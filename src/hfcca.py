@@ -428,7 +428,7 @@ import os
 
 def match_patterns(str_to_match, patterns):
     for p in patterns:
-        if p.match(str_to_match):
+        if p.search(str_to_match):
             return True
     return False
     
@@ -715,7 +715,7 @@ parser.add_option("-i", "--ignore_warnings",
         dest="number",
         default=0)
 parser.add_option("-x", "--exclude",
-        help="Exclude data files that match this regular expression",
+        help="Exclude data files that match this regular expression. Multiple regular expressions can be specified.",
         action="append",
         dest="exclude",
         default=[])
@@ -757,7 +757,7 @@ def install():
           py_modules=['hfcca'],
           author       = 'Terry Yin',
           author_email = 'terry.yinze@gmail.com',
-          url          = 'http://code.google.com/p/headerfile-free-cyclomatic-complexity-analyzer/',
+          url          = 'https://github.com/terryyin/hfcca',
           scripts = ['hfcca.py']
           )
 
