@@ -16,7 +16,7 @@
 #
 
 """
-source_analyzer (verion 1.5.1) is a simple code complexity source_file_counter without caring about the C/C++ header files.
+source_analyzer (verion 1.5.2) is a simple code complexity source_file_counter without caring about the C/C++ header files.
 It can deal with C/C++/Objective C & TNSDL code. It count the NLOC (lines of code without comments), CCN 
 (cyclomatic complexity number) and token count of _functions.
 It requires python2.6 or above (early versions are not verified).
@@ -43,9 +43,8 @@ class FunctionInfo:
     def add_to_function_name(self, app):
         self.name += app
         self.function_name_with_param += app
-    def __getattr__(self, name):
-        if name == "long_name":
-            return self.return_type + self.function_name_with_param
+    def long_name(self):
+        return self.return_type + self.function_name_with_param
     def add_to_long_name(self, app):
         self.function_name_with_param += app
     def add_condition(self): self.cyclomatic_complexity += 1
@@ -96,10 +95,13 @@ class UniversalCodeCounter(list):
         self.NLOC = 0
         self.current_function = None
         self.filename = filename
+        self.functionInfos = []
         for fun in self._functions(parsed_code.process()):
             self.append(fun)
         self.LOC = parsed_code.get_current_line()
         self._summarize()
+    def countCode(self):
+        return self
     def START_NEW_FUNCTION(self, name_and_line):
         self.current_function = FunctionInfo(*name_and_line)
     def CONDITION(self, token): 
@@ -349,20 +351,26 @@ def get_parser_by_file_name(filename):
             info = hfcca_language_infos[lan]
             if info['name_pattern'].match(filename):
                 return info['creator']
-    
-def analyze_source_code_with_parser(code, preprocessor, filename, parser):
-    return UniversalCodeCounter(parser(preprocessor().process(generate_tokens(code))), filename)
-def analyze_source_file(filename, use_preprocessor=None):
-    f = open(filename)
-    code = f.read()
-    f.close()
-    parser = get_parser_by_file_name(filename)
-    if parser:
-        preprocessor = DefaultPreprocessor
-        if use_preprocessor:
-            preprocessor = CPreprocessor
-        return analyze_source_code_with_parser(code, preprocessor, filename, parser)
+class FileAnalyzer:
+    def __init__(self, use_preprocessor = False):
+        self.use_preprocessor = use_preprocessor
+        self.open = open
+    def __call__(self, filename):
+        return self.analyze(filename)
+    def analyze(self, filename):
+        f = self.open(filename)
+        code = f.read()
+        f.close()
+        parser = get_parser_by_file_name(filename)
+        if parser:
+            preprocessor = DefaultPreprocessor
+            if self.use_preprocessor:
+                preprocessor = CPreprocessor
+            return self.analyze_source_code_with_parser(code, preprocessor, filename, parser)
        
+    def analyze_source_code_with_parser(self, code, preprocessor, filename, parser):
+        return UniversalCodeCounter(parser(preprocessor().process(generate_tokens(code))), filename).countCode()
+
 token_pattern = re.compile(r"(\w+|/\*|//|:=|::|>=|\*=|>|#\s*define|#\s*if|#\s*else|#\s*endif|#\s*\w+|[!%^&\*\-=+\|\\<>/\]\+]+|.)", re.M | re.S)
 
 def generate_tokens(source_code):
@@ -453,21 +461,12 @@ def iterate_files(SRC_DIRs, exclude_patterns):
                             continue
                         yield full_path_name
 
-import itertools
-def analyze(paths, exclude_patterns, use_preprocessor=None, threads=1):
-    if 0:
-        import multiprocessing
-        it = multiprocessing.Pool(processes=threads)
-        return it.imap(analyze_source_file, iterate_files(paths, exclude_patterns))
-    return map(analyze_source_file, iterate_files(paths, exclude_patterns), itertools.repeat(use_preprocessor))
-
-
 import sys
 
 def print_function_info(fun, filename, option):
     name = fun.name
     if option.verbose:
-        name = fun.long_name
+        name = fun.long_name()
     print("%6d%6d%6d%6d %s@%s@%s"%(fun.NLOC, fun.cyclomatic_complexity, fun.token_count, fun.parameter_count,  name, fun.start_line, filename))
 
 def print_warnings(option, saved_result):
@@ -767,6 +766,17 @@ def install():
           scripts = ['hfcca.py']
           )
 
+import itertools
+def analyze_files(files, fileAnalyzer, working_threads):
+     
+    if working_threads > 1:
+        import multiprocessing
+        it = multiprocessing.Pool(processes=working_threads)
+        r = it.imap_unordered(fileAnalyzer, files)
+    else:
+        r = map(fileAnalyzer, files)
+    return r
+
 def main(argv):
     (options, args) = parser.parse_args(args=sys.argv)
     
@@ -784,12 +794,8 @@ def main(argv):
     
     exclude_patterns = [re.compile(p) for p in options.exclude]
     files = iterate_files(paths, exclude_patterns)
-    if options.working_threads > 1:
-        import multiprocessing
-        it = multiprocessing.Pool(processes=options.working_threads)
-        r = it.imap_unordered(analyze_source_file, files)
-    else:
-        r = map(analyze_source_file, files, itertools.repeat(options.use_preprocessor))
+    fileAnalyzer = FileAnalyzer(options.use_preprocessor)
+    r = analyze_files(files, fileAnalyzer, options.working_threads)
     if options.xml:
         print(xml_output([f for f in r], options))
     else:
@@ -814,7 +820,7 @@ class Test_generate_tonken(unittest.TestCase):
 
 class Test_c_cpp_hfcca(unittest.TestCase):
     def create_c_hfcca(self, source_code, preprocessor=DefaultPreprocessor):
-        return analyze_source_code_with_parser(source_code, preprocessor, "", CTokenTranslator)
+        return FileAnalyzer().analyze_source_code_with_parser(source_code, preprocessor, "", CTokenTranslator)
     def test_empty(self):
         result = self.create_c_hfcca("")
         self.assertEqual(0, len(result))
@@ -839,7 +845,7 @@ class Test_c_cpp_hfcca(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertTrue("fun" in result)
         self.assertEqual(1, result[0].cyclomatic_complexity)
-        self.assertEqual("fun( xx oo )", result[0].long_name)
+        self.assertEqual("fun( xx oo )", result[0].long_name())
     def test_one_function_with_content(self):
         result = self.create_c_hfcca("int fun(){if(a){xx;}}")
         self.assertEqual(2, result[0].cyclomatic_complexity)
@@ -886,13 +892,13 @@ class Test_c_cpp_hfcca(unittest.TestCase):
         result = self.create_c_hfcca("int abc::fun(){}")
         self.assertEqual(1, len(result))
         self.assertEqual("abc::fun", result[0].name)
-        self.assertEqual("abc::fun( )", result[0].long_name)
+        self.assertEqual("abc::fun( )", result[0].long_name())
         self.assertEqual(1, result[0].cyclomatic_complexity)
     def test_one_function_with_const(self):
         result = self.create_c_hfcca("int abc::fun()const{}")
         self.assertEqual(1, len(result))
         self.assertEqual("abc::fun", result[0].name)
-        self.assertEqual("abc::fun( ) const", result[0].long_name)
+        self.assertEqual("abc::fun( ) const", result[0].long_name())
         self.assertEqual(1, result[0].cyclomatic_complexity)
 
     def test_one_function_in_class(self):
@@ -912,7 +918,7 @@ class Test_c_cpp_hfcca(unittest.TestCase):
 
 class Test_sdl_hfcca(unittest.TestCase):
     def create_sdl_hfcca(self, source_code):
-        return UniversalCodeCounter(SDLTokenTranslator(generate_tokens(source_code)) , "")
+        return UniversalCodeCounter(SDLTokenTranslator(generate_tokens(source_code)) , "").countCode()
     def test_empty(self):
         result = self.create_sdl_hfcca("")
         self.assertEqual(0, len(result))
@@ -952,7 +958,7 @@ class Test_sdl_hfcca(unittest.TestCase):
 
 class Test_objc_hfcca(unittest.TestCase):
     def create_objc_hfcca(self, source_code):
-        return UniversalCodeCounter(ObjCTokenTranslator(generate_tokens(source_code)) , "")
+        return UniversalCodeCounter(ObjCTokenTranslator(generate_tokens(source_code)) , "").countCode()
     def test_empty(self):
         result = self.create_objc_hfcca("")
         self.assertEqual(0, len(result))
@@ -968,15 +974,15 @@ class Test_objc_hfcca(unittest.TestCase):
     def test_one_objc_function_with_param(self):
         result = self.create_objc_hfcca("-(void) replaceScene: (CCScene*) scene {}")
         self.assertEqual("replaceScene:", result[0].name)
-        self.assertEqual("replaceScene:( CCScene * )", result[0].long_name)
+        self.assertEqual("replaceScene:( CCScene * )", result[0].long_name())
     def test_one_objc_functio_nwith_two_param(self):
         result = self.create_objc_hfcca("- (BOOL)scanJSONObject:(id *)outObject error:(NSError **)outError {}")
         self.assertTrue("scanJSONObject: error:" in result)
-        self.assertEqual("scanJSONObject:( id * ) error:( NSError ** )", result[0].long_name)
+        self.assertEqual("scanJSONObject:( id * ) error:( NSError ** )", result[0].long_name())
     def test_one_objc_function_with_three_param(self):
         result = self.create_objc_hfcca("- (id)initWithRequest:(NSURLRequest *)request delegate:(id <NSURLConnectionDelegate>)delegate startImmediately:(BOOL)startImmediately{}")
         self.assertEqual("initWithRequest: delegate: startImmediately:", result[0].name)
-        self.assertEqual("initWithRequest:( NSURLRequest * ) delegate:( id < NSURLConnectionDelegate > ) startImmediately:( BOOL )", result[0].long_name)
+        self.assertEqual("initWithRequest:( NSURLRequest * ) delegate:( id < NSURLConnectionDelegate > ) startImmediately:( BOOL )", result[0].long_name())
     def test_implementation(self):
         code = """
             @implementation classname(xx)
@@ -1067,6 +1073,63 @@ class Test_parser_token(unittest.TestCase):
     def test_with_c_comments(self):
         tokens = self.get_tokens_and_line('/*abc\n*/ t')
         self.assertTrue(('t', 2) in tokens)
+
+class MockFileAnalyzer(FileAnalyzer):
+    def __init__(self):
+        self.mockRecord = []
+    def analyze(self, filename):
+        return filename
+class Test_analyze_files(unittest.TestCase):
+    def test_NoFiles(self):
+        analyzer = MockFileAnalyzer()
+        analyze_files([], analyzer, 1)
+        self.assertEqual(0, len(analyzer.mockRecord))
+    def test_NoFilesMultipleThread(self):
+        analyzer = MockFileAnalyzer()
+        analyze_files([], analyzer, 2)
+        self.assertEqual(0, len(analyzer.mockRecord))
+    def test_OneFile(self):
+        analyzer = MockFileAnalyzer()
+        r=analyze_files(["filename"], analyzer, 1)
+        self.assertEqual(["filename"], [x for x in r])
+    def test_OneFileMultipleThread(self):
+        analyzer = MockFileAnalyzer()
+        r = analyze_files(["filename"], analyzer, 2)
+        self.assertEqual(["filename"], [x for x in r])
+    def test_MoreFiles(self):
+        analyzer = MockFileAnalyzer()
+        r=analyze_files(["f1", "f2"], analyzer, 1)
+        self.assertEqual(["f1", "f2"], [x for x in r])
+    def test_MoreFilesMultipleThread(self):
+        analyzer = MockFileAnalyzer()
+        r=analyze_files(["f1", "f2"], analyzer, 2)
+        self.assertEqual(["f1", "f2"], [x for x in r])
+
+class MockFile:
+    def __init__(self):
+        self.mockRecord = []
+    def read(self):
+        return "int foo(){}"
+    def close(self):
+        pass
+def mockOpen(name):
+    return MockFile()
+class Test_FileAnalyzer(unittest.TestCase):
+    def setUp(self):
+        self.analyzer = FileAnalyzer()
+        self.analyzer.open = mockOpen
+    def create_c_hfcca(self, source_code, preprocessor=DefaultPreprocessor):
+        return FileAnalyzer().analyze_source_code_with_parser(source_code, preprocessor, "", CTokenTranslator)
+    def test_analyze_c_file(self):
+        r=analyze_files(["f1.c"], self.analyzer, 1)
+        self.assertEqual(1, len([x for x in r]))
+    def test_analyze_c_file_with_multiple_thread(self):
+        r=analyze_files(["f1.c"], self.analyzer, 2)
+        self.assertEqual(1, len([x for x in r]))
+class Test_FunctionInfo(unittest.TestCase):
+    def test_FunctionInfo_ShouldBePicklable(self):
+        import pickle
+        pickle.dumps(FunctionInfo("a",1))
 
 example1 = r'''
 int startup(u_short *port)

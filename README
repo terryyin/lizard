@@ -11,6 +11,16 @@ Than you can run hfcca.py from any where.
 the C/C++ header files. It can deal with C/C++/ObjectiveC & TNSDL code. It count the NLOC
 (lines of code without comments), CCN  (cyclomatic complexity number) and
 token count of functions.
+It requires python2.6 or above (early versions are not verified).
+To install it on your computer(so that you don't need to do python myPath/hfcca/hfcca.py all the time):
+
+python hfcca.py install
+
+Or,
+
+sudo python hfcca.py install
+
+Then you can just type hfcca.py from any where in your command line.
 
 Options:
   -h, --help            show this help message and exit
