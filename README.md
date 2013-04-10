@@ -49,3 +49,5 @@ Options:
                         Adding this option to ignore them
   -t WORKING_THREADS, --working_threads=WORKING_THREADS
                         number of working threads. The default value is 1.
+                        
+[![Build Status](https://travis-ci.org/terryyin/hfcca.png?branch=master)](https://travis-ci.org/terryyin/hfcca)
