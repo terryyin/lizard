@@ -1,3 +1,6 @@
+#Header Free Cyclomatic Complexity Analyzer
+[![Build Status](https://travis-ci.org/terryyin/hfcca.png?branch=master)](https://travis-ci.org/terryyin/hfcca)
+
 This tool will calculate the cycolomatic complexity of C/C++/Objective C code without caring about header files and preprocessors. So the tool is actually calculating how complex the code 'looks' rather than how complex the code 'is'.
 
 People will need this tool because it's often very hard to get all the include folders and files right with a similar tool, but we don't really need that kind of accuracy when come to cyclomatic complexity.
@@ -51,4 +54,3 @@ Options:
   -t WORKING_THREADS, --working_threads=WORKING_THREADS
                         number of working threads. The default value is 1.
 </pre>                   
-[![Build Status](https://travis-ci.org/terryyin/hfcca.png?branch=master)](https://travis-ci.org/terryyin/hfcca)
