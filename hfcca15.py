@@ -26,6 +26,7 @@ Or,
 sudo python hfcca.py install
 Then you can just type hfcca.py from any where in your command line.
 """
+import itertools
 
 DEFAULT_CCN_THRESHOLD = 15
 
@@ -54,7 +55,7 @@ class FunctionInfo:
         if self.parameter_count == 0:
             self.parameter_count = 1
         if token == ",":
-            self.parameter_count+=1
+            self.parameter_count += 1
 
 class DefaultPreprocessor:
     def process(self, tokens):
@@ -186,7 +187,7 @@ class CTokenTranslator(TokenTranslatorBase):
             return UniversalCodeCounter.START_NEW_FUNCTION, (token, self._current_line)
     def _NAMESPACE(self, token):
             self._state = self._GLOBAL
-            return UniversalCodeCounter.ADD_TO_FUNCTION_NAME, "::"+token
+            return UniversalCodeCounter.ADD_TO_FUNCTION_NAME, "::" + token
     def _DEC(self, token):
         if token == '(' or token == "<":
             self.pa_count += 1
@@ -223,7 +224,7 @@ class ObjCTokenTranslator(CTokenTranslator):
     def __init__(self, token):
         CTokenTranslator.__init__(self, token)
     def _DEC_TO_IMP(self, token):
-        if token in ("+","-"):
+        if token in ("+", "-"):
             self._state = self._GLOBAL
         else:
             CTokenTranslator._DEC_TO_IMP(self, token)
@@ -250,12 +251,12 @@ class ObjCTokenTranslator(CTokenTranslator):
             self._state = self._IMP
         else:
             self._state = self._OBJC_DEC_BEGIN
-            return UniversalCodeCounter.ADD_TO_FUNCTION_NAME, " "+token
+            return UniversalCodeCounter.ADD_TO_FUNCTION_NAME, " " + token
         
     def _OBJC_PARAM_TYPE(self, token):
         if token == ')':
             self._state = self._OBJC_PARAM
-        return UniversalCodeCounter.ADD_TO_LONG_FUNCTION_NAME, " "+token
+        return UniversalCodeCounter.ADD_TO_LONG_FUNCTION_NAME, " " + token
     def _OBJC_PARAM(self, token):
         self._state = self._OBJC_DEC
 
@@ -335,7 +336,7 @@ objc_pattern = re.compile(r".*\.(m)$")
 hfcca_language_infos = {
                  'c/c++': {
                   'name_pattern': c_pattern,
-                  'creator':CTokenTranslator},   
+                  'creator':CTokenTranslator},
                     
                  'sdl' : {
                   'name_pattern': sdl_pattern,
@@ -352,7 +353,7 @@ def get_parser_by_file_name(filename):
             if info['name_pattern'].match(filename):
                 return info['creator']
 class FileAnalyzer:
-    def __init__(self, use_preprocessor = False):
+    def __init__(self, use_preprocessor=False):
         self.use_preprocessor = use_preprocessor
         self.open = open
     def __call__(self, filename):
@@ -409,7 +410,7 @@ def generate_tokens_from_code_with_multiple_newlines(source_code):
                 break
             token = source_code[m.start(0):index]
         elif token == '/*':
-            index = source_code.find("*/", index)
+            index = source_code.find("*/", index + 2)
             if index == -1:
                 break
             index += 2
@@ -467,7 +468,7 @@ def print_function_info(fun, filename, option):
     name = fun.name
     if option.verbose:
         name = fun.long_name()
-    print("%6d%6d%6d%6d %s@%s@%s"%(fun.NLOC, fun.cyclomatic_complexity, fun.token_count, fun.parameter_count,  name, fun.start_line, filename))
+    print("%6d%6d%6d%6d %s@%s@%s" % (fun.NLOC, fun.cyclomatic_complexity, fun.token_count, fun.parameter_count, name, fun.start_line, filename))
 
 def print_warnings(option, saved_result):
     warning_count = 0
@@ -480,12 +481,11 @@ def print_warnings(option, saved_result):
     for f in saved_result:
         for fun in f:
             cnt += 1
-            if fun.cyclomatic_complexity >option.CCN or fun.parameter_count > option.arguments:
+            if fun.cyclomatic_complexity > option.CCN or fun.parameter_count > option.arguments:
                 warning_count += 1
                 print_function_info(fun, f.filename, option)
     
     return warning_count
-
 
 def print_total(warning_count, saved_result, option):
     all_fun = list(itertools.chain(*saved_result))
@@ -496,7 +496,7 @@ def print_total(warning_count, saved_result, option):
     if (tNLOC == 0):
         tNLOC = 1
     total_info = (
-                  tNLOC, tNLOC /cnt,
+                  tNLOC, tNLOC / cnt,
                   float(sum([f.cyclomatic_complexity for f in all_fun])) / cnt,
                   float(sum([f.token_count for f in all_fun])) / cnt,
                   cnt,
@@ -510,8 +510,6 @@ def print_total(warning_count, saved_result, option):
     print("Total NLOC  Avg.NLOC  Avg CCN  Avg token  Fun Cnt  Warning cnt   Fun Rt   NLOC Rt  ")
     print("--------------------------------------------------------------------------------")
     print("%10d%10d%9.2f%11.2f%9d%13d%10.2f%8.2f" % total_info)
-
-
 
 def print_and_save_detail_information(r, option):
     saved_result = []
@@ -694,90 +692,92 @@ def xml_output(result, options):
 def remove_sharp_from_class(parser_class):
     parser_class.conditions.remove("#if")
 
-from optparse import OptionParser
-
-parser = OptionParser()
-parser.add_option("-v", "--verbose",
-        help="Output in verbose mode (long function name)",
-        action="store_true",
-        dest="verbose",
-        default=False)
-parser.add_option("-C", "--CCN",
-        help="Threshold for cyclomatic complexity number warning. _functions with CCN bigger than this number will be shown in warning",
-        action="store",
-        type="int",
-        dest="CCN",
-        default=DEFAULT_CCN_THRESHOLD)
-parser.add_option("-w", "--warnings_only",
-        help="Show warnings only",
-        action="store_true",
-        dest="warnings_only",
-        default=False)
-parser.add_option("-i", "--ignore_warnings",
-        help="If the number of warnings is equal or less than the number, the tool will exit normally, otherwize it will generate error. Useful in makefile when improving legacy code.",
-        action="store",
-        type="int",
-        dest="number",
-        default=0)
-parser.add_option("-x", "--exclude",
-        help="Exclude data files that match this regular expression. Multiple regular expressions can be specified.",
-        action="append",
-        dest="exclude",
-        default=[])
-parser.add_option("-X", "--xml",
-        help="Generate XML in cppncss style instead of the normal tabular output. Useful to generate report in Hudson server",
-        action="store_true",
-        dest="xml",
-        default=None)
-parser.add_option("-p", "--preprocess",
-        help="Use preprocessor, always ignore the #else branch. By default, source_analyzer just ignore any preprocessor statement.",
-        action="store_true",
-        dest="use_preprocessor",
-        default=False)
-parser.add_option("-a", "--arguments",
-        help="Limit for number of parameters",
-        action="store",
-        type= "int",
-        dest="arguments",
-        default=100)
-parser.add_option("-P", "--no_preprocessor_count",
-        help="By default, a #if will also increase the complexity. Adding this option to ignore them",
-        action="store_true",
-        dest="no_preprocessor_count",
-        default=False)
-parser.add_option("-t", "--working_threads",
-        help="number of working threads. The default value is 1.",
-        action="store",
-        type="int",
-        dest="working_threads",
-        default=1)
-
-parser.usage = "source_analyzer.py [options] [PATH or FILE] [PATH] ... "
-parser.description = __doc__
+def createHfccaCommandLineParser():
+    from optparse import OptionParser
+    parser = OptionParser()
+    parser.add_option("-v", "--verbose",
+            help="Output in verbose mode (long function name)",
+            action="store_true",
+            dest="verbose",
+            default=False)
+    parser.add_option("-C", "--CCN",
+            help="Threshold for cyclomatic complexity number warning. _functions with CCN bigger than this number will be shown in warning",
+            action="store",
+            type="int",
+            dest="CCN",
+            default=DEFAULT_CCN_THRESHOLD)
+    parser.add_option("-w", "--warnings_only",
+            help="Show warnings only",
+            action="store_true",
+            dest="warnings_only",
+            default=False)
+    parser.add_option("-i", "--ignore_warnings",
+            help="If the number of warnings is equal or less than the number, the tool will exit normally, otherwize it will generate error. Useful in makefile when improving legacy code.",
+            action="store",
+            type="int",
+            dest="number",
+            default=0)
+    parser.add_option("-x", "--exclude",
+            help="Exclude data files that match this regular expression. Multiple regular expressions can be specified.",
+            action="append",
+            dest="exclude",
+            default=[])
+    parser.add_option("-X", "--xml",
+            help="Generate XML in cppncss style instead of the normal tabular output. Useful to generate report in Hudson server",
+            action="store_true",
+            dest="xml",
+            default=None)
+    parser.add_option("-p", "--preprocess",
+            help="Use preprocessor, always ignore the #else branch. By default, source_analyzer just ignore any preprocessor statement.",
+            action="store_true",
+            dest="use_preprocessor",
+            default=False)
+    parser.add_option("-a", "--arguments",
+            help="Limit for number of parameters",
+            action="store",
+            type="int",
+            dest="arguments",
+            default=100)
+    parser.add_option("-P", "--no_preprocessor_count",
+            help="By default, a #if will also increase the complexity. Adding this option to ignore them",
+            action="store_true",
+            dest="no_preprocessor_count",
+            default=False)
+    parser.add_option("-t", "--working_threads",
+            help="number of working threads. The default value is 1.",
+            action="store",
+            type="int",
+            dest="working_threads",
+            default=1)
+    
+    parser.usage = "source_analyzer.py [options] [PATH or FILE] [PATH] ... "
+    parser.description = __doc__
+    
+    return parser
 
 from distutils.core import setup
 def install():
     setup(name='hfcca',
           version='1.5',
           py_modules=['hfcca'],
-          author       = 'Terry Yin',
-          author_email = 'terry.yinze@gmail.com',
-          url          = 'https://github.com/terryyin/hfcca',
-          scripts = ['hfcca.py']
+          author='Terry Yin',
+          author_email='terry.yinze@gmail.com',
+          url='https://github.com/terryyin/hfcca',
+          scripts=['hfcca.py']
           )
 
-import itertools
-def analyze_files(files, fileAnalyzer, working_threads):
-     
-    if working_threads > 1:
+def mapFilesToAnalyzer(files, fileAnalyzer, working_threads):
+    try:
         import multiprocessing
         it = multiprocessing.Pool(processes=working_threads)
-        r = it.imap_unordered(fileAnalyzer, files)
-    else:
-        r = map(fileAnalyzer, files)
+        mapFun = it.imap_unordered
+    except:
+        mapFun = itertools.imap
+    r = mapFun(fileAnalyzer, files)
     return r
 
 def main(argv):
+    parser = createHfccaCommandLineParser()
     (options, args) = parser.parse_args(args=sys.argv)
     
     if len(args) == 1:
@@ -795,7 +795,7 @@ def main(argv):
     exclude_patterns = [re.compile(p) for p in options.exclude]
     files = iterate_files(paths, exclude_patterns)
     fileAnalyzer = FileAnalyzer(options.use_preprocessor)
-    r = analyze_files(files, fileAnalyzer, options.working_threads)
+    r = mapFilesToAnalyzer(files, fileAnalyzer, options.working_threads)
     if options.xml:
         print(xml_output([f for f in r], options))
     else:
@@ -1038,6 +1038,9 @@ class Test_parser_token(unittest.TestCase):
         self.assertEqual([], tokens)
         tokens = self.get_tokens("//aaa\n")
         self.assertEqual(['\n'], tokens)
+    def test_commentedComment(self):
+        tokens = self.get_tokens(" /*/*/")
+        self.assertEqual([], tokens)
     def test_string(self):
         tokens = self.get_tokens(r'""')
         self.assertEqual(['""'], tokens)
@@ -1082,27 +1085,27 @@ class MockFileAnalyzer(FileAnalyzer):
 class Test_analyze_files(unittest.TestCase):
     def test_NoFiles(self):
         analyzer = MockFileAnalyzer()
-        analyze_files([], analyzer, 1)
+        mapFilesToAnalyzer([], analyzer, 1)
         self.assertEqual(0, len(analyzer.mockRecord))
     def test_NoFilesMultipleThread(self):
         analyzer = MockFileAnalyzer()
-        analyze_files([], analyzer, 2)
+        mapFilesToAnalyzer([], analyzer, 2)
         self.assertEqual(0, len(analyzer.mockRecord))
     def test_OneFile(self):
         analyzer = MockFileAnalyzer()
-        r=analyze_files(["filename"], analyzer, 1)
+        r = mapFilesToAnalyzer(["filename"], analyzer, 1)
         self.assertEqual(["filename"], [x for x in r])
     def test_OneFileMultipleThread(self):
         analyzer = MockFileAnalyzer()
-        r = analyze_files(["filename"], analyzer, 2)
+        r = mapFilesToAnalyzer(["filename"], analyzer, 2)
         self.assertEqual(["filename"], [x for x in r])
     def test_MoreFiles(self):
         analyzer = MockFileAnalyzer()
-        r=analyze_files(["f1", "f2"], analyzer, 1)
+        r = mapFilesToAnalyzer(["f1", "f2"], analyzer, 1)
         self.assertEqual(["f1", "f2"], [x for x in r])
     def test_MoreFilesMultipleThread(self):
         analyzer = MockFileAnalyzer()
-        r=analyze_files(["f1", "f2"], analyzer, 2)
+        r = mapFilesToAnalyzer(["f1", "f2"], analyzer, 2)
         self.assertEqual(["f1", "f2"], [x for x in r])
 
 class MockFile:
@@ -1121,15 +1124,15 @@ class Test_FileAnalyzer(unittest.TestCase):
     def create_c_hfcca(self, source_code, preprocessor=DefaultPreprocessor):
         return FileAnalyzer().analyze_source_code_with_parser(source_code, preprocessor, "", CTokenTranslator)
     def test_analyze_c_file(self):
-        r=analyze_files(["f1.c"], self.analyzer, 1)
+        r = mapFilesToAnalyzer(["f1.c"], self.analyzer, 1)
         self.assertEqual(1, len([x for x in r]))
     def test_analyze_c_file_with_multiple_thread(self):
-        r=analyze_files(["f1.c"], self.analyzer, 2)
+        r = mapFilesToAnalyzer(["f1.c"], self.analyzer, 2)
         self.assertEqual(1, len([x for x in r]))
 class Test_FunctionInfo(unittest.TestCase):
     def test_FunctionInfo_ShouldBePicklable(self):
         import pickle
-        pickle.dumps(FunctionInfo("a",1))
+        pickle.dumps(FunctionInfo("a", 1))
 
 example1 = r'''
 int startup(u_short *port)
@@ -1206,14 +1209,6 @@ example_sdl_process = r'''
 PROCESS pofsrt
   COMMENT '@(#)SID: POFSRTGX.SDL 2.1-0 06/07/11';
 /*
- *  Environment:
- *      DXSYST PHRSYB AUUSEB POFFIC
- *
- *  Description:
- *      This is the sender hand prefix of the ATM Post
- *      Office prefix family.
- *
- *  COPYRIGHT (c) 1995 NOKIA TELECOMMUNICATIONS OY FINLAND
  */
 
 DCL
