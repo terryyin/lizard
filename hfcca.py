@@ -573,8 +573,11 @@ def xml_output(result, options):
         file_name = source_file.filename
         for func in source_file:
             Nr += 1
+            name = func.name
+            if options.verbose:
+                name = func.long_name()
             item = doc.createElement("item")
-            item.setAttribute("name", "%s(...) at %s:%s" % (func.name, file_name, func.start_line))
+            item.setAttribute("name", "%s(...) at %s:%s" % (name, file_name, func.start_line))
             value1 = doc.createElement("value")
             text1 = doc.createTextNode(str(Nr))
             value1.appendChild(text1)
