@@ -16,7 +16,7 @@
 #
 
 """
-source_analyzer (verion 1.5.2) is a simple code complexity source_file_counter without caring about the C/C++ header files.
+source_analyzer is a simple code complexity source_file_counter without caring about the C/C++ header files.
 It can deal with C/C++/Objective C & TNSDL code. It count the NLOC (lines of code without comments), CCN 
 (cyclomatic complexity number) and token count of _functions.
 It requires python2.6 or above (early versions are not verified).

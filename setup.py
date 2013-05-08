@@ -11,7 +11,7 @@ def install():
         long_description = hfcca.__doc__
     setup(
           name = 'hfcca',
-          version = "1.5.0",
+          version = "1.6.0",
           description = ''' 
 source_analyzer is a simple code complexity source_file_counter without caring about the C/C++ header files.
 It can deal with C/C++/Objective C & TNSDL code. It count the NLOC (lines of code without comments), CCN 
