@@ -10,7 +10,7 @@ class Test_generate_tonken(unittest.TestCase):
         self.assertEqual(0, len(result))
     def test_with_one_return(self):
         result = [t for t in generate_tokens_from_code("\n")]
-	self.assertEqual(1, len(result))
+        self.assertEqual(1, len(result))
     def test_with_two_returns(self):
         result = [t for t in generate_tokens_from_code("\n\n")]
         self.assertEqual(1, len(result))
