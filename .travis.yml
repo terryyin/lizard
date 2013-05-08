@@ -1,9 +1,12 @@
 language: python
 python:
+  - "2.6"
+  - "2.5"
   - "2.7"
+  - "3.3"
 install: 
-  - python hfcca.py install
+  - python setup.py install
 
 script:
-  - python -munittest hfcca
+  - python -munittest test
 
