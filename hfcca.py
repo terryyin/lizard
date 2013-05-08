@@ -756,7 +756,10 @@ def mapFilesToAnalyzer(files, fileAnalyzer, working_threads):
         it = multiprocessing.Pool(processes=working_threads)
         mapFun = it.imap_unordered
     except:
-        mapFun = itertools.imap
+        try:
+            mapFun = itertools.imap
+        except:
+            mapFun = map
     r = mapFun(fileAnalyzer, files)
     return r
 
