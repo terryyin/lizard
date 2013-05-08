@@ -4,27 +4,36 @@
 This tool will calculate the cycolomatic complexity of C/C++/Objective C code without caring about header files and preprocessors. So the tool is actually calculating how complex the code 'looks' rather than how complex the code 'is'.
 
 People will need this tool because it's often very hard to get all the include folders and files right with a similar tool, but we don't really need that kind of accuracy when come to cyclomatic complexity.
+
+##Installation
+
+hfcca.py is only a single python file, you can always use it without install.
+
+If you want a proper install:
+
 <pre>
-Usage: python hfcca.py [options] [PATH or FILE] [PATH] ... 
-
-or: python hfcca.py install
+[sudo] pip install hfcca
 </pre>
-Than you can run hfcca.py from any where.
 
- hfcca (verion 1.5) is a simple code complexity counter without caring about
+Or if you've got the source:
+
+<pre>
+[sudo] python setup.py install
+</pre>
+
+##Usage
+
+<pre>
+hfcca [options] [PATH or FILE] [PATH] ... 
+</pre>
+
+hfcca (verion 1.5) is a simple code complexity counter without caring about
 the C/C++ header files. It can deal with C/C++/ObjectiveC & TNSDL code. It count the NLOC
 (lines of code without comments), CCN  (cyclomatic complexity number) and
 token count of functions.
 
 It requires python2.6 or above (early versions are not verified).
 
-To install it on your computer(so that you don't need to do python myPath/hfcca/hfcca.py all the time):
-<pre>
-python hfcca.py install
-Or,
-sudo python hfcca.py install
-</pre>
-Then you can just type hfcca.py from any where in your command line.
 <pre>
 Options:
   -h, --help            show this help message and exit

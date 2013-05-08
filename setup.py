@@ -12,7 +12,10 @@ def install():
     setup(
           name = 'hfcca',
           version = "1.5.0",
-          description = hfcca.__doc__,
+          description = ''' 
+source_analyzer is a simple code complexity source_file_counter without caring about the C/C++ header files.
+It can deal with C/C++/Objective C & TNSDL code. It count the NLOC (lines of code without comments), CCN 
+(cyclomatic complexity number) and token count of _functions.''',
           long_description =  long_description,
           url = 'https://github.com/terryyin/hfcca',
           classifiers = ['Development Status :: 5 - Production/Stable',

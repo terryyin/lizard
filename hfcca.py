@@ -20,11 +20,6 @@ source_analyzer (verion 1.5.2) is a simple code complexity source_file_counter w
 It can deal with C/C++/Objective C & TNSDL code. It count the NLOC (lines of code without comments), CCN 
 (cyclomatic complexity number) and token count of _functions.
 It requires python2.6 or above (early versions are not verified).
-To install it on your computer(so that you don't need to do python myPath/hfcca/hfcca.py all the time):
-python hfcca.py install
-Or,
-sudo python hfcca.py install
-Then you can just type hfcca.py from any where in your command line.
 """
 import itertools
 
