@@ -752,6 +752,8 @@ def createHfccaCommandLineParser():
 
 def mapFilesToAnalyzer(files, fileAnalyzer, working_threads):
     try:
+        # python 2.6 cannot work properly with multiple threading
+        if sys.version_info[0:2] == (2,6): raise 
         import multiprocessing
         it = multiprocessing.Pool(processes=working_threads)
         mapFun = it.imap_unordered
