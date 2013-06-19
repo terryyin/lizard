@@ -459,19 +459,35 @@ def iterate_files(SRC_DIRs, exclude_patterns):
 
 import sys
 
+def print_function_info_header():
+    print("==============================================================")
+    print("  NLOC    CCN  token  param    function@line@file")
+    print("--------------------------------------------------------------")
+
 def print_function_info(fun, filename, option):
-    name = fun.name
+    output_params = {
+        'NLOC': fun.NLOC,
+        'CCN': fun.cyclomatic_complexity,
+        'token': fun.token_count,
+        'param': fun.parameter_count,
+        'name': fun.name,
+        'line': fun.start_line,
+        'file': filename
+    }
+    output_format = "%(NLOC)6d %(CCN)6d %(token)6d %(param)6d    %(name)s@%(line)s@%(file)s"
     if option.verbose:
-        name = fun.long_name()
-    print("%6d%6d%6d%6d %s@%s@%s" % (fun.NLOC, fun.cyclomatic_complexity, fun.token_count, fun.parameter_count, name, fun.start_line, filename))
+        output_params['name'] = fun.long_name()
+    if option.warnings_only and option.clang_warnings:
+        # only use clang output if both options are set
+        output_format = "%(file)s:%(line)s: warning: %(name)s has %(CCN)d CCN and %(param)d params (%(NLOC)d NLOC, %(token)d tokens)"
+    print(output_format % output_params)
 
 def print_warnings(option, saved_result):
     warning_count = 0
-    print() 
-    print("!!!! Warnings (CCN > %d) !!!!" % option.CCN)
-    print("==============================================================")
-    print("NLOC    CCN   token   param            function@file")
-    print("--------------------------------------------------------------")
+    if not option.clang_warnings or not option.warnings_only:
+        print()
+        print("!!!! Warnings (CCN > %d) !!!!" % option.CCN)
+        print_function_info_header()
     cnt = 0
     for f in saved_result:
         for fun in f:
@@ -500,20 +516,18 @@ def print_total(warning_count, saved_result, option):
                   float(sum([f.NLOC for f in all_fun if f.cyclomatic_complexity > option.CCN])) / tNLOC
                   )
 
-
-    print("=================================================================================")
-    print("Total NLOC  Avg.NLOC  Avg CCN  Avg token  Fun Cnt  Warning cnt   Fun Rt   NLOC Rt  ")
-    print("--------------------------------------------------------------------------------")
-    print("%10d%10d%9.2f%11.2f%9d%13d%10.2f%8.2f" % total_info)
+    if not option.clang_warnings or not option.warnings_only:
+        print("=================================================================================")
+        print("Total NLOC  Avg.NLOC  Avg CCN  Avg token  Fun Cnt  Warning cnt   Fun Rt   NLOC Rt  ")
+        print("--------------------------------------------------------------------------------")
+        print("%10d%10d%9.2f%11.2f%9d%13d%10.2f%8.2f" % total_info)
 
 def print_and_save_detail_information(r, option):
     saved_result = []
     if (option.warnings_only):
         saved_result = r
     else:
-        print("==============================================================")
-        print("NLOC    CCN   token   param           function@line@file")
-        print("--------------------------------------------------------------")
+        print_function_info_header()
         for f in r:
             saved_result.append(f)
             for fun in f:
@@ -705,6 +719,11 @@ def createHfccaCommandLineParser():
             help="Show warnings only",
             action="store_true",
             dest="warnings_only",
+            default=False)
+    parser.add_option("--clang_warnings",
+            help="Use clang/gcc's warning format for printing warnings. Must also pass -w or --warnings_only for this to happen. http://clang.llvm.org/docs/UsersManual.html#cmdoption-fdiagnostics-format",
+            action="store_true",
+            dest="clang_warnings",
             default=False)
     parser.add_option("-i", "--ignore_warnings",
             help="If the number of warnings is equal or less than the number, the tool will exit normally, otherwize it will generate error. Useful in makefile when improving legacy code.",
