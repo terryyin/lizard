@@ -22,7 +22,7 @@ It can deal with C/C++/Objective C & TNSDL code. It count the NLOC (lines of cod
 It requires python2.6 or above (early versions are not verified).
 """
 
-VERSION="hfcca 1.6.0"
+VERSION="1.6.1"
 
 import itertools
 
