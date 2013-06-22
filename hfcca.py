@@ -21,6 +21,9 @@ It can deal with C/C++/Objective C & TNSDL code. It count the NLOC (lines of cod
 (cyclomatic complexity number) and token count of _functions.
 It requires python2.6 or above (early versions are not verified).
 """
+
+VERSION="hfcca 1.6.0"
+
 import itertools
 
 DEFAULT_CCN_THRESHOLD = 15
@@ -689,7 +692,7 @@ def remove_sharp_from_class(parser_class):
 
 def createHfccaCommandLineParser():
     from optparse import OptionParser
-    parser = OptionParser()
+    parser = OptionParser(version=VERSION)
     parser.add_option("-v", "--verbose",
             help="Output in verbose mode (long function name)",
             action="store_true",
