@@ -258,7 +258,7 @@ class Test_Exclude_Patterns(unittest.TestCase):
     def test_explicit_file_names(self, mock_isfile):
         mock_isfile.return_value = True
         files = getSourceFiles(["dir/file.c"], [])
-        self.assertListEqual(["dir/file.c"], list(files))
+        self.assertEqual(["dir/file.c"], list(files))
     
     @patch.object(os, "walk")
     def test_exclude_file_name(self, mock_os_walk):
@@ -266,7 +266,7 @@ class Test_Exclude_Patterns(unittest.TestCase):
                                       None,
                                       ['temp.log', 'useful.cpp']],)
         files = getSourceFiles(["dir"], ["*.log"])
-        self.assertListEqual(["./useful.cpp"], list(files))
+        self.assertEqual(["./useful.cpp"], list(files))
     
     @patch.object(os, "walk")
     def test_exclude_folder(self, mock_os_walk):
@@ -274,7 +274,7 @@ class Test_Exclude_Patterns(unittest.TestCase):
                                       None,
                                       ['useful.cpp']],)
         files = getSourceFiles(["dir"], ["ut/*"])
-        self.assertListEqual([], list(files))
+        self.assertEqual([], list(files))
     
     @patch.object(os, "walk")
     def test_exclude_folder_recursively(self, mock_os_walk):
@@ -282,7 +282,7 @@ class Test_Exclude_Patterns(unittest.TestCase):
                                       None,
                                       ['useful.cpp']],)
         files = getSourceFiles(["dir"], ["ut/*"])
-        self.assertListEqual([], list(files))
+        self.assertEqual([], list(files))
     
 example_sdl_procedure = '''
 /**************************************************************************/
