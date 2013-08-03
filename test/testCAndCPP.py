@@ -61,6 +61,10 @@ class Test_c_cpp_hfcca(unittest.TestCase):
         result = create_c_hfcca("int fun(){if(a&&b){xx;}}")
         self.assertEqual(3, result[0].cyclomatic_complexity)
     
+    def test_one_function_with_else_if(self):
+        result = create_c_hfcca("int fun(){if(a)b;else if (c) d;}")
+        self.assertEqual(3, result[0].cyclomatic_complexity)
+    
     def test_double_slash_within_string(self):
         result = create_c_hfcca("""int fun(){char *a="\\\\";}""")
         self.assertEqual(1, result[0].cyclomatic_complexity)

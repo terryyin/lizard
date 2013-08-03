@@ -283,6 +283,14 @@ class Test_Exclude_Patterns(unittest.TestCase):
                                       ['useful.cpp']],)
         files = getSourceFiles(["dir"], ["ut/*"])
         self.assertEqual([], list(files))
+
+    @patch.object(os, "walk")
+    def test_exclude_none_supported_files(self, mock_os_walk):
+        mock_os_walk.return_value = (['.', 
+                                      None,
+                                      ['useful.txt']],)
+        files = getSourceFiles(["dir"],[])
+        self.assertEqual([], list(files))
     
 example_sdl_procedure = '''
 /**************************************************************************/

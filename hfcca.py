@@ -22,7 +22,7 @@ It can deal with C/C++/Objective C & TNSDL code. It count the NLOC (lines of cod
 It requires python2.6 or above (early versions are not verified).
 """
 
-VERSION="1.6.2"
+VERSION="1.6.4"
 
 import itertools
 
@@ -380,6 +380,7 @@ def get_parser_by_file_name(filename):
             info = hfcca_language_infos[lan]
             if info['name_pattern'].match(filename):
                 return info['creator']
+            
 class FileAnalyzer:
     def __init__(self, use_preprocessor=False):
         self.use_preprocessor = use_preprocessor
@@ -391,11 +392,10 @@ class FileAnalyzer:
         code = f.read()
         f.close()
         parser = get_parser_by_file_name(filename)
-        if parser:
-            preprocessor = DefaultPreprocessor
-            if self.use_preprocessor:
-                preprocessor = CPreprocessor
-            return self.analyze_source_code_with_parser(code, preprocessor, filename, parser)
+        preprocessor = DefaultPreprocessor
+        if self.use_preprocessor:
+            preprocessor = CPreprocessor
+        return self.analyze_source_code_with_parser(code, preprocessor, filename, parser)
        
     def analyze_source_code_with_parser(self, code, preprocessor, filename, parser):
         return UniversalCodeCounter(parser(preprocessor().getFunctions(generate_tokens(code))), filename).countCode()
@@ -406,6 +406,7 @@ def generate_tokens(source_code):
     for t, l in generate_tokens_from_code(source_code):
         if not t.startswith('#define') and not t.startswith('/*') and not t.startswith('//') :
             yield t, l
+            
 def generate_tokens_from_code(source_code):
     in_middle_of_empty_lines = False
     for (token, line) in generate_tokens_from_code_with_multiple_newlines(source_code):
@@ -531,24 +532,24 @@ def print_total(warning_count, saved_result, option):
         print("--------------------------------------------------------------------------------")
         print("%10d%10d%9.2f%11.2f%9d%13d%10.2f%8.2f" % total_info)
 
-def print_and_save_detail_information(r, option):
+def print_and_save_detail_information(allStatistics, option):
     saved_result = []
     if (option.warnings_only):
-        saved_result = r
+        saved_result = allStatistics
     else:
         print_function_info_header()
-        for f in r:
-            saved_result.append(f)
-            for fun in f:
-                print_function_info(fun, f.filename, option)
+        for fileStatistics in allStatistics:
+            saved_result.append(fileStatistics)
+            for fun in fileStatistics:
+                print_function_info(fun, fileStatistics.filename, option)
         
         print("--------------------------------------------------------------")
         print("%d file analyzed." % (len(saved_result)))
         print("==============================================================")
         print("LOC    Avg.NLOC AvgCCN Avg.ttoken  function_cnt    file")
         print("--------------------------------------------------------------")
-        for f in saved_result:
-            print("%7d%7d%7d%10d%10d     %s" % (f.LOC, f.average_NLOC, f.average_CCN, f.average_token, len(f), f.filename))
+        for fileStatistics in saved_result:
+            print("%7d%7d%7d%10d%10d     %s" % (fileStatistics.LOC, fileStatistics.average_NLOC, fileStatistics.average_CCN, fileStatistics.average_token, len(fileStatistics), fileStatistics.filename))
     
     return saved_result
 
@@ -797,7 +798,8 @@ import os
 import fnmatch
 
 def _notExluded(str_to_match, patterns):
-    return all(not fnmatch.fnmatch(str_to_match, p) for p in patterns)
+    return get_parser_by_file_name(str_to_match) and \
+        all(not fnmatch.fnmatch(str_to_match, p) for p in patterns)
 
 def getSourceFiles(SRC_DIRs, exclude_patterns):
     for SRC_DIR in SRC_DIRs:
