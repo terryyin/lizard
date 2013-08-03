@@ -56,14 +56,14 @@ class FunctionInfo:
             self.parameter_count += 1
 
 class DefaultPreprocessor:
-    def process(self, tokens):
+    def getFunctions(self, tokens):
         for token in tokens:
             yield token
 
 class CPreprocessor:
     def __init__(self):
         self.stack = []
-    def process(self, tokens):
+    def getFunctions(self, tokens):
         for token, line in tokens:
             if not self.in_else(token):
                 yield token, line
@@ -95,38 +95,48 @@ class UniversalCodeCounter(list):
         self.current_function = None
         self.filename = filename
         self.functionInfos = []
-        for fun in self._functions(parsed_code.process()):
+        for fun in self._functions(parsed_code.getFunctions()):
             self.append(fun)
         self.LOC = parsed_code.get_current_line()
         self._summarize()
+        
     def countCode(self):
         return self
+    
     def START_NEW_FUNCTION(self, name_and_line):
         self.current_function = FunctionInfo(*name_and_line)
+    
     def CONDITION(self, token): 
         self.TOKEN(token)
         self.current_function.add_condition()
+    
     def TOKEN(self, text):
         self.current_function.add_token()
+    
     def NEW_LINE(self, token): 
         self.NLOC += 1
         if self.current_function is not None:
             self.current_function.add_non_comment_line()
+    
     def ADD_TO_LONG_FUNCTION_NAME(self, app):
         self.current_function.add_to_long_name(app)
+    
     def ADD_TO_FUNCTION_NAME(self, app):
         self.current_function.add_to_function_name(app)
+    
     def PARAMETER(self, token):
         self.current_function.add_parameter(token)
         self.ADD_TO_LONG_FUNCTION_NAME(" " + token)
         
     END_OF_FUNCTION = 1
+    
     def _functions(self, parsed_code):
         for code, text in parsed_code:
             if code == UniversalCodeCounter.END_OF_FUNCTION:
                 yield self.current_function
             else:
                 code(self, text)
+    
     def _summarize(self):
         self.average_NLOC = 0
         self.average_CCN = 0
@@ -150,16 +160,20 @@ class UniversalCodeCounter(list):
         self.token = token
 
 class TokenTranslatorBase:
+    
     def __init__(self, token):
         self._tokens = token
         self._state = self._GLOBAL
         self._current_line = 0
+    
     def get_current_line(self):
         return self._current_line
-    def process(self):
+    
+    def getFunctions(self):
         for token, self._current_line in self._tokens:
             fun = self._read_token(token)
             if fun: yield fun
+    
     def _read_token(self, token):
         if token.isspace():
             return UniversalCodeCounter.NEW_LINE, None
@@ -167,35 +181,50 @@ class TokenTranslatorBase:
             return self._state(token)
     
 class CTokenTranslator(TokenTranslatorBase):
+    
     conditions = set(['if', 'for', 'while', '&&', '||', 'case', '?', '#if', 'catch'])
+    
     def __init__(self, token):
         TokenTranslatorBase.__init__(self, token)
-        self.pa_count = 0
+        self.bracket_level = 0
         self.br_count = 0
+    
     def _is_condition(self, token):
         return token in self.conditions
+    
     def _GLOBAL(self, token):
         if token == '(':
-            self.pa_count += 1
+            self.bracket_level += 1
             self._state = self._DEC
             return UniversalCodeCounter.ADD_TO_LONG_FUNCTION_NAME, token
         elif token == '::':
             self._state = self._NAMESPACE
         else:
+            if token == 'operator':
+                self._state = self._OPERATOR
             return UniversalCodeCounter.START_NEW_FUNCTION, (token, self._current_line)
+
+    
+    def _OPERATOR(self, token):
+            if token != '(':
+                self._state = self._GLOBAL
+            return UniversalCodeCounter.ADD_TO_FUNCTION_NAME, ' ' + token
+    
     def _NAMESPACE(self, token):
-            self._state = self._GLOBAL
+            self._state = self._OPERATOR if token == 'operator'  else self._GLOBAL
             return UniversalCodeCounter.ADD_TO_FUNCTION_NAME, "::" + token
+    
     def _DEC(self, token):
         if token == '(' or token == "<":
-            self.pa_count += 1
+            self.bracket_level += 1
         elif token == ')' or token == ">" or token == "*>":
-            self.pa_count -= 1
-            if (self.pa_count == 0):
+            self.bracket_level -= 1
+            if (self.bracket_level == 0):
                 self._state = self._DEC_TO_IMP
-        elif self.pa_count == 1:
+        elif self.bracket_level == 1:
             return UniversalCodeCounter.PARAMETER, token
         return UniversalCodeCounter.ADD_TO_LONG_FUNCTION_NAME, " " + token
+    
     def _DEC_TO_IMP(self, token):
         if token == 'const':
             return UniversalCodeCounter.ADD_TO_LONG_FUNCTION_NAME, " " + token
@@ -204,6 +233,7 @@ class CTokenTranslator(TokenTranslatorBase):
             self._state = self._IMP
         else:
             self._state = self._GLOBAL
+    
     def _IMP(self, token):
         if token == '{':
             self.br_count += 1
@@ -368,7 +398,7 @@ class FileAnalyzer:
             return self.analyze_source_code_with_parser(code, preprocessor, filename, parser)
        
     def analyze_source_code_with_parser(self, code, preprocessor, filename, parser):
-        return UniversalCodeCounter(parser(preprocessor().process(generate_tokens(code))), filename).countCode()
+        return UniversalCodeCounter(parser(preprocessor().getFunctions(generate_tokens(code))), filename).countCode()
 
 token_pattern = re.compile(r"(\w+|/\*|//|:=|::|>=|\*=|>|#\s*define|#\s*if|#\s*else|#\s*endif|#\s*\w+|[!%^&\*\-=+\|\\<>/\]\+]+|.)", re.M | re.S)
 

@@ -99,6 +99,22 @@ class Test_c_cpp_hfcca(unittest.TestCase):
         result = create_c_hfcca("abc::def(a<b*> c){}")
         self.assertEqual(1, len(result))
         
+    def test_operator_overloading(self):
+        result = create_c_hfcca("bool operator +=(int b){}")
+        self.assertEqual(1, len(result))
+        self.assertEqual("operator +=", result[0].name)
+                
+    def test_operator_overloading_with_namespace(self):
+        result = create_c_hfcca("bool TC::operator !(int b){}")
+        self.assertEqual(1, len(result))
+        self.assertEqual("TC::operator !", result[0].name)
+                
+    def test_function_operator(self):
+        result = create_c_hfcca("bool TC::operator ()(int b){}")
+        self.assertEqual(1, len(result))
+        self.assertEqual("TC::operator ( )", result[0].name)
+        
+        
 class Test_C_Function_Token_Count(unittest.TestCase):
 
     def test_one_function_with_content(self):

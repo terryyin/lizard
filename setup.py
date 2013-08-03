@@ -27,7 +27,6 @@ It can deal with C/C++/Objective C & TNSDL code. It count the NLOC (lines of cod
                      'Operating System :: MacOS :: MacOS X',
                      'Topic :: Software Development :: Quality Assurance',
                      'Programming Language :: Python',
-                     'Programming Language :: Python :: 2.5',
                      'Programming Language :: Python :: 2.6',
                      'Programming Language :: Python :: 2.7',
                      'Programming Language :: Python :: 3.2',
