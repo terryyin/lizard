@@ -215,9 +215,9 @@ class CTokenTranslator(TokenTranslatorBase):
             return UniversalCodeCounter.ADD_TO_FUNCTION_NAME, "::" + token
     
     def _DEC(self, token):
-        if token == '(' or token == "<":
+        if token in ('(', "<"):
             self.bracket_level += 1
-        elif token == ')' or token == ">" or token == "*>":
+        elif token in (')', ">"):
             self.bracket_level -= 1
             if (self.bracket_level == 0):
                 self._state = self._DEC_TO_IMP
@@ -400,7 +400,7 @@ class FileAnalyzer:
     def analyze_source_code_with_parser(self, code, preprocessor, filename, parser):
         return UniversalCodeCounter(parser(preprocessor().getFunctions(generate_tokens(code))), filename).countCode()
 
-token_pattern = re.compile(r"(\w+|/\*|//|:=|::|>=|\*=|>|#\s*define|#\s*if|#\s*else|#\s*endif|#\s*\w+|[!%^&\*\-=+\|\\<>/\]\+]+|.)", re.M | re.S)
+token_pattern = re.compile(r"(\w+|/\*|//|:=|::|>=|\*=|\*\*|\*|>|&=|&&|&|#\s*define|#\s*if|#\s*else|#\s*endif|#\s*\w+|[!%^&\*\-=+\|\\<>/\]\+]+|.)", re.M | re.S)
 
 def generate_tokens(source_code):
     for t, l in generate_tokens_from_code(source_code):
