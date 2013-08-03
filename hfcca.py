@@ -22,7 +22,7 @@ It can deal with C/C++/Objective C & TNSDL code. It count the NLOC (lines of cod
 It requires python2.6 or above (early versions are not verified).
 """
 
-VERSION="1.6.1"
+VERSION="1.6.2"
 
 import itertools
 
@@ -435,31 +435,7 @@ def generate_tokens_from_code_with_multiple_newlines(source_code):
         line += (len(token.splitlines()) - 1)
         if not token.isspace() or token == '\n':
             yield token, line
-         
-
-import os
-
-def match_patterns(str_to_match, patterns):
-    for p in patterns:
-        if p.search(str_to_match):
-            return True
-    return False
-    
-def iterate_files(SRC_DIRs, exclude_patterns):
-    for SRC_DIR in SRC_DIRs:
-        if os.path.isfile(SRC_DIR):
-            yield SRC_DIR
-        else:
-            for root, dirs, files in os.walk(SRC_DIR, topdown=False):
-                for filename in files:
-                    if get_parser_by_file_name(filename):
-                        if match_patterns(filename, exclude_patterns):
-                            continue
-                        full_path_name = os.path.join(root, filename)
-                        if match_patterns(full_path_name, exclude_patterns):
-                            continue
-                        yield full_path_name
-
+                
 import sys
 
 def print_function_info_header():
@@ -735,7 +711,7 @@ def createHfccaCommandLineParser():
             dest="number",
             default=0)
     parser.add_option("-x", "--exclude",
-            help="Exclude data files that match this regular expression. Multiple regular expressions can be specified.",
+            help="Exclude files that match this pattern. * matches everything, ? matches any single characoter, folder/* exclude everything in the folder, recursively. Multiple patterns can be specified.",
             action="append",
             dest="exclude",
             default=[])
@@ -787,6 +763,23 @@ def mapFilesToAnalyzer(files, fileAnalyzer, working_threads):
     r = mapFun(fileAnalyzer, files)
     return r
 
+import os
+import fnmatch
+
+def _notExluded(str_to_match, patterns):
+    return all(not fnmatch.fnmatch(str_to_match, p) for p in patterns)
+
+def getSourceFiles(SRC_DIRs, exclude_patterns):
+    for SRC_DIR in SRC_DIRs:
+        if os.path.isfile(SRC_DIR):
+            yield SRC_DIR
+        else:
+            for root, _, files in os.walk(SRC_DIR, topdown=False):
+                for filename in files:
+                    full_path_name = os.path.join(root, filename)
+                    if _notExluded(full_path_name, exclude_patterns):
+                        yield full_path_name
+
 def main():
     parser = createHfccaCommandLineParser()
     (options, args) = parser.parse_args(args=sys.argv)
@@ -800,13 +793,13 @@ def main():
         remove_sharp_from_class(CTokenTranslator)
         remove_sharp_from_class(SDLTokenTranslator)
     
-    exclude_patterns = [re.compile(p) for p in options.exclude]
-    files = iterate_files(paths, exclude_patterns)
+    files = getSourceFiles(paths, options.exclude)
     fileAnalyzer = FileAnalyzer(options.use_preprocessor)
     r = mapFilesToAnalyzer(files, fileAnalyzer, options.working_threads)
     if options.xml:
         print(xml_output([f for f in r], options))
     else:
         print_result(r, options)
+        
 if __name__ == "__main__":
     main()

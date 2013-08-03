@@ -2,6 +2,7 @@
 # Unit Test
 #
 import unittest
+from mock import Mock, patch
 from hfcca import DefaultPreprocessor, FileAnalyzer, UniversalCodeCounter, SDLTokenTranslator, generate_tokens, ObjCTokenTranslator, generate_tokens_from_code, CTokenTranslator, mapFilesToAnalyzer, FunctionInfo
 
 class Test_generate_tonken(unittest.TestCase):
@@ -223,6 +224,7 @@ class MockFile:
         pass
 def mockOpen(name):
     return MockFile()
+
 class Test_FileAnalyzer(unittest.TestCase):
     def setUp(self):
         self.analyzer = FileAnalyzer()
@@ -235,11 +237,53 @@ class Test_FileAnalyzer(unittest.TestCase):
     def test_analyze_c_file_with_multiple_thread(self):
         r = mapFilesToAnalyzer(["f1.c"], self.analyzer, 2)
         self.assertEqual(1, len([x for x in r]))
+        
 class Test_FunctionInfo(unittest.TestCase):
     def test_FunctionInfo_ShouldBePicklable(self):
         import pickle
         pickle.dumps(FunctionInfo("a", 1))
 
+from hfcca import getSourceFiles
+import os
+
+class Test_Exclude_Patterns(unittest.TestCase):
+    
+    @patch.object(os, "walk")
+    def test_no_matching(self, mock_os_walk):
+        mock_os_walk.return_value = []
+        files = getSourceFiles(["dir"], [])
+        self.assertEqual(0, len(list(files)))
+    
+    @patch.object(os.path, "isfile")
+    def test_explicit_file_names(self, mock_isfile):
+        mock_isfile.return_value = True
+        files = getSourceFiles(["dir/file.c"], [])
+        self.assertListEqual(["dir/file.c"], list(files))
+    
+    @patch.object(os, "walk")
+    def test_exclude_file_name(self, mock_os_walk):
+        mock_os_walk.return_value = (['.', 
+                                      None,
+                                      ['temp.log', 'useful.cpp']],)
+        files = getSourceFiles(["dir"], ["*.log"])
+        self.assertListEqual(["./useful.cpp"], list(files))
+    
+    @patch.object(os, "walk")
+    def test_exclude_folder(self, mock_os_walk):
+        mock_os_walk.return_value = (['ut', 
+                                      None,
+                                      ['useful.cpp']],)
+        files = getSourceFiles(["dir"], ["ut/*"])
+        self.assertListEqual([], list(files))
+    
+    @patch.object(os, "walk")
+    def test_exclude_folder_recursively(self, mock_os_walk):
+        mock_os_walk.return_value = (['ut/something', 
+                                      None,
+                                      ['useful.cpp']],)
+        files = getSourceFiles(["dir"], ["ut/*"])
+        self.assertListEqual([], list(files))
+    
 example_sdl_procedure = '''
 /**************************************************************************/
 PROCEDURE send_swo_msgs__r;

@@ -27,7 +27,7 @@ Or if you've got the source:
 hfcca [options] [PATH or FILE] [PATH] ... 
 </pre>
 
-hfcca (verion 1.5) is a simple code complexity counter without caring about
+hfcca is a simple code complexity counter without caring about
 the C/C++ header files. It can deal with C/C++/ObjectiveC & TNSDL code. It count the NLOC
 (lines of code without comments), CCN  (cyclomatic complexity number) and
 token count of functions.
@@ -48,7 +48,11 @@ Options:
                         generate error. Useful in makefile when improving
                         legacy code.
   -x EXCLUDE, --exclude=EXCLUDE
-                        Exclude data files that match this regular expression
+                        Exclude files that match this pattern. 
+                        * matches everything, 
+                        ? matches any single characoter, 
+                        folder/* exclude everything in the folder, recursively. 
+                        Multiple patterns can be specified.
   -X, --xml             Generate XML in cppncss style instead of the normal
                         tabular output. Useful to generate report in Hudson
                         server
