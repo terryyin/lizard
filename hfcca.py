@@ -838,7 +838,7 @@ def hfcca_main(argv):
     paths = ["."] if len(args) == 1 else args[1:]
     r = analyzeSourceFilesWithOptions(paths, options)
     if options.xml:
-        print xml_output([f for f in r], options)
+        print (xml_output([f for f in r], options))
     else:
         print_result(r, options)
 
