@@ -63,9 +63,6 @@ Options:
   -X, --xml             Generate XML in cppncss style instead of the normal
                         tabular output. Useful to generate report in Hudson
                         server
-  -p, --preprocess      Use preprocessor, always ignore the #else branch. By
-                        default, source_analyzer just ignore any preprocessor
-                        statement.
   -a ARGUMENTS, --arguments=ARGUMENTS
                         Limit for number of parameters
   -P, --no_preprocessor_count
