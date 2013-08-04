@@ -2,7 +2,7 @@
 # Unit Test
 #
 import unittest
-from mock import Mock, patch
+from mock import patch
 from hfcca import DefaultPreprocessor, FileAnalyzer, UniversalCodeCounter, SDLTokenTranslator, generate_tokens, ObjCTokenTranslator, generate_tokens_from_code, CTokenTranslator, mapFilesToAnalyzer, FunctionInfo
 
 class Test_generate_tonken(unittest.TestCase):
@@ -260,6 +260,12 @@ class Test_Exclude_Patterns(unittest.TestCase):
         files = getSourceFiles(["dir/file.c"], [])
         self.assertEqual(["dir/file.c"], list(files))
     
+    @patch.object(os.path, "isfile")
+    def test_exlclude_explicit_file_names_doesnot_support(self, mock_isfile):
+        mock_isfile.return_value = True
+        files = getSourceFiles(["dir/file.log"], [])
+        self.assertEqual([], list(files))
+    
     @patch.object(os, "walk")
     def test_exclude_file_name(self, mock_os_walk):
         mock_os_walk.return_value = (['.', 
@@ -289,7 +295,7 @@ class Test_Exclude_Patterns(unittest.TestCase):
         mock_os_walk.return_value = (['.', 
                                       None,
                                       ['useful.txt']],)
-        files = getSourceFiles(["dir"],[])
+        files = getSourceFiles(["dir"],['exclude_me'])
         self.assertEqual([], list(files))
     
 example_sdl_procedure = '''

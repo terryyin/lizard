@@ -1,5 +1,5 @@
 import unittest
-from hfcca import DefaultPreprocessor, FileAnalyzer, UniversalCodeCounter, SDLTokenTranslator, generate_tokens, ObjCTokenTranslator, generate_tokens_from_code, CTokenTranslator, mapFilesToAnalyzer, FunctionInfo
+from hfcca import DefaultPreprocessor, FileAnalyzer, CTokenTranslator
 
 def create_c_hfcca(source_code, preprocessor=DefaultPreprocessor):
     return FileAnalyzer().analyze_source_code_with_parser(source_code, preprocessor, "", CTokenTranslator)
@@ -174,4 +174,3 @@ example_macro = r'''
    phys_address_t np;                                                         \
    }
 '''
-

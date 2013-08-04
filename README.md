@@ -26,7 +26,14 @@ Or if you've got the source:
 <pre>
 hfcca [options] [PATH or FILE] [PATH] ... 
 </pre>
-
+Run for the code under current folder (recursively):
+<pre>
+hfcca
+</pre>
+Exclude anything in the tests folder:
+<pre>
+hfcca mySource/ -x"./tests/*"
+</pre>
 hfcca is a simple code complexity counter without caring about
 the C/C++ header files. It can deal with C/C++/ObjectiveC & TNSDL code. It count the NLOC
 (lines of code without comments), CCN  (cyclomatic complexity number) and
@@ -48,11 +55,11 @@ Options:
                         generate error. Useful in makefile when improving
                         legacy code.
   -x EXCLUDE, --exclude=EXCLUDE
-                        Exclude files that match this pattern. 
-                        * matches everything, 
-                        ? matches any single characoter, 
-                        folder/* exclude everything in the folder, recursively. 
-                        Multiple patterns can be specified.
+                        Exclude files that match this pattern. * matches
+                        everything, ? matches any single characoter,
+                        "./folder/*" exclude everything in the folder,
+                        recursively. Multiple patterns can be specified. Don't
+                        forget to add "" around the pattern.
   -X, --xml             Generate XML in cppncss style instead of the normal
                         tabular output. Useful to generate report in Hudson
                         server

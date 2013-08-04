@@ -22,7 +22,7 @@ It can deal with C/C++/Objective C & TNSDL code. It count the NLOC (lines of cod
 It requires python2.6 or above (early versions are not verified).
 """
 
-VERSION="1.6.4"
+VERSION="1.6.5"
 
 import itertools
 
@@ -381,17 +381,24 @@ def get_parser_by_file_name(filename):
             if info['name_pattern'].match(filename):
                 return info['creator']
             
+def get_parser_by_file_name_otherwise_default(filename):
+    for lan in hfcca_language_infos:
+        info = hfcca_language_infos[lan]
+        if info['name_pattern'].match(filename):
+            return info['creator']
+    return hfcca_language_infos['c/c++']['creator']
+            
 class FileAnalyzer:
+    open = open
     def __init__(self, use_preprocessor=False):
         self.use_preprocessor = use_preprocessor
-        self.open = open
     def __call__(self, filename):
         return self.analyze(filename)
     def analyze(self, filename):
         f = self.open(filename)
         code = f.read()
         f.close()
-        parser = get_parser_by_file_name(filename)
+        parser = get_parser_by_file_name_otherwise_default(filename)
         preprocessor = DefaultPreprocessor
         if self.use_preprocessor:
             preprocessor = CPreprocessor
@@ -561,6 +568,10 @@ def print_result(r, option):
         sys.exit(1)
 
 def xml_output(result, options):
+    ''' Thanks for Holy Wen from Nokia Siemens Networks to let me use his code
+        to put the result into xml file that is compatible with cppncss.
+        Jenkens has plugin for cppncss format result to display the diagram.
+    '''
     import xml.dom.minidom
 
     impl = xml.dom.minidom.getDOMImplementation()
@@ -742,7 +753,7 @@ def createHfccaCommandLineParser():
             dest="number",
             default=0)
     parser.add_option("-x", "--exclude",
-            help="Exclude files that match this pattern. * matches everything, ? matches any single characoter, folder/* exclude everything in the folder, recursively. Multiple patterns can be specified.",
+            help="Exclude files that match this pattern. * matches everything, ? matches any single characoter, \"./folder/*\" exclude everything in the folder, recursively. Multiple patterns can be specified. Don't forget to add \"\" around the pattern.",
             action="append",
             dest="exclude",
             default=[])
@@ -776,7 +787,6 @@ def createHfccaCommandLineParser():
     
     parser.usage = "source_analyzer.py [options] [PATH or FILE] [PATH] ... "
     parser.description = __doc__
-    
     return parser
 
 def mapFilesToAnalyzer(files, fileAnalyzer, working_threads):
@@ -803,7 +813,7 @@ def _notExluded(str_to_match, patterns):
 
 def getSourceFiles(SRC_DIRs, exclude_patterns):
     for SRC_DIR in SRC_DIRs:
-        if os.path.isfile(SRC_DIR):
+        if os.path.isfile(SRC_DIR) and get_parser_by_file_name(SRC_DIR):
             yield SRC_DIR
         else:
             for root, _, files in os.walk(SRC_DIR, topdown=False):
@@ -812,26 +822,28 @@ def getSourceFiles(SRC_DIRs, exclude_patterns):
                     if _notExluded(full_path_name, exclude_patterns):
                         yield full_path_name
 
-def main():
-    parser = createHfccaCommandLineParser()
-    (options, args) = parser.parse_args(args=sys.argv)
-    
-    if len(args) == 1:
-        paths = ["."]
-    else:
-        paths = args[1:]
-    
+
+def analyzeSourceFilesWithOptions(paths, options):
     if options.no_preprocessor_count:
         remove_sharp_from_class(CTokenTranslator)
         remove_sharp_from_class(SDLTokenTranslator)
-    
     files = getSourceFiles(paths, options.exclude)
     fileAnalyzer = FileAnalyzer(options.use_preprocessor)
     r = mapFilesToAnalyzer(files, fileAnalyzer, options.working_threads)
+    return r
+
+
+def hfcca_main(argv):
+    options, args = createHfccaCommandLineParser().parse_args(args = argv)
+    paths = ["."] if len(args) == 1 else args[1:]
+    r = analyzeSourceFilesWithOptions(paths, options)
     if options.xml:
-        print(xml_output([f for f in r], options))
+        print xml_output([f for f in r], options)
     else:
         print_result(r, options)
+
+def main():
+    hfcca_main(sys.argv)
         
 if __name__ == "__main__":
     main()
