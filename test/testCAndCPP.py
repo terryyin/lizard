@@ -1,8 +1,8 @@
 import unittest
-from hfcca import DefaultPreprocessor, FileAnalyzer, CTokenTranslator
+from hfcca import  FileAnalyzer, CTokenTranslator, generate_tokens
 
-def create_c_hfcca(source_code, preprocessor=DefaultPreprocessor):
-    return FileAnalyzer().analyze_source_code_with_parser(source_code, preprocessor, "", CTokenTranslator)
+def create_c_hfcca(source_code):
+    return FileAnalyzer().analyze_source_code_with_parser("", CTokenTranslator(), generate_tokens(source_code))
 
 class Test_c_cpp_hfcca(unittest.TestCase):
     def test_empty(self):
@@ -21,7 +21,7 @@ class Test_c_cpp_hfcca(unittest.TestCase):
     
     def test_two_function(self):
         result = create_c_hfcca("int fun(){}\nint fun1(){}")
-        self.assertEqual(2, result.LOC)
+        self.assertEqual(3, result.LOC)
         self.assertEqual(2, len(result))
         self.assertTrue("fun" in result)
         self.assertTrue("fun1" in result)
@@ -68,10 +68,6 @@ class Test_c_cpp_hfcca(unittest.TestCase):
     def test_double_slash_within_string(self):
         result = create_c_hfcca("""int fun(){char *a="\\\\";}""")
         self.assertEqual(1, result[0].cyclomatic_complexity)
-    
-    def test_example_code(self):
-        result = create_c_hfcca(example_c_code)
-        self.assertEqual(3, result[0].cyclomatic_complexity)
     
     def test_example_macro(self):
         result = create_c_hfcca(example_macro)
@@ -154,19 +150,6 @@ class Test_C_Function_Token_Count(unittest.TestCase):
         result = create_c_hfcca("int fun(){/**/}")
         self.assertEqual(0, result[0].token_count)
 
-example_c_code = r'''
-int startup(u_short *port)
-{
- if (*port == 0)  /* if dynamically allocating a port */
- {
-  socklen_t namelen = sizeof(name);
-#ifdef abc
-  *port = ntohs(name.sin_port);
-#endif
- }
- return(httpd);
-}
-'''
 
 example_macro = r'''
 #define MTP_CHECK                                                             \

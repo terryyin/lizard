@@ -3,7 +3,7 @@
 #
 import unittest
 from mock import patch
-from hfcca import DefaultPreprocessor, FileAnalyzer, UniversalCodeCounter, SDLTokenTranslator, generate_tokens, ObjCTokenTranslator, generate_tokens_from_code, CTokenTranslator, mapFilesToAnalyzer, FunctionInfo
+from hfcca import FileAnalyzer, FunctionsStatisticsListOfSourceFile, SDLTokenTranslator, generate_tokens, ObjCTokenTranslator, generate_tokens_from_code, CTokenTranslator, mapFilesToAnalyzer, FunctionInfo
 
 class Test_generate_tonken(unittest.TestCase):
 
@@ -25,7 +25,7 @@ class Test_generate_tonken(unittest.TestCase):
 
 class Test_sdl_hfcca(unittest.TestCase):
     def create_sdl_hfcca(self, source_code):
-        return UniversalCodeCounter(SDLTokenTranslator(generate_tokens(source_code)) , "").countCode()
+        return FunctionsStatisticsListOfSourceFile(SDLTokenTranslator().getFunctions(generate_tokens(source_code)) , "")
     def test_empty(self):
         result = self.create_sdl_hfcca("")
         self.assertEqual(0, len(result))
@@ -65,7 +65,7 @@ class Test_sdl_hfcca(unittest.TestCase):
 
 class Test_objc_hfcca(unittest.TestCase):
     def create_objc_hfcca(self, source_code):
-        return UniversalCodeCounter(ObjCTokenTranslator(generate_tokens(source_code)) , "").countCode()
+        return FunctionsStatisticsListOfSourceFile(ObjCTokenTranslator().getFunctions(generate_tokens(source_code)) , "")
     def test_empty(self):
         result = self.create_objc_hfcca("")
         self.assertEqual(0, len(result))
@@ -229,8 +229,8 @@ class Test_FileAnalyzer(unittest.TestCase):
     def setUp(self):
         self.analyzer = FileAnalyzer()
         self.analyzer.open = mockOpen
-    def create_c_hfcca(self, source_code, preprocessor=DefaultPreprocessor):
-        return FileAnalyzer().analyze_source_code_with_parser(source_code, preprocessor, "", CTokenTranslator)
+    def create_c_hfcca(self, source_code):
+        return FileAnalyzer().analyze_source_code_with_parser(source_code, "", CTokenTranslator)
     def test_analyze_c_file(self):
         r = mapFilesToAnalyzer(["f1.c"], self.analyzer, 1)
         self.assertEqual(1, len([x for x in r]))

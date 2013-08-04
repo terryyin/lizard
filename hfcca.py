@@ -55,29 +55,7 @@ class FunctionInfo:
         if token == ",":
             self.parameter_count += 1
 
-class DefaultPreprocessor:
-    def getFunctions(self, tokens):
-        for token in tokens:
-            yield token
-
-class CPreprocessor:
-    def __init__(self):
-        self.stack = []
-    def getFunctions(self, tokens):
-        for token, line in tokens:
-            if not self.in_else(token):
-                yield token, line
-    def in_else(self, token):
-        if token == '#if':
-            self.stack.append(token)
-        elif token == '#else':
-            self.stack.append(token)
-        elif token == '#endif':
-            while len(self.stack) and self.stack.pop() != "#if":
-                pass
-        return token.startswith("#") or '#else' in self.stack
-
-class UniversalCodeCounter(list):
+class FunctionsStatisticsListOfSourceFile(list):
     """
         UniversalCode is the code that is unrelated to any programming languages. The code could be:
         START_NEW_FUNCTION
@@ -95,14 +73,10 @@ class UniversalCodeCounter(list):
         self.current_function = None
         self.filename = filename
         self.functionInfos = []
-        for fun in self._functions(parsed_code.getFunctions()):
+        for fun in self._functions(parsed_code):
             self.append(fun)
-        self.LOC = parsed_code.get_current_line()
         self._summarize()
         
-    def countCode(self):
-        return self
-    
     def START_NEW_FUNCTION(self, name_and_line):
         self.current_function = FunctionInfo(*name_and_line)
     
@@ -132,7 +106,7 @@ class UniversalCodeCounter(list):
     
     def _functions(self, parsed_code):
         for code, text in parsed_code:
-            if code == UniversalCodeCounter.END_OF_FUNCTION:
+            if code == FunctionsStatisticsListOfSourceFile.END_OF_FUNCTION:
                 yield self.current_function
             else:
                 code(self, text)
@@ -142,6 +116,7 @@ class UniversalCodeCounter(list):
         self.average_CCN = 0
         self.average_token = 0
         
+        self.LOC = reduce(lambda loc, fun:loc+fun.NLOC, self, 0)
         nloc = 0
         ccn = 0
         token = 0
@@ -161,31 +136,32 @@ class UniversalCodeCounter(list):
 
 class TokenTranslatorBase:
     
-    def __init__(self, token):
-        self._tokens = token
+    def __init__(self):
         self._state = self._GLOBAL
         self._current_line = 0
     
     def get_current_line(self):
         return self._current_line
     
-    def getFunctions(self):
-        for token, self._current_line in self._tokens:
+    def getFunctions(self, tokens):
+        for token, self._current_line in tokens:
             fun = self._read_token(token)
             if fun: yield fun
     
     def _read_token(self, token):
         if token.isspace():
-            return UniversalCodeCounter.NEW_LINE, None
+            return FunctionsStatisticsListOfSourceFile.NEW_LINE, None
         else:
             return self._state(token)
+    def remove_hash_if(self):
+        self.conditions.remove("#if")
+
     
 class CTokenTranslator(TokenTranslatorBase):
     
-    conditions = set(['if', 'for', 'while', '&&', '||', 'case', '?', '#if', 'catch'])
-    
-    def __init__(self, token):
-        TokenTranslatorBase.__init__(self, token)
+    def __init__(self):
+        TokenTranslatorBase.__init__(self)
+        self.conditions = set(['if', 'for', 'while', '&&', '||', 'case', '?', '#if', 'catch'])
         self.bracket_level = 0
         self.br_count = 0
     
@@ -196,23 +172,23 @@ class CTokenTranslator(TokenTranslatorBase):
         if token == '(':
             self.bracket_level += 1
             self._state = self._DEC
-            return UniversalCodeCounter.ADD_TO_LONG_FUNCTION_NAME, token
+            return FunctionsStatisticsListOfSourceFile.ADD_TO_LONG_FUNCTION_NAME, token
         elif token == '::':
             self._state = self._NAMESPACE
         else:
             if token == 'operator':
                 self._state = self._OPERATOR
-            return UniversalCodeCounter.START_NEW_FUNCTION, (token, self._current_line)
+            return FunctionsStatisticsListOfSourceFile.START_NEW_FUNCTION, (token, self._current_line)
 
     
     def _OPERATOR(self, token):
             if token != '(':
                 self._state = self._GLOBAL
-            return UniversalCodeCounter.ADD_TO_FUNCTION_NAME, ' ' + token
+            return FunctionsStatisticsListOfSourceFile.ADD_TO_FUNCTION_NAME, ' ' + token
     
     def _NAMESPACE(self, token):
             self._state = self._OPERATOR if token == 'operator'  else self._GLOBAL
-            return UniversalCodeCounter.ADD_TO_FUNCTION_NAME, "::" + token
+            return FunctionsStatisticsListOfSourceFile.ADD_TO_FUNCTION_NAME, "::" + token
     
     def _DEC(self, token):
         if token in ('(', "<"):
@@ -222,12 +198,12 @@ class CTokenTranslator(TokenTranslatorBase):
             if (self.bracket_level == 0):
                 self._state = self._DEC_TO_IMP
         elif self.bracket_level == 1:
-            return UniversalCodeCounter.PARAMETER, token
-        return UniversalCodeCounter.ADD_TO_LONG_FUNCTION_NAME, " " + token
+            return FunctionsStatisticsListOfSourceFile.PARAMETER, token
+        return FunctionsStatisticsListOfSourceFile.ADD_TO_LONG_FUNCTION_NAME, " " + token
     
     def _DEC_TO_IMP(self, token):
         if token == 'const':
-            return UniversalCodeCounter.ADD_TO_LONG_FUNCTION_NAME, " " + token
+            return FunctionsStatisticsListOfSourceFile.ADD_TO_LONG_FUNCTION_NAME, " " + token
         elif token == '{':
             self.br_count += 1
             self._state = self._IMP
@@ -241,16 +217,17 @@ class CTokenTranslator(TokenTranslatorBase):
             self.br_count -= 1
             if self.br_count == 0:
                 self._state = self._GLOBAL
-                return UniversalCodeCounter.END_OF_FUNCTION, ""      
+                return FunctionsStatisticsListOfSourceFile.END_OF_FUNCTION, ""      
         else:
             if self._is_condition(token):
-                return UniversalCodeCounter.CONDITION, token
+                return FunctionsStatisticsListOfSourceFile.CONDITION, token
             if token not in '();':
-                return UniversalCodeCounter.TOKEN, token
+                return FunctionsStatisticsListOfSourceFile.TOKEN, token
         
 class ObjCTokenTranslator(CTokenTranslator):
-    def __init__(self, token):
-        CTokenTranslator.__init__(self, token)
+    def __init__(self):
+        CTokenTranslator.__init__(self)
+        
     def _DEC_TO_IMP(self, token):
         if token in ("+", "-"):
             self._state = self._GLOBAL
@@ -258,11 +235,11 @@ class ObjCTokenTranslator(CTokenTranslator):
             CTokenTranslator._DEC_TO_IMP(self, token)
             if self._state == self._GLOBAL:
                 self._state = self._OBJC_DEC_BEGIN
-                return UniversalCodeCounter.START_NEW_FUNCTION, (token, self._current_line)
+                return FunctionsStatisticsListOfSourceFile.START_NEW_FUNCTION, (token, self._current_line)
     def _OBJC_DEC_BEGIN(self, token):
         if token == ':':
             self._state = self._OBJC_DEC
-            return UniversalCodeCounter.ADD_TO_FUNCTION_NAME, token
+            return FunctionsStatisticsListOfSourceFile.ADD_TO_FUNCTION_NAME, token
         elif token == '{':
             self.br_count += 1
             self._state = self._IMP
@@ -271,7 +248,7 @@ class ObjCTokenTranslator(CTokenTranslator):
     def _OBJC_DEC(self, token):
         if token == '(':
             self._state = self._OBJC_PARAM_TYPE
-            return UniversalCodeCounter.ADD_TO_LONG_FUNCTION_NAME, token
+            return FunctionsStatisticsListOfSourceFile.ADD_TO_LONG_FUNCTION_NAME, token
         elif token == ',':
             pass
         elif token == '{':
@@ -279,18 +256,18 @@ class ObjCTokenTranslator(CTokenTranslator):
             self._state = self._IMP
         else:
             self._state = self._OBJC_DEC_BEGIN
-            return UniversalCodeCounter.ADD_TO_FUNCTION_NAME, " " + token
+            return FunctionsStatisticsListOfSourceFile.ADD_TO_FUNCTION_NAME, " " + token
         
     def _OBJC_PARAM_TYPE(self, token):
         if token == ')':
             self._state = self._OBJC_PARAM
-        return UniversalCodeCounter.ADD_TO_LONG_FUNCTION_NAME, " " + token
+        return FunctionsStatisticsListOfSourceFile.ADD_TO_LONG_FUNCTION_NAME, " " + token
     def _OBJC_PARAM(self, token):
         self._state = self._OBJC_DEC
 
 class SDLTokenTranslator(TokenTranslatorBase):
-    def __init__(self, token):
-        TokenTranslatorBase.__init__(self, token)
+    def __init__(self):
+        TokenTranslatorBase.__init__(self)
         self.last_token = ""
         self.prefix = ""
         self.statename = ""
@@ -306,16 +283,16 @@ class SDLTokenTranslator(TokenTranslatorBase):
             elif token == 'START': 
                 self.prefix = self.saved_process
                 self._state = self._IMP
-                return UniversalCodeCounter.START_NEW_FUNCTION, (self.prefix, self._current_line)
+                return FunctionsStatisticsListOfSourceFile.START_NEW_FUNCTION, (self.prefix, self._current_line)
     def _DEC(self, token):
             self.prefix = "PROCEDURE " + token
             self._state = self._IMP
-            return UniversalCodeCounter.START_NEW_FUNCTION, (self.prefix, self._current_line)
+            return FunctionsStatisticsListOfSourceFile.START_NEW_FUNCTION, (self.prefix, self._current_line)
     def _PROCESS(self, token):
         self.prefix = "PROCESS " + token
         self.saved_process = self.prefix
         self._state = self._IMP
-        return UniversalCodeCounter.START_NEW_FUNCTION, (self.prefix, self._current_line)
+        return FunctionsStatisticsListOfSourceFile.START_NEW_FUNCTION, (self.prefix, self._current_line)
     def _STATE(self, token):
         self.statename = token
         self._state = self._BETWEEN_STATE_AND_INPUT
@@ -325,34 +302,34 @@ class SDLTokenTranslator(TokenTranslatorBase):
     def _INPUT(self, token):
         if token != 'INTERNAL':
             self._state = self._IMP
-            return UniversalCodeCounter.START_NEW_FUNCTION, (self.prefix + " STATE " + self.statename + " INPUT " + token, self._current_line)
+            return FunctionsStatisticsListOfSourceFile.START_NEW_FUNCTION, (self.prefix + " STATE " + self.statename + " INPUT " + token, self._current_line)
     def _IMP(self, token):
         if token == 'PROCEDURE':
             self._state = self._DEC
             return False
         if token == 'ENDPROCEDURE' or token == 'ENDPROCESS' or token == 'ENDSTATE':
             self._state = self._GLOBAL
-            return UniversalCodeCounter.END_OF_FUNCTION, ""
+            return FunctionsStatisticsListOfSourceFile.END_OF_FUNCTION, ""
         if self.start_of_statement:     
             if token == 'STATE': 
                 self._state = self._STATE
-                return UniversalCodeCounter.END_OF_FUNCTION, ""     
+                return FunctionsStatisticsListOfSourceFile.END_OF_FUNCTION, ""     
             elif token == 'INPUT': 
                 self._state = self._INPUT
-                return UniversalCodeCounter.END_OF_FUNCTION, ""     
+                return FunctionsStatisticsListOfSourceFile.END_OF_FUNCTION, ""     
         condition = self._is_condition(token, self.last_token)
 
         self.last_token = token
         if not token.startswith("#"):
             self.start_of_statement = (token == ';')
         if condition:
-            return UniversalCodeCounter.CONDITION, token
-        return UniversalCodeCounter.TOKEN, token
+            return FunctionsStatisticsListOfSourceFile.CONDITION, token
+        return FunctionsStatisticsListOfSourceFile.TOKEN, token
         
     conditions = set(['WHILE', 'AND', 'OR', '#if'])
     def _is_condition(self, token, last_token):
         if token == ':' and last_token == ')':
-            return UniversalCodeCounter.END_OF_FUNCTION, ""
+            return FunctionsStatisticsListOfSourceFile.END_OF_FUNCTION, ""
         return token in self.conditions
 
 import re
@@ -385,27 +362,46 @@ def get_parser_by_file_name_otherwise_default(filename):
     for lan in hfcca_language_infos:
         info = hfcca_language_infos[lan]
         if info['name_pattern'].match(filename):
-            return info['creator']
-    return hfcca_language_infos['c/c++']['creator']
+            return info['creator']()
+    return hfcca_language_infos['c/c++']['creator']()
             
 class FileAnalyzer:
+    ''' A FileAnalyzer works as a function. It takes filename as parameter.
+        Returns a list of function infos in this file.
+    '''
+    
     open = open
-    def __init__(self, use_preprocessor=False):
-        self.use_preprocessor = use_preprocessor
+    
+    def __init__(self, noCountPre=False):
+        self.noCountPre = noCountPre
+        
     def __call__(self, filename):
         return self.analyze(filename)
+    
+
+    def analyze_source_code_with_parser1(self, filename, code, parser):
+        tokens = generate_tokens(code)
+        result = self.analyze_source_code_with_parser(filename, parser, tokens)
+        return result
+
     def analyze(self, filename):
+        code = self._readFileContent(filename)
+        parser = get_parser_by_file_name_otherwise_default(filename)
+        if self.noCountPre:
+            parser.remove_hash_if()
+        result = self.analyze_source_code_with_parser1(filename, code, parser)
+        return result
+       
+
+    def analyze_source_code_with_parser(self, filename, parser, tokens):
+        result = FunctionsStatisticsListOfSourceFile(parser.getFunctions(tokens), filename)
+        return result
+
+    def _readFileContent(self, filename):
         f = self.open(filename)
         code = f.read()
         f.close()
-        parser = get_parser_by_file_name_otherwise_default(filename)
-        preprocessor = DefaultPreprocessor
-        if self.use_preprocessor:
-            preprocessor = CPreprocessor
-        return self.analyze_source_code_with_parser(code, preprocessor, filename, parser)
-       
-    def analyze_source_code_with_parser(self, code, preprocessor, filename, parser):
-        return UniversalCodeCounter(parser(preprocessor().getFunctions(generate_tokens(code))), filename).countCode()
+        return code
 
 token_pattern = re.compile(r"(\w+|/\*|//|:=|::|>=|\*=|\*\*|\*|>|&=|&&|&|#\s*define|#\s*if|#\s*else|#\s*endif|#\s*\w+|[!%^&\*\-=+\|\\<>/\]\+]+|.)", re.M | re.S)
 
@@ -719,9 +715,6 @@ def xml_output(result, options):
     xmlString = doc.toprettyxml()
     return xmlString
 
-def remove_sharp_from_class(parser_class):
-    parser_class.conditions.remove("#if")
-
 def createHfccaCommandLineParser():
     from optparse import OptionParser
     parser = OptionParser(version=VERSION)
@@ -762,11 +755,6 @@ def createHfccaCommandLineParser():
             action="store_true",
             dest="xml",
             default=None)
-    parser.add_option("-p", "--preprocess",
-            help="Use preprocessor, always ignore the #else branch. By default, source_analyzer just ignore any preprocessor statement.",
-            action="store_true",
-            dest="use_preprocessor",
-            default=False)
     parser.add_option("-a", "--arguments",
             help="Limit for number of parameters",
             action="store",
@@ -822,23 +810,22 @@ def getSourceFiles(SRC_DIRs, exclude_patterns):
                     if _notExluded(full_path_name, exclude_patterns):
                         yield full_path_name
 
-
-def analyzeSourceFilesWithOptions(paths, options):
-    if options.no_preprocessor_count:
-        remove_sharp_from_class(CTokenTranslator)
-        remove_sharp_from_class(SDLTokenTranslator)
+def analyze(paths, options={}):
+    ''' This is the most important function of hfcca.
+        It analyze the given paths with the options.
+        Can be used directly by other Python application.
+    '''
     files = getSourceFiles(paths, options.exclude)
-    fileAnalyzer = FileAnalyzer(options.use_preprocessor)
+    fileAnalyzer = FileAnalyzer(options.no_preprocessor_count)
     r = mapFilesToAnalyzer(files, fileAnalyzer, options.working_threads)
     return r
-
 
 def hfcca_main(argv):
     options, args = createHfccaCommandLineParser().parse_args(args = argv)
     paths = ["."] if len(args) == 1 else args[1:]
-    r = analyzeSourceFilesWithOptions(paths, options)
+    r = analyze(paths, options)
     if options.xml:
-        print (xml_output([f for f in r], options))
+        print (xml_output(list(r), options))
     else:
         print_result(r, options)
 
