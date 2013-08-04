@@ -116,7 +116,7 @@ class FunctionsStatisticsListOfSourceFile(list):
         self.average_CCN = 0
         self.average_token = 0
         
-        self.LOC = reduce(lambda loc, fun:loc+fun.NLOC, self, 0)
+        self.LOC = sum(fun.NLOC for fun in self)
         nloc = 0
         ccn = 0
         token = 0
