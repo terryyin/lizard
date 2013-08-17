@@ -200,7 +200,7 @@ class Test_FileAnalyzer(unittest.TestCase):
     
     def test_fileInfomation(self):
         r = mapFilesToAnalyzer(["f1.c"], self.analyzer, 1)
-        fileInfo = r.next()
+        fileInfo = list(r)[0]
         self.assertEqual(1, fileInfo.average_NLOC)
         self.assertEqual(1, fileInfo.average_CCN)
         self.assertEqual(4, fileInfo.average_token)
