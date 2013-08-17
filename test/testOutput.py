@@ -2,7 +2,7 @@ import unittest
 from mock import Mock
 import sys
 import hfcca
-from hfcca import print_warnings, FunctionInfo
+from hfcca import print_warnings, FunctionInfo, FileInformation
 
 class StreamForTest:
     
@@ -39,15 +39,11 @@ class TestOutput(unittest.TestCase):
         print_warnings(option, [])
         self.assertNotIn("Warnings (CCN > 15)", sys.stdout)
 
-    class FunctionsStatisticsListOfSourceFile(list):
-        pass
-
     def test_should_use_clang_format_for_warning(self):
         fun = FunctionInfo("foo", 100)
         fun.cyclomatic_complexity = 16
-        fileStat = self.FunctionsStatisticsListOfSourceFile()
+        fileStat = FileInformation("FILENAME")
         fileStat.append(fun)
-        fileStat.filename = "FILENAME"
         option = Mock(CCN=15)
         print_warnings(option, [fileStat])
-        self.assertIn("FILENAME:100: warning: foo has 16 CCN and 0 params (1 NLOC, 0 tokens)\n", sys.stdout)
+        self.assertIn("FILENAME:100: warning: foo has 16 CCN and 0 params (0 NLOC, 0 tokens)\n", sys.stdout)

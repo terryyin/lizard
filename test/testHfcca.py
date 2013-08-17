@@ -3,7 +3,7 @@
 #
 import unittest
 from mock import patch
-from hfcca import FileAnalyzer, FunctionsStatisticsListOfSourceFile, generate_tokens, ObjCTokenTranslator, generate_tokens_from_code, CTokenTranslator, mapFilesToAnalyzer, FunctionInfo
+from hfcca import FileAnalyzer, UniversalAnalyzer, generate_tokens, ObjCTokenTranslator, generate_tokens_from_code, CTokenTranslator, mapFilesToAnalyzer, FunctionInfo
 
 class Test_generate_tonken(unittest.TestCase):
 
@@ -25,7 +25,7 @@ class Test_generate_tonken(unittest.TestCase):
 
 class Test_objc_hfcca(unittest.TestCase):
     def create_objc_hfcca(self, source_code):
-        return FunctionsStatisticsListOfSourceFile(ObjCTokenTranslator().getFunctions(generate_tokens(source_code)) , "")
+        return UniversalAnalyzer().analyze(ObjCTokenTranslator().getFunctions(generate_tokens(source_code)) , "")
     def test_empty(self):
         result = self.create_objc_hfcca("")
         self.assertEqual(0, len(result))
@@ -71,8 +71,6 @@ class Test_objc_hfcca(unittest.TestCase):
         self.assertEqual(2, len(result))
         self.assertEqual("classMethod", result[0].name)
         
-
-
 class Test_parser_token(unittest.TestCase):
     def get_tokens(self, source_code):
         return [x for x, l in generate_tokens(source_code)]
@@ -179,9 +177,10 @@ class MockFile:
     def __init__(self):
         self.mockRecord = []
     def read(self):
-        return "int foo(){}"
+        return "int foo(){haha();\n}"
     def close(self):
         pass
+    
 def mockOpen(name):
     return MockFile()
 
@@ -194,9 +193,17 @@ class Test_FileAnalyzer(unittest.TestCase):
     def test_analyze_c_file(self):
         r = mapFilesToAnalyzer(["f1.c"], self.analyzer, 1)
         self.assertEqual(1, len([x for x in r]))
+        
     def test_analyze_c_file_with_multiple_thread(self):
         r = mapFilesToAnalyzer(["f1.c"], self.analyzer, 2)
         self.assertEqual(1, len([x for x in r]))
+    
+    def test_fileInfomation(self):
+        r = mapFilesToAnalyzer(["f1.c"], self.analyzer, 1)
+        fileInfo = r.next()
+        self.assertEqual(1, fileInfo.average_NLOC)
+        self.assertEqual(1, fileInfo.average_CCN)
+        self.assertEqual(4, fileInfo.average_token)
         
 class Test_FunctionInfo(unittest.TestCase):
     def test_FunctionInfo_ShouldBePicklable(self):

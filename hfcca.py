@@ -22,96 +22,59 @@ It can deal with C/C++/Objective C. It count the NLOC (lines of code without com
 It requires python2.6 or above (early versions are not verified).
 """
 
-VERSION="1.6.5"
+VERSION = "1.6.6"
 
 import itertools
 
 DEFAULT_CCN_THRESHOLD = 15
 
 class FunctionInfo:
+    ''' Statistic information of a function.
+    '''
     def __init__(self, name, start_line):
         self.cyclomatic_complexity = 1
-        self.NLOC = 1
+        self.NLOC = 0
         self.token_count = 0
         self.name = name
         self.function_name_with_param = name
         self.return_type = ""
         self.start_line = start_line
         self.parameter_count = 0
+    
     def __eq__(self, other): return other == self.name
+    
     def add_to_function_name(self, app):
         self.name += app
         self.function_name_with_param += app
+    
     def long_name(self):
         return self.return_type + self.function_name_with_param
+    
     def add_to_long_name(self, app):
         self.function_name_with_param += app
+    
     def add_condition(self): self.cyclomatic_complexity += 1
+    
     def add_token(self): self.token_count += 1
+    
     def add_non_comment_line(self): self.NLOC += 1
+    
     def add_parameter(self, token):
         if self.parameter_count == 0:
             self.parameter_count = 1
         if token == ",":
             self.parameter_count += 1
 
-class FunctionsStatisticsListOfSourceFile(list):
-    """
-        UniversalCode is the code that is unrelated to any programming languages. The code could be:
-        START_NEW_FUNCTION
-            ADD_TO_FUNCTION_NAME
-            ADD_TO_LONG_FUNCTION_NAME
-                PARAMETER
-            CONDITION
-            TOKEN
-        END_OF_FUNCTION
-        
-        A TokenTranslator will generate UniversalCode.
-    """
-    def __init__(self, parsed_code, filename):
-        self.NLOC = 0
-        self.current_function = None
+class FileInformation(list):
+    ''' Statistic information of a source file.
+        Including all the functions and the file summary.
+    '''
+    def __init__(self, filename):
         self.filename = filename
-        self.functionInfos = []
-        for fun in self._functions(parsed_code):
-            self.append(fun)
-        self._summarize()
-        
-    def START_NEW_FUNCTION(self, name_and_line):
-        self.current_function = FunctionInfo(*name_and_line)
-    
-    def CONDITION(self, token): 
-        self.TOKEN(token)
-        self.current_function.add_condition()
-    
-    def TOKEN(self, text):
-        self.current_function.add_token()
-    
-    def NEW_LINE(self, token): 
-        self.NLOC += 1
-        if self.current_function is not None:
-            self.current_function.add_non_comment_line()
-    
-    def ADD_TO_LONG_FUNCTION_NAME(self, app):
-        self.current_function.add_to_long_name(app)
-    
-    def ADD_TO_FUNCTION_NAME(self, app):
-        self.current_function.add_to_function_name(app)
-    
-    def PARAMETER(self, token):
-        self.current_function.add_parameter(token)
-        self.ADD_TO_LONG_FUNCTION_NAME(" " + token)
-        
-    END_OF_FUNCTION = 1
-    
-    def _functions(self, parsed_code):
-        for code, text in parsed_code:
-            if code == FunctionsStatisticsListOfSourceFile.END_OF_FUNCTION:
-                yield self.current_function
-            else:
-                code(self, text)
-    
-    def _summarize(self):
+        self.NLOC = 0
+
+    def summarize(self, NLOC):
+        self.NLOC = NLOC
         self.average_NLOC = 0
         self.average_CCN = 0
         self.average_token = 0
@@ -130,10 +93,70 @@ class FunctionsStatisticsListOfSourceFile(list):
             self.average_CCN = ccn / fc
             self.average_token = token / fc
     
-        self.NLOC = nloc
         self.CCN = ccn
         self.token = token
 
+class UniversalAnalyzer(list):
+    """
+        UniversalCode is the code that is unrelated to any programming languages. The code could be:
+        START_NEW_FUNCTION
+            ADD_TO_FUNCTION_NAME
+            ADD_TO_LONG_FUNCTION_NAME
+                PARAMETER
+            CONDITION
+            TOKEN
+        END_OF_FUNCTION
+        
+        A TokenTranslator will generate UniversalCode.
+    """
+    def __init__(self):
+        self.current_function = None
+        self.newline = True
+        self.NLOC = 0
+
+    def analyze(self, parsed_code, filename):
+        fileInfo = FileInformation(filename)
+        for fun in self._functions(parsed_code):
+            fileInfo.append(fun)
+        fileInfo.summarize(self.NLOC)
+        return fileInfo
+        
+    def START_NEW_FUNCTION(self, name_and_line):
+        self.current_function = FunctionInfo(*name_and_line)
+    
+    def CONDITION(self, token): 
+        self.TOKEN(token)
+        self.current_function.add_condition()
+    
+    def TOKEN(self, text):
+        if self.newline:
+            self.current_function.add_non_comment_line()
+            self.newline = False
+        self.current_function.add_token()
+    
+    def NEW_LINE(self, token): 
+        self.NLOC += 1
+        self.newline = True
+    
+    def ADD_TO_LONG_FUNCTION_NAME(self, app):
+        self.current_function.add_to_long_name(app)
+    
+    def ADD_TO_FUNCTION_NAME(self, app):
+        self.current_function.add_to_function_name(app)
+    
+    def PARAMETER(self, token):
+        self.current_function.add_parameter(token)
+        self.ADD_TO_LONG_FUNCTION_NAME(" " + token)
+        
+    END_OF_FUNCTION = 1
+    
+    def _functions(self, parsed_code):
+        for code, text in parsed_code:
+            if code is UniversalAnalyzer.END_OF_FUNCTION:
+                yield self.current_function
+            else:
+                code(self, text)
+    
 class TokenTranslatorBase:
     
     def __init__(self):
@@ -150,7 +173,7 @@ class TokenTranslatorBase:
     
     def _read_token(self, token):
         if token.isspace():
-            return FunctionsStatisticsListOfSourceFile.NEW_LINE, None
+            return UniversalAnalyzer.NEW_LINE, None
         else:
             return self._state(token)
     def remove_hash_if(self):
@@ -172,23 +195,23 @@ class CTokenTranslator(TokenTranslatorBase):
         if token == '(':
             self.bracket_level += 1
             self._state = self._DEC
-            return FunctionsStatisticsListOfSourceFile.ADD_TO_LONG_FUNCTION_NAME, token
+            return UniversalAnalyzer.ADD_TO_LONG_FUNCTION_NAME, token
         elif token == '::':
             self._state = self._NAMESPACE
         else:
             if token == 'operator':
                 self._state = self._OPERATOR
-            return FunctionsStatisticsListOfSourceFile.START_NEW_FUNCTION, (token, self._current_line)
+            return UniversalAnalyzer.START_NEW_FUNCTION, (token, self._current_line)
 
     
     def _OPERATOR(self, token):
             if token != '(':
                 self._state = self._GLOBAL
-            return FunctionsStatisticsListOfSourceFile.ADD_TO_FUNCTION_NAME, ' ' + token
+            return UniversalAnalyzer.ADD_TO_FUNCTION_NAME, ' ' + token
     
     def _NAMESPACE(self, token):
             self._state = self._OPERATOR if token == 'operator'  else self._GLOBAL
-            return FunctionsStatisticsListOfSourceFile.ADD_TO_FUNCTION_NAME, "::" + token
+            return UniversalAnalyzer.ADD_TO_FUNCTION_NAME, "::" + token
     
     def _DEC(self, token):
         if token in ('(', "<"):
@@ -198,12 +221,12 @@ class CTokenTranslator(TokenTranslatorBase):
             if (self.bracket_level == 0):
                 self._state = self._DEC_TO_IMP
         elif self.bracket_level == 1:
-            return FunctionsStatisticsListOfSourceFile.PARAMETER, token
-        return FunctionsStatisticsListOfSourceFile.ADD_TO_LONG_FUNCTION_NAME, " " + token
+            return UniversalAnalyzer.PARAMETER, token
+        return UniversalAnalyzer.ADD_TO_LONG_FUNCTION_NAME, " " + token
     
     def _DEC_TO_IMP(self, token):
         if token == 'const':
-            return FunctionsStatisticsListOfSourceFile.ADD_TO_LONG_FUNCTION_NAME, " " + token
+            return UniversalAnalyzer.ADD_TO_LONG_FUNCTION_NAME, " " + token
         elif token == '{':
             self.br_count += 1
             self._state = self._IMP
@@ -217,12 +240,11 @@ class CTokenTranslator(TokenTranslatorBase):
             self.br_count -= 1
             if self.br_count == 0:
                 self._state = self._GLOBAL
-                return FunctionsStatisticsListOfSourceFile.END_OF_FUNCTION, ""      
+                return UniversalAnalyzer.END_OF_FUNCTION, ""      
         else:
             if self._is_condition(token):
-                return FunctionsStatisticsListOfSourceFile.CONDITION, token
-            if token not in '();':
-                return FunctionsStatisticsListOfSourceFile.TOKEN, token
+                return UniversalAnalyzer.CONDITION, token
+        return UniversalAnalyzer.TOKEN, token
         
 class ObjCTokenTranslator(CTokenTranslator):
     def __init__(self):
@@ -235,11 +257,11 @@ class ObjCTokenTranslator(CTokenTranslator):
             CTokenTranslator._DEC_TO_IMP(self, token)
             if self._state == self._GLOBAL:
                 self._state = self._OBJC_DEC_BEGIN
-                return FunctionsStatisticsListOfSourceFile.START_NEW_FUNCTION, (token, self._current_line)
+                return UniversalAnalyzer.START_NEW_FUNCTION, (token, self._current_line)
     def _OBJC_DEC_BEGIN(self, token):
         if token == ':':
             self._state = self._OBJC_DEC
-            return FunctionsStatisticsListOfSourceFile.ADD_TO_FUNCTION_NAME, token
+            return UniversalAnalyzer.ADD_TO_FUNCTION_NAME, token
         elif token == '{':
             self.br_count += 1
             self._state = self._IMP
@@ -248,7 +270,7 @@ class ObjCTokenTranslator(CTokenTranslator):
     def _OBJC_DEC(self, token):
         if token == '(':
             self._state = self._OBJC_PARAM_TYPE
-            return FunctionsStatisticsListOfSourceFile.ADD_TO_LONG_FUNCTION_NAME, token
+            return UniversalAnalyzer.ADD_TO_LONG_FUNCTION_NAME, token
         elif token == ',':
             pass
         elif token == '{':
@@ -256,12 +278,12 @@ class ObjCTokenTranslator(CTokenTranslator):
             self._state = self._IMP
         else:
             self._state = self._OBJC_DEC_BEGIN
-            return FunctionsStatisticsListOfSourceFile.ADD_TO_FUNCTION_NAME, " " + token
+            return UniversalAnalyzer.ADD_TO_FUNCTION_NAME, " " + token
         
     def _OBJC_PARAM_TYPE(self, token):
         if token == ')':
             self._state = self._OBJC_PARAM
-        return FunctionsStatisticsListOfSourceFile.ADD_TO_LONG_FUNCTION_NAME, " " + token
+        return UniversalAnalyzer.ADD_TO_LONG_FUNCTION_NAME, " " + token
     def _OBJC_PARAM(self, token):
         self._state = self._OBJC_DEC
 
@@ -321,7 +343,7 @@ class FileAnalyzer:
        
 
     def analyze_source_code_with_parser(self, filename, parser, tokens):
-        result = FunctionsStatisticsListOfSourceFile(parser.getFunctions(tokens), filename)
+        result = UniversalAnalyzer().analyze(parser.getFunctions(tokens), filename)
         return result
 
     def _readFileContent(self, filename):
@@ -424,9 +446,9 @@ def print_function_info(fun, filename, option):
 def print_warnings(option, saved_result):
     warning_count = 0
     if not option.warnings_only:
-        print(("\n" +
-              "======================================\n"+
-              "!!!! Warnings (CCN > %d) !!!!\n"+
+        print(("\n" + 
+              "======================================\n" + 
+              "!!!! Warnings (CCN > %d) !!!!\n" + 
               "======================================") % option.CCN)
     for f in saved_result:
         for fun in f:
@@ -703,7 +725,7 @@ def createHfccaCommandLineParser():
 def mapFilesToAnalyzer(files, fileAnalyzer, working_threads):
     try:
         # python 2.6 cannot work properly with multiple threading
-        if sys.version_info[0:2] == (2,6): raise 
+        if sys.version_info[0:2] == (2, 6): raise 
         import multiprocessing
         it = multiprocessing.Pool(processes=working_threads)
         mapFun = it.imap_unordered
@@ -744,7 +766,7 @@ def analyze(paths, options={}):
     return r
 
 def hfcca_main(argv):
-    options, args = createHfccaCommandLineParser().parse_args(args = argv)
+    options, args = createHfccaCommandLineParser().parse_args(args=argv)
     paths = ["."] if len(args) == 1 else args[1:]
     r = analyze(paths, options)
     if options.xml:
