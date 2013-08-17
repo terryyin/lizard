@@ -490,25 +490,26 @@ def print_function_info(fun, filename, option):
     output_format = "%(NLOC)6d %(CCN)6d %(token)6d %(param)6d    %(name)s@%(line)s@%(file)s"
     if option.verbose:
         output_params['name'] = fun.long_name()
-    if option.warnings_only and option.clang_warnings:
-        # only use clang output if both options are set
+    if option.warnings_only:
         output_format = "%(file)s:%(line)s: warning: %(name)s has %(CCN)d CCN and %(param)d params (%(NLOC)d NLOC, %(token)d tokens)"
     print(output_format % output_params)
 
 def print_warnings(option, saved_result):
     warning_count = 0
-    if not option.clang_warnings or not option.warnings_only:
-        print()
-        print("!!!! Warnings (CCN > %d) !!!!" % option.CCN)
-        print_function_info_header()
-    cnt = 0
+    if not option.warnings_only:
+        print(("\n" +
+              "======================================\n"+
+              "!!!! Warnings (CCN > %d) !!!!\n"+
+              "======================================") % option.CCN)
     for f in saved_result:
         for fun in f:
-            cnt += 1
             if fun.cyclomatic_complexity > option.CCN or fun.parameter_count > option.arguments:
                 warning_count += 1
                 print_function_info(fun, f.filename, option)
-    
+
+    if warning_count == 0:
+        print("No warning found. Excellent!")
+            
     return warning_count
 
 def print_total(warning_count, saved_result, option):
@@ -529,7 +530,7 @@ def print_total(warning_count, saved_result, option):
                   float(sum([f.NLOC for f in all_fun if f.cyclomatic_complexity > option.CCN])) / tNLOC
                   )
 
-    if not option.clang_warnings or not option.warnings_only:
+    if not option.warnings_only:
         print("=================================================================================")
         print("Total NLOC  Avg.NLOC  Avg CCN  Avg token  Fun Cnt  Warning cnt   Fun Rt   NLOC Rt  ")
         print("--------------------------------------------------------------------------------")
@@ -730,14 +731,9 @@ def createHfccaCommandLineParser():
             dest="CCN",
             default=DEFAULT_CCN_THRESHOLD)
     parser.add_option("-w", "--warnings_only",
-            help="Show warnings only",
+            help="Show warnings only, using clang/gcc's warning format for printing warnings. http://clang.llvm.org/docs/UsersManual.html#cmdoption-fdiagnostics-format",
             action="store_true",
             dest="warnings_only",
-            default=False)
-    parser.add_option("--clang_warnings",
-            help="Use clang/gcc's warning format for printing warnings. Must also pass -w or --warnings_only for this to happen. http://clang.llvm.org/docs/UsersManual.html#cmdoption-fdiagnostics-format",
-            action="store_true",
-            dest="clang_warnings",
             default=False)
     parser.add_option("-i", "--ignore_warnings",
             help="If the number of warnings is equal or less than the number, the tool will exit normally, otherwize it will generate error. Useful in makefile when improving legacy code.",
