@@ -2,7 +2,7 @@ import unittest
 from mock import Mock
 import sys
 import hfcca
-from hfcca import print_warnings, FunctionInfo, FileInformation
+from hfcca import print_warnings, print_and_save_detail_information, FunctionInfo, FileInformation
 
 class StreamForTest:
     
@@ -15,7 +15,7 @@ class StreamForTest:
     def __getattr__(self, attr):
         return getattr(self.stream, attr)    
 
-class TestOutput(unittest.TestCase):
+class TestWarningOutput(unittest.TestCase):
     
     def setUp(self):
         self.savedStdout = sys.stdout 
@@ -47,3 +47,21 @@ class TestOutput(unittest.TestCase):
         option = Mock(CCN=15)
         print_warnings(option, [fileStat])
         self.assertIn("FILENAME:100: warning: foo has 16 CCN and 0 params (0 NLOC, 0 tokens)\n", sys.stdout)
+
+
+class TestFileOutput(unittest.TestCase):
+    
+    def setUp(self):
+        self.savedStdout = sys.stdout 
+        sys.stdout = StreamForTest()
+    
+    def tearDown(self):
+        sys.stdout = self.savedStdout
+        
+    def test_print_and_save_detail_information(self):
+        fileSummary = FileInformation("FILENAME")
+        fileSummary.summarize(123)
+        print_and_save_detail_information([fileSummary], Mock(warnings_only=False))
+        self.assertIn("    123      0      0         0         0     FILENAME", sys.stdout)
+        
+        
