@@ -188,7 +188,7 @@ class Test_FileAnalyzer(unittest.TestCase):
     def setUp(self):
         self.analyzer = FileAnalyzer()
         self.analyzer.open = mockOpen
-    def create_c_hfcca(self, source_code):
+    def create_cpp_hfcca(self, source_code):
         return FileAnalyzer().analyze_source_code_with_parser(source_code, "", CTokenTranslator)
     def test_analyze_c_file(self):
         r = mapFilesToAnalyzer(["f1.c"], self.analyzer, 1)

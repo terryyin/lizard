@@ -192,6 +192,7 @@ class CTokenTranslator(TokenTranslatorBase):
             ['if', 'for', 'while', '&&', '||', 'case', '?', '#if', 'catch'])
         self.bracket_level = 0
         self.br_count = 0
+        self.last_preprocessor = None
 
     def _is_condition(self, token):
         return token in self.conditions
@@ -240,16 +241,19 @@ class CTokenTranslator(TokenTranslatorBase):
             self._state = self._GLOBAL
 
     def _IMP(self, token):
-        if token == '{':
-            self.br_count += 1
-        elif token == '}':
-            self.br_count -= 1
-            if self.br_count == 0:
-                self._state = self._GLOBAL
-                return UniversalAnalyzer.END_OF_FUNCTION, ""
-        else:
-            if self._is_condition(token):
-                return UniversalAnalyzer.CONDITION, token
+        if token in ("#else", "#if", "#endif"):
+            self.last_preprocessor = token
+        # will ignore the braces in a #else branch            
+        if self.last_preprocessor != '#else':
+            if token == '{':
+                self.br_count += 1
+            elif token == '}':
+                self.br_count -= 1
+                if self.br_count == 0:
+                    self._state = self._GLOBAL
+                    return UniversalAnalyzer.END_OF_FUNCTION, ""
+        if self._is_condition(token):
+            return UniversalAnalyzer.CONDITION, token
         return UniversalAnalyzer.TOKEN, token
 
 class ObjCTokenTranslator(CTokenTranslator):
