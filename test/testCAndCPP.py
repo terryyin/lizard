@@ -164,7 +164,7 @@ class Test_C_Function_Token_Count(unittest.TestCase):
         
 class Test_Preprocessing(unittest.TestCase):
 
-    def test_one_function_with_no_token(self):
+    def test_braces_in_harsh_else(self):
         result = create_cpp_hfcca('''int main(){
                                         #ifndef NORBUS
                                         {
@@ -174,7 +174,6 @@ class Test_Preprocessing(unittest.TestCase):
                                         }
                                     } void fun(){}''')
         self.assertEqual(2, len(result))
-
 
 example_macro = r'''
 #define MTP_CHECK                                                             \
