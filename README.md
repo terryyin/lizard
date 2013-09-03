@@ -1,9 +1,31 @@
 #Header Free Cyclomatic Complexity Analyzer
 [![Build Status](https://travis-ci.org/terryyin/hfcca.png?branch=master)](https://travis-ci.org/terryyin/hfcca)
 
-This tool will calculate the cycolomatic complexity of C/C++/Objective C code without caring about header files and preprocessors. So the tool is actually calculating how complex the code 'looks' rather than how complex the code 'is'.
+hfcca is a simple code complexity analyzer without caring about the C/C++ 
+header files or Java imports. It can deal with
 
-People will need this tool because it's often very hard to get all the include folders and files right with a similar tool, but we don't really need that kind of accuracy when come to cyclomatic complexity.
+* Java
+* /C/C++
+* Objective C.
+
+It counts 
+
+* the nloc (lines of code without comments), 
+* CCN (cyclomatic complexity number),
+* token count of functions.
+* parameter count of functions.
+
+You can set limitation for CCN (-C), the number of parameters (-a). Functions
+that exceed these limitations will generate warnings. The exit code of hfcca
+will be none-Zero if there are warnings. 
+
+This tool actually calculates how complex the code 'looks' rather than how
+complex the code real 'is'. People will need this tool because it's often very
+hard to get all the included folders and files right when they are complicated.
+But we don't really need that kind of accuracy when come to cyclomatic
+complexity.
+
+It requires python2.6 or above (early versions are not verified).
 
 ##Installation
 
@@ -34,21 +56,21 @@ Exclude anything in the tests folder:
 <pre>
 hfcca mySource/ -x"./tests/*"
 </pre>
-hfcca is a simple code complexity counter without caring about
-the C/C++ header files. It can deal with C/C++/ObjectiveC & TNSDL code. It count the NLOC
-(lines of code without comments), CCN  (cyclomatic complexity number) and
-token count of functions.
-
-It requires python2.6 or above (early versions are not verified).
+### Options
 
 <pre>
-Options:
+  --version             show program's version number and exit
   -h, --help            show this help message and exit
   -v, --verbose         Output in verbose mode (long function name)
   -C CCN, --CCN=CCN     Threshold for cyclomatic complexity number warning.
-                        functions with CCN bigger than this number will be
-                        shown in warning
-  -w, --warnings_only   Show warnings only
+                        The default value is 15. Functions with CCN bigger
+                        than this number will generate warning
+  -a ARGUMENTS, --arguments=ARGUMENTS
+                        Limit for number of parameters
+  -w, --warnings_only   Show warnings only, using clang/gcc's warning format
+                        for printing warnings.
+                        http://clang.llvm.org/docs/UsersManual.html#cmdoption-
+                        fdiagnostics-format
   -i NUMBER, --ignore_warnings=NUMBER
                         If the number of warnings is equal or less than the
                         number, the tool will exit normally, otherwize it will
@@ -61,10 +83,8 @@ Options:
                         recursively. Multiple patterns can be specified. Don't
                         forget to add "" around the pattern.
   -X, --xml             Generate XML in cppncss style instead of the normal
-                        tabular output. Useful to generate report in Hudson
+                        tabular output. Useful to generate report in Jenkins
                         server
-  -a ARGUMENTS, --arguments=ARGUMENTS
-                        Limit for number of parameters
   -P, --no_preprocessor_count
                         By default, a #if will also increase the complexity.
                         Adding this option to ignore them

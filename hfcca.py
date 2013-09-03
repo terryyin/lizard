@@ -16,10 +16,30 @@
 #
 
 """
-source_analyzer is a simple code complexity source_file_counter without
-caring about the C/C++ header files. It can deal with C/C++/Objective C.
-It count the nloc (lines of code without comments), CCN
-(cyclomatic complexity number) and token count of _functions.
+hfcca is a simple code complexity analyzer without caring about the C/C++ 
+header files or Java imports. It can deal with
+
+* Java
+* /C/C++
+* Objective C.
+
+It counts 
+
+* the nloc (lines of code without comments), 
+* CCN (cyclomatic complexity number),
+* token count of functions.
+* parameter count of functions.
+
+You can set limitation for CCN (-C), the number of parameters (-a). Functions
+that exceed these limitations will generate warnings. The exit code of hfcca
+will be none-Zero if there are warnings. 
+
+This tool actually calculates how complex the code 'looks' rather than how
+complex the code real 'is'. People will need this tool because it's often very
+hard to get all the included folders and files right when they are complicated.
+But we don't really need that kind of accuracy when come to cyclomatic
+complexity.
+
 It requires python2.6 or above (early versions are not verified).
 """
 
@@ -301,11 +321,15 @@ class ObjCTokenTranslator(CTokenTranslator):
 import re
 
 c_pattern = re.compile(r".*\.(c|C|cpp|CPP|CC|cc|mm)$")
+java_pattern = re.compile(r".*\.(java)$")
 objc_pattern = re.compile(r".*\.(m)$")
 
 hfcca_language_infos = {
                  'c/c++': {
                   'name_pattern': c_pattern,
+                  'creator':CTokenTranslator},
+                 'Java': {
+                  'name_pattern': java_pattern,
                   'creator':CTokenTranslator},
                   'objC' : {
                   'name_pattern': objc_pattern,
@@ -667,11 +691,18 @@ def createHfccaCommandLineParser():
             dest="verbose",
             default=False)
     parser.add_option("-C", "--CCN",
-            help="Threshold for cyclomatic complexity number warning. _functions with CCN bigger than this number will be shown in warning",
+            help =  "Threshold for cyclomatic complexity number warning. "+
+                    "The default value is %d. Functions with CCN bigger than this number will generate warning" % DEFAULT_CCN_THRESHOLD,
             action="store",
             type="int",
             dest="CCN",
             default=DEFAULT_CCN_THRESHOLD)
+    parser.add_option("-a", "--arguments",
+            help="Limit for number of parameters",
+            action="store",
+            type="int",
+            dest="arguments",
+            default=100)
     parser.add_option("-w", "--warnings_only",
             help="Show warnings only, using clang/gcc's warning format for printing warnings. http://clang.llvm.org/docs/UsersManual.html#cmdoption-fdiagnostics-format",
             action="store_true",
@@ -689,16 +720,10 @@ def createHfccaCommandLineParser():
             dest="exclude",
             default=[])
     parser.add_option("-X", "--xml",
-            help="Generate XML in cppncss style instead of the normal tabular output. Useful to generate report in Hudson server",
+            help="Generate XML in cppncss style instead of the normal tabular output. Useful to generate report in Jenkins server",
             action="store_true",
             dest="xml",
             default=None)
-    parser.add_option("-a", "--arguments",
-            help="Limit for number of parameters",
-            action="store",
-            type="int",
-            dest="arguments",
-            default=100)
     parser.add_option("-P", "--no_preprocessor_count",
             help="By default, a #if will also increase the complexity. Adding this option to ignore them",
             action="store_true",
@@ -711,7 +736,7 @@ def createHfccaCommandLineParser():
             dest="working_threads",
             default=1)
 
-    parser.usage = "source_analyzer.py [options] [PATH or FILE] [PATH] ... "
+    parser.usage = "hfcca [options] [PATH or FILE] [PATH] ... "
     parser.description = __doc__
     return parser
 
