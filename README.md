@@ -29,7 +29,11 @@ It requires python2.6 or above (early versions are not verified).
 
 ##Installation
 
-hfcca.py is only a single python file, you can always use it without install.
+hfcca.py is only a single python file, and everything is in that single script. You can always use it without any installation.
+
+<pre>
+python hfcca.py
+</pre>
 
 If you want a proper install:
 

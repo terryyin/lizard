@@ -39,7 +39,8 @@ It can deal with C/C++/Objective C & TNSDL code. It count the NLOC (lines of cod
           py_modules = ['hfcca'],
           author = 'Terry Yin',
           author_email = 'terry.yinze@gmail.com',
-          scripts = ['hfcca.bat' if os.sep == '\\' else 'hfcca'],
+          #scripts = ['hfcca.bat' if os.sep == '\\' else 'hfcca']
+          scripts = ['hfcca.bat', 'hfcca']
           )
 
 if __name__ == "__main__":
