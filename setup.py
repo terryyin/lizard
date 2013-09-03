@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 # encoding: utf-8
 '''
+Setup script.
+To install hfcca:
+[sudo] python setup.py install
 '''
+import os
+from os.path import join
 import hfcca
 from distutils.core import setup
 def install():
@@ -34,7 +39,7 @@ It can deal with C/C++/Objective C & TNSDL code. It count the NLOC (lines of cod
           py_modules = ['hfcca'],
           author = 'Terry Yin',
           author_email = 'terry.yinze@gmail.com',
-          scripts=['hfcca']
+          scripts = ['hfcca.bat' if os.sep == '\\' else 'hfcca'],
           )
 
 if __name__ == "__main__":

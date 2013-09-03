@@ -43,7 +43,7 @@ complexity.
 It requires python2.6 or above (early versions are not verified).
 """
 
-VERSION = "1.6.6"
+VERSION = "1.7.0"
 
 import itertools
 
