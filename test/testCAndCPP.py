@@ -33,7 +33,7 @@ class Test_c_cpp_hfcca(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual("fun", result[0].name)
         self.assertEqual(1, result[0].cyclomatic_complexity)
-        self.assertEqual("fun( xx oo )", result[0].long_name())
+        self.assertEqual("fun( xx oo )", result[0].long_name)
     
     def test_one_function_with_content(self):
         result = create_cpp_hfcca("int fun(){if(a){xx;}}")
@@ -97,14 +97,14 @@ class Test_c_cpp_hfcca(unittest.TestCase):
         result = create_cpp_hfcca("int abc::fun(){}")
         self.assertEqual(1, len(result))
         self.assertEqual("abc::fun", result[0].name)
-        self.assertEqual("abc::fun( )", result[0].long_name())
+        self.assertEqual("abc::fun( )", result[0].long_name)
         self.assertEqual(1, result[0].cyclomatic_complexity)
     
     def test_one_function_with_const(self):
         result = create_cpp_hfcca("int abc::fun()const{}")
         self.assertEqual(1, len(result))
         self.assertEqual("abc::fun", result[0].name)
-        self.assertEqual("abc::fun( ) const", result[0].long_name())
+        self.assertEqual("abc::fun( ) const", result[0].long_name)
         self.assertEqual(1, result[0].cyclomatic_complexity)
 
     def test_one_function_in_class(self):

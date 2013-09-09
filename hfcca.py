@@ -43,11 +43,15 @@ complexity.
 It requires python2.6 or above (early versions are not verified).
 """
 
+
 VERSION = "1.7.1"
+
 
 import itertools
 
+
 DEFAULT_CCN_THRESHOLD = 15
+
 
 class FunctionInfo(object):
     ''' 
@@ -59,30 +63,20 @@ class FunctionInfo(object):
         self.nloc = 0
         self.token_count = 0
         self.name = name
-        self.function_name_with_param = name
+        self.long_name = name
         self.start_line = start_line
         self.parameter_count = 0
 
     def add_to_function_name(self, app):
         self.name += app
-        self.function_name_with_param += app
-
-    def long_name(self):
-        return self.function_name_with_param
+        self.long_name += app
 
     def add_to_long_name(self, app):
-        self.function_name_with_param += app
-
-    def add_condition(self):
-        self.cyclomatic_complexity += 1
-
-    def add_token(self):
-        self.token_count += 1
-
-    def add_non_comment_line(self):
-        self.nloc += 1
+        self.long_name += app
 
     def add_parameter(self, token):
+        self.add_to_long_name(" " + token)
+        
         if self.parameter_count == 0:
             self.parameter_count = 1
         if token == ",":
@@ -90,11 +84,13 @@ class FunctionInfo(object):
 
 
 class FileInformation(list):
-    ''' Statistic information of a source file.
-        Including all the functions and the file summary.
+    ''' 
+    Statistic information of a source file.
+    Including all the functions and the file summary.
     '''
+    
     def __init__(self, filename):
-        list.__init__(self)
+        super(FileInformation, self).__init__()
         self.filename = filename
 
     def summarize(self, NLOC):
@@ -119,7 +115,8 @@ class FileInformation(list):
         self.CCN = ccn
         self.token = token
 
-class UniversalAnalyzer(list):
+
+class UniversalAnalyzer(object):
     """
         UniversalCode is the code that is unrelated to any programming
         languages. The code could be:
@@ -150,13 +147,13 @@ class UniversalAnalyzer(list):
 
     def CONDITION(self, token):
         self.TOKEN(token)
-        self.current_function.add_condition()
+        self.current_function.cyclomatic_complexity += 1
 
     def TOKEN(self, text):
         if self.newline:
-            self.current_function.add_non_comment_line()
+            self.current_function.nloc += 1
             self.newline = False
-        self.current_function.add_token()
+        self.current_function.token_count += 1
 
     def NEW_LINE(self, token):
         self.nloc += 1
@@ -170,7 +167,6 @@ class UniversalAnalyzer(list):
 
     def PARAMETER(self, token):
         self.current_function.add_parameter(token)
-        self.ADD_TO_LONG_FUNCTION_NAME(" " + token)
 
     END_OF_FUNCTION = 1
 
@@ -180,6 +176,7 @@ class UniversalAnalyzer(list):
                 yield self.current_function
             else:
                 code(self, text)
+
 
 class TokenTranslatorBase:
 
@@ -275,6 +272,7 @@ class CTokenTranslator(TokenTranslatorBase):
         if self._is_condition(token):
             return UniversalAnalyzer.CONDITION, token
         return UniversalAnalyzer.TOKEN, token
+
 
 class ObjCTokenTranslator(CTokenTranslator):
     def __init__(self):
@@ -478,7 +476,7 @@ def print_function_info(fun, filename, option):
     }
     output_format = "%(nloc)6d %(CCN)6d %(token)6d %(param)6d    %(name)s@%(line)s@%(file)s"
     if option.verbose:
-        output_params['name'] = fun.long_name()
+        output_params['name'] = fun.long_name
     if option.warnings_only:
         output_format = "%(file)s:%(line)s: warning: %(name)s has %(CCN)d CCN and %(param)d params (%(nloc)d NLOC, %(token)d tokens)"
     print(output_format % output_params)
@@ -639,9 +637,9 @@ class XMLFormatter(object):
     def _createFunctionItem(self, doc, Nr, file_name, func, verbose):
         item = doc.createElement("item")
         if verbose:
-            item.setAttribute("name", "%s at %s:%s" % (func.long_name(), file_name, func.start_line))
+            item.setAttribute("name", "%s at %s:%s" % (func.long_name, file_name, func.start_line))
         else:
-            item.setAttribute("name", "%s(...) at %s:%s" % (func.name(), file_name, func.start_line))
+            item.setAttribute("name", "%s(...) at %s:%s" % (func.name, file_name, func.start_line))
         value1 = doc.createElement("value")
         text1 = doc.createTextNode(str(Nr))
         value1.appendChild(text1)
