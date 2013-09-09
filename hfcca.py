@@ -50,8 +50,10 @@ import itertools
 DEFAULT_CCN_THRESHOLD = 15
 
 class FunctionInfo(object):
-    ''' Statistic information of a function.
+    ''' 
+    Statistic information of a function.
     '''
+    
     def __init__(self, name, start_line):
         self.cyclomatic_complexity = 1
         self.nloc = 0
@@ -60,9 +62,6 @@ class FunctionInfo(object):
         self.function_name_with_param = name
         self.start_line = start_line
         self.parameter_count = 0
-
-    def __eq__(self, other):
-        return other == self.name
 
     def add_to_function_name(self, app):
         self.name += app
@@ -88,6 +87,7 @@ class FunctionInfo(object):
             self.parameter_count = 1
         if token == ",":
             self.parameter_count += 1
+
 
 class FileInformation(list):
     ''' Statistic information of a source file.

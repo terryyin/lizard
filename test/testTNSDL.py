@@ -4,27 +4,33 @@ from hfcca import UniversalAnalyzer, generate_tokens
 
 
 class Test_sdl_hfcca(unittest.TestCase):
+    
     def create_sdl_hfcca(self, source_code):
         return UniversalAnalyzer().analyze(SDLTokenTranslator().getFunctions(generate_tokens(source_code)) , "")
+    
     def test_empty(self):
         result = self.create_sdl_hfcca("")
         self.assertEqual(0, len(result))
+    
     def test_process(self):
         result = self.create_sdl_hfcca("PROCESS pofcap\n ENDPROCESS;")
         self.assertEqual(1, len(result))
-        self.assertTrue('PROCESS pofcap' in result)
+        self.assertEqual('PROCESS pofcap', result[0].name)
+    
     def test_one_function(self):
         result = self.create_sdl_hfcca("PROCEDURE xxx\n ENDPROCEDURE;");
         self.assertEqual(1, len(result))
-        self.assertTrue("PROCEDURE xxx" in result)
+        self.assertEqual("PROCEDURE xxx", result[0].name)
         self.assertEqual(1, result[0].cyclomatic_complexity)
         self.assertEqual(0, result[0].token_count)
+    
     def test_one_function_with_condition(self):
         result = self.create_sdl_hfcca(example_sdl_procedure);
         self.assertEqual(1, len(result))
-        self.assertTrue("PROCEDURE send_swo_msgs__r" in result)
+        self.assertEqual("PROCEDURE send_swo_msgs__r", result[0].name)
         self.assertEqual(7, result[0].cyclomatic_complexity)
         self.assertEqual(173, result[0].token_count)
+    
     def test_one_function_with_array(self):
         result = self.create_sdl_hfcca("""
         PROCEDURE send_swo_msgs__r;
@@ -34,13 +40,14 @@ class Test_sdl_hfcca(unittest.TestCase):
         """);
         self.assertEqual(1, len(result))
         self.assertEqual(1, result[0].cyclomatic_complexity)
+    
     def test_process_with_content(self):
         result = self.create_sdl_hfcca(example_sdl_process);
         self.assertEqual(5, len(result))
-        self.assertTrue("PROCEDURE send_swo_msgs__r" in result)
-        self.assertTrue("PROCESS pofsrt" in result)
-        self.assertTrue("PROCESS pofsrt STATE start_state INPUT supervision_msg_s" in result)
-        self.assertTrue("PROCESS pofsrt STATE start_state1 INPUT supervision_msg_s2" in result)
+        self.assertEqual("PROCEDURE send_swo_msgs__r", result[0].name)
+        self.assertEqual("PROCESS pofsrt", result[1].name)
+        self.assertEqual("PROCESS pofsrt STATE start_state INPUT supervision_msg_s", result[2].name)
+        self.assertEqual("PROCESS pofsrt STATE start_state1 INPUT supervision_msg_s2", result[4].name)
         self.assertEqual(2, result[1].cyclomatic_complexity)
 
 example_sdl_procedure = '''

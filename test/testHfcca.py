@@ -34,17 +34,17 @@ class Test_objc_hfcca(unittest.TestCase):
         self.assertEqual(0, len(result))
     def test_one_c_function(self):
         result = self.create_objc_hfcca("int fun(int a, int b) const{}")
-        self.assertTrue("fun" in result)
+        self.assertEqual("fun", result[0].name)
     def test_one_objc_function(self):
         result = self.create_objc_hfcca("-(void) foo {}")
-        self.assertTrue("foo" in result)
+        self.assertEqual("foo", result[0].name)
     def test_one_objc_function_with_param(self):
         result = self.create_objc_hfcca("-(void) replaceScene: (CCScene*) scene {}")
         self.assertEqual("replaceScene:", result[0].name)
         self.assertEqual("replaceScene:( CCScene * )", result[0].long_name())
     def test_one_objc_functio_nwith_two_param(self):
         result = self.create_objc_hfcca("- (BOOL)scanJSONObject:(id *)outObject error:(NSError **)outError {}")
-        self.assertTrue("scanJSONObject: error:" in result)
+        self.assertEqual("scanJSONObject: error:", result[0].name)
         self.assertEqual("scanJSONObject:( id * ) error:( NSError ** )", result[0].long_name())
     def test_one_objc_function_with_three_param(self):
         result = self.create_objc_hfcca("- (id)initWithRequest:(NSURLRequest *)request delegate:(id <NSURLConnectionDelegate>)delegate startImmediately:(BOOL)startImmediately{}")

@@ -16,22 +16,22 @@ class Test_c_cpp_hfcca(unittest.TestCase):
     def test_one_function(self):
         result = create_cpp_hfcca("int fun(){}")
         self.assertEqual(1, len(result))
-        self.assertTrue("fun" in result)
+        self.assertEqual("fun", result[0].name)
         self.assertEqual(1, result[0].cyclomatic_complexity)
     
     def test_two_function(self):
         result = create_cpp_hfcca("int fun(){}\nint fun1(){}\n")
         self.assertEqual(2, result.nloc)
         self.assertEqual(2, len(result))
-        self.assertTrue("fun" in result)
-        self.assertTrue("fun1" in result)
+        self.assertEqual("fun", result[0].name)
+        self.assertEqual("fun1", result[1].name)
         self.assertEqual(1, result[0].start_line)
         self.assertEqual(2, result[1].start_line)
     
     def test_function_with_content(self):
         result = create_cpp_hfcca("int fun(xx oo){int a; a= call(p1,p2);}")
         self.assertEqual(1, len(result))
-        self.assertTrue("fun" in result)
+        self.assertEqual("fun", result[0].name)
         self.assertEqual(1, result[0].cyclomatic_complexity)
         self.assertEqual("fun( xx oo )", result[0].long_name())
     
@@ -110,8 +110,8 @@ class Test_c_cpp_hfcca(unittest.TestCase):
     def test_one_function_in_class(self):
         result = create_cpp_hfcca("class c {~c(){}}; int d(){}")
         self.assertEqual(2, len(result))
-        self.assertTrue("c" in result)
-        self.assertTrue("d" in result)
+        self.assertEqual("c", result[0].name)
+        self.assertEqual("d", result[1].name)
         
     def test_template_as_reference(self):
         result = create_cpp_hfcca("abc::def(a<b>& c){}")
