@@ -25,7 +25,7 @@ header files or Java imports. It can deal with
 
 It counts 
 
-* the nloc (lines of code without comments), 
+* the nloc (net lines of code, excluding comments and blanks), 
 * CCN (cyclomatic complexity number),
 * token count of functions.
 * parameter count of functions.

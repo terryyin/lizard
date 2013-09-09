@@ -5,7 +5,7 @@ hfcca is a simple code complexity analyzer without caring about the C/C++
 header files or Java imports. It can deal with
 
 * Java
-* /C/C++
+* C/C++
 * Objective C.
 
 It counts 
