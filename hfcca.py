@@ -20,7 +20,7 @@ hfcca is a simple code complexity analyzer without caring about the C/C++
 header files or Java imports. It can deal with
 
 * Java
-* /C/C++
+* C/C++
 * Objective C.
 
 It counts 
@@ -562,7 +562,7 @@ class XMLFormatter(object):
             Jenkens has plugin for cppncss format result to display the diagram.
         '''
         import xml.dom.minidom
-    
+            
         impl = xml.dom.minidom.getDOMImplementation()
         doc = impl.createDocument(None, "cppncss", None)
         root = doc.documentElement
@@ -581,7 +581,7 @@ class XMLFormatter(object):
                 Nr += 1
                 total_func_ncss += func.nloc
                 total_func_ccn += func.cyclomatic_complexity
-                measure.appendChild(self._createFunctionItem(doc, Nr, file_name, func))
+                measure.appendChild(self._createFunctionItem(doc, Nr, file_name, func, options.verbose))
     
             if Nr != 0:
                 measure.appendChild(self._createLabeledValueItem(doc, 'average', "NCSS", str(total_func_ncss / Nr)))
@@ -636,9 +636,12 @@ class XMLFormatter(object):
         
         return labels
 
-    def _createFunctionItem(self, doc, Nr, file_name, func):
+    def _createFunctionItem(self, doc, Nr, file_name, func, verbose):
         item = doc.createElement("item")
-        item.setAttribute("name", "%s(...) at %s:0" % (func.name, file_name))
+        if verbose:
+            item.setAttribute("name", "%s at %s:%s" % (func.long_name(), file_name, func.start_line))
+        else:
+            item.setAttribute("name", "%s(...) at %s:%s" % (func.name(), file_name, func.start_line))
         value1 = doc.createElement("value")
         text1 = doc.createTextNode(str(Nr))
         value1.appendChild(text1)
