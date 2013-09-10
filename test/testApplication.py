@@ -1,5 +1,5 @@
 import unittest
-from mock import patch, ANY
+from mock import patch
 import hfcca
 from hfcca import hfcca_main, FileAnalyzer
 import os
@@ -33,7 +33,7 @@ class TestApplication(unittest.TestCase):
         def check_result(result, options):
             fileInfos = list(result) 
             self.assertEqual(1, len(fileInfos))
-            self.assertEqual('foo', fileInfos[0][0].name)
+            self.assertEqual('foo', fileInfos[0].function_list[0].name)
         os_walk.return_value = [('.', [], ['a.cpp'])]
         mock_open.return_value.read.return_value = "void foo(){}"
         print_result.side_effect = check_result
@@ -46,7 +46,7 @@ class TestApplication(unittest.TestCase):
         def check_result(result, options):
             fileInfos = list(result) 
             self.assertEqual(1, len(fileInfos))
-            self.assertEqual('foo', fileInfos[0][0].name)
+            self.assertEqual('foo', fileInfos[0].function_list[0].name)
         os_walk.return_value = [('.', [], ['a.cpp'])]
         mock_open.return_value.read.return_value = "void foo(){}"
         print_result.side_effect = check_result
@@ -75,11 +75,11 @@ class TestOptions(unittest.TestCase):
         
     def test_with_preprocessor_counted_in_CCN(self):
         self.runApplicationWithArgv(['hfcca'])
-        self.assertEqual(2, self.fileInfos[0][0].cyclomatic_complexity)
+        self.assertEqual(2, self.fileInfos[0].function_list[0].cyclomatic_complexity)
 
     def test_not_with_preprocessor_counted_in_CCN(self):
         self.runApplicationWithArgv(['hfcca', '-P'])
-        self.assertEqual(1, self.fileInfos[0][0].cyclomatic_complexity)
+        self.assertEqual(1, self.fileInfos[0].function_list[0].cyclomatic_complexity)
 
 
 if __name__ == "__main__":

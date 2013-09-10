@@ -42,8 +42,7 @@ class TestWarningOutput(unittest.TestCase):
     def test_should_use_clang_format_for_warning(self):
         fun = FunctionInfo("foo", 100)
         fun.cyclomatic_complexity = 16
-        fileStat = FileInformation("FILENAME")
-        fileStat.append(fun)
+        fileStat = FileInformation("FILENAME", 1, [fun])
         option = Mock(CCN=15)
         print_warnings(option, [fileStat])
         self.assertIn("FILENAME:100: warning: foo has 16 CCN and 0 params (0 NLOC, 0 tokens)\n", sys.stdout.stream)
@@ -59,8 +58,7 @@ class TestFileOutput(unittest.TestCase):
         sys.stdout = self.savedStdout
         
     def test_print_and_save_detail_information(self):
-        fileSummary = FileInformation("FILENAME")
-        fileSummary.summarize(123)
+        fileSummary = FileInformation("FILENAME", 123, [])
         print_and_save_detail_information([fileSummary], Mock(warnings_only=False))
         self.assertIn("    123      0      0         0         0     FILENAME", sys.stdout.stream)
         

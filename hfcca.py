@@ -83,37 +83,24 @@ class FunctionInfo(object):
             self.parameter_count += 1
 
 
-class FileInformation(list):
+class FileInformation(object):
     ''' 
     Statistic information of a source file.
     Including all the functions and the file summary.
     '''
     
-    def __init__(self, filename):
-        super(FileInformation, self).__init__()
+    def __init__(self, filename, nloc, function_list):
         self.filename = filename
+        self.nloc = nloc
+        self.function_list = function_list
 
-    def summarize(self, NLOC):
-        self.nloc = NLOC
-        self.average_NLOC = 0
-        self.average_CCN = 0
-        self.average_token = 0
+    average_NLOC = property(lambda self:self._functions_average("nloc"))
+    average_token = property(lambda self:self._functions_average("token_count"))
+    average_CCN = property(lambda self:self._functions_average("cyclomatic_complexity"))
 
-        nloc = 0
-        ccn = 0
-        token = 0
-        for fun in self:
-            nloc += fun.nloc
-            ccn += fun.cyclomatic_complexity
-            token += fun.token_count
-        fc = len(self)
-        if fc > 0:
-            self.average_NLOC = nloc / fc
-            self.average_CCN = ccn / fc
-            self.average_token = token / fc
-
-        self.CCN = ccn
-        self.token = token
+    def _functions_average(self, att):
+        return sum(getattr(fun, att) for fun in self.function_list) \
+                / len(self.function_list) if self.function_list else 0
 
 
 class UniversalAnalyzer(object):
@@ -136,10 +123,10 @@ class UniversalAnalyzer(object):
         self.nloc = 0
 
     def analyze(self, parsed_code, filename):
-        fileInfo = FileInformation(filename)
+        function_list = []
         for fun in self._functions(parsed_code):
-            fileInfo.append(fun)
-        fileInfo.summarize(self.nloc)
+            function_list.append(fun)
+        fileInfo = FileInformation(filename, self.nloc, function_list)
         return fileInfo
 
     def START_NEW_FUNCTION(self, name_and_line):
@@ -488,12 +475,12 @@ def print_warnings(option, saved_result):
               "======================================\n" +
               "!!!! Warnings (CCN > %d) !!!!\n" +
               "======================================") % option.CCN)
-    for f in saved_result:
-        for fun in f:
+    for file_info in saved_result:
+        for fun in file_info.function_list:
             if fun.cyclomatic_complexity > option.CCN or \
                     fun.parameter_count > option.arguments:
                 warning_count += 1
-                print_function_info(fun, f.filename, option)
+                print_function_info(fun, file_info.filename, option)
 
     if warning_count == 0:
         print("No warning found. Excellent!")
@@ -532,7 +519,7 @@ def print_and_save_detail_information(allStatistics, option):
         print_function_info_header()
         for fileStatistics in allStatistics:
             saved_result.append(fileStatistics)
-            for fun in fileStatistics:
+            for fun in fileStatistics.function_list:
                 print_function_info(fun, fileStatistics.filename, option)
 
         print("--------------------------------------------------------------")
@@ -541,7 +528,13 @@ def print_and_save_detail_information(allStatistics, option):
         print("NLOC    Avg.NLOC AvgCCN Avg.ttoken  function_cnt    file")
         print("--------------------------------------------------------------")
         for fileStatistics in saved_result:
-            print("%7d%7d%7d%10d%10d     %s" % (fileStatistics.nloc, fileStatistics.average_NLOC, fileStatistics.average_CCN, fileStatistics.average_token, len(fileStatistics), fileStatistics.filename))
+            print("%7d%7d%7d%10d%10d     %s" % (
+                            fileStatistics.nloc, 
+                            fileStatistics.average_NLOC, 
+                            fileStatistics.average_CCN, 
+                            fileStatistics.average_token, 
+                            len(fileStatistics.function_list), 
+                            fileStatistics.filename))
 
     return saved_result
 

@@ -25,7 +25,7 @@ class Test_generate_tonken(unittest.TestCase):
 
 class Test_objc_hfcca(unittest.TestCase):
     def create_objc_hfcca(self, source_code):
-        return UniversalAnalyzer().analyze(ObjCTokenTranslator().getFunctions(generate_tokens(source_code)) , "")
+        return UniversalAnalyzer().analyze(ObjCTokenTranslator().getFunctions(generate_tokens(source_code)) , "").function_list
     def test_empty(self):
         result = self.create_objc_hfcca("")
         self.assertEqual(0, len(result))
@@ -201,6 +201,7 @@ class Test_FileAnalyzer(unittest.TestCase):
     def test_fileInfomation(self):
         r = mapFilesToAnalyzer(["f1.c"], self.analyzer, 1)
         fileInfo = list(r)[0]
+        self.assertEqual(1, fileInfo.nloc)
         self.assertEqual(1, fileInfo.average_NLOC)
         self.assertEqual(1, fileInfo.average_CCN)
         self.assertEqual(4, fileInfo.average_token)
