@@ -1,12 +1,12 @@
 import unittest
 from hfcca_for_tnsdl import SDLTokenTranslator
-from hfcca import UniversalAnalyzer, generate_tokens
+from hfcca import UniversalCode, generate_tokens
 
 
 class Test_sdl_hfcca(unittest.TestCase):
     
     def create_sdl_hfcca(self, source_code):
-        return UniversalAnalyzer().analyze(SDLTokenTranslator().getFunctions(generate_tokens(source_code)) , "").function_list
+        return UniversalCode().analyze(SDLTokenTranslator().getFunctions(generate_tokens(source_code)) , "").function_list
     
     def test_empty(self):
         result = self.create_sdl_hfcca("")
