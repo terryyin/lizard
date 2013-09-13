@@ -128,14 +128,11 @@ class UniversalCode(object):
         A TokenTranslator will generate UniversalCode.
     """
 
-    def __init__(self):
+    def __init__(self, parsed_code):
         self.current_function = None
         self.newline = True
         self.nloc = 0
-
-    def analyze(self, parsed_code, filename):
-        function_list = list(self._functions(parsed_code))
-        return FileInformation(filename, self.nloc, function_list)
+        self.parsed_code = parsed_code
 
     def START_NEW_FUNCTION(self, name_and_line):
         self.current_function = FunctionInfo(*name_and_line)
@@ -165,12 +162,14 @@ class UniversalCode(object):
 
     END_OF_FUNCTION = 1
 
-    def _functions(self, parsed_code):
-        for code, text in parsed_code:
+    def functions(self):
+        function_list = []
+        for code, text in self.parsed_code:
             if code is UniversalCode.END_OF_FUNCTION:
-                yield self.current_function
+                function_list.append(self.current_function)
             else:
                 code(self, text)
+        return function_list
 
 
 class TokenTranslatorBase:
@@ -371,9 +370,9 @@ class FileAnalyzer:
 
 
     def analyze_source_code_with_parser(self, filename, parser, tokens):
-        result = UniversalCode().analyze(
-                            parser.getFunctions(tokens), filename)
-        return result
+        parsed_code = UniversalCode(parser.getFunctions(tokens))
+        function_list = parsed_code.functions()
+        return FileInformation(filename, parsed_code.nloc, function_list)
 
     def _readFileContent(self, filename):
         f = self.open(filename)

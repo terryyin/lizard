@@ -25,7 +25,7 @@ class Test_generate_tonken(unittest.TestCase):
 
 class Test_objc_hfcca(unittest.TestCase):
     def create_objc_hfcca(self, source_code):
-        return UniversalCode().analyze(ObjCTokenTranslator().getFunctions(generate_tokens(source_code)) , "").function_list
+        return UniversalCode(ObjCTokenTranslator().getFunctions(generate_tokens(source_code))).functions()
     def test_empty(self):
         result = self.create_objc_hfcca("")
         self.assertEqual(0, len(result))
