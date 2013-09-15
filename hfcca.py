@@ -122,23 +122,21 @@ class UniversalCode(object):
             ADD_TO_FUNCTION_NAME
             ADD_TO_LONG_FUNCTION_NAME
                 PARAMETER
-            CONDITION
-            TOKEN
+                    CONDITION
+                    TOKEN
         END_OF_FUNCTION
 
         A TokenTranslator will generate UniversalCode.
     """
 
-    def __init__(self, parsed_code = None):
+    def __init__(self):
         self.current_function = None
         self.newline = True
         self.nloc = 0
-        self.current_line_number = 0
-        self.parsed_code = parsed_code
         self.function_list = []
 
-    def START_NEW_FUNCTION(self, name):
-        self.current_function = FunctionInfo(name, self.current_line_number)
+    def START_NEW_FUNCTION(self, name, start_line):
+        self.current_function = FunctionInfo(name, start_line)
 
     def CONDITION(self):
         self.TOKEN()
@@ -166,53 +164,38 @@ class UniversalCode(object):
     def END_OF_FUNCTION(self):
         self.function_list.append(self.current_function)
 
-    def read_tokens(self, language_reader, tokens):
-        for token, self.current_line_number in tokens:
-            if token.isspace():
-                self.NEW_LINE()
-            else:
-                code = language_reader._state(token)
-                if code:
-                    try:
-                        code[0](self, *code[1:])
-                    except:
-                        code(self)
-        return self
 
-
-class TokenTranslatorBase(object):
+class LanguageReaderBase(object):
 
     def __init__(self):
         self._state = self._GLOBAL
-        self._current_line = 0
-
-    def get_current_line_number(self):
-        return self._current_line
-
-    def getFunctions(self, tokens):
-        for token, self._current_line in tokens:
-            fun = self._read_token(token)
-            if fun: yield fun
+        self.current_line = 0
+        self.univeral_code = UniversalCode()
+    
+    def generate_universal_code(self, tokens):
+        for token, self.current_line in tokens:
+            self._read_token(token)
+        return self.univeral_code
 
     def _read_token(self, token):
         if token.isspace():
-            return UniversalCode.NEW_LINE, None
+            self.univeral_code.NEW_LINE()
         else:
-            return self._state(token)
-
-    def remove_hash_if(self):
-        self.conditions.remove("#if")
+            self._state(token)
 
 
-class CLikeReader(TokenTranslatorBase):
+class CLikeReader(LanguageReaderBase):
 
     def __init__(self):
-        TokenTranslatorBase.__init__(self)
+        super(CLikeReader, self).__init__()
         self.conditions = set(
             ['if', 'for', 'while', '&&', '||', 'case', '?', '#if', 'catch'])
         self.bracket_level = 0
         self.br_count = 0
         self.last_preprocessor = None
+
+    def remove_hash_if(self):
+        self.conditions.remove("#if")
 
     def _is_condition(self, token):
         return token in self.conditions
@@ -221,22 +204,22 @@ class CLikeReader(TokenTranslatorBase):
         if token == '(':
             self.bracket_level += 1
             self._state = self._DEC
-            return UniversalCode.ADD_TO_LONG_FUNCTION_NAME, token
+            self.univeral_code.ADD_TO_LONG_FUNCTION_NAME(token)
         elif token == '::':
             self._state = self._NAMESPACE
         else:
             if token == 'operator':
                 self._state = self._OPERATOR
-            return UniversalCode.START_NEW_FUNCTION, token
+            self.univeral_code.START_NEW_FUNCTION(token, self.current_line)
 
     def _OPERATOR(self, token):
         if token != '(':
             self._state = self._GLOBAL
-        return UniversalCode.ADD_TO_FUNCTION_NAME, ' ' + token
+        self.univeral_code.ADD_TO_FUNCTION_NAME(' ' + token)
 
     def _NAMESPACE(self, token):
         self._state = self._OPERATOR if token == 'operator'  else self._GLOBAL
-        return UniversalCode.ADD_TO_FUNCTION_NAME, "::" + token
+        self.univeral_code.ADD_TO_FUNCTION_NAME("::" + token)
 
     def _DEC(self, token):
         if token in ('(', "<"):
@@ -246,12 +229,13 @@ class CLikeReader(TokenTranslatorBase):
             if (self.bracket_level == 0):
                 self._state = self._DEC_TO_IMP
         elif self.bracket_level == 1:
-            return UniversalCode.PARAMETER, token
-        return UniversalCode.ADD_TO_LONG_FUNCTION_NAME, " " + token
+            self.univeral_code.PARAMETER(token)
+            return
+        self.univeral_code.ADD_TO_LONG_FUNCTION_NAME(" " + token)
 
     def _DEC_TO_IMP(self, token):
         if token == 'const':
-            return UniversalCode.ADD_TO_LONG_FUNCTION_NAME, " " + token
+            self.univeral_code.ADD_TO_LONG_FUNCTION_NAME(" " + token)
         elif token == '{':
             self.br_count += 1
             self._state = self._IMP
@@ -269,10 +253,12 @@ class CLikeReader(TokenTranslatorBase):
                 self.br_count -= 1
                 if self.br_count == 0:
                     self._state = self._GLOBAL
-                    return UniversalCode.END_OF_FUNCTION
+                    self.univeral_code.END_OF_FUNCTION()
+                    return
         if self._is_condition(token):
-            return UniversalCode.CONDITION
-        return UniversalCode.TOKEN
+            self.univeral_code.CONDITION()
+        else:
+            self.univeral_code.TOKEN()
 
 
 class ObjCReader(CLikeReader):
@@ -286,12 +272,12 @@ class ObjCReader(CLikeReader):
             super(ObjCReader, self)._DEC_TO_IMP(token)
             if self._state == self._GLOBAL:
                 self._state = self._OBJC_DEC_BEGIN
-                return UniversalCode.START_NEW_FUNCTION, token
+                self.univeral_code.START_NEW_FUNCTION(token, self.current_line)
 
     def _OBJC_DEC_BEGIN(self, token):
         if token == ':':
             self._state = self._OBJC_DEC
-            return UniversalCode.ADD_TO_FUNCTION_NAME, token
+            self.univeral_code.ADD_TO_FUNCTION_NAME(token)
         elif token == '{':
             self.br_count += 1
             self._state = self._IMP
@@ -300,7 +286,7 @@ class ObjCReader(CLikeReader):
     def _OBJC_DEC(self, token):
         if token == '(':
             self._state = self._OBJC_PARAM_TYPE
-            return UniversalCode.ADD_TO_LONG_FUNCTION_NAME, token
+            self.univeral_code.ADD_TO_LONG_FUNCTION_NAME(token)
         elif token == ',':
             pass
         elif token == '{':
@@ -308,12 +294,12 @@ class ObjCReader(CLikeReader):
             self._state = self._IMP
         else:
             self._state = self._OBJC_DEC_BEGIN
-            return UniversalCode.ADD_TO_FUNCTION_NAME, " " + token
+            self.univeral_code.ADD_TO_FUNCTION_NAME(" " + token)
 
     def _OBJC_PARAM_TYPE(self, token):
         if token == ')':
             self._state = self._OBJC_PARAM
-        return UniversalCode.ADD_TO_LONG_FUNCTION_NAME, " " + token
+        self.univeral_code.ADD_TO_LONG_FUNCTION_NAME(" " + token)
     def _OBJC_PARAM(self, token):
         self._state = self._OBJC_DEC
 
@@ -377,7 +363,7 @@ class FileAnalyzer:
 
 
     def analyze_source_code_with_parser(self, filename, parser, tokens):
-        parsed_code = UniversalCode().read_tokens(parser, tokens)
+        parsed_code = parser.generate_universal_code(tokens)
         function_list = parsed_code.function_list
         return FileInformation(filename, parsed_code.nloc, function_list)
 
