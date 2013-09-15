@@ -1,8 +1,8 @@
 import unittest
-from hfcca import  FileAnalyzer, CTokenTranslator, generate_tokens
+from hfcca import  FileAnalyzer, CLikeReader, generate_tokens
 
 def create_cpp_hfcca(source_code):
-    return FileAnalyzer().analyze_source_code_with_parser("", CTokenTranslator(), generate_tokens(source_code)).function_list
+    return FileAnalyzer().analyze_source_code_with_parser("", CLikeReader(), generate_tokens(source_code)).function_list
 
 class Test_c_cpp_hfcca(unittest.TestCase):
     def test_empty(self):

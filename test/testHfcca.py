@@ -3,7 +3,7 @@
 #
 import unittest
 from mock import patch
-from hfcca import FileAnalyzer, UniversalCode, generate_tokens, ObjCTokenTranslator, generate_tokens_from_code, CTokenTranslator, mapFilesToAnalyzer, FunctionInfo
+from hfcca import FileAnalyzer, UniversalCode, generate_tokens, ObjCReader, generate_tokens_from_code, CLikeReader, mapFilesToAnalyzer, FunctionInfo
 
 class Test_generate_tonken(unittest.TestCase):
 
@@ -25,7 +25,7 @@ class Test_generate_tonken(unittest.TestCase):
 
 class Test_objc_hfcca(unittest.TestCase):
     def create_objc_hfcca(self, source_code):
-        return UniversalCode(ObjCTokenTranslator().getFunctions(generate_tokens(source_code))).functions()
+        return UniversalCode().read_tokens(ObjCReader(), generate_tokens(source_code)).function_list
     def test_empty(self):
         result = self.create_objc_hfcca("")
         self.assertEqual(0, len(result))
@@ -189,7 +189,7 @@ class Test_FileAnalyzer(unittest.TestCase):
         self.analyzer = FileAnalyzer()
         self.analyzer.open = mockOpen
     def create_cpp_hfcca(self, source_code):
-        return FileAnalyzer().analyze_source_code_with_parser(source_code, "", CTokenTranslator)
+        return FileAnalyzer().analyze_source_code_with_parser(source_code, "", CLikeReader)
     def test_analyze_c_file(self):
         r = mapFilesToAnalyzer(["f1.c"], self.analyzer, 1)
         self.assertEqual(1, len([x for x in r]))

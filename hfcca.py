@@ -107,6 +107,7 @@ class FileInformation(object):
     average_NLOC = property(lambda self:self._functions_average("nloc"))
     average_token = property(lambda self:self._functions_average("token_count"))
     average_CCN = property(lambda self:self._functions_average("cyclomatic_complexity"))
+    CCN = property(lambda self:sum(fun.cyclomatic_complexity for fun in self.function_list))
 
     def _functions_average(self, att):
         return sum(getattr(fun, att) for fun in self.function_list) \
@@ -128,26 +129,28 @@ class UniversalCode(object):
         A TokenTranslator will generate UniversalCode.
     """
 
-    def __init__(self, parsed_code):
+    def __init__(self, parsed_code = None):
         self.current_function = None
         self.newline = True
         self.nloc = 0
+        self.current_line_number = 0
         self.parsed_code = parsed_code
+        self.function_list = []
 
-    def START_NEW_FUNCTION(self, name_and_line):
-        self.current_function = FunctionInfo(*name_and_line)
+    def START_NEW_FUNCTION(self, name):
+        self.current_function = FunctionInfo(name, self.current_line_number)
 
-    def CONDITION(self, token):
-        self.TOKEN(token)
+    def CONDITION(self):
+        self.TOKEN()
         self.current_function.cyclomatic_complexity += 1
 
-    def TOKEN(self, text):
+    def TOKEN(self):
         if self.newline:
             self.current_function.nloc += 1
             self.newline = False
         self.current_function.token_count += 1
 
-    def NEW_LINE(self, token):
+    def NEW_LINE(self):
         self.nloc += 1
         self.newline = True
 
@@ -160,19 +163,24 @@ class UniversalCode(object):
     def PARAMETER(self, token):
         self.current_function.add_parameter(token)
 
-    END_OF_FUNCTION = 1
+    def END_OF_FUNCTION(self):
+        self.function_list.append(self.current_function)
 
-    def functions(self):
-        function_list = []
-        for code, text in self.parsed_code:
-            if code is UniversalCode.END_OF_FUNCTION:
-                function_list.append(self.current_function)
+    def read_tokens(self, language_reader, tokens):
+        for token, self.current_line_number in tokens:
+            if token.isspace():
+                self.NEW_LINE()
             else:
-                code(self, text)
-        return function_list
+                code = language_reader._state(token)
+                if code:
+                    try:
+                        code[0](self, *code[1:])
+                    except:
+                        code(self)
+        return self
 
 
-class TokenTranslatorBase:
+class TokenTranslatorBase(object):
 
     def __init__(self):
         self._state = self._GLOBAL
@@ -191,11 +199,12 @@ class TokenTranslatorBase:
             return UniversalCode.NEW_LINE, None
         else:
             return self._state(token)
+
     def remove_hash_if(self):
         self.conditions.remove("#if")
 
 
-class CTokenTranslator(TokenTranslatorBase):
+class CLikeReader(TokenTranslatorBase):
 
     def __init__(self):
         TokenTranslatorBase.__init__(self)
@@ -218,9 +227,7 @@ class CTokenTranslator(TokenTranslatorBase):
         else:
             if token == 'operator':
                 self._state = self._OPERATOR
-            return UniversalCode.START_NEW_FUNCTION,\
-                    (token, self._current_line)
-
+            return UniversalCode.START_NEW_FUNCTION, token
 
     def _OPERATOR(self, token):
         if token != '(':
@@ -262,25 +269,25 @@ class CTokenTranslator(TokenTranslatorBase):
                 self.br_count -= 1
                 if self.br_count == 0:
                     self._state = self._GLOBAL
-                    return UniversalCode.END_OF_FUNCTION, ""
+                    return UniversalCode.END_OF_FUNCTION
         if self._is_condition(token):
-            return UniversalCode.CONDITION, token
-        return UniversalCode.TOKEN, token
+            return UniversalCode.CONDITION
+        return UniversalCode.TOKEN
 
 
-class ObjCTokenTranslator(CTokenTranslator):
+class ObjCReader(CLikeReader):
     def __init__(self):
-        CTokenTranslator.__init__(self)
+        super(ObjCReader, self).__init__()
 
     def _DEC_TO_IMP(self, token):
         if token in ("+", "-"):
             self._state = self._GLOBAL
         else:
-            CTokenTranslator._DEC_TO_IMP(self, token)
+            super(ObjCReader, self)._DEC_TO_IMP(token)
             if self._state == self._GLOBAL:
                 self._state = self._OBJC_DEC_BEGIN
-                return UniversalCode.START_NEW_FUNCTION,\
-                        (token, self._current_line)
+                return UniversalCode.START_NEW_FUNCTION, token
+
     def _OBJC_DEC_BEGIN(self, token):
         if token == ':':
             self._state = self._OBJC_DEC
@@ -319,13 +326,13 @@ objc_pattern = re.compile(r".*\.(m)$")
 hfcca_language_infos = {
                  'c/c++': {
                   'name_pattern': c_pattern,
-                  'creator':CTokenTranslator},
+                  'creator':CLikeReader},
                  'Java': {
                   'name_pattern': java_pattern,
-                  'creator':CTokenTranslator},
+                  'creator':CLikeReader},
                   'objC' : {
                   'name_pattern': objc_pattern,
-                  'creator':ObjCTokenTranslator}
+                  'creator':ObjCReader}
             }
 
 def get_parser_by_file_name(filename):
@@ -370,8 +377,8 @@ class FileAnalyzer:
 
 
     def analyze_source_code_with_parser(self, filename, parser, tokens):
-        parsed_code = UniversalCode(parser.getFunctions(tokens))
-        function_list = parsed_code.functions()
+        parsed_code = UniversalCode().read_tokens(parser, tokens)
+        function_list = parsed_code.function_list
         return FileInformation(filename, parsed_code.nloc, function_list)
 
     def _readFileContent(self, filename):
@@ -495,21 +502,24 @@ def print_warnings(option, saved_result):
     return warning_count
 
 def print_total(warning_count, saved_result, option):
-    all_fun = list(itertools.chain(*saved_result))
+    file_infos = list(saved_result)
+    all_fun = list(itertools.chain(*(file_info.function_list for file_info in file_infos)))
     cnt = len(all_fun)
     if (cnt == 0):
         cnt = 1
-    tNLOC = sum([f.nloc for f in all_fun])
-    if (tNLOC == 0):
-        tNLOC = 1
+    files_NLOC = sum([f.nloc for f in file_infos])
+    functions_NLOC = sum([f.nloc for f in all_fun])
+    if (functions_NLOC == 0):
+        functions_NLOC = 1
     total_info = (
-                  tNLOC, tNLOC / cnt,
+                  files_NLOC,
+                  functions_NLOC / cnt,
                   float(sum([f.cyclomatic_complexity for f in all_fun])) / cnt,
                   float(sum([f.token_count for f in all_fun])) / cnt,
                   cnt,
                   warning_count,
                   float(warning_count) / cnt,
-                  float(sum([f.nloc for f in all_fun if f.cyclomatic_complexity > option.CCN])) / tNLOC
+                  float(sum([f.nloc for f in all_fun if f.cyclomatic_complexity > option.CCN])) / functions_NLOC
                   )
 
     if not option.warnings_only:
@@ -519,22 +529,22 @@ def print_total(warning_count, saved_result, option):
         print("%10d%10d%9.2f%11.2f%9d%13d%10.2f%8.2f" % total_info)
 
 def print_and_save_detail_information(allStatistics, option):
-    saved_result = []
+    all_functions = []
     if (option.warnings_only):
-        saved_result = allStatistics
+        all_functions = allStatistics
     else:
         print_function_info_header()
         for fileStatistics in allStatistics:
-            saved_result.append(fileStatistics)
+            all_functions.append(fileStatistics)
             for fun in fileStatistics.function_list:
                 print_function_info(fun, fileStatistics.filename, option)
 
         print("--------------------------------------------------------------")
-        print("%d file analyzed." % (len(saved_result)))
+        print("%d file analyzed." % (len(all_functions)))
         print("==============================================================")
         print("NLOC    Avg.NLOC AvgCCN Avg.ttoken  function_cnt    file")
         print("--------------------------------------------------------------")
-        for fileStatistics in saved_result:
+        for fileStatistics in all_functions:
             print("%7d%7d%7d%10d%10d     %s" % (
                             fileStatistics.nloc, 
                             fileStatistics.average_NLOC, 
@@ -543,12 +553,12 @@ def print_and_save_detail_information(allStatistics, option):
                             len(fileStatistics.function_list), 
                             fileStatistics.filename))
 
-    return saved_result
+    return all_functions
 
 def print_result(r, option):
-    saved_result = print_and_save_detail_information(r, option)
-    warning_count = print_warnings(option, saved_result)
-    print_total(warning_count, saved_result, option)
+    all_functions = print_and_save_detail_information(r, option)
+    warning_count = print_warnings(option, all_functions)
+    print_total(warning_count, all_functions, option)
     if option.number > warning_count:
         sys.exit(1)
 
@@ -575,7 +585,7 @@ class XMLFormatter(object):
     
         for source_file in result:
             file_name = source_file.filename
-            for func in source_file:
+            for func in source_file.function_list:
                 Nr += 1
                 total_func_ncss += func.nloc
                 total_func_ccn += func.cyclomatic_complexity
@@ -600,7 +610,7 @@ class XMLFormatter(object):
             file_NR += 1
             file_total_ncss += source_file.nloc
             file_total_ccn += source_file.CCN
-            file_total_funcs += len(source_file)
+            file_total_funcs += len(source_file.function_list)
             measure.appendChild(self._createFileNode(doc, source_file, file_NR))
     
         if file_NR != 0:
@@ -678,7 +688,7 @@ class XMLFormatter(object):
         value3.appendChild(text3)
         item.appendChild(value3)
         value4 = doc.createElement("value")
-        text4 = doc.createTextNode(str(len(source_file)))
+        text4 = doc.createTextNode(str(len(source_file.function_list)))
         value4.appendChild(text4)
         item.appendChild(value4)
         return item

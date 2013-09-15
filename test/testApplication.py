@@ -42,6 +42,7 @@ class TestApplication(unittest.TestCase):
     @patch.object(FileAnalyzer, 'open')
     @patch.object(os, 'walk')
     @patch.object(hfcca, 'print_result')
+    
     def testMutipleFilesInArgv(self, print_result, os_walk, mock_open):
         def check_result(result, options):
             fileInfos = list(result) 
