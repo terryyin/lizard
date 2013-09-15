@@ -48,6 +48,7 @@ VERSION = "1.7.1"
 
 
 import itertools
+import re
 
 
 DEFAULT_CCN_THRESHOLD = 15
@@ -166,6 +167,18 @@ class UniversalCode(object):
 
 
 class LanguageReaderBase(object):
+    '''
+    This is the base class for any programming language reader.
+    It reader the tokens of a certain language and generate universal_code
+    by calling it's -generate_universal_code- method.
+    
+    The derived class should implement a series of 'state' functions. The
+    most basic and start state is _GLOBAL. Derived class must implement _GLOBAL
+    and other states. When the state changes, simply assign the state method to
+    self._state.
+    During each state, call the methods of self.universal_code to build the
+    universal code.
+    '''
 
     def __init__(self):
         self._state = self._GLOBAL
@@ -174,17 +187,17 @@ class LanguageReaderBase(object):
     
     def generate_universal_code(self, tokens):
         for token, self.current_line in tokens:
-            self._read_token(token)
+            if token.isspace():
+                self.univeral_code.NEW_LINE()
+            else:
+                self._state(token)
         return self.univeral_code
-
-    def _read_token(self, token):
-        if token.isspace():
-            self.univeral_code.NEW_LINE()
-        else:
-            self._state(token)
 
 
 class CLikeReader(LanguageReaderBase):
+    '''
+    This is the reader for C, C++ and Java.
+    '''
 
     def __init__(self):
         super(CLikeReader, self).__init__()
@@ -194,7 +207,7 @@ class CLikeReader(LanguageReaderBase):
         self.br_count = 0
         self.last_preprocessor = None
 
-    def remove_hash_if(self):
+    def remove_hash_if_from_conditions(self):
         self.conditions.remove("#if")
 
     def _is_condition(self, token):
@@ -283,6 +296,7 @@ class ObjCReader(CLikeReader):
             self._state = self._IMP
         else:
             self._state = self._GLOBAL
+
     def _OBJC_DEC(self, token):
         if token == '(':
             self._state = self._OBJC_PARAM_TYPE
@@ -300,39 +314,36 @@ class ObjCReader(CLikeReader):
         if token == ')':
             self._state = self._OBJC_PARAM
         self.univeral_code.ADD_TO_LONG_FUNCTION_NAME(" " + token)
+
     def _OBJC_PARAM(self, token):
         self._state = self._OBJC_DEC
 
-import re
 
-c_pattern = re.compile(r".*\.(c|C|cpp|CPP|CC|cc|mm)$")
-java_pattern = re.compile(r".*\.(java)$")
-objc_pattern = re.compile(r".*\.(m)$")
+class LanguageChooser(object):
 
-hfcca_language_infos = {
-                 'c/c++': {
-                  'name_pattern': c_pattern,
-                  'creator':CLikeReader},
-                 'Java': {
-                  'name_pattern': java_pattern,
-                  'creator':CLikeReader},
-                  'objC' : {
-                  'name_pattern': objc_pattern,
-                  'creator':ObjCReader}
-            }
+    hfcca_language_infos = {
+                     'c/c++': {
+                          'name_pattern': re.compile(r".*\.(c|C|cpp|CPP|CC|cc|mm)$"),
+                          'reader':CLikeReader},
+                     'Java': {
+                          'name_pattern': re.compile(r".*\.(java)$"),
+                          'reader':CLikeReader},
+                      'objC' : {
+                          'name_pattern': re.compile(r".*\.(m)$"),
+                          'reader':ObjCReader}
+                    }
 
-def get_parser_by_file_name(filename):
-    for lan in hfcca_language_infos:
-        info = hfcca_language_infos[lan]
-        if info['name_pattern'].match(filename):
-            return info['creator']
+    def is_file_type_supported(self, filename):
+        return any(info['name_pattern'].match(filename) 
+                   for info in self.hfcca_language_infos.itervalues())
 
-def get_parser_by_file_name_otherwise_default(filename):
-    for lan in hfcca_language_infos:
-        info = hfcca_language_infos[lan]
-        if info['name_pattern'].match(filename):
-            return info['creator']()
-    return hfcca_language_infos['c/c++']['creator']()
+    def get_reader_by_file_name_otherwise_default(self, filename):
+        for lan in self.hfcca_language_infos:
+            info = self.hfcca_language_infos[lan]
+            if info['name_pattern'].match(filename):
+                return info['reader']()
+        return self.hfcca_language_infos['c/c++']['reader']()
+
 
 class FileAnalyzer:
     ''' A FileAnalyzer works as a function. It takes filename as parameter.
@@ -355,9 +366,9 @@ class FileAnalyzer:
 
     def analyze(self, filename):
         code = self._readFileContent(filename)
-        parser = get_parser_by_file_name_otherwise_default(filename)
+        parser = LanguageChooser().get_reader_by_file_name_otherwise_default(filename)
         if self.noCountPre:
-            parser.remove_hash_if()
+            parser.remove_hash_if_from_conditions()
         result = self.analyze_source_code_with_parser1(filename, code, parser)
         return result
 
@@ -472,7 +483,7 @@ def print_warnings(option, saved_result):
     warning_count = 0
     if not option.warnings_only:
         print(("\n" +
-              "======================================\n" +
+               "======================================\n" +
               "!!!! Warnings (CCN > %d) !!!!\n" +
               "======================================") % option.CCN)
     for file_info in saved_result:
@@ -757,12 +768,12 @@ import os
 import fnmatch
 
 def _notExluded(str_to_match, patterns):
-    return get_parser_by_file_name(str_to_match) and \
+    return LanguageChooser().is_file_type_supported(str_to_match) and \
         all(not fnmatch.fnmatch(str_to_match, p) for p in patterns)
 
 def getSourceFiles(SRC_DIRs, exclude_patterns):
     for SRC_DIR in SRC_DIRs:
-        if os.path.isfile(SRC_DIR) and get_parser_by_file_name(SRC_DIR):
+        if os.path.isfile(SRC_DIR) and LanguageChooser().is_file_type_supported(SRC_DIR):
             yield SRC_DIR
         else:
             for root, _, files in os.walk(SRC_DIR, topdown=False):
