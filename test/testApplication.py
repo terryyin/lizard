@@ -1,9 +1,12 @@
 import unittest
 from mock import patch
 import hfcca
-from hfcca import hfcca_main, FileAnalyzer
+from hfcca import hfcca_main
 import os
 
+@patch('hfcca.open', create=True)
+@patch.object(os, 'walk')
+@patch.object(hfcca, 'print_result')
 class TestApplication(unittest.TestCase):
     
     def exhaust_result(self, result, options): 
@@ -12,46 +15,36 @@ class TestApplication(unittest.TestCase):
     def check_empty_result(self, result, options): 
         self.assertEqual([], list(result))
         
-    @patch.object(os, 'walk')
-    @patch.object(hfcca, 'print_result')
-    def testGetCurrentFolderByDefault(self, print_result, os_walk):
+    def testGetCurrentFolderByDefault(self, print_result, os_walk, mock_open):
         print_result.side_effect = self.exhaust_result
         hfcca_main(['hfcca'])
         os_walk.assert_called_once_with('.', topdown=False)
 
-    @patch.object(os, 'walk')
-    @patch.object(hfcca, 'print_result')
-    def testEmptyResult(self, print_result, os_walk):
+    def testEmptyResult(self, print_result, os_walk, mock_open):
         os_walk.return_value = [('.', [], [])]
         print_result.side_effect = self.check_empty_result
         hfcca_main(['hfcca'])
 
-    @patch.object(FileAnalyzer, 'open')
-    @patch.object(os, 'walk')
-    @patch.object(hfcca, 'print_result')
     def testFilesWithFunction(self, print_result, os_walk, mock_open):
         def check_result(result, options):
             fileInfos = list(result) 
             self.assertEqual(1, len(fileInfos))
             self.assertEqual('foo', fileInfos[0].function_list[0].name)
         os_walk.return_value = [('.', [], ['a.cpp'])]
-        mock_open.return_value.read.return_value = "void foo(){}"
+        mock_open.return_value.__enter__.return_value.read.return_value = "void foo(){}"
         print_result.side_effect = check_result
         hfcca_main(['hfcca'])
 
-    @patch.object(FileAnalyzer, 'open')
-    @patch.object(os, 'walk')
-    @patch.object(hfcca, 'print_result')
-    
     def testMutipleFilesInArgv(self, print_result, os_walk, mock_open):
         def check_result(result, options):
             fileInfos = list(result) 
             self.assertEqual(1, len(fileInfos))
             self.assertEqual('foo', fileInfos[0].function_list[0].name)
         os_walk.return_value = [('.', [], ['a.cpp'])]
-        mock_open.return_value.read.return_value = "void foo(){}"
+        mock_open.return_value.__enter__.return_value.read.return_value = "void foo(){}"
         print_result.side_effect = check_result
         hfcca_main(['hfcca'])
+
 
 class TestOptions(unittest.TestCase):
 
@@ -63,14 +56,14 @@ class TestOptions(unittest.TestCase):
         }
         '''
         
-    @patch.object(FileAnalyzer, 'open')
+    @patch('hfcca.open', create=True)
     @patch.object(os, 'walk')
     @patch.object(hfcca, 'print_result')
     def runApplicationWithArgv(self, argv, print_result, os_walk, mock_open):
         def store_result(result, options):
             self.fileInfos = list(result) 
         os_walk.return_value = [('.', [], ['a.cpp'])]
-        mock_open.return_value.read.return_value = self.source_code
+        mock_open.return_value.__enter__.return_value.read.return_value = self.source_code
         print_result.side_effect = store_result
         hfcca_main(argv)
         

@@ -2,8 +2,8 @@
 # Unit Test
 #
 import unittest
-from mock import patch
-from hfcca import FileAnalyzer, UniversalCode, generate_tokens, ObjCReader, generate_tokens_from_code, CLikeReader, mapFilesToAnalyzer, FunctionInfo
+from mock import patch, MagicMock, Mock
+from hfcca import FileAnalyzer, FileInformation, generate_tokens, ObjCReader, generate_tokens_from_code, CLikeReader, mapFilesToAnalyzer, FunctionInfo
 
 class Test_generate_tonken(unittest.TestCase):
 
@@ -142,63 +142,70 @@ class Test_parser_token(unittest.TestCase):
         tokens = self.get_tokens_and_line('/*abc\n*/ t')
         self.assertTrue(('t', 2) in tokens)
 
-class MockFileAnalyzer(FileAnalyzer):
-    def __init__(self):
-        self.mockRecord = []
-    def analyze(self, filename):
-        return filename
+
+def analyzer_mock(filename):
+    return filename
+
 class Test_analyze_files(unittest.TestCase):
     def test_NoFiles(self):
-        analyzer = MockFileAnalyzer()
+        call_count = 0
+        def analyzer(filename):
+            call_count += 1
         mapFilesToAnalyzer([], analyzer, 1)
-        self.assertEqual(0, len(analyzer.mockRecord))
+        self.assertEqual(0, call_count)
+
     def test_NoFilesMultipleThread(self):
-        analyzer = MockFileAnalyzer()
+        call_count = 0
+        def analyzer(filename):
+            call_count += 1
         mapFilesToAnalyzer([], analyzer, 2)
-        self.assertEqual(0, len(analyzer.mockRecord))
+        self.assertEqual(0, call_count)
+        
     def test_OneFile(self):
-        analyzer = MockFileAnalyzer()
+        analyzer = analyzer_mock
         r = mapFilesToAnalyzer(["filename"], analyzer, 1)
         self.assertEqual(["filename"], [x for x in r])
+        
     def test_OneFileMultipleThread(self):
-        analyzer = MockFileAnalyzer()
+        analyzer = analyzer_mock
         r = mapFilesToAnalyzer(["filename"], analyzer, 2)
         self.assertEqual(["filename"], [x for x in r])
+    
     def test_MoreFiles(self):
-        analyzer = MockFileAnalyzer()
+        analyzer = analyzer_mock
         r = mapFilesToAnalyzer(["f1", "f2"], analyzer, 1)
         self.assertEqual(["f1", "f2"], [x for x in r])
+
     def test_MoreFilesMultipleThread(self):
-        analyzer = MockFileAnalyzer()
+        analyzer = analyzer_mock
         r = mapFilesToAnalyzer(["f1", "f2"], analyzer, 2)
         self.assertEqual(["f1", "f2"], [x for x in r])
 
-class MockFile:
-    def __init__(self):
-        self.mockRecord = []
-    def read(self):
-        return "int foo(){haha();\n}"
-    def close(self):
-        pass
-    
-def mockOpen(name):
-    return MockFile()
 
+@patch('hfcca.open', create=True)
 class Test_FileAnalyzer(unittest.TestCase):
+    
     def setUp(self):
         self.analyzer = FileAnalyzer()
-        self.analyzer.open = mockOpen
+        
     def create_cpp_hfcca(self, source_code):
         return FileAnalyzer().analyze_source_code_with_parser(source_code, "", CLikeReader)
-    def test_analyze_c_file(self):
+
+    def test_analyze_c_file(self, mock_open):
+        file_handle = mock_open.return_value.__enter__.return_value
+        file_handle.read.return_value = "int foo(){haha();\n}"
         r = mapFilesToAnalyzer(["f1.c"], self.analyzer, 1)
         self.assertEqual(1, len([x for x in r]))
         
-    def test_analyze_c_file_with_multiple_thread(self):
+    def test_analyze_c_file_with_multiple_thread(self, mock_open):
+        file_handle = mock_open.return_value.__enter__.return_value
+        file_handle.read.return_value = "int foo(){haha();\n}"
         r = mapFilesToAnalyzer(["f1.c"], self.analyzer, 2)
         self.assertEqual(1, len([x for x in r]))
     
-    def test_fileInfomation(self):
+    def test_fileInfomation(self, mock_open):
+        file_handle = mock_open.return_value.__enter__.return_value
+        file_handle.read.return_value = "int foo(){haha();\n}"
         r = mapFilesToAnalyzer(["f1.c"], self.analyzer, 1)
         fileInfo = list(r)[0]
         self.assertEqual(1, fileInfo.nloc)
