@@ -335,7 +335,7 @@ class LanguageChooser(object):
 
     def is_file_type_supported(self, filename):
         return any(info['name_pattern'].match(filename) 
-                   for info in self.hfcca_language_infos.itervalues())
+                   for info in self.hfcca_language_infos.values())
 
     def get_reader_by_file_name_otherwise_default(self, filename):
         for lan in self.hfcca_language_infos:
