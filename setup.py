@@ -20,7 +20,7 @@ def install():
 A simple code complexity analyzer without caring about the C/C++ header files or Java imports.
 It can deal with Java/C/C++/Objective C code. It counts the cyclomatic complexity number etc.''',
           long_description =  long_description,
-          url = 'https://github.com/terryyin/lizard',
+          url = 'https://github.com/terryyin/hfcca',
           classifiers = ['Development Status :: 5 - Production/Stable',
                      'Intended Audience :: Developers',
                      'Intended Audience :: End Users/Desktop',
