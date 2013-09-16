@@ -1,38 +1,38 @@
 import unittest
-from hfcca_for_tnsdl import SDLReader
-from hfcca import generate_tokens
+from lizard_for_tnsdl import SDLReader
+from lizard import generate_tokens
 
 
-class Test_sdl_hfcca(unittest.TestCase):
+class Test_sdl_lizard(unittest.TestCase):
     
-    def create_sdl_hfcca(self, source_code):
+    def create_sdl_lizard(self, source_code):
         return SDLReader().generate_universal_code(generate_tokens(source_code)).function_list
     
     def test_empty(self):
-        result = self.create_sdl_hfcca("")
+        result = self.create_sdl_lizard("")
         self.assertEqual(0, len(result))
     
     def test_process(self):
-        result = self.create_sdl_hfcca("PROCESS pofcap\n ENDPROCESS;")
+        result = self.create_sdl_lizard("PROCESS pofcap\n ENDPROCESS;")
         self.assertEqual(1, len(result))
         self.assertEqual('PROCESS pofcap', result[0].name)
     
     def test_one_function(self):
-        result = self.create_sdl_hfcca("PROCEDURE xxx\n ENDPROCEDURE;");
+        result = self.create_sdl_lizard("PROCEDURE xxx\n ENDPROCEDURE;");
         self.assertEqual(1, len(result))
         self.assertEqual("PROCEDURE xxx", result[0].name)
         self.assertEqual(1, result[0].cyclomatic_complexity)
         self.assertEqual(0, result[0].token_count)
     
     def test_one_function_with_condition(self):
-        result = self.create_sdl_hfcca(example_sdl_procedure);
+        result = self.create_sdl_lizard(example_sdl_procedure);
         self.assertEqual(1, len(result))
         self.assertEqual("PROCEDURE send_swo_msgs__r", result[0].name)
         self.assertEqual(7, result[0].cyclomatic_complexity)
         self.assertEqual(173, result[0].token_count)
     
     def test_one_function_with_array(self):
-        result = self.create_sdl_hfcca("""
+        result = self.create_sdl_lizard("""
         PROCEDURE send_swo_msgs__r;
         START;
             TASK array(0):= 1;
@@ -42,7 +42,7 @@ class Test_sdl_hfcca(unittest.TestCase):
         self.assertEqual(1, result[0].cyclomatic_complexity)
     
     def test_process_with_content(self):
-        result = self.create_sdl_hfcca(example_sdl_process);
+        result = self.create_sdl_lizard(example_sdl_process);
         self.assertEqual(5, len(result))
         self.assertEqual("PROCEDURE send_swo_msgs__r", result[0].name)
         self.assertEqual("PROCESS pofsrt", result[1].name)

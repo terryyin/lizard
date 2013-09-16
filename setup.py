@@ -2,26 +2,25 @@
 # encoding: utf-8
 '''
 Setup script.
-To install hfcca:
+To install lizard:
 [sudo] python setup.py install
 '''
-import os
-from os.path import join
-import hfcca
+import lizard
 from distutils.core import setup
 def install():
     try:
-        long_description = open("README.md").read()
+        with open("README.md") as f:
+            long_description = (f.read()).replace("*", "``*``").replace("```", "")
     except:
-        long_description = hfcca.__doc__
+        long_description = lizard.__doc__  # @UndefinedVariable
     setup(
-          name = 'hfcca',
-          version = hfcca.VERSION,
+          name = 'lizard',
+          version = lizard.VERSION,
           description = ''' 
 A simple code complexity analyzer without caring about the C/C++ header files or Java imports.
 It can deal with Java/C/C++/Objective C code. It counts the cyclomatic complexity number etc.''',
           long_description =  long_description,
-          url = 'https://github.com/terryyin/hfcca',
+          url = 'https://github.com/terryyin/lizard',
           classifiers = ['Development Status :: 5 - Production/Stable',
                      'Intended Audience :: Developers',
                      'Intended Audience :: End Users/Desktop',
@@ -39,11 +38,11 @@ It can deal with Java/C/C++/Objective C code. It counts the cyclomatic complexit
                      'Programming Language :: Python :: 2.7',
                      'Programming Language :: Python :: 3.2',
                      'Programming Language :: Python :: 3.3'],
-          py_modules = ['hfcca'],
+          py_modules = ['lizard'],
           author = 'Terry Yin',
           author_email = 'terry.yinze@gmail.com',
-          #scripts = ['hfcca.bat' if os.sep == '\\' else 'hfcca']
-          scripts = ['hfcca.bat', 'hfcca']
+          #scripts = ['lizard.bat' if os.sep == '\\' else 'lizard']
+          scripts = ['lizard.bat', 'lizard', 'hfcca.bat', 'hfcca']
           )
 
 if __name__ == "__main__":

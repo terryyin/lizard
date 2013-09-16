@@ -1,9 +1,9 @@
 '''
-hfcca support for TNSDL. 
+lizard support for TNSDL. 
 TNSDL is an in-house programming language of Nokia/Nokia Solutions and Networks.
 '''
 import re
-from hfcca import LanguageReaderBase
+from lizard import LanguageReaderBase
 
 class SDLReader(LanguageReaderBase):
     def __init__(self):
@@ -84,7 +84,7 @@ class SDLReader(LanguageReaderBase):
 
 sdl_pattern = re.compile(r".*\.(sdl|SDL)$")
 
-extra_hfcca_language_infos = {
+extra_lizard_language_infos = {
                  'sdl' : {
                   'name_pattern': sdl_pattern,
                   'creator':SDLReader}

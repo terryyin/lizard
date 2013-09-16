@@ -1,7 +1,10 @@
-#Header Free Cyclomatic Complexity Analyzer
-[![Build Status](https://travis-ci.org/terryyin/hfcca.png?branch=master)](https://travis-ci.org/terryyin/hfcca)
+Lizard
+======
+Was hfcca, A Header Free Cyclomatic Complexity Analyzer.
 
-hfcca is a simple code complexity analyzer without caring about the C/C++ 
+[![Build Status](https://travis-ci.org/terryyin/lizard.png?branch=master)](https://travis-ci.org/terryyin/lizard)
+
+lizard is a simple code complexity analyzer without caring about the C/C++ 
 header files or Java imports. It can deal with
 
 * Java
@@ -16,7 +19,7 @@ It counts
 * parameter count of functions.
 
 You can set limitation for CCN (-C), the number of parameters (-a). Functions
-that exceed these limitations will generate warnings. The exit code of hfcca
+that exceed these limitations will generate warnings. The exit code of lizard
 will be none-Zero if there are warnings. 
 
 This tool actually calculates how complex the code 'looks' rather than how
@@ -29,16 +32,16 @@ It requires python2.6 or above (early versions are not verified).
 
 ##Installation
 
-hfcca.py is only a single python file, and everything is in that single script. You can always use it without any installation.
+lizard.py is only a single python file, and everything is in that single script. You can always use it without any installation.
 
 <pre>
-python hfcca.py
+python lizard.py
 </pre>
 
 If you want a proper install:
 
 <pre>
-[sudo] pip install hfcca
+[sudo] pip install lizard
 </pre>
 
 Or if you've got the source:
@@ -50,19 +53,20 @@ Or if you've got the source:
 ##Usage
 
 <pre>
-hfcca [options] [PATH or FILE] [PATH] ... 
+lizard [options] [PATH or FILE] [PATH] ... 
 </pre>
 Run for the code under current folder (recursively):
 <pre>
-hfcca
+lizard
 </pre>
 Exclude anything in the tests folder:
-<pre>
-hfcca mySource/ -x"./tests/*"
-</pre>
+```
+lizard mySource/ -x"./tests/*"
+```
+
 ### Options
 
-<pre>
+```
   --version             show program's version number and exit
   -h, --help            show this help message and exit
   -v, --verbose         Output in verbose mode (long function name)
@@ -94,9 +98,9 @@ hfcca mySource/ -x"./tests/*"
                         Adding this option to ignore them
   -t WORKING_THREADS, --working_threads=WORKING_THREADS
                         number of working threads. The default value is 1.
-</pre>                   
+```
 ##Example use
-### Analyze a folder recursively: hfcca mahjong_game/src
+### Analyze a folder recursively: lizard mahjong_game/src
 <pre>
 ==============================================================
   NLOC    CCN  token  param    function@line@file
@@ -122,22 +126,22 @@ Total NLOC  Avg.NLOC  Avg CCN  Avg token  Fun Cnt  Warning cnt   Fun Rt   NLOC R
 --------------------------------------------------------------------------------
        554        20     4.07      71.15       27            1      0.04    0.12
 </pre>
-### Warnings only (in clang/gcc formation):hfcca -w mahjong_game
+### Warnings only (in clang/gcc formation):lizard -w mahjong_game
 <pre>
 ./src/html_ui/httpd.c:64: warning: accept_request has 19 CCN and 1 params (66 NLOC, 247 tokens)
 ./src/mahjong_game/mj_table.c:109: warning: mj_table_update_state has 20 CCN and 1 params (72 NLOC, 255 tokens)
 </pre>
-## Using hfcca as Python module
-You can also use hfcca as a Python module in your code:
+## Using lizard as Python module
+You can also use lizard as a Python module in your code:
 ```python
->>> import hfcca
->>> i = hfcca.analyze_file("../cpputest/tests/AllTests.cpp")
+>>> import lizard
+>>> i = lizard.analyze_file("../cpputest/tests/AllTests.cpp")
 >>> print i.__dict__
-{'nloc': 9, 'function_list': [<hfcca.FunctionInfo object at 0x10bf7af10>], 'filename': '../cpputest/tests/AllTests.cpp'}
+{'nloc': 9, 'function_list': [<lizard.FunctionInfo object at 0x10bf7af10>], 'filename': '../cpputest/tests/AllTests.cpp'}
 >>> print i.function_list[0].__dict__
 {'cyclomatic_complexity': 1, 'token_count': 22, 'name': 'main', 'parameter_count': 2, 'nloc': 3, 'long_name': 'main( int ac , const char ** av )', 'start_line': 30}
 ```
 You can also use source code string instead of file. But you need to provide a file name (to identify the language).
 ```python
->>> i = hfcca.analyze_file.analyze_source_code("AllTests.cpp", "int foo(){}")
+>>> i = lizard.analyze_file.analyze_source_code("AllTests.cpp", "int foo(){}")
 ```

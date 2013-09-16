@@ -14,9 +14,8 @@
 #
 #  author: terry.yinzhe@gmail.com
 #
-
 """
-hfcca is a simple code complexity analyzer without caring about the C/C++ 
+lizard is a simple code complexity analyzer without caring about the C/C++ 
 header files or Java imports. It can deal with
 
 * Java
@@ -31,7 +30,7 @@ It counts
 * parameter count of functions.
 
 You can set limitation for CCN (-C), the number of parameters (-a). Functions
-that exceed these limitations will generate warnings. The exit code of hfcca
+that exceed these limitations will generate warnings. The exit code of lizard
 will be none-Zero if there are warnings. 
 
 This tool actually calculates how complex the code 'looks' rather than how
@@ -44,7 +43,8 @@ It requires python2.6 or above (early versions are not verified).
 """
 
 
-VERSION = "1.7.1"
+VERSION = "0.0.1"
+HFCCA_VERSION = "1.7.2"
 
 
 import itertools
@@ -321,7 +321,7 @@ class ObjCReader(CLikeReader):
 
 class LanguageChooser(object):
 
-    hfcca_language_infos = {
+    lizard_language_infos = {
                      'c/c++': {
                           'name_pattern': re.compile(r".*\.(c|C|cpp|CPP|CC|cc|mm)$"),
                           'reader':CLikeReader},
@@ -335,14 +335,14 @@ class LanguageChooser(object):
 
     def is_file_type_supported(self, filename):
         return any(info['name_pattern'].match(filename) 
-                   for info in self.hfcca_language_infos.values())
+                   for info in self.lizard_language_infos.values())
 
     def get_reader_by_file_name_otherwise_default(self, filename):
-        for lan in self.hfcca_language_infos:
-            info = self.hfcca_language_infos[lan]
+        for lan in self.lizard_language_infos:
+            info = self.lizard_language_infos[lan]
             if info['name_pattern'].match(filename):
                 return info['reader']()
-        return self.hfcca_language_infos['c/c++']['reader']()
+        return self.lizard_language_infos['c/c++']['reader']()
 
 
 class FileAnalyzer:
@@ -680,7 +680,7 @@ class XMLFormatter(object):
         item.appendChild(value4)
         return item
 
-def createHfccaCommandLineParser():
+def createlizardCommandLineParser():
     from optparse import OptionParser
     parser = OptionParser(version=VERSION)
     parser.add_option("-v", "--verbose",
@@ -734,7 +734,7 @@ def createHfccaCommandLineParser():
             dest="working_threads",
             default=1)
 
-    parser.usage = "hfcca [options] [PATH or FILE] [PATH] ... "
+    parser.usage = "lizard [options] [PATH or FILE] [PATH] ... "
     parser.description = __doc__
     return parser
 
@@ -773,7 +773,7 @@ def getSourceFiles(SRC_DIRs, exclude_patterns):
                         yield full_path_name
 
 def analyze(paths, options):
-    ''' This is the most important function of hfcca.
+    ''' This is the most important function of lizard.
         It analyze the given paths with the options.
         Can be used directly by other Python application.
     '''
@@ -782,8 +782,8 @@ def analyze(paths, options):
     r = mapFilesToAnalyzer(files, fileAnalyzer, options.working_threads)
     return r
 
-def hfcca_main(argv):
-    options, args = createHfccaCommandLineParser().parse_args(args=argv)
+def lizard_main(argv):
+    options, args = createlizardCommandLineParser().parse_args(args=argv)
     paths = ["."] if len(args) == 1 else args[1:]
     r = analyze(paths, options)
     if options.xml:
@@ -792,7 +792,7 @@ def hfcca_main(argv):
         print_result(r, options)
 
 def main():
-    hfcca_main(sys.argv)
+    lizard_main(sys.argv)
 
 if __name__ == "__main__":
     main()

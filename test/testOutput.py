@@ -1,7 +1,7 @@
 import unittest
 from mock import Mock, patch
 import sys
-from hfcca import print_warnings, print_and_save_detail_information, FunctionInfo, FileInformation,\
+from lizard import print_warnings, print_and_save_detail_information, FunctionInfo, FileInformation,\
     print_result, XMLFormatter
 
 class StreamStdoutTestCase(unittest.TestCase):

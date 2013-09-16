@@ -2,8 +2,8 @@
 # Unit Test
 #
 import unittest
-from mock import patch, MagicMock, Mock
-from hfcca import FileAnalyzer, FileInformation, generate_tokens, ObjCReader, generate_tokens_from_code, CLikeReader, mapFilesToAnalyzer, FunctionInfo
+from mock import patch
+from lizard import FileAnalyzer, generate_tokens, ObjCReader, generate_tokens_from_code, CLikeReader, mapFilesToAnalyzer, FunctionInfo
 
 class Test_generate_tonken(unittest.TestCase):
 
@@ -23,31 +23,31 @@ class Test_generate_tonken(unittest.TestCase):
         result = [t for t in generate_tokens_from_code("/**/")]
         self.assertEqual(1, len(result))
 
-class Test_objc_hfcca(unittest.TestCase):
-    def create_objc_hfcca(self, source_code):
+class Test_objc_lizard(unittest.TestCase):
+    def create_objc_lizard(self, source_code):
         return ObjCReader().generate_universal_code(generate_tokens(source_code)).function_list
     def test_empty(self):
-        result = self.create_objc_hfcca("")
+        result = self.create_objc_lizard("")
         self.assertEqual(0, len(result))
     def test_no_function(self):
-        result = self.create_objc_hfcca("#import <unistd.h>\n")
+        result = self.create_objc_lizard("#import <unistd.h>\n")
         self.assertEqual(0, len(result))
     def test_one_c_function(self):
-        result = self.create_objc_hfcca("int fun(int a, int b) const{}")
+        result = self.create_objc_lizard("int fun(int a, int b) const{}")
         self.assertEqual("fun", result[0].name)
     def test_one_objc_function(self):
-        result = self.create_objc_hfcca("-(void) foo {}")
+        result = self.create_objc_lizard("-(void) foo {}")
         self.assertEqual("foo", result[0].name)
     def test_one_objc_function_with_param(self):
-        result = self.create_objc_hfcca("-(void) replaceScene: (CCScene*) scene {}")
+        result = self.create_objc_lizard("-(void) replaceScene: (CCScene*) scene {}")
         self.assertEqual("replaceScene:", result[0].name)
         self.assertEqual("replaceScene:( CCScene * )", result[0].long_name)
     def test_one_objc_functio_nwith_two_param(self):
-        result = self.create_objc_hfcca("- (BOOL)scanJSONObject:(id *)outObject error:(NSError **)outError {}")
+        result = self.create_objc_lizard("- (BOOL)scanJSONObject:(id *)outObject error:(NSError **)outError {}")
         self.assertEqual("scanJSONObject: error:", result[0].name)
         self.assertEqual("scanJSONObject:( id * ) error:( NSError ** )", result[0].long_name)
     def test_one_objc_function_with_three_param(self):
-        result = self.create_objc_hfcca("- (id)initWithRequest:(NSURLRequest *)request delegate:(id <NSURLConnectionDelegate>)delegate startImmediately:(BOOL)startImmediately{}")
+        result = self.create_objc_lizard("- (id)initWithRequest:(NSURLRequest *)request delegate:(id <NSURLConnectionDelegate>)delegate startImmediately:(BOOL)startImmediately{}")
         self.assertEqual("initWithRequest: delegate: startImmediately:", result[0].name)
         self.assertEqual("initWithRequest:( NSURLRequest * ) delegate:( id < NSURLConnectionDelegate > ) startImmediately:( BOOL )", result[0].long_name)
     def test_implementation(self):
@@ -67,7 +67,7 @@ class Test_objc_hfcca(unittest.TestCase):
             }
             @end
             """
-        result = self.create_objc_hfcca(code)
+        result = self.create_objc_lizard(code)
         self.assertEqual(2, len(result))
         self.assertEqual("classMethod", result[0].name)
         
@@ -182,13 +182,13 @@ class Test_analyze_files(unittest.TestCase):
         self.assertEqual(["f1", "f2"], [x for x in r])
 
 
-@patch('hfcca.open', create=True)
+@patch('lizard.open', create=True)
 class Test_FileAnalyzer(unittest.TestCase):
     
     def setUp(self):
         self.analyzer = FileAnalyzer()
         
-    def create_cpp_hfcca(self, source_code):
+    def create_cpp_lizard(self, source_code):
         return FileAnalyzer().analyze_source_code_with_parser(source_code, "", CLikeReader)
 
     def test_analyze_c_file(self, mock_open):
@@ -218,7 +218,7 @@ class Test_FunctionInfo(unittest.TestCase):
         import pickle
         pickle.dumps(FunctionInfo("a", 1))
 
-from hfcca import getSourceFiles
+from lizard import getSourceFiles
 import os
 
 class Test_Exclude_Patterns(unittest.TestCase):
