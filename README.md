@@ -127,3 +127,17 @@ Total NLOC  Avg.NLOC  Avg CCN  Avg token  Fun Cnt  Warning cnt   Fun Rt   NLOC R
 ./src/html_ui/httpd.c:64: warning: accept_request has 19 CCN and 1 params (66 NLOC, 247 tokens)
 ./src/mahjong_game/mj_table.c:109: warning: mj_table_update_state has 20 CCN and 1 params (72 NLOC, 255 tokens)
 </pre>
+## Using hfcca as Python module
+You can also use hfcca as a Python module in your code:
+```python
+>>> import hfcca
+>>> i = hfcca.analyze_file("../cpputest/tests/AllTests.cpp")
+>>> print i.__dict__
+{'nloc': 9, 'function_list': [<hfcca.FunctionInfo object at 0x10bf7af10>], 'filename': '../cpputest/tests/AllTests.cpp'}
+>>> print i.function_list[0].__dict__
+{'cyclomatic_complexity': 1, 'token_count': 22, 'name': 'main', 'parameter_count': 2, 'nloc': 3, 'long_name': 'main( int ac , const char ** av )', 'start_line': 30}
+```
+You can also use source code string instead of file. But you need to provide a file name (to identify the language).
+```python
+>>> i = hfcca.analyze_file.analyze_source_code("AllTests.cpp", "int foo(){}")
+```

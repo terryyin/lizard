@@ -354,29 +354,25 @@ class FileAnalyzer:
         self.no_preprocessor_count = noCountPre
 
     def __call__(self, filename):
-        code = self._readFileContent(filename)
+        with open(filename) as f:
+            return self.analyze_source_code(filename, f.read())
+
+    def analyze_source_code(self, filename, code):
         reader = LanguageChooser().get_reader_by_file_name_otherwise_default(filename)
         if self.no_preprocessor_count and hasattr(reader, 'remove_hash_if_from_conditions'):
             reader.remove_hash_if_from_conditions()
-        result = self.analyze_source_code_with_parser1(filename, code, reader)
+        result = self.analyze_source_code_with_parser(filename, code, reader)
         return result
 
-
-
-    def analyze_source_code_with_parser1(self, filename, code, parser):
+    def analyze_source_code_with_parser(self, filename, code, parser):
         tokens = generate_tokens(code)
-        result = self.analyze_source_code_with_parser(filename, parser, tokens)
-        return result
- 
- 
-    def analyze_source_code_with_parser(self, filename, parser, tokens):
         parsed_code = parser.generate_universal_code(tokens)
         function_list = parsed_code.function_list
         return FileInformation(filename, parsed_code.nloc, function_list)
 
-    def _readFileContent(self, filename):
-        with open(filename) as f:
-            return f.read()
+
+analyze_file = FileAnalyzer()
+
 
 token_pattern = re.compile(r"(\w+|/\*|//|:=|::|>=|\*=|\*\*|\*|>"+
                            r"|&=|&&|&"+
