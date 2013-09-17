@@ -41,7 +41,6 @@ It can deal with Java/C/C++/Objective C code. It counts the cyclomatic complexit
           py_modules = ['lizard'],
           author = 'Terry Yin',
           author_email = 'terry.yinze@gmail.com',
-          #scripts = ['lizard.bat' if os.sep == '\\' else 'lizard']
           scripts = ['lizard.bat', 'lizard', 'hfcca.bat', 'hfcca']
           )
 
