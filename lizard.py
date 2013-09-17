@@ -374,33 +374,45 @@ class FileAnalyzer:
 analyze_file = FileAnalyzer()
 
 
-token_pattern = re.compile(r"(\w+|/\*|//|:=|::|>=|\*=|\*\*|\*|>"+
+class FreeFormattingTokenizer(object):
+    '''
+    Use this tokenizer to tokenize C/C++, Java, ObjC code, which the
+    format is not part of the syntax. So indentation & new lines
+    doesn't matter.
+    '''
+    
+    token_pattern = re.compile(r"(\w+|/\*|//|:=|::|>=|\*=|\*\*|\*|>"+
                            r"|&=|&&|&"+
                            r"|#\s*define|#\s*if|#\s*else|#\s*endif|#\s*\w+"+
                            r"|[!%^&\*\-=+\|\\<>/\]\+]+|.)", re.M | re.S)
 
-def generate_tokens(source_code):
-    for t, l in generate_tokens_from_code(source_code):
-        if not any(t.startswith(x) for x in ('#define', '/*', '//')) :
-            yield t, l
 
-def generate_tokens_from_code(source_code):
-    in_middle_of_empty_lines = False
-    for (token, line) in tokens_from_code_with_multiple_newlines(source_code):
-        if token != '\n' or not in_middle_of_empty_lines:
-            yield token, line
-        in_middle_of_empty_lines = (token == '\n')
+    def __call__(self, source_code):
+        for t, l in self._generate_tokens_without_empty_lines(source_code):
+            if not any(t.startswith(x) for x in ('#define', '/*', '//')) :
+                yield t, l
 
-def tokens_from_code_with_multiple_newlines(source_code):
-    index = 0
-    line = 1
-    while 1:
-        m = token_pattern.match(source_code, index)
-        if not m:
-            break
-        token = m.group(0)
-        if token == '\n': line += 1
+    def _generate_tokens_without_empty_lines(self, source_code):
+        in_middle_of_empty_lines = False
+        for (token, line) in self._tokens_from_code_with_multiple_newlines(source_code):
+            if token != '\n' or not in_middle_of_empty_lines:
+                yield token, line
+            in_middle_of_empty_lines = (token == '\n')
+    
+    def _tokens_from_code_with_multiple_newlines(self, source_code):
+        index = 0
+        line = 1
+        while index >= 0:
+            m = self.token_pattern.match(source_code, index)
+            if not m:
+                break
+            index, token = self._read_one_token(source_code, index, m.group(0))            
+            line += 1 if token == '\n' else (len(token.splitlines()) - 1)
+            if not token.isspace() or token == '\n':
+                yield token, line
 
+    def _read_one_token(self, source_code, index, token):
+        original_index = index
         if token.startswith("#"):
             token = "#" + token[1:].strip()
 
@@ -412,19 +424,15 @@ def tokens_from_code_with_multiple_newlines(source_code):
                     break
                 if not source_code[bindex:index].rstrip().endswith('\\'):
                     break
-            if index == -1:
-                break
-            token = source_code[m.start(0):index]
+            if index != -1:
+                token = source_code[original_index:index]
         elif token == '/*':
             index = source_code.find("*/", index + 2)
-            if index == -1:
-                break
-            index += 2
-            token = source_code[m.start(0):index]
+            if index != -1:
+                index += 2
+                token = source_code[original_index:index]
         elif token in( '//', '#if','#endif'):
             index = source_code.find('\n', index)
-            if index == -1:
-                break
         elif token == '"' or token == '\'':
             while(1):
                 index += 1
@@ -435,15 +443,15 @@ def tokens_from_code_with_multiple_newlines(source_code):
                     if source_code[index - 2] != '\\':
                         continue
                 break
-            if index == -1:
-                break
-            token = source_code[m.start(0):index + 1]
-            index = index + 1
+            if index != -1:
+                token = source_code[original_index:index + 1]
+                index = index + 1
         else:
-            index = m.end(0)
-        line += (len(token.splitlines()) - 1)
-        if not token.isspace() or token == '\n':
-            yield token, line
+            index += len(token)
+        return index, token
+
+generate_tokens = FreeFormattingTokenizer()
+
 
 import sys
 

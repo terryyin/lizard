@@ -3,25 +3,22 @@
 #
 import unittest
 from mock import patch
-from lizard import FileAnalyzer, generate_tokens, ObjCReader, generate_tokens_from_code, CLikeReader, mapFilesToAnalyzer, FunctionInfo
+from lizard import FileAnalyzer, ObjCReader, generate_tokens, CLikeReader, mapFilesToAnalyzer, FunctionInfo
 
 class Test_generate_tonken(unittest.TestCase):
 
     def test_empty_string(self):
-        result = [t for t in generate_tokens_from_code("")]
+        result = [t for t in generate_tokens("")]
         self.assertEqual(0, len(result))
 
     def test_with_one_return(self):
-        result = [t for t in generate_tokens_from_code("\n")]
+        result = [t for t in generate_tokens("\n")]
         self.assertEqual(1, len(result))
 
     def test_with_two_returns(self):
-        result = [t for t in generate_tokens_from_code("\n\n")]
+        result = [t for t in generate_tokens("\n\n")]
         self.assertEqual(1, len(result))
 
-    def test_comment_count_as_a_token_when_generating(self):
-        result = [t for t in generate_tokens_from_code("/**/")]
-        self.assertEqual(1, len(result))
 
 class Test_objc_lizard(unittest.TestCase):
     def create_objc_lizard(self, source_code):
