@@ -269,4 +269,22 @@ class Test_Exclude_Patterns(unittest.TestCase):
                                       ['useful.txt']],)
         files = getSourceFiles(["dir"],['exclude_me'])
         self.assertEqual([], list(files))
+
+
+from lizard import LanguageChooser
+class TestLanguageChooser(unittest.TestCase):
+    
+    def test_not_case_sensitive(self):
+        self.assertEqual("c/c++", LanguageChooser().get_language_by_filename("a.Cpp"));
+    
+    def test_java(self):
+        self.assertEqual("Java", LanguageChooser().get_language_by_filename("a.java"));
+    
+    def test_objectiveC(self):
+        self.assertEqual("objC", LanguageChooser().get_language_by_filename("a.m"));
+    
+    def test_c_cpp(self):
+        for name in ("a.cpp", ".cxx", ".h", ".hpp"):
+            self.assertEqual("c/c++", LanguageChooser().get_language_by_filename(name),
+                             "File name '%s' is not recognized as c/c++ file" % name);
     

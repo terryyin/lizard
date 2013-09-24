@@ -319,30 +319,32 @@ class ObjCReader(CLikeReader):
         self._state = self._OBJC_DEC
 
 
+def compile_file_extension_re(*exts):
+    return re.compile(r".*\.(" + r"|".join(exts) + r")$", re.IGNORECASE)
+
 class LanguageChooser(object):
 
     lizard_language_infos = {
                      'c/c++': {
-                          'name_pattern': re.compile(r".*\.(c|C|cpp|CPP|CC|cc|mm)$"),
+                          'name_pattern': compile_file_extension_re("c", "cpp", "cc", "mm", "cxx", "h", "hpp"),
                           'reader':CLikeReader},
                      'Java': {
-                          'name_pattern': re.compile(r".*\.(java)$"),
+                          'name_pattern': compile_file_extension_re("java"),
                           'reader':CLikeReader},
                       'objC' : {
-                          'name_pattern': re.compile(r".*\.(m)$"),
+                          'name_pattern': compile_file_extension_re("m"),
                           'reader':ObjCReader}
                     }
 
-    def is_file_type_supported(self, filename):
-        return any(info['name_pattern'].match(filename) 
-                   for info in self.lizard_language_infos.values())
-
-    def get_reader_by_file_name_otherwise_default(self, filename):
+    def get_language_by_filename(self, filename):
         for lan in self.lizard_language_infos:
             info = self.lizard_language_infos[lan]
             if info['name_pattern'].match(filename):
-                return info['reader']()
-        return self.lizard_language_infos['c/c++']['reader']()
+                return lan
+
+    def get_reader_by_file_name_otherwise_default(self, filename):
+        lan = self.get_language_by_filename(filename)
+        return self.lizard_language_infos[lan or "c/c++"]['reader']()
 
 
 class FileAnalyzer:
@@ -482,8 +484,8 @@ def print_warnings(option, saved_result):
     if not option.warnings_only:
         print(("\n" +
                "======================================\n" +
-              "!!!! Warnings (CCN > %d) !!!!\n" +
-              "======================================") % option.CCN)
+              "!!!! Warnings (CCN > %d) !!!!") % option.CCN)
+        print_function_info_header()
     for file_info in saved_result:
         for fun in file_info.function_list:
             if fun.cyclomatic_complexity > option.CCN or \
@@ -766,12 +768,12 @@ import os
 import fnmatch
 
 def _notExluded(str_to_match, patterns):
-    return LanguageChooser().is_file_type_supported(str_to_match) and \
+    return LanguageChooser().get_language_by_filename(str_to_match) and \
         all(not fnmatch.fnmatch(str_to_match, p) for p in patterns)
 
 def getSourceFiles(SRC_DIRs, exclude_patterns):
     for SRC_DIR in SRC_DIRs:
-        if os.path.isfile(SRC_DIR) and LanguageChooser().is_file_type_supported(SRC_DIR):
+        if os.path.isfile(SRC_DIR) and LanguageChooser().get_language_by_filename(SRC_DIR):
             yield SRC_DIR
         else:
             for root, _, files in os.walk(SRC_DIR, topdown=False):
