@@ -72,10 +72,6 @@ class Test_c_cpp_lizard(unittest.TestCase):
         result = create_cpp_lizard("""int fun(){char *a="\\\\";}""")
         self.assertEqual(1, result[0].cyclomatic_complexity)
     
-    def test_example_macro(self):
-        result = create_cpp_lizard(example_macro)
-        self.assertEqual(0, len(result))
-    
     def test_function_with_no_param(self):
         result = create_cpp_lizard("int fun(){}")
         self.assertEqual(0, result[0].parameter_count)
@@ -143,6 +139,12 @@ class Test_c_cpp_lizard(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual("TC::operator ( )", result[0].name)
 
+    def test_constructor_initialization_list(self):
+        result = create_cpp_lizard('''A::A():a(1){}''')
+        self.assertEqual(1, len(result))
+        self.assertEqual("A::A", result[0].name)
+        
+
 class Test_C_Function_Token_Count(unittest.TestCase):
 
     def test_one_function_with_no_token(self):
@@ -174,9 +176,22 @@ class Test_Preprocessing(unittest.TestCase):
                                     } void fun(){}''')
         self.assertEqual(2, len(result))
 
-example_macro = r'''
-#define MTP_CHECK                                                             \
-   if (mea_data->which_data != MTP_WHICH_DATA_T_NONE_C) {                     \
-   phys_address_t np;                                                         \
-   }
-'''
+    def test_content_macro_should_be_ignored(self):
+        result = create_cpp_lizard(r'''
+                    #define MTP_CHEC                    \
+                       int foo () {                     \
+                        }
+               ''')
+        self.assertEqual(0, len(result))
+    
+   
+    def test_preprocessors_should_be_ignored_outside_function_implementation(self):
+        result = create_cpp_lizard('''
+                      Constructor::Constructor()
+                      #ifdef MAGIC
+                      :m_timer(5)
+                      #endif
+                      {}
+                    ''')
+        self.assertEqual(1, len(result))
+

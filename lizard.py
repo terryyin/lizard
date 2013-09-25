@@ -184,14 +184,17 @@ class LanguageReaderBase(object):
         self._state = self._GLOBAL
         self.current_line = 0
         self.univeral_code = UniversalCode()
-    
+
     def generate_universal_code(self, tokens):
         for token, self.current_line in tokens:
             if token.isspace():
                 self.univeral_code.NEW_LINE()
             else:
-                self._state(token)
+                self.process_token(token)
         return self.univeral_code
+    
+    def process_token(self, token):
+        return self._state(token)
 
 
 class CLikeReader(LanguageReaderBase):
@@ -212,6 +215,11 @@ class CLikeReader(LanguageReaderBase):
 
     def _is_condition(self, token):
         return token in self.conditions
+
+    def process_token(self, token):
+        if token.startswith("#") and self._state != self._IMP:
+            return
+        return super(CLikeReader, self).process_token(token)
 
     def _GLOBAL(self, token):
         if token == '(':
@@ -252,8 +260,15 @@ class CLikeReader(LanguageReaderBase):
         elif token == '{':
             self.br_count += 1
             self._state = self._IMP
+        elif token == ":":
+            self._state = self._CONSTRUCTOR_INITIALIZATION_LIST
         else:
             self._state = self._GLOBAL
+
+    def _CONSTRUCTOR_INITIALIZATION_LIST(self, token):
+        if token == '{':
+            self.br_count += 1
+            self._state = self._IMP
 
     def _IMP(self, token):
         if token in ("#else", "#if", "#endif"):
