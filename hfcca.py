@@ -542,7 +542,10 @@ class XMLFormatter(object):
         impl = xml.dom.minidom.getDOMImplementation()
         doc = impl.createDocument(None, "cppncss", None)
         root = doc.documentElement
-    
+
+        pi = doc.createProcessingInstruction('xml-stylesheet','type="text/xsl" href="hfcca.xsl"')
+        doc.insertBefore(pi, root)
+
         measure = doc.createElement("measure")
         measure.setAttribute("type", "Function")
         measure.appendChild(self._createLabels(doc, ["Nr.", "NCSS", "CCN"]))
