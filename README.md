@@ -2,7 +2,7 @@ Lizard
 ======
 Was hfcca, A Header Free Cyclomatic Complexity Analyzer.
 
-[![Build Status](https://travis-ci.org/terryyin/hfcca.png?branch=master)](https://travis-ci.org/terryyin/hfcca)
+[![Build Status](https://travis-ci.org/terryyin/lizard.png?branch=master)](https://travis-ci.org/terryyin/lizard)
 
 lizard is a simple code complexity analyzer without caring about the C/C++ 
 header files or Java imports. It can deal with

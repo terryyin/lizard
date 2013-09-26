@@ -195,3 +195,13 @@ class Test_Preprocessing(unittest.TestCase):
                     ''')
         self.assertEqual(1, len(result))
 
+    def test_sharp_if_and_sharp_elif_counts_in_cc_number(self):
+        result = create_cpp_lizard('''
+                    void main(){
+                    #ifdef A
+                    #elif (defined E)
+                    #endif
+                    }''')
+        self.assertEqual(1, len(result))
+        self.assertEqual(3, result[0].cyclomatic_complexity)
+

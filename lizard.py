@@ -205,13 +205,14 @@ class CLikeReader(LanguageReaderBase):
     def __init__(self):
         super(CLikeReader, self).__init__()
         self.conditions = set(
-            ['if', 'for', 'while', '&&', '||', 'case', '?', '#if', 'catch'])
+            ['if', 'for', 'while', '&&', '||', 'case', '?', '#if', '#elif', 'catch'])
         self.bracket_level = 0
         self.br_count = 0
         self.last_preprocessor = None
 
     def remove_hash_if_from_conditions(self):
         self.conditions.remove("#if")
+        self.conditions.remove("#elif")
 
     def _is_condition(self, token):
         return token in self.conditions
