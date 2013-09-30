@@ -611,7 +611,7 @@ class XMLFormatter(object):
         doc = impl.createDocument(None, "cppncss", None)
         root = doc.documentElement
 
-        pi = doc.createProcessingInstruction('xml-stylesheet','type="text/xsl" href="hfcca.xsl"')
+        pi = doc.createProcessingInstruction('xml-stylesheet','type="text/xsl" href="https://raw.github.com/terryyin/lizard/master/lizard.xsl"')
         doc.insertBefore(pi, root)
 
         measure = doc.createElement("measure")
