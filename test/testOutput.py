@@ -75,6 +75,12 @@ class TestAllOutput(StreamStdoutTestCase):
         print_result(file_infos, option)
         mock_exit.has_called_with(1)
 
+    def test_null_result(self):
+        file_infos = [FileInformation('f1.c', 1, []), None]
+        option = Mock(CCN=15, number = 0)
+        print_result(file_infos, option)
+
+
 
 import xml.etree.ElementTree as ET
 class TestXMLOutput(unittest.TestCase):

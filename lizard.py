@@ -416,8 +416,6 @@ class FileAnalyzer:
             e.code = code
             raise
             
-        return FileInformation(filename, 0, [])
-    
     def analyze_source_code_with_parser(self, filename, code, parser):
         tokens = generate_tokens(code)
         parsed_code = parser.generate_universal_code(tokens)
@@ -539,11 +537,12 @@ def print_warnings(option, saved_result):
               "!!!! Warnings (CCN > %d) !!!!") % option.CCN)
         print_function_info_header()
     for file_info in saved_result:
-        for fun in file_info.function_list:
-            if fun.cyclomatic_complexity > option.CCN or \
-                    fun.parameter_count > option.arguments:
-                warning_count += 1
-                print_function_info(fun, file_info.filename, option)
+        if file_info:
+            for fun in file_info.function_list:
+                if fun.cyclomatic_complexity > option.CCN or \
+                        fun.parameter_count > option.arguments:
+                    warning_count += 1
+                    print_function_info(fun, file_info.filename, option)
 
     if warning_count == 0:
         print("No warning found. Excellent!")
@@ -551,7 +550,7 @@ def print_warnings(option, saved_result):
     return warning_count
 
 def print_total(warning_count, saved_result, option):
-    file_infos = list(saved_result)
+    file_infos = list(file_info for file_info in saved_result if file_info)
     all_fun = list(itertools.chain(*(file_info.function_list for file_info in file_infos)))
     cnt = len(all_fun)
     if (cnt == 0):
@@ -584,23 +583,24 @@ def print_and_save_detail_information(allStatistics, option):
     else:
         print_function_info_header()
         for fileStatistics in allStatistics:
-            all_functions.append(fileStatistics)
-            for fun in fileStatistics.function_list:
-                print_function_info(fun, fileStatistics.filename, option)
-
-        print("--------------------------------------------------------------")
-        print("%d file analyzed." % (len(all_functions)))
-        print("==============================================================")
-        print("NLOC    Avg.NLOC AvgCCN Avg.ttoken  function_cnt    file")
-        print("--------------------------------------------------------------")
-        for fileStatistics in all_functions:
-            print("%7d%7d%7d%10d%10d     %s" % (
-                            fileStatistics.nloc, 
-                            fileStatistics.average_NLOC, 
-                            fileStatistics.average_CCN, 
-                            fileStatistics.average_token, 
-                            len(fileStatistics.function_list), 
-                            fileStatistics.filename))
+            if fileStatistics:
+                all_functions.append(fileStatistics)
+                for fun in fileStatistics.function_list:
+                    print_function_info(fun, fileStatistics.filename, option)
+    
+            print("--------------------------------------------------------------")
+            print("%d file analyzed." % (len(all_functions)))
+            print("==============================================================")
+            print("NLOC    Avg.NLOC AvgCCN Avg.ttoken  function_cnt    file")
+            print("--------------------------------------------------------------")
+            for fileStatistics in all_functions:
+                print("%7d%7d%7d%10d%10d     %s" % (
+                                fileStatistics.nloc, 
+                                fileStatistics.average_NLOC, 
+                                fileStatistics.average_CCN, 
+                                fileStatistics.average_token, 
+                                len(fileStatistics.function_list), 
+                                fileStatistics.filename))
 
     return all_functions
 
