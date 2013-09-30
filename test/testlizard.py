@@ -236,6 +236,7 @@ class Test_FileAnalyzer(unittest.TestCase):
         self.assertEqual(1, mock_stderr.write.call_count)
         error_message = mock_stderr.write.call_args[0][0]
         self.assertIn("[Errno 2]", error_message)
+        self.assertIn("terry.yinzhe@gmail.com", error_message)
         
          
 class Test_FunctionInfo(unittest.TestCase):

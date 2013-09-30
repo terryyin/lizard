@@ -42,6 +42,7 @@ complexity.
 It requires python2.6 or above (early versions are not verified).
 """
 
+BUG_REPORTING = "please report bug to terry.yinzhe@gmail.com or https://github.com/terryyin/lizard.\n"
 
 VERSION = "0.0.1"
 HFCCA_VERSION = "1.7.2"
@@ -181,8 +182,7 @@ class ParsingError(Exception):
             line = ''
         return '''!!!Exception Happens!!!
 At %s:%d: '%s'
-If possible, please report this bug to terry.yinzhe@gmail.com or https://github.com/terryyin/lizard.
-''' % (self.filename, self.line_number, line)
+If possible, ''' % (self.filename, self.line_number, line) + BUG_REPORTING
 
 
 class LanguageReaderBase(object):
@@ -400,6 +400,7 @@ class FileAnalyzer:
                 return self.analyze_source_code(filename, f.read())
         except Exception as e:
             msg = '\n'.join(traceback.format_exception_only(type(e), e))
+            msg+= "\nIf you think this is a bug, "+ BUG_REPORTING
             sys.stderr.write(msg)
             
     def analyze_source_code(self, filename, code):
