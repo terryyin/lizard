@@ -74,13 +74,23 @@ class TestAllOutput(StreamStdoutTestCase):
         option = Mock(CCN=15, number = 0)
         print_result(file_infos, option)
         mock_exit.has_called_with(1)
-        
+
+
+import xml.etree.ElementTree as ET
 class TestXMLOutput(unittest.TestCase):
     
+    fun = FunctionInfo("foo", 100)
+    fun.cyclomatic_complexity = 16
+    file_infos = [FileInformation('f1.c', 1, [fun])]
+    option = Mock(CCN=15, number = 0)
+    xml = XMLFormatter().xml_output(file_infos, option)
+    
     def test_xml_output(self):
-        fun = FunctionInfo("foo", 100)
-        fun.cyclomatic_complexity = 16
-        file_infos = [FileInformation('f1.c', 1, [fun])]
-        option = Mock(CCN=15, number = 0)
-        xml = XMLFormatter().xml_output(file_infos, option)
-        self.assertIn('''<item name="foo at f1.c:100">''', xml)
+        root = ET.fromstring(self.xml)
+        item = root.findall('''./measure[@type="Function"]/item[0]''')[0]
+        self.assertEqual('''foo at f1.c:100''', item.get("name"))
+
+    def test_xml_stylesheet(self):
+        self.assertIn('''<?xml-stylesheet type="text/xsl" href="https://raw.github.com/terryyin/lizard/master/lizard.xsl"?>''', self.xml)
+        
+        
