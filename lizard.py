@@ -47,7 +47,7 @@ VERSION = "0.0.1"
 HFCCA_VERSION = "1.7.2"
 
 
-import itertools
+import itertools, traceback
 import re
 
 
@@ -171,12 +171,18 @@ class ParsingError(Exception):
 
     def __init__(self, line_number):
         self.line_number = line_number
+        self.filename = ''
+        self.code = ''
     
-    def message(self, filename, code):
+    def __str__(self):
+        try:
+            line = self.code.splitlines()[self.line_number - 1]
+        except:
+            line = ''
         return '''!!!Exception Happens!!!
-At %s:%d token '%s'
+At %s:%d: '%s'
 If possible, please report this bug to terry.yinzhe@gmail.com or https://github.com/terryyin/lizard.
-''' % (filename, self.line_number, code.splitlines()[self.line_number-1])
+''' % (self.filename, self.line_number, line)
 
 
 class LanguageReaderBase(object):
@@ -389,9 +395,13 @@ class FileAnalyzer:
         self.no_preprocessor_count = noCountPre
 
     def __call__(self, filename):
-        with open(filename) as f:
-            return self.analyze_source_code(filename, f.read())
-
+        try:
+            with open(filename) as f:
+                return self.analyze_source_code(filename, f.read())
+        except Exception as e:
+            msg = '\n'.join(traceback.format_exception_only(type(e), e))
+            sys.stderr.write(msg)
+            
     def analyze_source_code(self, filename, code):
         try:
             reader = LanguageChooser().get_reader_by_file_name_otherwise_default(filename)
@@ -401,7 +411,9 @@ class FileAnalyzer:
     
             return result
         except ParsingError as e:
-            sys.stderr.write(e.message(filename, code))
+            e.filename = filename
+            e.code = code
+            raise
             
         return FileInformation(filename, 0, [])
     

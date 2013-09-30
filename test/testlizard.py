@@ -229,6 +229,14 @@ class Test_FileAnalyzer(unittest.TestCase):
         self.assertIn("terry.yinzhe@gmail.com", error_message)
         self.assertIn("https://github.com/terryyin/lizard", error_message)
         
+    @patch.object(sys, 'stderr')
+    def test_should_report_when_having_other_problem_and_continue(self, mock_stderr, mock_open):
+        mock_open.side_effect = IOError("[Errno 2] No such file or directory")
+        analyze_file("f1.c")
+        self.assertEqual(1, mock_stderr.write.call_count)
+        error_message = mock_stderr.write.call_args[0][0]
+        self.assertIn("[Errno 2]", error_message)
+        
          
 class Test_FunctionInfo(unittest.TestCase):
     def test_FunctionInfo_ShouldBePicklable(self):
