@@ -144,6 +144,10 @@ class Test_c_cpp_lizard(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual("A::A", result[0].name)
         
+    def test_brakets_before_function(self):
+        result = create_cpp_lizard('''()''')
+        self.assertEqual(0, len(result))
+        
 
 class Test_C_Function_Token_Count(unittest.TestCase):
 
@@ -197,11 +201,19 @@ class Test_Preprocessing(unittest.TestCase):
 
     def test_sharp_if_and_sharp_elif_counts_in_cc_number(self):
         result = create_cpp_lizard('''
-                    void main(){
-                    #ifdef A
-                    #elif (defined E)
-                    #endif
-                    }''')
+                int main(){
+                #ifdef A
+                #elif (defined E)
+                #endif
+                }''')
         self.assertEqual(1, len(result))
         self.assertEqual(3, result[0].cyclomatic_complexity)
+
+    def test_preprocessor_is_not_function(self):
+        result = create_cpp_lizard('''
+                #ifdef A
+                #elif (defined E)
+                #endif
+                ''')
+        self.assertEqual(0, len(result))
 

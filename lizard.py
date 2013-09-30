@@ -131,7 +131,7 @@ class UniversalCode(object):
     """
 
     def __init__(self):
-        self.current_function = None
+        self.START_NEW_FUNCTION('', 0)
         self.newline = True
         self.nloc = 0
         self.function_list = []
@@ -164,6 +164,19 @@ class UniversalCode(object):
 
     def END_OF_FUNCTION(self):
         self.function_list.append(self.current_function)
+        self.START_NEW_FUNCTION('', 0)
+
+
+class ParsingError(Exception):
+
+    def __init__(self, line_number):
+        self.line_number = line_number
+    
+    def message(self, filename, code):
+        return '''!!!Exception Happens!!!
+At %s:%d token '%s'
+If possible, please report this bug to terry.yinzhe@gmail.com or https://github.com/terryyin/lizard.
+''' % (filename, self.line_number, code.splitlines()[self.line_number-1])
 
 
 class LanguageReaderBase(object):
@@ -187,10 +200,14 @@ class LanguageReaderBase(object):
 
     def generate_universal_code(self, tokens):
         for token, self.current_line in tokens:
-            if token.isspace():
-                self.univeral_code.NEW_LINE()
-            else:
-                self.process_token(token)
+            try:
+                if token.isspace():
+                    self.univeral_code.NEW_LINE()
+                else:
+                    self.process_token(token)
+            except:
+                raise ParsingError(self.current_line)
+        
         return self.univeral_code
     
     def process_token(self, token):
@@ -230,9 +247,9 @@ class CLikeReader(LanguageReaderBase):
         elif token == '::':
             self._state = self._NAMESPACE
         else:
+            self.univeral_code.START_NEW_FUNCTION(token, self.current_line)
             if token == 'operator':
                 self._state = self._OPERATOR
-            self.univeral_code.START_NEW_FUNCTION(token, self.current_line)
 
     def _OPERATOR(self, token):
         if token != '(':
@@ -376,12 +393,18 @@ class FileAnalyzer:
             return self.analyze_source_code(filename, f.read())
 
     def analyze_source_code(self, filename, code):
-        reader = LanguageChooser().get_reader_by_file_name_otherwise_default(filename)
-        if self.no_preprocessor_count and hasattr(reader, 'remove_hash_if_from_conditions'):
-            reader.remove_hash_if_from_conditions()
-        result = self.analyze_source_code_with_parser(filename, code, reader)
-        return result
-
+        try:
+            reader = LanguageChooser().get_reader_by_file_name_otherwise_default(filename)
+            if self.no_preprocessor_count and hasattr(reader, 'remove_hash_if_from_conditions'):
+                reader.remove_hash_if_from_conditions()
+            result = self.analyze_source_code_with_parser(filename, code, reader)
+    
+            return result
+        except ParsingError as e:
+            sys.stderr.write(e.message(filename, code))
+            
+        return FileInformation(filename, 0, [])
+    
     def analyze_source_code_with_parser(self, filename, code, parser):
         tokens = generate_tokens(code)
         parsed_code = parser.generate_universal_code(tokens)
