@@ -588,19 +588,19 @@ def print_and_save_detail_information(allStatistics, option):
                 for fun in fileStatistics.function_list:
                     print_function_info(fun, fileStatistics.filename, option)
     
-            print("--------------------------------------------------------------")
-            print("%d file analyzed." % (len(all_functions)))
-            print("==============================================================")
-            print("NLOC    Avg.NLOC AvgCCN Avg.ttoken  function_cnt    file")
-            print("--------------------------------------------------------------")
-            for fileStatistics in all_functions:
-                print("%7d%7d%7d%10d%10d     %s" % (
-                                fileStatistics.nloc, 
-                                fileStatistics.average_NLOC, 
-                                fileStatistics.average_CCN, 
-                                fileStatistics.average_token, 
-                                len(fileStatistics.function_list), 
-                                fileStatistics.filename))
+        print("--------------------------------------------------------------")
+        print("%d file analyzed." % (len(all_functions)))
+        print("==============================================================")
+        print("NLOC    Avg.NLOC AvgCCN Avg.ttoken  function_cnt    file")
+        print("--------------------------------------------------------------")
+        for fileStatistics in all_functions:
+            print("%7d%7d%7d%10d%10d     %s" % (
+                            fileStatistics.nloc, 
+                            fileStatistics.average_NLOC, 
+                            fileStatistics.average_CCN, 
+                            fileStatistics.average_token, 
+                            len(fileStatistics.function_list), 
+                            fileStatistics.filename))
 
     return all_functions
 

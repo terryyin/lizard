@@ -56,6 +56,12 @@ class TestFileOutput(StreamStdoutTestCase):
         print_and_save_detail_information([fileSummary], Mock(warnings_only=False))
         self.assertIn("    123      0      0         0         0     FILENAME", sys.stdout.stream)
 
+    def test_print_file_summary_only_once(self):
+        print_and_save_detail_information(
+                            [FileInformation("FILENAME1", 123, []), 
+                             FileInformation("FILENAME2", 123, [])], Mock(warnings_only=False))
+        self.assertEqual(1, sys.stdout.stream.count("FILENAME1"))
+
     
 class TestAllOutput(StreamStdoutTestCase):
         
