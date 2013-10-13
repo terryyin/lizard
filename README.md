@@ -145,3 +145,4 @@ You can also use source code string instead of file. But you need to provide a f
 ```python
 >>> i = lizard.analyze_file.analyze_source_code("AllTests.cpp", "int foo(){}")
 ```
+
