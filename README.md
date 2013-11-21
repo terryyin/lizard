@@ -98,6 +98,8 @@ lizard mySource/ -x"./tests/*"
                         Adding this option to ignore them
   -t WORKING_THREADS, --working_threads=WORKING_THREADS
                         number of working threads. The default value is 1.
+  -d, --find_duplicates
+                        Find and skip analysis for file duplicates.
 ```
 ##Example use
 ### Analyze a folder recursively: lizard mahjong_game/src
