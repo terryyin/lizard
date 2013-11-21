@@ -878,7 +878,7 @@ def analyze(paths, options):
         It analyze the given paths with the options.
         Can be used directly by other Python application.
     '''
-    files = list(getSourceFiles(paths, options.exclude, options.duplicates)) # FIXME: not memory optimal - for dupa debug
+    files = getSourceFiles(paths, options.exclude, options.duplicates)
     fileAnalyzer = FileAnalyzer(options.no_preprocessor_count)
     r = mapFilesToAnalyzer(files, fileAnalyzer, options.working_threads)
     return r
