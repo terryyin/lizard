@@ -832,7 +832,10 @@ import hashlib
 def _md5HashFile(full_path_name):
     ''' return md5 hash of a file '''
     with open(full_path_name, mode='r') as source_file:
-        code_md5 = hashlib.md5(source_file.read())
+        if sys.version_info[0] == 3:
+            code_md5 = hashlib.md5(source_file.read().encode('utf-8'))
+        else:
+            code_md5 = hashlib.md5(source_file.read())
     return code_md5.hexdigest()
 
 def _notDuplicate(full_path_name, hash_set):
