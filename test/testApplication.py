@@ -1,5 +1,5 @@
 import unittest
-from mock import patch
+from test.mock import patch
 import lizard
 from lizard import lizard_main
 import os
