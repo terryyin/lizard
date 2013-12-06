@@ -15,23 +15,23 @@
 #  author: terry.yinzhe@gmail.com
 #
 """
-lizard is a simple code complexity analyzer without caring about the C/C++ 
+lizard is a simple code complexity analyzer without caring about the C/C++
 header files or Java imports. It can deal with
 
 * Java
 * C/C++
 * Objective C.
 
-It counts 
+It counts
 
-* the nloc (net lines of code, excluding comments and blanks), 
+* the nloc (net lines of code, excluding comments and blanks),
 * CCN (cyclomatic complexity number),
 * token count of functions.
 * parameter count of functions.
 
 You can set limitation for CCN (-C), the number of parameters (-a). Functions
 that exceed these limitations will generate warnings. The exit code of lizard
-will be none-Zero if there are warnings. 
+will be none-Zero if there are warnings.
 
 This tool actually calculates how complex the code 'looks' rather than how
 complex the code real 'is'. People will need this tool because it's often very
@@ -66,10 +66,10 @@ UniversalCode.get_statistics => The statistics of one source file.
 
 
 class FunctionInfo(object):
-    ''' 
+    '''
     Statistic information of a function.
     '''
-    
+
     def __init__(self, name, start_line):
         self.cyclomatic_complexity = 1
         self.nloc = 0
@@ -88,7 +88,7 @@ class FunctionInfo(object):
 
     def add_parameter(self, token):
         self.add_to_long_name(" " + token)
-        
+
         if self.parameter_count == 0:
             self.parameter_count = 1
         if token == ",":
@@ -100,7 +100,7 @@ class FileInformation(object):
     Statistic information of a source file.
     Including all the functions and the file summary.
     '''
-    
+
     def __init__(self, filename, nloc, function_list):
         self.filename = filename
         self.nloc = nloc
@@ -174,7 +174,7 @@ class ParsingError(Exception):
         self.line_number = line_number
         self.filename = ''
         self.code = ''
-    
+
     def __str__(self):
         try:
             line = self.code.splitlines()[self.line_number - 1]
@@ -190,7 +190,7 @@ class LanguageReaderBase(object):
     This is the base class for any programming language reader.
     It reader the tokens of a certain language and generate universal_code
     by calling it's -generate_universal_code- method.
-    
+
     The derived class should implement a series of 'state' functions. The
     most basic and start state is _GLOBAL. Derived class must implement _GLOBAL
     and other states. When the state changes, simply assign the state method to
@@ -213,9 +213,9 @@ class LanguageReaderBase(object):
                     self.process_token(token)
             except:
                 raise ParsingError(self.current_line)
-        
+
         return self.univeral_code
-    
+
     def process_token(self, token):
         return self._state(token)
 
@@ -402,20 +402,20 @@ class FileAnalyzer:
             msg = '\n'.join(traceback.format_exception_only(type(e), e))
             msg+= "\nIf you think this is a bug, "+ BUG_REPORTING
             sys.stderr.write(msg)
-            
+
     def analyze_source_code(self, filename, code):
         try:
             reader = LanguageChooser().get_reader_by_file_name_otherwise_default(filename)
             if self.no_preprocessor_count and hasattr(reader, 'remove_hash_if_from_conditions'):
                 reader.remove_hash_if_from_conditions()
             result = self.analyze_source_code_with_parser(filename, code, reader)
-    
+
             return result
         except ParsingError as e:
             e.filename = filename
             e.code = code
             raise
-            
+
     def analyze_source_code_with_parser(self, filename, code, parser):
         tokens = generate_tokens(code)
         parsed_code = parser.generate_universal_code(tokens)
@@ -432,7 +432,7 @@ class FreeFormattingTokenizer(object):
     format is not part of the syntax. So indentation & new lines
     doesn't matter.
     '''
-    
+
     token_pattern = re.compile(r"(\w+|/\*|//|:=|::|>=|\*=|\*\*|\*|>"+
                            r"|&=|&&|&"+
                            r"|#\s*define|#\s*if|#\s*else|#\s*endif|#\s*\w+"+
@@ -450,7 +450,7 @@ class FreeFormattingTokenizer(object):
             if token != '\n' or not in_middle_of_empty_lines:
                 yield token, line
             in_middle_of_empty_lines = (token == '\n')
-    
+
     def _tokens_from_code_with_multiple_newlines(self, source_code):
         index = 0
         line = 1
@@ -587,7 +587,7 @@ def print_and_save_detail_information(allStatistics, option):
                 all_functions.append(fileStatistics)
                 for fun in fileStatistics.function_list:
                     print_function_info(fun, fileStatistics.filename, option)
-    
+
         print("--------------------------------------------------------------")
         print("%d file analyzed." % (len(all_functions)))
         print("==============================================================")
@@ -612,14 +612,14 @@ def print_result(r, option):
         sys.exit(1)
 
 class XMLFormatter(object):
-    
+
     def xml_output(self, result, options):
         ''' Thanks for Holy Wen from Nokia Siemens Networks to let me use his code
             to put the result into xml file that is compatible with cppncss.
             Jenkens has plugin for cppncss format result to display the diagram.
         '''
         import xml.dom.minidom
-            
+
         impl = xml.dom.minidom.getDOMImplementation()
         doc = impl.createDocument(None, "cppncss", None)
         root = doc.documentElement
@@ -630,11 +630,11 @@ class XMLFormatter(object):
         measure = doc.createElement("measure")
         measure.setAttribute("type", "Function")
         measure.appendChild(self._createLabels(doc, ["Nr.", "NCSS", "CCN"]))
-    
+
         Nr = 0
         total_func_ncss = 0
         total_func_ccn = 0
-    
+
         for source_file in result:
             file_name = source_file.filename
             for func in source_file.function_list:
@@ -642,44 +642,44 @@ class XMLFormatter(object):
                 total_func_ncss += func.nloc
                 total_func_ccn += func.cyclomatic_complexity
                 measure.appendChild(self._createFunctionItem(doc, Nr, file_name, func, options.verbose))
-    
+
             if Nr != 0:
                 measure.appendChild(self._createLabeledValueItem(doc, 'average', "NCSS", str(total_func_ncss / Nr)))
                 measure.appendChild(self._createLabeledValueItem(doc, 'average', "CCN", str(total_func_ccn / Nr)))
-    
+
         root.appendChild(measure)
-    
+
         measure = doc.createElement("measure")
         measure.setAttribute("type", "File")
         measure.appendChild(self._createLabels(doc, ["Nr.", "NCSS", "CCN", "Functions"]))
-    
+
         file_NR = 0
         file_total_ncss = 0
         file_total_ccn = 0
         file_total_funcs = 0
-    
+
         for source_file in result:
             file_NR += 1
             file_total_ncss += source_file.nloc
             file_total_ccn += source_file.CCN
             file_total_funcs += len(source_file.function_list)
             measure.appendChild(self._createFileNode(doc, source_file, file_NR))
-    
+
         if file_NR != 0:
             fileSummary = [("NCSS", file_total_ncss / file_NR),
                            ("CCN", file_total_ccn / file_NR),
                            ("Functions", file_total_funcs / file_NR)]
             for k, v in fileSummary:
                 measure.appendChild(self._createLabeledValueItem(doc, 'average', k, v))
-    
+
         summary = [("NCSS", file_total_ncss),
                        ("CCN", file_total_ccn ),
                        ("Functions", file_total_funcs)]
         for k, v in summary:
             measure.appendChild(self._createLabeledValueItem(doc, 'sum', k, v))
-    
+
         root.appendChild(measure)
-    
+
         xmlString = doc.toprettyxml()
         return xmlString
 
@@ -693,7 +693,7 @@ class XMLFormatter(object):
         labels = doc.createElement("labels")
         for label in labelNames:
             labels.appendChild(self._createLabel(doc, label))
-        
+
         return labels
 
     def _createFunctionItem(self, doc, Nr, file_name, func, verbose):
@@ -798,6 +798,11 @@ def createCommandLineParser():
             type="int",
             dest="working_threads",
             default=1)
+    parser.add_option("-d", "--find_duplicates",
+            help="find and skip analysis for duplicates",
+            action="store_true",
+            dest="duplicates",
+            default=False)
 
     parser.usage = "lizard [options] [PATH or FILE] [PATH] ... "
     parser.description = __doc__
@@ -822,11 +827,42 @@ def mapFilesToAnalyzer(files, fileAnalyzer, working_threads):
 import os
 import fnmatch
 
+import hashlib
+
+def _md5HashFile(full_path_name):
+    ''' return md5 hash of a file '''
+    with open(full_path_name, mode='r') as source_file:
+        if sys.version_info[0] == 3:
+            code_md5 = hashlib.md5(source_file.read().encode('utf-8'))
+        else:
+            code_md5 = hashlib.md5(source_file.read())
+    return code_md5.hexdigest()
+
+def _notDuplicate(full_path_name, hash_set):
+    ''' Function counts md5 hash for the given file and checks if it isn't a duplicate using set of hashes for previous files '''
+    fhash = _md5HashFile(full_path_name)
+    if fhash and fhash not in hash_set:
+        hash_set.add(fhash)
+        return True
+    else:
+        return False
+
 def _notExluded(str_to_match, patterns):
     return LanguageChooser().get_language_by_filename(str_to_match) and \
         all(not fnmatch.fnmatch(str_to_match, p) for p in patterns)
 
-def getSourceFiles(SRC_DIRs, exclude_patterns):
+def checkFile(full_path_name, exclude_patterns, hash_set, check_duplicates):
+    ''' simplify the getSourceFiles function  '''
+    if _notExluded(full_path_name, exclude_patterns):
+        if check_duplicates:
+            return _notDuplicate(full_path_name, hash_set)
+        else:
+            return True
+    else:
+        return False
+
+def getSourceFiles(SRC_DIRs, exclude_patterns, check_duplicates=False):
+    hash_set = set()
     for SRC_DIR in SRC_DIRs:
         if os.path.isfile(SRC_DIR) and LanguageChooser().get_language_by_filename(SRC_DIR):
             yield SRC_DIR
@@ -834,7 +870,7 @@ def getSourceFiles(SRC_DIRs, exclude_patterns):
             for root, _, files in os.walk(SRC_DIR, topdown=False):
                 for filename in files:
                     full_path_name = os.path.join(root, filename)
-                    if _notExluded(full_path_name, exclude_patterns):
+                    if checkFile(full_path_name, exclude_patterns, hash_set, check_duplicates):
                         yield full_path_name
 
 def analyze(paths, options):
@@ -842,7 +878,7 @@ def analyze(paths, options):
         It analyze the given paths with the options.
         Can be used directly by other Python application.
     '''
-    files = getSourceFiles(paths, options.exclude)
+    files = getSourceFiles(paths, options.exclude, options.duplicates)
     fileAnalyzer = FileAnalyzer(options.no_preprocessor_count)
     r = mapFilesToAnalyzer(files, fileAnalyzer, options.working_threads)
     return r

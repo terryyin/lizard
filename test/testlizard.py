@@ -3,8 +3,9 @@
 #
 import unittest
 import sys
-from mock import patch
+from test.mock import patch, MagicMock
 from lizard import FileAnalyzer, ObjCReader, generate_tokens, CLikeReader, mapFilesToAnalyzer, FunctionInfo, analyze_file
+from random import randint
 
 class Test_generate_tonken(unittest.TestCase):
 
@@ -299,6 +300,28 @@ class Test_Exclude_Patterns(unittest.TestCase):
         files = getSourceFiles(["dir"],['exclude_me'])
         self.assertEqual([], list(files))
 
+    @patch.object(os, "walk")
+    @patch("lizard.open", create=True)
+    def test_duplicates(self, mock_open, mock_os_walk):
+        mock_os_walk.return_value = (['.',
+                                      None,
+                                      ['f1.cpp', 'f2.cpp']],)
+        file_handle = mock_open.return_value.__enter__.return_value
+        file_handle.read.return_value = "int foo(){haha();\n}"
+        files = getSourceFiles(["dir"], [], True)
+        self.assertEqual(['./f1.cpp'], list(files))
+
+    @patch.object(os, "walk")
+    @patch("lizard.open", create=True)
+    def test_nonduplicates(self, mock_open, mock_os_walk):
+        mock_os_walk.return_value = (['.',
+                                      None,
+                                      ['f1.cpp', 'f2.cpp']],)
+        file_handle = mock_open.return_value.__enter__.return_value
+        outs = ["int foo(){{haha({param});\n}}".format(param=randint(i, 20)) for i in range(2)]
+        file_handle.read.side_effect = lambda: outs.pop()
+        files = getSourceFiles(["dir"], [], True)
+        self.assertEqual(["./f1.cpp", "./f2.cpp"], list(files))
 
 from lizard import LanguageChooser
 class TestLanguageChooser(unittest.TestCase):
