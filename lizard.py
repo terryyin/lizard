@@ -745,7 +745,7 @@ class XMLFormatter(object):
         item.appendChild(value4)
         return item
 
-def createlizardCommandLineParser():
+def createCommandLineParser():
     from optparse import OptionParser
     parser = OptionParser(version=VERSION)
     parser.add_option("-v", "--verbose",
@@ -848,7 +848,7 @@ def analyze(paths, options):
     return r
 
 def lizard_main(argv):
-    options, args = createlizardCommandLineParser().parse_args(args=argv)
+    options, args = createCommandLineParser().parse_args(args=argv)
     paths = ["."] if len(args) == 1 else args[1:]
     r = analyze(paths, options)
     if options.xml:
