@@ -826,59 +826,61 @@ def mapFilesToAnalyzer(files, fileAnalyzer, working_threads):
 
 import os
 import fnmatch
-
 import hashlib
 
-def _md5HashFile(full_path_name):
-    ''' return md5 hash of a file '''
-    with open(full_path_name, mode='r') as source_file:
-        if sys.version_info[0] == 3:
-            code_md5 = hashlib.md5(source_file.read().encode('utf-8'))
-        else:
-            code_md5 = hashlib.md5(source_file.read())
-    return code_md5.hexdigest()
+class FilesFilter(object):
+    
+    def __init__(self, exclude_patterns, check_duplicates):
+        self.exclude_patterns = exclude_patterns
+        self.check_duplicates = check_duplicates
+        self.hash_set = set()
+        
+    def getFileNameList(self, paths):
+        for SRC_DIR in paths:
+            if os.path.isfile(SRC_DIR) and LanguageChooser().get_language_by_filename(SRC_DIR):
+                yield SRC_DIR
+            else:
+                for root, _, files in os.walk(SRC_DIR, topdown=False):
+                    for filename in files:
+                        full_path_name = os.path.join(root, filename)
+                        if self._checkFile(full_path_name):
+                            yield full_path_name
 
-def _notDuplicate(full_path_name, hash_set):
-    ''' Function counts md5 hash for the given file and checks if it isn't a duplicate using set of hashes for previous files '''
-    fhash = _md5HashFile(full_path_name)
-    if fhash and fhash not in hash_set:
-        hash_set.add(fhash)
-        return True
-    else:
-        return False
+    def _checkFile(self, full_path_name):
+        ''' simplify the getSourceFiles function  '''
+        if self._notExluded(full_path_name):
+            if self.check_duplicates:
+                return self._notDuplicate(full_path_name)
+            else:
+                return True
 
-def _notExluded(str_to_match, patterns):
-    return LanguageChooser().get_language_by_filename(str_to_match) and \
-        all(not fnmatch.fnmatch(str_to_match, p) for p in patterns)
+    def _md5HashFile(self, full_path_name):
+        ''' return md5 hash of a file '''
+        with open(full_path_name, mode='r') as source_file:
+            if sys.version_info[0] == 3:
+                code_md5 = hashlib.md5(source_file.read().encode('utf-8'))
+            else:
+                code_md5 = hashlib.md5(source_file.read())
+        return code_md5.hexdigest()
 
-def checkFile(full_path_name, exclude_patterns, hash_set, check_duplicates):
-    ''' simplify the getSourceFiles function  '''
-    if _notExluded(full_path_name, exclude_patterns):
-        if check_duplicates:
-            return _notDuplicate(full_path_name, hash_set)
-        else:
+    def _notExluded(self, str_to_match):
+        return LanguageChooser().get_language_by_filename(str_to_match) and \
+            all(not fnmatch.fnmatch(str_to_match, p) for p in self.exclude_patterns)
+
+    def _notDuplicate(self, full_path_name):
+        ''' Function counts md5 hash for the given file and checks if it isn't a duplicate using set of hashes for previous files '''
+        fhash = self._md5HashFile(full_path_name)
+        if fhash and fhash not in self.hash_set:
+            self.hash_set.add(fhash)
             return True
-    else:
-        return False
 
-def getSourceFiles(SRC_DIRs, exclude_patterns, check_duplicates=False):
-    hash_set = set()
-    for SRC_DIR in SRC_DIRs:
-        if os.path.isfile(SRC_DIR) and LanguageChooser().get_language_by_filename(SRC_DIR):
-            yield SRC_DIR
-        else:
-            for root, _, files in os.walk(SRC_DIR, topdown=False):
-                for filename in files:
-                    full_path_name = os.path.join(root, filename)
-                    if checkFile(full_path_name, exclude_patterns, hash_set, check_duplicates):
-                        yield full_path_name
 
 def analyze(paths, options):
     ''' This is the most important function of lizard.
         It analyze the given paths with the options.
         Can be used directly by other Python application.
     '''
-    files = getSourceFiles(paths, options.exclude, options.duplicates)
+    files = FilesFilter(options.exclude, options.duplicates).getFileNameList(paths)
     fileAnalyzer = FileAnalyzer(options.no_preprocessor_count)
     r = mapFilesToAnalyzer(files, fileAnalyzer, options.working_threads)
     return r

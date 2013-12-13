@@ -245,27 +245,30 @@ class Test_FunctionInfo(unittest.TestCase):
         import pickle
         pickle.dumps(FunctionInfo("a", 1))
 
-from lizard import getSourceFiles
+from lizard import FilesFilter
 import os
 
 class Test_Exclude_Patterns(unittest.TestCase):
     
+    def getSourceFiles(self, SRC_DIRs, exclude_patterns, check_duplicates = False):
+        return FilesFilter(exclude_patterns, check_duplicates).getFileNameList(SRC_DIRs)
+    
     @patch.object(os, "walk")
     def test_no_matching(self, mock_os_walk):
         mock_os_walk.return_value = []
-        files = getSourceFiles(["dir"], [])
+        files = self.getSourceFiles(["dir"], [])
         self.assertEqual(0, len(list(files)))
     
     @patch.object(os.path, "isfile")
     def test_explicit_file_names(self, mock_isfile):
         mock_isfile.return_value = True
-        files = getSourceFiles(["dir/file.c"], [])
+        files = self.getSourceFiles(["dir/file.c"], [])
         self.assertEqual(["dir/file.c"], list(files))
     
     @patch.object(os.path, "isfile")
     def test_exlclude_explicit_file_names_doesnot_support(self, mock_isfile):
         mock_isfile.return_value = True
-        files = getSourceFiles(["dir/file.log"], [])
+        files = self.getSourceFiles(["dir/file.log"], [])
         self.assertEqual([], list(files))
     
     @patch.object(os, "walk")
@@ -273,7 +276,7 @@ class Test_Exclude_Patterns(unittest.TestCase):
         mock_os_walk.return_value = (['.', 
                                       None,
                                       ['temp.log', 'useful.cpp']],)
-        files = getSourceFiles(["dir"], ["*.log"])
+        files = self.getSourceFiles(["dir"], ["*.log"])
         self.assertEqual(["./useful.cpp"], list(files))
     
     @patch.object(os, "walk")
@@ -281,7 +284,7 @@ class Test_Exclude_Patterns(unittest.TestCase):
         mock_os_walk.return_value = (['ut', 
                                       None,
                                       ['useful.cpp']],)
-        files = getSourceFiles(["dir"], ["ut/*"])
+        files = self.getSourceFiles(["dir"], ["ut/*"])
         self.assertEqual([], list(files))
     
     @patch.object(os, "walk")
@@ -289,7 +292,7 @@ class Test_Exclude_Patterns(unittest.TestCase):
         mock_os_walk.return_value = (['ut/something', 
                                       None,
                                       ['useful.cpp']],)
-        files = getSourceFiles(["dir"], ["ut/*"])
+        files = self.getSourceFiles(["dir"], ["ut/*"])
         self.assertEqual([], list(files))
 
     @patch.object(os, "walk")
@@ -297,7 +300,7 @@ class Test_Exclude_Patterns(unittest.TestCase):
         mock_os_walk.return_value = (['.', 
                                       None,
                                       ['useful.txt']],)
-        files = getSourceFiles(["dir"],['exclude_me'])
+        files = self.getSourceFiles(["dir"],['exclude_me'])
         self.assertEqual([], list(files))
 
     @patch.object(os, "walk")
@@ -308,7 +311,7 @@ class Test_Exclude_Patterns(unittest.TestCase):
                                       ['f1.cpp', 'f2.cpp']],)
         file_handle = mock_open.return_value.__enter__.return_value
         file_handle.read.return_value = "int foo(){haha();\n}"
-        files = getSourceFiles(["dir"], [], True)
+        files = self.getSourceFiles(["dir"], [], True)
         self.assertEqual(['./f1.cpp'], list(files))
 
     @patch.object(os, "walk")
@@ -320,7 +323,7 @@ class Test_Exclude_Patterns(unittest.TestCase):
         file_handle = mock_open.return_value.__enter__.return_value
         outs = ["int foo(){{haha({param});\n}}".format(param=randint(i, 20)) for i in range(2)]
         file_handle.read.side_effect = lambda: outs.pop()
-        files = getSourceFiles(["dir"], [], True)
+        files = self.getSourceFiles(["dir"], [], True)
         self.assertEqual(["./f1.cpp", "./f2.cpp"], list(files))
 
 from lizard import LanguageChooser
