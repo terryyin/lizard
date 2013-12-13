@@ -835,9 +835,9 @@ class FilesFilter(object):
         self.check_duplicates = check_duplicates
         self.hash_set = set()
         
-    def getFileNameList(self, paths):
+    def getFileNameLists(self, paths):
         for SRC_DIR in paths:
-            if os.path.isfile(SRC_DIR) :#and LanguageChooser().get_language_by_filename(SRC_DIR):
+            if os.path.isfile(SRC_DIR) :
                 yield SRC_DIR
             else:
                 for root, _, files in os.walk(SRC_DIR, topdown=False):
@@ -847,7 +847,6 @@ class FilesFilter(object):
                             yield full_path_name
 
     def _checkFile(self, full_path_name):
-        ''' simplify the getSourceFiles function  '''
         if self._notExluded(full_path_name):
             if self.check_duplicates:
                 return self._notDuplicate(full_path_name)
@@ -880,7 +879,7 @@ def analyze(paths, options):
         It analyze the given paths with the options.
         Can be used directly by other Python application.
     '''
-    files = FilesFilter(options.exclude, options.duplicates).getFileNameList(paths)
+    files = FilesFilter(options.exclude, options.duplicates).getFileNameLists(paths)
     fileAnalyzer = FileAnalyzer(options.no_preprocessor_count)
     r = mapFilesToAnalyzer(files, fileAnalyzer, options.working_threads)
     return r
