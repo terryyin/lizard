@@ -266,10 +266,10 @@ class Test_Exclude_Patterns(unittest.TestCase):
         self.assertEqual(["dir/file.c"], list(files))
     
     @patch.object(os.path, "isfile")
-    def test_exlclude_explicit_file_names_doesnot_support(self, mock_isfile):
+    def test_specific_filenames_should_not_be_excluded(self, mock_isfile):
         mock_isfile.return_value = True
         files = self.getSourceFiles(["dir/file.log"], [])
-        self.assertEqual([], list(files))
+        self.assertEqual(["dir/file.log"], list(files))
     
     @patch.object(os, "walk")
     def test_exclude_file_name(self, mock_os_walk):

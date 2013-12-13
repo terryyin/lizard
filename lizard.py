@@ -837,7 +837,7 @@ class FilesFilter(object):
         
     def getFileNameList(self, paths):
         for SRC_DIR in paths:
-            if os.path.isfile(SRC_DIR) and LanguageChooser().get_language_by_filename(SRC_DIR):
+            if os.path.isfile(SRC_DIR) :#and LanguageChooser().get_language_by_filename(SRC_DIR):
                 yield SRC_DIR
             else:
                 for root, _, files in os.walk(SRC_DIR, topdown=False):
