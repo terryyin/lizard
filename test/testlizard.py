@@ -251,7 +251,7 @@ import os
 class Test_Exclude_Patterns(unittest.TestCase):
     
     def getSourceFiles(self, SRC_DIRs, exclude_patterns, check_duplicates = False):
-        return FilesFilter(exclude_patterns, check_duplicates).getFileNameLists(SRC_DIRs)
+        return FilesFilter(exclude_patterns, check_duplicates).getFileNames(SRC_DIRs)
     
     @patch.object(os, "walk")
     def test_no_matching(self, mock_os_walk):

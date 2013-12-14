@@ -835,7 +835,7 @@ class FilesFilter(object):
         self.check_duplicates = check_duplicates
         self.hash_set = set()
         
-    def getFileNameLists(self, paths):
+    def getFileNames(self, paths):
         for SRC_DIR in paths:
             if os.path.isfile(SRC_DIR) :
                 yield SRC_DIR
@@ -867,7 +867,9 @@ class FilesFilter(object):
             all(not fnmatch.fnmatch(str_to_match, p) for p in self.exclude_patterns)
 
     def _notDuplicate(self, full_path_name):
-        ''' Function counts md5 hash for the given file and checks if it isn't a duplicate using set of hashes for previous files '''
+        ''' Function counts md5 hash for the given file 
+            and checks if it isn't a duplicate using set 
+            of hashes for previous files '''
         fhash = self._md5HashFile(full_path_name)
         if fhash and fhash not in self.hash_set:
             self.hash_set.add(fhash)
@@ -879,7 +881,7 @@ def analyze(paths, options):
         It analyze the given paths with the options.
         Can be used directly by other Python application.
     '''
-    files = FilesFilter(options.exclude, options.duplicates).getFileNameLists(paths)
+    files = FilesFilter(options.exclude, options.duplicates).getFileNames(paths)
     fileAnalyzer = FileAnalyzer(options.no_preprocessor_count)
     r = mapFilesToAnalyzer(files, fileAnalyzer, options.working_threads)
     return r
