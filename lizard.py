@@ -77,6 +77,7 @@ class FunctionInfo(object):
         self.name = name
         self.long_name = name
         self.start_line = start_line
+        self.end_line = None
         self.parameter_count = 0
 
     def add_to_function_name(self, app):
@@ -163,7 +164,8 @@ class UniversalCode(object):
     def PARAMETER(self, token):
         self.current_function.add_parameter(token)
 
-    def END_OF_FUNCTION(self):
+    def END_OF_FUNCTION(self, end_line):
+        self.current_function.end_line = end_line
         self.function_list.append(self.current_function)
         self.START_NEW_FUNCTION('', 0)
 
@@ -305,7 +307,7 @@ class CLikeReader(LanguageReaderBase):
                 self.br_count -= 1
                 if self.br_count == 0:
                     self._state = self._GLOBAL
-                    self.univeral_code.END_OF_FUNCTION()
+                    self.univeral_code.END_OF_FUNCTION(self.current_line)
                     return
         if self._is_condition(token):
             self.univeral_code.CONDITION()
@@ -513,13 +515,14 @@ def print_function_info_header():
     print("--------------------------------------------------------------")
 
 def print_function_info(fun, filename, option):
+    line = '{}-{}'.format(fun.start_line, fun.end_line) if option.display_fn_end_line else fun.start_line
     output_params = {
         'nloc': fun.nloc,
         'CCN': fun.cyclomatic_complexity,
         'token': fun.token_count,
         'param': fun.parameter_count,
         'name': fun.name,
-        'line': fun.start_line,
+        'line': line,
         'file': filename
     }
     output_format = "%(nloc)6d %(CCN)6d %(token)6d %(param)6d    %(name)s@%(line)s@%(file)s"
@@ -802,6 +805,11 @@ def createCommandLineParser():
             help="find and skip analysis for duplicates",
             action="store_true",
             dest="duplicates",
+            default=False)
+    parser.add_option("-e", "--display_fn_end_line",
+            help="display function end line number in addition to start line number",
+            action="store_true",
+            dest="display_fn_end_line",
             default=False)
 
     parser.usage = "lizard [options] [PATH or FILE] [PATH] ... "

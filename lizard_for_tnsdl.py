@@ -55,16 +55,16 @@ class SDLReader(LanguageReaderBase):
             return
         if token == 'ENDPROCEDURE' or token == 'ENDPROCESS' or token == 'ENDSTATE':
             self._state = self._GLOBAL
-            self.univeral_code.END_OF_FUNCTION()
+            self.univeral_code.END_OF_FUNCTION(self.current_line)
             return
         if self.start_of_statement:     
             if token == 'STATE': 
                 self._state = self._STATE
-                self.univeral_code.END_OF_FUNCTION()
+                self.univeral_code.END_OF_FUNCTION(self.current_line)
                 return 
             elif token == 'INPUT': 
                 self._state = self._INPUT
-                self.univeral_code.END_OF_FUNCTION()
+                self.univeral_code.END_OF_FUNCTION(self.current_line)
                 return
         condition = self._is_condition(token, self.last_token)
 
