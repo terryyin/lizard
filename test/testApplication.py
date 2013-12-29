@@ -76,7 +76,7 @@ class TestOptions(unittest.TestCase):
         self.assertEqual(1, self.fileInfos[0].function_list[0].cyclomatic_complexity)
         
     def test_using_the_WordCount_plugin(self):
-        self.runApplicationWithArgv(['lizard', '-eWordCount'])
+        self.runApplicationWithArgv(['lizard', '-EWordCount'])
         self.assertEqual(1, self.fileInfos[0].wordCount["foo"])
 
 
