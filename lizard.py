@@ -803,6 +803,11 @@ def createCommandLineParser():
             action="store_true",
             dest="duplicates",
             default=False)
+    parser.add_option("-e", "--extension",
+            help="Use extension. Can be WordCount.",
+            action="append",
+            dest="extensions",
+            default=[])
 
     parser.usage = "lizard [options] [PATH or FILE] [PATH] ... "
     parser.description = __doc__

@@ -3,7 +3,7 @@
 #
 import unittest
 import sys
-from test.mock import patch, MagicMock
+from test.mock import patch
 from lizard import FileAnalyzer, ObjCReader, generate_tokens, CLikeReader, mapFilesToAnalyzer, FunctionInfo, analyze_file
 from random import randint
 
