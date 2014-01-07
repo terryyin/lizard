@@ -62,22 +62,29 @@ class TestFileOutput(StreamStdoutTestCase):
     
     def test_print_and_save_detail_information(self):
         fileSummary = FileInformation("FILENAME", 123, [])
-        print_and_save_detail_information([fileSummary], Mock(warnings_only=False))
+        print_and_save_detail_information([fileSummary], Mock(warnings_only=False, extensions=[]))
         self.assertIn("    123      0      0         0         0     FILENAME", sys.stdout.stream)
 
     def test_print_file_summary_only_once(self):
         print_and_save_detail_information(
                             [FileInformation("FILENAME1", 123, []), 
-                             FileInformation("FILENAME2", 123, [])], Mock(warnings_only=False))
+                             FileInformation("FILENAME2", 123, [])], Mock(warnings_only=False, extensions=[]))
         self.assertEqual(1, sys.stdout.stream.count("FILENAME1"))
 
     
 class TestAllOutput(StreamStdoutTestCase):
         
+    def test_print_extension_results(self):
+        file_infos = []
+        extension = Mock()
+        option = Mock(CCN=15, number = 0, extensions = [extension])
+        print_result(file_infos, option)
+        self.assertEqual(1, extension.print_result.call_count)
+
     @patch.object(sys, 'exit')
     def test_print_result(self, mock_exit):
         file_infos = [FileInformation('f1.c', 1, []), FileInformation('f2.c', 1, [])]
-        option = Mock(CCN=15, number = 0)
+        option = Mock(CCN=15, number = 0, extensions=[])
         print_result(file_infos, option)
         self.assertEqual(0, mock_exit.call_count)
 
@@ -86,13 +93,13 @@ class TestAllOutput(StreamStdoutTestCase):
         fun = FunctionInfo("foo", 100)
         fun.cyclomatic_complexity = 16
         file_infos = [FileInformation('f1.c', 1, [fun])]
-        option = Mock(CCN=15, number = 0)
+        option = Mock(CCN=15, number = 0, extensions=[])
         print_result(file_infos, option)
         mock_exit.has_called_with(1)
 
     def test_null_result(self):
         file_infos = [FileInformation('f1.c', 1, []), None]
-        option = Mock(CCN=15, number = 0)
+        option = Mock(CCN=15, number = 0, extensions=[])
         print_result(file_infos, option)
 
 
@@ -103,7 +110,7 @@ class TestXMLOutput(unittest.TestCase):
     fun = FunctionInfo("foo", 100)
     fun.cyclomatic_complexity = 16
     file_infos = [FileInformation('f1.c', 1, [fun])]
-    option = Mock(CCN=15, number = 0)
+    option = Mock(CCN=15, number = 0, extensions=[])
     xml = XMLFormatter().xml_output(file_infos, option)
     
     def test_xml_output(self):

@@ -393,8 +393,9 @@ class FileAnalyzer:
         Returns a list of function infos in this file.
     '''
 
-    def __init__(self, noCountPre=False):
+    def __init__(self, extensions = [], noCountPre=False):
         self.no_preprocessor_count = noCountPre
+        self.extensions = extensions
 
     def __call__(self, filename):
         try:
@@ -420,10 +421,14 @@ class FileAnalyzer:
 
     def analyze_source_code_with_parser(self, filename, code, parser):
         tokens = generate_tokens(code)
+        for extension in self.extensions:
+            tokens = extension.extend_tokens(tokens)
         parsed_code = parser.generate_universal_code(tokens)
         function_list = parsed_code.function_list
-        return FileInformation(filename, parsed_code.nloc, function_list)
-
+        result = FileInformation(filename, parsed_code.nloc, function_list)
+        for extension in self.extensions:
+            result.wordCount = extension.result
+        return result
 
 analyze_file = FileAnalyzer()
 
@@ -586,6 +591,8 @@ def print_and_save_detail_information(allStatistics, option):
     else:
         print_function_info_header()
         for fileStatistics in allStatistics:
+            for extension in option.extensions:
+                extension.reduce(fileStatistics)
             if fileStatistics:
                 all_functions.append(fileStatistics)
                 for fun in fileStatistics.function_list:
@@ -611,6 +618,8 @@ def print_result(r, option):
     all_functions = print_and_save_detail_information(r, option)
     warning_count = print_warnings(option, all_functions)
     print_total(warning_count, all_functions, option)
+    for extension in option.extensions:
+        extension.print_result()
     if option.number > warning_count:
         sys.exit(1)
 
@@ -888,6 +897,8 @@ class FilesFilter(object):
             self.hash_set.add(fhash)
             return True
 
+def get_extensions(extension_names):
+    return [__import__('lizard' + name).LizardExtension() for name in extension_names]
 
 def analyze(paths, options):
     ''' This is the most important function of lizard.
@@ -895,12 +906,13 @@ def analyze(paths, options):
         Can be used directly by other Python application.
     '''
     files = FilesFilter(options.exclude, options.duplicates).getFileNames(paths)
-    fileAnalyzer = FileAnalyzer(options.no_preprocessor_count)
+    fileAnalyzer = FileAnalyzer(options.extensions, options.no_preprocessor_count)
     r = mapFilesToAnalyzer(files, fileAnalyzer, options.working_threads)
     return r
 
 def lizard_main(argv):
     options, args = createCommandLineParser().parse_args(args=argv)
+    options.extensions = get_extensions(options.extensions)
     paths = ["."] if len(args) == 1 else args[1:]
     r = analyze(paths, options)
     if options.xml:

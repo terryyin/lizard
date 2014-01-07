@@ -38,7 +38,7 @@ It can deal with Java/C/C++/Objective C code. It counts the cyclomatic complexit
                      'Programming Language :: Python :: 2.7',
                      'Programming Language :: Python :: 3.2',
                      'Programming Language :: Python :: 3.3'],
-          py_modules = ['lizard'],
+          py_modules = ['lizard', 'lizardWordCount'],
           author = 'Terry Yin',
           author_email = 'terry.yinze@gmail.com',
           scripts = ['lizard.bat', 'lizard', 'hfcca.bat', 'hfcca']
