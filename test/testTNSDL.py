@@ -1,12 +1,15 @@
 import unittest
 from lizard_for_tnsdl import SDLReader
-from lizard import generate_tokens
+from lizard import analyze_file
 
 
 class Test_sdl_lizard(unittest.TestCase):
     
+    def get_tnsdl_fileinfo(self, source_code):
+        return analyze_file.analyze_source_code_with_parser("", source_code, SDLReader())
+    
     def create_sdl_lizard(self, source_code):
-        return SDLReader().generate_universal_code(generate_tokens(source_code)).function_list
+        return self.get_tnsdl_fileinfo(source_code).function_list
     
     def test_empty(self):
         result = self.create_sdl_lizard("")

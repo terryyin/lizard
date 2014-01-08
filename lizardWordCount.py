@@ -1,6 +1,48 @@
 class LizardExtension(object):
     
-    ignoreList = ('(',')','{','}',';',',', '\n')
+    ignoreList = set(('(',')','{','}',';',',', '\n',
+'~',
+'static_cast',
+'&&',
+'#pragma',
+'!',
+'virtual',
+'++',
+'operator',
+'-',
+'private',
+'else',
+'+',
+'!=',
+'static',
+'inline',
+']',
+'==',
+'[',
+'public',
+'struct',
+'typedef',
+'class',
+'<<',
+'#endif',
+'#if',
+'if',
+'namespace',
+':',
+'->',
+'return',
+'void',
+'*',
+    '#include',
+    '=',
+    'const',
+    '<',
+    '>',
+    '&',
+    '.',
+    '::',
+
+            ))
     
     def __init__(self):
         self.result1 = {}
@@ -19,4 +61,4 @@ class LizardExtension(object):
             
     def print_result(self):
         for k in sorted(self.result1, key=self.result1.get):
-            print(k, "\t", self.result1[k])
+            print "'%s',"%k #(k, "\t", self.result1[k])

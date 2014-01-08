@@ -137,6 +137,7 @@ class UniversalCode(object):
         self.newline = True
         self.nloc = 0
         self.function_list = []
+        self.token_count = 0
 
     def START_NEW_FUNCTION(self, name, start_line):
         self.current_function = FunctionInfo(name, start_line)
@@ -212,6 +213,7 @@ class LanguageReaderBase(object):
                 if token.isspace():
                     self.univeral_code.NEW_LINE()
                 else:
+                    self.univeral_code.token_count+=1
                     self.process_token(token)
             except:
                 raise ParsingError(self.current_line)
@@ -220,6 +222,9 @@ class LanguageReaderBase(object):
 
     def process_token(self, token):
         return self._state(token)
+
+    def extend_tokens(self, tokens):
+        return tokens
 
 
 class CLikeReader(LanguageReaderBase):
@@ -234,6 +239,22 @@ class CLikeReader(LanguageReaderBase):
         self.bracket_level = 0
         self.br_count = 0
         self.last_preprocessor = None
+
+    def extend_tokens(self, tokens):
+        include_brackets = None
+        brackets = ""
+        for token, line in tokens:
+            if token == "#include":
+                include_brackets = False
+            elif include_brackets is not None:
+                brackets += token
+                if token == "<":
+                   include_brackets = True
+                elif token == ">":
+                    include_brackets = None
+                    token = brackets
+            if not include_brackets:
+                yield token, line
 
     def remove_hash_if_from_conditions(self):
         self.conditions.remove("#if")
@@ -421,11 +442,13 @@ class FileAnalyzer:
 
     def analyze_source_code_with_parser(self, filename, code, parser):
         tokens = generate_tokens(code)
+        tokens = parser.extend_tokens(tokens)
         for extension in self.extensions:
             tokens = extension.extend_tokens(tokens)
         parsed_code = parser.generate_universal_code(tokens)
         function_list = parsed_code.function_list
         result = FileInformation(filename, parsed_code.nloc, function_list)
+        result.token_count = parsed_code.token_count
         for extension in self.extensions:
             result.wordCount = extension.result
         return result

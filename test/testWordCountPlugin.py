@@ -15,7 +15,6 @@ class TestWordCountPlugin(unittest.TestCase):
         list(ext.extend_tokens([("a",1), ("a",1)]))
         self.assertEqual(2, ext.result['a'])
 
-    #no hpp
     
     
 if __name__ == "__main__":
