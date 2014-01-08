@@ -61,4 +61,4 @@ class LizardExtension(object):
             
     def print_result(self):
         for k in sorted(self.result1, key=self.result1.get):
-            print "'%s',"%k #(k, "\t", self.result1[k])
+            print (k, "\t", self.result1[k])
