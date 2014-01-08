@@ -96,16 +96,11 @@ class FunctionInfo(object):
             self.parameter_count += 1
 
 
-class FileInformation(object):
+class FileStatisticMixIn(object):
     ''' 
-    Statistic information of a source file.
-    Including all the functions and the file summary.
+    Statistic properties of a source file.
     '''
 
-    def __init__(self, filename, nloc, function_list):
-        self.filename = filename
-        self.nloc = nloc
-        self.function_list = function_list
 
     average_NLOC = property(lambda self:self._functions_average("nloc"))
     average_token = property(lambda self:self._functions_average("token_count"))
@@ -117,7 +112,7 @@ class FileInformation(object):
                 / len(self.function_list) if self.function_list else 0
 
 
-class UniversalCode(object):
+class UniversalCode(FileStatisticMixIn):
     """
         UniversalCode is the code that is unrelated to any programming
         languages. The code could be:
@@ -445,10 +440,8 @@ class FileAnalyzer:
         tokens = parser.extend_tokens(tokens)
         for extension in self.extensions:
             tokens = extension.extend_tokens(tokens)
-        parsed_code = parser.generate_universal_code(tokens)
-        function_list = parsed_code.function_list
-        result = FileInformation(filename, parsed_code.nloc, function_list)
-        result.token_count = parsed_code.token_count
+        result = parser.generate_universal_code(tokens)
+        result.filename = filename
         for extension in self.extensions:
             result.wordCount = extension.result
         return result

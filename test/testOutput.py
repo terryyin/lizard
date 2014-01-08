@@ -1,8 +1,14 @@
 import unittest
 from test.mock import Mock, patch
 import sys
-from lizard import print_warnings, print_and_save_detail_information, FunctionInfo, FileInformation,\
+from lizard import print_warnings, print_and_save_detail_information, FunctionInfo, UniversalCode, \
     print_result, XMLFormatter
+
+class FileInformation(UniversalCode):
+    def __init__(self, filename, nloc, function_list):
+        self.filename = filename
+        self.nloc = nloc
+        self.function_list = function_list
 
 class StreamStdoutTestCase(unittest.TestCase):
     def setUp(self):
