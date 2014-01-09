@@ -71,9 +71,9 @@ class Test_FileAnalyzer(unittest.TestCase):
         r = mapFilesToAnalyzer(["f1.c"], self.analyzer, 1)
         fileInfo = list(r)[0]
         self.assertEqual(1, fileInfo.nloc)
-        self.assertEqual(1, fileInfo.average_NLOC)
+        self.assertEqual(2, fileInfo.average_NLOC)
         self.assertEqual(1, fileInfo.average_CCN)
-        self.assertEqual(4, fileInfo.average_token)
+        self.assertEqual(9, fileInfo.average_token)
 
     @patch.object(sys, 'stderr')
     @patch.object(CLikeReader, '_GLOBAL')

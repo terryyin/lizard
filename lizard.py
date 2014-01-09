@@ -73,7 +73,7 @@ class FunctionInfo(object):
     def __init__(self, name, start_line):
         self.cyclomatic_complexity = 1
         self.nloc = 0
-        self.token_count = 0
+        self.token_count = 1  # the first token
         self.name = name
         self.long_name = name
         self.start_line = start_line
@@ -96,11 +96,17 @@ class FunctionInfo(object):
             self.parameter_count += 1
 
 
-class FileStatisticMixIn(object):
+class FileInformation(object):
     ''' 
-    Statistic properties of a source file.
+    Statistic information of a source file.
+    Including all the functions and the file summary.
     '''
 
+    def __init__(self, filename, nloc, function_list):
+        self.filename = filename
+        self.nloc = nloc
+        self.function_list = function_list
+        self.token_count = 0
 
     average_NLOC = property(lambda self:self._functions_average("nloc"))
     average_token = property(lambda self:self._functions_average("token_count"))
@@ -112,7 +118,7 @@ class FileStatisticMixIn(object):
                 / len(self.function_list) if self.function_list else 0
 
 
-class UniversalCode(FileStatisticMixIn):
+class UniversalCode(FileInformation):
     """
         UniversalCode is the code that is unrelated to any programming
         languages. The code could be:
@@ -128,17 +134,17 @@ class UniversalCode(FileStatisticMixIn):
     """
 
     def __init__(self):
+        self.fileinfo = FileInformation("", 0, [])
         self.START_NEW_FUNCTION('', 0)
-        self.newline = True
-        self.nloc = 0
-        self.function_list = []
-        self.token_count = 0
+
+    def build(self):
+        return self.fileinfo
 
     def START_NEW_FUNCTION(self, name, start_line):
+        self.newline = True
         self.current_function = FunctionInfo(name, start_line)
 
     def CONDITION(self):
-        self.TOKEN()
         self.current_function.cyclomatic_complexity += 1
 
     def TOKEN(self):
@@ -148,7 +154,7 @@ class UniversalCode(FileStatisticMixIn):
         self.current_function.token_count += 1
 
     def NEW_LINE(self):
-        self.nloc += 1
+        self.fileinfo.nloc += 1
         self.newline = True
 
     def ADD_TO_LONG_FUNCTION_NAME(self, app):
@@ -162,7 +168,7 @@ class UniversalCode(FileStatisticMixIn):
 
     def END_OF_FUNCTION(self, end_line):
         self.current_function.end_line = end_line
-        self.function_list.append(self.current_function)
+        self.fileinfo.function_list.append(self.current_function)
         self.START_NEW_FUNCTION('', 0)
 
 
@@ -208,7 +214,8 @@ class LanguageReaderBase(object):
                 if token.isspace():
                     self.univeral_code.NEW_LINE()
                 else:
-                    self.univeral_code.token_count+=1
+                    self.univeral_code.TOKEN()
+                    self.univeral_code.fileinfo.token_count+=1
                     self.process_token(token)
             except:
                 raise ParsingError(self.current_line)
@@ -327,8 +334,6 @@ class CLikeReader(LanguageReaderBase):
                     return
         if self._is_condition(token):
             self.univeral_code.CONDITION()
-        else:
-            self.univeral_code.TOKEN()
 
 
 class ObjCReader(CLikeReader):
@@ -440,7 +445,7 @@ class FileAnalyzer:
         tokens = parser.extend_tokens(tokens)
         for extension in self.extensions:
             tokens = extension.extend_tokens(tokens)
-        result = parser.generate_universal_code(tokens)
+        result = parser.generate_universal_code(tokens).build()
         result.filename = filename
         for extension in self.extensions:
             result.wordCount = extension.result

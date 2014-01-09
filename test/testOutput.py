@@ -1,14 +1,8 @@
 import unittest
 from test.mock import Mock, patch
 import sys
-from lizard import print_warnings, print_and_save_detail_information, FunctionInfo, UniversalCode, \
+from lizard import print_warnings, print_and_save_detail_information, FunctionInfo, FileInformation,\
     print_result, XMLFormatter
-
-class FileInformation(UniversalCode):
-    def __init__(self, filename, nloc, function_list):
-        self.filename = filename
-        self.nloc = nloc
-        self.function_list = function_list
 
 class StreamStdoutTestCase(unittest.TestCase):
     def setUp(self):
@@ -52,7 +46,7 @@ class TestWarningOutput(StreamStdoutTestCase):
         fileStat = FileInformation("FILENAME", 1, [fun])
         option = Mock(CCN=15, display_fn_end_line = False)
         print_warnings(option, [fileStat])
-        self.assertIn("FILENAME:100: warning: foo has 16 CCN and 0 params (0 NLOC, 0 tokens)\n", sys.stdout.stream)
+        self.assertIn("FILENAME:100: warning: foo has 16 CCN and 0 params (0 NLOC, 1 tokens)\n", sys.stdout.stream)
 
     def test_should_use_clang_format_with_function_end_line_number_for_warning(self):
         fun = FunctionInfo("foo", 100)
@@ -61,7 +55,7 @@ class TestWarningOutput(StreamStdoutTestCase):
         fileStat = FileInformation("FILENAME", 1, [fun])
         option = Mock(CCN=15, display_fn_end_line = True)
         print_warnings(option, [fileStat])
-        self.assertIn("FILENAME:100-100: warning: foo has 16 CCN and 0 params (0 NLOC, 0 tokens)\n", sys.stdout.stream)
+        self.assertIn("FILENAME:100-100: warning: foo has 16 CCN and 0 params (0 NLOC, 1 tokens)\n", sys.stdout.stream)
 
 
 class TestFileOutput(StreamStdoutTestCase):
