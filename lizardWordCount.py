@@ -18,6 +18,7 @@ class LizardExtension(object):
 'inline',
 ']',
 '==',
+'+=',
 '[',
 'public',
 'struct',
