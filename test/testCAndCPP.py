@@ -13,6 +13,10 @@ class Test_C_Token_extension(unittest.TestCase):
         extended = CLikeReader().extend_tokens((("#include", 1), ("<",1), ("aa.h", 1), (">", 1)))
         self.assertEqual(("<aa.h>", 1), list(extended)[1])
 
+    def test_include_brackets_with_quotes(self):
+        extended = CLikeReader().extend_tokens((("#include", 1), ('"aa.h"', 1)))
+        self.assertEqual(('"aa.h"', 1), list(extended)[1])
+
 class Test_C_Token_Count(unittest.TestCase):
 
     def test_non_function_tokens_are_counted(self):

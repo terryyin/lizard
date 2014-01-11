@@ -60,5 +60,6 @@ class LizardExtension(object):
             self.result1[k] = self.result1.get(k, 0) + v
             
     def print_result(self):
-        for k in sorted(self.result1, key=self.result1.get):
-            print (k, "\t", self.result1[k])
+        for k in sorted(self.result1, key=self.result1.get, reverse = True):
+                print ("[", '"'+k+'"', ", ",self.result1[k], "],")
+

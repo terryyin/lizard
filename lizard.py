@@ -58,9 +58,9 @@ DEFAULT_CCN_THRESHOLD = 15
 '''
 The analyzing process
 =====================
-Source code => Tokens => UniversalCode
+Source code => Tokens => SourceCodeInforamtionBuilder
 
-UniversalCode.get_statistics => The statistics of one source file.
+SourceCodeInforamtionBuilder.get_statistics => The statistics of one source file.
 
 '''
 
@@ -118,10 +118,10 @@ class FileInformation(object):
                 / len(self.function_list) if self.function_list else 0
 
 
-class UniversalCode(FileInformation):
+class SourceCodeInforamtionBuilder(object):
     """
-        UniversalCode is the code that is unrelated to any programming
-        languages. The code could be:
+        SourceCodeInforamtionBuilder provides the builder to build FileInformation
+        The building blocks are:
         START_NEW_FUNCTION
             ADD_TO_FUNCTION_NAME
             ADD_TO_LONG_FUNCTION_NAME
@@ -129,8 +129,6 @@ class UniversalCode(FileInformation):
                     CONDITION
                     TOKEN
         END_OF_FUNCTION
-
-        A TokenTranslator will generate UniversalCode.
     """
 
     def __init__(self):
@@ -206,21 +204,21 @@ class LanguageReaderBase(object):
     def __init__(self):
         self._state = self._GLOBAL
         self.current_line = 0
-        self.univeral_code = UniversalCode()
+        self.sourceCodeInfoBuilder = SourceCodeInforamtionBuilder()
 
     def generate_universal_code(self, tokens):
         for token, self.current_line in tokens:
             try:
                 if token.isspace():
-                    self.univeral_code.NEW_LINE()
+                    self.sourceCodeInfoBuilder.NEW_LINE()
                 else:
-                    self.univeral_code.TOKEN()
-                    self.univeral_code.fileinfo.token_count+=1
+                    self.sourceCodeInfoBuilder.TOKEN()
+                    self.sourceCodeInfoBuilder.fileinfo.token_count+=1
                     self.process_token(token)
             except:
                 raise ParsingError(self.current_line)
 
-        return self.univeral_code
+        return self.sourceCodeInfoBuilder
 
     def process_token(self, token):
         return self._state(token)
@@ -243,18 +241,19 @@ class CLikeReader(LanguageReaderBase):
         self.last_preprocessor = None
 
     def extend_tokens(self, tokens):
-        include_brackets = None
+        last_token_is_include = False
+        include_brackets = False
         brackets = ""
         for token, line in tokens:
-            if token == "#include":
-                include_brackets = False
-            elif include_brackets is not None:
+            if last_token_is_include and token == "<":
+                include_brackets = True
+                brackets = "<"
+            elif include_brackets:
                 brackets += token
-                if token == "<":
-                   include_brackets = True
-                elif token == ">":
-                    include_brackets = None
+                if token == ">":
+                    include_brackets = False
                     token = brackets
+            last_token_is_include = token == "#include"
             if not include_brackets:
                 yield token, line
 
@@ -274,22 +273,22 @@ class CLikeReader(LanguageReaderBase):
         if token == '(':
             self.bracket_level += 1
             self._state = self._DEC
-            self.univeral_code.ADD_TO_LONG_FUNCTION_NAME(token)
+            self.sourceCodeInfoBuilder.ADD_TO_LONG_FUNCTION_NAME(token)
         elif token == '::':
             self._state = self._NAMESPACE
         else:
-            self.univeral_code.START_NEW_FUNCTION(token, self.current_line)
+            self.sourceCodeInfoBuilder.START_NEW_FUNCTION(token, self.current_line)
             if token == 'operator':
                 self._state = self._OPERATOR
 
     def _OPERATOR(self, token):
         if token != '(':
             self._state = self._GLOBAL
-        self.univeral_code.ADD_TO_FUNCTION_NAME(' ' + token)
+        self.sourceCodeInfoBuilder.ADD_TO_FUNCTION_NAME(' ' + token)
 
     def _NAMESPACE(self, token):
         self._state = self._OPERATOR if token == 'operator'  else self._GLOBAL
-        self.univeral_code.ADD_TO_FUNCTION_NAME("::" + token)
+        self.sourceCodeInfoBuilder.ADD_TO_FUNCTION_NAME("::" + token)
 
     def _DEC(self, token):
         if token in ('(', "<"):
@@ -299,13 +298,13 @@ class CLikeReader(LanguageReaderBase):
             if (self.bracket_level == 0):
                 self._state = self._DEC_TO_IMP
         elif self.bracket_level == 1:
-            self.univeral_code.PARAMETER(token)
+            self.sourceCodeInfoBuilder.PARAMETER(token)
             return
-        self.univeral_code.ADD_TO_LONG_FUNCTION_NAME(" " + token)
+        self.sourceCodeInfoBuilder.ADD_TO_LONG_FUNCTION_NAME(" " + token)
 
     def _DEC_TO_IMP(self, token):
         if token == 'const':
-            self.univeral_code.ADD_TO_LONG_FUNCTION_NAME(" " + token)
+            self.sourceCodeInfoBuilder.ADD_TO_LONG_FUNCTION_NAME(" " + token)
         elif token == '{':
             self.br_count += 1
             self._state = self._IMP
@@ -330,10 +329,10 @@ class CLikeReader(LanguageReaderBase):
                 self.br_count -= 1
                 if self.br_count == 0:
                     self._state = self._GLOBAL
-                    self.univeral_code.END_OF_FUNCTION(self.current_line)
+                    self.sourceCodeInfoBuilder.END_OF_FUNCTION(self.current_line)
                     return
         if self._is_condition(token):
-            self.univeral_code.CONDITION()
+            self.sourceCodeInfoBuilder.CONDITION()
 
 
 class ObjCReader(CLikeReader):
@@ -347,12 +346,12 @@ class ObjCReader(CLikeReader):
             super(ObjCReader, self)._DEC_TO_IMP(token)
             if self._state == self._GLOBAL:
                 self._state = self._OBJC_DEC_BEGIN
-                self.univeral_code.START_NEW_FUNCTION(token, self.current_line)
+                self.sourceCodeInfoBuilder.START_NEW_FUNCTION(token, self.current_line)
 
     def _OBJC_DEC_BEGIN(self, token):
         if token == ':':
             self._state = self._OBJC_DEC
-            self.univeral_code.ADD_TO_FUNCTION_NAME(token)
+            self.sourceCodeInfoBuilder.ADD_TO_FUNCTION_NAME(token)
         elif token == '{':
             self.br_count += 1
             self._state = self._IMP
@@ -362,7 +361,7 @@ class ObjCReader(CLikeReader):
     def _OBJC_DEC(self, token):
         if token == '(':
             self._state = self._OBJC_PARAM_TYPE
-            self.univeral_code.ADD_TO_LONG_FUNCTION_NAME(token)
+            self.sourceCodeInfoBuilder.ADD_TO_LONG_FUNCTION_NAME(token)
         elif token == ',':
             pass
         elif token == '{':
@@ -370,12 +369,12 @@ class ObjCReader(CLikeReader):
             self._state = self._IMP
         else:
             self._state = self._OBJC_DEC_BEGIN
-            self.univeral_code.ADD_TO_FUNCTION_NAME(" " + token)
+            self.sourceCodeInfoBuilder.ADD_TO_FUNCTION_NAME(" " + token)
 
     def _OBJC_PARAM_TYPE(self, token):
         if token == ')':
             self._state = self._OBJC_PARAM
-        self.univeral_code.ADD_TO_LONG_FUNCTION_NAME(" " + token)
+        self.sourceCodeInfoBuilder.ADD_TO_LONG_FUNCTION_NAME(" " + token)
 
     def _OBJC_PARAM(self, token):
         self._state = self._OBJC_DEC

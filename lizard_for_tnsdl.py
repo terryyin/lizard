@@ -23,18 +23,18 @@ class SDLReader(LanguageReaderBase):
             elif token == 'START': 
                 self.prefix = self.saved_process
                 self._state = self._IMP
-                self.univeral_code.START_NEW_FUNCTION(self.prefix, self.current_line)
+                self.sourceCodeInfoBuilder.START_NEW_FUNCTION(self.prefix, self.current_line)
             
     def _DEC(self, token):
             self.prefix = "PROCEDURE " + token
             self._state = self._IMP
-            self.univeral_code.START_NEW_FUNCTION(self.prefix, self.current_line)
+            self.sourceCodeInfoBuilder.START_NEW_FUNCTION(self.prefix, self.current_line)
 
     def _PROCESS(self, token):
         self.prefix = "PROCESS " + token
         self.saved_process = self.prefix
         self._state = self._IMP
-        self.univeral_code.START_NEW_FUNCTION(self.prefix, self.current_line)
+        self.sourceCodeInfoBuilder.START_NEW_FUNCTION(self.prefix, self.current_line)
 
     def _STATE(self, token):
         self.statename = token
@@ -47,7 +47,7 @@ class SDLReader(LanguageReaderBase):
     def _INPUT(self, token):
         if token != 'INTERNAL':
             self._state = self._IMP
-            self.univeral_code.START_NEW_FUNCTION(self.prefix + " STATE " + self.statename + " INPUT " + token, self.current_line)
+            self.sourceCodeInfoBuilder.START_NEW_FUNCTION(self.prefix + " STATE " + self.statename + " INPUT " + token, self.current_line)
 
     def _IMP(self, token):
         if token == 'PROCEDURE':
@@ -55,16 +55,16 @@ class SDLReader(LanguageReaderBase):
             return
         if token == 'ENDPROCEDURE' or token == 'ENDPROCESS' or token == 'ENDSTATE':
             self._state = self._GLOBAL
-            self.univeral_code.END_OF_FUNCTION(self.current_line)
+            self.sourceCodeInfoBuilder.END_OF_FUNCTION(self.current_line)
             return
         if self.start_of_statement:     
             if token == 'STATE': 
                 self._state = self._STATE
-                self.univeral_code.END_OF_FUNCTION(self.current_line)
+                self.sourceCodeInfoBuilder.END_OF_FUNCTION(self.current_line)
                 return 
             elif token == 'INPUT': 
                 self._state = self._INPUT
-                self.univeral_code.END_OF_FUNCTION(self.current_line)
+                self.sourceCodeInfoBuilder.END_OF_FUNCTION(self.current_line)
                 return
         condition = self._is_condition(token, self.last_token)
 
@@ -72,9 +72,9 @@ class SDLReader(LanguageReaderBase):
         if not token.startswith("#"):
             self.start_of_statement = (token == ';')
         if condition:
-            return self.univeral_code.CONDITION()
+            return self.sourceCodeInfoBuilder.CONDITION()
         else:
-            return self.univeral_code.TOKEN()
+            return self.sourceCodeInfoBuilder.TOKEN()
         
     conditions = set(['WHILE', 'AND', 'OR', '#if'])
     def _is_condition(self, token, last_token):
