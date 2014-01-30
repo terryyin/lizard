@@ -14,12 +14,23 @@ class LizardExtension(object):
 'else',
 '+',
 '!=',
+'?',
+'/',
+">=",
+"<=",
+"|=",
+"&=",
+"-=",
+"/=",
+"*=",
 'static',
 'inline',
 ']',
 '==',
 '+=',
 '[',
+'|',
+'||',
 'public',
 'struct',
 'typedef',
@@ -28,6 +39,9 @@ class LizardExtension(object):
 '#endif',
 '#if',
 'if',
+'for',
+'case',
+'break',
 'namespace',
 ':',
 '->',
@@ -51,7 +65,7 @@ class LizardExtension(object):
     def extend_tokens(self, tokens):
         self.result = {}
         for t in tokens:
-            token = t[0].lower()
+            token = t[0]#.lower()
             if token not in self.ignoreList:
                 self.result[token] = self.result.get(token, 0) + 1
             yield t

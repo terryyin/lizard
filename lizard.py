@@ -831,17 +831,17 @@ def createCommandLineParser():
             dest="working_threads",
             default=1)
     parser.add_option("-d", "--find_duplicates",
-            help="find and skip analysis for duplicates",
+            help="find and skip analysis for identical files. Will be made default in the next release",
             action="store_true",
             dest="duplicates",
             default=False)
     parser.add_option("-e", "--display_fn_end_line",
-            help="display function end line number in addition to start line number",
+            help="display function end line number in addition to start line number. Will be made default in the next release",
             action="store_true",
             dest="display_fn_end_line",
             default=False)
     parser.add_option("-E", "--extension",
-            help="Use extension. Can be WordCount.",
+            help="under construction...", #"Use extension. Can be WordCount.",
             action="append",
             dest="extensions",
             default=[])

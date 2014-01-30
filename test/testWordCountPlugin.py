@@ -15,8 +15,13 @@ class TestWordCountPlugin(unittest.TestCase):
         list(ext.extend_tokens([("a",1), ("a",1)]))
         self.assertEqual(2, ext.result['a'])
 
-    
-    
-if __name__ == "__main__":
-    #import sys;sys.argv = ['', 'Test.testName']
-    unittest.main()
+    def test_should_not_count_keywords(self):
+        ext = LizardExtension()
+        list(ext.extend_tokens([("for",1)]))
+        self.assertNotIn('for', ext.result)
+
+    def test_should_count_non_keyword(self):
+        ext = LizardExtension()
+        list(ext.extend_tokens([("For",1)]))
+        self.assertIn('For', ext.result)
+
