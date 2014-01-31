@@ -92,7 +92,16 @@ class TestAllOutput(StreamStdoutTestCase):
         file_infos = [FileInformation('f1.c', 1, [fun])]
         option = Mock(CCN=15, number = 0, extensions=[])
         print_result(file_infos, option)
-        mock_exit.has_called_with(1)
+        mock_exit.assert_called_with(1)
+
+    @patch.object(sys, 'exit')
+    def xtest_whitelist(self, mock_exit):
+        fun = FunctionInfo("foo", 100)
+        fun.cyclomatic_complexity = 16
+        file_infos = [FileInformation('f1.c', 1, [fun])]
+        option = Mock(CCN=15, number = 0, extensions=[], whitelist=['foo'])
+        print_result(file_infos, option)
+        self.assertEqual(0, mock_exit.call_count)
 
     def test_null_result(self):
         file_infos = [FileInformation('f1.c', 1, []), None]

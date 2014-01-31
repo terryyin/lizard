@@ -213,13 +213,20 @@ from lizard import warning_filter, FileInformation
 
 class TestWarningFilter(unittest.TestCase):
 
-    def test_should_filter_the_warnings(self):
+    def setUp(self):
         complex_fun = FunctionInfo("complex", 100)
         complex_fun.cyclomatic_complexity = 16
         simple_fun = FunctionInfo("simple", 100)
         simple_fun.cyclomatic_complexity = 15
-        fileStat = FileInformation("FILENAME", 1, [complex_fun, simple_fun])
+        self.fileStat = FileInformation("FILENAME", 1, [complex_fun, simple_fun])
+
+    def test_should_filter_the_warnings(self):
         option = Mock(CCN=15, arguments=10)
-        warnings = list(warning_filter(option, [fileStat]))
+        warnings = list(warning_filter(option, [self.fileStat]))
         self.assertEqual(1, len(warnings))
         self.assertEqual("complex", warnings[0][0].name)
+
+    def xtest_should_filter_out_the_whitelist(self):
+        option = Mock(CCN=15, arguments=10, whitelist=['complex'])
+        warnings = list(warning_filter(option, [self.fileStat]))
+        self.assertEqual(0, len(warnings))

@@ -646,7 +646,7 @@ def print_result(r, option):
     print_total(warning_count, all_functions, option)
     for extension in option.extensions:
         extension.print_result()
-    if option.number > warning_count:
+    if option.number < warning_count:
         sys.exit(1)
 
 class XMLFormatter(object):
