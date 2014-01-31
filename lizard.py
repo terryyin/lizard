@@ -452,6 +452,15 @@ class FileAnalyzer:
 
 analyze_file = FileAnalyzer()
 
+def warning_filter(option, fileStatistics):
+    for file_info in fileStatistics:
+        if file_info:
+            for fun in file_info.function_list:
+                if fun.cyclomatic_complexity > option.CCN or \
+                        fun.parameter_count > option.arguments:
+                    yield fun, file_info.filename
+
+
 
 class FreeFormattingTokenizer(object):
     '''
@@ -557,20 +566,16 @@ def print_function_info(fun, filename, option):
         output_format = "%(file)s:%(line)s: warning: %(name)s has %(CCN)d CCN and %(param)d params (%(nloc)d NLOC, %(token)d tokens)"
     print(output_format % output_params)
 
-def print_warnings(option, saved_result):
+def print_warnings(option, warnings):
     warning_count = 0
     if not option.warnings_only:
         print(("\n" +
                "======================================\n" +
               "!!!! Warnings (CCN > %d) !!!!") % option.CCN)
         print_function_info_header()
-    for file_info in saved_result:
-        if file_info:
-            for fun in file_info.function_list:
-                if fun.cyclomatic_complexity > option.CCN or \
-                        fun.parameter_count > option.arguments:
-                    warning_count += 1
-                    print_function_info(fun, file_info.filename, option)
+    for warning in warnings:
+        warning_count += 1
+        print_function_info(warning[0], warning[1], option)
 
     if warning_count == 0:
         print("No warning found. Excellent!")
@@ -636,7 +641,8 @@ def print_and_save_detail_information(allStatistics, option):
 
 def print_result(r, option):
     all_functions = print_and_save_detail_information(r, option)
-    warning_count = print_warnings(option, all_functions)
+    warnings = warning_filter(option, all_functions)
+    warning_count = print_warnings(option, warnings)
     print_total(warning_count, all_functions, option)
     for extension in option.extensions:
         extension.print_result()

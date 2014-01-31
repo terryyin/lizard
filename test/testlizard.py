@@ -3,9 +3,8 @@
 #
 import unittest
 import sys
-from test.mock import patch
+from test.mock import patch, Mock
 from lizard import FileAnalyzer, CLikeReader, mapFilesToAnalyzer, FunctionInfo, analyze_file
-
 
 
 def analyzer_mock(filename):
@@ -192,6 +191,7 @@ class Test_Exclude_Patterns(unittest.TestCase):
         files = self.getSourceFiles(["dir"], [], True)
         self.assertEqual(["./f1.cpp", "./f2.cpp"], list(files))
 
+
 from lizard import LanguageChooser
 class TestLanguageChooser(unittest.TestCase):
     
@@ -209,3 +209,17 @@ class TestLanguageChooser(unittest.TestCase):
             self.assertEqual("c/c++", LanguageChooser().get_language_by_filename(name),
                              "File name '%s' is not recognized as c/c++ file" % name);
     
+from lizard import warning_filter, FileInformation
+
+class TestWarningFilter(unittest.TestCase):
+
+    def test_should_filter_the_warnings(self):
+        complex_fun = FunctionInfo("complex", 100)
+        complex_fun.cyclomatic_complexity = 16
+        simple_fun = FunctionInfo("simple", 100)
+        simple_fun.cyclomatic_complexity = 15
+        fileStat = FileInformation("FILENAME", 1, [complex_fun, simple_fun])
+        option = Mock(CCN=15)
+        warnings = list(warning_filter(option, [fileStat]))
+        self.assertEqual(1, len(warnings))
+        self.assertEqual("complex", warnings[0][0].name)
