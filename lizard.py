@@ -70,8 +70,8 @@ class FunctionInfo(object):
     Statistic information of a function.
     '''
 
-    def __init__(self, name, start_line):
-        self.cyclomatic_complexity = 1
+    def __init__(self, name, start_line = 0, ccn = 1):
+        self.cyclomatic_complexity = ccn
         self.nloc = 0
         self.token_count = 1  # the first token
         self.name = name
@@ -452,6 +452,7 @@ class FileAnalyzer:
 
 analyze_file = FileAnalyzer()
 
+
 def warning_filter(option, fileStatistics):
     for file_info in fileStatistics:
         if file_info:
@@ -461,6 +462,36 @@ def warning_filter(option, fileStatistics):
                     yield fun, file_info.filename
 
 
+class Whitelist(object):
+
+    def __init__(self, text):
+        self.whitelist = [
+            self._get_whitelist_item(line.split('#')[0])
+            for line in text.splitlines()]
+
+    def filter(self, warnings):
+        for warning in warnings:
+            if not self._in_list(warning):
+                yield warning
+
+    def _get_whitelist_item(self, text):
+        white = {}
+        pieces = text.replace('::', '##').split(':')
+        if len(pieces) > 1:
+            white['file_name'] = pieces[0]
+            text = pieces[1]
+        white['function_names'] = [x.strip().replace('##','::') for x in text.split(',')]
+        return white
+
+    def _in_list(self, warning):
+        return any(self._match_whitelist_item(white, warning) for white in self.whitelist)
+
+    def _match_whitelist_item(self, white, warning):
+        if warning[0].name in white['function_names']:
+            if 'file_name' in white:
+                return warning[1] == white['file_name']
+            return True
+        return False
 
 class FreeFormattingTokenizer(object):
     '''
@@ -642,6 +673,7 @@ def print_and_save_detail_information(allStatistics, option):
 def print_result(r, option):
     all_functions = print_and_save_detail_information(r, option)
     warnings = warning_filter(option, all_functions)
+    warnings = Whitelist(option.whitelist).filter(warnings)
     warning_count = print_warnings(option, warnings)
     print_total(warning_count, all_functions, option)
     for extension in option.extensions:
@@ -936,8 +968,16 @@ def analyze(paths, options):
     r = mapFilesToAnalyzer(files, fileAnalyzer, options.working_threads)
     return r
 
+def get_whitelist():
+    try:
+        with open('whitelizard.txt', mode='r') as whitelizard:
+            return whitelizard.read()
+    except:
+        return ''
+
 def lizard_main(argv):
     options, args = createCommandLineParser().parse_args(args=argv)
+    options.whitelist = get_whitelist()
     options.extensions = get_extensions(options.extensions)
     paths = ["."] if len(args) == 1 else args[1:]
     r = analyze(paths, options)

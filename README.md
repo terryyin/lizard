@@ -148,4 +148,14 @@ You can also use source code string instead of file. But you need to provide a f
 ```python
 >>> i = lizard.analyze_file.analyze_source_code("AllTests.cpp", "int foo(){}")
 ```
+## Whitelist
+If for some reason you would like to ignore the warnings, you can use the whitelist. Add 'whitelizard.txt' to the current folder, 
+then the functions defined in the file will be ignored. This is an example
 
+<pre>
+#whitelizard.txt
+#The file name can only be whitelizard.txt and put it in the current folder.
+#You may have commented lines begin with #.
+function_name1, function_name2 # list function names in mulitple lines or split with comma.
+filename:function1, function2  # you can also specify the filename
+</pre>
