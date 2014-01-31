@@ -219,7 +219,7 @@ class TestWarningFilter(unittest.TestCase):
         simple_fun = FunctionInfo("simple", 100)
         simple_fun.cyclomatic_complexity = 15
         fileStat = FileInformation("FILENAME", 1, [complex_fun, simple_fun])
-        option = Mock(CCN=15)
+        option = Mock(CCN=15, arguments=10)
         warnings = list(warning_filter(option, [fileStat]))
         self.assertEqual(1, len(warnings))
         self.assertEqual("complex", warnings[0][0].name)
