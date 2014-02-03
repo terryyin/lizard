@@ -25,7 +25,7 @@ header files or Java imports. It can deal with
 It counts
 
 * the nloc (net lines of code, excluding comments and blanks),
-* CCN (cyclomatic complexity number),
+* CCN (cyclomatic complexity number) or Modified CCN,
 * token count of functions.
 * parameter count of functions.
 
@@ -231,10 +231,24 @@ class CLikeReader(LanguageReaderBase):
     This is the reader for C, C++ and Java.
     '''
 
-    def __init__(self):
-        super(CLikeReader, self).__init__()
+    def __init__(self, includeHashIfConditions = True, modifiedCcn = False, **kwargs):
+        '''includeHashIfConditions: Should #if and #elseif have effect on the CCN
+           modifiedCcn: Use modified CCN (i.e. for one switch case increases CCN by 1 instead of
+                        by the amount of case blocks)
+        '''
+        super(CLikeReader, self).__init__(**kwargs)
         self.conditions = set(
-            ['if', 'for', 'while', '&&', '||', 'case', '?', '#if', '#elif', 'catch'])
+            ['if', 'for', 'while', '&&', '||', '?', 'catch'])
+
+        if includeHashIfConditions:
+            self.conditions.add('#if')
+            self.conditions.add('#elif')
+
+        if modifiedCcn:
+            self.conditions.add('switch')
+        else:
+            self.conditions.add('case')
+
         self.bracket_level = 0
         self.br_count = 0
         self.last_preprocessor = None
@@ -255,10 +269,6 @@ class CLikeReader(LanguageReaderBase):
             last_token_is_include = token == "#include"
             if not include_brackets:
                 yield token, line
-
-    def remove_hash_if_from_conditions(self):
-        self.conditions.remove("#if")
-        self.conditions.remove("#elif")
 
     def _is_condition(self, token):
         return token in self.conditions
@@ -335,8 +345,8 @@ class CLikeReader(LanguageReaderBase):
 
 
 class ObjCReader(CLikeReader):
-    def __init__(self):
-        super(ObjCReader, self).__init__()
+    def __init__(self, **kwargs):
+        super(ObjCReader, self).__init__(**kwargs)
 
     def _DEC_TO_IMP(self, token):
         if token in ("+", "-"):
@@ -384,6 +394,10 @@ def compile_file_extension_re(*exts):
 
 class LanguageChooser(object):
 
+    def __init__(self, **readerArgs):
+        object.__init__(self)
+        self.readerArgs = readerArgs
+
     lizard_language_infos = {
                      'c/c++': {
                           'name_pattern': compile_file_extension_re("c", "cpp", "cc", "mm", "cxx", "h", "hpp"),
@@ -404,17 +418,21 @@ class LanguageChooser(object):
 
     def get_reader_by_file_name_otherwise_default(self, filename):
         lan = self.get_language_by_filename(filename)
-        return self.lizard_language_infos[lan or "c/c++"]['reader']()
+        return self.lizard_language_infos[lan or "c/c++"]['reader'](**self.readerArgs)
 
+default_language_chooser = LanguageChooser(
+    includeHashIfConditions = True,
+    modifiedCcn = False,
+)
 
 class FileAnalyzer:
     ''' A FileAnalyzer works as a function. It takes filename as parameter.
         Returns a list of function infos in this file.
     '''
 
-    def __init__(self, extensions = [], noCountPre=False):
-        self.no_preprocessor_count = noCountPre
+    def __init__(self, languageChooser = default_language_chooser, extensions = []):
         self.extensions = extensions
+        self.languageChooser = languageChooser
 
     def __call__(self, filename):
         try:
@@ -427,9 +445,7 @@ class FileAnalyzer:
 
     def analyze_source_code(self, filename, code):
         try:
-            reader = LanguageChooser().get_reader_by_file_name_otherwise_default(filename)
-            if self.no_preprocessor_count and hasattr(reader, 'remove_hash_if_from_conditions'):
-                reader.remove_hash_if_from_conditions()
+            reader = self.languageChooser.get_reader_by_file_name_otherwise_default(filename)
             result = self.analyze_source_code_with_parser(filename, code, reader)
 
             return result
@@ -877,6 +893,11 @@ def createCommandLineParser():
             action="store_true",
             dest="display_fn_end_line",
             default=False)
+    parser.add_option("-m", "--modified",
+            help="Calculate modified cyclomatic complexity number",
+            action="store_true",
+            dest="modifiedCcn",
+            default=False)
     parser.add_option("-E", "--extension",
             help="under construction...", #"Use extension. Can be WordCount.",
             action="append",
@@ -909,10 +930,11 @@ import hashlib
 
 class FilesFilter(object):
     
-    def __init__(self, exclude_patterns, check_duplicates):
+    def __init__(self, exclude_patterns, check_duplicates, languageChooser = default_language_chooser):
         self.exclude_patterns = exclude_patterns
         self.check_duplicates = check_duplicates
         self.hash_set = set()
+        self.languageChooser = languageChooser
         
     def getFileNames(self, paths):
         for SRC_DIR in paths:
@@ -942,7 +964,7 @@ class FilesFilter(object):
         return code_md5.hexdigest()
 
     def _notExluded(self, str_to_match):
-        return LanguageChooser().get_language_by_filename(str_to_match) and \
+        return self.languageChooser.get_language_by_filename(str_to_match) and \
             all(not fnmatch.fnmatch(str_to_match, p) for p in self.exclude_patterns)
 
     def _notDuplicate(self, full_path_name):
@@ -962,8 +984,14 @@ def analyze(paths, options):
         It analyze the given paths with the options.
         Can be used directly by other Python application.
     '''
-    files = FilesFilter(options.exclude, options.duplicates).getFileNames(paths)
-    fileAnalyzer = FileAnalyzer(options.extensions, options.no_preprocessor_count)
+
+    chooser = LanguageChooser(
+      includeHashIfConditions = not options.no_preprocessor_count,
+      modifiedCcn = options.modifiedCcn,
+    )
+
+    files = FilesFilter(options.exclude, options.duplicates, chooser).getFileNames(paths)
+    fileAnalyzer = FileAnalyzer(chooser, options.extensions)
     r = mapFilesToAnalyzer(files, fileAnalyzer, options.working_threads)
     return r
 
