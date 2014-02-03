@@ -25,7 +25,7 @@ header files or Java imports. It can deal with
 It counts
 
 * the nloc (net lines of code, excluding comments and blanks),
-* CCN (cyclomatic complexity number),
+* CCN (cyclomatic complexity number) or Modified CCN,
 * token count of functions.
 * parameter count of functions.
 
@@ -231,16 +231,23 @@ class CLikeReader(LanguageReaderBase):
     This is the reader for C, C++ and Java.
     '''
 
-    def __init__(self, includeHashIfConditions = True, **kwargs):
+    def __init__(self, includeHashIfConditions = True, modifiedCcn = False, **kwargs):
         '''includeHashIfConditions: Should #if and #elseif have effect on the CCN
+           modifiedCcn: Use modified CCN (i.e. for one switch case increases CCN by 1 instead of
+                        by the amount of case blocks)
         '''
         super(CLikeReader, self).__init__(**kwargs)
         self.conditions = set(
-            ['if', 'for', 'while', '&&', '||', 'case', '?', 'catch'])
+            ['if', 'for', 'while', '&&', '||', '?', 'catch'])
 
         if includeHashIfConditions:
             self.conditions.add('#if')
             self.conditions.add('#elif')
+
+        if modifiedCcn:
+            self.conditions.add('switch')
+        else:
+            self.conditions.add('case')
 
         self.bracket_level = 0
         self.br_count = 0
@@ -415,6 +422,7 @@ class LanguageChooser(object):
 
 default_language_chooser = LanguageChooser(
     includeHashIfConditions = True,
+    modifiedCcn = False,
 )
 
 class FileAnalyzer:
@@ -885,6 +893,11 @@ def createCommandLineParser():
             action="store_true",
             dest="display_fn_end_line",
             default=False)
+    parser.add_option("-m", "--modified",
+            help="Calculate modified cyclomatic complexity number",
+            action="store_true",
+            dest="modifiedCcn",
+            default=False)
     parser.add_option("-E", "--extension",
             help="under construction...", #"Use extension. Can be WordCount.",
             action="append",
@@ -974,6 +987,7 @@ def analyze(paths, options):
 
     chooser = LanguageChooser(
       includeHashIfConditions = not options.no_preprocessor_count,
+      modifiedCcn = options.modifiedCcn,
     )
 
     files = FilesFilter(options.exclude, options.duplicates, chooser).getFileNames(paths)
