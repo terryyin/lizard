@@ -44,7 +44,7 @@ It requires python2.6 or above (early versions are not verified).
 
 BUG_REPORTING = "please report bug to terry.yinzhe@gmail.com or https://github.com/terryyin/lizard.\n"
 
-VERSION = "1.7.4"
+VERSION = "1.7.5"
 
 
 import itertools, traceback
