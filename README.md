@@ -159,3 +159,14 @@ then the functions defined in the file will be ignored. This is an example
 function_name1, function_name2 # list function names in mulitple lines or split with comma.
 filename:function1, function2  # you can also specify the filename
 </pre>
+
+## Wishlist (The features that will come in the near future)
+### Options in Comments
+You can use options in the comments of the source code to change the behavior of lizard.
+By putting "#lizard forgives" inside a function or before a function it will suppress the warning for that function.
+<pre>
+int foo() {
+    // #lizard forgives the complexity
+    ...
+}
+</pre>
