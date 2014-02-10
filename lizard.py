@@ -54,14 +54,83 @@ import re
 DEFAULT_CCN_THRESHOLD = 15
 
 
-'''
-The analyzing process
-=====================
-Source code => Tokens => SourceCodeInforamtionBuilder
+def createCommandLineParser():
+    from optparse import OptionParser
+    parser = OptionParser(version=VERSION)
+    parser.add_option("-v", "--verbose",
+            help="Output in verbose mode (long function name)",
+            action="store_true",
+            dest="verbose",
+            default=False)
+    parser.add_option("-C", "--CCN",
+            help =  "Threshold for cyclomatic complexity number warning. "+
+                    "The default value is %d. Functions with CCN bigger than this number will generate warning" % DEFAULT_CCN_THRESHOLD,
+            action="store",
+            type="int",
+            dest="CCN",
+            default=DEFAULT_CCN_THRESHOLD)
+    parser.add_option("-a", "--arguments",
+            help="Limit for number of parameters",
+            action="store",
+            type="int",
+            dest="arguments",
+            default=100)
+    parser.add_option("-w", "--warnings_only",
+            help="Show warnings only, using clang/gcc's warning format for printing warnings. http://clang.llvm.org/docs/UsersManual.html#cmdoption-fdiagnostics-format",
+            action="store_true",
+            dest="warnings_only",
+            default=False)
+    parser.add_option("-i", "--ignore_warnings",
+            help="If the number of warnings is equal or less than the number, the tool will exit normally, otherwize it will generate error. Useful in makefile when improving legacy code.",
+            action="store",
+            type="int",
+            dest="number",
+            default=0)
+    parser.add_option("-x", "--exclude",
+            help="Exclude files that match this pattern. * matches everything, ? matches any single characoter, \"./folder/*\" exclude everything in the folder, recursively. Multiple patterns can be specified. Don't forget to add \"\" around the pattern.",
+            action="append",
+            dest="exclude",
+            default=[])
+    parser.add_option("-X", "--xml",
+            help="Generate XML in cppncss style instead of the normal tabular output. Useful to generate report in Jenkins server",
+            action="store_true",
+            dest="xml",
+            default=None)
+    parser.add_option("-P", "--no_preprocessor_count",
+            help="By default, a #if will also increase the complexity. Adding this option to ignore them",
+            action="store_true",
+            dest="no_preprocessor_count",
+            default=False)
+    parser.add_option("-t", "--working_threads",
+            help="number of working threads. The default value is 1.",
+            action="store",
+            type="int",
+            dest="working_threads",
+            default=1)
+    parser.add_option("-d", "--find_duplicates",
+            help="find and skip analysis for identical files. Will be made default in the next release",
+            action="store_true",
+            dest="duplicates",
+            default=False)
+    parser.add_option("-e", "--display_fn_end_line",
+            help="display function end line number in addition to start line number. Will be made default in the next release",
+            action="store_true",
+            dest="display_fn_end_line",
+            default=False)
+    parser.add_option("-m", "--modified",
+            help="Calculate modified cyclomatic complexity number",
+            action="store_true",
+            dest="modifiedCcn",
+            default=False)
+    parser.add_option("-E", "--extension",
+            help="under construction...", #"Use extension. Can be WordCount.",
+            action="append",
+            dest="extensions",
+            default=[])
 
-SourceCodeInforamtionBuilder.get_statistics => The statistics of one source file.
-
-'''
+    parser.usage = "lizard [options] [PATH or FILE] [PATH] ... "
+    parser.description = __doc__
+    return parser
 
 
 class FunctionInfo(object):
@@ -132,14 +201,29 @@ class SourceCodeInforamtionBuilder(object):
 
     def __init__(self):
         self.fileinfo = FileInformation("", 0, [])
-        self.START_NEW_FUNCTION('', 0)
+        self.current_line = 0
+        self.START_NEW_FUNCTION('')
+
+    def parse_functions(self, tokens, parser):
+        for token, self.current_line in tokens:
+            try:
+                if token.isspace():
+                    self.NEW_LINE()
+                else:
+                    self.TOKEN()
+                    self.fileinfo.token_count+=1
+                    parser.process_token(token)
+            except:
+                raise ParsingError(self.current_line)
+
+        return parser.sourceCodeInfoBuilder
 
     def build(self):
         return self.fileinfo
 
-    def START_NEW_FUNCTION(self, name, start_line):
+    def START_NEW_FUNCTION(self, name):
         self.newline = True
-        self.current_function = FunctionInfo(name, start_line)
+        self.current_function = FunctionInfo(name, self.current_line)
 
     def CONDITION(self):
         self.current_function.cyclomatic_complexity += 1
@@ -163,10 +247,10 @@ class SourceCodeInforamtionBuilder(object):
     def PARAMETER(self, token):
         self.current_function.add_parameter(token)
 
-    def END_OF_FUNCTION(self, end_line):
-        self.current_function.end_line = end_line
+    def END_OF_FUNCTION(self):
+        self.current_function.end_line = self.current_line
         self.fileinfo.function_list.append(self.current_function)
-        self.START_NEW_FUNCTION('', 0)
+        self.START_NEW_FUNCTION('')
 
 
 class ParsingError(Exception):
@@ -202,22 +286,10 @@ class LanguageReaderBase(object):
 
     def __init__(self):
         self._state = self._GLOBAL
-        self.current_line = 0
         self.sourceCodeInfoBuilder = SourceCodeInforamtionBuilder()
 
     def generate_universal_code(self, tokens):
-        for token, self.current_line in tokens:
-            try:
-                if token.isspace():
-                    self.sourceCodeInfoBuilder.NEW_LINE()
-                else:
-                    self.sourceCodeInfoBuilder.TOKEN()
-                    self.sourceCodeInfoBuilder.fileinfo.token_count+=1
-                    self.process_token(token)
-            except:
-                raise ParsingError(self.current_line)
-
-        return self.sourceCodeInfoBuilder
+        return self.sourceCodeInfoBuilder.parse_functions(tokens, self)
 
     def process_token(self, token):
         return self._state(token)
@@ -286,7 +358,7 @@ class CLikeReader(LanguageReaderBase):
         elif token == '::':
             self._state = self._NAMESPACE
         else:
-            self.sourceCodeInfoBuilder.START_NEW_FUNCTION(token, self.current_line)
+            self.sourceCodeInfoBuilder.START_NEW_FUNCTION(token)
             if token == 'operator':
                 self._state = self._OPERATOR
 
@@ -338,7 +410,7 @@ class CLikeReader(LanguageReaderBase):
                 self.br_count -= 1
                 if self.br_count == 0:
                     self._state = self._GLOBAL
-                    self.sourceCodeInfoBuilder.END_OF_FUNCTION(self.current_line)
+                    self.sourceCodeInfoBuilder.END_OF_FUNCTION()
                     return
         if self._is_condition(token):
             self.sourceCodeInfoBuilder.CONDITION()
@@ -355,7 +427,7 @@ class ObjCReader(CLikeReader):
             super(ObjCReader, self)._DEC_TO_IMP(token)
             if self._state == self._GLOBAL:
                 self._state = self._OBJC_DEC_BEGIN
-                self.sourceCodeInfoBuilder.START_NEW_FUNCTION(token, self.current_line)
+                self.sourceCodeInfoBuilder.START_NEW_FUNCTION(token)
 
     def _OBJC_DEC_BEGIN(self, token):
         if token == ':':
@@ -446,9 +518,7 @@ class FileAnalyzer:
     def analyze_source_code(self, filename, code):
         try:
             reader = self.languageChooser.get_reader_by_file_name_otherwise_default(filename)
-            result = self.analyze_source_code_with_parser(filename, code, reader)
-
-            return result
+            return self.analyze_source_code_with_parser(filename, code, reader)
         except ParsingError as e:
             e.filename = filename
             e.code = code
@@ -830,83 +900,6 @@ class XMLFormatter(object):
         item.appendChild(value4)
         return item
 
-def createCommandLineParser():
-    from optparse import OptionParser
-    parser = OptionParser(version=VERSION)
-    parser.add_option("-v", "--verbose",
-            help="Output in verbose mode (long function name)",
-            action="store_true",
-            dest="verbose",
-            default=False)
-    parser.add_option("-C", "--CCN",
-            help =  "Threshold for cyclomatic complexity number warning. "+
-                    "The default value is %d. Functions with CCN bigger than this number will generate warning" % DEFAULT_CCN_THRESHOLD,
-            action="store",
-            type="int",
-            dest="CCN",
-            default=DEFAULT_CCN_THRESHOLD)
-    parser.add_option("-a", "--arguments",
-            help="Limit for number of parameters",
-            action="store",
-            type="int",
-            dest="arguments",
-            default=100)
-    parser.add_option("-w", "--warnings_only",
-            help="Show warnings only, using clang/gcc's warning format for printing warnings. http://clang.llvm.org/docs/UsersManual.html#cmdoption-fdiagnostics-format",
-            action="store_true",
-            dest="warnings_only",
-            default=False)
-    parser.add_option("-i", "--ignore_warnings",
-            help="If the number of warnings is equal or less than the number, the tool will exit normally, otherwize it will generate error. Useful in makefile when improving legacy code.",
-            action="store",
-            type="int",
-            dest="number",
-            default=0)
-    parser.add_option("-x", "--exclude",
-            help="Exclude files that match this pattern. * matches everything, ? matches any single characoter, \"./folder/*\" exclude everything in the folder, recursively. Multiple patterns can be specified. Don't forget to add \"\" around the pattern.",
-            action="append",
-            dest="exclude",
-            default=[])
-    parser.add_option("-X", "--xml",
-            help="Generate XML in cppncss style instead of the normal tabular output. Useful to generate report in Jenkins server",
-            action="store_true",
-            dest="xml",
-            default=None)
-    parser.add_option("-P", "--no_preprocessor_count",
-            help="By default, a #if will also increase the complexity. Adding this option to ignore them",
-            action="store_true",
-            dest="no_preprocessor_count",
-            default=False)
-    parser.add_option("-t", "--working_threads",
-            help="number of working threads. The default value is 1.",
-            action="store",
-            type="int",
-            dest="working_threads",
-            default=1)
-    parser.add_option("-d", "--find_duplicates",
-            help="find and skip analysis for identical files. Will be made default in the next release",
-            action="store_true",
-            dest="duplicates",
-            default=False)
-    parser.add_option("-e", "--display_fn_end_line",
-            help="display function end line number in addition to start line number. Will be made default in the next release",
-            action="store_true",
-            dest="display_fn_end_line",
-            default=False)
-    parser.add_option("-m", "--modified",
-            help="Calculate modified cyclomatic complexity number",
-            action="store_true",
-            dest="modifiedCcn",
-            default=False)
-    parser.add_option("-E", "--extension",
-            help="under construction...", #"Use extension. Can be WordCount.",
-            action="append",
-            dest="extensions",
-            default=[])
-
-    parser.usage = "lizard [options] [PATH or FILE] [PATH] ... "
-    parser.description = __doc__
-    return parser
 
 def mapFilesToAnalyzer(files, fileAnalyzer, working_threads):
     try:
@@ -930,12 +923,11 @@ import hashlib
 
 class FilesFilter(object):
     
-    def __init__(self, exclude_patterns, check_duplicates, languageChooser = default_language_chooser):
+    def __init__(self, exclude_patterns, check_duplicates):
         self.exclude_patterns = exclude_patterns
         self.check_duplicates = check_duplicates
         self.hash_set = set()
-        self.languageChooser = languageChooser
-        
+
     def getFileNames(self, paths):
         for SRC_DIR in paths:
             if os.path.isfile(SRC_DIR) :
@@ -964,7 +956,7 @@ class FilesFilter(object):
         return code_md5.hexdigest()
 
     def _notExluded(self, str_to_match):
-        return self.languageChooser.get_language_by_filename(str_to_match) and \
+        return LanguageChooser().get_language_by_filename(str_to_match) and \
             all(not fnmatch.fnmatch(str_to_match, p) for p in self.exclude_patterns)
 
     def _notDuplicate(self, full_path_name):
@@ -985,15 +977,14 @@ def analyze(paths, options):
         Can be used directly by other Python application.
     '''
 
-    chooser = LanguageChooser(
+    language = LanguageChooser(
       includeHashIfConditions = not options.no_preprocessor_count,
       modifiedCcn = options.modifiedCcn,
     )
 
-    files = FilesFilter(options.exclude, options.duplicates, chooser).getFileNames(paths)
-    fileAnalyzer = FileAnalyzer(chooser, options.extensions)
-    r = mapFilesToAnalyzer(files, fileAnalyzer, options.working_threads)
-    return r
+    files = FilesFilter(options.exclude, options.duplicates).getFileNames(paths)
+    fileAnalyzer = FileAnalyzer(language, options.extensions)
+    return mapFilesToAnalyzer(files, fileAnalyzer, options.working_threads)
 
 def get_whitelist():
     try:

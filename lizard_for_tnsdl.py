@@ -23,18 +23,18 @@ class SDLReader(LanguageReaderBase):
             elif token == 'START': 
                 self.prefix = self.saved_process
                 self._state = self._IMP
-                self.sourceCodeInfoBuilder.START_NEW_FUNCTION(self.prefix, self.current_line)
+                self.sourceCodeInfoBuilder.START_NEW_FUNCTION(self.prefix)
             
     def _DEC(self, token):
             self.prefix = "PROCEDURE " + token
             self._state = self._IMP
-            self.sourceCodeInfoBuilder.START_NEW_FUNCTION(self.prefix, self.current_line)
+            self.sourceCodeInfoBuilder.START_NEW_FUNCTION(self.prefix)
 
     def _PROCESS(self, token):
         self.prefix = "PROCESS " + token
         self.saved_process = self.prefix
         self._state = self._IMP
-        self.sourceCodeInfoBuilder.START_NEW_FUNCTION(self.prefix, self.current_line)
+        self.sourceCodeInfoBuilder.START_NEW_FUNCTION(self.prefix)
 
     def _STATE(self, token):
         self.statename = token
@@ -47,7 +47,7 @@ class SDLReader(LanguageReaderBase):
     def _INPUT(self, token):
         if token != 'INTERNAL':
             self._state = self._IMP
-            self.sourceCodeInfoBuilder.START_NEW_FUNCTION(self.prefix + " STATE " + self.statename + " INPUT " + token, self.current_line)
+            self.sourceCodeInfoBuilder.START_NEW_FUNCTION(self.prefix + " STATE " + self.statename + " INPUT " + token)
 
     def _IMP(self, token):
         if token == 'PROCEDURE':
@@ -55,16 +55,16 @@ class SDLReader(LanguageReaderBase):
             return
         if token == 'ENDPROCEDURE' or token == 'ENDPROCESS' or token == 'ENDSTATE':
             self._state = self._GLOBAL
-            self.sourceCodeInfoBuilder.END_OF_FUNCTION(self.current_line)
+            self.sourceCodeInfoBuilder.END_OF_FUNCTION()
             return
         if self.start_of_statement:     
             if token == 'STATE': 
                 self._state = self._STATE
-                self.sourceCodeInfoBuilder.END_OF_FUNCTION(self.current_line)
+                self.sourceCodeInfoBuilder.END_OF_FUNCTION()
                 return 
             elif token == 'INPUT': 
                 self._state = self._INPUT
-                self.sourceCodeInfoBuilder.END_OF_FUNCTION(self.current_line)
+                self.sourceCodeInfoBuilder.END_OF_FUNCTION()
                 return
         condition = self._is_condition(token, self.last_token)
 

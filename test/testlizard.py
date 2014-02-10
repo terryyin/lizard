@@ -103,9 +103,10 @@ class Test_FileAnalyzer(unittest.TestCase):
         error_message = mock_stderr.write.call_args[0][0]
         self.assertIn("[Errno 2]", error_message)
         self.assertIn("terry.yinzhe@gmail.com", error_message)
-        
-         
+
+
 class Test_FunctionInfo(unittest.TestCase):
+
     def test_FunctionInfo_ShouldBePicklable(self):
         import pickle
         pickle.dumps(FunctionInfo("a", 1))
