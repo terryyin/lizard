@@ -199,12 +199,13 @@ class SourceCodeInforamtionBuilder(object):
         END_OF_FUNCTION
     """
 
-    def __init__(self):
-        self.fileinfo = FileInformation("", 0, [])
+    def __init__(self, filename):
+        self.fileinfo = FileInformation(filename, 0, [])
         self.current_line = 0
         self.START_NEW_FUNCTION('')
 
     def parse_functions(self, tokens, parser):
+        parser.sourceCodeInfoBuilder = self
         for token, self.current_line in tokens:
             try:
                 if token.isspace():
@@ -215,10 +216,6 @@ class SourceCodeInforamtionBuilder(object):
                     parser.process_token(token)
             except:
                 raise ParsingError(self.current_line)
-
-        return parser.sourceCodeInfoBuilder
-
-    def build(self):
         return self.fileinfo
 
     def START_NEW_FUNCTION(self, name):
@@ -286,10 +283,6 @@ class LanguageReaderBase(object):
 
     def __init__(self):
         self._state = self._GLOBAL
-        self.sourceCodeInfoBuilder = SourceCodeInforamtionBuilder()
-
-    def generate_universal_code(self, tokens):
-        return self.sourceCodeInfoBuilder.parse_functions(tokens, self)
 
     def process_token(self, token):
         return self._state(token)
@@ -529,8 +522,7 @@ class FileAnalyzer:
         tokens = parser.extend_tokens(tokens)
         for extension in self.extensions:
             tokens = extension.extend_tokens(tokens)
-        result = parser.generate_universal_code(tokens).build()
-        result.filename = filename
+        result = SourceCodeInforamtionBuilder(filename).parse_functions(tokens, parser)
         for extension in self.extensions:
             result.wordCount = extension.result
         return result
