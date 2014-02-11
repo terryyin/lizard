@@ -94,17 +94,19 @@ class TestOptions(unittest.TestCase):
         self.assertEqual(4, self.fileInfos[0].function_list[0].cyclomatic_complexity)
 
 
-from lizard import get_whitelist
+from lizard import parse_args
 class TestOptionParsing(unittest.TestCase):
 
     @patch('lizard.open', create=True)
     def test_load_whitelist_from_file(self, mock_open):
         mock_open.return_value.__enter__.return_value.read.return_value = "foo"
-        self.assertEqual("foo", get_whitelist())
+        _, options = parse_args(['lizard'])
+        self.assertEqual("foo", options.whitelist)
         mock_open.assert_called_with('whitelizard.txt', mode='r')
 
     @patch('lizard.open', create=True)
     def test_should_be_empty_if_whitelist_file_doesnot_exist(self, mock_open):
         mock_open.side_effect = IOError
-        self.assertEqual("", get_whitelist())
+        _, options = parse_args(['lizard'])
+        self.assertEqual("", options.whitelist)
 

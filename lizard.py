@@ -120,7 +120,7 @@ def createCommandLineParser():
     parser.add_option("-m", "--modified",
             help="Calculate modified cyclomatic complexity number",
             action="store_true",
-            dest="modifiedCcn",
+            dest="switchCasesAsOneCondition",
             default=False)
     parser.add_option("-E", "--extension",
             help="under construction...", #"Use extension. Can be WordCount.",
@@ -296,9 +296,9 @@ class CLikeReader(LanguageReaderBase):
     This is the reader for C, C++ and Java.
     '''
 
-    def __init__(self, includeHashIfConditions = True, modifiedCcn = False, **kwargs):
+    def __init__(self, includeHashIfConditions = True, switchCasesAsOneCondition = False, **kwargs):
         '''includeHashIfConditions: Should #if and #elseif have effect on the CCN
-           modifiedCcn: Use modified CCN (i.e. for one switch case increases CCN by 1 instead of
+           switchCasesAsOneCondition: Use modified CCN (i.e. for one switch case increases CCN by 1 instead of
                         by the amount of case blocks)
         '''
         super(CLikeReader, self).__init__(**kwargs)
@@ -309,7 +309,7 @@ class CLikeReader(LanguageReaderBase):
             self.conditions.add('#if')
             self.conditions.add('#elif')
 
-        if modifiedCcn:
+        if switchCasesAsOneCondition:
             self.conditions.add('switch')
         else:
             self.conditions.add('case')
@@ -487,7 +487,7 @@ class LanguageChooser(object):
 
 default_language_chooser = LanguageChooser(
     includeHashIfConditions = True,
-    modifiedCcn = False,
+    switchCasesAsOneCondition = False,
 )
 
 class FileAnalyzer:
@@ -892,6 +892,9 @@ class XMLFormatter(object):
         item.appendChild(value4)
         return item
 
+def print_xml(r, options):
+        print (XMLFormatter().xml_output(list(r), options))
+
 
 def mapFilesToAnalyzer(files, fileAnalyzer, working_threads):
     try:
@@ -960,44 +963,43 @@ class FilesFilter(object):
             self.hash_set.add(fhash)
             return True
 
-def get_extensions(extension_names):
-    return [__import__('lizard' + name).LizardExtension() for name in extension_names]
-
 def analyze(paths, options):
     ''' This is the most important function of lizard.
         It analyze the given paths with the options.
         Can be used directly by other Python application.
     '''
 
-    language = LanguageChooser(
-      includeHashIfConditions = not options.no_preprocessor_count,
-      modifiedCcn = options.modifiedCcn,
-    )
+    languages = LanguageChooser(
+            includeHashIfConditions = not options.no_preprocessor_count,
+            switchCasesAsOneCondition = options.switchCasesAsOneCondition,)
 
     files = FilesFilter(options.exclude, options.duplicates).getFileNames(paths)
-    fileAnalyzer = FileAnalyzer(language, options.extensions)
+    fileAnalyzer = FileAnalyzer(languages, options.extensions)
     return mapFilesToAnalyzer(files, fileAnalyzer, options.working_threads)
 
-def get_whitelist():
-    try:
-        with open('whitelizard.txt', mode='r') as whitelizard:
-            return whitelizard.read()
-    except:
-        return ''
+def parse_args(argv):
 
-def lizard_main(argv):
+    def get_extensions(extension_names):
+        return [__import__('lizard' + name).LizardExtension() for name in extension_names]
+
+    def get_whitelist():
+        try:
+            with open('whitelizard.txt', mode='r') as whitelizard:
+                return whitelizard.read()
+        except:
+            return ''
+
     options, args = createCommandLineParser().parse_args(args=argv)
     options.whitelist = get_whitelist()
     options.extensions = get_extensions(options.extensions)
     paths = ["."] if len(args) == 1 else args[1:]
-    r = analyze(paths, options)
-    if options.xml:
-        print (XMLFormatter().xml_output(list(r), options))
-    else:
-        print_result(r, options)
+    return paths, options
 
-def main():
-    lizard_main(sys.argv)
+def lizard_main(argv =  sys.argv):
+    paths, options = parse_args(argv)
+    printer = print_xml if options.xml else print_result
+    r = analyze(paths, options)
+    printer(r, options)
 
 if __name__ == "__main__":
-    main()
+    lizard_main()
