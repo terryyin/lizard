@@ -66,11 +66,10 @@ class LizardExtension(object):
     
     def extend_tokens(self, tokens):
         self.result = {}
-        for t in tokens:
-            token = t[0]#.lower()
+        for token in tokens:
             if token not in self.ignoreList and token[0] not in ('"', "'", '#'):
                 self.result[token] = self.result.get(token, 0) + 1
-            yield t
+            yield token
     
     def reduce(self, statistics):
         for k, v in statistics.wordCount.items():

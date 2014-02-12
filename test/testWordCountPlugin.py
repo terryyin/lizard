@@ -6,22 +6,22 @@ class TestWordCountPlugin(unittest.TestCase):
 
     def test_count_one_word(self):
         ext = LizardExtension()
-        list(ext.extend_tokens([("a",0), ("b",0)]))
+        list(ext.extend_tokens(["a", "b"]))
         self.assertEqual(1, ext.result['a'])
         self.assertEqual(1, ext.result['b'])
 
     def test_count_one_word_multiple_times(self):
         ext = LizardExtension()
-        list(ext.extend_tokens([("a",1), ("a",1)]))
+        list(ext.extend_tokens(["a", "a"]))
         self.assertEqual(2, ext.result['a'])
 
     def test_should_not_count_keywords(self):
         ext = LizardExtension()
-        list(ext.extend_tokens([("for",1)]))
+        list(ext.extend_tokens(["for"]))
         self.assertNotIn('for', ext.result)
 
     def test_should_count_non_keyword(self):
         ext = LizardExtension()
-        list(ext.extend_tokens([("For",1)]))
+        list(ext.extend_tokens(["For"]))
         self.assertIn('For', ext.result)
 

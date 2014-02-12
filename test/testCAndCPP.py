@@ -5,11 +5,11 @@ from .testHelpers import get_cpp_fileinfo, get_cpp_function_list
 class Test_C_Token_extension(unittest.TestCase):
 
     def test_marco_should_be_splitted_into_two_tokens(self):
-        extended = CLikeReader().extend_tokens((("# marco param1 param2", 1), ))
-        self.assertEqual([("#marco", 1), ("param1 param2", 1)], list(extended))
+        extended = CLikeReader().extend_tokens(("# marco param1 param2", ))
+        self.assertEqual(["#marco", "param1 param2"], list(extended))
 
     def test_connecting_marcro(self):
-        extended = CLikeReader().extend_tokens((("a##b c", 1), ))
+        extended = CLikeReader().extend_tokens(("a##b c", ))
         #tbd
 
 class Test_c_cpp_lizard(unittest.TestCase):

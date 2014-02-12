@@ -206,7 +206,9 @@ class SourceCodeInforamtionBuilder(object):
 
     def parse_functions(self, tokens, parser):
         parser.sourceCodeInfoBuilder = self
-        for token, self.current_line in tokens:
+        self.current_line = 1 
+        for token in tokens:
+            self.current_line += 1 if token == '\n' else (len(token.splitlines()) - 1)
             try:
                 if token.isspace():
                     self.NEW_LINE()
@@ -325,15 +327,16 @@ class CLikeReader(LanguageReaderBase):
     macro_pattern = re.compile(r"#\s*(\w+)\s*(.*)", re.M | re.S)
 
     def extend_tokens(self, tokens):
-        for token, line in tokens:
+        # handle c preprocessors
+        for token in tokens:
             m = self.macro_pattern.match(token)
             if m:
-                yield "#" + m.group(1), line
+                yield "#" + m.group(1)
                 param = m.group(2).strip()
                 if param:
-                    yield param, line
+                    yield param
             else:
-                yield token, line
+                yield token
 
     def _is_condition(self, token):
         return token in self.conditions
@@ -576,6 +579,8 @@ class FreeFormattingTokenizer(object):
     format is not part of the syntax. So indentation & new lines
     doesn't matter.
     '''
+
+    # DONOT put any sub groups in the regex. Good for performance
     _until_end = r"(?:\\\n|[^\n])*"
     token_pattern = re.compile(r"(\w+"+
                            r"|/\*.*?\*/"+
@@ -586,25 +591,12 @@ class FreeFormattingTokenizer(object):
                            r"|:=|::|>=|\*=|\*\*|\*|>"+
                            r"|&=|&&|&"+
                            r"|[!%^&\*\-=+\|\\<>/\]\+]+"+
+                           r"|\n"+
+                           r"|\s+"+
                            r"|.)", re.M | re.S)
 
-
     def __call__(self, source_code):
-        return self._generate_tokens_without_empty_lines(source_code)
-
-    def _generate_tokens_without_empty_lines(self, source_code):
-        in_middle_of_empty_lines = False
-        for (token, line) in self._tokens_from_code_with_multiple_newlines(source_code):
-            if token != '\n' or not in_middle_of_empty_lines:
-                yield token, line
-            in_middle_of_empty_lines = (token == '\n')
-
-    def _tokens_from_code_with_multiple_newlines(self, source_code):
-        line = 1
-        for token in self.token_pattern.findall(source_code):
-            line += 1 if token == '\n' else (len(token.splitlines()) - 1)
-            if not token.isspace() or token == '\n':
-                yield token, line
+        return [t for t in self.token_pattern.findall(source_code) if not t.isspace() or t == '\n']
 
 generate_tokens = FreeFormattingTokenizer()
 

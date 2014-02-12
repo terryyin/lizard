@@ -51,6 +51,10 @@ class TestNLOC(unittest.TestCase):
         result = get_cpp_function_list("int fun(){/*\n*/}")
         self.assertEqual(2, result[0].nloc)
 
+    def test_nloc_with_comment_between_new_lines(self):
+        result = get_cpp_function_list("int fun(){\n/*\n*/\n}")
+        self.assertEqual(2, result[0].nloc)
+
     def test_nloc2(self):
         result = get_cpp_function_list("int fun(){aa();\n\n\n\nbb();\n\n\n}")
         self.assertEqual(3, result[0].nloc)
