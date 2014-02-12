@@ -579,11 +579,14 @@ class FreeFormattingTokenizer(object):
     _until_end = r"((\\\n)|[^\n])*"
     token_pattern = re.compile(r"(\w+"+
                            r"|/\*.*?\*/"+
+                           r"|\"(\\.|[^\"])*\""+
+                           r"|\'(\\.|[^\'])*\'"+
                            r"|//"+ _until_end +
                            r"|#" + _until_end +
                            r"|:=|::|>=|\*=|\*\*|\*|>"+
                            r"|&=|&&|&"+
-                           r"|[!%^&\*\-=+\|\\<>/\]\+]+|.)", re.M | re.S)
+                           r"|[!%^&\*\-=+\|\\<>/\]\+]+"+
+                           r"|.)", re.M | re.S)
 
 
     def __call__(self, source_code):
@@ -603,26 +606,11 @@ class FreeFormattingTokenizer(object):
             m = self.token_pattern.match(source_code, index)
             if not m:
                 break
-            token = self._read_one_token(source_code, index, m.group(0))
+            token = m.group(0)
             index += len(token)
             line += 1 if token == '\n' else (len(token.splitlines()) - 1)
             if not token.isspace() or token == '\n':
                 yield token, line
-
-    def _read_one_token(self, source_code, index, token):
-        if token == '"' or token == '\'':
-            head = index
-            while(1):
-                head = source_code.find(token, head+1)
-                if head == -1:
-                    break
-                if source_code[head - 1] == '\\':
-                    if source_code[head - 2] != '\\':
-                        continue
-                break
-            if head != -1:
-                token = source_code[index:head + 1]
-        return token
 
 generate_tokens = FreeFormattingTokenizer()
 

@@ -123,3 +123,4 @@ class Test_generate_tonken_for_comments(unittest.TestCase):
     def test_with_c_comments(self):
         tokens = get_tokens_and_line('/*abc\n*/ t')
         self.assertTrue(('t', 2) in tokens)
+
