@@ -186,9 +186,9 @@ class FileInformation(object):
                 / len(self.function_list) if self.function_list else 0
 
 
-class SourceCodeInforamtionBuilder(object):
+class CodeInfoContext(object):
     """
-        SourceCodeInforamtionBuilder provides the builder to build FileInformation
+        provides the builder to build FileInformation
         The building blocks are:
         START_NEW_FUNCTION
             ADD_TO_FUNCTION_NAME
@@ -205,26 +205,16 @@ class SourceCodeInforamtionBuilder(object):
         self.START_NEW_FUNCTION('')
         self.forgive = False
 
-    def parse_functions(self, tokens, parser):
-        parser.sourceCodeInfoBuilder = self
-        self.current_line = 1 
-        for token in tokens:
-            self.current_line += 1 if token == '\n' else (len(token.splitlines()) - 1)
-            try:
-                if token.isspace():
-                    self.NEW_LINE()
-                elif token.startswith("/*") or token.startswith("//"):
-                    if len(token.splitlines()) > 1:
-                        self.NEW_LINE()
-                    if token[2:].strip().startswith("#lizard forgive"):
-                        self.forgive = True
-                else:
-                    self.TOKEN()
-                    self.fileinfo.token_count+=1
-                    parser.process_token(token)
-            except:
-                raise ParsingError(self.current_line)
-        return self.fileinfo
+    def _new_line(self):
+        self.fileinfo.nloc += 1
+        self.newline = True
+
+    def _count_token(self):
+        self.fileinfo.token_count+=1
+        if self.newline:
+            self.current_function.nloc += 1
+            self.newline = False
+        self.current_function.token_count += 1
 
     def START_NEW_FUNCTION(self, name):
         self.newline = True
@@ -232,16 +222,6 @@ class SourceCodeInforamtionBuilder(object):
 
     def CONDITION(self):
         self.current_function.cyclomatic_complexity += 1
-
-    def TOKEN(self):
-        if self.newline:
-            self.current_function.nloc += 1
-            self.newline = False
-        self.current_function.token_count += 1
-
-    def NEW_LINE(self):
-        self.fileinfo.nloc += 1
-        self.newline = True
 
     def ADD_TO_LONG_FUNCTION_NAME(self, app):
         self.current_function.add_to_long_name(app)
@@ -258,6 +238,25 @@ class SourceCodeInforamtionBuilder(object):
             self.fileinfo.function_list.append(self.current_function)
         self.forgive = False
         self.START_NEW_FUNCTION('')
+
+
+class LineCounter():
+
+    def extend_tokens(self, tokens, context):
+        self.context = context
+        self.context.current_line = 1 
+        for token in tokens:
+            self.context.current_line += 1 if token == '\n' else (len(token.splitlines()) - 1)
+            if token == "\n":
+                self.context._new_line()
+            elif token.startswith("/*") or token.startswith("//"):
+                if len(token.splitlines()) > 1:
+                    self.context._new_line()
+                if token[2:].strip().startswith("#lizard forgive"):
+                    self.context.forgive = True
+            else:
+                self.context._count_token()
+                yield token
 
 
 class ParsingError(Exception):
@@ -294,10 +293,12 @@ class LanguageReaderBase(object):
     def __init__(self):
         self._state = self._GLOBAL
 
-    def process_token(self, token):
-        return self._state(token)
+    def process_tokens(self, tokens, context):
+        self.context = context
+        for token in tokens:
+            self._state(token)
 
-    def extend_tokens(self, tokens):
+    def extend_tokens(self, tokens, context):
         return tokens
 
 
@@ -331,7 +332,7 @@ class CLikeReader(LanguageReaderBase):
 
     macro_pattern = re.compile(r"#\s*(\w+)\s*(.*)", re.M | re.S)
 
-    def extend_tokens(self, tokens):
+    def extend_tokens(self, tokens, context):
         # handle c preprocessors
         for token in tokens:
             m = self.macro_pattern.match(token)
@@ -346,31 +347,26 @@ class CLikeReader(LanguageReaderBase):
     def _is_condition(self, token):
         return token in self.conditions
 
-    def process_token(self, token):
-        if token.startswith("#") and self._state != self._IMP:
-            return
-        return super(CLikeReader, self).process_token(token)
-
     def _GLOBAL(self, token):
         if token == '(':
             self.bracket_level += 1
             self._state = self._DEC
-            self.sourceCodeInfoBuilder.ADD_TO_LONG_FUNCTION_NAME(token)
+            self.context.ADD_TO_LONG_FUNCTION_NAME(token)
         elif token == '::':
             self._state = self._NAMESPACE
         else:
-            self.sourceCodeInfoBuilder.START_NEW_FUNCTION(token)
+            self.context.START_NEW_FUNCTION(token)
             if token == 'operator':
                 self._state = self._OPERATOR
 
     def _OPERATOR(self, token):
         if token != '(':
             self._state = self._GLOBAL
-        self.sourceCodeInfoBuilder.ADD_TO_FUNCTION_NAME(' ' + token)
+        self.context.ADD_TO_FUNCTION_NAME(' ' + token)
 
     def _NAMESPACE(self, token):
         self._state = self._OPERATOR if token == 'operator'  else self._GLOBAL
-        self.sourceCodeInfoBuilder.ADD_TO_FUNCTION_NAME("::" + token)
+        self.context.ADD_TO_FUNCTION_NAME("::" + token)
 
     def _DEC(self, token):
         if token in ('(', "<"):
@@ -380,13 +376,13 @@ class CLikeReader(LanguageReaderBase):
             if (self.bracket_level == 0):
                 self._state = self._DEC_TO_IMP
         elif self.bracket_level == 1:
-            self.sourceCodeInfoBuilder.PARAMETER(token)
+            self.context.PARAMETER(token)
             return
-        self.sourceCodeInfoBuilder.ADD_TO_LONG_FUNCTION_NAME(" " + token)
+        self.context.ADD_TO_LONG_FUNCTION_NAME(" " + token)
 
     def _DEC_TO_IMP(self, token):
         if token == 'const':
-            self.sourceCodeInfoBuilder.ADD_TO_LONG_FUNCTION_NAME(" " + token)
+            self.context.ADD_TO_LONG_FUNCTION_NAME(" " + token)
         elif token == '{':
             self.br_count += 1
             self._state = self._IMP
@@ -411,10 +407,10 @@ class CLikeReader(LanguageReaderBase):
                 self.br_count -= 1
                 if self.br_count == 0:
                     self._state = self._GLOBAL
-                    self.sourceCodeInfoBuilder.END_OF_FUNCTION()
+                    self.context.END_OF_FUNCTION()
                     return
         if self._is_condition(token):
-            self.sourceCodeInfoBuilder.CONDITION()
+            self.context.CONDITION()
 
 
 class ObjCReader(CLikeReader):
@@ -428,12 +424,12 @@ class ObjCReader(CLikeReader):
             super(ObjCReader, self)._DEC_TO_IMP(token)
             if self._state == self._GLOBAL:
                 self._state = self._OBJC_DEC_BEGIN
-                self.sourceCodeInfoBuilder.START_NEW_FUNCTION(token)
+                self.context.START_NEW_FUNCTION(token)
 
     def _OBJC_DEC_BEGIN(self, token):
         if token == ':':
             self._state = self._OBJC_DEC
-            self.sourceCodeInfoBuilder.ADD_TO_FUNCTION_NAME(token)
+            self.context.ADD_TO_FUNCTION_NAME(token)
         elif token == '{':
             self.br_count += 1
             self._state = self._IMP
@@ -443,7 +439,7 @@ class ObjCReader(CLikeReader):
     def _OBJC_DEC(self, token):
         if token == '(':
             self._state = self._OBJC_PARAM_TYPE
-            self.sourceCodeInfoBuilder.ADD_TO_LONG_FUNCTION_NAME(token)
+            self.context.ADD_TO_LONG_FUNCTION_NAME(token)
         elif token == ',':
             pass
         elif token == '{':
@@ -451,12 +447,12 @@ class ObjCReader(CLikeReader):
             self._state = self._IMP
         else:
             self._state = self._OBJC_DEC_BEGIN
-            self.sourceCodeInfoBuilder.ADD_TO_FUNCTION_NAME(" " + token)
+            self.context.ADD_TO_FUNCTION_NAME(" " + token)
 
     def _OBJC_PARAM_TYPE(self, token):
         if token == ')':
             self._state = self._OBJC_PARAM
-        self.sourceCodeInfoBuilder.ADD_TO_LONG_FUNCTION_NAME(" " + token)
+        self.context.ADD_TO_LONG_FUNCTION_NAME(" " + token)
 
     def _OBJC_PARAM(self, token):
         self._state = self._OBJC_DEC
@@ -527,13 +523,14 @@ class FileAnalyzer:
 
     def analyze_source_code_with_parser(self, filename, code, parser):
         tokens = generate_tokens(code)
-        tokens = parser.extend_tokens(tokens)
-        for extension in self.extensions:
-            tokens = extension.extend_tokens(tokens)
-        result = SourceCodeInforamtionBuilder(filename).parse_functions(tokens, parser)
-        for extension in self.extensions:
-            result.wordCount = extension.result
-        return result
+        context = CodeInfoContext(filename)
+        try:
+            for extension in [parser, LineCounter()] + self.extensions:
+                tokens = extension.extend_tokens(tokens, context)
+            parser.process_tokens(tokens, context)
+        except:
+            raise ParsingError(context.current_line)
+        return context.fileinfo
 
 analyze_file = FileAnalyzer()
 

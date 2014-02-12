@@ -60,12 +60,9 @@ class LizardExtension(object):
                 '::',
 
             ))
-    
-    def __init__(self):
-        self.result1 = {}
-    
-    def extend_tokens(self, tokens):
-        self.result = {}
+
+    def extend_tokens(self, tokens, context):
+        context.fileinfo.wordCount = self.result = {}
         for token in tokens:
             if token not in self.ignoreList and token[0] not in ('"', "'", '#'):
                 self.result[token] = self.result.get(token, 0) + 1

@@ -32,7 +32,7 @@ class Test_sdl_lizard(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual("PROCEDURE send_swo_msgs__r", result[0].name)
         self.assertEqual(7, result[0].cyclomatic_complexity)
-        self.assertEqual(342, result[0].token_count)
+        self.assertEqual(175, result[0].token_count)
     
     def test_one_function_with_array(self):
         result = self.create_sdl_lizard("""

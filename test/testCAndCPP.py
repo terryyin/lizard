@@ -5,11 +5,11 @@ from .testHelpers import get_cpp_fileinfo, get_cpp_function_list
 class Test_C_Token_extension(unittest.TestCase):
 
     def test_marco_should_be_splitted_into_two_tokens(self):
-        extended = CLikeReader().extend_tokens(("# marco param1 param2", ))
+        extended = CLikeReader().extend_tokens(("# marco param1 param2", ), None)
         self.assertEqual(["#marco", "param1 param2"], list(extended))
 
     def test_connecting_marcro(self):
-        extended = CLikeReader().extend_tokens(("a##b c", ))
+        extended = CLikeReader().extend_tokens(("a##b c", ), None)
         #tbd
 
 class Test_c_cpp_lizard(unittest.TestCase):
@@ -166,10 +166,9 @@ class Test_Preprocessing(unittest.TestCase):
    
     def test_preprocessors_should_be_ignored_outside_function_implementation(self):
         result = get_cpp_function_list('''
-                      Constructor::Constructor()
                       #ifdef MAGIC
-                      :m_timer(5)
                       #endif
+                      void foo()
                       {}
                     ''')
         self.assertEqual(1, len(result))
