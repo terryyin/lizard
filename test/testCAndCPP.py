@@ -4,13 +4,13 @@ from .testHelpers import get_cpp_fileinfo, get_cpp_function_list
 
 class Test_C_Token_extension(unittest.TestCase):
 
-    def test_include_brackets(self):
-        extended = CLikeReader().extend_tokens((("#include", 1), ("<",1), ("aa.h", 1), (">", 1)))
-        self.assertEqual(("<aa.h>", 1), list(extended)[1])
+    def test_marco_should_be_splitted_into_two_tokens(self):
+        extended = CLikeReader().extend_tokens((("# marco param1 param2", 1), ))
+        self.assertEqual([("#marco", 1), ("param1 param2", 1)], list(extended))
 
-    def test_include_brackets_with_quotes(self):
-        extended = CLikeReader().extend_tokens((("#include", 1), ('"aa.h"', 1)))
-        self.assertEqual(('"aa.h"', 1), list(extended)[1])
+    def test_connecting_marcro(self):
+        extended = CLikeReader().extend_tokens((("a##b c", 1), ))
+        #tbd
 
 class Test_c_cpp_lizard(unittest.TestCase):
     def test_empty(self):
@@ -43,25 +43,6 @@ class Test_c_cpp_lizard(unittest.TestCase):
         self.assertEqual("fun", result[0].name)
         self.assertEqual(1, result[0].cyclomatic_complexity)
         self.assertEqual("fun( xx oo )", result[0].long_name)
-    
-    def test_one_function_with_content(self):
-        result = get_cpp_function_list("int fun(){if(a){xx;}}")
-        self.assertEqual(2, result[0].cyclomatic_complexity)
-        self.assertEqual(1, result[0].nloc)
-
-    def test_nloc_of_empty_function(self):
-        result = get_cpp_function_list("int fun(){}")
-        self.assertEqual(1, result[0].nloc)
-    
-    def test_nloc(self):
-        result = get_cpp_function_list("int fun(){\n\n\n}")
-        self.assertEqual(2, result[0].nloc)
-    
-    def test_nloc2(self):
-        result = get_cpp_function_list("int fun(){aa();\n\n\n\nbb();\n\n\n}")
-        self.assertEqual(3, result[0].nloc)
-        self.assertEqual(1, result[0].start_line)
-        self.assertEqual(8, result[0].end_line)
     
     def test_one_function_with_question_mark(self):
         result = get_cpp_function_list("int fun(){return (a)?b:c;}")

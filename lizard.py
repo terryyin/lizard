@@ -210,6 +210,9 @@ class SourceCodeInforamtionBuilder(object):
             try:
                 if token.isspace():
                     self.NEW_LINE()
+                elif token.startswith("/*") or token.startswith("//"):
+                    if len(token.splitlines()) > 1:
+                        self.NEW_LINE()
                 else:
                     self.TOKEN()
                     self.fileinfo.token_count+=1
@@ -307,6 +310,7 @@ class CLikeReader(LanguageReaderBase):
 
         if includeHashIfConditions:
             self.conditions.add('#if')
+            self.conditions.add('#ifdef')
             self.conditions.add('#elif')
 
         if switchCasesAsOneCondition:
@@ -318,21 +322,17 @@ class CLikeReader(LanguageReaderBase):
         self.br_count = 0
         self.last_preprocessor = None
 
+    macro_pattern = re.compile(r"#\s*(\w+)\s*(.*)", re.M | re.S)
+
     def extend_tokens(self, tokens):
-        last_token_is_include = False
-        include_brackets = False
-        brackets = ""
         for token, line in tokens:
-            if last_token_is_include and token == "<":
-                include_brackets = True
-                brackets = "<"
-            elif include_brackets:
-                brackets += token
-                if token == ">":
-                    include_brackets = False
-                    token = brackets
-            last_token_is_include = token == "#include"
-            if not include_brackets:
+            m = self.macro_pattern.match(token)
+            if m:
+                yield "#" + m.group(1), line
+                param = m.group(2).strip()
+                if param:
+                    yield param, line
+            else:
                 yield token, line
 
     def _is_condition(self, token):
@@ -393,7 +393,7 @@ class CLikeReader(LanguageReaderBase):
             self._state = self._IMP
 
     def _IMP(self, token):
-        if token in ("#else", "#if", "#endif"):
+        if token in ("#else", "#endif"):
             self.last_preprocessor = token
         # will ignore the braces in a #else branch            
         if self.last_preprocessor != '#else':
@@ -576,17 +576,18 @@ class FreeFormattingTokenizer(object):
     format is not part of the syntax. So indentation & new lines
     doesn't matter.
     '''
-
-    token_pattern = re.compile(r"(\w+|/\*|//|:=|::|>=|\*=|\*\*|\*|>"+
+    _until_end = r"((\\\n)|[^\n])*"
+    token_pattern = re.compile(r"(\w+"+
+                           r"|/\*.*?\*/"+
+                           r"|//"+ _until_end +
+                           r"|#" + _until_end +
+                           r"|:=|::|>=|\*=|\*\*|\*|>"+
                            r"|&=|&&|&"+
-                           r"|#\s*define|#\s*if|#\s*else|#\s*endif|#\s*\w+"+
                            r"|[!%^&\*\-=+\|\\<>/\]\+]+|.)", re.M | re.S)
 
 
     def __call__(self, source_code):
-        for t, l in self._generate_tokens_without_empty_lines(source_code):
-            if not any(t.startswith(x) for x in ('#define', '/*', '//')) :
-                yield t, l
+        return self._generate_tokens_without_empty_lines(source_code)
 
     def _generate_tokens_without_empty_lines(self, source_code):
         in_middle_of_empty_lines = False
@@ -602,49 +603,26 @@ class FreeFormattingTokenizer(object):
             m = self.token_pattern.match(source_code, index)
             if not m:
                 break
-            index, token = self._read_one_token(source_code, index, m.group(0))            
+            token = self._read_one_token(source_code, index, m.group(0))
+            index += len(token)
             line += 1 if token == '\n' else (len(token.splitlines()) - 1)
             if not token.isspace() or token == '\n':
                 yield token, line
 
     def _read_one_token(self, source_code, index, token):
-        original_index = index
-        if token.startswith("#"):
-            token = "#" + token[1:].strip()
-
-        if token == "#define":
+        if token == '"' or token == '\'':
+            head = index
             while(1):
-                bindex = index + 1
-                index = source_code.find('\n', bindex)
-                if index == -1:
+                head = source_code.find(token, head+1)
+                if head == -1:
                     break
-                if not source_code[bindex:index].rstrip().endswith('\\'):
-                    break
-            if index != -1:
-                token = source_code[original_index:index]
-        elif token == '/*':
-            index = source_code.find("*/", index + 2)
-            if index != -1:
-                index += 2
-                token = source_code[original_index:index]
-        elif token in( '//', '#if','#endif'):
-            index = source_code.find('\n', index)
-        elif token == '"' or token == '\'':
-            while(1):
-                index += 1
-                index = source_code.find(token, index)
-                if index == -1:
-                    break
-                if source_code[index - 1] == '\\':
-                    if source_code[index - 2] != '\\':
+                if source_code[head - 1] == '\\':
+                    if source_code[head - 2] != '\\':
                         continue
                 break
-            if index != -1:
-                token = source_code[original_index:index + 1]
-                index = index + 1
-        else:
-            index += len(token)
-        return index, token
+            if head != -1:
+                token = source_code[index:head + 1]
+        return token
 
 generate_tokens = FreeFormattingTokenizer()
 

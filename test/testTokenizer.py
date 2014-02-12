@@ -56,12 +56,6 @@ class Test_generate_tonken(unittest.TestCase):
         tokens = get_tokens(r'"x\"xx")')
         self.assertEqual(['"x\\"xx"', ')'], tokens)
 
-    def test_define(self):
-        tokens = get_tokens('''#define xx()\
-                                      abc
-                                    int''')
-        self.assertEqual(['\n', 'int'], tokens)
-
     def test_line_number(self):
         tokens = get_tokens_and_line(r'abc')
         self.assertEqual(('abc', 1), tokens[0])
@@ -74,6 +68,24 @@ class Test_generate_tonken(unittest.TestCase):
         tokens = get_tokens_and_line('"sss\nsss" t')
         self.assertTrue(('t', 2) in tokens)
 
+
+class Test_generate_tonken_for_marcos(unittest.TestCase):
+
+    def test_define(self):
+        define =  '''#define xx()\
+                       abc'''
+        tokens = get_tokens(define+'''
+                    int''')
+        self.assertEqual([define, '\n', 'int'], tokens)
+
+    def test_if(self):
+        tokens = get_tokens('''#if abc\n''')
+        self.assertEqual(['#if abc', '\n'], tokens)
+
+    def test_ifdef(self):
+        tokens = get_tokens('''#ifdef abc\n''')
+        self.assertEqual(['#ifdef abc', '\n'], tokens)
+
     def test_with_line_continuer_define(self):
         tokens = get_tokens_and_line('#define a \\\nb\n t')
         self.assertTrue(('t', 3) in tokens)
@@ -82,20 +94,27 @@ class Test_generate_tonken(unittest.TestCase):
         tokens = get_tokens_and_line(r''' # define yyMakeArray(ptr, count, size)     { MakeArray (ptr, count, size); \
                        yyCheckMemory (* ptr); }
                        t
-''')
+                    ''')
         self.assertTrue(('t', 3) in tokens)
+
 
 class Test_generate_tonken_for_comments(unittest.TestCase):
 
-    def test_comment(self):
+    def test_c_style_comment(self):
         tokens = get_tokens("/***\n**/")
-        self.assertEqual([], tokens)
+        self.assertEqual(["/***\n**/"], tokens)
+
+    def test_cpp_style_comment(self):
         tokens = get_tokens("//aaa\n")
-        self.assertEqual(['\n'], tokens)
+        self.assertEqual(['//aaa', '\n'], tokens)
+
+    def test_cpp_style_comment_with_multiple_lines(self):
+        tokens = get_tokens("//a\\\nb")
+        self.assertEqual(['//a\\\nb'], tokens)
 
     def test_commentedComment(self):
         tokens = get_tokens(" /*/*/")
-        self.assertEqual([], tokens)
+        self.assertEqual(["/*/*/"], tokens)
 
     def test_with_cpp_comments(self):
         tokens = get_tokens_and_line('//abc\n t')
