@@ -44,7 +44,7 @@ It requires python2.6 or above (early versions are not verified).
 
 BUG_REPORTING = "please report bug to terry.yinzhe@gmail.com or https://github.com/terryyin/lizard.\n"
 
-VERSION = "1.7.5"
+VERSION = "1.7.6"
 
 
 import itertools, traceback
@@ -215,6 +215,8 @@ class SourceCodeInforamtionBuilder(object):
                 elif token.startswith("/*") or token.startswith("//"):
                     if len(token.splitlines()) > 1:
                         self.NEW_LINE()
+                    if token[2:].strip().startswith("#lizard forgive"):
+                        self.forgive = True
                 else:
                     self.TOKEN()
                     self.fileinfo.token_count+=1
@@ -224,6 +226,7 @@ class SourceCodeInforamtionBuilder(object):
         return self.fileinfo
 
     def START_NEW_FUNCTION(self, name):
+        self.forgive = False
         self.newline = True
         self.current_function = FunctionInfo(name, self.current_line)
 
@@ -251,7 +254,8 @@ class SourceCodeInforamtionBuilder(object):
 
     def END_OF_FUNCTION(self):
         self.current_function.end_line = self.current_line
-        self.fileinfo.function_list.append(self.current_function)
+        if not self.forgive:
+            self.fileinfo.function_list.append(self.current_function)
         self.START_NEW_FUNCTION('')
 
 
