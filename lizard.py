@@ -44,7 +44,7 @@ It requires python2.6 or above (early versions are not verified).
 
 BUG_REPORTING = "please report bug to terry.yinzhe@gmail.com or https://github.com/terryyin/lizard.\n"
 
-VERSION = "1.7.6"
+VERSION = "1.7.7"
 
 
 import itertools, traceback
@@ -203,6 +203,7 @@ class SourceCodeInforamtionBuilder(object):
         self.fileinfo = FileInformation(filename, 0, [])
         self.current_line = 0
         self.START_NEW_FUNCTION('')
+        self.forgive = False
 
     def parse_functions(self, tokens, parser):
         parser.sourceCodeInfoBuilder = self
@@ -226,7 +227,6 @@ class SourceCodeInforamtionBuilder(object):
         return self.fileinfo
 
     def START_NEW_FUNCTION(self, name):
-        self.forgive = False
         self.newline = True
         self.current_function = FunctionInfo(name, self.current_line)
 
@@ -256,6 +256,7 @@ class SourceCodeInforamtionBuilder(object):
         self.current_function.end_line = self.current_line
         if not self.forgive:
             self.fileinfo.function_list.append(self.current_function)
+        self.forgive = False
         self.START_NEW_FUNCTION('')
 
 
