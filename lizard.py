@@ -576,11 +576,11 @@ class FreeFormattingTokenizer(object):
     format is not part of the syntax. So indentation & new lines
     doesn't matter.
     '''
-    _until_end = r"((\\\n)|[^\n])*"
+    _until_end = r"(?:\\\n|[^\n])*"
     token_pattern = re.compile(r"(\w+"+
                            r"|/\*.*?\*/"+
-                           r"|\"(\\.|[^\"])*\""+
-                           r"|\'(\\.|[^\'])*\'"+
+                           r"|\"(?:\\.|[^\"])*\""+
+                           r"|\'(?:\\.|[^\'])*\'"+
                            r"|//"+ _until_end +
                            r"|#" + _until_end +
                            r"|:=|::|>=|\*=|\*\*|\*|>"+
@@ -600,14 +600,8 @@ class FreeFormattingTokenizer(object):
             in_middle_of_empty_lines = (token == '\n')
 
     def _tokens_from_code_with_multiple_newlines(self, source_code):
-        index = 0
         line = 1
-        while index >= 0:
-            m = self.token_pattern.match(source_code, index)
-            if not m:
-                break
-            token = m.group(0)
-            index += len(token)
+        for token in self.token_pattern.findall(source_code):
             line += 1 if token == '\n' else (len(token.splitlines()) - 1)
             if not token.isspace() or token == '\n':
                 yield token, line
