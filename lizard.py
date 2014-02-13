@@ -42,8 +42,6 @@ complexity.
 It requires python2.6 or above (early versions are not verified).
 """
 
-BUG_REPORTING = "please report bug to terry.yinzhe@gmail.com or https://github.com/terryyin/lizard.\n"
-
 VERSION = "1.7.7"
 
 
@@ -53,6 +51,20 @@ import re
 
 DEFAULT_CCN_THRESHOLD = 15
 
+
+def analyze(paths, options):
+    ''' This is the most important function of lizard.
+        It analyzes the given paths with the options.
+        Can be used directly by other Python application.
+    '''
+
+    languages = LanguageChooser(
+            includeHashIfConditions = not options.no_preprocessor_count,
+            switchCasesAsOneCondition = options.switchCasesAsOneCondition,)
+
+    files = FilesFilter(options.exclude, options.duplicates).getFileNames(paths)
+    fileAnalyzer = FileAnalyzer(languages, options.extensions)
+    return mapFilesToAnalyzer(files, fileAnalyzer, options.working_threads)
 
 def createCommandLineParser():
     from optparse import OptionParser
@@ -259,41 +271,10 @@ class LineCounter():
                 yield token
 
 
-class ParsingError(Exception):
-
-    def __init__(self, line_number):
-        self.line_number = line_number
-        self.filename = ''
-        self.code = ''
-
-    def __str__(self):
-        try:
-            line = self.code.splitlines()[self.line_number - 1]
-        except:
-            line = ''
-        return '''!!!Exception Happens!!!
-At %s:%d: '%s'
-If possible, ''' % (self.filename, self.line_number, line) + BUG_REPORTING
-
-
 class LanguageReaderBase(object):
-    '''
-    This is the base class for any programming language reader.
-    It reader the tokens of a certain language and generate universal_code
-    by calling it's -generate_universal_code- method.
-
-    The derived class should implement a series of 'state' functions. The
-    most basic and start state is _GLOBAL. Derived class must implement _GLOBAL
-    and other states. When the state changes, simply assign the state method to
-    self._state.
-    During each state, call the methods of self.universal_code to build the
-    universal code.
-    '''
-
-    def __init__(self):
-        self._state = self._GLOBAL
 
     def process_tokens(self, tokens, context):
+        self._state = self._GLOBAL
         self.context = context
         for token in tokens:
             self._state(token)
@@ -495,41 +476,25 @@ default_language_chooser = LanguageChooser(
 )
 
 class FileAnalyzer:
-    ''' A FileAnalyzer works as a function. It takes filename as parameter.
-        Returns a list of function infos in this file.
-    '''
 
     def __init__(self, languageChooser = default_language_chooser, extensions = []):
         self.extensions = extensions
         self.languageChooser = languageChooser
 
     def __call__(self, filename):
-        try:
-            with open(filename) as f:
-                return self.analyze_source_code(filename, f.read())
-        except Exception as e:
-            msg = '\n'.join(traceback.format_exception_only(type(e), e))
-            msg+= "\nIf you think this is a bug, "+ BUG_REPORTING
-            sys.stderr.write(msg)
+        with open(filename) as f:
+            return self.analyze_source_code(filename, f.read())
 
     def analyze_source_code(self, filename, code):
-        try:
-            reader = self.languageChooser.get_reader_by_file_name_otherwise_default(filename)
-            return self.analyze_source_code_with_parser(filename, code, reader)
-        except ParsingError as e:
-            e.filename = filename
-            e.code = code
-            raise
+        reader = self.languageChooser.get_reader_by_file_name_otherwise_default(filename)
+        return self.analyze_source_code_with_parser(filename, code, reader)
 
     def analyze_source_code_with_parser(self, filename, code, parser):
         tokens = generate_tokens(code)
         context = CodeInfoContext(filename)
-        try:
-            for extension in [parser, LineCounter()] + self.extensions:
-                tokens = extension.extend_tokens(tokens, context)
-            parser.process_tokens(tokens, context)
-        except:
-            raise ParsingError(context.current_line)
+        for extension in [parser, LineCounter()] + self.extensions:
+            tokens = extension.extend_tokens(tokens, context)
+        parser.process_tokens(tokens, context)
         return context.fileinfo
 
 analyze_file = FileAnalyzer()
@@ -917,31 +882,16 @@ class FilesFilter(object):
             self.hash_set.add(fhash)
             return True
 
-def analyze(paths, options):
-    ''' This is the most important function of lizard.
-        It analyze the given paths with the options.
-        Can be used directly by other Python application.
-    '''
-
-    languages = LanguageChooser(
-            includeHashIfConditions = not options.no_preprocessor_count,
-            switchCasesAsOneCondition = options.switchCasesAsOneCondition,)
-
-    files = FilesFilter(options.exclude, options.duplicates).getFileNames(paths)
-    fileAnalyzer = FileAnalyzer(languages, options.extensions)
-    return mapFilesToAnalyzer(files, fileAnalyzer, options.working_threads)
-
 def parse_args(argv):
 
     def get_extensions(extension_names):
         return [__import__('lizard' + name).LizardExtension() for name in extension_names]
 
     def get_whitelist():
-        try:
-            with open('whitelizard.txt', mode='r') as whitelizard:
-                return whitelizard.read()
-        except:
-            return ''
+        whitelist_filename = "whitelizard.txt"
+        if os.path.isfile(whitelist_filename):
+            return open(whitelist_filename, mode='r').read()
+        return ''
 
     options, args = createCommandLineParser().parse_args(args=argv)
     options.whitelist = get_whitelist()

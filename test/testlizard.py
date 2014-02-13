@@ -74,36 +74,6 @@ class Test_FileAnalyzer(unittest.TestCase):
         self.assertEqual(1, fileInfo.average_CCN)
         self.assertEqual(9, fileInfo.average_token)
 
-    @patch.object(sys, 'stderr')
-    @patch.object(CLikeReader, '_GLOBAL')
-    def test_should_report_when_having_problem_parsing_the_source(self, mock_GLOBAL, mock_stderr, mock_open):
-        def fake_reader(token):
-            if token == "exception":
-                raise KeyError("")
-        file_handle = mock_open.return_value.__enter__.return_value
-        mock_GLOBAL.side_effect = fake_reader
-        file_handle.read.return_value = '''line1
-                                           line2
-                                           exception lala
-                                           line4'''
-        analyze_file("f1.c")
-        self.assertEqual(1, mock_stderr.write.call_count)
-        error_message = mock_stderr.write.call_args[0][0]
-        self.assertIn("f1.c", error_message)
-        self.assertIn("3", error_message)
-        self.assertIn("exception lala", error_message)
-        self.assertIn("terry.yinzhe@gmail.com", error_message)
-        self.assertIn("https://github.com/terryyin/lizard", error_message)
-        
-    @patch.object(sys, 'stderr')
-    def test_should_report_when_having_other_problem_and_continue(self, mock_stderr, mock_open):
-        mock_open.side_effect = IOError("[Errno 2] No such file or directory")
-        analyze_file("f1.c")
-        self.assertEqual(1, mock_stderr.write.call_count)
-        error_message = mock_stderr.write.call_args[0][0]
-        self.assertIn("[Errno 2]", error_message)
-        self.assertIn("terry.yinzhe@gmail.com", error_message)
-
 
 class Test_FunctionInfo(unittest.TestCase):
 
