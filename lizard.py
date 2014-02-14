@@ -42,7 +42,7 @@ complexity.
 It requires python2.6 or above (early versions are not verified).
 """
 
-VERSION = "1.7.7"
+VERSION = "1.7.8"
 
 
 import itertools, traceback
