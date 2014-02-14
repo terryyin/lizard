@@ -482,8 +482,10 @@ class FileAnalyzer:
         self.languageChooser = languageChooser
 
     def __call__(self, filename):
-        with open(filename) as f:
-            return self.analyze_source_code(filename, f.read())
+        try:
+            return self.analyze_source_code(filename, open(filename).read())
+        except IOError as e:
+            sys.stderr.write(e.message)
 
     def analyze_source_code(self, filename, code):
         reader = self.languageChooser.get_reader_by_file_name_otherwise_default(filename)

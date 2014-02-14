@@ -31,7 +31,7 @@ class TestApplication(unittest.TestCase):
             self.assertEqual(1, len(fileInfos))
             self.assertEqual('foo', fileInfos[0].function_list[0].name)
         os_walk.return_value = [('.', [], ['a.cpp'])]
-        mock_open.return_value.__enter__.return_value.read.return_value = "void foo(){}"
+        mock_open.return_value.read.return_value = "void foo(){}"
         print_result.side_effect = check_result
         lizard_main(['lizard'])
 
@@ -41,7 +41,7 @@ class TestApplication(unittest.TestCase):
             self.assertEqual(1, len(fileInfos))
             self.assertEqual('foo', fileInfos[0].function_list[0].name)
         os_walk.return_value = [('.', [], ['a.cpp'])]
-        mock_open.return_value.__enter__.return_value.read.return_value = "void foo(){}"
+        mock_open.return_value.read.return_value = "void foo(){}"
         print_result.side_effect = check_result
         lizard_main(['lizard'])
 
@@ -73,7 +73,7 @@ class TestOptions(unittest.TestCase):
         def store_result(result, options):
             self.fileInfos = list(result) 
         os_walk.return_value = [('.', [], ['a.cpp'])]
-        mock_open.return_value.__enter__.return_value.read.return_value = self.source_code
+        mock_open.return_value.read.return_value = self.source_code
         print_result.side_effect = store_result
         lizard_main(argv)
         

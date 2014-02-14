@@ -1,5 +1,5 @@
 class LizardExtension(object):
-    
+
     ignoreList = set(('(',')','{','}',';',',', '\n',
                 '~',
                 'static_cast',
@@ -64,17 +64,27 @@ class LizardExtension(object):
     def __init__(self):
         self.result = {}
 
-    def extend_tokens(self, tokens, context):
-        context.fileinfo.wordCount = self.result = {}
+    @staticmethod
+    def extend_tokens(tokens, context):
+        '''
+        The function will be used in multiple threading tasks.
+        So don't store any data with an extension object.
+        '''
+        context.fileinfo.wordCount = result = {}
         for token in tokens:
-            if token not in self.ignoreList and token[0] not in ('"', "'", '#'):
-                self.result[token] = self.result.get(token, 0) + 1
+            if token not in LizardExtension.ignoreList and token[0] not in ('"', "'", '#'):
+                result[token] = result.get(token, 0) + 1
             yield token
-    
-    def reduce(self, statistics):
-        for k, v in statistics.wordCount.items():
+
+    def reduce(self, fileinfo):
+        '''
+        Combine the statistics from each file.
+        Because the statistics came from multiple thread tasks. This function needs
+        to be called to collect the combined result.
+        '''
+        for k, v in fileinfo.wordCount.items():
             self.result[k] = self.result.get(k, 0) + v
-            
+
     def print_result(self):
         with open('codecloud.html', 'w') as f:
             f.write('''

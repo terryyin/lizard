@@ -53,20 +53,17 @@ class Test_FileAnalyzer(unittest.TestCase):
         self.analyzer = FileAnalyzer()
         
     def test_analyze_c_file(self, mock_open):
-        file_handle = mock_open.return_value.__enter__.return_value
-        file_handle.read.return_value = "int foo(){haha();\n}"
+        file_handle = mock_open.return_value.read.return_value = "int foo(){haha();\n}"
         r = mapFilesToAnalyzer(["f1.c"], self.analyzer, 1)
         self.assertEqual(1, len([x for x in r]))
         
     def test_analyze_c_file_with_multiple_thread(self, mock_open):
-        file_handle = mock_open.return_value.__enter__.return_value
-        file_handle.read.return_value = "int foo(){haha();\n}"
+        file_handle = mock_open.return_value.read.return_value = "int foo(){haha();\n}"
         r = mapFilesToAnalyzer(["f1.c"], self.analyzer, 2)
         self.assertEqual(1, len([x for x in r]))
     
     def test_fileInfomation(self, mock_open):
-        file_handle = mock_open.return_value.__enter__.return_value
-        file_handle.read.return_value = "int foo(){haha();\n}"
+        mock_open.return_value.read.return_value = "int foo(){haha();\n}"
         r = mapFilesToAnalyzer(["f1.c"], self.analyzer, 1)
         fileInfo = list(r)[0]
         self.assertEqual(1, fileInfo.nloc)
@@ -74,6 +71,13 @@ class Test_FileAnalyzer(unittest.TestCase):
         self.assertEqual(1, fileInfo.average_CCN)
         self.assertEqual(9, fileInfo.average_token)
 
+    @patch.object(sys, 'stderr')
+    def test_should_report_when_having_other_problem_and_continue(self, mock_stderr, mock_open):
+        mock_open.side_effect = IOError("[Errno 2] No such file or directory")
+        analyze_file("f1.c")
+        self.assertEqual(1, mock_stderr.write.call_count)
+        error_message = mock_stderr.write.call_args[0][0]
+        self.assertIn("[Errno 2]", error_message)
 
 class Test_FunctionInfo(unittest.TestCase):
 
