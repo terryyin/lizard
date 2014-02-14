@@ -1,11 +1,11 @@
 import unittest
-from lizard import  analyze_file, ObjCReader
+from lizard import  analyze_file
 
 
 class Test_objc_lizard(unittest.TestCase):
 
     def create_objc_lizard(self, source_code):
-        return analyze_file.analyze_source_code_with_parser("", source_code, ObjCReader()).function_list
+        return analyze_file.analyze_source_code("a.m", source_code).function_list
 
     def test_empty(self):
         result = self.create_objc_lizard("")

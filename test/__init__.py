@@ -4,7 +4,6 @@ from .testApplication import *
 from .testOutput import *
 from .testCAndCPP import *
 from .testObjC import *
-from .testTNSDL import *
 from .testWordCountPlugin import *
 from .testCommentOptions import *
 from .testBasicFunctionInfo import *

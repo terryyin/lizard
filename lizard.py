@@ -252,38 +252,44 @@ class CodeInfoContext(object):
         self.START_NEW_FUNCTION('')
 
 
-class LineCounter():
+class Preprocessor(object):
 
-    def extend_tokens(self, tokens, context):
-        self.context = context
-        self.context.current_line = 1 
+    macro_pattern = re.compile(r"#\s*(\w+)\s*(.*)", re.M | re.S)
+
+    @staticmethod
+    def extend_tokens(tokens, context):
+        # handle c preprocessors
         for token in tokens:
-            self.context.current_line += 1 if token == '\n' else (len(token.splitlines()) - 1)
-            if token == "\n":
-                self.context._new_line()
-            elif token.startswith("/*") or token.startswith("//"):
-                if len(token.splitlines()) > 1:
-                    self.context._new_line()
-                if token[2:].strip().startswith("#lizard forgive"):
-                    self.context.forgive = True
+            m = Preprocessor.macro_pattern.match(token)
+            if m:
+                yield "#" + m.group(1)
+                param = m.group(2).strip()
+                if param:
+                    yield param
             else:
-                self.context._count_token()
                 yield token
 
 
-class LanguageReaderBase(object):
+class LineCounter(object):
 
-    def process_tokens(self, tokens, context):
-        self._state = self._GLOBAL
-        self.context = context
+    @staticmethod
+    def extend_tokens(tokens, context):
+        context.current_line = 1 
         for token in tokens:
-            self._state(token)
+            context.current_line += 1 if token == '\n' else (len(token.splitlines()) - 1)
+            if token == "\n":
+                context._new_line()
+            elif token.startswith("/*") or token.startswith("//"):
+                if len(token.splitlines()) > 1:
+                    context._new_line()
+                if token[2:].strip().startswith("#lizard forgive"):
+                    context.forgive = True
+            else:
+                context._count_token()
+                yield token
 
-    def extend_tokens(self, tokens, context):
-        return tokens
 
-
-class CLikeReader(LanguageReaderBase):
+class CLikeReader(object):
     '''
     This is the reader for C, C++ and Java.
     '''
@@ -293,7 +299,6 @@ class CLikeReader(LanguageReaderBase):
            switchCasesAsOneCondition: Use modified CCN (i.e. for one switch case increases CCN by 1 instead of
                         by the amount of case blocks)
         '''
-        super(CLikeReader, self).__init__(**kwargs)
         self.conditions = set(
             ['if', 'for', 'while', '&&', '||', '?', 'catch'])
 
@@ -310,20 +315,7 @@ class CLikeReader(LanguageReaderBase):
         self.bracket_level = 0
         self.br_count = 0
         self.last_preprocessor = None
-
-    macro_pattern = re.compile(r"#\s*(\w+)\s*(.*)", re.M | re.S)
-
-    def extend_tokens(self, tokens, context):
-        # handle c preprocessors
-        for token in tokens:
-            m = self.macro_pattern.match(token)
-            if m:
-                yield "#" + m.group(1)
-                param = m.group(2).strip()
-                if param:
-                    yield param
-            else:
-                yield token
+        self._state = self._GLOBAL
 
     def _is_condition(self, token):
         return token in self.conditions
@@ -484,20 +476,23 @@ class FileAnalyzer:
     def __call__(self, filename):
         try:
             return self.analyze_source_code(filename, open(filename).read())
-        except IOError as e:
-            sys.stderr.write(e.message)
+        except IOError:
+            sys.stderr.write("Error: Fail to read source file '%s'"%filename)
 
     def analyze_source_code(self, filename, code):
-        reader = self.languageChooser.get_reader_by_file_name_otherwise_default(filename)
-        return self.analyze_source_code_with_parser(filename, code, reader)
-
-    def analyze_source_code_with_parser(self, filename, code, parser):
         tokens = generate_tokens(code)
         context = CodeInfoContext(filename)
-        for extension in [parser, LineCounter()] + self.extensions:
+        context.function_reader = self.languageChooser.get_reader_by_file_name_otherwise_default(filename)
+        context.function_reader.context = context
+        for extension in [Preprocessor, LineCounter] + self.extensions + [self]:
             tokens = extension.extend_tokens(tokens, context)
-        parser.process_tokens(tokens, context)
         return context.fileinfo
+
+    @staticmethod
+    def extend_tokens(tokens, context):
+        for token in tokens:
+            context.function_reader._state(token)
+
 
 analyze_file = FileAnalyzer()
 
