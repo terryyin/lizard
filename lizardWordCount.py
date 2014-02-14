@@ -61,6 +61,9 @@ class LizardExtension(object):
 
             ))
 
+    def __init__(self):
+        self.result = {}
+
     def extend_tokens(self, tokens, context):
         context.fileinfo.wordCount = self.result = {}
         for token in tokens:
@@ -70,7 +73,7 @@ class LizardExtension(object):
     
     def reduce(self, statistics):
         for k, v in statistics.wordCount.items():
-            self.result1[k] = self.result1.get(k, 0) + v
+            self.result[k] = self.result.get(k, 0) + v
             
     def print_result(self):
         with open('codecloud.html', 'w') as f:
@@ -85,8 +88,8 @@ class LizardExtension(object):
                                     var ctx = canvas.getContext("2d");
                                     var tagCloud = new TagCloud(canvas.width, canvas.height, ctx);
                                     tagCloud.render([''')
-            for k in sorted(self.result1, key=self.result1.get, reverse = True)[:400]:
-                f.write(' ' * 40 + '["%s", %d],\n' % (k.replace('"', '\\\"').replace("'", "\\\\'").replace("\\", "\\\\"), self.result1[k]))
+            for k in sorted(self.result, key=self.result.get, reverse = True)[:400]:
+                f.write(' ' * 40 + '["%s", %d],\n' % (k.replace('"', '\\\"').replace("'", "\\\\'").replace("\\", "\\\\"), self.result[k]))
             f.write('''
                                     ]);
                                 }

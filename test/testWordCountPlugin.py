@@ -16,6 +16,7 @@ class TestWordCountPlugin(unittest.TestCase):
 
     def setUp(self):
         self.context = Context()
+
     def test_count_one_word(self):
         list(LizardExtension().extend_tokens(["a", "b"], self.context))
         self.assertEqual(1, self.context.get_word_map()['a'])
@@ -37,3 +38,12 @@ class TestWordCountPlugin(unittest.TestCase):
         list(LizardExtension().extend_tokens(["\"\""], self.context))
         self.assertEqual(0, len(self.context.get_word_map()))
 
+class TestWordCountOutput(unittest.TestCase):
+
+    def setUp(self):
+        self.context = Context()
+
+    def test_should_output_html(self):
+        ext = LizardExtension()
+        list(ext.extend_tokens([], self.context))
+        ext.print_result()
