@@ -53,17 +53,8 @@ DEFAULT_CCN_THRESHOLD = 15
 
 
 def analyze(paths, options):
-    ''' This is the most important function of lizard.
-        It analyzes the given paths with the options.
-        Can be used directly by other Python application.
-    '''
-
-    languages = LanguageChooser(
-            includeHashIfConditions = not options.no_preprocessor_count,
-            switchCasesAsOneCondition = options.switchCasesAsOneCondition,)
-
     files = FilesFilter(options.exclude, options.duplicates).getFileNames(paths)
-    fileAnalyzer = FileAnalyzer(languages, options.extensions)
+    fileAnalyzer = FileAnalyzer(options.extensions, not options.no_preprocessor_count, options.switchCasesAsOneCondition)
     return mapFilesToAnalyzer(files, fileAnalyzer, options.working_threads)
 
 def createCommandLineParser():
@@ -216,6 +207,8 @@ class CodeInfoContext(object):
         self.current_line = 0
         self.START_NEW_FUNCTION('')
         self.forgive = False
+        self.function_reader = LanguageChooser( ).get_reader_by_file_name_otherwise_default(filename)
+        self.function_reader.context = self
 
     def _new_line(self):
         self.fileinfo.nloc += 1
@@ -289,16 +282,8 @@ class LineCounter(object):
                 yield token
 
 
-class CLikeReader(object):
-    '''
-    This is the reader for C, C++ and Java.
-    '''
-
-    def __init__(self, includeHashIfConditions = True, switchCasesAsOneCondition = False, **kwargs):
-        '''includeHashIfConditions: Should #if and #elseif have effect on the CCN
-           switchCasesAsOneCondition: Use modified CCN (i.e. for one switch case increases CCN by 1 instead of
-                        by the amount of case blocks)
-        '''
+class Condition(object):
+    def __init__(self, includeHashIfConditions = True, switchCasesAsOneCondition = False):
         self.conditions = set(
             ['if', 'for', 'while', '&&', '||', '?', 'catch'])
 
@@ -312,13 +297,25 @@ class CLikeReader(object):
         else:
             self.conditions.add('case')
 
+    def is_condition(self, token):
+        return token in self.conditions
+
+    def extend_tokens(self, tokens, context):
+        for token in tokens:
+            if self.is_condition(token):
+                context.CONDITION()
+            yield token
+
+class CLikeReader(object):
+    '''
+    This is the reader for C, C++ and Java.
+    '''
+
+    def __init__(self):
         self.bracket_level = 0
         self.br_count = 0
         self.last_preprocessor = None
         self._state = self._GLOBAL
-
-    def _is_condition(self, token):
-        return token in self.conditions
 
     def _GLOBAL(self, token):
         if token == '(':
@@ -372,7 +369,7 @@ class CLikeReader(object):
     def _IMP(self, token):
         if token in ("#else", "#endif"):
             self.last_preprocessor = token
-        # will ignore the braces in a #else branch            
+        # will ignore the braces in a #else branch
         if self.last_preprocessor != '#else':
             if token == '{':
                 self.br_count += 1
@@ -381,14 +378,11 @@ class CLikeReader(object):
                 if self.br_count == 0:
                     self._state = self._GLOBAL
                     self.context.END_OF_FUNCTION()
-                    return
-        if self._is_condition(token):
-            self.context.CONDITION()
 
 
 class ObjCReader(CLikeReader):
-    def __init__(self, **kwargs):
-        super(ObjCReader, self).__init__(**kwargs)
+    def __init__(self):
+        super(ObjCReader, self).__init__()
 
     def _DEC_TO_IMP(self, token):
         if token in ("+", "-"):
@@ -436,10 +430,6 @@ def compile_file_extension_re(*exts):
 
 class LanguageChooser(object):
 
-    def __init__(self, **readerArgs):
-        object.__init__(self)
-        self.readerArgs = readerArgs
-
     lizard_language_infos = {
                      'c/c++': {
                           'name_pattern': compile_file_extension_re("c", "cpp", "cc", "mm", "cxx", "h", "hpp"),
@@ -460,18 +450,14 @@ class LanguageChooser(object):
 
     def get_reader_by_file_name_otherwise_default(self, filename):
         lan = self.get_language_by_filename(filename)
-        return self.lizard_language_infos[lan or "c/c++"]['reader'](**self.readerArgs)
+        return self.lizard_language_infos[lan or "c/c++"]['reader']()
 
-default_language_chooser = LanguageChooser(
-    includeHashIfConditions = True,
-    switchCasesAsOneCondition = False,
-)
 
-class FileAnalyzer:
+class FileAnalyzer(object):
 
-    def __init__(self, languageChooser = default_language_chooser, extensions = []):
-        self.extensions = extensions
-        self.languageChooser = languageChooser
+    def __init__(self, extensions = [], preprocessor_condition = True, switchCasesAsOneCondition = False):
+        condition = Condition(preprocessor_condition, switchCasesAsOneCondition)
+        self.processors = [Preprocessor, LineCounter] + extensions + [condition]
 
     def __call__(self, filename):
         try:
@@ -482,16 +468,11 @@ class FileAnalyzer:
     def analyze_source_code(self, filename, code):
         tokens = generate_tokens(code)
         context = CodeInfoContext(filename)
-        context.function_reader = self.languageChooser.get_reader_by_file_name_otherwise_default(filename)
-        context.function_reader.context = context
-        for extension in [Preprocessor, LineCounter] + self.extensions + [self]:
-            tokens = extension.extend_tokens(tokens, context)
-        return context.fileinfo
-
-    @staticmethod
-    def extend_tokens(tokens, context):
+        for processor in self.processors:
+            tokens = processor.extend_tokens(tokens, context)
         for token in tokens:
             context.function_reader._state(token)
+        return context.fileinfo
 
 
 analyze_file = FileAnalyzer()
