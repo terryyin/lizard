@@ -160,7 +160,7 @@ function_name1, function_name2 # list function names in mulitple lines or split 
 filename:function1, function2  # you can also specify the filename
 </pre>
 
-### Options in Comments
+## Options in Comments
 You can use options in the comments of the source code to change the behavior of lizard.
 By putting "#lizard forgives" inside a function or before a function it will suppress the warning for that function.
 <pre>

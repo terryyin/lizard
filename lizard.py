@@ -16,43 +16,20 @@
 #
 """
 lizard is a simple code complexity analyzer without caring about the C/C++
-header files or Java imports. It can deal with
-
-* Java
-* C/C++
-* Objective C.
-
-It counts
-
-* the nloc (net lines of code, excluding comments and blanks),
-* CCN (cyclomatic complexity number) or Modified CCN,
-* token count of functions.
-* parameter count of functions.
-
-You can set limitation for CCN (-C), the number of parameters (-a). Functions
-that exceed these limitations will generate warnings. The exit code of lizard
-will be none-Zero if there are warnings.
-
-This tool actually calculates how complex the code 'looks' rather than how
-complex the code real 'is'. People will need this tool because it's often very
-hard to get all the included folders and files right when they are complicated.
-But we don't really need that kind of accuracy when come to cyclomatic
-complexity.
-
-It requires python2.6 or above (early versions are not verified).
+header files or Java imports.
+Please find the README.md for more information.
 """
-
 VERSION = "1.7.9"
 
-
-import itertools, traceback
+import itertools
 import re
-
 
 DEFAULT_CCN_THRESHOLD = 15
 
 
 def analyze(paths, options):
+    ''' returns an iterator of file infomation.
+    '''
     files = FilesFilter(options.exclude, options.duplicates).getFileNames(paths)
     fileAnalyzer = FileAnalyzer(options.extensions, not options.no_preprocessor_count, options.switchCasesAsOneCondition)
     return mapFilesToAnalyzer(files, fileAnalyzer, options.working_threads)
@@ -137,9 +114,6 @@ def createCommandLineParser():
 
 
 class FunctionInfo(object):
-    '''
-    Statistic information of a function.
-    '''
 
     def __init__(self, name, start_line = 0, ccn = 1):
         self.cyclomatic_complexity = ccn
@@ -168,10 +142,6 @@ class FunctionInfo(object):
 
 
 class FileInformation(object):
-    ''' 
-    Statistic information of a source file.
-    Including all the functions and the file summary.
-    '''
 
     def __init__(self, filename, nloc, function_list):
         self.filename = filename
@@ -207,8 +177,6 @@ class CodeInfoContext(object):
         self.current_line = 0
         self.START_NEW_FUNCTION('')
         self.forgive = False
-        self.function_reader = LanguageChooser( ).get_reader_by_file_name_otherwise_default(filename)
-        self.function_reader.context = self
 
     def _new_line(self):
         self.fileinfo.nloc += 1
@@ -282,7 +250,8 @@ class LineCounter(object):
                 yield token
 
 
-class Condition(object):
+class ConditionCounter(object):
+
     def __init__(self, includeHashIfConditions = True, switchCasesAsOneCondition = False):
         self.conditions = set(
             ['if', 'for', 'while', '&&', '||', '?', 'catch'])
@@ -305,6 +274,7 @@ class Condition(object):
             if self.is_condition(token):
                 context.CONDITION()
             yield token
+
 
 class CLikeReader(object):
     '''
@@ -453,11 +423,19 @@ class LanguageChooser(object):
         return self.lizard_language_infos[lan or "c/c++"]['reader']()
 
 
+class FunctionParser(object):
+
+    def extend_tokens(self, tokens, context):
+        function_reader = LanguageChooser( ).get_reader_by_file_name_otherwise_default(context.fileinfo.filename)
+        function_reader.context = context
+        for token in tokens:
+            function_reader._state(token)
+
 class FileAnalyzer(object):
 
     def __init__(self, extensions = [], preprocessor_condition = True, switchCasesAsOneCondition = False):
-        condition = Condition(preprocessor_condition, switchCasesAsOneCondition)
-        self.processors = [Preprocessor, LineCounter] + extensions + [condition]
+        condition = ConditionCounter(preprocessor_condition, switchCasesAsOneCondition)
+        self.processors = [Preprocessor, LineCounter, condition] + extensions + [FunctionParser()]
 
     def __call__(self, filename):
         try:
@@ -470,8 +448,6 @@ class FileAnalyzer(object):
         context = CodeInfoContext(filename)
         for processor in self.processors:
             tokens = processor.extend_tokens(tokens, context)
-        for token in tokens:
-            context.function_reader._state(token)
         return context.fileinfo
 
 
