@@ -90,12 +90,25 @@ class LizardExtension(object):
             f.write('''
             <html>
                 <head>
+                    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0" />
+                    <style type="text/css">
+                        canvas {
+                            border: 1px solid black;
+                            width: 700px;
+                            height: 700px;
+                        }
+                    </style>
                     <script type="text/javascript" src="https://raw2.github.com/terryyin/tagcloud.js/master/tagcloud.js"></script> 
                     <script type="application/javascript">
                         function draw() {
                             var canvas = document.getElementById("canvas");
                                 if (canvas.getContext) {
                                     var ctx = canvas.getContext("2d");
+                                    // scale 2x
+                                    if(window.devicePixelRatio == 2) {
+                                        canvas.setAttribute('width', canvas.width * 2);
+                                        canvas.setAttribute('height', canvas.height * 2);
+                                    }
                                     var tagCloud = new TagCloud(canvas.width, canvas.height, ctx);
                                     tagCloud.render([''')
             for k in sorted(self.result, key=self.result.get, reverse = True)[:400]:

@@ -790,7 +790,7 @@ import fnmatch
 import hashlib
 
 class FilesFilter(object):
-    
+
     def __init__(self, exclude_patterns, check_duplicates):
         self.exclude_patterns = exclude_patterns
         self.check_duplicates = check_duplicates
