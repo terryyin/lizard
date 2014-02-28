@@ -28,6 +28,10 @@ class TestWordCountPlugin(unittest.TestCase):
         list(self.ext.extend_tokens(["a", "a"], self.context))
         self.assertEqual(2, self.context.get_word_map()['a'])
 
+    def test_count_one_word_multiple_times(self):
+        list(self.ext.extend_tokens(["a", "a"], self.context))
+        self.assertEqual(2, self.context.get_word_map()['a'])
+
     def test_should_not_count_keywords(self):
         list(self.ext.extend_tokens(["for"], self.context))
         self.assertNotIn('for', self.context.get_word_map())
@@ -55,8 +59,9 @@ class TestWordCountOutput(unittest.TestCase):
     def write_to_buffer(self, txt):
             self.buf += txt
 
+    @patch('webbrowser.open')
     @patch('lizardWordCount.open', create=True)
-    def test_should_output_html(self, mock_open):
+    def test_should_output_html(self, mock_open, browser_open):
         buf = ""
         mock_open.return_value.__enter__.return_value.write.side_effect = self.write_to_buffer
         ext = LizardExtension()
@@ -65,3 +70,13 @@ class TestWordCountOutput(unittest.TestCase):
         mock_open.assert_called_once_with('codecloud.html', 'w')
         self.assertIn('<html>', self.buf)
         self.assertIn('["a", 123]', self.buf)
+
+    @patch('webbrowser.open')
+    @patch('lizardWordCount.open', create=True)
+    def test_should_open_the_browser(self, mock_open, browser_open):
+        import os
+        ext = LizardExtension()
+        ext.result = {'a':123}
+        ext.print_result()
+        browser_open.assert_called_with('file://' + os.path.abspath('codecloud.html'));
+
