@@ -31,7 +31,7 @@ def analyze(paths, options):
     ''' returns an iterator of file infomation.
     '''
     files = FilesFilter(options.exclude, options.duplicates).getFileNames(paths)
-    fileAnalyzer = FileAnalyzer(options.extensions, not options.no_preprocessor_count, options.switchCasesAsOneCondition)
+    fileAnalyzer = FileAnalyzer(options.extensions)
     return mapFilesToAnalyzer(files, fileAnalyzer, options.working_threads)
 
 def createCommandLineParser():
@@ -178,17 +178,6 @@ class CodeInfoContext(object):
         self.START_NEW_FUNCTION('')
         self.forgive = False
 
-    def _new_line(self):
-        self.fileinfo.nloc += 1
-        self.newline = True
-
-    def _count_token(self):
-        self.fileinfo.token_count+=1
-        if self.newline:
-            self.current_function.nloc += 1
-            self.newline = False
-        self.current_function.token_count += 1
-
     def START_NEW_FUNCTION(self, name):
         self.newline = True
         self.current_function = FunctionInfo(name, self.current_line)
@@ -232,25 +221,67 @@ class Preprocessor(object):
 
 
 class LineCounter(object):
+    ''' And extension of lizard, to count the line and nloc.
+    '''
 
-    @staticmethod
-    def extend_tokens(tokens, context):
+    FUNCTION_CAPTION = "  NLOC  "
+
+    def extend_tokens(self, tokens, context):
         context.current_line = 1 
         for token in tokens:
             context.current_line += 1 if token == '\n' else (len(token.splitlines()) - 1)
             if token == "\n":
-                context._new_line()
+                self._new_line(context)
             elif token.startswith("/*") or token.startswith("//"):
                 if len(token.splitlines()) > 1:
-                    context._new_line()
+                    self._new_line(context)
                 if token[2:].strip().startswith("#lizard forgive"):
                     context.forgive = True
             else:
-                context._count_token()
+                self._count_token(context)
                 yield token
+
+    def _new_line(self, context):
+        context.fileinfo.nloc += 1
+        context.newline = True
+
+    def _count_token(self, context):
+        context.fileinfo.token_count+=1
+        if context.newline:
+            context.current_function.nloc += 1
+            context.newline = False
+        context.current_function.token_count += 1
+
+
+class TokenCounter(object):
+    ''' An extension that counts the token.
+        But because of historical and implementation reason, the token
+        counting is already done in LineCounter. So this class only do
+        the output.
+    '''
+
+    FUNCTION_CAPTION = " token "
+
+    def extend_tokens(self, tokens, context):
+        return tokens
+
+
+class ParameterCounter(object):
+    ''' An extension that counts the parameters.
+        But because of historical and implementation reason, the parameter
+        counting is already done in FunctionCounter. So this class only do
+        the output.
+    '''
+
+    FUNCTION_CAPTION = " PARAM "
+
+    def extend_tokens(self, tokens, context):
+        return tokens
 
 
 class ConditionCounter(object):
+
+    FUNCTION_CAPTION = "  CNN  "
 
     def __init__(self, includeHashIfConditions = True, switchCasesAsOneCondition = False):
         self.conditions = set(
@@ -425,6 +456,8 @@ class LanguageChooser(object):
 
 class FunctionParser(object):
 
+    FUNCTION_CAPTION = " function@line@filename          "
+
     def extend_tokens(self, tokens, context):
         function_reader = LanguageChooser( ).get_reader_by_file_name_otherwise_default(context.fileinfo.filename)
         function_reader.context = context
@@ -433,9 +466,8 @@ class FunctionParser(object):
 
 class FileAnalyzer(object):
 
-    def __init__(self, extensions = [], preprocessor_condition = True, switchCasesAsOneCondition = False):
-        condition = ConditionCounter(preprocessor_condition, switchCasesAsOneCondition)
-        self.processors = [Preprocessor, LineCounter, condition] + extensions + [FunctionParser()]
+    def __init__(self, extensions = []):
+        self.processors = extensions
 
     def __call__(self, filename):
         try:
@@ -449,9 +481,6 @@ class FileAnalyzer(object):
         for processor in self.processors:
             tokens = processor.extend_tokens(tokens, context)
         return context.fileinfo
-
-
-analyze_file = FileAnalyzer()
 
 
 def warning_filter(option, fileStatistics):
@@ -524,25 +553,25 @@ generate_tokens = FreeFormattingTokenizer()
 
 import sys
 
-def print_function_info_header():
-    print("==============================================================")
-    print("  nloc    CCN  token  param    function@line@file")
-    print("--------------------------------------------------------------")
+def print_function_info_header(extensions):
+    captions = "".join(ext.FUNCTION_CAPTION for ext in extensions if hasattr(ext, "FUNCTION_CAPTION"))
+    print("=" * len(captions))
+    print(captions)
+    print("-" * len(captions))
 
-def print_function_info(fun, filename, option):
+def print_function_info(fun, filename, extensions, option):
     line = '{}-{}'.format(fun.start_line, fun.end_line) if option.display_fn_end_line else fun.start_line
     output_params = {
         'nloc': fun.nloc,
         'CCN': fun.cyclomatic_complexity,
         'token': fun.token_count,
         'param': fun.parameter_count,
-        'name': fun.name,
+        'name': fun.long_name if option.verbose else fun.name,
         'line': line,
         'file': filename
     }
+
     output_format = "%(nloc)6d %(CCN)6d %(token)6d %(param)6d    %(name)s@%(line)s@%(file)s"
-    if option.verbose:
-        output_params['name'] = fun.long_name
     if option.warnings_only:
         output_format = "%(file)s:%(line)s: warning: %(name)s has %(CCN)d CCN and %(param)d params (%(nloc)d NLOC, %(token)d tokens)"
     print(output_format % output_params)
@@ -553,10 +582,10 @@ def print_warnings(option, warnings):
         print(("\n" +
                "======================================\n" +
               "!!!! Warnings (CCN > %d) !!!!") % option.CCN)
-        print_function_info_header()
+        print_function_info_header(option.extensions)
     for warning in warnings:
         warning_count += 1
-        print_function_info(warning[0], warning[1], option)
+        print_function_info(warning[0], warning[1], option.extensions,  option)
 
     if warning_count == 0:
         print("No warning found. Excellent!")
@@ -595,14 +624,15 @@ def print_and_save_detail_information(allStatistics, option):
     if (option.warnings_only):
         all_functions = allStatistics
     else:
-        print_function_info_header()
+        print_function_info_header(option.extensions)
         for fileStatistics in allStatistics:
             for extension in option.extensions:
-                extension.reduce(fileStatistics)
+                if hasattr(extension, 'reduce'):
+                    extension.reduce(fileStatistics)
             if fileStatistics:
                 all_functions.append(fileStatistics)
                 for fun in fileStatistics.function_list:
-                    print_function_info(fun, fileStatistics.filename, option)
+                    print_function_info(fun, fileStatistics.filename, option.extensions, option)
 
         print("--------------------------------------------------------------")
         print("%d file analyzed." % (len(all_functions)))
@@ -627,7 +657,8 @@ def print_result(r, option):
     warning_count = print_warnings(option, warnings)
     print_total(warning_count, all_functions, option)
     for extension in option.extensions:
-        extension.print_result()
+        if hasattr(extension, 'print_result'):
+            extension.print_result()
     if option.number < warning_count:
         sys.exit(1)
 
@@ -838,9 +869,6 @@ class FilesFilter(object):
 
 def parse_args(argv):
 
-    def get_extensions(extension_names):
-        return [__import__('lizard' + name).LizardExtension() for name in extension_names]
-
     def get_whitelist():
         whitelist_filename = "whitelizard.txt"
         if os.path.isfile(whitelist_filename):
@@ -849,13 +877,27 @@ def parse_args(argv):
 
     options, args = createCommandLineParser().parse_args(args=argv)
     options.whitelist = get_whitelist()
-    options.extensions = get_extensions(options.extensions)
     paths = ["."] if len(args) == 1 else args[1:]
     return paths, options
+
+def get_extensions(extension_names, countPreprocessor = True, switchCaseAsOneCondition = False):
+    basicExtensions = [
+        Preprocessor,
+        LineCounter(),
+        ConditionCounter(countPreprocessor, switchCaseAsOneCondition),
+        TokenCounter(),
+        ParameterCounter()
+        ]
+    return basicExtensions +\
+        [__import__('lizard' + name).LizardExtension() if type(name) == type("") else name  for name in extension_names] +\
+        [FunctionParser()]
+
+analyze_file = FileAnalyzer(get_extensions([]))
 
 def lizard_main(argv =  sys.argv):
     paths, options = parse_args(argv)
     printer = print_xml if options.xml else print_result
+    options.extensions = get_extensions(options.extensions, not options.no_preprocessor_count, options.switchCasesAsOneCondition)
     r = analyze(paths, options)
     printer(r, options)
 

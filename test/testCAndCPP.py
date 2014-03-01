@@ -25,7 +25,6 @@ class Test_c_cpp_lizard(unittest.TestCase):
         result = get_cpp_function_list("int fun(){}")
         self.assertEqual(1, len(result))
         self.assertEqual("fun", result[0].name)
-        self.assertEqual(1, result[0].cyclomatic_complexity)
     
     def test_two_function(self):
         result = get_cpp_function_list("int fun(){}\nint fun1(){}\n")
@@ -41,29 +40,11 @@ class Test_c_cpp_lizard(unittest.TestCase):
         result = get_cpp_function_list("int fun(xx oo){int a; a= call(p1,p2);}")
         self.assertEqual(1, len(result))
         self.assertEqual("fun", result[0].name)
-        self.assertEqual(1, result[0].cyclomatic_complexity)
         self.assertEqual("fun( xx oo )", result[0].long_name)
-    
-    def test_one_function_with_question_mark(self):
-        result = get_cpp_function_list("int fun(){return (a)?b:c;}")
-        self.assertEqual(2, result[0].cyclomatic_complexity)
-    
-    def test_one_function_with_forever_loop(self):
-        result = get_cpp_function_list("int fun(){for(;;){dosomething();}}")
-        self.assertEqual(1, len(result))
-        self.assertEqual(2, result[0].cyclomatic_complexity)
-    
-    def test_one_function_with_and(self):
-        result = get_cpp_function_list("int fun(){if(a&&b){xx;}}")
-        self.assertEqual(3, result[0].cyclomatic_complexity)
-    
-    def test_one_function_with_else_if(self):
-        result = get_cpp_function_list("int fun(){if(a)b;else if (c) d;}")
-        self.assertEqual(3, result[0].cyclomatic_complexity)
     
     def test_double_slash_within_string(self):
         result = get_cpp_function_list("""int fun(){char *a="\\\\";}""")
-        self.assertEqual(1, result[0].cyclomatic_complexity)
+        self.assertEqual(1, len(result))
     
     def test_function_with_no_param(self):
         result = get_cpp_function_list("int fun(){}")
@@ -81,19 +62,17 @@ class Test_c_cpp_lizard(unittest.TestCase):
         result = get_cpp_function_list("int fun(aa<mm, nn> bb){}")
         self.assertEqual(1, result[0].parameter_count)
     
-    def test_one_function1(self):
+    def test_one_function_with_namespace(self):
         result = get_cpp_function_list("int abc::fun(){}")
         self.assertEqual(1, len(result))
         self.assertEqual("abc::fun", result[0].name)
         self.assertEqual("abc::fun( )", result[0].long_name)
-        self.assertEqual(1, result[0].cyclomatic_complexity)
     
     def test_one_function_with_const(self):
         result = get_cpp_function_list("int abc::fun()const{}")
         self.assertEqual(1, len(result))
         self.assertEqual("abc::fun", result[0].name)
         self.assertEqual("abc::fun( ) const", result[0].long_name)
-        self.assertEqual(1, result[0].cyclomatic_complexity)
 
     def test_one_function_in_class(self):
         result = get_cpp_function_list("class c {~c(){}}; int d(){}")
@@ -172,16 +151,6 @@ class Test_Preprocessing(unittest.TestCase):
                       {}
                     ''')
         self.assertEqual(1, len(result))
-
-    def test_sharp_if_and_sharp_elif_counts_in_cc_number(self):
-        result = get_cpp_function_list('''
-                int main(){
-                #ifdef A
-                #elif (defined E)
-                #endif
-                }''')
-        self.assertEqual(1, len(result))
-        self.assertEqual(3, result[0].cyclomatic_complexity)
 
     def test_preprocessor_is_not_function(self):
         result = get_cpp_function_list('''

@@ -36,7 +36,6 @@ class TestNLOC(unittest.TestCase):
 
     def test_one_function_with_content(self):
         result = get_cpp_function_list("int fun(){if(a){xx;}}")
-        self.assertEqual(2, result[0].cyclomatic_complexity)
         self.assertEqual(1, result[0].nloc)
 
     def test_nloc_of_empty_function(self):

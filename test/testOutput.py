@@ -2,7 +2,7 @@ import unittest
 from test.mock import Mock, patch
 import sys
 from lizard import print_warnings, print_and_save_detail_information, FunctionInfo, FileInformation,\
-    print_result, XMLFormatter
+    print_result, XMLFormatter, get_extensions
 
 class StreamStdoutTestCase(unittest.TestCase):
     def setUp(self):
@@ -23,15 +23,45 @@ class StreamStdoutTestCase(unittest.TestCase):
         def __getattr__(self, attr):
             return getattr(self.stream, attr)    
 
+class TestFunctionOutput(StreamStdoutTestCase):
+
+    def setUp(self):
+        StreamStdoutTestCase.setUp(self)
+        self.options = Mock(warnings_only=False, extensions = get_extensions([]))
+
+    def test_function_info_header_should_have_a_box(self):
+        print_and_save_detail_information([], self.options)
+        self.assertIn("=" * 20, sys.stdout.stream.splitlines()[0])
+
+    def test_function_info_header_should_have_the_captions(self):
+        print_and_save_detail_information([], self.options)
+        self.assertEquals("  NLOC    CNN   token  PARAM  function@line@filename          ", sys.stdout.stream.splitlines()[1])
+
+    def test_function_info_header_should_have_the_captions_of_external_extensions(self):
+        external_extension = Mock(FUNCTION_CAPTION = "*external_extension*")
+        self.options = Mock(warnings_only=False, extensions = get_extensions([external_extension]))
+        print_and_save_detail_information([], self.options)
+        self.assertEquals("  NLOC    CNN   token  PARAM *external_extension* function@line@filename          ", sys.stdout.stream.splitlines()[1])
+
+    def test_print_fileinfo(self):
+        fun = FunctionInfo("foo", 100)
+        fun.end_line = 100
+        fun.cyclomatic_complexity = 16
+        fileStat = FileInformation("FILENAME", 1, [fun])
+        print_and_save_detail_information([fileStat], self.options)
+        self.assertEquals("     0     16      1      0    foo@100-100@FILENAME", sys.stdout.stream.splitlines()[3])
+
+
+
 class TestWarningOutput(StreamStdoutTestCase):
         
     def test_should_have_header_when_warning_only_is_off(self):
-        option = Mock(warnings_only=False, CCN=15)
+        option = Mock(warnings_only=False, CCN=15, extensions = [])
         print_warnings(option, [])
         self.assertIn("Warnings (CCN > 15)", sys.stdout.stream)
 
     def test_should_say_no_warning_when_warning_only_is_off(self):
-        option = Mock(warnings_only=False, CCN=15)
+        option = Mock(warnings_only=False, CCN=15, extensions = [])
         print_warnings(option, [])
         self.assertIn("No warning found. Excellent!\n", sys.stdout.stream)
 
@@ -70,13 +100,18 @@ class TestFileOutput(StreamStdoutTestCase):
 
     
 class TestAllOutput(StreamStdoutTestCase):
-        
     def test_print_extension_results(self):
+
         file_infos = []
         extension = Mock()
         option = Mock(CCN=15, number = 0, extensions = [extension], whitelist='')
         print_result(file_infos, option)
         self.assertEqual(1, extension.print_result.call_count)
+
+    def test_should_not_print_extension_results_when_not_implemented(self):
+        file_infos = []
+        option = Mock(CCN=15, number = 0, extensions = [object()], whitelist='')
+        print_result(file_infos, option)
 
     @patch.object(sys, 'exit')
     def test_print_result(self, mock_exit):

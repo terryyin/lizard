@@ -7,3 +7,5 @@ from .testObjC import *
 from .testWordCountPlugin import *
 from .testCommentOptions import *
 from .testBasicFunctionInfo import *
+from .testFunctionExitCount import *
+from .testCyclomaticComplexity import *

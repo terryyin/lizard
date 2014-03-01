@@ -4,7 +4,7 @@
 import unittest
 import sys
 from test.mock import patch, Mock
-from lizard import FileAnalyzer, CLikeReader, mapFilesToAnalyzer, FunctionInfo, analyze_file
+from lizard import analyze_file, CLikeReader, mapFilesToAnalyzer, FunctionInfo, analyze_file
 
 
 def analyzer_mock(filename):
@@ -50,7 +50,7 @@ class Test_analyze_files(unittest.TestCase):
 class Test_FileAnalyzer(unittest.TestCase):
     
     def setUp(self):
-        self.analyzer = FileAnalyzer()
+        self.analyzer = analyze_file
         
     def test_analyze_c_file(self, mock_open):
         file_handle = mock_open.return_value.read.return_value = "int foo(){haha();\n}"
