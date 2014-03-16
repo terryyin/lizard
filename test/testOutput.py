@@ -82,6 +82,23 @@ class TestWarningOutput(StreamStdoutTestCase):
         print_warnings(option, [(fun, "FILENAME")])
         self.assertIn("FILENAME:100-100: warning: foo has 16 CCN and 0 params (0 NLOC, 1 tokens)\n", sys.stdout.stream)
 
+    @patch('lizard.print_function_info')
+    def test_sort_warning(self, print_function_info):
+        option = Mock(display_fn_end_line = False, extensions = get_extensions([]))
+        option.sorting = ['cyclomatic_complexity']
+        foo = FunctionInfo("foo", 100)
+        foo.cyclomatic_complexity = 10
+        bar = FunctionInfo("bar", 100)
+        bar.cyclomatic_complexity = 15
+        print_warnings(option, [(foo, "FILENAME"),(bar, "FILENAME")])
+        self.assertEqual('bar', print_function_info.call_args_list[0][0][0].name)
+
+    def test_sort_warning_with_generator(self):
+        option = Mock(display_fn_end_line = False, extensions = get_extensions([]))
+        option.sorting = ['cyclomatic_complexity']
+        print_warnings(option, (x for x in []))
+
+
 
 class TestFileOutput(StreamStdoutTestCase):
     

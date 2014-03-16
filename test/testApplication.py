@@ -2,7 +2,7 @@ import unittest
 from test.mock import patch
 import lizard
 from lizard import lizard_main
-import os
+import os, sys
 
 @patch('lizard.open', create=True)
 @patch.object(os, 'walk')
@@ -114,3 +114,21 @@ class TestOptionParsing(unittest.TestCase):
         _, options = parse_args(['lizard'])
         self.assertEqual("", options.whitelist)
 
+    def test_default_sorting(self):
+        _, options = parse_args(['lizard'])
+        self.assertEqual(0, len(options.sorting))
+
+    def test_sorting_factor(self):
+        _, options = parse_args(['lizard', '-snloc'])
+        self.assertEqual("nloc", options.sorting[0])
+
+    @patch.object(sys, 'exit')
+    def test_sorting_factor_does_not_exist(self, mock_exit):
+        _, options = parse_args(['lizard', '-sdoesnotexist'])
+        mock_exit.assert_called_with(2)
+
+    @patch.object(sys, 'exit')
+    @patch('sys.stderr')
+    def test_sorting_factor_does_not_exist_error_message(self, mock_stderr, mock_exit):
+        _, options = parse_args(['lizard', '-sdoesnotexist'])
+        mock_stderr.write.assert_called_with("Wrong sorting field 'doesnotexist'.\nCandidates are: ['nloc', 'cyclomatic_complexity', 'token_count', 'parameter_count']\n")

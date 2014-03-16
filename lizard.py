@@ -107,6 +107,11 @@ def createCommandLineParser():
             action="append",
             dest="extensions",
             default=[])
+    parser.add_option("-s", "--sort",
+            help="Sort the warning with field. The field can be nloc, cyclomatic_complexity, token_count, parameter_count, etc. Or an customized file.",
+            action="append",
+            dest="sorting",
+            default=[])
 
     parser.usage = "lizard [options] [PATH or FILE] [PATH] ... "
     parser.description = __doc__
@@ -588,6 +593,9 @@ def print_function_info(fun, filename, extensions, option):
 
 def print_warnings(option, warnings):
     warning_count = 0
+    if type(option.sorting) is type([]) and len(option.sorting) > 0:
+        warnings = list(warnings)
+        warnings.sort(reverse = True, key=lambda x: getattr(x[0], option.sorting[0]))
     if not option.warnings_only:
         print(("\n" +
                "======================================\n" +
@@ -888,6 +896,15 @@ def parse_args(argv):
     options, args = createCommandLineParser().parse_args(args=argv)
     options.whitelist = get_whitelist()
     paths = ["."] if len(args) == 1 else args[1:]
+    options.extensions = get_extensions(options.extensions, not options.no_preprocessor_count, options.switchCasesAsOneCondition)
+    function_parts = [getattr(ext, 'FUNCTION_INFO_PART') for ext in options.extensions
+            if hasattr(ext, 'FUNCTION_INFO_PART')]
+    for sort_factor in options.sorting:
+        if sort_factor not in function_parts:
+            error_message =  "Wrong sorting field '%s'.\n" % sort_factor
+            error_message +=  "Candidates are: " + str(function_parts) + "\n"
+            sys.stderr.write(error_message)
+            sys.exit(2)
     return paths, options
 
 def get_extensions(extension_names, countPreprocessor = True, switchCaseAsOneCondition = False):
@@ -907,7 +924,6 @@ analyze_file = FileAnalyzer(get_extensions([]))
 def lizard_main(argv =  sys.argv):
     paths, options = parse_args(argv)
     printer = print_xml if options.xml else print_result
-    options.extensions = get_extensions(options.extensions, not options.no_preprocessor_count, options.switchCasesAsOneCondition)
     r = analyze(paths, options)
     printer(r, options)
 
