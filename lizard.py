@@ -241,6 +241,9 @@ class LineCounter(object):
                 self._count_token(context)
                 yield token
 
+    def formated_function_info(self, container):
+        return ""
+
     def _new_line(self, context):
         context.fileinfo.nloc += 1
         context.newline = True
@@ -560,6 +563,10 @@ def print_function_info_header(extensions):
     print("-" * len(captions))
 
 def print_function_info(fun, filename, extensions, option):
+    ll = ''
+    for ext in extensions:
+        if hasattr(ext, "formated_function_info"):
+            ll += ext.formated_function_info(fun)
     line = '{}-{}'.format(fun.start_line, fun.end_line) if option.display_fn_end_line else fun.start_line
     output_params = {
         'nloc': fun.nloc,
@@ -574,7 +581,7 @@ def print_function_info(fun, filename, extensions, option):
     output_format = "%(nloc)6d %(CCN)6d %(token)6d %(param)6d    %(name)s@%(line)s@%(file)s"
     if option.warnings_only:
         output_format = "%(file)s:%(line)s: warning: %(name)s has %(CCN)d CCN and %(param)d params (%(nloc)d NLOC, %(token)d tokens)"
-    print(output_format % output_params)
+    print(ll + output_format % output_params)
 
 def print_warnings(option, warnings):
     warning_count = 0
