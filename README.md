@@ -100,6 +100,10 @@ lizard mySource/ -x"./tests/*"
                         number of working threads. The default value is 1.
   -d, --find_duplicates
                         Find and skip analysis for file duplicates.
+  -s, --sort
+                        Sort the warning with field. The field can be nloc, 
+                        cyclomatic_complexity, token_count, parameter_count,
+                        etc. Or an customized file.
 ```
 ##Example use
 ### Analyze a folder recursively: lizard mahjong_game/src

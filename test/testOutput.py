@@ -99,7 +99,6 @@ class TestWarningOutput(StreamStdoutTestCase):
         print_warnings(option, (x for x in []))
 
 
-
 class TestFileOutput(StreamStdoutTestCase):
     
     def test_print_and_save_detail_information(self):
