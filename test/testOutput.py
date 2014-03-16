@@ -49,9 +49,7 @@ class TestFunctionOutput(StreamStdoutTestCase):
         fun.cyclomatic_complexity = 16
         fileStat = FileInformation("FILENAME", 1, [fun])
         print_and_save_detail_information([fileStat], self.options)
-        self.assertEquals("     0     16      1      0    foo@100-100@FILENAME", sys.stdout.stream.splitlines()[3])
-
-
+        self.assertEquals("       0     16      1      0 foo@100-100@FILENAME", sys.stdout.stream.splitlines()[3])
 
 class TestWarningOutput(StreamStdoutTestCase):
         
