@@ -3,6 +3,9 @@ This is an extension of lizard, that counts the 'exit points' in every function.
 '''
 class LizardExtension(object):
 
+    FUNCTION_CAPTION = " exits "
+    FUNCTION_INFO_PART = "exit_count"
+
     def extend_tokens(self, tokens, context):
         first_return = False
         for token in tokens:
