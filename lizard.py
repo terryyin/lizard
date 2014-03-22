@@ -36,8 +36,9 @@ def analyze(paths, options):
 
 def createCommandLineParser(prog=None):
     from argparse import ArgumentParser
-    parser = ArgumentParser(prog=prog, version=VERSION)
+    parser = ArgumentParser(prog=prog)
     parser.add_argument('paths', nargs='*', default=['.'], help='list of the filename/paths.')
+    parser.add_argument('--version', action='version', version=VERSION)
     parser.add_argument("-V", "--verbose",
             help="Output in verbose mode (long function name)",
             action="store_true",
