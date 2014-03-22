@@ -174,3 +174,6 @@ int foo() {
 }
 </pre>
 ## Wishlist (The features that will come in the near future)
+
+## Change Logs
+2014.03.22 Change the -v (--verbose) option to -V. This is because -v will be used for --version.
