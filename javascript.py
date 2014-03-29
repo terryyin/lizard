@@ -2,7 +2,7 @@ from lizard import CLikeReader
 class JavaScriptReader(CLikeReader):
     
     def _GLOBAL(self, token):
-        if token == '=':
+        if token in ('=', ':'):
             self._state = self._ASSIGNMENT
         elif token == '.':
             self._state = self._FIELD
@@ -16,4 +16,5 @@ class JavaScriptReader(CLikeReader):
     def _FIELD(self, token):
         self.context.ADD_TO_FUNCTION_NAME(token)
         self._state = self._GLOBAL
+
 

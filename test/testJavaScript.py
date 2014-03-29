@@ -26,7 +26,7 @@ class Test_parser_for_JavaScript(unittest.TestCase):
         functions = get_js_function_list("a.b = function (a, b){}")
         self.assertEqual('a.b', functions[0].name)
 
-    def xtest_function_in_a_object(self):
+    def test_function_in_a_object(self):
         functions = get_js_function_list("var App={a:function(){};}")
         self.assertEqual('a', functions[0].name)
 
