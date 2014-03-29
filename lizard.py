@@ -442,7 +442,7 @@ def compile_file_extension_re(*exts):
     return re.compile(r".*\.(" + r"|".join(exts) + r")$", re.IGNORECASE)
 
 class LanguageChooser(object):
-
+    from javascript import JavaScriptReader
     lizard_language_infos = {
                      'c/c++': {
                           'name_pattern': compile_file_extension_re("c", "cpp", "cc", "mm", "cxx", "h", "hpp"),
@@ -450,6 +450,9 @@ class LanguageChooser(object):
                      'Java': {
                           'name_pattern': compile_file_extension_re("java"),
                           'reader':CLikeReader},
+                     'JavaScript': {
+                          'name_pattern': compile_file_extension_re("js"),
+                          'reader':JavaScriptReader},
                       'objC' : {
                           'name_pattern': compile_file_extension_re("m"),
                           'reader':ObjCReader}
