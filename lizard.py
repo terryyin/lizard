@@ -563,7 +563,7 @@ class FreeFormattingTokenizer(object):
                            r"|&=|&&|&"+
                            r"|[!%^&\*\-=+\|\\<>/\]\+]+"+
                            r"|\n"+
-                           r"|\s+"+
+                           r"|[^\S\n]+"+
                            r"|.)", re.M | re.S)
 
     def __call__(self, source_code):

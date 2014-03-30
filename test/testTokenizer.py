@@ -16,6 +16,10 @@ class Test_generate_tonken(unittest.TestCase):
         result = [t for t in generate_tokens("\n\n")]
         self.assertEqual(2, len(result))
 
+    def test_space(self):
+        result = [t for t in generate_tokens(" \n")]
+        self.assertEqual(1, len(result))
+
     def test_empty(self):
         tokens = generate_tokens("")
         self.assertEqual(0, len(tokens))

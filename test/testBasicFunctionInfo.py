@@ -59,3 +59,15 @@ class TestNLOC(unittest.TestCase):
         self.assertEqual(3, result[0].nloc)
         self.assertEqual(1, result[0].start_line)
         self.assertEqual(8, result[0].end_line)
+
+
+class TestLOC(unittest.TestCase):
+
+    def test_having_empty_line(self):
+        result = get_cpp_function_list("\nint fun(){}")
+        self.assertEqual(2, result[0].start_line)
+
+    def test_having_empty_line_that_has_spaces(self):
+        result = get_cpp_function_list("  \nint fun(){}")
+        self.assertEqual(2, result[0].start_line)
+
