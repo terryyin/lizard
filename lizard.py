@@ -470,6 +470,11 @@ class LanguageChooser(object):
 
 
 class FunctionParser(object):
+    ''' FunctionParser parse source code into functions. This is different from language
+        to language. So FunctionParser need a language specific 'reader' to actually do
+        the job.
+        TODO: FunctionParser might yield functions in the future.
+    '''
 
     FUNCTION_CAPTION = " function@line@filename          "
 
