@@ -43,7 +43,7 @@ class Test_parser_for_JavaScript(unittest.TestCase):
         self.assertEqual('b', functions[0].name)
         self.assertEqual('a', functions[1].name)
 
-    def xtest_global(self):
+    def test_global(self):
         functions = get_js_function_list("{}")
-        self.assertEqual('a', functions[0].name)
+        self.assertEqual(0, len(functions))
 

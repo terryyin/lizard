@@ -2,7 +2,7 @@ class JavaScriptReader(object):
 
     def __init__(self):
         self.bracket_level = 0
-        self.brace_count = 0
+        self.brace_count = 1 # start from one, so global level will never count
         self._state = self._GLOBAL
         self.last_tokens = ''
         self.function_name = ''
@@ -62,4 +62,3 @@ class JavaScriptReader(object):
             return
         self.context.ADD_TO_LONG_FUNCTION_NAME(" " + token)
 
-    _IMP = _GLOBAL
