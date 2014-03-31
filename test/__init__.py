@@ -10,3 +10,4 @@ from .testCommentOptions import *
 from .testBasicFunctionInfo import *
 from .testFunctionExitCount import *
 from .testCyclomaticComplexity import *
+from .testLanguages import *

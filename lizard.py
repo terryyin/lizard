@@ -23,6 +23,9 @@ VERSION = "1.7.9"
 
 import itertools
 import re
+
+class CodeReader(object): pass
+
 from lizard_ext import JavaScriptReader
 
 DEFAULT_CCN_THRESHOLD = 15
@@ -320,12 +323,13 @@ class ConditionCounter(object):
             yield token
 
 
-class CodeReader(object): pass
-
 class CLikeReader(CodeReader):
     '''
     This is the reader for C, C++ and Java.
     '''
+
+    lan = "c/c++"
+    ext = ["c", "cpp", "cc", "mm", "cxx", "h", "hpp"]
 
     def __init__(self):
         self.bracket_level = 0
@@ -395,8 +399,16 @@ class CLikeReader(CodeReader):
                     self._state = self._GLOBAL
                     self.context.END_OF_FUNCTION()
 
+class JavaReader(CLikeReader, CodeReader):
 
-class ObjCReader(CLikeReader):
+    lan = 'Java'
+    ext = ['java']
+
+class ObjCReader(CLikeReader, CodeReader):
+
+    lan = 'objC'
+    ext = ['m']
+
     def __init__(self):
         super(ObjCReader, self).__init__()
 
@@ -444,22 +456,15 @@ class ObjCReader(CLikeReader):
 def compile_file_extension_re(*exts):
     return re.compile(r".*\.(" + r"|".join(exts) + r")$", re.IGNORECASE)
 
-class LanguageChooser(object):
-    lizard_language_infos = {
-                     'c/c++': {
-                          'name_pattern': compile_file_extension_re("c", "cpp", "cc", "mm", "cxx", "h", "hpp"),
-                          'reader':CLikeReader},
-                     'Java': {
-                          'name_pattern': compile_file_extension_re("java"),
-                          'reader':CLikeReader},
-                     'JavaScript': {
-                          'name_pattern': compile_file_extension_re("js"),
-                          'reader':JavaScriptReader},
-                      'objC' : {
-                          'name_pattern': compile_file_extension_re("m"),
-                          'reader':ObjCReader}
-                    }
+class Languages(object):
 
+    def __init__(self):
+        self.lizard_language_infos = {}
+        for cls in CodeReader.__subclasses__():
+            self.lizard_language_infos[cls.lan] = {
+                          'name_pattern': compile_file_extension_re(*cls.ext),
+                          'reader': cls
+                    }
 
     def get_language_by_filename(self, filename):
         for lan in self.lizard_language_infos:
@@ -482,7 +487,7 @@ class FunctionParser(object):
     FUNCTION_CAPTION = " function@line@filename          "
 
     def extend_tokens(self, tokens, context):
-        function_reader = LanguageChooser( ).get_reader_by_file_name_otherwise_default(context.fileinfo.filename)
+        function_reader = Languages( ).get_reader_by_file_name_otherwise_default(context.fileinfo.filename)
         function_reader.context = context
         for token in tokens:
             function_reader._state(token)
@@ -886,7 +891,7 @@ class FilesFilter(object):
         return code_md5.hexdigest()
 
     def _notExluded(self, str_to_match):
-        return LanguageChooser().get_language_by_filename(str_to_match) and \
+        return Languages().get_language_by_filename(str_to_match) and \
             all(not fnmatch.fnmatch(str_to_match, p) for p in self.exclude_patterns)
 
     def _notDuplicate(self, full_path_name):

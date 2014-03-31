@@ -1,4 +1,10 @@
-class JavaScriptReader(object):
+from lizard import CodeReader
+
+
+class JavaScriptReader(CodeReader):
+
+    lan = 'JavaScript'
+    ext = ['js']
 
     def __init__(self):
         self.brace_count = 1 # start from one, so global level will never count
