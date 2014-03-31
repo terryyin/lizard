@@ -1,7 +1,6 @@
 class JavaScriptReader(object):
 
     def __init__(self):
-        self.bracket_level = 0
         self.brace_count = 1 # start from one, so global level will never count
         self._state = self._GLOBAL
         self.last_tokens = ''
@@ -38,7 +37,6 @@ class JavaScriptReader(object):
             self.function_stack.append(self.context.current_function)
             self.brace_count = 0
             self.context.START_NEW_FUNCTION(self.function_name or 'function')
-            self.bracket_level += 1
             self._state = self._DEC
 
     def _ASSIGNMENT(self, token):
@@ -51,12 +49,8 @@ class JavaScriptReader(object):
         self._state = self._GLOBAL
     
     def _DEC(self, token):
-        if token == '(':
-            self.bracket_level += 1
-        elif token == ')':
-            self.bracket_level -= 1
-            if (self.bracket_level == 0):
-                self._state = self._GLOBAL
+        if token == ')':
+            self._state = self._GLOBAL
         else:
             self.context.PARAMETER(token)
             return

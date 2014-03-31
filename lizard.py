@@ -23,6 +23,7 @@ VERSION = "1.7.9"
 
 import itertools
 import re
+from lizard_ext import JavaScriptReader
 
 DEFAULT_CCN_THRESHOLD = 15
 
@@ -442,7 +443,6 @@ def compile_file_extension_re(*exts):
     return re.compile(r".*\.(" + r"|".join(exts) + r")$", re.IGNORECASE)
 
 class LanguageChooser(object):
-    from javascript import JavaScriptReader
     lizard_language_infos = {
                      'c/c++': {
                           'name_pattern': compile_file_extension_re("c", "cpp", "cc", "mm", "cxx", "h", "hpp"),

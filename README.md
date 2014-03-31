@@ -7,8 +7,9 @@ Was hfcca, A Header Free Cyclomatic Complexity Analyzer.
 lizard is a simple code complexity analyzer without caring about the C/C++ 
 header files or Java imports. It can deal with
 
-* Java
 * C/C++
+* Java
+* JavaScript
 * Objective C.
 
 It counts 
@@ -25,14 +26,15 @@ will be none-Zero if there are warnings.
 This tool actually calculates how complex the code 'looks' rather than how
 complex the code real 'is'. People will need this tool because it's often very
 hard to get all the included folders and files right when they are complicated.
-But we don't really need that kind of accuracy when come to cyclomatic
-complexity.
+But we don't really need that kind of accuracy for cyclomatic complexity.
 
-It requires python2.6 or above (early versions are not verified).
+It requires python2.7 or above (early versions are not verified).
 
 ##Installation
 
-lizard.py is only a single python file, and everything is in that single script. You can always use it without any installation.
+lizard.py can be used as a stand alone Python script, most functionalities are
+there. You can always use it without any installation.
+To acquire all the functionalities of lizard, you will need a proper install.
 
 <pre>
 python lizard.py
@@ -176,4 +178,5 @@ int foo() {
 ## Wishlist (The features that will come in the near future)
 
 ## Change Logs
+2014.03.31 Support JavaScript!
 2014.03.22 Change the -v (--verbose) option to -V. This is because -v will be used for --version.
