@@ -35,13 +35,13 @@ class TestFunctionOutput(StreamStdoutTestCase):
 
     def test_function_info_header_should_have_the_captions(self):
         print_and_save_detail_information([], self.options)
-        self.assertEquals("  NLOC    CNN   token  PARAM  function@line@filename          ", sys.stdout.stream.splitlines()[1])
+        self.assertEquals("  NLOC    CCN   token  PARAM  function@line@filename          ", sys.stdout.stream.splitlines()[1])
 
     def test_function_info_header_should_have_the_captions_of_external_extensions(self):
         external_extension = Mock(FUNCTION_CAPTION = "*external_extension*")
         self.options = Mock(warnings_only=False, extensions = get_extensions([external_extension]))
         print_and_save_detail_information([], self.options)
-        self.assertEquals("  NLOC    CNN   token  PARAM *external_extension* function@line@filename          ", sys.stdout.stream.splitlines()[1])
+        self.assertEquals("  NLOC    CCN   token  PARAM *external_extension* function@line@filename          ", sys.stdout.stream.splitlines()[1])
 
     def test_print_fileinfo(self):
         fun = FunctionInfo("foo", 100)
