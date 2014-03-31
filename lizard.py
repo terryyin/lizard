@@ -293,7 +293,7 @@ class ParameterCounter(object):
 
 class ConditionCounter(object):
 
-    FUNCTION_CAPTION = "  CNN  "
+    FUNCTION_CAPTION = "  CCN  "
     FUNCTION_INFO_PART = "cyclomatic_complexity"
 
     def __init__(self, includeHashIfConditions = True, switchCasesAsOneCondition = False):
