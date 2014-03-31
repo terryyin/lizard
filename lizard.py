@@ -320,7 +320,9 @@ class ConditionCounter(object):
             yield token
 
 
-class CLikeReader(object):
+class CodeReader(object): pass
+
+class CLikeReader(CodeReader):
     '''
     This is the reader for C, C++ and Java.
     '''
@@ -457,6 +459,7 @@ class LanguageChooser(object):
                           'name_pattern': compile_file_extension_re("m"),
                           'reader':ObjCReader}
                     }
+
 
     def get_language_by_filename(self, filename):
         for lan in self.lizard_language_infos:
