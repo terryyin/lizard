@@ -1,1 +1,1 @@
-from javascript import JavaScriptReader
+from .javascript import JavaScriptReader
