@@ -178,5 +178,5 @@ int foo() {
 ## Wishlist (The features that will come in the near future)
 
 ## Change Logs
-2014.03.31 Support JavaScript!
-2014.03.22 Change the -v (--verbose) option to -V. This is because -v will be used for --version.
+* 2014.03.31 Support JavaScript!
+* 2014.03.22 Change the -v (--verbose) option to -V. This is because -v will be used for --version.
