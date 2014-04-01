@@ -459,22 +459,17 @@ def compile_file_extension_re(*exts):
 class Languages(object):
 
     def __init__(self):
-        self.lizard_language_infos = {}
+        self.lizard_language_infos = []
         for cls in CodeReader.__subclasses__():
-            self.lizard_language_infos[cls.lan] = {
+            self.lizard_language_infos.append({
                           'name_pattern': compile_file_extension_re(*cls.ext),
                           'reader': cls
-                    }
+                    } )
 
-    def get_language_by_filename(self, filename):
+    def get_reader(self, filename):
         for lan in self.lizard_language_infos:
-            info = self.lizard_language_infos[lan]
-            if info['name_pattern'].match(filename):
-                return lan
-
-    def get_reader_by_file_name_otherwise_default(self, filename):
-        lan = self.get_language_by_filename(filename)
-        return self.lizard_language_infos[lan or "c/c++"]['reader']()
+            if lan['name_pattern'].match(filename):
+                return lan['reader']
 
 
 class FunctionParser(object):
@@ -487,7 +482,7 @@ class FunctionParser(object):
     FUNCTION_CAPTION = " function@line@filename          "
 
     def extend_tokens(self, tokens, context):
-        function_reader = Languages( ).get_reader_by_file_name_otherwise_default(context.fileinfo.filename)
+        function_reader = (Languages( ).get_reader(context.fileinfo.filename) or CLikeReader)()
         function_reader.context = context
         for token in tokens:
             function_reader._state(token)
@@ -891,7 +886,7 @@ class FilesFilter(object):
         return code_md5.hexdigest()
 
     def _notExluded(self, str_to_match):
-        return Languages().get_language_by_filename(str_to_match) and \
+        return Languages().get_reader(str_to_match) and \
             all(not fnmatch.fnmatch(str_to_match, p) for p in self.exclude_patterns)
 
     def _notDuplicate(self, full_path_name):
