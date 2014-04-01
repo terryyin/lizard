@@ -3,7 +3,6 @@ from lizard import CodeReader
 
 class JavaScriptReader(CodeReader):
 
-    lan = 'JavaScript'
     ext = ['js']
 
     def __init__(self):

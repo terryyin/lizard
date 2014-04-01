@@ -24,9 +24,6 @@ VERSION = "1.7.9"
 import itertools
 import re
 
-class CodeReader(object): pass
-
-from lizard_ext import JavaScriptReader
 
 DEFAULT_CCN_THRESHOLD = 15
 
@@ -323,12 +320,31 @@ class ConditionCounter(object):
             yield token
 
 
+#----------------------------------------------
+# CodeReaders are used to parse functions structures from code of different
+# language. Each language will need a subclass of CodeReader.
+
+class CodeReader(object):
+
+    @staticmethod
+    def compile_file_extension_re(*exts):
+        return re.compile(r".*\.(" + r"|".join(exts) + r")$", re.IGNORECASE)
+
+    @staticmethod
+    def get_reader(filename):
+        for lan in list(CodeReader.__subclasses__()):
+            if CodeReader.compile_file_extension_re(*lan.ext).match(filename):
+                return lan
+
+
+from lizard_ext import JavaScriptReader
+
+
 class CLikeReader(CodeReader):
     '''
     This is the reader for C, C++ and Java.
     '''
 
-    lan = "c/c++"
     ext = ["c", "cpp", "cc", "mm", "cxx", "h", "hpp"]
 
     def __init__(self):
@@ -401,12 +417,10 @@ class CLikeReader(CodeReader):
 
 class JavaReader(CLikeReader, CodeReader):
 
-    lan = 'Java'
     ext = ['java']
 
 class ObjCReader(CLikeReader, CodeReader):
 
-    lan = 'objC'
     ext = ['m']
 
     def __init__(self):
@@ -453,25 +467,6 @@ class ObjCReader(CLikeReader, CodeReader):
         self._state = self._OBJC_DEC
 
 
-def compile_file_extension_re(*exts):
-    return re.compile(r".*\.(" + r"|".join(exts) + r")$", re.IGNORECASE)
-
-class Languages(object):
-
-    def __init__(self):
-        self.lizard_language_infos = []
-        for cls in CodeReader.__subclasses__():
-            self.lizard_language_infos.append({
-                          'name_pattern': compile_file_extension_re(*cls.ext),
-                          'reader': cls
-                    } )
-
-    def get_reader(self, filename):
-        for lan in self.lizard_language_infos:
-            if lan['name_pattern'].match(filename):
-                return lan['reader']
-
-
 class FunctionParser(object):
     ''' FunctionParser parse source code into functions. This is different from language
         to language. So FunctionParser need a language specific 'reader' to actually do
@@ -482,7 +477,7 @@ class FunctionParser(object):
     FUNCTION_CAPTION = " function@line@filename          "
 
     def extend_tokens(self, tokens, context):
-        function_reader = (Languages( ).get_reader(context.fileinfo.filename) or CLikeReader)()
+        function_reader = (CodeReader.get_reader(context.fileinfo.filename) or CLikeReader)()
         function_reader.context = context
         for token in tokens:
             function_reader._state(token)
@@ -886,7 +881,7 @@ class FilesFilter(object):
         return code_md5.hexdigest()
 
     def _notExluded(self, str_to_match):
-        return Languages().get_reader(str_to_match) and \
+        return CodeReader.get_reader(str_to_match) and \
             all(not fnmatch.fnmatch(str_to_match, p) for p in self.exclude_patterns)
 
     def _notDuplicate(self, full_path_name):
