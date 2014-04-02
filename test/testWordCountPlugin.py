@@ -1,6 +1,6 @@
 import unittest
 from test.mock import patch
-from lizardWordCount import LizardExtension
+from lizard_ext.lizardWordCount import LizardExtension
 
 
 class Context(object):
@@ -60,7 +60,7 @@ class TestWordCountOutput(unittest.TestCase):
             self.buf += txt
 
     @patch('webbrowser.open')
-    @patch('lizardWordCount.open', create=True)
+    @patch('lizard_ext.lizardWordCount.open', create=True)
     def test_should_output_html(self, mock_open, browser_open):
         buf = ""
         mock_open.return_value.__enter__.return_value.write.side_effect = self.write_to_buffer
@@ -72,7 +72,7 @@ class TestWordCountOutput(unittest.TestCase):
         self.assertIn('["a", 123]', self.buf)
 
     @patch('webbrowser.open')
-    @patch('lizardWordCount.open', create=True)
+    @patch('lizard_ext.lizardWordCount.open', create=True)
     def test_should_open_the_browser(self, mock_open, browser_open):
         import os
         ext = LizardExtension()

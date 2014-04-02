@@ -337,8 +337,10 @@ class CodeReader(object):
                 return lan
 
 
-from lizard_ext import JavaScriptReader
-
+try: # lizard.py can run as a stand alone python script, without the extensions
+    from lizard_ext import JavaScriptReader
+except:
+    pass
 
 class CLikeReader(CodeReader):
     '''
@@ -915,6 +917,7 @@ def parse_args(argv):
     return options
 
 def get_extensions(extension_names, countPreprocessor = True, switchCaseAsOneCondition = False):
+    from importlib import import_module
     basicExtensions = [
         Preprocessor,
         LineCounter(),
@@ -923,7 +926,7 @@ def get_extensions(extension_names, countPreprocessor = True, switchCaseAsOneCon
         ParameterCounter()
         ]
     return basicExtensions +\
-        [__import__('lizard' + name).LizardExtension() if type(name) == type("") else name  for name in extension_names] +\
+        [import_module('lizard_ext.lizard' + name).LizardExtension() if type(name) == type("") else name  for name in extension_names] +\
         [FunctionParser()]
 
 analyze_file = FileAnalyzer(get_extensions([]))
