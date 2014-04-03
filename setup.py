@@ -9,8 +9,8 @@ import lizard
 from distutils.core import setup
 def install(appname='lizard'):
     try:
-        with open("README.md") as f:
-            long_description = (f.read()).replace("*", "``*``").replace("```", "")
+        with open("README.rst") as f:
+            long_description = f.read()
     except:
         long_description = lizard.__doc__  # @UndefinedVariable
     setup(
@@ -18,7 +18,7 @@ def install(appname='lizard'):
           version = lizard.VERSION,
           description = ''' 
 A simple code complexity analyzer without caring about the C/C++ header files or Java imports.
-It can deal with Java/C/C++/Objective C code. It counts the cyclomatic complexity number etc.''',
+It can deal with Java/C/C++/JavaScript/Objective C code. It counts the cyclomatic complexity number etc.''',
           long_description =  long_description,
           url = 'https://github.com/terryyin/lizard',
           classifiers = ['Development Status :: 5 - Production/Stable',
@@ -32,15 +32,16 @@ It can deal with Java/C/C++/Objective C code. It counts the cyclomatic complexit
                      'Programming Language :: C',
                      'Programming Language :: C++',
                      'Programming Language :: Java',
+                     'Programming Language :: JavaScript',
                      'Programming Language :: Objective C',
                      'Programming Language :: Python',
-                     'Programming Language :: Python :: 2.6',
                      'Programming Language :: Python :: 2.7',
                      'Programming Language :: Python :: 3.2',
                      'Programming Language :: Python :: 3.3'],
-          py_modules = ['lizard', 'lizardWordCount'],
+          packages = ['lizard_ext'],
+          py_modules = ['lizard'],
           author = 'Terry Yin',
-          author_email = 'terry.yinze@gmail.com',
+          author_email = 'terry@odd-e.com',
           scripts = ['lizard.bat', 'lizard', 'hfcca.bat', 'hfcca']
           )
 

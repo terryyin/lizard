@@ -40,44 +40,34 @@ functionalities are there. You can always use it without any
 installation. To acquire all the functionalities of lizard, you will
 need a proper install.
 
-.. raw:: html
+::
 
-   <pre>
    python lizard.py
-   </pre>
 
 If you want a proper install:
 
-.. raw:: html
+::
 
-   <pre>
    [sudo] pip install lizard
-   </pre>
 
 Or if you've got the source:
 
-.. raw:: html
+::
 
-   <pre>
    [sudo] python setup.py install
-   </pre>
 
 Usage
 -----
 
-.. raw:: html
+::
 
-   <pre>
    lizard [options] [PATH or FILE] [PATH] ... 
-   </pre>
 
 Run for the code under current folder (recursively):
 
-.. raw:: html
+::
 
-   <pre>
    lizard
-   </pre>
 
 Exclude anything in the tests folder:
 
@@ -134,9 +124,8 @@ Example use
 Analyze a folder recursively: lizard mahjong\_game/src
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. raw:: html
+::
 
-   <pre>
    ==============================================================
      NLOC    CCN  token  param    function@line@file
    --------------------------------------------------------------
@@ -160,17 +149,14 @@ Analyze a folder recursively: lizard mahjong\_game/src
    Total NLOC  Avg.NLOC  Avg CCN  Avg token  Fun Cnt  Warning cnt   Fun Rt   NLOC Rt  
    --------------------------------------------------------------------------------
           554        20     4.07      71.15       27            1      0.04    0.12
-   </pre>
 
 Warnings only (in clang/gcc formation):lizard -w mahjong\_game
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. raw:: html
+::
 
-   <pre>
    ./src/html_ui/httpd.c:64: warning: accept_request has 19 CCN and 1 params (66 NLOC, 247 tokens)
    ./src/mahjong_game/mj_table.c:109: warning: mj_table_update_state has 20 CCN and 1 params (72 NLOC, 255 tokens)
-   </pre>
 
 Using lizard as Python module
 -----------------------------
@@ -200,15 +186,13 @@ If for some reason you would like to ignore the warnings, you can use
 the whitelist. Add 'whitelizard.txt' to the current folder, then the
 functions defined in the file will be ignored. This is an example
 
-.. raw:: html
+::
 
-   <pre>
    #whitelizard.txt
    #The file name can only be whitelizard.txt and put it in the current folder.
    #You may have commented lines begin with #.
    function_name1, function_name2 # list function names in mulitple lines or split with comma.
    filename:function1, function2  # you can also specify the filename
-   </pre>
 
 Options in Comments
 -------------------
@@ -217,14 +201,12 @@ You can use options in the comments of the source code to change the
 behavior of lizard. By putting "#lizard forgives" inside a function or
 before a function it will suppress the warning for that function.
 
-.. raw:: html
+::
 
-   <pre>
    int foo() {
        // #lizard forgives the complexity
        ...
    }
-   </pre>
 
 Wishlist (The features that will come in the near future)
 ---------------------------------------------------------

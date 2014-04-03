@@ -12,7 +12,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-#  author: terry.yinzhe@gmail.com
+#  author: terry@odd-e.com
 #
 """
 lizard is a simple code complexity analyzer without caring about the C/C++
