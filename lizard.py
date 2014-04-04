@@ -22,7 +22,7 @@ Please find the README.md for more information.
 VERSION = "1.8.0"
 
 import itertools
-import re
+import re, sys
 
 
 DEFAULT_CCN_THRESHOLD = 15
@@ -191,8 +191,8 @@ class CodeInfoContext(object):
         self.newline = True
         self.current_function = FunctionInfo(name, self.current_line)
 
-    def CONDITION(self):
-        self.current_function.cyclomatic_complexity += 1
+    def CONDITION(self, inc = 1):
+        self.current_function.cyclomatic_complexity += inc
 
     def ADD_TO_LONG_FUNCTION_NAME(self, app):
         self.current_function.add_to_long_name(app)
@@ -217,10 +217,7 @@ class Preprocessor(object):
         if hasattr(context.reader, "preprocess"):
             return context.reader.preprocess(tokens, context)
         else:
-            return self._default_preprocess(tokens)
-
-    def _default_preprocess(self, tokens):
-        return tokens
+            return (t for t in tokens if not t.isspace() or t == '\n')
 
 
 class CommentCounter(object):
@@ -299,20 +296,7 @@ class ConditionCounter(object):
 
     FUNCTION_CAPTION = "  CCN  "
     FUNCTION_INFO_PART = "cyclomatic_complexity"
-
-    def __init__(self, includeHashIfConditions = True, switchCasesAsOneCondition = False):
-        self.conditions = set(
-            ['if', 'for', 'while', '&&', '||', '?', 'catch'])
-
-        if includeHashIfConditions:
-            self.conditions.add('#if')
-            self.conditions.add('#ifdef')
-            self.conditions.add('#elif')
-
-        if switchCasesAsOneCondition:
-            self.conditions.add('switch')
-        else:
-            self.conditions.add('case')
+    conditions = set(['if', 'for', 'while', '&&', '||', '?', 'catch', 'case'])
 
     def is_condition(self, token):
         return token in self.conditions
@@ -320,6 +304,26 @@ class ConditionCounter(object):
     def extend_tokens(self, tokens, context):
         for token in tokens:
             if self.is_condition(token):
+                context.CONDITION()
+            yield token
+
+
+class SwitchCasesAsOneConditionCounter(object):
+
+    def extend_tokens(self, tokens, context):
+        for token in tokens:
+            if token == 'switch':
+                context.CONDITION()
+            elif token == 'case':
+                context.CONDITION(-1)
+            yield token
+
+
+class PreprocessorConditionCounter(object):
+
+    def extend_tokens(self, tokens, context):
+        for token in tokens:
+            if token in ('#if', '#ifdef', '#elif'):
                 context.CONDITION()
             yield token
 
@@ -365,14 +369,15 @@ class CLikeReader(CodeReader):
 
     def preprocess(self, tokens, context):
         for token in tokens:
-            m = self.macro_pattern.match(token)
-            if m:
-                yield "#" + m.group(1)
-                param = m.group(2).strip()
-                if param:
-                    yield param
-            else:
-                yield token
+            if not token.isspace() or token == '\n':
+                m = self.macro_pattern.match(token)
+                if m:
+                    yield "#" + m.group(1)
+                    param = m.group(2).strip()
+                    if param:
+                        yield param
+                else:
+                    yield token
 
     def _GLOBAL(self, token):
         if token == '(':
@@ -576,13 +581,8 @@ class Whitelist(object):
             return True
         return False
 
-class FreeFormattingTokenizer(object):
-    '''
-    Use this tokenizer to tokenize C/C++, Java, ObjC code, which the
-    format is not part of the syntax. So indentation & new lines
-    doesn't matter.
-    '''
 
+def generate_tokens(source_code):
     # DONOT put any sub groups in the regex. Good for performance
     _until_end = r"(?:\\\n|[^\n])*"
     token_pattern = re.compile(r"(\w+"+
@@ -598,14 +598,8 @@ class FreeFormattingTokenizer(object):
                            r"|[^\S\n]+"+
                            r"|.)", re.M | re.S)
 
-    def __call__(self, source_code):
-        tokens = self.token_pattern.findall(source_code)
-        return [t for t in tokens if not t.isspace() or t == '\n']
+    return token_pattern.findall(source_code)
 
-generate_tokens = FreeFormattingTokenizer()
-
-
-import sys
 
 def print_function_info_header(extensions):
     captions = "".join(ext.FUNCTION_CAPTION for ext in extensions if hasattr(ext, "FUNCTION_CAPTION"))
@@ -951,16 +945,21 @@ def parse_args(argv):
 
 def get_extensions(extension_names, countPreprocessor = True, switchCaseAsOneCondition = False):
     from importlib import import_module
-    basicExtensions = [
+    extensions = [
         Preprocessor(),
         CommentCounter(),
         LineCounter(),
-        ConditionCounter(countPreprocessor, switchCaseAsOneCondition),
+        ConditionCounter(),
         TokenCounter(),
         FunctionParser(),
         ParameterCounter()
         ]
-    return basicExtensions +\
+    if countPreprocessor:
+        extensions.append(PreprocessorConditionCounter())
+    if switchCaseAsOneCondition:
+        extensions.append(SwitchCasesAsOneConditionCounter())
+
+    return extensions +\
         [import_module('lizard_ext.lizard' + name).LizardExtension() if type(name) == type("") else name  for name in extension_names] +\
         [FunctionOutputPlaceholder()]
 

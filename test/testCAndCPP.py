@@ -86,7 +86,7 @@ class Test_c_cpp_lizard(unittest.TestCase):
         self.assertEqual(1, len(result))
 
     def test_template_with_pointer(self):
-        result = get_cpp_function_list("abc::def(a<b*> c){}")
+        result = get_cpp_function_list("abc::def (a<b*> c){}")
         self.assertEqual(1, len(result))
         
     def test_template_with_reference(self):

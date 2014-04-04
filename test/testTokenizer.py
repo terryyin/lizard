@@ -18,7 +18,7 @@ class Test_generate_tonken(unittest.TestCase):
 
     def test_space(self):
         result = [t for t in generate_tokens(" \n")]
-        self.assertEqual(1, len(result))
+        self.assertEqual(2, len(result))
 
     def test_empty(self):
         tokens = generate_tokens("")
@@ -42,7 +42,7 @@ class Test_generate_tonken(unittest.TestCase):
 
     def test_more(self):
         tokens = generate_tokens("int a{}")
-        self.assertEqual(['int', "a", "{", "}"], tokens)
+        self.assertEqual(['int', ' ', "a", "{", "}"], tokens)
 
     def test_or(self):
         tokens = generate_tokens("||")
@@ -74,7 +74,7 @@ class Test_generate_tonken_for_marcos(unittest.TestCase):
                        abc'''
         tokens = generate_tokens(define+'''
                     int''')
-        self.assertEqual([define, '\n', 'int'], tokens)
+        self.assertEqual([define, '\n', ' ' * 20, 'int'], tokens)
 
     def test_if(self):
         tokens = generate_tokens('''#if abc\n''')
@@ -112,7 +112,7 @@ class Test_generate_tonken_for_comments(unittest.TestCase):
 
     def test_commentedComment(self):
         tokens = generate_tokens(" /*/*/")
-        self.assertEqual(["/*/*/"], tokens)
+        self.assertEqual([' ', "/*/*/"], tokens)
 
     def test_with_cpp_comments(self):
         tokens = generate_tokens('//abc\n t')
