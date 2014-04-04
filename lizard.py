@@ -185,6 +185,7 @@ class CodeInfoContext(object):
         self.current_line = 0
         self.START_NEW_FUNCTION('')
         self.forgive = False
+        self.reader = (CodeReader.get_reader(filename) or CLikeReader)()
 
     def START_NEW_FUNCTION(self, name):
         self.newline = True
@@ -212,20 +213,14 @@ class CodeInfoContext(object):
 
 class Preprocessor(object):
 
-    macro_pattern = re.compile(r"#\s*(\w+)\s*(.*)", re.M | re.S)
+    def extend_tokens(self, tokens, context):
+        if hasattr(context.reader, "preprocess"):
+            return context.reader.preprocess(tokens, context)
+        else:
+            return self._default_preprocess(tokens)
 
-    @staticmethod
-    def extend_tokens(tokens, context):
-        # handle c preprocessors
-        for token in tokens:
-            m = Preprocessor.macro_pattern.match(token)
-            if m:
-                yield "#" + m.group(1)
-                param = m.group(2).strip()
-                if param:
-                    yield param
-            else:
-                yield token
+    def _default_preprocess(self, tokens):
+        return tokens
 
 
 class CommentCounter(object):
@@ -360,12 +355,24 @@ class CLikeReader(CodeReader):
     '''
 
     ext = ["c", "cpp", "cc", "mm", "cxx", "h", "hpp"]
+    macro_pattern = re.compile(r"#\s*(\w+)\s*(.*)", re.M | re.S)
 
     def __init__(self):
         self.bracket_level = 0
         self.br_count = 0
         self.last_preprocessor = None
         self._state = self._GLOBAL
+
+    def preprocess(self, tokens, context):
+        for token in tokens:
+            m = self.macro_pattern.match(token)
+            if m:
+                yield "#" + m.group(1)
+                param = m.group(2).strip()
+                if param:
+                    yield param
+            else:
+                yield token
 
     def _GLOBAL(self, token):
         if token == '(':
@@ -488,7 +495,7 @@ class FunctionParser(object):
         TODO: FunctionParser might yield functions in the future.
     '''
     def extend_tokens(self, tokens, context):
-        function_reader = (CodeReader.get_reader(context.fileinfo.filename) or CLikeReader)()
+        function_reader = context.reader
         function_reader.context = context
         for token in tokens:
             function_reader._state(token)
@@ -592,7 +599,8 @@ class FreeFormattingTokenizer(object):
                            r"|.)", re.M | re.S)
 
     def __call__(self, source_code):
-        return [t for t in self.token_pattern.findall(source_code) if not t.isspace() or t == '\n']
+        tokens = self.token_pattern.findall(source_code)
+        return [t for t in tokens if not t.isspace() or t == '\n']
 
 generate_tokens = FreeFormattingTokenizer()
 
@@ -944,7 +952,7 @@ def parse_args(argv):
 def get_extensions(extension_names, countPreprocessor = True, switchCaseAsOneCondition = False):
     from importlib import import_module
     basicExtensions = [
-        Preprocessor,
+        Preprocessor(),
         CommentCounter(),
         LineCounter(),
         ConditionCounter(countPreprocessor, switchCaseAsOneCondition),

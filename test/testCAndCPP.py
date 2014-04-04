@@ -1,15 +1,16 @@
 import unittest
-from lizard import CLikeReader, Preprocessor
+from lizard import CLikeReader, CLikeReader
+from mock import Mock
 from .testHelpers import get_cpp_fileinfo, get_cpp_function_list
 
 class Test_C_Token_extension(unittest.TestCase):
 
     def test_marco_should_be_splitted_into_two_tokens(self):
-        extended = Preprocessor.extend_tokens(("# marco param1 param2", ), None)
+        extended = CLikeReader().preprocess(("# marco param1 param2", ), None)
         self.assertEqual(["#marco", "param1 param2"], list(extended))
 
     def test_connecting_marcro(self):
-        extended = Preprocessor.extend_tokens(("a##b c", ), None)
+        extended = CLikeReader().preprocess(("a##b c", ), None)
         #tbd
 
 class Test_c_cpp_lizard(unittest.TestCase):
