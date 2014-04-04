@@ -228,6 +228,19 @@ class Preprocessor(object):
                 yield token
 
 
+class CommentCounter(object):
+
+    def extend_tokens(self, tokens, context):
+        for token in tokens:
+            if token.startswith("/*") or token.startswith("//"):
+                if len(token.splitlines()) > 1:
+                    yield '\n'
+                if token[2:].strip().startswith("#lizard forgive"):
+                    context.forgive = True
+            else:
+                yield token
+
+
 class LineCounter(object):
     ''' And extension of lizard, to count the line and nloc.
     '''
@@ -242,25 +255,12 @@ class LineCounter(object):
             context.current_line += 1 if token == '\n' else (len(token.splitlines()) - 1)
             if token == "\n":
                 self._new_line(context)
-            elif token.startswith("/*") or token.startswith("//"):
-                if len(token.splitlines()) > 1:
-                    self._new_line(context)
-                if token[2:].strip().startswith("#lizard forgive"):
-                    context.forgive = True
             else:
-                self._count_token(context)
                 yield token
 
     def _new_line(self, context):
         context.fileinfo.nloc += 1
         context.newline = True
-
-    def _count_token(self, context):
-        context.fileinfo.token_count+=1
-        if context.newline:
-            context.current_function.nloc += 1
-            context.newline = False
-        context.current_function.token_count += 1
 
 
 class TokenCounter(object):
@@ -274,7 +274,16 @@ class TokenCounter(object):
     FUNCTION_INFO_PART = "token_count"
 
     def extend_tokens(self, tokens, context):
-        return tokens
+        for token in tokens:
+            self._count_token(context)
+            yield token
+
+    def _count_token(self, context):
+        context.fileinfo.token_count+=1
+        if context.newline:
+            context.current_function.nloc += 1
+            context.newline = False
+        context.current_function.token_count += 1
 
 
 class ParameterCounter(object):
@@ -478,15 +487,27 @@ class FunctionParser(object):
         the job.
         TODO: FunctionParser might yield functions in the future.
     '''
-
-    FUNCTION_CAPTION = " function@line@filename          "
-
     def extend_tokens(self, tokens, context):
         function_reader = (CodeReader.get_reader(context.fileinfo.filename) or CLikeReader)()
         function_reader.context = context
         for token in tokens:
             function_reader._state(token)
+            yield token
         function_reader.eof()
+
+
+class FunctionOutputPlaceholder(object):
+    ''' FunctionParser parse source code into functions. This is different from language
+        to language. So FunctionParser need a language specific 'reader' to actually do
+        the job.
+        TODO: FunctionParser might yield functions in the future.
+    '''
+
+    FUNCTION_CAPTION = " function@line@filename          "
+
+    def extend_tokens(self, tokens, context):
+        for token in tokens:
+            pass
 
 
 class FileAnalyzer(object):
@@ -924,14 +945,16 @@ def get_extensions(extension_names, countPreprocessor = True, switchCaseAsOneCon
     from importlib import import_module
     basicExtensions = [
         Preprocessor,
+        CommentCounter(),
         LineCounter(),
         ConditionCounter(countPreprocessor, switchCaseAsOneCondition),
         TokenCounter(),
+        FunctionParser(),
         ParameterCounter()
         ]
     return basicExtensions +\
         [import_module('lizard_ext.lizard' + name).LizardExtension() if type(name) == type("") else name  for name in extension_names] +\
-        [FunctionParser()]
+        [FunctionOutputPlaceholder()]
 
 analyze_file = FileAnalyzer(get_extensions([]))
 
