@@ -336,9 +336,12 @@ class CodeReader(object):
             if CodeReader.compile_file_extension_re(*lan.ext).match(filename):
                 return lan
 
+    def eof(self): pass
+
 
 try: # lizard.py can run as a stand alone python script, without the extensions
     from lizard_ext import JavaScriptReader
+    from lizard_ext import PythonReader
 except:
     pass
 
@@ -483,6 +486,7 @@ class FunctionParser(object):
         function_reader.context = context
         for token in tokens:
             function_reader._state(token)
+        function_reader.eof()
 
 
 class FileAnalyzer(object):
