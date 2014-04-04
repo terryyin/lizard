@@ -130,7 +130,7 @@ class FunctionInfo(object):
         self.name = name
         self.long_name = name
         self.start_line = start_line
-        self.end_line = None
+        self.end_line = start_line
         self.parameter_count = 0
 
     def add_to_function_name(self, app):
@@ -204,7 +204,6 @@ class CodeInfoContext(object):
         self.current_function.add_parameter(token)
 
     def END_OF_FUNCTION(self):
-        self.current_function.end_line = self.current_line
         if not self.forgive:
             self.fileinfo.function_list.append(self.current_function)
         self.forgive = False
@@ -275,6 +274,7 @@ class TokenCounter(object):
         if context.newline:
             context.current_function.nloc += 1
             context.newline = False
+            context.current_function.end_line = context.current_line
         context.current_function.token_count += 1
 
 
@@ -522,6 +522,24 @@ class FunctionOutputPlaceholder(object):
             pass
 
 
+def generate_tokens(source_code):
+    # DONOT put any sub groups in the regex. Good for performance
+    _until_end = r"(?:\\\n|[^\n])*"
+    token_pattern = re.compile(r"(\w+"+
+                           r"|/\*.*?\*/"+
+                           r"|\"(?:\\.|[^\"])*\""+
+                           r"|\'(?:\\.|[^\'])*\'"+
+                           r"|//"+ _until_end +
+                           r"|#" + _until_end +
+                           r"|:=|::|>=|\*=|\*\*|\*|>"+
+                           r"|&=|&&|&"+
+                           r"|[!%^&\*\-=+\|\\<>/\]\+]+"+
+                           r"|\n"+
+                           r"|[^\S\n]+"+
+                           r"|.)", re.M | re.S)
+    return token_pattern.findall(source_code)
+
+
 class FileAnalyzer(object):
 
     def __init__(self, extensions = []):
@@ -580,25 +598,6 @@ class Whitelist(object):
                 return warning[1] == white['file_name']
             return True
         return False
-
-
-def generate_tokens(source_code):
-    # DONOT put any sub groups in the regex. Good for performance
-    _until_end = r"(?:\\\n|[^\n])*"
-    token_pattern = re.compile(r"(\w+"+
-                           r"|/\*.*?\*/"+
-                           r"|\"(?:\\.|[^\"])*\""+
-                           r"|\'(?:\\.|[^\'])*\'"+
-                           r"|//"+ _until_end +
-                           r"|#" + _until_end +
-                           r"|:=|::|>=|\*=|\*\*|\*|>"+
-                           r"|&=|&&|&"+
-                           r"|[!%^&\*\-=+\|\\<>/\]\+]+"+
-                           r"|\n"+
-                           r"|[^\S\n]+"+
-                           r"|.)", re.M | re.S)
-
-    return token_pattern.findall(source_code)
 
 
 def print_function_info_header(extensions):
