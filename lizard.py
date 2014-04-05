@@ -349,6 +349,26 @@ class CodeReader(object):
 
     def eof(self): pass
 
+    @staticmethod
+    def generate_tokens(source_code, addition = ''):
+        # DONOT put any sub groups in the regex. Good for performance
+        _until_end = r"(?:\\\n|[^\n])*"
+        token_pattern = re.compile(r"(\w+"+
+                            addition+
+                            r"|/\*.*?\*/"+
+                            r"|\"(?:\\.|[^\"])*\""+
+                            r"|\'(?:\\.|[^\'])*\'"+
+                            r"|//"+ _until_end +
+                            r"|#" + _until_end +
+                            r"|:=|::|>=|\*=|\*\*|\*|>"+
+                            r"|&=|&&|&"+
+                            r"|[!%^&\*\-=+\|\\<>/\]\+]+"+
+                            r"|\n"+
+                            r"|[^\S\n]+"+
+                            r"|.)", re.M | re.S)
+        return token_pattern.findall(source_code)
+
+
 
 class CCppCommentsMixin(object):
     @staticmethod
@@ -532,24 +552,6 @@ class FunctionOutputPlaceholder(object):
             pass
 
 
-def generate_tokens(source_code):
-    # DONOT put any sub groups in the regex. Good for performance
-    _until_end = r"(?:\\\n|[^\n])*"
-    token_pattern = re.compile(r"(\w+"+
-                           r"|/\*.*?\*/"+
-                           r"|\"(?:\\.|[^\"])*\""+
-                           r"|\'(?:\\.|[^\'])*\'"+
-                           r"|//"+ _until_end +
-                           r"|#" + _until_end +
-                           r"|:=|::|>=|\*=|\*\*|\*|>"+
-                           r"|&=|&&|&"+
-                           r"|[!%^&\*\-=+\|\\<>/\]\+]+"+
-                           r"|\n"+
-                           r"|[^\S\n]+"+
-                           r"|.)", re.M | re.S)
-    return token_pattern.findall(source_code)
-
-
 class FileAnalyzer(object):
 
     def __init__(self, extensions = []):
@@ -562,8 +564,8 @@ class FileAnalyzer(object):
             sys.stderr.write("Error: Fail to read source file '%s'"%filename)
 
     def analyze_source_code(self, filename, code):
-        tokens = generate_tokens(code)
         context = CodeInfoContext(filename)
+        tokens = context.reader.generate_tokens(code)
         for processor in self.processors:
             tokens = processor.extend_tokens(tokens, context)
         return context.fileinfo

@@ -115,6 +115,7 @@ def b():
 
     def test_comment_is_not_counted_in_nloc(self):
         def function_with_comments():
+
             # comment
             pass
         functions = get_python_function_list(inspect.getsource(function_with_comments))
@@ -148,8 +149,17 @@ def b():
         functions = get_python_function_list(code)
         self.assertEqual(9, functions[0].cyclomatic_complexity)
 
+    def test_block_string_is_one_token(self):
+        code =  'def a():\n' + \
+                "    a = '''\n" +\
+                "a b c d e f g h i'''\n"+\
+                "    return a\n"
+        functions = get_python_function_list(code)
+        self.assertEqual(9, functions[0].token_count)
+        self.assertEqual(4, functions[0].end_line)
+
     #global complexity
-    #block string literal
+    #docstring
 
 
 def top_level_function_for_test():

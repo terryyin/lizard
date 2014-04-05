@@ -12,6 +12,10 @@ class PythonReader(CodeReader):
         self.current_indent = 0
         self.leading_space = True
 
+    @staticmethod
+    def generate_tokens(source_code):
+        return CodeReader.generate_tokens(source_code, r"|\'\'\'.*?\'\'\'")
+
     def preprocess(self, tokens, context):
         for token in tokens:
             if token != '\n':
