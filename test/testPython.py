@@ -46,6 +46,15 @@ class Test_parser_for_Python(unittest.TestCase):
         functions = get_python_function_list(inspect.getsource(top_level_function_for_test))
         self.assertEqual(1, len(functions))
 
+    def test_2_top_level_functions(self):
+        print "test 2 levels"
+        functions = get_python_function_list('''
+def a():pass
+def b():pass
+''')
+        self.assertEqual(2, len(functions))
+        self.assertEqual("a", functions[0].name)
+
     def test_2_functions(self):
         class namespace4:
             def function1(a, b):
@@ -105,6 +114,9 @@ class Test_parser_for_Python(unittest.TestCase):
 
     #handle comments
     #global complexity
+    #blank line with spaces
+    #tabs
+    #block string literal
 
 
 def top_level_function_for_test():

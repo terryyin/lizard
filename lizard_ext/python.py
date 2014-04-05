@@ -13,11 +13,11 @@ class PythonReader(CodeReader):
 
     def preprocess(self, tokens, context):
         for token in tokens:
-            if token.isspace() and token != '\n':
+            if token != '\n':
                 if self.newline:
-                    self._close_functions(len(token))
-            else:
-                self.newline = token == '\n'
+                    self._close_functions(len(token) if token.isspace() else 0)
+            self.newline = token == '\n'
+            if not token.isspace() or token == '\n':
                 yield token
 
     def _GLOBAL(self, token):
