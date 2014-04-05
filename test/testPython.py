@@ -158,6 +158,11 @@ def b():
         self.assertEqual(9, functions[0].token_count)
         self.assertEqual(4, functions[0].end_line)
 
+    def test_block_string_with_double_quotes(self):
+        code = 'def f(): """block string"""'
+        functions = get_python_function_list(code)
+        self.assertEqual(5, functions[0].token_count)
+
     #global complexity
     #docstring
 

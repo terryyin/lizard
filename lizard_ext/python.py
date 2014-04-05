@@ -14,7 +14,7 @@ class PythonReader(CodeReader):
 
     @staticmethod
     def generate_tokens(source_code):
-        return CodeReader.generate_tokens(source_code, r"|\'\'\'.*?\'\'\'")
+        return CodeReader.generate_tokens(source_code, r"|\'\'\'.*?\'\'\'" + r'|\"\"\".*?\"\"\"')
 
     def preprocess(self, tokens, context):
         for token in tokens:
