@@ -1,7 +1,6 @@
-from lizard import CodeReader
+from lizard import CodeReader, CCppCommentsMixin
 
-
-class JavaScriptReader(CodeReader):
+class JavaScriptReader(CodeReader,  CCppCommentsMixin):
 
     ext = ['js']
 

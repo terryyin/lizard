@@ -4,21 +4,34 @@ from lizard import CodeReader
 class PythonReader(CodeReader):
 
     ext = ['py']
+    conditions = set(['if', 'for', 'while', 'and', 'or', 'elif', 'except', 'finally'])
 
     def __init__(self):
         self._state = self._GLOBAL
         self.function_stack = []
         self.current_indent = 0
-        self.newline = True
+        self.leading_space = True
 
     def preprocess(self, tokens, context):
         for token in tokens:
             if token != '\n':
-                if self.newline:
-                    self._close_functions(len(token) if token.isspace() else 0)
-            self.newline = token == '\n'
+                if self.leading_space:
+                    if token.isspace():
+                        self.current_indent = len(token.replace('\t', ' ' * 8))
+                    else:
+                        if not token.startswith('#'):
+                            self._close_functions()
+                        self.leading_space = False
+            else:
+                self.leading_space = True
+                self.current_indent = 0
             if not token.isspace() or token == '\n':
                 yield token
+
+    @staticmethod
+    def get_comment_from_token(token):
+        if token.startswith("#"):
+            return token[1:]
 
     def _GLOBAL(self, token):
         if token == 'def':
@@ -41,10 +54,10 @@ class PythonReader(CodeReader):
         self.context.ADD_TO_LONG_FUNCTION_NAME(" " + token)
 
     def eof(self):
-        self._close_functions(0)
+        self.current_indent = 0
+        self._close_functions()
 
-    def _close_functions(self, new_indent):
-        self.current_indent = new_indent
+    def _close_functions(self):
         while self.context.current_function.indent >= self.current_indent:
             endline = self.context.current_function.end_line
             self.context.END_OF_FUNCTION()

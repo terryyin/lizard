@@ -48,8 +48,10 @@ class Test_parser_for_Python(unittest.TestCase):
 
     def test_2_top_level_functions(self):
         functions = get_python_function_list('''
-def a():pass
-def b():pass
+def a():
+    pass
+def b():
+    pass
 ''')
         self.assertEqual(2, len(functions))
         self.assertEqual("a", functions[0].name)
@@ -105,16 +107,48 @@ def b():pass
 
     def test_one_line_functions(self):
         class namespace8:
-            def a():pass
-            def b():pass
+            def a( ):pass
+            def b( ):pass
         functions = get_python_function_list(inspect.getsource(namespace8))
         self.assertEqual("a", functions[0].name)
         self.assertEqual("b", functions[1].name)
 
-    #handle comments
+    def test_comment_is_not_counted_in_nloc(self):
+        def function_with_comments():
+            # comment
+            pass
+        functions = get_python_function_list(inspect.getsource(function_with_comments))
+        self.assertEqual(2, functions[0].nloc)
+
+    def test_odd_blank_line(self):
+        code =  "class c:\n" + \
+                "    def f():\n" +\
+                "  \n" +\
+                "         pass\n"
+        functions = get_python_function_list(code)
+        self.assertEqual(4, functions[0].end_line)
+
+    def test_odd_line_with_comment(self):
+        code =  "class c:\n" + \
+                "    def f():\n" +\
+                "  #\n" +\
+                "         pass\n"
+        functions = get_python_function_list(code)
+        self.assertEqual(4, functions[0].end_line)
+
+    def test_tab_is_same_as_8_spaces(self):
+        code =  ' ' * 7 + "def a():\n" + \
+                '\t'    +  "pass\n"
+        functions = get_python_function_list(code)
+        self.assertEqual(2, functions[0].end_line)
+
+    def test_if_elif_and_or_for_while_except_finally(self):
+        code =  'def a():\n' + \
+                '    if elif and or for while except finally\n'
+        functions = get_python_function_list(code)
+        self.assertEqual(9, functions[0].cyclomatic_complexity)
+
     #global complexity
-    #blank line with spaces
-    #tabs
     #block string literal
 
 

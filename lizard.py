@@ -223,11 +223,13 @@ class Preprocessor(object):
 class CommentCounter(object):
 
     def extend_tokens(self, tokens, context):
+        get_comment = context.reader.get_comment_from_token
         for token in tokens:
-            if token.startswith("/*") or token.startswith("//"):
-                if len(token.splitlines()) > 1:
+            comment = get_comment(token)
+            if comment is not None:
+                if len(comment.splitlines()) > 1:
                     yield '\n'
-                if token[2:].strip().startswith("#lizard forgive"):
+                if comment.strip().startswith("#lizard forgive"):
                     context.forgive = True
             else:
                 yield token
@@ -299,12 +301,12 @@ class ConditionCounter(object):
     FUNCTION_INFO_PART = "cyclomatic_complexity"
     conditions = set(['if', 'for', 'while', '&&', '||', '?', 'catch', 'case'])
 
-    def is_condition(self, token):
-        return token in self.conditions
-
     def extend_tokens(self, tokens, context):
+        conditions = \
+                context.reader.conditions if hasattr(context.reader, "conditions")\
+                else self.conditions
         for token in tokens:
-            if self.is_condition(token):
+            if token in conditions:
                 context.CONDITION()
             yield token
 
@@ -348,13 +350,20 @@ class CodeReader(object):
     def eof(self): pass
 
 
+class CCppCommentsMixin(object):
+    @staticmethod
+    def get_comment_from_token(token):
+        if token.startswith("/*") or token.startswith("//"):
+            return token[2:]
+
+
 try: # lizard.py can run as a stand alone python script, without the extensions
     from lizard_ext import JavaScriptReader
     from lizard_ext import PythonReader
 except:
     pass
 
-class CLikeReader(CodeReader):
+class CLikeReader(CodeReader, CCppCommentsMixin):
     '''
     This is the reader for C, C++ and Java.
     '''
