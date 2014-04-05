@@ -8,7 +8,6 @@ class PythonReader(CodeReader):
     def __init__(self):
         self._state = self._GLOBAL
         self.function_stack = []
-        self.function_indent = -1
         self.current_indent = 0
         self.newline = True
 
@@ -16,10 +15,7 @@ class PythonReader(CodeReader):
         for token in tokens:
             if token.isspace() and token != '\n':
                 if self.newline:
-                    self.current_indent = len(token)
-                    if self.current_indent <= self.function_indent:
-                        self.context.END_OF_FUNCTION()
-                        self.function_indent = -1
+                    self._close_functions(len(token))
             else:
                 self.newline = token == '\n'
                 yield token
@@ -32,7 +28,7 @@ class PythonReader(CodeReader):
         if token != '(':
             self.function_stack.append(self.context.current_function)
             self.context.START_NEW_FUNCTION(token)
-            self.function_indent = self.current_indent
+            self.context.current_function.indent = self.current_indent
         else:
             self._state = self._DEC
 
@@ -45,5 +41,12 @@ class PythonReader(CodeReader):
         self.context.ADD_TO_LONG_FUNCTION_NAME(" " + token)
 
     def eof(self):
-        if self.function_indent >= 0:
+        self._close_functions(0)
+
+    def _close_functions(self, new_indent):
+        self.current_indent = new_indent
+        while self.context.current_function.indent >= self.current_indent:
+            endline = self.context.current_function.end_line
             self.context.END_OF_FUNCTION()
+            self.context.current_function = self.function_stack.pop()
+            self.context.current_function.end_line = endline

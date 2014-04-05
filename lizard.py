@@ -132,6 +132,7 @@ class FunctionInfo(object):
         self.start_line = start_line
         self.end_line = start_line
         self.parameter_count = 0
+        self.indent = -1
 
     def add_to_function_name(self, app):
         self.name += app

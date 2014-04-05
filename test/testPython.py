@@ -53,8 +53,58 @@ class Test_parser_for_Python(unittest.TestCase):
             def function2(a, b):
                 pass
         functions = get_python_function_list(inspect.getsource(namespace4))
-        self.assertEqual("function1", functions[0].name)
         self.assertEqual(2, len(functions))
+
+    def test_nested_functions(self):
+        class namespace5:
+            def function1(a, b):
+                def function2(a, b):
+                    pass
+                a = 1 if b == 2 else 3
+        functions = get_python_function_list(inspect.getsource(namespace5))
+        self.assertEqual(2, len(functions))
+        self.assertEqual("function2", functions[0].name)
+        self.assertEqual(4, functions[0].end_line)
+        self.assertEqual("function1", functions[1].name)
+        self.assertEqual(5, functions[1].end_line)
+        self.assertEqual(2, functions[1].cyclomatic_complexity)
+
+    def test_nested_functions_ended_at_eof(self):
+        class namespace6:
+            def function1(a, b):
+                def function2(a, b):
+                    pass
+        functions = get_python_function_list(inspect.getsource(namespace6))
+        self.assertEqual(2, len(functions))
+        self.assertEqual("function2", functions[0].name)
+        self.assertEqual(4, functions[0].end_line)
+        self.assertEqual("function1", functions[1].name)
+        self.assertEqual(4, functions[1].end_line)
+
+    def test_nested_functions_ended_at_same_line(self):
+        class namespace7:
+            def function1(a, b):
+                def function2(a, b):
+                    pass
+            def function3():
+                pass
+        functions = get_python_function_list(inspect.getsource(namespace7))
+        self.assertEqual(3, len(functions))
+        self.assertEqual("function2", functions[0].name)
+        self.assertEqual(4, functions[0].end_line)
+        self.assertEqual("function1", functions[1].name)
+        self.assertEqual(4, functions[1].end_line)
+
+    def test_one_line_functions(self):
+        class namespace8:
+            def a():pass
+            def b():pass
+        functions = get_python_function_list(inspect.getsource(namespace8))
+        self.assertEqual("a", functions[0].name)
+        self.assertEqual("b", functions[1].name)
+
+    #handle comments
+    #global complexity
 
 
 def top_level_function_for_test():
