@@ -47,7 +47,6 @@ class Test_parser_for_Python(unittest.TestCase):
         self.assertEqual(1, len(functions))
 
     def test_2_top_level_functions(self):
-        print "test 2 levels"
         functions = get_python_function_list('''
 def a():pass
 def b():pass
