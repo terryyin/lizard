@@ -8,20 +8,20 @@ class StreamStdoutTestCase(unittest.TestCase):
     def setUp(self):
         self.savedStdout = sys.stdout 
         sys.stdout = self.StreamForTest()
-    
+
     def tearDown(self):
         sys.stdout = self.savedStdout
 
     class StreamForTest:
-        
+
         def __init__(self):
             self.stream = ""
-            
+
         def write(self, x):
             self.stream += str(x)
-            
+
         def __getattr__(self, attr):
-            return getattr(self.stream, attr)    
+            return getattr(self.stream, attr)
 
 class TestFunctionOutput(StreamStdoutTestCase):
 
@@ -52,7 +52,7 @@ class TestFunctionOutput(StreamStdoutTestCase):
         self.assertEquals("       0     16      1      0 foo@100-100@FILENAME", sys.stdout.stream.splitlines()[3])
 
 class TestWarningOutput(StreamStdoutTestCase):
-        
+
     def test_should_have_header_when_warning_only_is_off(self):
         option = Mock(warnings_only=False, CCN=15, extensions = [])
         print_warnings(option, [])
@@ -112,7 +112,7 @@ class TestFileOutput(StreamStdoutTestCase):
                              FileInformation("FILENAME2", 123, [])], Mock(warnings_only=False, extensions=[]))
         self.assertEqual(1, sys.stdout.stream.count("FILENAME1"))
 
-    
+
 class TestAllOutput(StreamStdoutTestCase):
     def test_print_extension_results(self):
 
@@ -161,13 +161,12 @@ class TestAllOutput(StreamStdoutTestCase):
 
 import xml.etree.ElementTree as ET
 class TestXMLOutput(unittest.TestCase):
-    
     fun = FunctionInfo("foo", 100)
     fun.cyclomatic_complexity = 16
     file_infos = [FileInformation('f1.c', 1, [fun])]
     option = Mock(CCN=15, number = 0, extensions=[])
     xml = XMLFormatter().xml_output(file_infos, option)
-    
+
     def test_xml_output(self):
         root = ET.fromstring(self.xml)
         item = root.findall('''./measure[@type="Function"]/item[0]''')[0]
@@ -175,5 +174,3 @@ class TestXMLOutput(unittest.TestCase):
 
     def test_xml_stylesheet(self):
         self.assertIn('''<?xml-stylesheet type="text/xsl" href="https://raw.github.com/terryyin/lizard/master/lizard.xsl"?>''', self.xml)
-        
-        
