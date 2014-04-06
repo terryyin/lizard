@@ -87,10 +87,6 @@ class IntegrationTests(unittest.TestCase):
         self.runApplicationWithArgv(['lizard'])
         self.assertEqual(7, self.fileInfos[0].function_list[0].cyclomatic_complexity)
 
-    def test_not_with_preprocessor_counted_in_CCN(self):
-        self.runApplicationWithArgv(['lizard', '-P'])
-        self.assertEqual(6, self.fileInfos[0].function_list[0].cyclomatic_complexity)
-
     def test_using_the_WordCount_plugin(self):
         self.runApplicationWithArgv(['lizard', '-EWordCount'])
         self.assertEqual(1, self.fileInfos[0].wordCount["foo"])

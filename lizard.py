@@ -42,78 +42,95 @@ def analyze(paths, exclude_pattern=[], threads=1, extensions=[]):
 def createCommandLineParser(prog=None):
     from argparse import ArgumentParser
     parser = ArgumentParser(prog=prog)
-    parser.add_argument('paths', nargs='*', default=['.'], help='list of the filename/paths.')
-    parser.add_argument('--version', action='version', version=VERSION)
-    parser.add_argument("-V", "--verbose",
-            help="Output in verbose mode (long function name)",
-            action="store_true",
-            dest="verbose",
-            default=False)
-    parser.add_argument("-C", "--CCN",
-            help =  "Threshold for cyclomatic complexity number warning. "+
-                    "The default value is %d. Functions with CCN bigger than this number will generate warning" % DEFAULT_CCN_THRESHOLD,
-            action="store",
-            type=int,
-            dest="CCN",
-            default=DEFAULT_CCN_THRESHOLD)
-    parser.add_argument("-a", "--arguments",
-            help="Limit for number of parameters",
-            action="store",
-            type=int,
-            dest="arguments",
-            default=100)
-    parser.add_argument("-w", "--warnings_only",
-            help="Show warnings only, using clang/gcc's warning format for printing warnings. http://clang.llvm.org/docs/UsersManual.html#cmdoption-fdiagnostics-format",
-            action="store_true",
-            dest="warnings_only",
-            default=False)
-    parser.add_argument("-i", "--ignore_warnings",
-            help="If the number of warnings is equal or less than the number, the tool will exit normally, otherwize it will generate error. Useful in makefile when improving legacy code.",
-            action="store",
-            type=int,
-            dest="number",
-            default=0)
-    parser.add_argument("-x", "--exclude",
-            help="Exclude files that match this pattern. * matches everything, ? matches any single characoter, \"./folder/*\" exclude everything in the folder, recursively. Multiple patterns can be specified. Don't forget to add \"\" around the pattern.",
-            action="append",
-            dest="exclude",
-            default=[])
-    parser.add_argument("-X", "--xml",
-            help="Generate XML in cppncss style instead of the normal tabular output. Useful to generate report in Jenkins server",
-            action="store_true",
-            dest="xml",
-            default=None)
-    parser.add_argument("-P", "--no_preprocessor_count",
-            help="By default, a #if will also increase the complexity. Adding this option to ignore them",
-            action="store_true",
-            dest="no_preprocessor_count",
-            default=False)
-    parser.add_argument("-t", "--working_threads",
-            help="number of working threads. The default value is 1.",
-            action="store",
-            type=int,
-            dest="working_threads",
-            default=1)
-    parser.add_argument("-e", "--display_fn_end_line",
-            help="display function end line number in addition to start line number. Will be made default in the next release",
-            action="store_true",
-            dest="display_fn_end_line",
-            default=False)
-    parser.add_argument("-m", "--modified",
-            help="Calculate modified cyclomatic complexity number",
-            action="store_true",
-            dest="switchCasesAsOneCondition",
-            default=False)
-    parser.add_argument("-E", "--extension",
-            help="under construction...", #"Use extension. Can be WordCount.",
-            action="append",
-            dest="extensions",
-            default=[])
-    parser.add_argument("-s", "--sort",
-            help="Sort the warning with field. The field can be nloc, cyclomatic_complexity, token_count, parameter_count, etc. Or an customized file.",
-            action="append",
-            dest="sorting",
-            default=[])
+    parser.add_argument(
+        'paths',
+        nargs='*',
+        default=['.'],
+        help='list of the filename/paths.')
+    parser.add_argument(
+        '--version',
+        action='version',
+        version=VERSION)
+    parser.add_argument(
+        "-V", "--verbose",
+        help="Output in verbose mode (long function name)",
+        action="store_true",
+        dest="verbose",
+        default=False)
+    parser.add_argument(
+        "-C", "--CCN",
+        help="Threshold for cyclomatic complexity number warning. " +
+             "The default value is %d. " % DEFAULT_CCN_THRESHOLD +
+             "Functions with CCN bigger than it will generate warning",
+        action="store",
+        type=int,
+        dest="CCN",
+        default=DEFAULT_CCN_THRESHOLD)
+    parser.add_argument(
+        "-a", "--arguments",
+        help="Limit for number of parameters",
+        action="store",
+        type=int,
+        dest="arguments",
+        default=100)
+    parser.add_argument(
+        "-w", "--warnings_only",
+        help="Show warnings only, using clang/gcc's warning format for " +
+             "printing warnings. http://cla" +
+             "ng.llvm.org/docs/UsersManual.html#cmdoption-fdiagnostics-format",
+        action="store_true",
+        dest="warnings_only",
+        default=False)
+    parser.add_argument(
+        "-i", "--ignore_warnings",
+        help="If the number of warnings is equal or less than the number, the tool will exit normally, otherwize it will generate error. Useful in makefile when improving legacy code.",
+        action="store",
+        type=int,
+        dest="number",
+        default=0)
+    parser.add_argument(
+        "-x", "--exclude",
+        help="Exclude files that match this pattern. * matches everything, ? matches any single characoter, \"./folder/*\" exclude everything in the folder, recursively. Multiple patterns can be specified. Don't forget to add \"\" around the pattern.",
+        action="append",
+        dest="exclude",
+        default=[])
+    parser.add_argument(
+        "-X", "--xml",
+        help="Generate XML in cppncss style instead of the normal tabular output. Useful to generate report in Jenkins server",
+        action="store_true",
+        dest="xml",
+        default=None)
+    parser.add_argument(
+        "-t", "--working_threads",
+        help="number of working threads. The default value is 1.",
+        action="store",
+        type=int,
+        dest="working_threads",
+        default=1)
+    parser.add_argument(
+        "-e", "--display_fn_end_line",
+        help="display function end line number in addition to start line number. Will be made default in the next release",
+        action="store_true",
+        dest="display_fn_end_line",
+        default=False)
+    parser.add_argument(
+        "-m", "--modified",
+        help="Calculate modified cyclomatic complexity number",
+        action="store_true",
+        dest="switchCasesAsOneCondition",
+        default=False)
+    parser.add_argument(
+        "-E", "--extension",
+        help="under construction...", #"Use extension. Can be WordCount.",
+        action="append",
+        dest="extensions",
+        default=[])
+    parser.add_argument(
+        "-s", "--sort",
+        help="Sort the warning with field. The field can be nloc, cyclomatic_complexity, token_count, parameter_count, etc. Or an customized file.",
+        action="append",
+        dest="sorting",
+        default=[])
 
     parser.usage = "lizard [options] [PATH or FILE] [PATH] ... "
     parser.description = __doc__
@@ -298,7 +315,7 @@ class ConditionCounter(object):
 
     FUNCTION_CAPTION = "  CCN  "
     FUNCTION_INFO_PART = "cyclomatic_complexity"
-    conditions = set(['if', 'for', 'while', '&&', '||', '?', 'catch', 'case'])
+    conditions = set(['if', 'for', 'while', '&&', '||', '?', 'catch', 'case', '#if', '#ifdef', '#elif'])
 
     def extend_tokens(self, tokens, context):
         conditions = \
@@ -318,15 +335,6 @@ class SwitchCasesAsOneConditionCounter(object):
                 context.CONDITION()
             elif token == 'case':
                 context.CONDITION(-1)
-            yield token
-
-
-class PreprocessorConditionCounter(object):
-
-    def extend_tokens(self, tokens, context):
-        for token in tokens:
-            if token in ('#if', '#ifdef', '#elif'):
-                context.CONDITION()
             yield token
 
 
@@ -935,7 +943,7 @@ def parse_args(argv):
 
     options = createCommandLineParser(argv[0]).parse_args(args=argv[1:])
     options.whitelist = get_whitelist()
-    options.extensions = get_extensions(options.extensions, not options.no_preprocessor_count, options.switchCasesAsOneCondition)
+    options.extensions = get_extensions(options.extensions, options.switchCasesAsOneCondition)
     function_parts = [getattr(ext, 'FUNCTION_INFO_PART') for ext in options.extensions
             if hasattr(ext, 'FUNCTION_INFO_PART')]
     for sort_factor in options.sorting:
@@ -946,7 +954,7 @@ def parse_args(argv):
             sys.exit(2)
     return options
 
-def get_extensions(extension_names, countPreprocessor = True, switchCaseAsOneCondition = False):
+def get_extensions(extension_names, switchCaseAsOneCondition = False):
     from importlib import import_module
     extensions = [
         Preprocessor(),
@@ -957,8 +965,6 @@ def get_extensions(extension_names, countPreprocessor = True, switchCaseAsOneCon
         FunctionParser(),
         ParameterCounter()
         ]
-    if countPreprocessor:
-        extensions.append(PreprocessorConditionCounter())
     if switchCaseAsOneCondition:
         extensions.append(SwitchCasesAsOneConditionCounter())
 
