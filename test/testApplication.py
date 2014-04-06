@@ -3,7 +3,10 @@ from test.mock import patch
 import lizard
 from lizard import lizard_main
 import os, sys
-from StringIO import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 @patch('lizard.open', create=True)
 @patch.object(os, 'walk')
