@@ -17,21 +17,22 @@
 """
 lizard is a simple code complexity analyzer without caring about the C/C++
 header files or Java imports.
-Please find the README.md for more information.
+Please find the README.rst for more information.
 """
 VERSION = "1.8.0"
 
 import itertools
-import re, sys
+import re
+import sys
 
 
 DEFAULT_CCN_THRESHOLD = 15
 
-
 def analyze(paths, options):
-    ''' returns an iterator of file infomation.
     '''
-    files = FilesFilter(options.exclude, options.duplicates).getFileNames(paths)
+    returns an iterator of file infomation.
+    '''
+    files = get_all_source_files(options.exclude, paths)
     fileAnalyzer = FileAnalyzer(options.extensions)
     return mapFilesToAnalyzer(files, fileAnalyzer, options.working_threads)
 
@@ -90,11 +91,6 @@ def createCommandLineParser(prog=None):
             type=int,
             dest="working_threads",
             default=1)
-    parser.add_argument("-d", "--find_duplicates",
-            help="find and skip analysis for identical files. Will be made default in the next release",
-            action="store_true",
-            dest="duplicates",
-            default=False)
     parser.add_argument("-e", "--display_fn_end_line",
             help="display function end line number in addition to start line number. Will be made default in the next release",
             action="store_true",
@@ -886,52 +882,45 @@ import os
 import fnmatch
 import hashlib
 
-class FilesFilter(object):
+def md5HashFile(full_path_name):
+    ''' return md5 hash of a file '''
+    with open(full_path_name, mode='r') as source_file:
+        if sys.version_info[0] == 3:
+            code_md5 = hashlib.md5(source_file.read().encode('utf-8'))
+        else:
+            code_md5 = hashlib.md5(source_file.read())
+    return code_md5.hexdigest()
 
-    def __init__(self, exclude_patterns, check_duplicates):
-        self.exclude_patterns = exclude_patterns
-        self.check_duplicates = check_duplicates
-        self.hash_set = set()
+def get_all_source_files(exclude_patterns, paths):
+    '''
+    Function counts md5 hash for the given file 
+    and checks if it isn't a duplicate using set 
+    of hashes for previous files
+    '''
+    hash_set = set()
 
-    def getFileNames(self, paths):
+    def _checkFile(pathname):
+        return CodeReader.get_reader(pathname) and \
+            all(not fnmatch.fnmatch(pathname, p) for p in exclude_patterns) and \
+            _notDuplicate(pathname)
+
+    def _notDuplicate(full_path_name):
+        fhash = md5HashFile(full_path_name)
+        if fhash and fhash not in hash_set:
+            hash_set.add(fhash)
+            return True
+
+    def all_listed_files(paths):
         for SRC_DIR in paths:
             if os.path.isfile(SRC_DIR) :
                 yield SRC_DIR
             else:
                 for root, _, files in os.walk(SRC_DIR, topdown=False):
                     for filename in files:
-                        full_path_name = os.path.join(root, filename)
-                        if self._checkFile(full_path_name):
-                            yield full_path_name
+                        yield os.path.join(root, filename)
 
-    def _checkFile(self, full_path_name):
-        if self._notExluded(full_path_name):
-            if self.check_duplicates:
-                return self._notDuplicate(full_path_name)
-            else:
-                return True
-
-    def _md5HashFile(self, full_path_name):
-        ''' return md5 hash of a file '''
-        with open(full_path_name, mode='r') as source_file:
-            if sys.version_info[0] == 3:
-                code_md5 = hashlib.md5(source_file.read().encode('utf-8'))
-            else:
-                code_md5 = hashlib.md5(source_file.read())
-        return code_md5.hexdigest()
-
-    def _notExluded(self, str_to_match):
-        return CodeReader.get_reader(str_to_match) and \
-            all(not fnmatch.fnmatch(str_to_match, p) for p in self.exclude_patterns)
-
-    def _notDuplicate(self, full_path_name):
-        ''' Function counts md5 hash for the given file 
-            and checks if it isn't a duplicate using set 
-            of hashes for previous files '''
-        fhash = self._md5HashFile(full_path_name)
-        if fhash and fhash not in self.hash_set:
-            self.hash_set.add(fhash)
-            return True
+    return (fn for fn in all_listed_files(paths)\
+            if fn in paths or _checkFile(fn))
 
 def parse_args(argv):
 
@@ -976,7 +965,8 @@ def get_extensions(extension_names, countPreprocessor = True, switchCaseAsOneCon
 
 analyze_file = FileAnalyzer(get_extensions([]))
 
-def lizard_main(argv =  sys.argv):
+
+def lizard_main(argv=sys.argv):
     options = parse_args(argv)
     printer = print_xml if options.xml else print_result
     r = analyze(options.paths, options)

@@ -1,4 +1,5 @@
 from .testlizard import *
+from .testFilesFilter import *
 from .testTokenizer import *
 from .testApplication import *
 from .testOutput import *

@@ -210,10 +210,13 @@ before a function it will suppress the warning for that function.
 
 Wishlist (The features that will come in the near future)
 ---------------------------------------------------------
+-  Support Python & Ruby
 
 Change Logs
 -----------
 
+-  2014.04.06 Remove option -d (ignore duplicated content), and make it
+  default
 -  2014.03.31 Support JavaScript!
 -  2014.03.22 Change the -v (--verbose) option to -V. This is because -v
    will be used for --version.
