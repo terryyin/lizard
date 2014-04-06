@@ -28,13 +28,16 @@ import sys
 
 DEFAULT_CCN_THRESHOLD = 15
 
-def analyze(paths, options):
+
+def analyze(paths, exclude_pattern=[], threads=1, extensions=[]):
     '''
-    returns an iterator of file infomation.
+    returns an iterator of file infomation that contains function
+    statistics.
     '''
-    files = get_all_source_files(options.exclude, paths)
-    fileAnalyzer = FileAnalyzer(options.extensions)
-    return mapFilesToAnalyzer(files, fileAnalyzer, options.working_threads)
+    files = get_all_source_files(exclude_pattern, paths)
+    fileAnalyzer = FileAnalyzer(extensions)
+    return mapFilesToAnalyzer(files, fileAnalyzer, threads)
+
 
 def createCommandLineParser(prog=None):
     from argparse import ArgumentParser
@@ -969,7 +972,7 @@ analyze_file = FileAnalyzer(get_extensions([]))
 def lizard_main(argv=sys.argv):
     options = parse_args(argv)
     printer = print_xml if options.xml else print_result
-    r = analyze(options.paths, options)
+    r = analyze(options.paths, options.exclude, options.working_threads, options.extensions)
     printer(r, options)
 
 if __name__ == "__main__":
