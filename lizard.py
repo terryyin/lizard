@@ -40,8 +40,8 @@ def analyze(paths, exclude_pattern=[], threads=1, extensions=[]):
     statistics.
     '''
     files = get_all_source_files(exclude_pattern, paths)
-    fileAnalyzer = FileAnalyzer(extensions)
-    return mapFilesToAnalyzer(files, fileAnalyzer, threads)
+    file_analyzer = FileAnalyzer(extensions)
+    return map_files_to_analyzer(files, file_analyzer, threads)
 
 
 def createCommandLineParser(prog=None):
@@ -904,22 +904,22 @@ class XMLFormatter(object):
         return item
 
 
-def print_xml(r, options):
-        print(XMLFormatter().xml_output(list(r), options))
+def print_xml(results, options):
+    print(XMLFormatter().xml_output(list(results), options))
 
 
 def get_map_method(working_threads):
     try:
         import multiprocessing
-        it = multiprocessing.Pool(processes=working_threads)
-        return it.imap_unordered
+        pool = multiprocessing.Pool(processes=working_threads)
+        return pool.imap_unordered
     except ImportError:
         return itertools.imap
 
 
-def mapFilesToAnalyzer(files, fileAnalyzer, working_threads):
+def map_files_to_analyzer(files, file_analyzer, working_threads):
     mapmethod = get_map_method(working_threads)
-    return mapmethod(fileAnalyzer, files)
+    return mapmethod(file_analyzer, files)
 
 
 def md5_hash_file(full_path_name):

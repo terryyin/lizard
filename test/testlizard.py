@@ -4,7 +4,7 @@
 import unittest
 import sys
 from mock import patch, Mock
-from lizard import analyze_file, CLikeReader, mapFilesToAnalyzer, FunctionInfo, analyze_file
+from lizard import CLikeReader, map_files_to_analyzer, FunctionInfo, analyze_file
 
 
 def analyzer_mock(filename):
@@ -15,34 +15,34 @@ class Test_analyze_files(unittest.TestCase):
         call_count = 0
         def analyzer(filename):
             call_count += 1
-        mapFilesToAnalyzer([], analyzer, 1)
+        map_files_to_analyzer([], analyzer, 1)
         self.assertEqual(0, call_count)
 
     def test_NoFilesMultipleThread(self):
         call_count = 0
         def analyzer(filename):
             call_count += 1
-        mapFilesToAnalyzer([], analyzer, 2)
+        map_files_to_analyzer([], analyzer, 2)
         self.assertEqual(0, call_count)
         
     def test_OneFile(self):
         analyzer = analyzer_mock
-        r = mapFilesToAnalyzer(["filename"], analyzer, 1)
+        r = map_files_to_analyzer(["filename"], analyzer, 1)
         self.assertEqual(["filename"], [x for x in r])
         
     def test_OneFileMultipleThread(self):
         analyzer = analyzer_mock
-        r = mapFilesToAnalyzer(["filename"], analyzer, 2)
+        r = map_files_to_analyzer(["filename"], analyzer, 2)
         self.assertEqual(["filename"], [x for x in r])
     
     def test_MoreFiles(self):
         analyzer = analyzer_mock
-        r = mapFilesToAnalyzer(["f1", "f2"], analyzer, 1)
+        r = map_files_to_analyzer(["f1", "f2"], analyzer, 1)
         self.assertEqual(["f1", "f2"], [x for x in r])
 
     def test_MoreFilesMultipleThread(self):
         analyzer = analyzer_mock
-        r = mapFilesToAnalyzer(["f1", "f2"], analyzer, 2)
+        r = map_files_to_analyzer(["f1", "f2"], analyzer, 2)
         self.assertEqual(["f1", "f2"], [x for x in r])
 
 
@@ -54,17 +54,17 @@ class Test_FileAnalyzer(unittest.TestCase):
         
     def test_analyze_c_file(self, mock_open):
         file_handle = mock_open.return_value.read.return_value = "int foo(){haha();\n}"
-        r = mapFilesToAnalyzer(["f1.c"], self.analyzer, 1)
+        r = map_files_to_analyzer(["f1.c"], self.analyzer, 1)
         self.assertEqual(1, len([x for x in r]))
         
     def test_analyze_c_file_with_multiple_thread(self, mock_open):
         file_handle = mock_open.return_value.read.return_value = "int foo(){haha();\n}"
-        r = mapFilesToAnalyzer(["f1.c"], self.analyzer, 2)
+        r = map_files_to_analyzer(["f1.c"], self.analyzer, 2)
         self.assertEqual(1, len([x for x in r]))
     
     def test_fileInfomation(self, mock_open):
         mock_open.return_value.read.return_value = "int foo(){haha();\n}"
-        r = mapFilesToAnalyzer(["f1.c"], self.analyzer, 1)
+        r = map_files_to_analyzer(["f1.c"], self.analyzer, 1)
         fileInfo = list(r)[0]
         self.assertEqual(1, fileInfo.nloc)
         self.assertEqual(2, fileInfo.average_NLOC)
