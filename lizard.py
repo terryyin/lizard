@@ -903,23 +903,20 @@ class XMLFormatter(object):
 
 
 def print_xml(r, options):
-        print (XMLFormatter().xml_output(list(r), options))
+        print(XMLFormatter().xml_output(list(r), options))
 
 
-def get_map_method():
+def get_map_method(working_threads):
     try:
         import multiprocessing
         it = multiprocessing.Pool(processes=working_threads)
         return it.imap_unordered
-    except:
-        try:
-            return itertools.imap
-        except:
-            return map
+    except ImportError:
+        return itertools.imap
 
 
 def mapFilesToAnalyzer(files, fileAnalyzer, working_threads):
-    mapmethod = get_map_method()
+    mapmethod = get_map_method(working_threads)
     return mapmethod(fileAnalyzer, files)
 
 
