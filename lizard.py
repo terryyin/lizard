@@ -19,6 +19,8 @@ lizard is a simple code complexity analyzer without caring about the C/C++
 header files or Java imports.
 Please find the README.rst for more information.
 """
+from __future__ import print_function
+
 VERSION = "1.8.0"
 
 import itertools
