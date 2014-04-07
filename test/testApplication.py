@@ -8,7 +8,7 @@ try:
 except ImportError:
     from io import StringIO
 
-@patch('lizard.md5HashFile')
+@patch('lizard.md5_hash_file')
 @patch('lizard.open', create=True)
 @patch.object(os, 'walk')
 @patch.object(lizard, 'print_result')
@@ -20,17 +20,17 @@ class TestApplication(unittest.TestCase):
     def check_empty_result(self, result, options): 
         self.assertEqual([], list(result))
 
-    def testGetCurrentFolderByDefault(self, print_result, os_walk, mock_open, md5HashFile):
+    def testGetCurrentFolderByDefault(self, print_result, os_walk, mock_open, md5_hash_file):
         print_result.side_effect = self.exhaust_result
         lizard_main(['lizard'])
         os_walk.assert_called_once_with('.', topdown=False)
 
-    def testEmptyResult(self, print_result, os_walk, mock_open, md5HashFile):
+    def testEmptyResult(self, print_result, os_walk, mock_open, md5_hash_file):
         os_walk.return_value = [('.', [], [])]
         print_result.side_effect = self.check_empty_result
         lizard_main(['lizard'])
 
-    def testFilesWithFunction(self, print_result, os_walk, mock_open, md5HashFile):
+    def testFilesWithFunction(self, print_result, os_walk, mock_open, md5_hash_file):
         def check_result(result, options):
             fileInfos = list(result) 
             self.assertEqual(1, len(fileInfos))
@@ -40,7 +40,7 @@ class TestApplication(unittest.TestCase):
         print_result.side_effect = check_result
         lizard_main(['lizard'])
 
-    def testMutipleFilesInArgv(self, print_result, os_walk, mock_open, md5HashFile):
+    def testMutipleFilesInArgv(self, print_result, os_walk, mock_open, md5_hash_file):
         def check_result(result, options):
             fileInfos = list(result) 
             self.assertEqual(1, len(fileInfos))
@@ -71,11 +71,11 @@ class IntegrationTests(unittest.TestCase):
         }
         '''
 
-    @patch('lizard.md5HashFile')
+    @patch('lizard.md5_hash_file')
     @patch('lizard.open', create=True)
     @patch.object(os, 'walk')
     @patch.object(lizard, 'print_result')
-    def runApplicationWithArgv(self, argv, print_result, os_walk, mock_open, md5HashFile):
+    def runApplicationWithArgv(self, argv, print_result, os_walk, mock_open, md5_hash_file):
         def store_result(result, options):
             self.fileInfos = list(result) 
         os_walk.return_value = [('.', [], ['a.cpp'])]

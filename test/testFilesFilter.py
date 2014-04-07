@@ -27,7 +27,7 @@ class Test_Exclude_Patterns(unittest.TestCase):
         files = self.getSourceFiles(["dir/file.log"], [])
         self.assertEqual(["dir/file.log"], list(files))
 
-    @patch('lizard.md5HashFile')
+    @patch('lizard.md5_hash_file')
     @patch.object(os, "walk")
     def test_exclude_file_name(self, mock_os_walk, md5):
         mock_os_walk.return_value = (['.', 

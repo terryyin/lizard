@@ -24,6 +24,9 @@ VERSION = "1.8.0"
 import itertools
 import re
 import sys
+import os
+import fnmatch
+import hashlib
 
 
 DEFAULT_CCN_THRESHOLD = 15
@@ -51,7 +54,8 @@ def createCommandLineParser(prog=None):
                         dest="verbose",
                         default=False)
     parser.add_argument("-C", "--CCN",
-                        help='''Threshold for cyclomatic complexity number warning. The default value is %d.
+                        help='''Threshold for cyclomatic complexity number
+                        warning. The default value is %d.
                         Functions with CCN bigger than it will generate warning
                         ''' % DEFAULT_CCN_THRESHOLD,
                         type=int,
@@ -61,21 +65,24 @@ def createCommandLineParser(prog=None):
                         help="Limit for number of parameters",
                         type=int, dest="arguments", default=100)
     parser.add_argument("-w", "--warnings_only",
-                        help='''Show warnings only, using clang/gcc's warning format for printing warnings.
+                        help='''Show warnings only, using clang/gcc's warning
+                        format for printing warnings.
                         http://clang.llvm.org/docs/UsersManual.html#cmdoption-fdiagnostics-format
                         ''',
                         action="store_true",
                         dest="warnings_only",
                         default=False)
     parser.add_argument("-i", "--ignore_warnings",
-                        help='''If the number of warnings is equal or less than the number,
+                        help='''If the number of warnings is equal or less
+                        than the number,
                         the tool will exit normally, otherwize it will generate
                         error. Useful in makefile for legacy code.''',
                         type=int,
                         dest="number",
                         default=0)
     parser.add_argument("-x", "--exclude",
-                        help='''Exclude files that match this pattern. * matches everything,
+                        help='''Exclude files that match this pattern. * matches
+                        everything,
                         ? matches any single characoter, "./folder/*" exclude
                         everything in the folder recursively. Multiple patterns
                         can be specified. Don't forget to add "" around the
@@ -84,14 +91,15 @@ def createCommandLineParser(prog=None):
                         dest="exclude",
                         default=[])
     parser.add_argument("-X", "--xml",
-                        help='''Generate XML in cppncss style instead of the normal
+                        help='''Generate XML in cppncss style instead of the
                         tabular output. Useful to generate report in Jenkins
                         server''',
                         action="store_true",
                         dest="xml",
                         default=None)
     parser.add_argument("-t", "--working_threads",
-                        help='''number of working threads. The default value is 1. Using a bigger
+                        help='''number of working threads. The default
+                        value is 1. Using a bigger
                         number can fully utilize the CPU and often faster.''',
                         type=int,
                         dest="working_threads",
@@ -130,10 +138,12 @@ class FunctionInfo(object):
         self.start_line = start_line
         self.end_line = start_line
         self.parameter_count = 0
-        self.filename =filename
+        self.filename = filename
         self.indent = -1
 
-    location = property(lambda self: " %(name)s@%(start_line)s-%(end_line)s@%(filename)s" % self.__dict__)
+    location = property(lambda self:
+                        " %(name)s@%(start_line)s-%(end_line)s@%(filename)s"
+                        % self.__dict__)
 
     def add_to_function_name(self, app):
         self.name += app
@@ -151,9 +161,10 @@ class FunctionInfo(object):
             self.parameter_count += 1
 
     def clang_format_warning(self):
-        return  (
-                "%(filename)s:%(start_line)s: warning: %(name)s has %(cyclomatic_complexity)d CCN" +
-                " and %(parameter_count)d params (%(nloc)d NLOC, %(token_count)d tokens)") % self.__dict__
+        return (
+            "%(filename)s:%(start_line)s: warning: %(name)s has" +
+            " %(cyclomatic_complexity)d CCN and %(parameter_count)d" +
+            " params (%(nloc)d NLOC, %(token_count)d tokens)") % self.__dict__
 
 
 class FileInformation(object):
@@ -200,7 +211,8 @@ class CodeInfoContext(object):
 
     def START_NEW_FUNCTION(self, name):
         self.newline = True
-        self.current_function = FunctionInfo(name, self.fileinfo.filename, self.current_line)
+        self.current_function =\
+            FunctionInfo(name, self.fileinfo.filename, self.current_line)
 
     def CONDITION(self, inc=1):
         self.current_function.cyclomatic_complexity += inc
@@ -385,6 +397,7 @@ try:
     The following langauages / extensions will not be supported in
     stand alone script.
     '''
+    # pylint: disable=W0611
     from lizard_ext import JavaScriptReader
     from lizard_ext import PythonReader
 except:
@@ -443,7 +456,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
             self.bracket_level += 1
         elif token in (')', ">"):
             self.bracket_level -= 1
-            if (self.bracket_level == 0):
+            if self.bracket_level == 0:
                 self._state = self._DEC_TO_IMP
         elif self.bracket_level == 1:
             self.context.PARAMETER(token)
@@ -538,7 +551,6 @@ class FunctionParser(object):
     FunctionParser parse source code into functions. This is different from
     language to language. So FunctionParser need a language specific 'reader'
     to actually do the job.
-    TODO: FunctionParser might yield functions in the future.
     '''
     def extend_tokens(self, tokens, context):
         function_reader = context.reader
@@ -629,8 +641,10 @@ def print_function_info_header(extensions):
 
 def get_extended_function_info(fun, extensions):
     return ''.join(
-        str(getattr(fun, ext.FUNCTION_INFO_PART)).rjust( len(ext.FUNCTION_CAPTION))
+        str(getattr(fun, ext.FUNCTION_INFO_PART))
+        .rjust(len(ext.FUNCTION_CAPTION))
         for ext in extensions if hasattr(ext, "FUNCTION_INFO_PART"))
+
 
 def print_function_info(fun, extensions, warnings_only):
     if warnings_only:
@@ -642,9 +656,10 @@ def print_function_info(fun, extensions, warnings_only):
 
 def print_warnings(option, warnings):
     warning_count = 0
-    if type(option.sorting) is type([]) and len(option.sorting) > 0:
+    if isinstance(option.sorting, list) and len(option.sorting) > 0:
         warnings = list(warnings)
-        warnings.sort(reverse = True, key=lambda x: getattr(x, option.sorting[0]))
+        warnings.sort(reverse=True,
+                      key=lambda x: getattr(x, option.sorting[0]))
     if not option.warnings_only:
         print(("\n" +
                "======================================\n" +
@@ -659,9 +674,11 @@ def print_warnings(option, warnings):
 
     return warning_count
 
+
 def print_total(warning_count, saved_result, option):
     file_infos = list(file_info for file_info in saved_result if file_info)
-    all_fun = list(itertools.chain(*(file_info.function_list for file_info in file_infos)))
+    all_fun = list(itertools.chain(*(file_info.function_list
+                   for file_info in file_infos)))
     cnt = len(all_fun)
     if (cnt == 0):
         cnt = 1
@@ -670,21 +687,24 @@ def print_total(warning_count, saved_result, option):
     if (functions_NLOC == 0):
         functions_NLOC = 1
     total_info = (
-                  files_NLOC,
-                  functions_NLOC / cnt,
-                  float(sum([f.cyclomatic_complexity for f in all_fun])) / cnt,
-                  float(sum([f.token_count for f in all_fun])) / cnt,
-                  cnt,
-                  warning_count,
-                  float(warning_count) / cnt,
-                  float(sum([f.nloc for f in all_fun if f.cyclomatic_complexity > option.CCN])) / functions_NLOC
-                  )
+        files_NLOC,
+        functions_NLOC / cnt,
+        float(sum([f.cyclomatic_complexity for f in all_fun])) / cnt,
+        float(sum([f.token_count for f in all_fun])) / cnt,
+        cnt,
+        warning_count,
+        float(warning_count) / cnt,
+        float(sum([f.nloc for f in all_fun
+              if f.cyclomatic_complexity > option.CCN])) / functions_NLOC
+        )
 
     if not option.warnings_only:
-        print("=================================================================================")
-        print("Total nloc  Avg.nloc  Avg CCN  Avg token  Fun Cnt  Warning cnt   Fun Rt   nloc Rt  ")
-        print("--------------------------------------------------------------------------------")
+        print("=" * 90)
+        print("Total nloc  Avg.nloc  Avg CCN  Avg token  Fun Cnt  Warning" +
+              " cnt   Fun Rt   nloc Rt  ")
+        print("-" * 90)
         print("%10d%10d%9.2f%11.2f%9d%13d%10.2f%8.2f" % total_info)
+
 
 def print_and_save_detail_information(allStatistics, option):
     all_functions = []
@@ -707,15 +727,17 @@ def print_and_save_detail_information(allStatistics, option):
         print("NLOC    Avg.NLOC AvgCCN Avg.ttoken  function_cnt    file")
         print("--------------------------------------------------------------")
         for fileStatistics in all_functions:
-            print("%7d%7d%7d%10d%10d     %s" % (
-                            fileStatistics.nloc, 
-                            fileStatistics.average_NLOC, 
-                            fileStatistics.average_CCN, 
-                            fileStatistics.average_token, 
-                            len(fileStatistics.function_list), 
-                            fileStatistics.filename))
+            print(
+                "%7d%7d%7d%10d%10d     %s" % (
+                    fileStatistics.nloc,
+                    fileStatistics.average_NLOC,
+                    fileStatistics.average_CCN,
+                    fileStatistics.average_token,
+                    len(fileStatistics.function_list),
+                    fileStatistics.filename))
 
     return all_functions
+
 
 def print_result(r, option):
     all_functions = print_and_save_detail_information(r, option)
@@ -729,12 +751,14 @@ def print_result(r, option):
     if option.number < warning_count:
         sys.exit(1)
 
+
 class XMLFormatter(object):
 
     def xml_output(self, result, options):
-        ''' Thanks for Holy Wen from Nokia Siemens Networks to let me use his code
-            to put the result into xml file that is compatible with cppncss.
-            Jenkens has plugin for cppncss format result to display the diagram.
+        '''
+        Thanks for Holy Wen from Nokia Siemens Networks to let me use his code
+        to put the result into xml file that is compatible with cppncss.
+        Jenkens has plugin for cppncss format result to display the diagram.
         '''
         import xml.dom.minidom
 
@@ -742,7 +766,10 @@ class XMLFormatter(object):
         doc = impl.createDocument(None, "cppncss", None)
         root = doc.documentElement
 
-        pi = doc.createProcessingInstruction('xml-stylesheet','type="text/xsl" href="https://raw.github.com/terryyin/lizard/master/lizard.xsl"')
+        pi = doc.createProcessingInstruction(
+            'xml-stylesheet',
+            'type="text/xsl" ' +
+            'href="https://raw.github.com/terryyin/lizard/master/lizard.xsl"')
         doc.insertBefore(pi, root)
 
         measure = doc.createElement("measure")
@@ -759,17 +786,24 @@ class XMLFormatter(object):
                 Nr += 1
                 total_func_ncss += func.nloc
                 total_func_ccn += func.cyclomatic_complexity
-                measure.appendChild(self._createFunctionItem(doc, Nr, file_name, func, options.verbose))
+                measure.appendChild(
+                    self._createFunctionItem(
+                        doc, Nr, file_name, func, options.verbose))
 
             if Nr != 0:
-                measure.appendChild(self._createLabeledValueItem(doc, 'average', "NCSS", str(total_func_ncss / Nr)))
-                measure.appendChild(self._createLabeledValueItem(doc, 'average', "CCN", str(total_func_ccn / Nr)))
+                measure.appendChild(
+                    self._createLabeledValueItem(
+                        doc, 'average', "NCSS", str(total_func_ncss / Nr)))
+                measure.appendChild(
+                    self._createLabeledValueItem(
+                        doc, 'average', "CCN", str(total_func_ccn / Nr)))
 
         root.appendChild(measure)
 
         measure = doc.createElement("measure")
         measure.setAttribute("type", "File")
-        measure.appendChild(self._createLabels(doc, ["Nr.", "NCSS", "CCN", "Functions"]))
+        measure.appendChild(
+            self._createLabels(doc, ["Nr.", "NCSS", "CCN", "Functions"]))
 
         file_NR = 0
         file_total_ncss = 0
@@ -781,18 +815,20 @@ class XMLFormatter(object):
             file_total_ncss += source_file.nloc
             file_total_ccn += source_file.CCN
             file_total_funcs += len(source_file.function_list)
-            measure.appendChild(self._createFileNode(doc, source_file, file_NR))
+            measure.appendChild(
+                self._createFileNode(doc, source_file, file_NR))
 
         if file_NR != 0:
             fileSummary = [("NCSS", file_total_ncss / file_NR),
                            ("CCN", file_total_ccn / file_NR),
                            ("Functions", file_total_funcs / file_NR)]
             for k, v in fileSummary:
-                measure.appendChild(self._createLabeledValueItem(doc, 'average', k, v))
+                measure.appendChild(
+                    self._createLabeledValueItem(doc, 'average', k, v))
 
         summary = [("NCSS", file_total_ncss),
-                       ("CCN", file_total_ccn ),
-                       ("Functions", file_total_funcs)]
+                   ("CCN", file_total_ccn),
+                   ("Functions", file_total_funcs)]
         for k, v in summary:
             measure.appendChild(self._createLabeledValueItem(doc, 'sum', k, v))
 
@@ -817,9 +853,13 @@ class XMLFormatter(object):
     def _createFunctionItem(self, doc, Nr, file_name, func, verbose):
         item = doc.createElement("item")
         if verbose:
-            item.setAttribute("name", "%s at %s:%s" % (func.long_name, file_name, func.start_line))
+            item.setAttribute(
+                "name", "%s at %s:%s" %
+                (func.long_name, file_name, func.start_line))
         else:
-            item.setAttribute("name", "%s(...) at %s:%s" % (func.name, file_name, func.start_line))
+            item.setAttribute(
+                "name", "%s(...) at %s:%s" %
+                (func.name, file_name, func.start_line))
         value1 = doc.createElement("value")
         text1 = doc.createTextNode(str(Nr))
         value1.appendChild(text1)
@@ -834,13 +874,11 @@ class XMLFormatter(object):
         item.appendChild(value3)
         return item
 
-
     def _createLabeledValueItem(self, doc, name, label, value):
         average_ncss = doc.createElement(name)
         average_ncss.setAttribute("lable", label)
         average_ncss.setAttribute("value", str(value))
         return average_ncss
-
 
     def _createFileNode(self, doc, source_file, file_NR):
         item = doc.createElement("item")
@@ -863,31 +901,26 @@ class XMLFormatter(object):
         item.appendChild(value4)
         return item
 
+
 def print_xml(r, options):
         print (XMLFormatter().xml_output(list(r), options))
 
 
 def mapFilesToAnalyzer(files, fileAnalyzer, working_threads):
     try:
-        # python 2.6 cannot work properly with multiple threading
-        if sys.version_info[0:2] == (2, 6):
-            raise
         import multiprocessing
         it = multiprocessing.Pool(processes=working_threads)
-        mapFun = it.imap_unordered
+        mapmethod = it.imap_unordered
     except:
         try:
-            mapFun = itertools.imap
+            mapmethod = itertools.imap
         except:
-            mapFun = map
-    r = mapFun(fileAnalyzer, files)
-    return r
+            mapmethod = map
+    result = mapmethod(fileAnalyzer, files)
+    return result
 
-import os
-import fnmatch
-import hashlib
 
-def md5HashFile(full_path_name):
+def md5_hash_file(full_path_name):
     ''' return md5 hash of a file '''
     with open(full_path_name, mode='r') as source_file:
         if sys.version_info[0] == 3:
@@ -896,36 +929,38 @@ def md5HashFile(full_path_name):
             code_md5 = hashlib.md5(source_file.read())
     return code_md5.hexdigest()
 
+
 def get_all_source_files(exclude_patterns, paths):
     '''
-    Function counts md5 hash for the given file 
-    and checks if it isn't a duplicate using set 
+    Function counts md5 hash for the given file
+    and checks if it isn't a duplicate using set
     of hashes for previous files
     '''
     hash_set = set()
 
-    def _checkFile(pathname):
+    def _validate_file(pathname):
         return CodeReader.get_reader(pathname) and \
             all(not fnmatch.fnmatch(pathname, p) for p in exclude_patterns) and \
-            _notDuplicate(pathname)
+            _not_duplicate(pathname)
 
-    def _notDuplicate(full_path_name):
-        fhash = md5HashFile(full_path_name)
+    def _not_duplicate(full_path_name):
+        fhash = md5_hash_file(full_path_name)
         if fhash and fhash not in hash_set:
             hash_set.add(fhash)
             return True
 
     def all_listed_files(paths):
-        for SRC_DIR in paths:
-            if os.path.isfile(SRC_DIR) :
-                yield SRC_DIR
+        for path in paths:
+            if os.path.isfile(path):
+                yield path
             else:
-                for root, _, files in os.walk(SRC_DIR, topdown=False):
+                for root, _, files in os.walk(path, topdown=False):
                     for filename in files:
                         yield os.path.join(root, filename)
 
-    return (fn for fn in all_listed_files(paths)\
-            if fn in paths or _checkFile(fn))
+    return (fn for fn in all_listed_files(paths)
+            if fn in paths or _validate_file(fn))
+
 
 def parse_args(argv):
 
@@ -937,18 +972,21 @@ def parse_args(argv):
 
     options = createCommandLineParser(argv[0]).parse_args(args=argv[1:])
     options.whitelist = get_whitelist()
-    options.extensions = get_extensions(options.extensions, options.switchCasesAsOneCondition)
-    function_parts = [getattr(ext, 'FUNCTION_INFO_PART') for ext in options.extensions
-            if hasattr(ext, 'FUNCTION_INFO_PART')]
+    options.extensions = get_extensions(options.extensions,
+                                        options.switchCasesAsOneCondition)
+    function_parts = [getattr(ext, 'FUNCTION_INFO_PART')
+                      for ext in options.extensions
+                      if hasattr(ext, 'FUNCTION_INFO_PART')]
     for sort_factor in options.sorting:
         if sort_factor not in function_parts:
-            error_message =  "Wrong sorting field '%s'.\n" % sort_factor
-            error_message +=  "Candidates are: " + str(function_parts) + "\n"
+            error_message = "Wrong sorting field '%s'.\n" % sort_factor
+            error_message += "Candidates are: " + str(function_parts) + "\n"
             sys.stderr.write(error_message)
             sys.exit(2)
     return options
 
-def get_extensions(extension_names, switchCaseAsOneCondition = False):
+
+def get_extensions(extension_names, switch_case_as_one_condition=False):
     from importlib import import_module
     extensions = [
         Preprocessor(),
@@ -959,21 +997,26 @@ def get_extensions(extension_names, switchCaseAsOneCondition = False):
         FunctionParser(),
         ParameterCounter()
         ]
-    if switchCaseAsOneCondition:
+    if switch_case_as_one_condition:
         extensions.append(SwitchCasesAsOneConditionCounter())
 
     return extensions +\
-        [import_module('lizard_ext.lizard' + name).LizardExtension() if type(name) == type("") else name  for name in extension_names] +\
+        [import_module('lizard_ext.lizard' + name).LizardExtension()
+            if isinstance(name, str) else name for name in extension_names] +\
         [FunctionOutputPlaceholder()]
 
-analyze_file = FileAnalyzer(get_extensions([]))
+analyze_file = FileAnalyzer(get_extensions([]))  # pylint: disable=C0103
 
 
-def lizard_main(argv=sys.argv):
+def lizard_main(argv):
     options = parse_args(argv)
     printer = print_xml if options.xml else print_result
-    r = analyze(options.paths, options.exclude, options.working_threads, options.extensions)
-    printer(r, options)
+    result = analyze(
+        options.paths,
+        options.exclude,
+        options.working_threads,
+        options.extensions)
+    printer(result, options)
 
 if __name__ == "__main__":
-    lizard_main()
+    lizard_main(sys.argv)
