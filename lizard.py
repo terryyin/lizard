@@ -906,18 +906,21 @@ def print_xml(r, options):
         print (XMLFormatter().xml_output(list(r), options))
 
 
-def mapFilesToAnalyzer(files, fileAnalyzer, working_threads):
+def get_map_method():
     try:
         import multiprocessing
         it = multiprocessing.Pool(processes=working_threads)
-        mapmethod = it.imap_unordered
+        return it.imap_unordered
     except:
         try:
-            mapmethod = itertools.imap
+            return itertools.imap
         except:
-            mapmethod = map
-    result = mapmethod(fileAnalyzer, files)
-    return result
+            return map
+
+
+def mapFilesToAnalyzer(files, fileAnalyzer, working_threads):
+    mapmethod = get_map_method()
+    return mapmethod(fileAnalyzer, files)
 
 
 def md5_hash_file(full_path_name):
