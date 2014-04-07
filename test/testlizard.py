@@ -83,7 +83,7 @@ class Test_FunctionInfo(unittest.TestCase):
 
     def test_FunctionInfo_ShouldBePicklable(self):
         import pickle
-        pickle.dumps(FunctionInfo("a", 1))
+        pickle.dumps(FunctionInfo("a", '', 1))
 
 
 from lizard import warning_filter, FileInformation, Whitelist
@@ -91,9 +91,9 @@ from lizard import warning_filter, FileInformation, Whitelist
 class TestWarningFilter(unittest.TestCase):
 
     def setUp(self):
-        complex_fun = FunctionInfo("complex", 100)
+        complex_fun = FunctionInfo("complex", '', 100)
         complex_fun.cyclomatic_complexity = 16
-        simple_fun = FunctionInfo("simple", 100)
+        simple_fun = FunctionInfo("simple", '', 100)
         simple_fun.cyclomatic_complexity = 15
         self.fileStat = FileInformation("FILENAME", 1, [complex_fun, simple_fun])
 
@@ -101,13 +101,13 @@ class TestWarningFilter(unittest.TestCase):
         option = Mock(CCN=15, arguments=10)
         warnings = list(warning_filter(option, [self.fileStat]))
         self.assertEqual(1, len(warnings))
-        self.assertEqual("complex", warnings[0][0].name)
+        self.assertEqual("complex", warnings[0].name)
 
 class TestWarningFilterWithWhitelist(unittest.TestCase):
 
-    WARNINGS = [(FunctionInfo("foo"), "filename"),
-             (FunctionInfo("bar"), "filename"),
-             (FunctionInfo("foo"), "anotherfile")]
+    WARNINGS = [FunctionInfo("foo", 'filename'),
+             FunctionInfo("bar", 'filename'),
+             FunctionInfo("foo", 'anotherfile')]
 
     def test_should_filter_out_the_whitelist(self):
         whitelist = Whitelist("foo")
@@ -121,7 +121,7 @@ class TestWarningFilterWithWhitelist(unittest.TestCase):
 
     def test_should_work_with_class_member(self):
         whitelist = Whitelist('class::foo')
-        warnings = list(whitelist.filter([(FunctionInfo("class::foo"), "filename")]))
+        warnings = list(whitelist.filter([FunctionInfo("class::foo", 'filename')]))
         self.assertEqual(0, len(warnings))
 
     def test_should_filter_mutiple_functions_defined_on_one_line(self):

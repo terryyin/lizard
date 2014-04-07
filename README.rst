@@ -215,6 +215,7 @@ Wishlist (The features that will come in the near future)
 Change Logs
 -----------
 
+-  2014.04.07 Remove option -e (display function end line), and make it default
 -  2014.04.06 Remove option -d (ignore duplicated content), and make it default
 -  2014.04.06 Remove option -p (no preprocessor count), and a '#if' will always be counted in cyclomatic complexity
 -  2014.03.31 Support JavaScript!

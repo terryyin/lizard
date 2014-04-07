@@ -28,6 +28,7 @@ class TestFunctionOutput(StreamStdoutTestCase):
     def setUp(self):
         StreamStdoutTestCase.setUp(self)
         self.options = Mock(warnings_only=False, extensions = get_extensions([]))
+        self.foo = FunctionInfo("foo", 'FILENAME', 100)
 
     def test_function_info_header_should_have_a_box(self):
         print_and_save_detail_information([], self.options)
@@ -35,68 +36,58 @@ class TestFunctionOutput(StreamStdoutTestCase):
 
     def test_function_info_header_should_have_the_captions(self):
         print_and_save_detail_information([], self.options)
-        self.assertEquals("  NLOC    CCN   token  PARAM  function@line@filename          ", sys.stdout.stream.splitlines()[1])
+        self.assertEquals("  NLOC    CCN   token  PARAM  location  ", sys.stdout.stream.splitlines()[1])
 
     def test_function_info_header_should_have_the_captions_of_external_extensions(self):
         external_extension = Mock(FUNCTION_CAPTION = "*external_extension*")
         self.options = Mock(warnings_only=False, extensions = get_extensions([external_extension]))
         print_and_save_detail_information([], self.options)
-        self.assertEquals("  NLOC    CCN   token  PARAM *external_extension* function@line@filename          ", sys.stdout.stream.splitlines()[1])
+        self.assertEquals("  NLOC    CCN   token  PARAM *external_extension* location  ", sys.stdout.stream.splitlines()[1])
 
     def test_print_fileinfo(self):
-        fun = FunctionInfo("foo", 100)
-        fun.end_line = 100
-        fun.cyclomatic_complexity = 16
-        fileStat = FileInformation("FILENAME", 1, [fun])
+        self.foo.end_line = 100
+        self.foo.cyclomatic_complexity = 16
+        fileStat = FileInformation("FILENAME", 1, [self.foo])
         print_and_save_detail_information([fileStat], self.options)
         self.assertEquals("       0     16      1      0 foo@100-100@FILENAME", sys.stdout.stream.splitlines()[3])
 
 class TestWarningOutput(StreamStdoutTestCase):
 
+    def setUp(self):
+        StreamStdoutTestCase.setUp(self)
+        self.option = Mock(warnings_only=False, CCN=15, extensions = [])
+        self.foo = FunctionInfo("foo", 'FILENAME', 100)
+
     def test_should_have_header_when_warning_only_is_off(self):
-        option = Mock(warnings_only=False, CCN=15, extensions = [])
-        print_warnings(option, [])
+        print_warnings(self.option, [])
         self.assertIn("Warnings (CCN > 15)", sys.stdout.stream)
 
     def test_should_say_no_warning_when_warning_only_is_off(self):
-        option = Mock(warnings_only=False, CCN=15, extensions = [])
-        print_warnings(option, [])
+        print_warnings(self.option, [])
         self.assertIn("No warning found. Excellent!\n", sys.stdout.stream)
 
     def test_should_not_have_header_when_warning_only_is_on(self):
-        option = Mock(warnings_only=True, CCN=15)
-        print_warnings(option, [])
+        self.option = Mock(warnings_only=True, CCN=15)
+        print_warnings(self.option, [])
         self.assertNotIn("Warnings (CCN > 15)", sys.stdout.stream)
 
     def test_should_use_clang_format_for_warning(self):
-        option = Mock(display_fn_end_line = False, extensions = get_extensions([]))
-        print_warnings(option, [(FunctionInfo("foo", 100), "FILENAME")])
+        self.option = Mock(display_fn_end_line = False, extensions = get_extensions([]))
+        print_warnings(self.option, [self.foo])
         self.assertIn("FILENAME:100: warning: foo has 1 CCN and 0 params (0 NLOC, 1 tokens)\n", sys.stdout.stream)
-
-    def test_should_use_clang_format_with_function_end_line_number_for_warning(self):
-        fun = FunctionInfo("foo", 100)
-        fun.end_line = 100
-        fun.cyclomatic_complexity = 16
-        fileStat = FileInformation("FILENAME", 1, [fun])
-        option = Mock(display_fn_end_line = True, extensions = get_extensions([])) 
-        print_warnings(option, [(fun, "FILENAME")])
-        self.assertIn("FILENAME:100-100: warning: foo has 16 CCN and 0 params (0 NLOC, 1 tokens)\n", sys.stdout.stream)
 
     @patch('lizard.print_function_info')
     def test_sort_warning(self, print_function_info):
-        option = Mock(display_fn_end_line = False, extensions = get_extensions([]))
-        option.sorting = ['cyclomatic_complexity']
-        foo = FunctionInfo("foo", 100)
-        foo.cyclomatic_complexity = 10
-        bar = FunctionInfo("bar", 100)
+        self.option.sorting = ['cyclomatic_complexity']
+        self.foo.cyclomatic_complexity = 10
+        bar = FunctionInfo("bar", '', 100)
         bar.cyclomatic_complexity = 15
-        print_warnings(option, [(foo, "FILENAME"),(bar, "FILENAME")])
+        print_warnings(self.option, [self.foo, bar])
         self.assertEqual('bar', print_function_info.call_args_list[0][0][0].name)
 
     def test_sort_warning_with_generator(self):
-        option = Mock(display_fn_end_line = False, extensions = get_extensions([]))
-        option.sorting = ['cyclomatic_complexity']
-        print_warnings(option, (x for x in []))
+        self.option.sorting = ['cyclomatic_complexity']
+        print_warnings(self.option, (x for x in []))
 
 
 class TestFileOutput(StreamStdoutTestCase):
@@ -114,8 +105,12 @@ class TestFileOutput(StreamStdoutTestCase):
 
 
 class TestAllOutput(StreamStdoutTestCase):
-    def test_print_extension_results(self):
 
+    def setUp(self):
+        StreamStdoutTestCase.setUp(self)
+        self.foo = FunctionInfo("foo", 'FILENAME', 100)
+
+    def test_print_extension_results(self):
         file_infos = []
         extension = Mock()
         option = Mock(CCN=15, number = 0, extensions = [extension], whitelist='')
@@ -136,18 +131,16 @@ class TestAllOutput(StreamStdoutTestCase):
 
     @patch.object(sys, 'exit')
     def test_exit_with_non_zero_when_more_warning_than_ignored_number(self, mock_exit):
-        fun = FunctionInfo("foo", 100)
-        fun.cyclomatic_complexity = 16
-        file_infos = [FileInformation('f1.c', 1, [fun])]
+        self.foo.cyclomatic_complexity = 16
+        file_infos = [FileInformation('f1.c', 1, [self.foo])]
         option = Mock(CCN=15, number = 0, extensions=[], whitelist='')
         print_result(file_infos, option)
         mock_exit.assert_called_with(1)
 
     @patch.object(sys, 'exit')
     def test_whitelist(self, mock_exit):
-        fun = FunctionInfo("foo", 100)
-        fun.cyclomatic_complexity = 16
-        file_infos = [FileInformation('f1.c', 1, [fun])]
+        self.foo.cyclomatic_complexity = 16
+        file_infos = [FileInformation('f1.c', 1, [self.foo])]
         option = Mock(CCN=15, number = 0, extensions=[], whitelist='foo')
         print_result(file_infos, option)
         self.assertEqual(0, mock_exit.call_count)
@@ -161,9 +154,9 @@ class TestAllOutput(StreamStdoutTestCase):
 
 import xml.etree.ElementTree as ET
 class TestXMLOutput(unittest.TestCase):
-    fun = FunctionInfo("foo", 100)
-    fun.cyclomatic_complexity = 16
-    file_infos = [FileInformation('f1.c', 1, [fun])]
+    foo = FunctionInfo("foo", '', 100)
+    foo.cyclomatic_complexity = 16
+    file_infos = [FileInformation('f1.c', 1, [foo])]
     option = Mock(CCN=15, number = 0, extensions=[])
     xml = XMLFormatter().xml_output(file_infos, option)
 
