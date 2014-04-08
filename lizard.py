@@ -766,7 +766,7 @@ def get_map_method(working_threads):
         pool = multiprocessing.Pool(processes=working_threads)
         return pool.imap_unordered
     except ImportError:
-        return itertools.imap
+        return itertools.imap if sys.version[0] == '2' else map
 
 
 def map_files_to_analyzer(files, file_analyzer, working_threads):
