@@ -83,4 +83,14 @@ class Test_Exclude_Patterns(unittest.TestCase):
         files = self.getSourceFiles(["dir"], [])
         self.assertEqual(["./f1.cpp", "./f2.cpp"], list(files))
 
+    @patch.object(os, "walk")
+    @patch("lizard.open", create=True)
+    def test_fail_to_open_file_should_be_allowed(self, mock_open, mock_os_walk):
+        mock_os_walk.return_value = (['.',
+                                      None,
+                                      ['f1.cpp', 'f2.cpp']],)
+        file_handle = mock_open.side_effect = IOError
+        files = self.getSourceFiles(["dir"], [])
+        self.assertEqual(['./f1.cpp', './f2.cpp'], list(files))
+
 

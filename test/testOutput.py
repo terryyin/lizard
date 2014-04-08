@@ -2,7 +2,8 @@ import unittest
 from test.mock import Mock, patch
 import sys
 from lizard import print_warnings, print_and_save_detail_information, FunctionInfo, FileInformation,\
-    print_result, XMLFormatter, get_extensions
+    print_result, get_extensions
+from lizard_ext import CppNcssXMLFormatter
 
 class StreamStdoutTestCase(unittest.TestCase):
     def setUp(self):
@@ -27,28 +28,28 @@ class TestFunctionOutput(StreamStdoutTestCase):
 
     def setUp(self):
         StreamStdoutTestCase.setUp(self)
-        self.options = Mock(warnings_only=False, extensions = get_extensions([]))
+        self.extensions = get_extensions([])
         self.foo = FunctionInfo("foo", 'FILENAME', 100)
 
     def test_function_info_header_should_have_a_box(self):
-        print_and_save_detail_information([], self.options)
+        print_and_save_detail_information([], self.extensions)
         self.assertIn("=" * 20, sys.stdout.stream.splitlines()[0])
 
     def test_function_info_header_should_have_the_captions(self):
-        print_and_save_detail_information([], self.options)
+        print_and_save_detail_information([], self.extensions)
         self.assertEquals("  NLOC    CCN   token  PARAM  location  ", sys.stdout.stream.splitlines()[1])
 
     def test_function_info_header_should_have_the_captions_of_external_extensions(self):
         external_extension = Mock(FUNCTION_CAPTION = "*external_extension*")
-        self.options = Mock(warnings_only=False, extensions = get_extensions([external_extension]))
-        print_and_save_detail_information([], self.options)
+        self.extensions = get_extensions([external_extension])
+        print_and_save_detail_information([], self.extensions)
         self.assertEquals("  NLOC    CCN   token  PARAM *external_extension* location  ", sys.stdout.stream.splitlines()[1])
 
     def test_print_fileinfo(self):
         self.foo.end_line = 100
         self.foo.cyclomatic_complexity = 16
         fileStat = FileInformation("FILENAME", 1, [self.foo])
-        print_and_save_detail_information([fileStat], self.options)
+        print_and_save_detail_information([fileStat], self.extensions)
         self.assertEquals("       0     16      1      0 foo@100-100@FILENAME", sys.stdout.stream.splitlines()[3])
 
 class TestWarningOutput(StreamStdoutTestCase):
@@ -91,16 +92,16 @@ class TestWarningOutput(StreamStdoutTestCase):
 
 
 class TestFileOutput(StreamStdoutTestCase):
-    
+
     def test_print_and_save_detail_information(self):
         fileSummary = FileInformation("FILENAME", 123, [])
-        print_and_save_detail_information([fileSummary], Mock(warnings_only=False, extensions=[]))
+        print_and_save_detail_information([fileSummary], [])
         self.assertIn("    123      0      0         0         0     FILENAME", sys.stdout.stream)
 
     def test_print_file_summary_only_once(self):
         print_and_save_detail_information(
                             [FileInformation("FILENAME1", 123, []), 
-                             FileInformation("FILENAME2", 123, [])], Mock(warnings_only=False, extensions=[]))
+                             FileInformation("FILENAME2", 123, [])], [])
         self.assertEqual(1, sys.stdout.stream.count("FILENAME1"))
 
 
@@ -158,7 +159,7 @@ class TestXMLOutput(unittest.TestCase):
     foo.cyclomatic_complexity = 16
     file_infos = [FileInformation('f1.c', 1, [foo])]
     option = Mock(CCN=15, number = 0, extensions=[])
-    xml = XMLFormatter().xml_output(file_infos, option)
+    xml = CppNcssXMLFormatter().xml_output(file_infos, option)
 
     def test_xml_output(self):
         root = ET.fromstring(self.xml)
