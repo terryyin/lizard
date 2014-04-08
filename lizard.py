@@ -369,17 +369,19 @@ class CodeReader(object):
     def generate_tokens(source_code, addition=''):
         # DONOT put any sub groups in the regex. Good for performance
         _until_end = r"(?:\\\n|[^\n])*"
+        combined_symbals = ["||", "&&", "===", "!==", "==", "!=", "<=", ">=",
+                            "<<", ">>>", "++", ">>", "--", '+=', '-=',
+                            '*=', '/=', '^=', '&=', '|=']
         token_pattern = re.compile(
-            r"(\w+" +
+            r"(?:\w+" +
             addition +
             r"|/\*.*?\*/" +
             r"|\"(?:\\.|[^\"])*\"" +
-            r"|\'(?:\\.|[^\'])*\'" +
+            r"|\'(?:\\.|[^\'])*?\'" +
             r"|//" + _until_end +
             r"|#" + _until_end +
-            r"|:=|::|>=|\*=|\*\*|\*|>" +
-            r"|&=|&&|&" +
-            r"|[!%^&\*\-=+\|\\<>/\]\+]+" +
+            r"|:=|::|\*\*" +
+            r"|" + r"|".join(re.escape(s) for s in combined_symbals) +
             r"|\n" +
             r"|[^\S\n]+" +
             r"|.)", re.M | re.S)

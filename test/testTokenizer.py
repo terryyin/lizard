@@ -5,59 +5,39 @@ generate_tokens = CodeReader.generate_tokens
 
 class Test_generate_tonken(unittest.TestCase):
 
+    def check_tokens(self, source, *expect):
+        tokens = generate_tokens(source)
+        self.assertEqual(list(expect), tokens)
+
     def test_empty_string(self):
-        result = [t for t in generate_tokens("")]
-        self.assertEqual(0, len(result))
+        self.check_tokens("")
 
-    def test_with_one_return(self):
-        result = [t for t in generate_tokens("\n")]
-        self.assertEqual(1, len(result))
+    def test_spaces(self):
+        self.check_tokens("\n", "\n")
+        self.check_tokens("\n\n", "\n", "\n")
+        self.check_tokens(" \n", " ", "\n")
 
-    def test_with_two_returns(self):
-        result = [t for t in generate_tokens("\n\n")]
-        self.assertEqual(2, len(result))
-
-    def test_space(self):
-        result = [t for t in generate_tokens(" \n")]
-        self.assertEqual(2, len(result))
-
-    def test_empty(self):
-        tokens = generate_tokens("")
-        self.assertEqual(0, len(tokens))
-
-    def test_one_digit(self):
-        tokens = generate_tokens("1")
-        self.assertEqual(['1'], tokens)
+    def test_digits(self):
+        self.check_tokens("1", "1")
+        self.check_tokens("123", "123")
 
     def test_operators(self):
-        tokens = generate_tokens("-;")
-        self.assertEqual(['-', ';'], tokens)
-
-    def test_operators1(self):
-        tokens = generate_tokens("-=")
-        self.assertEqual(['-='], tokens)
-
-    def test_operators2(self):
-        tokens = generate_tokens(">=")
-        self.assertEqual(['>='], tokens)
+        self.check_tokens("-;", '-', ';')
+        self.check_tokens("-=", '-=')
+        self.check_tokens(">=", '>=')
+        self.check_tokens("<=", '<=')
+        self.check_tokens("||", '||')
 
     def test_more(self):
-        tokens = generate_tokens("int a{}")
-        self.assertEqual(['int', ' ', "a", "{", "}"], tokens)
-
-    def test_or(self):
-        tokens = generate_tokens("||")
-        self.assertEqual(['||'], tokens)
+        self.check_tokens("int a{}", 'int', ' ', "a", "{", "}")
 
     def test_string(self):
-        tokens = generate_tokens(r'""')
-        self.assertEqual(['""'], tokens)
-        tokens = generate_tokens(r'"x\"xx")')
-        self.assertEqual(['"x\\"xx"', ')'], tokens)
+        self.check_tokens(r'""', '""')
+        self.check_tokens(r'"x\"xx")', '"x\\"xx"', ')')
+        self.check_tokens("'\\''", "'\\''")
 
     def test_line_number(self):
-        tokens = generate_tokens(r'abc')
-        self.assertEqual('abc', tokens[0])
+        self.check_tokens(r'abc', 'abc')
 
     def test_line_number2(self):
         tokens = generate_tokens('abc\ndef')
