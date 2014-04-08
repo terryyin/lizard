@@ -760,6 +760,8 @@ def print_xml(results, options):
 
 def get_map_method(working_threads):
     try:
+        if working_threads == 1:
+            raise ImportError
         import multiprocessing
         pool = multiprocessing.Pool(processes=working_threads)
         return pool.imap_unordered

@@ -1,9 +1,26 @@
 import unittest
 from lizard import  analyze_file, FileAnalyzer, get_extensions
+from lizard_ext import JavaScriptReader
 
 
 def get_js_function_list(source_code):
     return analyze_file.analyze_source_code("a.js", source_code).function_list
+
+
+class Test_tokenizing_JavaScript(unittest.TestCase):
+
+    def check_tokens(self, expect, source):
+        tokens = list(JavaScriptReader.generate_tokens(source))
+        self.assertEqual(expect, tokens)
+
+    def test_tokenizing_javascript_regular_expression(self):
+        self.check_tokens(['/ab/'], '/ab/')
+        self.check_tokens([r'/\//'], r'/\//')
+        self.check_tokens([r'/a/igm'], r'/a/igm')
+
+    def test_should_not_confuse_division_as_regx(self):
+        self.check_tokens(['a','/','b',',','a','/','b'], 'a/b,a/b')
+        self.check_tokens(['3453',' ','/','b',',','a','/','b'], '3453 /b,a/b')
 
 
 class Test_parser_for_JavaScript(unittest.TestCase):

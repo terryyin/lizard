@@ -1,8 +1,25 @@
 from lizard import CodeReader, CCppCommentsMixin
+import re
 
 class JavaScriptReader(CodeReader,  CCppCommentsMixin):
 
     ext = ['js']
+
+    @staticmethod
+    def generate_tokens(source_code):
+        REGX_REGX = r"|/(?:\\.|[^/])+?/[igm]*"
+        regx_pattern = re.compile(REGX_REGX)
+        word_pattern = re.compile(r'\w+')
+        tokens = CodeReader.generate_tokens(source_code, REGX_REGX)
+        leading_by_word = False
+        for token in tokens:
+            if leading_by_word and regx_pattern.match(token):
+                for t in CodeReader.generate_tokens(token):
+                    yield t
+            else:
+                yield token
+            if not token.isspace():
+                leading_by_word = word_pattern.match(token)
 
     def __init__(self):
         self.brace_count = 1 # start from one, so global level will never count
