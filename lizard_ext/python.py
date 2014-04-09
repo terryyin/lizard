@@ -6,7 +6,8 @@ class PythonReader(CodeReader):
     ext = ['py']
     conditions = set(['if', 'for', 'while', 'and', 'or', 'elif', 'except', 'finally'])
 
-    def __init__(self):
+    def __init__(self, context):
+        super(PythonReader, self).__init__(context)
         self._state = self._GLOBAL
         self.function_stack = []
         self.current_indent = 0
@@ -16,7 +17,7 @@ class PythonReader(CodeReader):
     def generate_tokens(source_code):
         return CodeReader.generate_tokens(source_code, r"|\'\'\'.*?\'\'\'" + r'|\"\"\".*?\"\"\"')
 
-    def preprocess(self, tokens, context):
+    def preprocess(self, tokens):
         for token in tokens:
             if token != '\n':
                 if self.leading_space:

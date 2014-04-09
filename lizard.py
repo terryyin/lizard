@@ -209,7 +209,7 @@ class CodeInfoContext(object):
         self.current_line = 0
         self.START_NEW_FUNCTION('')
         self.forgive = False
-        self.reader = (CodeReader.get_reader(filename) or CLikeReader)()
+        self.reader = (CodeReader.get_reader(filename) or CLikeReader)(self)
         self.newline = True
 
     def add_nloc(self, count):
@@ -243,7 +243,7 @@ class Preprocessor(object):
 
     def extend_tokens(self, tokens, context):
         if hasattr(context.reader, "preprocess"):
-            return context.reader.preprocess(tokens, context)
+            return context.reader.preprocess(tokens)
         else:
             return (t for t in tokens if not t.isspace() or t == '\n')
 
@@ -356,6 +356,10 @@ class CodeReader(object):
     CodeReaders are used to parse functions structures from code of different
     language. Each language will need a subclass of CodeReader.
     '''
+    def __init__(self, context):
+        self.context = context
+        self._state = lambda _: _
+
     @staticmethod
     def compile_file_extension_re(*exts):
         return re.compile(r".*\.(" + r"|".join(exts) + r")$", re.IGNORECASE)
@@ -365,6 +369,9 @@ class CodeReader(object):
         for lan in list(CodeReader.__subclasses__()):
             if CodeReader.compile_file_extension_re(*lan.ext).match(filename):
                 return lan
+
+    def state(self, token):
+        self._state(token)
 
     def eof(self):
         pass
@@ -392,7 +399,7 @@ class CodeReader(object):
         return token_pattern.findall(source_code)
 
 
-class CCppCommentsMixin(object):
+class CCppCommentsMixin(object):  # pylint: disable-msg=R0903
     @staticmethod
     def get_comment_from_token(token):
         if token.startswith("/*") or token.startswith("//"):
@@ -400,16 +407,14 @@ class CCppCommentsMixin(object):
 
 
 try:
-    '''
-    lizard.py can run as a stand alone script, without the extensions
-    The following langauages / extensions will not be supported in
-    stand alone script.
-    '''
+    # lizard.py can run as a stand alone script, without the extensions
+    # The following langauages / extensions will not be supported in
+    # stand alone script.
     # pylint: disable=W0611
     from lizard_ext import JavaScriptReader
     from lizard_ext import PythonReader
     from lizard_ext import CppNcssXMLFormatter
-except:
+except ImportError:
     pass
 
 
@@ -421,74 +426,76 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
     ext = ["c", "cpp", "cc", "mm", "cxx", "h", "hpp"]
     macro_pattern = re.compile(r"#\s*(\w+)\s*(.*)", re.M | re.S)
 
-    def __init__(self):
+    def __init__(self, context):
+        super(CLikeReader, self).__init__(context)
         self.bracket_level = 0
         self.br_count = 0
         self.last_preprocessor = None
-        self._state = self._GLOBAL
+        self._state = self._state_global
 
-    def preprocess(self, tokens, context):
+    def preprocess(self, tokens):
         for token in tokens:
             if not token.isspace() or token == '\n':
-                m = self.macro_pattern.match(token)
-                if m:
-                    yield "#" + m.group(1)
-                    param = m.group(2).strip()
+                macro = self.macro_pattern.match(token)
+                if macro:
+                    yield "#" + macro.group(1)
+                    param = macro.group(2).strip()
                     if param:
                         yield param
                 else:
                     yield token
 
-    def _GLOBAL(self, token):
+    def _state_global(self, token):
         if token == '(':
             self.bracket_level += 1
-            self._state = self._DEC
+            self._state = self._state_dec
             self.context.ADD_TO_LONG_FUNCTION_NAME(token)
         elif token == '::':
-            self._state = self._NAMESPACE
+            self._state = self._state_namespace
         else:
             self.context.START_NEW_FUNCTION(token)
             if token == 'operator':
-                self._state = self._OPERATOR
+                self._state = self._state_operator
 
-    def _OPERATOR(self, token):
+    def _state_operator(self, token):
         if token != '(':
-            self._state = self._GLOBAL
+            self._state = self._state_global
         self.context.ADD_TO_FUNCTION_NAME(' ' + token)
 
-    def _NAMESPACE(self, token):
-        self._state = self._OPERATOR if token == 'operator' else self._GLOBAL
+    def _state_namespace(self, token):
+        self._state = self._state_operator\
+            if token == 'operator' else self._state_global
         self.context.ADD_TO_FUNCTION_NAME("::" + token)
 
-    def _DEC(self, token):
+    def _state_dec(self, token):
         if token in ('(', "<"):
             self.bracket_level += 1
         elif token in (')', ">"):
             self.bracket_level -= 1
             if self.bracket_level == 0:
-                self._state = self._DEC_TO_IMP
+                self._state = self._state_dec_to_imp
         elif self.bracket_level == 1:
             self.context.PARAMETER(token)
             return
         self.context.ADD_TO_LONG_FUNCTION_NAME(" " + token)
 
-    def _DEC_TO_IMP(self, token):
+    def _state_dec_to_imp(self, token):
         if token == 'const':
             self.context.ADD_TO_LONG_FUNCTION_NAME(" " + token)
         elif token == '{':
             self.br_count += 1
-            self._state = self._IMP
+            self._state = self._state_imp
         elif token == ":":
-            self._state = self._CONSTRUCTOR_INITIALIZATION_LIST
+            self._state = self._state_initialization_list
         else:
-            self._state = self._GLOBAL
+            self._state = self._state_global
 
-    def _CONSTRUCTOR_INITIALIZATION_LIST(self, token):
+    def _state_initialization_list(self, token):
         if token == '{':
             self.br_count += 1
-            self._state = self._IMP
+            self._state = self._state_imp
 
-    def _IMP(self, token):
+    def _state_imp(self, token):
         if token in ("#else", "#endif"):
             self.last_preprocessor = token
         # will ignore the braces in a #else branch
@@ -498,7 +505,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
             elif token == '}':
                 self.br_count -= 1
                 if self.br_count == 0:
-                    self._state = self._GLOBAL
+                    self._state = self._state_global
                     self.context.END_OF_FUNCTION()
 
 
@@ -511,78 +518,80 @@ class ObjCReader(CLikeReader, CodeReader):
 
     ext = ['m']
 
-    def __init__(self):
-        super(ObjCReader, self).__init__()
+    def __init__(self, context):
+        super(ObjCReader, self).__init__(context)
 
-    def _DEC_TO_IMP(self, token):
+    def _state_dec_to_imp(self, token):
         if token in ("+", "-"):
-            self._state = self._GLOBAL
+            self._state = self._state_global
         else:
-            super(ObjCReader, self)._DEC_TO_IMP(token)
-            if self._state == self._GLOBAL:
-                self._state = self._OBJC_DEC_BEGIN
+            super(ObjCReader, self)._state_dec_to_imp(token)
+            if self._state == self._state_global:
+                self._state = self._state_objc_dec_begin
                 self.context.START_NEW_FUNCTION(token)
 
-    def _OBJC_DEC_BEGIN(self, token):
+    def _state_objc_dec_begin(self, token):
         if token == ':':
-            self._state = self._OBJC_DEC
+            self._state = self._state_objc_dec
             self.context.ADD_TO_FUNCTION_NAME(token)
         elif token == '{':
             self.br_count += 1
-            self._state = self._IMP
+            self._state = self._state_imp
         else:
-            self._state = self._GLOBAL
+            self._state = self._state_global
 
-    def _OBJC_DEC(self, token):
+    def _state_objc_dec(self, token):
         if token == '(':
-            self._state = self._OBJC_PARAM_TYPE
+            self._state = self._state_objc_param_type
             self.context.ADD_TO_LONG_FUNCTION_NAME(token)
         elif token == ',':
             pass
         elif token == '{':
             self.br_count += 1
-            self._state = self._IMP
+            self._state = self._state_imp
         else:
-            self._state = self._OBJC_DEC_BEGIN
+            self._state = self._state_objc_dec_begin
             self.context.ADD_TO_FUNCTION_NAME(" " + token)
 
-    def _OBJC_PARAM_TYPE(self, token):
+    def _state_objc_param_type(self, token):
         if token == ')':
-            self._state = self._OBJC_PARAM
+            self._state = self._state_objc_param
         self.context.ADD_TO_LONG_FUNCTION_NAME(" " + token)
 
-    def _OBJC_PARAM(self, token):
-        self._state = self._OBJC_DEC
+    def _state_objc_param(self, _):
+        self._state = self._state_objc_dec
 
 
-class FunctionParser(object):
+class FunctionParser(object):  # pylint: disable-msg=R0903
     '''
     FunctionParser parse source code into functions. This is different from
     language to language. So FunctionParser need a language specific 'reader'
     to actually do the job.
     '''
-    def extend_tokens(self, tokens, context):
+    @staticmethod
+    def extend_tokens(tokens, context):
         function_reader = context.reader
         function_reader.context = context
         for token in tokens:
-            function_reader._state(token)
+            function_reader.state(token)
             yield token
         function_reader.eof()
 
 
-class FunctionOutputPlaceholder(object):
+class FunctionOutputPlaceholder(object):  # pylint: disable-msg=R0903
 
     FUNCTION_CAPTION = " location  "
     FUNCTION_INFO_PART = 'location'
 
-    def extend_tokens(self, tokens, context):
-        for token in tokens:
+    @staticmethod
+    def extend_tokens(tokens, _):
+        for _ in tokens:
             pass
 
 
-class FileAnalyzer(object):
+class FileAnalyzer(object):  # pylint: disable-msg=R0903
 
-    def __init__(self, extensions=[]):
+    def __init__(self, extensions):
         self.processors = extensions
 
     def __call__(self, filename):
@@ -599,8 +608,8 @@ class FileAnalyzer(object):
         return context.fileinfo
 
 
-def warning_filter(option, fileStatistics):
-    for file_info in fileStatistics:
+def warning_filter(option, module_infos):
+    for file_info in module_infos:
         if file_info:
             for fun in file_info.function_list:
                 if fun.cyclomatic_complexity > option.CCN or \
@@ -826,10 +835,8 @@ def get_all_source_files(exclude_patterns, paths):
 
 def parse_args(argv):
     options = createCommandLineParser(argv[0]).parse_args(args=argv[1:])
-    options.extensions = get_extensions(options.extensions,
-                                        options.switchCasesAsOneCondition)
     function_parts = [getattr(ext, 'FUNCTION_INFO_PART')
-                      for ext in options.extensions
+                      for ext in get_extensions([])
                       if hasattr(ext, 'FUNCTION_INFO_PART')]
     for sort_factor in options.sorting:
         if sort_factor not in function_parts:
@@ -864,6 +871,8 @@ analyze_file = FileAnalyzer(get_extensions([]))  # pylint: disable=C0103
 
 def lizard_main(argv):
     options = parse_args(argv)
+    options.extensions = get_extensions(options.extensions,
+                                        options.switchCasesAsOneCondition)
     printer = print_xml if options.xml else print_result
     result = analyze(
         options.paths,

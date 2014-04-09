@@ -21,7 +21,8 @@ class JavaScriptReader(CodeReader,  CCppCommentsMixin):
             if not token.isspace():
                 leading_by_word = word_pattern.match(token)
 
-    def __init__(self):
+    def __init__(self, context):
+        super(JavaScriptReader, self).__init__(context)
         self.brace_count = 1 # start from one, so global level will never count
         self._state = self._GLOBAL
         self.last_tokens = ''
