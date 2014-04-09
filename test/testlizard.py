@@ -66,7 +66,7 @@ class Test_FileAnalyzer(unittest.TestCase):
         mock_open.return_value.read.return_value = "int foo(){haha();\n}"
         r = map_files_to_analyzer(["f1.c"], self.analyzer, 1)
         fileInfo = list(r)[0]
-        self.assertEqual(1, fileInfo.nloc)
+        self.assertEqual(2, fileInfo.nloc)
         self.assertEqual(2, fileInfo.average_NLOC)
         self.assertEqual(1, fileInfo.average_CCN)
         self.assertEqual(9, fileInfo.average_token)

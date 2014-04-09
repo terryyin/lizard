@@ -21,7 +21,7 @@ Please find the README.rst for more information.
 """
 from __future__ import print_function
 
-VERSION = "1.8.0"
+VERSION = "1.8.1"
 
 import itertools
 import re
@@ -133,7 +133,7 @@ class FunctionInfo(object):
 
     def __init__(self, name, filename, start_line=0, ccn=1):
         self.cyclomatic_complexity = ccn
-        self.nloc = 0
+        self.nloc = 1
         self.token_count = 1  # the first token
         self.name = name
         self.long_name = name
@@ -210,9 +210,9 @@ class CodeInfoContext(object):
         self.START_NEW_FUNCTION('')
         self.forgive = False
         self.reader = (CodeReader.get_reader(filename) or CLikeReader)()
+        self.newline = True
 
     def START_NEW_FUNCTION(self, name):
-        self.newline = True
         self.current_function =\
             FunctionInfo(name, self.fileinfo.filename, self.current_line)
 
@@ -277,7 +277,6 @@ class LineCounter(object):
                 yield token
 
     def _new_line(self, context):
-        context.fileinfo.nloc += 1
         context.newline = True
 
 
@@ -300,6 +299,7 @@ class TokenCounter(object):
         context.fileinfo.token_count += 1
         if context.newline:
             context.current_function.nloc += 1
+            context.fileinfo.nloc += 1
             context.newline = False
             context.current_function.end_line = context.current_line
         context.current_function.token_count += 1
@@ -711,16 +711,16 @@ def print_total(warning_count, saved_result, option):
         print("%10d%10d%9.2f%11.2f%9d%13d%10.2f%8.2f" % total_info)
 
 
-def print_and_save_detail_information(allStatistics, extensions):
+def print_and_save_modules(all_modules, extensions):
     all_functions = []
     print_function_info_header(extensions)
-    for fileStatistics in allStatistics:
+    for module_info in all_modules:
         for extension in extensions:
             if hasattr(extension, 'reduce'):
-                extension.reduce(fileStatistics)
-        if fileStatistics:
-            all_functions.append(fileStatistics)
-            for fun in fileStatistics.function_list:
+                extension.reduce(module_info)
+        if module_info:
+            all_functions.append(module_info)
+            for fun in module_info.function_list:
                 print(get_extended_function_info(fun, extensions))
 
     print("--------------------------------------------------------------")
@@ -728,23 +728,23 @@ def print_and_save_detail_information(allStatistics, extensions):
     print("==============================================================")
     print("NLOC    Avg.NLOC AvgCCN Avg.ttoken  function_cnt    file")
     print("--------------------------------------------------------------")
-    for fileStatistics in all_functions:
-        print(
-            "%7d%7d%7d%10d%10d     %s" % (
-                fileStatistics.nloc,
-                fileStatistics.average_NLOC,
-                fileStatistics.average_CCN,
-                fileStatistics.average_token,
-                len(fileStatistics.function_list),
-                fileStatistics.filename))
+    for module_info in all_functions:
+        print((
+            "{module.nloc:7d}" +
+            "{module.average_NLOC:7d}" +
+            "{module.average_CCN:7d}" +
+            "{module.average_token:10d}" +
+            "{function_count:10d}" +
+            "     {module.filename}").format(
+                module=module_info,
+                function_count=len(module_info.function_list)))
 
     return all_functions
 
 
 def print_result(code_infos, option):
     if not option.warnings_only:
-        code_infos = print_and_save_detail_information(
-            code_infos, option.extensions)
+        code_infos = print_and_save_modules(code_infos, option.extensions)
     warnings = warning_filter(option, code_infos)
     warnings = Whitelist(option.whitelist).filter(warnings)
     warning_count = print_warnings(option, warnings)

@@ -60,6 +60,17 @@ class TestNLOC(unittest.TestCase):
         self.assertEqual(1, result[0].start_line)
         self.assertEqual(8, result[0].end_line)
 
+    def check_file_nloc(self, expect, source):
+        fileinfo = get_cpp_fileinfo(source)
+        self.assertEqual(expect, fileinfo.nloc)
+
+    def test_last_line_without_return_should_be_counted_in_fileinfo(self):
+        self.check_file_nloc(1, ";\n")
+        self.check_file_nloc(2, ";\n\n;\n")
+        self.check_file_nloc(2, ";\n;")
+        self.check_file_nloc(1, "fun(){}")
+        self.check_file_nloc(1, "fun(){};\n")
+
 
 class TestLOC(unittest.TestCase):
 
