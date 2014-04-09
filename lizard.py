@@ -731,9 +731,9 @@ def print_and_save_modules(all_modules, extensions):
     for module_info in all_functions:
         print((
             "{module.nloc:7d}" +
-            "{module.average_NLOC:7d}" +
-            "{module.average_CCN:7d}" +
-            "{module.average_token:10d}" +
+            "{module.average_NLOC:7.0f}" +
+            "{module.average_CCN:7.1f}" +
+            "{module.average_token:10.0f}" +
             "{function_count:10d}" +
             "     {module.filename}").format(
                 module=module_info,

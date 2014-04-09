@@ -163,8 +163,14 @@ def b():
         functions = get_python_function_list(code)
         self.assertEqual(5, functions[0].token_count)
 
+    def test_docstring_is_not_counted_in_nloc(self):
+        class namespace2:
+            def function_with_2_parameters(a, b):
+                pass
+        functions = get_python_function_list(inspect.getsource(namespace2))
+        self.assertEqual(2, functions[0].parameter_count)
+
     #global complexity
-    #docstring
 
 
 def top_level_function_for_test():
