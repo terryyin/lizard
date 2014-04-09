@@ -86,7 +86,7 @@ class Test_FunctionInfo(unittest.TestCase):
         pickle.dumps(FunctionInfo("a", '', 1))
 
 
-from lizard import warning_filter, FileInformation, Whitelist
+from lizard import warning_filter, FileInformation, whitelist_filter
 
 class TestWarningFilter(unittest.TestCase):
 
@@ -110,33 +110,27 @@ class TestWarningFilterWithWhitelist(unittest.TestCase):
              FunctionInfo("foo", 'anotherfile')]
 
     def test_should_filter_out_the_whitelist(self):
-        whitelist = Whitelist("foo")
-        warnings = list(whitelist.filter(self.WARNINGS))
-        self.assertEqual(1, len(warnings))
+        warnings = whitelist_filter(self.WARNINGS, "foo")
+        self.assertEqual(1, len(list(warnings)))
 
     def test_should_filter_function_in_the_right_file_when_specified(self):
-        whitelist = Whitelist('filename:foo')
-        warnings = list(whitelist.filter(self.WARNINGS))
-        self.assertEqual(2, len(warnings))
+        warnings = whitelist_filter(self.WARNINGS, 'filename:foo')
+        self.assertEqual(2, len(list(warnings)))
 
     def test_should_work_with_class_member(self):
-        whitelist = Whitelist('class::foo')
-        warnings = list(whitelist.filter([FunctionInfo("class::foo", 'filename')]))
-        self.assertEqual(0, len(warnings))
+        warnings = whitelist_filter([FunctionInfo("class::foo", 'filename')], 'class::foo')
+        self.assertEqual(0, len(list(warnings)))
 
     def test_should_filter_mutiple_functions_defined_on_one_line(self):
-        whitelist = Whitelist('foo, bar')
-        warnings = list(whitelist.filter(self.WARNINGS))
-        self.assertEqual(0, len(warnings))
+        warnings = whitelist_filter(self.WARNINGS, 'foo, bar')
+        self.assertEqual(0, len(list(warnings)))
 
     def test_should_filter_mutiple_lines_of_whitelist(self):
-        whitelist = Whitelist('foo\n bar')
-        warnings = list(whitelist.filter(self.WARNINGS))
-        self.assertEqual(0, len(warnings))
+        warnings = whitelist_filter(self.WARNINGS, 'foo\n bar')
+        self.assertEqual(0, len(list(warnings)))
 
     def test_should_ignore_comments_in_whitelist(self):
-        whitelist = Whitelist('foo  #,bar\ni#,bar')
-        warnings = list(whitelist.filter(self.WARNINGS))
-        self.assertEqual(1, len(warnings))
+        warnings = whitelist_filter(self.WARNINGS, 'foo  #,bar\ni#,bar')
+        self.assertEqual(1, len(list(warnings)))
 
 

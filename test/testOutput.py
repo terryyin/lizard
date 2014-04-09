@@ -1,6 +1,7 @@
 import unittest
 from test.mock import Mock, patch
 import sys
+import os
 from lizard import print_warnings, print_and_save_modules, FunctionInfo, FileInformation,\
     print_result, get_extensions
 from lizard_ext import CppNcssXMLFormatter
@@ -130,27 +131,29 @@ class TestAllOutput(StreamStdoutTestCase):
         print_result(file_infos, option)
         self.assertEqual(0, mock_exit.call_count)
 
+    @patch.object(os.path, 'isfile')
+    @patch('lizard.open', create=True)
+    def check_whitelist(self, script, mock_open, mock_isfile):
+        mock_isfile.return_value = True
+        mock_open.return_value.read.return_value = script
+        file_infos = [FileInformation('f1.c', 1, [self.foo])]
+        option = Mock(CCN=15, number = 0, extensions=[])
+        print_result(file_infos, option)
+
     @patch.object(sys, 'exit')
     def test_exit_with_non_zero_when_more_warning_than_ignored_number(self, mock_exit):
         self.foo.cyclomatic_complexity = 16
-        file_infos = [FileInformation('f1.c', 1, [self.foo])]
-        option = Mock(CCN=15, number = 0, extensions=[], whitelist='')
-        print_result(file_infos, option)
+        self.check_whitelist('')
         mock_exit.assert_called_with(1)
 
     @patch.object(sys, 'exit')
     def test_whitelist(self, mock_exit):
         self.foo.cyclomatic_complexity = 16
-        file_infos = [FileInformation('f1.c', 1, [self.foo])]
-        option = Mock(CCN=15, number = 0, extensions=[], whitelist='foo')
-        print_result(file_infos, option)
+        self.check_whitelist('foo')
         self.assertEqual(0, mock_exit.call_count)
 
     def test_null_result(self):
-        file_infos = [FileInformation('f1.c', 1, []), None]
-        option = Mock(CCN=15, number = 0, extensions=[], whitelist='')
-        print_result(file_infos, option)
-
+        self.check_whitelist('')
 
 
 import xml.etree.ElementTree as ET

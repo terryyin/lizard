@@ -608,35 +608,39 @@ def warning_filter(option, fileStatistics):
                     yield fun
 
 
-class Whitelist(object):
-
-    def __init__(self, text):
-        self.whitelist = [
-            self._get_whitelist_item(line.split('#')[0])
-            for line in text.splitlines()]
-
-    def filter(self, warnings):
-        for warning in warnings:
-            if not self._in_list(warning):
-                yield warning
-
-    def _get_whitelist_item(self, text):
+def whitelist_filter(warnings, script=None):
+    def _get_whitelist_item(script):
         white = {}
-        pieces = text.replace('::', '##').split(':')
+        pieces = script.replace('::', '##').split(':')
         if len(pieces) > 1:
             white['file_name'] = pieces[0]
-            text = pieces[1]
+            script = pieces[1]
         white['function_names'] = (
-            [x.strip().replace('##', '::') for x in text.split(',')])
+            [x.strip().replace('##', '::') for x in script.split(',')])
         return white
 
-    def _in_list(self, warning):
-        return any(self._match_whitelist_item(white, warning)
-                   for white in self.whitelist)
+    def _in_list(warning):
+        return any(_match_whitelist_item(white, warning)
+                   for white in whitelist)
 
-    def _match_whitelist_item(self, white, warning):
+    def _match_whitelist_item(white, warning):
         return (warning.name in white['function_names'] and
                 warning.filename == white.get('file_name', warning.filename))
+
+    def get_whitelist():
+        whitelist_filename = "whitelizard.txt"
+        if os.path.isfile(whitelist_filename):
+            return open(whitelist_filename, mode='r').read()
+        return ''
+
+    if not script:
+        script = get_whitelist()
+    whitelist = [
+        _get_whitelist_item(line.split('#')[0])
+        for line in script.splitlines()]
+    for warning in warnings:
+        if not _in_list(warning):
+            yield warning
 
 
 def print_function_info_header(extensions):
@@ -691,20 +695,19 @@ def print_total(warning_count, saved_result, option):
     cnt = len(all_fun)
     if (cnt == 0):
         cnt = 1
-    files_NLOC = sum([f.nloc for f in file_infos])
-    functions_NLOC = sum([f.nloc for f in all_fun])
-    if (functions_NLOC == 0):
-        functions_NLOC = 1
+    nloc_in_functions = sum([f.nloc for f in all_fun])
+    if (nloc_in_functions == 0):
+        nloc_in_functions = 1
     total_info = (
-        files_NLOC,
-        functions_NLOC / cnt,
+        sum([f.nloc for f in file_infos]),
+        nloc_in_functions / cnt,
         float(sum([f.cyclomatic_complexity for f in all_fun])) / cnt,
         float(sum([f.token_count for f in all_fun])) / cnt,
         cnt,
         warning_count,
         float(warning_count) / cnt,
         float(sum([f.nloc for f in all_fun
-              if f.cyclomatic_complexity > option.CCN])) / functions_NLOC
+              if f.cyclomatic_complexity > option.CCN])) / nloc_in_functions
         )
 
     if not option.warnings_only:
@@ -750,7 +753,7 @@ def print_result(code_infos, option):
     if not option.warnings_only:
         code_infos = print_and_save_modules(code_infos, option.extensions)
     warnings = warning_filter(option, code_infos)
-    warnings = Whitelist(option.whitelist).filter(warnings)
+    warnings = whitelist_filter(warnings)
     warning_count = print_warnings(option, warnings)
     print_total(warning_count, code_infos, option)
     for extension in option.extensions:
@@ -826,15 +829,7 @@ def get_all_source_files(exclude_patterns, paths):
 
 
 def parse_args(argv):
-
-    def get_whitelist():
-        whitelist_filename = "whitelizard.txt"
-        if os.path.isfile(whitelist_filename):
-            return open(whitelist_filename, mode='r').read()
-        return ''
-
     options = createCommandLineParser(argv[0]).parse_args(args=argv[1:])
-    options.whitelist = get_whitelist()
     options.extensions = get_extensions(options.extensions,
                                         options.switchCasesAsOneCondition)
     function_parts = [getattr(ext, 'FUNCTION_INFO_PART')
