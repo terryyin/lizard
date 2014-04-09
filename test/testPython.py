@@ -158,19 +158,21 @@ def b():
         self.assertEqual(9, functions[0].token_count)
         self.assertEqual(4, functions[0].end_line)
 
-    def test_block_string_with_double_quotes(self):
-        code = 'def f(): """block string"""'
-        functions = get_python_function_list(code)
-        self.assertEqual(5, functions[0].token_count)
+    def check_function_info(self, source, expect_token_count, expect_nloc, expect_endline):
+        functions = get_python_function_list(source)
+        self.assertEqual(expect_token_count, functions[0].token_count)
+        self.assertEqual(expect_nloc, functions[0].nloc)
+        self.assertEqual(expect_endline, functions[0].end_line)
 
-    def xtest_docstring_is_not_counted_in_nloc(self):
-        def function_with_doctstring(a, b):
-            '''blah
-            blah
-            '''
-            pass
-        functions = get_python_function_list(inspect.getsource(function_with_doctstring))
-        self.assertEqual(2, functions[0].nloc)
+    def test_block_string(self):
+        self.check_function_info('def f(): a="""block string"""', 7, 1, 1)
+        self.check_function_info("def f(): a='''block string'''", 7, 1, 1)
+        self.check_function_info("def f():\n a='''block string'''", 7, 2, 2)
+        self.check_function_info("def f():\n a='''block\n string'''", 7, 3, 3)
+        self.check_function_info("def f():\n a='''block\n '''", 7, 3, 3)
+
+    def test_docstring_is_not_counted_in_nloc(self):
+        self.check_function_info("def f():\n '''block\n '''\n pass", 6, 2, 4)
 
     #global complexity
 

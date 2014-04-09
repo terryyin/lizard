@@ -51,11 +51,20 @@ class PythonReader(CodeReader):
 
     def _DEC(self, token):
         if token == ')':
-            self._state = self._GLOBAL
+            self._state = self._state_colon
         else:
             self.context.PARAMETER(token)
             return
         self.context.ADD_TO_LONG_FUNCTION_NAME(" " + token)
+
+    def _state_colon(self, token):
+        self._state = self._state_first_line if token == ':' else self._GLOBAL
+
+    def _state_first_line(self, token):
+        self._state = self._GLOBAL
+        if token.startswith('"""') or token.startswith("'''"):
+            self.context.add_nloc(-token.count('\n') - 1)
+        self._GLOBAL(token)
 
     def eof(self):
         self.current_indent = 0

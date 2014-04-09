@@ -212,6 +212,10 @@ class CodeInfoContext(object):
         self.reader = (CodeReader.get_reader(filename) or CLikeReader)()
         self.newline = True
 
+    def add_nloc(self, count):
+        self.current_function.nloc += count
+        self.fileinfo.nloc += count
+
     def START_NEW_FUNCTION(self, name):
         self.current_function =\
             FunctionInfo(name, self.fileinfo.filename, self.current_line)
@@ -251,7 +255,7 @@ class CommentCounter(object):
         for token in tokens:
             comment = get_comment(token)
             if comment is not None:
-                if len(comment.splitlines()) > 1:
+                for _ in comment.splitlines()[1:]:
                     yield '\n'
                 if comment.strip().startswith("#lizard forgive"):
                     context.forgive = True
@@ -269,15 +273,16 @@ class LineCounter(object):
     def extend_tokens(self, tokens, context):
         context.current_line = 1
         for token in tokens:
-            context.current_line += (
-                1 if token == '\n' else (len(token.splitlines()) - 1))
-            if token == "\n":
-                self._new_line(context)
-            else:
+            if token != "\n":
+                self._new_line(context, token.count('\n'))
                 yield token
+            else:
+                context.current_line += 1
+                context.newline = True
 
-    def _new_line(self, context):
-        context.newline = True
+    def _new_line(self, context, count):
+        context.current_line += count
+        context.add_nloc(count)
 
 
 class TokenCounter(object):
@@ -298,10 +303,9 @@ class TokenCounter(object):
     def _count_token(self, context):
         context.fileinfo.token_count += 1
         if context.newline:
-            context.current_function.nloc += 1
-            context.fileinfo.nloc += 1
+            context.add_nloc(1)
             context.newline = False
-            context.current_function.end_line = context.current_line
+        context.current_function.end_line = context.current_line
         context.current_function.token_count += 1
 
 

@@ -82,3 +82,11 @@ class TestLOC(unittest.TestCase):
         result = get_cpp_function_list("  \nint fun(){}")
         self.assertEqual(2, result[0].start_line)
 
+    def test_having_multiple_line_comments(self):
+        result = get_cpp_function_list('''int fun(){
+        /*2
+          3
+          4*/
+                }''')
+        self.assertEqual(5, result[0].end_line)
+
