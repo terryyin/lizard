@@ -43,7 +43,7 @@ class Test_analyze_files(unittest.TestCase):
     def test_MoreFilesMultipleThread(self):
         analyzer = analyzer_mock
         r = map_files_to_analyzer(["f1", "f2"], analyzer, 2)
-        self.assertEqual(["f1", "f2"], [x for x in r])
+        self.assertSetEqual(set(["f1", "f2"]), set(x for x in r))
 
 
 @patch('lizard.open', create=True)
