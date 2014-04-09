@@ -64,9 +64,10 @@ class TestWarningOutput(StreamStdoutTestCase):
         print_warnings(self.option, [])
         self.assertIn("Warnings (CCN > 15)", sys.stdout.stream)
 
-    def test_should_say_no_warning_when_warning_only_is_off(self):
+    def test_no_news_is_good_news(self):
+        self.option.warnings_only = True
         print_warnings(self.option, [])
-        self.assertIn("No warning found. Excellent!\n", sys.stdout.stream)
+        self.assertEqual('', sys.stdout.stream)
 
     def test_should_not_have_header_when_warning_only_is_on(self):
         self.option = Mock(warnings_only=True, CCN=15)

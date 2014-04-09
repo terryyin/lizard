@@ -681,10 +681,6 @@ def print_warnings(option, warnings):
     for warning in warnings:
         warning_count += 1
         print_function_info(warning, option.extensions, option.warnings_only)
-
-    if warning_count == 0:
-        print("No warning found. Excellent!")
-
     return warning_count
 
 
