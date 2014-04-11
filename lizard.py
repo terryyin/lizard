@@ -34,17 +34,19 @@ import hashlib
 DEFAULT_CCN_THRESHOLD = 15
 
 
-def analyze(paths, exclude_pattern=[], threads=1, extensions=[]):
+def analyze(paths, exclude_pattern=None, threads=1, extensions=None):
     '''
     returns an iterator of file infomation that contains function
     statistics.
     '''
+    exclude_pattern = exclude_pattern or []
+    extensions = extensions or []
     files = get_all_source_files(exclude_pattern, paths)
     file_analyzer = FileAnalyzer(extensions)
     return map_files_to_analyzer(files, file_analyzer, threads)
 
 
-def createCommandLineParser(prog=None):
+def create_command_line_parser(prog=None):
     from argparse import ArgumentParser
     parser = ArgumentParser(prog=prog)
     parser.add_argument('paths', nargs='*', default=['.'],
@@ -129,7 +131,7 @@ def createCommandLineParser(prog=None):
     return parser
 
 
-class FunctionInfo(object):
+class FunctionInfo(object):  # pylint: disable=R0902
 
     def __init__(self, name, filename, start_line=0, ccn=1):
         self.cyclomatic_complexity = ccn
@@ -169,34 +171,32 @@ class FunctionInfo(object):
             " params (%(nloc)d NLOC, %(token_count)d tokens)") % self.__dict__
 
 
-class FileInformation(object):
+class FileInformation(object):  # pylint: disable=R0903
 
-    def __init__(self, filename, nloc, function_list):
+    def __init__(self, filename, nloc, function_list=None):
         self.filename = filename
         self.nloc = nloc
-        self.function_list = function_list
+        self.function_list = function_list or []
         self.token_count = 0
 
-    average_NLOC = property(lambda self: self._functions_average("nloc"))
+    average_NLOC = property(lambda self: self.functions_average("nloc"))
     average_token = property(
-        lambda self: self._functions_average("token_count"))
+        lambda self: self.functions_average("token_count"))
     average_CCN = property(
-        lambda self: self._functions_average("cyclomatic_complexity"))
+        lambda self: self.functions_average("cyclomatic_complexity"))
     CCN = property(
         lambda self:
         sum(fun.cyclomatic_complexity for fun in self.function_list))
 
-    def _functions_average(self, att):
+    def functions_average(self, att):
         return (sum(getattr(fun, att) for fun in self.function_list)
                 / len(self.function_list) if self.function_list else 0)
 
 
-class CodeInfoContext(FileInformation):
-    """ provides the builder to build FileInformation """
+class CodeInfoContext(object):
 
     def __init__(self, filename):
-        FileInformation.__init__(self, filename, 0, [])
-        self.fileinfo = self
+        self.fileinfo = FileInformation(filename, 0)
         self.current_line = 0
         self.current_function = FunctionInfo('', '', 0)
         self.forgive = False
@@ -309,7 +309,7 @@ class CodeReader(object):
 
     @staticmethod
     def get_reader(filename):
-        # pylint: disable-msg=E1101
+        # pylint: disable=E1101
         for lan in list(CodeReader.__subclasses__()):
             if CodeReader.compile_file_extension_re(*lan.ext).match(filename):
                 return lan
@@ -343,7 +343,7 @@ class CodeReader(object):
         return token_pattern.findall(source_code)
 
 
-class CCppCommentsMixin(object):  # pylint: disable-msg=R0903
+class CCppCommentsMixin(object):  # pylint: disable=R0903
     @staticmethod
     def get_comment_from_token(token):
         if token.startswith("/*") or token.startswith("//"):
@@ -517,7 +517,7 @@ def token_processor_for_function(tokens, reader):
     reader.eof()
 
 
-class FileAnalyzer(object):  # pylint: disable-msg=R0903
+class FileAnalyzer(object):  # pylint: disable=R0903
 
     def __init__(self, extensions):
         self.processors = extensions
@@ -536,7 +536,7 @@ class FileAnalyzer(object):  # pylint: disable-msg=R0903
             tokens = processor(tokens, reader)
         for _ in tokens:
             pass
-        return context
+        return context.fileinfo
 
 
 def warning_filter(option, module_infos):
@@ -775,7 +775,7 @@ def get_all_source_files(exclude_patterns, paths):
 
 
 def parse_args(argv):
-    options = createCommandLineParser(argv[0]).parse_args(args=argv[1:])
+    options = create_command_line_parser(argv[0]).parse_args(args=argv[1:])
     values = [
         item['value'] for item in OutputScheme([]).items]
     for sort_factor in options.sorting:
