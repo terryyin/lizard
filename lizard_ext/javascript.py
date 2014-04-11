@@ -44,7 +44,7 @@ class JavaScriptReader(CodeReader,  CCppCommentsMixin):
                 self.brace_count -= 1
                 if self.brace_count == 0:
                     self._state = self._GLOBAL
-                    self.context.END_OF_FUNCTION()
+                    self.context.end_of_function()
                     if self.function_stack:
                         self.context.current_function = self.function_stack.pop()
                         self.brace_count = self.context.current_function.brace_count
@@ -58,7 +58,7 @@ class JavaScriptReader(CodeReader,  CCppCommentsMixin):
             self.context.current_function.brace_count = self.brace_count
             self.function_stack.append(self.context.current_function)
             self.brace_count = 0
-            self.context.START_NEW_FUNCTION(self.function_name or 'function')
+            self.context.start_new_function(self.function_name or 'function')
             self._state = self._DEC
 
     def _ASSIGNMENT(self, token):
@@ -74,7 +74,7 @@ class JavaScriptReader(CodeReader,  CCppCommentsMixin):
         if token == ')':
             self._state = self._GLOBAL
         else:
-            self.context.PARAMETER(token)
+            self.context.parameter(token)
             return
-        self.context.ADD_TO_LONG_FUNCTION_NAME(" " + token)
+        self.context.add_to_long_function_name(" " + token)
 

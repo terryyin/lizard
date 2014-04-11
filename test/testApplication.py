@@ -117,4 +117,4 @@ class TestOptionParsing(unittest.TestCase):
     @patch('sys.stderr', new_callable=StringIO)
     def test_sorting_factor_does_not_exist_error_message(self, mock_stderr, mock_exit):
         options = parse_args(['lizard', '-sdoesnotexist'])
-        self.assertEqual("Wrong sorting field 'doesnotexist'.\nCandidates are: ['nloc', 'cyclomatic_complexity', 'token_count', 'parameter_count', 'location']\n", mock_stderr.getvalue())
+        self.assertEqual("Wrong sorting field 'doesnotexist'.\nCandidates are: nloc, cyclomatic_complexity, token_count, parameter_count, location\n", mock_stderr.getvalue())

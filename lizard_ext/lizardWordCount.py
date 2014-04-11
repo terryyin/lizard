@@ -77,12 +77,12 @@ class LizardExtension(object):
         self.result = {}
 
     @staticmethod
-    def extend_tokens(tokens, context):
+    def __call__(tokens, reader):
         '''
         The function will be used in multiple threading tasks.
         So don't store any data with an extension object.
         '''
-        context.fileinfo.wordCount = result = {}
+        reader.context.fileinfo.wordCount = result = {}
         for token in tokens:
             if token not in LizardExtension.ignoreList and token[0] not in ('"', "'", '#'):
                 result[token] = result.get(token, 0) + 1

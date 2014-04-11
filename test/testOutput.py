@@ -3,7 +3,7 @@ from test.mock import Mock, patch
 import sys
 import os
 from lizard import print_warnings, print_and_save_modules, FunctionInfo, FileInformation,\
-    print_result, get_extensions
+    print_result, get_extensions, OutputScheme
 from lizard_ext import CppNcssXMLFormatter
 
 class StreamStdoutTestCase(unittest.TestCase):
@@ -30,27 +30,29 @@ class TestFunctionOutput(StreamStdoutTestCase):
     def setUp(self):
         StreamStdoutTestCase.setUp(self)
         self.extensions = get_extensions([])
+        self.scheme = OutputScheme(self.extensions)
         self.foo = FunctionInfo("foo", 'FILENAME', 100)
 
     def test_function_info_header_should_have_a_box(self):
-        print_and_save_modules([], self.extensions)
+        print_and_save_modules([], self.extensions, self.scheme)
         self.assertIn("=" * 20, sys.stdout.stream.splitlines()[0])
 
     def test_function_info_header_should_have_the_captions(self):
-        print_and_save_modules([], self.extensions)
+        print_and_save_modules([], self.extensions, self.scheme)
         self.assertEquals("  NLOC    CCN   token  PARAM  location  ", sys.stdout.stream.splitlines()[1])
 
     def test_function_info_header_should_have_the_captions_of_external_extensions(self):
         external_extension = Mock(FUNCTION_CAPTION = "*external_extension*")
-        self.extensions = get_extensions([external_extension])
-        print_and_save_modules([], self.extensions)
+        extensions = get_extensions([external_extension])
+        scheme = OutputScheme(extensions)
+        print_and_save_modules([], extensions, scheme)
         self.assertEquals("  NLOC    CCN   token  PARAM *external_extension* location  ", sys.stdout.stream.splitlines()[1])
 
     def test_print_fileinfo(self):
         self.foo.end_line = 100
         self.foo.cyclomatic_complexity = 16
         fileStat = FileInformation("FILENAME", 1, [self.foo])
-        print_and_save_modules([fileStat], self.extensions)
+        print_and_save_modules([fileStat], self.extensions, self.scheme)
         self.assertEquals("       1     16      1      0 foo@100-100@FILENAME", sys.stdout.stream.splitlines()[3])
 
 class TestWarningOutput(StreamStdoutTestCase):
@@ -59,51 +61,51 @@ class TestWarningOutput(StreamStdoutTestCase):
         StreamStdoutTestCase.setUp(self)
         self.option = Mock(warnings_only=False, CCN=15, extensions = [])
         self.foo = FunctionInfo("foo", 'FILENAME', 100)
+        self.scheme = Mock()
 
     def test_should_have_header_when_warning_only_is_off(self):
-        print_warnings(self.option, [])
+        print_warnings(self.option, self.scheme, [])
         self.assertIn("Warnings (CCN > 15)", sys.stdout.stream)
 
     def test_no_news_is_good_news(self):
         self.option.warnings_only = True
-        print_warnings(self.option, [])
+        print_warnings(self.option, self.scheme, [])
         self.assertEqual('', sys.stdout.stream)
 
     def test_should_not_have_header_when_warning_only_is_on(self):
         self.option = Mock(warnings_only=True, CCN=15)
-        print_warnings(self.option, [])
+        print_warnings(self.option, self.scheme, [])
         self.assertNotIn("Warnings (CCN > 15)", sys.stdout.stream)
 
     def test_should_use_clang_format_for_warning(self):
         self.option = Mock(display_fn_end_line = False, extensions = get_extensions([]))
-        print_warnings(self.option, [self.foo])
+        print_warnings(self.option, self.scheme, [self.foo])
         self.assertIn("FILENAME:100: warning: foo has 1 CCN and 0 params (1 NLOC, 1 tokens)\n", sys.stdout.stream)
 
-    @patch('lizard.print_function_info')
-    def test_sort_warning(self, print_function_info):
+    def test_sort_warning(self):
         self.option.sorting = ['cyclomatic_complexity']
         self.foo.cyclomatic_complexity = 10
         bar = FunctionInfo("bar", '', 100)
         bar.cyclomatic_complexity = 15
-        print_warnings(self.option, [self.foo, bar])
-        self.assertEqual('bar', print_function_info.call_args_list[0][0][0].name)
+        print_warnings(self.option, self.scheme, [self.foo, bar])
+        self.assertEqual('bar', self.scheme.function_info.call_args_list[0][0][0].name)
 
     def test_sort_warning_with_generator(self):
         self.option.sorting = ['cyclomatic_complexity']
-        print_warnings(self.option, (x for x in []))
+        print_warnings(self.option, self.scheme, (x for x in []))
 
 
 class TestFileOutput(StreamStdoutTestCase):
 
     def test_print_and_save_detail_information(self):
         fileSummary = FileInformation("FILENAME", 123, [])
-        print_and_save_modules([fileSummary], [])
+        print_and_save_modules([fileSummary], [], Mock())
         self.assertIn("    123      0    0.0         0         0     FILENAME", sys.stdout.stream)
 
     def test_print_file_summary_only_once(self):
         print_and_save_modules(
                             [FileInformation("FILENAME1", 123, []), 
-                             FileInformation("FILENAME2", 123, [])], [])
+                             FileInformation("FILENAME2", 123, [])], [], Mock())
         self.assertEqual(1, sys.stdout.stream.count("FILENAME1"))
 
 

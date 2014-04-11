@@ -45,7 +45,7 @@ class PythonReader(CodeReader):
     def _FUNCTION(self, token):
         if token != '(':
             self.function_stack.append(self.context.current_function)
-            self.context.START_NEW_FUNCTION(token)
+            self.context.start_new_function(token)
             self.context.current_function.indent = self.current_indent
         else:
             self._state = self._DEC
@@ -54,9 +54,9 @@ class PythonReader(CodeReader):
         if token == ')':
             self._state = self._state_colon
         else:
-            self.context.PARAMETER(token)
+            self.context.parameter(token)
             return
-        self.context.ADD_TO_LONG_FUNCTION_NAME(" " + token)
+        self.context.add_to_long_function_name(" " + token)
 
     def _state_colon(self, token):
         self._state = self._state_first_line if token == ':' else self._GLOBAL
@@ -74,6 +74,6 @@ class PythonReader(CodeReader):
     def _close_functions(self):
         while self.context.current_function.indent >= self.current_indent:
             endline = self.context.current_function.end_line
-            self.context.END_OF_FUNCTION()
+            self.context.end_of_function()
             self.context.current_function = self.function_stack.pop()
             self.context.current_function.end_line = endline

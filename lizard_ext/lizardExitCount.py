@@ -6,15 +6,15 @@ class LizardExtension(object):
     FUNCTION_CAPTION = " exits "
     FUNCTION_INFO_PART = "exit_count"
 
-    def extend_tokens(self, tokens, context):
+    def __call__(self, tokens, reader):
         first_return = False
         for token in tokens:
-            if not hasattr(context.current_function, "exit_count"):
-                context.current_function.exit_count = 1
+            if not hasattr(reader.context.current_function, "exit_count"):
+                reader.context.current_function.exit_count = 1
                 first_return = True
             if token == "return":
                 if first_return:
                     first_return = False
                 else:
-                    context.current_function.exit_count += 1
+                    reader.context.current_function.exit_count += 1
             yield token

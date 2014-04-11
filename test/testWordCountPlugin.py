@@ -3,12 +3,13 @@ from test.mock import patch
 from lizard_ext.lizardWordCount import LizardExtension
 
 
-class Context(object):
+class FakeReader(object):
 
     class FI(object) : pass
 
     def __init__(self):
         self.fileinfo = self.FI()
+        self.context = self
     def get_word_map(self):
         return self.fileinfo.wordCount
 
@@ -16,44 +17,43 @@ class Context(object):
 class TestWordCountPlugin(unittest.TestCase):
 
     def setUp(self):
-        self.context = Context()
+        self.reader = FakeReader()
         self.ext = LizardExtension()
 
     def test_count_one_word(self):
-        list(self.ext.extend_tokens(["a", "b"], self.context))
-        self.assertEqual(1, self.context.get_word_map()['a'])
-        self.assertEqual(1, self.context.get_word_map()['b'])
+        list(self.ext(["a", "b"], self.reader))
+        self.assertEqual(1, self.reader.get_word_map()['a'])
+        self.assertEqual(1, self.reader.get_word_map()['b'])
 
     def test_count_one_word_multiple_times(self):
-        list(self.ext.extend_tokens(["a", "a"], self.context))
-        self.assertEqual(2, self.context.get_word_map()['a'])
+        list(self.ext(["a", "a"], self.reader))
+        self.assertEqual(2, self.reader.get_word_map()['a'])
 
     def test_count_one_word_multiple_times(self):
-        list(self.ext.extend_tokens(["a", "a"], self.context))
-        self.assertEqual(2, self.context.get_word_map()['a'])
+        list(self.ext(["a", "a"], self.reader))
+        self.assertEqual(2, self.reader.get_word_map()['a'])
 
     def test_should_not_count_keywords(self):
-        list(self.ext.extend_tokens(["for"], self.context))
-        self.assertNotIn('for', self.context.get_word_map())
+        list(self.ext(["for"], self.reader))
+        self.assertNotIn('for', self.reader.get_word_map())
 
     def test_should_count_non_keyword(self):
-        list(self.ext.extend_tokens(["For"], self.context))
-        self.assertIn('For', self.context.get_word_map())
+        list(self.ext(["For"], self.reader))
+        self.assertIn('For', self.reader.get_word_map())
 
     def test_should_not_count_string(self):
-        list(self.ext.extend_tokens(["\"\""], self.context))
-        self.assertEqual(0, len(self.context.get_word_map()))
+        list(self.ext(["\"\""], self.reader))
+        self.assertEqual(0, len(self.reader.get_word_map()))
 
     def test_reduce_the_result(self):
-        list(self.ext.extend_tokens(["a"], self.context))
-        self.ext.reduce(self.context.fileinfo)
-        self.ext.reduce(self.context.fileinfo)
+        list(self.ext(["a"], self.reader))
+        self.ext.reduce(self.reader.fileinfo)
+        self.ext.reduce(self.reader.fileinfo)
         self.assertEqual(2, self.ext.result['a'])
 
 class TestWordCountOutput(unittest.TestCase):
 
     def setUp(self):
-        self.context = Context()
         self.buf = ''
 
     def write_to_buffer(self, txt):

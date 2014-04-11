@@ -27,7 +27,7 @@ import itertools
 import re
 import sys
 import os
-import fnmatch
+from fnmatch import fnmatch
 import hashlib
 
 
@@ -191,164 +191,107 @@ class FileInformation(object):
                 / len(self.function_list) if self.function_list else 0)
 
 
-class CodeInfoContext(object):
-    """
-        provides the builder to build FileInformation
-        The building blocks are:
-        START_NEW_FUNCTION
-            ADD_TO_FUNCTION_NAME
-            ADD_TO_LONG_FUNCTION_NAME
-                PARAMETER
-                    CONDITION
-                    TOKEN
-        END_OF_FUNCTION
-    """
+class CodeInfoContext(FileInformation):
+    """ provides the builder to build FileInformation """
 
     def __init__(self, filename):
-        self.fileinfo = FileInformation(filename, 0, [])
+        FileInformation.__init__(self, filename, 0, [])
+        self.fileinfo = self
         self.current_line = 0
-        self.START_NEW_FUNCTION('')
+        self.current_function = FunctionInfo('', '', 0)
         self.forgive = False
-        self.reader = (CodeReader.get_reader(filename) or CLikeReader)(self)
         self.newline = True
 
     def add_nloc(self, count):
         self.current_function.nloc += count
         self.fileinfo.nloc += count
 
-    def START_NEW_FUNCTION(self, name):
+    def start_new_function(self, name):
         self.current_function =\
             FunctionInfo(name, self.fileinfo.filename, self.current_line)
 
-    def CONDITION(self, inc=1):
+    def add_condition(self, inc=1):
         self.current_function.cyclomatic_complexity += inc
 
-    def ADD_TO_LONG_FUNCTION_NAME(self, app):
+    def add_to_long_function_name(self, app):
         self.current_function.add_to_long_name(app)
 
-    def ADD_TO_FUNCTION_NAME(self, app):
+    def add_to_function_name(self, app):
         self.current_function.add_to_function_name(app)
 
-    def PARAMETER(self, token):
+    def parameter(self, token):
         self.current_function.add_parameter(token)
 
-    def END_OF_FUNCTION(self):
+    def end_of_function(self):
         if not self.forgive:
             self.fileinfo.function_list.append(self.current_function)
         self.forgive = False
-        self.START_NEW_FUNCTION('')
+        self.current_function = FunctionInfo('', '', 0)
 
 
-class Preprocessor(object):
+def preprocessing(tokens, reader):
+    if hasattr(reader, "preprocess"):
+        return reader.preprocess(tokens)
+    else:
+        return (t for t in tokens if not t.isspace() or t == '\n')
 
-    def extend_tokens(self, tokens, context):
-        if hasattr(context.reader, "preprocess"):
-            return context.reader.preprocess(tokens)
+
+def comment_counter(tokens, reader):
+    get_comment = reader.get_comment_from_token
+    for token in tokens:
+        comment = get_comment(token)
+        if comment is not None:
+            for _ in comment.splitlines()[1:]:
+                yield '\n'
+            if comment.strip().startswith("#lizard forgive"):
+                reader.context.forgive = True
         else:
-            return (t for t in tokens if not t.isspace() or t == '\n')
-
-
-class CommentCounter(object):
-
-    def extend_tokens(self, tokens, context):
-        get_comment = context.reader.get_comment_from_token
-        for token in tokens:
-            comment = get_comment(token)
-            if comment is not None:
-                for _ in comment.splitlines()[1:]:
-                    yield '\n'
-                if comment.strip().startswith("#lizard forgive"):
-                    context.forgive = True
-            else:
-                yield token
-
-
-class LineCounter(object):
-    '''
-    And extension of lizard, to count the line and nloc.
-    '''
-    FUNCTION_CAPTION = "  NLOC  "
-    FUNCTION_INFO_PART = "nloc"
-
-    def extend_tokens(self, tokens, context):
-        context.current_line = 1
-        for token in tokens:
-            if token != "\n":
-                self._new_line(context, token.count('\n'))
-                yield token
-            else:
-                context.current_line += 1
-                context.newline = True
-
-    def _new_line(self, context, count):
-        context.current_line += count
-        context.add_nloc(count)
-
-
-class TokenCounter(object):
-    '''
-    An extension that counts the token.
-    But because of historical and implementation reason, the token
-    counting is already done in LineCounter. So this class only do
-    the output.
-    '''
-    FUNCTION_CAPTION = " token "
-    FUNCTION_INFO_PART = "token_count"
-
-    def extend_tokens(self, tokens, context):
-        for token in tokens:
-            self._count_token(context)
-            yield token
-
-    def _count_token(self, context):
-        context.fileinfo.token_count += 1
-        if context.newline:
-            context.add_nloc(1)
-            context.newline = False
-        context.current_function.end_line = context.current_line
-        context.current_function.token_count += 1
-
-
-class ParameterCounter(object):
-    ''' An extension that counts the parameters.
-        But because of historical and implementation reason, the parameter
-        counting is already done in FunctionCounter. So this class only do
-        the output.
-    '''
-
-    FUNCTION_CAPTION = " PARAM "
-    FUNCTION_INFO_PART = "parameter_count"
-
-    def extend_tokens(self, tokens, context):
-        return tokens
-
-
-class ConditionCounter(object):
-
-    FUNCTION_CAPTION = "  CCN  "
-    FUNCTION_INFO_PART = "cyclomatic_complexity"
-    conditions = set(['if', 'for', 'while', '&&', '||', '?', 'catch',
-                     'case', '#if', '#ifdef', '#elif'])
-
-    def extend_tokens(self, tokens, context):
-        conditions = (
-            context.reader.conditions
-            if hasattr(context.reader, "conditions") else self.conditions)
-        for token in tokens:
-            if token in conditions:
-                context.CONDITION()
             yield token
 
 
-class SwitchCasesAsOneConditionCounter(object):
-
-    def extend_tokens(self, tokens, context):
-        for token in tokens:
-            if token == 'switch':
-                context.CONDITION()
-            elif token == 'case':
-                context.CONDITION(-1)
+def line_counter(tokens, reader):
+    reader.context.current_line = 1
+    for token in tokens:
+        if token != "\n":
+            count = token.count('\n')
+            reader.context.current_line += count
+            reader.context.add_nloc(count)
             yield token
+        else:
+            reader.context.current_line += 1
+            reader.context.newline = True
+
+
+def token_counter(tokens, reader):
+    for token in tokens:
+        reader.context.fileinfo.token_count += 1
+        if reader.context.newline:
+            reader.context.add_nloc(1)
+            reader.context.newline = False
+        reader.context.current_function.end_line = reader.context.current_line
+        reader.context.current_function.token_count += 1
+        yield token
+
+
+def condition_counter(tokens, reader):
+    if hasattr(reader, "conditions"):
+        conditions = reader.conditions
+    else:
+        conditions = set(['if', 'for', 'while', '&&', '||', '?', 'catch',
+                         'case', '#if', '#ifdef', '#elif'])
+    for token in tokens:
+        if token in conditions:
+            reader.context.add_condition()
+        yield token
+
+
+def recount_switch_case(tokens, reader):
+    for token in tokens:
+        if token == 'switch':
+            reader.context.add_condition()
+        elif token == 'case':
+            reader.context.add_condition(-1)
+        yield token
 
 
 class CodeReader(object):
@@ -366,6 +309,7 @@ class CodeReader(object):
 
     @staticmethod
     def get_reader(filename):
+        # pylint: disable-msg=E1101
         for lan in list(CodeReader.__subclasses__()):
             if CodeReader.compile_file_extension_re(*lan.ext).match(filename):
                 return lan
@@ -449,23 +393,23 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
         if token == '(':
             self.bracket_level += 1
             self._state = self._state_dec
-            self.context.ADD_TO_LONG_FUNCTION_NAME(token)
+            self.context.add_to_long_function_name(token)
         elif token == '::':
             self._state = self._state_namespace
         else:
-            self.context.START_NEW_FUNCTION(token)
+            self.context.start_new_function(token)
             if token == 'operator':
                 self._state = self._state_operator
 
     def _state_operator(self, token):
         if token != '(':
             self._state = self._state_global
-        self.context.ADD_TO_FUNCTION_NAME(' ' + token)
+        self.context.add_to_function_name(' ' + token)
 
     def _state_namespace(self, token):
         self._state = self._state_operator\
             if token == 'operator' else self._state_global
-        self.context.ADD_TO_FUNCTION_NAME("::" + token)
+        self.context.add_to_function_name("::" + token)
 
     def _state_dec(self, token):
         if token in ('(', "<"):
@@ -475,13 +419,13 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
             if self.bracket_level == 0:
                 self._state = self._state_dec_to_imp
         elif self.bracket_level == 1:
-            self.context.PARAMETER(token)
+            self.context.parameter(token)
             return
-        self.context.ADD_TO_LONG_FUNCTION_NAME(" " + token)
+        self.context.add_to_long_function_name(" " + token)
 
     def _state_dec_to_imp(self, token):
         if token == 'const':
-            self.context.ADD_TO_LONG_FUNCTION_NAME(" " + token)
+            self.context.add_to_long_function_name(" " + token)
         elif token == '{':
             self.br_count += 1
             self._state = self._state_imp
@@ -506,7 +450,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
                 self.br_count -= 1
                 if self.br_count == 0:
                     self._state = self._state_global
-                    self.context.END_OF_FUNCTION()
+                    self.context.end_of_function()
 
 
 class JavaReader(CLikeReader, CodeReader):
@@ -528,12 +472,12 @@ class ObjCReader(CLikeReader, CodeReader):
             super(ObjCReader, self)._state_dec_to_imp(token)
             if self._state == self._state_global:
                 self._state = self._state_objc_dec_begin
-                self.context.START_NEW_FUNCTION(token)
+                self.context.start_new_function(token)
 
     def _state_objc_dec_begin(self, token):
         if token == ':':
             self._state = self._state_objc_dec
-            self.context.ADD_TO_FUNCTION_NAME(token)
+            self.context.add_to_function_name(token)
         elif token == '{':
             self.br_count += 1
             self._state = self._state_imp
@@ -543,7 +487,7 @@ class ObjCReader(CLikeReader, CodeReader):
     def _state_objc_dec(self, token):
         if token == '(':
             self._state = self._state_objc_param_type
-            self.context.ADD_TO_LONG_FUNCTION_NAME(token)
+            self.context.add_to_long_function_name(token)
         elif token == ',':
             pass
         elif token == '{':
@@ -551,42 +495,26 @@ class ObjCReader(CLikeReader, CodeReader):
             self._state = self._state_imp
         else:
             self._state = self._state_objc_dec_begin
-            self.context.ADD_TO_FUNCTION_NAME(" " + token)
+            self.context.add_to_function_name(" " + token)
 
     def _state_objc_param_type(self, token):
         if token == ')':
             self._state = self._state_objc_param
-        self.context.ADD_TO_LONG_FUNCTION_NAME(" " + token)
+        self.context.add_to_long_function_name(" " + token)
 
     def _state_objc_param(self, _):
         self._state = self._state_objc_dec
 
 
-class FunctionParser(object):  # pylint: disable-msg=R0903
+def token_processor_for_function(tokens, reader):
+    ''' token_processor_for_function parse source code into functions. This is
+    different from language to language. So token_processor_for_function need
+    a language specific 'reader' to actually do the job.
     '''
-    FunctionParser parse source code into functions. This is different from
-    language to language. So FunctionParser need a language specific 'reader'
-    to actually do the job.
-    '''
-    @staticmethod
-    def extend_tokens(tokens, context):
-        function_reader = context.reader
-        function_reader.context = context
-        for token in tokens:
-            function_reader.state(token)
-            yield token
-        function_reader.eof()
-
-
-class FunctionOutputPlaceholder(object):  # pylint: disable-msg=R0903
-
-    FUNCTION_CAPTION = " location  "
-    FUNCTION_INFO_PART = 'location'
-
-    @staticmethod
-    def extend_tokens(tokens, _):
-        for _ in tokens:
-            pass
+    for token in tokens:
+        reader.state(token)
+        yield token
+    reader.eof()
 
 
 class FileAnalyzer(object):  # pylint: disable-msg=R0903
@@ -602,10 +530,13 @@ class FileAnalyzer(object):  # pylint: disable-msg=R0903
 
     def analyze_source_code(self, filename, code):
         context = CodeInfoContext(filename)
-        tokens = context.reader.generate_tokens(code)
+        reader = (CodeReader.get_reader(filename) or CLikeReader)(context)
+        tokens = reader.generate_tokens(code)
         for processor in self.processors:
-            tokens = processor.extend_tokens(tokens, context)
-        return context.fileinfo
+            tokens = processor(tokens, reader)
+        for _ in tokens:
+            pass
+        return context
 
 
 def warning_filter(option, module_infos):
@@ -652,31 +583,36 @@ def whitelist_filter(warnings, script=None):
             yield warning
 
 
-def print_function_info_header(extensions):
-    captions = "".join(
-        ext.FUNCTION_CAPTION for ext in extensions
-        if hasattr(ext, "FUNCTION_CAPTION"))
-    print("=" * len(captions))
-    print(captions)
-    print("-" * len(captions))
+class OutputScheme(object):
+    def __init__(self, ext):
+        self.extensions = ext
+        self.items = [
+            {'caption': "  NLOC  ", 'value': "nloc"},
+            {'caption': "  CCN  ", 'value': "cyclomatic_complexity"},
+            {'caption': " token ", 'value': "token_count"},
+            {'caption': " PARAM ", 'value': "parameter_count"},
+            ] + [
+            {
+                'caption': ext.FUNCTION_CAPTION,
+                'value': ext.FUNCTION_INFO_PART
+            }
+            for ext in self.extensions if hasattr(ext, "FUNCTION_CAPTION")]
+        self.items.append({'caption': " location  ", 'value': 'location'})
+
+    def captions(self):
+        return "".join(item['caption'] for item in self.items)
+
+    def function_info_head(self):
+        captions = self.captions()
+        return "\n".join(("=" * len(captions), captions, "-" * len(captions)))
+
+    def function_info(self, fun):
+        return ''.join(
+            str(getattr(fun, item['value'])).rjust(len(item['caption']))
+            for item in self.items)
 
 
-def get_extended_function_info(fun, extensions):
-    return ''.join(
-        str(getattr(fun, ext.FUNCTION_INFO_PART))
-        .rjust(len(ext.FUNCTION_CAPTION))
-        for ext in extensions if hasattr(ext, "FUNCTION_INFO_PART"))
-
-
-def print_function_info(fun, extensions, warnings_only):
-    if warnings_only:
-        output_format = fun.clang_format_warning()
-    else:
-        output_format = get_extended_function_info(fun, extensions)
-    print(output_format)
-
-
-def print_warnings(option, warnings):
+def print_warnings(option, scheme, warnings):
     warning_count = 0
     if isinstance(option.sorting, list) and len(option.sorting) > 0:
         warnings = list(warnings)
@@ -686,10 +622,13 @@ def print_warnings(option, warnings):
         print(("\n" +
                "======================================\n" +
               "!!!! Warnings (CCN > %d) !!!!") % option.CCN)
-        print_function_info_header(option.extensions)
+        print(scheme.function_info_head())
     for warning in warnings:
         warning_count += 1
-        print_function_info(warning, option.extensions, option.warnings_only)
+        if option.warnings_only:
+            print(warning.clang_format_warning())
+        else:
+            print(scheme.function_info(warning))
     return warning_count
 
 
@@ -698,10 +637,10 @@ def print_total(warning_count, saved_result, option):
     all_fun = list(itertools.chain(*(file_info.function_list
                    for file_info in file_infos)))
     cnt = len(all_fun)
-    if (cnt == 0):
+    if cnt == 0:
         cnt = 1
     nloc_in_functions = sum([f.nloc for f in all_fun])
-    if (nloc_in_functions == 0):
+    if nloc_in_functions == 0:
         nloc_in_functions = 1
     total_info = (
         sum([f.nloc for f in file_infos]),
@@ -723,9 +662,9 @@ def print_total(warning_count, saved_result, option):
         print("%10d%10d%9.2f%11.2f%9d%13d%10.2f%8.2f" % total_info)
 
 
-def print_and_save_modules(all_modules, extensions):
+def print_and_save_modules(all_modules, extensions, scheme):
     all_functions = []
-    print_function_info_header(extensions)
+    print(scheme.function_info_head())
     for module_info in all_modules:
         for extension in extensions:
             if hasattr(extension, 'reduce'):
@@ -733,7 +672,7 @@ def print_and_save_modules(all_modules, extensions):
         if module_info:
             all_functions.append(module_info)
             for fun in module_info.function_list:
-                print(get_extended_function_info(fun, extensions))
+                print(scheme.function_info(fun))
 
     print("--------------------------------------------------------------")
     print("%d file analyzed." % (len(all_functions)))
@@ -755,11 +694,13 @@ def print_and_save_modules(all_modules, extensions):
 
 
 def print_result(code_infos, option):
+    scheme = OutputScheme(option.extensions)
     if not option.warnings_only:
-        code_infos = print_and_save_modules(code_infos, option.extensions)
+        code_infos = print_and_save_modules(
+            code_infos, option.extensions, scheme)
     warnings = warning_filter(option, code_infos)
     warnings = whitelist_filter(warnings)
-    warning_count = print_warnings(option, warnings)
+    warning_count = print_warnings(option, scheme, warnings)
     print_total(warning_count, code_infos, option)
     for extension in option.extensions:
         if hasattr(extension, 'print_result'):
@@ -810,9 +751,9 @@ def get_all_source_files(exclude_patterns, paths):
     hash_set = set()
 
     def _validate_file(pathname):
-        return CodeReader.get_reader(pathname) and \
-            all(not fnmatch.fnmatch(pathname, p) for p in exclude_patterns) and \
-            _not_duplicate(pathname)
+        return (CodeReader.get_reader(pathname) and
+                all(not fnmatch(pathname, p) for p in exclude_patterns)
+                and _not_duplicate(pathname))
 
     def _not_duplicate(full_path_name):
         fhash = md5_hash_file(full_path_name)
@@ -835,13 +776,12 @@ def get_all_source_files(exclude_patterns, paths):
 
 def parse_args(argv):
     options = createCommandLineParser(argv[0]).parse_args(args=argv[1:])
-    function_parts = [getattr(ext, 'FUNCTION_INFO_PART')
-                      for ext in get_extensions([])
-                      if hasattr(ext, 'FUNCTION_INFO_PART')]
+    values = [
+        item['value'] for item in OutputScheme([]).items]
     for sort_factor in options.sorting:
-        if sort_factor not in function_parts:
+        if sort_factor not in values:
             error_message = "Wrong sorting field '%s'.\n" % sort_factor
-            error_message += "Candidates are: " + str(function_parts) + "\n"
+            error_message += "Candidates are: " + ', '.join(values) + "\n"
             sys.stderr.write(error_message)
             sys.exit(2)
     return options
@@ -850,21 +790,19 @@ def parse_args(argv):
 def get_extensions(extension_names, switch_case_as_one_condition=False):
     from importlib import import_module
     extensions = [
-        Preprocessor(),
-        CommentCounter(),
-        LineCounter(),
-        ConditionCounter(),
-        TokenCounter(),
-        FunctionParser(),
-        ParameterCounter()
+        preprocessing,
+        comment_counter,
+        line_counter,
+        condition_counter,
+        token_counter,
+        token_processor_for_function,
         ]
     if switch_case_as_one_condition:
-        extensions.append(SwitchCasesAsOneConditionCounter())
+        extensions.append(recount_switch_case)
 
     return extensions +\
         [import_module('lizard_ext.lizard' + name).LizardExtension()
-            if isinstance(name, str) else name for name in extension_names] +\
-        [FunctionOutputPlaceholder()]
+            if isinstance(name, str) else name for name in extension_names]
 
 analyze_file = FileAnalyzer(get_extensions([]))  # pylint: disable=C0103
 
