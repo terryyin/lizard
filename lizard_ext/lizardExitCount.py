@@ -1,6 +1,9 @@
 '''
-This is an extension of lizard, that counts the 'exit points' in every function.
+This is an extension of lizard, that counts the 'exit points'
+in every function.
 '''
+
+
 class LizardExtension(object):
 
     FUNCTION_CAPTION = " exits "

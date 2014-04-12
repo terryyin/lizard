@@ -9,69 +9,76 @@ the result to an HTML file and open the browser to show it.
 import webbrowser
 from os.path import abspath
 
+
 class LizardExtension(object):
 
     HTML_FILENAME = "codecloud.html"
-    ignoreList = set(('(',')','{','}',';',',', '\n',
-                '~',
-                'static_cast',
-                '&&',
-                '#pragma',
-                '!',
-                'virtual',
-                '++',
-                'operator',
-                '-',
-                'private',
-                'else',
-                '+',
-                '!=',
-                '?',
-                '/',
-                ">=",
-                "<=",
-                "|=",
-                "&=",
-                "-=",
-                "/=",
-                "*=",
-                'static',
-                'inline',
-                ']',
-                '==',
-                '+=',
-                '[',
-                '|',
-                '||',
-                'public',
-                'struct',
-                'typedef',
-                'class',
-                '<<',
-                '#endif',
-                '#if',
-                'if',
-                'for',
-                'case',
-                'break',
-                'namespace',
-                ':',
-                '->',
-                'return',
-                'void',
-                '*',
-                '#include',
-                '=',
-                'const',
-                '<',
-                '>',
-                '&',
-                '\\',
-                "\\\\\\",
-                '.',
-                '::',
-
-            ))
+    ignoreList = set((
+        '(',
+        ')',
+        '{',
+        '}',
+        ';',
+        ',',
+        '\n',
+        '~',
+        'static_cast',
+        '&&',
+        '#pragma',
+        '!',
+        'virtual',
+        '++',
+        'operator',
+        '-',
+        'private',
+        'else',
+        '+',
+        '!=',
+        '?',
+        '/',
+        ">=",
+        "<=",
+        "|=",
+        "&=",
+        "-=",
+        "/=",
+        "*=",
+        'static',
+        'inline',
+        ']',
+        '==',
+        '+=',
+        '[',
+        '|',
+        '||',
+        'public',
+        'struct',
+        'typedef',
+        'class',
+        '<<',
+        '#endif',
+        '#if',
+        'if',
+        'for',
+        'case',
+        'break',
+        'namespace',
+        ':',
+        '->',
+        'return',
+        'void',
+        '*',
+        '#include',
+        '=',
+        'const',
+        '<',
+        '>',
+        '&',
+        '\\',
+        "\\\\\\",
+        '.',
+        '::',
+    ))
 
     def __init__(self):
         self.result = {}
@@ -84,15 +91,16 @@ class LizardExtension(object):
         '''
         reader.context.fileinfo.wordCount = result = {}
         for token in tokens:
-            if token not in LizardExtension.ignoreList and token[0] not in ('"', "'", '#'):
+            if token not in LizardExtension.ignoreList\
+                    and token[0] not in ('"', "'", '#'):
                 result[token] = result.get(token, 0) + 1
             yield token
 
     def reduce(self, fileinfo):
         '''
         Combine the statistics from each file.
-        Because the statistics came from multiple thread tasks. This function needs
-        to be called to collect the combined result.
+        Because the statistics came from multiple thread tasks. This function
+        needs to be called to collect the combined result.
         '''
         for k, v in fileinfo.wordCount.items():
             self.result[k] = self.result.get(k, 0) + v
@@ -100,35 +108,40 @@ class LizardExtension(object):
     def print_result(self):
         with open(self.HTML_FILENAME, 'w') as f:
             f.write('''
-            <html>
-                <head>
-                    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0" />
-                    <style type="text/css">
-                        canvas {
-                            border: 1px solid black;
-                            width: 700px;
-                            height: 700px;
-                        }
-                    </style>
-                    <script type="text/javascript">
-                    ''');
-            f.write(self.TAG_CLOUD_JAVASCRIPT);
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width,
+            initial-scale=1.0,maximum-scale=1.0" />
+        <style type="text/css">
+            canvas {
+                border: 1px solid black;
+                width: 700px;
+                height: 700px;
+            }
+        </style>
+        <script type="text/javascript">
+        ''')
+            f.write(self.TAG_CLOUD_JAVASCRIPT)
             f.write('''
-                    </script> 
-                    <script type="application/javascript">
-                        function draw() {
-                            var canvas = document.getElementById("canvas");
-                                if (canvas.getContext) {
-                                    var ctx = canvas.getContext("2d");
-                                    // scale 2x
-                                    if(window.devicePixelRatio == 2) {
-                                        canvas.setAttribute('width', canvas.width * 2);
-                                        canvas.setAttribute('height', canvas.height * 2);
-                                    }
-                                    var tagCloud = new TagCloud(canvas.width, canvas.height, ctx);
-                                    tagCloud.render([''')
-            for k in sorted(self.result, key=self.result.get, reverse = True)[:400]:
-                f.write(' ' * 40 + '["%s", %d],\n' % (k.replace('"', '\\\"').replace("'", "\\\\'").replace("\\", "\\\\"), self.result[k]))
+        </script>
+        <script type="application/javascript">
+            function draw() {
+                var canvas = document.getElementById("canvas");
+                    if (canvas.getContext) {
+                        var ctx = canvas.getContext("2d");
+                        // scale 2x
+                        if(window.devicePixelRatio == 2) {
+                            canvas.setAttribute('width', canvas.width * 2);
+                            canvas.setAttribute('height', canvas.height * 2);
+                        }
+                        var tagCloud = new TagCloud(canvas.width,
+                            canvas.height, ctx);
+                        tagCloud.render([''')
+            tags = sorted(self.result, key=self.result.get, reverse=True)[:400]
+            for k in tags:
+                f.write(' ' * 40 + '["%s", %d],\n' % (k.replace('"', '\\\"')
+                        .replace("'", "\\\\'").replace("\\", "\\\\"),
+                        self.result[k]))
             f.write('''
                                     ]);
                                 }
@@ -140,7 +153,7 @@ class LizardExtension(object):
                 </body>
             </html>''')
 
-            webbrowser.open("file://" + abspath(self.HTML_FILENAME));
+            webbrowser.open("file://" + abspath(self.HTML_FILENAME))
 
     TAG_CLOUD_JAVASCRIPT = '''
 
@@ -166,14 +179,16 @@ TagCloud.prototype.render = function (tags) {
 
 TagCloud.prototype.placeTag = function (tag) {
     var placement;
-    while (!(placement = this._getNonOverlappingPlaceWithBestSize(this.fontSize, tag)))
+    while (!(placement = this._getNonOverlappingPlaceWithBestSize(
+            this.fontSize, tag)))
         this.fontSize *= 0.9;
 
     this.ctx.fillStyle = this._getRandomColor();
     this.ctx.fillText(tag, placement.x, placement.y);
 };
 
-TagCloud.prototype._getNonOverlappingPlaceWithBestSize = function (fontSize, tag) {
+TagCloud.prototype._getNonOverlappingPlaceWithBestSize =
+    function (fontSize, tag) {
     this.ctx.font = "" + fontSize + "pt " + "Arial";
     var lineHeight=this.getLineHeight(fontSize);
     var tagWidth = this.ctx.measureText(tag).width;
@@ -199,23 +214,27 @@ TagCloud.prototype.getLineHeight = function (fontSize) {
 }
 
 TagCloud.prototype._getRandomColor = function (){
-    var colors = ["aqua", "black", "blue", "fuchsia", "gray", "green", "lime", "maroon", "navy", "olive", "orange", "purple", "red", "silver", "teal"];
+    var colors = ["aqua", "black", "blue", "fuchsia", "gray", "green",
+                  "lime", "maroon", "navy", "olive", "orange", "purple",
+                  "red", "silver", "teal"];
     return colors[Math.floor(colors.length * Math.random())];
 };
 
 TagCloud.prototype._isPlaceEmpty = function (placement, width, height) {
-    if (placement.x < 0 || placement.y < 0 || placement.x + width > this.canvasWidth || placement.y + height > this.canvasHeight)
+    if (placement.x < 0 || placement.y < 0 || placement.x + width >
+         this.canvasWidth || placement.y + height > this.canvasHeight)
         return false;
 
-    var pix = this.ctx.getImageData(placement.x, placement.y, width, height).data;
+    var pix = this.ctx.getImageData(
+                placement.x, placement.y, width, height).data;
 
     for (var i = 0, n = pix.length; i < n; i += 4)
         if (pix[i+3])
                 return false;
 
-    return [[placement.x, placement.y], 
-            [placement.x + width, placement.y], 
-            [placement.x, placement.y + height], 
+    return [[placement.x, placement.y],
+            [placement.x + width, placement.y],
+            [placement.x, placement.y + height],
             [placement.x + width, placement.y + height]].every(
                 function(pos) {
                     var a = this.canvasWidth / 2;
@@ -227,7 +246,8 @@ TagCloud.prototype._isPlaceEmpty = function (placement, width, height) {
 };
 
 TagCloud.prototype.getCoverage = function () {
-    var pix = this.ctx.getImageData(0, 0, this.canvasWidth, this.canvasHeight).data;
+    var pix = this.ctx.getImageData(
+                0, 0, this.canvasWidth, this.canvasHeight).data;
     var pixCount = 0;
     for (var i = 0, n = pix.length; i < n; i += 4) {
         if (pix[i+3])
@@ -267,4 +287,3 @@ function generateSpiralOffsets() {
 BasePlacement.prototype._spiralOffsets = generateSpiralOffsets();
 
     '''
-

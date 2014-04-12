@@ -1,6 +1,7 @@
 from lizard import CodeReader, CCppCommentsMixin
 import re
 
+
 class JavaScriptReader(CodeReader,  CCppCommentsMixin):
 
     ext = ['js']
@@ -23,7 +24,8 @@ class JavaScriptReader(CodeReader,  CCppCommentsMixin):
 
     def __init__(self, context):
         super(JavaScriptReader, self).__init__(context)
-        self.brace_count = 1 # start from one, so global level will never count
+        # start from one, so global level will never count
+        self.brace_count = 1
         self._state = self._GLOBAL
         self.last_tokens = ''
         self.function_name = ''
@@ -44,12 +46,15 @@ class JavaScriptReader(CodeReader,  CCppCommentsMixin):
                 self.brace_count -= 1
                 if self.brace_count == 0:
                     self._state = self._GLOBAL
-                    self.context.end_of_function()
-                    if self.function_stack:
-                        self.context.current_function = self.function_stack.pop()
-                        self.brace_count = self.context.current_function.brace_count
+                    self._pop_function_from_stack()
             self.last_tokens = token
             self.function_name = ''
+
+    def _pop_function_from_stack(self):
+        self.context.end_of_function()
+        if self.function_stack:
+            self.context.current_function = self.function_stack.pop()
+            self.brace_count = self.context.current_function.brace_count
 
     def _FUNCTION(self, token):
         if token != '(':
@@ -69,7 +74,7 @@ class JavaScriptReader(CodeReader,  CCppCommentsMixin):
     def _FIELD(self, token):
         self.last_tokens += token
         self._state = self._GLOBAL
-    
+
     def _DEC(self, token):
         if token == ')':
             self._state = self._GLOBAL
@@ -77,4 +82,3 @@ class JavaScriptReader(CodeReader,  CCppCommentsMixin):
             self.context.parameter(token)
             return
         self.context.add_to_long_function_name(" " + token)
-

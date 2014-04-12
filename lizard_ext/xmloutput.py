@@ -146,4 +146,3 @@ class CppNcssXMLFormatter(object):
         value4.appendChild(text4)
         item.appendChild(value4)
         return item
-
