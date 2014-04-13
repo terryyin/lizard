@@ -4,7 +4,7 @@ in every function.
 '''
 
 
-class LizardExtension(object):
+class LizardExtension(object):  # pylint: disable=R0903
 
     FUNCTION_CAPTION = " exits "
     FUNCTION_INFO_PART = "exit_count"
