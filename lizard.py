@@ -22,7 +22,7 @@ Please find the README.rst for more information.
 from __future__ import print_function
 import sys
 if sys.version[0] == '2':
-    from future_builtins import map  # pylint: disable=W0622
+    from future_builtins import map  # pylint: disable=W0622, F0401
 
 import itertools
 import re
