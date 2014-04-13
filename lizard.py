@@ -20,6 +20,7 @@ header files or Java imports.
 Please find the README.rst for more information.
 """
 from __future__ import print_function
+from future_builtins import map as mapping
 
 VERSION = "1.8.1"
 
@@ -721,7 +722,7 @@ def get_map_method(working_threads):
         pool = multiprocessing.Pool(processes=working_threads)
         return pool.imap_unordered
     except ImportError:
-        return itertools.imap if sys.version[0] == '2' else map
+        return mapping
 
 
 def map_files_to_analyzer(files, file_analyzer, working_threads):
