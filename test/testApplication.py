@@ -2,11 +2,13 @@ import unittest
 from test.mock import patch
 import lizard
 from lizard import lizard_main
-import os, sys
+import os
+import sys
 try:
     from StringIO import StringIO
 except ImportError:
     from io import StringIO
+
 
 @patch('lizard.md5_hash_file')
 @patch('lizard.open', create=True)
@@ -14,23 +16,33 @@ except ImportError:
 @patch.object(lizard, 'print_result')
 class TestApplication(unittest.TestCase):
 
-    def exhaust_result(self, result, options): 
-        list(result)
-
-    def check_empty_result(self, result, options): 
-        self.assertEqual([], list(result))
-
-    def testGetCurrentFolderByDefault(self, print_result, os_walk, mock_open, md5_hash_file):
-        print_result.side_effect = self.exhaust_result
+    @patch('lizard.md5_hash_file')
+    @patch('lizard.open', create=True)
+    @patch.object(os, 'walk')
+    @patch.object(lizard, 'print_result')
+    def check_lizard_main(self,
+                          print_method,
+                          print_result,
+                          os_walk,
+                          mock_open, _):
+        print_result.side_effect = print_method
         lizard_main(['lizard'])
         os_walk.assert_called_once_with('.', topdown=False)
 
-    def testEmptyResult(self, print_result, os_walk, mock_open, md5_hash_file):
+    def testGetCurrentFolderByDefault(self, print_result, os_walk, mock_open, _):
+        def exhaust_result(result, options):
+            list(result)
+        self.check_lizard_main(exhaust_result)
+
+    def testEmptyResult(self, print_result, os_walk, mock_open, _):
+        def check_empty_result(result, options):
+            self.assertEqual([], list(result))
+
         os_walk.return_value = [('.', [], [])]
-        print_result.side_effect = self.check_empty_result
+        print_result.side_effect = check_empty_result
         lizard_main(['lizard'])
 
-    def testFilesWithFunction(self, print_result, os_walk, mock_open, md5_hash_file):
+    def testFilesWithFunction(self, print_result, os_walk, mock_open, _):
         def check_result(result, options):
             fileInfos = list(result) 
             self.assertEqual(1, len(fileInfos))
@@ -40,7 +52,7 @@ class TestApplication(unittest.TestCase):
         print_result.side_effect = check_result
         lizard_main(['lizard'])
 
-    def testMutipleFilesInArgv(self, print_result, os_walk, mock_open, md5_hash_file):
+    def testMutipleFilesInArgv(self, print_result, os_walk, mock_open, _):
         def check_result(result, options):
             fileInfos = list(result) 
             self.assertEqual(1, len(fileInfos))
@@ -75,7 +87,7 @@ class IntegrationTests(unittest.TestCase):
     @patch('lizard.open', create=True)
     @patch.object(os, 'walk')
     @patch.object(lizard, 'print_result')
-    def runApplicationWithArgv(self, argv, print_result, os_walk, mock_open, md5_hash_file):
+    def runApplicationWithArgv(self, argv, print_result, os_walk, mock_open, _):
         def store_result(result, options):
             self.fileInfos = list(result) 
         os_walk.return_value = [('.', [], ['a.cpp'])]
