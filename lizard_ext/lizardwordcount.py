@@ -102,12 +102,12 @@ class LizardExtension(object):
         Because the statistics came from multiple thread tasks. This function
         needs to be called to collect the combined result.
         '''
-        for k, v in fileinfo.wordCount.items():
-            self.result[k] = self.result.get(k, 0) + v
+        for k, val in fileinfo.wordCount.items():
+            self.result[k] = self.result.get(k, 0) + val
 
     def print_result(self):
-        with open(self.HTML_FILENAME, 'w') as f:
-            f.write('''
+        with open(self.HTML_FILENAME, 'w') as html_file:
+            html_file.write('''
 <html>
     <head>
         <meta name="viewport" content="width=device-width,
@@ -121,8 +121,8 @@ class LizardExtension(object):
         </style>
         <script type="text/javascript">
         ''')
-            f.write(self.TAG_CLOUD_JAVASCRIPT)
-            f.write('''
+            html_file.write(self.TAG_CLOUD_JAVASCRIPT)
+            html_file.write('''
         </script>
         <script type="application/javascript">
             function draw() {
@@ -139,10 +139,12 @@ class LizardExtension(object):
                         tagCloud.render([''')
             tags = sorted(self.result, key=self.result.get, reverse=True)[:400]
             for k in tags:
-                f.write(' ' * 40 + '["%s", %d],\n' % (k.replace('"', '\\\"')
+                html_file.write(
+                    ' ' * 40 + '["%s", %d],\n' % (
+                        k.replace('"', '\\\"')
                         .replace("'", "\\\\'").replace("\\", "\\\\"),
                         self.result[k]))
-            f.write('''
+            html_file.write('''
                                     ]);
                                 }
                         }

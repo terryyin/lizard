@@ -1,3 +1,5 @@
+''' extensions of lizard '''
+
 from .javascript import JavaScriptReader
 from .python import PythonReader
-from .xmloutput import CppNcssXMLFormatter
+from .xmloutput import xml_output

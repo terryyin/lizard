@@ -4,7 +4,7 @@ import sys
 import os
 from lizard import print_warnings, print_and_save_modules, FunctionInfo, FileInformation,\
     print_result, get_extensions, OutputScheme
-from lizard_ext import CppNcssXMLFormatter
+from lizard_ext import xml_output
 
 class StreamStdoutTestCase(unittest.TestCase):
     def setUp(self):
@@ -164,8 +164,7 @@ class TestXMLOutput(unittest.TestCase):
     foo = FunctionInfo("foo", '', 100)
     foo.cyclomatic_complexity = 16
     file_infos = [FileInformation('f1.c', 1, [foo])]
-    option = Mock(CCN=15, number = 0, extensions=[])
-    xml = CppNcssXMLFormatter().xml_output(file_infos, option)
+    xml = xml_output(file_infos, True)
 
     def test_xml_output(self):
         root = ET.fromstring(self.xml)

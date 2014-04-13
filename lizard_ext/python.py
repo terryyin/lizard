@@ -1,3 +1,5 @@
+''' Language parser for Python '''
+
 from lizard import CodeReader
 
 
@@ -9,13 +11,13 @@ class PythonReader(CodeReader):
 
     def __init__(self, context):
         super(PythonReader, self).__init__(context)
-        self._state = self._GLOBAL
+        self._state = self._global
         self.function_stack = []
         self.current_indent = 0
         self.leading_space = True
 
     @staticmethod
-    def generate_tokens(source_code):
+    def generate_tokens(source_code, _=None):
         return CodeReader.generate_tokens(
             source_code,
             r"|\'\'\'.*?\'\'\'" + r'|\"\"\".*?\"\"\"')
@@ -41,19 +43,19 @@ class PythonReader(CodeReader):
         if token.startswith("#"):
             return token[1:]
 
-    def _GLOBAL(self, token):
+    def _global(self, token):
         if token == 'def':
-            self._state = self._FUNCTION
+            self._state = self._function
 
-    def _FUNCTION(self, token):
+    def _function(self, token):
         if token != '(':
             self.function_stack.append(self.context.current_function)
             self.context.start_new_function(token)
             self.context.current_function.indent = self.current_indent
         else:
-            self._state = self._DEC
+            self._state = self._dec
 
-    def _DEC(self, token):
+    def _dec(self, token):
         if token == ')':
             self._state = self._state_colon
         else:
@@ -62,13 +64,13 @@ class PythonReader(CodeReader):
         self.context.add_to_long_function_name(" " + token)
 
     def _state_colon(self, token):
-        self._state = self._state_first_line if token == ':' else self._GLOBAL
+        self._state = self._state_first_line if token == ':' else self._global
 
     def _state_first_line(self, token):
-        self._state = self._GLOBAL
+        self._state = self._global
         if token.startswith('"""') or token.startswith("'''"):
             self.context.add_nloc(-token.count('\n') - 1)
-        self._GLOBAL(token)
+        self._global(token)
 
     def eof(self):
         self.current_indent = 0
