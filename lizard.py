@@ -20,17 +20,17 @@ header files or Java imports.
 Please find the README.rst for more information.
 """
 from __future__ import print_function
-from future_builtins import map as mapping
-
-VERSION = "1.8.1"
+import sys
+if sys.version[0] == '2':
+    from future_builtins import map  # pylint: disable=W0622
 
 import itertools
 import re
-import sys
 import os
 from fnmatch import fnmatch
 import hashlib
 
+VERSION = "1.8.1"
 
 DEFAULT_CCN_THRESHOLD = 15
 
@@ -722,7 +722,7 @@ def get_map_method(working_threads):
         pool = multiprocessing.Pool(processes=working_threads)
         return pool.imap_unordered
     except ImportError:
-        return mapping
+        return map
 
 
 def map_files_to_analyzer(files, file_analyzer, working_threads):
