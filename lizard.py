@@ -22,7 +22,7 @@ Please find the README.rst for more information.
 from __future__ import print_function
 import sys
 if sys.version[0] == '2':
-    from future_builtins import map  # pylint: disable=W0622, F0401
+    from future_builtins import map, filter  # pylint: disable=W0622, F0401
 
 import itertools
 import re
@@ -42,7 +42,7 @@ def analyze(paths, exclude_pattern=None, threads=1, extensions=None):
     '''
     exclude_pattern = exclude_pattern or []
     extensions = extensions or []
-    files = get_all_source_files(exclude_pattern, paths)
+    files = get_all_source_files(paths, exclude_pattern)
     file_analyzer = FileAnalyzer(extensions)
     return map_files_to_analyzer(files, file_analyzer, threads)
 
@@ -743,7 +743,7 @@ def md5_hash_file(full_path_name):
         return None
 
 
-def get_all_source_files(exclude_patterns, paths):
+def get_all_source_files(paths, exclude_patterns):
     '''
     Function counts md5 hash for the given file
     and checks if it isn't a duplicate using set
@@ -752,9 +752,9 @@ def get_all_source_files(exclude_patterns, paths):
     hash_set = set()
 
     def _validate_file(pathname):
-        return (CodeReader.get_reader(pathname) and
+        return (pathname in paths or (CodeReader.get_reader(pathname) and
                 all(not fnmatch(pathname, p) for p in exclude_patterns)
-                and _not_duplicate(pathname))
+                and _not_duplicate(pathname)))
 
     def _not_duplicate(full_path_name):
         fhash = md5_hash_file(full_path_name)
@@ -771,8 +771,7 @@ def get_all_source_files(exclude_patterns, paths):
                     for filename in files:
                         yield os.path.join(root, filename)
 
-    return (fn for fn in all_listed_files(paths)
-            if fn in paths or _validate_file(fn))
+    return filter(_validate_file, all_listed_files(paths))
 
 
 def parse_args(argv):

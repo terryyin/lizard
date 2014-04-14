@@ -4,27 +4,24 @@ from mock import patch, Mock
 from lizard import get_all_source_files
 import os
 
-class Test_Exclude_Patterns(unittest.TestCase):
-
-    def getSourceFiles(self, SRC_DIRs, exclude_patterns):
-        return get_all_source_files(exclude_patterns, SRC_DIRs)
+class TestFilesFilter(unittest.TestCase):
 
     @patch.object(os, "walk")
     def test_no_matching(self, mock_os_walk):
         mock_os_walk.return_value = []
-        files = self.getSourceFiles(["dir"], [])
+        files = get_all_source_files(["dir"], [])
         self.assertEqual(0, len(list(files)))
 
     @patch.object(os.path, "isfile")
     def test_explicit_file_names(self, mock_isfile):
         mock_isfile.return_value = True
-        files = self.getSourceFiles(["dir/file.c"], [])
+        files = get_all_source_files(["dir/file.c"], [])
         self.assertEqual(["dir/file.c"], list(files))
 
     @patch.object(os.path, "isfile")
     def test_specific_filenames_should_not_be_excluded(self, mock_isfile):
         mock_isfile.return_value = True
-        files = self.getSourceFiles(["dir/file.log"], [])
+        files = get_all_source_files(["dir/file.log"], [])
         self.assertEqual(["dir/file.log"], list(files))
 
     @patch('lizard.md5_hash_file')
@@ -33,7 +30,7 @@ class Test_Exclude_Patterns(unittest.TestCase):
         mock_os_walk.return_value = (['.', 
                                       None,
                                       ['temp.log', 'useful.cpp']],)
-        files = self.getSourceFiles(["dir"], ["*.log"])
+        files = get_all_source_files(["dir"], ["*.log"])
         self.assertEqual(["./useful.cpp"], list(files))
 
     @patch.object(os, "walk")
@@ -41,7 +38,7 @@ class Test_Exclude_Patterns(unittest.TestCase):
         mock_os_walk.return_value = (['ut', 
                                       None,
                                       ['useful.cpp']],)
-        files = self.getSourceFiles(["dir"], ["ut/*"])
+        files = get_all_source_files(["dir"], ["ut/*"])
         self.assertEqual([], list(files))
 
     @patch.object(os, "walk")
@@ -49,7 +46,7 @@ class Test_Exclude_Patterns(unittest.TestCase):
         mock_os_walk.return_value = (['ut/something', 
                                       None,
                                       ['useful.cpp']],)
-        files = self.getSourceFiles(["dir"], ["ut/*"])
+        files = get_all_source_files(["dir"], ["ut/*"])
         self.assertEqual([], list(files))
 
     @patch.object(os, "walk")
@@ -57,7 +54,7 @@ class Test_Exclude_Patterns(unittest.TestCase):
         mock_os_walk.return_value = (['.', 
                                       None,
                                       ['useful.txt']],)
-        files = self.getSourceFiles(["dir"],['exclude_me'])
+        files = get_all_source_files(["dir"],['exclude_me'])
         self.assertEqual([], list(files))
 
     @patch.object(os, "walk")
@@ -68,7 +65,7 @@ class Test_Exclude_Patterns(unittest.TestCase):
                                       ['f1.cpp', 'f2.cpp']],)
         file_handle = mock_open.return_value.__enter__.return_value
         file_handle.read.return_value = "int foo(){haha();\n}"
-        files = self.getSourceFiles(["dir"], [])
+        files = get_all_source_files(["dir"], [])
         self.assertEqual(['./f1.cpp'], list(files))
 
     @patch.object(os, "walk")
@@ -80,7 +77,7 @@ class Test_Exclude_Patterns(unittest.TestCase):
         file_handle = mock_open.return_value.__enter__.return_value
         outs = ["int foo(){{haha({param});\n}}".format(param=i) for i in range(2)]
         file_handle.read.side_effect = lambda: outs.pop()
-        files = self.getSourceFiles(["dir"], [])
+        files = get_all_source_files(["dir"], [])
         self.assertEqual(["./f1.cpp", "./f2.cpp"], list(files))
 
     @patch.object(os, "walk")
@@ -90,7 +87,7 @@ class Test_Exclude_Patterns(unittest.TestCase):
                                       None,
                                       ['f1.cpp', 'f2.cpp']],)
         file_handle = mock_open.side_effect = IOError
-        files = self.getSourceFiles(["dir"], [])
+        files = get_all_source_files(["dir"], [])
         self.assertEqual(['./f1.cpp', './f2.cpp'], list(files))
 
 
