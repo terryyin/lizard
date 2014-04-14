@@ -10,11 +10,11 @@ class Test_Token_Count(unittest.TestCase):
 
     def test_include_is_counted_as_2(self):
         fileinfo = get_cpp_fileinfo("#include \"abc.h\"")
-        self.assertEqual(2, fileinfo.token_count)
+        self.assertEqual(0, fileinfo.token_count)
 
     def test_include_with_lg_and_gg_is_counted_as_2(self):
         fileinfo = get_cpp_fileinfo("#include <abc.h>")
-        self.assertEqual(2, fileinfo.token_count)
+        self.assertEqual(0, fileinfo.token_count)
 
     def test_one_function_with_no_token(self):
         result = get_cpp_function_list("int fun(){}")
@@ -77,6 +77,10 @@ class TestLOC(unittest.TestCase):
     def test_having_empty_line(self):
         result = get_cpp_function_list("\nint fun(){}")
         self.assertEqual(2, result[0].start_line)
+
+    def test_newline_in_macro(self):
+        result = get_cpp_function_list("#define a\\\nb\nint fun(){}")
+        self.assertEqual(3, result[0].start_line)
 
     def test_having_empty_line_that_has_spaces(self):
         result = get_cpp_function_list("  \nint fun(){}")

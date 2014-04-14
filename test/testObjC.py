@@ -16,7 +16,7 @@ class Test_objc_lizard(unittest.TestCase):
         self.assertEqual(0, len(result))
 
     def test_one_c_function(self):
-        result = self.create_objc_lizard("int fun(int a, int b) const{}")
+        result = self.create_objc_lizard("int fun(int a, int b) {}")
         self.assertEqual("fun", result[0].name)
 
     def test_one_objc_function(self):

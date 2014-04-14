@@ -279,7 +279,7 @@ def condition_counter(tokens, reader):
         conditions = reader.conditions
     else:
         conditions = set(['if', 'for', 'while', '&&', '||', '?', 'catch',
-                         'case', '#if', '#ifdef', '#elif'])
+                         'case'])
     for token in tokens:
         if token in conditions:
             reader.context.add_condition()
@@ -364,9 +364,7 @@ except ImportError:
 
 
 class CLikeReader(CodeReader, CCppCommentsMixin):
-    '''
-    This is the reader for C, C++ and Java.
-    '''
+    ''' This is the reader for C, C++ and Java. '''
 
     ext = ["c", "cpp", "cc", "mm", "cxx", "h", "hpp"]
     macro_pattern = re.compile(r"#\s*(\w+)\s*(.*)", re.M | re.S)
@@ -375,7 +373,6 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
         super(CLikeReader, self).__init__(context)
         self.bracket_level = 0
         self.br_count = 0
-        self.last_preprocessor = None
         self._state = self._state_global
 
     def preprocess(self, tokens):
@@ -383,40 +380,67 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
             if not token.isspace() or token == '\n':
                 macro = self.macro_pattern.match(token)
                 if macro:
-                    yield "#" + macro.group(1)
-                    param = macro.group(2).strip()
-                    if param:
-                        yield param
+                    if macro.group(1) in ('if', 'ifdef', 'elif'):
+                        self.context.add_condition()
+                    for _ in macro.group(2).splitlines()[1:]:
+                        yield '\n'
                 else:
                     yield token
 
     def _state_global(self, token):
+        if token[0].isalpha() or token[0] == '_':
+            self.context.start_new_function(token)
+            self._state = self._state_function
+            if token == 'operator':
+                self._state = self._state_operator
+
+    def _state_function(self, token):
         if token == '(':
             self.bracket_level += 1
             self._state = self._state_dec
             self.context.add_to_long_function_name(token)
         elif token == '::':
             self._state = self._state_namespace
+        elif token == '<':
+            self._state = self._state_template_in_name
+            self.bracket_level += 1
+            self.context.add_to_function_name(token)
         else:
-            self.context.start_new_function(token)
-            if token == 'operator':
-                self._state = self._state_operator
+            self._state = self._state_global
+            self._state_global(token)
+
+    def _state_template_in_name(self, token):
+        if token == "<":
+            self.bracket_level += 1
+        elif token == ">":
+            self.bracket_level -= 1
+        elif token == ">>":
+            self.bracket_level -= 2
+        if self.bracket_level == 0:
+            self._state = self._state_function
+        self.context.add_to_function_name(token)
 
     def _state_operator(self, token):
         if token != '(':
-            self._state = self._state_global
+            self._state = self._state_operator_next
         self.context.add_to_function_name(' ' + token)
+
+    def _state_operator_next(self, token):
+        if token == '(':
+            self._state_function(token)
+        else:
+            self.context.add_to_function_name(' ' + token)
 
     def _state_namespace(self, token):
         self._state = self._state_operator\
-            if token == 'operator' else self._state_global
+            if token == 'operator' else self._state_function
         self.context.add_to_function_name("::" + token)
 
     def _state_dec(self, token):
         if token in ('(', "<"):
             self.bracket_level += 1
-        elif token in (')', ">"):
-            self.bracket_level -= 1
+        elif token in (')', ">", ">>"):
+            self.bracket_level -= len(token)
             if self.bracket_level == 0:
                 self._state = self._state_dec_to_imp
         elif self.bracket_level == 1:
@@ -427,13 +451,25 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
     def _state_dec_to_imp(self, token):
         if token == 'const':
             self.context.add_to_long_function_name(" " + token)
+        elif token == 'throw':
+            self._state = self._state_throw
         elif token == '{':
             self.br_count += 1
             self._state = self._state_imp
         elif token == ":":
             self._state = self._state_initialization_list
-        else:
+        elif not token[0].isalpha() or token[0] == '_':
             self._state = self._state_global
+        else:
+            self._state = self._state_old_c_params
+
+    def _state_throw(self, token):
+        if token == ')':
+            self._state = self._state_dec_to_imp
+
+    def _state_old_c_params(self, token):
+        if token == ';':
+            self._state = self._state_dec_to_imp
 
     def _state_initialization_list(self, token):
         if token == '{':
@@ -441,17 +477,13 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
             self._state = self._state_imp
 
     def _state_imp(self, token):
-        if token in ("#else", "#endif"):
-            self.last_preprocessor = token
-        # will ignore the braces in a #else branch
-        if self.last_preprocessor != '#else':
-            if token == '{':
-                self.br_count += 1
-            elif token == '}':
-                self.br_count -= 1
-                if self.br_count == 0:
-                    self._state = self._state_global
-                    self.context.end_of_function()
+        if token == '{':
+            self.br_count += 1
+        elif token == '}':
+            self.br_count -= 1
+            if self.br_count == 0:
+                self._state = self._state_global
+                self.context.end_of_function()
 
 
 class JavaReader(CLikeReader, CodeReader):
@@ -466,12 +498,19 @@ class ObjCReader(CLikeReader, CodeReader):
     def __init__(self, context):
         super(ObjCReader, self).__init__(context)
 
+    def _state_global(self, token):
+        super(ObjCReader, self)._state_global(token)
+        if token == '(':
+            self.bracket_level += 1
+            self._state = self._state_dec
+            self.context.add_to_long_function_name(token)
+
     def _state_dec_to_imp(self, token):
         if token in ("+", "-"):
             self._state = self._state_global
         else:
             super(ObjCReader, self)._state_dec_to_imp(token)
-            if self._state == self._state_global:
+            if self._state != self._state_imp:
                 self._state = self._state_objc_dec_begin
                 self.context.start_new_function(token)
 
@@ -525,9 +564,11 @@ class FileAnalyzer(object):  # pylint: disable=R0903
 
     def __call__(self, filename):
         try:
-            return self.analyze_source_code(filename, open(filename).read())
+            return self.analyze_source_code(
+                filename, open(filename, 'rU').read())
         except IOError:
-            sys.stderr.write("Error: Fail to read source file '%s'" % filename)
+            sys.stderr.write("Error: Fail to read source file '%s'\n"
+                             % filename)
 
     def analyze_source_code(self, filename, code):
         context = CodeInfoContext(filename)

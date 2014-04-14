@@ -77,7 +77,7 @@ class Test_FileAnalyzer(unittest.TestCase):
         analyze_file("f1.c")
         self.assertEqual(1, mock_stderr.write.call_count)
         error_message = mock_stderr.write.call_args[0][0]
-        self.assertIn("Error", error_message)
+        self.assertEqual("Error: Fail to read source file 'f1.c'\n", error_message)
 
 class Test_Picklability(unittest.TestCase):
 

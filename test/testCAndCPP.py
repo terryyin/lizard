@@ -5,10 +5,6 @@ from .testHelpers import get_cpp_fileinfo, get_cpp_function_list
 
 class Test_C_Token_extension(unittest.TestCase):
 
-    def test_marco_should_be_splitted_into_two_tokens(self):
-        extended = CLikeReader(None).preprocess(("# marco param1 param2", ))
-        self.assertEqual(["#marco", "param1 param2"], list(extended))
-
     def test_connecting_marcro(self):
         extended = CLikeReader(None).preprocess(("a##b c", ))
         #tbd
@@ -42,7 +38,31 @@ class Test_c_cpp_lizard(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual("fun", result[0].name)
         self.assertEqual("fun( xx oo )", result[0].long_name)
-    
+
+    def test_old_style_c_function(self):
+        result = get_cpp_function_list("""int fun(param) int praram; {}""")
+        self.assertEqual(1, len(result))
+
+    def test_complicated_c_function(self):
+        result = get_cpp_function_list("""int f(int(*)()){}""")
+        self.assertEqual('f', result[0].name)
+
+    def test_function_dec_with_throw(self):
+        result = get_cpp_function_list("""int fun() throw();void foo(){}""")
+        self.assertEqual(1, len(result))
+
+    def test_function_declaration_is_not_counted(self):
+        result = get_cpp_function_list("""int fun();class A{};""")
+        self.assertEqual(0, len(result))
+
+    def test_old_style_c_function_has_semicolon(self):
+        result = get_cpp_function_list("""{(void*)a}{}""")
+        self.assertEqual(0, len(result))
+
+    def test_only_word_can_be_function_name(self):
+        result = get_cpp_function_list("""[(){}""")
+        self.assertEqual(0, len(result))
+
     def test_double_slash_within_string(self):
         result = get_cpp_function_list("""int fun(){char *a="\\\\";}""")
         self.assertEqual(1, len(result))
@@ -88,20 +108,31 @@ class Test_c_cpp_lizard(unittest.TestCase):
     def test_template_with_pointer(self):
         result = get_cpp_function_list("abc::def (a<b*> c){}")
         self.assertEqual(1, len(result))
-        
+
+    def test_nested_template(self):
+        result = get_cpp_function_list("abc::def (a<b<c>> c){}")
+        self.assertEqual(1, len(result))
+
     def test_template_with_reference(self):
         result = get_cpp_function_list("void fun(t<int &>b){} ")
         self.assertEqual(1, len(result))
-        
+
     def test_template_with_reference_as_reference(self):
         result = get_cpp_function_list("void fun(t<const int&>&b){} ")
         self.assertEqual(1, len(result))
-       
+
+    def test_template_as_part_of_function_name(self):
+        result = get_cpp_function_list("void fun<a,b<c>>(){} ")
+        self.assertEqual('fun<a,b<c>>', result[0].name)
+
     def test_operator_overloading(self):
         result = get_cpp_function_list("bool operator +=(int b){}")
-        self.assertEqual(1, len(result))
         self.assertEqual("operator +=", result[0].name)
-                
+
+    def test_operator_with_complicated_name(self):
+        result = get_cpp_function_list("operator MyStruct&(){}")
+        self.assertEqual("operator MyStruct &", result[0].name)
+
     def test_operator_overloading_with_namespace(self):
         result = get_cpp_function_list("bool TC::operator !(int b){}")
         self.assertEqual(1, len(result))
@@ -123,17 +154,6 @@ class Test_c_cpp_lizard(unittest.TestCase):
         
 
 class Test_Preprocessing(unittest.TestCase):
-
-    def test_braces_in_harsh_else(self):
-        result = get_cpp_function_list('''int main(){
-                                        #ifndef NORBUS
-                                        {
-                                        #else
-                                        {
-                                        #endif
-                                        }
-                                    } void fun(){}''')
-        self.assertEqual(2, len(result))
 
     def test_content_macro_should_be_ignored(self):
         result = get_cpp_function_list(r'''
