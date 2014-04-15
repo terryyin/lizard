@@ -51,6 +51,10 @@ class Test_c_cpp_lizard(unittest.TestCase):
         result = get_cpp_function_list("""int fun() throw();void foo(){}""")
         self.assertEqual(1, len(result))
 
+    def test_function_dec_followed_with_one_word_is_ok(self):
+        result = get_cpp_function_list("""int fun() no_throw {}""")
+        self.assertEqual(1, len(result))
+
     def test_function_declaration_is_not_counted(self):
         result = get_cpp_function_list("""int fun();class A{};""")
         self.assertEqual(0, len(result))
@@ -58,6 +62,14 @@ class Test_c_cpp_lizard(unittest.TestCase):
     def test_old_style_c_function_has_semicolon(self):
         result = get_cpp_function_list("""{(void*)a}{}""")
         self.assertEqual(0, len(result))
+
+    def test_typedef_is_not_old_style_c_function(self):
+        result = get_cpp_function_list('''typedef T() nT; foo(){}''')
+        self.assertEqual("foo", result[0].name)
+
+    def test_stupid_macro_before_function(self):
+        result = get_cpp_function_list('''T() foo(){}''')
+        self.assertEqual("foo", result[0].name)
 
     def test_only_word_can_be_function_name(self):
         result = get_cpp_function_list("""[(){}""")
@@ -100,9 +112,13 @@ class Test_c_cpp_lizard(unittest.TestCase):
         self.assertEqual(2, len(result))
         self.assertEqual("c", result[0].name)
         self.assertEqual("d", result[1].name)
-        
+
     def test_template_as_reference(self):
         result = get_cpp_function_list("abc::def(a<b>& c){}")
+        self.assertEqual(1, len(result))
+
+    def test_less_then_is_not_template(self):
+        result = get_cpp_function_list("def(<); foo(){}")
         self.assertEqual(1, len(result))
 
     def test_template_with_pointer(self):
@@ -147,7 +163,7 @@ class Test_c_cpp_lizard(unittest.TestCase):
         result = get_cpp_function_list('''A::A():a(1){}''')
         self.assertEqual(1, len(result))
         self.assertEqual("A::A", result[0].name)
-        
+
     def test_brakets_before_function(self):
         result = get_cpp_function_list('''()''')
         self.assertEqual(0, len(result))
