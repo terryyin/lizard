@@ -513,6 +513,10 @@ class JavaReader(CLikeReader, CodeReader):
 
     ext = ['java']
 
+    def _state_old_c_params(self, token):
+        if token == '{':
+            self._state_dec_to_imp(token)
+
 
 class ObjCReader(CLikeReader, CodeReader):
 
