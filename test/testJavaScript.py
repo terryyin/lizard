@@ -11,6 +11,8 @@ class Test_tokenizing_JavaScript(unittest.TestCase):
 
     def check_tokens(self, expect, source):
         tokens = list(JavaScriptReader.generate_tokens(source))
+        if expect != tokens:
+            print tokens
         self.assertEqual(expect, tokens)
 
     def test_tokenizing_javascript_regular_expression(self):
@@ -25,6 +27,8 @@ class Test_tokenizing_JavaScript(unittest.TestCase):
     def test_tokenizing_javascript_regular_expression(self):
         self.check_tokens(['a', '=', '/ab/'], 'a=/ab/')
 
+    def test_tokenizing_javascript_comments(self):
+        self.check_tokens(['/**a/*/'], '''/**a/*/''')
 
 class Test_parser_for_JavaScript(unittest.TestCase):
 

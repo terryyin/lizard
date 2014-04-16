@@ -103,3 +103,8 @@ class Test_generate_tonken_for_comments(unittest.TestCase):
         tokens = generate_tokens('/*abc\n*/ t')
         self.assertTrue('t' in tokens)
 
+    def test_with_c_comments_with_backslash_in_it(self):
+        comment = '/**a/*/'
+        tokens = generate_tokens(comment)
+        self.assertListEqual([comment], tokens)
+

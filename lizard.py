@@ -30,7 +30,7 @@ import os
 from fnmatch import fnmatch
 import hashlib
 
-VERSION = "1.8.1"
+VERSION = "1.8.2"
 
 DEFAULT_CCN_THRESHOLD = 15
 
@@ -330,8 +330,8 @@ class CodeReader(object):
                             '*=', '/=', '^=', '&=', '|=']
         token_pattern = re.compile(
             r"(?:\w+" +
-            addition +
             r"|/\*.*?\*/" +
+            addition +
             r"|\"(?:\\.|[^\"])*\"" +
             r"|\'(?:\\.|[^\'])*?\'" +
             r"|//" + _until_end +

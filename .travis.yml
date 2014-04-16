@@ -4,8 +4,8 @@ python:
   - "3.3"
 install: 
 install:
-  - pip install -e . --use-mirrors
-  - pip install -r dev_requirements.txt --use-mirrors
+  - pip install -e .
+  - pip install -r dev_requirements.txt
   - python setup.py install
 
 script:

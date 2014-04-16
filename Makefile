@@ -1,3 +1,5 @@
+.PHONY: all tests pep8 pylint deps test-deps publish
+
 all: extensive pylint
 extensive: tests pep8
 
@@ -9,3 +11,10 @@ pep8:
 
 pylint:
 	pylint --rcfile pylintrc lizard.py lizard_ext
+
+deps:
+	pip install -r dev_requirements.txt
+
+publish:
+	python setup.py sdist bdist_wheel register upload
+
