@@ -12,6 +12,7 @@ C/C++ header files or Java imports. It can deal with
 -  Java
 -  JavaScript
 -  Objective C.
+-  Python
 
 It counts
 
