@@ -72,6 +72,4 @@ class IntegrationTests(unittest.TestCase):
 
     def test_using_modified_ccn(self):
         self.runApplicationWithArgv(['lizard', '--modified'])
-        self.assertEqual(4, self.fileInfos[0].function_list[0].cyclomatic_complexity)
-
-
+        self.assertEqual(4, self.fileInfos[0].function_list[0].cyclomatic_complexity) 

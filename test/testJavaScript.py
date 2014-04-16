@@ -11,8 +11,6 @@ class Test_tokenizing_JavaScript(unittest.TestCase):
 
     def check_tokens(self, expect, source):
         tokens = list(JavaScriptReader.generate_tokens(source))
-        if expect != tokens:
-            print tokens
         self.assertEqual(expect, tokens)
 
     def test_tokenizing_javascript_regular_expression(self):

@@ -7,7 +7,7 @@ tests:
 	nosetests test
 
 pep8:
-	pep8 --exclude=mock.py lizard.py lizard_ext test
+	pep8 --exclude=mock.py lizard.py lizard_ext # test
 
 pylint:
 	pylint --rcfile pylintrc lizard.py lizard_ext
