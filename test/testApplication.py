@@ -29,6 +29,7 @@ class TestApplication(unittest.TestCase):
         print_result.side_effect = check_result
         lizard_main(['lizard'])
 
+
 class IntegrationTests(unittest.TestCase):
 
     def setUp(self):

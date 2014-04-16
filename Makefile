@@ -4,10 +4,10 @@ all: extensive pylint
 extensive: tests pep8
 
 tests:
-	python -munittest test
+	nosetests test
 
 pep8:
-	pep8 --exclude=mock.py lizard.py lizard_ext # test
+	pep8 --exclude=mock.py lizard.py lizard_ext test
 
 pylint:
 	pylint --rcfile pylintrc lizard.py lizard_ext
@@ -16,5 +16,5 @@ deps:
 	pip install -r dev_requirements.txt
 
 publish:
-	python setup.py sdist bdist_wheel register upload
+	python setup.py sdist upload
 

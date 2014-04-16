@@ -1,26 +1,28 @@
-#!/usr/bin/env python
-# encoding: utf-8
 '''
 Setup script.
 To install lizard:
 [sudo] python setup.py install
 '''
+
 import lizard
-from distutils.core import setup
-def install(appname='lizard'):
-    try:
-        with open("README.rst") as f:
-            long_description = f.read()
-    except:
-        long_description = lizard.__doc__  # @UndefinedVariable
+from setuptools import setup, find_packages
+import os
+
+def install(appname):
+
+    with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as fobj:
+        readme = fobj.read()
+
     setup(
           name = appname,
           version = lizard.VERSION,
-          description = ''' 
-A simple code complexity analyzer without caring about the C/C++ header files or Java imports.
-It can deal with Java/C/C++/JavaScript/Objective C code. It counts the cyclomatic complexity number etc.''',
-          long_description =  long_description,
+          description = ''' A code analyzer without caring the C/C++ header files.
+It works with Java, C/C++, JavaScript, Python, Objective C. Metrics includes cyclomatic complexity number etc.''',
+          long_description =  readme,
           url = 'https://github.com/terryyin/lizard',
+          download_url='https://pypi.python.org/lizard/',
+          license='MIT',
+          platforms='any',
           classifiers = ['Development Status :: 5 - Production/Stable',
                      'Intended Audience :: Developers',
                      'Intended Audience :: End Users/Desktop',
@@ -46,4 +48,6 @@ It can deal with Java/C/C++/JavaScript/Objective C code. It counts the cyclomati
           )
 
 if __name__ == "__main__":
-    install()
+    import sys
+    install('hfcca')
+    install('lizard')

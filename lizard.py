@@ -30,7 +30,7 @@ import os
 from fnmatch import fnmatch
 import hashlib
 
-VERSION = "1.8.2"
+VERSION = "1.8.3"
 
 DEFAULT_CCN_THRESHOLD = 15
 
