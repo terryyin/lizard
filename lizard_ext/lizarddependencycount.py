@@ -4,7 +4,7 @@ within the code.
 '''
 
 
-class LizardExtension(object):
+class LizardExtension(object):  # pylint: disable=R0903
     FUNCTION_CAPTION = " dep cnt "
     FUNCTION_INFO_PART = "dependency_count"
 

@@ -13,11 +13,11 @@ class Test_c_cpp_lizard(unittest.TestCase):
     def test_empty(self):
         result = get_cpp_function_list("")
         self.assertEqual(0, len(result))
-        
+
     def test_no_function(self):
         result = get_cpp_function_list("#include <stdio.h>\n")
         self.assertEqual(0, len(result))
-    
+
     def test_one_function(self):
         result = get_cpp_function_list("int fun(){}")
         self.assertEqual(1, len(result))

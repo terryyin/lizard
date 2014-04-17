@@ -383,6 +383,9 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
                 if macro:
                     if macro.group(1) in ('if', 'ifdef', 'elif'):
                         self.context.add_condition()
+                    elif macro.group(1) == 'include':
+                        yield "#include"
+                        yield macro.group(2)
                     for _ in macro.group(2).splitlines()[1:]:
                         yield '\n'
                 else:
