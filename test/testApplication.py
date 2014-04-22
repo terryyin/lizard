@@ -12,6 +12,7 @@ import os
 class TestApplication(unittest.TestCase):
 
     def testEmptyResult(self, print_result, os_walk, mock_open, _):
+
         def check_empty_result(result, options):
             self.assertEqual([], list(result))
 
@@ -50,17 +51,21 @@ class IntegrationTests(unittest.TestCase):
         }
         '''
 
-    @patch('lizard.md5_hash_file')
     @patch('lizard.open', create=True)
-    @patch.object(os, 'walk')
     @patch.object(lizard, 'print_result')
-    def runApplicationWithArgv(self, argv, print_result, os_walk, mock_open, _):
+    def run_with_mocks(self, argv, src, print_result, mock_open):
         def store_result(result, options):
-            self.fileInfos = list(result) 
-        os_walk.return_value = [('.', [], ['a.cpp'])]
-        mock_open.return_value.read.return_value = self.source_code
+            self.fileInfos = list(result)
+        mock_open.return_value.read.return_value = src
         print_result.side_effect = store_result
         lizard_main(argv)
+        return self.fileInfos
+
+    @patch('lizard.md5_hash_file')
+    @patch.object(os, 'walk')
+    def runApplicationWithArgv(self, argv, os_walk, _):
+        os_walk.return_value = [('.', [], ['a.cpp'])]
+        return self.run_with_mocks(argv, self.source_code)
 
     def test_with_preprocessor_counted_in_CCN(self):
         self.runApplicationWithArgv(['lizard'])
@@ -72,4 +77,4 @@ class IntegrationTests(unittest.TestCase):
 
     def test_using_modified_ccn(self):
         self.runApplicationWithArgv(['lizard', '--modified'])
-        self.assertEqual(4, self.fileInfos[0].function_list[0].cyclomatic_complexity) 
+        self.assertEqual(4, self.fileInfos[0].function_list[0].cyclomatic_complexity)
