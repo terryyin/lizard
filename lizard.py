@@ -208,8 +208,10 @@ class CodeInfoContext(object):
         self.fileinfo.nloc += count
 
     def start_new_function(self, name):
-        self.current_function =\
-            FunctionInfo(name, self.fileinfo.filename, self.current_line)
+        self.current_function = FunctionInfo(
+            name,
+            self.fileinfo.filename,
+            self.current_line)
 
     def add_condition(self, inc=1):
         self.current_function.cyclomatic_complexity += inc
@@ -279,7 +281,7 @@ def condition_counter(tokens, reader):
         conditions = reader.conditions
     else:
         conditions = set(['if', 'for', 'while', '&&', '||', '?', 'catch',
-                         'case'])
+                          'case'])
     for token in tokens:
         if token in conditions:
             reader.context.add_condition()
@@ -296,10 +298,12 @@ def recount_switch_case(tokens, reader):
 
 
 class CodeReader(object):
+
     '''
     CodeReaders are used to parse functions structures from code of different
     language. Each language will need a subclass of CodeReader.
     '''
+
     def __init__(self, context):
         self.context = context
         self._state = lambda _: _
@@ -345,6 +349,7 @@ class CodeReader(object):
 
 
 class CCppCommentsMixin(object):  # pylint: disable=R0903
+
     @staticmethod
     def get_comment_from_token(token):
         if token.startswith("/*") or token.startswith("//"):
@@ -364,6 +369,7 @@ except ImportError:
 
 
 class CLikeReader(CodeReader, CCppCommentsMixin):
+
     ''' This is the reader for C, C++ and Java. '''
 
     ext = ["c", "cpp", "cc", "mm", "cxx", "h", "hpp"]
@@ -656,6 +662,7 @@ def whitelist_filter(warnings, script=None):
 
 
 class OutputScheme(object):
+
     def __init__(self, ext):
         self.extensions = ext
         self.items = [
@@ -663,7 +670,7 @@ class OutputScheme(object):
             {'caption': "  CCN  ", 'value': "cyclomatic_complexity"},
             {'caption': " token ", 'value': "token_count"},
             {'caption': " PARAM ", 'value': "parameter_count"},
-            ] + [
+        ] + [
             {
                 'caption': ext.FUNCTION_CAPTION,
                 'value': ext.FUNCTION_INFO_PART
@@ -693,7 +700,7 @@ def print_warnings(option, scheme, warnings):
     if not option.warnings_only:
         print(("\n" +
                "======================================\n" +
-              "!!!! Warnings (CCN > %d) !!!!") % option.CCN)
+               "!!!! Warnings (CCN > %d) !!!!") % option.CCN)
         print(scheme.function_info_head())
     for warning in warnings:
         warning_count += 1
@@ -707,7 +714,7 @@ def print_warnings(option, scheme, warnings):
 def print_total(warning_count, saved_result, option):
     file_infos = list(file_info for file_info in saved_result if file_info)
     all_fun = list(itertools.chain(*(file_info.function_list
-                   for file_info in file_infos)))
+                                     for file_info in file_infos)))
     cnt = len(all_fun)
     if cnt == 0:
         cnt = 1
@@ -723,8 +730,9 @@ def print_total(warning_count, saved_result, option):
         warning_count,
         float(warning_count) / cnt,
         float(sum([f.nloc for f in all_fun
-              if f.cyclomatic_complexity > option.CCN])) / nloc_in_functions
-        )
+                   if f.cyclomatic_complexity > option.CCN]))
+        / nloc_in_functions
+    )
 
     if not option.warnings_only:
         print("=" * 90)
@@ -823,8 +831,12 @@ def get_all_source_files(paths, exclude_patterns):
     hash_set = set()
 
     def _validate_file(pathname):
-        return (pathname in paths or (CodeReader.get_reader(pathname) and
-                all(not fnmatch(pathname, p) for p in exclude_patterns)
+        return (
+            pathname in paths or (
+                CodeReader.get_reader(pathname) and all(
+                    not fnmatch(
+                        pathname,
+                        p) for p in exclude_patterns)
                 and _not_duplicate(pathname)))
 
     def _not_duplicate(full_path_name):
@@ -867,7 +879,7 @@ def get_extensions(extension_names, switch_case_as_one_condition=False):
         condition_counter,
         token_counter,
         token_processor_for_function,
-        ]
+    ]
     if switch_case_as_one_condition:
         extensions.append(recount_switch_case)
 
