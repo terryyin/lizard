@@ -20,7 +20,6 @@ class LizardExtension(object):  # pylint: disable=R0903
         import_as_list = []
         import_as_counter = 0
         for token in tokens:
-            print import_list
             if not hasattr(reader.context.current_function,
                            "dependency_count"):
                 reader.context.current_function.dependency_count = 0
@@ -31,10 +30,7 @@ class LizardExtension(object):  # pylint: disable=R0903
                 expect_dependency = dependency_type[token]
             elif expect_dependency == dependency_type['#include']:
                 # gets rid of the <> or "" as well as the .h
-                if len(token) >= 4:
-                    import_list += [token[1:len(token) - 3]]
-                else:
-                    import_list += [token[1:len(token) - 1]]
+                import_list += [token[1:len(token) - 3]]
                 expect_dependency = dependency_type['null']
             elif expect_dependency == dependency_type['import']:
                 if token == "as":
