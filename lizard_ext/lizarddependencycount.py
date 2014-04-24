@@ -9,7 +9,6 @@ class LizardExtension(object):  # pylint: disable=R0903
     FUNCTION_INFO_PART = "dependency_count"
 
     def __call__(self, tokens, reader):
-        print reader.context.fileinfo.__dict__
         ignored_list = {','}
         dependency_type = {
             'null': 0,
