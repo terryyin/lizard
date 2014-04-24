@@ -298,12 +298,10 @@ def recount_switch_case(tokens, reader):
 
 
 class CodeReader(object):
-
     '''
     CodeReaders are used to parse functions structures from code of different
     language. Each language will need a subclass of CodeReader.
     '''
-
     def __init__(self, context):
         self.context = context
         self._state = lambda _: _
