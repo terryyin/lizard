@@ -884,7 +884,7 @@ def get_extensions(extension_names, switch_case_as_one_condition=False):
 
     return extensions +\
         [import_module('lizard_ext.lizard' + name.lower()).LizardExtension()
-            if isinstance(name, str) else name for name in extension_names]
+         if isinstance(name, str) else name for name in extension_names]
 
 analyze_file = FileAnalyzer(get_extensions([]))  # pylint: disable=C0103
 

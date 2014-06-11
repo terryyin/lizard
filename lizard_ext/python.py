@@ -7,7 +7,7 @@ class PythonReader(CodeReader):
 
     ext = ['py']
     conditions = set(['if', 'for', 'while', 'and', 'or',
-                     'elif', 'except', 'finally'])
+                      'elif', 'except', 'finally'])
 
     def __init__(self, context):
         super(PythonReader, self).__init__(context)
