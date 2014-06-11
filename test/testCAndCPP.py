@@ -10,6 +10,7 @@ class Test_C_Token_extension(unittest.TestCase):
         #tbd
 
 class Test_c_cpp_lizard(unittest.TestCase):
+
     def test_empty(self):
         result = get_cpp_function_list("")
         self.assertEqual(0, len(result))
@@ -22,7 +23,7 @@ class Test_c_cpp_lizard(unittest.TestCase):
         result = get_cpp_function_list("int fun(){}")
         self.assertEqual(1, len(result))
         self.assertEqual("fun", result[0].name)
-    
+
     def test_two_function(self):
         result = get_cpp_function_list("int fun(){}\nint fun1(){}\n")
         self.assertEqual(2, len(result))
@@ -32,7 +33,7 @@ class Test_c_cpp_lizard(unittest.TestCase):
         self.assertEqual(1, result[0].end_line)
         self.assertEqual(2, result[1].start_line)
         self.assertEqual(2, result[1].end_line)
-    
+
     def test_function_with_content(self):
         result = get_cpp_function_list("int fun(xx oo){int a; a= call(p1,p2);}")
         self.assertEqual(1, len(result))

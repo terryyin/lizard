@@ -199,9 +199,10 @@ class CodeInfoContext(object):
     def __init__(self, filename):
         self.fileinfo = FileInformation(filename, 0)
         self.current_line = 0
-        self.current_function = FunctionInfo('', '', 0)
         self.forgive = False
         self.newline = True
+        self.global_pseudo_function = FunctionInfo('*global*', filename, 0)
+        self.current_function = self.global_pseudo_function
 
     def add_nloc(self, count):
         self.current_function.nloc += count
@@ -229,7 +230,7 @@ class CodeInfoContext(object):
         if not self.forgive:
             self.fileinfo.function_list.append(self.current_function)
         self.forgive = False
-        self.current_function = FunctionInfo('', '', 0)
+        self.current_function = self.global_pseudo_function
 
 
 def preprocessing(tokens, reader):
