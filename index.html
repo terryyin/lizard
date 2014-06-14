@@ -10,11 +10,23 @@
     <h1 class="text-center">Lizard</h1>
     <h2 class="text-center"> Code Compliexity Analyzer </h2>
     </header>
-
-    <div class="row" ng-controller="SourceFormController as source" ng-submit="submit()">
+      <div class="container">
+      <blockquote>complex doesn't have to be complicated.</blockquote>
+    </div>
+    <div class="row center-block" ng-controller="SourceFormController as source" ng-submit="submit()">
       <div class="col-md-6">
-        <form method="post"  role="form">
-          <div><input type="submit" value="Analyse" class="form-control"></div>
+        <form method="post"  role="form" class="form-horizontal">
+          <h4>Try Lizard in Your Browser</h4>
+          <div class="form-group">
+            <div class="col-sm-6">
+              <select ng-init="source.lang = source.lang || '.c'"
+                ng-model="source.lang" class="form-control" ng-options="lang for lang in ['.c','.cpp','.java','.javascript', '.py', '.m','.h']"  title="Language">
+              </select>
+            </div>
+            <div class="col-sm-6">
+            <input type="submit" value="Analyse" class="form-control btn btn-primary pull-right">
+          </div>
+          </div>
           <div><textarea name="content"  class="form-control" rows="20" ng-model="source.code" placeholder="Paste your source code here..."></textarea></div>
         </form>
       </div>

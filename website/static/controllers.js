@@ -6,6 +6,7 @@
 
   app.controller('SourceFormController', ['$scope', '$http', function ($scope, $http) {
     $scope.source = {};
+    $scope.source.lang = '.java';
     $scope.submit = function () {
       $scope.progress = "analysing...";
       $scope.result = {
