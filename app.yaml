@@ -5,19 +5,12 @@ api_version: 1
 threadsafe: true
 
 handlers:
-- url: .*
-  script: index.app
+- url: /
+  static_files: index.html
+  upload: index.html
+- url: /.*
+  script: website.application
 
 libraries:
-- name: jinja2
+- name: webapp2
   version: latest
-- name: markupsafe
-  version: latest
-
-skip_files:
-- ^(.*/)?#.*#$
-- ^(.*/)?.*~$
-- ^(.*/)?.*\.py[co]$
-- ^(.*/)?.*/RCS/.*$
-- ^(.*/)?\..*$
-#- ^(.*/)?.*lib/local/.*
