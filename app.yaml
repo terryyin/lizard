@@ -8,6 +8,8 @@ handlers:
 - url: /
   static_files: index.html
   upload: index.html
+- url: /website/static
+  static_dir: website/static
 - url: /.*
   script: website.application
 
