@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+{% autoescape true %}
+<html>
+  <body>
+
+    <form action="{{ url_for('analyse') }}" method="post">
+      <div><textarea name="content" rows="30" cols="60"></textarea></div>
+      <div><input type="submit" value="Analyse"></div>
+    </form>
+
+{% if info %}
+  <ul class=entries>
+  {% for f in info.function_list %}
+    <li><h2>{{ f.name }}</h2>{{ f.nloc }}
+  {% else %}
+    <li><em>Unbelievable.  No entries here so far</em>
+  {% endfor %}
+  </ul>
+ {% endif %}
+  </body>
+</html>
+{% endautoescape %}
