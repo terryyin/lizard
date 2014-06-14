@@ -1,24 +1,46 @@
 <!DOCTYPE html>
 <html ng-app="lizardApp">
   <head>
+    <link rel="stylesheet" type="text/css" href="website/static/bower/bootstrap/dist/css/bootstrap.css" />
     <script src="website/static/bower/angular/angular.js"></script>
     <script src="website/static/controllers.js"></script>
   </head>
   <body>
+    <header>
+    <h1 class="text-center">Lizard</h1>
+    <h2 class="text-center"> Code Compliexity Analyzer </h2>
+    </header>
 
-    <div ng-controller="SourceFormController as source" ng-submit="submit()">
-      <form method="post">
-        <div><textarea name="content" rows="30" cols="60" ng-model="source.code" placeholder="Paste your source code here..."></textarea></div>
-        <div><input type="submit" value="Analyse"></div>
-      </form>
-      {{progress}}
-      <table>
-        <tr ng-repeat="fun in result.function_list">
-          <td>{{fun.name}}</td>
-          <td>{{fun.nloc}}</td>
-        </tr>
-      </table>
-    </div>
+    <div class="row" ng-controller="SourceFormController as source" ng-submit="submit()">
+      <div class="col-md-6">
+        <form method="post"  role="form">
+          <div><input type="submit" value="Analyse" class="form-control"></div>
+          <div><textarea name="content"  class="form-control" rows="20" ng-model="source.code" placeholder="Paste your source code here..."></textarea></div>
+        </form>
+      </div>
+      <div class="col-md-6">
+        {{progress}}
+        <div>
 
-  </body>
-</html>
+        </div>
+        <table class="table table-hover">
+          <tr>
+            <th> Function Name </th>
+            <th> NLOC </th>
+            <th> Complexity </th>
+            <th> Token Count </th>
+            <th> Parameter Count </th>
+            <th> Position </th>
+          </tr>
+          <tr ng-repeat="fun in result.function_list">
+            <td>{{fun.name}}</td>
+            <td align=right>{{fun.nloc}}</td>
+            <td align=right>{{fun.cyclomatic_complexity}}</td>
+            <td align=right>{{fun.token_count}}</td>
+            <td align=right>{{fun.parameter_count}}</td>
+            <td align=right>{{fun.start_line}} - {{fun.end_line}}</td>
+          </tr>
+        </table>
+      </div>
+    </body>
+  </html>
