@@ -154,7 +154,7 @@ class Test_c_cpp_lizard(unittest.TestCase):
         result = get_cpp_function_list("bool TC::operator !(int b){}")
         self.assertEqual(1, len(result))
         self.assertEqual("TC::operator !", result[0].name)
-                
+
     def test_function_operator(self):
         result = get_cpp_function_list("bool TC::operator ()(int b){}")
         self.assertEqual(1, len(result))
@@ -168,7 +168,7 @@ class Test_c_cpp_lizard(unittest.TestCase):
     def test_brakets_before_function(self):
         result = get_cpp_function_list('''()''')
         self.assertEqual(0, len(result))
-        
+
 
 class Test_Preprocessing(unittest.TestCase):
 
@@ -179,8 +179,8 @@ class Test_Preprocessing(unittest.TestCase):
                         }
                ''')
         self.assertEqual(0, len(result))
-    
-   
+
+
     def test_preprocessors_should_be_ignored_outside_function_implementation(self):
         result = get_cpp_function_list('''
                       #ifdef MAGIC
