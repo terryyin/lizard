@@ -1,6 +1,9 @@
 <!DOCTYPE html>
-{% autoescape true %}
 <html>
+  <head>
+      <script src="bower_components/angular/angular.js"></script>
+      <script src="js/controllers.js"></script>
+  </head>
   <body>
 
     <form action="{{ url_for('analyse') }}" method="post">
@@ -19,4 +22,3 @@
  {% endif %}
   </body>
 </html>
-{% endautoescape %}
