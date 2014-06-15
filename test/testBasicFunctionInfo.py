@@ -94,3 +94,25 @@ class TestLOC(unittest.TestCase):
                 }''')
         self.assertEqual(5, result[0].end_line)
 
+
+class TestFileNLOC(unittest.TestCase):
+
+    def test_empty_file_should_has_0_nloc(self):
+        fileinfo = get_cpp_fileinfo("")
+        self.assertEqual(0, fileinfo.nloc)
+
+    def test_one_line_file_should_has_1_nloc(self):
+        fileinfo = get_cpp_fileinfo("a")
+        self.assertEqual(1, fileinfo.nloc)
+
+    def test_one_line_file_with_newline_at_the_end_should_has_1_nloc(self):
+        fileinfo = get_cpp_fileinfo("a\n")
+        self.assertEqual(1, fileinfo.nloc)
+
+    def test_two_one_line_file_should_has_2_nloc(self):
+        fileinfo = get_cpp_fileinfo("a\nb")
+        self.assertEqual(2, fileinfo.nloc)
+
+    def test_comment_should_not_count(self):
+        fileinfo = get_cpp_fileinfo("//abc")
+        self.assertEqual(0, fileinfo.nloc)
