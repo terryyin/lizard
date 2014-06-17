@@ -5,6 +5,8 @@ Was hfcca, A Header Free Cyclomatic Complexity Analyzer.
 
 |Build Status|
 
+Visit the tool website |Web Site|
+
 lizard is a simple code complexity analyzer without caring about the
 C/C++ header files or Java imports. It can deal with
 
@@ -225,3 +227,6 @@ Change Logs
 
 .. |Build Status| image:: https://travis-ci.org/terryyin/lizard.png?branch=master
    :target: https://travis-ci.org/terryyin/lizard
+
+.. |Web Site| image:: https://www.lizard.ws/website/static/img/logo-small.png
+   :target: https://www.lizard.ws

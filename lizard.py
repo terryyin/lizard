@@ -13,11 +13,12 @@
 #  limitations under the License.
 #
 #  author: terry@odd-e.com
+#  Website: www.lizard.ws
 #
 """
 lizard is a simple code complexity analyzer without caring about the C/C++
 header files or Java imports.
-Please find the README.rst for more information.
+For more information visit http://www.lizard.ws
 """
 from __future__ import print_function
 import sys
@@ -30,7 +31,7 @@ import os
 from fnmatch import fnmatch
 import hashlib
 
-VERSION = "1.8.3"
+VERSION = "1.8.4"
 
 DEFAULT_CCN_THRESHOLD = 15
 
@@ -127,7 +128,7 @@ def create_command_line_parser(prog=None):
                         dest="sorting",
                         default=[])
 
-    parser.usage = "lizard [options] [PATH or FILE] [PATH] ... "
+    parser.usage = '''lizard [options] [PATH or FILE] [PATH] ...'''
     parser.description = __doc__
     return parser
 

@@ -19,7 +19,7 @@ def install(appname):
           description = ''' A code analyzer without caring the C/C++ header files.
 It works with Java, C/C++, JavaScript, Python, Objective C. Metrics includes cyclomatic complexity number etc.''',
           long_description =  readme,
-          url = 'https://github.com/terryyin/lizard',
+          url = 'http://www.lizard.ws',
           download_url='https://pypi.python.org/lizard/',
           license='MIT',
           platforms='any',
