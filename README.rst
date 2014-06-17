@@ -228,5 +228,5 @@ Change Logs
 .. |Build Status| image:: https://travis-ci.org/terryyin/lizard.png?branch=master
    :target: https://travis-ci.org/terryyin/lizard
 
-.. |Web Site| image:: https://www.lizard.ws/website/static/img/logo-small.png
-   :target: https://www.lizard.ws
+.. |Web Site| image:: http://www.lizard.ws/website/static/img/logo-small.png
+   :target: http://www.lizard.ws
