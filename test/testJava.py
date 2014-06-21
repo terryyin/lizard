@@ -15,3 +15,15 @@ class TestJava(unittest.TestCase):
     def test_function_with_throws(self):
         result = get_java_function_list("void fun() throws e1, e2{}")
         self.assertEqual(1, len(result))
+
+    def test_function_with_decorator(self):
+        result = get_java_function_list("@abc() void fun() throws e1, e2{}")
+        self.assertEqual(1, len(result))
+
+    def test_class_with_decorator(self):
+        result = get_java_function_list("@abc() class funxx{ }")
+        self.assertEqual(0, len(result))
+
+    def test_class_with_decorator_that_has_namespace(self):
+        result = get_java_function_list("@a.b() class funxx{ }")
+        self.assertEqual(0, len(result))

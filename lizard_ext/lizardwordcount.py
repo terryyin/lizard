@@ -78,6 +78,12 @@ class LizardExtension(object):
         "\\\\\\",
         '.',
         '::',
+        'def',
+        'self',
+        'in',
+        'is',
+        'import',
+        'from',
     ))
 
     def __init__(self):
