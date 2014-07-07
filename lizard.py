@@ -31,7 +31,7 @@ import os
 from fnmatch import fnmatch
 import hashlib
 
-VERSION = "1.8.4"
+VERSION = "1.8.5"
 
 DEFAULT_CCN_THRESHOLD = 15
 
@@ -476,6 +476,10 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
             self.context.add_to_long_function_name(" " + token)
         elif token == 'throw':
             self._state = self._state_throw
+        elif token == '(':
+            long_name = self.context.current_function.long_name
+            self.context.start_new_function(long_name)
+            self._state_function(token)
         elif token == '{':
             self.br_count += 1
             self._state = self._state_imp

@@ -169,6 +169,12 @@ class Test_c_cpp_lizard(unittest.TestCase):
         result = get_cpp_function_list('''()''')
         self.assertEqual(0, len(result))
 
+    def test_function_that_returns_function_pointers(self):
+        result = get_cpp_function_list('''int (*fun())(){}''')
+        self.assertEqual(1, len(result))
+        self.assertEqual("int( * fun ( ) )", result[0].name)
+
+
 
 class Test_Preprocessing(unittest.TestCase):
 
