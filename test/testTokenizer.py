@@ -57,6 +57,10 @@ class Test_generate_tonken_for_marcos(unittest.TestCase):
                     int''')
         self.assertEqual([define, '\n', ' ' * 20, 'int'], tokens)
 
+    def test_include(self):
+        tokens = generate_tokens('''#include "abc"''')
+        self.assertEqual(['#include "abc"'], tokens)
+
     def test_if(self):
         tokens = generate_tokens('''#if abc\n''')
         self.assertEqual(['#if abc', '\n'], tokens)
@@ -75,6 +79,12 @@ class Test_generate_tonken_for_marcos(unittest.TestCase):
                        t
                     ''')
         self.assertTrue('t' in tokens)
+
+    def test_half_comment_following(self):
+        comment = '''#define A/*\n*/'''
+        tokens = generate_tokens(comment)
+        self.assertEqual(2, len(tokens))
+
 
 
 class Test_generate_tonken_for_comments(unittest.TestCase):

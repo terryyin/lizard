@@ -94,7 +94,6 @@ class TestLOC(unittest.TestCase):
                 }''')
         self.assertEqual(5, result[0].end_line)
 
-
 class TestFileNLOC(unittest.TestCase):
 
     def test_empty_file_should_has_0_nloc(self):
