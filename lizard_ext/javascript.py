@@ -7,6 +7,7 @@ import re
 
 
 class JavaScriptReader(CodeReader, CCppCommentsMixin):
+    # pylint: disable=R0903
 
     ext = ['js']
 

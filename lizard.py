@@ -31,7 +31,7 @@ import os
 from fnmatch import fnmatch
 import hashlib
 
-VERSION = "1.8.5"
+VERSION = "1.8.6"
 
 DEFAULT_CCN_THRESHOLD = 15
 
@@ -326,45 +326,45 @@ class CodeReader(object):
         pass
 
     @staticmethod
-    def _generate_tokens(source_code, addition):
-        # DONOT put any sub groups in the regex. Good for performance
-        _until_end = r"(?:\\\n|[^\n])*"
-        combined_symbals = ["||", "&&", "===", "!==", "==", "!=", "<=", ">=",
-                            "<<", ">>>", "++", ">>", "--", '+=', '-=',
-                            '*=', '/=', '^=', '&=', '|=']
-        token_pattern = re.compile(
-            r"(?:\w+" +
-            r"|/\*.*?\*/" +
-            addition +
-            r"|\"(?:\\.|[^\"])*\"" +
-            r"|\'(?:\\.|[^\'])*?\'" +
-            r"|//" + _until_end +
-            r"|\#" +
-            r"|:=|::|\*\*" +
-            r"|" + r"|".join(re.escape(s) for s in combined_symbals) +
-            r"|\\\n" +
-            r"|\n" +
-            r"|[^\S\n]+" +
-            r"|.)", re.M | re.S)
-        macro = ""
-        for token in token_pattern.findall(source_code):
-            if macro:
-                if token == "\\\n" or "\n" not in token:
-                    macro += token
-                else:
-                    yield macro
-                    yield token
-                    macro = ""
-            elif token == "#":
-                macro = token
-            else:
-                yield token
-        if macro:
-            yield macro
-
-    @staticmethod
     def generate_tokens(source_code, addition=''):
-        return [t for t in CodeReader._generate_tokens(source_code, addition)]
+        def _generate_tokens(source_code, addition):
+            # DONOT put any sub groups in the regex. Good for performance
+            _until_end = r"(?:\\\n|[^\n])*"
+            combined_symbals = ["||", "&&", "===", "!==", "==", "!=", "<=",
+                                ">=",
+                                "<<", ">>>", "++", ">>", "--", '+=', '-=',
+                                '*=', '/=', '^=', '&=', '|=']
+            token_pattern = re.compile(
+                r"(?:\w+" +
+                r"|/\*.*?\*/" +
+                addition +
+                r"|\"(?:\\.|[^\"])*\"" +
+                r"|\'(?:\\.|[^\'])*?\'" +
+                r"|//" + _until_end +
+                r"|\#" +
+                r"|:=|::|\*\*" +
+                r"|" + r"|".join(re.escape(s) for s in combined_symbals) +
+                r"|\\\n" +
+                r"|\n" +
+                r"|[^\S\n]+" +
+                r"|.)", re.M | re.S)
+            macro = ""
+            for token in token_pattern.findall(source_code):
+                if macro:
+                    if token == "\\\n" or "\n" not in token:
+                        macro += token
+                    else:
+                        yield macro
+                        yield token
+                        macro = ""
+                elif token == "#":
+                    macro = token
+                else:
+                    yield token
+            if macro:
+                yield macro
+
+        return [t for t in _generate_tokens(source_code, addition)]
 
 
 class CCppCommentsMixin(object):  # pylint: disable=R0903
@@ -387,6 +387,7 @@ except ImportError:
     pass
 
 
+# pylint: disable=R0903
 class CLikeReader(CodeReader, CCppCommentsMixin):
 
     ''' This is the reader for C, C++ and Java. '''
