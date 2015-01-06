@@ -505,7 +505,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
             self._state = self._state_imp
         elif token == ":":
             self._state = self._state_initialization_list
-        elif not token[0].isalpha() or token[0] == '_':
+        elif not (token[0].isalpha() or token[0] == '_'):
             self._state = self._state_global
         else:
             self._state = self._state_old_c_params
