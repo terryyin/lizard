@@ -31,7 +31,7 @@ import os
 from fnmatch import fnmatch
 import hashlib
 
-VERSION = "1.8.6"
+VERSION = "1.8.7"
 
 DEFAULT_CCN_THRESHOLD = 15
 
@@ -411,7 +411,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
                         self.context.add_condition()
                     elif macro.group(1) == 'include':
                         yield "#include"
-                        yield macro.group(2)
+                        yield macro.group(2) or "\"\""
                     for _ in macro.group(2).splitlines()[1:]:
                         yield '\n'
                 else:
