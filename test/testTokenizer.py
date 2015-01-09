@@ -35,6 +35,7 @@ class Test_generate_tonken(unittest.TestCase):
         self.check_tokens(r'""', '""')
         self.check_tokens(r'"x\"xx")', '"x\\"xx"', ')')
         self.check_tokens("'\\''", "'\\''")
+        self.check_tokens(r"'\\\'", *["'", '\\', '\\', '\\', "'"])
 
     def test_line_number(self):
         self.check_tokens(r'abc', 'abc')
