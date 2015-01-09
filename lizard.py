@@ -645,7 +645,6 @@ class FileAnalyzer(object):  # pylint: disable=R0903
         self.processors = extensions
 
     def __call__(self, filename):
-        print(filename)
         try:
             return self.analyze_source_code(
                 filename, open(filename, 'rU').read())
