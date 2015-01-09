@@ -27,6 +27,6 @@ class TestFunctionDependencyCount(unittest.TestCase):
             DependencyCounter())
         self.assertEqual(1, result[0].dependency_count)
         result = get_cpp_function_list_with_extnesion(
-            "import kok as www import tree, java as monster, coffee import java public class board { private void function() { java += 1; java.tree = green; www.yay(0); teacher.lecture(0); }",
+            "import kok as www import tree, java as monster, coffee import java public board { private void function() { java += 1; java.tree = green; www.yay(0); teacher.lecture(0); }",
             DependencyCounter())
         self.assertEqual(3, result[0].dependency_count)

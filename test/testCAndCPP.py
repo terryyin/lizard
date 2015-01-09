@@ -214,10 +214,15 @@ class Test_Preprocessing(unittest.TestCase):
 
 
 class Test_Big(unittest.TestCase):
+
     def test_trouble(self):
-        #code = open("a.c").read()
-        #result = get_cpp_fileinfo(code)
-        #self.assertEqual(0, len(result))
-        pass
+        code = "foo<y () >> 5> r;"
+        result = get_cpp_function_list(code)
+        self.assertEqual(0, len(result))
+
+    def test_namespace_is_not_function(self):
+        code = "namespace a b(){}"
+        result = get_cpp_function_list(code)
+        self.assertEqual(0, len(result))
 
 

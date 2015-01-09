@@ -422,13 +422,19 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
         self.bracket_stack = []
 
     def _state_global(self, token):
-        if token == 'typedef':
+        if token in ("class", "namespace"):
+            self._state = self._state_namespace_def
+        elif token == 'typedef':
             self._state = self._state_typedef
         elif token[0].isalpha() or token[0] == '_':
             self.context.start_new_function(token)
             self._state = self._state_function
             if token == 'operator':
                 self._state = self._state_operator
+
+    def _state_namespace_def(self, token):
+        if token in '{;':
+            self._state = self._state_global
 
     def _state_typedef(self, token):
         if token == ';':
@@ -454,7 +460,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
             self.bracket_stack.append(token)
         elif token in (">", ">>"):
             for _ in token:
-                if self.bracket_stack.pop() != "<":
+                if not self.bracket_stack or self.bracket_stack.pop() != "<":
                     self._reset_to_global()
         if not self.bracket_stack:
             self._state = self._state_function
@@ -653,6 +659,7 @@ class FileAnalyzer(object):  # pylint: disable=R0903
                              % filename)
 
     def analyze_source_code(self, filename, code):
+        print(filename)
         context = CodeInfoContext(filename)
         reader = (CodeReader.get_reader(filename) or CLikeReader)(context)
         tokens = reader.generate_tokens(code)
