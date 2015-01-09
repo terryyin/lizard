@@ -44,6 +44,10 @@ class Test_c_cpp_lizard(unittest.TestCase):
         result = get_cpp_function_list("""int fun(param) int praram; {}""")
         self.assertEqual(1, len(result))
 
+    def test_not_old_style_c_function(self):
+        result = get_cpp_function_list("m()"*1500+ "a(){}")
+        self.assertEqual(1, len(result))
+
     def test_complicated_c_function(self):
         result = get_cpp_function_list("""int f(int(*)()){}""")
         self.assertEqual('f', result[0].name)
@@ -180,10 +184,6 @@ class Test_c_cpp_lizard(unittest.TestCase):
         result = get_cpp_function_list(''' a() _() { }''')
         self.assertEqual(1, len(result))
 
-
-
-
-
 class Test_Preprocessing(unittest.TestCase):
 
     def test_content_macro_should_be_ignored(self):
@@ -211,4 +211,13 @@ class Test_Preprocessing(unittest.TestCase):
                 #endif
                 ''')
         self.assertEqual(0, len(result))
+
+
+class Test_Big(unittest.TestCase):
+    def test_trouble(self):
+        #code = open("a.c").read()
+        #result = get_cpp_fileinfo(code)
+        #self.assertEqual(0, len(result))
+        pass
+
 

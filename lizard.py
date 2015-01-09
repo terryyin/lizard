@@ -351,7 +351,7 @@ class CodeReader(object):
             macro = ""
             for token in token_pattern.findall(source_code):
                 if macro:
-                    if token == "\\\n" or "\n" not in token:
+                    if "\\\n" in token or "\n" not in token:
                         macro += token
                     else:
                         yield macro
@@ -518,11 +518,17 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
     def _state_old_c_params(self, token):
         self._saved_tokens.append(token)
         if token == ';':
+            self._saved_tokens = []
             self._state = self._state_dec_to_imp
         elif token == '{':
             if len(self._saved_tokens) == 2:
+                self._saved_tokens = []
                 self._state_dec_to_imp(token)
                 return
+            self._state = self._state_global
+            for token in self._saved_tokens:
+                self._state(token)
+        elif token == '(':
             self._state = self._state_global
             for token in self._saved_tokens:
                 self._state(token)
@@ -639,6 +645,7 @@ class FileAnalyzer(object):  # pylint: disable=R0903
         self.processors = extensions
 
     def __call__(self, filename):
+        print(filename)
         try:
             return self.analyze_source_code(
                 filename, open(filename, 'rU').read())

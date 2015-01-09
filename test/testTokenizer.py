@@ -85,7 +85,10 @@ class Test_generate_tonken_for_marcos(unittest.TestCase):
         tokens = generate_tokens(comment)
         self.assertEqual(2, len(tokens))
 
-
+    def test_block_comment_in_define(self):
+        comment = '''#define A \\\n/*\\\n*/'''
+        tokens = generate_tokens(comment)
+        self.assertEqual(1, len(tokens))
 
 class Test_generate_tonken_for_comments(unittest.TestCase):
 
