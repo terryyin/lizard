@@ -31,7 +31,7 @@ import os
 from fnmatch import fnmatch
 import hashlib
 
-VERSION = "1.8.8"
+VERSION = "1.8.9"
 
 DEFAULT_CCN_THRESHOLD = 15
 
@@ -116,7 +116,11 @@ def create_command_line_parser(prog=None):
                         dest="switchCasesAsOneCondition",
                         default=False)
     parser.add_argument("-E", "--extension",
-                        help="under construction...",
+                        help='''User the extensions. The available extensions are:
+                        -Ecpre: it will ignore code in the #else branch.
+                        -Ewordcount: count word fequencies and generate tag cloud.
+                        -Eoutside: include the global code as one function.
+                        ''',
                         action="append",
                         dest="extensions",
                         default=[])

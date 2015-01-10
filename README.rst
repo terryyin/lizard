@@ -83,43 +83,46 @@ Options
 
 ::
 
-      --version             show program's version number and exit
-      -h, --help            show this help message and exit
-      -v, --verbose         Output in verbose mode (long function name)
-      -C CCN, --CCN=CCN     Threshold for cyclomatic complexity number warning.
-                            The default value is 15. Functions with CCN bigger
-                            than this number will generate warning
-      -a ARGUMENTS, --arguments=ARGUMENTS
-                            Limit for number of parameters
-      -w, --warnings_only   Show warnings only, using clang/gcc's warning format
-                            for printing warnings.
-                            http://clang.llvm.org/docs/UsersManual.html#cmdoption-
-                            fdiagnostics-format
-      -i NUMBER, --ignore_warnings=NUMBER
-                            If the number of warnings is equal or less than the
-                            number, the tool will exit normally, otherwize it will
-                            generate error. Useful in makefile when improving
-                            legacy code.
-      -x EXCLUDE, --exclude=EXCLUDE
-                            Exclude files that match this pattern. * matches
-                            everything, ? matches any single characoter,
-                            "./folder/*" exclude everything in the folder,
-                            recursively. Multiple patterns can be specified. Don't
-                            forget to add "" around the pattern.
-      -X, --xml             Generate XML in cppncss style instead of the normal
-                            tabular output. Useful to generate report in Jenkins
-                            server
-      -P, --no_preprocessor_count
-                            By default, a #if will also increase the complexity.
-                            Adding this option to ignore them
-      -t WORKING_THREADS, --working_threads=WORKING_THREADS
-                            number of working threads. The default value is 1.
-      -d, --find_duplicates
-                            Find and skip analysis for file duplicates.
-      -s, --sort
-                            Sort the warning with field. The field can be nloc, 
-                            cyclomatic_complexity, token_count, parameter_count,
-                            etc. Or an customized file.
+  -h, --help            show this help message and exit
+  --version             show program's version number and exit
+  -V, --verbose         Output in verbose mode (long function name)
+  -C CCN, --CCN CCN     Threshold for cyclomatic complexity number warning.
+                        The default value is 15. Functions with CCN bigger
+                        than it will generate warning
+  -a ARGUMENTS, --arguments ARGUMENTS
+                        Limit for number of parameters
+  -w, --warnings_only   Show warnings only, using clang/gcc's warning format
+                        for printing warnings.
+                        http://clang.llvm.org/docs/UsersManual.html#cmdoption-
+                        fdiagnostics-format
+  -i NUMBER, --ignore_warnings NUMBER
+                        If the number of warnings is equal or less than the
+                        number, the tool will exit normally, otherwize it will
+                        generate error. Useful in makefile for legacy code.
+  -x EXCLUDE, --exclude EXCLUDE
+                        Exclude files that match this pattern. * matches
+                        everything, ? matches any single characoter,
+                        "./folder/*" exclude everything in the folder
+                        recursively. Multiple patterns can be specified. Don't
+                        forget to add "" around the pattern.
+  -X, --xml             Generate XML in cppncss style instead of the tabular
+                        output. Useful to generate report in Jenkins server
+  -t WORKING_THREADS, --working_threads WORKING_THREADS
+                        number of working threads. The default value is 1.
+                        Using a bigger number can fully utilize the CPU and
+                        often faster.
+  -m, --modified        Calculate modified cyclomatic complexity number
+  -E EXTENSIONS, --extension EXTENSIONS
+                        User the extensions. The available extensions are:
+                        -Ecpre: it will ignore code in the #else branch.
+                        -Ewordcount: count word fequencies and generate tag
+                        cloud. -Eoutside: include the global code as one
+                        function.
+  -s SORTING, --sort SORTING
+                        Sort the warning with field. The field can be nloc,
+                        cyclomatic_complexity, token_count, parameter_count,
+                        etc. Or an customized file.
+
 
 Example use
 -----------
@@ -217,7 +220,7 @@ Wishlist (The features that will come in the near future)
 
 Change Logs
 -----------
-
+-  2015.01.09 Add C preprocessor back by -Ecpre. it will ignore all the #else branch in the C/C++ code.
 -  2014.04.07 Remove option -e (display function end line), and make it default
 -  2014.04.06 Remove option -d (ignore duplicated content), and make it default
 -  2014.04.06 Remove option -p (no preprocessor count), and a '#if' will always be counted in cyclomatic complexity
