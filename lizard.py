@@ -31,7 +31,7 @@ import os
 from fnmatch import fnmatch
 import hashlib
 
-VERSION = "1.8.7"
+VERSION = "1.8.8"
 
 DEFAULT_CCN_THRESHOLD = 15
 
@@ -659,7 +659,6 @@ class FileAnalyzer(object):  # pylint: disable=R0903
                              % filename)
 
     def analyze_source_code(self, filename, code):
-        print(filename)
         context = CodeInfoContext(filename)
         reader = (CodeReader.get_reader(filename) or CLikeReader)(context)
         tokens = reader.generate_tokens(code)
@@ -924,6 +923,18 @@ def parse_args(argv):
 
 
 def get_extensions(extension_names, switch_case_as_one_condition=False):
+
+    def expand_extensions(existing):
+        for name in extension_names:
+            ext = (import_module('lizard_ext.lizard' + name.lower())
+                   .LizardExtension()
+                   if isinstance(name, str) else name)
+            existing.insert(
+                len(existing) if not hasattr(ext, "ordering_index") else
+                ext.ordering_index,
+                ext)
+        return existing
+
     from importlib import import_module
     extensions = [
         preprocessing,
@@ -935,10 +946,7 @@ def get_extensions(extension_names, switch_case_as_one_condition=False):
     ]
     if switch_case_as_one_condition:
         extensions.append(recount_switch_case)
-
-    return extensions +\
-        [import_module('lizard_ext.lizard' + name.lower()).LizardExtension()
-         if isinstance(name, str) else name for name in extension_names]
+    return expand_extensions(extensions)
 
 analyze_file = FileAnalyzer(get_extensions([]))  # pylint: disable=C0103
 
