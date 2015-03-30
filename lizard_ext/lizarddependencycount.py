@@ -47,8 +47,8 @@ class LizardExtension(object):  # pylint: disable=R0903
                     import_as_counter += 1
                     import_as_list += [token]
             elif (expect_dependency ==
-                  dependency_type['python_import_as_change']
-                  and token not in ignored_list):
+                  dependency_type['python_import_as_change'] and
+                  token not in ignored_list):
                 import_as_counter -= 1
                 import_list += [token]
                 if import_as_counter == 0:

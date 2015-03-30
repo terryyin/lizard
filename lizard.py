@@ -22,16 +22,15 @@ For more information visit http://www.lizard.ws
 """
 from __future__ import print_function
 import sys
-if sys.version[0] == '2':
-    from future_builtins import map, filter  # pylint: disable=W0622, F0401
-
 import itertools
 import re
 import os
 from fnmatch import fnmatch
 import hashlib
+if sys.version[0] == '2':
+    from future_builtins import map, filter  # pylint: disable=W0622, F0401
 
-VERSION = "1.8.9"
+VERSION = "1.8.10"
 
 DEFAULT_CCN_THRESHOLD = 15
 
@@ -196,8 +195,8 @@ class FileInformation(object):  # pylint: disable=R0903
         sum(fun.cyclomatic_complexity for fun in self.function_list))
 
     def functions_average(self, att):
-        return (sum(getattr(fun, att) for fun in self.function_list)
-                / len(self.function_list) if self.function_list else 0)
+        summary = sum(getattr(fun, att) for fun in self.function_list)
+        return summary / len(self.function_list) if self.function_list else 0
 
 
 class CodeInfoContext(object):
@@ -786,9 +785,10 @@ def print_total(warning_count, saved_result, option):
         cnt,
         warning_count,
         float(warning_count) / cnt,
-        float(sum([f.nloc for f in all_fun
-                   if f.cyclomatic_complexity > option.CCN]))
-        / nloc_in_functions
+        float(sum([
+            f.nloc for f in all_fun
+            if f.cyclomatic_complexity > option.CCN
+            ])) / nloc_in_functions
     )
 
     if not option.warnings_only:
@@ -890,11 +890,9 @@ def get_all_source_files(paths, exclude_patterns):
     def _validate_file(pathname):
         return (
             pathname in paths or (
-                CodeReader.get_reader(pathname) and all(
-                    not fnmatch(
-                        pathname,
-                        p) for p in exclude_patterns)
-                and _not_duplicate(pathname)))
+                CodeReader.get_reader(pathname) and
+                all(not fnmatch(pathname, p) for p in exclude_patterns) and
+                _not_duplicate(pathname)))
 
     def _not_duplicate(full_path_name):
         fhash = md5_hash_file(full_path_name)
