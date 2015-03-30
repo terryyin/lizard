@@ -78,6 +78,8 @@ Exclude anything in the tests folder:
 
     lizard mySource/ -x"./tests/*"
 
+You can also find a tutorial by @jxieeducation (Jason Xie) from here: http://thrashing.io/tutorial/551891bccfead697722b05ad
+
 Options
 ~~~~~~~
 
