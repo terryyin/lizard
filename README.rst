@@ -124,6 +124,9 @@ Options
                         Sort the warning with field. The field can be nloc,
                         cyclomatic_complexity, token_count, parameter_count,
                         etc. Or an customized file.
+  -W WHITELIST, --whitelist WHITELIST
+                        The path and file name to the whitelist file. It's
+                        './whitelizard.txt' by default.
 
 
 Example use
@@ -191,7 +194,7 @@ Whitelist
 ---------
 
 If for some reason you would like to ignore the warnings, you can use
-the whitelist. Add 'whitelizard.txt' to the current folder, then the
+the whitelist. Add 'whitelizard.txt' to the current folder (or use -W to point to the whitelist file), then the
 functions defined in the file will be ignored. This is an example
 
 ::

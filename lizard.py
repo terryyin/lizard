@@ -30,9 +30,10 @@ import hashlib
 if sys.version[0] == '2':
     from future_builtins import map, filter  # pylint: disable=W0622, F0401
 
-VERSION = "1.8.10"
+VERSION = "1.8.11"
 
 DEFAULT_CCN_THRESHOLD = 15
+DEFAULT_WHITELIST = "whitelizard.txt"
 
 
 def analyze(paths, exclude_pattern=None, threads=1, extensions=None):
@@ -131,6 +132,12 @@ def create_command_line_parser(prog=None):
                         action="append",
                         dest="sorting",
                         default=[])
+    parser.add_argument("-W", "--whitelist",
+                        help='''The path and file name to the whitelist file.
+                        It's './whitelizard.txt' by default.''',
+                        type=str,
+                        dest="whitelist",
+                        default=DEFAULT_WHITELIST)
 
     parser.usage = '''lizard [options] [PATH or FILE] [PATH] ...'''
     parser.description = __doc__
@@ -682,7 +689,7 @@ def warning_filter(option, module_infos):
                     yield fun
 
 
-def whitelist_filter(warnings, script=None):
+def whitelist_filter(warnings, script=None, whitelist=None):
     def _get_whitelist_item(script):
         white = {}
         pieces = script.replace('::', '##').split(':')
@@ -701,14 +708,16 @@ def whitelist_filter(warnings, script=None):
         return (warning.name in white['function_names'] and
                 warning.filename == white.get('file_name', warning.filename))
 
-    def get_whitelist():
-        whitelist_filename = "whitelizard.txt"
-        if os.path.isfile(whitelist_filename):
-            return open(whitelist_filename, mode='r').read()
+    def get_whitelist(whitelist):
+        if os.path.isfile(whitelist):
+            return open(whitelist, mode='r').read()
+        elif whitelist != DEFAULT_WHITELIST:
+            print("WARNING: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            print("WARNING: the whitelist \""+whitelist+"\" doesn't existing.")
         return ''
 
     if not script:
-        script = get_whitelist()
+        script = get_whitelist(whitelist)
     whitelist = [
         _get_whitelist_item(line.split('#')[0])
         for line in script.splitlines()]
@@ -836,7 +845,7 @@ def print_result(code_infos, option):
         code_infos = print_and_save_modules(
             code_infos, option.extensions, scheme)
     warnings = warning_filter(option, code_infos)
-    warnings = whitelist_filter(warnings)
+    warnings = whitelist_filter(warnings, whitelist=option.whitelist)
     warning_count = print_warnings(option, scheme, warnings)
     print_total(warning_count, code_infos, option)
     for extension in option.extensions:
