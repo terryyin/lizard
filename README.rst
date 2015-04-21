@@ -169,6 +169,16 @@ Warnings only (in clang/gcc formation):lizard -w mahjong\_game
    ./src/html_ui/httpd.c:64: warning: accept_request has 19 CCN and 1 params (66 NLOC, 247 tokens)
    ./src/mahjong_game/mj_table.c:109: warning: mj_table_update_state has 20 CCN and 1 params (72 NLOC, 255 tokens)
 
+Generate A Tag Cloud For Your Code
+-----------------------------
+
+You can generate a "Tag cloud" of your code by the following command. It counts the identifiers in your code (ignoring the comments).
+
+::
+
+   lizard -EWordCount <path to your code>
+
+
 Using lizard as Python module
 -----------------------------
 
