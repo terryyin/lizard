@@ -39,33 +39,33 @@ class TestFunctionOutput(StreamStdoutTestCase):
 
     def test_function_info_header_should_have_the_captions(self):
         print_and_save_modules([], self.extensions, self.scheme)
-        self.assertEquals("  NLOC    CCN   token  PARAM  location  ", sys.stdout.stream.splitlines()[1])
+        self.assertEquals("  NLOC    CCN   token  PARAM  length  location  ", sys.stdout.stream.splitlines()[1])
 
     def test_function_info_header_should_have_the_captions_of_external_extensions(self):
         external_extension = Mock(FUNCTION_CAPTION = "*external_extension*", ordering_index=-1)
         extensions = get_extensions([external_extension])
         scheme = OutputScheme(extensions)
         print_and_save_modules([], extensions, scheme)
-        self.assertEquals("  NLOC    CCN   token  PARAM *external_extension* location  ", sys.stdout.stream.splitlines()[1])
+        self.assertEquals("  NLOC    CCN   token  PARAM  length *external_extension* location  ", sys.stdout.stream.splitlines()[1])
 
     def test_print_fileinfo(self):
         self.foo.end_line = 100
         self.foo.cyclomatic_complexity = 16
         fileStat = FileInformation("FILENAME", 1, [self.foo])
         print_and_save_modules([fileStat], self.extensions, self.scheme)
-        self.assertEquals("       1     16      1      0 foo@100-100@FILENAME", sys.stdout.stream.splitlines()[3])
+        self.assertEquals("       1     16      1      0       0 foo@100-100@FILENAME", sys.stdout.stream.splitlines()[3])
 
 class TestWarningOutput(StreamStdoutTestCase):
 
     def setUp(self):
         StreamStdoutTestCase.setUp(self)
-        self.option = Mock(warnings_only=False, CCN=15, extensions = [])
+        self.option = Mock(warnings_only=False, CCN=15, arguments=100, length=200, extensions = [])
         self.foo = FunctionInfo("foo", 'FILENAME', 100)
         self.scheme = Mock()
 
     def test_should_have_header_when_warning_only_is_off(self):
         print_warnings(self.option, self.scheme, [])
-        self.assertIn("Warnings (CCN > 15)", sys.stdout.stream)
+        self.assertIn("Warnings (CCN > 15 or arguments > 100 or length > 200)", sys.stdout.stream)
 
     def test_no_news_is_good_news(self):
         self.option.warnings_only = True
@@ -73,9 +73,9 @@ class TestWarningOutput(StreamStdoutTestCase):
         self.assertEqual('', sys.stdout.stream)
 
     def test_should_not_have_header_when_warning_only_is_on(self):
-        self.option = Mock(warnings_only=True, CCN=15)
+        self.option = Mock(warnings_only=True, CCN=15, arguments=100, length=200)
         print_warnings(self.option, self.scheme, [])
-        self.assertNotIn("Warnings (CCN > 15)", sys.stdout.stream)
+        self.assertNotIn("Warnings (CCN > 15 or arguments > 100 or length > 200)", sys.stdout.stream)
 
     def test_should_use_clang_format_for_warning(self):
         self.option = Mock(display_fn_end_line = False, extensions = get_extensions([]))

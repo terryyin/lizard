@@ -296,7 +296,7 @@ def token_counter(tokens, reader):
             reader.context.newline = False
         reader.context.current_function.end_line = reader.context.current_line
         length = reader.context.current_line
-        length -= reader.context.current_function.start_line;
+        length -= reader.context.current_function.start_line
         reader.context.current_function.length = length
         reader.context.current_function.token_count += 1
         yield token
@@ -777,12 +777,14 @@ def print_warnings(option, scheme, warnings):
         warnings = list(warnings)
         warnings.sort(reverse=True,
                       key=lambda x: getattr(x, option.sorting[0]))
+    if not option.warnings_only:
+        warn_str = ("!!!! Warnings (CCN > {0} or arguments > {1} " +
+                    "or length > {2}) !!!!").format(option.CCN,
+                                                    option.arguments,
+                                                    option.length)
+        print("\n" + "=" * len(warn_str) + "\n" + warn_str)
+        print(scheme.function_info_head())
     for warning in warnings:
-        if warning_count == 0 and not option.warnings_only:
-            print(("\n" +
-                   "================================================================\n" +
-                   "!!!! Warnings (CCN > %d or arguments > %d or length > %d) !!!!") % (option.CCN, option.arguments, option.length))
-            print(scheme.function_info_head())
         warning_count += 1
         if option.warnings_only:
             print(warning.clang_format_warning())
