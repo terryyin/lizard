@@ -45,6 +45,10 @@ class TestWordCountPlugin(unittest.TestCase):
         list(self.ext(["\"\""], self.reader))
         self.assertEqual(0, len(self.reader.get_word_map()))
 
+    def test_should_not_line_continuer(self):
+        list(self.ext(["\\\n"], self.reader))
+        self.assertEqual(0, len(self.reader.get_word_map()))
+
     def test_reduce_the_result(self):
         list(self.ext(["a"], self.reader))
         self.ext.reduce(self.reader.fileinfo)

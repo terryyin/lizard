@@ -76,6 +76,7 @@ class LizardExtension(object):
         '&',
         '\\',
         "\\\\\\",
+        '\\\n',
         '.',
         '::',
         'def',
