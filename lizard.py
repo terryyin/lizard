@@ -30,7 +30,7 @@ import hashlib
 if sys.version[0] == '2':
     from future_builtins import map, filter  # pylint: disable=W0622, F0401
 
-VERSION = "1.8.11"
+VERSION = "1.8.12"
 
 DEFAULT_CCN_THRESHOLD = 15
 DEFAULT_WHITELIST = "whitelizard.txt"
