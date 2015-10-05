@@ -181,6 +181,14 @@ class Test_c_cpp_lizard(unittest.TestCase):
 
     def test_constructor_initialization_list_noexcept(self):
         result = get_cpp_function_list('''A::A()noexcept:a(1){}''')
+
+    def test_constructor_initializer_list(self):
+        result = get_cpp_function_list('''A::A():a({1}),value(true){}''')
+        self.assertEqual(1, len(result))
+        self.assertEqual("A::A", result[0].name)
+
+    def test_constructor_uniform_initialization(self):
+        result = get_cpp_function_list('''A::A():a{1},value(true){}''')
         self.assertEqual(1, len(result))
         self.assertEqual("A::A", result[0].name)
 
