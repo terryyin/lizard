@@ -33,6 +33,7 @@ if sys.version[0] == '2':
 VERSION = "1.8.12"
 
 DEFAULT_CCN_THRESHOLD = 15
+DEFAULT_MAX_FUNC_LENGTH = 200
 DEFAULT_WHITELIST = "whitelizard.txt"
 
 
@@ -67,6 +68,14 @@ def create_command_line_parser(prog=None):
                         type=int,
                         dest="CCN",
                         default=DEFAULT_CCN_THRESHOLD)
+    parser.add_argument("-L", "--length",
+                        help='''Threshold for maximum function length
+                        warning. The default value is %d.
+                        Functions length bigger than it will generate warning
+                        ''' % DEFAULT_MAX_FUNC_LENGTH,
+                        type=int,
+                        dest="length",
+                        default=DEFAULT_MAX_FUNC_LENGTH)
     parser.add_argument("-a", "--arguments",
                         help="Limit for number of parameters",
                         type=int, dest="arguments", default=100)
@@ -157,6 +166,7 @@ class FunctionInfo(object):  # pylint: disable=R0902
         self.parameter_count = 0
         self.filename = filename
         self.indent = -1
+        self.length = 0
 
     location = property(lambda self:
                         " %(name)s@%(start_line)s-%(end_line)s@%(filename)s"
@@ -285,6 +295,9 @@ def token_counter(tokens, reader):
             reader.context.add_nloc(1)
             reader.context.newline = False
         reader.context.current_function.end_line = reader.context.current_line
+        length = reader.context.current_line
+        length -= reader.context.current_function.start_line
+        reader.context.current_function.length = length
         reader.context.current_function.token_count += 1
         yield token
 
@@ -685,7 +698,8 @@ def warning_filter(option, module_infos):
         if file_info:
             for fun in file_info.function_list:
                 if fun.cyclomatic_complexity > option.CCN or \
-                        fun.parameter_count > option.arguments:
+                        fun.parameter_count > option.arguments or \
+                        fun.length > option.length:
                     yield fun
 
 
@@ -735,6 +749,7 @@ class OutputScheme(object):
             {'caption': "  CCN  ", 'value': "cyclomatic_complexity"},
             {'caption': " token ", 'value': "token_count"},
             {'caption': " PARAM ", 'value': "parameter_count"},
+            {'caption': " length ", 'value': "length"},
         ] + [
             {
                 'caption': ext.FUNCTION_CAPTION,
@@ -763,9 +778,11 @@ def print_warnings(option, scheme, warnings):
         warnings.sort(reverse=True,
                       key=lambda x: getattr(x, option.sorting[0]))
     if not option.warnings_only:
-        print(("\n" +
-               "======================================\n" +
-               "!!!! Warnings (CCN > %d) !!!!") % option.CCN)
+        warn_str = ("!!!! Warnings (CCN > {0} or arguments > {1} " +
+                    "or length > {2}) !!!!").format(option.CCN,
+                                                    option.arguments,
+                                                    option.length)
+        print("\n" + "=" * len(warn_str) + "\n" + warn_str)
         print(scheme.function_info_head())
     for warning in warnings:
         warning_count += 1
