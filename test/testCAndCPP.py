@@ -56,6 +56,10 @@ class Test_c_cpp_lizard(unittest.TestCase):
         result = get_cpp_function_list("""int fun() throw();void foo(){}""")
         self.assertEqual(1, len(result))
 
+    def test_function_dec_with_noexcept(self):
+        result = get_cpp_function_list("int fun() noexcept(true);void foo(){}")
+        self.assertEqual(1, len(result))
+
     def test_function_dec_followed_with_one_word_is_ok(self):
         result = get_cpp_function_list("""int fun() no_throw {}""")
         self.assertEqual(1, len(result))
