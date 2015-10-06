@@ -412,6 +412,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
         self.br_count = 0
         self._state = self._state_global
         self._saved_tokens = []
+        self._destructor = False  # Hack to add '~' to destructor names
 
     def preprocess(self, tokens):
         for token in tokens:
@@ -437,8 +438,15 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
             self._state = self._state_namespace_def
         elif token == 'typedef':
             self._state = self._state_typedef
+        elif token == '~':
+            assert not self._destructor
+            self._destructor = True
         elif token[0].isalpha() or token[0] == '_':
-            self.context.start_new_function(token)
+            if self._destructor:
+                self.context.start_new_function('~' + token)
+                self._destructor = False
+            else:
+                self.context.start_new_function(token)
             self._state = self._state_function
             if token == 'operator':
                 self._state = self._state_operator
@@ -489,9 +497,17 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
             self.context.add_to_function_name(' ' + token)
 
     def _state_namespace(self, token):
-        self._state = self._state_operator\
-            if token == 'operator' else self._state_function
-        self.context.add_to_function_name("::" + token)
+        if token == '~':
+            assert not self._destructor
+            self._destructor = True
+        else:
+            self._state = self._state_operator\
+                if token == 'operator' else self._state_function
+            if self._destructor:
+                self.context.add_to_function_name("::~" + token)
+                self._destructor = False
+            else:
+                self.context.add_to_function_name("::" + token)
 
     def _state_dec(self, token):
         if token in ('(', "<"):
