@@ -32,7 +32,8 @@ if sys.version[0] == '2':
 
 VERSION = "1.9.0"
 
-DEFAULT_CCN_THRESHOLD, DEFAULT_WHITELIST, DEFAULT_MAX_FUNC_LENGTH = 15, "whitelizard.txt", 1000
+DEFAULT_CCN_THRESHOLD, DEFAULT_WHITELIST, \
+    DEFAULT_MAX_FUNC_LENGTH = 15, "whitelizard.txt", 1000
 
 
 def analyze(paths, exclude_pattern=None, threads=1, extensions=None):
@@ -397,18 +398,6 @@ class CCppCommentsMixin(object):  # pylint: disable=R0903
             return token[2:]
 
 
-try:
-    # lizard.py can run as a stand alone script, without the extensions
-    # The following langauages / extensions will not be supported in
-    # stand alone script.
-    # pylint: disable=W0611
-    from lizard_ext import JavaScriptReader
-    from lizard_ext import PythonReader
-    from lizard_ext import xml_output
-except ImportError:
-    pass
-
-
 # pylint: disable=R0903
 class CLikeReader(CodeReader, CCppCommentsMixin):
 
@@ -598,6 +587,19 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
                 self.context.end_of_function()
 
 
+try:
+    # lizard.py can run as a stand alone script, without the extensions
+    # The following langauages / extensions will not be supported in
+    # stand alone script.
+    # pylint: disable=W0611
+    from lizard_ext import JavaScriptReader
+    from lizard_ext import PythonReader
+    from lizard_ext import ObjCReader
+    from lizard_ext import xml_output
+except ImportError:
+    pass
+
+
 class JavaReader(CLikeReader, CodeReader):
 
     ext = ['java']
@@ -621,61 +623,6 @@ class JavaReader(CLikeReader, CodeReader):
         else:
             self._state = self._state_global
             self._state(token)
-
-
-class ObjCReader(CLikeReader, CodeReader):
-
-    ext = ['m']
-
-    def __init__(self, context):
-        super(ObjCReader, self).__init__(context)
-
-    def _state_global(self, token):
-        super(ObjCReader, self)._state_global(token)
-        if token == '(':
-            self.bracket_stack.append(token)
-            self._state = self._state_dec
-            self.context.add_to_long_function_name(token)
-
-    def _state_dec_to_imp(self, token):
-        if token in ("+", "-"):
-            self._state = self._state_global
-        else:
-            super(ObjCReader, self)._state_dec_to_imp(token)
-            if self._state != self._state_imp:
-                self._state = self._state_objc_dec_begin
-                self.context.start_new_function(token)
-
-    def _state_objc_dec_begin(self, token):
-        if token == ':':
-            self._state = self._state_objc_dec
-            self.context.add_to_function_name(token)
-        elif token == '{':
-            self.br_count += 1
-            self._state = self._state_imp
-        else:
-            self._state = self._state_global
-
-    def _state_objc_dec(self, token):
-        if token == '(':
-            self._state = self._state_objc_param_type
-            self.context.add_to_long_function_name(token)
-        elif token == ',':
-            pass
-        elif token == '{':
-            self.br_count += 1
-            self._state = self._state_imp
-        else:
-            self._state = self._state_objc_dec_begin
-            self.context.add_to_function_name(" " + token)
-
-    def _state_objc_param_type(self, token):
-        if token == ')':
-            self._state = self._state_objc_param
-        self.context.add_to_long_function_name(" " + token)
-
-    def _state_objc_param(self, _):
-        self._state = self._state_objc_dec
 
 
 def token_processor_for_function(tokens, reader):
