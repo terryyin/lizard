@@ -550,15 +550,17 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
                 self._state(token)
 
     def _state_initialization_list(self, token):
+        def comeback():
+            self._state = self._state_initialization_list
         if token == '{':
             self.br_count += 1
             self._state = self._state_imp
         else:
-            self._state = self.OneInitializationState(self)
+            self._state = self.OneInitializationState(comeback)
 
     class OneInitializationState(object):
-        def __init__(self, reader):
-            self.reader = reader
+        def __init__(self, next_state):
+            self.next_state = next_state
             self.bracket = None
             self.close_bracket = None
             self.bracket_count = 0
@@ -572,7 +574,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
             if token == self.close_bracket:
                 self.bracket_count -= 1
                 if self.bracket_count == 0:
-                    self.reader._state = self.reader._state_initialization_list
+                    self.next_state()
 
     def _state_imp(self, token):
         if token == '{':
