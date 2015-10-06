@@ -144,6 +144,10 @@ class Test_c_cpp_lizard(unittest.TestCase):
         result = get_cpp_function_list("abc::def (a<b<c>> c){}")
         self.assertEqual(1, len(result))
 
+    def test_double_nested_template(self):
+        result = get_cpp_function_list("abc::def (a<b<c<d>>> c){}")
+        self.assertEqual(1, len(result))
+
     def test_template_with_reference(self):
         result = get_cpp_function_list("void fun(t<int &>b){} ")
         self.assertEqual(1, len(result))
