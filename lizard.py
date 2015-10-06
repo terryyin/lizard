@@ -32,8 +32,7 @@ if sys.version[0] == '2':
 
 VERSION = "1.8.12"
 
-DEFAULT_CCN_THRESHOLD = 15
-DEFAULT_WHITELIST = "whitelizard.txt"
+DEFAULT_CCN_THRESHOLD, DEFAULT_WHITELIST = 15, "whitelizard.txt"
 
 
 def analyze(paths, exclude_pattern=None, threads=1, extensions=None):
@@ -554,6 +553,26 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
         if token == '{':
             self.br_count += 1
             self._state = self._state_imp
+        else:
+            self._state = self.OneInitializationParser(self)
+
+    class OneInitializationParser(object):
+        def __init__(self, reader):
+            self.reader = reader
+            self.bracket = None
+            self.close_bracket = None
+            self.bracket_count = 0
+
+        def __call__(self, token):
+            if token in '({' and not self.bracket:
+                self.bracket = token
+                self.close_bracket = {'(': ')', '{': '}'}[token]
+            if token == self.bracket:
+                self.bracket_count += 1
+            if token == self.close_bracket:
+                self.bracket_count -= 1
+                if self.bracket_count == 0:
+                    self.reader._state = self.reader._state_initialization_list
 
     def _state_imp(self, token):
         if token == '{':
