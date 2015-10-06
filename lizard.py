@@ -554,9 +554,9 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
             self.br_count += 1
             self._state = self._state_imp
         else:
-            self._state = self.OneInitializationParser(self)
+            self._state = self.OneInitializationState(self)
 
-    class OneInitializationParser(object):
+    class OneInitializationState(object):
         def __init__(self, reader):
             self.reader = reader
             self.bracket = None
