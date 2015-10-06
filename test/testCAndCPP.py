@@ -125,7 +125,7 @@ class Test_c_cpp_lizard(unittest.TestCase):
     def test_one_function_in_class(self):
         result = get_cpp_function_list("class c {~c(){}}; int d(){}")
         self.assertEqual(2, len(result))
-        self.assertEqual("c", result[0].name)
+        self.assertEqual("~c", result[0].name)
         self.assertEqual("d", result[1].name)
 
     def test_template_as_reference(self):
@@ -195,6 +195,11 @@ class Test_c_cpp_lizard(unittest.TestCase):
     def test_brakets_before_function(self):
         result = get_cpp_function_list('''()''')
         self.assertEqual(0, len(result))
+
+    def test_destructor_implementation(self):
+        result = get_cpp_function_list('''A::~A(){}''')
+        self.assertEqual(1, len(result))
+        self.assertEqual("A::~A", result[0].name)
 
     def test_function_that_returns_function_pointers(self):
         result = get_cpp_function_list('''int (*fun())(){}''')
