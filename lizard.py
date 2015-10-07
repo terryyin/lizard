@@ -412,7 +412,6 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
         self.br_count = 0
         self._state = self._state_global
         self._saved_tokens = []
-        self._destructor = False  # Hack to add '~' to destructor names
 
     def preprocess(self, tokens):
         for token in tokens:
@@ -439,17 +438,16 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
         elif token == 'typedef':
             self._state = self._state_typedef
         elif token == '~':
-            assert not self._destructor
-            self._destructor = True
-        elif token[0].isalpha() or token[0] == '_':
-            if self._destructor:
-                self.context.start_new_function('~' + token)
-                self._destructor = False
-            else:
-                self.context.start_new_function(token)
+            self._state = self._state_tilde
+        elif token[0].isalpha() or token[0] in '_~':
+            self.context.start_new_function(token)
             self._state = self._state_function
             if token == 'operator':
                 self._state = self._state_operator
+
+    def _state_tilde(self, token):
+        self._state = self._state_global
+        self._state("~" + token)
 
     def _state_namespace_def(self, token):
         if token in '{;':
@@ -466,6 +464,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
             self.context.add_to_long_function_name(token)
         elif token == '::':
             self._state = self._state_namespace
+            self.context.add_to_function_name(token)
         elif token == '<':
             self._state = self._state_template_in_name
             self.bracket_stack.append(token)
@@ -497,17 +496,10 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
             self.context.add_to_function_name(' ' + token)
 
     def _state_namespace(self, token):
-        if token == '~':
-            assert not self._destructor
-            self._destructor = True
-        else:
+        if token != "~":
             self._state = self._state_operator\
                 if token == 'operator' else self._state_function
-            if self._destructor:
-                self.context.add_to_function_name("::~" + token)
-                self._destructor = False
-            else:
-                self.context.add_to_function_name("::" + token)
+        self.context.add_to_function_name(token)
 
     def _state_dec(self, token):
         if token in ('(', "<"):
