@@ -38,7 +38,7 @@ DEFAULT_CCN_THRESHOLD, DEFAULT_WHITELIST, \
 
 def analyze(paths, exclude_pattern=None, threads=1, extensions=None):
     '''
-    returns an iterator of file infomation that contains function
+    returns an iterator of file information that contains function
     statistics.
     '''
     exclude_pattern = exclude_pattern or []
@@ -89,7 +89,7 @@ def create_command_line_parser(prog=None):
     parser.add_argument("-i", "--ignore_warnings",
                         help='''If the number of warnings is equal or less
                         than the number,
-                        the tool will exit normally, otherwize it will generate
+                        the tool will exit normally, otherwise it will generate
                         error. Useful in makefile for legacy code.''',
                         type=int,
                         dest="number",
@@ -97,7 +97,7 @@ def create_command_line_parser(prog=None):
     parser.add_argument("-x", "--exclude",
                         help='''Exclude files that match this pattern. * matches
                         everything,
-                        ? matches any single characoter, "./folder/*" exclude
+                        ? matches any single character, "./folder/*" exclude
                         everything in the folder recursively. Multiple patterns
                         can be specified. Don't forget to add "" around the
                         pattern.''',
@@ -126,7 +126,7 @@ def create_command_line_parser(prog=None):
     parser.add_argument("-E", "--extension",
                         help='''User the extensions. The available extensions
                         are: -Ecpre: it will ignore code in the #else branch.
-                        -Ewordcount: count word fequencies and generate tag
+                        -Ewordcount: count word frequencies and generate tag
                         cloud. -Eoutside: include the global code as one
                         function.
                         ''',
@@ -324,7 +324,7 @@ def recount_switch_case(tokens, reader):
 
 class CodeReader(object):
     '''
-    CodeReaders are used to parse functions structures from code of different
+    CodeReaders are used to parse function structures from code of different
     language. Each language will need a subclass of CodeReader.
     '''
     def __init__(self, context):
@@ -351,9 +351,9 @@ class CodeReader(object):
     @staticmethod
     def generate_tokens(source_code, addition=''):
         def _generate_tokens(source_code, addition):
-            # DONOT put any sub groups in the regex. Good for performance
+            # DO NOT put any sub groups in the regex. Good for performance
             _until_end = r"(?:\\\n|[^\n])*"
-            combined_symbals = ["||", "&&", "===", "!==", "==", "!=", "<=",
+            combined_symbols = ["||", "&&", "===", "!==", "==", "!=", "<=",
                                 ">=",
                                 "<<", ">>>", "++", ">>", "--", '+=', '-=',
                                 '*=', '/=', '^=', '&=', '|=']
@@ -366,7 +366,7 @@ class CodeReader(object):
                 r"|//" + _until_end +
                 r"|\#" +
                 r"|:=|::|\*\*" +
-                r"|" + r"|".join(re.escape(s) for s in combined_symbals) +
+                r"|" + r"|".join(re.escape(s) for s in combined_symbols) +
                 r"|\\\n" +
                 r"|\n" +
                 r"|[^\S\n]+" +
@@ -412,6 +412,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
         self.br_count = 0
         self._state = self._state_global
         self._saved_tokens = []
+        self._destructor = False  # Hack to add '~' to destructor names
 
     def preprocess(self, tokens):
         for token in tokens:
@@ -437,8 +438,15 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
             self._state = self._state_namespace_def
         elif token == 'typedef':
             self._state = self._state_typedef
+        elif token == '~':
+            assert not self._destructor
+            self._destructor = True
         elif token[0].isalpha() or token[0] == '_':
-            self.context.start_new_function(token)
+            if self._destructor:
+                self.context.start_new_function('~' + token)
+                self._destructor = False
+            else:
+                self.context.start_new_function(token)
             self._state = self._state_function
             if token == 'operator':
                 self._state = self._state_operator
@@ -489,9 +497,17 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
             self.context.add_to_function_name(' ' + token)
 
     def _state_namespace(self, token):
-        self._state = self._state_operator\
-            if token == 'operator' else self._state_function
-        self.context.add_to_function_name("::" + token)
+        if token == '~':
+            assert not self._destructor
+            self._destructor = True
+        else:
+            self._state = self._state_operator\
+                if token == 'operator' else self._state_function
+            if self._destructor:
+                self.context.add_to_function_name("::~" + token)
+                self._destructor = False
+            else:
+                self.context.add_to_function_name("::" + token)
 
     def _state_dec(self, token):
         if token in ('(', "<"):
@@ -589,7 +605,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
 
 try:
     # lizard.py can run as a stand alone script, without the extensions
-    # The following langauages / extensions will not be supported in
+    # The following languages / extensions will not be supported in
     # stand alone script.
     # pylint: disable=W0611
     from lizard_ext import JavaScriptReader
@@ -694,7 +710,7 @@ def whitelist_filter(warnings, script=None, whitelist=None):
             return open(whitelist, mode='r').read()
         elif whitelist != DEFAULT_WHITELIST:
             print("WARNING: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-            print("WARNING: the whitelist \""+whitelist+"\" doesn't existing.")
+            print("WARNING: the whitelist \""+whitelist+"\" doesn't exist.")
         return ''
 
     if not script:
