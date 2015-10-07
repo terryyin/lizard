@@ -102,7 +102,7 @@ class TestWarningFilter(unittest.TestCase):
         self.fileStat = FileInformation("FILENAME", 1, [complex_fun, simple_fun])
 
     def test_should_filter_the_warnings(self):
-        option = Mock(CCN=15, arguments=10)
+        option = Mock(CCN=15, arguments=10, length=1000)
         warnings = list(warning_filter(option, [self.fileStat]))
         self.assertEqual(1, len(warnings))
         self.assertEqual("complex", warnings[0].name)

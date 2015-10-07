@@ -140,7 +140,7 @@ class TestAllOutput(StreamStdoutTestCase):
         mock_isfile.return_value = True
         mock_open.return_value.read.return_value = script
         file_infos = [FileInformation('f1.c', 1, [self.foo])]
-        option = Mock(CCN=15, number = 0, arguments=100, extensions=[])
+        option = Mock(CCN=15, number = 0, arguments=100, length=1000, extensions=[])
         print_result(file_infos, option)
 
     @patch.object(sys, 'exit')
