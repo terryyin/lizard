@@ -178,6 +178,11 @@ class Test_c_cpp_lizard(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual("TC::operator ( )", result[0].name)
 
+    def test_inline_operator(self):
+        result = get_cpp_function_list("class A { bool operator()(int b) {} };")
+        self.assertEqual(1, len(result))
+        self.assertEqual("A::operator ( )", result[0].name)
+
     def test_constructor_initialization_list(self):
         result = get_cpp_function_list('''A::A():a(1){}''')
         self.assertEqual(1, len(result))
