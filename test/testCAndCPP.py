@@ -125,8 +125,28 @@ class Test_c_cpp_lizard(unittest.TestCase):
     def test_one_function_in_class(self):
         result = get_cpp_function_list("class c {~c(){}}; int d(){}")
         self.assertEqual(2, len(result))
-        self.assertEqual("~c", result[0].name)
+        self.assertEqual("c::~c", result[0].name)
         self.assertEqual("d", result[1].name)
+
+    def test_pre_class(self):
+        result = get_cpp_function_list("class c; int d(){}")
+        self.assertEqual(1, len(result))
+        self.assertEqual("d", result[0].name)
+
+    def test_nested_class(self):
+        result = get_cpp_function_list("class c {class d {int f(){}};};")
+        self.assertEqual(1, len(result))
+        self.assertEqual("c::d::f", result[0].name)
+
+    def test_braket_that_is_not_a_namespace(self):
+        result = get_cpp_function_list("class c { {};int f(){}};")
+        self.assertEqual(1, len(result))
+        self.assertEqual("c::f", result[0].name)
+
+    def test_nested_class_middle(self):
+        result = get_cpp_function_list("class c {class d {};int f(){}};")
+        self.assertEqual(1, len(result))
+        self.assertEqual("c::f", result[0].name)
 
     def test_template_as_reference(self):
         result = get_cpp_function_list("abc::def(a<b>& c){}")

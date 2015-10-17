@@ -406,16 +406,79 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
     ext = ["c", "cpp", "cc", "mm", "cxx", "h", "hpp"]
     macro_pattern = re.compile(r"#\s*(\w+)\s*(.*)", re.M | re.S)
 
+    class NamespaceState(object):
+        def __init__(self, next_state):
+            self.next_state = next_state
+            self.namespace = []
+            self._state = self._global
+            self.current = ''
+
+        def prefix(self, name):
+            return '::'.join(self.namespace + [name])
+
+        def __call__(self, token):
+            self._state(token)
+
+        def _global(self, token):
+            if token in ("class", "namespace"):
+                self._state = self._state_namespace_def
+            elif token == "{":
+                self.namespace.append(self.current)
+                self.current = ''
+            elif token == '}':
+                if self.namespace:
+                    self.namespace.pop()
+            elif token[0].isalpha() or token[0] in '_~':
+                self.next_state(token)
+
+        def _state_namespace_def(self, token):
+            if token in '{;':
+                self._state = self._global
+                self._state(token)
+            else:
+                self.current += token
+
+    class OneInitializationState(object):
+        def __init__(self, next_state):
+            self.next_state = next_state
+            self.bracket = None
+            self.close_bracket = None
+            self.bracket_count = 0
+
+        def __call__(self, token):
+            if token in '({' and not self.bracket:
+                self.bracket = token
+                self.close_bracket = {'(': ')', '{': '}'}[token]
+            if token == self.bracket:
+                self.bracket_count += 1
+            if token == self.close_bracket:
+                self.bracket_count -= 1
+                if self.bracket_count == 0:
+                    self.next_state()
+
     def __init__(self, context):
         super(CLikeReader, self).__init__(context)
         self.bracket_stack = []
         self.br_count = 0
         self._state = self._state_global
+        self.namespace = self.NamespaceState(self.start_new_function)
         self._saved_tokens = []
 
+    def start_new_function(self, name):
+        self.context.start_new_function(self.namespace.prefix(name))
+        self._state = self._state_function
+        if name == 'operator':
+            self._state = self._state_operator
+
     def preprocess(self, tokens):
+        tilde = False
         for token in tokens:
-            if not token.isspace() or token == '\n':
+            if token == '~':
+                tilde = True
+            elif tilde:
+                tilde = False
+                yield "~" + token
+            elif not token.isspace() or token == '\n':
                 macro = self.macro_pattern.match(token)
                 if macro:
                     if macro.group(1) in ('if', 'ifdef', 'elif'):
@@ -433,29 +496,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
         self.bracket_stack = []
 
     def _state_global(self, token):
-        if token in ("class", "namespace"):
-            self._state = self._state_namespace_def
-        elif token == 'typedef':
-            self._state = self._state_typedef
-        elif token == '~':
-            self._state = self._state_tilde
-        elif token[0].isalpha() or token[0] in '_~':
-            self.context.start_new_function(token)
-            self._state = self._state_function
-            if token == 'operator':
-                self._state = self._state_operator
-
-    def _state_tilde(self, token):
-        self._state = self._state_global
-        self._state("~" + token)
-
-    def _state_namespace_def(self, token):
-        if token in '{;':
-            self._state = self._state_global
-
-    def _state_typedef(self, token):
-        if token == ';':
-            self._state = self._state_global
+        return self.namespace(token)
 
     def _state_function(self, token):
         if token == '(':
@@ -496,9 +537,8 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
             self.context.add_to_function_name(' ' + token)
 
     def _state_namespace(self, token):
-        if token != "~":
-            self._state = self._state_operator\
-                if token == 'operator' else self._state_function
+        self._state = self._state_operator\
+            if token == 'operator' else self._state_function
         self.context.add_to_function_name(token)
 
     def _state_dec(self, token):
@@ -523,7 +563,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
             self._state = self._state_throw
         elif token == '(':
             long_name = self.context.current_function.long_name
-            self.context.start_new_function(long_name)
+            self.start_new_function(long_name)
             self._state_function(token)
         elif token == '{':
             self.br_count += 1
@@ -567,24 +607,6 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
         else:
             self._state = self.OneInitializationState(comeback)
 
-    class OneInitializationState(object):
-        def __init__(self, next_state):
-            self.next_state = next_state
-            self.bracket = None
-            self.close_bracket = None
-            self.bracket_count = 0
-
-        def __call__(self, token):
-            if token in '({' and not self.bracket:
-                self.bracket = token
-                self.close_bracket = {'(': ')', '{': '}'}[token]
-            if token == self.bracket:
-                self.bracket_count += 1
-            if token == self.close_bracket:
-                self.bracket_count -= 1
-                if self.bracket_count == 0:
-                    self.next_state()
-
     def _state_imp(self, token):
         if token == '{':
             self.br_count += 1
@@ -611,6 +633,9 @@ except ImportError:
 class JavaReader(CLikeReader, CodeReader):
 
     ext = ['java']
+
+    def __init__(self, context):
+        super(JavaReader, self).__init__(context)
 
     def _state_old_c_params(self, token):
         if token == '{':

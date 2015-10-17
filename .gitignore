@@ -32,3 +32,5 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
+.settings/
+dist/
