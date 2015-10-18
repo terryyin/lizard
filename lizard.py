@@ -420,7 +420,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
             self._state(token)
 
         def _global(self, token):
-            if token in ("class", "namespace"):
+            if token in ("struct", "class", "namespace"):
                 self._state = self._state_namespace_def
             elif token == "{":
                 self.namespace.append(self.current)
