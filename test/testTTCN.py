@@ -1,10 +1,11 @@
 import unittest
 import inspect
-from lizard import  analyze_file, FileAnalyzer, get_extensions
+from lizard import analyze_file, FileAnalyzer, get_extensions
 
 
 def get_ttcn_function_list(source_code):
-    return analyze_file.analyze_source_code("a.ttcn", source_code).function_list
+    return analyze_file.analyze_source_code(
+        "a.ttcn", source_code).function_list
 
 
 class Test_parser_for_TTCN(unittest.TestCase):
@@ -14,11 +15,17 @@ class Test_parser_for_TTCN(unittest.TestCase):
         self.assertEqual(0, len(functions))
 
     def test_no_function(self):
-        result = get_ttcn_function_list("module test {\nconst integer i := 1;\n}")
+        result = get_ttcn_function_list('''
+                module test {
+                    const integer i := 1;
+                }''')
         self.assertEqual(0, len(result))
 
     def test_one_function(self):
-        result = get_ttcn_function_list("module test_one_func {\nfunction fun(){}\n}")
+        result = get_ttcn_function_list('''
+                module test_one_func {
+                    function fun() {}
+                }''')
         self.assertEqual(1, len(result))
         self.assertEqual("fun", result[0].name)
 
@@ -42,7 +49,10 @@ class Test_parser_for_TTCN(unittest.TestCase):
         self.assertEqual(8, result[1].end_line)
 
     def test_one_testcase(self):
-        result = get_ttcn_function_list("module test_one_tc {\ntestcase tc(){}\n}")
+        result = get_ttcn_function_list('''
+                module test_one_tc {
+                    testcase tc() {}
+                }''')
         self.assertEqual(1, len(result))
         self.assertEqual("__testcase__tc", result[0].name)
 
@@ -119,7 +129,8 @@ class Test_parser_for_TTCN(unittest.TestCase):
                 }''')
         self.assertEqual(1, len(result))
         self.assertEqual("fun", result[0].name)
-        self.assertEqual("fun( inout integer i ) runs on MTC_CT", result[0].long_name)
+        self.assertEqual("fun( inout integer i ) runs on MTC_CT",
+                         result[0].long_name)
 
     def test_function_with_mtc(self):
         result = get_ttcn_function_list('''
@@ -144,7 +155,8 @@ class Test_parser_for_TTCN(unittest.TestCase):
                 }''')
         self.assertEqual(1, len(result))
         self.assertEqual("fun", result[0].name)
-        self.assertEqual("fun( integer i ) system MySystemType", result[0].long_name)
+        self.assertEqual("fun( integer i ) system MySystemType",
+                         result[0].long_name)
 
     def test_function_with_return(self):
         result = get_ttcn_function_list('''
@@ -157,7 +169,8 @@ class Test_parser_for_TTCN(unittest.TestCase):
                 }''')
         self.assertEqual(1, len(result))
         self.assertEqual("fun", result[0].name)
-        self.assertEqual("fun( integer i ) return integer", result[0].long_name)
+        self.assertEqual("fun( integer i ) return integer",
+                         result[0].long_name)
 
     def test_function_with_return_w_template(self):
         result = get_ttcn_function_list('''
@@ -170,7 +183,8 @@ class Test_parser_for_TTCN(unittest.TestCase):
                 }''')
         self.assertEqual(1, len(result))
         self.assertEqual("fun", result[0].name)
-        self.assertEqual("fun( integer i ) return template integer", result[0].long_name)
+        self.assertEqual("fun( integer i ) return template integer",
+                         result[0].long_name)
 
     def test_function_in_group(self):
         result = get_ttcn_function_list('''
@@ -298,7 +312,9 @@ class Test_parser_for_TTCN(unittest.TestCase):
     def test_template(self):
         result = get_ttcn_function_list('''
                 module test_template {
-                    template MyMessageType MyTemplate1 (template ( omit ) integer MyFormalParam):=
+                    template MyMessageType MyTemplate1 (
+                        template ( omit ) integer MyFormalParam
+                    ):=
                     {
                         field1 := MyFormalParam,
                         field2 := pattern "abc*xyz",
@@ -306,6 +322,7 @@ class Test_parser_for_TTCN(unittest.TestCase):
                     }
                 }''')
         self.assertEqual(0, len(result))
+
 
 class Test_Preprocessing(unittest.TestCase):
 
@@ -318,10 +335,9 @@ class Test_Preprocessing(unittest.TestCase):
                 } ''')
         self.assertEqual(0, len(result))
 
-
-    def test_preprocessors_should_be_ignored_outside_function_implementation(self):
+    def test_preproc_should_be_ignored_outside_func_impl(self):
         result = get_ttcn_function_list('''
-                module test_preprocessors_should_be_ignored_outside_function_implementation {
+                module test_preproc_should_be_ignored_outside_func_impl {
                     #ifdef MAGIC
                     #endif
                     function foo()
@@ -337,4 +353,3 @@ class Test_Preprocessing(unittest.TestCase):
                     #endif
                 } ''')
         self.assertEqual(0, len(result))
-

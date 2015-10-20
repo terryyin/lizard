@@ -63,5 +63,5 @@ class TTCNReader(CLikeReader, CodeReader):
         return CodeReader.generate_tokens(
             source_code,
             r'|' + r'|'.join(re.escape(s) for s in (
-                '..', '->', '<@', '@>', '@lazy', '@fuzzy', '@index', '@deterministic')
-                ))
+                '..', '->', '<@', '@>', '@lazy', '@fuzzy',
+                '@index', '@deterministic')))
