@@ -618,19 +618,6 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
                 self.context.end_of_function()
 
 
-try:
-    # lizard.py can run as a stand alone script, without the extensions
-    # The following languages / extensions will not be supported in
-    # stand alone script.
-    # pylint: disable=W0611
-    from lizard_ext import JavaScriptReader
-    from lizard_ext import PythonReader
-    from lizard_ext import ObjCReader
-    from lizard_ext import xml_output
-except ImportError:
-    pass
-
-
 class JavaReader(CLikeReader, CodeReader):
 
     ext = ['java']
@@ -657,6 +644,20 @@ class JavaReader(CLikeReader, CodeReader):
         else:
             self._state = self._state_global
             self._state(token)
+
+
+try:
+    # lizard.py can run as a stand alone script, without the extensions
+    # The following languages / extensions will not be supported in
+    # stand alone script.
+    # pylint: disable=W0611
+    from lizard_ext import JavaScriptReader
+    from lizard_ext import PythonReader
+    from lizard_ext import ObjCReader
+    from lizard_ext import TTCNReader
+    from lizard_ext import xml_output
+except ImportError:
+    pass
 
 
 def token_processor_for_function(tokens, reader):
