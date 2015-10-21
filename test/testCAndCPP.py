@@ -208,6 +208,13 @@ class Test_c_cpp_lizard(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual("A::foo", result[0].name)
 
+    def test_namespace_alias(self):
+        result = get_cpp_function_list(
+                "namespace p;"
+                "namespace real { bool foo() {} }")
+        self.assertEqual(1, len(result))
+        self.assertEqual("real::foo", result[0].name)
+
     def test_constructor_initialization_list(self):
         result = get_cpp_function_list('''A::A():a(1){}''')
         self.assertEqual(1, len(result))

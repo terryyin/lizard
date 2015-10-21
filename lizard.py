@@ -430,6 +430,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
                     self.namespace.pop()
             elif token[0].isalpha() or token[0] in '_~':
                 self.next_state(token)
+            self.current = ''
 
         def _state_namespace_def(self, token):
             if token in '{;':
