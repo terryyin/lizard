@@ -87,29 +87,29 @@ class Test_c_cpp_lizard(unittest.TestCase):
     def test_double_slash_within_string(self):
         result = get_cpp_function_list("""int fun(){char *a="\\\\";}""")
         self.assertEqual(1, len(result))
-    
+
     def test_function_with_no_param(self):
         result = get_cpp_function_list("int fun(){}")
         self.assertEqual(0, result[0].parameter_count)
-    
+
     def test_function_with_1_param(self):
         result = get_cpp_function_list("int fun(aa * bb){}")
         self.assertEqual(1, result[0].parameter_count)
-    
+
     def test_function_with_param(self):
         result = get_cpp_function_list("int fun(aa * bb, cc dd){}")
         self.assertEqual(2, result[0].parameter_count)
-    
+
     def test_function_with_strang_param(self):
         result = get_cpp_function_list("int fun(aa<mm, nn> bb){}")
         self.assertEqual(1, result[0].parameter_count)
-    
+
     def test_one_function_with_namespace(self):
         result = get_cpp_function_list("int abc::fun(){}")
         self.assertEqual(1, len(result))
         self.assertEqual("abc::fun", result[0].name)
         self.assertEqual("abc::fun( )", result[0].long_name)
-    
+
     def test_one_function_with_const(self):
         result = get_cpp_function_list("int abc::fun()const{}")
         self.assertEqual(1, len(result))
@@ -203,6 +203,11 @@ class Test_c_cpp_lizard(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual("A::operator ( )", result[0].name)
 
+    def test_inline_function_in_struct(self):
+        result = get_cpp_function_list("struct A { bool foo(int bar) {} };")
+        self.assertEqual(1, len(result))
+        self.assertEqual("A::foo", result[0].name)
+
     def test_constructor_initialization_list(self):
         result = get_cpp_function_list('''A::A():a(1){}''')
         self.assertEqual(1, len(result))
@@ -281,5 +286,3 @@ class Test_Big(unittest.TestCase):
         code = "namespace a b(){}"
         result = get_cpp_function_list(code)
         self.assertEqual(0, len(result))
-
-
