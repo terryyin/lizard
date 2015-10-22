@@ -405,6 +405,8 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
 
     ext = ["c", "cpp", "cc", "mm", "cxx", "h", "hpp"]
     macro_pattern = re.compile(r"#\s*(\w+)\s*(.*)", re.M | re.S)
+    parameter_bracket_open = '(<'
+    parameter_bracket_close = ')>>>'
 
     class NamespaceState(object):
         def __init__(self, next_state):
@@ -543,9 +545,9 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
         self.context.add_to_function_name(token)
 
     def _state_dec(self, token):
-        if token in ('(', "<"):
+        if token in self.parameter_bracket_open:
             self.bracket_stack.append(token)
-        elif token in (')', ">", ">>"):
+        elif token in self.parameter_bracket_close:
             for sub in token:
                 if self.bracket_stack.pop() != {')': '(', '>': '<'}[sub]:
                     self._reset_to_global()

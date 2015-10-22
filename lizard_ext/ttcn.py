@@ -4,13 +4,16 @@ from lizard import CLikeReader, CodeReader
 import re
 
 
-class TTCNReader(CLikeReader, CodeReader):
+class TTCNReader(CLikeReader, CodeReader):  # pylint: disable=R0903
 
     ext = ['ttcn', 'ttcnpp']
 
     conditions = set(['if', 'else', 'for', 'while', 'altstep',
                       'case', 'goto', 'alt', 'interleave',
                       'and', 'or', 'xor'])
+
+    parameter_bracket_open = '('
+    parameter_bracket_close = ')'
 
     def __init__(self, context):
         super(TTCNReader, self).__init__(context)
@@ -38,18 +41,6 @@ class TTCNReader(CLikeReader, CodeReader):
             self.context.add_to_long_function_name(token + ' ')
         else:
             self._state = self._state_global
-
-    def _state_dec(self, token):
-        if token == '(':
-            self.bracket_stack.append(token)
-        elif token == ')':
-            self.bracket_stack.pop()
-            if not self.bracket_stack:
-                self._state = self._state_dec_to_imp
-        elif len(self.bracket_stack) == 1:
-            self.context.parameter(token)
-            return
-        self.context.add_to_long_function_name(" " + token)
 
     def _state_dec_to_imp(self, token):
         if token == '{':
