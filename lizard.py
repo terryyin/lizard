@@ -626,6 +626,7 @@ try:
     from lizard_ext import JavaScriptReader
     from lizard_ext import PythonReader
     from lizard_ext import ObjCReader
+    from lizard_ext import TTCNReader
     from lizard_ext import xml_output
 except ImportError:
     pass

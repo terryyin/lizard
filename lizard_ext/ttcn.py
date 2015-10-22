@@ -1,0 +1,67 @@
+''' Language parser for TTCN-3 '''
+
+from lizard import CLikeReader, CodeReader
+import re
+
+
+class TTCNReader(CLikeReader, CodeReader):
+
+    ext = ['ttcn', 'ttcnpp']
+
+    conditions = set(['if', 'else', 'for', 'while', 'altstep',
+                      'case', 'goto', 'alt', 'interleave',
+                      'and', 'or', 'xor'])
+
+    def __init__(self, context):
+        super(TTCNReader, self).__init__(context)
+
+    # module and group blocks are ignored
+    def _state_global(self, token):
+        if token == 'testcase':
+            self._state = self._state_function
+            self.context.start_new_function('__testcase__')
+        elif token == 'function':
+            self._state = self._state_function
+            self.context.start_new_function('')
+        elif token == 'control':
+            self.context.start_new_function('__control__')
+            self._state = self._state_dec_to_imp
+
+    def _state_function(self, token):
+        if token[0].isalpha():
+            self.context.add_to_function_name(token)
+        elif token == '(':
+            self.bracket_stack.append(token)
+            self._state = self._state_dec
+            self.context.add_to_long_function_name(token)
+        elif token == '@deterministic':
+            self.context.add_to_long_function_name(token + ' ')
+        else:
+            self._state = self._state_global
+
+    def _state_dec(self, token):
+        if token == '(':
+            self.bracket_stack.append(token)
+        elif token == ')':
+            self.bracket_stack.pop()
+            if not self.bracket_stack:
+                self._state = self._state_dec_to_imp
+        elif len(self.bracket_stack) == 1:
+            self.context.parameter(token)
+            return
+        self.context.add_to_long_function_name(" " + token)
+
+    def _state_dec_to_imp(self, token):
+        if token == '{':
+            self.br_count += 1
+            self._state = self._state_imp
+        else:
+            self.context.add_to_long_function_name(' ' + token)
+
+    @staticmethod
+    def generate_tokens(source_code, _=None):
+        return CodeReader.generate_tokens(
+            source_code,
+            r'|' + r'|'.join(re.escape(s) for s in (
+                '..', '->', '<@', '@>', '@lazy', '@fuzzy',
+                '@index', '@deterministic')))
