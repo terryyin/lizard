@@ -416,7 +416,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
             self.current = ''
 
         def prefix(self, name):
-            return '::'.join(self.namespace + [name])
+            return '::'.join([x for x in self.namespace if x] + [name])
 
         def __call__(self, token):
             self._state(token)
