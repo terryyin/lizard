@@ -467,6 +467,9 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
         self.namespace = self.NamespaceState(self.start_new_function)
         self._saved_tokens = []
 
+    def is_in_function(self):
+        return self.br_count > 0
+
     def start_new_function(self, name):
         self.context.start_new_function(self.namespace.prefix(name))
         self._state = self._state_function

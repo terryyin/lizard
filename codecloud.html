@@ -1,0 +1,551 @@
+
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width,
+            initial-scale=1.0,maximum-scale=1.0" />
+        <style type="text/css">
+            canvas {
+                border: 1px solid black;
+                width: 700px;
+                height: 700px;
+            }
+        </style>
+        <script type="text/javascript">
+        
+
+function TagCloud(w, h, context) {
+    "use strict";
+    this.ctx = context;
+    this.canvasWidth = w;
+    this.canvasHeight = h;
+    this.fontSize = this.canvasHeight / 3;
+    this.shape = "rectangle";
+}
+
+TagCloud.prototype.setShape = function () {
+    this.shape = "circle";
+};
+
+TagCloud.prototype.render = function (tags) {
+    this.ctx.textBaseline = "top";
+    tags.forEach(function (tag) {
+        this.placeTag(tag[0]);
+    }, this);
+};
+
+TagCloud.prototype.placeTag = function (tag) {
+    var placement;
+    while (!(placement = this._getNonOverlappingPlaceWithBestSize(
+            this.fontSize, tag)))
+        this.fontSize *= 0.9;
+
+    this.ctx.fillStyle = this._getRandomColor();
+    this.ctx.fillText(tag, placement.x, placement.y);
+};
+
+TagCloud.prototype._getNonOverlappingPlaceWithBestSize =
+    function (fontSize, tag) {
+    this.ctx.font = "" + fontSize + "pt " + "Arial";
+    var lineHeight=this.getLineHeight(fontSize);
+    var tagWidth = this.ctx.measureText(tag).width;
+
+    var base = new BasePlacement(
+        (this.canvasWidth - tagWidth) * Math.random(),
+        (this.canvasHeight - lineHeight) * Math.random(),
+        lineHeight
+        );
+
+    var placement;
+    /* jshint ignore:start */
+    while (placement = base.nextPlaceToTry()) {
+        if (this._isPlaceEmpty(placement, tagWidth, lineHeight))
+            break;
+    }
+    /* jshint ignore:end */
+    return placement;
+};
+
+TagCloud.prototype.getLineHeight = function (fontSize) {
+    return this.ctx.measureText('M').width * 1.2;
+}
+
+TagCloud.prototype._getRandomColor = function (){
+    var colors = ["aqua", "black", "blue", "fuchsia", "gray", "green",
+                  "lime", "maroon", "navy", "olive", "orange", "purple",
+                  "red", "silver", "teal"];
+    return colors[Math.floor(colors.length * Math.random())];
+};
+
+TagCloud.prototype._isPlaceEmpty = function (placement, width, height) {
+    if (placement.x < 0 || placement.y < 0 || placement.x + width >
+         this.canvasWidth || placement.y + height > this.canvasHeight)
+        return false;
+
+    var pix = this.ctx.getImageData(
+                placement.x, placement.y, width, height).data;
+
+    for (var i = 0, n = pix.length; i < n; i += 4)
+        if (pix[i+3])
+                return false;
+
+    return [[placement.x, placement.y],
+            [placement.x + width, placement.y],
+            [placement.x, placement.y + height],
+            [placement.x + width, placement.y + height]].every(
+                function(pos) {
+                    var a = this.canvasWidth / 2;
+                    var b = this.canvasHeight / 2;
+                    var X = pos[0] - a;
+                    var Y = pos[1] - b;
+                    return (X * X / a / a + Y * Y / b / b < 1);
+                }, this);
+};
+
+TagCloud.prototype.getCoverage = function () {
+    var pix = this.ctx.getImageData(
+                0, 0, this.canvasWidth, this.canvasHeight).data;
+    var pixCount = 0;
+    for (var i = 0, n = pix.length; i < n; i += 4) {
+        if (pix[i+3])
+            pixCount++;
+    }
+    return pixCount * 100 / this.canvasWidth / this.canvasHeight;
+};
+
+function BasePlacement(x, y, h) {
+    var baseX = x,
+        baseY = y,
+        scale = h,
+        tryNumber = 0;
+
+    this.nextPlaceToTry = function() {
+        if (tryNumber < this._spiralOffsets.length)
+            return {
+                x : baseX + this._spiralOffsets[tryNumber][0] * scale,
+                y : baseY + this._spiralOffsets[tryNumber++][1] * scale
+            };
+    };
+}
+
+function generateSpiralOffsets() {
+    var spiralOffsets = [];
+    var radius = 0;
+    var dr = 0.2;
+    for (var i = 0; radius < 40; i+=0.4, radius += dr) {
+        spiralOffsets.push([
+                   radius * Math.sin(i),
+                   radius * Math.cos(i)
+                ]);
+    }
+    return spiralOffsets;
+}
+
+BasePlacement.prototype._spiralOffsets = generateSpiralOffsets();
+
+    
+        </script>
+        <script type="application/javascript">
+            function draw() {
+                var canvas = document.getElementById("canvas");
+                    if (canvas.getContext) {
+                        var ctx = canvas.getContext("2d");
+                        // scale 2x
+                        if(window.devicePixelRatio == 2) {
+                            canvas.setAttribute('width', canvas.width * 2);
+                            canvas.setAttribute('height', canvas.height * 2);
+                        }
+                        var tagCloud = new TagCloud(canvas.width,
+                            canvas.height, ctx);
+                        tagCloud.render([                                        ["lim", 78],
+                                        ["log_", 77],
+                                        ["std", 66],
+                                        ["string", 53],
+                                        ["message", 34],
+                                        ["DistName", 29],
+                                        ["CmDiagnosticsService", 28],
+                                        ["TRACE_LOG_BEG", 28],
+                                        ["u32", 24],
+                                        ["TRACE_LOG_END", 24],
+                                        ["0", 23],
+                                        ["limFacade_", 23],
+                                        ["ScfFileOperator", 23],
+                                        ["AaConfigRadGetValue", 22],
+                                        ["bool", 21],
+                                        ["filePath", 20],
+                                        ["result", 20],
+                                        ["traceNumOfFiles", 18],
+                                        ["limtools", 18],
+                                        ["traceFilePresent", 18],
+                                        ["traceFileSize", 18],
+                                        ["oam", 18],
+                                        ["boost", 17],
+                                        ["cmDiagnosticsDistName", 16],
+                                        ["m", 15],
+                                        ["isAutoConfig", 14],
+                                        ["getProxy", 13],
+                                        ["errorCode", 13],
+                                        ["configurationFileDn", 13],
+                                        ["tag", 12],
+                                        ["mySicad", 12],
+                                        ["get", 12],
+                                        ["io", 12],
+                                        ["lastActivation", 12],
+                                        ["1", 11],
+                                        ["planDn", 11],
+                                        ["value", 11],
+                                        ["AaConfigRadSubscribeNotifs", 11],
+                                        ["shared_ptr", 10],
+                                        ["recommissioningDistName", 10],
+                                        ["lastDownload", 10],
+                                        ["Buffer", 9],
+                                        ["func", 9],
+                                        ["className", 9],
+                                        ["__FUNCTION__", 8],
+                                        ["INSTANCEID", 8],
+                                        ["debug", 8],
+                                        ["cmDiagnostics", 8],
+                                        ["libraml", 8],
+                                        ["it", 8],
+                                        ["getScfPath", 8],
+                                        ["adjustTraceFileSize", 7],
+                                        ["createDistName", 7],
+                                        ["uint32_t", 7],
+                                        ["model", 7],
+                                        ["insertMo", 7],
+                                        ["cfDistName", 7],
+                                        ["versionString", 7],
+                                        ["mrBtsVersion", 6],
+                                        ["syscom", 6],
+                                        ["false", 6],
+                                        ["getString", 6],
+                                        ["aRamlMOData", 6],
+                                        ["matchPos", 6],
+                                        ["auto_ptr", 6],
+                                        ["scfDocument", 6],
+                                        ["scfFileContent", 6],
+                                        ["planLimDn", 6],
+                                        ["retDoc", 6],
+                                        ["scfDn", 6],
+                                        ["StateInfo", 6],
+                                        ["int", 6],
+                                        ["ramlMODataToAdd", 5],
+                                        ["substr", 5],
+                                        ["this", 5],
+                                        ["getClassName", 5],
+                                        ["ERadLteSysAdapter_CdnlTraceNumOfFiles", 5],
+                                        ["rromTrace", 5],
+                                        ["ERadLteSysAdapter_RnwTraceFileSize", 5],
+                                        ["ccnTrace", 5],
+                                        ["ERadLteSysAdapter_CcnTraceNumOfFiles", 5],
+                                        ["size_t", 5],
+                                        ["underScorePosition", 5],
+                                        ["versionInfo", 5],
+                                        ["IDomDocument", 5],
+                                        ["scfFilePath", 5],
+                                        ["ERadLteSysAdapter_CdnlTraceFileSize", 5],
+                                        ["str", 5],
+                                        ["ERadLteSysAdapter_KeepTRS", 5],
+                                        ["storedConfigurationFileManager_", 5],
+                                        ["ERadLteSysAdapter_CcnTraceFilePresent", 5],
+                                        ["npDn", 5],
+                                        ["ERadLteSysAdapter_RnwTraceNumOfFiles", 5],
+                                        ["cdnlTrace", 5],
+                                        ["moDistNameOstr", 5],
+                                        ["libDomXml", 5],
+                                        ["scfRamlDoc", 5],
+                                        ["SAaConfigRadChangeNotif", 5],
+                                        ["moName", 5],
+                                        ["ERadLteSysAdapter_KeepCUPL", 5],
+                                        ["error", 5],
+                                        ["ERadLteSysAdapter_RnwTraceFilePresent", 5],
+                                        ["ERadLteSysAdapter_CdnlTraceFilePresent", 5],
+                                        ["c_str", 5],
+                                        ["Message", 5],
+                                        ["ERadLteSysAdapter_CcnTraceFileSize", 5],
+                                        ["MoCcn_traces", 4],
+                                        ["returnBuffer", 4],
+                                        ["dumpedBtsoamSyslogSize", 4],
+                                        ["error_code", 4],
+                                        ["MoCm_diagnostics", 4],
+                                        ["ramlMO", 4],
+                                        ["ramlDocToAddTo", 4],
+                                        ["IFacade", 4],
+                                        ["compare", 4],
+                                        ["lnbts", 4],
+                                        ["contentBuffer", 4],
+                                        ["MoRrom_traces", 4],
+                                        ["bind", 4],
+                                        ["INFO_LOG", 4],
+                                        ["_1", 4],
+                                        ["status", 4],
+                                        ["fileOperations_", 4],
+                                        ["STORED_CONFIGURATION_FILE", 4],
+                                        ["mrBtsIt", 4],
+                                        ["updateMo", 4],
+                                        ["true", 4],
+                                        ["dumpCuplToSnapshot", 4],
+                                        ["removeAllAndCreateOne", 4],
+                                        ["dumpTrswCdnlToSnapshot", 4],
+                                        ["scfVersion", 4],
+                                        ["dumpedCplaneSyslogSize", 4],
+                                        ["MoCdnl_traces", 4],
+                                        ["dumpActiveScfAtStart", 4],
+                                        ["dotPosition", 4],
+                                        ["npos", 4],
+                                        ["configurationFile", 4],
+                                        ["moClassName", 3],
+                                        ["npDistName", 3],
+                                        ["dumpCupl", 3],
+                                        ["printDocument", 3],
+                                        ["MoLnbts", 3],
+                                        ["scfDirPath", 3],
+                                        ["MINTRACEFILESIZE", 3],
+                                        ["getScfPathFromConfigurationFile", 3],
+                                        ["LibRamlManagedObject", 3],
+                                        ["ContainerManagedObjectData", 3],
+                                        ["onChangeLnbtsProceduralState", 3],
+                                        ["proxy", 3],
+                                        ["copyBuffer", 3],
+                                        ["state", 3],
+                                        ["dumpTrswCdnl", 3],
+                                        ["saveScfFile", 3],
+                                        ["storingResult", 3],
+                                        ["createAndInitializeCmDiagnostics", 3],
+                                        ["param", 3],
+                                        ["getCurrent", 3],
+                                        ["filesize", 3],
+                                        ["getDistName", 3],
+                                        ["reset", 3],
+                                        ["np", 3],
+                                        ["<boost/lexical_cast.hpp>", 2],
+                                        ["localFileSystem_", 2],
+                                        ["getMOClassFromName", 2],
+                                        ["dispatcher_", 2],
+                                        ["REL2_LASTACTIVATIONMO_DUMPEDBTSOAMSYSLOGSIZE", 2],
+                                        ["new", 2],
+                                        ["path", 2],
+                                        ["EProceduralState_Failed", 2],
+                                        ["Stripper", 2],
+                                        ["REL2_ATSTARTUP_REGISTEREXISTINGFILESTOSNAPSHOT", 2],
+                                        ["REL2_LASTACTIVATIONMO_DUMPACTIVESCFATSTART", 2],
+                                        ["mergeHwfContent", 2],
+                                        ["REL2_LASTDOWNLOADMO_DUMPACTIVESCFATSTART", 2],
+                                        ["REL3_ATSTARTUP_REGISTEREXISTINGFILESTOSNAPSHOT", 2],
+                                        ["createCdnlTraces", 2],
+                                        ["mrBtsDistName", 2],
+                                        ["REL2_LASTDOWNLOADMO_DUMPEDBTSOAMSYSLOGSIZE", 2],
+                                        ["REL3_LASTACTIVATIONMO_DUMPIMSFILE", 2],
+                                        ["autoconfigScfcNumber", 2],
+                                        ["RegisterExistingFilesToSnapshotAtStartup", 2],
+                                        ["subscriptionLnbts_", 2],
+                                        ["createLastDownload", 2],
+                                        ["createCmDiagnostics", 2],
+                                        ["subscriptionFuncl_", 2],
+                                        ["REL2_LASTDOWNLOADMO_DUMPCDNL", 2],
+                                        ["limFacade", 2],
+                                        ["end", 2],
+                                        ["setCmDiagnosticsMoProperty", 2],
+                                        ["REL2_PATHONFILESYSTEM", 2],
+                                        ["setCcnMoProperty", 2],
+                                        ["getScfPathFromDelta", 2],
+                                        ["hwfOperator", 2],
+                                        ["setCmDiagnostics", 2],
+                                        ["createRromTraces", 2],
+                                        ["bindWeak", 2],
+                                        ["handleRadChangeNotif", 2],
+                                        ["MoScf", 2],
+                                        ["createCcnTraces", 2],
+                                        ["REL3_LASTACTIVATIONMO_DUMPACTIVESCFATEND", 2],
+                                        ["MoConfiguration_file", 2],
+                                        ["ccnTraceFilePresent", 2],
+                                        ["lastActivationDistName", 2],
+                                        ["getItsFactory", 2],
+                                        ["setCcnTraces", 2],
+                                        ["dispatcher", 2],
+                                        ["selectivecopier", 2],
+                                        ["fileOperations", 2],
+                                        ["LNBTS", 2],
+                                        ["LnbtsVector", 2],
+                                        ["REL2_LASTACTIVATIONMO_DUMPEDCPLANESYSLOGSIZE", 2],
+                                        ["types", 2],
+                                        ["createRecommissioning", 2],
+                                        ["getParent", 2],
+                                        ["dumpCdnl", 2],
+                                        ["shared_from_this", 2],
+                                        ["MoFunc_l", 2],
+                                        ["localFileSystem", 2],
+                                        ["rromTraceDistName", 2],
+                                        ["begin", 2],
+                                        ["setCdnlMoProperty", 2],
+                                        ["REL2_LASTDOWNLOADMO_DUMPEDCPLANESYSLOGSIZE", 2],
+                                        ["cdm", 2],
+                                        ["REL2_LASTACTIVATIONMO_DUMPACTIVESCFATEND", 2],
+                                        ["const_iterator", 2],
+                                        ["LibRamlDocumentPtr", 2],
+                                        ["createLastActivation", 2],
+                                        ["info", 2],
+                                        ["REL3_LASTACTIVATIONMO_DUMPEDBTSOAMSYSLOGSIZE", 2],
+                                        ["<core/types/bindWeak.hpp>", 2],
+                                        ["cdnlTraceNumOfFiles", 2],
+                                        ["incrementVersionOfFile", 2],
+                                        ["deprecatedFileName", 2],
+                                        ["deltaDistName", 2],
+                                        ["REL3_LASTACTIVATIONMO_DUMPEDCPLANESYSLOGSIZE", 2],
+                                        ["isHwfMergeRequired", 2],
+                                        ["HwfFileOperator", 2],
+                                        ["rfind", 2],
+                                        ["REL3_LASTDOWNLOADMO_DUMPEDCPLANESYSLOGSIZE", 2],
+                                        ["myCpid", 2],
+                                        ["REL3_PATHONFILESYSTEM", 2],
+                                        ["REL2_LASTACTIVATIONMO_DUMPIMSFILE", 2],
+                                        ["fetchByClass", 2],
+                                        ["funcCreateHandler", 2],
+                                        ["empty", 2],
+                                        ["ccnTraceFileSize", 2],
+                                        ["cdnlTraceFileSize", 2],
+                                        ["cdnlTraceFilePresent", 2],
+                                        ["REL3_LASTDOWNLOADMO_DUMPACTIVESCFATSTART", 2],
+                                        ["textData", 2],
+                                        ["parse", 2],
+                                        ["MoLast_activation", 2],
+                                        ["facade", 2],
+                                        ["make_shared", 2],
+                                        ["rnwTraceNumOfFiles", 2],
+                                        ["MoNp", 2],
+                                        ["setCdnlTraces", 2],
+                                        ["getScfPathFromAutoconfig", 2],
+                                        ["ramlMergeEditor", 2],
+                                        ["rnwTraceFilePresent", 2],
+                                        ["EProceduralState_Completed", 2],
+                                        ["MoLast_download", 2],
+                                        ["dumpActiveScfAtEnd", 2],
+                                        ["mergeManagedObjects", 2],
+                                        ["cfDn", 2],
+                                        ["removeHwf", 2],
+                                        ["2000000", 2],
+                                        ["<string>", 2],
+                                        ["parameterList", 2],
+                                        ["lastDownloadDistName", 2],
+                                        ["rnwTraceFileSize", 2],
+                                        ["core", 2],
+                                        ["MoBaseCPtr", 2],
+                                        ["ccnTraceNumOfFiles", 2],
+                                        ["setRromMoProperty", 2],
+                                        ["cdnlTraceDistName", 2],
+                                        ["ccnTraceDistName", 2],
+                                        ["MoRecommissioning", 2],
+                                        ["mrBtsDistNameStr", 2],
+                                        ["REL3_LASTACTIVATIONMO_DUMPACTIVESCFATSTART", 2],
+                                        ["setRromTraces", 2],
+                                        ["getScfFileDirPath", 2],
+                                        ["warning", 2],
+                                        ["pathOnFileSystem", 2],
+                                        ["storage", 2],
+                                        ["REL3_LASTDOWNLOADMO_DUMPCDNL", 2],
+                                        ["REL3_LASTDOWNLOADMO_DUMPEDBTSOAMSYSLOGSIZE", 2],
+                                        ["recommissioning", 2],
+                                        ["dumpImsFile", 2],
+                                        ["<boost/make_shared.hpp>", 1],
+                                        ["createLibRamlManagedObject", 1],
+                                        ["<lim/storage_data/pddb_types/NP.hpp>", 1],
+                                        ["NameValuePair", 1],
+                                        ["atEnd", 1],
+                                        ["shadowSaveScfFile", 1],
+                                        ["registerExecutor", 1],
+                                        ["second", 1],
+                                        ["AaSysComSicadGet", 1],
+                                        ["to_string", 1],
+                                        ["SCF_OPEN_ERROR", 1],
+                                        ["scoped_ptr", 1],
+                                        ["AaSysComUserRegister", 1],
+                                        ["<core/types/SysException.hpp>", 1],
+                                        ["getVersion", 1],
+                                        ["CONFIGURATION_FILE", 1],
+                                        ["fetch", 1],
+                                        ["DomDocumentFactory", 1],
+                                        ["MoDelta", 1],
+                                        ["planDN", 1],
+                                        ["switch", 1],
+                                        ["proceduralState", 1],
+                                        ["subscribeLnbtsProceduralState", 1],
+                                        ["write", 1],
+                                        ["AaProEuCurrent", 1],
+                                        ["lt", 1],
+                                        ["getLibRamlManagedObjectsByClass", 1],
+                                        ["<DomXml/DomDocumentFactory.h>", 1],
+                                        ["auto", 1],
+                                        ["find_last_of", 1],
+                                        ["CmDiagnosticsExecutor", 1],
+                                        ["lnbtsVector", 1],
+                                        ["loadScfFile", 1],
+                                        ["SelectiveClassIterator", 1],
+                                        ["TAaSysComSicad", 1],
+                                        ["getIncrementedScfPath", 1],
+                                        ["first", 1],
+                                        [">>", 1],
+                                        ["WARN_LOG", 1],
+                                        ["editor", 1],
+                                        ["<lim/storage_data/pddb_types/SCF.hpp>", 1],
+                                        ["IProxy", 1],
+                                        ["createConfigurationFile", 1],
+                                        ["AaSysComGetOwnNid", 1],
+                                        ["getItsRamlDomDocument", 1],
+                                        ["MoAutoconfig", 1],
+                                        ["1000000", 1],
+                                        ["MoCDecorator", 1],
+                                        ["SCF_LOAD_OK", 1],
+                                        ["RamlMerge", 1],
+                                        ["clear", 1],
+                                        ["DEBUG_LOG", 1],
+                                        ["IFileSystem", 1],
+                                        ["FileOperationsPtr", 1],
+                                        ["ScfLoadingStatus", 1],
+                                        ["remove", 1],
+                                        ["AASYSCOM_CP_INVALID", 1],
+                                        ["fail", 1],
+                                        ["toString", 1],
+                                        ["LibRamlDocument", 1],
+                                        ["FileOperations", 1],
+                                        ["EProceduralState", 1],
+                                        ["subscribe", 1],
+                                        ["<editor/RamlMerge.h>", 1],
+                                        ["ContainerNameValuePair", 1],
+                                        ["createDomDocument", 1],
+                                        ["subscribeForFunclCreation", 1],
+                                        ["getLibRamlCmData", 1],
+                                        ["10000", 1],
+                                        ["getMODataForScf", 1],
+                                        ["CREATE", 1],
+                                        ["startService", 1],
+                                        ["stateInfo", 1],
+                                        ["<boost/scoped_ptr.hpp>", 1],
+                                        ["SCF_PARSE_ERROR", 1],
+                                        ["read", 1],
+                                        ["castMoBase", 1],
+                                        ["Operation", 1],
+                                        ["ManagedObjectData", 1],
+                                        ["EProceduralState_onAir", 1],
+                                        ["find_first_of", 1],
+                                        ["10000000", 1],
+                                        ["TAaSysComCpid", 1],
+                                        ["stringstream", 1],
+                                        ["RAML_PARSE_OK", 1],
+                                        ["mergeManagedObject", 1],
+                                        ["default", 1],
+                                        ["ostringstream", 1],
+                                        ["char", 1],
+                                        ["shadowWrite", 1],
+                                        ["createScalar", 1],
+                                        ["DispatcherPtr", 1],
+                                        ["getNetworkPlan", 1],
+                                        ["addParameter", 1],
+
+                                    ]);
+                                }
+                        }
+                    </script>
+                </head>
+                <body onload="draw();">
+                    <canvas id="canvas" width="700" height="700"></canvas>
+                </body>
+            </html>
