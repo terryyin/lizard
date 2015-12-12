@@ -1,6 +1,8 @@
 import unittest
 from .testHelpers import get_cpp_function_list_with_extnesion
 from lizard_ext.lizardinternalrelationship import LizardExtension as ir
+from lizard_ext.lizardinternalrelationship import preprocess
+
 
 class TestInternalRelationship(unittest.TestCase):
 
@@ -60,8 +62,7 @@ void CmDiagnosticsService::startService()
 class TestPreprocessor(unittest.TestCase):
 
     def process(self, *tokens):
-        ext = ir()
-        return [x for x in ext.preprocess(tokens)]
+        return [x for x in preprocess(tokens)]
 
     def test_no_namespaces(self):
         self.assertEqual(["a", "b"], self.process("a", "b"))

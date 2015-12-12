@@ -30,7 +30,7 @@ import hashlib
 if sys.version[0] == '2':
     from future_builtins import map, filter  # pylint: disable=W0622, F0401
 
-VERSION = "1.9.0"
+VERSION = "1.9.2"
 
 DEFAULT_CCN_THRESHOLD, DEFAULT_WHITELIST, \
     DEFAULT_MAX_FUNC_LENGTH = 15, "whitelizard.txt", 1000
@@ -162,7 +162,7 @@ class FunctionInfo(object):  # pylint: disable=R0902
         self.long_name = name
         self.start_line = start_line
         self.end_line = start_line
-        self.parameter_count = 0
+        self.parameters = []
         self.filename = filename
         self.indent = -1
         self.length = 0
@@ -170,6 +170,8 @@ class FunctionInfo(object):  # pylint: disable=R0902
     location = property(lambda self:
                         " %(name)s@%(start_line)s-%(end_line)s@%(filename)s"
                         % self.__dict__)
+
+    parameter_count = property(lambda self: len(self.parameters))
 
     def add_to_function_name(self, app):
         self.name += app
@@ -181,16 +183,16 @@ class FunctionInfo(object):  # pylint: disable=R0902
     def add_parameter(self, token):
         self.add_to_long_name(" " + token)
 
-        if self.parameter_count == 0:
-            self.parameter_count = 1
-        if token == ",":
-            self.parameter_count += 1
+        if not self.parameters or token == ",":
+            self.parameters.append(token)
+        else:
+            self.parameters[-1] = token
 
     def clang_format_warning(self):
         return (
-            "%(filename)s:%(start_line)s: warning: %(name)s has" +
-            " %(cyclomatic_complexity)d CCN and %(parameter_count)d" +
-            " params (%(nloc)d NLOC, %(token_count)d tokens)") % self.__dict__
+            "{f.filename}:{f.start_line}: warning: {f.name} has" +
+            " {f.cyclomatic_complexity} CCN and {f.parameter_count}" +
+            " params ({f.nloc} NLOC, {f.token_count} tokens)").format(f=self)
 
 
 class FileInformation(object):  # pylint: disable=R0903
@@ -215,7 +217,7 @@ class FileInformation(object):  # pylint: disable=R0903
         return summary / len(self.function_list) if self.function_list else 0
 
 
-class CodeInfoContext(object):
+class FileInfoBuilder(object):
 
     def __init__(self, filename):
         self.fileinfo = FileInformation(filename, 0)
@@ -476,6 +478,9 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
         if name == 'operator':
             self._state = self._state_operator
 
+    def start_new_function_impl(self):
+        self._state = self._state_imp
+
     def preprocess(self, tokens):
         tilde = False
         for token in tokens:
@@ -573,7 +578,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
             self._state_function(token)
         elif token == '{':
             self.br_count += 1
-            self._state = self._state_imp
+            self.start_new_function_impl()
         elif token == ":":
             self._state = self._state_initialization_list
         elif not (token[0].isalpha() or token[0] == '_'):
@@ -609,7 +614,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
             self._state = self._state_initialization_list
         if token == '{':
             self.br_count += 1
-            self._state = self._state_imp
+            self.start_new_function_impl()
         else:
             self._state = self.OneInitializationState(comeback)
 
@@ -628,6 +633,7 @@ try:
     # The following languages / extensions will not be supported in
     # stand alone script.
     # pylint: disable=W0611
+    from lizard_ext import JavaReader
     from lizard_ext import JavaScriptReader
     from lizard_ext import PythonReader
     from lizard_ext import ObjCReader
@@ -635,34 +641,6 @@ try:
     from lizard_ext import xml_output
 except ImportError:
     pass
-
-
-class JavaReader(CLikeReader, CodeReader):
-
-    ext = ['java']
-
-    def __init__(self, context):
-        super(JavaReader, self).__init__(context)
-
-    def _state_old_c_params(self, token):
-        if token == '{':
-            self._state_dec_to_imp(token)
-
-    def _state_global(self, token):
-        if token == '@':
-            self._state = self._state_decorator
-            return
-        super(JavaReader, self)._state_global(token)
-
-    def _state_decorator(self, _):
-        self._state = self._state_post_decorator
-
-    def _state_post_decorator(self, token):
-        if token == '.':
-            self._state = self._state_decorator
-        else:
-            self._state = self._state_global
-            self._state(token)
 
 
 def token_processor_for_function(tokens, reader):
@@ -690,7 +668,7 @@ class FileAnalyzer(object):  # pylint: disable=R0903
                              % filename)
 
     def analyze_source_code(self, filename, code):
-        context = CodeInfoContext(filename)
+        context = FileInfoBuilder(filename)
         reader = (CodeReader.get_reader(filename) or CLikeReader)(context)
         tokens = reader.generate_tokens(code)
         for processor in self.processors:
@@ -976,9 +954,9 @@ def get_extensions(extension_names, switch_case_as_one_condition=False):
         preprocessing,
         comment_counter,
         line_counter,
-        condition_counter,
         token_counter,
         token_processor_for_function,
+        condition_counter,
     ]
     if switch_case_as_one_condition:
         extensions.append(recount_switch_case)

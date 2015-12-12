@@ -95,6 +95,7 @@ class Test_c_cpp_lizard(unittest.TestCase):
     def test_function_with_1_param(self):
         result = get_cpp_function_list("int fun(aa * bb){}")
         self.assertEqual(1, result[0].parameter_count)
+        self.assertEqual(["bb"], result[0].parameters)
 
     def test_function_with_param(self):
         result = get_cpp_function_list("int fun(aa * bb, cc dd){}")

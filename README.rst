@@ -116,7 +116,7 @@ Options
                         often faster.
   -m, --modified        Calculate modified cyclomatic complexity number
   -E EXTENSIONS, --extension EXTENSIONS
-                        User the extensions. The available extensions are:
+                        Use the extended modules. The available extensions are:
                         -Ecpre: it will ignore code in the #else branch.
                         -Ewordcount: count word fequencies and generate tag
                         cloud. -Eoutside: include the global code as one

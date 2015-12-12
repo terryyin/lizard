@@ -4,7 +4,7 @@
 import unittest
 import sys
 from mock import patch, Mock
-from lizard import CLikeReader, map_files_to_analyzer, FunctionInfo, analyze_file, CodeInfoContext
+from lizard import CLikeReader, map_files_to_analyzer, FunctionInfo, analyze_file, FileInfoBuilder
 
 
 def analyzer_mock(filename):
@@ -87,7 +87,7 @@ class Test_Picklability(unittest.TestCase):
 
     def test_FileInfo_ShouldBePicklable(self):
         import pickle
-        pickle.dumps(CodeInfoContext("a"))
+        pickle.dumps(FileInfoBuilder("a"))
 
 
 from lizard import warning_filter, FileInformation, whitelist_filter
