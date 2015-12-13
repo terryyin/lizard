@@ -74,7 +74,7 @@ class LizardExtension(object):  # pylint: disable=R0903
                     for token in subcall(
                             self.wild(tokens, reader), reader):
                         yield token
-                yield tokens.next()
+                yield next(tokens)
         except self.StopSplitting:
             pass
 
