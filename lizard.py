@@ -94,6 +94,17 @@ def create_command_line_parser(prog=None):
                         type=int,
                         dest="number",
                         default=0)
+    parser.add_argument("-l", "--languages",
+                        help='''List the programming language you want to
+                        analyze.
+                        if left empty, it'll search for all languages it knows.
+                            lizard -l cpp java
+                        will search for C++ and Java code.
+                        The available languages are:
+                        ''',
+                        action="append",
+                        dest="languages",
+                        default=[])
     parser.add_argument("-x", "--exclude",
                         help='''Exclude files that match this pattern. * matches
                         everything,

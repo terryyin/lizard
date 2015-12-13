@@ -81,7 +81,7 @@ class LizardExtension(object):  # pylint: disable=R0903
     def wild(self, tokens, reader):
         try:
             while reader.is_in_function():
-                yield tokens.next()
+                yield next(tokens)
         except StopIteration:
             raise self.StopSplitting
 
