@@ -2,8 +2,8 @@
 Language parser for JavaScript
 '''
 
-from lizard import CodeReader, CCppCommentsMixin
 import re
+from lizard import CodeReader, CCppCommentsMixin
 
 
 class JavaScriptReader(CodeReader, CCppCommentsMixin):

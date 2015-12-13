@@ -1,7 +1,7 @@
 ''' Language parser for TTCN-3 '''
 
-from lizard import CLikeReader, CodeReader
 import re
+from lizard import CLikeReader, CodeReader
 
 
 class TTCNReader(CLikeReader, CodeReader):  # pylint: disable=R0903

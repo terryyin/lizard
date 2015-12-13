@@ -633,6 +633,7 @@ try:
     # The following languages / extensions will not be supported in
     # stand alone script.
     # pylint: disable=W0611
+    # pylint: disable=C0413
     from lizard_ext import JavaReader
     from lizard_ext import JavaScriptReader
     from lizard_ext import PythonReader
