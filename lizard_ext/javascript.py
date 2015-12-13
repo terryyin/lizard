@@ -10,6 +10,7 @@ class JavaScriptReader(CodeReader, CCppCommentsMixin):
     # pylint: disable=R0903
 
     ext = ['js']
+    language_names = ['javascript', 'js']
 
     @staticmethod
     def generate_tokens(source_code, _=None):

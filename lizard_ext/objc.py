@@ -7,6 +7,7 @@ from lizard import CLikeReader
 class ObjCReader(CLikeReader, CodeReader):
 
     ext = ['m']
+    language_names = ['objectivec', 'objective-c', 'objc']
 
     def __init__(self, context):
         super(ObjCReader, self).__init__(context)

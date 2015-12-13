@@ -7,6 +7,7 @@ from lizard import CLikeReader, CodeReader
 class TTCNReader(CLikeReader, CodeReader):  # pylint: disable=R0903
 
     ext = ['ttcn', 'ttcnpp']
+    language_names = ['ttcn', 'ttcn3']
 
     conditions = set(['if', 'else', 'for', 'while', 'altstep',
                       'case', 'goto', 'alt', 'interleave',

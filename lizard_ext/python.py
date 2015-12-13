@@ -6,6 +6,7 @@ from lizard import CodeReader
 class PythonReader(CodeReader):
 
     ext = ['py']
+    language_names = ['python']
     conditions = set(['if', 'for', 'while', 'and', 'or',
                       'elif', 'except', 'finally'])
 

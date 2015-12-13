@@ -36,14 +36,14 @@ DEFAULT_CCN_THRESHOLD, DEFAULT_WHITELIST, \
     DEFAULT_MAX_FUNC_LENGTH = 15, "whitelizard.txt", 1000
 
 
-def analyze(paths, exclude_pattern=None, threads=1, extensions=None):
+def analyze(paths, exclude_pattern=None, threads=1, exts=None, lans=None):
     '''
     returns an iterator of file information that contains function
     statistics.
     '''
     exclude_pattern = exclude_pattern or []
-    extensions = extensions or []
-    files = get_all_source_files(paths, exclude_pattern)
+    extensions = exts or []
+    files = get_all_source_files(paths, exclude_pattern, lans)
     file_analyzer = FileAnalyzer(extensions)
     return map_files_to_analyzer(files, file_analyzer, threads)
 
@@ -54,6 +54,16 @@ def create_command_line_parser(prog=None):
     parser.add_argument('paths', nargs='*', default=['.'],
                         help='list of the filename/paths.')
     parser.add_argument('--version', action='version', version=VERSION)
+    # pylint: disable=E1101
+    parser.add_argument("-l", "--languages",
+                        help='''List the programming languages you want to
+                        analyze. if left empty, it'll search for all languages
+                        it knows. `lizard -l cpp -l java`searches for C++ and
+                        Java code. The available languages are:
+    ''' + ', '.join(x.language_names[0] for x in CodeReader.__subclasses__()),
+                        action="append",
+                        dest="languages",
+                        default=[])
     parser.add_argument("-V", "--verbose",
                         help="Output in verbose mode (long function name)",
                         action="store_true",
@@ -94,17 +104,6 @@ def create_command_line_parser(prog=None):
                         type=int,
                         dest="number",
                         default=0)
-    parser.add_argument("-l", "--languages",
-                        help='''List the programming language you want to
-                        analyze.
-                        if left empty, it'll search for all languages it knows.
-                            lizard -l cpp java
-                        will search for C++ and Java code.
-                        The available languages are:
-                        ''',
-                        action="append",
-                        dest="languages",
-                        default=[])
     parser.add_argument("-x", "--exclude",
                         help='''Exclude files that match this pattern. * matches
                         everything,
@@ -338,8 +337,10 @@ def recount_switch_case(tokens, reader):
 class CodeReader(object):
     '''
     CodeReaders are used to parse function structures from code of different
-    language. Each language will need a subclass of CodeReader.
-    '''
+    language. Each language will need a subclass of CodeReader.  '''
+
+    languages = None
+
     def __init__(self, context):
         self.context = context
         self._state = lambda _: _
@@ -417,6 +418,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
     ''' This is the reader for C, C++ and Java. '''
 
     ext = ["c", "cpp", "cc", "mm", "cxx", "h", "hpp"]
+    language_names = ['cpp', 'c']
     macro_pattern = re.compile(r"#\s*(\w+)\s*(.*)", re.M | re.S)
     parameter_bracket_open = '(<'
     parameter_bracket_close = ')>>>'
@@ -902,18 +904,22 @@ def md5_hash_file(full_path_name):
         return None
 
 
-def get_all_source_files(paths, exclude_patterns):
+def get_all_source_files(paths, exclude_patterns, languages):
     '''
-    Function counts md5 hash for the given file
-    and checks if it isn't a duplicate using set
-    of hashes for previous files
+    Function counts md5 hash for the given file and checks if it isn't a
+    duplicate using set of hashes for previous files
     '''
     hash_set = set()
+
+    def _support(reader):
+        return not languages or set(languages).intersection(
+            reader.language_names)
 
     def _validate_file(pathname):
         return (
             pathname in paths or (
                 CodeReader.get_reader(pathname) and
+                _support(CodeReader.get_reader(pathname)) and
                 all(not fnmatch(pathname, p) for p in exclude_patterns) and
                 _not_duplicate(pathname)))
 
@@ -986,7 +992,8 @@ def lizard_main(argv):
         options.paths,
         options.exclude,
         options.working_threads,
-        options.extensions)
+        options.extensions,
+        options.languages)
     printer(result, options)
 
 if __name__ == "__main__":

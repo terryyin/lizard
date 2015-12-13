@@ -11,6 +11,7 @@ from lizard import CodeReader, CCppCommentsMixin
 class SDLReader(CodeReader, CCppCommentsMixin):
 
     ext = ['sdl']
+    language_names = ['tnsdl']
 
     def __init__(self):
         super(SDLReader, self).__init__()

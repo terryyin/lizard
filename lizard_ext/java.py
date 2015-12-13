@@ -9,6 +9,7 @@ class JavaReader(CLikeReader, CodeReader):
     # pylint: disable=R0903
 
     ext = ['java']
+    language_names = ['java']
 
     def __init__(self, context):
         super(JavaReader, self).__init__(context)

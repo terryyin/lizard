@@ -88,10 +88,21 @@ Options
 
   -h, --help            show this help message and exit
   --version             show program's version number and exit
+  -l LANGUAGES, --languages LANGUAGES
+                        List the programming languages you want to analyze. if
+                        left empty, it'll search for all languages it knows.
+                            lizard -l cpp -l java
+                        searches for C++ and Java code.
+                        The available languages are: cpp, java, javascript,
+                        python, objectivec, ttcn
   -V, --verbose         Output in verbose mode (long function name)
   -C CCN, --CCN CCN     Threshold for cyclomatic complexity number warning.
                         The default value is 15. Functions with CCN bigger
                         than it will generate warning
+  -L LENGTH, --length LENGTH
+                        Threshold for maximum function length warning. The
+                        default value is 1000. Functions length bigger than it
+                        will generate warning
   -a ARGUMENTS, --arguments ARGUMENTS
                         Limit for number of parameters
   -w, --warnings_only   Show warnings only, using clang/gcc's warning format
@@ -100,11 +111,11 @@ Options
                         fdiagnostics-format
   -i NUMBER, --ignore_warnings NUMBER
                         If the number of warnings is equal or less than the
-                        number, the tool will exit normally, otherwize it will
+                        number, the tool will exit normally, otherwise it will
                         generate error. Useful in makefile for legacy code.
   -x EXCLUDE, --exclude EXCLUDE
                         Exclude files that match this pattern. * matches
-                        everything, ? matches any single characoter,
+                        everything, ? matches any single character,
                         "./folder/*" exclude everything in the folder
                         recursively. Multiple patterns can be specified. Don't
                         forget to add "" around the pattern.
@@ -116,9 +127,9 @@ Options
                         often faster.
   -m, --modified        Calculate modified cyclomatic complexity number
   -E EXTENSIONS, --extension EXTENSIONS
-                        Use the extended modules. The available extensions are:
+                        User the extensions. The available extensions are:
                         -Ecpre: it will ignore code in the #else branch.
-                        -Ewordcount: count word fequencies and generate tag
+                        -Ewordcount: count word frequencies and generate tag
                         cloud. -Eoutside: include the global code as one
                         function.
   -s SORTING, --sort SORTING
@@ -232,10 +243,11 @@ before a function it will suppress the warning for that function.
 
 Wishlist (The features that will come in the near future)
 ---------------------------------------------------------
--  Support Python & Ruby
+-  Support Ruby
 
 Change Logs
 -----------
+-  2015.12.12 Add the -l option to filter language
 -  2015.10.22 TTCN-3 added by @gustafj
 -  2015.10.06 Add C++11 uniform constructor initialization. Thanks to @rakhimov
 -  2015.01.09 Add C preprocessor back by -Ecpre. it will ignore all the #else branch in the C/C++ code.
