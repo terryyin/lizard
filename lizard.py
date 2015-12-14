@@ -30,7 +30,7 @@ import hashlib
 if sys.version[0] == '2':
     from future_builtins import map, filter  # pylint: disable=W0622, F0401
 
-VERSION = "1.9.2"
+VERSION = "1.9.3"
 
 DEFAULT_CCN_THRESHOLD, DEFAULT_WHITELIST, \
     DEFAULT_MAX_FUNC_LENGTH = 15, "whitelizard.txt", 1000
@@ -138,8 +138,7 @@ def create_command_line_parser(prog=None):
                         are: -Ecpre: it will ignore code in the #else branch.
                         -Ewordcount: count word frequencies and generate tag
                         cloud. -Eoutside: include the global code as one
-                        function.
-                        ''',
+                        function.  ''',
                         action="append",
                         dest="extensions",
                         default=[])
@@ -152,7 +151,8 @@ def create_command_line_parser(prog=None):
                         default=[])
     parser.add_argument("-W", "--whitelist",
                         help='''The path and file name to the whitelist file.
-                        It's './whitelizard.txt' by default.''',
+                        It's './whitelizard.txt' by default.
+                        Find more information in README.''',
                         type=str,
                         dest="whitelist",
                         default=DEFAULT_WHITELIST)

@@ -218,7 +218,10 @@ Whitelist
 
 If for some reason you would like to ignore the warnings, you can use
 the whitelist. Add 'whitelizard.txt' to the current folder (or use -W to point to the whitelist file), then the
-functions defined in the file will be ignored. This is an example
+functions defined in the file will be ignored. Please notice that if you assign the file pathname, it need to
+be exactly the same relative path as Lizard find the file. An easy way to get the file pathname is copy it from
+the Lizard warning output.
+This is an example whitelist:
 
 ::
 
@@ -226,7 +229,7 @@ functions defined in the file will be ignored. This is an example
    #The file name can only be whitelizard.txt and put it in the current folder.
    #You may have commented lines begin with #.
    function_name1, function_name2 # list function names in mulitple lines or split with comma.
-   filename:function1, function2  # you can also specify the filename
+   file/path/name:function1, function2  # you can also specify the filename
 
 Options in Comments
 -------------------
