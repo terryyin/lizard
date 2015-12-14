@@ -335,8 +335,7 @@ def recount_switch_case(tokens, reader):
 
 
 class CodeReader(object):
-    '''
-    CodeReaders are used to parse function structures from code of different
+    ''' CodeReaders are used to parse function structures from code of different
     language. Each language will need a subclass of CodeReader.  '''
 
     languages = None
@@ -355,6 +354,17 @@ class CodeReader(object):
         for lan in list(CodeReader.__subclasses__()):
             if CodeReader.compile_file_extension_re(*lan.ext).match(filename):
                 return lan
+
+    @staticmethod
+    def read_brackets(func):
+        def read_until_matching_brackets(self, token):
+            if token == '{':
+                self.br_count += 1
+            elif token == '}':
+                self.br_count -= 1
+                if self.br_count == 0:
+                    func(self, token)
+        return read_until_matching_brackets
 
     def state(self, token):
         self._state(token)
@@ -492,6 +502,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
             self._state = self._state_operator
 
     def start_new_function_impl(self):
+        self.br_count += 1
         self._state = self._state_imp
 
     def preprocess(self, tokens):
@@ -590,7 +601,6 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
             self.start_new_function(long_name)
             self._state_function(token)
         elif token == '{':
-            self.br_count += 1
             self.start_new_function_impl()
         elif token == ":":
             self._state = self._state_initialization_list
@@ -626,19 +636,14 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
         def comeback():
             self._state = self._state_initialization_list
         if token == '{':
-            self.br_count += 1
             self.start_new_function_impl()
         else:
             self._state = self.OneInitializationState(comeback)
 
-    def _state_imp(self, token):
-        if token == '{':
-            self.br_count += 1
-        elif token == '}':
-            self.br_count -= 1
-            if self.br_count == 0:
-                self._state = self._state_global
-                self.context.end_of_function()
+    @CodeReader.read_brackets
+    def _state_imp(self, _):
+        self._state = self._state_global
+        self.context.end_of_function()
 
 
 try:
@@ -903,8 +908,7 @@ def md5_hash_file(full_path_name):
 def get_all_source_files(paths, exclude_patterns, lans):
     '''
     Function counts md5 hash for the given file and checks if it isn't a
-    duplicate using set of hashes for previous files
-    '''
+    duplicate using set of hashes for previous files '''
     hash_set = set()
 
     def _support(reader):
