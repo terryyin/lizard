@@ -647,12 +647,8 @@ try:
     # stand alone script.
     # pylint: disable=W0611
     # pylint: disable=C0413
-    from lizard_ext import JavaReader
-    from lizard_ext import JavaScriptReader
-    from lizard_ext import PythonReader
-    from lizard_ext import ObjCReader
-    from lizard_ext import TTCNReader
     from lizard_ext import xml_output
+    import languages
 except ImportError:
     pass
 
@@ -904,7 +900,7 @@ def md5_hash_file(full_path_name):
         return None
 
 
-def get_all_source_files(paths, exclude_patterns, languages):
+def get_all_source_files(paths, exclude_patterns, lans):
     '''
     Function counts md5 hash for the given file and checks if it isn't a
     duplicate using set of hashes for previous files
@@ -912,7 +908,7 @@ def get_all_source_files(paths, exclude_patterns, languages):
     hash_set = set()
 
     def _support(reader):
-        return not languages or set(languages).intersection(
+        return not lans or set(lans).intersection(
             reader.language_names)
 
     def _validate_file(pathname):

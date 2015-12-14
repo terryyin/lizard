@@ -16,6 +16,7 @@ C/C++ header files or Java imports. It can deal with
 -  Objective C.
 -  Python
 -  TTCN-3
+-  Swift (coming soon)
 
 It counts
 
