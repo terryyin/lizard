@@ -52,3 +52,14 @@ class Test_parser_for_Swift(unittest.TestCase):
                 ''')
         self.assertEqual(2, result[0].cyclomatic_complexity)
 
+    def test_interface(self):
+        result = get_swift_function_list('''
+            protocol EPGCollectionViewLayoutDelegate {
+                func durationInHourForItemAtIndexPath(indexPath: NSIndexPath) -> Double
+                func startDateForItemAtIndexPath(indexPath: NSIndexPath) -> NSDate
+            }
+            func sayGoodbye() { }
+                ''')
+        self.assertEqual(1, len(result))
+        self.assertEqual("sayGoodbye", result[0].name)
+

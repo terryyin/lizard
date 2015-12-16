@@ -136,5 +136,3 @@ class TestWarningFilterWithWhitelist(unittest.TestCase):
     def test_should_ignore_comments_in_whitelist(self):
         warnings = whitelist_filter(self.WARNINGS, 'foo  #,bar\ni#,bar')
         self.assertEqual(1, len(list(warnings)))
-
-

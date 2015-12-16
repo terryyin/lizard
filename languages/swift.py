@@ -35,6 +35,8 @@ class SwiftReader(CodeReader, CCppCommentsMixin):
             self.context.parameter(token)
 
     def _expect_function_impl(self, token):
+        if token == 'func':
+            self._state = self._function_name
         if token == '{':
             self.br_count += 1
             self._state = self._function_impl
