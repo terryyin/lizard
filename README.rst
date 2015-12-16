@@ -13,10 +13,10 @@ C/C++ header files or Java imports. It can deal with
 -  C/C++ (works with C++14)
 -  Java
 -  JavaScript
--  Objective C.
+-  Objective C
+-  Swift
 -  Python
 -  TTCN-3
--  Swift (coming soon)
 
 It counts
 
@@ -251,6 +251,7 @@ Wishlist (The features that will come in the near future)
 
 Change Logs
 -----------
+-  2015.12.17 Add support for Swift
 -  2015.12.12 Add the -l option to filter language
 -  2015.10.22 TTCN-3 added by @gustafj
 -  2015.10.06 Add C++11 uniform constructor initialization. Thanks to @rakhimov

@@ -19,6 +19,8 @@ class SwiftReader(CodeReader, CCppCommentsMixin):
     def _global(self, token):
         if token == 'func':
             self._state = self._function_name
+        if token == 'protocol':
+            self._state = self._protocol
 
     def _function_name(self, token):
         self.context.start_new_function(token)
@@ -35,8 +37,6 @@ class SwiftReader(CodeReader, CCppCommentsMixin):
             self.context.parameter(token)
 
     def _expect_function_impl(self, token):
-        if token == 'func':
-            self._state = self._function_name
         if token == '{':
             self.br_count += 1
             self._state = self._function_impl
@@ -45,3 +45,7 @@ class SwiftReader(CodeReader, CCppCommentsMixin):
     def _function_impl(self, _):
         self._state = self._global
         self.context.end_of_function()
+
+    @CodeReader.read_brackets
+    def _protocol(self, _):
+        self._state = self._global

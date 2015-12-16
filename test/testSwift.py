@@ -54,12 +54,55 @@ class Test_parser_for_Swift(unittest.TestCase):
 
     def test_interface(self):
         result = get_swift_function_list('''
-            protocol EPGCollectionViewLayoutDelegate {
-                func durationInHourForItemAtIndexPath(indexPath: NSIndexPath) -> Double
-                func startDateForItemAtIndexPath(indexPath: NSIndexPath) -> NSDate
+            protocol p {
+                func f1() -> Double
+                func f2() -> NSDate
             }
             func sayGoodbye() { }
                 ''')
         self.assertEqual(1, len(result))
         self.assertEqual("sayGoodbye", result[0].name)
+
+    def test_interface_followed_by_a_class(self):
+        result = get_swift_function_list('''
+            protocol p {
+                func f1() -> Double
+                func f2() -> NSDate
+            }
+            class c { }
+                ''')
+        self.assertEqual(0, len(result))
+
+    def test_interface_with_var(self):
+        result = get_swift_function_list('''
+            protocol p {
+                func f1() -> Double
+                var area: Double { get }
+            }
+            class c { }
+                ''')
+        self.assertEqual(0, len(result))
+
+    def test_interface_with_var(self):
+        result = get_swift_function_list('''
+            protocol p {
+                func f1() -> Double
+                var area: Double { get }
+            }
+            class c { }
+                ''')
+        self.assertEqual(0, len(result))
+
+    def test_generic_function(self):
+        result = get_swift_function_list('''
+            func f<T>() {}
+                ''')
+        self.assertEqual("f", result[0].name)
+
+    def xtest_generic_function(self):
+        result = get_swift_function_list('''
+        func f<C1, C2: Container where (C1.t == C2.t)> (c1: C1, c: C2) -> Bool {}
+                ''')
+        self.assertEqual("f", result[0].name)
+        self.assertEqual(2, result[0].parameter_count)
 
