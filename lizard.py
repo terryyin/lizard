@@ -30,7 +30,7 @@ import hashlib
 if sys.version[0] == '2':
     from future_builtins import map, filter  # pylint: disable=W0622, F0401
 
-VERSION = "1.9.5"
+VERSION = "1.9.6"
 
 DEFAULT_CCN_THRESHOLD, DEFAULT_WHITELIST, \
     DEFAULT_MAX_FUNC_LENGTH = 15, "whitelizard.txt", 1000
@@ -366,6 +366,20 @@ class CodeReader(object):
                     func(self, token)
         return read_until_matching_brackets
 
+    @staticmethod
+    def read_until_then(tokens):
+        def read_until_then_decorator(func):
+            saved = []
+
+            def read_until_then_token(self, token):
+                if token in tokens:
+                    func(self, token, saved)
+                    del saved[:]
+                else:
+                    saved.append(token)
+            return read_until_then_token
+        return read_until_then_decorator
+
     def state(self, token):
         self._state(token)
 
@@ -438,7 +452,6 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
             self.next_state = next_state
             self.namespace = []
             self._state = self._global
-            self.current = ''
 
         def prefix(self, name):
             return '::'.join([x for x in self.namespace if x] + [name])
@@ -450,21 +463,19 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
             if token in ("struct", "class", "namespace"):
                 self._state = self._state_namespace_def
             elif token == "{":
-                self.namespace.append(self.current)
-                self.current = ''
+                self.namespace.append("")
             elif token == '}':
                 if self.namespace:
                     self.namespace.pop()
             elif token[0].isalpha() or token[0] in '_~':
                 self.next_state(token)
-            self.current = ''
 
-        def _state_namespace_def(self, token):
-            if token in '{;':
-                self._state = self._global
-                self._state(token)
-            else:
-                self.current += token
+        @CodeReader.read_until_then('{;')
+        def _state_namespace_def(self, token, saved):
+            if token == "{":
+                self.namespace.append(''.join(itertools.takewhile(
+                    lambda x: x not in [":", "final"], saved)))
+            self._state = self._global
 
     class OneInitializationState(object):
         def __init__(self, next_state):
@@ -606,6 +617,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
             self._state = self._state_initialization_list
         elif not (token[0].isalpha() or token[0] == '_'):
             self._state = self._state_global
+            self._state(token)
         else:
             self._state = self._state_old_c_params
             self._saved_tokens = [token]
