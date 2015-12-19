@@ -368,17 +368,17 @@ class CodeReader(object):
 
     @staticmethod
     def read_until_then(tokens):
-        def read_until_then_decorator(func):
-            saved = []
-
+        def decorator(func):
             def read_until_then_token(self, token):
+                if not hasattr(self, "rut_tokens"):
+                    self.rut_tokens = []
                 if token in tokens:
-                    func(self, token, saved)
-                    del saved[:]
+                    func(self, token, self.rut_tokens)
+                    self.rut_tokens = []
                 else:
-                    saved.append(token)
+                    self.rut_tokens.append(token)
             return read_until_then_token
-        return read_until_then_decorator
+        return decorator
 
     def state(self, token):
         self._state(token)
@@ -447,36 +447,6 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
     parameter_bracket_open = '(<'
     parameter_bracket_close = ')>>>'
 
-    class NamespaceState(object):
-        def __init__(self, next_state):
-            self.next_state = next_state
-            self.namespace = []
-            self._state = self._global
-
-        def prefix(self, name):
-            return '::'.join([x for x in self.namespace if x] + [name])
-
-        def __call__(self, token):
-            self._state(token)
-
-        def _global(self, token):
-            if token in ("struct", "class", "namespace"):
-                self._state = self._state_namespace_def
-            elif token == "{":
-                self.namespace.append("")
-            elif token == '}':
-                if self.namespace:
-                    self.namespace.pop()
-            elif token[0].isalpha() or token[0] in '_~':
-                self.next_state(token)
-
-        @CodeReader.read_until_then('{;')
-        def _state_namespace_def(self, token, saved):
-            if token == "{":
-                self.namespace.append(''.join(itertools.takewhile(
-                    lambda x: x not in [":", "final"], saved)))
-            self._state = self._global
-
     class OneInitializationState(object):
         def __init__(self, next_state):
             self.next_state = next_state
@@ -500,14 +470,14 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
         self.bracket_stack = []
         self.br_count = 0
         self._state = self._state_global
-        self.namespace = self.NamespaceState(self.start_new_function)
         self._saved_tokens = []
+        self.namespaces = []
 
     def is_in_function(self):
         return self.br_count > 0
 
     def start_new_function(self, name):
-        self.context.start_new_function(self.namespace.prefix(name))
+        self.context.start_new_function(name)
         self._state = self._state_function
         if name == 'operator':
             self._state = self._state_operator
@@ -542,7 +512,23 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
         self.bracket_stack = []
 
     def _state_global(self, token):
-        return self.namespace(token)
+        if token in ("struct", "class", "namespace"):
+            self._state = self._read_namespace
+        elif token == "{":
+            self.namespaces.append("")
+        elif token == '}':
+            if self.namespaces:
+                self.namespaces.pop()
+        elif token[0].isalpha() or token[0] in '_~':
+            self.start_new_function('::'.join(
+                [x for x in self.namespaces if x] + [token]))
+
+    @CodeReader.read_until_then('{;')
+    def _read_namespace(self, token, saved):
+        if token == "{":
+            self.namespaces.append(''.join(itertools.takewhile(
+                lambda x: x not in [":", "final"], saved)))
+        self._state = self._state_global
 
     def _state_function(self, token):
         if token == '(':
