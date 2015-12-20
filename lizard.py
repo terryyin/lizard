@@ -93,9 +93,9 @@ def create_command_line_parser(prog=None):
                         format for printing warnings.
                         http://clang.llvm.org/docs/UsersManual.html#cmdoption-fdiagnostics-format
                         ''',
-                        action="store_true",
-                        dest="warnings_only",
-                        default=False)
+                        action="store_const",
+                        const=print_clang_style_warning,
+                        dest="printer")
     parser.add_argument("-i", "--ignore_warnings",
                         help='''If the number of warnings is equal or less
                         than the number,
@@ -118,9 +118,9 @@ def create_command_line_parser(prog=None):
                         help='''Generate XML in cppncss style instead of the
                         tabular output. Useful to generate report in Jenkins
                         server''',
-                        action="store_true",
-                        dest="xml",
-                        default=None)
+                        action="store_const",
+                        const=print_xml,
+                        dest="printer")
     parser.add_argument("-t", "--working_threads",
                         help='''number of working threads. The default
                         value is 1. Using a bigger
@@ -650,7 +650,7 @@ try:
     # stand alone script.
     # pylint: disable=W0611
     # pylint: disable=C0413
-    from lizard_ext import xml_output
+    from lizard_ext import print_xml
     import languages
 except ImportError:
     pass
@@ -771,23 +771,16 @@ class OutputScheme(object):
 
 def print_warnings(option, scheme, warnings):
     warning_count = 0
-    if isinstance(option.sorting, list) and len(option.sorting) > 0:
-        warnings = list(warnings)
-        warnings.sort(reverse=True,
-                      key=lambda x: getattr(x, option.sorting[0]))
-    if not option.warnings_only:
-        warn_str = ("!!!! Warnings (CCN > {0} or arguments > {1} " +
-                    "or length > {2}) !!!!").format(option.CCN,
-                                                    option.arguments,
-                                                    option.length)
-        print("\n" + "=" * len(warn_str) + "\n" + warn_str)
-        print(scheme.function_info_head())
+
+    warn_str = ("!!!! Warnings (CCN > {0} or arguments > {1} " +
+                "or length > {2}) !!!!").format(option.CCN,
+                                                option.arguments,
+                                                option.length)
+    print("\n" + "=" * len(warn_str) + "\n" + warn_str)
+    print(scheme.function_info_head())
     for warning in warnings:
         warning_count += 1
-        if option.warnings_only:
-            print(warning.clang_format_warning())
-        else:
-            print(scheme.function_info(warning))
+        print(scheme.function_info(warning))
     return warning_count
 
 
@@ -815,12 +808,11 @@ def print_total(warning_count, saved_result, option):
             ])) / nloc_in_functions
     )
 
-    if not option.warnings_only:
-        print("=" * 90)
-        print("Total nloc  Avg.nloc  Avg CCN  Avg token  Fun Cnt  Warning" +
-              " cnt   Fun Rt   nloc Rt  ")
-        print("-" * 90)
-        print("%10d%10d%9.2f%11.2f%9d%13d%10.2f%8.2f" % total_info)
+    print("=" * 90)
+    print("Total nloc  Avg.nloc  Avg CCN  Avg token  Fun Cnt  Warning" +
+          " cnt   Fun Rt   nloc Rt  ")
+    print("-" * 90)
+    print("%10d%10d%9.2f%11.2f%9d%13d%10.2f%8.2f" % total_info)
 
 
 def print_and_save_modules(all_modules, extensions, scheme):
@@ -854,13 +846,20 @@ def print_and_save_modules(all_modules, extensions, scheme):
     return all_functions
 
 
+def get_warnings(code_infos, option):
+    warnings = whitelist_filter(warning_filter(option, code_infos),
+                                whitelist=option.whitelist)
+    if isinstance(option.sorting, list) and len(option.sorting) > 0:
+        warnings = sorted(warnings, reverse=True, key=lambda x: getattr(
+            x, option.sorting[0]))
+    return warnings
+
+
 def print_result(code_infos, option):
     scheme = OutputScheme(option.extensions)
-    if not option.warnings_only:
-        code_infos = print_and_save_modules(
-            code_infos, option.extensions, scheme)
-    warnings = warning_filter(option, code_infos)
-    warnings = whitelist_filter(warnings, whitelist=option.whitelist)
+    code_infos = print_and_save_modules(
+        code_infos, option.extensions, scheme)
+    warnings = get_warnings(code_infos, option)
     warning_count = print_warnings(option, scheme, warnings)
     print_total(warning_count, code_infos, option)
     for extension in option.extensions:
@@ -870,8 +869,9 @@ def print_result(code_infos, option):
         sys.exit(1)
 
 
-def print_xml(results, options):
-    print(xml_output(list(results), options.verbose))
+def print_clang_style_warning(code_infos, option):
+    for warning in get_warnings(code_infos, option):
+        print(warning.clang_format_warning())
 
 
 def get_map_method(working_threads):
@@ -985,7 +985,7 @@ def lizard_main(argv):
     options = parse_args(argv)
     options.extensions = get_extensions(options.extensions,
                                         options.switchCasesAsOneCondition)
-    printer = print_xml if options.xml else print_result
+    printer = options.printer or print_result
     result = analyze(
         options.paths,
         options.exclude,
