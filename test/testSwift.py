@@ -93,6 +93,12 @@ class Test_parser_for_Swift(unittest.TestCase):
                 ''')
         self.assertEqual(0, len(result))
 
+    def test_init(self):
+        result = get_swift_function_list('''
+            init() {}
+                ''')
+        self.assertEqual("init", result[0].name)
+
     def test_generic_function(self):
         result = get_swift_function_list('''
             func f<T>() {}

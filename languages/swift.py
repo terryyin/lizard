@@ -19,6 +19,8 @@ class SwiftReader(CodeReader, CCppCommentsMixin):
     def _global(self, token):
         if token == 'func':
             self._state = self._function_name
+        if token == 'init':
+            self._function_name(token)
         if token == 'protocol':
             self._state = self._protocol
 
