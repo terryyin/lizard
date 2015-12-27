@@ -114,13 +114,6 @@ def create_command_line_parser(prog=None):
                         action="append",
                         dest="exclude",
                         default=[])
-    parser.add_argument("-X", "--xml",
-                        help='''Generate XML in cppncss style instead of the
-                        tabular output. Useful to generate report in Jenkins
-                        server''',
-                        action="store_const",
-                        const=print_xml,
-                        dest="printer")
     parser.add_argument("-t", "--working_threads",
                         help='''number of working threads. The default
                         value is 1. Using a bigger
@@ -128,6 +121,18 @@ def create_command_line_parser(prog=None):
                         type=int,
                         dest="working_threads",
                         default=1)
+    parser.add_argument("-X", "--xml",
+                        help='''Generate XML in cppncss style instead of the
+                        tabular output. Useful to generate report in Jenkins
+                        server''',
+                        action="store_const",
+                        const=print_xml,
+                        dest="printer")
+    parser.add_argument("-H", "--html",
+                        help='''Output HTML report''',
+                        action="store_const",
+                        const=html_output,
+                        dest="printer")
     parser.add_argument("-m", "--modified",
                         help="Calculate modified cyclomatic complexity number",
                         action="store_true",
@@ -651,6 +656,7 @@ try:
     # pylint: disable=W0611
     # pylint: disable=C0413
     from lizard_ext import print_xml
+    from lizard_ext import html_output
     import languages
 except ImportError:
     pass
@@ -826,7 +832,6 @@ def print_and_save_modules(all_modules, extensions, scheme):
             all_functions.append(module_info)
             for fun in module_info.function_list:
                 print(scheme.function_info(fun))
-
     print("--------------------------------------------------------------")
     print("%d file analyzed." % (len(all_functions)))
     print("==============================================================")
@@ -842,7 +847,6 @@ def print_and_save_modules(all_modules, extensions, scheme):
             "     {module.filename}").format(
                 module=module_info,
                 function_count=len(module_info.function_list)))
-
     return all_functions
 
 
@@ -855,13 +859,11 @@ def get_warnings(code_infos, option):
     return warnings
 
 
-def print_result(code_infos, option):
-    scheme = OutputScheme(option.extensions)
-    code_infos = print_and_save_modules(
-        code_infos, option.extensions, scheme)
-    warnings = get_warnings(code_infos, option)
+def print_result(result, option, scheme):
+    result = print_and_save_modules(result, option.extensions, scheme)
+    warnings = get_warnings(result, option)
     warning_count = print_warnings(option, scheme, warnings)
-    print_total(warning_count, code_infos, option)
+    print_total(warning_count, result, option)
     for extension in option.extensions:
         if hasattr(extension, 'print_result'):
             extension.print_result()
@@ -992,7 +994,7 @@ def lizard_main(argv):
         options.working_threads,
         options.extensions,
         options.languages)
-    printer(result, options)
+    printer(result, options, OutputScheme(options.extensions))
 
 if __name__ == "__main__":
     lizard_main(sys.argv)

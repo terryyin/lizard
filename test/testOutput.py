@@ -1,30 +1,15 @@
 import unittest
-from test.mock import Mock, patch
 import sys
+from test.mock import Mock, patch
+from test.helper_stream import StreamStdoutTestCase
 import os
 from lizard import print_warnings, print_and_save_modules, FunctionInfo, FileInformation,\
     print_result, get_extensions, OutputScheme, get_warnings, print_clang_style_warning,\
     parse_args
 from lizard_ext import xml_output
 
-class StreamStdoutTestCase(unittest.TestCase):
-    def setUp(self):
-        self.savedStdout = sys.stdout 
-        sys.stdout = self.StreamForTest()
-
-    def tearDown(self):
-        sys.stdout = self.savedStdout
-
-    class StreamForTest:
-
-        def __init__(self):
-            self.stream = ""
-
-        def write(self, x):
-            self.stream += str(x)
-
-        def __getattr__(self, attr):
-            return getattr(self.stream, attr)
+def print_result_with_scheme(result, option):
+    return print_result(result, option, OutputScheme(option.extensions))
 
 class TestFunctionOutput(StreamStdoutTestCase):
 
@@ -62,6 +47,7 @@ class TestWarningOutput(StreamStdoutTestCase):
         StreamStdoutTestCase.setUp(self)
         self.option = parse_args("app")
         self.foo = FunctionInfo("foo", 'FILENAME', 100)
+        fileSummary = FileInformation("FILENAME", 123, [self.foo])
         self.scheme = Mock()
 
     def test_should_have_header_when_warning_only_is_off(self):
@@ -116,19 +102,19 @@ class TestAllOutput(StreamStdoutTestCase):
         file_infos = []
         extension = Mock(FUNCTION_CAPTION = "")
         option = Mock(CCN=15, number = 0, extensions = [extension], whitelist='')
-        print_result(file_infos, option)
+        print_result(file_infos, option, OutputScheme(option.extensions))
         self.assertEqual(1, extension.print_result.call_count)
 
     def test_should_not_print_extension_results_when_not_implemented(self):
         file_infos = []
         option = Mock(CCN=15, number = 0, extensions = [object()], whitelist='')
-        print_result(file_infos, option)
+        print_result_with_scheme(file_infos, option)
 
     @patch.object(sys, 'exit')
     def test_print_result(self, mock_exit):
         file_infos = [FileInformation('f1.c', 1, []), FileInformation('f2.c', 1, [])]
         option = Mock(CCN=15, number = 0, extensions=[], whitelist='')
-        print_result(file_infos, option)
+        print_result_with_scheme(file_infos, option)
         self.assertEqual(0, mock_exit.call_count)
 
     @patch.object(os.path, 'isfile')
@@ -138,7 +124,7 @@ class TestAllOutput(StreamStdoutTestCase):
         mock_open.return_value.read.return_value = script
         file_infos = [FileInformation('f1.c', 1, [self.foo])]
         option = Mock(CCN=15, number = 0, arguments=100, length=1000, extensions=[])
-        print_result(file_infos, option)
+        print_result_with_scheme(file_infos, option)
 
     @patch.object(sys, 'exit')
     def test_exit_with_non_zero_when_more_warning_than_ignored_number(self, mock_exit):
