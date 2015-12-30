@@ -21,6 +21,9 @@ class SwiftReader(CodeReader, CCppCommentsMixin):
             self._state = self._function_name
         if token == 'init':
             self._function_name(token)
+        if token in ('get', 'set', 'deinit'):
+            self.context.start_new_function(token)
+            self._state = self._expect_function_impl
         if token == 'protocol':
             self._state = self._protocol
 

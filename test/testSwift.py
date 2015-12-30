@@ -99,6 +99,32 @@ class Test_parser_for_Swift(unittest.TestCase):
                 ''')
         self.assertEqual("init", result[0].name)
 
+    def test_deinit(self):
+        result = get_swift_function_list('''
+            deinit {}
+                ''')
+        self.assertEqual("deinit", result[0].name)
+
+    def test_getter_setter(self):
+        result = get_swift_function_list('''
+            class Time
+            {
+                var minutes: Double
+                {
+                    get
+                    {
+                        return (seconds / 60)
+                    }
+                    set
+                    {
+                        self.seconds = (newValue * 60)
+                    }
+                }
+            }
+                ''')
+        self.assertEqual("get", result[0].name)
+        self.assertEqual("set", result[1].name)
+
     def test_generic_function(self):
         result = get_swift_function_list('''
             func f<T>() {}
