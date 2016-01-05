@@ -14,7 +14,7 @@ class JavaScriptReader(CodeReader, CCppCommentsMixin):
 
     @staticmethod
     def generate_tokens(source_code, _=None):
-        regx_regx = r"|/(?:\\.|[^/])+?/[igm]*"
+        regx_regx = r"|/(?:\\/|[^/])+?/[igm]*"
         regx_pattern = re.compile(regx_regx)
         word_pattern = re.compile(r'\w+')
         tokens = CodeReader.generate_tokens(source_code, regx_regx)

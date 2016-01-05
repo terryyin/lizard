@@ -1,6 +1,6 @@
 import unittest
 from lizard import  analyze_file, FileAnalyzer, get_extensions
-from lizard_ext import JavaScriptReader
+from languages import JavaScriptReader
 
 
 def get_js_function_list(source_code):
@@ -27,6 +27,12 @@ class Test_tokenizing_JavaScript(unittest.TestCase):
 
     def test_tokenizing_javascript_comments(self):
         self.check_tokens(['/**a/*/'], '''/**a/*/''')
+
+    def test_tokenizing_pattern(self):
+        self.check_tokens(['/\//'], r'''/\//''')
+
+    def test_tokenizing_javascript_multiple_line_string(self):
+        self.check_tokens(['"aaa\\\nbbb"'], '"aaa\\\nbbb"')
 
 class Test_parser_for_JavaScript(unittest.TestCase):
 

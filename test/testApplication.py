@@ -13,7 +13,7 @@ class TestApplication(unittest.TestCase):
 
     def testEmptyResult(self, print_result, os_walk, mock_open, _):
 
-        def check_empty_result(result, options):
+        def check_empty_result(result, options, scheme):
             self.assertEqual([], list(result))
 
         os_walk.return_value = [('.', [], [])]
@@ -21,7 +21,7 @@ class TestApplication(unittest.TestCase):
         lizard_main(['lizard'])
 
     def testFilesWithFunction(self, print_result, os_walk, mock_open, _):
-        def check_result(result, options):
+        def check_result(result, options, scheme):
             fileInfos = list(result)
             self.assertEqual(1, len(fileInfos))
             self.assertEqual('foo', fileInfos[0].function_list[0].name)
@@ -54,7 +54,7 @@ class IntegrationTests(unittest.TestCase):
     @patch('lizard.open', create=True)
     @patch.object(lizard, 'print_result')
     def run_with_mocks(self, argv, src, print_result, mock_open):
-        def store_result(result, options):
+        def store_result(result, options, scheme):
             self.fileInfos = list(result)
         mock_open.return_value.read.return_value = src
         print_result.side_effect = store_result

@@ -13,7 +13,8 @@ C/C++ header files or Java imports. It can deal with
 -  C/C++ (works with C++14)
 -  Java
 -  JavaScript
--  Objective C.
+-  Objective C
+-  Swift
 -  Python
 -  TTCN-3
 
@@ -217,7 +218,10 @@ Whitelist
 
 If for some reason you would like to ignore the warnings, you can use
 the whitelist. Add 'whitelizard.txt' to the current folder (or use -W to point to the whitelist file), then the
-functions defined in the file will be ignored. This is an example
+functions defined in the file will be ignored. Please notice that if you assign the file pathname, it need to
+be exactly the same relative path as Lizard find the file. An easy way to get the file pathname is copy it from
+the Lizard warning output.
+This is an example whitelist:
 
 ::
 
@@ -225,7 +229,7 @@ functions defined in the file will be ignored. This is an example
    #The file name can only be whitelizard.txt and put it in the current folder.
    #You may have commented lines begin with #.
    function_name1, function_name2 # list function names in mulitple lines or split with comma.
-   filename:function1, function2  # you can also specify the filename
+   file/path/name:function1, function2  # you can also specify the filename
 
 Options in Comments
 -------------------
@@ -247,6 +251,7 @@ Wishlist (The features that will come in the near future)
 
 Change Logs
 -----------
+-  2015.12.17 Add support for Swift
 -  2015.12.12 Add the -l option to filter language
 -  2015.10.22 TTCN-3 added by @gustafj
 -  2015.10.06 Add C++11 uniform constructor initialization. Thanks to @rakhimov

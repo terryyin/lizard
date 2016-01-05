@@ -1,8 +1,9 @@
 ''' extensions of lizard '''
 
-from .java import JavaReader
-from .javascript import JavaScriptReader
-from .python import PythonReader
-from .objc import ObjCReader
-from .ttcn import TTCNReader
+from __future__ import print_function
+from .htmloutput import html_output
 from .xmloutput import xml_output
+
+
+def print_xml(results, options):
+    print(xml_output(list(results), options.verbose))

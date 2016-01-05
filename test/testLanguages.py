@@ -1,5 +1,6 @@
 import unittest
-from lizard import CodeReader, CLikeReader, JavaReader, ObjCReader, JavaScriptReader
+from lizard import CodeReader, CLikeReader
+from languages import JavaReader, ObjCReader, JavaScriptReader
 
 
 class TestLanguageChooser(unittest.TestCase):

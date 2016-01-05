@@ -30,7 +30,7 @@ import hashlib
 if sys.version[0] == '2':
     from future_builtins import map, filter  # pylint: disable=W0622, F0401
 
-VERSION = "1.9.2"
+VERSION = "1.9.6"
 
 DEFAULT_CCN_THRESHOLD, DEFAULT_WHITELIST, \
     DEFAULT_MAX_FUNC_LENGTH = 15, "whitelizard.txt", 1000
@@ -93,9 +93,9 @@ def create_command_line_parser(prog=None):
                         format for printing warnings.
                         http://clang.llvm.org/docs/UsersManual.html#cmdoption-fdiagnostics-format
                         ''',
-                        action="store_true",
-                        dest="warnings_only",
-                        default=False)
+                        action="store_const",
+                        const=print_clang_style_warning,
+                        dest="printer")
     parser.add_argument("-i", "--ignore_warnings",
                         help='''If the number of warnings is equal or less
                         than the number,
@@ -114,13 +114,6 @@ def create_command_line_parser(prog=None):
                         action="append",
                         dest="exclude",
                         default=[])
-    parser.add_argument("-X", "--xml",
-                        help='''Generate XML in cppncss style instead of the
-                        tabular output. Useful to generate report in Jenkins
-                        server''',
-                        action="store_true",
-                        dest="xml",
-                        default=None)
     parser.add_argument("-t", "--working_threads",
                         help='''number of working threads. The default
                         value is 1. Using a bigger
@@ -128,6 +121,18 @@ def create_command_line_parser(prog=None):
                         type=int,
                         dest="working_threads",
                         default=1)
+    parser.add_argument("-X", "--xml",
+                        help='''Generate XML in cppncss style instead of the
+                        tabular output. Useful to generate report in Jenkins
+                        server''',
+                        action="store_const",
+                        const=print_xml,
+                        dest="printer")
+    parser.add_argument("-H", "--html",
+                        help='''Output HTML report''',
+                        action="store_const",
+                        const=html_output,
+                        dest="printer")
     parser.add_argument("-m", "--modified",
                         help="Calculate modified cyclomatic complexity number",
                         action="store_true",
@@ -138,8 +143,7 @@ def create_command_line_parser(prog=None):
                         are: -Ecpre: it will ignore code in the #else branch.
                         -Ewordcount: count word frequencies and generate tag
                         cloud. -Eoutside: include the global code as one
-                        function.
-                        ''',
+                        function.  ''',
                         action="append",
                         dest="extensions",
                         default=[])
@@ -152,7 +156,8 @@ def create_command_line_parser(prog=None):
                         default=[])
     parser.add_argument("-W", "--whitelist",
                         help='''The path and file name to the whitelist file.
-                        It's './whitelizard.txt' by default.''',
+                        It's './whitelizard.txt' by default.
+                        Find more information in README.''',
                         type=str,
                         dest="whitelist",
                         default=DEFAULT_WHITELIST)
@@ -335,8 +340,7 @@ def recount_switch_case(tokens, reader):
 
 
 class CodeReader(object):
-    '''
-    CodeReaders are used to parse function structures from code of different
+    ''' CodeReaders are used to parse function structures from code of different
     language. Each language will need a subclass of CodeReader.  '''
 
     languages = None
@@ -355,6 +359,31 @@ class CodeReader(object):
         for lan in list(CodeReader.__subclasses__()):
             if CodeReader.compile_file_extension_re(*lan.ext).match(filename):
                 return lan
+
+    @staticmethod
+    def read_brackets(func):
+        def read_until_matching_brackets(self, token):
+            if token == '{':
+                self.br_count += 1
+            elif token == '}':
+                self.br_count -= 1
+                if self.br_count == 0:
+                    func(self, token)
+        return read_until_matching_brackets
+
+    @staticmethod
+    def read_until_then(tokens):
+        def decorator(func):
+            def read_until_then_token(self, token):
+                if not hasattr(self, "rut_tokens"):
+                    self.rut_tokens = []
+                if token in tokens:
+                    func(self, token, self.rut_tokens)
+                    self.rut_tokens = []
+                else:
+                    self.rut_tokens.append(token)
+            return read_until_then_token
+        return decorator
 
     def state(self, token):
         self._state(token)
@@ -423,39 +452,6 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
     parameter_bracket_open = '(<'
     parameter_bracket_close = ')>>>'
 
-    class NamespaceState(object):
-        def __init__(self, next_state):
-            self.next_state = next_state
-            self.namespace = []
-            self._state = self._global
-            self.current = ''
-
-        def prefix(self, name):
-            return '::'.join([x for x in self.namespace if x] + [name])
-
-        def __call__(self, token):
-            self._state(token)
-
-        def _global(self, token):
-            if token in ("struct", "class", "namespace"):
-                self._state = self._state_namespace_def
-            elif token == "{":
-                self.namespace.append(self.current)
-                self.current = ''
-            elif token == '}':
-                if self.namespace:
-                    self.namespace.pop()
-            elif token[0].isalpha() or token[0] in '_~':
-                self.next_state(token)
-            self.current = ''
-
-        def _state_namespace_def(self, token):
-            if token in '{;':
-                self._state = self._global
-                self._state(token)
-            else:
-                self.current += token
-
     class OneInitializationState(object):
         def __init__(self, next_state):
             self.next_state = next_state
@@ -479,19 +475,20 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
         self.bracket_stack = []
         self.br_count = 0
         self._state = self._state_global
-        self.namespace = self.NamespaceState(self.start_new_function)
         self._saved_tokens = []
+        self.namespaces = []
 
     def is_in_function(self):
         return self.br_count > 0
 
     def start_new_function(self, name):
-        self.context.start_new_function(self.namespace.prefix(name))
+        self.context.start_new_function(name)
         self._state = self._state_function
         if name == 'operator':
             self._state = self._state_operator
 
     def start_new_function_impl(self):
+        self.br_count += 1
         self._state = self._state_imp
 
     def preprocess(self, tokens):
@@ -520,7 +517,23 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
         self.bracket_stack = []
 
     def _state_global(self, token):
-        return self.namespace(token)
+        if token in ("struct", "class", "namespace"):
+            self._state = self._read_namespace
+        elif token == "{":
+            self.namespaces.append("")
+        elif token == '}':
+            if self.namespaces:
+                self.namespaces.pop()
+        elif token[0].isalpha() or token[0] in '_~':
+            self.start_new_function('::'.join(
+                [x for x in self.namespaces if x] + [token]))
+
+    @CodeReader.read_until_then('{;')
+    def _read_namespace(self, token, saved):
+        if token == "{":
+            self.namespaces.append(''.join(itertools.takewhile(
+                lambda x: x not in [":", "final"], saved)))
+        self._state = self._state_global
 
     def _state_function(self, token):
         if token == '(':
@@ -590,12 +603,12 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
             self.start_new_function(long_name)
             self._state_function(token)
         elif token == '{':
-            self.br_count += 1
             self.start_new_function_impl()
         elif token == ":":
             self._state = self._state_initialization_list
         elif not (token[0].isalpha() or token[0] == '_'):
             self._state = self._state_global
+            self._state(token)
         else:
             self._state = self._state_old_c_params
             self._saved_tokens = [token]
@@ -626,19 +639,14 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
         def comeback():
             self._state = self._state_initialization_list
         if token == '{':
-            self.br_count += 1
             self.start_new_function_impl()
         else:
             self._state = self.OneInitializationState(comeback)
 
-    def _state_imp(self, token):
-        if token == '{':
-            self.br_count += 1
-        elif token == '}':
-            self.br_count -= 1
-            if self.br_count == 0:
-                self._state = self._state_global
-                self.context.end_of_function()
+    @CodeReader.read_brackets
+    def _state_imp(self, _):
+        self._state = self._state_global
+        self.context.end_of_function()
 
 
 try:
@@ -647,12 +655,9 @@ try:
     # stand alone script.
     # pylint: disable=W0611
     # pylint: disable=C0413
-    from lizard_ext import JavaReader
-    from lizard_ext import JavaScriptReader
-    from lizard_ext import PythonReader
-    from lizard_ext import ObjCReader
-    from lizard_ext import TTCNReader
-    from lizard_ext import xml_output
+    from lizard_ext import print_xml
+    from lizard_ext import html_output
+    import languages
 except ImportError:
     pass
 
@@ -772,23 +777,16 @@ class OutputScheme(object):
 
 def print_warnings(option, scheme, warnings):
     warning_count = 0
-    if isinstance(option.sorting, list) and len(option.sorting) > 0:
-        warnings = list(warnings)
-        warnings.sort(reverse=True,
-                      key=lambda x: getattr(x, option.sorting[0]))
-    if not option.warnings_only:
-        warn_str = ("!!!! Warnings (CCN > {0} or arguments > {1} " +
-                    "or length > {2}) !!!!").format(option.CCN,
-                                                    option.arguments,
-                                                    option.length)
-        print("\n" + "=" * len(warn_str) + "\n" + warn_str)
-        print(scheme.function_info_head())
+
+    warn_str = ("!!!! Warnings (CCN > {0} or arguments > {1} " +
+                "or length > {2}) !!!!").format(option.CCN,
+                                                option.arguments,
+                                                option.length)
+    print("\n" + "=" * len(warn_str) + "\n" + warn_str)
+    print(scheme.function_info_head())
     for warning in warnings:
         warning_count += 1
-        if option.warnings_only:
-            print(warning.clang_format_warning())
-        else:
-            print(scheme.function_info(warning))
+        print(scheme.function_info(warning))
     return warning_count
 
 
@@ -816,12 +814,11 @@ def print_total(warning_count, saved_result, option):
             ])) / nloc_in_functions
     )
 
-    if not option.warnings_only:
-        print("=" * 90)
-        print("Total nloc  Avg.nloc  Avg CCN  Avg token  Fun Cnt  Warning" +
-              " cnt   Fun Rt   nloc Rt  ")
-        print("-" * 90)
-        print("%10d%10d%9.2f%11.2f%9d%13d%10.2f%8.2f" % total_info)
+    print("=" * 90)
+    print("Total nloc  Avg.nloc  Avg CCN  Avg token  Fun Cnt  Warning" +
+          " cnt   Fun Rt   nloc Rt  ")
+    print("-" * 90)
+    print("%10d%10d%9.2f%11.2f%9d%13d%10.2f%8.2f" % total_info)
 
 
 def print_and_save_modules(all_modules, extensions, scheme):
@@ -835,7 +832,6 @@ def print_and_save_modules(all_modules, extensions, scheme):
             all_functions.append(module_info)
             for fun in module_info.function_list:
                 print(scheme.function_info(fun))
-
     print("--------------------------------------------------------------")
     print("%d file analyzed." % (len(all_functions)))
     print("==============================================================")
@@ -851,19 +847,23 @@ def print_and_save_modules(all_modules, extensions, scheme):
             "     {module.filename}").format(
                 module=module_info,
                 function_count=len(module_info.function_list)))
-
     return all_functions
 
 
-def print_result(code_infos, option):
-    scheme = OutputScheme(option.extensions)
-    if not option.warnings_only:
-        code_infos = print_and_save_modules(
-            code_infos, option.extensions, scheme)
-    warnings = warning_filter(option, code_infos)
-    warnings = whitelist_filter(warnings, whitelist=option.whitelist)
+def get_warnings(code_infos, option):
+    warnings = whitelist_filter(warning_filter(option, code_infos),
+                                whitelist=option.whitelist)
+    if isinstance(option.sorting, list) and len(option.sorting) > 0:
+        warnings = sorted(warnings, reverse=True, key=lambda x: getattr(
+            x, option.sorting[0]))
+    return warnings
+
+
+def print_result(result, option, scheme):
+    result = print_and_save_modules(result, option.extensions, scheme)
+    warnings = get_warnings(result, option)
     warning_count = print_warnings(option, scheme, warnings)
-    print_total(warning_count, code_infos, option)
+    print_total(warning_count, result, option)
     for extension in option.extensions:
         if hasattr(extension, 'print_result'):
             extension.print_result()
@@ -871,8 +871,9 @@ def print_result(code_infos, option):
         sys.exit(1)
 
 
-def print_xml(results, options):
-    print(xml_output(list(results), options.verbose))
+def print_clang_style_warning(code_infos, option):
+    for warning in get_warnings(code_infos, option):
+        print(warning.clang_format_warning())
 
 
 def get_map_method(working_threads):
@@ -904,15 +905,14 @@ def md5_hash_file(full_path_name):
         return None
 
 
-def get_all_source_files(paths, exclude_patterns, languages):
+def get_all_source_files(paths, exclude_patterns, lans):
     '''
     Function counts md5 hash for the given file and checks if it isn't a
-    duplicate using set of hashes for previous files
-    '''
+    duplicate using set of hashes for previous files '''
     hash_set = set()
 
     def _support(reader):
-        return not languages or set(languages).intersection(
+        return not lans or set(lans).intersection(
             reader.language_names)
 
     def _validate_file(pathname):
@@ -987,14 +987,14 @@ def lizard_main(argv):
     options = parse_args(argv)
     options.extensions = get_extensions(options.extensions,
                                         options.switchCasesAsOneCondition)
-    printer = print_xml if options.xml else print_result
+    printer = options.printer or print_result
     result = analyze(
         options.paths,
         options.exclude,
         options.working_threads,
         options.extensions,
         options.languages)
-    printer(result, options)
+    printer(result, options, OutputScheme(options.extensions))
 
 if __name__ == "__main__":
     lizard_main(sys.argv)

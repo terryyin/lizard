@@ -40,7 +40,7 @@ It works with Java, C/C++, JavaScript, Python, Objective C. Metrics includes cyc
                      'Programming Language :: Python :: 2.7',
                      'Programming Language :: Python :: 3.2',
                      'Programming Language :: Python :: 3.3'],
-          packages = ['lizard_ext'],
+          packages = ['lizard_ext', 'languages'],
           py_modules = ['lizard'],
           author = 'Terry Yin',
           author_email = 'terry@odd-e.com',

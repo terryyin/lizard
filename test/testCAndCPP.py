@@ -129,10 +129,20 @@ class Test_c_cpp_lizard(unittest.TestCase):
         self.assertEqual("c::~c", result[0].name)
         self.assertEqual("d", result[1].name)
 
+    def test_one_macro_in_class(self):
+        result = get_cpp_function_list("class c {M()}; int d(){}")
+        self.assertEqual(1, len(result))
+        self.assertEqual("d", result[0].name)
+
     def test_pre_class(self):
         result = get_cpp_function_list("class c; int d(){}")
         self.assertEqual(1, len(result))
         self.assertEqual("d", result[0].name)
+
+    def test_class_with_inheritance(self):
+        result = get_cpp_function_list("class c final:public b {int f(){}};")
+        self.assertEqual(1, len(result))
+        self.assertEqual("c::f", result[0].name)
 
     def test_nested_class(self):
         result = get_cpp_function_list("class c {class d {int f(){}};};")
@@ -200,9 +210,9 @@ class Test_c_cpp_lizard(unittest.TestCase):
         self.assertEqual("TC::operator ( )", result[0].name)
 
     def test_inline_operator(self):
-        result = get_cpp_function_list("class A { bool operator()(int b) {} };")
+        result = get_cpp_function_list("class A { bool operator ()(int b) {} };")
         self.assertEqual(1, len(result))
-        self.assertEqual("A::operator ( )", result[0].name)
+        self.assertEqual("A::operator( )", result[0].name)
 
     def test_namespace_alias(self):
         result = get_cpp_function_list(
