@@ -2,10 +2,10 @@
 Language parser for JavaScript
 '''
 
-from lizard import CLikeReader, CodeReader
+from lizard import CLikeReader, CodeReader, CCppCommentsMixin
 
 
-class JavaReader(CLikeReader, CodeReader):
+class JavaReader(CLikeReader, CodeReader, CCppCommentsMixin):
     # pylint: disable=R0903
 
     ext = ['java']

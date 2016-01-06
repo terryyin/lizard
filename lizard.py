@@ -217,6 +217,7 @@ class FileInformation(object):  # pylint: disable=R0903
         self.nloc = nloc
         self.function_list = function_list or []
         self.token_count = 0
+        self.comment_count = 0
 
     average_NLOC = property(lambda self: self.functions_average("nloc"))
     average_token = property(
@@ -255,6 +256,9 @@ class FileInfoBuilder(object):
     def add_condition(self, inc=1):
         self.current_function.cyclomatic_complexity += inc
 
+    def increment_comment_count(self):
+        self.fileinfo.comment_count += 1
+
     def add_to_long_function_name(self, app):
         self.current_function.add_to_long_name(app)
 
@@ -287,6 +291,8 @@ def comment_counter(tokens, reader):
                 yield '\n'
             if comment.strip().startswith("#lizard forgive"):
                 reader.context.forgive = True
+            else:
+                reader.context.increment_comment_count()
         else:
             yield token
 
@@ -439,6 +445,15 @@ class CCppCommentsMixin(object):  # pylint: disable=R0903
     def get_comment_from_token(token):
         if token.startswith("/*") or token.startswith("//"):
             return token[2:]
+
+class PyCommentsMixin(object):  # pylint: disable=R0903
+
+    @staticmethod
+    def get_comment_from_token(token):
+        if token.startswith("#"):
+            return token[1:]
+        elif token.startswith('"""') or token.startswith("'''"):
+            return token[3:]
 
 
 # pylint: disable=R0903
@@ -753,6 +768,7 @@ class OutputScheme(object):
             {'caption': "  CCN  ", 'value': "cyclomatic_complexity"},
             {'caption': " token ", 'value': "token_count"},
             {'caption': " PARAM ", 'value': "parameter_count"},
+            {'caption': " COMMENTS ", 'value': "comment_count"},
             {'caption': " length ", 'value': "length"},
         ] + [
             {
