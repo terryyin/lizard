@@ -55,13 +55,13 @@ class TestWarningOutput(StreamStdoutTestCase):
         self.assertIn("Warnings (CCN > 15 or arguments > 100 or length > 1000)", sys.stdout.stream)
 
     def test_no_news_is_good_news(self):
-        print_clang_style_warning([], self.option)
+        print_clang_style_warning([], self.option, None)
         self.assertEqual('', sys.stdout.stream)
 
     def test_should_use_clang_format_for_warning(self):
         self.foo.cyclomatic_complexity = 30
         fileSummary = FileInformation("FILENAME", 123, [self.foo])
-        print_clang_style_warning([fileSummary], self.option)
+        print_clang_style_warning([fileSummary], self.option, None)
         self.assertIn("FILENAME:100: warning: foo has 30 CCN and 0 params (1 NLOC, 1 tokens)\n", sys.stdout.stream)
 
     def test_sort_warning(self):

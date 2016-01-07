@@ -5,5 +5,5 @@ from .htmloutput import html_output
 from .xmloutput import xml_output
 
 
-def print_xml(results, options):
+def print_xml(results, options, _):
     print(xml_output(list(results), options.verbose))

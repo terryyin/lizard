@@ -30,7 +30,7 @@ import hashlib
 if sys.version[0] == '2':
     from future_builtins import map, filter  # pylint: disable=W0622, F0401
 
-VERSION = "1.9.6"
+VERSION = "1.9.9"
 
 DEFAULT_CCN_THRESHOLD, DEFAULT_WHITELIST, \
     DEFAULT_MAX_FUNC_LENGTH = 15, "whitelizard.txt", 1000
@@ -871,7 +871,7 @@ def print_result(result, option, scheme):
         sys.exit(1)
 
 
-def print_clang_style_warning(code_infos, option):
+def print_clang_style_warning(code_infos, option, _):
     for warning in get_warnings(code_infos, option):
         print(warning.clang_format_warning())
 
