@@ -241,6 +241,7 @@ class FileInfoBuilder(object):
         self.newline = True
         self.global_pseudo_function = FunctionInfo('*global*', filename, 0)
         self.current_function = self.global_pseudo_function
+        self.ignore_complexity = False
 
     def add_nloc(self, count):
         self.current_function.nloc += count
@@ -253,7 +254,8 @@ class FileInfoBuilder(object):
             self.current_line)
 
     def add_condition(self, inc=1):
-        self.current_function.cyclomatic_complexity += inc
+        if not self.ignore_complexity:
+            self.current_function.cyclomatic_complexity += inc
 
     def add_to_long_function_name(self, app):
         self.current_function.add_to_long_name(app)
@@ -470,6 +472,19 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
                 if self.bracket_count == 0:
                     self.next_state()
 
+    class AssertState(object):
+        def __init__(self, next_state):
+            self.next_state = next_state
+            self.bracket_count = 0
+
+        def __call__(self, token):
+            if token in '(':
+                self.bracket_count += 1
+            elif token in ')':
+                self.bracket_count -= 1
+                if self.bracket_count == 0:
+                    self.next_state()
+
     def __init__(self, context):
         super(CLikeReader, self).__init__(context)
         self.bracket_stack = []
@@ -643,10 +658,20 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
         else:
             self._state = self.OneInitializationState(comeback)
 
-    @CodeReader.read_brackets
-    def _state_imp(self, _):
-        self._state = self._state_global
-        self.context.end_of_function()
+    def _state_imp(self, token):
+        def comeback():
+            self.context.ignore_complexity = False
+            self._state = self._state_imp
+        if token == '{':
+            self.br_count += 1
+        elif token == '}':
+            self.br_count -= 1
+            if self.br_count == 0:
+                self._state = self._state_global
+                self.context.end_of_function()
+        elif token in ("assert", "static_assert"):
+            self.context.ignore_complexity = True
+            self._state = self.AssertState(comeback)
 
 
 try:
