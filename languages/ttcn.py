@@ -45,8 +45,7 @@ class TTCNReader(CLikeReader, CodeReader):  # pylint: disable=R0903
 
     def _state_dec_to_imp(self, token):
         if token == '{':
-            self.br_count += 1
-            self._state = self._state_imp
+            self.next(self._state_imp, "{")
         else:
             self.context.add_to_long_function_name(' ' + token)
 

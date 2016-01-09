@@ -12,7 +12,6 @@ class PythonReader(CodeReader):
 
     def __init__(self, context):
         super(PythonReader, self).__init__(context)
-        self._state = self._global
         self.function_stack = []
         self.current_indent = 0
         self.leading_space = True
@@ -44,7 +43,7 @@ class PythonReader(CodeReader):
         if token.startswith("#"):
             return token[1:]
 
-    def _global(self, token):
+    def _state_global(self, token):
         if token == 'def':
             self._state = self._function
 
@@ -65,13 +64,16 @@ class PythonReader(CodeReader):
         self.context.add_to_long_function_name(" " + token)
 
     def _state_colon(self, token):
-        self._state = self._state_first_line if token == ':' else self._global
+        if token == ':':
+            self.next(self._state_first_line)
+        else:
+            self.next(self._state_global)
 
     def _state_first_line(self, token):
-        self._state = self._global
+        self._state = self._state_global
         if token.startswith('"""') or token.startswith("'''"):
             self.context.add_nloc(-token.count('\n') - 1)
-        self._global(token)
+        self._state_global(token)
 
     def eof(self):
         self.current_indent = 0

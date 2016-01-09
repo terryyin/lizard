@@ -1,5 +1,5 @@
 import unittest
-from .testHelpers import get_cpp_fileinfo, get_cpp_function_list
+from .testHelpers import get_cpp_function_list
 
 class TestCyclomaticComplexity(unittest.TestCase):
 
@@ -36,12 +36,3 @@ class TestCyclomaticComplexity(unittest.TestCase):
                 }''')
         self.assertEqual(1, len(result))
         self.assertEqual(3, result[0].cyclomatic_complexity)
-
-    def test_exclusion_of_assert(self):
-        result = get_cpp_function_list("void fun() { assert(a && b && c); }")
-        self.assertEqual(1, result[0].cyclomatic_complexity)
-
-    def test_exclusion_of_static_assert(self):
-        result = get_cpp_function_list(
-                "void fun() { static_assert(a && b && c, \"Failed\"); }")
-        self.assertEqual(1, result[0].cyclomatic_complexity)

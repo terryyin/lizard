@@ -39,8 +39,7 @@ class ObjCReader(CLikeReader, CodeReader):
             self._state = self._state_objc_dec
             self.context.add_to_function_name(token)
         elif token == '{':
-            self.br_count += 1
-            self._state = self._state_imp
+            self.next(self._state_imp, "{")
         else:
             self._state = self._state_global
 
@@ -51,8 +50,7 @@ class ObjCReader(CLikeReader, CodeReader):
         elif token == ',':
             pass
         elif token == '{':
-            self.br_count += 1
-            self._state = self._state_imp
+            self.next(self._state_imp, "{")
         else:
             self._state = self._state_objc_dec_begin
             self.context.add_to_function_name(" " + token)

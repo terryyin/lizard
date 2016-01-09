@@ -34,6 +34,12 @@ class Test_c_cpp_lizard(unittest.TestCase):
         self.assertEqual(2, result[1].start_line)
         self.assertEqual(2, result[1].end_line)
 
+    def test_two_simplest_function(self):
+        result = get_cpp_function_list("f(){}g(){}")
+        self.assertEqual(2, len(result))
+        self.assertEqual("f", result[0].name)
+        self.assertEqual("g", result[1].name)
+
     def test_function_with_content(self):
         result = get_cpp_function_list("int fun(xx oo){int a; a= call(p1,p2);}")
         self.assertEqual(1, len(result))

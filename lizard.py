@@ -241,7 +241,6 @@ class FileInfoBuilder(object):
         self.newline = True
         self.global_pseudo_function = FunctionInfo('*global*', filename, 0)
         self.current_function = self.global_pseudo_function
-        self.ignore_complexity = False
 
     def add_nloc(self, count):
         self.current_function.nloc += count
@@ -254,8 +253,7 @@ class FileInfoBuilder(object):
             self.current_line)
 
     def add_condition(self, inc=1):
-        if not self.ignore_complexity:
-            self.current_function.cyclomatic_complexity += inc
+        self.current_function.cyclomatic_complexity += inc
 
     def add_to_long_function_name(self, app):
         self.current_function.add_to_long_name(app)
@@ -341,37 +339,25 @@ def recount_switch_case(tokens, reader):
         yield token
 
 
-class CodeReader(object):
-    ''' CodeReaders are used to parse function structures from code of different
-    language. Each language will need a subclass of CodeReader.  '''
-
-    languages = None
-
-    def __init__(self, context):
-        self.context = context
-        self._state = lambda _: _
+class CodeStateMachine(object):
+    ''' the state machine '''
+    def __init__(self):
+        self._state = self._state_global
+        self.context = None
 
     @staticmethod
-    def compile_file_extension_re(*exts):
-        return re.compile(r".*\.(" + r"|".join(exts) + r")$", re.IGNORECASE)
-
-    @staticmethod
-    def get_reader(filename):
-        # pylint: disable=E1101
-        for lan in list(CodeReader.__subclasses__()):
-            if CodeReader.compile_file_extension_re(*lan.ext).match(filename):
-                return lan
-
-    @staticmethod
-    def read_brackets(func):
-        def read_until_matching_brackets(self, token):
-            if token == '{':
-                self.br_count += 1
-            elif token == '}':
-                self.br_count -= 1
-                if self.br_count == 0:
+    def read_inside_brackets_then(brs, end_state=None):
+        def decorator(func):
+            def read_until_matching_brackets(self, token):
+                if not hasattr(self, "br_count"):
+                    self.br_count = 0
+                self.br_count += {brs[0]: 1, brs[1]: -1}.get(token, 0)
+                if self.br_count == 0 and end_state is not None:
+                    self.next(getattr(self, end_state))
+                if self.br_count == 0 or end_state is not None:
                     func(self, token)
-        return read_until_matching_brackets
+            return read_until_matching_brackets
+        return decorator
 
     @staticmethod
     def read_until_then(tokens):
@@ -387,8 +373,45 @@ class CodeReader(object):
             return read_until_then_token
         return decorator
 
-    def state(self, token):
-        self._state(token)
+    def __call__(self, tokens, reader):
+        self.context = reader.context
+        for token in tokens:
+            self._state(token)
+            yield token
+        self.eof()
+
+    def _state_global(self, token):
+        pass
+
+    def eof(self):
+        pass
+
+    def next(self, state, token=None):
+        self._state = state
+        if token is not None:
+            self._state(token)
+
+
+class CodeReader(CodeStateMachine):
+    ''' CodeReaders are used to parse function structures from code of different
+    language. Each language will need a subclass of CodeReader.  '''
+
+    languages = None
+
+    def __init__(self, context):
+        super(CodeReader, self).__init__()
+        self.context = context
+
+    @staticmethod
+    def compile_file_extension_re(*exts):
+        return re.compile(r".*\.(" + r"|".join(exts) + r")$", re.IGNORECASE)
+
+    @staticmethod
+    def get_reader(filename):
+        # pylint: disable=E1101
+        for lan in list(CodeReader.__subclasses__()):
+            if CodeReader.compile_file_extension_re(*lan.ext).match(filename):
+                return lan
 
     def eof(self):
         pass
@@ -445,7 +468,6 @@ class CCppCommentsMixin(object):  # pylint: disable=R0903
 
 # pylint: disable=R0903
 class CLikeReader(CodeReader, CCppCommentsMixin):
-
     ''' This is the reader for C, C++ and Java. '''
 
     ext = ["c", "cpp", "cc", "mm", "cxx", "h", "hpp"]
@@ -454,57 +476,17 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
     parameter_bracket_open = '(<'
     parameter_bracket_close = ')>>>'
 
-    class OneInitializationState(object):
-        def __init__(self, next_state):
-            self.next_state = next_state
-            self.bracket = None
-            self.close_bracket = None
-            self.bracket_count = 0
-
-        def __call__(self, token):
-            if token in '({' and not self.bracket:
-                self.bracket = token
-                self.close_bracket = {'(': ')', '{': '}'}[token]
-            if token == self.bracket:
-                self.bracket_count += 1
-            if token == self.close_bracket:
-                self.bracket_count -= 1
-                if self.bracket_count == 0:
-                    self.next_state()
-
-    class AssertState(object):
-        def __init__(self, next_state):
-            self.next_state = next_state
-            self.bracket_count = 0
-
-        def __call__(self, token):
-            if token in '(':
-                self.bracket_count += 1
-            elif token in ')':
-                self.bracket_count -= 1
-                if self.bracket_count == 0:
-                    self.next_state()
-
     def __init__(self, context):
         super(CLikeReader, self).__init__(context)
         self.bracket_stack = []
-        self.br_count = 0
-        self._state = self._state_global
         self._saved_tokens = []
         self.namespaces = []
-
-    def is_in_function(self):
-        return self.br_count > 0
 
     def start_new_function(self, name):
         self.context.start_new_function(name)
         self._state = self._state_function
         if name == 'operator':
             self._state = self._state_operator
-
-    def start_new_function_impl(self):
-        self.br_count += 1
-        self._state = self._state_imp
 
     def preprocess(self, tokens):
         tilde = False
@@ -618,7 +600,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
             self.start_new_function(long_name)
             self._state_function(token)
         elif token == '{':
-            self.start_new_function_impl()
+            self.next(self._state_imp, "{")
         elif token == ":":
             self._state = self._state_initialization_list
         elif not (token[0].isalpha() or token[0] == '_'):
@@ -651,27 +633,30 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
                 self._state(token)
 
     def _state_initialization_list(self, token):
-        def comeback():
-            self._state = self._state_initialization_list
+        self._state = self._state_one_initialization
         if token == '{':
-            self.start_new_function_impl()
-        else:
-            self._state = self.OneInitializationState(comeback)
+            self.next(self._state_imp, "{")
 
-    def _state_imp(self, token):
-        def comeback():
-            self.context.ignore_complexity = False
-            self._state = self._state_imp
-        if token == '{':
-            self.br_count += 1
-        elif token == '}':
-            self.br_count -= 1
-            if self.br_count == 0:
-                self._state = self._state_global
-                self.context.end_of_function()
-        elif token in ("assert", "static_assert"):
-            self.context.ignore_complexity = True
-            self._state = self.AssertState(comeback)
+    @CodeReader.read_until_then('({')
+    def _state_one_initialization(self, token, _):
+        if token == "(":
+            self._state = self._state_initialization_value1
+        else:
+            self._state = self._state_initialization_value2
+        self._state(token)
+
+    @CodeStateMachine.read_inside_brackets_then("()")
+    def _state_initialization_value1(self, _):
+        self._state = self._state_initialization_list
+
+    @CodeStateMachine.read_inside_brackets_then("{}")
+    def _state_initialization_value2(self, _):
+        self._state = self._state_initialization_list
+
+    @CodeStateMachine.read_inside_brackets_then("{}")
+    def _state_imp(self, _):
+        self._state = self._state_global
+        self.context.end_of_function()
 
 
 try:
@@ -685,17 +670,6 @@ try:
     import languages
 except ImportError:
     pass
-
-
-def token_processor_for_function(tokens, reader):
-    ''' token_processor_for_function parse source code into functions. This is
-    different from language to language. So token_processor_for_function need
-    a language specific 'reader' to actually do the job.
-    '''
-    for token in tokens:
-        reader.state(token)
-        yield token
-    reader.eof()
 
 
 class FileAnalyzer(object):  # pylint: disable=R0903
@@ -717,7 +691,7 @@ class FileAnalyzer(object):  # pylint: disable=R0903
         tokens = reader.generate_tokens(code)
         for processor in self.processors:
             tokens = processor(tokens, reader)
-        for _ in tokens:
+        for _ in reader(tokens, reader):
             pass
         return context.fileinfo
 
@@ -998,7 +972,6 @@ def get_extensions(extension_names, switch_case_as_one_condition=False):
         comment_counter,
         line_counter,
         token_counter,
-        token_processor_for_function,
         condition_counter,
     ]
     if switch_case_as_one_condition:

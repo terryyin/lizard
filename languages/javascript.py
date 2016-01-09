@@ -32,12 +32,11 @@ class JavaScriptReader(CodeReader, CCppCommentsMixin):
         super(JavaScriptReader, self).__init__(context)
         # start from one, so global level will never count
         self.brace_count = 1
-        self._state = self._global
         self.last_tokens = ''
         self.function_name = ''
         self.function_stack = []
 
-    def _global(self, token):
+    def _state_global(self, token):
         if token == 'function':
             self._state = self._function
         elif token in ('=', ':'):
@@ -51,7 +50,7 @@ class JavaScriptReader(CodeReader, CCppCommentsMixin):
             elif token == '}':
                 self.brace_count -= 1
                 if self.brace_count == 0:
-                    self._state = self._global
+                    self._state = self._state_global
                     self._pop_function_from_stack()
             self.last_tokens = token
             self.function_name = ''
@@ -74,11 +73,11 @@ class JavaScriptReader(CodeReader, CCppCommentsMixin):
 
     def _field(self, token):
         self.last_tokens += token
-        self._state = self._global
+        self._state = self._state_global
 
     def _dec(self, token):
         if token == ')':
-            self._state = self._global
+            self._state = self._state_global
         else:
             self.context.parameter(token)
             return
