@@ -344,13 +344,13 @@ class CodeStateMachine(object):
     def __init__(self):
         self._state = self._state_global
         self.context = None
+        self.br_count = 0
+        self.rut_tokens = []
 
     @staticmethod
     def read_inside_brackets_then(brs, end_state=None):
         def decorator(func):
             def read_until_matching_brackets(self, token):
-                if not hasattr(self, "br_count"):
-                    self.br_count = 0
                 self.br_count += {brs[0]: 1, brs[1]: -1}.get(token, 0)
                 if self.br_count == 0 and end_state is not None:
                     self.next(getattr(self, end_state))
@@ -363,8 +363,6 @@ class CodeStateMachine(object):
     def read_until_then(tokens):
         def decorator(func):
             def read_until_then_token(self, token):
-                if not hasattr(self, "rut_tokens"):
-                    self.rut_tokens = []
                 if token in tokens:
                     func(self, token, self.rut_tokens)
                     self.rut_tokens = []
@@ -423,7 +421,7 @@ class CodeReader(CodeStateMachine):
             _until_end = r"(?:\\\n|[^\n])*"
             combined_symbols = ["||", "&&", "===", "!==", "==", "!=", "<=",
                                 ">=",
-                                "<<", "++", ">>", "--", '+=', '-=',
+                                "++", "--", '+=', '-=',
                                 '*=', '/=', '^=', '&=', '|=']
             token_pattern = re.compile(
                 r"(?:\w+" +
@@ -474,7 +472,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
     language_names = ['cpp', 'c']
     macro_pattern = re.compile(r"#\s*(\w+)\s*(.*)", re.M | re.S)
     parameter_bracket_open = '(<'
-    parameter_bracket_close = ')>>>'
+    parameter_bracket_close = ')>'
 
     def __init__(self, context):
         super(CLikeReader, self).__init__(context)
@@ -509,10 +507,6 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
                 else:
                     yield token
 
-    def _reset_to_global(self):
-        self._state = self._state_global
-        self.bracket_stack = []
-
     def _state_global(self, token):
         if token in ("struct", "class", "namespace"):
             self._state = self._read_namespace
@@ -534,29 +528,17 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
 
     def _state_function(self, token):
         if token == '(':
-            self.bracket_stack.append(token)
-            self._state = self._state_dec
-            self.context.add_to_long_function_name(token)
+            self.next(self._state_dec, token)
         elif token == '::':
-            self._state = self._state_namespace
             self.context.add_to_function_name(token)
+            self.next(self._state_name_with_space)
         elif token == '<':
-            self._state = self._state_template_in_name
-            self.bracket_stack.append(token)
-            self.context.add_to_function_name(token)
+            self.next(self._state_template_in_name, token)
         else:
-            self._state = self._state_global
-            self._state_global(token)
+            self.next(self._state_global, token)
 
+    @CodeStateMachine.read_inside_brackets_then("<>", "_state_function")
     def _state_template_in_name(self, token):
-        if token == "<":
-            self.bracket_stack.append(token)
-        elif token in (">", ">>"):
-            for _ in token:
-                if not self.bracket_stack or self.bracket_stack.pop() != "<":
-                    self._reset_to_global()
-        if not self.bracket_stack:
-            self._state = self._state_function
         self.context.add_to_function_name(token)
 
     def _state_operator(self, token):
@@ -570,25 +552,21 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
         else:
             self.context.add_to_function_name(' ' + token)
 
-    def _state_namespace(self, token):
+    def _state_name_with_space(self, token):
         self._state = self._state_operator\
             if token == 'operator' else self._state_function
         self.context.add_to_function_name(token)
 
+    @CodeStateMachine.read_inside_brackets_then("()", "_state_dec_to_imp")
     def _state_dec(self, token):
         if token in self.parameter_bracket_open:
             self.bracket_stack.append(token)
         elif token in self.parameter_bracket_close:
-            for sub in token:
-                if self.bracket_stack.pop() != {')': '(', '>': '<'}[sub]:
-                    self._reset_to_global()
-                    return
-            if not self.bracket_stack:
-                self._state = self._state_dec_to_imp
+            self.bracket_stack.pop()
         elif len(self.bracket_stack) == 1:
             self.context.parameter(token)
             return
-        self.context.add_to_long_function_name(" " + token)
+        self.context.add_to_long_function_name(token)
 
     def _state_dec_to_imp(self, token):
         if token == 'const' or token == 'noexcept':

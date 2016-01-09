@@ -27,6 +27,7 @@ class Test_generate_tonken(unittest.TestCase):
         self.check_tokens(">=", '>=')
         self.check_tokens("<=", '<=')
         self.check_tokens("||", '||')
+        self.check_tokens(">>", '>', '>')
 
     def test_more(self):
         self.check_tokens("int a{}", 'int', ' ', "a", "{", "}")

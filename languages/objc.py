@@ -21,9 +21,7 @@ class ObjCReader(CLikeReader, CodeReader):
     def _state_global(self, token):
         super(ObjCReader, self)._state_global(token)
         if token == '(':
-            self.bracket_stack.append(token)
-            self._state = self._state_dec
-            self.context.add_to_long_function_name(token)
+            self.next(self._state_dec, token)
 
     def _state_dec_to_imp(self, token):
         if token in ("+", "-"):

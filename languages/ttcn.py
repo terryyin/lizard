@@ -35,9 +35,7 @@ class TTCNReader(CLikeReader, CodeReader):  # pylint: disable=R0903
         if token[0].isalpha():
             self.context.add_to_function_name(token)
         elif token == '(':
-            self.bracket_stack.append(token)
-            self._state = self._state_dec
-            self.context.add_to_long_function_name(token)
+            self.next(self._state_dec, token)
         elif token == '@deterministic':
             self.context.add_to_long_function_name(token + ' ')
         else:

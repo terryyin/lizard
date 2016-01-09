@@ -44,7 +44,7 @@ class Test_c_cpp_lizard(unittest.TestCase):
         result = get_cpp_function_list("int fun(xx oo){int a; a= call(p1,p2);}")
         self.assertEqual(1, len(result))
         self.assertEqual("fun", result[0].name)
-        self.assertEqual("fun( xx oo )", result[0].long_name)
+        self.assertEqual("fun( xx oo)", result[0].long_name)
 
     def test_old_style_c_function(self):
         result = get_cpp_function_list("""int fun(param) int praram; {}""")
@@ -110,24 +110,29 @@ class Test_c_cpp_lizard(unittest.TestCase):
     def test_function_with_strang_param(self):
         result = get_cpp_function_list("int fun(aa<mm, nn> bb){}")
         self.assertEqual(1, result[0].parameter_count)
+        self.assertEqual("fun( aa<mm,nn> bb)", result[0].long_name)
+
+    def test_function_with_strang_param2(self):
+        result = get_cpp_function_list("int fun(aa<x<mm,(x, y)>, nn> bb, (cc)<xx, oo> d){}")
+        self.assertEqual(2, result[0].parameter_count)
 
     def test_one_function_with_namespace(self):
         result = get_cpp_function_list("int abc::fun(){}")
         self.assertEqual(1, len(result))
         self.assertEqual("abc::fun", result[0].name)
-        self.assertEqual("abc::fun( )", result[0].long_name)
+        self.assertEqual("abc::fun()", result[0].long_name)
 
     def test_one_function_with_const(self):
         result = get_cpp_function_list("int abc::fun()const{}")
         self.assertEqual(1, len(result))
         self.assertEqual("abc::fun", result[0].name)
-        self.assertEqual("abc::fun( ) const", result[0].long_name)
+        self.assertEqual("abc::fun() const", result[0].long_name)
 
     def test_one_function_with_noexcept(self):
         result = get_cpp_function_list("int abc::fun()noexcept{}")
         self.assertEqual(1, len(result))
         self.assertEqual("abc::fun", result[0].name)
-        self.assertEqual("abc::fun( ) noexcept", result[0].long_name)
+        self.assertEqual("abc::fun() noexcept", result[0].long_name)
 
     def test_one_function_in_class(self):
         result = get_cpp_function_list("class c {~c(){}}; int d(){}")
@@ -201,6 +206,10 @@ class Test_c_cpp_lizard(unittest.TestCase):
         result = get_cpp_function_list("bool operator +=(int b){}")
         self.assertEqual("operator +=", result[0].name)
 
+    def test_operator_overloading_shift(self):
+        result = get_cpp_function_list("bool operator <<(int b){}")
+        self.assertEqual("operator < <", result[0].name)
+
     def test_operator_with_complicated_name(self):
         result = get_cpp_function_list("operator MyStruct&(){}")
         self.assertEqual("operator MyStruct &", result[0].name)
@@ -218,7 +227,7 @@ class Test_c_cpp_lizard(unittest.TestCase):
     def test_inline_operator(self):
         result = get_cpp_function_list("class A { bool operator ()(int b) {} };")
         self.assertEqual(1, len(result))
-        self.assertEqual("A::operator( )", result[0].name)
+        self.assertEqual("A::operator()", result[0].name)
 
     def test_namespace_alias(self):
         result = get_cpp_function_list(
@@ -263,7 +272,7 @@ class Test_c_cpp_lizard(unittest.TestCase):
     def test_function_that_returns_function_pointers(self):
         result = get_cpp_function_list('''int (*fun())(){}''')
         self.assertEqual(1, len(result))
-        self.assertEqual("int( * fun ( ) )", result[0].name)
+        self.assertEqual("int( * fun())", result[0].name)
 
     def test_underscore(self):
         from lizard import CodeReader
