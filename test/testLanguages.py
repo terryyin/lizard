@@ -25,11 +25,3 @@ class TestLanguageChooser(unittest.TestCase):
     def test_unknown_extension(self):
         self.assertEqual(None, CodeReader.get_reader("a.unknown"));
 
-    def test_new_reader_should_be_found(self):
-        exec('''class NewReader(CodeReader):
-            ext = ['ext']''')
-
-        self.assertEqual(NewReader, CodeReader.get_reader("a.ext"));
-        del NewReader
-
-
