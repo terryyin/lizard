@@ -13,5 +13,5 @@ class LizardExtension(CodeStateMachine):  # pylint: disable=R0903
 
     @CodeStateMachine.read_inside_brackets_then("()", "_state_global")
     def in_assertion(self, token):
-        if token in ("&&", "||"):
+        if token in ("&&", "||", "?"):
             self.context.add_condition(-1)

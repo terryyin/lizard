@@ -30,7 +30,7 @@ import hashlib
 if sys.version[0] == '2':
     from future_builtins import map, filter  # pylint: disable=W0622, F0401
 
-VERSION = "1.9.9"
+VERSION = "1.9.10"
 
 DEFAULT_CCN_THRESHOLD, DEFAULT_WHITELIST, \
     DEFAULT_MAX_FUNC_LENGTH = 15, "whitelizard.txt", 1000
@@ -143,7 +143,8 @@ def create_command_line_parser(prog=None):
                         are: -Ecpre: it will ignore code in the #else branch.
                         -Ewordcount: count word frequencies and generate tag
                         cloud. -Eoutside: include the global code as one
-                        function.  ''',
+                        function.  -EIgnoreAssert: to ignore all code in
+                        assert''',
                         action="append",
                         dest="extensions",
                         default=[])
