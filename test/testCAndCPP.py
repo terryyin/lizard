@@ -274,6 +274,11 @@ class Test_c_cpp_lizard(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual("int( * fun())", result[0].name)
 
+    def test_struct_in_return_type(self):
+        result = get_cpp_function_list(''' struct a b() { a(1>2); }''')
+        self.assertEqual(1, len(result))
+        self.assertEqual("b", result[0].name)
+
     def test_underscore(self):
         from lizard import CodeReader
         generate_tokens = CodeReader.generate_tokens
@@ -313,10 +318,5 @@ class Test_Big(unittest.TestCase):
 
     def test_trouble(self):
         code = "foo<y () >> 5> r;"
-        result = get_cpp_function_list(code)
-        self.assertEqual(0, len(result))
-
-    def test_namespace_is_not_function(self):
-        code = "namespace a b(){}"
         result = get_cpp_function_list(code)
         self.assertEqual(0, len(result))

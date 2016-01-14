@@ -30,7 +30,7 @@ import hashlib
 if sys.version[0] == '2':
     from future_builtins import map, filter  # pylint: disable=W0622, F0401
 
-VERSION = "1.9.12"
+VERSION = "1.9.13"
 
 DEFAULT_CCN_THRESHOLD, DEFAULT_WHITELIST, \
     DEFAULT_MAX_FUNC_LENGTH = 15, "whitelizard.txt", 1000
@@ -520,12 +520,15 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
             self.start_new_function('::'.join(
                 [x for x in self.namespaces if x] + [token]))
 
-    @CodeReader.read_until_then('{;')
+    @CodeReader.read_until_then('({;')
     def _read_namespace(self, token, saved):
+        self._state = self._state_global
         if token == "{":
             self.namespaces.append(''.join(itertools.takewhile(
                 lambda x: x not in [":", "final"], saved)))
-        self._state = self._state_global
+        elif token == '(':
+            self.start_new_function(saved[-1])
+            self._state_function(token)
 
     def _state_function(self, token):
         if token == '(':
@@ -563,8 +566,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
         if token in self.parameter_bracket_open:
             self.bracket_stack.append(token)
         elif token in self.parameter_bracket_close:
-            if self.bracket_stack:
-                self.bracket_stack.pop()
+            self.bracket_stack.pop()
         elif len(self.bracket_stack) == 1:
             self.context.parameter(token)
             return
