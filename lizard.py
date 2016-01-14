@@ -30,7 +30,7 @@ import hashlib
 if sys.version[0] == '2':
     from future_builtins import map, filter  # pylint: disable=W0622, F0401
 
-VERSION = "1.9.11"
+VERSION = "1.9.12"
 
 DEFAULT_CCN_THRESHOLD, DEFAULT_WHITELIST, \
     DEFAULT_MAX_FUNC_LENGTH = 15, "whitelizard.txt", 1000
@@ -563,7 +563,8 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
         if token in self.parameter_bracket_open:
             self.bracket_stack.append(token)
         elif token in self.parameter_bracket_close:
-            self.bracket_stack.pop()
+            if self.bracket_stack:
+                self.bracket_stack.pop()
         elif len(self.bracket_stack) == 1:
             self.context.parameter(token)
             return
