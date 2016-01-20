@@ -130,7 +130,7 @@ def _create_function_item(doc, number, file_name, func, verbose):
 
 def _create_labeled_value_item(doc, name, label, value):
     average_ncss = doc.createElement(name)
-    average_ncss.setAttribute("lable", label)
+    average_ncss.setAttribute("label", label)
     average_ncss.setAttribute("value", str(value))
     return average_ncss
 
