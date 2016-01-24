@@ -16,5 +16,5 @@ deps:
 	pip install -r dev_requirements.txt
 
 publish:
-	python setup.py sdist upload
+	python setup.py sdist bdist_wheel upload
 

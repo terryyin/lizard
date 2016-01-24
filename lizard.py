@@ -30,7 +30,7 @@ import hashlib
 if sys.version[0] == '2':
     from future_builtins import map, filter  # pylint: disable=W0622, F0401
 
-VERSION = "1.9.14"
+VERSION = "1.9.21"
 
 DEFAULT_CCN_THRESHOLD, DEFAULT_WHITELIST, \
     DEFAULT_MAX_FUNC_LENGTH = 15, "whitelizard.txt", 1000
@@ -54,13 +54,12 @@ def create_command_line_parser(prog=None):
     parser.add_argument('paths', nargs='*', default=['.'],
                         help='list of the filename/paths.')
     parser.add_argument('--version', action='version', version=VERSION)
-    # pylint: disable=E1101
     parser.add_argument("-l", "--languages",
                         help='''List the programming languages you want to
                         analyze. if left empty, it'll search for all languages
                         it knows. `lizard -l cpp -l java`searches for C++ and
                         Java code. The available languages are:
-    ''' + ', '.join(x.language_names[0] for x in CodeReader.__subclasses__()),
+    ''' + ', '.join(x.language_names[0] for x in CodeReader.subclasses()),
                         action="append",
                         dest="languages",
                         default=[])
@@ -396,6 +395,7 @@ class CodeReader(CodeStateMachine):
     language. Each language will need a subclass of CodeReader.  '''
 
     languages = None
+    extra_subclasses = set()
 
     def __init__(self, context):
         super(CodeReader, self).__init__()
@@ -408,9 +408,14 @@ class CodeReader(CodeStateMachine):
     @staticmethod
     def get_reader(filename):
         # pylint: disable=E1101
-        for lan in list(CodeReader.__subclasses__()):
+        for lan in list(CodeReader.subclasses()):
             if CodeReader.compile_file_extension_re(*lan.ext).match(filename):
                 return lan
+
+    # pylint: disable=E1101
+    @staticmethod
+    def subclasses():
+        return CodeReader.extra_subclasses.union(CodeReader.__subclasses__())
 
     def eof(self):
         pass
@@ -644,6 +649,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
         self.context.end_of_function()
 
 
+# This part will be replaced by the source code in the languages
 try:
     # lizard.py can run as a stand alone script, without the extensions
     # The following languages / extensions will not be supported in
@@ -652,7 +658,6 @@ try:
     # pylint: disable=C0413
     from lizard_ext import print_xml
     from lizard_ext import html_output
-    import languages
 except ImportError:
     pass
 
@@ -966,7 +971,9 @@ def get_extensions(extension_names, switch_case_as_one_condition=False):
 analyze_file = FileAnalyzer(get_extensions([]))  # pylint: disable=C0103
 
 
-def lizard_main(argv):
+def lizard_main(argv, extra_languages=None):
+    if extra_languages:
+        CodeReader.extra_subclasses |= set(extra_languages)
     options = parse_args(argv)
     options.extensions = get_extensions(options.extensions,
                                         options.switchCasesAsOneCondition)
