@@ -1,14 +1,7 @@
 #!/usr/bin/env python
-from lizard import lizard_main
-import languages
+from lizard_langs import lizard_for_more_languages
 import sys
 
-lans = [languages.JavaReader,
-    languages.JavaScriptReader,
-    languages.PythonReader,
-    languages.ObjCReader,
-    languages.TTCNReader,
-    languages.SwiftReader]
 
 if __name__ == "__main__":
-    lizard_main(sys.argv, lans)
+    lizard_for_more_languages(sys.argv)

@@ -1,2 +1,2 @@
 @echo off
-python -m lizard %*
+python -m lizard_langs %*
