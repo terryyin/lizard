@@ -6,6 +6,9 @@ extensive: tests pep8
 tests:
 	nosetests test
 
+tests3:
+	python3 -m unittest test
+
 pep8:
 	pep8 --exclude=mock.py lizard.py lizard_ext languages # test
 

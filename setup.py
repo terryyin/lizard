@@ -10,8 +10,11 @@ import os
 
 def install(appname):
 
-    with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as fobj:
-        readme = fobj.read()
+    try:
+        with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as fobj:
+            readme = fobj.read()
+    except IOError:
+        readme = "lizard"
 
     setup(
           name = appname,

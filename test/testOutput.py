@@ -142,7 +142,6 @@ class TestAllOutput(StreamStdoutTestCase):
         self.check_whitelist('')
 
 
-import xml.etree.ElementTree as ET
 class TestXMLOutput(unittest.TestCase):
     foo = FunctionInfo("foo", '', 100)
     foo.cyclomatic_complexity = 16
@@ -150,9 +149,7 @@ class TestXMLOutput(unittest.TestCase):
     xml = xml_output(file_infos, True)
 
     def test_xml_output(self):
-        root = ET.fromstring(self.xml)
-        item = root.findall('''./measure[@type="Function"]/item[0]''')[0]
-        self.assertEqual('''foo at f1.c:100''', item.get("name"))
+        self.assertIn('''foo at f1.c:100''', self.xml)
 
     def test_xml_stylesheet(self):
         self.assertIn('''<?xml-stylesheet type="text/xsl" href="https://raw.github.com/terryyin/lizard/master/lizard.xsl"?>''', self.xml)
