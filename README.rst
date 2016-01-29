@@ -186,6 +186,17 @@ Warnings only (in clang/gcc formation):lizard -w mahjong\_game
    ./src/html_ui/httpd.c:64: warning: accept_request has 19 CCN and 1 params (66 NLOC, 247 tokens)
    ./src/mahjong_game/mj_table.c:109: warning: mj_table_update_state has 20 CCN and 1 params (72 NLOC, 255 tokens)
 
+
+Set warning threshold for any field:lizard -T nloc=25
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The option `-Tcyclomatic_complexity=10` is equal to `-C10`.
+The option `-Tlength=10` is equal to `-L10`.
+The option `-Tparameter_count=10` is equal to `-a10`.
+
+You can also do `-Tnloc=10` to set the limit of the NLOC. Any function that
+has NLOC greater than 10 will generate a warning.
+
 Generate A Tag Cloud For Your Code
 -----------------------------
 
@@ -255,6 +266,7 @@ Wishlist (The features that will come in the near future)
 
 Change Logs
 -----------
+-  2016.01.29 Add -T option to set limit for any field
 -  2015.12.17 Add support for Swift
 -  2015.12.12 Add the -l option to filter language
 -  2015.10.22 TTCN-3 added by @gustafj

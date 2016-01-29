@@ -30,7 +30,7 @@ import hashlib
 if sys.version[0] == '2':
     from future_builtins import map, filter  # pylint: disable=W0622, F0401
 
-VERSION = "1.9.23"
+VERSION = "1.9.24"
 
 DEFAULT_CCN_THRESHOLD, DEFAULT_WHITELIST, \
     DEFAULT_MAX_FUNC_LENGTH = 15, "whitelizard.txt", 1000
@@ -49,7 +49,17 @@ def analyze(paths, exclude_pattern=None, threads=1, exts=None, lans=None):
 
 
 def create_command_line_parser(prog=None):
-    from argparse import ArgumentParser
+    from argparse import ArgumentParser, Action, ArgumentError
+
+    class DictAction(Action):  # pylint: disable=R0903
+        def __init__(self, option_strings, dest, nargs=None, **kwargs):
+            super(DictAction, self).__init__(option_strings, dest, **kwargs)
+
+        def __call__(self, parser, namespace, value, option_string=None):
+            if not re.match(r"\s*\w+\s*=\s*\d+", value):
+                raise ArgumentError(self, "should be like nloc=20")
+            k, val = value.split("=", 2)
+            getattr(namespace, self.dest)[k.strip()] = int(val.strip())
     parser = ArgumentParser(prog=prog)
     parser.add_argument('paths', nargs='*', default=['.'],
                         help='list of the filename/paths.')
@@ -154,6 +164,14 @@ def create_command_line_parser(prog=None):
                         action="append",
                         dest="sorting",
                         default=[])
+    parser.add_argument("-T", "--Threshold",
+                        help='''Set the limit for a field. The field can be
+                        nloc, cyclomatic_complexity, token_count,
+                        parameter_count, etc. Or an customized file. Lizard
+                        will report warning if a function exceed the limit''',
+                        action=DictAction,
+                        dest="thresholds",
+                        default={})
     parser.add_argument("-W", "--whitelist",
                         help='''The path and file name to the whitelist file.
                         It's './whitelizard.txt' by default.
@@ -694,9 +712,8 @@ def warning_filter(option, module_infos):
     for file_info in module_infos:
         if file_info:
             for fun in file_info.function_list:
-                if fun.cyclomatic_complexity > option.CCN or \
-                        fun.parameter_count > option.arguments or \
-                        fun.length > option.length:
+                if any(getattr(fun, attr) > limit for attr, limit in
+                        option.thresholds.iteritems()):
                     yield fun
 
 
@@ -771,10 +788,9 @@ class OutputScheme(object):
 def print_warnings(option, scheme, warnings):
     warning_count = 0
 
-    warn_str = ("!!!! Warnings (CCN > {0} or arguments > {1} " +
-                "or length > {2}) !!!!").format(option.CCN,
-                                                option.arguments,
-                                                option.length)
+    warn_str = "!!!! Warnings ({0}) !!!!".format(
+            ' or '.join("{0} > {1}".format(
+                k, val) for k, val in option.thresholds.iteritems()))
     print("\n" + "=" * len(warn_str) + "\n" + warn_str)
     print(scheme.function_info_head())
     for warning in warnings:
@@ -783,7 +799,7 @@ def print_warnings(option, scheme, warnings):
     return warning_count
 
 
-def print_total(warning_count, saved_result, option):
+def print_total(warning_count, saved_result, op):
     file_infos = list(file_info for file_info in saved_result if file_info)
     all_fun = list(itertools.chain(*(file_info.function_list
                                      for file_info in file_infos)))
@@ -803,7 +819,7 @@ def print_total(warning_count, saved_result, option):
         float(warning_count) / cnt,
         float(sum([
             f.nloc for f in all_fun
-            if f.cyclomatic_complexity > option.CCN
+            if f.cyclomatic_complexity > op.thresholds['cyclomatic_complexity']
             ])) / nloc_in_functions
     )
 
@@ -937,16 +953,21 @@ def get_all_source_files(paths, exclude_patterns, lans):
 
 
 def parse_args(argv):
-    options = create_command_line_parser(argv[0]).parse_args(args=argv[1:])
-    values = [
-        item['value'] for item in OutputScheme([]).items]
-    for sort_factor in options.sorting:
-        if sort_factor not in values:
-            error_message = "Wrong sorting field '%s'.\n" % sort_factor
-            error_message += "Candidates are: " + ', '.join(values) + "\n"
-            sys.stderr.write(error_message)
-            sys.exit(2)
-    return options
+    opt = create_command_line_parser(argv[0]).parse_args(args=argv[1:])
+    values = [item['value'] for item in OutputScheme([]).items]
+    no_fields = (set(opt.sorting) | set(opt.thresholds.keys())) - set(values)
+    if no_fields:
+        error_message = "Wrong field name '%s'.\n" % ", ".join(no_fields)
+        error_message += "Candidates are: " + ', '.join(values) + "\n"
+        sys.stderr.write(error_message)
+        sys.exit(2)
+    if "cyclomatic_complexity" not in opt.thresholds:
+        opt.thresholds["cyclomatic_complexity"] = opt.CCN
+    if "length" not in opt.thresholds:
+        opt.thresholds["length"] = opt.length
+    if "parameter_count" not in opt.thresholds:
+        opt.thresholds["parameter_count"] = opt.arguments
+    return opt
 
 
 def get_extensions(extension_names, switch_case_as_one_condition=False):

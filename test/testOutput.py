@@ -52,7 +52,7 @@ class TestWarningOutput(StreamStdoutTestCase):
 
     def test_should_have_header_when_warning_only_is_off(self):
         print_warnings(self.option, self.scheme, [])
-        self.assertIn("Warnings (CCN > 15 or arguments > 100 or length > 1000)", sys.stdout.stream)
+        self.assertIn("Warnings (cyclomatic_complexity > 15 or length > 1000 or parameter_count > 100)", sys.stdout.stream)
 
     def test_no_news_is_good_news(self):
         count = print_clang_style_warning([], self.option, None)
@@ -103,18 +103,18 @@ class TestAllOutput(StreamStdoutTestCase):
     def test_print_extension_results(self):
         file_infos = []
         extension = Mock(FUNCTION_CAPTION = "")
-        option = Mock(CCN=15, number = 0, extensions = [extension], whitelist='')
+        option = Mock(CCN=15, thresholds={}, number = 0, extensions = [extension], whitelist='')
         print_result(file_infos, option, OutputScheme(option.extensions))
         self.assertEqual(1, extension.print_result.call_count)
 
     def test_should_not_print_extension_results_when_not_implemented(self):
         file_infos = []
-        option = Mock(CCN=15, number = 0, extensions = [object()], whitelist='')
+        option = Mock(CCN=15, number = 0, thresholds={}, extensions = [object()], whitelist='')
         return print_result_with_scheme(file_infos, option)
 
     def test_print_result(self):
         file_infos = [FileInformation('f1.c', 1, []), FileInformation('f2.c', 1, [])]
-        option = Mock(CCN=15, number = 0, extensions=[], whitelist='')
+        option = Mock(CCN=15,thresholds={},  number = 0, extensions=[], whitelist='')
         self.assertEqual(0, print_result_with_scheme(file_infos, option))
 
     @patch.object(os.path, 'isfile')
@@ -123,7 +123,7 @@ class TestAllOutput(StreamStdoutTestCase):
         mock_isfile.return_value = True
         mock_open.return_value.read.return_value = script
         file_infos = [FileInformation('f1.c', 1, [self.foo])]
-        option = Mock(CCN=15, number = 0, arguments=100, length=1000, extensions=[])
+        option = Mock(thresholds={'cyclomatic_complexity':15, 'length':1000}, CCN=15, number = 0, arguments=100, length=1000, extensions=[])
         return print_result_with_scheme(file_infos, option)
 
     def test_exit_with_non_zero_when_more_warning_than_ignored_number(self):

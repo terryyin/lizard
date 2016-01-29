@@ -27,6 +27,7 @@ class TestApplication(unittest.TestCase):
             fileInfos = list(result)
             self.assertEqual(1, len(fileInfos))
             self.assertEqual('foo', fileInfos[0].function_list[0].name)
+            return 0
         os_walk.return_value = [('.', [], ['a.cpp'])]
         mock_open.return_value.read.return_value = "void foo(){}"
         print_result.side_effect = check_result
