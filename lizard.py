@@ -30,7 +30,7 @@ import hashlib
 if sys.version[0] == '2':
     from future_builtins import map, filter  # pylint: disable=W0622, F0401
 
-VERSION = "1.9.24"
+VERSION = "1.9.25"
 
 DEFAULT_CCN_THRESHOLD, DEFAULT_WHITELIST, \
     DEFAULT_MAX_FUNC_LENGTH = 15, "whitelizard.txt", 1000
@@ -713,7 +713,7 @@ def warning_filter(option, module_infos):
         if file_info:
             for fun in file_info.function_list:
                 if any(getattr(fun, attr) > limit for attr, limit in
-                        option.thresholds.iteritems()):
+                        option.thresholds.items()):
                     yield fun
 
 
@@ -790,7 +790,7 @@ def print_warnings(option, scheme, warnings):
 
     warn_str = "!!!! Warnings ({0}) !!!!".format(
             ' or '.join("{0} > {1}".format(
-                k, val) for k, val in option.thresholds.iteritems()))
+                k, val) for k, val in option.thresholds.items()))
     print("\n" + "=" * len(warn_str) + "\n" + warn_str)
     print(scheme.function_info_head())
     for warning in warnings:
