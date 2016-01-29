@@ -52,7 +52,7 @@ class TestWarningOutput(StreamStdoutTestCase):
 
     def test_should_have_header_when_warning_only_is_off(self):
         print_warnings(self.option, self.scheme, [])
-        self.assertIn("Warnings (cyclomatic_complexity > 15 or length > 1000 or parameter_count > 100)", sys.stdout.stream)
+        self.assertIn("cyclomatic_complexity > 15", sys.stdout.stream)
 
     def test_no_news_is_good_news(self):
         count = print_clang_style_warning([], self.option, None)

@@ -160,7 +160,7 @@ def create_command_line_parser(prog=None):
     parser.add_argument("-s", "--sort",
                         help='''Sort the warning with field. The field can be
                         nloc, cyclomatic_complexity, token_count,
-                        parameter_count, etc. Or an customized file.''',
+                        parameter_count, etc. Or an customized field.''',
                         action="append",
                         dest="sorting",
                         default=[])
