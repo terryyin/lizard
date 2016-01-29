@@ -16,6 +16,7 @@ class TestApplication(unittest.TestCase):
 
         def check_empty_result(result, options, scheme):
             self.assertEqual([], list(result))
+            return 0
 
         os_walk.return_value = [('.', [], [])]
         print_result.side_effect = check_empty_result
