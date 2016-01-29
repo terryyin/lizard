@@ -55,14 +55,16 @@ class TestWarningOutput(StreamStdoutTestCase):
         self.assertIn("Warnings (CCN > 15 or arguments > 100 or length > 1000)", sys.stdout.stream)
 
     def test_no_news_is_good_news(self):
-        print_clang_style_warning([], self.option, None)
+        count = print_clang_style_warning([], self.option, None)
         self.assertEqual('', sys.stdout.stream)
+        self.assertEqual(0, count)
 
     def test_should_use_clang_format_for_warning(self):
         self.foo.cyclomatic_complexity = 30
         fileSummary = FileInformation("FILENAME", 123, [self.foo])
-        print_clang_style_warning([fileSummary], self.option, None)
+        count = print_clang_style_warning([fileSummary], self.option, None)
         self.assertIn("FILENAME:100: warning: foo has 30 CCN and 0 params (1 NLOC, 1 tokens)\n", sys.stdout.stream)
+        self.assertEqual(1, count)
 
     def test_sort_warning(self):
         self.option.sorting = ['cyclomatic_complexity']
@@ -108,14 +110,12 @@ class TestAllOutput(StreamStdoutTestCase):
     def test_should_not_print_extension_results_when_not_implemented(self):
         file_infos = []
         option = Mock(CCN=15, number = 0, extensions = [object()], whitelist='')
-        print_result_with_scheme(file_infos, option)
+        return print_result_with_scheme(file_infos, option)
 
-    @patch.object(sys, 'exit')
-    def test_print_result(self, mock_exit):
+    def test_print_result(self):
         file_infos = [FileInformation('f1.c', 1, []), FileInformation('f2.c', 1, [])]
         option = Mock(CCN=15, number = 0, extensions=[], whitelist='')
-        print_result_with_scheme(file_infos, option)
-        self.assertEqual(0, mock_exit.call_count)
+        self.assertEqual(0, print_result_with_scheme(file_infos, option))
 
     @patch.object(os.path, 'isfile')
     @patch('lizard.open', create=True)
@@ -124,19 +124,16 @@ class TestAllOutput(StreamStdoutTestCase):
         mock_open.return_value.read.return_value = script
         file_infos = [FileInformation('f1.c', 1, [self.foo])]
         option = Mock(CCN=15, number = 0, arguments=100, length=1000, extensions=[])
-        print_result_with_scheme(file_infos, option)
+        return print_result_with_scheme(file_infos, option)
 
-    @patch.object(sys, 'exit')
-    def test_exit_with_non_zero_when_more_warning_than_ignored_number(self, mock_exit):
+    def test_exit_with_non_zero_when_more_warning_than_ignored_number(self):
         self.foo.cyclomatic_complexity = 16
-        self.check_whitelist('')
-        mock_exit.assert_called_with(1)
+        self.assertEqual(1, self.check_whitelist(''))
 
-    @patch.object(sys, 'exit')
-    def test_whitelist(self, mock_exit):
+    def test_whitelist(self):
         self.foo.cyclomatic_complexity = 16
         self.check_whitelist('foo')
-        self.assertEqual(0, mock_exit.call_count)
+        self.assertEqual(0, self.check_whitelist('foo'))
 
     def test_null_result(self):
         self.check_whitelist('')

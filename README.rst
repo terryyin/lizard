@@ -18,6 +18,10 @@ C/C++ header files or Java imports. It can deal with
 -  Python
 -  TTCN-3
 
+By default lizard will search for any source code that it knows an mix
+all the result together. This might not be what you want. You can use
+the "-l" option to select language(s).
+
 It counts
 
 -  the nloc (lines of code without comments),

@@ -30,7 +30,7 @@ import hashlib
 if sys.version[0] == '2':
     from future_builtins import map, filter  # pylint: disable=W0622, F0401
 
-VERSION = "1.9.22"
+VERSION = "1.9.23"
 
 DEFAULT_CCN_THRESHOLD, DEFAULT_WHITELIST, \
     DEFAULT_MAX_FUNC_LENGTH = 15, "whitelizard.txt", 1000
@@ -532,7 +532,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
             self.namespaces.append(''.join(itertools.takewhile(
                 lambda x: x not in [":", "final"], saved)))
         elif token == '(':
-            self.start_new_function(saved[-1])
+            self.start_new_function(saved[-1] if saved else "class")
             self._state_function(token)
 
     def _state_function(self, token):
@@ -674,6 +674,10 @@ class FileAnalyzer(object):  # pylint: disable=R0903
         except IOError:
             sys.stderr.write("Error: Fail to read source file '%s'\n"
                              % filename)
+        except IndexError:
+            sys.stderr.write("Error: Fail to parse file '%s'\n"
+                             % filename)
+            raise
 
     def analyze_source_code(self, filename, code):
         context = FileInfoBuilder(filename)
@@ -856,13 +860,15 @@ def print_result(result, option, scheme):
     for extension in option.extensions:
         if hasattr(extension, 'print_result'):
             extension.print_result()
-    if option.number < warning_count:
-        sys.exit(1)
+    return warning_count
 
 
 def print_clang_style_warning(code_infos, option, _):
+    count = 0
     for warning in get_warnings(code_infos, option):
         print(warning.clang_format_warning())
+        count += 1
+    return count
 
 
 def get_map_method(working_threads):
@@ -984,7 +990,9 @@ def lizard_main(argv, extra_languages=None):
         options.working_threads,
         options.extensions,
         options.languages)
-    printer(result, options, OutputScheme(options.extensions))
+    warning_count = printer(result, options, OutputScheme(options.extensions))
+    if options.number < warning_count:
+        sys.exit(1)
 
 if __name__ == "__main__":
     lizard_main(sys.argv)

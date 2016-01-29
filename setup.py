@@ -52,5 +52,5 @@ It works with Java, C/C++, JavaScript, Python, Objective C. Metrics includes cyc
 
 if __name__ == "__main__":
     import sys
-    #install('hfcca')
-    install('lizard')
+    install('hfcca')
+    #install('lizard')

@@ -279,11 +279,16 @@ class Test_c_cpp_lizard(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual("b", result[0].name)
 
+    def test_function_name_class(self):
+        result = get_cpp_function_list('''int class(){}''');
+        self.assertEqual(1, len(result))
+
     def test_underscore(self):
         from lizard import CodeReader
         generate_tokens = CodeReader.generate_tokens
         result = get_cpp_function_list(''' a() _() { }''')
         self.assertEqual(1, len(result))
+
 
 class Test_Preprocessing(unittest.TestCase):
 
