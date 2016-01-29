@@ -1,9 +1,10 @@
 ''' Language parser for Python '''
 
 from lizard import CodeReader
+from .script_language import ScriptLanguageMixIn
 
 
-class PythonReader(CodeReader):
+class PythonReader(CodeReader, ScriptLanguageMixIn):
 
     ext = ['py']
     language_names = ['python']
@@ -37,11 +38,6 @@ class PythonReader(CodeReader):
                 self.current_indent = 0
             if not token.isspace() or token == '\n':
                 yield token
-
-    @staticmethod
-    def get_comment_from_token(token):
-        if token.startswith("#"):
-            return token[1:]
 
     def _state_global(self, token):
         if token == 'def':

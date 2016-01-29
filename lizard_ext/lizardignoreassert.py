@@ -7,6 +7,9 @@ from lizard import CodeStateMachine
 
 class LizardExtension(CodeStateMachine):  # pylint: disable=R0903
 
+    def __init__(self):
+        super(LizardExtension, self).__init__(None)
+
     def _state_global(self, token):
         if token in ("assert", "static_assert"):
             self._state = self.in_assertion

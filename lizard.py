@@ -160,7 +160,7 @@ def create_command_line_parser(prog=None):
     parser.add_argument("-s", "--sort",
                         help='''Sort the warning with field. The field can be
                         nloc, cyclomatic_complexity, token_count,
-                        parameter_count, etc. Or an customized field.''',
+                        p#arameter_count, etc. Or an customized field.''',
                         action="append",
                         dest="sorting",
                         default=[])
@@ -359,9 +359,9 @@ def recount_switch_case(tokens, reader):
 
 class CodeStateMachine(object):
     ''' the state machine '''
-    def __init__(self):
+    def __init__(self, context):
+        self.context = context
         self._state = self._state_global
-        self.context = None
         self.br_count = 0
         self.rut_tokens = []
 
@@ -416,8 +416,7 @@ class CodeReader(CodeStateMachine):
     extra_subclasses = set()
 
     def __init__(self, context):
-        super(CodeReader, self).__init__()
-        self.context = context
+        super(CodeReader, self).__init__(context)
 
     @staticmethod
     def compile_file_extension_re(*exts):
