@@ -1,5 +1,8 @@
 '''
-This is an extension of lizard, that counts the complexity outside functions
+This is an extension of lizard,
+It helps to deal with C code with preprocessors that
+is hard to parse. It works by always ignoring the code
+between #else and #end.
 '''
 
 
