@@ -297,9 +297,8 @@ def preprocessing(tokens, reader):
 
 
 def comment_counter(tokens, reader):
-    get_comment = reader.get_comment_from_token
     for token in tokens:
-        comment = get_comment(token)
+        comment = reader.get_comment_from_token(token)
         if comment is not None:
             for _ in comment.splitlines()[1:]:
                 yield '\n'

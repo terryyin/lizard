@@ -2,8 +2,8 @@
 Language parser for JavaScript
 '''
 
-import re
 from lizard import CodeReader, CCppCommentsMixin
+from .js_style_regex_expression import js_style_regex_expression
 
 
 class JavaScriptReader(CodeReader, CCppCommentsMixin):
@@ -13,20 +13,9 @@ class JavaScriptReader(CodeReader, CCppCommentsMixin):
     language_names = ['javascript', 'js']
 
     @staticmethod
-    def generate_tokens(source_code, _=None):
-        regx_regx = r"|/(?:\\/|[^/])+?/[igm]*"
-        regx_pattern = re.compile(regx_regx)
-        word_pattern = re.compile(r'\w+')
-        tokens = CodeReader.generate_tokens(source_code, regx_regx)
-        leading_by_word = False
-        for token in tokens:
-            if leading_by_word and regx_pattern.match(token):
-                for subtoken in CodeReader.generate_tokens(token):
-                    yield subtoken
-            else:
-                yield token
-            if not token.isspace():
-                leading_by_word = word_pattern.match(token)
+    @js_style_regex_expression
+    def generate_tokens(source_code, _=''):
+        return CodeReader.generate_tokens(source_code, _)
 
     def __init__(self, context):
         super(JavaScriptReader, self).__init__(context)
