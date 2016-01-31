@@ -16,8 +16,8 @@
 #  Website: www.lizard.ws
 #
 """
-lizard is a simple code complexity analyzer without caring about the C/C++
-header files or Java imports.
+lizard is an extensible Cyclomatic Complexity Analyzer for many programming
+languages including C/C++ (doesn't require all the header files).
 For more information visit http://www.lizard.ws
 """
 from __future__ import print_function
@@ -30,7 +30,7 @@ import hashlib
 if sys.version[0] == '2':
     from future_builtins import map, filter  # pylint: disable=W0622, F0401
 
-VERSION = "1.9.25"
+VERSION = "1.10.0"
 
 DEFAULT_CCN_THRESHOLD, DEFAULT_WHITELIST, \
     DEFAULT_MAX_FUNC_LENGTH = 15, "whitelizard.txt", 1000
@@ -445,9 +445,10 @@ class CodeReader(CodeStateMachine):
                                 "++", "--", '+=', '-=',
                                 '*=', '/=', '^=', '&=', '|=']
             token_pattern = re.compile(
-                r"(?:\w+" +
-                r"|/\*.*?\*/" +
+                r"(?:" +
+                r"/\*.*?\*/" +
                 addition +
+                r"|\w+" +
                 r"|\"(?:\\.|[^\"\\])*\"" +
                 r"|\'(?:\\.|[^\'\\])*?\'" +
                 r"|//" + _until_end +

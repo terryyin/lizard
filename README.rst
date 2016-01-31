@@ -1,7 +1,8 @@
 Lizard
 ======
 
-Was hfcca, A Header Free Cyclomatic Complexity Analyzer.
+An extensible Cyclomatic Complexity Analyzer for many programming languages
+including C/C++ (doesn't require all the header files).
 
 |Build Status|
 
@@ -16,6 +17,7 @@ C/C++ header files or Java imports. It can deal with
 -  Objective C
 -  Swift
 -  Python
+-  Ruby
 -  TTCN-3
 
 By default lizard will search for any source code that it knows an mix
@@ -260,12 +262,9 @@ before a function it will suppress the warning for that function.
        ...
    }
 
-Wishlist (The features that will come in the near future)
----------------------------------------------------------
--  Support Ruby
-
 Change Logs
 -----------
+-  2016.01.31 Add support for Ruby
 -  2016.01.29 Add -T option to set limit for any field
 -  2015.12.17 Add support for Swift
 -  2015.12.12 Add the -l option to filter language

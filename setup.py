@@ -20,7 +20,7 @@ def install(appname):
           name = appname,
           version = lizard.VERSION,
           description = ''' A code analyzer without caring the C/C++ header files.
-It works with Java, C/C++, JavaScript, Python, Objective C. Metrics includes cyclomatic complexity number etc.''',
+It works with Java, C/C++, JavaScript, Python, Ruby, Swift, Objective C. Metrics includes cyclomatic complexity number etc.''',
           long_description =  readme,
           url = 'http://www.lizard.ws',
           download_url='https://pypi.python.org/lizard/',
@@ -54,5 +54,5 @@ It works with Java, C/C++, JavaScript, Python, Objective C. Metrics includes cyc
 
 if __name__ == "__main__":
     import sys
-    install('hfcca')
-    #install('lizard')
+    #install('hfcca')
+    install('lizard')

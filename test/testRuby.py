@@ -40,6 +40,19 @@ class Test_tokenizing_Ruby(unittest.TestCase):
         self.check_tokens(['%q[\]]'], r'''%q[\]]''')
         self.check_tokens(['%q<\>>'], r'''%q<\>>''')
 
+    def test_vars(self):
+        self.check_tokens(['$a'], r'''$a''')
+        self.check_tokens(['@a'], r'''@a''')
+        self.check_tokens(['@@a'], r'''@@a''')
+
+    def test_ranges(self):
+        self.check_tokens(['..'], r'''..''')
+        self.check_tokens(['...'], r'''...''')
+
+    def test_special_method_names(self):
+        self.check_tokens(['a!'], r'''a!''')
+        self.check_tokens(['a?'], r'''a?''')
+
 
 
 class Test_parser_for_Ruby(unittest.TestCase):
@@ -103,6 +116,25 @@ class Test_parser_for_Ruby(unittest.TestCase):
                 ''')
         self.assertEqual(4, result[0].nloc)
 
+    def test_one_with_class_in_it(self):
+        result = get_ruby_function_list('''
+            def f
+                class a
+                end
+                module a
+                end
+            end
+                ''')
+        self.assertEqual(6, result[0].nloc)
+
+    def test_one_with_class_as_identifier(self):
+        result = get_ruby_function_list('''
+            def f
+                a.class
+            end
+                ''')
+        self.assertEqual(3, result[0].nloc)
+
     def test_one_with_do(self):
         result = get_ruby_function_list('''
             def f
@@ -160,7 +192,6 @@ class Test_parser_for_Ruby_ccn(unittest.TestCase):
 
 
 class Test_parser_for_Ruby_if_while_for(unittest.TestCase):
-
     def test_basic_if_block(self):
         result = get_ruby_function_list('''
             def f
@@ -236,4 +267,28 @@ class Test_parser_for_Ruby_if_while_for(unittest.TestCase):
             end
                 ''')
         self.assertEqual(4, result[0].nloc)
+
+
+class Test_parser_for_Ruby_def(unittest.TestCase):
+    def test_class_method(self):
+        result = get_ruby_function_list('''
+            def a.b
+            end
+                ''')
+        self.assertEqual("a.b", result[0].name)
+        self.assertEqual(0, result[0].parameter_count)
+
+    def test_empty_parameters(self):
+        result = get_ruby_function_list('''
+            def a()
+            end
+                ''')
+        self.assertEqual(0, result[0].parameter_count)
+
+    def test_more_parameters(self):
+        result = get_ruby_function_list('''
+            def a(b,c)
+            end
+                ''')
+        self.assertEqual(2, result[0].parameter_count)
 
