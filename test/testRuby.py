@@ -33,6 +33,12 @@ class Test_tokenizing_Ruby(unittest.TestCase):
 
     def test_tokenizing_string_expression(self):
         self.check_tokens(['%{"}'], r'''%{"}''')
+        self.check_tokens(['%{""}'], r'''%{""}''')
+        self.check_tokens(['%{\}}'], r'''%{\}}''')
+        self.check_tokens(['%{\}}'], r'''%{\}}''')
+        self.check_tokens(['%q{\}}'], r'''%q{\}}''')
+        self.check_tokens(['%q[\]]'], r'''%q[\]]''')
+        self.check_tokens(['%q<\>>'], r'''%q<\>>''')
 
 
 
@@ -138,4 +144,96 @@ def f
 end
                 ''')
         self.assertEqual(1, len(result))
+
+
+class Test_parser_for_Ruby_ccn(unittest.TestCase):
+
+    def test_basic_complexity(self):
+        result = get_ruby_function_list('''
+            def f
+                if a
+                elsif b
+                end
+            end
+                ''')
+        self.assertEqual(3, result[0].cyclomatic_complexity)
+
+
+class Test_parser_for_Ruby_if_while_for(unittest.TestCase):
+
+    def test_basic_if_block(self):
+        result = get_ruby_function_list('''
+            def f
+                if a
+                end
+            end
+                ''')
+        self.assertEqual(4, result[0].nloc)
+
+    def test_basic_if_oneliner_block(self):
+        result = get_ruby_function_list('''
+            def f; if a; end; end
+                ''')
+        self.assertEqual(1, result[0].nloc)
+
+    def test_basic_if_modifier(self):
+        result = get_ruby_function_list('''
+            def f
+                a if b
+            end
+                ''')
+        self.assertEqual(3, result[0].nloc)
+
+    def test_basic_if_with_then_on_one_line(self):
+        result = get_ruby_function_list('''
+            def f
+                a = if b then c else d end
+            end
+                ''')
+        self.assertEqual(3, result[0].nloc)
+
+    def test_unless(self):
+        result = get_ruby_function_list('''
+            def f
+                a = unless b then c else d end
+            end
+                ''')
+        self.assertEqual(3, result[0].nloc)
+
+    def test_basic_while_block(self):
+        result = get_ruby_function_list('''
+            def f
+                while a
+                end
+                for a
+                end
+            end
+                ''')
+        self.assertEqual(6, result[0].nloc)
+
+    def test_basic_while_modifier(self):
+        result = get_ruby_function_list('''
+            def f
+                a while a
+            end
+                ''')
+        self.assertEqual(3, result[0].nloc)
+
+    def test_while_with_do(self):
+        result = get_ruby_function_list('''
+            def f
+                while a do
+                end
+            end
+                ''')
+        self.assertEqual(4, result[0].nloc)
+
+    def test_while_modifier_with_block(self):
+        result = get_ruby_function_list('''
+            def f
+                begin
+                end while a
+            end
+                ''')
+        self.assertEqual(4, result[0].nloc)
 

@@ -261,8 +261,12 @@ class FileInfoBuilder(object):
         self.current_function = self.global_pseudo_function
 
     def add_nloc(self, count):
-        self.current_function.nloc += count
         self.fileinfo.nloc += count
+        self.current_function.nloc += count
+        self.current_function.end_line = self.current_line
+        self.current_function.length =\
+            self.current_line - self.current_function.start_line
+        self.newline = count > 0
 
     def start_new_function(self, name):
         self.current_function = FunctionInfo(
@@ -310,27 +314,22 @@ def comment_counter(tokens, reader):
 
 def line_counter(tokens, reader):
     reader.context.current_line = 1
+    newline = 1
     for token in tokens:
         if token != "\n":
             count = token.count('\n')
             reader.context.current_line += count
-            reader.context.add_nloc(count)
+            reader.context.add_nloc(count + newline)
+            newline = 0
             yield token
         else:
             reader.context.current_line += 1
-            reader.context.newline = True
+            newline = 1
 
 
 def token_counter(tokens, reader):
     for token in tokens:
         reader.context.fileinfo.token_count += 1
-        if reader.context.newline:
-            reader.context.add_nloc(1)
-            reader.context.newline = False
-        reader.context.current_function.end_line = reader.context.current_line
-        length = reader.context.current_line
-        length -= reader.context.current_function.start_line
-        reader.context.current_function.length = length
         reader.context.current_function.token_count += 1
         yield token
 
