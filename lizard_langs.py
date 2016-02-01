@@ -8,6 +8,7 @@ def lizard_for_more_languages(args):
         languages.PythonReader,
         languages.ObjCReader,
         languages.TTCNReader,
+        languages.RubyReader,
         languages.SwiftReader]
     lizard_main(args, lans)
 

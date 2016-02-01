@@ -36,3 +36,7 @@ class TestCyclomaticComplexity(unittest.TestCase):
                 }''')
         self.assertEqual(1, len(result))
         self.assertEqual(3, result[0].cyclomatic_complexity)
+
+    def test_one_function_with_forward(self):
+        result = get_cpp_function_list("template <template <typename...> class TemplateClass, typename... Args> TemplateClass<Args...> make(Args&&... args){}")
+        self.assertEqual(1, result[0].cyclomatic_complexity)

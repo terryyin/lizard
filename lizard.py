@@ -30,7 +30,7 @@ import hashlib
 if sys.version[0] == '2':
     from future_builtins import map, filter  # pylint: disable=W0622, F0401
 
-VERSION = "1.10.0"
+VERSION = "1.10.1"
 
 DEFAULT_CCN_THRESHOLD, DEFAULT_WHITELIST, \
     DEFAULT_MAX_FUNC_LENGTH = 15, "whitelizard.txt", 1000
@@ -277,6 +277,9 @@ class FileInfoBuilder(object):
     def add_condition(self, inc=1):
         self.current_function.cyclomatic_complexity += inc
 
+    def reset_complexity(self):
+        self.current_function.cyclomatic_complexity = 1
+
     def add_to_long_function_name(self, app):
         self.current_function.add_to_long_name(app)
 
@@ -443,7 +446,7 @@ class CodeReader(CodeStateMachine):
             combined_symbols = ["||", "&&", "===", "!==", "==", "!=", "<=",
                                 ">=",
                                 "++", "--", '+=', '-=',
-                                '*=', '/=', '^=', '&=', '|=']
+                                '*=', '/=', '^=', '&=', '|=', "..."]
             token_pattern = re.compile(
                 r"(?:" +
                 r"/\*.*?\*/" +
@@ -606,7 +609,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
             self.start_new_function(long_name)
             self._state_function(token)
         elif token == '{':
-            self.next(self._state_imp, "{")
+            self.next(self._state_entering_imp, "{")
         elif token == ":":
             self._state = self._state_initialization_list
         elif not (token[0].isalpha() or token[0] == '_'):
@@ -641,7 +644,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
     def _state_initialization_list(self, token):
         self._state = self._state_one_initialization
         if token == '{':
-            self.next(self._state_imp, "{")
+            self.next(self._state_entering_imp, "{")
 
     @CodeReader.read_until_then('({')
     def _state_one_initialization(self, token, _):
@@ -658,6 +661,10 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
     @CodeStateMachine.read_inside_brackets_then("{}")
     def _state_initialization_value2(self, _):
         self._state = self._state_initialization_list
+
+    def _state_entering_imp(self, token):
+        self.context.reset_complexity()
+        self.next(self._state_imp, token)
 
     @CodeStateMachine.read_inside_brackets_then("{}")
     def _state_imp(self, _):
