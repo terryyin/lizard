@@ -277,7 +277,7 @@ class FileInfoBuilder(object):
         self.current_function.nloc += count
         self.current_function.end_line = self.current_line
         self.current_function.length =\
-            self.current_line - self.current_function.start_line
+            self.current_line - self.current_function.start_line + 1
         self.newline = count > 0
 
     def start_new_function(self, name):

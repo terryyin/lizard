@@ -74,7 +74,7 @@ class Test_parser_for_Ruby(unittest.TestCase):
         self.assertEqual("f", result[0].name)
         self.assertEqual(0, result[0].parameter_count)
         self.assertEqual(1, result[0].cyclomatic_complexity)
-        self.assertEqual(1, result[0].length)
+        self.assertEqual(2, result[0].length)
 
     def test_one_function_loc(self):
         result = get_ruby_function_list('''
@@ -82,7 +82,7 @@ class Test_parser_for_Ruby(unittest.TestCase):
                 something
             end
                 ''')
-        self.assertEqual(2, result[0].length)
+        self.assertEqual(3, result[0].length)
         self.assertEqual(3, result[0].nloc)
 
     def test_two_functions(self):
