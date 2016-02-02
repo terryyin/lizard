@@ -2,7 +2,8 @@
 Language parser for JavaScript
 '''
 
-from lizard import CodeReader, CCppCommentsMixin
+from .code_reader import CodeReader
+from .clike import CCppCommentsMixin
 from .js_style_regex_expression import js_style_regex_expression
 
 

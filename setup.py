@@ -45,8 +45,8 @@ It works with Java, C/C++, JavaScript, Python, Ruby, Swift, Objective C. Metrics
                      'Programming Language :: Python :: 3.3',
                      'Programming Language :: Python :: 3.4',
                      'Programming Language :: Python :: 3.5'],
-          packages = ['lizard_ext', 'languages'],
-          py_modules = ['lizard', 'lizard_langs'],
+          packages = ['lizard_ext', 'lizard_languages'],
+          py_modules = ['lizard'],
           author = 'Terry Yin',
           author_email = 'terry@odd-e.com',
           scripts = ['lizard.bat', 'lizard', 'hfcca.bat', 'hfcca']

@@ -2,7 +2,8 @@
 Language parser for Apple Swift
 '''
 
-from lizard import CodeReader, CCppCommentsMixin
+from .code_reader import CodeReader
+from .clike import CCppCommentsMixin
 
 
 class SwiftReader(CodeReader, CCppCommentsMixin):

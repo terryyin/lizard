@@ -1,5 +1,5 @@
 import unittest
-from lizard import CLikeReader, CLikeReader
+from lizard_languages import CLikeReader
 from mock import Mock
 from .testHelpers import get_cpp_fileinfo, get_cpp_function_list
 
@@ -284,7 +284,7 @@ class Test_c_cpp_lizard(unittest.TestCase):
         self.assertEqual(1, len(result))
 
     def test_underscore(self):
-        from lizard import CodeReader
+        from lizard_languages.code_reader import CodeReader
         generate_tokens = CodeReader.generate_tokens
         result = get_cpp_function_list(''' a() _() { }''')
         self.assertEqual(1, len(result))

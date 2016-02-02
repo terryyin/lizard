@@ -1,0 +1,568 @@
+
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width,
+            initial-scale=1.0,maximum-scale=1.0" />
+        <style type="text/css">
+            canvas {
+                border: 1px solid black;
+                width: 700px;
+                height: 700px;
+            }
+        </style>
+        <script type="text/javascript">
+        
+
+function TagCloud(w, h, context) {
+    "use strict";
+    this.ctx = context;
+    this.canvasWidth = w;
+    this.canvasHeight = h;
+    this.fontSize = this.canvasHeight / 3;
+    this.shape = "rectangle";
+}
+
+TagCloud.prototype.setShape = function () {
+    this.shape = "circle";
+};
+
+TagCloud.prototype.render = function (tags) {
+    this.ctx.textBaseline = "top";
+    tags.forEach(function (tag) {
+        this.placeTag(tag[0]);
+    }, this);
+};
+
+TagCloud.prototype.placeTag = function (tag) {
+    var placement;
+    while (!(placement = this._getNonOverlappingPlaceWithBestSize(
+            this.fontSize, tag)))
+        this.fontSize *= 0.9;
+
+    this.ctx.fillStyle = this._getRandomColor();
+    this.ctx.fillText(tag, placement.x, placement.y);
+};
+
+TagCloud.prototype._getNonOverlappingPlaceWithBestSize =
+    function (fontSize, tag) {
+    this.ctx.font = "" + fontSize + "pt " + "Arial";
+    var lineHeight=this.getLineHeight(fontSize);
+    var tagWidth = this.ctx.measureText(tag).width;
+
+    var base = new BasePlacement(
+        (this.canvasWidth - tagWidth) * Math.random(),
+        (this.canvasHeight - lineHeight) * Math.random(),
+        lineHeight
+        );
+
+    var placement;
+    /* jshint ignore:start */
+    while (placement = base.nextPlaceToTry()) {
+        if (this._isPlaceEmpty(placement, tagWidth, lineHeight))
+            break;
+    }
+    /* jshint ignore:end */
+    return placement;
+};
+
+TagCloud.prototype.getLineHeight = function (fontSize) {
+    return this.ctx.measureText('M').width * 1.2;
+}
+
+TagCloud.prototype._getRandomColor = function (){
+    var colors = ["aqua", "black", "blue", "fuchsia", "gray", "green",
+                  "lime", "maroon", "navy", "olive", "orange", "purple",
+                  "red", "silver", "teal"];
+    return colors[Math.floor(colors.length * Math.random())];
+};
+
+TagCloud.prototype._isPlaceEmpty = function (placement, width, height) {
+    if (placement.x < 0 || placement.y < 0 || placement.x + width >
+         this.canvasWidth || placement.y + height > this.canvasHeight)
+        return false;
+
+    var pix = this.ctx.getImageData(
+                placement.x, placement.y, width, height).data;
+
+    for (var i = 0, n = pix.length; i < n; i += 4)
+        if (pix[i+3])
+                return false;
+
+    return [[placement.x, placement.y],
+            [placement.x + width, placement.y],
+            [placement.x, placement.y + height],
+            [placement.x + width, placement.y + height]].every(
+                function(pos) {
+                    var a = this.canvasWidth / 2;
+                    var b = this.canvasHeight / 2;
+                    var X = pos[0] - a;
+                    var Y = pos[1] - b;
+                    return (X * X / a / a + Y * Y / b / b < 1);
+                }, this);
+};
+
+TagCloud.prototype.getCoverage = function () {
+    var pix = this.ctx.getImageData(
+                0, 0, this.canvasWidth, this.canvasHeight).data;
+    var pixCount = 0;
+    for (var i = 0, n = pix.length; i < n; i += 4) {
+        if (pix[i+3])
+            pixCount++;
+    }
+    return pixCount * 100 / this.canvasWidth / this.canvasHeight;
+};
+
+function BasePlacement(x, y, h) {
+    var baseX = x,
+        baseY = y,
+        scale = h,
+        tryNumber = 0;
+
+    this.nextPlaceToTry = function() {
+        if (tryNumber < this._spiralOffsets.length)
+            return {
+                x : baseX + this._spiralOffsets[tryNumber][0] * scale,
+                y : baseY + this._spiralOffsets[tryNumber++][1] * scale
+            };
+    };
+}
+
+function generateSpiralOffsets() {
+    var spiralOffsets = [];
+    var radius = 0;
+    var dr = 0.2;
+    for (var i = 0; radius < 40; i+=0.4, radius += dr) {
+        spiralOffsets.push([
+                   radius * Math.sin(i),
+                   radius * Math.cos(i)
+                ]);
+    }
+    return spiralOffsets;
+}
+
+BasePlacement.prototype._spiralOffsets = generateSpiralOffsets();
+
+    
+        </script>
+        <script type="application/javascript">
+            function draw() {
+                var canvas = document.getElementById("canvas");
+                    if (canvas.getContext) {
+                        var ctx = canvas.getContext("2d");
+                        // scale 2x
+                        if(window.devicePixelRatio == 2) {
+                            canvas.setAttribute('width', canvas.width * 2);
+                            canvas.setAttribute('height', canvas.height * 2);
+                        }
+                        var tagCloud = new TagCloud(canvas.width,
+                            canvas.height, ctx);
+                        tagCloud.render([                                        ["token", 350],
+                                        ["context", 117],
+                                        ["_state", 90],
+                                        ["0", 59],
+                                        ["tokens", 55],
+                                        ["reader", 52],
+                                        ["1", 49],
+                                        ["doc", 45],
+                                        ["elif", 44],
+                                        ["_state_global", 38],
+                                        ["not", 38],
+                                        ["r", 36],
+                                        ["yield", 36],
+                                        ["next", 34],
+                                        ["__init__", 33],
+                                        ["current_function", 32],
+                                        ["None", 32],
+                                        ["filename", 28],
+                                        ["CodeReader", 26],
+                                        ["appendChild", 26],
+                                        ["@", 23],
+                                        ["or", 23],
+                                        ["result", 23],
+                                        ["parser", 23],
+                                        ["ext", 22],
+                                        ["_", 22],
+                                        ["item", 21],
+                                        ["name", 20],
+                                        ["print", 20],
+                                        ["re", 19],
+                                        ["dest", 19],
+                                        ["option", 18],
+                                        ["func", 18],
+                                        ["add_argument", 18],
+                                        ["len", 17],
+                                        ["help", 17],
+                                        ["extensions", 17],
+                                        ["source_file", 16],
+                                        ["object", 16],
+                                        ["start_new_function", 15],
+                                        ["True", 15],
+                                        ["options", 15],
+                                        ["function_list", 15],
+                                        ["super", 15],
+                                        ["append", 14],
+                                        ["measure", 14],
+                                        ["and", 14],
+                                        ["source_code", 14],
+                                        ["set", 14],
+                                        ["macro", 14],
+                                        ["createElement", 14],
+                                        ["default", 14],
+                                        ["join", 13],
+                                        ["str", 13],
+                                        ["startswith", 13],
+                                        ["nloc", 13],
+                                        ["opt", 13],
+                                        ["False", 13],
+                                        ["add_to_function_name", 13],
+                                        ["warning", 13],
+                                        ["f", 12],
+                                        ["CLikeReader", 12],
+                                        ["count", 12],
+                                        ["whitelist", 11],
+                                        ["pass", 11],
+                                        ["warning_count", 11],
+                                        ["action", 11],
+                                        ["language_names", 11],
+                                        ["__call__", 11],
+                                        ["x", 11],
+                                        ["CodeStateMachine", 11],
+                                        ["fun", 11],
+                                        ["sys", 11],
+                                        ["%", 11],
+                                        ["k", 10],
+                                        ["staticmethod", 10],
+                                        ["thresholds", 10],
+                                        ["generate_tokens", 10],
+                                        ["LizardExtension", 10],
+                                        ["warnings", 10],
+                                        ["add_to_long_function_name", 10],
+                                        ["val", 10],
+                                        ["prefix", 9],
+                                        ["brace_count", 9],
+                                        ["app", 9],
+                                        ["write", 9],
+                                        ["_state_function", 9],
+                                        ["number", 9],
+                                        ["white", 9],
+                                        ["scheme", 9],
+                                        ["read_inside_brackets_then", 9],
+                                        ["last_token", 9],
+                                        ["conditions", 9],
+                                        ["hasattr", 9],
+                                        ["_state_dec_to_imp", 9],
+                                        ["file_nr", 9],
+                                        ["fileinfo", 9],
+                                        ["code_reader", 9],
+                                        ["file_info", 8],
+                                        ["path", 8],
+                                        ["items", 8],
+                                        ["callback", 8],
+                                        ["lambda", 8],
+                                        ["cyclomatic_complexity", 8],
+                                        ["_saved_tokens", 8],
+                                        ["script", 8],
+                                        ["2", 8],
+                                        ["paths", 8],
+                                        ["except", 8],
+                                        ["module_info", 8],
+                                        ["CCppCommentsMixin", 8],
+                                        ["cnt", 8],
+                                        ["createTextNode", 8],
+                                        ["try", 7],
+                                        ["sum", 7],
+                                        ["current_line", 7],
+                                        ["function_builder", 7],
+                                        ["verbose", 7],
+                                        ["start_line", 7],
+                                        ["end_of_function", 7],
+                                        ["sub_state", 7],
+                                        ["clike", 7],
+                                        ["setAttribute", 7],
+                                        ["function_stack", 7],
+                                        ["label", 7],
+                                        ["if_stack", 7],
+                                        ["js_style_regex_expression", 7],
+                                        ["long_name", 7],
+                                        ["newline", 7],
+                                        ["RubyStateMachine", 7],
+                                        ["languages", 6],
+                                        ["namespaces", 6],
+                                        ["value2", 6],
+                                        ["replace", 6],
+                                        ["ObjCReader", 6],
+                                        ["value3", 6],
+                                        ["value1", 6],
+                                        ["type", 6],
+                                        ["text1", 6],
+                                        ["root", 6],
+                                        ["parameter", 6],
+                                        ["captions", 6],
+                                        ["_state_imp", 6],
+                                        ["state", 6],
+                                        ["argv", 6],
+                                        ["current_indent", 6],
+                                        ["pathname", 6],
+                                        ["working_threads", 6],
+                                        ["add_condition", 6],
+                                        ["parameters", 6],
+                                        ["getattr", 6],
+                                        ["key", 6],
+                                        ["pop", 6],
+                                        ["property", 6],
+                                        ["html_file", 6],
+                                        ["t", 6],
+                                        ["extension", 6],
+                                        ["os", 6],
+                                        ["files", 6],
+                                        ["all_fun", 6],
+                                        ["int", 6],
+                                        ["preprocess", 5],
+                                        ["_IMP", 5],
+                                        ["_create_labeled_value_item", 5],
+                                        ["isalpha", 5],
+                                        ["get_reader_for", 5],
+                                        ["isspace", 5],
+                                        ["is_newline", 5],
+                                        ["bracket_stack", 5],
+                                        ["JavaReader", 5],
+                                        ["open", 5],
+                                        ["last_tokens", 5],
+                                        ["file_name", 5],
+                                        ["nloc_in_functions", 5],
+                                        ["all_functions", 5],
+                                        ["token_count", 5],
+                                        ["get", 5],
+                                        ["IGNORED_WORDS", 5],
+                                        ["function_name", 5],
+                                        ["ScriptLanguageMixIn", 5],
+                                        ["value", 5],
+                                        ["compile", 5],
+                                        ["match", 5],
+                                        ["lans", 5],
+                                        ["existing", 4],
+                                        ["html_output", 4],
+                                        ["saved", 4],
+                                        ["JavaScriptReader", 4],
+                                        ["file_total_funcs", 4],
+                                        ["list", 4],
+                                        ["stderr", 4],
+                                        ["br_count", 4],
+                                        ["text2", 4],
+                                        ["text3", 4],
+                                        ["pieces", 4],
+                                        ["else_count", 4],
+                                        ["group", 4],
+                                        ["file_total_ccn", 4],
+                                        ["_state_initialization_list", 4],
+                                        ["SwiftReader", 4],
+                                        ["decorator", 4],
+                                        ["RubyReader", 4],
+                                        ["exts", 4],
+                                        ["leading_space", 4],
+                                        ["PythonReader", 4],
+                                        ["forgive", 4],
+                                        ["_function", 4],
+                                        ["_dec", 4],
+                                        ["saved_token", 4],
+                                        ["end_state", 4],
+                                        ["lizard_ext", 4],
+                                        ["first_return", 4],
+                                        ["START_NEW_FUNCTION", 4],
+                                        ["summary", 4],
+                                        ["exclude_pattern", 4],
+                                        ["full_path_name", 4],
+                                        ["itertools", 4],
+                                        ["comment", 4],
+                                        ["raise", 4],
+                                        ["print_result", 4],
+                                        ["addition", 4],
+                                        ["ImportError", 4],
+                                        ["TTCNReader", 4],
+                                        ["fhash", 4],
+                                        ["s", 4],
+                                        ["read", 4],
+                                        ["split", 4],
+                                        ["_state_dec", 4],
+                                        ["CCN", 4],
+                                        ["tilde", 4],
+                                        ["previous", 4],
+                                        ["file_analyzer", 4],
+                                        ["average_ncss", 4],
+                                        ["format", 4],
+                                        ["sorting", 4],
+                                        ["end_line", 4],
+                                        ["code_infos", 4],
+                                        ["functions_average", 4],
+                                        ["file_total_ncss", 4],
+                                        ["float", 4],
+                                        ["strip", 4],
+                                        ["rut_tokens", 4],
+                                        ["_def_continue", 4],
+                                        ["eof", 4],
+                                        ["add_to_long_name", 3],
+                                        ["labels", 3],
+                                        ["END_OF_FUNCTION", 3],
+                                        ["_close_functions", 3],
+                                        ["_state_entering_imp", 3],
+                                        ["_INPUT", 3],
+                                        ["brs", 3],
+                                        ["value4", 3],
+                                        ["print_function", 3],
+                                        ["_state_objc_dec", 3],
+                                        ["_state_objc_dec_begin", 3],
+                                        ["read_until_then", 3],
+                                        ["values", 3],
+                                        ["fnmatch", 3],
+                                        ["parameter_bracket_open", 3],
+                                        ["lan", 3],
+                                        ["_local_variables", 3],
+                                        ["_function_name", 3],
+                                        ["FileAnalyzer", 3],
+                                        ["OutputScheme", 3],
+                                        ["no_fields", 3],
+                                        ["FunctionInfo", 3],
+                                        ["StopSplitting", 3],
+                                        ["warn_str", 3],
+                                        ["_global_state", 3],
+                                        ["indent", 3],
+                                        ["parse_args", 3],
+                                        ["length", 3],
+                                        ["DEFAULT_MAX_FUNC_LENGTH", 3],
+                                        ["potential_type", 3],
+                                        ["function_info", 3],
+                                        ["hashlib", 3],
+                                        ["total_func_ncss", 3],
+                                        ["global_pseudo_function", 3],
+                                        ["_expect_function_impl", 3],
+                                        ["code_md5", 3],
+                                        ["null", 3],
+                                        ["_DEC", 3],
+                                        ["_def", 3],
+                                        ["printer", 3],
+                                        ["print_xml", 3],
+                                        ["statename", 3],
+                                        ["_state_decorator", 3],
+                                        ["start_of_statement", 3],
+                                        ["_state_old_c_params", 3],
+                                        ["DEFAULT_WHITELIST", 3],
+                                        ["xml_output", 3],
+                                        ["function_info_head", 3],
+                                        ["saved_state", 3],
+                                        ["get_warnings", 3],
+                                        ["_create_labels", 3],
+                                        ["FUNCTION_INFO_PART", 3],
+                                        ["while", 3],
+                                        ["DictAction", 3],
+                                        ["add", 3],
+                                        ["saved_process", 3],
+                                        ["get_comment_from_token", 3],
+                                        ["error_message", 3],
+                                        ["get_extensions", 3],
+                                        ["exit", 3],
+                                        ["prog", 3],
+                                        ["to_exit", 3],
+                                        ["DEFAULT_CCN_THRESHOLD", 3],
+                                        ["parameter_bracket_close", 3],
+                                        ["_state_operator", 3],
+                                        ["__future__", 3],
+                                        ["file_infos", 3],
+                                        ["splitlines", 3],
+                                        ["total_func_ccn", 3],
+                                        ["HTML_FILENAME", 3],
+                                        ["add_nloc", 3],
+                                        ["_STATE", 3],
+                                        ["regx_regx", 3],
+                                        ["hash_set", 3],
+                                        ["FUNCTION_CAPTION", 3],
+                                        ["leading_by_word", 3],
+                                        ["mapmethod", 2],
+                                        ["code", 2],
+                                        ["results", 2],
+                                        ["_create_file_node", 2],
+                                        ["_state_operator_next", 2],
+                                        ["VERSION", 2],
+                                        ["_validate_file", 2],
+                                        ["condition", 2],
+                                        ["subcall", 2],
+                                        ["ArgumentError", 2],
+                                        ["print_total", 2],
+                                        ["option_strings", 2],
+                                        ["_field", 2],
+                                        ["FileInfoBuilder", 2],
+                                        ["version", 2],
+                                        ["nargs", 2],
+                                        ["wild", 2],
+                                        ["threads", 2],
+                                        ["_GLOBAL", 2],
+                                        ["_support", 2],
+                                        ["compile_file_extension_re", 2],
+                                        ["combined_symbols", 2],
+                                        ["_read_namespace", 2],
+                                        ["import_module", 2],
+                                        ["file_summary", 2],
+                                        ["python_import_as_change", 2],
+                                        ["read_until_then_token", 2],
+                                        ["abspath", 2],
+                                        ["_PROCESS", 2],
+                                        ["webbrowser", 2],
+                                        ["text4", 2],
+                                        ["90", 2],
+                                        ["label_name", 2],
+                                        ["import_list", 2],
+                                        ["_state_throw", 2],
+                                        ["processors", 2],
+                                        ["att", 2],
+                                        ["_BETWEEN_STATE_AND_INPUT", 2],
+                                        ["read_until_matching_brackets", 2],
+                                        ["_in_list", 2],
+                                        ["map", 2],
+                                        ["in_assertion", 2],
+                                        ["generate_tokens_with_regex", 2],
+                                        ["preprocessing", 2],
+                                        ["_protocol", 2],
+                                        ["FileInformation", 2],
+                                        ["subtoken", 2],
+                                        ["SDLReader", 2],
+                                        ["kwargs", 2],
+                                        ["sorted", 2],
+                                        ["mode", 2],
+                                        ["endline", 2],
+                                        ["reduce", 2],
+                                        ["get_map_method", 2],
+                                        ["isfile", 2],
+                                        ["p", 2],
+                                        ["ignoreList", 2],
+                                        ["_function_impl", 2],
+                                        ["dependencies", 2],
+                                        ["md5", 2],
+                                        ["multiprocessing", 2],
+                                        ["filter", 2],
+                                        ["_function_dec", 2],
+                                        ["expand_extensions", 2],
+                                        ["print_warnings", 2],
+                                        ["whitelist_filter", 2],
+                                        ["_create_function_measure", 2],
+                                        ["any", 2],
+                                        ["next_token", 2],
+                                        ["add_parameter", 2],
+                                        ["map_files_to_analyzer", 2],
+                                        ["recount_switch_case", 2],
+                                        ["dependency_count", 2],
+                                        ["switch_case_as_one_condition", 2],
+                                        ["M", 2],
+                                        ["**", 2],
+                                        ["dom", 2],
+                                        ["_if", 2],
+                                        ["_def_parameters", 2],
+                                        ["exclude_patterns", 2],
+
+                                    ]);
+                                }
+                        }
+                    </script>
+                </head>
+                <body onload="draw();">
+                    <canvas id="canvas" width="700" height="700"></canvas>
+                </body>
+            </html>

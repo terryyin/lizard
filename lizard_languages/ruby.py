@@ -2,7 +2,7 @@
 Language parser for JavaScript
 '''
 
-from lizard import CodeReader
+from .code_reader import CodeReader
 from .script_language import ScriptLanguageMixIn
 from .js_style_regex_expression import js_style_regex_expression
 

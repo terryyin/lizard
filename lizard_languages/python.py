@@ -1,6 +1,6 @@
 ''' Language parser for Python '''
 
-from lizard import CodeReader
+from .code_reader import CodeReader
 from .script_language import ScriptLanguageMixIn
 
 

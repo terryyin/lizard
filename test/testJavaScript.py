@@ -1,6 +1,6 @@
 import unittest
 from lizard import  analyze_file, FileAnalyzer, get_extensions
-from languages import JavaScriptReader
+from lizard_languages import JavaScriptReader
 
 
 def get_js_function_list(source_code):

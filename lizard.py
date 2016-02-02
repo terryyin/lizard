@@ -30,6 +30,18 @@ import hashlib
 if sys.version[0] == '2':
     from future_builtins import map, filter  # pylint: disable=W0622, F0401
 
+try:
+    from lizard_languages import languages, get_reader_for, CLikeReader
+except ImportError:
+    sys.stderr.write("Cannot find the lizard_languages module.")
+    sys.exit(2)
+try:
+    from lizard_ext import print_xml
+    from lizard_ext import html_output
+except ImportError:
+    pass
+
+
 VERSION = "1.10.1"
 
 DEFAULT_CCN_THRESHOLD, DEFAULT_WHITELIST, \
@@ -69,7 +81,7 @@ def create_command_line_parser(prog=None):
                         analyze. if left empty, it'll search for all languages
                         it knows. `lizard -l cpp -l java`searches for C++ and
                         Java code. The available languages are:
-    ''' + ', '.join(x.language_names[0] for x in CodeReader.subclasses()),
+    ''' + ', '.join(x.language_names[0] for x in languages()),
                         action="append",
                         dest="languages",
                         default=[])
@@ -358,333 +370,6 @@ def recount_switch_case(tokens, reader):
         yield token
 
 
-class CodeStateMachine(object):
-    ''' the state machine '''
-    def __init__(self, context):
-        self.context = context
-        self._state = self._state_global
-        self.br_count = 0
-        self.rut_tokens = []
-
-    @staticmethod
-    def read_inside_brackets_then(brs, end_state=None):
-        def decorator(func):
-            def read_until_matching_brackets(self, token):
-                self.br_count += {brs[0]: 1, brs[1]: -1}.get(token, 0)
-                if self.br_count == 0 and end_state is not None:
-                    self.next(getattr(self, end_state))
-                if self.br_count == 0 or end_state is not None:
-                    func(self, token)
-            return read_until_matching_brackets
-        return decorator
-
-    @staticmethod
-    def read_until_then(tokens):
-        def decorator(func):
-            def read_until_then_token(self, token):
-                if token in tokens:
-                    func(self, token, self.rut_tokens)
-                    self.rut_tokens = []
-                else:
-                    self.rut_tokens.append(token)
-            return read_until_then_token
-        return decorator
-
-    def __call__(self, tokens, reader):
-        self.context = reader.context
-        for token in tokens:
-            self._state(token)
-            yield token
-        self.eof()
-
-    def _state_global(self, token):
-        pass
-
-    def eof(self):
-        pass
-
-    def next(self, state, token=None):
-        self._state = state
-        if token is not None:
-            self._state(token)
-
-
-class CodeReader(CodeStateMachine):
-    ''' CodeReaders are used to parse function structures from code of different
-    language. Each language will need a subclass of CodeReader.  '''
-
-    languages = None
-    extra_subclasses = set()
-
-    def __init__(self, context):
-        super(CodeReader, self).__init__(context)
-
-    @staticmethod
-    def compile_file_extension_re(*exts):
-        return re.compile(r".*\.(" + r"|".join(exts) + r")$", re.IGNORECASE)
-
-    @staticmethod
-    def get_reader(filename):
-        # pylint: disable=E1101
-        for lan in list(CodeReader.subclasses()):
-            if CodeReader.compile_file_extension_re(*lan.ext).match(filename):
-                return lan
-
-    # pylint: disable=E1101
-    @staticmethod
-    def subclasses():
-        return CodeReader.extra_subclasses.union(CodeReader.__subclasses__())
-
-    def eof(self):
-        pass
-
-    @staticmethod
-    def generate_tokens(source_code, addition=''):
-        def _generate_tokens(source_code, addition):
-            # DO NOT put any sub groups in the regex. Good for performance
-            _until_end = r"(?:\\\n|[^\n])*"
-            combined_symbols = ["||", "&&", "===", "!==", "==", "!=", "<=",
-                                ">=",
-                                "++", "--", '+=', '-=',
-                                '*=', '/=', '^=', '&=', '|=', "..."]
-            token_pattern = re.compile(
-                r"(?:" +
-                r"/\*.*?\*/" +
-                addition +
-                r"|\w+" +
-                r"|\"(?:\\.|[^\"\\])*\"" +
-                r"|\'(?:\\.|[^\'\\])*?\'" +
-                r"|//" + _until_end +
-                r"|\#" +
-                r"|:=|::|\*\*" +
-                r"|" + r"|".join(re.escape(s) for s in combined_symbols) +
-                r"|\\\n" +
-                r"|\n" +
-                r"|[^\S\n]+" +
-                r"|.)", re.M | re.S)
-            macro = ""
-            for token in token_pattern.findall(source_code):
-                if macro:
-                    if "\\\n" in token or "\n" not in token:
-                        macro += token
-                    else:
-                        yield macro
-                        yield token
-                        macro = ""
-                elif token == "#":
-                    macro = token
-                else:
-                    yield token
-            if macro:
-                yield macro
-
-        return [t for t in _generate_tokens(source_code, addition)]
-
-
-class CCppCommentsMixin(object):  # pylint: disable=R0903
-
-    @staticmethod
-    def get_comment_from_token(token):
-        if token.startswith("/*") or token.startswith("//"):
-            return token[2:]
-
-
-# pylint: disable=R0903
-class CLikeReader(CodeReader, CCppCommentsMixin):
-    ''' This is the reader for C, C++ and Java. '''
-
-    ext = ["c", "cpp", "cc", "mm", "cxx", "h", "hpp"]
-    language_names = ['cpp', 'c']
-    macro_pattern = re.compile(r"#\s*(\w+)\s*(.*)", re.M | re.S)
-    parameter_bracket_open = '(<'
-    parameter_bracket_close = ')>'
-
-    def __init__(self, context):
-        super(CLikeReader, self).__init__(context)
-        self.bracket_stack = []
-        self._saved_tokens = []
-        self.namespaces = []
-
-    def start_new_function(self, name):
-        self.context.start_new_function(name)
-        self._state = self._state_function
-        if name == 'operator':
-            self._state = self._state_operator
-
-    def preprocess(self, tokens):
-        tilde = False
-        for token in tokens:
-            if token == '~':
-                tilde = True
-            elif tilde:
-                tilde = False
-                yield "~" + token
-            elif not token.isspace() or token == '\n':
-                macro = self.macro_pattern.match(token)
-                if macro:
-                    if macro.group(1) in ('if', 'ifdef', 'elif'):
-                        self.context.add_condition()
-                    elif macro.group(1) == 'include':
-                        yield "#include"
-                        yield macro.group(2) or "\"\""
-                    for _ in macro.group(2).splitlines()[1:]:
-                        yield '\n'
-                else:
-                    yield token
-
-    def _state_global(self, token):
-        if token in ("struct", "class", "namespace"):
-            self._state = self._read_namespace
-        elif token == "{":
-            self.namespaces.append("")
-        elif token == '}':
-            if self.namespaces:
-                self.namespaces.pop()
-        elif token[0].isalpha() or token[0] in '_~':
-            self.start_new_function('::'.join(
-                [x for x in self.namespaces if x] + [token]))
-
-    @CodeReader.read_until_then('({;')
-    def _read_namespace(self, token, saved):
-        self._state = self._state_global
-        if token == "{":
-            self.namespaces.append(''.join(itertools.takewhile(
-                lambda x: x not in [":", "final"], saved)))
-        elif token == '(':
-            self.start_new_function(saved[-1] if saved else "class")
-            self._state_function(token)
-
-    def _state_function(self, token):
-        if token == '(':
-            self.next(self._state_dec, token)
-        elif token == '::':
-            self.context.add_to_function_name(token)
-            self.next(self._state_name_with_space)
-        elif token == '<':
-            self.next(self._state_template_in_name, token)
-        else:
-            self.next(self._state_global, token)
-
-    @CodeStateMachine.read_inside_brackets_then("<>", "_state_function")
-    def _state_template_in_name(self, token):
-        self.context.add_to_function_name(token)
-
-    def _state_operator(self, token):
-        if token != '(':
-            self._state = self._state_operator_next
-        self.context.add_to_function_name(' ' + token)
-
-    def _state_operator_next(self, token):
-        if token == '(':
-            self._state_function(token)
-        else:
-            self.context.add_to_function_name(' ' + token)
-
-    def _state_name_with_space(self, token):
-        self._state = self._state_operator\
-            if token == 'operator' else self._state_function
-        self.context.add_to_function_name(token)
-
-    @CodeStateMachine.read_inside_brackets_then("()", "_state_dec_to_imp")
-    def _state_dec(self, token):
-        if token in self.parameter_bracket_open:
-            self.bracket_stack.append(token)
-        elif token in self.parameter_bracket_close:
-            if self.bracket_stack:
-                self.bracket_stack.pop()
-            else:
-                self.next(self._state_global)
-        elif len(self.bracket_stack) == 1:
-            self.context.parameter(token)
-            return
-        self.context.add_to_long_function_name(token)
-
-    def _state_dec_to_imp(self, token):
-        if token == 'const' or token == 'noexcept':
-            self.context.add_to_long_function_name(" " + token)
-        elif token == 'throw':
-            self._state = self._state_throw
-        elif token == '(':
-            long_name = self.context.current_function.long_name
-            self.start_new_function(long_name)
-            self._state_function(token)
-        elif token == '{':
-            self.next(self._state_entering_imp, "{")
-        elif token == ":":
-            self._state = self._state_initialization_list
-        elif not (token[0].isalpha() or token[0] == '_'):
-            self._state = self._state_global
-            self._state(token)
-        else:
-            self._state = self._state_old_c_params
-            self._saved_tokens = [token]
-
-    def _state_throw(self, token):
-        if token == ')':
-            self._state = self._state_dec_to_imp
-
-    def _state_old_c_params(self, token):
-        self._saved_tokens.append(token)
-        if token == ';':
-            self._saved_tokens = []
-            self._state = self._state_dec_to_imp
-        elif token == '{':
-            if len(self._saved_tokens) == 2:
-                self._saved_tokens = []
-                self._state_dec_to_imp(token)
-                return
-            self._state = self._state_global
-            for token in self._saved_tokens:
-                self._state(token)
-        elif token == '(':
-            self._state = self._state_global
-            for token in self._saved_tokens:
-                self._state(token)
-
-    def _state_initialization_list(self, token):
-        self._state = self._state_one_initialization
-        if token == '{':
-            self.next(self._state_entering_imp, "{")
-
-    @CodeReader.read_until_then('({')
-    def _state_one_initialization(self, token, _):
-        if token == "(":
-            self._state = self._state_initialization_value1
-        else:
-            self._state = self._state_initialization_value2
-        self._state(token)
-
-    @CodeStateMachine.read_inside_brackets_then("()")
-    def _state_initialization_value1(self, _):
-        self._state = self._state_initialization_list
-
-    @CodeStateMachine.read_inside_brackets_then("{}")
-    def _state_initialization_value2(self, _):
-        self._state = self._state_initialization_list
-
-    def _state_entering_imp(self, token):
-        self.context.reset_complexity()
-        self.next(self._state_imp, token)
-
-    @CodeStateMachine.read_inside_brackets_then("{}")
-    def _state_imp(self, _):
-        self._state = self._state_global
-        self.context.end_of_function()
-
-
-# This part will be replaced by the source code in the languages
-try:
-    # lizard.py can run as a stand alone script, without the extensions
-    # The following languages / extensions will not be supported in
-    # stand alone script.
-    # pylint: disable=W0611
-    # pylint: disable=C0413
-    from lizard_ext import print_xml
-    from lizard_ext import html_output
-except ImportError:
-    pass
-
-
 class FileAnalyzer(object):  # pylint: disable=R0903
 
     def __init__(self, extensions):
@@ -704,7 +389,7 @@ class FileAnalyzer(object):  # pylint: disable=R0903
 
     def analyze_source_code(self, filename, code):
         context = FileInfoBuilder(filename)
-        reader = (CodeReader.get_reader(filename) or CLikeReader)(context)
+        reader = (get_reader_for(filename) or CLikeReader)(context)
         tokens = reader.generate_tokens(code)
         for processor in self.processors:
             tokens = processor(tokens, reader)
@@ -934,8 +619,8 @@ def get_all_source_files(paths, exclude_patterns, lans):
     def _validate_file(pathname):
         return (
             pathname in paths or (
-                CodeReader.get_reader(pathname) and
-                _support(CodeReader.get_reader(pathname)) and
+                get_reader_for(pathname) and
+                _support(get_reader_for(pathname)) and
                 all(not fnmatch(pathname, p) for p in exclude_patterns) and
                 _not_duplicate(pathname)))
 
@@ -1003,9 +688,7 @@ def get_extensions(extension_names, switch_case_as_one_condition=False):
 analyze_file = FileAnalyzer(get_extensions([]))  # pylint: disable=C0103
 
 
-def lizard_main(argv, extra_languages=None):
-    if extra_languages:
-        CodeReader.extra_subclasses |= set(extra_languages)
+def lizard_main(argv):
     options = parse_args(argv)
     options.extensions = get_extensions(options.extensions,
                                         options.switchCasesAsOneCondition)

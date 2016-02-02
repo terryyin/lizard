@@ -1,5 +1,5 @@
 import unittest
-from lizard import CodeReader
+from lizard_languages.code_reader import CodeReader
 generate_tokens = CodeReader.generate_tokens
 
 

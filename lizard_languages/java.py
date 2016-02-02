@@ -2,10 +2,10 @@
 Language parser for JavaScript
 '''
 
-from lizard import CLikeReader, CodeReader
+from .clike import CLikeReader
 
 
-class JavaReader(CLikeReader, CodeReader):
+class JavaReader(CLikeReader):
     # pylint: disable=R0903
 
     ext = ['java']

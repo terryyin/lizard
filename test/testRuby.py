@@ -1,6 +1,6 @@
 import unittest
 from lizard import analyze_file, FileAnalyzer, get_extensions
-from languages import RubyReader
+from lizard_languages import RubyReader
 
 
 def get_ruby_function_list(source_code):

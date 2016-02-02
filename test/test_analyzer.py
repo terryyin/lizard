@@ -4,7 +4,8 @@
 import unittest
 import sys
 from mock import patch, Mock
-from lizard import CLikeReader, map_files_to_analyzer, FunctionInfo, analyze_file, FileInfoBuilder
+from lizard_languages import CLikeReader
+from lizard import map_files_to_analyzer, FunctionInfo, analyze_file, FileInfoBuilder
 
 
 def analyzer_mock(filename):

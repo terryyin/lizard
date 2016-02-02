@@ -2,7 +2,7 @@
 This is an extension of lizard, that ignores the CCN within
 the assertion.
 '''
-from lizard import CodeStateMachine
+from lizard_languages.code_reader import CodeStateMachine
 
 
 class LizardExtension(CodeStateMachine):  # pylint: disable=R0903

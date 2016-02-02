@@ -10,10 +10,10 @@ tests3:
 	python3 -m unittest test
 
 pep8:
-	pep8 --exclude=mock.py lizard.py lizard_ext languages # test
+	pep8 --exclude=mock.py lizard.py lizard_ext lizard_languages # test
 
 pylint:
-	pylint --rcfile pylintrc lizard.py lizard_ext languages
+	pylint --rcfile pylintrc lizard.py lizard_ext lizard_languages
 
 deps:
 	pip install -r dev_requirements.txt

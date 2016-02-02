@@ -1,7 +1,7 @@
 ''' Language parser for Python '''
 
-from lizard import CodeReader
-from lizard import CLikeReader
+from .code_reader import CodeReader
+from .clike import CLikeReader
 
 
 class ObjCReader(CLikeReader, CodeReader):
