@@ -54,5 +54,5 @@ It works with Java, C/C++, JavaScript, Python, Ruby, Swift, Objective C. Metrics
 
 if __name__ == "__main__":
     import sys
-    install('hfcca')
-    #install('lizard')
+    #install('hfcca')
+    install('lizard')

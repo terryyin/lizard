@@ -264,6 +264,7 @@ before a function it will suppress the warning for that function.
 
 Change Logs
 -----------
+-  2016.02.2 Add option -EMcCabe for ignoring fall-through swith/cases, thanks to @@vicgonzalez
 -  2016.01.31 Add support for Ruby
 -  2016.01.29 Add -T option to set limit for any field
 -  2015.12.17 Add support for Swift
