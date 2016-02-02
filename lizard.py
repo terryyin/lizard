@@ -42,7 +42,7 @@ except ImportError:
     pass
 
 
-VERSION = "1.10.1"
+VERSION = "1.10.2"
 
 DEFAULT_CCN_THRESHOLD, DEFAULT_WHITELIST, \
     DEFAULT_MAX_FUNC_LENGTH = 15, "whitelizard.txt", 1000
