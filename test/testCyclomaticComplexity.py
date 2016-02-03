@@ -1,7 +1,7 @@
 import unittest
 from .testHelpers import get_cpp_function_list
 
-class TestCyclomaticComplexity(unittest.TestCase):
+class TestCppCyclomaticComplexity(unittest.TestCase):
 
     def test_one_function_with_no_condition(self):
         result = get_cpp_function_list("int fun(){}")
@@ -37,6 +37,18 @@ class TestCyclomaticComplexity(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual(3, result[0].cyclomatic_complexity)
 
-    def test_one_function_with_forward(self):
-        result = get_cpp_function_list("template <template <typename...> class TemplateClass, typename... Args> TemplateClass<Args...> make(Args&&... args){}")
+    def test_one_function_with_r_value_ref_in_parameter(self):
+        result = get_cpp_function_list("int make(Args&&... args){}")
+        self.assertEqual(1, result[0].cyclomatic_complexity)
+
+    def test_one_function_with_r_value_ref_in_body(self):
+        result = get_cpp_function_list("int f() {Args&& a=b;}")
+        self.assertEqual(1, result[0].cyclomatic_complexity)
+
+    def test_one_function_with_non_r_value_ref_in_body(self):
+        result = get_cpp_function_list("int f() {a && b==c;}")
+        self.assertEqual(2, result[0].cyclomatic_complexity)
+
+    def test_one_function_with_typedef(self):
+        result = get_cpp_function_list("int f() {typedef int&& rref;}")
         self.assertEqual(1, result[0].cyclomatic_complexity)

@@ -5,6 +5,42 @@ Base class for all langauge parsers
 import re
 
 
+class SyntaxMachine(object):
+    # pylint: disable=R0903
+    def __init__(self, context):
+        self.context = context
+        self.saved_state = self._state = self._state_global
+        self.last_token = None
+        self.to_exit = False
+        self.callback = None
+        self.rut_tokens = []
+
+    def next(self, state, token=None):
+        self._state = state
+        if token is not None:
+            return self(token)
+
+    def sm_return(self):
+        self.to_exit = True
+
+    def sub_state(self, state, callback=None, token=None):
+        self.saved_state = self._state
+        self.callback = callback
+        self.next(state, token)
+
+    def __call__(self, token):
+        if self._state(token):
+            self.next(self.saved_state)
+            if self.callback:
+                self.callback()
+        self.last_token = token
+        if self.to_exit:
+            return True
+
+    def _state_global(self, token):
+        pass
+
+
 class CodeStateMachine(object):
     ''' the state machine '''
     def __init__(self, context):
@@ -12,6 +48,7 @@ class CodeStateMachine(object):
         self._state = self._state_global
         self.br_count = 0
         self.rut_tokens = []
+        self.parallel_states = []
 
     @staticmethod
     def read_inside_brackets_then(brs, end_state=None):
@@ -41,6 +78,8 @@ class CodeStateMachine(object):
         self.context = reader.context
         for token in tokens:
             self._state(token)
+            for state in self.parallel_states:
+                state(token)
             yield token
         self.eof()
 

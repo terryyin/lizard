@@ -2,44 +2,9 @@
 Language parser for JavaScript
 '''
 
-from .code_reader import CodeReader
+from .code_reader import CodeReader, SyntaxMachine
 from .script_language import ScriptLanguageMixIn
 from .js_style_regex_expression import js_style_regex_expression
-
-
-class SyntaxMachine(object):
-    # pylint: disable=R0903
-    def __init__(self, context):
-        self.context = context
-        self.saved_state = self._state = self._state_global
-        self.last_token = None
-        self.to_exit = False
-        self.callback = None
-
-    def next(self, state, token=None):
-        self._state = state
-        if token is not None:
-            return self(token)
-
-    def sm_return(self):
-        self.to_exit = True
-
-    def sub_state(self, state, callback=None, token=None):
-        self.saved_state = self._state
-        self.callback = callback
-        self.next(state, token)
-
-    def __call__(self, token):
-        if self._state(token):
-            self.next(self.saved_state)
-            if self.callback:
-                self.callback()
-        self.last_token = token
-        if self.to_exit:
-            return True
-
-    def _state_global(self, token):
-        pass
 
 
 def state_embedded_doc(token):

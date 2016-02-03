@@ -4,7 +4,7 @@ Language parser for C, C++ -like languages.
 
 import re
 import itertools
-from .code_reader import CodeStateMachine, CodeReader
+from .code_reader import SyntaxMachine, CodeStateMachine, CodeReader
 
 
 class CCppCommentsMixin(object):  # pylint: disable=R0903
@@ -13,6 +13,25 @@ class CCppCommentsMixin(object):  # pylint: disable=R0903
     def get_comment_from_token(token):
         if token.startswith("/*") or token.startswith("//"):
             return token[2:]
+
+
+class CFunctionStates(SyntaxMachine):
+    # pylint: disable=R0903
+
+    def _state_global(self, token):
+        if token == "&&":
+            self.next(self._and_and)
+        elif token == "typedef":
+            self.next(self._typedef)
+
+    @CodeReader.read_until_then('=;{}')
+    def _and_and(self, token, _):
+        if token == "=":
+            self.context.add_condition(-1)
+
+    @CodeReader.read_until_then(';')
+    def _typedef(self, _, tokens):
+        self.context.add_condition(-tokens.count("&&"))
 
 
 # pylint: disable=R0903
@@ -30,6 +49,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
         self.bracket_stack = []
         self._saved_tokens = []
         self.namespaces = []
+        self.parallel_states.append(CFunctionStates(context))
 
     def start_new_function(self, name):
         self.context.start_new_function(name)
