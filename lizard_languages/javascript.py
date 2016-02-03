@@ -2,7 +2,7 @@
 Language parser for JavaScript
 '''
 
-from .code_reader import CodeReader
+from .code_reader import CodeReader, CodeStateMachine
 from .clike import CCppCommentsMixin
 from .js_style_regex_expression import js_style_regex_expression
 
@@ -20,6 +20,12 @@ class JavaScriptReader(CodeReader, CCppCommentsMixin):
 
     def __init__(self, context):
         super(JavaScriptReader, self).__init__(context)
+        self.parallel_states = [JavaScriptStates(context)]
+
+
+class JavaScriptStates(CodeStateMachine):  # pylint: disable=R0903
+    def __init__(self, context):
+        super(JavaScriptStates, self).__init__(context)
         # start from one, so global level will never count
         self.brace_count = 1
         self.last_tokens = ''

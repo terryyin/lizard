@@ -49,6 +49,18 @@ class TestCppCyclomaticComplexity(unittest.TestCase):
         result = get_cpp_function_list("int f() {a && b==c;}")
         self.assertEqual(2, result[0].cyclomatic_complexity)
 
+    def test_two_function_with_non_r_value_ref_in_body(self):
+        result = get_cpp_function_list("""
+x c() {
+  if (a && b) {
+  }
+}
+x a() {
+  inputs = c;
+}
+        """)
+        self.assertEqual(1, result[1].cyclomatic_complexity)
+
     def test_one_function_with_typedef(self):
         result = get_cpp_function_list("int f() {typedef int&& rref;}")
         self.assertEqual(1, result[0].cyclomatic_complexity)

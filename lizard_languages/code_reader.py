@@ -5,14 +5,18 @@ Base class for all langauge parsers
 import re
 
 
-class SyntaxMachine(object):
+class CodeStateMachine(object):
+    ''' the state machine '''
     # pylint: disable=R0903
+    # pylint: disable=R0902
     def __init__(self, context):
         self.context = context
         self.saved_state = self._state = self._state_global
         self.last_token = None
         self.to_exit = False
         self.callback = None
+        self.rut_tokens = []
+        self.br_count = 0
         self.rut_tokens = []
 
     def next(self, state, token=None):
@@ -40,16 +44,6 @@ class SyntaxMachine(object):
     def _state_global(self, token):
         pass
 
-
-class CodeStateMachine(object):
-    ''' the state machine '''
-    def __init__(self, context):
-        self.context = context
-        self._state = self._state_global
-        self.br_count = 0
-        self.rut_tokens = []
-        self.parallel_states = []
-
     @staticmethod
     def read_inside_brackets_then(brs, end_state=None):
         def decorator(func):
@@ -74,28 +68,8 @@ class CodeStateMachine(object):
             return read_until_then_token
         return decorator
 
-    def __call__(self, tokens, reader):
-        self.context = reader.context
-        for token in tokens:
-            self._state(token)
-            for state in self.parallel_states:
-                state(token)
-            yield token
-        self.eof()
 
-    def _state_global(self, token):
-        pass
-
-    def eof(self):
-        pass
-
-    def next(self, state, token=None):
-        self._state = state
-        if token is not None:
-            self._state(token)
-
-
-class CodeReader(CodeStateMachine):
+class CodeReader(object):
     ''' CodeReaders are used to parse function structures from code of different
     language. Each language will need a subclass of CodeReader.  '''
 
@@ -104,7 +78,8 @@ class CodeReader(CodeStateMachine):
     extra_subclasses = set()
 
     def __init__(self, context):
-        super(CodeReader, self).__init__(context)
+        self.parallel_states = []
+        self.context = context
 
     @classmethod
     def match_filename(cls, filename):
@@ -112,9 +87,6 @@ class CodeReader(CodeStateMachine):
             return re.compile(r".*\.(" + r"|".join(exts) + r")$", re.I)
 
         return compile_file_extension_re(*cls.ext).match(filename)
-
-    def eof(self):
-        pass
 
     @staticmethod
     def generate_tokens(source_code, addition=''):
@@ -157,3 +129,14 @@ class CodeReader(CodeStateMachine):
                 yield macro
 
         return [t for t in _generate_tokens(source_code, addition)]
+
+    def __call__(self, tokens, reader):
+        self.context = reader.context
+        for token in tokens:
+            for state in self.parallel_states:
+                state(token)
+            yield token
+        self.eof()
+
+    def eof(self):
+        pass

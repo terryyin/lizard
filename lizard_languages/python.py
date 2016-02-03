@@ -1,6 +1,6 @@
 ''' Language parser for Python '''
 
-from .code_reader import CodeReader
+from .code_reader import CodeReader, CodeStateMachine
 from .script_language import ScriptLanguageMixIn
 
 
@@ -13,9 +13,9 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
 
     def __init__(self, context):
         super(PythonReader, self).__init__(context)
-        self.function_stack = []
+        self.parallel_states = [PythonStates(context, self)]
         self.current_indent = 0
-        self.leading_space = True
+        self.function_stack = []
 
     @staticmethod
     def generate_tokens(source_code, _=None):
@@ -24,20 +24,38 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
             r"|\'\'\'.*?\'\'\'" + r'|\"\"\".*?\"\"\"')
 
     def preprocess(self, tokens):
+        leading_space = True
         for token in tokens:
             if token != '\n':
-                if self.leading_space:
+                if leading_space:
                     if token.isspace():
                         self.current_indent = len(token.replace('\t', ' ' * 8))
                     else:
                         if not token.startswith('#'):
                             self._close_functions()
-                        self.leading_space = False
+                        leading_space = False
             else:
-                self.leading_space = True
+                leading_space = True
                 self.current_indent = 0
             if not token.isspace() or token == '\n':
                 yield token
+
+    def _close_functions(self):
+        while self.context.current_function.indent >= self.current_indent:
+            endline = self.context.current_function.end_line
+            self.context.end_of_function()
+            self.context.current_function = self.function_stack.pop()
+            self.context.current_function.end_line = endline
+
+    def eof(self):
+        self.current_indent = 0
+        self._close_functions()
+
+
+class PythonStates(CodeStateMachine):  # pylint: disable=R0903
+    def __init__(self, context, reader):
+        super(PythonStates, self).__init__(context)
+        self.reader = reader
 
     def _state_global(self, token):
         if token == 'def':
@@ -45,9 +63,9 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
 
     def _function(self, token):
         if token != '(':
-            self.function_stack.append(self.context.current_function)
+            self.reader.function_stack.append(self.context.current_function)
             self.context.start_new_function(token)
-            self.context.current_function.indent = self.current_indent
+            self.context.current_function.indent = self.reader.current_indent
         else:
             self._state = self._dec
 
@@ -70,14 +88,3 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
         if token.startswith('"""') or token.startswith("'''"):
             self.context.add_nloc(-token.count('\n') - 1)
         self._state_global(token)
-
-    def eof(self):
-        self.current_indent = 0
-        self._close_functions()
-
-    def _close_functions(self):
-        while self.context.current_function.indent >= self.current_indent:
-            endline = self.context.current_function.end_line
-            self.context.end_of_function()
-            self.context.current_function = self.function_stack.pop()
-            self.context.current_function.end_line = endline

@@ -2,10 +2,10 @@
 
 import re
 from .code_reader import CodeReader
-from .clike import CLikeReader
+from .clike import CLikeReader, CLikeStates
 
 
-class TTCNReader(CLikeReader, CodeReader):  # pylint: disable=R0903
+class TTCNReader(CLikeReader):  # pylint: disable=R0903
 
     ext = ['ttcn', 'ttcnpp']
     language_names = ['ttcn', 'ttcn3']
@@ -14,11 +14,22 @@ class TTCNReader(CLikeReader, CodeReader):  # pylint: disable=R0903
                       'case', 'goto', 'alt', 'interleave',
                       'and', 'or', 'xor'])
 
-    parameter_bracket_open = '('
-    parameter_bracket_close = ')'
-
     def __init__(self, context):
         super(TTCNReader, self).__init__(context)
+        self.parallel_states = [TTCNStates(context)]
+
+    @staticmethod
+    def generate_tokens(source_code, _=None):
+        return CodeReader.generate_tokens(
+            source_code,
+            r'|' + r'|'.join(re.escape(s) for s in (
+                '..', '->', '<@', '@>', '@lazy', '@fuzzy',
+                '@index', '@deterministic')))
+
+
+class TTCNStates(CLikeStates):  # pylint: disable=R0903
+    parameter_bracket_open = '('
+    parameter_bracket_close = ')'
 
     # module and group blocks are ignored
     def _state_global(self, token):
@@ -47,11 +58,3 @@ class TTCNReader(CLikeReader, CodeReader):  # pylint: disable=R0903
             self.next(self._state_imp, "{")
         else:
             self.context.add_to_long_function_name(' ' + token)
-
-    @staticmethod
-    def generate_tokens(source_code, _=None):
-        return CodeReader.generate_tokens(
-            source_code,
-            r'|' + r'|'.join(re.escape(s) for s in (
-                '..', '->', '<@', '@>', '@lazy', '@fuzzy',
-                '@index', '@deterministic')))

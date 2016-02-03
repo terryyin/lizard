@@ -4,7 +4,7 @@ Language parser for C, C++ -like languages.
 
 import re
 import itertools
-from .code_reader import SyntaxMachine, CodeStateMachine, CodeReader
+from .code_reader import CodeStateMachine, CodeReader
 
 
 class CCppCommentsMixin(object):  # pylint: disable=R0903
@@ -15,25 +15,6 @@ class CCppCommentsMixin(object):  # pylint: disable=R0903
             return token[2:]
 
 
-class CFunctionStates(SyntaxMachine):
-    # pylint: disable=R0903
-
-    def _state_global(self, token):
-        if token == "&&":
-            self.next(self._and_and)
-        elif token == "typedef":
-            self.next(self._typedef)
-
-    @CodeReader.read_until_then('=;{}')
-    def _and_and(self, token, _):
-        if token == "=":
-            self.context.add_condition(-1)
-
-    @CodeReader.read_until_then(';')
-    def _typedef(self, _, tokens):
-        self.context.add_condition(-tokens.count("&&"))
-
-
 # pylint: disable=R0903
 class CLikeReader(CodeReader, CCppCommentsMixin):
     ''' This is the reader for C, C++ and Java. '''
@@ -41,21 +22,10 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
     ext = ["c", "cpp", "cc", "mm", "cxx", "h", "hpp"]
     language_names = ['cpp', 'c']
     macro_pattern = re.compile(r"#\s*(\w+)\s*(.*)", re.M | re.S)
-    parameter_bracket_open = '(<'
-    parameter_bracket_close = ')>'
 
     def __init__(self, context):
         super(CLikeReader, self).__init__(context)
-        self.bracket_stack = []
-        self._saved_tokens = []
-        self.namespaces = []
-        self.parallel_states.append(CFunctionStates(context))
-
-    def start_new_function(self, name):
-        self.context.start_new_function(name)
-        self._state = self._state_function
-        if name == 'operator':
-            self._state = self._state_operator
+        self.parallel_states = [CLikeStates(context), CFunctionStates(context)]
 
     def preprocess(self, tokens):
         tilde = False
@@ -78,6 +48,45 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
                 else:
                     yield token
 
+
+class CFunctionStates(CodeStateMachine):
+    # pylint: disable=R0903
+
+    def _state_global(self, token):
+        if token == "&&":
+            self.next(self._and_and)
+        elif token == "typedef":
+            self.next(self._typedef)
+
+    @CodeStateMachine.read_until_then('=;{}')
+    def _and_and(self, token, _):
+        if token == "=":
+            self.context.add_condition(-1)
+        self.next(self._state_global)
+
+    @CodeStateMachine.read_until_then(';')
+    def _typedef(self, _, tokens):
+        self.context.add_condition(-tokens.count("&&"))
+
+
+# pylint: disable=R0903
+class CLikeStates(CodeStateMachine):
+    ''' This is the reader for C, C++ and Java. '''
+    parameter_bracket_open = '(<'
+    parameter_bracket_close = ')>'
+
+    def __init__(self, context):
+        super(CLikeStates, self).__init__(context)
+        self.bracket_stack = []
+        self._saved_tokens = []
+        self.namespaces = []
+
+    def start_new_function(self, name):
+        self.context.start_new_function(name)
+        self._state = self._state_function
+        if name == 'operator':
+            self._state = self._state_operator
+
     def _state_global(self, token):
         if token in ("struct", "class", "namespace"):
             self._state = self._read_namespace
@@ -90,7 +99,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
             self.start_new_function('::'.join(
                 [x for x in self.namespaces if x] + [token]))
 
-    @CodeReader.read_until_then('({;')
+    @CodeStateMachine.read_until_then('({;')
     def _read_namespace(self, token, saved):
         self._state = self._state_global
         if token == "{":
@@ -192,7 +201,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
         if token == '{':
             self.next(self._state_entering_imp, "{")
 
-    @CodeReader.read_until_then('({')
+    @CodeStateMachine.read_until_then('({')
     def _state_one_initialization(self, token, _):
         if token == "(":
             self._state = self._state_initialization_value1

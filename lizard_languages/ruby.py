@@ -2,7 +2,7 @@
 Language parser for JavaScript
 '''
 
-from .code_reader import CodeReader, SyntaxMachine
+from .code_reader import CodeReader, CodeStateMachine
 from .script_language import ScriptLanguageMixIn
 from .js_style_regex_expression import js_style_regex_expression
 
@@ -12,7 +12,7 @@ def state_embedded_doc(token):
         return True
 
 
-class RubyStateMachine(SyntaxMachine):
+class RubyStateMachine(CodeStateMachine):
     # pylint: disable=R0903
     def is_newline(self):
         return self.context.newline or self.last_token == ";"
@@ -89,7 +89,7 @@ class RubyReader(CodeReader, ScriptLanguageMixIn):
 
     def __init__(self, context):
         super(RubyReader, self).__init__(context)
-        self._state = RubyStateMachine(context)
+        self.parallel_states = [RubyStateMachine(context)]
 
     @staticmethod
     @js_style_regex_expression

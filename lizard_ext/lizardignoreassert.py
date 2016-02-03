@@ -3,9 +3,10 @@ This is an extension of lizard, that ignores the CCN within
 the assertion.
 '''
 from lizard_languages.code_reader import CodeStateMachine
+from .extension_base import ExtensionBase
 
 
-class LizardExtension(CodeStateMachine):  # pylint: disable=R0903
+class LizardExtension(ExtensionBase):  # pylint: disable=R0903
 
     def __init__(self):
         super(LizardExtension, self).__init__(None)

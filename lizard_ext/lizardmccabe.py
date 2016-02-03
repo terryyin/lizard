@@ -6,10 +6,10 @@ counted by lizard according to McCabe's definition:
 In McCabe's version, the fall-through cases in switch/case statement
 doesn't count as 1 complexity.
 '''
-from lizard_languages.code_reader import CodeStateMachine
+from .extension_base import ExtensionBase
 
 
-class LizardExtension(CodeStateMachine):  # pylint: disable=R0903
+class LizardExtension(ExtensionBase):  # pylint: disable=R0903
 
     def _state_global(self, token):
         if token == "case":

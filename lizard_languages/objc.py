@@ -1,16 +1,16 @@
 ''' Language parser for Python '''
 
-from .code_reader import CodeReader
-from .clike import CLikeReader
+from .clike import CLikeReader, CLikeStates
 
 
-class ObjCReader(CLikeReader, CodeReader):
+class ObjCReader(CLikeReader):
 
     ext = ['m']
     language_names = ['objectivec', 'objective-c', 'objc']
 
     def __init__(self, context):
         super(ObjCReader, self).__init__(context)
+        self.parallel_states = [ObjCStates(context)]
 
     def fake_and_useless(self):
         pass
@@ -18,8 +18,10 @@ class ObjCReader(CLikeReader, CodeReader):
     def useless_and_fake(self):
         pass
 
+
+class ObjCStates(CLikeStates):  # pylint: disable=R0903
     def _state_global(self, token):
-        super(ObjCReader, self)._state_global(token)
+        super(ObjCStates, self)._state_global(token)
         if token == '(':
             self.next(self._state_dec, token)
 
@@ -27,7 +29,7 @@ class ObjCReader(CLikeReader, CodeReader):
         if token in ("+", "-"):
             self._state = self._state_global
         else:
-            super(ObjCReader, self)._state_dec_to_imp(token)
+            super(ObjCStates, self)._state_dec_to_imp(token)
             if self._state != self._state_imp:
                 self._state = self._state_objc_dec_begin
                 self.context.start_new_function(token)
