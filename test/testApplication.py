@@ -90,3 +90,4 @@ class IntegrationTests(unittest.TestCase):
         self.runApplicationWithArgv(['lizard', '-C5'])
         mock_exit.assert_called_with(1)
 
+

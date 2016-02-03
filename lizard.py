@@ -328,24 +328,26 @@ def comment_counter(tokens, reader):
 
 
 def line_counter(tokens, reader):
-    reader.context.current_line = 1
+    context = reader.context
+    context.current_line = 1
     newline = 1
     for token in tokens:
         if token != "\n":
             count = token.count('\n')
-            reader.context.current_line += count
-            reader.context.add_nloc(count + newline)
+            context.current_line += count
+            context.add_nloc(count + newline)
             newline = 0
             yield token
         else:
-            reader.context.current_line += 1
+            context.current_line += 1
             newline = 1
 
 
 def token_counter(tokens, reader):
+    context = reader.context
     for token in tokens:
-        reader.context.fileinfo.token_count += 1
-        reader.context.current_function.token_count += 1
+        context.fileinfo.token_count += 1
+        context.current_function.token_count += 1
         yield token
 
 

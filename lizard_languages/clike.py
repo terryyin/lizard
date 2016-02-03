@@ -25,7 +25,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
 
     def __init__(self, context):
         super(CLikeReader, self).__init__(context)
-        self.parallel_states = [CLikeStates(context), CFunctionStates(context)]
+        self.parallel_states = (CLikeStates(context), CFunctionStates(context))
 
     def preprocess(self, tokens):
         tilde = False
