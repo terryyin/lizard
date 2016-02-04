@@ -78,6 +78,22 @@ class TestCPreprocessor(unittest.TestCase):
         """)
         self.assertIn("1", tokens)
 
+    def test_should_handle_multiple_elifs(self):
+        tokens = process_code("""
+        #if defined(BLAH1)
+        1
+        #elif defined(BLAH2)
+        2
+        #elif define(BLAH3)
+        3
+        #endif
+        4
+        """)
+        self.assertIn("1", tokens)
+        self.assertNotIn("2", tokens)
+        self.assertIn("4", tokens)
+
+
 
 def analyze_with_extension(code):
     return get_cpp_function_list_with_extnesion(code, CPreprocessor())

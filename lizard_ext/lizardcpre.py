@@ -16,19 +16,17 @@ class LizardExtension(object):  # pylint: disable=R0903
             if_stack = []
             for token in tokens:
                 if token.startswith("#"):
-                    if token.startswith("#if"):
-                        if_stack.append(token)
-                    elif token.startswith("#el"):
-                        else_count += 1
-                        if_stack.append(token)
-                    elif token.startswith("#endif"):
-                        if if_stack and if_stack.pop().startswith("#el"):
-                            else_count -= 1
-                            if if_stack:
-                                if_stack.pop()
-                    continue
-                if not else_count:
-                    yield token
+                    if_stack.append(token)
+                    else_count += 1 if token.startswith("#else") else 0
+                    if token.startswith("#endif"):
+                        while if_stack:
+                            last = if_stack.pop()
+                            else_count -= 1 if last.startswith("#else") else 0
+                            if last.startswith("#if"):
+                                break
+                elif not else_count:
+                    if not (if_stack and if_stack[-1].startswith("#elif")):
+                        yield token
 
         if "c" not in reader.ext:
             return tokens
