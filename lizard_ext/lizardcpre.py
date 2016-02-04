@@ -5,7 +5,6 @@ is hard to parse. It works by always ignoring the code
 between #else and #end.
 '''
 
-
 class LizardExtension(object):  # pylint: disable=R0903
 
     ordering_index = 0
@@ -22,10 +21,8 @@ class LizardExtension(object):  # pylint: disable=R0903
                         else_count += 1
                         if_stack.append(token)
                     elif token.startswith("#endif"):
-                        if if_stack and if_stack.pop().startswith("#el"):
+                        while if_stack and if_stack.pop().startswith("#el"):
                             else_count -= 1
-                            if if_stack:
-                                if_stack.pop()
                     continue
                 if not else_count:
                     yield token
