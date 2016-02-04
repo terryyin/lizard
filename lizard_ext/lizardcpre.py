@@ -17,11 +17,11 @@ class LizardExtension(object):  # pylint: disable=R0903
             for token in tokens:
                 if token.startswith("#"):
                     if_stack.append(token)
-                    else_count += 1 if token.startswith("#else") else 0
+                    else_count += token.count("#else")
                     if token.startswith("#endif"):
                         while if_stack:
                             last = if_stack.pop()
-                            else_count -= 1 if last.startswith("#else") else 0
+                            else_count -= last.count("#else")
                             if last.startswith("#if"):
                                 break
                 elif not else_count:
