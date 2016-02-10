@@ -20,7 +20,7 @@ lizard is an extensible Cyclomatic Complexity Analyzer for many programming
 languages including C/C++ (doesn't require all the header files).
 For more information visit http://www.lizard.ws
 """
-from __future__ import print_function
+from __future__ import print_function, division
 import sys
 import itertools
 import re
@@ -495,29 +495,25 @@ def print_total(warning_count, saved_result, op):
     file_infos = list(file_info for file_info in saved_result if file_info)
     all_fun = list(itertools.chain(*(file_info.function_list
                                      for file_info in file_infos)))
-    cnt = len(all_fun)
-    if cnt == 0:
-        cnt = 1
-    nloc_in_functions = sum([f.nloc for f in all_fun])
-    if nloc_in_functions == 0:
-        nloc_in_functions = 1
+    cnt = len(all_fun) or 1
+    nloc_in_functions = sum([f.nloc for f in all_fun]) or 1
     total_info = (
         sum([f.nloc for f in file_infos]),
         nloc_in_functions / cnt,
-        float(sum([f.cyclomatic_complexity for f in all_fun])) / cnt,
-        float(sum([f.token_count for f in all_fun])) / cnt,
+        sum([f.cyclomatic_complexity for f in all_fun]) / cnt,
+        sum([f.token_count for f in all_fun]) / cnt,
         cnt,
         warning_count,
-        float(warning_count) / cnt,
-        float(sum([
+        warning_count / cnt,
+        sum([
             f.nloc for f in all_fun
             if f.cyclomatic_complexity > op.thresholds['cyclomatic_complexity']
-            ])) / nloc_in_functions
+            ]) / nloc_in_functions
     )
 
     print("=" * 90)
-    print("Total nloc  Avg.nloc  Avg CCN  Avg token  Fun Cnt  Warning" +
-          " cnt   Fun Rt   nloc Rt  ")
+    print("Total nloc  Avg.nloc  Avg CCN  Avg token  Fun Cnt  Warning"
+          " cnt   Fun Rt   nloc Rt")
     print("-" * 90)
     print("%10d%10d%9.2f%11.2f%9d%13d%10.2f%8.2f" % total_info)
 
