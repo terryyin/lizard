@@ -5,10 +5,14 @@ python:
   - "3.5"
 
 install:
-  - python setup.py install
+  - pip install lizard
+
 before_script:
   - mkdir ./projects/
   - (cd projects && git clone https://github.com/andrewrk/zig.git)
 
 script:
-  - lizard projects/zig/src/*.cpp
+  - lizard --version
+  - lizard --help
+  - lizard projects/zig/src/analyze.cpp
+  - lizard -lcpp projects/zig/src/analyze.cpp
