@@ -3,12 +3,13 @@ python:
   - "2.7"
   - "3.4"
   - "3.5"
-install: 
+
 install:
-  - pip install -e .
-  - pip install -r dev_requirements.txt
-  - python setup.py install
+  - pip install lizard
+
+before_script:
+  - mkdir ./projects/
+  - (cd projects && git clone https://github.com/andrewrk/zig.git)
 
 script:
-  - make
-
+  - lizard projects/zig/src/*.cpp
