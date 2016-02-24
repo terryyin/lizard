@@ -296,7 +296,12 @@ def comment_counter(tokens, reader):
             if comment.strip().startswith("#lizard forgive"):
                 reader.context.forgive = True
             else:
-                comment_words_count = len(comment.split())
+                comment_words = comment.split()
+                if (comment_words and comment_words[0] or None) == '#':
+                    comment_words = comment_words[1:]
+                if (comment_words and comment_words[-1] or None) == "'''":
+                    comment_words = comment_words[:-1]
+                comment_words_count = len(comment_words)
                 reader.context.increment_comment_count()
                 reader.context.add_comment_words_count(comment_words_count)
         else:
