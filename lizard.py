@@ -218,6 +218,7 @@ class FileInformation(object):  # pylint: disable=R0903
         self.function_list = function_list or []
         self.token_count = 0
         self.comment_count = 0
+        self.comment_words_count = 0
 
     average_NLOC = property(lambda self: self.functions_average("nloc"))
     average_token = property(
@@ -259,6 +260,9 @@ class FileInfoBuilder(object):
     def increment_comment_count(self):
         self.fileinfo.comment_count += 1
 
+    def add_comment_words_count(self, comment_words_count):
+        self.fileinfo.comment_words_count += comment_words_count
+
     def add_to_long_function_name(self, app):
         self.current_function.add_to_long_name(app)
 
@@ -292,7 +296,9 @@ def comment_counter(tokens, reader):
             if comment.strip().startswith("#lizard forgive"):
                 reader.context.forgive = True
             else:
+                comment_words_count = len(comment.split())
                 reader.context.increment_comment_count()
+                reader.context.add_comment_words_count(comment_words_count)
         else:
             yield token
 
@@ -769,6 +775,7 @@ class OutputScheme(object):
             {'caption': " token ", 'value': "token_count"},
             {'caption': " PARAM ", 'value': "parameter_count"},
             {'caption': " COMMENTS ", 'value': "comment_count"},
+            {'caption': " COMMENT WORDS ", 'value': "comment_words_count"},
             {'caption': " length ", 'value': "length"},
         ] + [
             {
