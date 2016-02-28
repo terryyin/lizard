@@ -105,4 +105,12 @@ class Test_end_2_end(unittest.TestCase):
         result = analyze_with_extension("#if\nxxaa#else\nint a(){}\n#endif")
         self.assertEqual(0, len(result))
 
-
+    def test_line_counting(self):
+        result = analyze_with_extension("""
+        x c(){
+        #if defined(BLAH1)
+        #else
+        #endif
+        }
+        """)
+        self.assertEqual(5, result[0].length)
