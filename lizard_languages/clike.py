@@ -54,12 +54,12 @@ class CFunctionStates(CodeStateMachine):
 
     def _state_global(self, token):
         if token == "&&":
-            self.next(self._and_and)
+            self.next(self._r_value_ref)
         elif token == "typedef":
             self.next(self._typedef)
 
-    @CodeStateMachine.read_until_then('=;{}')
-    def _and_and(self, token, _):
+    @CodeStateMachine.read_until_then('=;{})')
+    def _r_value_ref(self, token, _):
         if token == "=":
             self.context.add_condition(-1)
         self.next(self._state_global)

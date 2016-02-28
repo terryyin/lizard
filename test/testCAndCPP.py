@@ -289,7 +289,6 @@ class Test_c_cpp_lizard(unittest.TestCase):
         result = get_cpp_function_list(''' a() _() { }''')
         self.assertEqual(1, len(result))
 
-
 class Test_Preprocessing(unittest.TestCase):
 
     def test_content_macro_should_be_ignored(self):
