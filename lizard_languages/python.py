@@ -38,8 +38,8 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
                     if token.isspace():
                         self.current_indent = len(token.replace('\t', ' ' * 8))
                         if self.array_indent[-1] != 0:
-                            indent_number = (self.array_indent[-1] - self.current_indent)
-                            for _ in itertools.repeat(None, indent_number / 4):
+                            nindent = self.array_indent[-1]-self.current_indent
+                            for _ in itertools.repeat(None, nindent / 4):
                                 yield self.indent_indicator
                         self.array_indent.append(self.current_indent)
                     else:
