@@ -44,8 +44,8 @@ except ImportError:
 
 VERSION = "1.10.4"
 
-DEFAULT_CCN_THRESHOLD, DEFAULT_WHITELIST, \
-    DEFAULT_MAX_FUNC_LENGTH = 15, "whitelizard.txt", 1000
+DEFAULT_CCN_THRESHOLD, DEFAULT_ND_THRESHOLD, DEFAULT_WHITELIST, \
+    DEFAULT_MAX_FUNC_LENGTH = 15, 7, "whitelizard.txt", 1000
 
 
 def analyze(paths, exclude_pattern=None, threads=1, exts=None, lans=None):
@@ -98,6 +98,14 @@ def create_command_line_parser(prog=None):
                         type=int,
                         dest="CCN",
                         default=DEFAULT_CCN_THRESHOLD)
+    parser.add_argument("-N", "--ND",
+                        help='''Threshold for nesting depth number
+                        warning. The default value is %d.
+                        Functions with ND bigger than it will generate warning
+                        ''' % DEFAULT_ND_THRESHOLD,
+                        type=int,
+                        dest="ND",
+                        default=DEFAULT_ND_THRESHOLD)
     parser.add_argument("-L", "--length",
                         help='''Threshold for maximum function length
                         warning. The default value is %d.
@@ -199,8 +207,12 @@ def create_command_line_parser(prog=None):
 
 class FunctionInfo(object):  # pylint: disable=R0902
 
-    def __init__(self, name, filename, start_line=0, ccn=1):
+    def __init__(self, name, filename, start_line=0, ccn=1, nd=0):
         self.cyclomatic_complexity = ccn
+        self.nesting_depth = nd
+        self.max_nesting_depth = nd
+        self.hidden_bracket = 0
+        self.bracket_loop = False
         self.nloc = 1
         self.token_count = 1  # the first token
         self.name = name
@@ -236,7 +248,8 @@ class FunctionInfo(object):  # pylint: disable=R0902
     def clang_format_warning(self):
         return (
             "{f.filename}:{f.start_line}: warning: {f.name} has" +
-            " {f.cyclomatic_complexity} CCN and {f.parameter_count}" +
+            " {f.cyclomatic_complexity} CCN and" +
+            " {f.max_nesting_depth} ND and {f.parameter_count}" +
             " params ({f.nloc} NLOC, {f.token_count} tokens)").format(f=self)
 
 
@@ -256,6 +269,11 @@ class FileInformation(object):  # pylint: disable=R0903
     CCN = property(
         lambda self:
         sum(fun.cyclomatic_complexity for fun in self.function_list))
+    average_ND = property(
+            lambda self: self.functions_average("max_nesting_depth"))
+    ND = property(
+        lambda self:
+        sum(fun.max_nesting_depth for fun in self.function_list))
 
     def functions_average(self, att):
         summary = sum(getattr(fun, att) for fun in self.function_list)
@@ -289,8 +307,39 @@ class FileInfoBuilder(object):
     def add_condition(self, inc=1):
         self.current_function.cyclomatic_complexity += inc
 
+    def add_nd_condition(self, inc=1):
+        self.current_function.nesting_depth += inc
+        nd_tmp = self.current_function.nesting_depth
+        if self.current_function.max_nesting_depth < nd_tmp:
+            self.current_function.max_nesting_depth = nd_tmp
+        return self.current_function.nesting_depth
+
     def reset_complexity(self):
         self.current_function.cyclomatic_complexity = 1
+
+    def reset_nd_complexity(self):
+        self.current_function.nesting_depth = 0
+        self.current_function.hidden_bracket = 0
+        self.current_function.bracket_loop = False
+
+    def reset_max_nd_complexity(self):
+        self.current_function.max_nesting_depth = 0
+
+    def add_max_nd_condition(self, inc=1):
+        self.current_function.max_nesting_depth += inc
+
+    def add_hidden_bracket_condition(self, inc=1):
+        self.current_function.hidden_bracket += inc
+
+    def get_hidden_bracket(self):
+        return self.current_function.hidden_bracket
+
+    def loop_bracket_status(self):
+        tmp_bracket_loop = self.current_function.bracket_loop
+        self.current_function.bracket_loop = not tmp_bracket_loop
+
+    def get_loop_status(self):
+        return self.current_function.bracket_loop
 
     def add_to_long_function_name(self, app):
         self.current_function.add_to_long_name(app)
@@ -332,7 +381,9 @@ def line_counter(tokens, reader):
     context.current_line = 1
     newline = 1
     for token in tokens:
-        if token != "\n":
+        if token == "<indent>":
+            yield token
+        elif token != "\n":
             count = token.count('\n')
             context.current_line += count
             context.add_nloc(count + newline)
@@ -363,12 +414,59 @@ def condition_counter(tokens, reader):
         yield token
 
 
+def condition_nd_counter(tokens, reader, loop_depth=0):
+    if hasattr(reader, "loops"):
+        loops = reader.loops
+    else:
+        loops = set(['if', 'else', 'foreach', 'for', 'while', '&&', '||',
+                     '?', 'catch', 'case', 'try'])
+    if hasattr(reader, "bracket"):
+        bracket = reader.bracket
+    else:
+        bracket = '}'
+    if hasattr(reader, "loop_indicator"):
+        loop_indicator = reader.loop_indicator
+    else:
+        loop_indicator = '{'
+    if hasattr(reader, "indent_indicator"):
+        indent_indicator = reader.indent_indicator
+    else:
+        indent_indicator = ';'
+    for token in tokens:
+        if token in loops:
+            loop_depth = reader.context.add_nd_condition()
+            if not reader.context.get_loop_status():
+                reader.context.add_hidden_bracket_condition()
+                reader.context.loop_bracket_status()
+        if token == loop_indicator:
+            reader.context.loop_bracket_status()
+        if token == bracket:
+            loop_depth = reader.context.add_nd_condition(-1)
+        if token == indent_indicator:
+            hidden_brackets = reader.context.get_hidden_bracket()
+            check_loop_brackets(reader, loop_depth, hidden_brackets)
+        if loop_depth < 0:
+            loop_depth = 0
+            reader.context.reset_nd_complexity()
+        yield token
+
+
+def check_loop_brackets(reader, loop_depth, hidden_brackets):
+    if hidden_brackets > 0:
+        reader.context.add_hidden_bracket_condition(-1)
+        loop_depth = reader.context.add_nd_condition(-1)
+    if loop_depth == 1:
+        reader.context.add_nd_condition(-1)
+
+
 def recount_switch_case(tokens, reader):
     for token in tokens:
         if token == 'switch':
             reader.context.add_condition()
+            reader.context.add_nd_condition()
         elif token == 'case':
             reader.context.add_condition(-1)
+            reader.context.add_nd_condition(-1)
         yield token
 
 
@@ -453,6 +551,7 @@ class OutputScheme(object):
         self.items = [
             {'caption': "  NLOC  ", 'value': "nloc"},
             {'caption': "  CCN  ", 'value': "cyclomatic_complexity"},
+            {'caption': "  ND  ", 'value': "max_nesting_depth"},
             {'caption': " token ", 'value': "token_count"},
             {'caption': " PARAM ", 'value': "parameter_count"},
             {'caption': " length ", 'value': "length"},
@@ -501,6 +600,7 @@ def print_total(warning_count, saved_result, op):
         sum([f.nloc for f in file_infos]),
         nloc_in_functions / cnt,
         sum([f.cyclomatic_complexity for f in all_fun]) / cnt,
+        sum([f.max_nesting_depth for f in all_fun]) / cnt,
         sum([f.token_count for f in all_fun]) / cnt,
         cnt,
         warning_count,
@@ -512,10 +612,10 @@ def print_total(warning_count, saved_result, op):
     )
 
     print("=" * 90)
-    print("Total nloc  Avg.nloc  Avg CCN  Avg token  Fun Cnt  Warning"
+    print("Total nloc  Avg.nloc  Avg CCN  Avg ND  Avg token  Fun Cnt  Warning"
           " cnt   Fun Rt   nloc Rt")
     print("-" * 90)
-    print("%10d%10d%9.2f%11.2f%9d%13d%10.2f%8.2f" % total_info)
+    print("%10d%10d%9.2f%9.2f%11.2f%9d%13d%10.2f%8.2f" % total_info)
 
 
 def print_and_save_modules(all_modules, extensions, scheme):
@@ -532,13 +632,14 @@ def print_and_save_modules(all_modules, extensions, scheme):
     print("--------------------------------------------------------------")
     print("%d file analyzed." % (len(all_functions)))
     print("==============================================================")
-    print("NLOC    Avg.NLOC AvgCCN Avg.ttoken  function_cnt    file")
+    print("NLOC    Avg.NLOC AvgCCN AvgND Avg.ttoken  function_cnt    file")
     print("--------------------------------------------------------------")
     for module_info in all_functions:
         print((
             "{module.nloc:7d}" +
             "{module.average_NLOC:7.0f}" +
             "{module.average_CCN:7.1f}" +
+            "{module.average_ND:7.1f}" +
             "{module.average_token:10.0f}" +
             "{function_count:10d}" +
             "     {module.filename}").format(
@@ -651,6 +752,8 @@ def parse_args(argv):
         sys.exit(2)
     if "cyclomatic_complexity" not in opt.thresholds:
         opt.thresholds["cyclomatic_complexity"] = opt.CCN
+    if "max_nesting_depth" not in opt.thresholds:
+        opt.thresholds["max_nesting_depth"] = opt.ND
     if "length" not in opt.thresholds:
         opt.thresholds["length"] = opt.length
     if "parameter_count" not in opt.thresholds:
@@ -678,6 +781,7 @@ def get_extensions(extension_names, switch_case_as_one_condition=False):
         line_counter,
         token_counter,
         condition_counter,
+        condition_nd_counter,
     ]
     if switch_case_as_one_condition:
         extensions.append(recount_switch_case)

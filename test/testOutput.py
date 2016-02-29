@@ -25,21 +25,22 @@ class TestFunctionOutput(StreamStdoutTestCase):
 
     def test_function_info_header_should_have_the_captions(self):
         print_and_save_modules([], self.extensions, self.scheme)
-        self.assertEquals("  NLOC    CCN   token  PARAM  length  location  ", sys.stdout.stream.splitlines()[1])
+        self.assertEquals("  NLOC    CCN    ND   token  PARAM  length  location  ", sys.stdout.stream.splitlines()[1])
 
     def test_function_info_header_should_have_the_captions_of_external_extensions(self):
         external_extension = Mock(FUNCTION_CAPTION = "*external_extension*", ordering_index=-1)
         extensions = get_extensions([external_extension])
         scheme = OutputScheme(extensions)
         print_and_save_modules([], extensions, scheme)
-        self.assertEquals("  NLOC    CCN   token  PARAM  length *external_extension* location  ", sys.stdout.stream.splitlines()[1])
+        self.assertEquals("  NLOC    CCN    ND   token  PARAM  length *external_extension* location  ", sys.stdout.stream.splitlines()[1])
 
     def test_print_fileinfo(self):
         self.foo.end_line = 100
         self.foo.cyclomatic_complexity = 16
         fileStat = FileInformation("FILENAME", 1, [self.foo])
         print_and_save_modules([fileStat], self.extensions, self.scheme)
-        self.assertEquals("       1     16      1      0       0 foo@100-100@FILENAME", sys.stdout.stream.splitlines()[3])
+        self.assertEquals("       1     16     0      1      0       0 foo@100-100@FILENAME", sys.stdout.stream.splitlines()[3])
+
 
 class TestWarningOutput(StreamStdoutTestCase):
 
@@ -61,9 +62,10 @@ class TestWarningOutput(StreamStdoutTestCase):
 
     def test_should_use_clang_format_for_warning(self):
         self.foo.cyclomatic_complexity = 30
+        self.foo.max_nesting_depth = 10
         fileSummary = FileInformation("FILENAME", 123, [self.foo])
         count = print_clang_style_warning([fileSummary], self.option, None)
-        self.assertIn("FILENAME:100: warning: foo has 30 CCN and 0 params (1 NLOC, 1 tokens)\n", sys.stdout.stream)
+        self.assertIn("FILENAME:100: warning: foo has 30 CCN and 10 ND and 0 params (1 NLOC, 1 tokens)\n", sys.stdout.stream)
         self.assertEqual(1, count)
 
     def test_sort_warning(self):
@@ -85,7 +87,7 @@ class TestFileOutput(StreamStdoutTestCase):
     def test_print_and_save_detail_information(self):
         fileSummary = FileInformation("FILENAME", 123, [])
         print_and_save_modules([fileSummary], [], Mock())
-        self.assertIn("    123      0    0.0         0         0     FILENAME", sys.stdout.stream)
+        self.assertIn("    123      0    0.0    0.0         0         0     FILENAME", sys.stdout.stream)
 
     def test_print_file_summary_only_once(self):
         print_and_save_modules(
