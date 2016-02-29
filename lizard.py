@@ -248,7 +248,7 @@ class FunctionInfo(object):  # pylint: disable=R0902
     def clang_format_warning(self):
         return (
             "{f.filename}:{f.start_line}: warning: {f.name} has" +
-            " {f.cyclomatic_complexity} CCN and {f.parameter_count}" +
+            " {f.cyclomatic_complexity} CCN and" +
             " {f.max_nesting_depth} ND and {f.parameter_count}" +
             " params ({f.nloc} NLOC, {f.token_count} tokens)").format(f=self)
 
