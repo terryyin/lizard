@@ -1,6 +1,6 @@
 import unittest
 import inspect
-from lizard import  analyze_file, FileAnalyzer, get_extensions
+from lizard import analyze_file, FileAnalyzer, get_extensions
 
 
 def get_python_function_list(source_code):
@@ -213,6 +213,3 @@ class Test_parser_for_Python(unittest.TestCase):
 def top_level_function_for_test():
     pass
 
-
-if __name__ == '__main__':
-    unittest.main()

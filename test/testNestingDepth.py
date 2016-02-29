@@ -1,5 +1,5 @@
 import unittest
-from testHelpers import get_cpp_function_list
+from .testHelpers import get_cpp_function_list
 
 
 class TestCppNestingDepth(unittest.TestCase):
@@ -117,6 +117,3 @@ class TestCppNestingDepth(unittest.TestCase):
         }
         """)
         self.assertEqual(3, result[0].max_nesting_depth)
-
-if __name__ == '__main__':
-    unittest.main()
