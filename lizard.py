@@ -99,13 +99,13 @@ def create_command_line_parser(prog=None):
                         dest="CCN",
                         default=DEFAULT_CCN_THRESHOLD)
     parser.add_argument("-N", "--ND",
-                            help='''Threshold for nesting depth number
-                            warning. The default value is %d.
-                            Functions with ND bigger than it will generate warning
-                            ''' % DEFAULT_ND_THRESHOLD,
-                            type=int,
-                            dest="ND",
-                            default=DEFAULT_ND_THRESHOLD)
+                        help='''Threshold for nesting depth number
+                        warning. The default value is %d.
+                        Functions with ND bigger than it will generate warning
+                        ''' % DEFAULT_ND_THRESHOLD,
+                        type=int,
+                        dest="ND",
+                        default=DEFAULT_ND_THRESHOLD)
     parser.add_argument("-L", "--length",
                         help='''Threshold for maximum function length
                         warning. The default value is %d.
@@ -309,8 +309,9 @@ class FileInfoBuilder(object):
 
     def add_nd_condition(self, inc=1):
         self.current_function.nesting_depth += inc
-        if self.current_function.max_nesting_depth < self.current_function.nesting_depth:
-            self.current_function.max_nesting_depth = self.current_function.nesting_depth
+        nd_tmp = self.current_function.nesting_depth
+        if self.current_function.max_nesting_depth < nd_tmp:
+            self.current_function.max_nesting_depth = nd_tmp
         return self.current_function.nesting_depth
 
     def reset_complexity(self):
@@ -334,7 +335,8 @@ class FileInfoBuilder(object):
         return self.current_function.hidden_bracket
 
     def loop_bracket_status(self):
-        self.current_function.bracket_loop = not self.current_function.bracket_loop
+        tmp_bracket_loop = self.current_function.bracket_loop
+        self.current_function.bracket_loop = not tmp_bracket_loop
 
     def get_loop_status(self):
         return self.current_function.bracket_loop
@@ -416,8 +418,8 @@ def condition_nd_counter(tokens, reader, loop_depth=0):
     if hasattr(reader, "loops"):
         loops = reader.loops
     else:
-        loops = set(['if', 'else', 'foreach', 'for', 'while', '&&', '||', '?', 'catch',
-                     'case', 'try'])
+        loops = set(['if', 'else', 'foreach', 'for', 'while', '&&', '||',
+                     '?', 'catch', 'case', 'try'])
     if hasattr(reader, "bracket"):
         bracket = reader.bracket
     else:

@@ -1,7 +1,7 @@
 """
 This is an extension of lizard. It rectifies the nesting depth
 counted by lizard according to codebetter's definition available on their website:
-    http://codebetter.com/patricksmacchia/2008/03/07/a-simple-trick-to-code-better-and-to-increase-testability/
+http://codebetter.com/patricksmacchia/2008/03/07/a-simple-trick-to-code-better-and-to-increase-testability/
 In nesting depth metric, the fall-through cases in switch/case statement
 doesn't count as 1 nested depth due to its readability.
 """
