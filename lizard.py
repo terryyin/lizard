@@ -27,6 +27,7 @@ import re
 import os
 from fnmatch import fnmatch
 import hashlib
+
 if sys.version[0] == '2':
     from future_builtins import map, filter  # pylint: disable=W0622, F0401
 
@@ -40,7 +41,6 @@ try:
     from lizard_ext import html_output
 except ImportError:
     pass
-
 
 VERSION = "1.10.4"
 
@@ -72,6 +72,7 @@ def create_command_line_parser(prog=None):
                 raise ArgumentError(self, "should be like nloc=20")
             k, val = value.split("=", 2)
             getattr(namespace, self.dest)[k.strip()] = int(val.strip())
+
     parser = ArgumentParser(prog=prog)
     parser.add_argument('paths', nargs='*', default=['.'],
                         help='list of the filename/paths.')
@@ -99,13 +100,13 @@ def create_command_line_parser(prog=None):
                         dest="CCN",
                         default=DEFAULT_CCN_THRESHOLD)
     parser.add_argument("-N", "--ND",
-                            help='''Threshold for nesting depth number
-                            warning. The default value is %d.
-                            Functions with ND bigger than it will generate warning
-                            ''' % DEFAULT_ND_THRESHOLD,
-                            type=int,
-                            dest="ND",
-                            default=DEFAULT_ND_THRESHOLD)
+                        help='''Threshold for nesting depth number
+                        warning. The default value is %d.
+                        Functions with ND bigger than it will generate warning
+                        ''' % DEFAULT_ND_THRESHOLD,
+                        type=int,
+                        dest="ND",
+                        default=DEFAULT_ND_THRESHOLD)
     parser.add_argument("-L", "--length",
                         help='''Threshold for maximum function length
                         warning. The default value is %d.
@@ -207,10 +208,10 @@ def create_command_line_parser(prog=None):
 
 class FunctionInfo(object):  # pylint: disable=R0902
 
-    def __init__(self, name, filename, start_line=0, ccn=1, nd=0):
+    def __init__(self, name, filename, start_line=0, ccn=1):
         self.cyclomatic_complexity = ccn
-        self.nesting_depth = nd
-        self.max_nesting_depth = nd
+        self.nesting_depth = 0
+        self.max_nesting_depth = 0
         self.hidden_bracket = 0
         self.bracket_loop = False
         self.nloc = 1
@@ -248,7 +249,7 @@ class FunctionInfo(object):  # pylint: disable=R0902
     def clang_format_warning(self):
         return (
             "{f.filename}:{f.start_line}: warning: {f.name} has" +
-            " {f.cyclomatic_complexity} CCN and {f.parameter_count}" +
+            " {f.cyclomatic_complexity} CCN and" +
             " {f.max_nesting_depth} ND and {f.parameter_count}" +
             " params ({f.nloc} NLOC, {f.token_count} tokens)").format(f=self)
 
@@ -270,8 +271,8 @@ class FileInformation(object):  # pylint: disable=R0903
         lambda self:
         sum(fun.cyclomatic_complexity for fun in self.function_list))
     average_ND = property(
-            lambda self: self.functions_average("max_nesting_depth"))
-    ND = property(
+        lambda self: self.functions_average("max_nesting_depth"))
+    ND = property(  # pylint: disable=C0103
         lambda self:
         sum(fun.max_nesting_depth for fun in self.function_list))
 
@@ -281,7 +282,6 @@ class FileInformation(object):  # pylint: disable=R0903
 
 
 class FileInfoBuilder(object):
-
     def __init__(self, filename):
         self.fileinfo = FileInformation(filename, 0)
         self.current_line = 0
@@ -294,7 +294,7 @@ class FileInfoBuilder(object):
         self.fileinfo.nloc += count
         self.current_function.nloc += count
         self.current_function.end_line = self.current_line
-        self.current_function.length =\
+        self.current_function.length = \
             self.current_line - self.current_function.start_line + 1
         self.newline = count > 0
 
@@ -309,8 +309,9 @@ class FileInfoBuilder(object):
 
     def add_nd_condition(self, inc=1):
         self.current_function.nesting_depth += inc
-        if self.current_function.max_nesting_depth < self.current_function.nesting_depth:
-            self.current_function.max_nesting_depth = self.current_function.nesting_depth
+        nd_tmp = self.current_function.nesting_depth
+        if self.current_function.max_nesting_depth < nd_tmp:
+            self.current_function.max_nesting_depth = nd_tmp
         return self.current_function.nesting_depth
 
     def reset_complexity(self):
@@ -334,7 +335,8 @@ class FileInfoBuilder(object):
         return self.current_function.hidden_bracket
 
     def loop_bracket_status(self):
-        self.current_function.bracket_loop = not self.current_function.bracket_loop
+        tmp_bracket_loop = self.current_function.bracket_loop
+        self.current_function.bracket_loop = not tmp_bracket_loop
 
     def get_loop_status(self):
         return self.current_function.bracket_loop
@@ -412,12 +414,12 @@ def condition_counter(tokens, reader):
         yield token
 
 
-def condition_nd_counter(tokens, reader, loop_depth=0):
+def condition_nd_counter(tokens, reader, l_depth=0):  # pylint: disable=R0912
     if hasattr(reader, "loops"):
         loops = reader.loops
     else:
-        loops = set(['if', 'else', 'foreach', 'for', 'while', '&&', '||', '?', 'catch',
-                     'case', 'try'])
+        loops = set(['if', 'else', 'foreach', 'for', 'while', '&&', '||',
+                     '?', 'catch', 'case', 'try'])
     if hasattr(reader, "bracket"):
         bracket = reader.bracket
     else:
@@ -432,28 +434,28 @@ def condition_nd_counter(tokens, reader, loop_depth=0):
         indent_indicator = ';'
     for token in tokens:
         if token in loops:
-            loop_depth = reader.context.add_nd_condition()
+            l_depth = reader.context.add_nd_condition()
             if not reader.context.get_loop_status():
                 reader.context.add_hidden_bracket_condition()
                 reader.context.loop_bracket_status()
         if token == loop_indicator:
             reader.context.loop_bracket_status()
         if token == bracket:
-            loop_depth = reader.context.add_nd_condition(-1)
+            l_depth = reader.context.add_nd_condition(-1)
         if token == indent_indicator:
             hidden_brackets = reader.context.get_hidden_bracket()
-            check_loop_brackets(reader, loop_depth, hidden_brackets)
-        if loop_depth < 0:
-            loop_depth = 0
+            check_loop_brackets(reader, l_depth, hidden_brackets)
+        if l_depth < 0:
+            l_depth = 0
             reader.context.reset_nd_complexity()
         yield token
 
 
-def check_loop_brackets(reader, loop_depth, hidden_brackets):
+def check_loop_brackets(reader, l_depth, hidden_brackets):
     if hidden_brackets > 0:
         reader.context.add_hidden_bracket_condition(-1)
-        loop_depth = reader.context.add_nd_condition(-1)
-    if loop_depth == 1:
+        l_depth = reader.context.add_nd_condition(-1)
+    if l_depth == 1:
         reader.context.add_nd_condition(-1)
 
 
@@ -501,7 +503,7 @@ def warning_filter(option, module_infos):
         if file_info:
             for fun in file_info.function_list:
                 if any(getattr(fun, attr) > limit for attr, limit in
-                        option.thresholds.items()):
+                       option.thresholds.items()):
                     yield fun
 
 
@@ -543,7 +545,6 @@ def whitelist_filter(warnings, script=None, whitelist=None):
 
 
 class OutputScheme(object):
-
     def __init__(self, ext):
         self.extensions = ext
         self.items = [
@@ -553,7 +554,7 @@ class OutputScheme(object):
             {'caption': " token ", 'value': "token_count"},
             {'caption': " PARAM ", 'value': "parameter_count"},
             {'caption': " length ", 'value': "length"},
-        ] + [
+            ] + [
             {
                 'caption': ext.FUNCTION_CAPTION,
                 'value': ext.FUNCTION_INFO_PART
@@ -578,8 +579,8 @@ def print_warnings(option, scheme, warnings):
     warning_count = 0
 
     warn_str = "!!!! Warnings ({0}) !!!!".format(
-            ' or '.join("{0} > {1}".format(
-                k, val) for k, val in option.thresholds.items()))
+        ' or '.join("{0} > {1}".format(
+            k, val) for k, val in option.thresholds.items()))
     print("\n" + "=" * len(warn_str) + "\n" + warn_str)
     print(scheme.function_info_head())
     for warning in warnings:
@@ -641,8 +642,8 @@ def print_and_save_modules(all_modules, extensions, scheme):
             "{module.average_token:10.0f}" +
             "{function_count:10d}" +
             "     {module.filename}").format(
-                module=module_info,
-                function_count=len(module_info.function_list)))
+            module=module_info,
+            function_count=len(module_info.function_list)))
     return all_functions
 
 
@@ -760,7 +761,6 @@ def parse_args(argv):
 
 
 def get_extensions(extension_names, switch_case_as_one_condition=False):
-
     def expand_extensions(existing):
         for name in extension_names:
             ext = (import_module('lizard_ext.lizard' + name.lower())
@@ -785,6 +785,7 @@ def get_extensions(extension_names, switch_case_as_one_condition=False):
         extensions.append(recount_switch_case)
     return expand_extensions(extensions)
 
+
 analyze_file = FileAnalyzer(get_extensions([]))  # pylint: disable=C0103
 
 
@@ -802,6 +803,7 @@ def lizard_main(argv):
     warning_count = printer(result, options, OutputScheme(options.extensions))
     if options.number < warning_count:
         sys.exit(1)
+
 
 if __name__ == "__main__":
     lizard_main(sys.argv)

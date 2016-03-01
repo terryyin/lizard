@@ -87,7 +87,7 @@ class TestFileOutput(StreamStdoutTestCase):
     def test_print_and_save_detail_information(self):
         fileSummary = FileInformation("FILENAME", 123, [])
         print_and_save_modules([fileSummary], [], Mock())
-        self.assertIn("    123      0    0.0         0         0     FILENAME", sys.stdout.stream)
+        self.assertIn("    123      0    0.0    0.0         0         0     FILENAME", sys.stdout.stream)
 
     def test_print_file_summary_only_once(self):
         print_and_save_modules(
