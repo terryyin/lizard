@@ -17,6 +17,9 @@ from lizard import FileInfoBuilder
 
 class LizardExtension(object):  # pylint: disable=R0903
 
+    FUNCTION_CAPTION = "  ND  "
+    FUNCTION_INFO_PART = "max_nesting_depth"
+
     def __call__(self, tokens, reader, l_depth=0):  # pylint: disable=R0912
         if hasattr(reader, "loops"):
             loops = reader.loops

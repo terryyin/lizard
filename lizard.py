@@ -474,7 +474,6 @@ class OutputScheme(object):
         self.items = [
             {'caption': "  NLOC  ", 'value': "nloc"},
             {'caption': "  CCN  ", 'value': "cyclomatic_complexity"},
-            {'caption': "  ND  ", 'value': "max_nesting_depth"},
             {'caption': " token ", 'value': "token_count"},
             {'caption': " PARAM ", 'value': "parameter_count"},
             {'caption': " length ", 'value': "length"},
@@ -666,7 +665,9 @@ def get_all_source_files(paths, exclude_patterns, lans):
 
 def parse_args(argv):
     opt = create_command_line_parser(argv[0]).parse_args(args=argv[1:])
-    values = [item['value'] for item in OutputScheme([]).items]
+    opt.extensions = get_extensions(opt.extensions,
+                                    opt.switchCasesAsOneCondition)
+    values = [item['value'] for item in OutputScheme(opt.extensions).items]
     no_fields = (set(opt.sorting) | set(opt.thresholds.keys())) - set(values)
     if no_fields:
         error_message = "Wrong field name '%s'.\n" % ", ".join(no_fields)
@@ -714,8 +715,6 @@ analyze_file = FileAnalyzer(get_extensions([]))  # pylint: disable=C0103
 
 def lizard_main(argv):
     options = parse_args(argv)
-    options.extensions = get_extensions(options.extensions,
-                                        options.switchCasesAsOneCondition)
     printer = options.printer or print_result
     result = analyze(
         options.paths,
