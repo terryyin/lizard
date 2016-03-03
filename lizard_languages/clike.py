@@ -40,7 +40,8 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
                 if macro:
                     if macro.group(1) in ('if', 'ifdef', 'elif'):
                         self.context.add_condition()
-                        self.context.add_nd_condition()
+                        if hasattr(self.context, "add_nd_condition"):
+                            self.context.add_nd_condition()
                     elif macro.group(1) == 'include':
                         yield "#include"
                         yield macro.group(2) or "\"\""
@@ -223,7 +224,7 @@ class CLikeStates(CodeStateMachine):
     def _state_entering_imp(self, token):
         self.context.reset_complexity()
         if hasattr(self.context, "reset_nd_complexity"):
-            self.context.reset_nd_complexity()
+            elf.context.reset_nd_complexity()
             self.context.reset_max_nd_complexity()
         self.next(self._state_imp, token)
 
