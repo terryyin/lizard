@@ -12,6 +12,7 @@ in every function.
                         default=DEFAULT_ND_THRESHOLD)
 
 """
+from lizard import FileInfoBuilder
 
 
 class LizardExtension(object):  # pylint: disable=R0903
@@ -59,3 +60,45 @@ def check_loop_brackets(reader, l_depth, hidden_brackets):
         l_depth = reader.context.add_nd_condition(-1)
     if l_depth == 1:
         reader.context.add_nd_condition(-1)
+
+
+class NDFileInfoAddition(FileInfoBuilder):
+
+    def add_nd_condition(self, inc=1):
+        self.current_function.nesting_depth += inc
+        nd_tmp = self.current_function.nesting_depth
+        if self.current_function.max_nesting_depth < nd_tmp:
+            self.current_function.max_nesting_depth = nd_tmp
+        return self.current_function.nesting_depth
+
+    def reset_nd_complexity(self):
+        self.current_function.nesting_depth = 0
+        self.current_function.hidden_bracket = 0
+        self.current_function.bracket_loop = False
+
+    def reset_max_nd_complexity(self):
+        self.current_function.max_nesting_depth = 0
+
+    def add_max_nd_condition(self, inc=1):
+        self.current_function.max_nesting_depth += inc
+
+    def add_hidden_bracket_condition(self, inc=1):
+        self.current_function.hidden_bracket += inc
+
+    def get_hidden_bracket(self):
+        return self.current_function.hidden_bracket
+
+    def loop_bracket_status(self):
+        tmp_bracket_loop = self.current_function.bracket_loop
+        self.current_function.bracket_loop = not tmp_bracket_loop
+
+    def get_loop_status(self):
+        return self.current_function.bracket_loop
+
+
+def patch(frm, accept_class):
+    for method in [k for k in frm.__dict__ if not k.startswith("_")]:
+        setattr(accept_class, method, getattr(frm, method).__func__)
+
+
+patch(NDFileInfoAddition, FileInfoBuilder)

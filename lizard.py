@@ -307,39 +307,8 @@ class FileInfoBuilder(object):
     def add_condition(self, inc=1):
         self.current_function.cyclomatic_complexity += inc
 
-    def add_nd_condition(self, inc=1):
-        self.current_function.nesting_depth += inc
-        nd_tmp = self.current_function.nesting_depth
-        if self.current_function.max_nesting_depth < nd_tmp:
-            self.current_function.max_nesting_depth = nd_tmp
-        return self.current_function.nesting_depth
-
     def reset_complexity(self):
         self.current_function.cyclomatic_complexity = 1
-
-    def reset_nd_complexity(self):
-        self.current_function.nesting_depth = 0
-        self.current_function.hidden_bracket = 0
-        self.current_function.bracket_loop = False
-
-    def reset_max_nd_complexity(self):
-        self.current_function.max_nesting_depth = 0
-
-    def add_max_nd_condition(self, inc=1):
-        self.current_function.max_nesting_depth += inc
-
-    def add_hidden_bracket_condition(self, inc=1):
-        self.current_function.hidden_bracket += inc
-
-    def get_hidden_bracket(self):
-        return self.current_function.hidden_bracket
-
-    def loop_bracket_status(self):
-        tmp_bracket_loop = self.current_function.bracket_loop
-        self.current_function.bracket_loop = not tmp_bracket_loop
-
-    def get_loop_status(self):
-        return self.current_function.bracket_loop
 
     def add_to_long_function_name(self, app):
         self.current_function.add_to_long_name(app)
