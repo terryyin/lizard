@@ -26,7 +26,8 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
     def _after_a_case(self, token):
         if token == "case":
             self.context.add_condition(-1)
-            self.context.add_nd_condition(-1)
+            if hasattr(self.context, "add_nd_condition"):
+                self.context.add_nd_condition(-1)
             self.next(self._in_case)
         else:
             self.next(self._state_global)
