@@ -1,10 +1,11 @@
 import unittest
 import inspect
-from lizard import analyze_file, FileAnalyzer, get_extensions
+from .testHelpers import get_python_function_list_with_extnesion
+from lizard_ext.lizardnd import LizardExtension as NestDepth
 
 
 def get_python_function_list(source_code):
-    return analyze_file.analyze_source_code("a.py", source_code).function_list
+    return get_python_function_list_with_extnesion(source_code, NestDepth())
 
 
 class Test_parser_for_Python(unittest.TestCase):
