@@ -1,6 +1,6 @@
 import unittest
 import inspect
-from lizard import  analyze_file, FileAnalyzer, get_extensions
+from lizard import analyze_file, FileAnalyzer, get_extensions
 
 
 def get_python_function_list(source_code):
@@ -22,6 +22,7 @@ class Test_parser_for_Python(unittest.TestCase):
         self.assertEqual(1, len(functions))
         self.assertEqual("simple_function", functions[0].name)
         self.assertEqual(2, functions[0].cyclomatic_complexity)
+        self.assertEqual(1, functions[0].max_nesting_depth)
         self.assertEqual(4, functions[0].end_line)
 
     def test_parameter_count(self):
@@ -48,11 +49,11 @@ class Test_parser_for_Python(unittest.TestCase):
 
     def test_2_top_level_functions(self):
         functions = get_python_function_list('''
-def a():
-    pass
-def b():
-    pass
-''')
+        def a():
+            pass
+        def b():
+            pass
+        ''')
         self.assertEqual(2, len(functions))
         self.assertEqual("a", functions[0].name)
 
@@ -78,6 +79,8 @@ def b():
         self.assertEqual("function1", functions[1].name)
         self.assertEqual(5, functions[1].end_line)
         self.assertEqual(2, functions[1].cyclomatic_complexity)
+        self.assertEqual(2, functions[1].max_nesting_depth)
+        # will be fixed, should be equal to 1
 
     def test_nested_functions_ended_at_eof(self):
         class namespace6:
@@ -112,6 +115,34 @@ def b():
         functions = get_python_function_list(inspect.getsource(namespace8))
         self.assertEqual("a", functions[0].name)
         self.assertEqual("b", functions[1].name)
+
+    def test_nested_depth_metric_muliple_continous_loop_statements(self):
+        class namespace9:
+            def function1():
+                if IamOnEarth:
+                    if IamOnShip:
+                        return toMars()
+        functions = get_python_function_list(inspect.getsource(namespace9))
+        self.assertEqual(1, len(functions))
+        self.assertEqual("function1", functions[0].name)
+        self.assertEqual(3, functions[0].cyclomatic_complexity)
+        self.assertEqual(2, functions[0].max_nesting_depth)
+        self.assertEqual(5, functions[0].end_line)
+
+    def test_nested_depth_metric_muliple_discrete_loop_statement(self):
+        class namespace10:
+            def function1():
+                if IamOnEarth:
+                    if not IamOnShip:
+                        return toMars()
+                elif IamOnMoon:
+                    return backEarth()
+        functions = get_python_function_list(inspect.getsource(namespace10))
+        self.assertEqual(1, len(functions))
+        self.assertEqual("function1", functions[0].name)
+        self.assertEqual(4, functions[0].cyclomatic_complexity)
+        self.assertEqual(2, functions[0].max_nesting_depth)
+        self.assertEqual(7, functions[0].end_line)
 
     def test_comment_is_not_counted_in_nloc(self):
         def function_with_comments():
@@ -148,6 +179,8 @@ def b():
                 '    if elif and or for while except finally\n'
         functions = get_python_function_list(code)
         self.assertEqual(9, functions[0].cyclomatic_complexity)
+        self.assertEqual(8, functions[0].max_nesting_depth)
+
 
     def test_block_string_is_one_token(self):
         code =  'def a():\n' + \

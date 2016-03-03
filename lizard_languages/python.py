@@ -1,5 +1,6 @@
 ''' Language parser for Python '''
 
+import itertools
 from .code_reader import CodeReader, CodeStateMachine
 from .script_language import ScriptLanguageMixIn
 
@@ -10,12 +11,18 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
     language_names = ['python']
     conditions = set(['if', 'for', 'while', 'and', 'or',
                       'elif', 'except', 'finally'])
+    loops = set(['if', 'for', 'while', 'and', 'or', 'else', 'try',
+                'elif', 'except', 'finally'])
+    loop_indicator = ':'
+    indent_indicator = '<indent>'
 
     def __init__(self, context):
         super(PythonReader, self).__init__(context)
         self.parallel_states = [PythonStates(context, self)]
         self.current_indent = 0
         self.function_stack = []
+        self.array_indent = [0]
+        self.indent_indicator = '<indent>'
 
     @staticmethod
     def generate_tokens(source_code, _=None):
@@ -25,11 +32,16 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
 
     def preprocess(self, tokens):
         leading_space = True
-        for token in tokens:
+        for token in tokens:  # pylint: disable=R0101
             if token != '\n':
                 if leading_space:
                     if token.isspace():
                         self.current_indent = len(token.replace('\t', ' ' * 8))
+                        if self.array_indent[-1] != 0:
+                            nindent = self.array_indent[-1]-self.current_indent
+                            for _ in itertools.repeat(None, int(nindent / 4)):
+                                yield self.indent_indicator
+                        self.array_indent.append(self.current_indent)
                     else:
                         if not token.startswith('#'):
                             self._close_functions()

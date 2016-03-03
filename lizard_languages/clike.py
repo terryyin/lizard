@@ -40,6 +40,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
                 if macro:
                     if macro.group(1) in ('if', 'ifdef', 'elif'):
                         self.context.add_condition()
+                        self.context.add_nd_condition()
                     elif macro.group(1) == 'include':
                         yield "#include"
                         yield macro.group(2) or "\"\""
@@ -62,11 +63,13 @@ class CFunctionStates(CodeStateMachine):
     def _r_value_ref(self, token, _):
         if token == "=":
             self.context.add_condition(-1)
+            self.context.add_max_nd_condition(-1)
         self.next(self._state_global)
 
     @CodeStateMachine.read_until_then(';')
     def _typedef(self, _, tokens):
         self.context.add_condition(-tokens.count("&&"))
+        self.context.add_max_nd_condition(-tokens.count("&&"))
 
 
 # pylint: disable=R0903
@@ -219,6 +222,8 @@ class CLikeStates(CodeStateMachine):
 
     def _state_entering_imp(self, token):
         self.context.reset_complexity()
+        self.context.reset_nd_complexity()
+        self.context.reset_max_nd_complexity()
         self.next(self._state_imp, token)
 
     @CodeStateMachine.read_inside_brackets_then("{}")
