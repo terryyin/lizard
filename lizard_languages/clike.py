@@ -224,7 +224,7 @@ class CLikeStates(CodeStateMachine):
     def _state_entering_imp(self, token):
         self.context.reset_complexity()
         if hasattr(self.context, "reset_nd_complexity"):
-            elf.context.reset_nd_complexity()
+            self.context.reset_nd_complexity()
             self.context.reset_max_nd_complexity()
         self.next(self._state_imp, token)
 

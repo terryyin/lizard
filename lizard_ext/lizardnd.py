@@ -12,7 +12,7 @@ in every function.
                         default=DEFAULT_ND_THRESHOLD)
 
 """
-from lizard import FileInfoBuilder
+from lizard import FileInfoBuilder, FunctionInfo
 
 
 class LizardExtension(object):  # pylint: disable=R0903
@@ -104,4 +104,22 @@ def patch(frm, accept_class):
         setattr(accept_class, method, getattr(frm, method).__func__)
 
 
+def patch_append_method(frm, accept_class, method_name):
+    old_method = getattr(accept_class, method_name).__func__
+
+    def appended(*args, **kargs):
+        old_method(*args, **kargs)
+        frm(*args, **kargs)
+
+    setattr(accept_class, method_name, appended)
+
+
+def _init_nesting_depth_data(self, *_):
+    self.nesting_depth = 0
+    self.max_nesting_depth = 0
+    self.hidden_bracket = 0
+    self.bracket_loop = False
+
+
 patch(NDFileInfoAddition, FileInfoBuilder)
+patch_append_method(_init_nesting_depth_data, FunctionInfo, "__init__")

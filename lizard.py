@@ -210,10 +210,6 @@ class FunctionInfo(object):  # pylint: disable=R0902
 
     def __init__(self, name, filename, start_line=0, ccn=1):
         self.cyclomatic_complexity = ccn
-        self.nesting_depth = 0
-        self.max_nesting_depth = 0
-        self.hidden_bracket = 0
-        self.bracket_loop = False
         self.nloc = 1
         self.token_count = 1  # the first token
         self.name = name
