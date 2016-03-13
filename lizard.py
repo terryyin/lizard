@@ -654,7 +654,7 @@ def parse_args(argv):
         extensions = get_extensions(opt.extensions)
         for ext in extensions:
             if hasattr(ext, "set_args"):
-                ext.set_args(parser_to_extend)
+                ext.set_args(parser_to_extend)  # pylint: disable=E1101
         return parser_to_extend
     parser = extend_parser(arg_parser(argv[0]))
     opt = parser.parse_args(args=argv[1:])
