@@ -43,6 +43,12 @@ class TestFunctionOutput(StreamStdoutTestCase):
         self.assertEquals("       1     16      1      0       0 foo@100-100@FILENAME", sys.stdout.stream.splitlines()[3])
 
 
+class Ext(object):
+    FUNCTION_CAPTION = "  ND  "
+    AVERAGE_CAPTION = " Avg.ND "
+    FUNCTION_INFO_PART = "max_nesting_depth"
+
+
 class TestWarningOutput(StreamStdoutTestCase):
 
     def setUp(self):
@@ -65,8 +71,9 @@ class TestWarningOutput(StreamStdoutTestCase):
         self.foo.cyclomatic_complexity = 30
         self.foo.max_nesting_depth = 10
         fileSummary = FileInformation("FILENAME", 123, [self.foo])
-        count = print_clang_style_warning([fileSummary], self.option, None)
-        self.assertIn("FILENAME:100: warning: foo has 30 CCN and 10 ND and 0 params (1 NLOC, 1 tokens)\n", sys.stdout.stream)
+        scheme = OutputScheme([Ext()])
+        count = print_clang_style_warning([fileSummary], self.option, scheme)
+        self.assertIn("FILENAME:100: warning: foo has 1 NLOC, 30 CCN, 1 token, 0 PARAM, 0 length, 10 ND\n", sys.stdout.stream)
         self.assertEqual(1, count)
 
     def test_sort_warning(self):
@@ -92,10 +99,6 @@ class TestFileOutput(StreamStdoutTestCase):
         self.assertIn("    123      0.0    0.0       0.0         0     FILENAME", sys.stdout.stream)
 
     def test_print_and_save_detail_information_with_ext(self):
-        class Ext(object):
-            FUNCTION_CAPTION = "  ND  "
-            AVERAGE_CAPTION = " Avg.ND "
-            FUNCTION_INFO_PART = "max_nesting_depth"
 
         scheme = OutputScheme([Ext()])
         fileSummary = FileInformation("FILENAME", 123, [])

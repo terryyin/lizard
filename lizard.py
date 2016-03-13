@@ -44,8 +44,8 @@ except ImportError:
 
 VERSION = "1.10.5"
 
-DEFAULT_CCN_THRESHOLD, DEFAULT_ND_THRESHOLD, DEFAULT_WHITELIST, \
-    DEFAULT_MAX_FUNC_LENGTH = 15, 7, "whitelizard.txt", 1000
+DEFAULT_CCN_THRESHOLD, DEFAULT_WHITELIST, \
+    DEFAULT_MAX_FUNC_LENGTH = 15, "whitelizard.txt", 1000
 
 
 def analyze(paths, exclude_pattern=None, threads=1, exts=None, lans=None):
@@ -238,13 +238,6 @@ class FunctionInfo(object):  # pylint: disable=R0902
             self.parameters.append(token)
         else:
             self.parameters[-1] = token
-
-    def clang_format_warning(self):
-        return (
-            "{f.filename}:{f.start_line}: warning: {f.name} has" +
-            " {f.cyclomatic_complexity} CCN and" +
-            " {f.max_nesting_depth} ND and {f.parameter_count}" +
-            " params ({f.nloc} NLOC, {f.token_count} tokens)").format(f=self)
 
 
 class FileInformation(object):  # pylint: disable=R0903
@@ -499,10 +492,18 @@ class OutputScheme(object):
             for e in self.items
             if e.get("avg_caption", None)])
 
+    def clang_warning_format(self):
+        return (
+            "{f.filename}:{f.start_line}: warning: {f.name} has " +
+            ", ".join([
+                "{{f.{ext[value]}}} {caption}"
+                .format(ext=e, caption=e['caption'].strip())
+                for e in self.items[:-1]
+                ]))
+
 
 def print_warnings(option, scheme, warnings):
     warning_count = 0
-
     warn_str = "!!!! Warnings ({0}) !!!!".format(
         ' or '.join("{0} > {1}".format(
             k, val) for k, val in option.thresholds.items()))
@@ -521,6 +522,7 @@ def print_total(warning_count, saved_result, op):
     cnt = len(all_fun) or 1
     nloc_in_functions = sum([f.nloc for f in all_fun]) or 1
     total_info = (
+        # sum([f.max_nesting_depth for f in all_fun]) / cnt,
         sum([f.nloc for f in file_infos]),
         nloc_in_functions / cnt,
         sum([f.cyclomatic_complexity for f in all_fun]) / cnt,
@@ -588,10 +590,11 @@ def print_result(result, option, scheme):
     return warning_count
 
 
-def print_clang_style_warning(code_infos, option, _):
+def print_clang_style_warning(code_infos, option, scheme):
     count = 0
     for warning in get_warnings(code_infos, option):
-        print(warning.clang_format_warning())
+
+        print(scheme.clang_warning_format().format(f=warning))
         count += 1
     return count
 
