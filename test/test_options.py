@@ -42,6 +42,10 @@ class TestOptionParsing(unittest.TestCase):
         options = parse_args(['lizard', '-a123'])
         self.assertEqual(123, options.thresholds['parameter_count'])
 
+    def test_unknlown_argument(self):
+        #options = parse_args(['lizard', '--unkown'])
+        pass
+
     @patch.object(sys, 'exit')
     @patch('sys.stderr')
     def test_sorting_factor_does_not_exist(self, _, mock_exit):
