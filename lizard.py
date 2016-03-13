@@ -334,9 +334,7 @@ def line_counter(tokens, reader):
     context.current_line = 1
     newline = 1
     for token in tokens:
-        if token == "<indent>":
-            yield token
-        elif token != "\n":
+        if token != "\n":
             count = token.count('\n')
             context.current_line += count
             context.add_nloc(count + newline)

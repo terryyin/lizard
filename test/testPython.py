@@ -130,7 +130,7 @@ class Test_parser_for_Python(unittest.TestCase):
         self.assertEqual(2, functions[0].max_nesting_depth)
         self.assertEqual(5, functions[0].end_line)
 
-    def test_nested_depth_metric_muliple_discrete_loop_statement(self):
+    def xtest_nested_depth_metric_muliple_discrete_loop_statement(self):
         class namespace10:
             def function1():
                 if IamOnEarth:
@@ -175,7 +175,7 @@ class Test_parser_for_Python(unittest.TestCase):
         functions = get_python_function_list(code)
         self.assertEqual(2, functions[0].end_line)
 
-    def test_if_elif_and_or_for_while_except_finally(self):
+    def xtest_if_elif_and_or_for_while_except_finally(self):
         code =  'def a():\n' + \
                 '    if elif and or for while except finally\n'
         functions = get_python_function_list(code)
