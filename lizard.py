@@ -383,10 +383,12 @@ def recount_switch_case(tokens, reader):
     for token in tokens:
         if token == 'switch':
             reader.context.add_condition()
-            reader.context.add_nd_condition()
+            if hasattr(reader.context, "add_nd_condition"):
+                reader.context.add_nd_condition()
         elif token == 'case':
             reader.context.add_condition(-1)
-            reader.context.add_nd_condition(-1)
+            if hasattr(reader.context, "add_nd_condition"):
+                reader.context.add_nd_condition(-1)
         yield token
 
 
