@@ -60,7 +60,20 @@ def analyze(paths, exclude_pattern=None, threads=1, exts=None, lans=None):
     return map_files_to_analyzer(files, file_analyzer, threads)
 
 
-def create_command_line_parser(prog=None):
+def _extension_arg(parser):
+    parser.add_argument("-E", "--extension",
+                        help='''User the extensions. The available extensions
+                        are: -Ecpre: it will ignore code in the #else branch.
+                        -Ewordcount: count word frequencies and generate tag
+                        cloud. -Eoutside: include the global code as one
+                        function.  -EIgnoreAssert: to ignore all code in
+                        assert''',
+                        action="append",
+                        dest="extensions",
+                        default=[])
+
+
+def arg_parser(prog=None):
     from argparse import ArgumentParser, Action, ArgumentError
 
     class DictAction(Action):  # pylint: disable=R0903
@@ -99,14 +112,6 @@ def create_command_line_parser(prog=None):
                         type=int,
                         dest="CCN",
                         default=DEFAULT_CCN_THRESHOLD)
-    parser.add_argument("-N", "--ND",
-                        help='''Threshold for nesting depth number
-                        warning. The default value is %d.
-                        Functions with ND bigger than it will generate warning
-                        ''' % DEFAULT_ND_THRESHOLD,
-                        type=int,
-                        dest="ND",
-                        default=DEFAULT_ND_THRESHOLD)
     parser.add_argument("-L", "--length",
                         help='''Threshold for maximum function length
                         warning. The default value is %d.
@@ -165,19 +170,11 @@ def create_command_line_parser(prog=None):
                         dest="printer")
     parser.add_argument("-m", "--modified",
                         help="Calculate modified cyclomatic complexity number",
-                        action="store_true",
-                        dest="switchCasesAsOneCondition",
-                        default=False)
-    parser.add_argument("-E", "--extension",
-                        help='''User the extensions. The available extensions
-                        are: -Ecpre: it will ignore code in the #else branch.
-                        -Ewordcount: count word frequencies and generate tag
-                        cloud. -Eoutside: include the global code as one
-                        function.  -EIgnoreAssert: to ignore all code in
-                        assert''',
-                        action="append",
+                        action="append_const",
+                        const="modified",
                         dest="extensions",
                         default=[])
+    _extension_arg(parser)
     parser.add_argument("-s", "--sort",
                         help='''Sort the warning with field. The field can be
                         nloc, cyclomatic_complexity, token_count,
@@ -376,19 +373,6 @@ def condition_counter(tokens, reader):
     for token in tokens:
         if token in conditions:
             reader.context.add_condition()
-        yield token
-
-
-def recount_switch_case(tokens, reader):
-    for token in tokens:
-        if token == 'switch':
-            reader.context.add_condition()
-            if hasattr(reader.context, "add_nd_condition"):
-                reader.context.add_nd_condition()
-        elif token == 'case':
-            reader.context.add_condition(-1)
-            if hasattr(reader.context, "add_nd_condition"):
-                reader.context.add_nd_condition(-1)
         yield token
 
 
@@ -662,9 +646,19 @@ def get_all_source_files(paths, exclude_patterns, lans):
 
 
 def parse_args(argv):
-    opt = create_command_line_parser(argv[0]).parse_args(args=argv[1:])
-    opt.extensions = get_extensions(opt.extensions,
-                                    opt.switchCasesAsOneCondition)
+    def extend_parser(parser_to_extend):
+        from argparse import ArgumentParser, Action, ArgumentError
+        parser = ArgumentParser(add_help=False)
+        _extension_arg(parser)
+        opt, _ = parser.parse_known_args(args=argv[1:])
+        extensions = get_extensions(opt.extensions)
+        for ext in extensions:
+            if hasattr(ext, "set_args"):
+                ext.set_args(parser_to_extend)
+        return parser_to_extend
+    parser = extend_parser(arg_parser(argv[0]))
+    opt = parser.parse_args(args=argv[1:])
+    opt.extensions = get_extensions(opt.extensions)
     values = [item['value'] for item in OutputScheme(opt.extensions).items]
     no_fields = (set(opt.sorting) | set(opt.thresholds.keys())) - set(values)
     if no_fields:
@@ -674,7 +668,7 @@ def parse_args(argv):
         sys.exit(2)
     if "cyclomatic_complexity" not in opt.thresholds:
         opt.thresholds["cyclomatic_complexity"] = opt.CCN
-    if "max_nesting_depth" not in opt.thresholds:
+    if "max_nesting_depth" not in opt.thresholds and hasattr(opt, "ND"):
         opt.thresholds["max_nesting_depth"] = opt.ND
     if "length" not in opt.thresholds:
         opt.thresholds["length"] = opt.length
@@ -683,7 +677,7 @@ def parse_args(argv):
     return opt
 
 
-def get_extensions(extension_names, switch_case_as_one_condition=False):
+def get_extensions(extension_names):
     def expand_extensions(existing):
         for name in extension_names:
             ext = (import_module('lizard_ext.lizard' + name.lower())
@@ -696,16 +690,13 @@ def get_extensions(extension_names, switch_case_as_one_condition=False):
         return existing
 
     from importlib import import_module
-    extensions = [
-        preprocessing,
-        comment_counter,
-        line_counter,
-        token_counter,
-        condition_counter,
-    ]
-    if switch_case_as_one_condition:
-        extensions.append(recount_switch_case)
-    return expand_extensions(extensions)
+    return expand_extensions([
+            preprocessing,
+            comment_counter,
+            line_counter,
+            token_counter,
+            condition_counter,
+        ])
 
 
 analyze_file = FileAnalyzer(get_extensions([]))  # pylint: disable=C0103

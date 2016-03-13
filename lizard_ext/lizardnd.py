@@ -1,24 +1,28 @@
 """
 This is an extension of lizard, that counts the 'Nesting Depth'
 in every function.
-
-    parser.add_argument("-N", "--ND",
-                        help='''Threshold for nesting depth number
-                        warning. The default value is %d.
-                        Functions with ND bigger than it will generate warning
-                        ''' % DEFAULT_ND_THRESHOLD,
-                        type=int,
-                        dest="ND",
-                        default=DEFAULT_ND_THRESHOLD)
-
 """
 from lizard import FileInfoBuilder, FunctionInfo
+
+DEFAULT_ND_THRESHOLD = 7
 
 
 class LizardExtension(object):  # pylint: disable=R0903
 
     FUNCTION_CAPTION = "  ND  "
     FUNCTION_INFO_PART = "max_nesting_depth"
+
+    @staticmethod
+    def set_args(parser):
+        parser.add_argument(
+            "-N", "--ND",
+            help='''Threshold for nesting depth number
+            warning. The default value is %d.
+            Functions with ND bigger than it will generate warning
+            ''' % DEFAULT_ND_THRESHOLD,
+            type=int,
+            dest="ND",
+            default=DEFAULT_ND_THRESHOLD)
 
     def __call__(self, tokens, reader, l_depth=0):  # pylint: disable=R0912
         if hasattr(reader, "loops"):
