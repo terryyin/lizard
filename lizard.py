@@ -488,7 +488,7 @@ class OutputScheme(object):
     def average_formatter(self):
         return "".join([
             "{{module.average_{ext[value]}:{size}.1f}}"
-            .format(ext=e, size=(len(e['avg_caption']) - 1))
+            .format(ext=e, size=len(e['avg_caption']))
             for e in self.items
             if e.get("avg_caption", None)])
 
@@ -504,6 +504,7 @@ class OutputScheme(object):
 
 def print_warnings(option, scheme, warnings):
     warning_count = 0
+    warning_nloc = 0
     warn_str = "!!!! Warnings ({0}) !!!!".format(
         ' or '.join("{0} > {1}".format(
             k, val) for k, val in option.thresholds.items()))
@@ -511,36 +512,36 @@ def print_warnings(option, scheme, warnings):
     print(scheme.function_info_head())
     for warning in warnings:
         warning_count += 1
+        warning_nloc += warning.nloc
         print(scheme.function_info(warning))
-    return warning_count
+    return warning_count, warning_nloc
 
 
-def print_total(warning_count, saved_result, op):
+def print_total(warning_count, warning_nloc, saved_result, scheme):
     file_infos = list(file_info for file_info in saved_result if file_info)
     all_fun = list(itertools.chain(*(file_info.function_list
                                      for file_info in file_infos)))
     cnt = len(all_fun) or 1
     nloc_in_functions = sum([f.nloc for f in all_fun]) or 1
-    total_info = (
-        # sum([f.max_nesting_depth for f in all_fun]) / cnt,
-        sum([f.nloc for f in file_infos]),
-        nloc_in_functions / cnt,
-        sum([f.cyclomatic_complexity for f in all_fun]) / cnt,
-        sum([f.token_count for f in all_fun]) / cnt,
-        cnt,
-        warning_count,
-        warning_count / cnt,
-        sum([
-            f.nloc for f in all_fun
-            if f.cyclomatic_complexity > op.thresholds['cyclomatic_complexity']
-            ]) / nloc_in_functions
-    )
+    all_in_one = FileInformation(
+            "",
+            sum([f.nloc for f in file_infos]),
+            all_fun)
 
     print("=" * 90)
-    print("Total nloc  Avg.nloc  Avg CCN  Avg ND  Avg token  Fun Cnt  Warning"
+    print("Total nloc  " + scheme.average_captions() + "  Fun Cnt  Warning"
           " cnt   Fun Rt   nloc Rt")
     print("-" * 90)
-    print("%10d%10d%9.2f%11.2f%9d%13d%10.2f%8.2f" % total_info)
+    print((
+        "{module.nloc:10d}" +
+        scheme.average_formatter() +
+        "{function_count:9d}{warning_count:13d}" +
+        "{function_rate:10.2f}{nloc_rate:8.2f}").format(
+                  module=all_in_one,
+                  function_count=cnt,
+                  warning_count=warning_count,
+                  function_rate=(warning_count/cnt),
+                  nloc_rate=(warning_nloc/nloc_in_functions)))
 
 
 def print_and_save_modules(all_modules, extensions, scheme):
@@ -582,8 +583,8 @@ def get_warnings(code_infos, option):
 def print_result(result, option, scheme):
     result = print_and_save_modules(result, option.extensions, scheme)
     warnings = get_warnings(result, option)
-    warning_count = print_warnings(option, scheme, warnings)
-    print_total(warning_count, result, option)
+    warning_count, warning_nloc = print_warnings(option, scheme, warnings)
+    print_total(warning_count, warning_nloc, result, scheme)
     for extension in option.extensions:
         if hasattr(extension, 'print_result'):
             extension.print_result()

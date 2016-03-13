@@ -96,15 +96,14 @@ class TestFileOutput(StreamStdoutTestCase):
         scheme = OutputScheme([])
         fileSummary = FileInformation("FILENAME", 123, [])
         print_and_save_modules([fileSummary], [], scheme)
-        self.assertIn("    123      0.0    0.0       0.0         0     FILENAME", sys.stdout.stream)
+        self.assertIn("    123       0.0     0.0        0.0         0     FILENAME\n", sys.stdout.stream)
 
     def test_print_and_save_detail_information_with_ext(self):
-
         scheme = OutputScheme([Ext()])
         fileSummary = FileInformation("FILENAME", 123, [])
         print_and_save_modules([fileSummary], [Ext()], scheme)
         self.assertIn("Avg.ND", sys.stdout.stream)
-        self.assertIn("    123      0.0    0.0       0.0    0.0         0     FILENAME", sys.stdout.stream)
+        self.assertIn("    123       0.0     0.0        0.0     0.0         0     FILENAME", sys.stdout.stream)
 
 
     def test_print_file_summary_only_once(self):
