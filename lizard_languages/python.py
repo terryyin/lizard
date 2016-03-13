@@ -19,9 +19,9 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
 
     @staticmethod
     def generate_tokens(source_code, _=None):
-        return CodeReader.generate_tokens(
-            source_code,
-            r"|\'\'\'.*?\'\'\'" + r'|\"\"\".*?\"\"\"')
+        return ScriptLanguageMixIn.generate_common_tokens(
+                source_code,
+                r"|\'\'\'.*?\'\'\'" + r'|\"\"\".*?\"\"\"')
 
     def preprocess(self, tokens):
         leading_space = True

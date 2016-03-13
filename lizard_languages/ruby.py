@@ -94,7 +94,7 @@ class RubyReader(CodeReader, ScriptLanguageMixIn):
     @staticmethod
     @js_style_regex_expression
     def generate_tokens(source_code, _=''):
-        return CodeReader.generate_tokens(
+        return ScriptLanguageMixIn.generate_common_tokens(
             source_code,
             r"|^\=begin|^\=end" +
             r"|\%[qQr]?\{(?:\\.|[^\}\\])*?\}" +

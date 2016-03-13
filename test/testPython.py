@@ -2,10 +2,17 @@ import unittest
 import inspect
 from .testHelpers import get_python_function_list_with_extnesion
 from lizard_ext.lizardnd import LizardExtension as NestDepth
+from lizard_languages.python import PythonReader
 
 
 def get_python_function_list(source_code):
     return get_python_function_list_with_extnesion(source_code, NestDepth())
+
+
+class Test_tokenizer_for_Python(unittest.TestCase):
+    def test_commment_with_quote(self):
+        tokens = PythonReader.generate_tokens("#'\n''")
+        self.assertEqual(["#'", "\n", "''"], tokens)
 
 
 class Test_parser_for_Python(unittest.TestCase):
@@ -25,6 +32,19 @@ class Test_parser_for_Python(unittest.TestCase):
         self.assertEqual(2, functions[0].cyclomatic_complexity)
         self.assertEqual(1, functions[0].max_nesting_depth)
         self.assertEqual(4, functions[0].end_line)
+
+    def test_two_simple_python_function(self):
+        source = """
+            def foo():
+                #'
+                return False
+
+            def bar():
+                if foo == 'bar':
+                    return True
+                """
+        functions = get_python_function_list(source)
+        self.assertEqual(2, len(functions))
 
     def test_parameter_count(self):
         class namespace2:
