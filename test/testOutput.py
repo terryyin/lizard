@@ -1,6 +1,6 @@
 import unittest
 import sys
-from test.mock import Mock, patch
+from mock import Mock, patch
 from test.helper_stream import StreamStdoutTestCase
 import os
 from lizard import print_warnings, print_and_save_modules, FunctionInfo, FileInformation,\
@@ -29,6 +29,7 @@ class TestFunctionOutput(StreamStdoutTestCase):
 
     def test_function_info_header_should_have_the_captions_of_external_extensions(self):
         external_extension = Mock(FUNCTION_CAPTION = "*external_extension*", ordering_index=-1)
+        del external_extension.AVERAGE_CAPTION
         extensions = get_extensions([external_extension])
         scheme = OutputScheme(extensions)
         print_and_save_modules([], extensions, scheme)
@@ -85,14 +86,29 @@ class TestWarningOutput(StreamStdoutTestCase):
 class TestFileOutput(StreamStdoutTestCase):
 
     def test_print_and_save_detail_information(self):
+        scheme = OutputScheme([])
         fileSummary = FileInformation("FILENAME", 123, [])
-        print_and_save_modules([fileSummary], [], Mock())
-        self.assertIn("    123      0    0.0    0.0         0         0     FILENAME", sys.stdout.stream)
+        print_and_save_modules([fileSummary], [], scheme)
+        self.assertIn("    123      0.0    0.0       0.0         0     FILENAME", sys.stdout.stream)
+
+    def test_print_and_save_detail_information_with_ext(self):
+        class Ext(object):
+            FUNCTION_CAPTION = "  ND  "
+            AVERAGE_CAPTION = " Avg.ND "
+            FUNCTION_INFO_PART = "max_nesting_depth"
+
+        scheme = OutputScheme([Ext()])
+        fileSummary = FileInformation("FILENAME", 123, [])
+        print_and_save_modules([fileSummary], [Ext()], scheme)
+        self.assertIn("Avg.ND", sys.stdout.stream)
+        self.assertIn("    123      0.0    0.0       0.0    0.0         0     FILENAME", sys.stdout.stream)
+
 
     def test_print_file_summary_only_once(self):
+        scheme = OutputScheme([])
         print_and_save_modules(
                             [FileInformation("FILENAME1", 123, []),
-                             FileInformation("FILENAME2", 123, [])], [], Mock())
+                             FileInformation("FILENAME2", 123, [])], [], scheme)
         self.assertEqual(1, sys.stdout.stream.count("FILENAME1"))
 
 
@@ -105,6 +121,7 @@ class TestAllOutput(StreamStdoutTestCase):
     def test_print_extension_results(self):
         file_infos = []
         extension = Mock(FUNCTION_CAPTION = "")
+        del extension.AVERAGE_CAPTION
         option = Mock(CCN=15, thresholds={}, number = 0, extensions = [extension], whitelist='')
         print_result(file_infos, option, OutputScheme(option.extensions))
         self.assertEqual(1, extension.print_result.call_count)

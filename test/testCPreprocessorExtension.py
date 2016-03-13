@@ -1,5 +1,5 @@
 import unittest
-from test.mock import Mock, patch
+from mock import Mock, patch
 from lizard_ext.lizardcpre import LizardExtension as CPreprocessor
 from .testHelpers import get_cpp_function_list_with_extnesion
 from lizard_languages.code_reader import CodeReader

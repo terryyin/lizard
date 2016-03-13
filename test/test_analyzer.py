@@ -68,9 +68,9 @@ class Test_FileAnalyzer(unittest.TestCase):
         r = map_files_to_analyzer(["f1.c"], self.analyzer, 1)
         fileInfo = list(r)[0]
         self.assertEqual(2, fileInfo.nloc)
-        self.assertEqual(2, fileInfo.average_NLOC)
-        self.assertEqual(1, fileInfo.average_CCN)
-        self.assertEqual(9, fileInfo.average_token)
+        self.assertEqual(2, fileInfo.average_nloc)
+        self.assertEqual(1, fileInfo.average_cyclomatic_complexity)
+        self.assertEqual(9, fileInfo.average_token_count)
 
     @patch.object(sys, 'stderr')
     def test_should_report_when_having_other_problem_and_continue(self, mock_stderr, mock_open):

@@ -255,16 +255,14 @@ class FileInformation(object):  # pylint: disable=R0903
         self.function_list = function_list or []
         self.token_count = 0
 
-    average_NLOC = property(lambda self: self.functions_average("nloc"))
-    average_token = property(
+    average_nloc = property(lambda self: self.functions_average("nloc"))
+    average_token_count = property(
         lambda self: self.functions_average("token_count"))
-    average_CCN = property(
+    average_cyclomatic_complexity = property(
         lambda self: self.functions_average("cyclomatic_complexity"))
     CCN = property(
         lambda self:
         sum(fun.cyclomatic_complexity for fun in self.function_list))
-    average_ND = property(
-        lambda self: self.functions_average("max_nesting_depth"))
     ND = property(  # pylint: disable=C0103
         lambda self:
         sum(fun.max_nesting_depth for fun in self.function_list))
@@ -454,15 +452,22 @@ class OutputScheme(object):
     def __init__(self, ext):
         self.extensions = ext
         self.items = [
-            {'caption': "  NLOC  ", 'value': "nloc"},
-            {'caption': "  CCN  ", 'value': "cyclomatic_complexity"},
-            {'caption': " token ", 'value': "token_count"},
+            {
+                'caption': "  NLOC  ", 'value': "nloc",
+                'avg_caption': ' Avg.NLOC '},
+            {
+                'caption': "  CCN  ", 'value': "cyclomatic_complexity",
+                'avg_caption': ' AvgCCN '},
+            {
+                'caption': " token ", 'value': "token_count",
+                'avg_caption': ' Avg.token '},
             {'caption': " PARAM ", 'value': "parameter_count"},
             {'caption': " length ", 'value': "length"},
             ] + [
             {
                 'caption': ext.FUNCTION_CAPTION,
-                'value': ext.FUNCTION_INFO_PART
+                'value': ext.FUNCTION_INFO_PART,
+                'avg_caption': getattr(ext, "AVERAGE_CAPTION", None)
             }
             for ext in self.extensions if hasattr(ext, "FUNCTION_CAPTION")]
         self.items.append({'caption': " location  ", 'value': 'location'})
@@ -478,6 +483,18 @@ class OutputScheme(object):
         return ''.join(
             str(getattr(fun, item['value'])).rjust(len(item['caption']))
             for item in self.items)
+
+    def average_captions(self):
+        return "".join([
+            e['avg_caption'] for e in self.items
+            if e.get("avg_caption", None)])
+
+    def average_formatter(self):
+        return "".join([
+            "{{module.average_{ext[value]}:{size}.1f}}"
+            .format(ext=e, size=(len(e['avg_caption']) - 1))
+            for e in self.items
+            if e.get("avg_caption", None)])
 
 
 def print_warnings(option, scheme, warnings):
@@ -504,7 +521,6 @@ def print_total(warning_count, saved_result, op):
         sum([f.nloc for f in file_infos]),
         nloc_in_functions / cnt,
         sum([f.cyclomatic_complexity for f in all_fun]) / cnt,
-        sum([f.max_nesting_depth for f in all_fun]) / cnt,
         sum([f.token_count for f in all_fun]) / cnt,
         cnt,
         warning_count,
@@ -519,7 +535,7 @@ def print_total(warning_count, saved_result, op):
     print("Total nloc  Avg.nloc  Avg CCN  Avg ND  Avg token  Fun Cnt  Warning"
           " cnt   Fun Rt   nloc Rt")
     print("-" * 90)
-    print("%10d%10d%9.2f%9.2f%11.2f%9d%13d%10.2f%8.2f" % total_info)
+    print("%10d%10d%9.2f%11.2f%9d%13d%10.2f%8.2f" % total_info)
 
 
 def print_and_save_modules(all_modules, extensions, scheme):
@@ -536,15 +552,12 @@ def print_and_save_modules(all_modules, extensions, scheme):
     print("--------------------------------------------------------------")
     print("%d file analyzed." % (len(all_functions)))
     print("==============================================================")
-    print("NLOC    Avg.NLOC AvgCCN AvgND Avg.ttoken  function_cnt    file")
+    print("NLOC   " + scheme.average_captions() + " function_cnt    file")
     print("--------------------------------------------------------------")
     for module_info in all_functions:
         print((
             "{module.nloc:7d}" +
-            "{module.average_NLOC:7.0f}" +
-            "{module.average_CCN:7.1f}" +
-            "{module.average_ND:7.1f}" +
-            "{module.average_token:10.0f}" +
+            scheme.average_formatter() +
             "{function_count:10d}" +
             "     {module.filename}").format(
             module=module_info,
@@ -677,19 +690,29 @@ def parse_args(argv):
     return opt
 
 
+def patch_extension(ext):
+    if hasattr(ext, "AVERAGE_CAPTION"):
+        setattr(FileInformation, "average_" + ext.FUNCTION_INFO_PART,
+                property(lambda self: self.functions_average(
+                         ext.FUNCTION_INFO_PART)))
+    return ext
+
+
 def get_extensions(extension_names):
+    from importlib import import_module as im
+
     def expand_extensions(existing):
         for name in extension_names:
-            ext = (import_module('lizard_ext.lizard' + name.lower())
-                   .LizardExtension()
-                   if isinstance(name, str) else name)
+            ext = patch_extension(
+                    im('lizard_ext.lizard' + name.lower())
+                    .LizardExtension()
+                    if isinstance(name, str) else name)
             existing.insert(
                 len(existing) if not hasattr(ext, "ordering_index") else
                 ext.ordering_index,
                 ext)
         return existing
 
-    from importlib import import_module
     return expand_extensions([
             preprocessing,
             comment_counter,

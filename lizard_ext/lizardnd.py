@@ -11,6 +11,7 @@ class LizardExtension(object):  # pylint: disable=R0903
 
     FUNCTION_CAPTION = "  ND  "
     FUNCTION_INFO_PART = "max_nesting_depth"
+    AVERAGE_CAPTION = " Avg.ND "
 
     @staticmethod
     def set_args(parser):
