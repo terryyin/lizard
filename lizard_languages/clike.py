@@ -64,13 +64,15 @@ class CFunctionStates(CodeStateMachine):
     def _r_value_ref(self, token, _):
         if token == "=":
             self.context.add_condition(-1)
-            self.context.add_max_nd_condition(-1)
+            if hasattr(reader.context, "add_max_nd_condition"):
+                self.context.add_max_nd_condition(-1)
         self.next(self._state_global)
 
     @CodeStateMachine.read_until_then(';')
     def _typedef(self, _, tokens):
         self.context.add_condition(-tokens.count("&&"))
-        self.context.add_max_nd_condition(-tokens.count("&&"))
+        if hasattr(reader.context, "add_max_nd_condition"):
+            self.context.add_max_nd_condition(-tokens.count("&&"))
 
 
 # pylint: disable=R0903
