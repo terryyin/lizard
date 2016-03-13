@@ -383,6 +383,9 @@ class FileAnalyzer(object):  # pylint: disable=R0903
         try:
             return self.analyze_source_code(
                 filename, open(filename, 'rU').read())
+        except UnicodeDecodeError:
+            sys.stderr.write("Error: doesn't support none utf encoding '%s'\n"
+                             % filename)
         except IOError:
             sys.stderr.write("Error: Fail to read source file '%s'\n"
                              % filename)
@@ -619,6 +622,8 @@ def md5_hash_file(full_path_name):
                 code_md5 = hashlib.md5(source_file.read())
         return code_md5.hexdigest()
     except IOError:
+        return None
+    except UnicodeDecodeError:
         return None
 
 
