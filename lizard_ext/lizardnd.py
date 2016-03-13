@@ -84,12 +84,6 @@ class NDFileInfoAddition(FileInfoBuilder):
         self.current_function.hidden_bracket = 0
         self.current_function.bracket_loop = False
 
-    def reset_max_nd_complexity(self):
-        self.current_function.max_nesting_depth = 0
-
-    def add_max_nd_condition(self, inc=1):
-        self.current_function.max_nesting_depth += inc
-
     def add_hidden_bracket_condition(self, inc=1):
         self.current_function.hidden_bracket += inc
 

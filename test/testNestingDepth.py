@@ -31,24 +31,6 @@ class TestCppNestingDepth(unittest.TestCase):
         result = get_cpp_with_nestDepth("int fun(){if(a)b;else if (c) d;}")
         self.assertEqual(2, result[0].max_nesting_depth)
 
-    def test_sharp_if_and_sharp_elif_counts_in_nd_number(self):
-        result = get_cpp_with_nestDepth('''
-                int main(){
-                #ifdef A
-                #elif (defined E)
-                #endif
-                }''')
-        self.assertEqual(1, len(result))
-        self.assertEqual(2, result[0].max_nesting_depth)
-
-    def test_one_function_nd_with_r_value_ref_in_parameter(self):
-        result = get_cpp_with_nestDepth("int make(Args&&... args){}")
-        self.assertEqual(0, result[0].max_nesting_depth)
-
-    def test_one_function_nd_with_r_value_ref_in_body(self):
-        result = get_cpp_with_nestDepth("int f() {Args&& a=b;}")
-        self.assertEqual(0, result[0].max_nesting_depth)
-
     def test_one_function_nd_with_non_r_value_ref_in_body(self):
         result = get_cpp_with_nestDepth("int f() {a && b==c;}")
         self.assertEqual(1, result[0].max_nesting_depth)
@@ -64,10 +46,6 @@ class TestCppNestingDepth(unittest.TestCase):
         }
         """)
         self.assertEqual(0, result[1].max_nesting_depth)
-
-    def test_one_function_nd_with_typedef(self):
-        result = get_cpp_with_nestDepth("int f() {typedef int&& rref;}")
-        self.assertEqual(0, result[0].max_nesting_depth)
 
     def test_one_function_nd_with_nested_loop_statement_plus_curly_brackets(self):
         result = get_cpp_with_nestDepth("""
