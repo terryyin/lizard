@@ -99,13 +99,23 @@ class NDFileInfoAddition(FileInfoBuilder):
         return self.current_function.bracket_loop
 
 
+def get_method(cls, name):
+    """ python3 doesn't need the __func__ to get the func of the
+        method.
+    """
+    method = getattr(cls, name)
+    if hasattr(method, "__func__"):
+        method = method.__func__
+    return method
+
+
 def patch(frm, accept_class):
     for method in [k for k in frm.__dict__ if not k.startswith("_")]:
-        setattr(accept_class, method, getattr(frm, method).__func__)
+        setattr(accept_class, method, get_method(frm, method))
 
 
 def patch_append_method(frm, accept_class, method_name):
-    old_method = getattr(accept_class, method_name).__func__
+    old_method = get_method(accept_class, method_name)
 
     def appended(*args, **kargs):
         old_method(*args, **kargs)
