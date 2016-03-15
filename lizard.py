@@ -50,8 +50,8 @@ DEFAULT_CCN_THRESHOLD, DEFAULT_WHITELIST, \
 
 def calc_struct(func_list, func_name, name_list, l_name_list):
     info_list = func_list[func_name]
-    fp = open(info_list[3]).readlines()[int(info_list[1]):int(info_list[2])]
-    for line in fp:
+    body = open(info_list[3]).readlines()[int(info_list[1]):int(info_list[2])]
+    for line in body:
         for i, name in enumerate(name_list):
             if name in line:
                 l_name = l_name_list[i]
@@ -66,9 +66,11 @@ def fan_in_fan_out(file_info, fan_in=0, fan_out=0):
     func_info = {}
     name_list, l_name_list = [], []
     for fun in file_info.function_list:
-        space, name, method_lines, path = re.split(r"[ @\s]\s*", fun.location)
+        _, name, method_lines, path = re.split(r"[ @\s]\s*", fun.location)
         start_func, end_func = method_lines.split('-')
-        func_info[fun.long_name] = [name, start_func, end_func, path, fan_in, fan_out]
+        func_info[fun.long_name] = [name, start_func,
+                                    end_func, path,
+                                    fan_in, fan_out]
         name_list.append(name)
         l_name_list.append(fun.long_name)
     for fun in file_info.function_list:
@@ -76,7 +78,9 @@ def fan_in_fan_out(file_info, fan_in=0, fan_out=0):
         calc_struct(func_info, long_name, name_list, l_name_list)
     for fun in file_info.function_list:
         long_name = fun.long_name
-        print("{0:>7d}{1:>7d}       {2:}".format(func_info[long_name][4], func_info[long_name][5], fun.location))
+        print("{0:>7d}{1:>7d}       {2:}".format(func_info[long_name][4],
+                                                 func_info[long_name][5],
+                                                 fun.location))
 
 
 def analyze(paths, exclude_pattern=None, threads=1, exts=None, lans=None):
