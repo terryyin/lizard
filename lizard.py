@@ -48,6 +48,39 @@ DEFAULT_CCN_THRESHOLD, DEFAULT_WHITELIST, \
     DEFAULT_MAX_FUNC_LENGTH = 15, "whitelizard.txt", 1000
 
 
+def calc_struct(func_list, func_name, name_list, l_name_list):
+    info_list = func_list[func_name]
+    fp = open(info_list[3]).readlines()[int(info_list[1]):int(info_list[2])]
+    for line in fp:
+        for i, name in enumerate(name_list):
+            if name in line:
+                l_name = l_name_list[i]
+                if line.count(',') == l_name.count(','):
+                    # structural fan in
+                    func_list[l_name][4] = func_list.get(l_name)[4] + 1
+                    # structural fan out
+                    func_list[func_name][5] = func_list.get(func_name)[5] + 1
+
+
+def print_fan_in_fan_out(file_info, fan_in=0, fan_out=0):
+    func_info = {}
+    name_list, l_name_list = [], []
+    for fun in file_info.function_list:
+        space, name, method_lines, path = re.split(r"[ @\s]\s*", fun.location)
+        start_func, end_func = method_lines.split('-')
+        func_info[fun.long_name] = [name, start_func, end_func, path, fan_in, fan_out]
+        name_list.append(name)
+        l_name_list.append(fun.long_name)
+    for fun in file_info.function_list:
+        long_name = fun.long_name
+        calc_struct(func_info, long_name, name_list, l_name_list)
+    print(" fan-in   fan-out        file")
+    print("--------------------------------------------------------------")
+    for fun in file_info.function_list:
+        long_name = fun.long_name
+        print("{0:>7d}{1:>7d}       {2:}".format(func_info[long_name][4], func_info[long_name][5], fun.long_name))
+
+
 def analyze(paths, exclude_pattern=None, threads=1, exts=None, lans=None):
     '''
     returns an iterator of file information that contains function
@@ -553,6 +586,7 @@ def print_and_save_modules(all_modules, extensions, scheme):
             all_functions.append(module_info)
             for fun in module_info.function_list:
                 print(scheme.function_info(fun))
+            
     print("--------------------------------------------------------------")
     print("%d file analyzed." % (len(all_functions)))
     print("==============================================================")
