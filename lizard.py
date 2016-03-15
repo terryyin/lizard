@@ -62,7 +62,7 @@ def calc_struct(func_list, func_name, name_list, l_name_list):
                     func_list[func_name][5] = func_list.get(func_name)[5] + 1
 
 
-def print_fan_in_fan_out(file_info, fan_in=0, fan_out=0):
+def fan_in_fan_out(file_info, fan_in=0, fan_out=0):
     func_info = {}
     name_list, l_name_list = [], []
     for fun in file_info.function_list:
@@ -597,13 +597,16 @@ def print_and_save_modules(all_modules, extensions, scheme):
             "     {module.filename}").format(
             module=module_info,
             function_count=len(module_info.function_list)))
+    return all_functions
+
+
+def print_fan_in_fan_out(all_functions):
     print("==============================================================")
-    print("--------------------------------------------------------------")
     print(" fan-in   fan-out        file")
+    print("--------------------------------------------------------------")
     for module_info in all_functions:
         if module_info:
-            print_fan_in_fan_out(module_info)
-    return all_functions
+            fan_in_fan_out(module_info)
 
 
 def get_warnings(code_infos, option):
@@ -617,6 +620,7 @@ def get_warnings(code_infos, option):
 
 def print_result(result, option, scheme):
     result = print_and_save_modules(result, option.extensions, scheme)
+    print_fan_in_fan_out(result)
     warnings = get_warnings(result, option)
     warning_count, warning_nloc = print_warnings(option, scheme, warnings)
     print_total(warning_count, warning_nloc, result, scheme)
