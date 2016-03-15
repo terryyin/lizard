@@ -74,11 +74,9 @@ def print_fan_in_fan_out(file_info, fan_in=0, fan_out=0):
     for fun in file_info.function_list:
         long_name = fun.long_name
         calc_struct(func_info, long_name, name_list, l_name_list)
-    print(" fan-in   fan-out        file")
-    print("--------------------------------------------------------------")
     for fun in file_info.function_list:
         long_name = fun.long_name
-        print("{0:>7d}{1:>7d}       {2:}".format(func_info[long_name][4], func_info[long_name][5], fun.long_name))
+        print("{0:>7d}{1:>7d}       {2:}".format(func_info[long_name][4], func_info[long_name][5], fun.location))
 
 
 def analyze(paths, exclude_pattern=None, threads=1, exts=None, lans=None):
@@ -586,7 +584,6 @@ def print_and_save_modules(all_modules, extensions, scheme):
             all_functions.append(module_info)
             for fun in module_info.function_list:
                 print(scheme.function_info(fun))
-            
     print("--------------------------------------------------------------")
     print("%d file analyzed." % (len(all_functions)))
     print("==============================================================")
@@ -600,6 +597,12 @@ def print_and_save_modules(all_modules, extensions, scheme):
             "     {module.filename}").format(
             module=module_info,
             function_count=len(module_info.function_list)))
+    print("==============================================================")
+    print("--------------------------------------------------------------")
+    print(" fan-in   fan-out        file")
+    for module_info in all_functions:
+        if module_info:
+            print_fan_in_fan_out(module_info)
     return all_functions
 
 
