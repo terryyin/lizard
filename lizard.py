@@ -335,7 +335,8 @@ def comment_counter(tokens, reader):
                 reader.context.forgive = True
             else:
                 comment_words = comment.split()
-                if (comment_words and comment_words[0] or None) == '#':
+                first_comment_word = (comment_words and comment_words[0] or None)
+                if first_comment_word == '#':
                     comment_words = comment_words[1:]
                 if (comment_words and comment_words[-1] or None) == "'''":
                     comment_words = comment_words[:-1]
