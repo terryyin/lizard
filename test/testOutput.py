@@ -1,6 +1,6 @@
 import unittest
 import sys
-from test.mock import Mock, patch
+from mock import Mock, patch
 from test.helper_stream import StreamStdoutTestCase
 import os
 from lizard import print_warnings, print_and_save_modules, FunctionInfo, FileInformation,\
@@ -29,6 +29,7 @@ class TestFunctionOutput(StreamStdoutTestCase):
 
     def test_function_info_header_should_have_the_captions_of_external_extensions(self):
         external_extension = Mock(FUNCTION_CAPTION = "*external_extension*", ordering_index=-1)
+        del external_extension.AVERAGE_CAPTION
         extensions = get_extensions([external_extension])
         scheme = OutputScheme(extensions)
         print_and_save_modules([], extensions, scheme)
@@ -41,6 +42,13 @@ class TestFunctionOutput(StreamStdoutTestCase):
         print_and_save_modules([fileStat], self.extensions, self.scheme)
         self.assertEquals("       1     16      1      0       0 foo@100-100@FILENAME", sys.stdout.stream.splitlines()[3])
 
+
+class Ext(object):
+    FUNCTION_CAPTION = "  ND  "
+    AVERAGE_CAPTION = " Avg.ND "
+    FUNCTION_INFO_PART = "max_nesting_depth"
+
+
 class TestWarningOutput(StreamStdoutTestCase):
 
     def setUp(self):
@@ -52,17 +60,21 @@ class TestWarningOutput(StreamStdoutTestCase):
 
     def test_should_have_header_when_warning_only_is_off(self):
         print_warnings(self.option, self.scheme, [])
-        self.assertIn("Warnings (CCN > 15 or arguments > 100 or length > 1000)", sys.stdout.stream)
+        self.assertIn("cyclomatic_complexity > 15", sys.stdout.stream)
 
     def test_no_news_is_good_news(self):
-        print_clang_style_warning([], self.option)
+        count = print_clang_style_warning([], self.option, None)
         self.assertEqual('', sys.stdout.stream)
+        self.assertEqual(0, count)
 
     def test_should_use_clang_format_for_warning(self):
         self.foo.cyclomatic_complexity = 30
+        self.foo.max_nesting_depth = 10
         fileSummary = FileInformation("FILENAME", 123, [self.foo])
-        print_clang_style_warning([fileSummary], self.option)
-        self.assertIn("FILENAME:100: warning: foo has 30 CCN and 0 params (1 NLOC, 1 tokens)\n", sys.stdout.stream)
+        scheme = OutputScheme([Ext()])
+        count = print_clang_style_warning([fileSummary], self.option, scheme)
+        self.assertIn("FILENAME:100: warning: foo has 1 NLOC, 30 CCN, 1 token, 0 PARAM, 0 length, 10 ND\n", sys.stdout.stream)
+        self.assertEqual(1, count)
 
     def test_sort_warning(self):
         self.option.sorting = ['cyclomatic_complexity']
@@ -81,14 +93,24 @@ class TestWarningOutput(StreamStdoutTestCase):
 class TestFileOutput(StreamStdoutTestCase):
 
     def test_print_and_save_detail_information(self):
+        scheme = OutputScheme([])
         fileSummary = FileInformation("FILENAME", 123, [])
-        print_and_save_modules([fileSummary], [], Mock())
-        self.assertIn("    123      0    0.0         0         0     FILENAME", sys.stdout.stream)
+        print_and_save_modules([fileSummary], [], scheme)
+        self.assertIn("    123       0.0     0.0        0.0         0     FILENAME\n", sys.stdout.stream)
+
+    def test_print_and_save_detail_information_with_ext(self):
+        scheme = OutputScheme([Ext()])
+        fileSummary = FileInformation("FILENAME", 123, [])
+        print_and_save_modules([fileSummary], [Ext()], scheme)
+        self.assertIn("Avg.ND", sys.stdout.stream)
+        self.assertIn("    123       0.0     0.0        0.0     0.0         0     FILENAME", sys.stdout.stream)
+
 
     def test_print_file_summary_only_once(self):
+        scheme = OutputScheme([])
         print_and_save_modules(
                             [FileInformation("FILENAME1", 123, []),
-                             FileInformation("FILENAME2", 123, [])], [], Mock())
+                             FileInformation("FILENAME2", 123, [])], [], scheme)
         self.assertEqual(1, sys.stdout.stream.count("FILENAME1"))
 
 
@@ -101,21 +123,20 @@ class TestAllOutput(StreamStdoutTestCase):
     def test_print_extension_results(self):
         file_infos = []
         extension = Mock(FUNCTION_CAPTION = "")
-        option = Mock(CCN=15, number = 0, extensions = [extension], whitelist='')
+        del extension.AVERAGE_CAPTION
+        option = Mock(CCN=15, thresholds={}, number = 0, extensions = [extension], whitelist='')
         print_result(file_infos, option, OutputScheme(option.extensions))
         self.assertEqual(1, extension.print_result.call_count)
 
     def test_should_not_print_extension_results_when_not_implemented(self):
         file_infos = []
-        option = Mock(CCN=15, number = 0, extensions = [object()], whitelist='')
-        print_result_with_scheme(file_infos, option)
+        option = Mock(CCN=15, number = 0, thresholds={}, extensions = [object()], whitelist='')
+        return print_result_with_scheme(file_infos, option)
 
-    @patch.object(sys, 'exit')
-    def test_print_result(self, mock_exit):
+    def test_print_result(self):
         file_infos = [FileInformation('f1.c', 1, []), FileInformation('f2.c', 1, [])]
-        option = Mock(CCN=15, number = 0, extensions=[], whitelist='')
-        print_result_with_scheme(file_infos, option)
-        self.assertEqual(0, mock_exit.call_count)
+        option = Mock(CCN=15,thresholds={},  number = 0, extensions=[], whitelist='')
+        self.assertEqual(0, print_result_with_scheme(file_infos, option))
 
     @patch.object(os.path, 'isfile')
     @patch('lizard.open', create=True)
@@ -123,26 +144,22 @@ class TestAllOutput(StreamStdoutTestCase):
         mock_isfile.return_value = True
         mock_open.return_value.read.return_value = script
         file_infos = [FileInformation('f1.c', 1, [self.foo])]
-        option = Mock(CCN=15, number = 0, arguments=100, length=1000, extensions=[])
-        print_result_with_scheme(file_infos, option)
+        option = Mock(thresholds={'cyclomatic_complexity':15, 'length':1000}, CCN=15, number = 0, arguments=100, length=1000, extensions=[])
+        return print_result_with_scheme(file_infos, option)
 
-    @patch.object(sys, 'exit')
-    def test_exit_with_non_zero_when_more_warning_than_ignored_number(self, mock_exit):
+    def test_exit_with_non_zero_when_more_warning_than_ignored_number(self):
         self.foo.cyclomatic_complexity = 16
-        self.check_whitelist('')
-        mock_exit.assert_called_with(1)
+        self.assertEqual(1, self.check_whitelist(''))
 
-    @patch.object(sys, 'exit')
-    def test_whitelist(self, mock_exit):
+    def test_whitelist(self):
         self.foo.cyclomatic_complexity = 16
         self.check_whitelist('foo')
-        self.assertEqual(0, mock_exit.call_count)
+        self.assertEqual(0, self.check_whitelist('foo'))
 
     def test_null_result(self):
         self.check_whitelist('')
 
 
-import xml.etree.ElementTree as ET
 class TestXMLOutput(unittest.TestCase):
     foo = FunctionInfo("foo", '', 100)
     foo.cyclomatic_complexity = 16
@@ -150,9 +167,7 @@ class TestXMLOutput(unittest.TestCase):
     xml = xml_output(file_infos, True)
 
     def test_xml_output(self):
-        root = ET.fromstring(self.xml)
-        item = root.findall('''./measure[@type="Function"]/item[0]''')[0]
-        self.assertEqual('''foo at f1.c:100''', item.get("name"))
+        self.assertIn('''foo at f1.c:100''', self.xml)
 
     def test_xml_stylesheet(self):
         self.assertIn('''<?xml-stylesheet type="text/xsl" href="https://raw.github.com/terryyin/lizard/master/lizard.xsl"?>''', self.xml)

@@ -1,7 +1,8 @@
 Lizard
 ======
 
-Was hfcca, A Header Free Cyclomatic Complexity Analyzer.
+An extensible Cyclomatic Complexity Analyzer for many programming languages
+including C/C++ (doesn't require all the header files).
 
 |Build Status|
 
@@ -16,7 +17,12 @@ C/C++ header files or Java imports. It can deal with
 -  Objective C
 -  Swift
 -  Python
+-  Ruby
 -  TTCN-3
+
+By default lizard will search for any source code that it knows an mix
+all the result together. This might not be what you want. You can use
+the "-l" option to select language(s).
 
 It counts
 
@@ -182,6 +188,17 @@ Warnings only (in clang/gcc formation):lizard -w mahjong\_game
    ./src/html_ui/httpd.c:64: warning: accept_request has 19 CCN and 1 params (66 NLOC, 247 tokens)
    ./src/mahjong_game/mj_table.c:109: warning: mj_table_update_state has 20 CCN and 1 params (72 NLOC, 255 tokens)
 
+
+Set warning threshold for any field:lizard -T nloc=25
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The option `-Tcyclomatic_complexity=10` is equal to `-C10`.
+The option `-Tlength=10` is equal to `-L10`.
+The option `-Tparameter_count=10` is equal to `-a10`.
+
+You can also do `-Tnloc=10` to set the limit of the NLOC. Any function that
+has NLOC greater than 10 will generate a warning.
+
 Generate A Tag Cloud For Your Code
 -----------------------------
 
@@ -245,12 +262,11 @@ before a function it will suppress the warning for that function.
        ...
    }
 
-Wishlist (The features that will come in the near future)
----------------------------------------------------------
--  Support Ruby
-
 Change Logs
 -----------
+-  2016.02.2 Add option -EMcCabe for ignoring fall-through swith/cases, thanks to @@vicgonzalez
+-  2016.01.31 Add support for Ruby
+-  2016.01.29 Add -T option to set limit for any field
 -  2015.12.17 Add support for Swift
 -  2015.12.12 Add the -l option to filter language
 -  2015.10.22 TTCN-3 added by @gustafj

@@ -1,5 +1,5 @@
 import unittest
-from lizard import CodeReader
+from lizard_languages.code_reader import CodeReader
 generate_tokens = CodeReader.generate_tokens
 
 
@@ -27,6 +27,7 @@ class Test_generate_tonken(unittest.TestCase):
         self.check_tokens(">=", '>=')
         self.check_tokens("<=", '<=')
         self.check_tokens("||", '||')
+        self.check_tokens(">>", '>', '>')
 
     def test_more(self):
         self.check_tokens("int a{}", 'int', ' ', "a", "{", "}")

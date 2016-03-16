@@ -4,7 +4,8 @@
 import unittest
 import sys
 from mock import patch, Mock
-from lizard import CLikeReader, map_files_to_analyzer, FunctionInfo, analyze_file, FileInfoBuilder
+from lizard_languages import CLikeReader
+from lizard import map_files_to_analyzer, FunctionInfo, analyze_file, FileInfoBuilder
 
 
 def analyzer_mock(filename):
@@ -67,9 +68,9 @@ class Test_FileAnalyzer(unittest.TestCase):
         r = map_files_to_analyzer(["f1.c"], self.analyzer, 1)
         fileInfo = list(r)[0]
         self.assertEqual(2, fileInfo.nloc)
-        self.assertEqual(2, fileInfo.average_NLOC)
-        self.assertEqual(1, fileInfo.average_CCN)
-        self.assertEqual(9, fileInfo.average_token)
+        self.assertEqual(2, fileInfo.average_nloc)
+        self.assertEqual(1, fileInfo.average_cyclomatic_complexity)
+        self.assertEqual(9, fileInfo.average_token_count)
 
     @patch.object(sys, 'stderr')
     def test_should_report_when_having_other_problem_and_continue(self, mock_stderr, mock_open):
@@ -102,7 +103,7 @@ class TestWarningFilter(unittest.TestCase):
         self.fileStat = FileInformation("FILENAME", 1, [complex_fun, simple_fun])
 
     def test_should_filter_the_warnings(self):
-        option = Mock(CCN=15, arguments=10, length=1000)
+        option = Mock(thresholds={'cyclomatic_complexity':15, 'length':1000})
         warnings = list(warning_filter(option, [self.fileStat]))
         self.assertEqual(1, len(warnings))
         self.assertEqual("complex", warnings[0].name)

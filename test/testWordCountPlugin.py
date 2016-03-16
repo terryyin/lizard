@@ -1,5 +1,5 @@
 import unittest
-from test.mock import patch
+from mock import patch
 from lizard_ext.lizardwordcount import LizardExtension
 
 

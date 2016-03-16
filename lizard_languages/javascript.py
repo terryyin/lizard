@@ -2,8 +2,9 @@
 Language parser for JavaScript
 '''
 
-import re
-from lizard import CodeReader, CCppCommentsMixin
+from .code_reader import CodeReader, CodeStateMachine
+from .clike import CCppCommentsMixin
+from .js_style_regex_expression import js_style_regex_expression
 
 
 class JavaScriptReader(CodeReader, CCppCommentsMixin):
@@ -13,31 +14,25 @@ class JavaScriptReader(CodeReader, CCppCommentsMixin):
     language_names = ['javascript', 'js']
 
     @staticmethod
-    def generate_tokens(source_code, _=None):
-        regx_regx = r"|/(?:\\/|[^/])+?/[igm]*"
-        regx_pattern = re.compile(regx_regx)
-        word_pattern = re.compile(r'\w+')
-        tokens = CodeReader.generate_tokens(source_code, regx_regx)
-        leading_by_word = False
-        for token in tokens:
-            if leading_by_word and regx_pattern.match(token):
-                for subtoken in CodeReader.generate_tokens(token):
-                    yield subtoken
-            else:
-                yield token
-            if not token.isspace():
-                leading_by_word = word_pattern.match(token)
+    @js_style_regex_expression
+    def generate_tokens(source_code, _=''):
+        return CodeReader.generate_tokens(source_code, _)
 
     def __init__(self, context):
         super(JavaScriptReader, self).__init__(context)
+        self.parallel_states = [JavaScriptStates(context)]
+
+
+class JavaScriptStates(CodeStateMachine):  # pylint: disable=R0903
+    def __init__(self, context):
+        super(JavaScriptStates, self).__init__(context)
         # start from one, so global level will never count
         self.brace_count = 1
-        self._state = self._global
         self.last_tokens = ''
         self.function_name = ''
         self.function_stack = []
 
-    def _global(self, token):
+    def _state_global(self, token):
         if token == 'function':
             self._state = self._function
         elif token in ('=', ':'):
@@ -51,7 +46,7 @@ class JavaScriptReader(CodeReader, CCppCommentsMixin):
             elif token == '}':
                 self.brace_count -= 1
                 if self.brace_count == 0:
-                    self._state = self._global
+                    self._state = self._state_global
                     self._pop_function_from_stack()
             self.last_tokens = token
             self.function_name = ''
@@ -74,11 +69,11 @@ class JavaScriptReader(CodeReader, CCppCommentsMixin):
 
     def _field(self, token):
         self.last_tokens += token
-        self._state = self._global
+        self._state = self._state_global
 
     def _dec(self, token):
         if token == ')':
-            self._state = self._global
+            self._state = self._state_global
         else:
             self.context.parameter(token)
             return

@@ -2,5 +2,6 @@
 from lizard import lizard_main
 import sys
 
+
 if __name__ == "__main__":
     lizard_main(sys.argv)

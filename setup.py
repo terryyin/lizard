@@ -10,14 +10,17 @@ import os
 
 def install(appname):
 
-    with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as fobj:
-        readme = fobj.read()
+    try:
+        with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as fobj:
+            readme = fobj.read()
+    except IOError:
+        readme = "lizard"
 
     setup(
           name = appname,
           version = lizard.VERSION,
           description = ''' A code analyzer without caring the C/C++ header files.
-It works with Java, C/C++, JavaScript, Python, Objective C. Metrics includes cyclomatic complexity number etc.''',
+It works with Java, C/C++, JavaScript, Python, Ruby, Swift, Objective C. Metrics includes cyclomatic complexity number etc.''',
           long_description =  readme,
           url = 'http://www.lizard.ws',
           download_url='https://pypi.python.org/lizard/',
@@ -39,8 +42,10 @@ It works with Java, C/C++, JavaScript, Python, Objective C. Metrics includes cyc
                      'Programming Language :: Python',
                      'Programming Language :: Python :: 2.7',
                      'Programming Language :: Python :: 3.2',
-                     'Programming Language :: Python :: 3.3'],
-          packages = ['lizard_ext', 'languages'],
+                     'Programming Language :: Python :: 3.3',
+                     'Programming Language :: Python :: 3.4',
+                     'Programming Language :: Python :: 3.5'],
+          packages = ['lizard_ext', 'lizard_languages'],
           py_modules = ['lizard'],
           author = 'Terry Yin',
           author_email = 'terry@odd-e.com',
@@ -49,5 +54,5 @@ It works with Java, C/C++, JavaScript, Python, Objective C. Metrics includes cyc
 
 if __name__ == "__main__":
     import sys
-    install('hfcca')
+    #install('hfcca')
     install('lizard')

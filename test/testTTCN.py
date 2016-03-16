@@ -104,7 +104,7 @@ class Test_parser_for_TTCN(unittest.TestCase):
                 }''')
         self.assertEqual(1, len(result))
         self.assertEqual("fun", result[0].name)
-        self.assertEqual("fun( inout integer i )", result[0].long_name)
+        self.assertEqual("fun( inout integer i)", result[0].long_name)
 
     def test_testcase_with_content(self):
         result = get_ttcn_function_list('''
@@ -116,7 +116,7 @@ class Test_parser_for_TTCN(unittest.TestCase):
                 }''')
         self.assertEqual(1, len(result))
         self.assertEqual("__testcase__tc", result[0].name)
-        self.assertEqual("__testcase__tc( integer i )", result[0].long_name)
+        self.assertEqual("__testcase__tc( integer i)", result[0].long_name)
 
     def test_function_with_runs_on(self):
         result = get_ttcn_function_list('''
@@ -129,7 +129,7 @@ class Test_parser_for_TTCN(unittest.TestCase):
                 }''')
         self.assertEqual(1, len(result))
         self.assertEqual("fun", result[0].name)
-        self.assertEqual("fun( inout integer i ) runs on MTC_CT",
+        self.assertEqual("fun( inout integer i) runs on MTC_CT",
                          result[0].long_name)
 
     def test_function_with_mtc(self):
@@ -142,7 +142,7 @@ class Test_parser_for_TTCN(unittest.TestCase):
                 }''')
         self.assertEqual(1, len(result))
         self.assertEqual("fun", result[0].name)
-        self.assertEqual("fun( integer i ) mtc MTC_CT", result[0].long_name)
+        self.assertEqual("fun( integer i) mtc MTC_CT", result[0].long_name)
 
     def test_function_with_system(self):
         result = get_ttcn_function_list('''
@@ -155,7 +155,7 @@ class Test_parser_for_TTCN(unittest.TestCase):
                 }''')
         self.assertEqual(1, len(result))
         self.assertEqual("fun", result[0].name)
-        self.assertEqual("fun( integer i ) system MySystemType",
+        self.assertEqual("fun( integer i) system MySystemType",
                          result[0].long_name)
 
     def test_function_with_return(self):
@@ -169,7 +169,7 @@ class Test_parser_for_TTCN(unittest.TestCase):
                 }''')
         self.assertEqual(1, len(result))
         self.assertEqual("fun", result[0].name)
-        self.assertEqual("fun( integer i ) return integer",
+        self.assertEqual("fun( integer i) return integer",
                          result[0].long_name)
 
     def test_function_with_return_w_template(self):
@@ -183,7 +183,7 @@ class Test_parser_for_TTCN(unittest.TestCase):
                 }''')
         self.assertEqual(1, len(result))
         self.assertEqual("fun", result[0].name)
-        self.assertEqual("fun( integer i ) return template integer",
+        self.assertEqual("fun( integer i) return template integer",
                          result[0].long_name)
 
     def test_function_in_group(self):
@@ -198,7 +198,7 @@ class Test_parser_for_TTCN(unittest.TestCase):
                 }''')
         self.assertEqual(1, len(result))
         self.assertEqual("fun", result[0].name)
-        self.assertEqual("fun( integer i )", result[0].long_name)
+        self.assertEqual("fun( integer i)", result[0].long_name)
 
     def test_double_slash_within_string(self):
         result = get_ttcn_function_list('''
@@ -262,7 +262,7 @@ class Test_parser_for_TTCN(unittest.TestCase):
                 }''')
         self.assertEqual(1, len(result))
         self.assertEqual("fun", result[0].name)
-        self.assertEqual("fun( out template boolean b )", result[0].long_name)
+        self.assertEqual("fun( out template boolean b)", result[0].long_name)
 
     def test_function_with_lazy_param(self):
         result = get_ttcn_function_list('''
@@ -273,7 +273,7 @@ class Test_parser_for_TTCN(unittest.TestCase):
                 }''')
         self.assertEqual(1, len(result))
         self.assertEqual("fun", result[0].name)
-        self.assertEqual("fun( in @lazy integer p_i )", result[0].long_name)
+        self.assertEqual("fun( in @lazy integer p_i)", result[0].long_name)
 
     def test_function_with_fuzzy_param(self):
         result = get_ttcn_function_list('''
@@ -284,7 +284,7 @@ class Test_parser_for_TTCN(unittest.TestCase):
                 }''')
         self.assertEqual(1, len(result))
         self.assertEqual("fun", result[0].name)
-        self.assertEqual("fun( in @fuzzy integer p_i )", result[0].long_name)
+        self.assertEqual("fun( in @fuzzy integer p_i)", result[0].long_name)
 
     def test_function_deterministic(self):
         result = get_ttcn_function_list('''
@@ -295,7 +295,7 @@ class Test_parser_for_TTCN(unittest.TestCase):
                 }''')
         self.assertEqual(1, len(result))
         self.assertEqual("fun", result[0].name)
-        self.assertEqual("@deterministic fun( )", result[0].long_name)
+        self.assertEqual("@deterministic fun()", result[0].long_name)
 
     def test_brakets_before_function(self):
         result = get_ttcn_function_list('''module err{\n()\n}''')

@@ -1,35 +1,26 @@
 import unittest
-from lizard import CodeReader, CLikeReader
-from languages import JavaReader, ObjCReader, JavaScriptReader
+from lizard_languages import get_reader_for, CLikeReader, JavaReader, ObjCReader, JavaScriptReader
 
 
 class TestLanguageChooser(unittest.TestCase):
 
     def test_not_case_sensitive(self):
-        self.assertEqual(CLikeReader, CodeReader.get_reader("a.Cpp"))
+        self.assertEqual(CLikeReader, get_reader_for("a.Cpp"))
 
     def test_java(self):
-        self.assertEqual(JavaReader, CodeReader.get_reader("a.java"))
+        self.assertEqual(JavaReader, get_reader_for("a.java"))
 
     def test_objectiveC(self):
-        self.assertEqual(ObjCReader, CodeReader.get_reader("a.m"))
+        self.assertEqual(ObjCReader, get_reader_for("a.m"))
 
     def test_c_cpp(self):
         for name in ("a.cpp", ".cxx", ".h", ".hpp"):
-            self.assertEqual(CLikeReader, CodeReader.get_reader(name),
+            self.assertEqual(CLikeReader, get_reader_for(name),
                              "File name '%s' is not recognized as c/c++ file" % name);
 
     def test_JavaScript(self):
-        self.assertEqual(JavaScriptReader, CodeReader.get_reader("a.js"))
+        self.assertEqual(JavaScriptReader, get_reader_for("a.js"))
 
     def test_unknown_extension(self):
-        self.assertEqual(None, CodeReader.get_reader("a.unknown"));
-
-    def test_new_reader_should_be_found(self):
-        class NewReader(CodeReader):
-            ext = ['ext']
-
-        self.assertEqual(NewReader, CodeReader.get_reader("a.ext"));
-        del NewReader
-
+        self.assertEqual(None, get_reader_for("a.unknown"));
 

@@ -1,8 +1,8 @@
 import unittest
-from test.mock import Mock, patch
+from mock import Mock, patch
 from lizard_ext.lizardcpre import LizardExtension as CPreprocessor
 from .testHelpers import get_cpp_function_list_with_extnesion
-from lizard import CodeReader
+from lizard_languages.code_reader import CodeReader
 generate_tokens = CodeReader.generate_tokens
 
 
@@ -78,6 +78,22 @@ class TestCPreprocessor(unittest.TestCase):
         """)
         self.assertIn("1", tokens)
 
+    def test_should_handle_multiple_elifs(self):
+        tokens = process_code("""
+        #if defined(BLAH1)
+        1
+        #elif defined(BLAH2)
+        2
+        #elif define(BLAH3)
+        3
+        #endif
+        4
+        """)
+        self.assertIn("1", tokens)
+        self.assertNotIn("2", tokens)
+        self.assertIn("4", tokens)
+
+
 
 def analyze_with_extension(code):
     return get_cpp_function_list_with_extnesion(code, CPreprocessor())
@@ -89,4 +105,12 @@ class Test_end_2_end(unittest.TestCase):
         result = analyze_with_extension("#if\nxxaa#else\nint a(){}\n#endif")
         self.assertEqual(0, len(result))
 
-
+    def test_line_counting(self):
+        result = analyze_with_extension("""
+        x c(){
+        #if defined(BLAH1)
+        #else
+        #endif
+        }
+        """)
+        self.assertEqual(5, result[0].length)
