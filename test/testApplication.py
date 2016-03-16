@@ -1,8 +1,9 @@
 import unittest
-from test.mock import patch
+from mock import patch
 import lizard
 from lizard import lizard_main
 import os
+import sys
 
 
 @patch('lizard.md5_hash_file')
@@ -15,6 +16,7 @@ class TestApplication(unittest.TestCase):
 
         def check_empty_result(result, options, scheme):
             self.assertEqual([], list(result))
+            return 0
 
         os_walk.return_value = [('.', [], [])]
         print_result.side_effect = check_empty_result
@@ -25,6 +27,7 @@ class TestApplication(unittest.TestCase):
             fileInfos = list(result)
             self.assertEqual(1, len(fileInfos))
             self.assertEqual('foo', fileInfos[0].function_list[0].name)
+            return 0
         os_walk.return_value = [('.', [], ['a.cpp'])]
         mock_open.return_value.read.return_value = "void foo(){}"
         print_result.side_effect = check_result
@@ -50,12 +53,14 @@ class IntegrationTests(unittest.TestCase):
             }
         }
         '''
+        self.returned_warning_count = 0
 
     @patch('lizard.open', create=True)
     @patch.object(lizard, 'print_result')
     def run_with_mocks(self, argv, src, print_result, mock_open):
         def store_result(result, options, scheme):
             self.fileInfos = list(result)
+            return self.returned_warning_count
         mock_open.return_value.read.return_value = src
         print_result.side_effect = store_result
         lizard_main(argv)
@@ -78,3 +83,11 @@ class IntegrationTests(unittest.TestCase):
     def test_using_modified_ccn(self):
         self.runApplicationWithArgv(['lizard', '--modified'])
         self.assertEqual(4, self.fileInfos[0].function_list[0].cyclomatic_complexity)
+
+    @patch.object(sys, 'exit')
+    def test_exit_code(self, mock_exit):
+        self.returned_warning_count = 6
+        self.runApplicationWithArgv(['lizard', '-C5'])
+        mock_exit.assert_called_with(1)
+
+

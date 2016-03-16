@@ -1,5 +1,5 @@
 import unittest
-from test.mock import Mock, patch
+from mock import Mock, patch
 from .testHelpers import get_cpp_function_list
 
 class TestCommentOptions(unittest.TestCase):

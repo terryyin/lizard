@@ -1,5 +1,5 @@
 import unittest
-from lizard import CLikeReader, CLikeReader, analyze_file
+from lizard import analyze_file
 
 
 def get_java_fileinfo(source_code):

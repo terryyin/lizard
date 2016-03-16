@@ -1,3 +1,5 @@
-pep8
-pylint
+mock
 nose
+pep8
+wheel
+pylint

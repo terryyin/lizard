@@ -1,4 +1,4 @@
-from test.mock import Mock, patch
+from mock import Mock, patch
 import unittest
 import sys
 from lizard_ext import html_output

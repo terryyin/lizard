@@ -16,21 +16,33 @@
 #  Website: www.lizard.ws
 #
 """
-lizard is a simple code complexity analyzer without caring about the C/C++
-header files or Java imports.
+lizard is an extensible Cyclomatic Complexity Analyzer for many programming
+languages including C/C++ (doesn't require all the header files).
 For more information visit http://www.lizard.ws
 """
-from __future__ import print_function
+from __future__ import print_function, division
 import sys
 import itertools
 import re
 import os
 from fnmatch import fnmatch
 import hashlib
+
 if sys.version[0] == '2':
     from future_builtins import map, filter  # pylint: disable=W0622, F0401
 
-VERSION = "1.9.6"
+try:
+    from lizard_languages import languages, get_reader_for, CLikeReader
+except ImportError:
+    sys.stderr.write("Cannot find the lizard_languages module.")
+    sys.exit(2)
+try:
+    from lizard_ext import print_xml
+    from lizard_ext import html_output
+except ImportError:
+    pass
+
+VERSION = "1.10.5"
 
 DEFAULT_CCN_THRESHOLD, DEFAULT_WHITELIST, \
     DEFAULT_MAX_FUNC_LENGTH = 15, "whitelizard.txt", 1000
@@ -48,19 +60,42 @@ def analyze(paths, exclude_pattern=None, threads=1, exts=None, lans=None):
     return map_files_to_analyzer(files, file_analyzer, threads)
 
 
-def create_command_line_parser(prog=None):
-    from argparse import ArgumentParser
+def _extension_arg(parser):
+    parser.add_argument("-E", "--extension",
+                        help='''User the extensions. The available extensions
+                        are: -Ecpre: it will ignore code in the #else branch.
+                        -Ewordcount: count word frequencies and generate tag
+                        cloud. -Eoutside: include the global code as one
+                        function.  -EIgnoreAssert: to ignore all code in
+                        assert''',
+                        action="append",
+                        dest="extensions",
+                        default=[])
+
+
+def arg_parser(prog=None):
+    from argparse import ArgumentParser, Action, ArgumentError
+
+    class DictAction(Action):  # pylint: disable=R0903
+        def __init__(self, option_strings, dest, nargs=None, **kwargs):
+            super(DictAction, self).__init__(option_strings, dest, **kwargs)
+
+        def __call__(self, parser, namespace, value, option_string=None):
+            if not re.match(r"\s*\w+\s*=\s*\d+", value):
+                raise ArgumentError(self, "should be like nloc=20")
+            k, val = value.split("=", 2)
+            getattr(namespace, self.dest)[k.strip()] = int(val.strip())
+
     parser = ArgumentParser(prog=prog)
     parser.add_argument('paths', nargs='*', default=['.'],
                         help='list of the filename/paths.')
     parser.add_argument('--version', action='version', version=VERSION)
-    # pylint: disable=E1101
     parser.add_argument("-l", "--languages",
                         help='''List the programming languages you want to
                         analyze. if left empty, it'll search for all languages
                         it knows. `lizard -l cpp -l java`searches for C++ and
                         Java code. The available languages are:
-    ''' + ', '.join(x.language_names[0] for x in CodeReader.__subclasses__()),
+    ''' + ', '.join(x.language_names[0] for x in languages()),
                         action="append",
                         dest="languages",
                         default=[])
@@ -135,25 +170,26 @@ def create_command_line_parser(prog=None):
                         dest="printer")
     parser.add_argument("-m", "--modified",
                         help="Calculate modified cyclomatic complexity number",
-                        action="store_true",
-                        dest="switchCasesAsOneCondition",
-                        default=False)
-    parser.add_argument("-E", "--extension",
-                        help='''User the extensions. The available extensions
-                        are: -Ecpre: it will ignore code in the #else branch.
-                        -Ewordcount: count word frequencies and generate tag
-                        cloud. -Eoutside: include the global code as one
-                        function.  ''',
-                        action="append",
+                        action="append_const",
+                        const="modified",
                         dest="extensions",
                         default=[])
+    _extension_arg(parser)
     parser.add_argument("-s", "--sort",
                         help='''Sort the warning with field. The field can be
                         nloc, cyclomatic_complexity, token_count,
-                        parameter_count, etc. Or an customized file.''',
+                        p#arameter_count, etc. Or an customized field.''',
                         action="append",
                         dest="sorting",
                         default=[])
+    parser.add_argument("-T", "--Threshold",
+                        help='''Set the limit for a field. The field can be
+                        nloc, cyclomatic_complexity, token_count,
+                        parameter_count, etc. Or an customized file. Lizard
+                        will report warning if a function exceed the limit''',
+                        action=DictAction,
+                        dest="thresholds",
+                        default={})
     parser.add_argument("-W", "--whitelist",
                         help='''The path and file name to the whitelist file.
                         It's './whitelizard.txt' by default.
@@ -203,12 +239,6 @@ class FunctionInfo(object):  # pylint: disable=R0902
         else:
             self.parameters[-1] = token
 
-    def clang_format_warning(self):
-        return (
-            "{f.filename}:{f.start_line}: warning: {f.name} has" +
-            " {f.cyclomatic_complexity} CCN and {f.parameter_count}" +
-            " params ({f.nloc} NLOC, {f.token_count} tokens)").format(f=self)
-
 
 class FileInformation(object):  # pylint: disable=R0903
 
@@ -220,14 +250,17 @@ class FileInformation(object):  # pylint: disable=R0903
         self.comment_count = 0
         self.comment_words_count = 0
 
-    average_NLOC = property(lambda self: self.functions_average("nloc"))
-    average_token = property(
+    average_nloc = property(lambda self: self.functions_average("nloc"))
+    average_token_count = property(
         lambda self: self.functions_average("token_count"))
-    average_CCN = property(
+    average_cyclomatic_complexity = property(
         lambda self: self.functions_average("cyclomatic_complexity"))
     CCN = property(
         lambda self:
         sum(fun.cyclomatic_complexity for fun in self.function_list))
+    ND = property(  # pylint: disable=C0103
+        lambda self:
+        sum(fun.max_nesting_depth for fun in self.function_list))
 
     def functions_average(self, att):
         summary = sum(getattr(fun, att) for fun in self.function_list)
@@ -235,7 +268,6 @@ class FileInformation(object):  # pylint: disable=R0903
 
 
 class FileInfoBuilder(object):
-
     def __init__(self, filename):
         self.fileinfo = FileInformation(filename, 0)
         self.current_line = 0
@@ -245,8 +277,12 @@ class FileInfoBuilder(object):
         self.current_function = self.global_pseudo_function
 
     def add_nloc(self, count):
-        self.current_function.nloc += count
         self.fileinfo.nloc += count
+        self.current_function.nloc += count
+        self.current_function.end_line = self.current_line
+        self.current_function.length = \
+            self.current_line - self.current_function.start_line + 1
+        self.newline = count > 0
 
     def start_new_function(self, name):
         self.current_function = FunctionInfo(
@@ -262,6 +298,9 @@ class FileInfoBuilder(object):
 
     def add_comment_words_count(self, comment_words_count):
         self.fileinfo.comment_words_count += comment_words_count
+
+    def reset_complexity(self):
+        self.current_function.cyclomatic_complexity = 1
 
     def add_to_long_function_name(self, app):
         self.current_function.add_to_long_name(app)
@@ -287,9 +326,8 @@ def preprocessing(tokens, reader):
 
 
 def comment_counter(tokens, reader):
-    get_comment = reader.get_comment_from_token
     for token in tokens:
-        comment = get_comment(token)
+        comment = reader.get_comment_from_token(token)
         if comment is not None:
             for _ in comment.splitlines()[1:]:
                 yield '\n'
@@ -309,29 +347,26 @@ def comment_counter(tokens, reader):
 
 
 def line_counter(tokens, reader):
-    reader.context.current_line = 1
+    context = reader.context
+    context.current_line = 1
+    newline = 1
     for token in tokens:
         if token != "\n":
             count = token.count('\n')
-            reader.context.current_line += count
-            reader.context.add_nloc(count)
+            context.current_line += count
+            context.add_nloc(count + newline)
+            newline = 0
             yield token
         else:
-            reader.context.current_line += 1
-            reader.context.newline = True
+            context.current_line += 1
+            newline = 1
 
 
 def token_counter(tokens, reader):
+    context = reader.context
     for token in tokens:
-        reader.context.fileinfo.token_count += 1
-        if reader.context.newline:
-            reader.context.add_nloc(1)
-            reader.context.newline = False
-        reader.context.current_function.end_line = reader.context.current_line
-        length = reader.context.current_line
-        length -= reader.context.current_function.start_line
-        reader.context.current_function.length = length
-        reader.context.current_function.token_count += 1
+        context.fileinfo.token_count += 1
+        context.current_function.token_count += 1
         yield token
 
 
@@ -347,357 +382,6 @@ def condition_counter(tokens, reader):
         yield token
 
 
-def recount_switch_case(tokens, reader):
-    for token in tokens:
-        if token == 'switch':
-            reader.context.add_condition()
-        elif token == 'case':
-            reader.context.add_condition(-1)
-        yield token
-
-
-class CodeReader(object):
-    ''' CodeReaders are used to parse function structures from code of different
-    language. Each language will need a subclass of CodeReader.  '''
-
-    languages = None
-
-    def __init__(self, context):
-        self.context = context
-        self._state = lambda _: _
-
-    @staticmethod
-    def compile_file_extension_re(*exts):
-        return re.compile(r".*\.(" + r"|".join(exts) + r")$", re.IGNORECASE)
-
-    @staticmethod
-    def get_reader(filename):
-        # pylint: disable=E1101
-        for lan in list(CodeReader.__subclasses__()):
-            if CodeReader.compile_file_extension_re(*lan.ext).match(filename):
-                return lan
-
-    @staticmethod
-    def read_brackets(func):
-        def read_until_matching_brackets(self, token):
-            if token == '{':
-                self.br_count += 1
-            elif token == '}':
-                self.br_count -= 1
-                if self.br_count == 0:
-                    func(self, token)
-        return read_until_matching_brackets
-
-    @staticmethod
-    def read_until_then(tokens):
-        def decorator(func):
-            def read_until_then_token(self, token):
-                if not hasattr(self, "rut_tokens"):
-                    self.rut_tokens = []
-                if token in tokens:
-                    func(self, token, self.rut_tokens)
-                    self.rut_tokens = []
-                else:
-                    self.rut_tokens.append(token)
-            return read_until_then_token
-        return decorator
-
-    def state(self, token):
-        self._state(token)
-
-    def eof(self):
-        pass
-
-    @staticmethod
-    def generate_tokens(source_code, addition=''):
-        def _generate_tokens(source_code, addition):
-            # DO NOT put any sub groups in the regex. Good for performance
-            _until_end = r"(?:\\\n|[^\n])*"
-            combined_symbols = ["||", "&&", "===", "!==", "==", "!=", "<=",
-                                ">=",
-                                "<<", "++", ">>", "--", '+=', '-=',
-                                '*=', '/=', '^=', '&=', '|=']
-            token_pattern = re.compile(
-                r"(?:\w+" +
-                r"|/\*.*?\*/" +
-                addition +
-                r"|\"(?:\\.|[^\"\\])*\"" +
-                r"|\'(?:\\.|[^\'\\])*?\'" +
-                r"|//" + _until_end +
-                r"|\#" +
-                r"|:=|::|\*\*" +
-                r"|" + r"|".join(re.escape(s) for s in combined_symbols) +
-                r"|\\\n" +
-                r"|\n" +
-                r"|[^\S\n]+" +
-                r"|.)", re.M | re.S)
-            macro = ""
-            for token in token_pattern.findall(source_code):
-                if macro:
-                    if "\\\n" in token or "\n" not in token:
-                        macro += token
-                    else:
-                        yield macro
-                        yield token
-                        macro = ""
-                elif token == "#":
-                    macro = token
-                else:
-                    yield token
-            if macro:
-                yield macro
-
-        return [t for t in _generate_tokens(source_code, addition)]
-
-
-class CCppCommentsMixin(object):  # pylint: disable=R0903
-
-    @staticmethod
-    def get_comment_from_token(token):
-        if token.startswith("/*") or token.startswith("//"):
-            return token[2:]
-
-class PyCommentsMixin(object):  # pylint: disable=R0903
-
-    @staticmethod
-    def get_comment_from_token(token):
-        if token.startswith("#"):
-            return token[1:]
-        elif token.startswith('"""') or token.startswith("'''"):
-            return token[3:]
-
-
-# pylint: disable=R0903
-class CLikeReader(CodeReader, CCppCommentsMixin):
-
-    ''' This is the reader for C, C++ and Java. '''
-
-    ext = ["c", "cpp", "cc", "mm", "cxx", "h", "hpp"]
-    language_names = ['cpp', 'c']
-    macro_pattern = re.compile(r"#\s*(\w+)\s*(.*)", re.M | re.S)
-    parameter_bracket_open = '(<'
-    parameter_bracket_close = ')>>>'
-
-    class OneInitializationState(object):
-        def __init__(self, next_state):
-            self.next_state = next_state
-            self.bracket = None
-            self.close_bracket = None
-            self.bracket_count = 0
-
-        def __call__(self, token):
-            if token in '({' and not self.bracket:
-                self.bracket = token
-                self.close_bracket = {'(': ')', '{': '}'}[token]
-            if token == self.bracket:
-                self.bracket_count += 1
-            if token == self.close_bracket:
-                self.bracket_count -= 1
-                if self.bracket_count == 0:
-                    self.next_state()
-
-    def __init__(self, context):
-        super(CLikeReader, self).__init__(context)
-        self.bracket_stack = []
-        self.br_count = 0
-        self._state = self._state_global
-        self._saved_tokens = []
-        self.namespaces = []
-
-    def is_in_function(self):
-        return self.br_count > 0
-
-    def start_new_function(self, name):
-        self.context.start_new_function(name)
-        self._state = self._state_function
-        if name == 'operator':
-            self._state = self._state_operator
-
-    def start_new_function_impl(self):
-        self.br_count += 1
-        self._state = self._state_imp
-
-    def preprocess(self, tokens):
-        tilde = False
-        for token in tokens:
-            if token == '~':
-                tilde = True
-            elif tilde:
-                tilde = False
-                yield "~" + token
-            elif not token.isspace() or token == '\n':
-                macro = self.macro_pattern.match(token)
-                if macro:
-                    if macro.group(1) in ('if', 'ifdef', 'elif'):
-                        self.context.add_condition()
-                    elif macro.group(1) == 'include':
-                        yield "#include"
-                        yield macro.group(2) or "\"\""
-                    for _ in macro.group(2).splitlines()[1:]:
-                        yield '\n'
-                else:
-                    yield token
-
-    def _reset_to_global(self):
-        self._state = self._state_global
-        self.bracket_stack = []
-
-    def _state_global(self, token):
-        if token in ("struct", "class", "namespace"):
-            self._state = self._read_namespace
-        elif token == "{":
-            self.namespaces.append("")
-        elif token == '}':
-            if self.namespaces:
-                self.namespaces.pop()
-        elif token[0].isalpha() or token[0] in '_~':
-            self.start_new_function('::'.join(
-                [x for x in self.namespaces if x] + [token]))
-
-    @CodeReader.read_until_then('{;')
-    def _read_namespace(self, token, saved):
-        if token == "{":
-            self.namespaces.append(''.join(itertools.takewhile(
-                lambda x: x not in [":", "final"], saved)))
-        self._state = self._state_global
-
-    def _state_function(self, token):
-        if token == '(':
-            self.bracket_stack.append(token)
-            self._state = self._state_dec
-            self.context.add_to_long_function_name(token)
-        elif token == '::':
-            self._state = self._state_namespace
-            self.context.add_to_function_name(token)
-        elif token == '<':
-            self._state = self._state_template_in_name
-            self.bracket_stack.append(token)
-            self.context.add_to_function_name(token)
-        else:
-            self._state = self._state_global
-            self._state_global(token)
-
-    def _state_template_in_name(self, token):
-        if token == "<":
-            self.bracket_stack.append(token)
-        elif token in (">", ">>"):
-            for _ in token:
-                if not self.bracket_stack or self.bracket_stack.pop() != "<":
-                    self._reset_to_global()
-        if not self.bracket_stack:
-            self._state = self._state_function
-        self.context.add_to_function_name(token)
-
-    def _state_operator(self, token):
-        if token != '(':
-            self._state = self._state_operator_next
-        self.context.add_to_function_name(' ' + token)
-
-    def _state_operator_next(self, token):
-        if token == '(':
-            self._state_function(token)
-        else:
-            self.context.add_to_function_name(' ' + token)
-
-    def _state_namespace(self, token):
-        self._state = self._state_operator\
-            if token == 'operator' else self._state_function
-        self.context.add_to_function_name(token)
-
-    def _state_dec(self, token):
-        if token in self.parameter_bracket_open:
-            self.bracket_stack.append(token)
-        elif token in self.parameter_bracket_close:
-            for sub in token:
-                if self.bracket_stack.pop() != {')': '(', '>': '<'}[sub]:
-                    self._reset_to_global()
-                    return
-            if not self.bracket_stack:
-                self._state = self._state_dec_to_imp
-        elif len(self.bracket_stack) == 1:
-            self.context.parameter(token)
-            return
-        self.context.add_to_long_function_name(" " + token)
-
-    def _state_dec_to_imp(self, token):
-        if token == 'const' or token == 'noexcept':
-            self.context.add_to_long_function_name(" " + token)
-        elif token == 'throw':
-            self._state = self._state_throw
-        elif token == '(':
-            long_name = self.context.current_function.long_name
-            self.start_new_function(long_name)
-            self._state_function(token)
-        elif token == '{':
-            self.start_new_function_impl()
-        elif token == ":":
-            self._state = self._state_initialization_list
-        elif not (token[0].isalpha() or token[0] == '_'):
-            self._state = self._state_global
-            self._state(token)
-        else:
-            self._state = self._state_old_c_params
-            self._saved_tokens = [token]
-
-    def _state_throw(self, token):
-        if token == ')':
-            self._state = self._state_dec_to_imp
-
-    def _state_old_c_params(self, token):
-        self._saved_tokens.append(token)
-        if token == ';':
-            self._saved_tokens = []
-            self._state = self._state_dec_to_imp
-        elif token == '{':
-            if len(self._saved_tokens) == 2:
-                self._saved_tokens = []
-                self._state_dec_to_imp(token)
-                return
-            self._state = self._state_global
-            for token in self._saved_tokens:
-                self._state(token)
-        elif token == '(':
-            self._state = self._state_global
-            for token in self._saved_tokens:
-                self._state(token)
-
-    def _state_initialization_list(self, token):
-        def comeback():
-            self._state = self._state_initialization_list
-        if token == '{':
-            self.start_new_function_impl()
-        else:
-            self._state = self.OneInitializationState(comeback)
-
-    @CodeReader.read_brackets
-    def _state_imp(self, _):
-        self._state = self._state_global
-        self.context.end_of_function()
-
-
-try:
-    # lizard.py can run as a stand alone script, without the extensions
-    # The following languages / extensions will not be supported in
-    # stand alone script.
-    # pylint: disable=W0611
-    # pylint: disable=C0413
-    from lizard_ext import print_xml
-    from lizard_ext import html_output
-    import languages
-except ImportError:
-    pass
-
-
-def token_processor_for_function(tokens, reader):
-    ''' token_processor_for_function parse source code into functions. This is
-    different from language to language. So token_processor_for_function need
-    a language specific 'reader' to actually do the job.
-    '''
-    for token in tokens:
-        reader.state(token)
-        yield token
-    reader.eof()
-
 
 class FileAnalyzer(object):  # pylint: disable=R0903
 
@@ -708,17 +392,24 @@ class FileAnalyzer(object):  # pylint: disable=R0903
         try:
             return self.analyze_source_code(
                 filename, open(filename, 'rU').read())
+        except UnicodeDecodeError:
+            sys.stderr.write("Error: doesn't support none utf encoding '%s'\n"
+                             % filename)
         except IOError:
             sys.stderr.write("Error: Fail to read source file '%s'\n"
                              % filename)
+        except IndexError:
+            sys.stderr.write("Error: Fail to parse file '%s'\n"
+                             % filename)
+            raise
 
     def analyze_source_code(self, filename, code):
         context = FileInfoBuilder(filename)
-        reader = (CodeReader.get_reader(filename) or CLikeReader)(context)
+        reader = (get_reader_for(filename) or CLikeReader)(context)
         tokens = reader.generate_tokens(code)
         for processor in self.processors:
             tokens = processor(tokens, reader)
-        for _ in tokens:
+        for _ in reader(tokens, reader):
             pass
         return context.fileinfo
 
@@ -727,9 +418,8 @@ def warning_filter(option, module_infos):
     for file_info in module_infos:
         if file_info:
             for fun in file_info.function_list:
-                if fun.cyclomatic_complexity > option.CCN or \
-                        fun.parameter_count > option.arguments or \
-                        fun.length > option.length:
+                if any(getattr(fun, attr) > limit for attr, limit in
+                       option.thresholds.items()):
                     yield fun
 
 
@@ -771,21 +461,27 @@ def whitelist_filter(warnings, script=None, whitelist=None):
 
 
 class OutputScheme(object):
-
     def __init__(self, ext):
         self.extensions = ext
         self.items = [
-            {'caption': "  NLOC  ", 'value': "nloc"},
-            {'caption': "  CCN  ", 'value': "cyclomatic_complexity"},
-            {'caption': " token ", 'value': "token_count"},
+            {
+                'caption': "  NLOC  ", 'value': "nloc",
+                'avg_caption': ' Avg.NLOC '},
+            {
+                'caption': "  CCN  ", 'value': "cyclomatic_complexity",
+                'avg_caption': ' AvgCCN '},
+            {
+                'caption': " token ", 'value': "token_count",
+                'avg_caption': ' Avg.token '},
             {'caption': " PARAM ", 'value': "parameter_count"},
             {'caption': " COMMENTS ", 'value': "comment_count"},
             {'caption': " COMMENT WORDS ", 'value': "comment_words_count"},
             {'caption': " length ", 'value': "length"},
-        ] + [
+            ] + [
             {
                 'caption': ext.FUNCTION_CAPTION,
-                'value': ext.FUNCTION_INFO_PART
+                'value': ext.FUNCTION_INFO_PART,
+                'avg_caption': getattr(ext, "AVERAGE_CAPTION", None)
             }
             for ext in self.extensions if hasattr(ext, "FUNCTION_CAPTION")]
         self.items.append({'caption': " location  ", 'value': 'location'})
@@ -802,51 +498,68 @@ class OutputScheme(object):
             str(getattr(fun, item['value'])).rjust(len(item['caption']))
             for item in self.items)
 
+    def average_captions(self):
+        return "".join([
+            e['avg_caption'] for e in self.items
+            if e.get("avg_caption", None)])
+
+    def average_formatter(self):
+        return "".join([
+            "{{module.average_{ext[value]}:{size}.1f}}"
+            .format(ext=e, size=len(e['avg_caption']))
+            for e in self.items
+            if e.get("avg_caption", None)])
+
+    def clang_warning_format(self):
+        return (
+            "{f.filename}:{f.start_line}: warning: {f.name} has " +
+            ", ".join([
+                "{{f.{ext[value]}}} {caption}"
+                .format(ext=e, caption=e['caption'].strip())
+                for e in self.items[:-1]
+                ]))
+
 
 def print_warnings(option, scheme, warnings):
     warning_count = 0
-
-    warn_str = ("!!!! Warnings (CCN > {0} or arguments > {1} " +
-                "or length > {2}) !!!!").format(option.CCN,
-                                                option.arguments,
-                                                option.length)
+    warning_nloc = 0
+    warn_str = "!!!! Warnings ({0}) !!!!".format(
+        ' or '.join("{0} > {1}".format(
+            k, val) for k, val in option.thresholds.items()))
     print("\n" + "=" * len(warn_str) + "\n" + warn_str)
     print(scheme.function_info_head())
     for warning in warnings:
         warning_count += 1
+        warning_nloc += warning.nloc
         print(scheme.function_info(warning))
-    return warning_count
+    return warning_count, warning_nloc
 
 
-def print_total(warning_count, saved_result, option):
+def print_total(warning_count, warning_nloc, saved_result, scheme):
     file_infos = list(file_info for file_info in saved_result if file_info)
     all_fun = list(itertools.chain(*(file_info.function_list
                                      for file_info in file_infos)))
-    cnt = len(all_fun)
-    if cnt == 0:
-        cnt = 1
-    nloc_in_functions = sum([f.nloc for f in all_fun])
-    if nloc_in_functions == 0:
-        nloc_in_functions = 1
-    total_info = (
-        sum([f.nloc for f in file_infos]),
-        nloc_in_functions / cnt,
-        float(sum([f.cyclomatic_complexity for f in all_fun])) / cnt,
-        float(sum([f.token_count for f in all_fun])) / cnt,
-        cnt,
-        warning_count,
-        float(warning_count) / cnt,
-        float(sum([
-            f.nloc for f in all_fun
-            if f.cyclomatic_complexity > option.CCN
-            ])) / nloc_in_functions
-    )
+    cnt = len(all_fun) or 1
+    nloc_in_functions = sum([f.nloc for f in all_fun]) or 1
+    all_in_one = FileInformation(
+            "",
+            sum([f.nloc for f in file_infos]),
+            all_fun)
 
     print("=" * 90)
-    print("Total nloc  Avg.nloc  Avg CCN  Avg token  Fun Cnt  Warning" +
-          " cnt   Fun Rt   nloc Rt  ")
+    print("Total nloc  " + scheme.average_captions() + "  Fun Cnt  Warning"
+          " cnt   Fun Rt   nloc Rt")
     print("-" * 90)
-    print("%10d%10d%9.2f%11.2f%9d%13d%10.2f%8.2f" % total_info)
+    print((
+        "{module.nloc:10d}" +
+        scheme.average_formatter() +
+        "{function_count:9d}{warning_count:13d}" +
+        "{function_rate:10.2f}{nloc_rate:8.2f}").format(
+                  module=all_in_one,
+                  function_count=cnt,
+                  warning_count=warning_count,
+                  function_rate=(warning_count/cnt),
+                  nloc_rate=(warning_nloc/nloc_in_functions)))
 
 
 def print_and_save_modules(all_modules, extensions, scheme):
@@ -863,18 +576,16 @@ def print_and_save_modules(all_modules, extensions, scheme):
     print("--------------------------------------------------------------")
     print("%d file analyzed." % (len(all_functions)))
     print("==============================================================")
-    print("NLOC    Avg.NLOC AvgCCN Avg.ttoken  function_cnt    file")
+    print("NLOC   " + scheme.average_captions() + " function_cnt    file")
     print("--------------------------------------------------------------")
     for module_info in all_functions:
         print((
             "{module.nloc:7d}" +
-            "{module.average_NLOC:7.0f}" +
-            "{module.average_CCN:7.1f}" +
-            "{module.average_token:10.0f}" +
+            scheme.average_formatter() +
             "{function_count:10d}" +
             "     {module.filename}").format(
-                module=module_info,
-                function_count=len(module_info.function_list)))
+            module=module_info,
+            function_count=len(module_info.function_list)))
     return all_functions
 
 
@@ -890,18 +601,21 @@ def get_warnings(code_infos, option):
 def print_result(result, option, scheme):
     result = print_and_save_modules(result, option.extensions, scheme)
     warnings = get_warnings(result, option)
-    warning_count = print_warnings(option, scheme, warnings)
-    print_total(warning_count, result, option)
+    warning_count, warning_nloc = print_warnings(option, scheme, warnings)
+    print_total(warning_count, warning_nloc, result, scheme)
     for extension in option.extensions:
         if hasattr(extension, 'print_result'):
             extension.print_result()
-    if option.number < warning_count:
-        sys.exit(1)
+    return warning_count
 
 
-def print_clang_style_warning(code_infos, option):
+def print_clang_style_warning(code_infos, option, scheme):
+    count = 0
     for warning in get_warnings(code_infos, option):
-        print(warning.clang_format_warning())
+
+        print(scheme.clang_warning_format().format(f=warning))
+        count += 1
+    return count
 
 
 def get_map_method(working_threads):
@@ -931,6 +645,8 @@ def md5_hash_file(full_path_name):
         return code_md5.hexdigest()
     except IOError:
         return None
+    except UnicodeDecodeError:
+        return None
 
 
 def get_all_source_files(paths, exclude_patterns, lans):
@@ -946,8 +662,8 @@ def get_all_source_files(paths, exclude_patterns, lans):
     def _validate_file(pathname):
         return (
             pathname in paths or (
-                CodeReader.get_reader(pathname) and
-                _support(CodeReader.get_reader(pathname)) and
+                get_reader_for(pathname) and
+                _support(get_reader_for(pathname)) and
                 all(not fnmatch(pathname, p) for p in exclude_patterns) and
                 _not_duplicate(pathname)))
 
@@ -970,51 +686,74 @@ def get_all_source_files(paths, exclude_patterns, lans):
 
 
 def parse_args(argv):
-    options = create_command_line_parser(argv[0]).parse_args(args=argv[1:])
-    values = [
-        item['value'] for item in OutputScheme([]).items]
-    for sort_factor in options.sorting:
-        if sort_factor not in values:
-            error_message = "Wrong sorting field '%s'.\n" % sort_factor
-            error_message += "Candidates are: " + ', '.join(values) + "\n"
-            sys.stderr.write(error_message)
-            sys.exit(2)
-    return options
+    def extend_parser(parser_to_extend):
+        from argparse import ArgumentParser, Action, ArgumentError
+        parser = ArgumentParser(add_help=False)
+        _extension_arg(parser)
+        opt, _ = parser.parse_known_args(args=argv[1:])
+        extensions = get_extensions(opt.extensions)
+        for ext in extensions:
+            if hasattr(ext, "set_args"):
+                ext.set_args(parser_to_extend)  # pylint: disable=E1101
+        return parser_to_extend
+    parser = extend_parser(arg_parser(argv[0]))
+    opt = parser.parse_args(args=argv[1:])
+    opt.extensions = get_extensions(opt.extensions)
+    values = [item['value'] for item in OutputScheme(opt.extensions).items]
+    no_fields = (set(opt.sorting) | set(opt.thresholds.keys())) - set(values)
+    if no_fields:
+        error_message = "Wrong field name '%s'.\n" % ", ".join(no_fields)
+        error_message += "Candidates are: " + ', '.join(values) + "\n"
+        sys.stderr.write(error_message)
+        sys.exit(2)
+    if "cyclomatic_complexity" not in opt.thresholds:
+        opt.thresholds["cyclomatic_complexity"] = opt.CCN
+    if "max_nesting_depth" not in opt.thresholds and hasattr(opt, "ND"):
+        opt.thresholds["max_nesting_depth"] = opt.ND
+    if "length" not in opt.thresholds:
+        opt.thresholds["length"] = opt.length
+    if "parameter_count" not in opt.thresholds:
+        opt.thresholds["parameter_count"] = opt.arguments
+    return opt
 
 
-def get_extensions(extension_names, switch_case_as_one_condition=False):
+def patch_extension(ext):
+    if hasattr(ext, "AVERAGE_CAPTION"):
+        setattr(FileInformation, "average_" + ext.FUNCTION_INFO_PART,
+                property(lambda self: self.functions_average(
+                         ext.FUNCTION_INFO_PART)))
+    return ext
+
+
+def get_extensions(extension_names):
+    from importlib import import_module as im
 
     def expand_extensions(existing):
         for name in extension_names:
-            ext = (import_module('lizard_ext.lizard' + name.lower())
-                   .LizardExtension()
-                   if isinstance(name, str) else name)
+            ext = patch_extension(
+                    im('lizard_ext.lizard' + name.lower())
+                    .LizardExtension()
+                    if isinstance(name, str) else name)
             existing.insert(
                 len(existing) if not hasattr(ext, "ordering_index") else
                 ext.ordering_index,
                 ext)
         return existing
 
-    from importlib import import_module
-    extensions = [
-        preprocessing,
-        comment_counter,
-        line_counter,
-        token_counter,
-        token_processor_for_function,
-        condition_counter,
-    ]
-    if switch_case_as_one_condition:
-        extensions.append(recount_switch_case)
-    return expand_extensions(extensions)
+    return expand_extensions([
+            preprocessing,
+            comment_counter,
+            line_counter,
+            token_counter,
+            condition_counter,
+        ])
+
 
 analyze_file = FileAnalyzer(get_extensions([]))  # pylint: disable=C0103
 
 
 def lizard_main(argv):
     options = parse_args(argv)
-    options.extensions = get_extensions(options.extensions,
-                                        options.switchCasesAsOneCondition)
     printer = options.printer or print_result
     result = analyze(
         options.paths,
@@ -1022,7 +761,10 @@ def lizard_main(argv):
         options.working_threads,
         options.extensions,
         options.languages)
-    printer(result, options, OutputScheme(options.extensions))
+    warning_count = printer(result, options, OutputScheme(options.extensions))
+    if options.number < warning_count:
+        sys.exit(1)
+
 
 if __name__ == "__main__":
     lizard_main(sys.argv)
