@@ -20,6 +20,11 @@ class ObjCReader(CLikeReader):
 
 
 class ObjCStates(CLikeStates):  # pylint: disable=R0903
+
+    def __init__(self, context):
+        super(ObjCStates, self).__init__(context)
+        self.param_stack = []
+
     def _state_global(self, token):
         super(ObjCStates, self)._state_global(token)
         if token == '(':
@@ -36,9 +41,19 @@ class ObjCStates(CLikeStates):  # pylint: disable=R0903
 
     def _state_objc_dec_begin(self, token):
         if token == ':':
+            if self.param_stack:
+                parameter = " ".join(self.param_stack)
+                self.param_stack = []
+                parameter = parameter + token
+                self.context.parameter(parameter)
             self._state = self._state_objc_dec
             self.context.add_to_function_name(token)
         elif token == '{':
+            if self.param_stack:
+                parameter = " ".join(self.param_stack)
+                self.param_stack = []
+                parameter = parameter + token
+                self.context.parameter(parameter)
             self.next(self._state_imp, "{")
         else:
             self._state = self._state_global
@@ -52,12 +67,20 @@ class ObjCStates(CLikeStates):  # pylint: disable=R0903
         elif token == '{':
             self.next(self._state_imp, "{")
         else:
+            if self.param_stack:
+                parameter = " ".join(self.param_stack)
+                self.param_stack = []
+                parameter = parameter + token
+                self.context.parameter(parameter)
             self._state = self._state_objc_dec_begin
             self.context.add_to_function_name(" " + token)
 
     def _state_objc_param_type(self, token):
         if token == ')':
             self._state = self._state_objc_param
+        elif token is not '(' and token is not 'void':
+            self.param_stack.append(token)
+
         self.context.add_to_long_function_name(" " + token)
 
     def _state_objc_param(self, _):

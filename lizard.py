@@ -32,6 +32,7 @@ if sys.version[0] == '2':
     from future_builtins import map, filter  # pylint: disable=W0622, F0401
 
 try:
+    from lizard_languages.python import PythonReader
     from lizard_languages import languages, get_reader_for, CLikeReader
 except ImportError:
     sys.stderr.write("Cannot find the lizard_languages module.")
@@ -309,6 +310,7 @@ class FileInfoBuilder(object):
         self.current_function.add_to_function_name(app)
 
     def parameter(self, token):
+        print(token)
         self.current_function.add_parameter(token)
 
     def end_of_function(self):
@@ -335,11 +337,16 @@ def comment_counter(tokens, reader):
                 reader.context.forgive = True
             else:
                 comment_words = comment.split()
-                first_comment_word = (comment_words and comment_words[0] or None)
-                if first_comment_word == '#':
-                    comment_words = comment_words[1:]
-                if (comment_words and comment_words[-1] or None) == "'''":
-                    comment_words = comment_words[:-1]
+                if isinstance(reader, PythonReader):
+                    first_comment_word = (comment_words and comment_words[0] or None)
+                    if first_comment_word == '#':
+                        comment_words = comment_words[1:]
+                    if (comment_words and comment_words[-1] or None) == "'''":
+                        comment_words = comment_words[:-1]
+                elif isinstance(reader, CLikeReader):
+                    comments = [comment for comment in comment_words if comment != '*' and comment != '*/']
+                    comment_words = comments
+
                 comment_words_count = len(comment_words)
                 reader.context.increment_comment_count()
                 reader.context.add_comment_words_count(comment_words_count)
