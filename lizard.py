@@ -459,12 +459,25 @@ class OutputScheme(object):
             {'caption': " length ", 'value': "length"},
             ] + [
             {
-                'caption': ext.FUNCTION_CAPTION,
-                'value': ext.FUNCTION_INFO_PART,
-                'avg_caption': getattr(ext, "AVERAGE_CAPTION", None)
+                'caption': caption,
+                'value': part,
+                'avg_caption': average
             }
-            for ext in self.extensions if hasattr(ext, "FUNCTION_CAPTION")]
+            for caption, part, average in self._ext_member_info()]
         self.items.append({'caption': " location  ", 'value': 'location'})
+
+    def _ext_member_info(self):
+        for ext in self.extensions:
+            if hasattr(ext, "FUNCTION_CAPTION"):
+                if isinstance(ext.FUNCTION_INFO_PART, basestring):
+                    yield (ext.FUNCTION_CAPTION,
+                           ext.FUNCTION_INFO_PART,
+                           getattr(ext, "AVERAGE_CAPTION", None))
+                else:
+                    for i in range(len(ext.FUNCTION_CAPTION)):
+                        yield (ext.FUNCTION_CAPTION[i],
+                               ext.FUNCTION_INFO_PART[i],
+                               getattr(ext, "AVERAGE_CAPTION", [None]*10)[i])
 
     def captions(self):
         return "".join(item['caption'] for item in self.items)
@@ -698,10 +711,15 @@ def parse_args(argv):
 
 
 def patch_extension(ext):
+    def _patch(name):
+        setattr(FileInformation, "average_" + name,
+                property(lambda self: self.functions_average(name)))
     if hasattr(ext, "AVERAGE_CAPTION"):
-        setattr(FileInformation, "average_" + ext.FUNCTION_INFO_PART,
-                property(lambda self: self.functions_average(
-                         ext.FUNCTION_INFO_PART)))
+        if isinstance(ext.FUNCTION_INFO_PART, basestring):
+            _patch(ext.FUNCTION_INFO_PART)
+        else:
+            for name in ext.FUNCTION_INFO_PART:
+                _patch(name)
     return ext
 
 
