@@ -48,41 +48,6 @@ DEFAULT_CCN_THRESHOLD, DEFAULT_WHITELIST, \
     DEFAULT_MAX_FUNC_LENGTH = 15, "whitelizard.txt", 1000
 
 
-def calc_struct(func_list, func_name, name_list, l_name_list):
-    info_list = func_list[func_name]
-    body = open(info_list[3]).readlines()[int(info_list[1]):int(info_list[2])]
-    for line in body:
-        for i, name in enumerate(name_list):
-            if name in line:
-                l_name = l_name_list[i]
-                if line.count(',') == l_name.count(','):
-                    # structural fan in
-                    func_list[l_name][4] = func_list.get(l_name)[4] + 1
-                    # structural fan out
-                    func_list[func_name][5] = func_list.get(func_name)[5] + 1
-
-
-def fan_in_fan_out(file_info, fan_in=0, fan_out=0):
-    func_info = {}
-    name_list, l_name_list = [], []
-    for fun in file_info.function_list:
-        _, name, method_lines, path = re.split(r"[ @\s]\s*", fun.location)
-        start_func, end_func = method_lines.split('-')
-        func_info[fun.long_name] = [name, start_func,
-                                    end_func, path,
-                                    fan_in, fan_out]
-        name_list.append(name)
-        l_name_list.append(fun.long_name)
-    for fun in file_info.function_list:
-        long_name = fun.long_name
-        calc_struct(func_info, long_name, name_list, l_name_list)
-    for fun in file_info.function_list:
-        long_name = fun.long_name
-        print("{0:>7d}{1:>7d}       {2:}".format(func_info[long_name][4],
-                                                 func_info[long_name][5],
-                                                 fun.location))
-
-
 def analyze(paths, exclude_pattern=None, threads=1, exts=None, lans=None):
     '''
     returns an iterator of file information that contains function
@@ -100,7 +65,8 @@ def _extension_arg(parser):
                         help='''User the extensions. The available extensions
                         are: -Ecpre: it will ignore code in the #else branch.
                         -Ewordcount: count word frequencies and generate tag
-                        cloud. -Eoutside: include the global code as one
+                        cloud. -Efans: count the fan in and fan out of
+                        functions. -Eoutside: include the global code as one
                         function.  -EIgnoreAssert: to ignore all code in
                         assert''',
                         action="append",
@@ -252,6 +218,8 @@ class FunctionInfo(object):  # pylint: disable=R0902
         self.filename = filename
         self.indent = -1
         self.length = 0
+        self.fan_in = 0
+        self.fan_out = 0
 
     location = property(lambda self:
                         " %(name)s@%(start_line)s-%(end_line)s@%(filename)s"
@@ -494,12 +462,25 @@ class OutputScheme(object):
             {'caption': " length ", 'value': "length"},
             ] + [
             {
-                'caption': ext.FUNCTION_CAPTION,
-                'value': ext.FUNCTION_INFO_PART,
-                'avg_caption': getattr(ext, "AVERAGE_CAPTION", None)
+                'caption': caption,
+                'value': part,
+                'avg_caption': average
             }
-            for ext in self.extensions if hasattr(ext, "FUNCTION_CAPTION")]
+            for caption, part, average in self._ext_member_info()]
         self.items.append({'caption': " location  ", 'value': 'location'})
+
+    def _ext_member_info(self):
+        for ext in self.extensions:
+            if hasattr(ext, "FUNCTION_CAPTION"):
+                if isinstance(ext.FUNCTION_INFO_PART, basestring):
+                    yield (ext.FUNCTION_CAPTION,
+                           ext.FUNCTION_INFO_PART,
+                           getattr(ext, "AVERAGE_CAPTION", None))
+                else:
+                    for i in range(len(ext.FUNCTION_CAPTION)):
+                        yield (ext.FUNCTION_CAPTION[i],
+                               ext.FUNCTION_INFO_PART[i],
+                               getattr(ext, "AVERAGE_CAPTION", [None]*10)[i])
 
     def captions(self):
         return "".join(item['caption'] for item in self.items)
@@ -584,6 +565,8 @@ def print_and_save_modules(all_modules, extensions, scheme):
         for extension in extensions:
             if hasattr(extension, 'reduce'):
                 extension.reduce(module_info)
+            if hasattr(extension, 'fans'):
+                extension.fans(module_info)
         if module_info:
             all_functions.append(module_info)
             for fun in module_info.function_list:
@@ -604,15 +587,6 @@ def print_and_save_modules(all_modules, extensions, scheme):
     return all_functions
 
 
-def print_fan_in_fan_out(all_functions):
-    print("==============================================================")
-    print(" fan-in   fan-out        file")
-    print("--------------------------------------------------------------")
-    for module_info in all_functions:
-        if module_info:
-            fan_in_fan_out(module_info)
-
-
 def get_warnings(code_infos, option):
     warnings = whitelist_filter(warning_filter(option, code_infos),
                                 whitelist=option.whitelist)
@@ -624,7 +598,6 @@ def get_warnings(code_infos, option):
 
 def print_result(result, option, scheme):
     result = print_and_save_modules(result, option.extensions, scheme)
-    print_fan_in_fan_out(result)
     warnings = get_warnings(result, option)
     warning_count, warning_nloc = print_warnings(option, scheme, warnings)
     print_total(warning_count, warning_nloc, result, scheme)
@@ -743,10 +716,15 @@ def parse_args(argv):
 
 
 def patch_extension(ext):
+    def _patch(name):
+        setattr(FileInformation, "average_" + name,
+                property(lambda self: self.functions_average(name)))
     if hasattr(ext, "AVERAGE_CAPTION"):
-        setattr(FileInformation, "average_" + ext.FUNCTION_INFO_PART,
-                property(lambda self: self.functions_average(
-                         ext.FUNCTION_INFO_PART)))
+        if isinstance(ext.FUNCTION_INFO_PART, basestring):
+            _patch(ext.FUNCTION_INFO_PART)
+        else:
+            for name in ext.FUNCTION_INFO_PART:
+                _patch(name)
     return ext
 
 

@@ -28,7 +28,7 @@ class TestFunctionOutput(StreamStdoutTestCase):
         self.assertEquals("  NLOC    CCN   token  PARAM  length  location  ", sys.stdout.stream.splitlines()[1])
 
     def test_function_info_header_should_have_the_captions_of_external_extensions(self):
-        external_extension = Mock(FUNCTION_CAPTION = "*external_extension*", ordering_index=-1)
+        external_extension = Mock(FUNCTION_CAPTION = "*external_extension*", FUNCTION_INFO_PART ="xx", ordering_index=-1)
         del external_extension.AVERAGE_CAPTION
         extensions = get_extensions([external_extension])
         scheme = OutputScheme(extensions)
