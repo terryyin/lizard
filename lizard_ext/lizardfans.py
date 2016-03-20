@@ -25,7 +25,7 @@ def calc_fan_in_fan_out(name_list, fileinfo, func):
                     func.fan_out += 1
 
 
-class LizardExtension(object):
+class LizardExtension(object):  # pylint: disable=R0903
 
     FUNCTION_CAPTION = ["  fan_in  ", "  fan_out  "]
     FUNCTION_INFO_PART = ["fan_in", "fan_out"]
@@ -50,6 +50,3 @@ class LizardExtension(object):
         self.name_list = [func.name for func in fileinfo.function_list]
         for func in fileinfo.function_list:
             calc_fan_in_fan_out(self.name_list, fileinfo, func)
-
-
-

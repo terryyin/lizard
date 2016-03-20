@@ -472,7 +472,11 @@ class OutputScheme(object):
     def _ext_member_info(self):
         for ext in self.extensions:
             if hasattr(ext, "FUNCTION_CAPTION"):
-                if isinstance(ext.FUNCTION_INFO_PART, basestring):
+                try:
+                    stringtype = basestring
+                except NameError:   # Not compatible with python 3
+                    stringtype = str
+                if isinstance(ext.FUNCTION_INFO_PART, stringtype):
                     yield (ext.FUNCTION_CAPTION,
                            ext.FUNCTION_INFO_PART,
                            getattr(ext, "AVERAGE_CAPTION", None))
@@ -720,7 +724,11 @@ def patch_extension(ext):
         setattr(FileInformation, "average_" + name,
                 property(lambda self: self.functions_average(name)))
     if hasattr(ext, "AVERAGE_CAPTION"):
-        if isinstance(ext.FUNCTION_INFO_PART, basestring):
+        try:
+            stringtype = basestring
+        except NameError:   # Not compatible with python 3
+            stringtype = str
+        if isinstance(ext.FUNCTION_INFO_PART, stringtype):
             _patch(ext.FUNCTION_INFO_PART)
         else:
             for name in ext.FUNCTION_INFO_PART:
