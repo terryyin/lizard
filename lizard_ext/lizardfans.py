@@ -8,21 +8,7 @@ If agreed upon, Henry's and Kafura's Complexity Metric will be
 calculated and integrated.
 """
 
-
-def calc_fan_in_fan_out(name_list, fileinfo, func):
-    """
-    calculate the structural fan in and fan out of every available function
-    """
-    body = open(func.filename).readlines()[func.start_line:func.end_line]
-    for line in body:
-        for i, name in enumerate(name_list):
-            if name in line:
-                line_count = line.count(',') + 1
-                if fileinfo.function_list[i].parameter_count == line_count:
-                    # structural fan-in
-                    fileinfo.function_list[i].fan_in += 1
-                    # structural fan-out
-                    func.fan_out += 1
+import re
 
 
 class LizardExtension(object):  # pylint: disable=R0903
@@ -49,4 +35,32 @@ class LizardExtension(object):  # pylint: disable=R0903
         """
         self.name_list = [func.name for func in fileinfo.function_list]
         for func in fileinfo.function_list:
-            calc_fan_in_fan_out(self.name_list, fileinfo, func)
+            body = self.method_open(func)
+            self.calc_fan_in_fan_out(self.name_list, body, fileinfo, func)
+
+    # pylint: disable=R0201
+    def method_open(self, func):
+        try:
+            body = open(func.filename).readlines()[func.start_line:
+                                                   func.end_line]
+        except IOError:
+            body = []
+            print("Could not open the method inside the file named {0}".
+                  format(func.filename))
+        return body
+
+    # pylint: disable=R0201
+    def calc_fan_in_fan_out(self, name_list, body, fileinfo, func):
+        """
+        calculate the structural fan_in & fan_out of every available function
+        """
+        for line in body:
+            for i, name in enumerate(name_list):
+                re.split(r'; |, |\*|\n', line)
+                if name in line:
+                    line_count = line.count(',') + 1
+                    if fileinfo.function_list[i].parameter_count == line_count:
+                        # structural fan-in
+                        fileinfo.function_list[i].fan_in += 1
+                        # structural fan-out
+                        func.fan_out += 1
