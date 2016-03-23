@@ -469,13 +469,18 @@ class OutputScheme(object):
             for caption, part, average in self._ext_member_info()]
         self.items.append({'caption': " location  ", 'value': 'location'})
 
+    @staticmethod
+    def get_stringtype():
+        try:
+            stringtype = basestring
+        except NameError:   # Not compatible with python 3
+            stringtype = str
+        return stringtype
+
     def _ext_member_info(self):
         for ext in self.extensions:
             if hasattr(ext, "FUNCTION_CAPTION"):
-                try:
-                    stringtype = basestring
-                except NameError:   # Not compatible with python 3
-                    stringtype = str
+                stringtype = OutputScheme.get_stringtype()
                 if isinstance(ext.FUNCTION_INFO_PART, stringtype):
                     yield (ext.FUNCTION_CAPTION,
                            ext.FUNCTION_INFO_PART,
@@ -724,10 +729,7 @@ def patch_extension(ext):
         setattr(FileInformation, "average_" + name,
                 property(lambda self: self.functions_average(name)))
     if hasattr(ext, "AVERAGE_CAPTION"):
-        try:
-            stringtype = basestring
-        except NameError:   # Not compatible with python 3
-            stringtype = str
+        stringtype = OutputScheme.get_stringtype()
         if isinstance(ext.FUNCTION_INFO_PART, stringtype):
             _patch(ext.FUNCTION_INFO_PART)
         else:
