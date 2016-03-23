@@ -13,6 +13,7 @@ C/C++ header files or Java imports. It can deal with
 
 -  C/C++ (works with C++14)
 -  Java
+-  C# (C Sharp)
 -  JavaScript
 -  Objective C
 -  Swift
