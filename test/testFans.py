@@ -83,9 +83,9 @@ class TestFans(unittest.TestCase):
     def test_fan_in_fan_out_only_result(self):
         result = get_cpp_fans_extension("""int fun(a){}
                                         int bar(a){}""")
-        self.ext.calc_fan_in_fan_out(['fun', 'bar'],
-                                     self.body, result,
-                                     result.function_list[1])
+        self.ext.calculate_fan_in_fan_out(['fun', 'bar'],
+                                          self.body, result,
+                                          result.function_list[1])
         self.assertEqual(1, result.function_list[0].fan_in)
         self.assertEqual(0, result.function_list[0].fan_out)
         self.assertEqual(0, result.function_list[1].fan_in)
@@ -94,9 +94,9 @@ class TestFans(unittest.TestCase):
     def test_single_dual_fans_result(self):
         result = get_cpp_fans_extension("""int fun(a){}""")
         self.body[6] = '\t bar(a)\n'
-        self.ext.calc_fan_in_fan_out(['fun'],
-                                     self.body, result,
-                                     result.function_list[0])
+        self.ext.calculate_fan_in_fan_out(['fun'],
+                                          self.body, result,
+                                          result.function_list[0])
         self.assertEqual(1, result.function_list[0].fan_in)
         self.assertEqual(1, result.function_list[0].fan_out)
 
@@ -104,9 +104,9 @@ class TestFans(unittest.TestCase):
         result = get_cpp_fans_extension("""int fun(a){}
                                         int bar(a){}""")
         self.body[6] = '\t bar(a)\n'
-        self.ext.calc_fan_in_fan_out(['fun', 'bar'],
-                                     self.body, result,
-                                     result.function_list[0])
+        self.ext.calculate_fan_in_fan_out(['fun', 'bar'],
+                                          self.body, result,
+                                          result.function_list[0])
         self.assertEqual(1, result.function_list[0].fan_in)
         self.assertEqual(2, result.function_list[0].fan_out)
         self.assertEqual(1, result.function_list[1].fan_in)
@@ -116,9 +116,9 @@ class TestFans(unittest.TestCase):
         result = get_cpp_fans_extension("""int fun(a){}
                                         int bar(a){}""")
         self.body[6] = '\t fun(a)\n'
-        self.ext.calc_fan_in_fan_out(['fun', 'bar'],
-                                     self.body, result,
-                                     result.function_list[1])
+        self.ext.calculate_fan_in_fan_out(['fun', 'bar'],
+                                          self.body, result,
+                                          result.function_list[1])
         self.assertEqual(2, result.function_list[0].fan_in)
         self.assertEqual(0, result.function_list[0].fan_out)
         self.assertEqual(0, result.function_list[1].fan_in)
@@ -130,9 +130,9 @@ class TestFans(unittest.TestCase):
                                         int foobar(c){}""")
         self.body[6] = '\t fun(a)\n'
         self.body[7] = '\t foo(a)\n'
-        self.ext.calc_fan_in_fan_out(['fun', 'bar', 'foobar'],
-                                     self.body, result,
-                                     result.function_list[0])
+        self.ext.calculate_fan_in_fan_out(['fun', 'bar', 'foobar'],
+                                          self.body, result,
+                                          result.function_list[0])
         self.assertEqual(2, result.function_list[0].fan_in)
         self.assertEqual(2, result.function_list[0].fan_out)
         self.assertEqual(0, result.function_list[1].fan_in)
