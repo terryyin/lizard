@@ -65,7 +65,8 @@ def _extension_arg(parser):
                         help='''User the extensions. The available extensions
                         are: -Ecpre: it will ignore code in the #else branch.
                         -Ewordcount: count word frequencies and generate tag
-                        cloud. -Eoutside: include the global code as one
+                        cloud. -Efans: count the fan in and fan out of
+                        functions. -Eoutside: include the global code as one
                         function.  -EIgnoreAssert: to ignore all code in
                         assert''',
                         action="append",
@@ -217,6 +218,8 @@ class FunctionInfo(object):  # pylint: disable=R0902
         self.filename = filename
         self.indent = -1
         self.length = 0
+        self.fan_in = 0
+        self.fan_out = 0
 
     location = property(lambda self:
                         " %(name)s@%(start_line)s-%(end_line)s@%(filename)s"
@@ -469,7 +472,11 @@ class OutputScheme(object):
     def _ext_member_info(self):
         for ext in self.extensions:
             if hasattr(ext, "FUNCTION_CAPTION"):
-                if isinstance(ext.FUNCTION_INFO_PART, basestring):
+                try:
+                    stringtype = basestring
+                except NameError:   # Not compatible with python 3
+                    stringtype = str
+                if isinstance(ext.FUNCTION_INFO_PART, stringtype):
                     yield (ext.FUNCTION_CAPTION,
                            ext.FUNCTION_INFO_PART,
                            getattr(ext, "AVERAGE_CAPTION", None))
@@ -562,6 +569,8 @@ def print_and_save_modules(all_modules, extensions, scheme):
         for extension in extensions:
             if hasattr(extension, 'reduce'):
                 extension.reduce(module_info)
+            if hasattr(extension, 'fans'):
+                extension.fans(module_info)
         if module_info:
             all_functions.append(module_info)
             for fun in module_info.function_list:
@@ -715,7 +724,11 @@ def patch_extension(ext):
         setattr(FileInformation, "average_" + name,
                 property(lambda self: self.functions_average(name)))
     if hasattr(ext, "AVERAGE_CAPTION"):
-        if isinstance(ext.FUNCTION_INFO_PART, basestring):
+        try:
+            stringtype = basestring
+        except NameError:   # Not compatible with python 3
+            stringtype = str
+        if isinstance(ext.FUNCTION_INFO_PART, stringtype):
             _patch(ext.FUNCTION_INFO_PART)
         else:
             for name in ext.FUNCTION_INFO_PART:
