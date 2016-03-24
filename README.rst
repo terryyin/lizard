@@ -5,6 +5,7 @@ An extensible Cyclomatic Complexity Analyzer for many programming languages
 including C/C++ (doesn't require all the header files).
 
 |Build Status|
+|Pypi Badge|
 
 Visit the tool website |Web Site|
 
@@ -283,6 +284,9 @@ Change Logs
 
 .. |Build Status| image:: https://travis-ci.org/terryyin/lizard.png?branch=master
    :target: https://travis-ci.org/terryyin/lizard
+
+.. |Pypi Badge| image:: https://badge.fury.io/py/lizard.svg
+    :target: https://badge.fury.io/py/lizard
 
 .. |Web Site| image:: http://www.lizard.ws/website/static/img/logo-small.png
    :target: http://www.lizard.ws
