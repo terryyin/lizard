@@ -79,3 +79,13 @@ class TestCsharpe(unittest.TestCase):
             }
         ''')
         self.assertEqual(8, result[0].cyclomatic_complexity)
+
+    def test_null_coalecing_operator(self):
+        result = get_csharpe_function_list('''
+            public void Method()
+            {
+                a ?? b;
+            }
+        ''')
+        self.assertEqual(2, result[0].cyclomatic_complexity)
+
