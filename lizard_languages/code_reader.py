@@ -76,6 +76,8 @@ class CodeReader(object):
     ext = []
     languages = None
     extra_subclasses = set()
+    conditions = set(['if', 'for', 'while', '&&', '||', '?', 'catch',
+                      'case'])
 
     def __init__(self, context):
         self.parallel_states = []

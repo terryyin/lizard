@@ -357,11 +357,7 @@ def token_counter(tokens, reader):
 
 
 def condition_counter(tokens, reader):
-    if hasattr(reader, "conditions"):
-        conditions = reader.conditions
-    else:
-        conditions = set(['if', 'for', 'while', '&&', '||', '?', 'catch',
-                          'case'])
+    conditions = reader.conditions
     for token in tokens:
         if token in conditions:
             reader.context.add_condition()
