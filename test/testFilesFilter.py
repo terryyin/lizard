@@ -1,11 +1,15 @@
 import unittest
-import sys
-from mock import patch, Mock
+import platform
+from mock import patch
 from lizard import get_all_source_files
 import os
 
-class TestFilesFilter(unittest.TestCase):
 
+def which_system():
+    return platform.system()
+
+
+class TestFilesFilter(unittest.TestCase):
     @patch.object(os, "walk")
     def test_no_matching(self, mock_os_walk):
         mock_os_walk.return_value = []
@@ -27,28 +31,36 @@ class TestFilesFilter(unittest.TestCase):
     @patch('lizard.md5_hash_file')
     @patch.object(os, "walk")
     def test_exclude_file_name(self, mock_os_walk, md5):
-        mock_os_walk.return_value = (['.', 
+        mock_os_walk.return_value = (['.',
                                       None,
                                       ['temp.c', 'useful.cpp']],)
         files = get_all_source_files(["dir"], ["*.c"], [])
-        self.assertEqual(["./useful.cpp"], list(files))
+        if which_system() == "Windows":
+            file_names = [".\\useful.cpp"]
+        else:
+            file_names = ["./useful.cpp"]
+        self.assertEqual(file_names, list(files))
 
     @patch('lizard.md5_hash_file')
     @patch.object(os, "walk")
     def test_assigned_lanagues(self, mock_os_walk, md5):
-        mock_os_walk.return_value = (['.', 
+        mock_os_walk.return_value = (['.',
                                       None,
                                       ['temp.c', 'useful.cpp', 'x.java', 'x.js']],)
-        md5.side_effect = [1,2,3,4,5,6,7,8,9,0]
+        md5.side_effect = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0]
         files = list(get_all_source_files(["dir"], [], ['cpp', 'java']))
-        self.assertIn("./temp.c", files)
-        self.assertIn("./useful.cpp", files)
-        self.assertIn("./x.java", files)
-        self.assertNotIn("./x.js", files)
+        if which_system() == "Windows":
+            file_names = [".\\temp.c", ".\\useful.cpp", ".\\x.java", ".\\x.js"]
+        else:
+            file_names = ["./temp.c", "./useful.cpp", "./x.java", "./x.js"]
+        self.assertIn(file_names[0], files)
+        self.assertIn(file_names[1], files)
+        self.assertIn(file_names[2], files)
+        self.assertNotIn(file_names[3], files)
 
     @patch.object(os, "walk")
     def test_exclude_folder(self, mock_os_walk):
-        mock_os_walk.return_value = (['ut', 
+        mock_os_walk.return_value = (['ut',
                                       None,
                                       ['useful.cpp']],)
         files = get_all_source_files(["dir"], ["ut/*"], [])
@@ -56,7 +68,7 @@ class TestFilesFilter(unittest.TestCase):
 
     @patch.object(os, "walk")
     def test_exclude_folder_recursively(self, mock_os_walk):
-        mock_os_walk.return_value = (['ut/something', 
+        mock_os_walk.return_value = (['ut/something',
                                       None,
                                       ['useful.cpp']],)
         files = get_all_source_files(["dir"], ["ut/*"], [])
@@ -64,10 +76,10 @@ class TestFilesFilter(unittest.TestCase):
 
     @patch.object(os, "walk")
     def test_exclude_none_supported_files(self, mock_os_walk):
-        mock_os_walk.return_value = (['.', 
+        mock_os_walk.return_value = (['.',
                                       None,
                                       ['useful.txt']],)
-        files = get_all_source_files(["dir"],['exclude_me'], [])
+        files = get_all_source_files(["dir"], ['exclude_me'], [])
         self.assertEqual([], list(files))
 
     @patch.object(os, "walk")
@@ -79,7 +91,11 @@ class TestFilesFilter(unittest.TestCase):
         file_handle = mock_open.return_value.__enter__.return_value
         file_handle.read.return_value = "int foo(){haha();\n}"
         files = get_all_source_files(["dir"], [], [])
-        self.assertEqual(['./f1.cpp'], list(files))
+        if which_system() == "Windows":
+            file_names = [".\\f1.cpp"]
+        else:
+            file_names = ["./f1.cpp"]
+        self.assertEqual(file_names, list(files))
 
     @patch.object(os, "walk")
     @patch("lizard.auto_open", create=True)
@@ -91,7 +107,11 @@ class TestFilesFilter(unittest.TestCase):
         outs = ["int foo(){{haha({param});\n}}".format(param=i) for i in range(2)]
         file_handle.read.side_effect = lambda: outs.pop()
         files = get_all_source_files(["dir"], [], [])
-        self.assertEqual(["./f1.cpp", "./f2.cpp"], list(files))
+        if which_system() == "Windows":
+            file_names = [".\\f1.cpp", ".\\f2.cpp"]
+        else:
+            file_names = ["./f1.cpp", "./f2.cpp"]
+        self.assertEqual(file_names, list(files))
 
     @patch.object(os, "walk")
     @patch("lizard.auto_open", create=True)
@@ -101,6 +121,8 @@ class TestFilesFilter(unittest.TestCase):
                                       ['f1.cpp', 'f2.cpp']],)
         file_handle = mock_open.side_effect = IOError
         files = get_all_source_files(["dir"], [], [])
-        self.assertEqual(['./f1.cpp', './f2.cpp'], list(files))
-
-
+        if which_system() == "Windows":
+            file_names = [".\\f1.cpp", ".\\f2.cpp"]
+        else:
+            file_names = ["./f1.cpp", "./f2.cpp"]
+        self.assertEqual(file_names, list(files))
