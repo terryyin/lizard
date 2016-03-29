@@ -1,4 +1,4 @@
-from lizard import  analyze_file, FileAnalyzer, get_extensions
+from lizard import analyze_file, FileAnalyzer, get_extensions
 
 def get_cpp_fileinfo(source_code):
     return analyze_file.analyze_source_code("a.cpp", source_code)

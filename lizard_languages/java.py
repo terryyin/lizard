@@ -1,5 +1,5 @@
 '''
-Language parser for JavaScript
+Language parser for Java
 '''
 
 from .clike import CLikeReader, CLikeStates

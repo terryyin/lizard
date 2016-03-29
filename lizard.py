@@ -43,7 +43,7 @@ try:
 except ImportError:
     pass
 
-VERSION = "1.10.5"
+VERSION = "1.11.0"
 
 DEFAULT_CCN_THRESHOLD, DEFAULT_WHITELIST, \
     DEFAULT_MAX_FUNC_LENGTH = 15, "whitelizard.txt", 1000
@@ -66,7 +66,8 @@ def _extension_arg(parser):
                         help='''User the extensions. The available extensions
                         are: -Ecpre: it will ignore code in the #else branch.
                         -Ewordcount: count word frequencies and generate tag
-                        cloud. -Eoutside: include the global code as one
+                        cloud. -Efans: count the fan in and fan out of
+                        functions. -Eoutside: include the global code as one
                         function.  -EIgnoreAssert: to ignore all code in
                         assert''',
                         action="append",
@@ -218,6 +219,8 @@ class FunctionInfo(object):  # pylint: disable=R0902
         self.filename = filename
         self.indent = -1
         self.length = 0
+        self.fan_in = 0
+        self.fan_out = 0
 
     location = property(lambda self:
                         " %(name)s@%(start_line)s-%(end_line)s@%(filename)s"
@@ -379,11 +382,7 @@ def token_counter(tokens, reader):
 
 
 def condition_counter(tokens, reader):
-    if hasattr(reader, "conditions"):
-        conditions = reader.conditions
-    else:
-        conditions = set(['if', 'for', 'while', '&&', '||', '?', 'catch',
-                          'case'])
+    conditions = reader.conditions
     for token in tokens:
         if token in conditions:
             reader.context.add_condition()
@@ -487,12 +486,33 @@ class OutputScheme(object):
             {'caption': " length ", 'value': "length"},
             ] + [
             {
-                'caption': ext.FUNCTION_CAPTION,
-                'value': ext.FUNCTION_INFO_PART,
-                'avg_caption': getattr(ext, "AVERAGE_CAPTION", None)
+                'caption': caption,
+                'value': part,
+                'avg_caption': average
             }
-            for ext in self.extensions if hasattr(ext, "FUNCTION_CAPTION")]
+            for caption, part, average in self._ext_member_info()]
         self.items.append({'caption': " location  ", 'value': 'location'})
+
+    @staticmethod
+    def is_string_instance(ext):
+        try:
+            stringtype = basestring
+        except NameError:   # Not compatible with python 3
+            stringtype = str
+        return isinstance(ext.FUNCTION_INFO_PART, stringtype)
+
+    def _ext_member_info(self):
+        for ext in self.extensions:
+            if hasattr(ext, "FUNCTION_CAPTION"):
+                if OutputScheme.is_string_instance(ext):
+                    yield (ext.FUNCTION_CAPTION,
+                           ext.FUNCTION_INFO_PART,
+                           getattr(ext, "AVERAGE_CAPTION", None))
+                else:
+                    for i in range(len(ext.FUNCTION_CAPTION)):
+                        yield (ext.FUNCTION_CAPTION[i],
+                               ext.FUNCTION_INFO_PART[i],
+                               getattr(ext, "AVERAGE_CAPTION", [None]*10)[i])
 
     def captions(self):
         return "".join(item['caption'] for item in self.items)
@@ -577,6 +597,8 @@ def print_and_save_modules(all_modules, extensions, scheme):
         for extension in extensions:
             if hasattr(extension, 'reduce'):
                 extension.reduce(module_info)
+            if hasattr(extension, 'fans'):
+                extension.fans(module_info)
         if module_info:
             all_functions.append(module_info)
             for fun in module_info.function_list:
@@ -726,10 +748,15 @@ def parse_args(argv):
 
 
 def patch_extension(ext):
+    def _patch(name):
+        setattr(FileInformation, "average_" + name,
+                property(lambda self: self.functions_average(name)))
     if hasattr(ext, "AVERAGE_CAPTION"):
-        setattr(FileInformation, "average_" + ext.FUNCTION_INFO_PART,
-                property(lambda self: self.functions_average(
-                         ext.FUNCTION_INFO_PART)))
+        if OutputScheme.is_string_instance(ext):
+            _patch(ext.FUNCTION_INFO_PART)
+        else:
+            for name in ext.FUNCTION_INFO_PART:
+                _patch(name)
     return ext
 
 

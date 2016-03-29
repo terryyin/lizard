@@ -65,6 +65,7 @@ class PythonStates(CodeStateMachine):  # pylint: disable=R0903
         if token != '(':
             self.reader.function_stack.append(self.context.current_function)
             self.context.start_new_function(token)
+            self.context.add_to_long_function_name("(")
             self.context.current_function.indent = self.reader.current_indent
         else:
             self._state = self._dec

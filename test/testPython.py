@@ -32,6 +32,7 @@ class Test_parser_for_Python(unittest.TestCase):
         self.assertEqual(2, functions[0].cyclomatic_complexity)
         self.assertEqual(1, functions[0].max_nesting_depth)
         self.assertEqual(4, functions[0].end_line)
+        self.assertEqual("simple_function( )", functions[0].long_name)
 
     def test_two_simple_python_function(self):
         source = """
