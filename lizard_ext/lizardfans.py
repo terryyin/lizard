@@ -28,8 +28,7 @@ class LizardExtension(object):  # pylint: disable=R0903
         So don't store any data with an extension object.
         """
         reader.context.fileinfo.fan_in = reader.context.fileinfo.fan_out = 0
-        for token in tokens:
-            yield token
+        return tokens
 
     def fans(self, fileinfo):
         """
@@ -58,9 +57,7 @@ class LizardExtension(object):  # pylint: disable=R0903
             for i, name in enumerate(name_list):
                 re.split(r'; |, |\*|\n', line)
                 if name in line:
-                    line_count = line.count(',') + 1
-                    if fileinfo.function_list[i].parameter_count == line_count:
-                        # structural fan-in
-                        fileinfo.function_list[i].fan_in += 1
-                        # structural fan-out
-                        func.fan_out += 1
+                    # structural fan-in
+                    fileinfo.function_list[i].fan_in += 1
+                    # structural fan-out
+                    func.fan_out += 1
