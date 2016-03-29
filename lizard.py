@@ -253,6 +253,7 @@ class FileInformation(object):  # pylint: disable=R0903
         self.token_count = 0
         self.comment_count = 0
         self.comment_words_count = 0
+        self.comments_list = []
 
     average_nloc = property(lambda self: self.functions_average("nloc"))
     average_token_count = property(
@@ -303,6 +304,9 @@ class FileInfoBuilder(object):
     def add_comment_words_count(self, comment_words_count):
         self.fileinfo.comment_words_count += comment_words_count
 
+    def add_comment(self, comment):
+        self.fileinfo.comments_list.append(comment)
+
     def reset_complexity(self):
         self.current_function.cyclomatic_complexity = 1
 
@@ -313,7 +317,6 @@ class FileInfoBuilder(object):
         self.current_function.add_to_function_name(app)
 
     def parameter(self, token):
-        print(token)
         self.current_function.add_parameter(token)
 
     def end_of_function(self):
@@ -351,6 +354,7 @@ def comment_counter(tokens, reader):
                     comment_words = comments
 
                 comment_words_count = len(comment_words)
+                reader.context.add_comment(" ".join(comment_words))
                 reader.context.increment_comment_count()
                 reader.context.add_comment_words_count(comment_words_count)
         else:
