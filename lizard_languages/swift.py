@@ -22,6 +22,7 @@ class SwiftReader(CodeReader, CCppCommentsMixin):
             source_code,
             r"|\w+\?" +
             r"|\w+\!" +
+            r"|\?\?" +
             _)
 
 
