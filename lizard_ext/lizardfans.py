@@ -9,6 +9,7 @@ calculated and integrated.
 """
 
 import re
+from sys import stderr
 
 
 class LizardExtension(object):  # pylint: disable=R0903
@@ -36,24 +37,22 @@ class LizardExtension(object):  # pylint: disable=R0903
         self.name_list = [func.name for func in fileinfo.function_list]
         for func in fileinfo.function_list:
             body = self.method_open(func)
-            self.calc_fan_in_fan_out(self.name_list, body, fileinfo, func)
+            self.calculate_fan_in_fan_out(self.name_list, body, fileinfo, func)
 
-    # pylint: disable=R0201
-    def method_open(self, func):
+    @staticmethod
+    def method_open(func):
         try:
             body = open(func.filename).readlines()[func.start_line:
                                                    func.end_line]
         except IOError:
             body = []
-            print("Could not open the method inside the file named {0}".
-                  format(func.filename))
+            stderr.write("\nCouldn't open the referenced method inside {0}".
+                         format(func.filename))
+            stderr.flush()
         return body
 
-    # pylint: disable=R0201
-    def calc_fan_in_fan_out(self, name_list, body, fileinfo, func):
-        """
-        calculate the structural fan_in & fan_out of every available function
-        """
+    @staticmethod
+    def calculate_fan_in_fan_out(name_list, body, fileinfo, func):
         for line in body:
             for i, name in enumerate(name_list):
                 re.split(r'; |, |\*|\n', line)
