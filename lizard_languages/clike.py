@@ -81,8 +81,7 @@ class CLikeNestingStackStates(CodeStateMachine):
         elif token == "{":
             self.context.nesting_stack.append("")
         elif token == '}':
-            if self.context.nesting_stack:
-                self.context.nesting_stack.pop()
+            self.context.nesting_stack.pop()
 
     @CodeStateMachine.read_until_then('({;')
     def _read_namespace(self, token, saved):
@@ -111,8 +110,7 @@ class CLikeStates(CodeStateMachine):
 
     def _state_global(self, token):
         if token[0].isalpha() or token[0] in '_~':
-            self.start_new_function('::'.join(
-                [x for x in self.context.nesting_stack if x] + [token]))
+            self.start_new_function(token)
 
     def _state_function(self, token):
         if token == '(':

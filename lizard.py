@@ -268,6 +268,25 @@ class FileInformation(object):  # pylint: disable=R0903
         return summary / len(self.function_list) if self.function_list else 0
 
 
+class NestingStack(object):
+
+    def __init__(self):
+        self.nesting_stack = []
+
+    def with_namespace(self, name):
+        return '::'.join([x for x in self.nesting_stack if x] + [name])
+
+    def append(self, token):
+        self.nesting_stack.append(token)
+
+    def pop(self):
+        if self.nesting_stack:
+            self.nesting_stack.pop()
+
+    def current_level(self):
+        len(self.nesting_stack)
+
+
 class FileInfoBuilder(object):
     '''
     The builder is also referred as "context" in the code,
@@ -283,7 +302,7 @@ class FileInfoBuilder(object):
         self.newline = True
         self.global_pseudo_function = FunctionInfo('*global*', filename, 0)
         self.current_function = self.global_pseudo_function
-        self.nesting_stack = []
+        self.nesting_stack = NestingStack()
 
     def add_nloc(self, count):
         self.fileinfo.nloc += count
@@ -295,7 +314,7 @@ class FileInfoBuilder(object):
 
     def start_new_function(self, name):
         self.current_function = FunctionInfo(
-            name,
+            self.nesting_stack.with_namespace(name),
             self.fileinfo.filename,
             self.current_line)
 
