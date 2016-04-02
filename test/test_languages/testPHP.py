@@ -74,3 +74,15 @@ class Test_parser_for_PHP(unittest.TestCase):
         functions = get_php_function_list("<?php a.b.c = function (a, b){} ?>")
         self.assertEqual('a.b.c', functions[0].name)
 
+    def test_class(self):
+        functions = get_php_function_list("<?php class C{function x(){}} ?>")
+        self.assertEqual('x', functions[0].name)
+
+    def test_class_mixed(self):
+        functions = get_php_function_list("<?php function a(){}; class C{function b(){}} function c(){} ?>")
+        self.assertEqual(3, len(functions))
+
+    def test_interface(self):
+        functions = get_php_function_list("<?php function a(); ?>")
+        self.assertEqual(0, len(functions))
+
