@@ -1,7 +1,7 @@
 import unittest
 from lizard_languages import CLikeReader
 from mock import Mock
-from .testHelpers import get_cpp_fileinfo, get_cpp_function_list
+from ..testHelpers import get_cpp_fileinfo, get_cpp_function_list
 
 class Test_C_Token_extension(unittest.TestCase):
 

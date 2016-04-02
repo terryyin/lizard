@@ -148,4 +148,3 @@ class Test_parser_for_Swift(unittest.TestCase):
             }
         ''')
         self.assertEqual(1, result[0].cyclomatic_complexity)
-

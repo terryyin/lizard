@@ -115,7 +115,8 @@ class CodeReader(object):
                 r"|[^\S\n]+" +
                 r"|.)", re.M | re.S)
             macro = ""
-            for token in token_pattern.findall(source_code):
+            for match in token_pattern.finditer(source_code):
+                token = match.group(0)
                 if macro:
                     if "\\\n" in token or "\n" not in token:
                         macro += token

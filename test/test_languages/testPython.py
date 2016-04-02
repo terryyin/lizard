@@ -1,6 +1,6 @@
 import unittest
 import inspect
-from .testHelpers import get_python_function_list_with_extnesion
+from ..testHelpers import get_python_function_list_with_extnesion
 from lizard_ext.lizardnd import LizardExtension as NestDepth
 from lizard_languages.python import PythonReader
 
