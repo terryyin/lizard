@@ -269,6 +269,13 @@ class FileInformation(object):  # pylint: disable=R0903
 
 
 class FileInfoBuilder(object):
+    '''
+    The builder is also referred as "context" in the code,
+    because each language readers use this builder to build
+    source file and function information and the builder keep
+    the context information that's needed for the building.
+    '''
+
     def __init__(self, filename):
         self.fileinfo = FileInformation(filename, 0)
         self.current_line = 0
@@ -276,6 +283,7 @@ class FileInfoBuilder(object):
         self.newline = True
         self.global_pseudo_function = FunctionInfo('*global*', filename, 0)
         self.current_function = self.global_pseudo_function
+        self.nesting_stack = []
 
     def add_nloc(self, count):
         self.fileinfo.nloc += count
