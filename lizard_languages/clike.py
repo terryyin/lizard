@@ -79,15 +79,15 @@ class CLikeNestingStackStates(CodeStateMachine):
         if token in ("struct", "class", "namespace"):
             self._state = self._read_namespace
         elif token == "{":
-            self.context.nesting_stack.append("")
+            self.context.add_nesting("")
         elif token == '}':
-            self.context.nesting_stack.pop()
+            self.context.pop_nesting()
 
     @CodeStateMachine.read_until_then('({;')
     def _read_namespace(self, token, saved):
         self._state = self._state_global
         if token == "{":
-            self.context.nesting_stack.append(''.join(itertools.takewhile(
+            self.context.add_nesting(''.join(itertools.takewhile(
                 lambda x: x not in [":", "final"], saved)))
 
 

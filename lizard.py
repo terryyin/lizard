@@ -276,14 +276,14 @@ class NestingStack(object):
     def with_namespace(self, name):
         return '::'.join([x for x in self.nesting_stack if x] + [name])
 
-    def append(self, token):
+    def add_nesting(self, token):
         self.nesting_stack.append(token)
 
-    def pop(self):
+    def pop_nesting(self):
         if self.nesting_stack:
             self.nesting_stack.pop()
 
-    def current_level(self):
+    def current_nesting_level(self):
         len(self.nesting_stack)
 
 
@@ -302,7 +302,11 @@ class FileInfoBuilder(object):
         self.newline = True
         self.global_pseudo_function = FunctionInfo('*global*', filename, 0)
         self.current_function = self.global_pseudo_function
-        self.nesting_stack = NestingStack()
+        self._nesting_stack = NestingStack()
+
+    def __getattr__(self, attr):
+        # delegating to _nesting_stack
+        return getattr(self._nesting_stack, attr)
 
     def add_nloc(self, count):
         self.fileinfo.nloc += count
@@ -314,7 +318,7 @@ class FileInfoBuilder(object):
 
     def start_new_function(self, name):
         self.current_function = FunctionInfo(
-            self.nesting_stack.with_namespace(name),
+            self.with_namespace(name),
             self.fileinfo.filename,
             self.current_line)
 
