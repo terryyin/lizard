@@ -216,7 +216,7 @@ class FunctionInfo(object):  # pylint: disable=R0902
         self.end_line = start_line
         self.parameters = []
         self.filename = filename
-        self.indent = -1
+        self.start_nesting_level = -1
         self.length = 0
         self.fan_in = 0
         self.fan_out = 0
@@ -268,23 +268,47 @@ class FileInformation(object):  # pylint: disable=R0903
         return summary / len(self.function_list) if self.function_list else 0
 
 
+class Nesting(object):
+    '''
+    Nesting represent one level of nesting in any programming language.
+    '''
+
+    def __init__(self, **kwargs):
+        self.name = kwargs.get("name", '')
+
+
 class NestingStack(object):
 
     def __init__(self):
         self.nesting_stack = []
 
     def with_namespace(self, name):
-        return '::'.join([x for x in self.nesting_stack if x] + [name])
+        return '::'.join(
+                [x.name for x in self.nesting_stack if x.name] +
+                [name])
 
     def add_nesting(self, token):
-        self.nesting_stack.append(token)
+        self.nesting_stack.append(Nesting(name=token))
 
     def pop_nesting(self):
         if self.nesting_stack:
             self.nesting_stack.pop()
 
+    def set_nesting_levels(self, level):
+        '''
+        set_nesting_levels only happens to language like Python that
+        use indentation for nesting.
+        Languages like C use brackets for nesting will only pop
+        one level of nesting at a time.
+        '''
+        for _ in range(len(self.nesting_stack), level, -1):
+            self.pop_nesting()
+        for _ in range(len(self.nesting_stack), level, 1):
+            self.add_nesting('')
+
+    @property
     def current_nesting_level(self):
-        len(self.nesting_stack)
+        return len(self.nesting_stack)
 
 
 class FileInfoBuilder(object):
@@ -321,6 +345,7 @@ class FileInfoBuilder(object):
             self.with_namespace(name),
             self.fileinfo.filename,
             self.current_line)
+        self.current_function.start_nesting_level = self.current_nesting_level
 
     def add_condition(self, inc=1):
         self.current_function.cyclomatic_complexity += inc

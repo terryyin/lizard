@@ -14,7 +14,6 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
     def __init__(self, context):
         super(PythonReader, self).__init__(context)
         self.parallel_states = [PythonStates(context, self)]
-        self.current_indent = 0
         self.function_stack = []
 
     @staticmethod
@@ -29,26 +28,31 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
             if token != '\n':
                 if leading_space:
                     if token.isspace():
-                        self.current_indent = len(token.replace('\t', ' ' * 8))
+                        self.context.set_nesting_levels(
+                                self._indent_level_of(token))
                     else:
                         if not token.startswith('#'):
                             self._close_functions()
                         leading_space = False
             else:
                 leading_space = True
-                self.current_indent = 0
             if not token.isspace() or token == '\n':
                 yield token
 
+    @staticmethod
+    def _indent_level_of(token):
+        return len(token.replace('\t', ' ' * 8))
+
     def _close_functions(self):
-        while self.context.current_function.indent >= self.current_indent:
+        while (self.context.current_function.start_nesting_level >=
+                self.context.current_nesting_level):
             endline = self.context.current_function.end_line
             self.context.end_of_function()
             self.context.current_function = self.function_stack.pop()
             self.context.current_function.end_line = endline
 
     def eof(self):
-        self.current_indent = 0
+        self.context.set_nesting_levels(0)
         self._close_functions()
 
 
@@ -66,7 +70,6 @@ class PythonStates(CodeStateMachine):  # pylint: disable=R0903
             self.reader.function_stack.append(self.context.current_function)
             self.context.start_new_function(token)
             self.context.add_to_long_function_name("(")
-            self.context.current_function.indent = self.reader.current_indent
         else:
             self._state = self._dec
 
