@@ -13,6 +13,9 @@ class Test_tokenizing_JavaScript(unittest.TestCase):
         tokens = list(JavaScriptReader.generate_tokens(source))
         self.assertEqual(expect, tokens)
 
+    def test_dollar_var(self):
+        self.check_tokens(['$a'], '$a')
+
     def test_tokenizing_javascript_regular_expression(self):
         self.check_tokens(['/ab/'], '/ab/')
         self.check_tokens([r'/\//'], r'/\//')
@@ -22,7 +25,7 @@ class Test_tokenizing_JavaScript(unittest.TestCase):
         self.check_tokens(['a','/','b',',','a','/','b'], 'a/b,a/b')
         self.check_tokens(['3453',' ','/','b',',','a','/','b'], '3453 /b,a/b')
 
-    def test_tokenizing_javascript_regular_expression(self):
+    def test_tokenizing_javascript_regular_expression1(self):
         self.check_tokens(['a', '=', '/ab/'], 'a=/ab/')
 
     def test_tokenizing_javascript_comments(self):

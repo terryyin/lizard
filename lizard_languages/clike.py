@@ -25,7 +25,10 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
 
     def __init__(self, context):
         super(CLikeReader, self).__init__(context)
-        self.parallel_states = (CLikeStates(context), CFunctionStates(context))
+        self.parallel_states = (
+                CLikeNestingStackStates(context),
+                CLikeStates(context),
+                CppRValueRefStates(context))
 
     def preprocess(self, tokens):
         tilde = False
@@ -49,7 +52,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
                     yield token
 
 
-class CFunctionStates(CodeStateMachine):
+class CppRValueRefStates(CodeStateMachine):
     # pylint: disable=R0903
 
     def _state_global(self, token):
@@ -69,6 +72,25 @@ class CFunctionStates(CodeStateMachine):
         self.context.add_condition(-tokens.count("&&"))
 
 
+class CLikeNestingStackStates(CodeStateMachine):
+    # pylint: disable=R0903
+
+    def _state_global(self, token):
+        if token in ("struct", "class", "namespace"):
+            self._state = self._read_namespace
+        elif token == "{":
+            self.context.add_nesting("")
+        elif token == '}':
+            self.context.pop_nesting()
+
+    @CodeStateMachine.read_until_then('({;')
+    def _read_namespace(self, token, saved):
+        self._state = self._state_global
+        if token == "{":
+            self.context.add_nesting(''.join(itertools.takewhile(
+                lambda x: x not in [":", "final"], saved)))
+
+
 # pylint: disable=R0903
 class CLikeStates(CodeStateMachine):
     ''' This is the reader for C, C++ and Java. '''
@@ -79,7 +101,6 @@ class CLikeStates(CodeStateMachine):
         super(CLikeStates, self).__init__(context)
         self.bracket_stack = []
         self._saved_tokens = []
-        self.namespaces = []
 
     def start_new_function(self, name):
         self.context.start_new_function(name)
@@ -88,26 +109,8 @@ class CLikeStates(CodeStateMachine):
             self._state = self._state_operator
 
     def _state_global(self, token):
-        if token in ("struct", "class", "namespace"):
-            self._state = self._read_namespace
-        elif token == "{":
-            self.namespaces.append("")
-        elif token == '}':
-            if self.namespaces:
-                self.namespaces.pop()
-        elif token[0].isalpha() or token[0] in '_~':
-            self.start_new_function('::'.join(
-                [x for x in self.namespaces if x] + [token]))
-
-    @CodeStateMachine.read_until_then('({;')
-    def _read_namespace(self, token, saved):
-        self._state = self._state_global
-        if token == "{":
-            self.namespaces.append(''.join(itertools.takewhile(
-                lambda x: x not in [":", "final"], saved)))
-        elif token == '(':
-            self.start_new_function(saved[-1] if saved else "class")
-            self._state_function(token)
+        if token[0].isalpha() or token[0] in '_~':
+            self.start_new_function(token)
 
     def _state_function(self, token):
         if token == '(':

@@ -21,6 +21,7 @@ C/C++ header files or Java imports. It can deal with
 -  Python
 -  Ruby
 -  TTCN-3
+-  PHP
 
 By default lizard will search for any source code that it knows an mix
 all the result together. This might not be what you want. You can use
@@ -266,6 +267,7 @@ before a function it will suppress the warning for that function.
 
 Change Logs
 -----------
+-  2016.04.2 Support PHP.
 -  2016.03.26 Support C#.
 -  2016.02.2 Add option -EMcCabe for ignoring fall-through swith/cases, thanks to @@vicgonzalez
 -  2016.01.31 Add support for Ruby

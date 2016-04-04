@@ -42,7 +42,7 @@ try:
 except ImportError:
     pass
 
-VERSION = "1.11.0"
+VERSION = "1.12.0"
 
 DEFAULT_CCN_THRESHOLD, DEFAULT_WHITELIST, \
     DEFAULT_MAX_FUNC_LENGTH = 15, "whitelizard.txt", 1000
@@ -268,7 +268,33 @@ class FileInformation(object):  # pylint: disable=R0903
         return summary / len(self.function_list) if self.function_list else 0
 
 
+class NestingStack(object):
+
+    def __init__(self):
+        self.nesting_stack = []
+
+    def with_namespace(self, name):
+        return '::'.join([x for x in self.nesting_stack if x] + [name])
+
+    def add_nesting(self, token):
+        self.nesting_stack.append(token)
+
+    def pop_nesting(self):
+        if self.nesting_stack:
+            self.nesting_stack.pop()
+
+    def current_nesting_level(self):
+        len(self.nesting_stack)
+
+
 class FileInfoBuilder(object):
+    '''
+    The builder is also referred as "context" in the code,
+    because each language readers use this builder to build
+    source file and function information and the builder keep
+    the context information that's needed for the building.
+    '''
+
     def __init__(self, filename):
         self.fileinfo = FileInformation(filename, 0)
         self.current_line = 0
@@ -276,6 +302,11 @@ class FileInfoBuilder(object):
         self.newline = True
         self.global_pseudo_function = FunctionInfo('*global*', filename, 0)
         self.current_function = self.global_pseudo_function
+        self._nesting_stack = NestingStack()
+
+    def __getattr__(self, attr):
+        # delegating to _nesting_stack
+        return getattr(self._nesting_stack, attr)
 
     def add_nloc(self, count):
         self.fileinfo.nloc += count
@@ -287,7 +318,7 @@ class FileInfoBuilder(object):
 
     def start_new_function(self, name):
         self.current_function = FunctionInfo(
-            name,
+            self.with_namespace(name),
             self.fileinfo.filename,
             self.current_line)
 

@@ -138,3 +138,13 @@ class Test_parser_for_Swift(unittest.TestCase):
         self.assertEqual("f", result[0].name)
         self.assertEqual(2, result[0].parameter_count)
 
+    def test_optional(self):
+        result = get_swift_function_list(''' func f() {optional1?} ''')
+        self.assertEqual(1, result[0].cyclomatic_complexity)
+
+    def test_coalescing_operator(self):
+        result = get_swift_function_list(''' func f() {
+                let keep = filteredList?.contains(ingredient) ?? true
+            }
+        ''')
+        self.assertEqual(1, result[0].cyclomatic_complexity)
