@@ -10,6 +10,11 @@ calculated and integrated.
 
 import re
 from sys import stderr
+import itertools
+
+
+class Infile(object):  # pylint: disable=R0903
+    name = None
 
 
 class LizardExtension(object):  # pylint: disable=R0903
@@ -27,28 +32,35 @@ class LizardExtension(object):  # pylint: disable=R0903
         So don't store any data with an extension object.
         """
         reader.context.fileinfo.fan_in = reader.context.fileinfo.fan_out = 0
-        for token in tokens:
-            yield token
+        return tokens
 
     def fans(self, fileinfo):
         """
         Preparation of calculating the fan in and fan out (prototype)
         """
+        infile = Infile()
         self.name_list = [func.name for func in fileinfo.function_list]
         for func in fileinfo.function_list:
-            body = self.method_open(func)
+            if not func.filename == infile.name:
+                infile = self.open_method(func.filename)
+            body = self.store_method(infile, func)
             self.calculate_fan_in_fan_out(self.name_list, body, fileinfo, func)
 
     @staticmethod
-    def method_open(func):
+    def open_method(name):
         try:
-            body = open(func.filename).readlines()[func.start_line:
-                                                   func.end_line]
+            infile = open(name)
         except IOError:
-            body = []
-            stderr.write("\nCouldn't open the referenced method inside {0}".
-                         format(func.filename))
+            infile = None
+            stderr.write(
+                "Couldn't open the referenced method inside {0}".format(name))
             stderr.flush()
+        return infile
+
+    @staticmethod
+    def store_method(infile, func):
+        result = itertools.islice(infile, func.start_line, func.end_line)
+        body = [elem for elem in result]
         return body
 
     @staticmethod
@@ -57,9 +69,7 @@ class LizardExtension(object):  # pylint: disable=R0903
             for i, name in enumerate(name_list):
                 re.split(r'; |, |\*|\n', line)
                 if name in line:
-                    line_count = line.count(',') + 1
-                    if fileinfo.function_list[i].parameter_count == line_count:
-                        # structural fan-in
-                        fileinfo.function_list[i].fan_in += 1
-                        # structural fan-out
-                        func.fan_out += 1
+                    # structural fan-in
+                    fileinfo.function_list[i].fan_in += 1
+                    # structural fan-out
+                    func.fan_out += 1

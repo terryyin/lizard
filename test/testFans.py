@@ -56,8 +56,28 @@ class TestFans(unittest.TestCase):
     def test_empty_body(self):
         result = get_cpp_function_list_with_fans_extension("a.cpp",
                                                            "int fun(a){})")
-        body = self.ext.method_open(result[0])
-        self.assertEqual([], body)
+        body = self.ext.open_method(result[0].filename)
+        self.assertEqual(None, body)
+
+    def test_open_function_infile(self):
+        f = open(path.join(self.test_dir, 'a.cpp'), 'w+')
+        f.writelines("""int c() {
+    if (a && b) {
+        if( a != 0 ){
+            a = b;
+        }
+    }
+}""")
+        f = open(path.join(self.test_dir, 'a.cpp'))
+        result = get_cpp_function_list_with_fans_extension(f.name, f.read())
+        infile = self.ext.open_method(result[0].filename)
+        self.assertEqual(infile.readlines(), ['int c() {\n',
+                                              '    if (a && b) {\n',
+                                              '        if( a != 0 ){\n',
+                                              '            a = b;\n',
+                                              '        }\n',
+                                              '    }\n',
+                                              '}'])
 
     def test_open_function_with_body(self):
         f = open(path.join(self.test_dir, 'a.cpp'), 'w+')
@@ -67,18 +87,17 @@ class TestFans(unittest.TestCase):
             a = b;
         }
     }
-}
-        """)
+}""")
         f = open(path.join(self.test_dir, 'a.cpp'))
         result = get_cpp_function_list_with_fans_extension(f.name, f.read())
-        f.close()
-        body = self.ext.method_open(result[0])
+        infile = self.ext.open_method(result[0].filename)
+        body = self.ext.store_method(infile, result[0])
         self.assertEqual(body, ['    if (a && b) {\n',
                                 '        if( a != 0 ){\n',
                                 '            a = b;\n',
                                 '        }\n',
                                 '    }\n',
-                                '}\n'])
+                                '}'])
 
     def test_fan_in_fan_out_only_result(self):
         result = get_cpp_fans_extension("""int fun(a){}
