@@ -8,18 +8,21 @@ def count_spaces(token):
     return len(token.replace('\t', ' ' * 8))
 
 
-class PythonIndents(object):
+class PythonIndents(object):  # pylint: disable=R0902
     def __init__(self, context):
         self.indents = [0]
         self.context = context
 
     def set_nesting(self, spaces):
-        while (self.indents[-1] > spaces):
+        while self.indents[-1] > spaces:
             self.indents.pop()
             self.context.pop_nesting()
-        if (self.indents[-1] < spaces):
+        if self.indents[-1] < spaces:
             self.indents.append(spaces)
             self.context.add_bare_nesting()
+
+    def reset(self):
+        self.set_nesting(0)
 
 
 class PythonReader(CodeReader, ScriptLanguageMixIn):
@@ -32,7 +35,6 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
     def __init__(self, context):
         super(PythonReader, self).__init__(context)
         self.parallel_states = [PythonStates(context, self)]
-        self.context.python_indents = PythonIndents(self.context)
 
     @staticmethod
     def generate_tokens(source_code, _=None):
@@ -41,7 +43,7 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
                 r"|\'\'\'.*?\'\'\'" + r'|\"\"\".*?\"\"\"')
 
     def preprocess(self, tokens):
-        indents = self.context.python_indents
+        indents = PythonIndents(self.context)
         current_leading_spaces = 0
         reading_leading_space = True
         for token in tokens:
@@ -58,7 +60,7 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
                 current_leading_spaces = 0
             if not token.isspace() or token == '\n':
                 yield token
-        indents.set_nesting(0)
+        indents.reset()
 
 
 class PythonStates(CodeStateMachine):  # pylint: disable=R0903

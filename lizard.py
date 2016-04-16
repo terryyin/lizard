@@ -204,7 +204,7 @@ def arg_parser(prog=None):
     return parser
 
 
-class Nesting(object):
+class Nesting(object):  # pylint: disable=R0903
     '''
     Nesting represent one level of nesting in any programming language.
     '''
@@ -216,7 +216,7 @@ class Nesting(object):
 BARE_NESTING = Nesting()
 
 
-class Namespace(Nesting):
+class Namespace(Nesting):  # pylint: disable=R0903
 
     def __init__(self, name):
         self.name = name
@@ -332,8 +332,8 @@ class NestingStack(object):
 
     @property
     def last_function(self):
-        x = [f for f in self.nesting_stack if isinstance(f, FunctionInfo)]
-        return x[-1] if x else None
+        funs = [f for f in self.nesting_stack if isinstance(f, FunctionInfo)]
+        return funs[-1] if funs else None
 
 
 class FileInfoBuilder(object):
