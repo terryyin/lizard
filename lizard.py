@@ -204,7 +204,29 @@ def arg_parser(prog=None):
     return parser
 
 
-class FunctionInfo(object):  # pylint: disable=R0902
+class Nesting(object):
+    '''
+    Nesting represent one level of nesting in any programming language.
+    '''
+    @property
+    def name_in_space(self):
+        return ''
+
+
+BARE_NESTING = Nesting()
+
+
+class Namespace(Nesting):
+
+    def __init__(self, name):
+        self.name = name
+
+    @property
+    def name_in_space(self):
+        return self.name + "::" if self.name else ''
+
+
+class FunctionInfo(Nesting):  # pylint: disable=R0902
 
     def __init__(self, name, filename, start_line=0, ccn=1):
         self.cyclomatic_complexity = ccn
@@ -216,10 +238,14 @@ class FunctionInfo(object):  # pylint: disable=R0902
         self.end_line = start_line
         self.parameters = []
         self.filename = filename
-        self.start_nesting_level = -1
+        self.top_nesting_level = -1
         self.length = 0
         self.fan_in = 0
         self.fan_out = 0
+
+    @property
+    def name_in_space(self):
+        return self.name + "."
 
     location = property(lambda self:
                         " %(name)s@%(start_line)s-%(end_line)s@%(filename)s"
@@ -268,47 +294,46 @@ class FileInformation(object):  # pylint: disable=R0903
         return summary / len(self.function_list) if self.function_list else 0
 
 
-class Nesting(object):
-    '''
-    Nesting represent one level of nesting in any programming language.
-    '''
-
-    def __init__(self, **kwargs):
-        self.name = kwargs.get("name", '')
-
-
 class NestingStack(object):
 
     def __init__(self):
         self.nesting_stack = []
+        self.pending_function = None
+        self.function_stack = []
 
     def with_namespace(self, name):
-        return '::'.join(
-                [x.name for x in self.nesting_stack if x.name] +
-                [name])
+        return ''.join([x.name_in_space for x in self.nesting_stack] + [name])
 
-    def add_nesting(self, token):
-        self.nesting_stack.append(Nesting(name=token))
+    def add_bare_nesting(self):
+        self.nesting_stack.append(self._create_nesting())
+
+    def add_namespace(self, token):
+        self.pending_function = None
+        self.nesting_stack.append(Namespace(token))
+
+    def start_new_funciton_nesting(self, function):
+        self.pending_function = function
+
+    def _create_nesting(self):
+        tmp = self.pending_function
+        self.pending_function = None
+        if tmp:
+            return tmp
+        return BARE_NESTING
 
     def pop_nesting(self):
+        self.pending_function = None
         if self.nesting_stack:
-            self.nesting_stack.pop()
-
-    def set_nesting_levels(self, level):
-        '''
-        set_nesting_levels only happens to language like Python that
-        use indentation for nesting.
-        Languages like C use brackets for nesting will only pop
-        one level of nesting at a time.
-        '''
-        for _ in range(len(self.nesting_stack), level, -1):
-            self.pop_nesting()
-        for _ in range(len(self.nesting_stack), level, 1):
-            self.add_nesting('')
+            return self.nesting_stack.pop()
 
     @property
     def current_nesting_level(self):
         return len(self.nesting_stack)
+
+    @property
+    def last_function(self):
+        x = [f for f in self.nesting_stack if isinstance(f, FunctionInfo)]
+        return x[-1] if x else None
 
 
 class FileInfoBuilder(object):
@@ -332,6 +357,16 @@ class FileInfoBuilder(object):
         # delegating to _nesting_stack
         return getattr(self._nesting_stack, attr)
 
+    def pop_nesting(self):
+        nest = self._nesting_stack.pop_nesting()
+        if isinstance(nest, FunctionInfo):
+            endline = self.current_function.end_line
+            self.end_of_function()
+            self.current_function = (
+                    self._nesting_stack.last_function or
+                    self.global_pseudo_function)
+            self.current_function.end_line = endline
+
     def add_nloc(self, count):
         self.fileinfo.nloc += count
         self.current_function.nloc += count
@@ -345,7 +380,8 @@ class FileInfoBuilder(object):
             self.with_namespace(name),
             self.fileinfo.filename,
             self.current_line)
-        self.current_function.start_nesting_level = self.current_nesting_level
+        self.current_function.top_nesting_level = self.current_nesting_level
+        self.start_new_funciton_nesting(self.current_function)
 
     def add_condition(self, inc=1):
         self.current_function.cyclomatic_complexity += inc

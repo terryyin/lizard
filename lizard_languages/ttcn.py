@@ -2,7 +2,7 @@
 
 import re
 from .code_reader import CodeReader
-from .clike import CLikeReader, CLikeStates
+from .clike import CLikeReader, CLikeStates, CLikeNestingStackStates
 
 
 class TTCNReader(CLikeReader):  # pylint: disable=R0903
@@ -16,7 +16,9 @@ class TTCNReader(CLikeReader):  # pylint: disable=R0903
 
     def __init__(self, context):
         super(TTCNReader, self).__init__(context)
-        self.parallel_states = [TTCNStates(context)]
+        self.parallel_states = [
+                CLikeNestingStackStates(context),
+                TTCNStates(context)]
 
     @staticmethod
     def generate_tokens(source_code, _=None):

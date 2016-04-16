@@ -160,6 +160,10 @@ class Test_c_cpp_lizard(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual("c::d::f", result[0].name)
 
+    def test_1(self):
+        result = get_cpp_function_list("class c {{}}")
+        self.assertEqual(0, len(result))
+
     def test_braket_that_is_not_a_namespace(self):
         result = get_cpp_function_list("class c { {};int f(){}};")
         self.assertEqual(1, len(result))

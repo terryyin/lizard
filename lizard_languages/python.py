@@ -4,6 +4,24 @@ from .code_reader import CodeReader, CodeStateMachine
 from .script_language import ScriptLanguageMixIn
 
 
+def count_spaces(token):
+    return len(token.replace('\t', ' ' * 8))
+
+
+class PythonIndents(object):
+    def __init__(self, context):
+        self.indents = [0]
+        self.context = context
+
+    def set_nesting(self, spaces):
+        while (self.indents[-1] > spaces):
+            self.indents.pop()
+            self.context.pop_nesting()
+        if (self.indents[-1] < spaces):
+            self.indents.append(spaces)
+            self.context.add_bare_nesting()
+
+
 class PythonReader(CodeReader, ScriptLanguageMixIn):
 
     ext = ['py']
@@ -14,7 +32,7 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
     def __init__(self, context):
         super(PythonReader, self).__init__(context)
         self.parallel_states = [PythonStates(context, self)]
-        self.function_stack = []
+        self.context.python_indents = PythonIndents(self.context)
 
     @staticmethod
     def generate_tokens(source_code, _=None):
@@ -23,37 +41,24 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
                 r"|\'\'\'.*?\'\'\'" + r'|\"\"\".*?\"\"\"')
 
     def preprocess(self, tokens):
-        leading_space = True
+        indents = self.context.python_indents
+        current_leading_spaces = 0
+        reading_leading_space = True
         for token in tokens:
             if token != '\n':
-                if leading_space:
+                if reading_leading_space:
                     if token.isspace():
-                        self.context.set_nesting_levels(
-                                self._indent_level_of(token))
+                        current_leading_spaces += count_spaces(token)
                     else:
                         if not token.startswith('#'):
-                            self._close_functions()
-                        leading_space = False
+                            indents.set_nesting(current_leading_spaces)
+                        reading_leading_space = False
             else:
-                leading_space = True
+                reading_leading_space = True
+                current_leading_spaces = 0
             if not token.isspace() or token == '\n':
                 yield token
-
-    @staticmethod
-    def _indent_level_of(token):
-        return len(token.replace('\t', ' ' * 8))
-
-    def _close_functions(self):
-        while (self.context.current_function.start_nesting_level >=
-                self.context.current_nesting_level):
-            endline = self.context.current_function.end_line
-            self.context.end_of_function()
-            self.context.current_function = self.function_stack.pop()
-            self.context.current_function.end_line = endline
-
-    def eof(self):
-        self.context.set_nesting_levels(0)
-        self._close_functions()
+        indents.set_nesting(0)
 
 
 class PythonStates(CodeStateMachine):  # pylint: disable=R0903
@@ -67,7 +72,6 @@ class PythonStates(CodeStateMachine):  # pylint: disable=R0903
 
     def _function(self, token):
         if token != '(':
-            self.reader.function_stack.append(self.context.current_function)
             self.context.start_new_function(token)
             self.context.add_to_long_function_name("(")
         else:
