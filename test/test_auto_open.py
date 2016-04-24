@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import unittest
 from mock import patch, Mock
 from tempfile import NamedTemporaryFile
