@@ -1,5 +1,7 @@
 # coding=utf-8
 import unittest
+import codecs
+import os
 from mock import patch, Mock
 from tempfile import NamedTemporaryFile
 from lizard_ext import auto_open
@@ -8,11 +10,18 @@ from lizard_ext import auto_open
 class TestAutoOpen(unittest.TestCase):
 
     def write_and_read(self, encoding, content):
-        with NamedTemporaryFile("w", encoding=encoding) as nf:
-            nf.write(content)
-            nf.flush()
-            handle = auto_open(nf.name, 'rU')
-            return handle.read()
+        f = NamedTemporaryFile(delete=False)
+        filename = f.name
+        f.close()
+
+        with codecs.open(filename, 'w+b', encoding=encoding) as fh:
+            fh.write(content)
+            fh.flush()
+            handle = auto_open(filename, 'rU')
+            result = handle.read()
+
+        os.unlink(filename)
+        return result
 
     def test_ascii(self):
         result = self.write_and_read("ascii", "abcd123")

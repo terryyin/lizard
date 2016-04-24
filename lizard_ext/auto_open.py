@@ -22,4 +22,5 @@ def auto_open(*args, **kwargs):
     with open(args[0], 'rb') as binary:
         if binary.read(size).startswith(codecs.BOM_UTF8):
             kwargs["encoding"] = 'utf-8-sig'
-    return io.open(*args, **kwargs)
+            return io.open(*args, **kwargs)
+    return open(*args, **kwargs)
