@@ -29,7 +29,7 @@ class TestAutoOpen(unittest.TestCase):
 
     def test_utf_8(self):
         result = self.write_and_read("utf-8", u"天下太平")
-        self.assertEqual(u"天下太平", result)
+        self.assertEqual("天下太平", result)
 
     def test_utf_8_with_bom(self):
         result = self.write_and_read("utf-8-sig", u"天下太平")
