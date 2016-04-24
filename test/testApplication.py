@@ -7,7 +7,7 @@ import sys
 
 
 @patch('lizard.md5_hash_file')
-@patch('lizard.open', create=True)
+@patch('lizard.auto_open', create=True)
 @patch.object(os, 'walk')
 @patch.object(lizard, 'print_result')
 class TestApplication(unittest.TestCase):
@@ -55,7 +55,7 @@ class IntegrationTests(unittest.TestCase):
         '''
         self.returned_warning_count = 0
 
-    @patch('lizard.open', create=True)
+    @patch('lizard.auto_open', create=True)
     @patch.object(lizard, 'print_result')
     def run_with_mocks(self, argv, src, print_result, mock_open):
         def store_result(result, options, scheme):

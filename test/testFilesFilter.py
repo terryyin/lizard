@@ -71,7 +71,7 @@ class TestFilesFilter(unittest.TestCase):
         self.assertEqual([], list(files))
 
     @patch.object(os, "walk")
-    @patch("lizard.open", create=True)
+    @patch("lizard.auto_open", create=True)
     def test_duplicates(self, mock_open, mock_os_walk):
         mock_os_walk.return_value = (['.',
                                       None,
@@ -82,7 +82,7 @@ class TestFilesFilter(unittest.TestCase):
         self.assertEqual(['./f1.cpp'], list(files))
 
     @patch.object(os, "walk")
-    @patch("lizard.open", create=True)
+    @patch("lizard.auto_open", create=True)
     def test_nonduplicates(self, mock_open, mock_os_walk):
         mock_os_walk.return_value = (['.',
                                       None,
@@ -94,7 +94,7 @@ class TestFilesFilter(unittest.TestCase):
         self.assertEqual(["./f1.cpp", "./f2.cpp"], list(files))
 
     @patch.object(os, "walk")
-    @patch("lizard.open", create=True)
+    @patch("lizard.auto_open", create=True)
     def test_fail_to_open_file_should_be_allowed(self, mock_open, mock_os_walk):
         mock_os_walk.return_value = (['.',
                                       None,

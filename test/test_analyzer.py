@@ -47,7 +47,7 @@ class Test_analyze_files(unittest.TestCase):
         self.assertSetEqual(set(["f1", "f2"]), set(x for x in r))
 
 
-@patch('lizard.open', create=True)
+@patch('lizard.auto_open', create=True)
 class Test_FileAnalyzer(unittest.TestCase):
     
     def setUp(self):

@@ -39,6 +39,7 @@ except ImportError:
 try:
     from lizard_ext import print_xml
     from lizard_ext import html_output
+    from lizard_ext import auto_open
 except ImportError:
     pass
 
@@ -464,7 +465,7 @@ class FileAnalyzer(object):  # pylint: disable=R0903
     def __call__(self, filename):
         try:
             return self.analyze_source_code(
-                filename, open(filename, 'rU').read())
+                filename, auto_open(filename, 'rU').read())
         except UnicodeDecodeError:
             sys.stderr.write("Error: doesn't support none utf encoding '%s'\n"
                              % filename)
@@ -731,7 +732,7 @@ def map_files_to_analyzer(files, file_analyzer, working_threads):
 def md5_hash_file(full_path_name):
     ''' return md5 hash of a file '''
     try:
-        with open(full_path_name, mode='r') as source_file:
+        with auto_open(full_path_name, mode='r') as source_file:
             if sys.version_info[0] == 3:
                 code_md5 = hashlib.md5(source_file.read().encode('utf-8'))
             else:
