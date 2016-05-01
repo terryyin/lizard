@@ -476,6 +476,7 @@ class FileAnalyzer(object):  # pylint: disable=R0903
             sys.stderr.write("Error: Fail to parse file '%s'\n"
                              % filename)
             raise
+        return FileInformation(filename, 0, [])
 
     def analyze_source_code(self, filename, code):
         context = FileInfoBuilder(filename)
