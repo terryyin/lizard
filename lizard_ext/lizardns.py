@@ -7,10 +7,11 @@ originally written by Mehrdad Meh and Terry Yin.
 """
 
 from lizard import FileInfoBuilder, FunctionInfo
-from lizardnd import patch, patch_append_method
+from lizard_ext.lizardnd import patch, patch_append_method
 
 
 DEFAULT_NS_THRESHOLD = 3
+
 
 class LizardExtension(object):  # pylint: disable=R0903
 
@@ -67,14 +68,16 @@ class LizardExtension(object):  # pylint: disable=R0903
 
                 elif token == structure_end:
                     reader.context.pop_brace()
-                    reader.context.pop_nested_structure();
+                    reader.context.pop_nested_structure()
 
                 elif token == indent_indicator:
-                    reader.context.pop_nested_structure();
+                    reader.context.pop_nested_structure()
 
             yield token
 
 
+# TODO: Some weird false positive from pylint. # pylint: disable=fixme
+# pylint: disable=E1101
 class NSFileInfoAddition(FileInfoBuilder):
 
     def add_nested_structure(self, token):
@@ -93,7 +96,6 @@ class NSFileInfoAddition(FileInfoBuilder):
         if self.current_function.max_nested_structures < ns_cur:
             self.current_function.max_nested_structures = ns_cur
 
-
     def pop_nested_structure(self):
         """Conditionally pops the structure count if braces match."""
         if not self.current_function.structure_stack:
@@ -107,6 +109,7 @@ class NSFileInfoAddition(FileInfoBuilder):
         self.current_function.brace_count += 1
 
     def pop_brace(self):
+        # pylint: disable=fixme
         # TODO: For some reason, brace count goes negative.
         # assert self.current_function.brace_count > 0
         self.current_function.brace_count -= 1
@@ -121,6 +124,7 @@ class NSFileInfoAddition(FileInfoBuilder):
 
     def is_within_structure(self):
         return bool(self.current_function.structure_stack)
+
 
 def _init_nested_structure_data(self, *_):
     self.max_nested_structures = 0
