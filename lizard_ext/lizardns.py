@@ -6,8 +6,8 @@ The code borrows heavily from implementation of Nesting Depth extension
 originally written by Mehrdad Meh and Terry Yin.
 """
 
-from lizard import FileInfoBuilder, FunctionInfo
-from lizard_ext.lizardnd import patch, patch_append_method
+from lizard import FunctionInfo
+from lizard_ext.lizardnd import patch_append_method
 
 
 DEFAULT_NS_THRESHOLD = 3
@@ -48,90 +48,65 @@ class LizardExtension(object):  # pylint: disable=R0903
         structures = set(['if', 'else', 'foreach', 'for', 'while', 'do',
                           'try', 'catch', 'switch'])
 
+        brace_count = 0
+        paren_count = 0
+        structure_stack = []
+
+        def add_nested_structure(token):
+            """Conditionally adds nested structures."""
+            # Handle compound else-if.
+            if token == "if" and structure_stack:
+                prev_token, br_state = structure_stack[-1]
+                if prev_token == "else" and br_state == brace_count:
+                    return
+
+            structure_stack.append((token, brace_count))
+
+            ns_cur = len(structure_stack)
+            if reader.context.current_function.max_nested_structures < ns_cur:
+                reader.context.current_function.max_nested_structures = ns_cur
+
+        def pop_nested_structure():
+            """Conditionally pops the structure count if braces match."""
+            if not structure_stack:
+                return
+
+            _, br_state = structure_stack[-1]
+            if br_state == brace_count:
+                structure_stack.pop()
+
         structure_indicator = "{"
         structure_end = "}"
         indent_indicator = ";"
 
         for token in tokens:
-            if reader.context.is_within_structure():
+            if structure_stack:  # Inside of the control structure.
                 if token == "(":
-                    reader.context.add_parentheses(1)
+                    paren_count += 1
                 elif token == ")":
-                    reader.context.add_parentheses(-1)
+                    assert paren_count > 0
+                    paren_count -= 1
 
-            if not reader.context.is_within_parentheses():
+            if paren_count == 0:  # Ignore if inside parentheses.
                 if token in structures:
-                    reader.context.add_nested_structure(token)
+                    add_nested_structure(token)
 
                 elif token == structure_indicator:
-                    reader.context.add_brace()
+                    brace_count += 1
 
                 elif token == structure_end:
-                    reader.context.pop_brace()
-                    reader.context.pop_nested_structure()
+                    # TODO: assert brace_count > 0  # pylint: disable=fixme
+                    brace_count -= 1
+                    pop_nested_structure()
 
                 elif token == indent_indicator:
-                    reader.context.pop_nested_structure()
+                    pop_nested_structure()
 
             yield token
 
 
-# TODO: Some weird false positive from pylint. # pylint: disable=fixme
-# pylint: disable=E1101
-class NSFileInfoAddition(FileInfoBuilder):
-
-    def add_nested_structure(self, token):
-        """Conditionally adds nested structures."""
-        # Handle compound else-if.
-        if token == "if" and self.current_function.structure_stack:
-            prev_token, br_state = self.current_function.structure_stack[-1]
-            if (prev_token == "else" and
-                    br_state == self.current_function.brace_count):
-                return
-
-        self.current_function.structure_stack.append(
-            (token, self.current_function.brace_count))
-
-        ns_cur = len(self.current_function.structure_stack)
-        if self.current_function.max_nested_structures < ns_cur:
-            self.current_function.max_nested_structures = ns_cur
-
-    def pop_nested_structure(self):
-        """Conditionally pops the structure count if braces match."""
-        if not self.current_function.structure_stack:
-            return
-
-        _, br_state = self.current_function.structure_stack[-1]
-        if br_state == self.current_function.brace_count:
-            self.current_function.structure_stack.pop()
-
-    def add_brace(self):
-        self.current_function.brace_count += 1
-
-    def pop_brace(self):
-        # pylint: disable=fixme
-        # TODO: For some reason, brace count goes negative.
-        # assert self.current_function.brace_count > 0
-        self.current_function.brace_count -= 1
-
-    def add_parentheses(self, inc):
-        """Dual purpose parentheses manipulator."""
-        self.current_function.paren_count += inc
-
-    def is_within_parentheses(self):
-        assert self.current_function.paren_count >= 0
-        return self.current_function.paren_count != 0
-
-    def is_within_structure(self):
-        return bool(self.current_function.structure_stack)
-
-
 def _init_nested_structure_data(self, *_):
     self.max_nested_structures = 0
-    self.brace_count = 0
-    self.paren_count = 0
-    self.structure_stack = []
 
 
-patch(NSFileInfoAddition, FileInfoBuilder)
 patch_append_method(_init_nested_structure_data, FunctionInfo, "__init__")
