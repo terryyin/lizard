@@ -17,7 +17,6 @@ class CodeStateMachine(object):
         self.callback = None
         self.rut_tokens = []
         self.br_count = 0
-        self.rut_tokens = []
 
     def next(self, state, token=None):
         self._state = state
