@@ -5,7 +5,7 @@ from lizard_languages.code_reader import CodeStateMachine
 class ExtensionBase(CodeStateMachine):
     '''Base class for all lizard extensions'''
 
-    def __init__(self, context):
+    def __init__(self, context=None):
         super(ExtensionBase, self).__init__(context)
 
     # pylint: disable=W0221
