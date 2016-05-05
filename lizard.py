@@ -248,6 +248,10 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
     def name_in_space(self):
         return self.name + "."
 
+    @property
+    def unqualified_name(self):
+        return self.name.split('::')[-1]
+
     location = property(lambda self:
                         " %(name)s@%(start_line)s-%(end_line)s@%(filename)s"
                         % self.__dict__)
