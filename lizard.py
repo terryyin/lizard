@@ -69,7 +69,7 @@ def _extension_arg(parser):
                         cloud. -Efans: count the fan in and fan out of
                         functions. -Eoutside: include the global code as one
                         function.  -EIgnoreAssert: to ignore all code in
-                        assert''',
+                        assert. -ENS: count nested control structures.''',
                         action="append",
                         dest="extensions",
                         default=[])
@@ -806,6 +806,8 @@ def parse_args(argv):
         opt.thresholds["cyclomatic_complexity"] = opt.CCN
     if "max_nesting_depth" not in opt.thresholds and hasattr(opt, "ND"):
         opt.thresholds["max_nesting_depth"] = opt.ND
+    if "max_nested_structures" not in opt.thresholds and hasattr(opt, "NS"):
+        opt.thresholds["max_nested_structures"] = opt.NS
     if "length" not in opt.thresholds:
         opt.thresholds["length"] = opt.length
     if "parameter_count" not in opt.thresholds:
