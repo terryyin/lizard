@@ -52,18 +52,25 @@ class LizardExtension(object):  # pylint: disable=R0903
         indent_indicator = ";"
 
         for token in tokens:
-            if token in structures:
-                reader.context.add_nested_structure(token)
+            if reader.context.is_within_structure():
+                if token == "(":
+                    reader.context.add_parentheses(1)
+                elif token == ")":
+                    reader.context.add_parentheses(-1)
 
-            elif token == structure_indicator:
-                reader.context.add_brace()
+            if not reader.context.is_within_parentheses():
+                if token in structures:
+                    reader.context.add_nested_structure(token)
 
-            elif token == structure_end:
-                reader.context.pop_brace()
-                reader.context.pop_nested_structure();
+                elif token == structure_indicator:
+                    reader.context.add_brace()
 
-            elif token == indent_indicator:
-                reader.context.pop_nested_structure();
+                elif token == structure_end:
+                    reader.context.pop_brace()
+                    reader.context.pop_nested_structure();
+
+                elif token == indent_indicator:
+                    reader.context.pop_nested_structure();
 
             yield token
 
@@ -101,12 +108,24 @@ class NSFileInfoAddition(FileInfoBuilder):
 
     def pop_brace(self):
         # TODO: For some reason, brace count goes negative.
+        # assert self.current_function.brace_count > 0
         self.current_function.brace_count -= 1
 
+    def add_parentheses(self, inc):
+        """Dual purpose parentheses manipulator."""
+        self.current_function.paren_count += inc
+
+    def is_within_parentheses(self):
+        assert self.current_function.paren_count >= 0
+        return self.current_function.paren_count != 0
+
+    def is_within_structure(self):
+        return bool(self.current_function.structure_stack)
 
 def _init_nested_structure_data(self, *_):
     self.max_nested_structures = 0
     self.brace_count = 0
+    self.paren_count = 0
     self.structure_stack = []
 
 

@@ -26,6 +26,10 @@ class TestCppNestedStructures(unittest.TestCase):
         result = process_cpp("int fun(){for(;;){dosomething();}}")
         self.assertEqual(1, result[0].max_nested_structures)
 
+    def test_terminator_in_parentheses(self):
+        result = process_cpp("int fun(){for(int a;;){ if (a) return b;}}")
+        self.assertEqual(2, result[0].max_nested_structures)
+
     def test_and_condition_in_if_structure(self):
         result = process_cpp("int fun(){if(a&&b){xx;}}")
         self.assertEqual(1, result[0].max_nested_structures)
