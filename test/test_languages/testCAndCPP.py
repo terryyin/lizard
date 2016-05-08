@@ -1,6 +1,5 @@
 import unittest
 from lizard_languages import CLikeReader
-from mock import Mock
 from ..testHelpers import get_cpp_fileinfo, get_cpp_function_list
 
 class Test_C_Token_extension(unittest.TestCase):
@@ -264,7 +263,7 @@ class Test_c_cpp_lizard(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual("A::A", result[0].name)
 
-    def test_brakets_before_function(self):
+    def test_parentheses_before_function(self):
         result = get_cpp_function_list('''()''')
         self.assertEqual(0, len(result))
 
@@ -302,7 +301,6 @@ class Test_Preprocessing(unittest.TestCase):
                         }
                ''')
         self.assertEqual(0, len(result))
-
 
     def test_preprocessors_should_be_ignored_outside_function_implementation(self):
         result = get_cpp_function_list('''

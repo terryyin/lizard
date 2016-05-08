@@ -211,10 +211,44 @@ class TestCppNestedStructures(unittest.TestCase):
               call();
           else  // Deceiving indentation!
               for (auto c : d)  // #3 control structure is here!
-                call(c)
+                call(c);
         }
         """)
         self.assertEqual(3, result[0].max_nested_structures)
+
+    def test_non_structure_braces(self):
+        """Extra braces for initializer lists may confuse the nesting level."""
+        result = process_cpp("""
+        x c() {
+          if (a) return {{}};  // Initializer list with a braceless structure.
+          if (b)
+            if (c)
+              if (d) return 42;
+        }
+        """)
+        self.assertEqual(3, result[0].max_nested_structures)
+
+    @unittest.skip("Unspecified. Not Implemented. Convoluted.")
+    def test_struct_inside_declaration(self):
+        """Extra complexity class/struct should be ignored."""
+        result = process_cpp("""
+        x c() {
+          for (struct {int s; int foo() { while(c) return s; }} a{42};;) break;
+        }
+        """)
+        self.assertEqual(1, result[0].max_nested_structures)
+
+    @unittest.skip("Unspecified. Not Implemented. Convoluted.")
+    def test_struct_inside_definition(self):
+        """Extra complexity class/struct should be ignored."""
+        result = process_cpp("""
+        x c() {
+          for (;;) {
+            struct {int s; int foo() { while(c) return s; }} a{42};
+          }
+        }
+        """)
+        self.assertEqual(1, result[0].max_nested_structures)
 
 
 class TestPythonNestedStructures(unittest.TestCase):
