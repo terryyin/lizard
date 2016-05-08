@@ -1,6 +1,9 @@
 """
 This extension counts nested control structures within a function.
-The extension is implemented with C++ in mind.
+
+The extension is implemented with C++ and Python in mind,
+but it is expected to work with other languages supported by Lizard
+with its language reader implementing 'nesting_level' metric for tokens.
 
 The code borrows heavily from implementation of Nesting Depth extension
 originally written by Mehrdad Meh and Terry Yin.
@@ -32,75 +35,84 @@ class LizardExtension(object):  # pylint: disable=R0903
     def __call__(self, tokens, reader):
         """The intent of the code is to detect control structures as entities.
 
-        The complexity arises from tracking of
-        control structures without brackets.
-        The termination of such control structures in C-like languages
-        is the next statement or control structure with a compound statement.
+        The implementation relies on nesting level metric for tokens
+        provided by language readers.
+        If the following contract for the nesting level metric does not hold,
+        this implementation of nested structure counting is invalid.
 
-        Moreover, control structures with two or more tokens complicates
-        the proper counting, for example, 'else if'.
+        If a control structure has started its block (eg. '{'),
+        and its level is **less** than the next structure,
+        the next structure is nested.
 
-        In Python with meaningful indentation,
-        tracking the indentation levels becomes crucial
-        to identify boundaries of the structures.
-        The following code is not designed for Python.
+        If a control structure has *not* started its block,
+        and its level is **no more** than the next structure,
+        the next structure is nested (compound statement).
+
+        If a control structure level is **higher** than the next structure,
+        it is considered closed.
+
+        If a control structure has started its block,
+        and its level is **equal** to the next structure,
+        it is considered closed.
+
+        The level of any non-structure tokens is treated
+        with the same logic as for the next structures
+        for control block **starting** and **closing** purposes.
         """
-        structures = set(['if', 'else', 'foreach', 'for', 'while', 'do',
-                          'try', 'catch', 'switch'])
+        # TODO: Delegate this to language readers  # pylint: disable=fixme
+        structures = set(['if', 'else', 'elif', 'for', 'foreach', 'while', 'do',
+                          'try', 'catch', 'switch', 'finally', 'except',
+                          'with'])
 
-        brace_count = 0
-        paren_count = 0
-        structure_stack = []
+        cur_level = 0
+        start_structure = [False]  # Just to make it mutable.
+        structure_stack = []  # [(token, ns_level)]
 
         def add_nested_structure(token):
             """Conditionally adds nested structures."""
-            # Handle compound else-if.
-            if token == "if" and structure_stack:
-                prev_token, br_state = structure_stack[-1]
-                if prev_token == "else" and br_state == brace_count:
-                    return
+            if structure_stack:
+                prev_token, ns_level = structure_stack[-1]
+                if cur_level == ns_level:
+                    if (token == "if" and prev_token == "else" and
+                            not start_structure[0]):
+                        return  # Compound 'else if' in C-like languages.
+                    if start_structure[0]:
+                        structure_stack.pop()
+                elif cur_level < ns_level:
+                    while structure_stack and ns_level >= cur_level:
+                        _, ns_level = structure_stack.pop()
 
-            structure_stack.append((token, brace_count))
+            structure_stack.append((token, cur_level))
+            start_structure[0] = False  # Starts on the next level with body.
 
             ns_cur = len(structure_stack)
             if reader.context.current_function.max_nested_structures < ns_cur:
                 reader.context.current_function.max_nested_structures = ns_cur
 
         def pop_nested_structure():
-            """Conditionally pops the structure count if braces match."""
+            """Conditionally pops the nested structures if levels match."""
             if not structure_stack:
                 return
 
-            _, br_state = structure_stack[-1]
-            if br_state == brace_count:
+            _, ns_level = structure_stack[-1]
+
+            if cur_level > ns_level:
+                start_structure[0] = True
+
+            elif cur_level < ns_level:
+                while structure_stack and ns_level >= cur_level:
+                    _, ns_level = structure_stack.pop()
+                start_structure[0] = bool(structure_stack)
+
+            elif start_structure[0]:
                 structure_stack.pop()
 
-        structure_indicator = "{"
-        structure_end = "}"
-        indent_indicator = ";"
-
         for token in tokens:
-            if structure_stack:  # Inside of the control structure.
-                if token == "(":
-                    paren_count += 1
-                elif token == ")":
-                    assert paren_count > 0
-                    paren_count -= 1
-
-            if paren_count == 0:  # Ignore if inside parentheses.
-                if token in structures:
-                    add_nested_structure(token)
-
-                elif token == structure_indicator:
-                    brace_count += 1
-
-                elif token == structure_end:
-                    # TODO: assert brace_count > 0  # pylint: disable=fixme
-                    brace_count -= 1
-                    pop_nested_structure()
-
-                elif token == indent_indicator:
-                    pop_nested_structure()
+            cur_level = reader.context.current_nesting_level
+            if token in structures:
+                add_nested_structure(token)
+            else:
+                pop_nested_structure()
 
             yield token
 
