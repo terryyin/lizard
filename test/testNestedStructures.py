@@ -1,16 +1,10 @@
 import unittest
-
-from .testHelpers import get_cpp_function_list_with_extnesion, \
-    get_python_function_list_with_extnesion
+from .testHelpers import get_cpp_function_list_with_extnesion
 from lizard_ext.lizardns import LizardExtension as NestedStructure
 
 
 def process_cpp(source):
     return get_cpp_function_list_with_extnesion(source, NestedStructure())
-
-
-def process_python(source):
-    return get_python_function_list_with_extnesion(source, NestedStructure())
 
 
 class TestCppNestedStructures(unittest.TestCase):
@@ -215,122 +209,3 @@ class TestCppNestedStructures(unittest.TestCase):
         }
         """)
         self.assertEqual(3, result[0].max_nested_structures)
-
-
-class TestPythonNestedStructures(unittest.TestCase):
-
-    def test_no_structures(self):
-        result = process_python("def fun():\n pass")
-        self.assertEqual(0, result[0].max_nested_structures)
-
-    def test_if_structure(self):
-        result = process_python("def fun():\n if a:\n  return")
-        self.assertEqual(1, result[0].max_nested_structures)
-
-    def test_for_structure(self):
-        result = process_python("def fun():\n for a in b:\n  foo()")
-        self.assertEqual(1, result[0].max_nested_structures)
-
-    def test_condition_in_if_structure(self):
-        result = process_python("def fun():\n if a and b:\n  return")
-        self.assertEqual(1, result[0].max_nested_structures)
-
-    def test_elif(self):
-        result = process_python("""
-        def c():
-          if a:
-            baz()
-          elif c:
-            foo()
-        """)
-        self.assertEqual(1, result[0].max_nested_structures)
-
-    def test_nested_if_structures(self):
-        result = process_python("""
-        def c():
-          if a:
-            if b:
-              baz()
-          else:
-            foo()
-        """)
-        self.assertEqual(2, result[0].max_nested_structures)
-
-    def test_equal_metric_structures(self):
-        result = process_python("""
-        def c():
-          if a:
-            if b:
-              baz()
-          else:
-            foo()
-
-          for a in b:
-            if c:
-              bar()
-        """)
-        self.assertEqual(2, result[0].max_nested_structures)
-
-    def test_while(self):
-        result = process_python("""
-        def c():
-          while a:
-            baz()
-        """)
-        self.assertEqual(1, result[0].max_nested_structures)
-
-    def test_try_catch(self):
-        result = process_python("""
-        def c():
-          try:
-            f.open()
-          catch Exception as err:
-            print(err)
-          finally:
-            f.close()
-        """)
-        self.assertEqual(1, result[0].max_nested_structures)
-
-    def test_two_functions(self):
-        result = process_python("""
-        def c():
-          try:
-            if a:
-              foo()
-          catch Exception as err:
-            print(err)
-
-        def d():
-          for a in b:
-            for x in y:
-              if i:
-                return j
-        """)
-        self.assertEqual(2, result[0].max_nested_structures)
-        self.assertEqual(3, result[1].max_nested_structures)
-
-    def test_nested_functions(self):
-        result = process_python("""
-        def c():
-            def d():
-                for a in b:
-                    for x in y:
-                        if i:
-                            return j
-            try:
-                if a:
-                    foo()
-            catch Exception as err:
-                print(err)
-
-        """)
-        self.assertEqual(3, result[0].max_nested_structures)
-        self.assertEqual(2, result[1].max_nested_structures)
-
-    def test_with_structure(self):
-        result = process_python("""
-        def c():
-            with open(f) as input_file:
-                foo(f)
-        """)
-        self.assertEqual(1, result[0].max_nested_structures)
