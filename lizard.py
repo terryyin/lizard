@@ -316,7 +316,7 @@ class NestingStack(object):
         self.pending_function = None
         self.nesting_stack.append(Namespace(token))
 
-    def start_new_funciton_nesting(self, function):
+    def start_new_function_nesting(self, function):
         self.pending_function = function
 
     def _create_nesting(self):
@@ -386,7 +386,7 @@ class FileInfoBuilder(object):
             self.fileinfo.filename,
             self.current_line)
         self.current_function.top_nesting_level = self.current_nesting_level
-        self.start_new_funciton_nesting(self.current_function)
+        self.start_new_function_nesting(self.current_function)
 
     def add_condition(self, inc=1):
         self.current_function.cyclomatic_complexity += inc
