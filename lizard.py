@@ -40,10 +40,11 @@ except ImportError:
 try:
     from lizard_ext import print_xml
     from lizard_ext import html_output
+    from lizard_ext import auto_open
 except ImportError:
     pass
 
-VERSION = "1.11.0"
+VERSION = "1.12.0"
 
 DEFAULT_CCN_THRESHOLD, DEFAULT_WHITELIST, \
     DEFAULT_MAX_FUNC_LENGTH = 15, "whitelizard.txt", 1000
@@ -69,7 +70,7 @@ def _extension_arg(parser):
                         cloud. -Efans: count the fan in and fan out of
                         functions. -Eoutside: include the global code as one
                         function.  -EIgnoreAssert: to ignore all code in
-                        assert''',
+                        assert. -ENS: count nested control structures.''',
                         action="append",
                         dest="extensions",
                         default=[])
@@ -205,7 +206,29 @@ def arg_parser(prog=None):
     return parser
 
 
-class FunctionInfo(object):  # pylint: disable=R0902
+class Nesting(object):  # pylint: disable=R0903
+    '''
+    Nesting represent one level of nesting in any programming language.
+    '''
+    @property
+    def name_in_space(self):
+        return ''
+
+
+BARE_NESTING = Nesting()
+
+
+class Namespace(Nesting):  # pylint: disable=R0903
+
+    def __init__(self, name):
+        self.name = name
+
+    @property
+    def name_in_space(self):
+        return self.name + "::" if self.name else ''
+
+
+class FunctionInfo(Nesting):  # pylint: disable=R0902
 
     def __init__(self, name, filename, start_line=0, ccn=1):
         self.cyclomatic_complexity = ccn
@@ -217,10 +240,18 @@ class FunctionInfo(object):  # pylint: disable=R0902
         self.end_line = start_line
         self.parameters = []
         self.filename = filename
-        self.indent = -1
+        self.top_nesting_level = -1
         self.length = 0
         self.fan_in = 0
         self.fan_out = 0
+
+    @property
+    def name_in_space(self):
+        return self.name + "."
+
+    @property
+    def unqualified_name(self):
+        return self.name.split('::')[-1]
 
     location = property(lambda self:
                         " %(name)s@%(start_line)s-%(end_line)s@%(filename)s"
@@ -272,7 +303,56 @@ class FileInformation(object):  # pylint: disable=R0903
         return summary / len(self.function_list) if self.function_list else 0
 
 
+class NestingStack(object):
+
+    def __init__(self):
+        self.nesting_stack = []
+        self.pending_function = None
+        self.function_stack = []
+
+    def with_namespace(self, name):
+        return ''.join([x.name_in_space for x in self.nesting_stack] + [name])
+
+    def add_bare_nesting(self):
+        self.nesting_stack.append(self._create_nesting())
+
+    def add_namespace(self, token):
+        self.pending_function = None
+        self.nesting_stack.append(Namespace(token))
+
+    def start_new_funciton_nesting(self, function):
+        self.pending_function = function
+
+    def _create_nesting(self):
+        tmp = self.pending_function
+        self.pending_function = None
+        if tmp:
+            return tmp
+        return BARE_NESTING
+
+    def pop_nesting(self):
+        self.pending_function = None
+        if self.nesting_stack:
+            return self.nesting_stack.pop()
+
+    @property
+    def current_nesting_level(self):
+        return len(self.nesting_stack)
+
+    @property
+    def last_function(self):
+        funs = [f for f in self.nesting_stack if isinstance(f, FunctionInfo)]
+        return funs[-1] if funs else None
+
+
 class FileInfoBuilder(object):
+    '''
+    The builder is also referred as "context" in the code,
+    because each language readers use this builder to build
+    source file and function information and the builder keep
+    the context information that's needed for the building.
+    '''
+
     def __init__(self, filename):
         self.fileinfo = FileInformation(filename, 0)
         self.current_line = 0
@@ -280,6 +360,21 @@ class FileInfoBuilder(object):
         self.newline = True
         self.global_pseudo_function = FunctionInfo('*global*', filename, 0)
         self.current_function = self.global_pseudo_function
+        self._nesting_stack = NestingStack()
+
+    def __getattr__(self, attr):
+        # delegating to _nesting_stack
+        return getattr(self._nesting_stack, attr)
+
+    def pop_nesting(self):
+        nest = self._nesting_stack.pop_nesting()
+        if isinstance(nest, FunctionInfo):
+            endline = self.current_function.end_line
+            self.end_of_function()
+            self.current_function = (
+                    self._nesting_stack.last_function or
+                    self.global_pseudo_function)
+            self.current_function.end_line = endline
 
     def add_nloc(self, count):
         self.fileinfo.nloc += count
@@ -291,9 +386,11 @@ class FileInfoBuilder(object):
 
     def start_new_function(self, name):
         self.current_function = FunctionInfo(
-            name,
+            self.with_namespace(name),
             self.fileinfo.filename,
             self.current_line)
+        self.current_function.top_nesting_level = self.current_nesting_level
+        self.start_new_funciton_nesting(self.current_function)
 
     def add_condition(self, inc=1):
         self.current_function.cyclomatic_complexity += inc
@@ -402,7 +499,7 @@ class FileAnalyzer(object):  # pylint: disable=R0903
     def __call__(self, filename):
         try:
             return self.analyze_source_code(
-                filename, open(filename, 'rU').read())
+                filename, auto_open(filename, 'rU').read())
         except UnicodeDecodeError:
             sys.stderr.write("Error: doesn't support none utf encoding '%s'\n"
                              % filename)
@@ -413,6 +510,7 @@ class FileAnalyzer(object):  # pylint: disable=R0903
             sys.stderr.write("Error: Fail to parse file '%s'\n"
                              % filename)
             raise
+        return FileInformation(filename, 0, [])
 
     def analyze_source_code(self, filename, code):
         context = FileInfoBuilder(filename)
@@ -671,7 +769,7 @@ def map_files_to_analyzer(files, file_analyzer, working_threads):
 def md5_hash_file(full_path_name):
     ''' return md5 hash of a file '''
     try:
-        with open(full_path_name, mode='r') as source_file:
+        with auto_open(full_path_name, mode='r') as source_file:
             if sys.version_info[0] == 3:
                 code_md5 = hashlib.md5(source_file.read().encode('utf-8'))
             else:
@@ -744,6 +842,8 @@ def parse_args(argv):
         opt.thresholds["cyclomatic_complexity"] = opt.CCN
     if "max_nesting_depth" not in opt.thresholds and hasattr(opt, "ND"):
         opt.thresholds["max_nesting_depth"] = opt.ND
+    if "max_nested_structures" not in opt.thresholds and hasattr(opt, "NS"):
+        opt.thresholds["max_nested_structures"] = opt.NS
     if "length" not in opt.thresholds:
         opt.thresholds["length"] = opt.length
     if "parameter_count" not in opt.thresholds:

@@ -303,11 +303,11 @@ class Test_parser_for_TTCN(unittest.TestCase):
 
     def test_underscore(self):
         result = get_ttcn_function_list('''module err{\nfunction _(){}\n}''')
-        self.assertEqual(0, len(result))
+        self.assertEqual(1, len(result))
 
     def test_digits(self):
         result = get_ttcn_function_list('''module err{\nfunction 42(){}\n}''')
-        self.assertEqual(0, len(result))
+        self.assertEqual(1, len(result))
 
     def test_template(self):
         result = get_ttcn_function_list('''

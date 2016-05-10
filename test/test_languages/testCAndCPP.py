@@ -1,7 +1,7 @@
 import unittest
 from lizard_languages import CLikeReader
 from mock import Mock
-from .testHelpers import get_cpp_fileinfo, get_cpp_function_list
+from ..testHelpers import get_cpp_fileinfo, get_cpp_function_list
 
 class Test_C_Token_extension(unittest.TestCase):
 
@@ -160,6 +160,10 @@ class Test_c_cpp_lizard(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual("c::d::f", result[0].name)
 
+    def test_1(self):
+        result = get_cpp_function_list("class c {{}}")
+        self.assertEqual(0, len(result))
+
     def test_braket_that_is_not_a_namespace(self):
         result = get_cpp_function_list("class c { {};int f(){}};")
         self.assertEqual(1, len(result))
@@ -227,7 +231,7 @@ class Test_c_cpp_lizard(unittest.TestCase):
     def test_inline_operator(self):
         result = get_cpp_function_list("class A { bool operator ()(int b) {} };")
         self.assertEqual(1, len(result))
-        self.assertEqual("A::operator()", result[0].name)
+        self.assertEqual("A::operator ( )", result[0].name)
 
     def test_namespace_alias(self):
         result = get_cpp_function_list(

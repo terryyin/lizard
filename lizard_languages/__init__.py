@@ -9,6 +9,7 @@ from .ttcn import TTCNReader
 from .swift import SwiftReader
 from .ruby import RubyReader
 from .csharp import CSharpReader
+from .php import PHPReader
 
 
 def languages():
@@ -21,6 +22,7 @@ def languages():
         ObjCReader,
         TTCNReader,
         RubyReader,
+        PHPReader,
         SwiftReader]
 
 
