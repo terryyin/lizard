@@ -444,7 +444,7 @@ def comment_counter(tokens, reader):
                     first_comment_word = (comment_words and comment_words[0] or None)
                     if first_comment_word == '#':
                         comment_words = comment_words[1:]
-                    if (comment_words and comment_words[-1] or None) == "'''":
+                    if (comment_words and comment_words[-1] or None) in ["'''", '"""']:
                         comment_words = comment_words[:-1]
                 elif isinstance(reader, CLikeReader):
                     comments = [comment for comment in comment_words if comment != '*' and comment != '*/']
