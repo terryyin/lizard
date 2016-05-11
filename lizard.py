@@ -447,7 +447,11 @@ def comment_counter(tokens, reader):
                     if (comment_words and comment_words[-1] or None) in ["'''", '"""']:
                         comment_words = comment_words[:-1]
                 elif isinstance(reader, CLikeReader):
-                    comments = [comment for comment in comment_words if comment != '*' and comment != '*/']
+                    comments = []
+                    for comment in comment_words:
+                        if comment != '*' and comment != '*/':
+                            comment = re.sub(r'\*\s|\s?\*/', '', comment)
+                            comments.append(comment)
                     comment_words = comments
 
                 comment_words_count = len(comment_words)
