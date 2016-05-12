@@ -1,10 +1,9 @@
-__author__ = 'David Baum'
 '''
 Language parser for Scala
 '''
-
 from .code_reader import CodeReader, CodeStateMachine
 from .clike import CCppCommentsMixin, CLikeReader
+__author__ = 'David Baum'
 
 
 class ScalaReader(CLikeReader):
@@ -55,4 +54,3 @@ class ScalaStates(CodeStateMachine):  # pylint: disable=R0903
     def _protocol(self, end_token):
         if end_token == "}":
             self._state = self._state_global
-

@@ -1,5 +1,5 @@
 import unittest
-from lizard_languages import get_reader_for, CLikeReader, JavaReader, ObjCReader, JavaScriptReader
+from lizard_languages import get_reader_for, CLikeReader, JavaReader, ObjCReader, JavaScriptReader, ScalaReader
 
 
 class TestLanguageChooser(unittest.TestCase):
@@ -16,11 +16,14 @@ class TestLanguageChooser(unittest.TestCase):
     def test_c_cpp(self):
         for name in ("a.cpp", ".cxx", ".h", ".hpp"):
             self.assertEqual(CLikeReader, get_reader_for(name),
-                             "File name '%s' is not recognized as c/c++ file" % name);
+                             "File name '%s' is not recognized as c/c++ file" % name)
 
     def test_JavaScript(self):
         self.assertEqual(JavaScriptReader, get_reader_for("a.js"))
 
+    def test_scala(self):
+        self.assertEqual(ScalaReader, get_reader_for("a.scala"))
+
     def test_unknown_extension(self):
-        self.assertEqual(None, get_reader_for("a.unknown"));
+        self.assertEqual(None, get_reader_for("a.unknown"))
 
