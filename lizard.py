@@ -49,7 +49,9 @@ DEFAULT_CCN_THRESHOLD, DEFAULT_WHITELIST, \
     DEFAULT_MAX_FUNC_LENGTH = 15, "whitelizard.txt", 1000
 
 
-def analyze(paths, exclude_pattern=None, threads=1, exts=None, lans=None):
+# pylint: disable-msg=too-many-arguments
+def analyze(paths, exclude_pattern=None, threads=1, exts=None,
+            lans=None, regression=False):
     '''
     returns an iterator of file information that contains function
     statistics.
@@ -58,7 +60,10 @@ def analyze(paths, exclude_pattern=None, threads=1, exts=None, lans=None):
     extensions = exts or []
     files = get_all_source_files(paths, exclude_pattern, lans)
     file_analyzer = FileAnalyzer(extensions)
-    return map_files_to_analyzer(files, file_analyzer, threads)
+    result = map_files_to_analyzer(files, file_analyzer, threads)
+    if regression:
+        result = [r for r in result]
+    return result
 
 
 def _extension_arg(parser):
@@ -544,6 +549,29 @@ def whitelist_filter(warnings, script=None, whitelist=None):
 
 
 class OutputScheme(object):
+    '''
+    Collect the schema of the data columns.
+    Each extension can define some additional data columns to
+    the FunctionInfo structure, or even add properties to
+    the FileInfomation structure.
+
+    In any extension class, define a class level variable:
+
+        FUNCTION_INFO = {
+            'column_name' : {
+                'caption': 'if defined, will show the column in result',
+                'average_caption': 'if defined, will add averge function
+                                    to FileInfomation and show in the
+                                    end result.
+                'regression': True 'if there's any regression, the result
+                               won't show until all the files are processed.
+                               This is
+                               used when some cross-files statistics are
+                               needed. e.g. fan-in and fan-out'
+            }
+        }
+    '''
+
     def __init__(self, ext):
         self.extensions = ext
         self.items = [
@@ -562,9 +590,10 @@ class OutputScheme(object):
             {
                 'caption': caption,
                 'value': part,
-                'avg_caption': average
+                'avg_caption': average,
+                'regression': regression
             }
-            for caption, part, average in self._ext_member_info()]
+            for caption, part, average, regression in self._ext_member_info()]
         self.items.append({'caption': " location  ", 'value': 'location'})
 
     def patch_for_extensions(self):
@@ -574,6 +603,9 @@ class OutputScheme(object):
         for item in self.items:
             if 'avg_caption' in item:
                 _patch(item["value"])
+
+    def any_regression(self):
+        return any(item.get('regression') for item in self.items)
 
     def value_columns(self):
         return [item['value'] for item in self.items]
@@ -585,15 +617,12 @@ class OutputScheme(object):
                     yield (
                         ext.FUNCTION_INFO[key].get("caption", None),
                         key,
-                        ext.FUNCTION_INFO[key].get("average_caption", None))
+                        ext.FUNCTION_INFO[key].get("average_caption", None),
+                        ext.FUNCTION_INFO[key].get("regression", None))
 
     def captions(self):
-        return "".join(
-                item['caption'] for item in self.items if item['caption'])
-
-    def regression_captions(self):
-        return "".join(
-                item['caption'] for item in self.items if item['caption'])
+        caps = [item.get('caption') for item in self.items]
+        return "".join(caption for caption in caps if caption)
 
     @staticmethod
     def _head(captions):
@@ -602,13 +631,10 @@ class OutputScheme(object):
     def function_info_head(self):
         return self._head(self.captions())
 
-    def function_regression_info_head(self):
-        return self._head(self.regression_captions())
-
     def function_info(self, fun):
         return ''.join(
             str(getattr(fun, item['value'])).rjust(len(item['caption']))
-            for item in self.items)
+            for item in self.items if item['caption'])
 
     def average_captions(self):
         return "".join([
@@ -685,9 +711,6 @@ def print_and_save_modules(all_fileinfos, extensions, scheme):
             saved_fileinfos.append(module_info)
             for fun in module_info.function_list:
                 print(scheme.function_info(fun))
-    if scheme.function_regression_info_head():
-        print(scheme.function_regression_info_head())
-    print("--------------------------------------------------------------")
     print("%d file analyzed." % (len(saved_fileinfos)))
     print("==============================================================")
     print("NLOC   " + scheme.average_captions() + " function_cnt    file")
@@ -870,7 +893,8 @@ def lizard_main(argv):
         options.exclude,
         options.working_threads,
         options.extensions,
-        options.languages)
+        options.languages,
+        schema.any_regression)
     warning_count = printer(result, options, schema)
     if options.number < warning_count:
         sys.exit(1)

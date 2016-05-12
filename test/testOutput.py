@@ -33,14 +33,13 @@ class TestFunctionOutput(StreamStdoutTestCase):
         scheme = OutputScheme(extensions)
         print_and_save_modules([], extensions, scheme)
         self.assertEquals("  NLOC    CCN   token  PARAM  length *external_extension* location  ", sys.stdout.stream.splitlines()[1])
+        self.assertFalse(scheme.any_regression())
 
-    def test_function_info_header_should_have_the_regression_captions_of_external_extensions(self):
-        external_extension = Mock(FUNCTION_INFO = {"xx": {"regession": "*external_extension*"}}, ordering_index=-1)
+    def test_schema_should_exhaust_the_result_if_there_is_regression_data(self):
+        external_extension = Mock(FUNCTION_INFO = {"xx": {"regression": True}}, ordering_index=-1)
         extensions = get_extensions([external_extension])
-        scheme = OutputScheme(extensions)
-        print_and_save_modules([], extensions, scheme)
-        self.assertEquals("  NLOC    CCN   token  PARAM  length  location  ", sys.stdout.stream.splitlines()[1])
-        #self.assertEquals("  NLOC    CCN   token  PARAM  length *external_extension* location  ", sys.stdout.stream.splitlines()[1])
+        schema = OutputScheme(extensions)
+        self.assertTrue(schema.any_regression())
 
     def test_print_fileinfo(self):
         self.foo.end_line = 100

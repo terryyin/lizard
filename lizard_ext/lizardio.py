@@ -8,8 +8,16 @@ class LizardExtension(ExtensionBase):
     '''
     '''
 
-    FUNCTION_REGRESSION_CAPTION = ["  fan_in  ", "  fan_out  "]
-    FUNCTION_INFO_PART = ["fan_in", "fan_out"]
+    FUNCTION_INFO = {
+            "fan_in":  {
+                "caption": " fan_in ",
+                "average_caption": " avg_fan_in ",
+                "regression": True},
+            "fan_out": {
+                "caption": " fan_out ",
+                "average_caption": " avg_fan_out ",
+                "regression": True}
+            }
 
     def __init__(self, context=None):
         self.all_methods = {}
