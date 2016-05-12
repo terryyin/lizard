@@ -3,11 +3,18 @@ from lizard import analyze_file, FileAnalyzer, get_extensions
 from lizard_ext.lizardio import LizardExtension as FanInOut
 
 
-def fanio(code):
+def fanio(*code):
+    '''
+    this helper function can simulate the situation that multiple files are
+    processed with the io extension.
+    '''
     ext = FanInOut()
-    result = FileAnalyzer(get_extensions([ext])).analyze_source_code("a.cpp", code)
-    ext.reduce(result)
-    return result.function_list[0]
+    def process(ext, code):
+        result = FileAnalyzer(get_extensions([ext])).analyze_source_code("a.cpp", code)
+        ext.reduce(result)
+        return result
+    results = [process(ext, code) for code in code]
+    return results[0].function_list[0]
 
 
 class TestFanOut(unittest.TestCase):
@@ -50,7 +57,6 @@ class TestFanOut(unittest.TestCase):
         self.assertEqual(1, result)
 
 
-
 class TestFanIn(unittest.TestCase):
 
     def fan_in(self, code):
@@ -73,3 +79,23 @@ class TestFanIn(unittest.TestCase):
                 int bar(){ fun(); fun()}
                 """)
         self.assertEqual(1, result)
+
+
+class TestCombinedResult(unittest.TestCase):
+
+    def test_1_fan_in_from_another_source_file(self):
+        result = fanio(
+                """ int fun(){ } """,
+                """ int bar(){ fun() } """
+                )
+        self.assertEqual(1, result.fan_in)
+
+    def test_1_fan_out_to_another_source_file(self):
+        result = fanio(
+                """ int fun(){ bar()} """,
+                """ int bar(){ } """
+                )
+        self.assertEqual(1, result.fan_out)
+
+
+
