@@ -2,6 +2,37 @@
 Theory
 ######
 
+Cyclomatic Complexity
+=========================
+
+Counting the Cyclomatic Complexity Number is one of the most early and fundamental function
+of Lizard. You can get more information about cycolmatic complexity from
+`<https://en.wikipedia.org/wiki/Cyclomatic_complexity>`_.
+
+The default way Lizard counts the CCN is mostly compatible with McCable's theory
+(McCabe 1976 `<http://www.mccabe.com/pdf/mccabe-nist235r.pdf>`_), except that the
+switch/case structure is counted by number of cases instead of switch. If you want
+to strictly count by McCabe's definition, there's a Lizard extension to do that:
+
+::
+
+    lizard -Emaccabe
+
+There's still an open issue that needs to be fixed. Forever loops, or loops without
+a condition shouldn't be counted.
+
+Below are some language specific notes about CCN.
+
+CCN for Nested Structures
+-------------------------
+
+There can be nested structures in many languages. For Python, we could the CCN
+for nested structure separately and it's not added to the parent structure.
+
+For C++ (and C++-like languages) we ignored the nested structure with the outermost
+function. All complexity (and perhaps all the other per-function statistics) are included
+in the outermost function.
+
 Nested Control Structures
 =========================
 
