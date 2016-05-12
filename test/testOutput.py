@@ -28,12 +28,19 @@ class TestFunctionOutput(StreamStdoutTestCase):
         self.assertEquals("  NLOC    CCN   token  PARAM  length  location  ", sys.stdout.stream.splitlines()[1])
 
     def test_function_info_header_should_have_the_captions_of_external_extensions(self):
-        external_extension = Mock(FUNCTION_CAPTION = "*external_extension*", FUNCTION_INFO_PART ="xx", ordering_index=-1)
-        del external_extension.AVERAGE_CAPTION
+        external_extension = Mock(FUNCTION_INFO = {"xx": {"caption":"*external_extension*"}}, ordering_index=-1)
         extensions = get_extensions([external_extension])
         scheme = OutputScheme(extensions)
         print_and_save_modules([], extensions, scheme)
         self.assertEquals("  NLOC    CCN   token  PARAM  length *external_extension* location  ", sys.stdout.stream.splitlines()[1])
+
+    def test_function_info_header_should_have_the_regression_captions_of_external_extensions(self):
+        external_extension = Mock(FUNCTION_INFO = {"xx": {"regession": "*external_extension*"}}, ordering_index=-1)
+        extensions = get_extensions([external_extension])
+        scheme = OutputScheme(extensions)
+        print_and_save_modules([], extensions, scheme)
+        self.assertEquals("  NLOC    CCN   token  PARAM  length  location  ", sys.stdout.stream.splitlines()[1])
+        #self.assertEquals("  NLOC    CCN   token  PARAM  length *external_extension* location  ", sys.stdout.stream.splitlines()[1])
 
     def test_print_fileinfo(self):
         self.foo.end_line = 100
@@ -44,9 +51,7 @@ class TestFunctionOutput(StreamStdoutTestCase):
 
 
 class Ext(object):
-    FUNCTION_CAPTION = "  ND  "
-    AVERAGE_CAPTION = " Avg.ND "
-    FUNCTION_INFO_PART = "max_nesting_depth"
+    FUNCTION_INFO = {"max_nesting_depth": {"caption": "  ND  ", "average_caption": " Avg.ND "}}
 
 
 class TestWarningOutput(StreamStdoutTestCase):
@@ -122,8 +127,7 @@ class TestAllOutput(StreamStdoutTestCase):
 
     def test_print_extension_results(self):
         file_infos = []
-        extension = Mock(FUNCTION_CAPTION = "")
-        del extension.AVERAGE_CAPTION
+        extension = Mock(FUNCTION_INFO = {})
         option = Mock(CCN=15, thresholds={}, number = 0, extensions = [extension], whitelist='')
         print_result(file_infos, option, OutputScheme(option.extensions))
         self.assertEqual(1, extension.print_result.call_count)

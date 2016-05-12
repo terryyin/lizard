@@ -1,7 +1,7 @@
 import unittest
 from mock import Mock, patch
 from lizard import get_extensions
-from lizard import patch_extension, FileInformation, FunctionInfo
+from lizard import OutputScheme, FileInformation, FunctionInfo
 import importlib
 
 class FakeExtension:
@@ -31,10 +31,8 @@ class Test_using_extensions(unittest.TestCase):
 
     def test_should_generate_property_for_file_info(self):
         class MyExt:
-            FUNCTION_CAPTION = "  ND  "
-            FUNCTION_INFO_PART = "max_nesting_depth"
-            AVERAGE_CAPTION = " Avg.ND "
-        patch_extension(MyExt())
+            FUNCTION_INFO= {"max_nesting_depth": {"caption": "  ND  ", "average_caption": " Avg.ND "}}
+        OutputScheme([MyExt()]).patch_for_extensions()
         self.func.max_nesting_depth = 1.5
         self.assertEqual(self.file_info.average_max_nesting_depth, 1.5)
 

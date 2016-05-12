@@ -15,8 +15,7 @@ DEFAULT_NS_THRESHOLD = 3
 
 class LizardExtension(object):  # pylint: disable=R0903
 
-    FUNCTION_CAPTION = ["  NS  "]
-    FUNCTION_INFO_PART = ["max_nested_structures"]
+    FUNCTION_INFO = {"max_nested_structures": {"caption": "  NS  "}}
 
     @staticmethod
     def set_args(parser):

@@ -68,7 +68,7 @@ class TestOptionParsing(unittest.TestCase):
 
     @patch.object(sys, 'exit')
     @patch('sys.stderr')
-    def test_sorting_factor_does_not_exist(self, _, mock_exit):
+    def test_sorting_factor_does_not_exist1(self, _, mock_exit):
         options = parse_args(['lizard', '-Tdoesnotexist=3'])
         mock_exit.assert_called_with(2)
 

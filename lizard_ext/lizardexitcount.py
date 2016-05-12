@@ -6,8 +6,7 @@ in every function.
 
 class LizardExtension(object):  # pylint: disable=R0903
 
-    FUNCTION_CAPTION = " exits "
-    FUNCTION_INFO_PART = "exit_count"
+    FUNCTION_INFO = {"exit_count": {"caption": " exits "}}
 
     def __call__(self, tokens, reader):
         first_return = False

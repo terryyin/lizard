@@ -567,33 +567,43 @@ class OutputScheme(object):
             for caption, part, average in self._ext_member_info()]
         self.items.append({'caption': " location  ", 'value': 'location'})
 
-    @staticmethod
-    def is_string_instance(ext):
-        try:
-            stringtype = basestring
-        except NameError:   # Not compatible with python 3
-            stringtype = str
-        return isinstance(ext.FUNCTION_INFO_PART, stringtype)
+    def patch_for_extensions(self):
+        def _patch(name):
+            setattr(FileInformation, "average_" + name,
+                    property(lambda self: self.functions_average(name)))
+        for item in self.items:
+            if 'avg_caption' in item:
+                _patch(item["value"])
+
+    def value_columns(self):
+        return [item['value'] for item in self.items]
 
     def _ext_member_info(self):
         for ext in self.extensions:
-            if hasattr(ext, "FUNCTION_CAPTION"):
-                if OutputScheme.is_string_instance(ext):
-                    yield (ext.FUNCTION_CAPTION,
-                           ext.FUNCTION_INFO_PART,
-                           getattr(ext, "AVERAGE_CAPTION", None))
-                else:
-                    for i in range(len(ext.FUNCTION_CAPTION)):
-                        yield (ext.FUNCTION_CAPTION[i],
-                               ext.FUNCTION_INFO_PART[i],
-                               getattr(ext, "AVERAGE_CAPTION", [None]*10)[i])
+            if hasattr(ext, "FUNCTION_INFO"):
+                for key in ext.FUNCTION_INFO:
+                    yield (
+                        ext.FUNCTION_INFO[key].get("caption", None),
+                        key,
+                        ext.FUNCTION_INFO[key].get("average_caption", None))
 
     def captions(self):
-        return "".join(item['caption'] for item in self.items)
+        return "".join(
+                item['caption'] for item in self.items if item['caption'])
+
+    def regression_captions(self):
+        return "".join(
+                item['caption'] for item in self.items if item['caption'])
+
+    @staticmethod
+    def _head(captions):
+        return "\n".join(("=" * len(captions), captions, "-" * len(captions)))
 
     def function_info_head(self):
-        captions = self.captions()
-        return "\n".join(("=" * len(captions), captions, "-" * len(captions)))
+        return self._head(self.captions())
+
+    def function_regression_info_head(self):
+        return self._head(self.regression_captions())
 
     def function_info(self, fun):
         return ''.join(
@@ -664,25 +674,25 @@ def print_total(warning_count, warning_nloc, saved_result, scheme):
                   nloc_rate=(warning_nloc/nloc_in_functions)))
 
 
-def print_and_save_modules(all_modules, extensions, scheme):
-    all_functions = []
+def print_and_save_modules(all_fileinfos, extensions, scheme):
+    saved_fileinfos = []
     print(scheme.function_info_head())
-    for module_info in all_modules:
+    for module_info in all_fileinfos:
         for extension in extensions:
             if hasattr(extension, 'reduce'):
                 extension.reduce(module_info)
-            if hasattr(extension, 'fans'):
-                extension.fans(module_info)
         if module_info:
-            all_functions.append(module_info)
+            saved_fileinfos.append(module_info)
             for fun in module_info.function_list:
                 print(scheme.function_info(fun))
+    if scheme.function_regression_info_head():
+        print(scheme.function_regression_info_head())
     print("--------------------------------------------------------------")
-    print("%d file analyzed." % (len(all_functions)))
+    print("%d file analyzed." % (len(saved_fileinfos)))
     print("==============================================================")
     print("NLOC   " + scheme.average_captions() + " function_cnt    file")
     print("--------------------------------------------------------------")
-    for module_info in all_functions:
+    for module_info in saved_fileinfos:
         print((
             "{module.nloc:7d}" +
             scheme.average_formatter() +
@@ -690,7 +700,7 @@ def print_and_save_modules(all_modules, extensions, scheme):
             "     {module.filename}").format(
             module=module_info,
             function_count=len(module_info.function_list)))
-    return all_functions
+    return saved_fileinfos
 
 
 def get_warnings(code_infos, option):
@@ -803,7 +813,7 @@ def parse_args(argv):
     parser = extend_parser(arg_parser(argv[0]))
     opt = parser.parse_args(args=argv[1:])
     opt.extensions = get_extensions(opt.extensions)
-    values = [item['value'] for item in OutputScheme(opt.extensions).items]
+    values = OutputScheme(opt.extensions).value_columns()
     no_fields = (set(opt.sorting) | set(opt.thresholds.keys())) - set(values)
     if no_fields:
         error_message = "Wrong field name '%s'.\n" % ", ".join(no_fields)
@@ -823,25 +833,12 @@ def parse_args(argv):
     return opt
 
 
-def patch_extension(ext):
-    def _patch(name):
-        setattr(FileInformation, "average_" + name,
-                property(lambda self: self.functions_average(name)))
-    if hasattr(ext, "AVERAGE_CAPTION"):
-        if OutputScheme.is_string_instance(ext):
-            _patch(ext.FUNCTION_INFO_PART)
-        else:
-            for name in ext.FUNCTION_INFO_PART:
-                _patch(name)
-    return ext
-
-
 def get_extensions(extension_names):
     from importlib import import_module as im
 
     def expand_extensions(existing):
         for name in extension_names:
-            ext = patch_extension(
+            ext = (
                     im('lizard_ext.lizard' + name.lower())
                     .LizardExtension()
                     if isinstance(name, str) else name)
@@ -866,13 +863,15 @@ analyze_file = FileAnalyzer(get_extensions([]))  # pylint: disable=C0103
 def lizard_main(argv):
     options = parse_args(argv)
     printer = options.printer or print_result
+    schema = OutputScheme(options.extensions)
+    schema.patch_for_extensions()
     result = analyze(
         options.paths,
         options.exclude,
         options.working_threads,
         options.extensions,
         options.languages)
-    warning_count = printer(result, options, OutputScheme(options.extensions))
+    warning_count = printer(result, options, schema)
     if options.number < warning_count:
         sys.exit(1)
 

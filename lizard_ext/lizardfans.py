@@ -14,8 +14,9 @@ from sys import stderr
 
 class LizardExtension(object):  # pylint: disable=R0903
 
-    FUNCTION_CAPTION = ["  fan_in  ", "  fan_out  "]
-    FUNCTION_INFO_PART = ["fan_in", "fan_out"]
+    FUNCTION_INFO = {
+            "fan_in ": {"caption": "  fan_in  "},
+            "fan_out": {"caption": "  fan_out  "}}
 
     def __init__(self):
         self.name_list = []
