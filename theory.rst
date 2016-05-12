@@ -16,7 +16,7 @@ to strictly count by McCabe's definition, there's a Lizard extension to do that:
 
 ::
 
-    lizard -Emaccabe
+    lizard -Emccabe
 
 There's still an open issue that needs to be fixed. Forever loops, or loops without
 a condition shouldn't be counted.
@@ -26,7 +26,7 @@ Below are some language specific notes about CCN.
 CCN for Nested Structures
 -------------------------
 
-There can be nested structures in many languages. For Python, we could the CCN
+There can be nested structures in many languages. For Python, we count the CCN
 for nested structure separately and it's not added to the parent structure.
 
 For C++ (and C++-like languages) we ignored the nested structure with the outermost
