@@ -250,6 +250,10 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
 
     @property
     def unqualified_name(self):
+        '''
+        name without qualification like namespaces or classes.
+        Just the bare name without '::'.
+        '''
         return self.name.split('::')[-1]
 
     location = property(lambda self:

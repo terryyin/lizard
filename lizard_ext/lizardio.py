@@ -20,3 +20,6 @@ class LizardExtension(ExtensionBase):
         all_func_names = set(all_func_names)
         for func in fileinfo.function_list:
             func.fan_out = len(func.tokens.intersection(all_func_names))
+            func.fan_in = sum(
+                    [1 for other_function in fileinfo.function_list
+                        if func.unqualified_name in other_function.tokens])
