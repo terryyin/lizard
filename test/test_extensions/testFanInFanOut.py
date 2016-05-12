@@ -98,4 +98,28 @@ class TestCombinedResult(unittest.TestCase):
         self.assertEqual(1, result.fan_out)
 
 
+class TestGeneralFanOut(unittest.TestCase):
+
+    def general_fan_out(self, code):
+        return fanio(code).general_fan_out
+
+    def xtest_0_fan_out(self):
+        result = self.fan_out(""" int fun(){ } """)
+        self.assertEqual(0, result)
+
+    def xtest_1_fan_out(self):
+        result = self.fan_out(""" int fun(){ bar; } """)
+        self.assertEqual(0, result)
+
+    def xtest_no_fan_out_for_things_defined_within(self):
+        result = self.fan_out(""" int fun(){int bar; bar; } """)
+        self.assertEqual(0, result)
+
+
+
+
+
+
+
+
 

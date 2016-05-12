@@ -9,6 +9,7 @@ class LizardExtension(ExtensionBase):
     '''
 
     FUNCTION_REGRESSION_CAPTION = ["  fan_in  ", "  fan_out  ", " general_fan_out "]
+    FUNCTION_CAPTION = [" general_fan_out "]
     FUNCTION_INFO_PART = ["fan_in", "fan_out", "general_fan_out"]
 
     def __init__(self, context=None):
