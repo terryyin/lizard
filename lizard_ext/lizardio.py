@@ -6,11 +6,10 @@ from .extension_base import ExtensionBase
 
 class LizardExtension(ExtensionBase):
     '''
-    The collective result is stored in self.file_info_list
     '''
 
-    FUNCTION_CAPTION = ["  fan_in  ", "  fan_out  "]
-    FUNCTION_INFO_PART = ["fan_in", "fan_out"]
+    FUNCTION_REGRESSION_CAPTION = ["  fan_in  ", "  fan_out  ", " general_fan_out "]
+    FUNCTION_INFO_PART = ["fan_in", "fan_out", "general_fan_out"]
 
     def __init__(self, context=None):
         self.all_methods = {}
