@@ -7,7 +7,6 @@ from .extension_base import ExtensionBase
 class LizardExtension(ExtensionBase):
     '''
     '''
-
     FUNCTION_INFO = {
             "fan_in":  {
                 "caption": " fan_in ",
@@ -16,6 +15,10 @@ class LizardExtension(ExtensionBase):
             "fan_out": {
                 "caption": " fan_out ",
                 "average_caption": " avg_fan_out ",
+                "regression": True},
+            "general_fan_out": {
+                "caption": " general_fan_out ",
+                "average_caption": " general_fan_out ",
                 "regression": True}
             }
 
@@ -32,11 +35,16 @@ class LizardExtension(ExtensionBase):
         new_funcs = {f.unqualified_name: f for f in fileinfo.function_list}
         self.all_methods.update(new_funcs)
         self._add_to_fan_outs(new_funcs.keys())
+        self._add_to_general_fan_out(new_funcs)
         self._add_to_fan_ins(fileinfo.function_list)
 
     def _add_to_fan_outs(self, keys):
         for other_func in self.all_methods.values():
             other_func.fan_out += len(other_func.tokens.intersection(keys))
+
+    def _add_to_general_fan_out(self, new_funcs):
+        for other_func in self.all_methods.values():
+            other_func.general_fan_out += len(other_func.tokens.intersection(new_funcs.keys()))
 
     def _add_to_fan_ins(self, new_funcs):
         for func in new_funcs:
