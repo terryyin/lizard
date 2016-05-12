@@ -244,6 +244,9 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
         self.length = 0
         self.fan_in = 0
         self.fan_out = 0
+        self.comment_count = 0
+        self.comment_words_count = 0
+        self.comments_list = []
 
     @property
     def name_in_space(self):
@@ -397,12 +400,15 @@ class FileInfoBuilder(object):
 
     def increment_comment_count(self):
         self.fileinfo.comment_count += 1
+        self.current_function.comment_count = self.fileinfo.comment_count
 
     def add_comment_words_count(self, comment_words_count):
         self.fileinfo.comment_words_count += comment_words_count
+        self.current_function.comment_words_count = self.fileinfo.comment_words_count
 
     def add_comment(self, comment):
         self.fileinfo.comments_list.append(comment)
+        self.current_function.comments_list = self.fileinfo.comments_list
 
     def reset_complexity(self):
         self.current_function.cyclomatic_complexity = 1
