@@ -59,9 +59,9 @@ class LizardExtension(object):  # pylint: disable=R0903
         for control block **starting** and **closing** purposes.
         """
         # TODO: Delegate this to language readers  # pylint: disable=fixme
-        structures = set(['if', 'else', 'elif', 'for', 'foreach', 'while', 'do',
-                          'try', 'catch', 'switch', 'finally', 'except',
-                          'with'])
+        structures = set(['if', 'else', 'elif', 'for', 'foreach', 'while',
+                          'do', 'try', 'catch', 'switch', 'finally',
+                          'except', 'with'])
 
         cur_level = 0
         start_structure = [False]  # Just to make it mutable.
