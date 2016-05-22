@@ -751,8 +751,6 @@ def print_clang_style_warning(code_infos, option, scheme):
     for warning in get_warnings(code_infos, option):
         print(scheme.clang_warning_format().format(f=warning))
         count += 1
-    for warning in get_warnings(code_infos, option):
-        print(scheme.clang_warning_format().format(f=warning))
     return count
 
 
