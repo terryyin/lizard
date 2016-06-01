@@ -43,7 +43,7 @@ try:
 except ImportError:
     pass
 
-VERSION = "1.12.0"
+VERSION = "1.12.1"
 
 DEFAULT_CCN_THRESHOLD, DEFAULT_WHITELIST, \
     DEFAULT_MAX_FUNC_LENGTH = 15, "whitelizard.txt", 1000
@@ -782,6 +782,8 @@ def md5_hash_file(full_path_name):
     except IOError:
         return None
     except UnicodeDecodeError:
+        return None
+    except UnicodeEncodeError:
         return None
 
 
