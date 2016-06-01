@@ -26,7 +26,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
     def __init__(self, context):
         super(CLikeReader, self).__init__(context)
         self.parallel_states = (
-                #CLikeNestingStackStates(context),
+                CLikeNestingStackStates(context),
                 CLikeStates(context),
                 CppRValueRefStates(context))
 
