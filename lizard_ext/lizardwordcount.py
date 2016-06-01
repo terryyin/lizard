@@ -38,8 +38,9 @@ class LizardExtension(object):
         Because the statistics came from multiple thread tasks. This function
         needs to be called to collect the combined result.
         '''
-        for k, val in fileinfo.wordCount.items():
-            self.result[k] = self.result.get(k, 0) + val
+        if hasattr(fileinfo, "wordCount"):
+            for k, val in fileinfo.wordCount.items():
+                self.result[k] = self.result.get(k, 0) + val
 
     def print_result(self):
         with open(self.HTML_FILENAME, 'w') as html_file:
