@@ -118,7 +118,7 @@ class CLikeNestingStackStates(CodeStateMachine):
         if token == "(":
             self.__paren_count += 1
         elif token == ")":
-            assert self.__paren_count > 0
+            #assert self.__paren_count > 0
             self.__paren_count -= 1
         elif self.__paren_count == 0:
             self._state = self._state_global
@@ -146,7 +146,7 @@ class CLikeNestingStackStates(CodeStateMachine):
             self.__pop_braceless_structures()
 
         elif token in self.__braceless_structures:
-            assert self.__paren_count == 0
+            #assert self.__paren_count == 0
             if token == "else":
                 self._state = self.__else_if_structure
             else:
