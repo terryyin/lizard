@@ -10,7 +10,7 @@ from .swift import SwiftReader
 from .ruby import RubyReader
 from .csharp import CSharpReader
 from .php import PHPReader
-
+from .scala import ScalaReader
 
 def languages():
     return [
@@ -23,7 +23,8 @@ def languages():
         TTCNReader,
         RubyReader,
         PHPReader,
-        SwiftReader]
+        SwiftReader,
+        ScalaReader]
 
 
 def get_reader_for(filename):

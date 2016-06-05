@@ -32,6 +32,7 @@ if sys.version[0] == '2':
     from future_builtins import map, filter  # pylint: disable=W0622, F0401
 
 try:
+    from lizard_languages.python import PythonReader
     from lizard_languages import languages, get_reader_for, CLikeReader
 except ImportError:
     sys.stderr.write("Cannot find the lizard_languages module.")
@@ -248,6 +249,9 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
         self.length = 0
         self.fan_in = 0
         self.fan_out = 0
+        self.comment_count = 0
+        self.comment_words_count = 0
+        self.comments_list = []
 
     @property
     def name_in_space(self):
@@ -290,6 +294,9 @@ class FileInformation(object):  # pylint: disable=R0903
         self.nloc = nloc
         self.function_list = function_list or []
         self.token_count = 0
+        self.comment_count = 0
+        self.comment_words_count = 0
+        self.comments_list = []
 
     average_nloc = property(lambda self: self.functions_average("nloc"))
     average_token_count = property(
@@ -400,6 +407,18 @@ class FileInfoBuilder(object):
     def add_condition(self, inc=1):
         self.current_function.cyclomatic_complexity += inc
 
+    def increment_comment_count(self):
+        self.fileinfo.comment_count += 1
+        self.current_function.comment_count = self.fileinfo.comment_count
+
+    def add_comment_words_count(self, comment_words_count):
+        self.fileinfo.comment_words_count += comment_words_count
+        self.current_function.comment_words_count = self.fileinfo.comment_words_count
+
+    def add_comment(self, comment):
+        self.fileinfo.comments_list.append(comment)
+        self.current_function.comments_list = self.fileinfo.comments_list
+
     def reset_complexity(self):
         self.current_function.cyclomatic_complexity = 1
 
@@ -434,6 +453,26 @@ def comment_counter(tokens, reader):
                 yield '\n'
             if comment.strip().startswith("#lizard forgive"):
                 reader.context.forgive = True
+            else:
+                comment_words = comment.split()
+                if isinstance(reader, PythonReader):
+                    first_comment_word = (comment_words and comment_words[0] or None)
+                    if first_comment_word == '#':
+                        comment_words = comment_words[1:]
+                    if (comment_words and comment_words[-1] or None) in ["'''", '"""']:
+                        comment_words = comment_words[:-1]
+                elif isinstance(reader, CLikeReader):
+                    comments = []
+                    for comment in comment_words:
+                        if comment != '*' and comment != '*/':
+                            comment = re.sub(r'\*\s|\s?\*/', '', comment)
+                            comments.append(comment)
+                    comment_words = comments
+
+                comment_words_count = len(comment_words)
+                reader.context.add_comment(" ".join(comment_words))
+                reader.context.increment_comment_count()
+                reader.context.add_comment_words_count(comment_words_count)
         else:
             yield token
 
@@ -468,6 +507,7 @@ def condition_counter(tokens, reader):
         if token in conditions:
             reader.context.add_condition()
         yield token
+
 
 
 class FileAnalyzer(object):  # pylint: disable=R0903
@@ -585,6 +625,8 @@ class OutputScheme(object):
                 'caption': " token ", 'value': "token_count",
                 'avg_caption': ' Avg.token '},
             {'caption': " PARAM ", 'value': "parameter_count"},
+            {'caption': " COMMENTS ", 'value': "comment_count"},
+            {'caption': " COMMENT WORDS ", 'value': "comment_words_count"},
             {'caption': " length ", 'value': "length"},
             ] + [
             {

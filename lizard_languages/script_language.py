@@ -11,6 +11,8 @@ class ScriptLanguageMixIn(object):
     def get_comment_from_token(token):
         if token.startswith("#"):
             return token[1:]
+        elif token.startswith('"""') or token.startswith("'''"):
+            return token[3:]
 
     @staticmethod
     def generate_common_tokens(source_code, addition):
