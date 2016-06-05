@@ -22,6 +22,7 @@ C/C++ header files or Java imports. It can deal with
 -  Ruby
 -  TTCN-3
 -  PHP
+-  Scala
 
 By default lizard will search for any source code that it knows an mix
 all the result together. This might not be what you want. You can use
