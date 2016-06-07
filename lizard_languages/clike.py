@@ -132,7 +132,10 @@ class CLikeNestingStackStates(CodeStateMachine):
 
     def _state_global(self, token):
         """Dual-purpose state for global and structure bodies."""
-        if token in ("struct", "class", "namespace"):
+        if token == "template":
+            self._state = self._template_declaration
+
+        elif token in ("struct", "class", "namespace"):
             self._state = self._read_namespace
 
         elif token == "{":
@@ -158,6 +161,11 @@ class CLikeNestingStackStates(CodeStateMachine):
         if token == "{":
             self.context.add_namespace(''.join(itertools.takewhile(
                 lambda x: x not in [":", "final"], saved)))
+
+    @CodeStateMachine.read_inside_brackets_then("<>", "_state_global")
+    def _template_declaration(self, _):
+        """Ignores template parameters."""
+        pass
 
 
 # pylint: disable=R0903
