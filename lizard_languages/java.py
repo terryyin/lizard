@@ -14,8 +14,8 @@ class JavaReader(CLikeReader):
     def __init__(self, context):
         super(JavaReader, self).__init__(context)
         self.parallel_states = [
-                CLikeNestingStackStates(context),
-                JavaStates(context)]
+                JavaStates(context),
+                CLikeNestingStackStates(context)]
 
 
 class JavaStates(CLikeStates):  # pylint: disable=R0903

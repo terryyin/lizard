@@ -389,13 +389,20 @@ class FileInfoBuilder(object):
             self.current_line - self.current_function.start_line + 1
         self.newline = count > 0
 
-    def start_new_function(self, name):
+    def try_new_function(self, name):
         self.current_function = FunctionInfo(
             self.with_namespace(name),
             self.fileinfo.filename,
             self.current_line)
         self.current_function.top_nesting_level = self.current_nesting_level
+
+    def confirm_new_function(self):
         self.start_new_function_nesting(self.current_function)
+        self.reset_complexity()
+
+    def start_new_function(self, name):
+        self.try_new_function(name)
+        self.confirm_new_function()
 
     def add_condition(self, inc=1):
         self.current_function.cyclomatic_complexity += inc

@@ -299,11 +299,13 @@ class Test_c_cpp_lizard(unittest.TestCase):
         self.assertEqual(0, len(result))
 
     def test_non_function_initializer_list(self):
+        result = get_cpp_function_list('''v={}''')
+        self.assertEqual(0, len(result))
+        result = get_cpp_function_list('''v = {};''')
+        self.assertEqual(0, len(result))
         result = get_cpp_function_list('''std::vector<int> v = {1, 2, 3};''')
         self.assertEqual(0, len(result))
         result = get_cpp_function_list('''v = {1, 2, 3};''')
-        self.assertEqual(0, len(result))
-        result = get_cpp_function_list('''v = {};''')
         self.assertEqual(0, len(result))
         result = get_cpp_function_list('''namespace n { v = {}; }''')
         self.assertEqual(0, len(result))
