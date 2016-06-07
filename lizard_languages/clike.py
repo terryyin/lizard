@@ -26,8 +26,8 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
     def __init__(self, context):
         super(CLikeReader, self).__init__(context)
         self.parallel_states = (
-                CLikeNestingStackStates(context),
                 CLikeStates(context),
+                CLikeNestingStackStates(context),
                 CppRValueRefStates(context))
 
     def preprocess(self, tokens):
@@ -171,15 +171,15 @@ class CLikeStates(CodeStateMachine):
         self.bracket_stack = []
         self._saved_tokens = []
 
-    def start_new_function(self, name):
-        self.context.start_new_function(name)
+    def try_new_function(self, name):
+        self.context.try_new_function(name)
         self._state = self._state_function
         if name == 'operator':
             self._state = self._state_operator
 
     def _state_global(self, token):
         if token[0].isalpha() or token[0] in '_~':
-            self.start_new_function(token)
+            self.try_new_function(token)
 
     def _state_function(self, token):
         if token == '(':
@@ -233,7 +233,7 @@ class CLikeStates(CodeStateMachine):
             self._state = self._state_throw
         elif token == '(':
             long_name = self.context.current_function.long_name
-            self.start_new_function(long_name)
+            self.try_new_function(long_name)
             self._state_function(token)
         elif token == '{':
             self.next(self._state_entering_imp, "{")
@@ -290,7 +290,7 @@ class CLikeStates(CodeStateMachine):
         self._state = self._state_initialization_list
 
     def _state_entering_imp(self, token):
-        self.context.reset_complexity()
+        self.context.confirm_new_function()
         self.next(self._state_imp, token)
 
     @CodeStateMachine.read_inside_brackets_then("{}")
