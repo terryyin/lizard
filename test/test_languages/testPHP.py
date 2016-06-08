@@ -43,6 +43,9 @@ class Test_tokenizing_PHP(unittest.TestCase):
     def test_doller_var(self):
         self.check_tokens(['$a'], '<?$a?>')
 
+    def test_code_block_without_closing(self):
+        self.check_tokens(['token'], '<?token')
+
 
 class Test_parser_for_PHP(unittest.TestCase):
 

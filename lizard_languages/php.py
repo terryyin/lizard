@@ -21,7 +21,9 @@ class PHPReader(CodeReader, CCppCommentsMixin):
         extra += r"|(?:\$\w+)"
         extra += r"|(?:\<{3}(?P<quote>\w+).*?(?P=quote))"
         current_pos = 0
-        code_block_pattern = re.compile(r"\<\?(?:php)?(.*?)\?\>", re.M | re.S)
+        code_block_pattern = re.compile(
+                r"\<\?(?:php)?(.*?)(?:(\?\>)|\Z)",
+                re.M | re.S)
         for match in code_block_pattern.finditer(source_code):
             if source_code[current_pos:match.start()]:
                 yield '"' + source_code[current_pos:match.start()] + '"'
