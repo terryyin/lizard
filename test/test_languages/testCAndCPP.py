@@ -159,6 +159,103 @@ class Test_c_cpp_lizard(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual("c::d::f", result[0].name)
 
+    def test_template_class(self):
+        result = get_cpp_function_list("template<typename T> class c {};")
+        self.assertEqual(0, len(result))
+        result = get_cpp_function_list("template<class T> class c {};")
+        self.assertEqual(0, len(result))
+        result = get_cpp_function_list("template<typename T> class c {"
+                                       "void f(T t) {}};")
+        self.assertEqual(1, len(result))
+        self.assertEqual("c::f", result[0].name)
+        result = get_cpp_function_list("template<class T> class c {"
+                                       "void f(T t) {}};")
+        self.assertEqual(1, len(result))
+        self.assertEqual("c::f", result[0].name)
+        result = get_cpp_function_list("template<class T, typename S>"
+                                       "class c {void f(T t) {}};")
+        self.assertEqual(1, len(result))
+        self.assertEqual("c::f", result[0].name)
+        result = get_cpp_function_list("namespace ns { template<class T>"
+                                       "class c {void f(T t) {}}; }")
+        self.assertEqual(1, len(result))
+        self.assertEqual("ns::c::f", result[0].name)
+
+    def test_template_class_full_specialization(self):
+        result = get_cpp_function_list("template<> class c<double> {};")
+        self.assertEqual(0, len(result))
+        result = get_cpp_function_list("template<> class c<double> {"
+                                       "void f() {}};")
+        self.assertEqual(1, len(result))
+        self.assertEqual("c<double>::f", result[0].name)
+        result = get_cpp_function_list("template<>"
+                                       "class c<double, int> {void f() {}};")
+        self.assertEqual(1, len(result))
+        self.assertEqual("c<double,int>::f", result[0].name)
+        result = get_cpp_function_list("namespace ns { template<>"
+                                       "class c<double> {void f() {}}; }")
+        self.assertEqual(1, len(result))
+        self.assertEqual("ns::c<double>::f", result[0].name)
+
+    def test_template_class_partial_specialization(self):
+        result = get_cpp_function_list(
+                "template<typename T> class c<int,T> {};")
+        self.assertEqual(0, len(result))
+        result = get_cpp_function_list("template<class T> class c<int,T> {};")
+        self.assertEqual(0, len(result))
+        result = get_cpp_function_list("template<typename T> class c<int,T> {"
+                                       "void f(T t) {}};")
+        self.assertEqual(1, len(result))
+        self.assertEqual("c<int,T>::f", result[0].name)
+        result = get_cpp_function_list("template<class T> class c<int,T> {"
+                                       "void f(T t) {}};")
+        self.assertEqual(1, len(result))
+        self.assertEqual("c<int,T>::f", result[0].name)
+        result = get_cpp_function_list("template<class T, typename S>"
+                                       "class c<int,T,S> {void f(T t) {}};")
+        self.assertEqual(1, len(result))
+        self.assertEqual("c<int,T,S>::f", result[0].name)
+        result = get_cpp_function_list("namespace ns { template<class T>"
+                                       "class c<int,T> {void f(T t) {}}; }")
+        self.assertEqual(1, len(result))
+        self.assertEqual("ns::c<int,T>::f", result[0].name)
+
+    def test_template_function(self):
+        result = get_cpp_function_list("template<typename T> void f(T t) {}")
+        self.assertEqual(1, len(result))
+        self.assertEqual("f", result[0].name)
+        result = get_cpp_function_list("template<class T> void f(T t) {}")
+        self.assertEqual(1, len(result))
+        self.assertEqual("f", result[0].name)
+        result = get_cpp_function_list("namespace ns {"
+                                       "template<class T> void f(T t) {}}")
+        self.assertEqual(1, len(result))
+        self.assertEqual("ns::f", result[0].name)
+
+    def test_template_function_specialization(self):
+        result = get_cpp_function_list("template<> void f<double>() {}")
+        self.assertEqual(1, len(result))
+        self.assertEqual("f<double>", result[0].name)
+        result = get_cpp_function_list("namespace ns {"
+                                       "template<> void f<double>() {}}")
+        self.assertEqual(1, len(result))
+        self.assertEqual("ns::f<double>", result[0].name)
+
+    def test_nested_template_function(self):
+        result = get_cpp_function_list("template<typename T> class c { "
+                                       "template<typename S> void f() {} };")
+        self.assertEqual(1, len(result))
+        self.assertEqual("c::f", result[0].name)
+        result = get_cpp_function_list("template<class T> class c { "
+                                       "template<class S> void f() {} };")
+        self.assertEqual(1, len(result))
+        self.assertEqual("c::f", result[0].name)
+        result = get_cpp_function_list("namespace ns { "
+                                       "template<class T> class c { "
+                                       "template<class S> void f() {} }; }")
+        self.assertEqual(1, len(result))
+        self.assertEqual("ns::c::f", result[0].name)
+
     def test_1(self):
         result = get_cpp_function_list("class c {{}}")
         self.assertEqual(0, len(result))
