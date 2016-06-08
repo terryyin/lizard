@@ -71,8 +71,7 @@ def _extension_arg(parser):
                         help='''User the extensions. The available extensions
                         are: -Ecpre: it will ignore code in the #else branch.
                         -Ewordcount: count word frequencies and generate tag
-                        cloud. -Efans: count the fan in and fan out of
-                        functions. -Eoutside: include the global code as one
+                        cloud. -Eoutside: include the global code as one
                         function.  -EIgnoreAssert: to ignore all code in
                         assert. -ENS: count nested control structures.''',
                         action="append",
