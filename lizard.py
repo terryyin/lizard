@@ -905,7 +905,7 @@ def lizard_main(argv):
         options.working_threads,
         options.extensions,
         options.languages,
-        schema.any_regression)
+        regression=schema.any_regression())
     warning_count = printer(result, options, schema)
     if options.number < warning_count:
         sys.exit(1)
