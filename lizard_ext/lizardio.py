@@ -58,11 +58,15 @@ class LizardExtension(ExtensionBase):
         self.context.current_function.tokens.append(token)
 
     def reduce(self, fileinfo):
-        new_funcs = {f.unqualified_name: f for f in fileinfo.function_list}
-        self.all_methods.update(new_funcs)
-        self._add_to_fan_outs(new_funcs.keys())
-        self._add_to_general_fan_out()
-        self._add_to_fan_ins(fileinfo.function_list)
+        try:
+            new_funcs = {f.unqualified_name: f for f in
+                         fileinfo.function_list}
+            self.all_methods.update(new_funcs)
+            self._add_to_fan_outs(new_funcs.keys())
+            self._add_to_general_fan_out()
+            self._add_to_fan_ins(fileinfo.function_list)
+        except (AttributeError, TypeError, ValueError):
+            pass
 
     def _add_to_fan_outs(self, keys):
         for other_func in self.all_methods.values():
@@ -78,7 +82,7 @@ class LizardExtension(ExtensionBase):
             bracket_indexes = get_all_indices('(', other_func.tokens)
             for idx in bracket_indexes[1:]:
                 # Suggestion ?
-                if not other_func.tokens[idx - 1] in (structures and
+                if other_func.tokens[idx - 1] not in (structures |
                                                       punctuations):
                     other_func.general_fan_out += 1
 

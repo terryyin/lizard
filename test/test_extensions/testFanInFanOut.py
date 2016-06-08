@@ -1,5 +1,5 @@
 import unittest
-from lizard import analyze_file, FileAnalyzer, get_extensions
+from lizard import FileAnalyzer, get_extensions
 from lizard_ext.lizardio import LizardExtension as FanInOut
 
 
