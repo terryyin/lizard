@@ -390,3 +390,25 @@ class TestPythonNestedStructures(unittest.TestCase):
                     print(j)
         """)
         self.assertEqual(2, result[0].max_nested_structures)
+
+    def test_if_else_expression(self):
+        """Python version of C ternary operator."""
+        result = process_python("""
+        def foo(bar):
+            return bar if bar else []
+        """)
+        self.assertEqual(0, result[0].max_nested_structures)
+        result = process_python("""
+        def foo(bar):
+            bar = bar if bar else []
+            if len(bar) == 42:
+                return bar
+        """)
+        self.assertEqual(1, result[0].max_nested_structures)
+        result = process_python("""
+        def foo(bar):
+            bar = bar if bar[:] else []
+            if len(bar) == 42:
+                return bar
+        """)
+        self.assertEqual(1, result[0].max_nested_structures)
