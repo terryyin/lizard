@@ -412,3 +412,33 @@ class TestPythonNestedStructures(unittest.TestCase):
                 return bar
         """)
         self.assertEqual(1, result[0].max_nested_structures)
+
+    def test_list_comprehension(self):
+        result = process_python("""
+        def foo(bar):
+            return [x for x in bar if x == 42]
+        """)
+        self.assertEqual(0, result[0].max_nested_structures)
+        result = process_python("""
+        def foo(bar):
+            if not bar:
+                return None
+            return [x for x in bar if x == 42]
+        """)
+        self.assertEqual(1, result[0].max_nested_structures)
+        result = process_python("""
+        def foo(bar):
+            baz = [x for x in bar if x == 42]
+            if baz:
+                return baz
+            return bar
+        """)
+        self.assertEqual(1, result[0].max_nested_structures)
+        result = process_python("""
+        def foo(bar):
+            baz = [x for x in bar[:] if x == 42]
+            if baz:
+                return baz
+            return bar
+        """)
+        self.assertEqual(1, result[0].max_nested_structures)
