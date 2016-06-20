@@ -47,24 +47,24 @@ class Test_analyze_files(unittest.TestCase):
         self.assertSetEqual(set(["f1", "f2"]), set(x for x in r))
 
 
-@patch('lizard.auto_open', create=True)
+@patch('lizard.auto_read', create=True)
 class Test_FileAnalyzer(unittest.TestCase):
     
     def setUp(self):
         self.analyzer = analyze_file
         
     def test_analyze_c_file(self, mock_open):
-        file_handle = mock_open.return_value.read.return_value = "int foo(){haha();\n}"
+        file_handle = mock_open.return_value = "int foo(){haha();\n}"
         r = map_files_to_analyzer(["f1.c"], self.analyzer, 1)
         self.assertEqual(1, len([x for x in r]))
         
     def test_analyze_c_file_with_multiple_thread(self, mock_open):
-        file_handle = mock_open.return_value.read.return_value = "int foo(){haha();\n}"
+        file_handle = mock_open.return_value = "int foo(){haha();\n}"
         r = map_files_to_analyzer(["f1.c"], self.analyzer, 2)
         self.assertEqual(1, len([x for x in r]))
     
     def test_fileInfomation(self, mock_open):
-        mock_open.return_value.read.return_value = "int foo(){haha();\n}"
+        mock_open.return_value = "int foo(){haha();\n}"
         r = map_files_to_analyzer(["f1.c"], self.analyzer, 1)
         fileInfo = list(r)[0]
         self.assertEqual(2, fileInfo.nloc)

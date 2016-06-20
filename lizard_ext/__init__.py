@@ -3,7 +3,7 @@
 from __future__ import print_function
 from .htmloutput import html_output
 from .xmloutput import xml_output
-from .auto_open import auto_open
+from .auto_open import auto_open, auto_read
 
 
 def print_xml(results, options, _):

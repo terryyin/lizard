@@ -39,11 +39,11 @@ except ImportError:
 try:
     from lizard_ext import print_xml
     from lizard_ext import html_output
-    from lizard_ext import auto_open
+    from lizard_ext import auto_open, auto_read
 except ImportError:
     pass
 
-VERSION = "1.12.2"
+VERSION = "1.12.4"
 
 DEFAULT_CCN_THRESHOLD, DEFAULT_WHITELIST, \
     DEFAULT_MAX_FUNC_LENGTH = 15, "whitelizard.txt", 1000
@@ -485,7 +485,7 @@ class FileAnalyzer(object):  # pylint: disable=R0903
     def __call__(self, filename):
         try:
             return self.analyze_source_code(
-                filename, auto_open(filename, 'rU').read())
+                filename, auto_read(filename))
         except UnicodeDecodeError:
             sys.stderr.write("Error: doesn't support none utf encoding '%s'\n"
                              % filename)

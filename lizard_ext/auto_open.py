@@ -24,3 +24,10 @@ def auto_open(*args, **kwargs):
             kwargs["encoding"] = 'utf-8-sig'
             return io.open(*args, **kwargs)
     return open(*args, **kwargs)
+
+
+def auto_read(filename):
+    try:
+        return auto_open(filename, 'rU').read()
+    except UnicodeDecodeError:
+        return open(filename, 'rb').read().decode('utf8', 'ignore')

@@ -7,7 +7,7 @@ import sys
 
 
 @patch('lizard.md5_hash_file')
-@patch('lizard.auto_open', create=True)
+@patch('lizard.auto_read', create=True)
 @patch.object(os, 'walk')
 @patch.object(lizard, 'print_result')
 class TestApplication(unittest.TestCase):
@@ -29,7 +29,7 @@ class TestApplication(unittest.TestCase):
             self.assertEqual('foo', fileInfos[0].function_list[0].name)
             return 0
         os_walk.return_value = [('.', [], ['a.cpp'])]
-        mock_open.return_value.read.return_value = "void foo(){}"
+        mock_open.return_value = "void foo(){}"
         print_result.side_effect = check_result
         lizard_main(['lizard'])
 
@@ -55,13 +55,13 @@ class IntegrationTests(unittest.TestCase):
         '''
         self.returned_warning_count = 0
 
-    @patch('lizard.auto_open', create=True)
+    @patch('lizard.auto_read', create=True)
     @patch.object(lizard, 'print_result')
     def run_with_mocks(self, argv, src, print_result, mock_open):
         def store_result(result, options, scheme):
             self.fileInfos = list(result)
             return self.returned_warning_count
-        mock_open.return_value.read.return_value = src
+        mock_open.return_value = src
         print_result.side_effect = store_result
         lizard_main(argv)
         return self.fileInfos

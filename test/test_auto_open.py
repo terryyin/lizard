@@ -4,7 +4,7 @@ import codecs
 import os
 from mock import patch, Mock
 from tempfile import NamedTemporaryFile
-from lizard_ext import auto_open
+from lizard_ext import auto_open, auto_read
 
 
 class TestAutoOpen(unittest.TestCase):
@@ -34,3 +34,11 @@ class TestAutoOpen(unittest.TestCase):
     def test_utf_8_with_bom(self):
         result = self.write_and_read("utf-8-sig", u"天下太平")
         self.assertEqual(u"天下太平", result)
+
+
+class TestAutoRead(unittest.TestCase):
+
+    def test_at(self):
+        result = auto_read(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data/utf.c'))
+        self.assertIn("after", result)
+
