@@ -119,6 +119,11 @@ def arg_parser(prog=None):
                         type=int,
                         dest="CCN",
                         default=DEFAULT_CCN_THRESHOLD)
+    parser.add_argument("-f", "--input_file",
+                        help='''get a list of filenames from the given file
+                        ''',
+                        type=str,
+                        dest="input_file")
     parser.add_argument("-L", "--length",
                         help='''Threshold for maximum function length
                         warning. The default value is %d.
@@ -899,6 +904,8 @@ def lizard_main(argv):
     printer = options.printer or print_result
     schema = OutputScheme(options.extensions)
     schema.patch_for_extensions()
+    if options.input_file:
+        options.paths = auto_read(options.input_file).splitlines()
     result = analyze(
         options.paths,
         options.exclude,
