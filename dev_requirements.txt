@@ -1,5 +1,6 @@
 mock
 nose
 pep8
+pycodestyle
 wheel
 pylint
