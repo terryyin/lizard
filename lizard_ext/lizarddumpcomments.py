@@ -2,9 +2,6 @@
 This extension dumps all the comments in one file
 """
 
-from lizard import FunctionInfo
-from lizard_ext.lizardnd import patch_append_method
-
 
 DEFAULT_NS_THRESHOLD = 3
 

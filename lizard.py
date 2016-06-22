@@ -620,7 +620,7 @@ class OutputScheme(object):
         return any(item.get('regression') for item in self.items)
 
     def any_silent(self):
-        return any(hasattr(ext, 'silent_all_others') for ext in self.extensions)
+        return any(hasattr(ex, 'silent_all_others') for ex in self.extensions)
 
     def value_columns(self):
         return [item['value'] for item in self.items]
@@ -764,8 +764,11 @@ def print_result(result, option, scheme):
     return warning_count
 
 
-def silent_printer(result, option, scheme):
-    for r in result:
+def silent_printer(result, *_):
+    '''
+    just to exhaust the result, no output.
+    '''
+    for _ in result:
         pass
     return 0
 
