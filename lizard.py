@@ -619,6 +619,9 @@ class OutputScheme(object):
     def any_regression(self):
         return any(item.get('regression') for item in self.items)
 
+    def any_silent(self):
+        return any(hasattr(ext, 'silent_all_others') for ext in self.extensions)
+
     def value_columns(self):
         return [item['value'] for item in self.items]
 
@@ -759,6 +762,12 @@ def print_result(result, option, scheme):
         if hasattr(extension, 'print_result'):
             extension.print_result()
     return warning_count
+
+
+def silent_printer(result, option, scheme):
+    for r in result:
+        pass
+    return 0
 
 
 def print_clang_style_warning(code_infos, option, scheme):
@@ -903,6 +912,8 @@ def lizard_main(argv):
     options = parse_args(argv)
     printer = options.printer or print_result
     schema = OutputScheme(options.extensions)
+    if schema.any_silent():
+        printer = silent_printer
     schema.patch_for_extensions()
     if options.input_file:
         options.paths = auto_read(options.input_file).splitlines()
