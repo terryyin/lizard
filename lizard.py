@@ -71,8 +71,7 @@ def _extension_arg(parser):
                         help='''User the extensions. The available extensions
                         are: -Ecpre: it will ignore code in the #else branch.
                         -Ewordcount: count word frequencies and generate tag
-                        cloud. -Efans: count the fan in and fan out of
-                        functions. -Eoutside: include the global code as one
+                        cloud. -Eoutside: include the global code as one
                         function.  -EIgnoreAssert: to ignore all code in
                         assert. -ENS: count nested control structures.''',
                         action="append",
@@ -253,6 +252,7 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
         self.length = 0
         self.fan_in = 0
         self.fan_out = 0
+        self.general_fan_out = 0
 
     @property
     def name_in_space(self):

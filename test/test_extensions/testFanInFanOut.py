@@ -1,5 +1,5 @@
 import unittest
-from lizard import analyze_file, FileAnalyzer, get_extensions
+from lizard import FileAnalyzer, get_extensions
 from lizard_ext.lizardio import LizardExtension as FanInOut
 
 
@@ -78,7 +78,7 @@ class TestFanIn(unittest.TestCase):
                 int fun(){ }
                 int bar(){ fun(); fun()}
                 """)
-        self.assertEqual(1, result)
+        self.assertEqual(2, result)
 
 
 class TestCombinedResult(unittest.TestCase):
@@ -96,3 +96,50 @@ class TestCombinedResult(unittest.TestCase):
                 """ int bar(){ } """
                 )
         self.assertEqual(1, result.fan_out)
+
+
+class TestGeneralFanOut(unittest.TestCase):
+
+    def general_fan_out(self, code):
+        return fanio(code).general_fan_out
+
+    def test_0_general_fan_out(self):
+        result = self.general_fan_out(""" int fun(){ } """)
+        self.assertEqual(0, result)
+
+    def test_ref_to_something_not_defined(self):
+        result = self.general_fan_out(""" int foo(){ bar();} """)
+        self.assertEqual(1, result)
+
+    def test_1_general_fan_out_with_space(self):
+        result = self.general_fan_out("""
+                int foo(){ bar   ();}
+                int bar(){}
+                """)
+        self.assertEqual(1, result)
+
+    def test_1_general_fan_out_multiple_punctuations(self):
+        result = self.general_fan_out("""
+                int foo(){ bar   ((((()));}
+                int bar(){}
+                """)
+        self.assertEqual(1, result)
+
+    def test_1_general_fan_out_with_2_calls_of_the_same_function(self):
+        result = self.general_fan_out("""
+                int foo(){ bar();bar();}
+                int bar(){}
+                """)
+        self.assertEqual(2, result)
+
+    def test_1_general_fan_out_with_recursive_call(self):
+        result = self.general_fan_out("""
+                void foo(){ foo();}
+                """)
+        self.assertEqual(1, result)
+
+    def test_1_general_fan_out_with_namespace(self):
+        result = self.general_fan_out("""
+                void ns::foo(){ foo();}
+                """)
+        self.assertEqual(1, result)
