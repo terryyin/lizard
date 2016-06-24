@@ -155,7 +155,7 @@ class CLikeNestingStackStates(CodeStateMachine):
             else:
                 self._state = self.__declare_structure
 
-    @CodeStateMachine.read_until_then('({;')
+    @CodeStateMachine.read_until_then(')({;')
     def _read_namespace(self, token, saved):
         self._state = self._state_global
         if token == "{":

@@ -419,6 +419,10 @@ class Test_c_cpp_lizard(unittest.TestCase):
         result = get_cpp_function_list('''class n { int v{0}; }''')
         self.assertEqual(0, len(result))
 
+    def test_struct_in_param(self):
+        result = get_cpp_function_list('''int fun(struct a){}''')
+        self.assertEqual(1, len(result))
+
 
 class Test_Preprocessing(unittest.TestCase):
 
