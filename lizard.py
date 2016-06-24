@@ -729,6 +729,10 @@ def print_and_save_modules(all_fileinfos, extensions, scheme):
                     print(scheme.function_info(fun))
                 except UnicodeEncodeError:
                     print("Found ill-formatted unicode function name.")
+    for extension in extensions:
+        if hasattr(extension, 'reduce_again'):
+            for module_info in saved_fileinfos:
+                extension.reduce_again(module_info)
     print("%d file analyzed." % (len(saved_fileinfos)))
     print("==============================================================")
     print("NLOC   " + scheme.average_captions() + " function_cnt    file")
