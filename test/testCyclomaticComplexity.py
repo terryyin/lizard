@@ -79,3 +79,13 @@ class TestCppCyclomaticComplexity(unittest.TestCase):
         """)
         self.assertEqual(4, result[0].cyclomatic_complexity)
 
+    def test_ref_qualifiers(self):
+        """C++11 rvalue ref qualifiers look like AND operator."""
+        result = get_cpp_function_list(
+                "struct A { void foo() && { return bar() && baz(); } };")
+        self.assertEqual(1, len(result))
+        self.assertEqual(2, result[0].cyclomatic_complexity)
+        result = get_cpp_function_list(
+                "struct A { void foo() const && { return bar() && baz(); } };")
+        self.assertEqual(1, len(result))
+        self.assertEqual(2, result[0].cyclomatic_complexity)
