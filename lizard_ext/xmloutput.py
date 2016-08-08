@@ -90,8 +90,8 @@ def _create_file_measure(doc, result):
     avgCCN_summary = [("Func_AVG#CCN",file_total_ccn/file_total_funcs),
                     ("Func_AVG#NCSS",file_total_ncss/file_total_funcs)
         ]
-     for AVGkey, AVGval in avgCCN_summary:
-        measure.appendChild(_create_labeled_value_item(doc, 'average', AVGkey, AVGval))
+     for key, val in avgCCN_summary:
+        measure.appendChild(_create_labeled_value_item(doc, 'average', key, val))
     return measure
 
 
