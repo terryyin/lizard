@@ -87,9 +87,8 @@ def _create_file_measure(doc, result):
     for key, val in summary:
         measure.appendChild(_create_labeled_value_item(doc, 'sum', key, val))
         
-    summary = [("Func_AVG#CCN",file_total_ccn/file_total_funcs),
-                    ("Func_AVG#NCSS",file_total_ncss/file_total_funcs)
-        ]
+       summary = [("NCSS", file_total_ncss),
+               ("CCN", file_total_ccn)]
      for key, val in summary:
         measure.appendChild(_create_labeled_value_item(doc, 'average', key, val))
     return measure
