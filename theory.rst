@@ -94,3 +94,44 @@ The idea is taken from the Linux kernel coding style:
 
     The answer to that is that if you need more than 3 levels of indentation,
     you're screwed anyway, and should fix your program.
+
+
+IgnoreAssert: Ignoring the CCN within Assertions
+================================================
+
+Consider a simple use case for assertions in C++ code:
+
+.. code-block:: cpp
+
+    assert(expression && "More description...");
+
+This line adds ``1 + CCN(expression)``
+if the assertion is counted as a part of a function.
+
+In defensive and design-by-contract programming,
+assertions are used
+to check invariants, pre-, post-conditions,
+to explicitly state assumptions and contract,
+and to defensively catch programmer errors.
+Moreover, assertions with side-effects is a practice frowned upon,
+and thus they are not expected to be a part of the flow of a function.
+The function should stay and behave the same
+if all the assertions are removed (in release mode, for example).
+
+Ignoring assertions calculates the true, inherent complexity of a function.
+However, design-by-contract codes may require death tests for assertions as well.
+The CCN of assertions with messages,
+which is equal to the delta of not ignoring the assertions,
+is a good proxy for the number of death tests.
+
+.. note::
+    Even though it is possible to put a code with an arbitrary complexity within assertions,
+    Lizard only discounts the CCN added by simple operators.
+
+.. note:: The extension IgnoreAssert is only implemented for C-like languages.
+
+.. note:: Some complexity analysis tools (ex. McCabe)
+          may have an option to add 1 CCN per ``assert`` statement,
+          treating ``assert`` as other conditional statements.
+          This use case considers ``assert`` statements as an error handling mechanism
+          mixed with or instead of 'proper' exceptions.
