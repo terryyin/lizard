@@ -44,7 +44,7 @@ class LizardExtension(ExtensionBase):
             "regression": True},
         "general_fan_out": {
             "caption": " general_fan_out ",
-            "average_caption": " general_fan_out ",
+            "average_caption": " avg_general_fan_out ",
             "regression": True}
     }
 
