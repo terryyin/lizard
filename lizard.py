@@ -856,7 +856,7 @@ def get_all_source_files(paths, exclude_patterns, lans):
 
 def parse_args(argv):
     def extend_parser(parser_to_extend):
-        from argparse import ArgumentParser, Action, ArgumentError
+        from argparse import ArgumentParser
         parser = ArgumentParser(add_help=False)
         _extension_arg(parser)
         opt, _ = parser.parse_known_args(args=argv[1:])
