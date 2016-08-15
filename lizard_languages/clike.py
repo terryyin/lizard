@@ -239,6 +239,8 @@ class CLikeStates(CodeStateMachine):
             self.context.add_to_long_function_name(" " + token)
         elif token == 'throw':
             self._state = self._state_throw
+        elif token == '->':
+            self._state = self._state_trailing_return
         elif token == '(':
             long_name = self.context.current_function.long_name
             self.try_new_function(long_name)
@@ -257,6 +259,11 @@ class CLikeStates(CodeStateMachine):
     def _state_throw(self, token):
         if token == ')':
             self._state = self._state_dec_to_imp
+
+    @CodeStateMachine.read_until_then(';{')
+    def _state_trailing_return(self, token, _):
+        self._state = self._state_dec_to_imp
+        self._state(token)
 
     def _state_old_c_params(self, token):
         self._saved_tokens.append(token)
