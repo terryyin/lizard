@@ -235,12 +235,14 @@ class CLikeStates(CodeStateMachine):
         self.context.add_to_long_function_name(token)
 
     def _state_dec_to_imp(self, token):
-        if token in ('const', 'noexcept', '&', '&&'):
+        if token in ('const', '&', '&&'):
             self.context.add_to_long_function_name(" " + token)
         elif token == 'throw':
             self._state = self._state_throw
         elif token == '->':
             self._state = self._state_trailing_return
+        elif token == 'noexcept':
+            self._state = self._state_noexcept
         elif token == '(':
             long_name = self.context.current_function.long_name
             self.try_new_function(long_name)
@@ -256,9 +258,16 @@ class CLikeStates(CodeStateMachine):
             self._state = self._state_old_c_params
             self._saved_tokens = [token]
 
-    def _state_throw(self, token):
-        if token == ')':
+    @CodeStateMachine.read_inside_brackets_then("()")
+    def _state_throw(self, _):
+        self._state = self._state_dec_to_imp
+
+    def _state_noexcept(self, token):
+        if token == '(':
+            self._state = self._state_throw
+        else:
             self._state = self._state_dec_to_imp
+        self._state(token)
 
     @CodeStateMachine.read_until_then(';{')
     def _state_trailing_return(self, token, _):

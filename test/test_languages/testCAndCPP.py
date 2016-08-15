@@ -127,11 +127,25 @@ class Test_c_cpp_lizard(unittest.TestCase):
         self.assertEqual("abc::fun", result[0].name)
         self.assertEqual("abc::fun() const", result[0].long_name)
 
+    def test_one_function_with_throw(self):
+        result = get_cpp_function_list("""int fun() throw() {}""")
+        self.assertEqual(1, len(result))
+        self.assertEqual('fun', result[0].name)
+        result = get_cpp_function_list("""int fun() throw(Exception) {}""")
+        self.assertEqual(1, len(result))
+        self.assertEqual('fun', result[0].name)
+
     def test_one_function_with_noexcept(self):
         result = get_cpp_function_list("int abc::fun()noexcept{}")
         self.assertEqual(1, len(result))
         self.assertEqual("abc::fun", result[0].name)
-        self.assertEqual("abc::fun() noexcept", result[0].long_name)
+        result = get_cpp_function_list("int fun() noexcept(true) {}")
+        self.assertEqual(1, len(result))
+        self.assertEqual('fun', result[0].name)
+        result = get_cpp_function_list(
+                "int fun() noexcept(noexcept(foo()) && noexcept(Bar())) {}")
+        self.assertEqual(1, len(result))
+        self.assertEqual('fun', result[0].name)
 
     def test_one_function_in_class(self):
         result = get_cpp_function_list("class c {~c(){}}; int d(){}")
