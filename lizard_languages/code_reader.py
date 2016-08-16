@@ -95,7 +95,7 @@ class CodeReader(object):
             # DO NOT put any sub groups in the regex. Good for performance
             _until_end = r"(?:\\\n|[^\n])*"
             combined_symbols = ["||", "&&", "===", "!==", "==", "!=", "<=",
-                                ">=",
+                                ">=", "->",
                                 "++", "--", '+=', '-=',
                                 '*=', '/=', '^=', '&=', '|=', "..."]
             token_pattern = re.compile(
