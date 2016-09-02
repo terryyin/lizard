@@ -5,7 +5,7 @@ To install lizard:
 '''
 
 import lizard
-from setuptools import setup, find_packages
+from setuptools import setup
 import os
 
 def install(appname):
