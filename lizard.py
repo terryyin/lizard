@@ -688,6 +688,13 @@ def print_warnings(option, scheme, warnings):
     return warning_count, warning_nloc
 
 
+def print_no_warnings(option):
+    warn_str = "No thresholds exceeded ({0})".format(
+        ' or '.join("{0} > {1}".format(
+            k, val) for k, val in option.thresholds.items()))
+    print("\n" + "=" * len(warn_str) + "\n" + warn_str)
+
+
 def print_total(warning_count, warning_nloc, saved_result, scheme):
     file_infos = list(file_info for file_info in saved_result if file_info)
     all_fun = list(itertools.chain(*(file_info.function_list
@@ -759,8 +766,14 @@ def get_warnings(code_infos, option):
 
 def print_result(result, option, scheme):
     result = print_and_save_modules(result, option.extensions, scheme)
+    warning_count = 0
+    warning_nloc = 0
     warnings = get_warnings(result, option)
-    warning_count, warning_nloc = print_warnings(option, scheme, warnings)
+    if list(warnings):
+        warnings = get_warnings(result, option)
+        warning_count, warning_nloc = print_warnings(option, scheme, warnings)
+    else:
+        print_no_warnings(option)
     print_total(warning_count, warning_nloc, result, scheme)
     for extension in option.extensions:
         if hasattr(extension, 'print_result'):
