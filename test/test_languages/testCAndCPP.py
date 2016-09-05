@@ -423,6 +423,7 @@ class Test_c_cpp_lizard(unittest.TestCase):
         result = get_cpp_function_list('''int fun(struct a){}''')
         self.assertEqual(1, len(result))
 
+
     def test_trailing_return_type(self):
         """C++11 trailing return type for functions."""
         result = get_cpp_function_list("auto foo() -> void {}")
@@ -431,6 +432,21 @@ class Test_c_cpp_lizard(unittest.TestCase):
         result = get_cpp_function_list("auto foo(int a) -> decltype(a) {}")
         self.assertEqual(1, len(result))
         self.assertEqual("foo", result[0].name)
+
+    def test_ref_qualifiers(self):
+        """C++11 ref qualifiers for member functions."""
+        result = get_cpp_function_list("struct A { void foo() & {} };")
+        self.assertEqual(1, len(result))
+        self.assertEqual("A::foo", result[0].name)
+        result = get_cpp_function_list("struct A { void foo() const & {} };")
+        self.assertEqual(1, len(result))
+        self.assertEqual("A::foo", result[0].name)
+        result = get_cpp_function_list("struct A { void foo() && {} };")
+        self.assertEqual(1, len(result))
+        self.assertEqual("A::foo", result[0].name)
+        result = get_cpp_function_list("struct A { void foo() const && {} };")
+        self.assertEqual(1, len(result))
+        self.assertEqual("A::foo", result[0].name)
 
 
 class Test_Preprocessing(unittest.TestCase):

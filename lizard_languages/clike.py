@@ -235,7 +235,7 @@ class CLikeStates(CodeStateMachine):
         self.context.add_to_long_function_name(token)
 
     def _state_dec_to_imp(self, token):
-        if token == 'const' or token == 'noexcept':
+        if token in ('const', 'noexcept', '&', '&&'):
             self.context.add_to_long_function_name(" " + token)
         elif token == 'throw':
             self._state = self._state_throw
