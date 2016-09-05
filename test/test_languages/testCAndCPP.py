@@ -483,3 +483,25 @@ class Test_Big(unittest.TestCase):
         code = "foo<y () >> 5> r;"
         result = get_cpp_function_list(code)
         self.assertEqual(0, len(result))
+
+
+class Test_Dialects(unittest.TestCase):
+
+    def test_cuda_kernel_launch(self):
+        """Special triple < and > for Nvidia CUDA C/C++ code."""
+        result = get_cpp_function_list('''void foo() {
+                kernel <<< gridDim, blockDim, 0 >>> (d_data, height, width);
+                }''')
+        self.assertEqual(1, len(result))
+        self.assertEqual("foo", result[0].name)
+        self.assertEqual(1, result[0].cyclomatic_complexity)
+        result = get_cpp_function_list('''void foo() {
+                kernel <<< gridDim, blockDim, (bar ? 0 : 1) >>> (x, y, z);
+                }''')
+        self.assertEqual(1, len(result))
+        self.assertEqual(2, result[0].cyclomatic_complexity)
+        result = get_cpp_function_list('''void foo() {
+                kernel <<< gridDim, blockDim, 0 >>> (x, y, (bar ? w : z));
+                }''')
+        self.assertEqual(1, len(result))
+        self.assertEqual(2, result[0].cyclomatic_complexity)
