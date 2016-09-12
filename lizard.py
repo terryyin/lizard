@@ -674,17 +674,21 @@ class OutputScheme(object):
 
 
 def print_warnings(option, scheme, warnings):
-    warning_count = 0
+    warning_count = None
     warning_nloc = 0
     warn_str = "!!!! Warnings ({0}) !!!!".format(
         ' or '.join("{0} > {1}".format(
             k, val) for k, val in option.thresholds.items()))
-    print("\n" + "=" * len(warn_str) + "\n" + warn_str)
-    print(scheme.function_info_head())
-    for warning in warnings:
-        warning_count += 1
+    for warning_count, warning in enumerate(warnings):
+        if warning_count == 0:
+            print("\n" + "=" * len(warn_str) + "\n" + warn_str)
+            print(scheme.function_info_head())
         warning_nloc += warning.nloc
         print(scheme.function_info(warning))
+    else:
+        if warning_count is None:
+            print_no_warnings(option)
+            warning_count = 0
     return warning_count, warning_nloc
 
 
@@ -766,14 +770,8 @@ def get_warnings(code_infos, option):
 
 def print_result(result, option, scheme):
     result = print_and_save_modules(result, option.extensions, scheme)
-    warning_count = 0
-    warning_nloc = 0
     warnings = get_warnings(result, option)
-    if list(warnings):
-        warnings = get_warnings(result, option)
-        warning_count, warning_nloc = print_warnings(option, scheme, warnings)
-    else:
-        print_no_warnings(option)
+    warning_count, warning_nloc = print_warnings(option, scheme, warnings)
     print_total(warning_count, warning_nloc, result, scheme)
     for extension in option.extensions:
         if hasattr(extension, 'print_result'):
