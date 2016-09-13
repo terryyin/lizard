@@ -679,7 +679,7 @@ def print_warnings(option, scheme, warnings):
     warn_str = "!!!! Warnings ({0}) !!!!".format(
         ' or '.join("{0} > {1}".format(
             k, val) for k, val in option.thresholds.items()))
-    for _, warning in enumerate(warnings):
+    for warning in warnings:
         if warning_count == 0:
             print("\n" + "=" * len(warn_str) + "\n" + warn_str)
             print(scheme.function_info_head())
