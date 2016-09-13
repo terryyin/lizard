@@ -674,21 +674,22 @@ class OutputScheme(object):
 
 
 def print_warnings(option, scheme, warnings):
-    warning_count = None
+    warning_count = 0
     warning_nloc = 0
     warn_str = "!!!! Warnings ({0}) !!!!".format(
         ' or '.join("{0} > {1}".format(
             k, val) for k, val in option.thresholds.items()))
-    for warning_count, warning in enumerate(warnings):
+    for _, warning in enumerate(warnings):
         if warning_count == 0:
             print("\n" + "=" * len(warn_str) + "\n" + warn_str)
             print(scheme.function_info_head())
+        warning_count += 1
         warning_nloc += warning.nloc
         print(scheme.function_info(warning))
     else:
-        if warning_count is None:
+        if warning_count == 0:
             print_no_warnings(option)
-            warning_count = 0
+            return 0, 0
     return warning_count, warning_nloc
 
 
