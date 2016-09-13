@@ -686,9 +686,8 @@ def print_warnings(option, scheme, warnings):
         warning_count += 1
         warning_nloc += warning.nloc
         print(scheme.function_info(warning))
-    else:
-        if warning_count == 0:
-            print_no_warnings(option)
+    if warning_count == 0:
+        print_no_warnings(option)
     return warning_count, warning_nloc
 
 
