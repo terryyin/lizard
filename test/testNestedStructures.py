@@ -368,3 +368,25 @@ class TestPythonNestedStructures(unittest.TestCase):
                 foo(f)
         """)
         self.assertEqual(1, result[0].max_nested_structures)
+
+    def test_for_else(self):
+        result = process_python("""
+        def c():
+            for i in range(10):
+                break
+            else:
+                for j in range(i):
+                    print(j)
+        """)
+        self.assertEqual(2, result[0].max_nested_structures)
+
+    def test_while_else(self):
+        result = process_python("""
+        def c(i):
+            while i < 10:
+                break
+            else:
+                for j in range(i):
+                    print(j)
+        """)
+        self.assertEqual(2, result[0].max_nested_structures)
