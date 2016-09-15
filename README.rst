@@ -24,8 +24,8 @@ C/C++ header files or Java imports. It can deal with
 -  PHP
 -  Scala
 
-By default lizard will search for any source code that it knows an mix
-all the result together. This might not be what you want. You can use
+By default lizard will search for any source code that it knows and mix
+all the results together. This might not be what you want. You can use
 the "-l" option to select language(s).
 
 It counts
@@ -40,7 +40,7 @@ Functions that exceed these limitations will generate warnings. The exit
 code of lizard will be none-Zero if there are warnings.
 
 This tool actually calculates how complex the code 'looks' rather than
-how complex the code real 'is'. People will need this tool because it's
+how complex the code really 'is'. People will need this tool because it's
 often very hard to get all the included folders and files right when
 they are complicated. But we don't really need that kind of accuracy for
 cyclomatic complexity.
@@ -76,7 +76,7 @@ Usage
 
 ::
 
-   lizard [options] [PATH or FILE] [PATH] ... 
+   lizard [options] [PATH or FILE] [PATH] ...
 
 Run for the code under current folder (recursively):
 
@@ -179,7 +179,7 @@ Analyze a folder recursively: lizard mahjong\_game/src
    ======================================
        66     19    247      1    accept_request@64@./httpd.c
    =================================================================================
-   Total NLOC  Avg.NLOC  Avg CCN  Avg token  Fun Cnt  Warning cnt   Fun Rt   NLOC Rt  
+   Total NLOC  Avg.NLOC  Avg CCN  Avg token  Fun Cnt  Warning cnt   Fun Rt   NLOC Rt
    --------------------------------------------------------------------------------
           554        20     4.07      71.15       27            1      0.04    0.12
 

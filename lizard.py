@@ -679,13 +679,23 @@ def print_warnings(option, scheme, warnings):
     warn_str = "!!!! Warnings ({0}) !!!!".format(
         ' or '.join("{0} > {1}".format(
             k, val) for k, val in option.thresholds.items()))
-    print("\n" + "=" * len(warn_str) + "\n" + warn_str)
-    print(scheme.function_info_head())
     for warning in warnings:
+        if warning_count == 0:
+            print("\n" + "=" * len(warn_str) + "\n" + warn_str)
+            print(scheme.function_info_head())
         warning_count += 1
         warning_nloc += warning.nloc
         print(scheme.function_info(warning))
+    if warning_count == 0:
+        print_no_warnings(option)
     return warning_count, warning_nloc
+
+
+def print_no_warnings(option):
+    warn_str = "No thresholds exceeded ({0})".format(
+        ' or '.join("{0} > {1}".format(
+            k, val) for k, val in option.thresholds.items()))
+    print("\n" + "=" * len(warn_str) + "\n" + warn_str)
 
 
 def print_total(warning_count, warning_nloc, saved_result, scheme):
