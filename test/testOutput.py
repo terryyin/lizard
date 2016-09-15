@@ -174,3 +174,9 @@ class TestXMLOutput(unittest.TestCase):
 
     def test_xml_stylesheet(self):
         self.assertIn('''<?xml-stylesheet type="text/xsl" href="https://raw.github.com/terryyin/lizard/master/lizard.xsl"?>''', self.xml)
+
+    def test_xml_output_on_empty_folder(self):
+        xml_empty = xml_output([], True)
+        self.assertIn('''<sum label="NCSS" value="0"/>''', xml_empty)
+        self.assertIn('''<sum label="CCN" value="0"/>''', xml_empty)
+        self.assertIn('''<sum label="Functions" value="0"/>''', xml_empty)
