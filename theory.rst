@@ -96,6 +96,10 @@ The idea is taken from the Linux kernel coding style:
     you're screwed anyway, and should fix your program.
 
 
+.. note:: For Python, use pylint ``max-nested-blocks`` metrics.
+          Lizard doesn't intend to provide a duplicate implementation.
+
+
 IgnoreAssert: Ignoring the CCN within Assertions
 ================================================
 
