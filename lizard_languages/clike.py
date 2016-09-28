@@ -155,16 +155,25 @@ class CLikeNestingStackStates(CodeStateMachine):
             else:
                 self._state = self.__declare_structure
 
-    @CodeStateMachine.read_until_then(')({;')
+    @CodeStateMachine.read_until_then(')({[;')
     def _read_namespace(self, token, saved):
-        self._state = self._state_global
-        if token == "{":
-            self.context.add_namespace(''.join(itertools.takewhile(
-                lambda x: x not in [":", "final"], saved)))
+        if token == "[":
+            self._state = self._read_attribute
+            self._state(token)
+        else:
+            self._state = self._state_global
+            if token == "{":
+                self.context.add_namespace(''.join(itertools.takewhile(
+                    lambda x: x not in [":", "final"], saved)))
 
     @CodeStateMachine.read_inside_brackets_then("<>", "_state_global")
     def _template_declaration(self, _):
         """Ignores template parameters."""
+        pass
+
+    @CodeStateMachine.read_inside_brackets_then("[]", "_read_namespace")
+    def _read_attribute(self, _):
+        """Ignores C++11 attributes inside [[ ]]."""
         pass
 
 
