@@ -260,6 +260,9 @@ class CLikeStates(CodeStateMachine):
             self.next(self._state_entering_imp, "{")
         elif token == ":":
             self._state = self._state_initialization_list
+        elif token == "[":
+            self._state = self._state_attribute
+            self._state(token)
         elif not (token[0].isalpha() or token[0] == '_'):
             self._state = self._state_global
             self._state(token)
@@ -329,3 +332,8 @@ class CLikeStates(CodeStateMachine):
     @CodeStateMachine.read_inside_brackets_then("{}")
     def _state_imp(self, _):
         self._state = self._state_global
+
+    @CodeStateMachine.read_inside_brackets_then("[]", "_state_dec_to_imp")
+    def _state_attribute(self, _):
+        "Ignores function attributes with C++11 syntax, i.e., [[ attribute ]]."
+        pass

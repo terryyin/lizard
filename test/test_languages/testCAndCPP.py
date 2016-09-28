@@ -477,12 +477,6 @@ class Test_cpp11_Attributes(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual("A::foo", result[0].name)
 
-    def test_function_gcc(self):
-        result = get_cpp_function_list(
-            "void foo() __attribute__((noreturn)) {}")
-        self.assertEqual(1, len(result))
-        self.assertEqual("foo", result[0].name)
-
     def test_function(self):
         result = get_cpp_function_list("void foo() [[noreturn]] {}")
         self.assertEqual(1, len(result))
