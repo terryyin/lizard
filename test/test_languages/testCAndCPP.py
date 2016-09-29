@@ -470,10 +470,18 @@ class Test_cpp11_Attributes(unittest.TestCase):
             "namespace [[visibility(hidden)]] ns { void foo() {} }")
         self.assertEqual(1, len(result))
         self.assertEqual("ns::foo", result[0].name)
+        result = get_cpp_function_list(
+            "namespace ns [[deprecated]] { void foo() {} }")
+        self.assertEqual(1, len(result))
+        self.assertEqual("ns::foo", result[0].name)
 
     def test_class(self):
         result = get_cpp_function_list(
             "struct [[alignas(8)]] A { void foo() {} };")
+        self.assertEqual(1, len(result))
+        self.assertEqual("A::foo", result[0].name)
+        result = get_cpp_function_list(
+            "struct A [[deprecated]] { void foo() {} };")
         self.assertEqual(1, len(result))
         self.assertEqual("A::foo", result[0].name)
 
@@ -510,6 +518,7 @@ class Test_cpp11_Attributes(unittest.TestCase):
                    sum += i; }""")
         self.assertEqual(1, len(result))
         self.assertEqual(2, result[0].cyclomatic_complexity)
+
 
 class Test_Preprocessing(unittest.TestCase):
 
