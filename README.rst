@@ -270,13 +270,25 @@ Limitations
 -----------
 
 Lizard requires syntactically correct code.
-Upon processing input with incorrect or unknown syntax,
-Lizard's behavior is pretty much undefined (in good old C sense).
-It can ignore the code, throw an exception, crash, fail silently, or succeed.
+Upon processing input with incorrect or unknown syntax:
+
+- Lizard guarantees to terminate eventually (i.e., no forever loops, hangs)
+  without hard failures (e.g., exit, crash, exceptions).
+
+- There is a chance of a combination of the following soft failures:
+
+    - omission
+    - misinterpretation
+    - improper analysis / tally
+    - success (the code under consideration is not relevant, e.g., global macros in C)
+
 This approach makes the Lizard implementation
 simpler and more focused with partial parsers for various languages.
+Developers of Lizard attempt to minimize the possibility of soft failures.
+Hard failures are bugs in Lizard code,
+while soft failures are trade-offs or potential bugs.
 
-In addition to asserting a correct code,
+In addition to asserting the correct code,
 Lizard may choose not to deal with some advanced or complicated language features:
 
 - C/C++ digraphs and trigraphs are not recognized.
