@@ -265,6 +265,41 @@ before a function it will suppress the warning for that function.
        ...
    }
 
+
+Limitations
+-----------
+
+Lizard requires syntactically correct code.
+Upon processing input with incorrect or unknown syntax:
+
+- Lizard guarantees to terminate eventually (i.e., no forever loops, hangs)
+  without hard failures (e.g., exit, crash, exceptions).
+
+- There is a chance of a combination of the following soft failures:
+
+    - omission
+    - misinterpretation
+    - improper analysis / tally
+    - success (the code under consideration is not relevant, e.g., global macros in C)
+
+This approach makes the Lizard implementation
+simpler and more focused with partial parsers for various languages.
+Developers of Lizard attempt to minimize the possibility of soft failures.
+Hard failures are bugs in Lizard code,
+while soft failures are trade-offs or potential bugs.
+
+In addition to asserting the correct code,
+Lizard may choose not to deal with some advanced or complicated language features:
+
+- C/C++ digraphs and trigraphs are not recognized.
+- C/C++ preprocessing or macro expansion is not performed.
+  For example, using macro instead of parentheses (or partial statements in macros)
+  can confuse Lizard's bracket stacks.
+- Some C++ complicated templates may cause confusion with matching angle brackets
+  and processing less-than ``<`` or more-than ``>`` operators
+  inside of template arguments.
+
+
 Change Logs
 -----------
 -  2016.04.2 Support PHP.
