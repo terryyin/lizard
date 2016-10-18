@@ -1,58 +1,46 @@
+#!/usr/bin/env python
 '''
 Setup script.
 To install lizard:
-[sudo] python setup.py install
+sudo setup.py build install
 '''
 
-import lizard
 from setuptools import setup
-import os
 
-def install(appname):
+import lizard
 
-    try:
-        with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as fobj:
-            readme = fobj.read()
-    except IOError:
-        readme = "lizard"
-
-    setup(
-          name = appname,
-          version = lizard.VERSION,
-          description = ''' A code analyzer without caring the C/C++ header files.
+setup(
+    name='lizard',
+    version=lizard.VERSION,
+    description='''A code analyzer without caring the C/C++ header files.
 It works with Java, C/C++, JavaScript, Python, Ruby, Swift, Objective C. Metrics includes cyclomatic complexity number etc.''',
-          long_description =  readme,
-          url = 'http://www.lizard.ws',
-          download_url='https://pypi.python.org/lizard/',
-          license='MIT',
-          platforms='any',
-          classifiers = ['Development Status :: 5 - Production/Stable',
-                     'Intended Audience :: Developers',
-                     'Intended Audience :: End Users/Desktop',
-                     'License :: Freeware',
-                     'Operating System :: POSIX',
-                     'Operating System :: Microsoft :: Windows',
-                     'Operating System :: MacOS :: MacOS X',
-                     'Topic :: Software Development :: Quality Assurance',
-                     'Programming Language :: C',
-                     'Programming Language :: C++',
-                     'Programming Language :: Java',
-                     'Programming Language :: JavaScript',
-                     'Programming Language :: Objective C',
-                     'Programming Language :: Python',
-                     'Programming Language :: Python :: 2.7',
-                     'Programming Language :: Python :: 3.2',
-                     'Programming Language :: Python :: 3.3',
-                     'Programming Language :: Python :: 3.4',
-                     'Programming Language :: Python :: 3.5'],
-          packages = ['lizard_ext', 'lizard_languages'],
-          py_modules = ['lizard'],
-          author = 'Terry Yin',
-          author_email = 'terry@odd-e.com',
-          scripts = ['lizard.bat', 'lizard', 'hfcca.bat', 'hfcca']
-          )
-
-if __name__ == "__main__":
-    import sys
-    #install('hfcca')
-    install('lizard')
+    long_description=open('README.rst').read(),
+    url='http://www.lizard.ws',
+    download_url='https://pypi.python.org/lizard/',
+    license='MIT',
+    platforms='any',
+    classifiers=['Development Status :: 5 - Production/Stable',
+                    'Intended Audience :: Developers',
+                    'Intended Audience :: End Users/Desktop',
+                    'License :: Freeware',
+                    'Operating System :: POSIX',
+                    'Operating System :: Microsoft :: Windows',
+                    'Operating System :: MacOS :: MacOS X',
+                    'Topic :: Software Development :: Quality Assurance',
+                    'Programming Language :: C',
+                    'Programming Language :: C++',
+                    'Programming Language :: Java',
+                    'Programming Language :: JavaScript',
+                    'Programming Language :: Objective C',
+                    'Programming Language :: Python',
+                    'Programming Language :: Python :: 2.7',
+                    'Programming Language :: Python :: 3.2',
+                    'Programming Language :: Python :: 3.3',
+                    'Programming Language :: Python :: 3.4',
+                    'Programming Language :: Python :: 3.5'],
+    packages=['lizard_ext', 'lizard_languages'],
+    py_modules=['lizard'],
+    entry_points={'console_scripts': ['lizard = lizard:main']},
+    author='Terry Yin',
+    author_email='terry@odd-e.com',
+)

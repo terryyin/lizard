@@ -69,7 +69,7 @@ Or if you've got the source:
 
 ::
 
-   [sudo] python setup.py install
+   [sudo] python setup.py build install --install-dir=/path/to/installation/directory/
 
 Usage
 -----
