@@ -1,8 +1,13 @@
+environment:
+    matrix:
+        - PYTHON: Python27
+        - PYTHON: Python35
+
 install:
-    - C:\Python27\Scripts\pip install -e .
-    - C:\Python27\Scripts\pip install -r dev_requirements.txt
+    - C:\%PYTHON%\Scripts\pip install -e .
+    - C:\%PYTHON%\Scripts\pip install -r dev_requirements.txt
 
 build: off
 
 test_script:
-    - C:\Python27\Scripts\nosetests test\
+    - C:\%PYTHON%\Scripts\nosetests test\
