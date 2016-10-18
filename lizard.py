@@ -925,8 +925,13 @@ def get_extensions(extension_names):
 analyze_file = FileAnalyzer(get_extensions([]))  # pylint: disable=C0103
 
 
-def lizard_main(argv):
-    options = parse_args(argv)
+def main(argv=None):
+    """Command-line entrance to Lizard.
+
+    Args:
+        argv: Arguments vector; if None, sys.argv by default.
+    """
+    options = parse_args(argv or sys.argv)
     printer = options.printer or print_result
     schema = OutputScheme(options.extensions)
     if schema.any_silent():
@@ -947,4 +952,4 @@ def lizard_main(argv):
 
 
 if __name__ == "__main__":
-    lizard_main(sys.argv)
+    main()
