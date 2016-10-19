@@ -1,7 +1,6 @@
 import unittest
 from mock import patch
 import lizard
-from lizard import lizard_main
 import os
 import sys
 
@@ -20,7 +19,7 @@ class TestApplication(unittest.TestCase):
 
         os_walk.return_value = [('.', [], [])]
         print_result.side_effect = check_empty_result
-        lizard_main(['lizard'])
+        lizard.main(['lizard'])
 
     def testFilesWithFunction(self, print_result, os_walk, mock_open, _):
         def check_result(result, options, scheme):
@@ -31,7 +30,7 @@ class TestApplication(unittest.TestCase):
         os_walk.return_value = [('.', [], ['a.cpp'])]
         mock_open.return_value = "void foo(){}"
         print_result.side_effect = check_result
-        lizard_main(['lizard'])
+        lizard.main(['lizard'])
 
 
 class IntegrationTests(unittest.TestCase):
@@ -63,7 +62,7 @@ class IntegrationTests(unittest.TestCase):
             return self.returned_warning_count
         mock_open.return_value = src
         print_result.side_effect = store_result
-        lizard_main(argv)
+        lizard.main(argv)
         return self.fileInfos
 
     @patch('lizard.md5_hash_file')
@@ -89,5 +88,3 @@ class IntegrationTests(unittest.TestCase):
         self.returned_warning_count = 6
         self.runApplicationWithArgv(['lizard', '-C5'])
         mock_exit.assert_called_with(1)
-
-
