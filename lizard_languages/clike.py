@@ -155,16 +155,30 @@ class CLikeNestingStackStates(CodeStateMachine):
             else:
                 self._state = self.__declare_structure
 
+    def _read_namespace(self, token):
+        """Processes declarations right after namespace/class keywords."""
+        if token == "[":
+            self._state = self._read_attribute
+        else:
+            self._state = self._read_namespace_name
+        self._state(token)
+
     @CodeStateMachine.read_until_then(')({;')
-    def _read_namespace(self, token, saved):
+    def _read_namespace_name(self, token, saved):
+        """Processes namespace/class/struct names from declrations."""
         self._state = self._state_global
         if token == "{":
             self.context.add_namespace(''.join(itertools.takewhile(
-                lambda x: x not in [":", "final"], saved)))
+                lambda x: x not in [":", "final", "["], saved)))
 
     @CodeStateMachine.read_inside_brackets_then("<>", "_state_global")
     def _template_declaration(self, _):
         """Ignores template parameters."""
+        pass
+
+    @CodeStateMachine.read_inside_brackets_then("[]", "_read_namespace")
+    def _read_attribute(self, _):
+        """Ignores C++11 attributes inside [[ ]]."""
         pass
 
 
@@ -251,6 +265,9 @@ class CLikeStates(CodeStateMachine):
             self.next(self._state_entering_imp, "{")
         elif token == ":":
             self._state = self._state_initialization_list
+        elif token == "[":
+            self._state = self._state_attribute
+            self._state(token)
         elif not (token[0].isalpha() or token[0] == '_'):
             self._state = self._state_global
             self._state(token)
@@ -320,3 +337,8 @@ class CLikeStates(CodeStateMachine):
     @CodeStateMachine.read_inside_brackets_then("{}")
     def _state_imp(self, _):
         self._state = self._state_global
+
+    @CodeStateMachine.read_inside_brackets_then("[]", "_state_dec_to_imp")
+    def _state_attribute(self, _):
+        "Ignores function attributes with C++11 syntax, i.e., [[ attribute ]]."
+        pass

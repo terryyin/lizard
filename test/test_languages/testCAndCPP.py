@@ -437,7 +437,6 @@ class Test_c_cpp_lizard(unittest.TestCase):
         result = get_cpp_function_list('''int fun(struct a){}''')
         self.assertEqual(1, len(result))
 
-
     def test_trailing_return_type(self):
         """C++11 trailing return type for functions."""
         result = get_cpp_function_list("auto foo() -> void {}")
@@ -461,6 +460,64 @@ class Test_c_cpp_lizard(unittest.TestCase):
         result = get_cpp_function_list("struct A { void foo() const && {} };")
         self.assertEqual(1, len(result))
         self.assertEqual("A::foo", result[0].name)
+
+
+class Test_cpp11_Attributes(unittest.TestCase):
+    """C++11 extendable attributes can appear pretty much anywhere."""
+
+    def test_namespace(self):
+        result = get_cpp_function_list(
+            "namespace [[visibility(hidden)]] ns { void foo() {} }")
+        self.assertEqual(1, len(result))
+        self.assertEqual("ns::foo", result[0].name)
+        result = get_cpp_function_list(
+            "namespace ns [[deprecated]] { void foo() {} }")
+        self.assertEqual(1, len(result))
+        self.assertEqual("ns::foo", result[0].name)
+
+    def test_class(self):
+        result = get_cpp_function_list(
+            "struct [[alignas(8)]] A { void foo() {} };")
+        self.assertEqual(1, len(result))
+        self.assertEqual("A::foo", result[0].name)
+        result = get_cpp_function_list(
+            "struct A [[deprecated]] { void foo() {} };")
+        self.assertEqual(1, len(result))
+        self.assertEqual("A::foo", result[0].name)
+
+    def test_function(self):
+        result = get_cpp_function_list("void foo() [[noreturn]] {}")
+        self.assertEqual(1, len(result))
+        self.assertEqual("foo", result[0].name)
+
+    def test_function_parameters(self):
+        result = get_cpp_function_list("void foo(int a [[unused]]) {}")
+        self.assertEqual(1, len(result))
+        self.assertEqual("foo", result[0].name)
+        result = get_cpp_function_list("void foo(int a [[unused]], int b) {}")
+        self.assertEqual(1, len(result))
+        self.assertEqual("foo", result[0].name)
+        result = get_cpp_function_list("void foo(int b, int a [[unused]]) {}")
+        self.assertEqual(1, len(result))
+        self.assertEqual("foo", result[0].name)
+
+    def test_function_return_type(self):
+        result = get_cpp_function_list(
+            "int [[warn_unused_result]] foo(int a) {}")
+        self.assertEqual(1, len(result))
+        self.assertEqual("foo", result[0].name)
+
+    def test_control_structures(self):
+        result = get_cpp_function_list(
+            "int foo() { [[likely(true)]] if (a) return 1; else return 2; }")
+        self.assertEqual(1, len(result))
+        self.assertEqual(2, result[0].cyclomatic_complexity)
+        result = get_cpp_function_list(
+            """int foo() {
+                 for [[omp::parallel()]] (int i{}; i < n; ++i)
+                   sum += i; }""")
+        self.assertEqual(1, len(result))
+        self.assertEqual(2, result[0].cyclomatic_complexity)
 
 
 class Test_Preprocessing(unittest.TestCase):
