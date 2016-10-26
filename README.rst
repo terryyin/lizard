@@ -238,8 +238,8 @@ Whitelist
 
 If for some reason you would like to ignore the warnings, you can use
 the whitelist. Add 'whitelizard.txt' to the current folder (or use -W to point to the whitelist file), then the
-functions defined in the file will be ignored. Please notice that if you assign the file pathname, it need to
-be exactly the same relative path as Lizard find the file. An easy way to get the file pathname is copy it from
+functions defined in the file will be ignored. Please notice that if you assign the file pathname, it needs to
+be exactly the same relative path as Lizard to find the file. An easy way to get the file pathname is to copy it from
 the Lizard warning output.
 This is an example whitelist:
 
