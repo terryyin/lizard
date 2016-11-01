@@ -73,5 +73,8 @@ IGNORED_WORDS = set((
     'import',
     'from',
     'do',
+    'new',
+    'require',
+    '@',
     'end'
     ))
