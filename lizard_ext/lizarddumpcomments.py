@@ -13,11 +13,14 @@ class LizardExtension(object):  # pylint: disable=R0903
     ordering_index = 1
 
     def __call__(self, tokens, reader):
+        first = True
         print("=" * 20)
         print(reader.context.fileinfo.filename)
         print("-" * 20)
         for token in tokens:
             comment = reader.get_comment_from_token(token)
             if comment is not None:
-                print(comment)
+                if not first or "copyright" not in comment.lower():
+                    print(comment)
+                first = False
             yield token
