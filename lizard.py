@@ -143,8 +143,8 @@ def arg_parser(prog=None):
                         const=print_clang_style_warning,
                         dest="printer")
     parser.add_argument("--warning-msvs",
-                        help='''Show warnings only, using Visual Studio's warning
-                        format for printing warnings.
+                        help='''Show warnings only, using Visual Studio's
+                        warning format for printing warnings.
                         https://msdn.microsoft.com/en-us/library/yxkt8b26.aspx
                         ''',
                         action="store_const",
