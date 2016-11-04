@@ -684,10 +684,10 @@ class OutputScheme(object):
         return (
             "{f.filename}({f.start_line}): warning: {f.name} has " +
             ", ".join([
-                          "{{f.{ext[value]}}} {caption}"
-                      .format(ext=e, caption=e['caption'].strip())
-                          for e in self.items[:-1]
-                          ]))
+                "{{f.{ext[value]}}} {caption}"
+                .format(ext=e, caption=e['caption'].strip())
+                for e in self.items[:-1]
+                ]))
 
 
 def print_warnings(option, scheme, warnings):
@@ -810,6 +810,7 @@ def print_clang_style_warning(code_infos, option, scheme):
         print(scheme.clang_warning_format().format(f=warning))
         count += 1
     return count
+
 
 def print_msvs_style_warning(code_infos, option, scheme):
     count = 0
