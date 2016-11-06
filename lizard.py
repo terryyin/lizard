@@ -142,6 +142,14 @@ def arg_parser(prog=None):
                         action="store_const",
                         const=print_clang_style_warning,
                         dest="printer")
+    parser.add_argument("--warning-msvs",
+                        help='''Show warnings only, using Visual Studio's
+                        warning format for printing warnings.
+                        https://msdn.microsoft.com/en-us/library/yxkt8b26.aspx
+                        ''',
+                        action="store_const",
+                        const=print_msvs_style_warning,
+                        dest="printer")
     parser.add_argument("-i", "--ignore_warnings",
                         help='''If the number of warnings is equal or less
                         than the number,
@@ -672,6 +680,15 @@ class OutputScheme(object):
                 for e in self.items[:-1]
                 ]))
 
+    def msvs_warning_format(self):
+        return (
+            "{f.filename}({f.start_line}): warning: {f.name} has " +
+            ", ".join([
+                "{{f.{ext[value]}}} {caption}"
+                .format(ext=e, caption=e['caption'].strip())
+                for e in self.items[:-1]
+                ]))
+
 
 def print_warnings(option, scheme, warnings):
     warning_count = 0
@@ -791,6 +808,14 @@ def print_clang_style_warning(code_infos, option, scheme):
     count = 0
     for warning in get_warnings(code_infos, option):
         print(scheme.clang_warning_format().format(f=warning))
+        count += 1
+    return count
+
+
+def print_msvs_style_warning(code_infos, option, scheme):
+    count = 0
+    for warning in get_warnings(code_infos, option):
+        print(scheme.msvs_warning_format().format(f=warning))
         count += 1
     return count
 
