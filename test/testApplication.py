@@ -88,3 +88,13 @@ class IntegrationTests(unittest.TestCase):
         self.returned_warning_count = 6
         self.runApplicationWithArgv(['lizard', '-C5'])
         mock_exit.assert_called_with(1)
+        self.runApplicationWithArgv(['lizard', '-i5'])
+        mock_exit.assert_called_with(1)
+
+    @patch.object(sys, 'exit')
+    def test_exit_code_ignore_warnings(self, mock_exit):
+        self.returned_warning_count = 6
+        self.runApplicationWithArgv(['lizard', '-i6'])
+        self.assertFalse(mock_exit.called)
+        self.runApplicationWithArgv(['lizard', '-i', '-1'])
+        self.assertFalse(mock_exit.called)

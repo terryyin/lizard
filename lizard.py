@@ -152,9 +152,12 @@ def arg_parser(prog=None):
                         dest="printer")
     parser.add_argument("-i", "--ignore_warnings",
                         help='''If the number of warnings is equal or less
-                        than the number,
-                        the tool will exit normally, otherwise it will generate
-                        error. Useful in makefile for legacy code.''',
+                        than the number, the tool will exit normally;
+                        otherwise, it will generate error.
+                        If the number is negative,
+                        the tool exits normally
+                        regardless of the number of warnings.
+                        Useful in makefile for legacy code.''',
                         type=int,
                         dest="number",
                         default=0)
@@ -972,7 +975,7 @@ def main(argv=None):
         options.languages,
         regression=schema.any_regression())
     warning_count = printer(result, options, schema)
-    if options.number < warning_count:
+    if 0 <= options.number < warning_count:
         sys.exit(1)
 
 
