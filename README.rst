@@ -1,16 +1,19 @@
-Lizard
-======
+|Web Site| Lizard
+=================
 
-An extensible Cyclomatic Complexity Analyzer for many programming languages
-including C/C++ (doesn't require all the header files).
+.. image:: https://travis-ci.org/terryyin/lizard.png?branch=master
+    :target: https://travis-ci.org/terryyin/lizard
+.. image:: https://badge.fury.io/py/lizard.svg
+    :target: https://badge.fury.io/py/lizard
+.. |Web Site| image:: http://www.lizard.ws/website/static/img/logo-small.png
+    :target: http://www.lizard.ws
 
-|Build Status|
-|Pypi Badge|
+|
 
-Visit the tool website |Web Site|
+Lizard is an extensible Cyclomatic Complexity Analyzer for many imperative programming languages
+including C/C++ (doesn't require all the header files or Java imports).
 
-lizard is a simple code complexity analyzer without caring about the
-C/C++ header files or Java imports. It can deal with
+A list of supported languages:
 
 -  C/C++ (works with C++14)
 -  Java
@@ -69,7 +72,7 @@ Or if you've got the source:
 
 ::
 
-   [sudo] python setup.py build install --install-dir=/path/to/installation/directory/
+   [sudo] python setup.py install --install-dir=/path/to/installation/directory/
 
 Usage
 -----
@@ -319,12 +322,3 @@ Change Logs
 -  2014.03.31 Support JavaScript!
 -  2014.03.22 Change the -v (--verbose) option to -V. This is because -v
    will be used for --version.
-
-.. |Build Status| image:: https://travis-ci.org/terryyin/lizard.png?branch=master
-   :target: https://travis-ci.org/terryyin/lizard
-
-.. |Pypi Badge| image:: https://badge.fury.io/py/lizard.svg
-    :target: https://badge.fury.io/py/lizard
-
-.. |Web Site| image:: http://www.lizard.ws/website/static/img/logo-small.png
-   :target: http://www.lizard.ws
