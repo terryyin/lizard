@@ -91,8 +91,6 @@ class CLikeNestingStackStates(CodeStateMachine):
     # Beasts that can be defined within one line without braces.
     __braceless_structures = set(['if', 'else', 'for', 'while', 'do',
                                   'switch'])
-    __paren_count = 0  # Used only to tackle the beasts.
-    __braceless = None  # Applies only to the beasts.
     __structure_brace_stack = []  # Boolean stack for structures' brace states.
 
     def __pop_braceless_structures(self):
@@ -113,21 +111,19 @@ class CLikeNestingStackStates(CodeStateMachine):
         if token != "if":
             self._state(token)
 
-    def __declare_structure(self, token):
+    @CodeStateMachine.read_inside_brackets_then("()", "_state_structure")
+    def __declare_structure(self, _):
         """Ignores structures between parentheses on structure declaration."""
-        if token == "(":
-            self.__paren_count += 1
-        elif token == ")":
-            # assert self.__paren_count > 0
-            self.__paren_count -= 1
-        elif self.__paren_count == 0:
-            self._state = self._state_global
-            if token == "{":
-                self.__braceless = False
-            else:
-                self.__braceless = True
-                self.context.add_bare_nesting()
-                self.__structure_brace_stack.append(True)
+        pass
+
+    def _state_structure(self, token):
+        """Control-flow structure states of right before the body."""
+        self.context.add_bare_nesting()
+        self._state = self._state_global
+        if token == "{":
+            self.__structure_brace_stack.append(False)
+        else:
+            self.__structure_brace_stack.append(True)
             self._state(token)
 
     def _state_global(self, token):
@@ -140,16 +136,13 @@ class CLikeNestingStackStates(CodeStateMachine):
 
         elif token == "{":
             self.context.add_bare_nesting()
-            self.__structure_brace_stack.append(self.__braceless)
-            self.__braceless = None
+            self.__structure_brace_stack.append(None)
 
         elif token == '}' or (token == ";" and self.__structure_brace_stack and
                               self.__structure_brace_stack[-1]):
-            self.__braceless = None
             self.__pop_braceless_structures()
 
         elif token in self.__braceless_structures:
-            # assert self.__paren_count == 0
             if token == "else":
                 self._state = self.__else_if_structure
             else:
