@@ -228,6 +228,74 @@ class TestCppNestedStructures(unittest.TestCase):
         """)
         self.assertEqual(3, result[0].max_nested_structures)
 
+    def test_braceless_consecutive_if_structures(self):
+        """Braceless structures one after another."""
+        result = process_cpp("""
+        x c() {
+          if (a)
+            if (b)
+                foobar();
+          if (c)
+            if (d)
+                baz();
+        }
+        """)
+        self.assertEqual(2, result[0].max_nested_structures)
+
+    def test_braceless_consecutive_for_if_structures(self):
+        """Braceless structures one after another."""
+        result = process_cpp("""
+        x c() {
+          for (;;)
+            for (;;)
+                foobar();
+          if (c)
+            if (d)
+                baz();
+        }
+        """)
+        self.assertEqual(2, result[0].max_nested_structures)
+
+    def test_braceless_consecutive_if_structures_with_return(self):
+        """Braceless structures one after another."""
+        result = process_cpp("""
+        x c() {
+          if (a)
+            if (b)
+                return true;
+          if (c)
+            if (d)
+                return false;
+        }
+        """)
+        self.assertEqual(2, result[0].max_nested_structures)
+
+    def test_braceless_nested_if_else_structures(self):
+        result = process_cpp("""
+        x c() {
+          if (a)
+            if (b) {
+              return b;
+            } else {
+              if (b) return 42;
+            }
+        }
+        """)
+        self.assertEqual(3, result[0].max_nested_structures)
+
+    def test_braceless_nested_if_else_if_structures(self):
+        result = process_cpp("""
+        x c() {
+          if (a)
+            if (b) {
+              return b;
+            } else if (c) {
+              if (b) return 42;
+            }
+        }
+        """)
+        self.assertEqual(3, result[0].max_nested_structures)
+
     @unittest.skip("Unspecified. Not Implemented. Convoluted.")
     def test_struct_inside_declaration(self):
         """Extra complexity class/struct should be ignored."""
