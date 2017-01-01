@@ -442,3 +442,35 @@ class TestPythonNestedStructures(unittest.TestCase):
             return bar
         """)
         self.assertEqual(1, result[0].max_nested_structures)
+
+    def test_expression_structures_line_break(self):
+        """Expression structures starting on a new line."""
+        result = process_python("""
+        def foo(bar):
+            return [x
+                    for x in bar
+                    if x == 42]
+        """)
+        self.assertEqual(0, result[0].max_nested_structures)
+        result = process_python("""
+        def foo(bar):
+            return [x
+            for x in bar
+            if x == 42]
+        """)
+        self.assertEqual(0, result[0].max_nested_structures)
+
+        result = process_python("""
+        def foo(bar):
+            return (bar
+                    if baz
+                    else None)
+        """)
+        self.assertEqual(0, result[0].max_nested_structures)
+        result = process_python("""
+        def foo(bar):
+            return (bar
+            if baz
+            else None)
+        """)
+        self.assertEqual(0, result[0].max_nested_structures)
