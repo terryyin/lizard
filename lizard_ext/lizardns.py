@@ -39,7 +39,7 @@ class LizardExtension(object):  # pylint: disable=R0903
         If the following contract for the nesting level metric does not hold,
         this implementation of nested structure counting is invalid.
 
-        If a control structure has started its block (eg. '{'),
+        If a control structure has started its block (e.g., '{'),
         and its level is **less** than the next structure,
         the next structure is nested.
 
@@ -107,13 +107,12 @@ class LizardExtension(object):  # pylint: disable=R0903
                 structure_stack.pop()
 
         for token in tokens:
+            yield token
             cur_level = reader.context.current_nesting_level
             if token in structures:
                 add_nested_structure(token)
             else:
                 pop_nested_structure()
-
-            yield token
 
 
 def _init_nested_structure_data(self, *_):

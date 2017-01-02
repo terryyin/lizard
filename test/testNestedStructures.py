@@ -175,6 +175,32 @@ class TestCppNestedStructures(unittest.TestCase):
         self.assertEqual(2, result[0].max_nested_structures)
         self.assertEqual(2, result[1].max_nested_structures)
 
+    def test_braceless_nested_if_try_structures(self):
+        result = process_cpp("""
+        x c() {
+          if (a)
+            try {
+              throw 42;
+            } catch(...) {
+              if (b) return 42;
+            }
+        }
+        """)
+        self.assertEqual(3, result[0].max_nested_structures)
+
+    def test_braceless_nested_for_try_structures(self):
+        result = process_cpp("""
+        x c() {
+          for (;;)
+            try {
+              throw 42;
+            } catch(...) {
+              if (b) return 42;
+            }
+        }
+        """)
+        self.assertEqual(3, result[0].max_nested_structures)
+
     def test_switch_case(self):
         """Switch-Case is one control structure."""
         result = process_cpp("""
@@ -224,6 +250,74 @@ class TestCppNestedStructures(unittest.TestCase):
           if (b)
             if (c)
               if (d) return 42;
+        }
+        """)
+        self.assertEqual(3, result[0].max_nested_structures)
+
+    def test_braceless_consecutive_if_structures(self):
+        """Braceless structures one after another."""
+        result = process_cpp("""
+        x c() {
+          if (a)
+            if (b)
+                foobar();
+          if (c)
+            if (d)
+                baz();
+        }
+        """)
+        self.assertEqual(2, result[0].max_nested_structures)
+
+    def test_braceless_consecutive_for_if_structures(self):
+        """Braceless structures one after another."""
+        result = process_cpp("""
+        x c() {
+          for (;;)
+            for (;;)
+                foobar();
+          if (c)
+            if (d)
+                baz();
+        }
+        """)
+        self.assertEqual(2, result[0].max_nested_structures)
+
+    def test_braceless_consecutive_if_structures_with_return(self):
+        """Braceless structures one after another."""
+        result = process_cpp("""
+        x c() {
+          if (a)
+            if (b)
+                return true;
+          if (c)
+            if (d)
+                return false;
+        }
+        """)
+        self.assertEqual(2, result[0].max_nested_structures)
+
+    def test_braceless_nested_if_else_structures(self):
+        result = process_cpp("""
+        x c() {
+          if (a)
+            if (b) {
+              return b;
+            } else {
+              if (b) return 42;
+            }
+        }
+        """)
+        self.assertEqual(3, result[0].max_nested_structures)
+
+    def test_braceless_nested_if_else_if_structures(self):
+        result = process_cpp("""
+        x c() {
+          if (a)
+            if (b) {
+              return b;
+            } else if (c) {
+              if (b) return 42;
+            }
         }
         """)
         self.assertEqual(3, result[0].max_nested_structures)
