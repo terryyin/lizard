@@ -4,7 +4,7 @@ all: extensive pylint
 extensive: tests pep8
 
 tests:
-	nosetests test
+	py.test test
 
 tests3:
 	python3 -m unittest test

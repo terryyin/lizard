@@ -10,4 +10,4 @@ install:
 build: off
 
 test_script:
-    - C:\%PYTHON%\Scripts\nosetests test\
+    - C:\%PYTHON%\Scripts\pytest test\
