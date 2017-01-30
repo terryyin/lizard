@@ -1,5 +1,5 @@
 import unittest
-from lizard_languages import get_reader_for, CLikeReader, JavaReader, ObjCReader, JavaScriptReader, ScalaReader
+from lizard_languages import get_reader_for, CLikeReader, JavaReader, ObjCReader, JavaScriptReader, ScalaReader, GDScriptReader
 
 
 class TestLanguageChooser(unittest.TestCase):
@@ -23,6 +23,9 @@ class TestLanguageChooser(unittest.TestCase):
 
     def test_scala(self):
         self.assertEqual(ScalaReader, get_reader_for("a.scala"))
+
+    def test_GDScript(self):
+        self.assertEqual(GDScriptReader, get_reader_for("a.gd"))
 
     def test_unknown_extension(self):
         self.assertEqual(None, get_reader_for("a.unknown"))

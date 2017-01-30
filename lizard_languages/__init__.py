@@ -11,6 +11,7 @@ from .ruby import RubyReader
 from .csharp import CSharpReader
 from .php import PHPReader
 from .scala import ScalaReader
+from .gdscript import GDScriptReader
 
 
 def languages():
@@ -25,7 +26,8 @@ def languages():
         RubyReader,
         PHPReader,
         SwiftReader,
-        ScalaReader]
+        ScalaReader,
+        GDScriptReader]
 
 
 def get_reader_for(filename):
