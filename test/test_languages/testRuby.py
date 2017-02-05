@@ -31,6 +31,14 @@ class Test_tokenizing_Ruby(unittest.TestCase):
     def test_tokenizing_pattern(self):
         self.check_tokens(['/\//'], r'''/\//''')
 
+    def test_tokenizing_symbol(self):
+        self.check_tokens([':class'], r''':class''')
+        self.check_tokens([':class?'], r''':class?''')
+        self.check_tokens([':@class'], r''':@class''')
+
+    def test_shorthand_symbol(self):
+        self.check_tokens(['class:', 'a'], r'''class:a''')
+
     def test_tokenizing_string_expression(self):
         self.check_tokens(['%{"}'], r'''%{"}''')
         self.check_tokens(['%{""}'], r'''%{""}''')
@@ -267,6 +275,16 @@ class Test_parser_for_Ruby_if_while_for(unittest.TestCase):
             end
                 ''')
         self.assertEqual(4, result[0].nloc)
+
+    def test_class_as_an_symbol(self):
+        result = get_ruby_function_list('''
+            def f
+                begin
+                end while a
+            end
+                ''')
+        self.assertEqual(4, result[0].nloc)
+
 
 
 class Test_parser_for_Ruby_def(unittest.TestCase):

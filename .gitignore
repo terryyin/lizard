@@ -34,3 +34,5 @@ nosetests.xml
 .pydevproject
 .settings/
 dist/
+.cache/
+.pypirc
