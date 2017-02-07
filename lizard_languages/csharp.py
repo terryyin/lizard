@@ -18,5 +18,5 @@ class CSharpReader(CLikeReader):
         super(CSharpReader, self).__init__(context)
 
     @staticmethod
-    def generate_tokens(source_code, _=''):
-        return CLikeReader.generate_tokens(source_code, r"|(?:\?\?)")
+    def generate_tokens(source_code, _='', tokener=None):
+        return CLikeReader.generate_tokens(source_code, r"|(?:\?\?)", tokener)

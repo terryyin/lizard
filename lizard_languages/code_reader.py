@@ -90,7 +90,12 @@ class CodeReader(object):
         return compile_file_extension_re(*cls.ext).match(filename)
 
     @staticmethod
-    def generate_tokens(source_code, addition=''):
+    def generate_tokens(source_code, addition='', token_class=None):
+        def create_token(match):
+            return match.group(0)
+        if not token_class:
+            token_class = create_token
+
         def _generate_tokens(source_code, addition):
             # DO NOT put any sub groups in the regex. Good for performance
             _until_end = r"(?:\\\n|[^\n])*"
@@ -115,7 +120,7 @@ class CodeReader(object):
                 r"|.)", re.M | re.S)
             macro = ""
             for match in token_pattern.finditer(source_code):
-                token = match.group(0)
+                token = token_class(match)
                 if macro:
                     if "\\\n" in token or "\n" not in token:
                         macro += token

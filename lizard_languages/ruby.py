@@ -18,12 +18,14 @@ class RubyStateMachine(CodeStateMachine):
         return self.context.newline or self.last_token == ";"
 
     def _state_global(self, token):
-        if token == "end":
+        if token in ("end", "}"):
             self.sm_return()
         elif token == 'def':
             self._state = self._def
             self.next(self._def)
-        elif token in ("begin", "do", "class", "module"
+        elif token == 'it':
+            self._state = self._it
+        elif token in ("begin", "do", "class", "module", "{", "${"
                        ) and self.last_token != ".":
             self.sub_state(RubyStateMachine(self.context))
         elif token in ("while", "for"):
@@ -40,6 +42,11 @@ class RubyStateMachine(CodeStateMachine):
     def _def(self, token):
         self.context.start_new_function(token)
         self.next(self._def_continue)
+
+    def _it(self, token):
+        if token in ('do', '{'):
+            self.context.start_new_function(self.last_token)
+            self.next(self._def_continue)
 
     def _def_continue(self, token):
         def callback():
@@ -79,6 +86,14 @@ class RubyStateMachine(CodeStateMachine):
                 self.sub_state(RubyStateMachine(self.context))
 
 
+class MyToken(str):
+    def __new__(cls, value, *_):
+        return super(MyToken, cls).__new__(cls, value.group(0))
+
+    def __init__(self, value):
+        self.begin = value.start()
+
+
 class RubyReader(CodeReader, ScriptLanguageMixIn):
     # pylint: disable=R0903
 
@@ -94,14 +109,41 @@ class RubyReader(CodeReader, ScriptLanguageMixIn):
     @staticmethod
     @js_style_regex_expression
     def generate_tokens(source_code, _=''):
-        return ScriptLanguageMixIn.generate_common_tokens(
-            source_code,
-            r"|^\=begin|^\=end" +
-            r"|\%[qQr]?\{(?:\\.|[^\}\\])*?\}" +
-            r"|\%[qQr]?\[(?:\\.|[^\]\\])*?\]" +
-            r"|\%[qQr]?\<(?:\\.|[^\>\\])*?\>" +
-            r"|\w+:" +
-            r"|\$\w+" +
-            r"|\.+" +
-            r"|:?\@{0,2}\w+\??\!?" +
-            _)
+        def process_source(source, _, matcher):
+            return ScriptLanguageMixIn.generate_common_tokens(
+                source,
+                r"|^\=begin|^\=end" +
+                r"|\%[qQr]?\{(?:\\.|[^\}\\])*?\}" +
+                r"|\%[qQr]?\[(?:\\.|[^\]\\])*?\]" +
+                r"|\%[qQr]?\<(?:\\.|[^\>\\])*?\>" +
+                r"|\w+:" +
+                r"|\$\w+" +
+                r"|\.+" +
+                r"|:?\@{0,2}\w+\??\!?" +
+                _, matcher)
+        matcher = MyToken
+        bracket_stack = []
+        source = source_code
+        off_set = 0
+        while source is not None:
+            for token in process_source(source, _, matcher):
+                if token == "{":
+                    bracket_stack.append("{")
+                elif token == "}":
+                    if bracket_stack:
+                        x = bracket_stack.pop()
+                        if x == '#{':
+                            source = '"'+source[token.begin + 1:]
+                            yield token
+                            break
+                elif token.startswith('"'):
+                    first, sep, last = token.partition('#{')
+                    if sep:
+                        yield first + '"'
+                        yield '${'  # because #will be regarded as comments
+                        bracket_stack.append(sep)
+                        source = source[token.begin + token.find(sep)+2:]
+                        break
+                yield token
+            else:
+                source = None

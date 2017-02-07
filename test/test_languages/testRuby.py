@@ -31,6 +31,18 @@ class Test_tokenizing_Ruby(unittest.TestCase):
     def test_tokenizing_pattern(self):
         self.check_tokens(['/\//'], r'''/\//''')
 
+    def test_tokenizing_brackets(self):
+        self.check_tokens(['{', '}'], r'''{}''')
+
+    def test_tokenizing_string_with_formatter(self):
+        self.check_tokens(['""', '${', '1', '}', '"a"' ], r'''"#{1}a"''')
+
+    def test_tokenizing_string_with_string(self):
+        self.check_tokens(['""', '${', '"a"', '}', '""' ], r'''"#{"a"}"''')
+
+    def test_tokenizing_string_with_string2(self):
+        self.check_tokens(['""', '${', '"/"', '${', '}', '""', '}', '""'], r'''"#{"/#{}"}"''')
+
     def test_tokenizing_symbol(self):
         self.check_tokens([':class'], r''':class''')
         self.check_tokens([':class?'], r''':class?''')
@@ -123,6 +135,30 @@ class Test_parser_for_Ruby(unittest.TestCase):
         end
                 ''')
         self.assertEqual(4, result[0].nloc)
+
+    def test_one_with_brackets_and_end_outside(self):
+        result = get_ruby_function_list('''
+        {
+            def f
+                begin
+                end
+            end
+        }
+                ''')
+        self.assertEqual(4, result[0].nloc)
+
+    def test_string(self):
+        result = get_ruby_function_list('''
+  def path_with_locale(params, to)
+    xx
+    "#{"a"}"
+    xx
+  end
+
+  mount JasmineRails::Engine => '/specs' if defined?(JasmineRails)
+end
+                ''')
+        self.assertEqual(5, result[0].nloc)
 
     def test_one_with_class_in_it(self):
         result = get_ruby_function_list('''
@@ -284,6 +320,53 @@ class Test_parser_for_Ruby_if_while_for(unittest.TestCase):
             end
                 ''')
         self.assertEqual(4, result[0].nloc)
+
+
+    def test_rspec_it(self):
+        result = get_ruby_function_list('''
+            describe 'xx' do
+              it "does something" do
+              end
+              it "does something else" do
+              end
+              context "xx" do
+                it "xxxx" do
+                    xxx
+                end
+              end
+            end
+                ''')
+        self.assertEqual(3, result[2].nloc)
+
+    def test_rspec_it_with_brackets(self):
+        result = get_ruby_function_list('''
+            describe 'xx' do
+              it { }
+              it "does something else" do
+                a if b
+              end
+              context "xx" do
+                it "xxxx" do
+                    xxx
+                end
+              end
+            end
+                ''')
+        self.assertEqual(3, len(result))
+        self.assertEqual(1, result[0].nloc)
+        self.assertEqual(1, result[0].cyclomatic_complexity)
+
+    def test_it_as_variable(self):
+        result = get_ruby_function_list('''
+            describe 'xx' do
+              it = 3
+            end
+                ''')
+        self.assertEqual(0, len(result))
+
+
+
+
 
 
 

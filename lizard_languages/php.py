@@ -17,7 +17,7 @@ class PHPReader(CodeReader, CCppCommentsMixin):
                       'case'])
 
     @staticmethod
-    def generate_tokens(source_code, extra=''):
+    def generate_tokens(source_code, extra='', tk=None):
         extra += r"|(?:\$\w+)"
         extra += r"|(?:\<{3}(?P<quote>\w+).*?(?P=quote))"
         current_pos = 0
@@ -27,7 +27,7 @@ class PHPReader(CodeReader, CCppCommentsMixin):
         for match in code_block_pattern.finditer(source_code):
             if source_code[current_pos:match.start()]:
                 yield '"' + source_code[current_pos:match.start()] + '"'
-            for token in CodeReader.generate_tokens(match.group(1), extra):
+            for token in CodeReader.generate_tokens(match.group(1), extra, tk):
                 yield token
             current_pos = match.end()
         if source_code[current_pos:]:
