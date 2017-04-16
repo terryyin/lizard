@@ -70,6 +70,7 @@ class CppRValueRefStates(CodeStateMachine):
     @CodeStateMachine.read_until_then(';')
     def _typedef(self, _, tokens):
         self.context.add_condition(-tokens.count("&&"))
+        self.next(self._state_global)
 
 
 # pylint: disable=R0903

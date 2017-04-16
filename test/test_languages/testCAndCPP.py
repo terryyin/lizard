@@ -555,6 +555,25 @@ class Test_Big(unittest.TestCase):
         result = get_cpp_function_list(code)
         self.assertEqual(0, len(result))
 
+    def test_typedef(self):
+        code = """
+        typedef struct tagAAA
+        {
+        }AAA;
+
+        int func_a(int size)
+        {
+            if(ccc && eee)
+            {
+                return 1;
+            }
+        }
+        """
+        result = get_cpp_function_list(code)
+        self.assertEqual(1, len(result))
+        self.assertEqual(2, result[0].cyclomatic_complexity)
+
+
 
 class Test_Dialects(unittest.TestCase):
 
