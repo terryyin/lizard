@@ -36,3 +36,4 @@ nosetests.xml
 dist/
 .cache/
 .pypirc
+*.sw[a-z]
