@@ -28,7 +28,7 @@ def csv_output(result, verbose):
         if source_file:
             for source_function in source_file.function_list:
                 if source_function:
-                    print('{},{},{},{},{},"{}","{}","{}","{}"'.format(
+                    print('{},{},{},{},{},"{}","{}","{}",{},{}'.format(
                         source_function.nloc,
                         source_function.cyclomatic_complexity,
                         source_function.token_count,
