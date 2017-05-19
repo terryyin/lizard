@@ -17,11 +17,6 @@ due to the nature of CSV outputs. The differences are:
 '''
 
 
-def print_csv(results, options, _):
-    csv_output(list(results), options.verbose)
-    return 0
-
-
 def csv_output(result, verbose):
     print("NLOC,CCN,token,PARAM,length,location,file,function,start,end")
     for source_file in result:
