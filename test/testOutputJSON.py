@@ -1,6 +1,7 @@
 from mock import Mock, patch
 import unittest
 import sys
+import json
 from lizard_ext import json_output
 from test.helper_stream import StreamStdoutTestCase
 from lizard import parse_args, print_and_save_modules, FunctionInfo, FileInformation, \
@@ -13,16 +14,10 @@ class TestCSVOutput(StreamStdoutTestCase):
     def setUp(self):
         StreamStdoutTestCase.setUp(self)
         self.option = parse_args("app")
-        self.foo = FunctionInfo("foo", 'FILENAME', 100)
+        self.foo = FunctionInfo("foo", "FILENAME", 100)
         self.fileSummary = FileInformation("FILENAME", 123, [self.foo])
         self.extensions = get_extensions([])
         self.scheme = OutputScheme(self.extensions)
-
-
-    def test_json_output(self):
-        json_output([self.fileSummary], self.option)
-        self.assertRegexpMatches(sys.stdout.stream,
-                                 r"NLOC,CCN,token,PARAM,length,location,file,function,start,end")
 
 
     def test_print_fileinfo(self):
@@ -32,7 +27,20 @@ class TestCSVOutput(StreamStdoutTestCase):
 
         json_output([fileStat], False)
 
-        self.assertEquals(
-            '1,16,1,0,0,"foo@100-100@FILENAME","FILENAME","foo",100,100',
-            sys.stdout.stream.splitlines()[1]
-        )
+        json_object = json.loads(sys.stdout.stream)
+
+        self.assertTrue("header" in json_object)
+        self.assertTrue("files"  in json_object)
+
+        self.assertTrue(len(json_object["files"]) == 1)
+
+        self.assertTrue(json_object["files"][0]["NLOC"] == 1)
+        self.assertTrue(json_object["files"][0]["CCN"] == 16)
+        self.assertTrue(json_object["files"][0]["token"] == 1)
+        self.assertTrue(json_object["files"][0]["PARAM"] == 0)
+        self.assertTrue(json_object["files"][0]["length"] == 0)
+        self.assertTrue(json_object["files"][0]["location"] == "foo@100-100@FILENAME")
+        self.assertTrue(json_object["files"][0]["file"] == "FILENAME")
+        self.assertTrue(json_object["files"][0]["function"] == "foo")
+        self.assertTrue(json_object["files"][0]["start"] == 100)
+        self.assertTrue(json_object["files"][0]["end"] == 100)
