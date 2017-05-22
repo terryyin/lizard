@@ -133,6 +133,8 @@ Options
                         "./folder/*" exclude everything in the folder
                         recursively. Multiple patterns can be specified. Don't
                         forget to add "" around the pattern.
+  --json                Generate JSON output as a transform of the default
+                        output
   -X, --xml             Generate XML in cppncss style instead of the tabular
                         output. Useful to generate report in Jenkins server
   -t WORKING_THREADS, --working_threads WORKING_THREADS
