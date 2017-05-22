@@ -39,6 +39,7 @@ except ImportError:
 try:
     from lizard_ext import print_xml
     from lizard_ext import print_csv
+    from lizard_ext import print_json
     from lizard_ext import html_output
     from lizard_ext import auto_open, auto_read
 except ImportError:
@@ -185,6 +186,12 @@ def arg_parser(prog=None):
                         server''',
                         action="store_const",
                         const=print_xml,
+                        dest="printer")
+    parser.add_argument("--json",
+                        help='''Generate JSON output as a transform of the
+                        default output''',
+                        action="store_const",
+                        const=print_json,
                         dest="printer")
     parser.add_argument("--csv",
                         help='''Generate CSV output as a transform of the
