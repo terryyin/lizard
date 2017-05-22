@@ -1,12 +1,20 @@
 """
 This extension counts nested control structures within a function.
 
-The extension is implemented with C++ and Python in mind,
+The extension is implemented with C++ in mind,
 but it is expected to work with other languages supported by Lizard
 with its language reader implementing 'nesting_level' metric for tokens.
 
 The code borrows heavily from implementation of Nesting Depth extension
 originally written by Mehrdad Meh and Terry Yin.
+
+WARNING: The current implementation does not support languages
+         that reutelize flow-control tokens (if, for, etc.)
+         in both statements and expressions (e.g., Python).
+         The application to these languages will yield higher NS count
+         than the real value.
+
+NOTE: For Python, pylint already implements 'max-nested-blocks'.
 """
 
 from lizard import FunctionInfo
