@@ -19,10 +19,18 @@ class TestCSVOutput(StreamStdoutTestCase):
         self.scheme = OutputScheme(self.extensions)
 
 
-    def test_csv_output(self):
-        csv_output([self.fileSummary], self.option)
+    def test_csv_header(self):
+        csv_output([self.fileSummary], True)
         self.assertRegexpMatches(sys.stdout.stream,
                                  r"NLOC,CCN,token,PARAM,length,location,file,function,start,end")
+
+
+    def test_csv_no_header(self):
+        csv_output([self.fileSummary], False)
+        self.assertEquals(
+            '1,1,1,0,0,"foo@100-100@FILENAME","FILENAME","foo",100,100',
+            sys.stdout.stream.splitlines()[0]
+        )
 
 
     def test_print_fileinfo(self):
@@ -30,7 +38,7 @@ class TestCSVOutput(StreamStdoutTestCase):
         self.foo.cyclomatic_complexity = 16
         fileStat = FileInformation("FILENAME", 1, [self.foo])
 
-        csv_output([fileStat], False)
+        csv_output([fileStat], True)
 
         self.assertEquals(
             '1,16,1,0,0,"foo@100-100@FILENAME","FILENAME","foo",100,100',

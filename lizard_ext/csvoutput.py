@@ -18,7 +18,9 @@ due to the nature of CSV outputs. The differences are:
 
 
 def csv_output(result, verbose):
-    print("NLOC,CCN,token,PARAM,length,location,file,function,start,end")
+    if verbose:
+        print("NLOC,CCN,token,PARAM,length,location,file,function,start,end")
+
     for source_file in result:
         if source_file:
             for source_function in source_file.function_list:
