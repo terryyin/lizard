@@ -461,6 +461,11 @@ class Test_c_cpp_lizard(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual("A::foo", result[0].name)
 
+    def test_union_as_qualifier(self):
+        """Union as namespace for functions."""
+        result = get_cpp_function_list("union A { void foo() {} };")
+        self.assertEqual(1, len(result))
+        self.assertEqual("A::foo", result[0].name)
 
 class Test_cpp11_Attributes(unittest.TestCase):
     """C++11 extendable attributes can appear pretty much anywhere."""
