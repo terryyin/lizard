@@ -173,7 +173,7 @@ class TestXMLOutput(unittest.TestCase):
         self.assertIn('''foo at f1.c:100''', self.xml)
 
     def test_xml_stylesheet(self):
-        self.assertIn('''<?xml-stylesheet type="text/xsl" href="https://raw.github.com/terryyin/lizard/master/lizard.xsl"?>''', self.xml)
+        self.assertIn('''<?xml-stylesheet type="text/xsl" href="https://raw.githubusercontent.com/terryyin/lizard/master/lizard.xsl"?>''', self.xml)
 
     def test_xml_output_on_empty_folder(self):
         xml_empty = xml_output([], True)
