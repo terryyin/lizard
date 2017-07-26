@@ -12,8 +12,8 @@ import lizard
 setup(
     name='lizard',
     version=lizard.VERSION,
-    description='''A code analyzer without caring the C/C++ header files.
-It works with Java, C/C++, JavaScript, Python, Ruby, Swift, Objective C. Metrics includes cyclomatic complexity number etc.''',
+    description='''A code analyzer without caring the C/C++ header files. ''' +
+        '''It works with Java, C/C++, JavaScript, Python, Ruby, Swift, Objective C. Metrics includes cyclomatic complexity number etc.''',
     long_description=open('README.rst').read(),
     url='http://www.lizard.ws',
     download_url='https://pypi.python.org/lizard/',
