@@ -28,6 +28,9 @@ def auto_open(*args, **kwargs):
 
 def auto_read(filename):
     try:
-        return auto_open(filename, 'rU').read()
+        with auto_open(filename, 'rU') as f:
+            return f.read()
+
     except UnicodeDecodeError:
-        return open(filename, 'rb').read().decode('utf8', 'ignore')
+        with open(filename, 'rb') as f:
+            return f.read().decode('utf8', 'ignore')
