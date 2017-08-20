@@ -552,6 +552,19 @@ class Test_Preprocessing(unittest.TestCase):
                 ''')
         self.assertEqual(0, len(result))
 
+    def test_body_with_function_like(self):
+        '''in the following example 'xws' is a macro defined somewhere else'''
+        result = get_cpp_function_list("""int a() { xws (a) if(){} }""")
+        self.assertEqual(1, len(result))
+        self.assertEqual('a', result[0].name)
+
+    def test_body_with_function_like1(self):
+        '''in the following example 'b' is a macro defined somewhere else'''
+        result = get_cpp_function_list("""int a() { if (a) b(){} }""")
+        self.assertEqual(1, len(result))
+        self.assertEqual('a', result[0].name)
+
+
 
 class Test_Big(unittest.TestCase):
 

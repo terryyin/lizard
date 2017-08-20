@@ -115,8 +115,6 @@ class CLikeNestingStackStates(CodeStateMachine):
         if self.__structure_brace_stack:
             structure = self.__structure_brace_stack.pop()
 
-        if structure is None:
-            return
         if structure in self.__paired_structures:
             self.__wait_for_pair = self.__paired_structures[structure]
             return
