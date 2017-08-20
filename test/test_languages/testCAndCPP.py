@@ -558,11 +558,33 @@ class Test_Preprocessing(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual('a', result[0].name)
 
-    def test_body_with_function_like1(self):
-        '''in the following example 'b' is a macro defined somewhere else'''
+    def test_body_with_macro_call_after_if(self):
         result = get_cpp_function_list("""int a() { if (a) b(){} }""")
         self.assertEqual(1, len(result))
         self.assertEqual('a', result[0].name)
+
+    def test_body_with_function_like2(self):
+        '''in the following example 'b' is a macro defined somewhere else'''
+        result = get_cpp_function_list("""
+void myFunction()
+{
+  IGNORE_FLAGS("w-maybe")
+  if(2+2==4)
+  END_IGNORE_FLAGS("w-maybe")
+  {
+    mySecondFunction()
+  }
+}
+
+int mySecondFunction()
+{
+  return 2;
+}
+                """)
+        self.assertEqual(2, len(result))
+        self.assertEqual('mySecondFunction', result[1].name)
+
+
 
 
 
