@@ -33,5 +33,4 @@ class LizardExtension(object):  # pylint: disable=R0903
 
         if "c" not in reader.ext:
             return tokens
-        else:
-            return preprocess_tokens(tokens)
+        return preprocess_tokens(tokens)

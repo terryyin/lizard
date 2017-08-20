@@ -17,13 +17,13 @@ class SwiftReader(CodeReader, CCppCommentsMixin):
         self.parallel_states = [SwiftStates(context)]
 
     @staticmethod
-    def generate_tokens(source_code, _=""):
+    def generate_tokens(source_code, addition='', token_class=None):
         return CodeReader.generate_tokens(
             source_code,
             r"|\w+\?" +
             r"|\w+\!" +
             r"|\?\?" +
-            _)
+            addition)
 
 
 class SwiftStates(CodeStateMachine):  # pylint: disable=R0903

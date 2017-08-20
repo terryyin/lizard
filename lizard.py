@@ -452,8 +452,7 @@ class FileInfoBuilder(object):
 def preprocessing(tokens, reader):
     if hasattr(reader, "preprocess"):
         return reader.preprocess(tokens)
-    else:
-        return (t for t in tokens if not t.isspace() or t == '\n')
+    return (t for t in tokens if not t.isspace() or t == '\n')
 
 
 def comment_counter(tokens, reader):
@@ -788,7 +787,7 @@ def print_and_save_modules(all_fileinfos, extensions, scheme):
 def get_warnings(code_infos, option):
     warnings = whitelist_filter(warning_filter(option, code_infos),
                                 whitelist=option.whitelist)
-    if isinstance(option.sorting, list) and len(option.sorting) > 0:
+    if isinstance(option.sorting, list) and option.sorting:
         warnings = sorted(warnings, reverse=True, key=lambda x: getattr(
             x, option.sorting[0]))
     return warnings

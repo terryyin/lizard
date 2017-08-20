@@ -37,10 +37,10 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
         self.parallel_states = [PythonStates(context, self)]
 
     @staticmethod
-    def generate_tokens(source_code, _=None, tk=None):
+    def generate_tokens(source_code, addition='', token_class=None):
         return ScriptLanguageMixIn.generate_common_tokens(
                 source_code,
-                r"|\'\'\'.*?\'\'\'" + r'|\"\"\".*?\"\"\"', tk)
+                r"|\'\'\'.*?\'\'\'" + r'|\"\"\".*?\"\"\"', token_class)
 
     def preprocess(self, tokens):
         indents = PythonIndents(self.context)

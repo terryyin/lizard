@@ -14,9 +14,7 @@ class CSharpReader(CLikeReader):
     conditions = set(['if', 'for', 'while', '&&', '||', '?', 'catch',
                       'case', '??'])
 
-    def __init__(self, context):
-        super(CSharpReader, self).__init__(context)
-
     @staticmethod
-    def generate_tokens(source_code, _='', tokener=None):
-        return CLikeReader.generate_tokens(source_code, r"|(?:\?\?)", tokener)
+    def generate_tokens(source_code, addition='', token_class=None):
+        return CLikeReader.generate_tokens(
+                source_code, r"|(?:\?\?)", token_class)

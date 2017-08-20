@@ -91,6 +91,7 @@ class MyToken(str):
         return super(MyToken, cls).__new__(cls, value.group(0))
 
     def __init__(self, value):
+        super(MyToken, self).__init__()
         self.begin = value.start()
 
 
@@ -108,7 +109,7 @@ class RubyReader(CodeReader, ScriptLanguageMixIn):
 
     @staticmethod
     @js_style_regex_expression
-    def generate_tokens(source_code, _=''):
+    def generate_tokens(source_code, addition='', token_class=None):
         def process_source(source, _, matcher):
             return ScriptLanguageMixIn.generate_common_tokens(
                 source,
@@ -124,20 +125,18 @@ class RubyReader(CodeReader, ScriptLanguageMixIn):
         matcher = MyToken
         bracket_stack = []
         source = source_code
-        off_set = 0
         while source is not None:
-            for token in process_source(source, _, matcher):
+            for token in process_source(source, addition, matcher):
                 if token == "{":
                     bracket_stack.append("{")
                 elif token == "}":
                     if bracket_stack:
-                        x = bracket_stack.pop()
-                        if x == '#{':
+                        if bracket_stack.pop() == '#{':
                             source = '"'+source[token.begin + 1:]
                             yield token
                             break
                 elif token.startswith('"'):
-                    first, sep, last = token.partition('#{')
+                    first, sep, _ = token.partition('#{')
                     if sep:
                         yield first + '"'
                         yield '${'  # because #will be regarded as comments

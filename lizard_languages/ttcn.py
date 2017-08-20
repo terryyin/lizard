@@ -21,7 +21,7 @@ class TTCNReader(CLikeReader):  # pylint: disable=R0903
                 TTCNStates(context)]
 
     @staticmethod
-    def generate_tokens(source_code, _=None):
+    def generate_tokens(source_code, addition='', token_class=None):
         return CodeReader.generate_tokens(
             source_code,
             r'|' + r'|'.join(re.escape(s) for s in (

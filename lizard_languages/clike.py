@@ -321,12 +321,12 @@ class CLikeStates(CodeStateMachine):
                 self._state_dec_to_imp(token)
                 return
             self._state = self._state_global
-            for token in self._saved_tokens:
-                self._state(token)
+            for tkn in self._saved_tokens:
+                self._state(tkn)
         elif token == '(':
             self._state = self._state_global
-            for token in self._saved_tokens:
-                self._state(token)
+            for tkn in self._saved_tokens:
+                self._state(tkn)
 
     def _state_initialization_list(self, token):
         self._state = self._state_one_initialization

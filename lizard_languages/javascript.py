@@ -16,9 +16,9 @@ class JavaScriptReader(CodeReader, CCppCommentsMixin):
 
     @staticmethod
     @js_style_regex_expression
-    def generate_tokens(source_code, extra='', tokener=None):
-        extra += r"|(?:\$\w+)"
-        return CodeReader.generate_tokens(source_code, extra, tokener)
+    def generate_tokens(source_code, addition='', token_class=None):
+        addition += r"|(?:\$\w+)"
+        return CodeReader.generate_tokens(source_code, addition, token_class)
 
     def __init__(self, context):
         super(JavaScriptReader, self).__init__(context)
