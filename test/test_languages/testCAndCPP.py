@@ -147,7 +147,7 @@ class Test_c_cpp_lizard(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual('fun', result[0].name)
 
-    def test_one_function_in_class(self):
+    def test_two_functions_in_class(self):
         result = get_cpp_function_list("class c {~c(){}}; int d(){}")
         self.assertEqual(2, len(result))
         self.assertEqual("c::~c", result[0].name)

@@ -96,6 +96,7 @@ class CLikeNestingStackStates(CodeStateMachine):
                            "do": "while"}
     __wait_for_pair = False  # Wait for the pair structure to close the level.
     __structure_brace_stack = []  # Structure and brace states.
+    __namespace_separators = [":", "final", "[", "extends", 'implements']
 
     def __pop_without_pair(self):
         """Continue poping nesting levels without the pair."""
@@ -186,7 +187,7 @@ class CLikeNestingStackStates(CodeStateMachine):
         self._state = self._state_global
         if token == "{":
             self.context.add_namespace(''.join(itertools.takewhile(
-                lambda x: x not in [":", "final", "["], saved)))
+                lambda x: x not in self.__namespace_separators, saved)))
 
     @CodeStateMachine.read_inside_brackets_then("<>", "_state_global")
     def _template_declaration(self, _):

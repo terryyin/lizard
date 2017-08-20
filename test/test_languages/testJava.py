@@ -27,3 +27,12 @@ class TestJava(unittest.TestCase):
     def test_class_with_decorator_that_has_namespace(self):
         result = get_java_function_list("@a.b() class funxx{ }")
         self.assertEqual(0, len(result))
+
+    def test_class_name_with_extends(self):
+        result = get_java_function_list("class A extends B { void f(){}}")
+        self.assertEqual('A::f', result[0].name)
+
+    def test_class_name_with_interface(self):
+        result = get_java_function_list("class A implements B { void f(){}}")
+        self.assertEqual('A::f', result[0].name)
+
