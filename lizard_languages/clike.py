@@ -155,9 +155,13 @@ class CLikeNestingStackStates(CodeStateMachine):
 
         elif token == "{":
             self.context.add_bare_nesting()
-            self.__structure_brace_stack.append(False)  # Non-structure braces.
+            self.__structure_brace_stack.append(False)
 
-        elif token == '}' or (token == ";" and self.__structure_brace_stack and
+        elif token == '}':
+            if self.__structure_brace_stack and self.__structure_brace_stack[-1]:
+                self.__pop_structures()
+            self.__pop_structures()
+        elif (token == ";" and self.__structure_brace_stack and
                               self.__structure_brace_stack[-1]):
             self.__pop_structures()
 
