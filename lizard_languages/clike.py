@@ -140,11 +140,7 @@ class CLikeNestingStackStates(CodeStateMachine):
     def _state_structure(self, token):
         """Control-flow structure states right before the body."""
         self._state = self._state_global
-        if token == "{":
-            self.context.add_bare_nesting()
-            self.__structure_brace_stack.append(False)
-        else:
-            self._state(token)
+        self._state(token)
 
     def _state_global(self, token):
         """Dual-purpose state for global and structure bodies."""
@@ -159,7 +155,7 @@ class CLikeNestingStackStates(CodeStateMachine):
 
         elif token == "{":
             self.context.add_bare_nesting()
-            self.__structure_brace_stack.append(None)  # Non-structure braces.
+            self.__structure_brace_stack.append(False)  # Non-structure braces.
 
         elif token == '}' or (token == ";" and self.__structure_brace_stack and
                               self.__structure_brace_stack[-1]):

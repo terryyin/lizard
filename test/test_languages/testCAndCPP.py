@@ -563,6 +563,11 @@ class Test_Preprocessing(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual('a', result[0].name)
 
+    def xtest_body_with_macro_call_after_if_and_no_semicolon_before_the_closing_br(self):
+        result = get_cpp_function_list("""int a() { if (a) b() } int c(){}""")
+        self.assertEqual(2, len(result))
+        self.assertEqual('c', result[1].name)
+
     def test_body_with_function_like2(self):
         '''in the following example 'b' is a macro defined somewhere else'''
         result = get_cpp_function_list("""
