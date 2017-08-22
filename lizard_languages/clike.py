@@ -73,6 +73,56 @@ class CppRValueRefStates(CodeStateMachine):
         self.next(self._state_global)
 
 
+class NestedStructureMixin:
+    __wait_for_pair = False  # Wait for the pair structure to close the level.
+    __structure_brace_stack = []  # Structure and brace states.
+    # Structures paired on the same nesting level.
+    __paired_structures = {"if": "else", "try": "catch", "catch": "catch",
+                           "do": "while"}
+
+    def __pop_without_pair(self, context):
+        """Continue poping nesting levels without the pair."""
+        self.__wait_for_pair = False
+        while (self.__structure_brace_stack and self.__structure_brace_stack[-1]):
+            self.__pop_structure(context)
+            if self.__wait_for_pair:
+                return
+
+    def __pop_structure(self, context):
+        context.pop_nesting()
+        if self.__structure_brace_stack:
+            structure = self.__structure_brace_stack.pop()
+            self.__wait_for_pair = self.__paired_structures.get(structure)
+
+    def __pop_structures(self, context):
+        """Pops structures up to the one with braces or a waiting pair."""
+        self.__pop_structure(context)
+        if not self.__wait_for_pair:
+            self.__pop_without_pair(context)
+
+    def pop_until_wait_for_pair(self, token, context):
+        if self.__wait_for_pair and token != self.__wait_for_pair:
+            self.__pop_without_pair(context)
+
+    def push_structure(self, token, context):
+        context.add_bare_nesting()
+        self.__wait_for_pair = False
+        self.__structure_brace_stack.append(token)
+
+    def structure_global(self, token, context):
+        if token == "{":
+            self.push_structure(False, context)
+
+        elif token == '}':
+            while self.__structure_brace_stack and self.__structure_brace_stack[-1]:
+                self.__pop_structure(context)
+            self.__pop_structures(context)
+        elif (token == ";" and self.__structure_brace_stack and
+                              self.__structure_brace_stack[-1]):
+            self.__pop_structures(context)
+
+
+
 # pylint: disable=R0903
 class CLikeNestingStackStates(CodeStateMachine):
     """Machinery to track nesting levels of tokens.
@@ -89,89 +139,33 @@ class CLikeNestingStackStates(CodeStateMachine):
     The handling of these complex cases is unspecified and can be ignored.
     """
 
+    __namespace_separators = [":", "final", "[", "extends", 'implements']
     __structures = set(["if", "else", "for", "while", "do", "switch",
                         "try", "catch"])
-    # Structures paired on the same nesting level.
-    __paired_structures = {"if": "else", "try": "catch", "catch": "catch",
-                           "do": "while"}
-    __wait_for_pair = False  # Wait for the pair structure to close the level.
-    __structure_brace_stack = []  # Structure and brace states.
-    __namespace_separators = [":", "final", "[", "extends", 'implements']
-
-    def __pop_without_pair(self):
-        """Continue poping nesting levels without the pair."""
-        self.__wait_for_pair = False
-        while (self.__structure_brace_stack and
-               self.__structure_brace_stack[-1]):
-            structure = self.__structure_brace_stack.pop()
-            self.context.pop_nesting()
-            if structure in self.__paired_structures:
-                self.__wait_for_pair = self.__paired_structures[structure]
-                return
-
-    def __pop_structures(self):
-        """Pops structures up to the one with braces or a waiting pair."""
-        self.context.pop_nesting()
-        structure = None
-        if self.__structure_brace_stack:
-            structure = self.__structure_brace_stack.pop()
-
-        if structure in self.__paired_structures:
-            self.__wait_for_pair = self.__paired_structures[structure]
-            return
-        self.__pop_without_pair()
-
-    def __else_if_structure(self, token):
-        """Handles possible compound 'else if' after 'else' token."""
-        self._state = self.__declare_structure
-        if token == "if":
-            self.__structure_brace_stack[-1] = "if"
-        else:
-            self._state(token)
+    nested = NestedStructureMixin()
 
     @CodeStateMachine.read_inside_brackets_then("()")
     def __declare_structure(self, token):
         """Ignores structures between parentheses on structure declaration."""
-        self.context.add_bare_nesting()
-        self._state = self._state_structure
+        self._state = self._state_global
         if token != ")":
             self._state(token)
 
-    def _state_structure(self, token):
-        """Control-flow structure states right before the body."""
-        self._state = self._state_global
-        self._state(token)
-
     def _state_global(self, token):
         """Dual-purpose state for global and structure bodies."""
-        while self.__wait_for_pair and token != self.__wait_for_pair:
-            self.__pop_without_pair()
+        self.nested.pop_until_wait_for_pair(token, self.context)
 
         if token == "template":
             self._state = self._template_declaration
 
         elif token in ("struct", "class", "namespace", "union"):
             self._state = self._read_namespace
+        else:
+            self.nested.structure_global(token, self.context)
 
-        elif token == "{":
-            self.context.add_bare_nesting()
-            self.__structure_brace_stack.append(False)
-
-        elif token == '}':
-            while self.__structure_brace_stack and self.__structure_brace_stack[-1]:
-                self.__pop_structures()
-            self.__pop_structures()
-        elif (token == ";" and self.__structure_brace_stack and
-                              self.__structure_brace_stack[-1]):
-            self.__pop_structures()
-
-        elif token in self.__structures:
-            self.__wait_for_pair = False
-            self.__structure_brace_stack.append(token)
-            if token == "else":
-                self._state = self.__else_if_structure
-            else:
-                self._state = self.__declare_structure
+        if token in self.__structures:
+            self.nested.push_structure(token, self.context)
+            self._state = self.__declare_structure
 
     def _read_namespace(self, token):
         """Processes declarations right after namespace/class keywords."""

@@ -107,8 +107,8 @@ class LizardExtension(object):  # pylint: disable=R0903
                 structure_stack.pop()
 
         for token in tokens:
-            yield token
             cur_level = reader.context.current_nesting_level
+            yield token
             if token in structures:
                 add_nested_structure(token)
             else:
