@@ -13,4 +13,5 @@ def print_xml(results, options, _):
 
 
 def print_csv(results, options, _):
-    return csv_output(list(results), options.verbose)
+    csv_output(list(results), options.verbose)
+    return 0
