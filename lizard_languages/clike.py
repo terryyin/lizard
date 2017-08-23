@@ -79,11 +79,12 @@ class NestedStructureMixin:
     # Structures paired on the same nesting level.
     __paired_structures = {"if": "else", "try": "catch", "catch": "catch",
                            "do": "while"}
+    __stack_of_stacks = []
 
     def __pop_without_pair(self, context):
         """Continue poping nesting levels without the pair."""
         self.__wait_for_pair = False
-        while (self.__structure_brace_stack and self.__structure_brace_stack[-1]):
+        while (self.__structure_brace_stack):
             self.__pop_structure(context)
             if self.__wait_for_pair:
                 return
@@ -101,7 +102,7 @@ class NestedStructureMixin:
             self.__pop_without_pair(context)
 
     def pop_until_wait_for_pair(self, token, context):
-        if self.__wait_for_pair and token != self.__wait_for_pair:
+        while self.__wait_for_pair and token != self.__wait_for_pair:
             self.__pop_without_pair(context)
 
     def push_structure(self, token, context):
@@ -111,14 +112,19 @@ class NestedStructureMixin:
 
     def structure_global(self, token, context):
         if token == "{":
-            self.push_structure(False, context)
+            context.add_bare_nesting()
+            self.__wait_for_pair = False
+            self.__structure_brace_stack.append(False)
+            self.__stack_of_stacks.append(self.__structure_brace_stack)
+            self.__structure_brace_stack = []
 
         elif token == '}':
-            while self.__structure_brace_stack and self.__structure_brace_stack[-1]:
+            while self.__structure_brace_stack:
                 self.__pop_structure(context)
+            if self.__stack_of_stacks:
+                self.__structure_brace_stack = self.__stack_of_stacks.pop()
             self.__pop_structures(context)
-        elif (token == ";" and self.__structure_brace_stack and
-                              self.__structure_brace_stack[-1]):
+        elif (token == ";" and self.__structure_brace_stack):
             self.__pop_structures(context)
 
 
