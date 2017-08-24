@@ -73,60 +73,6 @@ class CppRValueRefStates(CodeStateMachine):
         self.next(self._state_global)
 
 
-class NestedStructureMixin:
-    __structure_brace_stack = 0  # Structure and brace states.
-    __stack_of_stacks = []
-    __structures = set(["if", "else", "for", "while", "do", "switch",
-                        "try", "catch"])
-
-    def __pop_structure(self, context):
-        if self.__structure_brace_stack:
-            context.pop_nesting()
-            self.__structure_brace_stack -= 1
-
-
-    def push_structure(self, context):
-        context.add_bare_nesting()
-        self.__structure_brace_stack += 1
-
-    def push_namespace(self, context, name):
-        context.add_namespace(name)
-        self.__structure_brace_stack += 1
-        self.__stack_of_stacks.append(self.__structure_brace_stack)
-        self.__structure_brace_stack = 0
-
-    def _structure_global(self, token, context):
-        if token == "{":
-            self.push_structure(context)
-            self.__stack_of_stacks.append(self.__structure_brace_stack)
-            self.__structure_brace_stack = 0
-        elif token in '}':
-            while self.__structure_brace_stack:
-                self.__pop_structure(context)
-            if token == '}':
-                if self.__stack_of_stacks:
-                    self.__structure_brace_stack = self.__stack_of_stacks.pop()
-                self.__pop_structure(context)
-                self.__pop_structure(context)
-
-
-    def structure_global(self, token, context):
-        if token == "{":
-            self.push_structure(context)
-            self.__stack_of_stacks.append(self.__structure_brace_stack)
-            self.__structure_brace_stack = 0
-        elif token in ';}':
-            while self.__structure_brace_stack:
-                self.__pop_structure(context)
-            if token == '}':
-                if self.__stack_of_stacks:
-                    self.__structure_brace_stack = self.__stack_of_stacks.pop()
-                self.__pop_structure(context)
-                self.__pop_structure(context)
-        elif token in self.__structures:
-            self.push_structure(context)
-
-
 # pylint: disable=R0903
 class CLikeNestingStackStates(CodeStateMachine):
     """Machinery to track nesting levels of tokens.
@@ -144,13 +90,6 @@ class CLikeNestingStackStates(CodeStateMachine):
     """
 
     __namespace_separators = [":", "final", "[", "extends", 'implements']
-    nested = NestedStructureMixin()
-
-    @CodeStateMachine.read_inside_brackets_then("()")
-    def __declare_structure(self, token):
-        """Ignores structures between parentheses on structure declaration."""
-        self._state = self._state_global
-        self._state(token)
 
     def _state_global(self, token):
         """Dual-purpose state for global and structure bodies."""
@@ -159,10 +98,10 @@ class CLikeNestingStackStates(CodeStateMachine):
 
         elif token in ("struct", "class", "namespace", "union"):
             self._state = self._read_namespace
-        else:
-            self.nested.structure_global(token, self.context)
-        if token == 'for':
-            self._state = self.__declare_structure
+        elif token == "{":
+            self.context.add_bare_nesting()
+        elif token == '}':
+            self.context.pop_nesting()
 
     def _read_namespace(self, token):
         """Processes declarations right after namespace/class keywords."""
@@ -177,7 +116,7 @@ class CLikeNestingStackStates(CodeStateMachine):
         """Processes namespace/class/struct names from declrations."""
         self._state = self._state_global
         if token == "{":
-            self.nested.push_namespace(self.context, ''.join(itertools.takewhile(
+            self.context.add_namespace(''.join(itertools.takewhile(
                 lambda x: x not in self.__namespace_separators, saved)))
 
     @CodeStateMachine.read_inside_brackets_then("<>", "_state_global")
