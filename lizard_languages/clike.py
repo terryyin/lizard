@@ -74,46 +74,31 @@ class CppRValueRefStates(CodeStateMachine):
 
 
 class NestedStructureMixin:
-    __wait_for_pair = False  # Wait for the pair structure to close the level.
     __structure_brace_stack = []  # Structure and brace states.
-    # Structures paired on the same nesting level.
-    __paired_structures = {"if": "else", "try": "catch", "catch": "catch",
-                           "do": "while"}
     __stack_of_stacks = []
 
     def __pop_without_pair(self, context):
         """Continue poping nesting levels without the pair."""
-        self.__wait_for_pair = False
-        while (self.__structure_brace_stack):
+        if (self.__structure_brace_stack):
             self.__pop_structure(context)
-            if self.__wait_for_pair:
-                return
 
     def __pop_structure(self, context):
         context.pop_nesting()
         if self.__structure_brace_stack:
-            structure = self.__structure_brace_stack.pop()
-            self.__wait_for_pair = self.__paired_structures.get(structure)
+            self.__structure_brace_stack.pop()
 
     def __pop_structures(self, context):
         """Pops structures up to the one with braces or a waiting pair."""
         self.__pop_structure(context)
-        if not self.__wait_for_pair:
-            self.__pop_without_pair(context)
-
-    def pop_until_wait_for_pair(self, token, context):
-        while self.__wait_for_pair and token != self.__wait_for_pair:
-            self.__pop_without_pair(context)
+        self.__pop_without_pair(context)
 
     def push_structure(self, token, context):
         context.add_bare_nesting()
-        self.__wait_for_pair = False
         self.__structure_brace_stack.append(token)
 
     def structure_global(self, token, context):
         if token == "{":
             context.add_bare_nesting()
-            self.__wait_for_pair = False
             self.__structure_brace_stack.append(False)
             self.__stack_of_stacks.append(self.__structure_brace_stack)
             self.__structure_brace_stack = []
@@ -159,8 +144,6 @@ class CLikeNestingStackStates(CodeStateMachine):
 
     def _state_global(self, token):
         """Dual-purpose state for global and structure bodies."""
-        self.nested.pop_until_wait_for_pair(token, self.context)
-
         if token == "template":
             self._state = self._template_declaration
 
