@@ -80,7 +80,6 @@ class NestedStructureMixin:
                         "try", "catch"])
 
     def __pop_structure(self, context):
-        print("popping_structure", self.__structure_brace_stack, self.__stack_of_stacks)
         if self.__structure_brace_stack:
             context.pop_nesting()
             self.__structure_brace_stack -= 1
@@ -89,17 +88,29 @@ class NestedStructureMixin:
     def push_structure(self, context):
         context.add_bare_nesting()
         self.__structure_brace_stack += 1
-        print("push_structure", self.__structure_brace_stack, self.__stack_of_stacks)
 
     def push_namespace(self, context, name):
         context.add_namespace(name)
         self.__structure_brace_stack += 1
         self.__stack_of_stacks.append(self.__structure_brace_stack)
         self.__structure_brace_stack = 0
-        print("push_namespace", name, self.__structure_brace_stack, self.__stack_of_stacks)
+
+    def _structure_global(self, token, context):
+        if token == "{":
+            self.push_structure(context)
+            self.__stack_of_stacks.append(self.__structure_brace_stack)
+            self.__structure_brace_stack = 0
+        elif token in '}':
+            while self.__structure_brace_stack:
+                self.__pop_structure(context)
+            if token == '}':
+                if self.__stack_of_stacks:
+                    self.__structure_brace_stack = self.__stack_of_stacks.pop()
+                self.__pop_structure(context)
+                self.__pop_structure(context)
+
 
     def structure_global(self, token, context):
-        print(token)
         if token == "{":
             self.push_structure(context)
             self.__stack_of_stacks.append(self.__structure_brace_stack)
