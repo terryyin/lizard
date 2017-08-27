@@ -13,7 +13,7 @@ def process_python(source):
     return get_python_function_list_with_extnesion(source, NestedStructure())
 
 
-class X:#TestCppNestedStructures(unittest.TestCase):
+class TestCppNestedStructures(unittest.TestCase):
 
     def test_no_structures(self):
         result = process_cpp("int fun(){}")
@@ -69,6 +69,16 @@ class X:#TestCppNestedStructures(unittest.TestCase):
 
     def test_nested_if_structures(self):
         result = process_cpp("""
+        x a() {
+          if (a && b)
+            if (a != 0)
+               a = b;
+        }
+        """)
+        self.assertEqual(2, result[0].max_nested_structures)
+
+    def test_nested_if_structures_in_2_functions(self):
+        result = process_cpp("""
         x c() {
           if (a && b) {
             if(a != 0) {
@@ -80,7 +90,6 @@ class X:#TestCppNestedStructures(unittest.TestCase):
           if (a && b)
             if (a != 0)
                a = b;
-
         }
         """)
         self.assertEqual(2, result[0].max_nested_structures)
@@ -184,6 +193,28 @@ class X:#TestCppNestedStructures(unittest.TestCase):
             } catch(...) {
               if (b) return 42;
             }
+        }
+        """)
+        self.assertEqual(3, result[0].max_nested_structures)
+
+    def test_non_block_if(self):
+        result = process_cpp("""
+        x c() {
+          if (a)
+            if(b) {
+              {}
+              if (c) { if (e) f; }
+            }
+        }
+        """)
+        self.assertEqual(4, result[0].max_nested_structures)
+
+    def test_braceless_nested_if_and_for(self):
+        result = process_cpp("""
+        x c() {
+          if (a)
+              for (;;)
+                if(b) c;
         }
         """)
         self.assertEqual(3, result[0].max_nested_structures)
@@ -345,7 +376,7 @@ class X:#TestCppNestedStructures(unittest.TestCase):
         self.assertEqual(1, result[0].max_nested_structures)
 
 
-class TestPythonNestedStructures(unittest.TestCase):
+class X: #TestPythonNestedStructures(unittest.TestCase):
 
     def test_no_structures(self):
         result = process_python("def fun():\n pass")

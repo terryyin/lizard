@@ -11,14 +11,48 @@ originally written by Mehrdad Meh and Terry Yin.
 
 from lizard import FunctionInfo
 from lizard_ext.lizardnd import patch_append_method
+from lizard_languages.code_reader import CodeStateMachine
+from .extension_base import ExtensionBase
 
 
 DEFAULT_NS_THRESHOLD = 3
 
 
-class LizardExtension(object):  # pylint: disable=R0903
+class LizardExtension(ExtensionBase):  # pylint: disable=R0903
+    """The intent of the code is to detect control structures as entities.
+
+    The implementation relies on nesting level metric for tokens
+    provided by language readers.
+    If the following contract for the nesting level metric does not hold,
+    this implementation of nested structure counting is invalid.
+
+    If a control structure has started its block (e.g., '{'),
+    and its level is **less** than the next structure,
+    the next structure is nested.
+
+    If a control structure has *not* started its block,
+    and its level is **no more** than the next structure,
+    the next structure is nested (compound statement).
+
+    If a control structure level is **higher** than the next structure,
+    it is considered closed.
+
+    If a control structure has started its block,
+    and its level is **equal** to the next structure,
+    it is considered closed.
+
+    The level of any non-structure tokens is treated
+    with the same logic as for the next structures
+    for control block **starting** and **closing** purposes.
+    """
 
     FUNCTION_INFO = {"max_nested_structures": {"caption": "  NS  "}}
+
+    # TODO: Delegate this to language readers  # pylint: disable=fixme
+    structures = set(['if', 'else', 'elif', 'for', 'foreach', 'while',
+                      'do', 'try', 'catch', 'switch', 'finally',
+                      'except', 'with'])
+    matching_structures = set(['else', 'elif', 'catch', 'finally'])
 
     @staticmethod
     def set_args(parser):
@@ -31,88 +65,39 @@ class LizardExtension(object):  # pylint: disable=R0903
             dest="NS",
             default=DEFAULT_NS_THRESHOLD)
 
-    def __call__(self, tokens, reader):
-        """The intent of the code is to detect control structures as entities.
+    def __init__(self):
+        super(LizardExtension, self).__init__(None)
+        self.structure_piles = [0]
 
-        The implementation relies on nesting level metric for tokens
-        provided by language readers.
-        If the following contract for the nesting level metric does not hold,
-        this implementation of nested structure counting is invalid.
+    def pile_up_within_block(self):
+        self.structure_piles[-1] += 1
+        cur_level = sum(self.structure_piles)
+        if self.context.current_function.max_nested_structures < cur_level:
+            self.context.current_function.max_nested_structures = cur_level
 
-        If a control structure has started its block (e.g., '{'),
-        and its level is **less** than the next structure,
-        the next structure is nested.
+    def _state_global(self, token):
+        if token == '{':
+            self.structure_piles.append(0)
+        elif token in ';}':
+            if token == '}':
+                self.structure_piles.pop()
+            self._state = self._block_ending
+        elif token in self.structures:
+            self._state = self._in_structure_head
 
-        If a control structure has *not* started its block,
-        and its level is **no more** than the next structure,
-        the next structure is nested (compound statement).
+    @CodeStateMachine.read_inside_brackets_then("()")
+    def _in_structure_head(self, token):
+        self.pile_up_within_block()
+        self._state = self._state_global
+        self._state(token)
 
-        If a control structure level is **higher** than the next structure,
-        it is considered closed.
-
-        If a control structure has started its block,
-        and its level is **equal** to the next structure,
-        it is considered closed.
-
-        The level of any non-structure tokens is treated
-        with the same logic as for the next structures
-        for control block **starting** and **closing** purposes.
-        """
-        # TODO: Delegate this to language readers  # pylint: disable=fixme
-        structures = set(['if', 'else', 'elif', 'for', 'foreach', 'while',
-                          'do', 'try', 'catch', 'switch', 'finally',
-                          'except', 'with'])
-
-        cur_level = 0
-        start_structure = [False]  # Just to make it mutable.
-        structure_stack = []  # [(token, ns_level)]
-
-        def add_nested_structure(token):
-            """Conditionally adds nested structures."""
-            if structure_stack:
-                prev_token, ns_level = structure_stack[-1]
-                if cur_level == ns_level:
-                    if (token == "if" and prev_token == "else" and
-                            not start_structure[0]):
-                        return  # Compound 'else if' in C-like languages.
-                    if start_structure[0]:
-                        structure_stack.pop()
-                elif cur_level < ns_level:
-                    while structure_stack and ns_level >= cur_level:
-                        _, ns_level = structure_stack.pop()
-
-            structure_stack.append((token, cur_level))
-            start_structure[0] = False  # Starts on the next level with body.
-
-            ns_cur = len(structure_stack)
-            if reader.context.current_function.max_nested_structures < ns_cur:
-                reader.context.current_function.max_nested_structures = ns_cur
-
-        def pop_nested_structure():
-            """Conditionally pops the nested structures if levels match."""
-            if not structure_stack:
-                return
-
-            _, ns_level = structure_stack[-1]
-
-            if cur_level > ns_level:
-                start_structure[0] = True
-
-            elif cur_level < ns_level:
-                while structure_stack and ns_level >= cur_level:
-                    _, ns_level = structure_stack.pop()
-                start_structure[0] = bool(structure_stack)
-
-            elif start_structure[0]:
-                structure_stack.pop()
-
-        for token in tokens:
-            cur_level = reader.context.current_nesting_level
-            yield token
-            if token in structures:
-                add_nested_structure(token)
-            else:
-                pop_nested_structure()
+    def _block_ending(self, token):
+        if token in self.matching_structures:
+            self.structure_piles[-1] -= 1
+        else:
+            self.structure_piles[-1] = 0
+        self._state = self._state_global
+        self._state(token)
 
 
 def _init_nested_structure_data(self, *_):
