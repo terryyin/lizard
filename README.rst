@@ -304,3 +304,13 @@ Lizard may choose not to deal with some advanced or complicated language feature
 - Some C++ complicated templates may cause confusion with matching angle brackets
   and processing less-than ``<`` or more-than ``>`` operators
   inside of template arguments.
+
+
+Literatures Refering to Lizard
+-----------
+
+Lizard is often used in software related researches. If you used it to support your work, you may contact the lizard author to add your work in the following list.
+
+- Software Quality in the ATLAS experiment at CERN, which refers to Lizard as one of the tools, has been published in the Journal of Physics: http://iopscience.iop.org/article/10.1088/1742-6596/898/7/072011
+
+    - S Martin-Haugh et al 2017 J. Phys.: Conf. Ser. 898 072011
