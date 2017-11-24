@@ -141,7 +141,9 @@ Options
                         number of working threads. The default value is 1.
                         Using a bigger number can fully utilize the CPU and
                         often faster.
-  -m, --modified        Calculate modified cyclomatic complexity number
+  -m, --modified        Calculate modified cyclomatic complexity number,
+                        which count a switch/case with multiple cases as
+                        one CCN.
   -E EXTENSIONS, --extension EXTENSIONS
                         User the extensions. The available extensions are:
                         -Ecpre: it will ignore code in the #else branch.

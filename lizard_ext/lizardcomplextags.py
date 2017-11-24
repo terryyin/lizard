@@ -15,4 +15,5 @@ class LizardExtension(object):  # pylint: disable=R0903
             if not hasattr(context.current_function, 'complex_tags'):
                 context.current_function.complex_tags = []
             if token in conditions:
-                context.current_function.complex_tags.append([token, context.current_line])
+                context.current_function.complex_tags.append(
+                        [token, context.current_line])

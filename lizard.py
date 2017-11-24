@@ -198,7 +198,9 @@ def arg_parser(prog=None):
                         const=html_output,
                         dest="printer")
     parser.add_argument("-m", "--modified",
-                        help="Calculate modified cyclomatic complexity number",
+                        help='''Calculate modified cyclomatic complexity number,
+                        which count a switch/case with multiple cases as
+                        one CCN.''',
                         action="append_const",
                         const="modified",
                         dest="extensions",
