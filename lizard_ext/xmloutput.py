@@ -15,7 +15,7 @@ def xml_output(result, verbose):
     processing_instruction = doc.createProcessingInstruction(
         'xml-stylesheet',
         'type="text/xsl" ' +
-        'href="https://raw.githubusercontent.com' +
+        'href="https://raw.github.com' +
         '/terryyin/lizard/master/lizard.xsl"')
     doc.insertBefore(processing_instruction, root)
 
