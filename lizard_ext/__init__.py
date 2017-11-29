@@ -1,6 +1,7 @@
 ''' extensions of lizard '''
 
 from __future__ import print_function
+from .version import version
 from .htmloutput import html_output
 from .csvoutput import csv_output
 from .xmloutput import xml_output

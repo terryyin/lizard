@@ -37,14 +37,13 @@ except ImportError:
     sys.stderr.write("Cannot find the lizard_languages module.")
     sys.exit(2)
 try:
+    from lizard_ext import version
     from lizard_ext import print_xml
     from lizard_ext import print_csv
     from lizard_ext import html_output
     from lizard_ext import auto_open, auto_read
 except ImportError:
     pass
-
-VERSION = "1.12.15"
 
 DEFAULT_CCN_THRESHOLD, DEFAULT_WHITELIST, \
     DEFAULT_MAX_FUNC_LENGTH = 15, "whitelizard.txt", 1000
@@ -96,7 +95,7 @@ def arg_parser(prog=None):
     parser = ArgumentParser(prog=prog)
     parser.add_argument('paths', nargs='*', default=['.'],
                         help='list of the filename/paths.')
-    parser.add_argument('--version', action='version', version=VERSION)
+    parser.add_argument('--version', action='version', version=version)
     parser.add_argument("-l", "--languages",
                         help='''List the programming languages you want to
                         analyze. if left empty, it'll search for all languages
