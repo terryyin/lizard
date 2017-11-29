@@ -4,3 +4,4 @@ pycodestyle
 wheel
 pylint
 pytest
+twine
