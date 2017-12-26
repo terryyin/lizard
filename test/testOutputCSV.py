@@ -22,13 +22,13 @@ class TestCSVOutput(StreamStdoutTestCase):
     def test_csv_header(self):
         csv_output([self.fileSummary], True)
         self.assertRegexpMatches(sys.stdout.stream,
-                                 r"NLOC,CCN,token,PARAM,length,location,file,function,start,end")
+                                 r"NLOC,CCN,token,PARAM,length,location,file,function,long_name,start,end")
 
 
     def test_csv_no_header(self):
         csv_output([self.fileSummary], False)
         self.assertEquals(
-            '1,1,1,0,0,"foo@100-100@FILENAME","FILENAME","foo",100,100',
+            '1,1,1,0,0,"foo@100-100@FILENAME","FILENAME","foo","foo",100,100',
             sys.stdout.stream.splitlines()[0]
         )
 
@@ -41,6 +41,6 @@ class TestCSVOutput(StreamStdoutTestCase):
         csv_output([fileStat], True)
 
         self.assertEquals(
-            '1,16,1,0,0,"foo@100-100@FILENAME","FILENAME","foo",100,100',
+            '1,16,1,0,0,"foo@100-100@FILENAME","FILENAME","foo","foo",100,100',
             sys.stdout.stream.splitlines()[1]
         )
