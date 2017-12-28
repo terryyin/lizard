@@ -76,3 +76,45 @@ class Test_parser_for_JavaScript(unittest.TestCase):
         functions = get_js_function_list("{}")
         self.assertEqual(0, len(functions))
 
+    # Arrow Functions
+    def test_simple_arrow_function_inside_function(self):
+        functions = get_js_function_list("() => {}")
+        self.assertEqual("() =>", functions[0].name)
+
+    def test_arrow_function_inside_function(self):
+        functions = get_js_function_list("function a(){() => {}}")
+        self.assertEqual("() =>", functions[0].name)
+
+    def test_simple_arrow_function_complexity(self):
+        functions = get_js_function_list("() => {m;if(a);}")
+        self.assertEqual(2, functions[0].cyclomatic_complexity)
+
+    @unittest.skip("Not yet implemented")
+    def test_arrow_function_parameter_count(self):
+        functions = get_js_function_list("(a, b) => {}")
+        self.assertEqual(2, functions[0].parameter_count)
+
+    @unittest.skip("Not yet implemented")
+    def test_arrow_function_assigning_to_a_name(self):
+        functions = get_js_function_list("a = () => (a, b) {}")
+        self.assertEqual('a', functions[0].name)
+
+    def test_not_a_arrow_function_assigning_to_a_name(self):
+        functions = get_js_function_list("abc=3; (a, b) => {}")
+        self.assertEqual('() =>', functions[0].name)
+
+    @unittest.skip("Not yet implemented")
+    def test_function_without_name_assign_to_field(self):
+        functions = get_js_function_list("a.b.c = (a, b) => {}")
+        self.assertEqual('a.b.c', functions[0].name)
+
+    @unittest.skip("Not yet implemented")
+    def test_function_in_a_object(self):
+        functions = get_js_function_list("var App={a: () => {};}")
+        self.assertEqual('a', functions[0].name)
+
+    @unittest.skip("Not yet implemented")
+    def test_function_in_a_function(self):
+        functions = get_js_function_list("const a = () => {const b = () => {}}")
+        self.assertEqual('b', functions[0].name)
+        self.assertEqual('a', functions[1].name)

@@ -15,7 +15,7 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
         self.function_stack = []
 
     def _state_global(self, token):
-        if token == 'function':
+        if token == 'function' or token == '=>':
             self._state = self._function
         elif token in ('=', ':'):
             self.function_name = self.last_tokens
@@ -27,7 +27,7 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
                 self.brace_count += 1
             elif token == '}':
                 self.brace_count -= 1
-                if self.brace_count == 0:
+                if self.brace_count <= 0:
                     self._state = self._state_global
                     self._pop_function_from_stack()
             self.last_tokens = token
@@ -40,23 +40,32 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
             self.brace_count = self.context.current_function.brace_count
 
     def _function(self, token):
-        if token != '(':
+        if self.last_token == '=>':
+            self._start_new_function('() =>')
+        elif token != '(':
             self.function_name = token
         else:
-            self.context.current_function.brace_count = self.brace_count
-            self.function_stack.append(self.context.current_function)
-            self.brace_count = 0
-            self.context.start_new_function(self.function_name or 'function')
-            self._state = self._dec
+            self._start_new_function()
 
     def _field(self, token):
         self.last_tokens += token
         self._state = self._state_global
 
     def _dec(self, token):
-        if token == ')':
+        if token == ')' or token == '}':
             self._state = self._state_global
         else:
             self.context.parameter(token)
             return
         self.context.add_to_long_function_name(" " + token)
+
+    def _start_new_function(self, function_name='function'):
+        self.context.current_function.brace_count = self.brace_count
+        self.function_stack.append(self.context.current_function)
+        self.brace_count = 0
+        self.context.start_new_function(self.function_name or function_name)
+        if function_name == '() =>':
+            self.context.parameter('s')
+            self._state = self._state_global
+        else:
+            self._state = self._dec
