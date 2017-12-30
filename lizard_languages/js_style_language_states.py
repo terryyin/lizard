@@ -14,6 +14,9 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
         self.function_name = ''
         self.function_stack = []
 
+    # Generator callback function.  These are the function that run when the
+    # generator is itterating through the token list from the source code.
+    # This function will run with the next token when `self._state = _state_global`
     def _state_global(self, token):
         if token == 'function' or token == '=>':
             self._state = self._function
@@ -33,12 +36,9 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
             self.last_tokens = token
             self.function_name = ''
 
-    def _pop_function_from_stack(self):
-        self.context.end_of_function()
-        if self.function_stack:
-            self.context.current_function = self.function_stack.pop()
-            self.brace_count = self.context.current_function.brace_count
-
+    # Generator callback function.  These are the function that run when the
+    # generator is itterating through the token list from the source code.
+    # This function will run with the next token when `self._state = _function`
     def _function(self, token):
         if self.last_token == '=>':
             self._start_new_function('() =>')
@@ -47,12 +47,18 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
         else:
             self._start_new_function()
 
+    # Generator callback function.  These are the function that run when the
+    # generator is itterating through the token list from the source code.
+    # This function will run with the next token when `self._state = _field`
     def _field(self, token):
         self.last_tokens += token
         self._state = self._state_global
 
+    # Generator callback function.  These are the function that run when the
+    # generator is itterating through the token list from the source code.
+    # This function will run with the next token when `self._state = _dec`
     def _dec(self, token):
-        if token == ')' or token == '}':
+        if token in (')', '}', ';'):
             self._state = self._state_global
         else:
             self.context.parameter(token)
@@ -69,3 +75,9 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
             self._state = self._state_global
         else:
             self._state = self._dec
+
+    def _pop_function_from_stack(self):
+        self.context.end_of_function()
+        if self.function_stack:
+            self.context.current_function = self.function_stack.pop()
+            self.brace_count = self.context.current_function.brace_count
