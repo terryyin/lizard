@@ -19,7 +19,8 @@ due to the nature of CSV outputs. The differences are:
 
 def csv_output(result, verbose):
     if verbose:
-        print("NLOC,CCN,token,PARAM,length,location,file,function,long_name,start,end")
+        print("NLOC,CCN,token,PARAM,length,location,file,function," +
+              "long_name,start,end")
 
     for source_file in result:
         if source_file:
@@ -32,14 +33,14 @@ def csv_output(result, verbose):
                         len(source_function.parameters),
                         source_function.end_line - source_function.start_line,
                         "{}@{}-{}@{}".format(
-                            source_function.name.replace("\"","'"),
+                            source_function.name.replace("\"", "'"),
                             source_function.start_line,
                             source_function.end_line,
                             source_file.filename
                         ),
                         source_file.filename,
-                        source_function.name.replace("\"","'"),
-                        source_function.long_name.replace("\"","'"),
+                        source_function.name.replace("\"", "'"),
+                        source_function.long_name.replace("\"", "'"),
                         source_function.start_line,
                         source_function.end_line
                     ))
