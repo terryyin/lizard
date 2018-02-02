@@ -10,11 +10,6 @@ python:
 
 os: linux
 
-matrix:
-  include:
-    - os: osx
-      language: generic
-
 install:
   - pip install -e .
   - pip install -r dev_requirements.txt
