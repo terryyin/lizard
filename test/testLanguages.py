@@ -29,4 +29,3 @@ class TestLanguageChooser(unittest.TestCase):
 
     def test_unknown_extension(self):
         self.assertEqual(None, get_reader_for("a.unknown"))
-

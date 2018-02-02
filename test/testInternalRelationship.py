@@ -75,4 +75,3 @@ class TestPreprocessor(unittest.TestCase):
 
     def test_namespaces_and_no_namepace(self):
         self.assertEqual(["a::b", "c"], self.process("a", "::", "b", "c"))
-

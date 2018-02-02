@@ -122,4 +122,3 @@ class Test_generate_tonken_for_comments(unittest.TestCase):
         comment = '/**a/*/'
         tokens = generate_tokens(comment)
         self.assertListEqual([comment], tokens)
-

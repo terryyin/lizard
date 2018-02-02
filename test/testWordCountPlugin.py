@@ -83,4 +83,3 @@ class TestWordCountOutput(unittest.TestCase):
         ext.result = {'a':123}
         ext.print_result()
         browser_open.assert_called_with('file://' + os.path.abspath('codecloud.html'));
-

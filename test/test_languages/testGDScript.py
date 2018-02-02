@@ -15,5 +15,3 @@ class TestGDScript(unittest.TestCase):
             "func a():\n" +
             "    pass")
         self.assertEqual(1, len(functions))
-
-

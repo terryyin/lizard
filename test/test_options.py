@@ -75,4 +75,3 @@ class TestOptionParsing(unittest.TestCase):
     def test_will_include_ext_args(self):
         options = parse_args(['lizard', '--ND', '2', '-End'])
         self.assertEqual(2, options.ND)
-
