@@ -1,12 +1,12 @@
 import unittest
 
-from .testHelpers import get_cpp_function_list_with_extnesion, \
+from .testHelpers import get_cpp_function_list_with_extension, \
     get_python_function_list_with_extnesion
 from lizard_ext.lizardns import LizardExtension as NestedStructure
 
 
 def process_cpp(source):
-    return get_cpp_function_list_with_extnesion(source, NestedStructure())
+    return get_cpp_function_list_with_extension(source, NestedStructure())
 
 
 def process_python(source):

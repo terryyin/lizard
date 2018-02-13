@@ -1,5 +1,5 @@
 import unittest
-from .testHelpers import get_cpp_function_list_with_extnesion
+from .testHelpers import get_cpp_function_list_with_extension
 from lizard_ext.lizardinternalrelationship import LizardExtension as ir
 from lizard_ext.lizardinternalrelationship import preprocess
 
@@ -7,40 +7,40 @@ from lizard_ext.lizardinternalrelationship import preprocess
 def TestInternalRelationship():#(unittest.TestCase):
 
     def test_empty_source(self):
-        result = get_cpp_function_list_with_extnesion("", ir())
+        result = get_cpp_function_list_with_extension("", ir())
         self.assertEqual(0, len(result))
 
     def test_a_c_function(self):
-        result = get_cpp_function_list_with_extnesion("void f(){}", ir())
+        result = get_cpp_function_list_with_extension("void f(){}", ir())
         self.assertEqual(1, len(result))
         self.assertEqual(set(), result[0].dependencies)
 
     def test_a_function_with_one_dependency(self):
-        result = get_cpp_function_list_with_extnesion("int C::f(){a();}", ir())
+        result = get_cpp_function_list_with_extension("int C::f(){a();}", ir())
         self.assertEqual({"a"}, result[0].dependencies)
 
     def test_a_function_with_keyword(self):
-        result = get_cpp_function_list_with_extnesion("int C::f(){if(m)b();}", ir())
+        result = get_cpp_function_list_with_extension("int C::f(){if(m)b();}", ir())
         self.assertEqual({"m", "b"}, result[0].dependencies)
 
     def test_with_local_variable(self):
-        result = get_cpp_function_list_with_extnesion("int C::f(){int a;}", ir())
+        result = get_cpp_function_list_with_extension("int C::f(){int a;}", ir())
         self.assertEqual(set(), result[0].dependencies)
 
     def test_using_local_variable(self):
-        result = get_cpp_function_list_with_extnesion("int C::f(){type a; a;}", ir())
+        result = get_cpp_function_list_with_extension("int C::f(){type a; a;}", ir())
         self.assertEqual(set(), result[0].dependencies)
 
     def test_scoped_name(self):
-        result = get_cpp_function_list_with_extnesion("int C::f(){a::b();}", ir())
+        result = get_cpp_function_list_with_extension("int C::f(){a::b();}", ir())
         self.assertEqual({"a::b"}, result[0].dependencies)
 
     def test_parameter(self):
-        result = get_cpp_function_list_with_extnesion("void f(type a){a;}", ir())
+        result = get_cpp_function_list_with_extension("void f(type a){a;}", ir())
         self.assertEqual(set(), result[0].dependencies)
 
     def xtest_xxx(self):
-        result = get_cpp_function_list_with_extnesion("""
+        result = get_cpp_function_list_with_extension("""
 void CmDiagnosticsService::startService()
 {
     TRACE_LOG_BEG(log_);

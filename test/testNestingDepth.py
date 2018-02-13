@@ -1,10 +1,10 @@
 import unittest
-from .testHelpers import get_cpp_function_list_with_extnesion
+from .testHelpers import get_cpp_function_list_with_extension
 from lizard_ext.lizardnd import LizardExtension as NestDepth
 
 
 def get_cpp_with_nestdepth(source):
-    return get_cpp_function_list_with_extnesion(source, NestDepth())
+    return get_cpp_function_list_with_extension(source, NestDepth())
 
 
 class TestCppNestingDepth(unittest.TestCase):
