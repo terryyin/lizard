@@ -16,6 +16,6 @@ class TestHTMLOutput(StreamStdoutTestCase):
         self.scheme = Mock()
 
     def test_should_have_html_body(self):
-        html_output([self.fileSummary], self.option)
+        html_output([self.fileSummary], self.option, _)
         self.assertRegexpMatches(sys.stdout.stream,
                 r"<html>.*<body>.*</body>\s*</html>\s*")
