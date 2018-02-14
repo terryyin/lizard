@@ -27,7 +27,7 @@ def html_output(result, verbose, _):
                     autoescape=select_autoescape(['html']))
 
     t = datetime.datetime.now()
-    date = t.strftime('%Y-%m-%d')
+    date = t.strftime('%Y-%m-%d %H:%M')
     output = env.get_template('template.html').render(
 		title='Lizard code complexity report', date = date, files = file_list)
     print(output)
