@@ -8,7 +8,7 @@ from jinja2 import Template, Environment, FileSystemLoader, select_autoescape
 import os
 import datetime
 
-def html_output(result, verbose, _):
+def html_output(result, options, _):
 
     file_list = []
     for source_file in result:
@@ -29,7 +29,7 @@ def html_output(result, verbose, _):
     t = datetime.datetime.now()
     date = t.strftime('%Y-%m-%d %H:%M')
     output = env.get_template('template.html').render(
-		title='Lizard code complexity report', date = date, files = file_list)
+		title='Lizard code complexity report', date = date, thresholds = options.thresholds, files = file_list)
     print(output)
 
 

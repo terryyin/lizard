@@ -19,5 +19,5 @@ def print_csv(results, options, _):
 
 
 def print_output(results, options, _):
-    html_output(list(results), options.verbose)
+    html_output(list(results), options)
     return 0
