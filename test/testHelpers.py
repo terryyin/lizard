@@ -11,4 +11,3 @@ def get_python_function_list_with_extnesion(source_code, extension):
 
 def get_cpp_function_list(source_code):
     return get_cpp_fileinfo(source_code).function_list
-

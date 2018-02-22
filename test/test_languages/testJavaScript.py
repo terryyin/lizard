@@ -75,4 +75,3 @@ class Test_parser_for_JavaScript(unittest.TestCase):
     def test_global(self):
         functions = get_js_function_list("{}")
         self.assertEqual(0, len(functions))
-

@@ -35,4 +35,3 @@ class TestJava(unittest.TestCase):
     def test_class_name_with_interface(self):
         result = get_java_function_list("class A implements B { void f(){}}")
         self.assertEqual('A::f', result[0].name)
-

@@ -41,4 +41,3 @@ class TestAutoRead(unittest.TestCase):
     def test_at(self):
         result = auto_read(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data/utf.c'))
         self.assertIn("after", result)
-

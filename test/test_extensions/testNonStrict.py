@@ -15,4 +15,3 @@ class TestNonStrictExtension(unittest.TestCase):
         int fun(){if (a && b) c;}
         ''', NonStrict())
         self.assertEqual(2, result[0].cyclomatic_complexity)
-

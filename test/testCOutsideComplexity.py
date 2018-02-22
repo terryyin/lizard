@@ -22,4 +22,3 @@ class Test_complexity_in_c_marco(unittest.TestCase):
         result = analyze_with_outside_extension("#if a==b\n void fun() {if(1);}\n #if 1")
         self.assertEqual("*global*", result[1].name)
         self.assertEqual(3, result[1].cyclomatic_complexity)
-

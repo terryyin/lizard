@@ -15,4 +15,3 @@ class TestFunctionExitCount(unittest.TestCase):
     def test_two_returns_should_count_as_2(self):
         result = get_cpp_function_list_with_extension("int fun(){return 0;return 1;}", ExitCounter())
         self.assertEqual(2, result[0].exit_count)
-

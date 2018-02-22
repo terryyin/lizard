@@ -33,4 +33,3 @@ class TestFunctionExitCount(unittest.TestCase):
                     };
                 }""", McCabe())
         self.assertEqual(2, result[0].cyclomatic_complexity)
-

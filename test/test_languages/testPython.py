@@ -278,4 +278,3 @@ class Test_parser_for_Python(unittest.TestCase):
 
 def top_level_function_for_test():
     pass
-

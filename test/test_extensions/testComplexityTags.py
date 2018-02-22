@@ -24,4 +24,3 @@ class TestNonStrictExtension(unittest.TestCase):
             }
         ''', ComplexTags())
         self.assertEqual([['if', 3]], result[0].complex_tags)
-

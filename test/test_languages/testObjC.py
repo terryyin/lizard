@@ -58,5 +58,3 @@ class Test_objc_lizard(unittest.TestCase):
         result = self.create_objc_lizard(code)
         self.assertEqual(2, len(result))
         self.assertEqual("classMethod", result[0].name)
-
-
