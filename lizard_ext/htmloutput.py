@@ -17,9 +17,9 @@ def html_output(result, options, _):
             func_list = []
             for source_function in source_file.function_list:
                 if source_function:
-		    source_function_dict = _create_dict(source_function)
-		    func_list.append(source_function_dict)
-            source_file_dict["functions"] = func_list
+                    source_function_dict = _create_dict(source_function)
+                    func_list.append(source_function_dict)
+                    source_file_dict["functions"] = func_list
         file_list.append(source_file_dict)
 
     cwd = os.path.dirname(os.path.abspath(__file__))
