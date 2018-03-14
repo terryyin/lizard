@@ -63,7 +63,6 @@ class FunctionDependenciesCounter(object):
 
 class LizardExtension(object):  # pylint: disable=R0903
     # pylint: disable=R0903
-    # pylint: disable=stop-iteration-return
 
     class StopSplitting(BaseException):
         pass

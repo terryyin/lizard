@@ -4,16 +4,17 @@
 This module extends the default output formatting to include HTML.
 '''
 
-from jinja2 import Template, Environment, FileSystemLoader, select_autoescape
 import os
 import datetime
+from jinja2 import Environment, FileSystemLoader, select_autoescape
+
 
 def html_output(result, options, _):
 
     file_list = []
     for source_file in result:
         if source_file:
-            source_file_dict = { "filename": source_file.filename }
+            source_file_dict = {"filename": source_file.filename}
             func_list = []
             for source_function in source_file.function_list:
                 if source_function:
@@ -24,12 +25,13 @@ def html_output(result, options, _):
 
     cwd = os.path.dirname(os.path.abspath(__file__))
     env = Environment(loader=FileSystemLoader(cwd),
-                    autoescape=select_autoescape(['html']))
+                      autoescape=select_autoescape(['html']))
 
-    t = datetime.datetime.now()
-    date = t.strftime('%Y-%m-%d %H:%M')
+    time = datetime.datetime.now()
+    date = time.strftime('%Y-%m-%d %H:%M')
     output = env.get_template('template.html').render(
-		title='Lizard code complexity report', date = date, thresholds = options.thresholds, files = file_list)
+            title='Lizard code complexity report',
+            date=date, thresholds=options.thresholds, files=file_list)
     print(output)
 
 
