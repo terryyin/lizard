@@ -274,6 +274,10 @@ class Test_c_cpp_lizard(unittest.TestCase):
         result = get_cpp_function_list("void a(){Class<?>[];}")
         self.assertEqual(1, result[0].cyclomatic_complexity)
 
+    def test_class_as_an_attribute(self):
+        result = get_cpp_function_list("void a(){{String.class}}")
+        self.assertEqual(1, result[0].cyclomatic_complexity)
+
     def test_1(self):
         result = get_cpp_function_list("class c {{}}")
         self.assertEqual(0, len(result))

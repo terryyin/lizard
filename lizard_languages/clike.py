@@ -95,13 +95,17 @@ class CLikeNestingStackStates(CodeStateMachine):
         """Dual-purpose state for global and structure bodies."""
         if token == "template":
             self._state = self._template_declaration
-
+        elif token == ".":
+            self._state = self._dot
         elif token in ("struct", "class", "namespace", "union"):
             self._state = self._read_namespace
         elif token == "{":
             self.context.add_bare_nesting()
         elif token == '}':
             self.context.pop_nesting()
+
+    def _dot(self, _):
+        self._state = self._state_global
 
     def _read_namespace(self, token):
         """Processes declarations right after namespace/class keywords."""
