@@ -270,6 +270,10 @@ class Test_c_cpp_lizard(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual("ns::c::f", result[0].name)
 
+    def test_templated_code_with_question_mark(self):
+        result = get_cpp_function_list("void a(){Class<?>[];}")
+        self.assertEqual(1, result[0].cyclomatic_complexity)
+
     def test_1(self):
         result = get_cpp_function_list("class c {{}}")
         self.assertEqual(0, len(result))

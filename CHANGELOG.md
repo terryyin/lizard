@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.14.1
+
+A minor fix for the --version option
+
 ## 1.14.0
 
 Support CSV & HTML format output
