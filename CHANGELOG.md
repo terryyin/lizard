@@ -1,8 +1,15 @@
 # Change Log
 
-## 1.14.1
+## 1.14.2
+
+in
+
+  Class<?>[] testClasses = {String.class};
+
+The ? wouldn't be counted as CC.
 
 A minor fix for the --version option
+
 
 ## 1.14.0
 

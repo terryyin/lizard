@@ -95,7 +95,7 @@ def arg_parser(prog=None):
     parser = ArgumentParser(prog=prog)
     parser.add_argument('paths', nargs='*', default=['.'],
                         help='list of the filename/paths.')
-    parser.add_argument('--version', action='version', version=version)
+    parser.add_argument('--version', action='version', version='1.14.2')
     parser.add_argument("-l", "--languages",
                         help='''List the programming languages you want to
                         analyze. if left empty, it'll search for all languages
