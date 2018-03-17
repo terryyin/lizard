@@ -5,11 +5,17 @@ This module extends the default output formatting to include HTML.
 '''
 
 import os
+import sys
 import datetime
-from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 
 def html_output(result, options, _):
+    try:
+        from jinja2 import Environment, FileSystemLoader, select_autoescape
+    except ImportError:
+        sys.stderr.write(
+                "HTML Output depends on jinja2. `pip install jinja2` first")
+        sys.exit(2)
 
     file_list = []
     for source_file in result:
