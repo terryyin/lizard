@@ -87,6 +87,7 @@ setup(
                     'Programming Language :: Python :: 3.5'],
     cmdclass={'version': VersionCommand},
     packages=['lizard_ext', 'lizard_languages'],
+    data_files=[('lizard_ext', ['lizard_ext/template.html'])],
     py_modules=['lizard'],
     entry_points={'console_scripts': ['lizard = lizard:main']},
     author='Terry Yin',

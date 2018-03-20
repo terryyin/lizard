@@ -39,6 +39,7 @@ def html_output(result, options, _):
             title='Lizard code complexity report',
             date=date, thresholds=options.thresholds, files=file_list)
     print(output)
+    return 0
 
 
 def _create_dict(obj):
