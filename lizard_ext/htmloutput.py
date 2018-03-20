@@ -29,7 +29,9 @@ def html_output(result, options, _):
                     source_file_dict["functions"] = func_list
         file_list.append(source_file_dict)
 
-    cwd = os.path.dirname(os.path.abspath(__file__))
+    cwd = os.path.join(sys.prefix, 'lizard_ext')
+    if not os.path.exists(cwd):
+        cwd = os.path.dirname(os.path.abspath(__file__))
     env = Environment(loader=FileSystemLoader(cwd),
                       autoescape=select_autoescape(['html']))
 
@@ -39,7 +41,6 @@ def html_output(result, options, _):
             title='Lizard code complexity report',
             date=date, thresholds=options.thresholds, files=file_list)
     print(output)
-    return 0
 
 
 def _create_dict(obj):
