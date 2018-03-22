@@ -316,3 +316,8 @@ Lizard is often used in software related researches. If you used it to support y
 - Software Quality in the ATLAS experiment at CERN, which refers to Lizard as one of the tools, has been published in the Journal of Physics: http://iopscience.iop.org/article/10.1088/1742-6596/898/7/072011
 
     - S Martin-Haugh et al 2017 J. Phys.: Conf. Ser. 898 072011
+
+Lizard is also used as a plugin for fastlane to help check code complexity and submit xml report to sonar.
+
+- [fastlane-plugin-lizard](https://github.com/liaogz82/fastlane-plugin-lizard)
+- [sonar](https://github.com/Backelite/sonar-swift/blob/develop/docs/sonarqube-fastlane.md)
