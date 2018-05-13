@@ -31,6 +31,8 @@ def html_output(result, options, _):
 
     cwd = os.path.join(sys.prefix, 'lizard_ext')
     if not os.path.exists(cwd):
+        cwd = os.path.join(sys.exec_prefix, 'local/lizard_ext')
+    if not os.path.exists(cwd):
         cwd = os.path.dirname(os.path.abspath(__file__))
     env = Environment(loader=FileSystemLoader(cwd),
                       autoescape=select_autoescape(['html']))
