@@ -19,7 +19,7 @@ class TestDuplicateExtension(unittest.TestCase):
         self.detect(
                 self.builder
                 .six_line_function("func1")
-                .six_line_function("func2")
+                .six_line_function("func1")
                 .code
                 )
         self.assertEqual(1, len(self.detector.duplicates))
