@@ -8,25 +8,42 @@ class TestDuplicateExtension(unittest.TestCase):
         self.detector = DuplicateDetector()
         self.builder = CFunctionBuilder()
 
+    def detect(self, code):
+        return get_cpp_fileinfo_with_extension(code, self.detector)
+
     def test_empty_file(self):
-        get_cpp_fileinfo_with_extension('''
-        ''', self.detector)
+        self.detect('')
         self.assertEqual([], self.detector.duplicates)
 
     def test_two_functions_that_are_exactly_the_same(self):
-        get_cpp_fileinfo_with_extension(
+        self.detect(
                 self.builder
                 .six_line_function()
                 .six_line_function()
-                .code,
-                self.detector
+                .code
                 )
         self.assertEqual(1, len(self.detector.duplicates))
+
+    def test_two_functions_that_are_exactly_the_same_detail(self):
+        self.detect(
+                self.builder
+                .six_line_function()
+                .six_line_function()
+                .code
+                )
+        self.assertEqual(2, len(self.detector.duplicates[0]))
 
 
 class CFunctionBuilder(object):
     def __init__(self):
         self.code = ''
+
+    def empty_function(self):
+        self.code += '''
+            void func() {
+            }
+        '''
+        return self
 
     def six_line_function(self):
         self.code += '''
