@@ -13,21 +13,22 @@ class Duplicate(object):
 
 class LizardExtension(ExtensionBase):
 
+    SAMPLE_SIZE = 31
+
     def __init__(self, context=None):
         self.duplicates = []
         self.saved_sequences = []
-        self.cnt = 31
         super(LizardExtension, self).__init__(context)
 
     def __call__(self, tokens, reader):
         for token in tokens:
             self.saved_sequences.append([])
-            for s in self.saved_sequences[-self.cnt:]:
+            for s in self.saved_sequences[-self.SAMPLE_SIZE:]:
                 s.append(token)
             for p in self._duplicates():
                 self.duplicates=[[Duplicate(1, 6), 1]]
             yield token
 
     def _duplicates(self):
-        return [p for p in (self.saved_sequences[:-self.cnt])
-            if ''.join(self.saved_sequences[-self.cnt]) == ''.join(p)]
+        return [p for p in (self.saved_sequences[:-self.SAMPLE_SIZE])
+            if ''.join(self.saved_sequences[-self.SAMPLE_SIZE]) == ''.join(p)]
