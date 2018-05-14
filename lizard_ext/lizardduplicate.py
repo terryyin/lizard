@@ -25,5 +25,5 @@ class LizardExtension(ExtensionBase):
                 s.append(token)
             for p in (self.saved_sequences[:-cnt]):
                 if ''.join(self.saved_sequences[-cnt]) == ''.join(p):
-                    self.duplicates.append([Duplicate(1, 6), 1])
+                    self.duplicates=[[Duplicate(1, 6), 1]]
             yield token
