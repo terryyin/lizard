@@ -14,7 +14,6 @@ class LizardExtension(ExtensionBase):
 
     def __init__(self, context=None):
         self.duplicates = []
-        self.saved_tokens = []
         self.saved_sequences = []
         super(LizardExtension, self).__init__(context)
 
@@ -27,7 +26,4 @@ class LizardExtension(ExtensionBase):
             for p in (self.saved_sequences[:-cnt]):
                 if ''.join(self.saved_sequences[-cnt]) == ''.join(p):
                     self.duplicates.append([Duplicate(1, 6), 1])
-            if token == 'func6' and token in self.saved_tokens:
-                self.duplicates.append([Duplicate(1, 6), 1])
-            self.saved_tokens.append(token)
             yield token
