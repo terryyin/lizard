@@ -21,8 +21,12 @@ class LizardExtension(ExtensionBase):
     def __call__(self, tokens, reader):
         for token in tokens:
             self.saved_sequences.append([])
-            for i, s in enumerate(self.saved_sequences):
+            cnt = 34
+            for s in self.saved_sequences[-cnt:]:
                 s.append(token)
+            for p in (self.saved_sequences[:-cnt]):
+                if ''.join(self.saved_sequences[-cnt]) == ''.join(p):
+                    self.duplicates.append([Duplicate(1, 6), 1])
             if token == 'func6' and token in self.saved_tokens:
                 self.duplicates.append([Duplicate(1, 6), 1])
             self.saved_tokens.append(token)

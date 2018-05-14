@@ -18,8 +18,8 @@ class TestDuplicateExtension(unittest.TestCase):
     def test_two_functions_that_are_exactly_the_same(self):
         self.detect(
                 self.builder
-                .six_line_function()
-                .six_line_function()
+                .six_line_function("func1")
+                .six_line_function("func2")
                 .code
                 )
         self.assertEqual(1, len(self.detector.duplicates))
