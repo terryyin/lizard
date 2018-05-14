@@ -13,7 +13,7 @@ class Duplicate(object):
 
 class LizardExtension(ExtensionBase):
 
-    SAMPLE_SIZE = 31
+    SAMPLE_SIZE = 21
 
     def __init__(self, context=None):
         self.duplicates = []
