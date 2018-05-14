@@ -13,5 +13,5 @@ class LizardExtension(ExtensionBase):
 
     def __call__(self, tokens, reader):
         for token in tokens:
-            self.duplicates =[1]
+            self.duplicates =[[1, 1]]
             yield token
