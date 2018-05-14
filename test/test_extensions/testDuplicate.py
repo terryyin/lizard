@@ -33,6 +33,7 @@ class TestDuplicateExtension(unittest.TestCase):
                 )
         self.assertEqual(2, len(self.detector.duplicates[0]))
         self.assertEqual(1, self.detector.duplicates[0][0].start_line)
+        self.assertEqual(6, self.detector.duplicates[0][0].end_line)
 
 
 class CFunctionBuilder(object):
