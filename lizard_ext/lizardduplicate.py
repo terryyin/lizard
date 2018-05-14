@@ -21,12 +21,18 @@ class LizardExtension(ExtensionBase):
         super(LizardExtension, self).__init__(context)
 
     def __call__(self, tokens, reader):
+        continuous = False
         for token in tokens:
             self.saved_sequences.append([])
             for s in self.saved_sequences[-self.SAMPLE_SIZE:]:
                 s.append(token)
             for p in self._duplicates():
-                self.duplicates=[[Duplicate(1, 6), 1]]
+                if not continuous:
+                    self.duplicates.append([Duplicate(1, 6), 1])
+                    continuous = True
+            if not self._duplicates():
+                continuous = False
+
             yield token
 
     def _duplicates(self):
