@@ -20,6 +20,6 @@ class LizardExtension(ExtensionBase):
     def __call__(self, tokens, reader):
         for token in tokens:
             if token == 'func6' and token in self.saved_tokens:
-                self.duplicates =[[Duplicate(1, 6), 1]]
+                self.duplicates.append([Duplicate(1, 6), 1])
             self.saved_tokens.append(token)
             yield token

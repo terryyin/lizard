@@ -27,8 +27,8 @@ class TestDuplicateExtension(unittest.TestCase):
     def test_two_functions_that_are_exactly_the_same_detail(self):
         self.detect(
                 self.builder
-                .six_line_function()
-                .six_line_function()
+                .six_line_function("func1")
+                .six_line_function("func2")
                 .code
                 )
         self.assertEqual(2, len(self.detector.duplicates[0]))
@@ -56,15 +56,15 @@ class CFunctionBuilder(object):
         '''
         return self
 
-    def six_line_function(self):
+    def six_line_function(self, name='func6'):
         self.code += '''
-            void func6(int param) {
+            void %s(int param) {
                 int result, i = 0;
                 for (; i < 10; i++) {
                     result += i * i;
                 }
                 return result;
             }
-        '''
+        '''%(name)
         return self
 
