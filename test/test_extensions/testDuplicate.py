@@ -44,6 +44,18 @@ class TestDuplicateExtension(unittest.TestCase):
                 )
         self.assertEqual(0, len(self.detector.duplicates))
 
+    def test_2_duplicates(self):
+        self.detect(
+                self.builder
+                .six_line_function()
+                .six_line_function()
+                .different_six_line_function()
+                .different_six_line_function()
+                .code
+                )
+        self.assertEqual(2, len(self.detector.duplicates))
+
+
 
 class CFunctionBuilder(object):
     def __init__(self):
@@ -62,6 +74,16 @@ class CFunctionBuilder(object):
                 int result, i = 0;
                 for (; i < 10; i++) {
                     result += i * i;
+                }
+            }
+        '''%(name)
+        return self
+
+    def different_six_line_function(self, name='func6'):
+        self.code += '''
+            int %s(int param, int c) {
+                if (abc == def) {
+                    while(param) c=c+1;
                 }
                 return result;
             }

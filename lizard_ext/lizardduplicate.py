@@ -20,7 +20,7 @@ class LizardExtension(ExtensionBase):
     def __call__(self, tokens, reader):
         for token in tokens:
             self.saved_sequences.append([])
-            cnt = 34
+            cnt = 31
             for s in self.saved_sequences[-cnt:]:
                 s.append(token)
             for p in (self.saved_sequences[:-cnt]):
