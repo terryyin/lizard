@@ -27,15 +27,16 @@ class TestDuplicateExtension(unittest.TestCase):
     def test_two_functions_that_are_exactly_the_same_detail(self):
         self.detect(
                 self.builder
+                .empty_function()
                 .six_line_function("func1")
                 .six_line_function("func2")
                 .code
                 )
         self.assertEqual(2, len(self.detector.duplicates[0]))
-        self.assertEqual(1, self.detector.duplicates[0][0].start_line)
-        self.assertEqual(6, self.detector.duplicates[0][0].end_line)
-        self.assertEqual(7, self.detector.duplicates[0][1].start_line)
-        self.assertEqual(12, self.detector.duplicates[0][1].end_line)
+        self.assertEqual(3, self.detector.duplicates[0][0].start_line)
+        self.assertEqual(9, self.detector.duplicates[0][0].end_line)
+        self.assertEqual(10, self.detector.duplicates[0][1].start_line)
+        self.assertEqual(15, self.detector.duplicates[0][1].end_line)
 
     def test_two_functions_that_are_not_the_same(self):
         self.detect(
