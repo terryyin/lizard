@@ -42,7 +42,7 @@ class LizardExtension(ExtensionBase):
                 s = self.saved_sequences.popleft()
                 for p in self.saved_hash[s.hash]:
                     if not continuous:
-                        self.duplicates.append([Duplicate(1, 6), 1])
+                        self.duplicates.append([Duplicate(1, 6), Duplicate(7, 12)])
                         continuous = True
                 if not self.saved_hash[s.hash]:
                     continuous = False

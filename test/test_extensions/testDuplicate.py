@@ -34,6 +34,8 @@ class TestDuplicateExtension(unittest.TestCase):
         self.assertEqual(2, len(self.detector.duplicates[0]))
         self.assertEqual(1, self.detector.duplicates[0][0].start_line)
         self.assertEqual(6, self.detector.duplicates[0][0].end_line)
+        self.assertEqual(7, self.detector.duplicates[0][1].start_line)
+        self.assertEqual(12, self.detector.duplicates[0][1].end_line)
 
     def test_two_functions_that_are_not_the_same(self):
         self.detect(
