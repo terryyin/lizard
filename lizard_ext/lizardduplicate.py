@@ -5,7 +5,7 @@ from collections import defaultdict, deque
 from .extension_base import ExtensionBase
 
 
-class Duplicate(object):
+class CodeSnippet(object):
     def __init__(self, start_line, end_line):
         self.start_line = start_line
         self.end_line = end_line
@@ -42,7 +42,7 @@ class LizardExtension(ExtensionBase):
                 s = self.saved_sequences.popleft()
                 for p in self.saved_hash[s.hash]:
                     if not continuous:
-                        self.duplicates.append([Duplicate(1, 6), Duplicate(7, 12)])
+                        self.duplicates.append([CodeSnippet(1, 6), CodeSnippet(7, 12)])
                         continuous = True
                 if not self.saved_hash[s.hash]:
                     continuous = False
