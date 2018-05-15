@@ -11,6 +11,10 @@ class Duplicate(object):
         self.end_line = end_line
 
 
+class Sequence(list):
+    pass
+
+
 class LizardExtension(ExtensionBase):
 
     SAMPLE_SIZE = 21
@@ -23,7 +27,7 @@ class LizardExtension(ExtensionBase):
     def __call__(self, tokens, reader):
         continuous = False
         for token in tokens:
-            self.saved_sequences.append([])
+            self.saved_sequences.append(Sequence())
             for s in self.saved_sequences[-self.SAMPLE_SIZE:]:
                 s.append(token)
             for p in self._duplicates():
