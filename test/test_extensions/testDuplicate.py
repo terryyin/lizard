@@ -72,7 +72,7 @@ class TestDuplicateExtension(unittest.TestCase):
                 )
         self.assertEqual(2, len(self.detector.duplicates))
 
-    def xtest_three_functions_that_are_the_same(self):
+    def test_three_functions_that_are_the_same(self):
         self.detect(
                 self.builder
                 .six_line_function("func1")
