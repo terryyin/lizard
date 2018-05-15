@@ -11,7 +11,7 @@ class Duplicate(object):
         self.end_line = end_line
 
 
-class Sequence(list):
+class Sequence(object):
     def __init__(self):
         self.tokens = []
 
