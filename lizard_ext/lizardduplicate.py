@@ -12,7 +12,12 @@ class Duplicate(object):
 
 
 class Sequence(list):
-    pass
+    def __init__(self):
+        self.tokens = []
+
+    def append(self, token):
+        self.tokens.append(token)
+        super(Sequence, self).append(token)
 
 
 class LizardExtension(ExtensionBase):
