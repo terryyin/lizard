@@ -14,12 +14,14 @@ class Duplicate(object):
 class Sequence(object):
     def __init__(self):
         self.tokens = []
+        self.seq = ''
 
     def append(self, token):
         self.tokens.append(token)
+        self.seq += token
 
     def __eq__(self, other):
-        return self.tokens == other.tokens
+        return self.seq == other.seq
 
 
 class LizardExtension(ExtensionBase):
