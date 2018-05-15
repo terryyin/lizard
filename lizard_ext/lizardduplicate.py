@@ -6,9 +6,9 @@ from .extension_base import ExtensionBase
 
 
 class CodeSnippet(object):
-    def __init__(self, start_line, end_line):
+    def __init__(self, start_line):
         self.start_line = start_line
-        self.end_line = end_line
+        self.end_line = start_line
 
 
 class Sequence(object):
@@ -32,20 +32,20 @@ class LizardExtension(ExtensionBase):
         self.duplicates = []
         self.saved_sequences = deque([Sequence(0)] * self.SAMPLE_SIZE)
         self.saved_hash = defaultdict(list)
+        self.active_dups = []
         super(LizardExtension, self).__init__(context)
 
     def __call__(self, tokens, reader):
-        current_dup = None
         for token in tokens:
             s = self._push_and_pop_current_sample_queue(token, reader.context.current_line)
-            for p in self.saved_hash[s.hash]:
-                if not current_dup:
-                    current_dup = [CodeSnippet(p.start_line, p.end_line), CodeSnippet(s.start_line, s.start_line + 5)]
-                    self.duplicates.append(current_dup)
-                current_dup[0].end_line = p.end_line
-                current_dup[1].end_line = s.end_line
             if not self.saved_hash[s.hash]:
-                current_dup = None
+                self.active_dups = []
+            for p in self.saved_hash[s.hash]:
+                if not self.active_dups:
+                    self.active_dups = [CodeSnippet(p.start_line), CodeSnippet(s.start_line)]
+                    self.duplicates.append(self.active_dups)
+                self.active_dups[0].end_line = p.end_line
+                self.active_dups[1].end_line = s.end_line
             self.saved_hash[s.hash].append(s)
 
             yield token
