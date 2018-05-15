@@ -30,26 +30,29 @@ class LizardExtension(ExtensionBase):
 
     def __init__(self, context=None):
         self.duplicates = []
-        self.saved_sequences = deque()
+        self.saved_sequences = deque([Sequence(0)] * self.SAMPLE_SIZE)
         self.saved_hash = defaultdict(list)
         super(LizardExtension, self).__init__(context)
 
     def __call__(self, tokens, reader):
         current_dup = None
         for token in tokens:
-            self.saved_sequences.append(Sequence(reader.context.current_line))
-            for s in self.saved_sequences:
-                s.append(token, reader.context.current_line)
-            if len(self.saved_sequences) > self.SAMPLE_SIZE:
-                s = self.saved_sequences.popleft()
-                for p in self.saved_hash[s.hash]:
-                    if not current_dup:
-                        current_dup = [CodeSnippet(p.start_line, p.end_line), CodeSnippet(s.start_line, s.start_line + 5)]
-                        self.duplicates.append(current_dup)
-                    current_dup[0].end_line = p.end_line
-                    current_dup[1].end_line = s.end_line
-                if not self.saved_hash[s.hash]:
-                    current_dup = None
-                self.saved_hash[s.hash].append(s)
+            s = self._push_and_pop_current_sample_queue(token, reader.context.current_line)
+            for p in self.saved_hash[s.hash]:
+                if not current_dup:
+                    current_dup = [CodeSnippet(p.start_line, p.end_line), CodeSnippet(s.start_line, s.start_line + 5)]
+                    self.duplicates.append(current_dup)
+                current_dup[0].end_line = p.end_line
+                current_dup[1].end_line = s.end_line
+            if not self.saved_hash[s.hash]:
+                current_dup = None
+            self.saved_hash[s.hash].append(s)
 
             yield token
+
+    def _push_and_pop_current_sample_queue(self, token, current_line):
+        self.saved_sequences.append(Sequence(current_line))
+        for s in self.saved_sequences:
+            s.append(token, current_line)
+        return self.saved_sequences.popleft()
+
