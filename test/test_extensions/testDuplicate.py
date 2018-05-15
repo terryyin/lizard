@@ -34,9 +34,9 @@ class TestDuplicateExtension(unittest.TestCase):
                 )
         self.assertEqual(2, len(self.detector.duplicates[0]))
         self.assertEqual(3, self.detector.duplicates[0][0].start_line)
-        self.assertEqual(9, self.detector.duplicates[0][0].end_line)
-        self.assertEqual(10, self.detector.duplicates[0][1].start_line)
-        self.assertEqual(15, self.detector.duplicates[0][1].end_line)
+        self.assertEqual(8, self.detector.duplicates[0][0].end_line)
+        self.assertEqual(9, self.detector.duplicates[0][1].start_line)
+        self.assertEqual(14, self.detector.duplicates[0][1].end_line)
 
     def test_two_functions_that_are_not_the_same(self):
         self.detect(
@@ -78,15 +78,13 @@ class CFunctionBuilder(object):
         self.code = ''
 
     def empty_function(self):
-        self.code += '''
-            void func0() {
+        self.code += ''' void func0() {
             }
         '''
         return self
 
     def six_line_function(self, name='func6'):
-        self.code += '''
-            void %s(int param) {
+        self.code += ''' void %s(int param) {
                 int result, i = 0;
                 for (; i < 10; i++) {
                     result += i * i;
@@ -96,8 +94,7 @@ class CFunctionBuilder(object):
         return self
 
     def different_six_line_function(self, name='func6'):
-        self.code += '''
-            int %s(int param, int c) {
+        self.code += ''' int %s(int param, int c) {
                 if (abc == def) {
                     while(param) c=c+1;
                 }

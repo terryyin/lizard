@@ -12,8 +12,9 @@ class CodeSnippet(object):
 
 
 class Sequence(object):
-    def __init__(self):
+    def __init__(self, start_line):
         self.hash = ''
+        self.start_line = start_line
 
     def append(self, token):
         self.hash += token
@@ -35,14 +36,14 @@ class LizardExtension(ExtensionBase):
     def __call__(self, tokens, reader):
         continuous = False
         for token in tokens:
-            self.saved_sequences.append(Sequence())
+            self.saved_sequences.append(Sequence(reader.context.current_line))
             for s in self.saved_sequences:
                 s.append(token)
             if len(self.saved_sequences) > self.SAMPLE_SIZE:
                 s = self.saved_sequences.popleft()
                 for p in self.saved_hash[s.hash]:
                     if not continuous:
-                        self.duplicates.append([CodeSnippet(1, 6), CodeSnippet(7, 12)])
+                        self.duplicates.append([CodeSnippet(p.start_line, p.start_line + 5), CodeSnippet(s.start_line, s.start_line + 5)])
                         continuous = True
                 if not self.saved_hash[s.hash]:
                     continuous = False
