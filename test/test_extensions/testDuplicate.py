@@ -38,6 +38,20 @@ class TestDuplicateExtension(unittest.TestCase):
         self.assertEqual(9, self.detector.duplicates[0][1].start_line)
         self.assertEqual(14, self.detector.duplicates[0][1].end_line)
 
+    def test_two_5_line_functions_that_are_exactly_the_same_detail(self):
+        self.detect(
+                self.builder
+                .empty_function()
+                .five_line_function("func1")
+                .five_line_function("func2")
+                .code
+                )
+        self.assertEqual(2, len(self.detector.duplicates[0]))
+        self.assertEqual(3, self.detector.duplicates[0][0].start_line)
+        self.assertEqual(7, self.detector.duplicates[0][0].end_line)
+        self.assertEqual(8, self.detector.duplicates[0][1].start_line)
+        self.assertEqual(12, self.detector.duplicates[0][1].end_line)
+
     def test_two_functions_that_are_not_the_same(self):
         self.detect(
                 self.builder
@@ -81,6 +95,15 @@ class CFunctionBuilder(object):
         self.code += ''' void func0() {
             }
         '''
+        return self
+
+    def five_line_function(self, name='func6'):
+        self.code += ''' string %s(int param, T t) {
+                for (int i; i < 100; i++)
+                    result += i * i;
+                return i * 5 + 1015;
+            }
+        '''%(name)
         return self
 
     def six_line_function(self, name='func6'):
