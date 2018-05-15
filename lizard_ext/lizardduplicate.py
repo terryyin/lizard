@@ -35,7 +35,7 @@ class LizardExtension(ExtensionBase):
         super(LizardExtension, self).__init__(context)
 
     def __call__(self, tokens, reader):
-        continuous = None
+        current_dup = None
         for token in tokens:
             self.saved_sequences.append(Sequence(reader.context.current_line))
             for s in self.saved_sequences:
@@ -43,13 +43,13 @@ class LizardExtension(ExtensionBase):
             if len(self.saved_sequences) > self.SAMPLE_SIZE:
                 s = self.saved_sequences.popleft()
                 for p in self.saved_hash[s.hash]:
-                    if not continuous:
-                        continuous = [CodeSnippet(p.start_line, p.end_line), CodeSnippet(s.start_line, s.start_line + 5)]
-                        self.duplicates.append(continuous)
-                    continuous[0].end_line = p.end_line
-                    continuous[1].end_line = s.end_line
+                    if not current_dup:
+                        current_dup = [CodeSnippet(p.start_line, p.end_line), CodeSnippet(s.start_line, s.start_line + 5)]
+                        self.duplicates.append(current_dup)
+                    current_dup[0].end_line = p.end_line
+                    current_dup[1].end_line = s.end_line
                 if not self.saved_hash[s.hash]:
-                    continuous = None
+                    current_dup = None
                 self.saved_hash[s.hash].append(s)
 
             yield token
