@@ -17,7 +17,9 @@ class Sequence(list):
 
     def append(self, token):
         self.tokens.append(token)
-        super(Sequence, self).append(token)
+
+    def __eq__(self, other):
+        return self.tokens == other.tokens
 
 
 class LizardExtension(ExtensionBase):
@@ -46,4 +48,4 @@ class LizardExtension(ExtensionBase):
 
     def _duplicates(self):
         return [p for p in (self.saved_sequences[:-self.SAMPLE_SIZE])
-            if ''.join(self.saved_sequences[-self.SAMPLE_SIZE]) == ''.join(p)]
+            if self.saved_sequences[-self.SAMPLE_SIZE] == p]
