@@ -13,11 +13,9 @@ class Duplicate(object):
 
 class Sequence(object):
     def __init__(self):
-        self.tokens = []
         self.seq = ''
 
     def append(self, token):
-        self.tokens.append(token)
         self.seq += token
 
     def __eq__(self, other):
