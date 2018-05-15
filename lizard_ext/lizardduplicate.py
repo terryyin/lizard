@@ -1,7 +1,7 @@
 '''
 Get Duplicated parameter lists
 '''
-from collections import Counter
+from collections import defaultdict, deque
 from .extension_base import ExtensionBase
 
 
@@ -28,24 +28,24 @@ class LizardExtension(ExtensionBase):
 
     def __init__(self, context=None):
         self.duplicates = []
-        self.saved_sequences = []
+        self.saved_sequences = deque()
+        self.saved_hash = defaultdict(list)
         super(LizardExtension, self).__init__(context)
 
     def __call__(self, tokens, reader):
         continuous = False
         for token in tokens:
             self.saved_sequences.append(Sequence())
-            for s in self.saved_sequences[-self.SAMPLE_SIZE:]:
+            for s in self.saved_sequences:
                 s.append(token)
-            for p in self._duplicates():
-                if not continuous:
-                    self.duplicates.append([Duplicate(1, 6), 1])
-                    continuous = True
-            if not self._duplicates():
-                continuous = False
+            if len(self.saved_sequences) > self.SAMPLE_SIZE:
+                s = self.saved_sequences.popleft()
+                for p in self.saved_hash[s.hash]:
+                    if not continuous:
+                        self.duplicates.append([Duplicate(1, 6), 1])
+                        continuous = True
+                if not self.saved_hash[s.hash]:
+                    continuous = False
+                self.saved_hash[s.hash].append(s)
 
             yield token
-
-    def _duplicates(self):
-        return [p for p in (self.saved_sequences[:-self.SAMPLE_SIZE])
-            if self.saved_sequences[-self.SAMPLE_SIZE] == p]
