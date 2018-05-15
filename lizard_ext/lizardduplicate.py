@@ -13,13 +13,13 @@ class Duplicate(object):
 
 class Sequence(object):
     def __init__(self):
-        self.seq = ''
+        self.hash = ''
 
     def append(self, token):
-        self.seq += token
+        self.hash += token
 
     def __eq__(self, other):
-        return self.seq == other.seq
+        return self.hash == other.hash
 
 
 class LizardExtension(ExtensionBase):
