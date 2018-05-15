@@ -79,11 +79,11 @@ class TestDuplicateExtension(unittest.TestCase):
                 .empty_function()
                 .six_line_function("func2")
                 .empty_function()
-                .six_line_function("func3")
+                .part_of_six_line_function("func3")
                 .code
                 )
-        self.assertEqual(1, len(self.detector.duplicates))
-        self.assertEqual(3, len(self.detector.duplicates[0]))
+        self.assertEqual(2, len(self.detector.duplicates))
+        self.assertEqual(3, len(self.detector.duplicates[1]))
 
 
 
@@ -111,6 +111,17 @@ class CFunctionBuilder(object):
                 int result, i = 0;
                 for (; i < 10; i++) {
                     result += i * i;
+                }
+            }
+        '''%(name)
+        return self
+
+    def part_of_six_line_function(self, name='func6'):
+        self.code += ''' void %s(int param) {
+                int result, i = 0;
+                for (; i < 10; i++) {
+                    result += i * i;
+                    then = "I do something else";
                 }
             }
         '''%(name)
