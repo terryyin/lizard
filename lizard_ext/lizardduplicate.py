@@ -38,12 +38,10 @@ class LizardExtension(ExtensionBase):
     def __call__(self, tokens, reader):
         for token in tokens:
             s = self._push_and_pop_current_sample_queue(token, reader.context.current_line)
-            self.find_duplicates(s)
+            self.find_duplicates(s, s.hash)
 
             yield token
-        end_seq = Sequence(0)
-        end_seq.hash = -1
-        self.find_duplicates(end_seq)
+        self.find_duplicates(Sequence(0), -1)
 
     def _push_and_pop_current_sample_queue(self, token, current_line):
         self.saved_sequences.append(Sequence(current_line))
@@ -51,12 +49,12 @@ class LizardExtension(ExtensionBase):
             s.append(token, current_line)
         return self.saved_sequences.popleft()
 
-    def find_duplicates(self, seq):
-        if not self.saved_hash[seq.hash]:
+    def find_duplicates(self, seq, seq_hash):
+        if not self.saved_hash[seq_hash]:
             if self.active_seqs:
                 self.add_duplicate(self.active_seqs)
                 self.active_seqs = []
-        for p in self.saved_hash[seq.hash]:
+        for p in self.saved_hash[seq_hash]:
             if not self.active_seqs:
                 self.active_seqs = [[p], [seq]]
             self.active_seqs[0].append(p)
