@@ -32,7 +32,7 @@ class LizardExtension(ExtensionBase):
         self.duplicates = []
         self.saved_sequences = deque([Sequence(0)] * self.SAMPLE_SIZE)
         self.saved_hash = defaultdict(list)
-        self.active_dups = []
+        self.active_seqs = []
         super(LizardExtension, self).__init__(context)
 
     def __call__(self, tokens, reader):
@@ -53,20 +53,16 @@ class LizardExtension(ExtensionBase):
 
     def find_duplicates(self, seq):
         if not self.saved_hash[seq.hash]:
-            if self.active_dups:
+            if self.active_seqs:
                 dup1 = CodeSnippet(self.active_seqs[0][0].start_line)
                 dup1.end_line = self.active_seqs[0][-1].end_line
                 dup2 = CodeSnippet(self.active_seqs[1][0].start_line)
                 dup2.end_line = self.active_seqs[1][-1].end_line
                 self.duplicates.append([dup1, dup2])
-                self.active_dups = []
                 self.active_seqs = []
         for p in self.saved_hash[seq.hash]:
-            if not self.active_dups:
-                self.active_dups = [CodeSnippet(p.start_line), CodeSnippet(seq.start_line)]
+            if not self.active_seqs:
                 self.active_seqs = [[p], [seq]]
-            self.active_dups[0].end_line = p.end_line
-            self.active_dups[1].end_line = seq.end_line
             self.active_seqs[0].append(p)
             self.active_seqs[1].append(seq)
         self.saved_hash[seq.hash].append(seq)
