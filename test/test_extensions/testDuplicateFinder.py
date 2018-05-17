@@ -7,12 +7,18 @@ class TestDuplicateFinder(unittest.TestCase):
         dups = []
         finder = DuplicateFinder(dups.append)
         for t in nodes + [-1]:
-            finder.find_duplicates(t, t)
+            finder.find_duplicates1(t, t)
         return dups
+
+    def test_no_duplicate(self):
+        self.assertEqual([], self.find_in([1,2]))
 
     def test_simple_duplicate(self):
         self.assertEqual([[[1], [1]]], self.find_in([1,1]))
 
     def test_mulitiple_nodes_duplicate(self):
         self.assertEqual([[[1, 2], [1, 2]]], self.find_in([1,2,1,2]))
+
+    def test_simple_duplicate_3_times(self):
+        self.assertEqual([[[1], [1], [1]]], self.find_in([1,1,1]))
 

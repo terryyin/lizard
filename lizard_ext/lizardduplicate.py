@@ -39,6 +39,21 @@ class DuplicateFinder(object):
             if not self.active_seqs:
                 self.active_seqs = [[p], [seq]]
             else:
+                self.active_seqs.append([p])
+                self.active_seqs[0].append(p)
+                self.active_seqs[1].append(seq)
+        self.saved_hash[seq_hash].append(seq)
+
+    def find_duplicates1(self, seq, seq_hash):
+        if not self.saved_hash[seq_hash]:
+            if self.active_seqs:
+                self.callback_add_duplicate(self.active_seqs)
+                self.active_seqs = []
+        for p in self.saved_hash[seq_hash]:
+            if not self.active_seqs:
+                self.active_seqs = [[p], [seq]]
+            else:
+                self.active_seqs.append([p])
                 self.active_seqs[0].append(p)
                 self.active_seqs[1].append(seq)
         self.saved_hash[seq_hash].append(seq)
