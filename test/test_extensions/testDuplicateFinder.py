@@ -13,3 +13,6 @@ class TestDuplicateFinder(unittest.TestCase):
     def test_simple_duplicate(self):
         self.assertEqual([[[1], [1]]], self.find_in([1,1]))
 
+    def test_mulitiple_nodes_duplicate(self):
+        self.assertEqual([[[1, 2], [1, 2]]], self.find_in([1,2,1,2]))
+
