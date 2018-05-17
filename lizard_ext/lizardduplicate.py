@@ -54,11 +54,7 @@ class LizardExtension(ExtensionBase):
     def find_duplicates(self, seq):
         if not self.saved_hash[seq.hash]:
             if self.active_seqs:
-                dup1 = CodeSnippet(self.active_seqs[0][0].start_line)
-                dup1.end_line = self.active_seqs[0][-1].end_line
-                dup2 = CodeSnippet(self.active_seqs[1][0].start_line)
-                dup2.end_line = self.active_seqs[1][-1].end_line
-                self.duplicates.append([dup1, dup2])
+                self.add_duplicate(self.active_seqs)
                 self.active_seqs = []
         for p in self.saved_hash[seq.hash]:
             if not self.active_seqs:
@@ -66,4 +62,11 @@ class LizardExtension(ExtensionBase):
             self.active_seqs[0].append(p)
             self.active_seqs[1].append(seq)
         self.saved_hash[seq.hash].append(seq)
+
+    def add_duplicate(self, sequences):
+        dup1 = CodeSnippet(sequences[0][0].start_line)
+        dup1.end_line = sequences[0][-1].end_line
+        dup2 = CodeSnippet(sequences[1][0].start_line)
+        dup2.end_line = sequences[1][-1].end_line
+        self.duplicates.append([dup1, dup2])
 
