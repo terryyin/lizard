@@ -38,9 +38,10 @@ class DuplicateFinder(object):
         for p in self.saved_hash[seq_hash]:
             if not self.active_seqs:
                 self.active_seqs = [[p], [seq]]
-            self.active_seqs[0].append(p)
-            self.active_seqs[1].append(seq)
-        self.saved_hash[seq.hash].append(seq)
+            else:
+                self.active_seqs[0].append(p)
+                self.active_seqs[1].append(seq)
+        self.saved_hash[seq_hash].append(seq)
 
 class LizardExtension(ExtensionBase):
 
