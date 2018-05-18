@@ -30,5 +30,10 @@ class TestDuplicateFinder(unittest.TestCase):
         self.assertEqual([[["1@0", "2@1"], ["1@2", "2@3"]]], self.find_in([1,2,1,2]))
 
     def test_not_mulitiple_nodes_duplicate(self):
-        self.assertEqual([[["1@0"],["1@3"]]], self.find_in([1,3,2,1,2]))
+        self.assertIn([["1@0"],["1@3"]], self.find_in([1,3,2,1,2]))
+        self.assertIn([["2@2"],["2@4"]], self.find_in([1,3,2,1,2]))
+
+    def test_mulitiple_nodes_duplicate_and_single_node(self):
+        self.assertIn([["1@0"], ["1@2"], ["1@4"]], self.find_in([1,2,1,2,1]))
+        self.assertIn([["1@0", "2@1"], ["1@2", "2@3"]], self.find_in([1,2,1,2,1]))
 
