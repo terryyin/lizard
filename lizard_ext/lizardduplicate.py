@@ -44,8 +44,6 @@ class DuplicateGraphNode(object):
             yield c
 
 
-
-
 class DuplicateGraph(object):
     def __init__(self):
         self.current = None
@@ -65,6 +63,7 @@ class DuplicateFinder(object):
         self.active_seqs = []
         self.duplicates = {}
         self.head = self.chain = DuplicateGraphNode(None, None)
+        self.hashed_node_indice = defaultdict(list)
 
     def find_duplicates(self, seq, seq_hash):
         if not self.saved_hash[seq_hash]:
@@ -91,12 +90,13 @@ class DuplicateFinder(object):
             same = self.saved_hash[node.hash]
             if len(same) > 1:
                 duplicates += self._duplicate_sequences([(n,n) for n in same])
-            del self.saved_hash[node.hash]
             node = node.next
         for v in duplicates:
             self.callback_add_duplicate([[n.used_by for n in l] for l in v])
 
     def _duplicate_sequences(self, sequences):
+        if len(sequences) == len(self.saved_hash[sequences[0][1].hash]):
+            del self.saved_hash[sequences[0][1].hash]
         duplicates = []
         nexts = [[s,n.next] for s,n in sequences]
         keyfunc = lambda x: x[1].hash
