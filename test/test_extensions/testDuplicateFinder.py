@@ -39,4 +39,8 @@ class TestDuplicateFinder(unittest.TestCase):
         self.assertIn([["1@0"], ["1@2"], ["1@4"]], self.find_in([1,2,1,2,1]))
         self.assertIn([["1@0", "2@1", "1@2"], ["1@2", "2@3", "1@4"]], self.find_in([1,2,1,2,1]))
 
+    def test_3_nodes_duplicate(self):
+        self.assertNotIn([["3@2"], ["3@5"]], self.find_in([1,2,3,1,2,3]))
+
+
 

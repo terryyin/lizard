@@ -64,7 +64,6 @@ class DuplicateFinder(object):
         self.saved_hash = defaultdict(list)
         self.active_seqs = []
         self.duplicates = {}
-        self.current_seq = None
         self.head = self.chain = DuplicateGraphNode(None, None)
 
     def find_duplicates(self, seq, seq_hash):
@@ -83,23 +82,15 @@ class DuplicateFinder(object):
 
     def find_duplicates1(self, seq, seq_hash):
         self.chain = self.chain.chain(seq, seq_hash)
-        if self.saved_hash[seq_hash]:
-            if self.current_seq and self.current_seq != seq_hash:
-                if self.duplicates[self.current_seq][0][-1].next.hash == seq_hash:
-                    self.duplicates[self.current_seq][0].append(self.saved_hash[seq_hash][0])
-                    self.duplicates[self.current_seq][1].append(self.chain)
-            else:
-                self.duplicates[seq_hash] =[[s] for s in self.saved_hash[seq_hash]] + [[self.chain]]
-                self.current_seq = seq_hash
-        else:
-            self.current_seq = None
         self.saved_hash[seq_hash].append(self.chain)
 
     def done(self):
         duplicates = []
         node = self.head
         while node:
-            duplicates += self._duplicate_sequences([(n,n) for n in self.saved_hash[node.hash]])
+            same = self.saved_hash[node.hash]
+            if len(same) > 1:
+                duplicates += self._duplicate_sequences([(n,n) for n in same])
             del self.saved_hash[node.hash]
             node = node.next
         for v in duplicates:
@@ -107,17 +98,18 @@ class DuplicateFinder(object):
 
     def _duplicate_sequences(self, sequences):
         duplicates = []
-        if len(sequences) > 1:
-            nexts = [[s,n.next] for s,n in sequences]
-            keyfunc = lambda x: x[1].hash
-            nexts = sorted(nexts, key=keyfunc)
-            stopped = False
-            for _, group in groupby(nexts, keyfunc):
-                group = list(group)
-                stopped = stopped or len(group) == 1
+        nexts = [[s,n.next] for s,n in sequences]
+        keyfunc = lambda x: x[1].hash
+        nexts = sorted(nexts, key=keyfunc)
+        stopped = False
+        for _, group in groupby(nexts, keyfunc):
+            group = list(group)
+            if len(group) > 1:
                 duplicates += self._duplicate_sequences(group)
-            if stopped:
-                duplicates.append([node.until(to) for node, to in sequences])
+            else:
+                stopped = True
+        if stopped:
+            duplicates.append([node.until(to) for node, to in sequences])
         return duplicates
 
 
