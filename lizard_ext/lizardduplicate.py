@@ -2,6 +2,7 @@
 Get Duplicated parameter lists
 '''
 from collections import defaultdict, deque, Counter
+from itertools import groupby
 from .extension_base import ExtensionBase
 
 
@@ -39,7 +40,7 @@ class DuplicateGraphNode(object):
         yield self
         c = self
         while c != node:
-            c = node.next
+            c = c.next
             yield c
 
 
@@ -109,10 +110,10 @@ class DuplicateFinder(object):
         if len(sequences) > 1:
             duplicates.append([node.until(to) for node, to in sequences])
             nexts = [[s,n.next] for s,n in sequences]
-            counter = Counter(n.hash for _,n in nexts)
-            for h, count in counter.most_common():
-                if count > 2:
-                    break
+            keyfunc = lambda x: x[1].hash
+            nexts = sorted(nexts, key=keyfunc)
+            for _, group in groupby(nexts, keyfunc):
+                duplicates += self._duplicate_sequences(list(group))
         return duplicates
 
 
