@@ -29,6 +29,8 @@ class DuplicateFinder(object):
         self.callback_add_duplicate = callback_add_duplicate
         self.saved_hash = defaultdict(list)
         self.active_seqs = []
+        self.duplicates = {}
+        self.current_seq = None
 
     def find_duplicates(self, seq, seq_hash):
         if not self.saved_hash[seq_hash]:
@@ -45,17 +47,18 @@ class DuplicateFinder(object):
         self.saved_hash[seq_hash].append(seq)
 
     def find_duplicates1(self, seq, seq_hash):
-        if not self.saved_hash[seq_hash]:
-            if self.active_seqs:
-                self.callback_add_duplicate(self.active_seqs)
-                self.active_seqs = []
-        for p in self.saved_hash[seq_hash]:
-            if not self.active_seqs:
-                self.active_seqs = [[p], [seq]]
+        if seq_hash == -1:
+            for v in self.duplicates.values():
+                self.callback_add_duplicate(v)
+        if self.saved_hash[seq_hash]:
+            if self.current_seq and self.current_seq != seq_hash:
+                self.duplicates[self.current_seq][0].append(self.saved_hash[seq_hash][0])
+                self.duplicates[self.current_seq][1].append(seq)
             else:
-                self.active_seqs.append([p])
-                self.active_seqs[0].append(p)
-                self.active_seqs[1].append(seq)
+                self.duplicates[seq_hash] =[[s] for s in self.saved_hash[seq_hash]] + [[seq]]
+                self.current_seq = seq_hash
+        else:
+            self.current_seq = None
         self.saved_hash[seq_hash].append(seq)
 
 class LizardExtension(ExtensionBase):
