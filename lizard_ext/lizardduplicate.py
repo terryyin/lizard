@@ -108,12 +108,16 @@ class DuplicateFinder(object):
     def _duplicate_sequences(self, sequences):
         duplicates = []
         if len(sequences) > 1:
-            duplicates.append([node.until(to) for node, to in sequences])
             nexts = [[s,n.next] for s,n in sequences]
             keyfunc = lambda x: x[1].hash
             nexts = sorted(nexts, key=keyfunc)
+            stopped = False
             for _, group in groupby(nexts, keyfunc):
-                duplicates += self._duplicate_sequences(list(group))
+                group = list(group)
+                stopped = stopped or len(group) == 1
+                duplicates += self._duplicate_sequences(group)
+            if stopped:
+                duplicates.append([node.until(to) for node, to in sequences])
         return duplicates
 
 
