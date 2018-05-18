@@ -1,7 +1,7 @@
 '''
 Get Duplicated parameter lists
 '''
-from collections import defaultdict, deque
+from collections import defaultdict, deque, Counter
 from .extension_base import ExtensionBase
 
 
@@ -34,6 +34,13 @@ class DuplicateGraphNode(object):
         node = DuplicateGraphNode(node, node_hash)
         self.next = node
         return node
+
+    def until(self, node):
+        yield self
+        c = self
+        while c != node:
+            c = node.next
+            yield c
 
 
 
@@ -88,15 +95,25 @@ class DuplicateFinder(object):
         self.saved_hash[seq_hash].append(self.chain)
 
     def done(self):
-        duplicates = {}
+        duplicates = []
         node = self.head
         while node:
-            if len(self.saved_hash[node.hash]) > 1:
-                duplicates[node.hash] = [[n] for n in self.saved_hash[node.hash]]
+            duplicates += self._duplicate_sequences([(n,n) for n in self.saved_hash[node.hash]])
             del self.saved_hash[node.hash]
             node = node.next
-        for v in duplicates.values():
+        for v in duplicates:
             self.callback_add_duplicate([[n.used_by for n in l] for l in v])
+
+    def _duplicate_sequences(self, sequences):
+        duplicates = []
+        if len(sequences) > 1:
+            duplicates.append([node.until(to) for node, to in sequences])
+            nexts = [[s,n.next] for s,n in sequences]
+            counter = Counter(n.hash for _,n in nexts)
+            for h, count in counter.most_common():
+                if count > 2:
+                    break
+        return duplicates
 
 
 class LizardExtension(ExtensionBase):
