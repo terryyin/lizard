@@ -8,6 +8,7 @@ class TestDuplicateFinder(unittest.TestCase):
         finder = DuplicateFinder(dups.append)
         for i,v in enumerate(nodes + [-1]):
             finder.find_duplicates1("%s@%s"%(v, i), v)
+        finder.done()
         return dups
 
     def test_no_duplicate(self):
@@ -27,4 +28,7 @@ class TestDuplicateFinder(unittest.TestCase):
 
     def test_mulitiple_nodes_duplicate(self):
         self.assertEqual([[["1@0", "2@1"], ["1@2", "2@3"]]], self.find_in([1,2,1,2]))
+
+    def test_not_mulitiple_nodes_duplicate(self):
+        self.assertEqual([[["1@0"],["1@3"]]], self.find_in([1,3,2,1,2]))
 

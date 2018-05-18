@@ -24,6 +24,32 @@ class Sequence(object):
         return self.hash == other.hash
 
 
+class DuplicateGraphNode(object):
+    def __init__(self, node, node_hash):
+        self.hash = node_hash
+        self.used_by = node
+        self.next = None
+
+    def chain(self,node, node_hash):
+        node = DuplicateGraphNode(node, node_hash)
+        self.next = node
+        return node
+
+
+
+
+class DuplicateGraph(object):
+    def __init__(self):
+        self.current = None
+
+    def add(self,node, node_hash):
+        if not self.current:
+            self.current = DuplicateTreeNode(node, node_hash)
+        else:
+            self.current = self.current.add(node, node_hash)
+
+
+
 class DuplicateFinder(object):
     def __init__(self, callback_add_duplicate):
         self.callback_add_duplicate = callback_add_duplicate
@@ -31,6 +57,7 @@ class DuplicateFinder(object):
         self.active_seqs = []
         self.duplicates = {}
         self.current_seq = None
+        self.chain = DuplicateGraphNode(None, None)
 
     def find_duplicates(self, seq, seq_hash):
         if not self.saved_hash[seq_hash]:
@@ -47,19 +74,23 @@ class DuplicateFinder(object):
         self.saved_hash[seq_hash].append(seq)
 
     def find_duplicates1(self, seq, seq_hash):
-        if seq_hash == -1:
-            for v in self.duplicates.values():
-                self.callback_add_duplicate(v)
+        self.chain = self.chain.chain(seq, seq_hash)
         if self.saved_hash[seq_hash]:
             if self.current_seq and self.current_seq != seq_hash:
-                self.duplicates[self.current_seq][0].append(self.saved_hash[seq_hash][0])
-                self.duplicates[self.current_seq][1].append(seq)
+                if self.duplicates[self.current_seq][0][-1].next.hash == seq_hash:
+                    self.duplicates[self.current_seq][0].append(self.saved_hash[seq_hash][0])
+                    self.duplicates[self.current_seq][1].append(self.chain)
             else:
-                self.duplicates[seq_hash] =[[s] for s in self.saved_hash[seq_hash]] + [[seq]]
+                self.duplicates[seq_hash] =[[s] for s in self.saved_hash[seq_hash]] + [[self.chain]]
                 self.current_seq = seq_hash
         else:
             self.current_seq = None
-        self.saved_hash[seq_hash].append(seq)
+        self.saved_hash[seq_hash].append(self.chain)
+
+    def done(self):
+        for v in self.duplicates.values():
+            self.callback_add_duplicate([[n.used_by for n in l] for l in v])
+
 
 class LizardExtension(ExtensionBase):
 
