@@ -54,6 +54,7 @@ class DuplicateFinder(object):
         self.nodes =[]
 
     def find_duplicates(self, seq, seq_hash):
+        return self.find_duplicates1(seq, seq_hash)
         if not self.saved_hash[seq_hash]:
             if self.active_seqs:
                 self.callback_add_duplicate(self.active_seqs)
@@ -118,7 +119,8 @@ class LizardExtension(ExtensionBase):
             s = self._push_and_pop_current_sample_queue(token, reader.context.current_line)
             self.duplicate_finder.find_duplicates(s, s.hash)
             yield token
-        self.duplicate_finder.find_duplicates(Sequence(0), -1)
+        self.duplicate_finder.find_duplicates(Sequence(0), '')
+        self.duplicate_finder.done()
 
     def _push_and_pop_current_sample_queue(self, token, current_line):
         self.saved_sequences.append(Sequence(current_line))
