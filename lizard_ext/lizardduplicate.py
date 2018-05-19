@@ -21,14 +21,9 @@ class Sequence(object):
         self.hash += token
         self.end_line = current_line
 
-    def __eq__(self, other):
-        return self.hash == other.hash
-
 
 class DuplicateFinder(object):
     def __init__(self):
-        self.saved_hash = defaultdict(list)
-        self.active_seqs = []
         self.duplicates = []
         self.hashed_node_indice = defaultdict(list)
         self.nodes = []
