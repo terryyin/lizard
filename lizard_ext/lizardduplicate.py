@@ -83,7 +83,7 @@ class DuplicateFinder(object):
     def _duplicate_sequences(self, results, sequences):
         if len(sequences) == len(self.hashed_node_indice[self.nodes[sequences[0][1]].hash]):
             del self.hashed_node_indice[self.nodes[sequences[0][1]].hash]
-        nexts = [[s,n+1] for s,n in sequences]
+        nexts = [(s,n+1) for s,n in sequences]
         keyfunc = lambda x: self.nodes[x[1]].hash
         nexts = sorted(nexts, key=keyfunc)
         full_duplicate_stopped = False
@@ -94,12 +94,13 @@ class DuplicateFinder(object):
             else:
                 full_duplicate_stopped = True
         if full_duplicate_stopped:
-            for dup in results:
-                if len(dup) == len(sequences):
-                    if dup[0][1]==sequences[0][1]:
-                        full_duplicate_stopped = False
-        if full_duplicate_stopped:
-            results.append([(node, to) for node, to in sequences])
+            if not self.full_inclusive_sequences(results, sequences):
+                results.append(sequences)
+
+    def full_inclusive_sequences(self, existing, sequences):
+        return any(
+            len(dup) == len(sequences) and dup[0][1]==sequences[0][1]
+                for dup in existing)
 
 
 class LizardExtension(ExtensionBase):
