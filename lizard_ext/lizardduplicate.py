@@ -25,25 +25,6 @@ class Sequence(object):
         return self.hash == other.hash
 
 
-class DuplicateGraphNode(object):
-    def __init__(self, node, node_hash):
-        self.hash = node_hash
-        self.used_by = node
-        self.next = None
-
-
-class DuplicateGraph(object):
-    def __init__(self):
-        self.current = None
-
-    def add(self,node, node_hash):
-        if not self.current:
-            self.current = DuplicateTreeNode(node, node_hash)
-        else:
-            self.current = self.current.add(node, node_hash)
-
-
-
 class DuplicateFinder(object):
     def __init__(self, callback_add_duplicate):
         self.callback_add_duplicate = callback_add_duplicate
@@ -51,35 +32,21 @@ class DuplicateFinder(object):
         self.active_seqs = []
         self.duplicates = {}
         self.hashed_node_indice = defaultdict(list)
-        self.nodes =[]
+        self.nodes = []
 
-    def find_duplicates(self, seq, seq_hash):
-        return self.find_duplicates1(seq, seq_hash)
-        if not self.saved_hash[seq_hash]:
-            if self.active_seqs:
-                self.callback_add_duplicate(self.active_seqs)
-                self.active_seqs = []
-        for p in self.saved_hash[seq_hash]:
-            if not self.active_seqs:
-                self.active_seqs = [[p], [seq]]
-            else:
-                self.active_seqs.append([p])
-                self.active_seqs[0].append(p)
-                self.active_seqs[1].append(seq)
-        self.saved_hash[seq_hash].append(seq)
-
-    def find_duplicates1(self, seq, seq_hash):
-        self.nodes.append(DuplicateGraphNode(seq, seq_hash))
-        self.hashed_node_indice[seq_hash].append(len(self.nodes) - 1)
+    def find_duplicates(self, node):
+        self.nodes.append(node)
+        self.hashed_node_indice[node.hash].append(len(self.nodes) - 1)
 
     def done(self):
         duplicates = []
         for node in self.nodes:
             same = self.hashed_node_indice[node.hash]
             if len(same) > 1:
-                self._duplicate_sequences(duplicates, [(n,n) for n in same])
+                self._duplicate_sequences(duplicates, [(n, n) for n in same])
         for v in duplicates:
-            self.callback_add_duplicate([[n.used_by for n in self.nodes[start:end+1]] for (start, end) in v])
+            dup = [(self.nodes[start], self.nodes[end]) for start, end in v]
+            self.callback_add_duplicate(dup)
 
     def _duplicate_sequences(self, results, sequences):
         if len(sequences) == len(self.hashed_node_indice[self.nodes[sequences[0][1]].hash]):
@@ -117,9 +84,9 @@ class LizardExtension(ExtensionBase):
     def __call__(self, tokens, reader):
         for token in tokens:
             s = self._push_and_pop_current_sample_queue(token, reader.context.current_line)
-            self.duplicate_finder.find_duplicates(s, s.hash)
+            self.duplicate_finder.find_duplicates(s)
             yield token
-        self.duplicate_finder.find_duplicates(Sequence(0), '')
+        self.duplicate_finder.find_duplicates(Sequence(0))
         self.duplicate_finder.done()
 
     def _push_and_pop_current_sample_queue(self, token, current_line):
