@@ -10,11 +10,10 @@ class Node(object):
 class TestDuplicateFinder(unittest.TestCase):
 
     def find_in(self, nodes):
-        dups = []
-        finder = DuplicateFinder(dups.append)
+        finder = DuplicateFinder()
         for i,v in enumerate(nodes + [-1]):
             finder.find_duplicates(Node("%s@%s"%(v, i), v))
-        finder.done()
+        dups = finder.done()
         return [[(x.value, y.value) for x, y in n] for n in dups]
 
     def test_no_duplicate(self):

@@ -26,8 +26,7 @@ class Sequence(object):
 
 
 class DuplicateFinder(object):
-    def __init__(self, callback_add_duplicate):
-        self.callback_add_duplicate = callback_add_duplicate
+    def __init__(self):
         self.saved_hash = defaultdict(list)
         self.active_seqs = []
         self.duplicates = {}
@@ -44,9 +43,7 @@ class DuplicateFinder(object):
             same = self.hashed_node_indice[node.hash]
             if len(same) > 1:
                 self._duplicate_sequences(duplicates, [(n, n) for n in same])
-        for v in duplicates:
-            dup = [(self.nodes[start], self.nodes[end]) for start, end in v]
-            self.callback_add_duplicate(dup)
+        return [[(self.nodes[start], self.nodes[end]) for start, end in v] for v in duplicates]
 
     def _duplicate_sequences(self, results, sequences):
         if len(sequences) == len(self.hashed_node_indice[self.nodes[sequences[0][1]].hash]):
@@ -78,7 +75,7 @@ class LizardExtension(ExtensionBase):
     def __init__(self, context=None):
         self.duplicates = []
         self.saved_sequences = deque([Sequence(0)] * self.SAMPLE_SIZE)
-        self.duplicate_finder = DuplicateFinder(self.add_duplicate)
+        self.duplicate_finder = DuplicateFinder()
         super(LizardExtension, self).__init__(context)
 
     def __call__(self, tokens, reader):
@@ -87,7 +84,8 @@ class LizardExtension(ExtensionBase):
             self.duplicate_finder.find_duplicates(s)
             yield token
         self.duplicate_finder.find_duplicates(Sequence(0))
-        self.duplicate_finder.done()
+        for seq in self.duplicate_finder.done():
+            self.add_duplicate(seq)
 
     def _push_and_pop_current_sample_queue(self, token, current_line):
         self.saved_sequences.append(Sequence(current_line))
