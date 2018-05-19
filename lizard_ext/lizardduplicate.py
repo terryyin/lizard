@@ -76,27 +76,30 @@ class DuplicateFinder(object):
         for node in self.nodes:
             same = self.hashed_node_indice[node.hash]
             if len(same) > 1:
-                duplicates += self._duplicate_sequences([(n,n) for n in same])
+                self._duplicate_sequences(duplicates, [(n,n) for n in same])
         for v in duplicates:
-            self.callback_add_duplicate([[n.used_by for n in l] for l in v])
+            self.callback_add_duplicate([[n.used_by for n in self.nodes[start:end+1]] for (start, end) in v])
 
-    def _duplicate_sequences(self, sequences):
+    def _duplicate_sequences(self, results, sequences):
         if len(sequences) == len(self.hashed_node_indice[self.nodes[sequences[0][1]].hash]):
             del self.hashed_node_indice[self.nodes[sequences[0][1]].hash]
-        duplicates = []
         nexts = [[s,n+1] for s,n in sequences]
         keyfunc = lambda x: self.nodes[x[1]].hash
         nexts = sorted(nexts, key=keyfunc)
-        stopped = False
+        full_duplicate_stopped = False
         for _, group in groupby(nexts, keyfunc):
             group = list(group)
             if len(group) > 1:
-                duplicates += self._duplicate_sequences(group)
+                self._duplicate_sequences(results, group)
             else:
-                stopped = True
-        if stopped:
-            duplicates.append([self.nodes[node:to+1] for node, to in sequences])
-        return duplicates
+                full_duplicate_stopped = True
+        if full_duplicate_stopped:
+            for dup in results:
+                if len(dup) == len(sequences):
+                    if dup[0][1]==sequences[0][1]:
+                        full_duplicate_stopped = False
+        if full_duplicate_stopped:
+            results.append([(node, to) for node, to in sequences])
 
 
 class LizardExtension(ExtensionBase):
