@@ -7,9 +7,10 @@ from .extension_base import ExtensionBase
 
 
 class CodeSnippet(object):
-    def __init__(self, start_line):
+    def __init__(self, start_line, file_name):
         self.start_line = start_line
         self.end_line = start_line
+        self.file_name = file_name
 
 
 class Sequence(object):
@@ -104,11 +105,11 @@ class LizardExtension(ExtensionBase):
 
     def __init__(self, context=None):
         self.duplicates = []
-        self.saved_sequences = deque([Sequence(0) for _ in range(self.SAMPLE_SIZE)])
         super(LizardExtension, self).__init__(context)
 
     def __call__(self, tokens, reader):
         nodes = []
+        self.saved_sequences = deque([Sequence(0) for _ in range(self.SAMPLE_SIZE)])
         for token in tokens:
             s = self._push_and_pop_current_sample_queue(
                     token, reader.context.current_line)
@@ -117,7 +118,7 @@ class LizardExtension(ExtensionBase):
         nodes.append(Sequence(0))
         duplicate_finder = DuplicateFinder(nodes)
         for seq in duplicate_finder.find():
-            self.add_duplicate(seq)
+            self.add_duplicate(seq, reader.context.fileinfo.filename)
 
     def _push_and_pop_current_sample_queue(self, token, current_line):
         self.saved_sequences.append(Sequence(current_line))
@@ -125,9 +126,20 @@ class LizardExtension(ExtensionBase):
             s.append(token, current_line)
         return self.saved_sequences.popleft()
 
-    def add_duplicate(self, sequences):
-        dup1 = CodeSnippet(sequences[0][0].start_line)
+    def add_duplicate(self, sequences, file_name):
+        dup1 = CodeSnippet(sequences[0][0].start_line, file_name)
         dup1.end_line = sequences[0][-1].end_line
-        dup2 = CodeSnippet(sequences[1][0].start_line)
+        dup2 = CodeSnippet(sequences[1][0].start_line, file_name)
         dup2.end_line = sequences[1][-1].end_line
         self.duplicates.append([dup1, dup2])
+
+    def print_result(self):
+        print("Duplicates")
+        print("===================================")
+        for dup in self.duplicates:
+            print("Duplicate block:")
+            print("--------------------------")
+            for d in dup:
+                print("%s: %s ~ %s"%(d.file_name, d.start_line, d.end_line))
+            print("^^^^^^^^^^^^^^^^^^^^^^^^^^")
+            print("")

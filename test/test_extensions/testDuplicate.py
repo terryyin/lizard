@@ -23,6 +23,7 @@ class TestDuplicateExtension(unittest.TestCase):
                 .code
                 )
         self.assertEqual(1, len(self.detector.duplicates))
+        self.assertEqual("a.cpp", self.detector.duplicates[0][0].file_name)
 
     def test_two_functions_that_are_exactly_the_same_detail(self):
         self.detect(
