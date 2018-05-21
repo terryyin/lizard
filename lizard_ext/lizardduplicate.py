@@ -7,9 +7,9 @@ from .extension_base import ExtensionBase
 
 
 class CodeSnippet(object):
-    def __init__(self, start_line, file_name):
+    def __init__(self, start_line, end_line, file_name):
         self.start_line = start_line
-        self.end_line = start_line
+        self.end_line = end_line
         self.file_name = file_name
 
 
@@ -127,11 +127,9 @@ class LizardExtension(ExtensionBase):
         return self.saved_sequences.popleft()
 
     def add_duplicate(self, sequences, file_name):
-        dup1 = CodeSnippet(sequences[0][0].start_line, file_name)
-        dup1.end_line = sequences[0][-1].end_line
-        dup2 = CodeSnippet(sequences[1][0].start_line, file_name)
-        dup2.end_line = sequences[1][-1].end_line
-        self.duplicates.append([dup1, dup2])
+        self.duplicates.append([
+        CodeSnippet(seq[0].start_line, seq[-1].end_line, file_name)
+        for seq in sequences ])
 
     def print_result(self):
         print("Duplicates")
