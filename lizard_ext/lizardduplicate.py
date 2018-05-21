@@ -1,8 +1,9 @@
 '''
 Get Duplicated parameter lists
 '''
-from collections import OrderedDict, deque
+from collections import deque
 from itertools import groupby
+from .default_ordered_dict import DefaultOrderedDict
 from .extension_base import ExtensionBase
 
 
@@ -21,42 +22,6 @@ class Sequence(object):
     def append(self, token, current_line):
         self.hash += token
         self.end_line = current_line
-
-
-class DefaultOrderedDict(OrderedDict):
-    def __init__(self, default_factory=None, *a, **kw):
-        OrderedDict.__init__(self, *a, **kw)
-        self.default_factory = default_factory
-
-    def __getitem__(self, key):
-        try:
-            return OrderedDict.__getitem__(self, key)
-        except KeyError:
-            return self.__missing__(key)
-
-    def __missing__(self, key):
-        if self.default_factory is None:
-            raise KeyError(key)
-        self[key] = value = self.default_factory()
-        return value
-
-    def __reduce__(self):
-        if self.default_factory is None:
-            args = tuple()
-        else:
-            args = self.default_factory,
-        return type(self), args, None, None, self.items()
-
-    def copy(self):
-        return self.__copy__()
-
-    def __copy__(self):
-        return type(self)(self.default_factory, self)
-
-    def __deepcopy__(self, memo):
-        import copy
-        return type(self)(self.default_factory,
-                          copy.deepcopy(self.items()))
 
 
 class DuplicateFinder(object):
@@ -99,6 +64,18 @@ class DuplicateFinder(object):
             for dup in self.duplicates)
 
 
+class CodeHasher(object):
+    def __init__(self, sample_size):
+        self.sample_n = sample_size
+        self.buffer = deque([Sequence(0) for _ in range(self.sample_n)])
+
+    def push_and_pop_current_sample_queue(self, token, current_line):
+        self.buffer.append(Sequence(current_line))
+        for s in self.buffer:
+            s.append(token, current_line)
+        return self.buffer.popleft()
+
+
 class LizardExtension(ExtensionBase):
 
     SAMPLE_SIZE = 21
@@ -109,9 +86,9 @@ class LizardExtension(ExtensionBase):
 
     def __call__(self, tokens, reader):
         nodes = []
-        self.saved_sequences = deque([Sequence(0) for _ in range(self.SAMPLE_SIZE)])
+        hasher = CodeHasher(self.SAMPLE_SIZE)
         for token in tokens:
-            s = self._push_and_pop_current_sample_queue(
+            s = hasher.push_and_pop_current_sample_queue(
                     token, reader.context.current_line)
             nodes.append(s)
             yield token
@@ -120,16 +97,10 @@ class LizardExtension(ExtensionBase):
         for seq in duplicate_finder.find():
             self.add_duplicate(seq, reader.context.fileinfo.filename)
 
-    def _push_and_pop_current_sample_queue(self, token, current_line):
-        self.saved_sequences.append(Sequence(current_line))
-        for s in self.saved_sequences:
-            s.append(token, current_line)
-        return self.saved_sequences.popleft()
-
     def add_duplicate(self, sequences, file_name):
         self.duplicates.append([
-        CodeSnippet(seq[0].start_line, seq[-1].end_line, file_name)
-        for seq in sequences ])
+            CodeSnippet(seq[0].start_line, seq[-1].end_line, file_name)
+            for seq in sequences])
 
     def print_result(self):
         print("Duplicates")
@@ -138,6 +109,6 @@ class LizardExtension(ExtensionBase):
             print("Duplicate block:")
             print("--------------------------")
             for d in dup:
-                print("%s: %s ~ %s"%(d.file_name, d.start_line, d.end_line))
+                print("%s: %s ~ %s" % (d.file_name, d.start_line, d.end_line))
             print("^^^^^^^^^^^^^^^^^^^^^^^^^^")
             print("")
