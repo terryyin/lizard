@@ -44,7 +44,6 @@ try:
     from lizard_ext import auto_open, auto_read
 except ImportError:
     sys.stderr.write("Cannot find the lizard_ext modules.")
-    pass
 
 DEFAULT_CCN_THRESHOLD, DEFAULT_WHITELIST, \
     DEFAULT_MAX_FUNC_LENGTH = 15, "whitelizard.txt", 1000

@@ -36,9 +36,7 @@ def html_output(result, options, _):
         cwd = os.path.dirname(os.path.abspath(__file__))
     env = Environment(loader=FileSystemLoader(cwd),
                       autoescape=select_autoescape(['html']))
-
-    time = datetime.datetime.now()
-    date = time.strftime('%Y-%m-%d %H:%M')
+    date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
     output = env.get_template('template.html').render(
             title='Lizard code complexity report',
             date=date, thresholds=options.thresholds, files=file_list)

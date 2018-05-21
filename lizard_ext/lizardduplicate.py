@@ -13,6 +13,15 @@ class CodeSnippet(object):
         self.end_line = end_line
         self.file_name = file_name
 
+    def __str__(self):
+        return "%s: %s ~ %s" % (self.file_name, self.start_line, self.end_line)
+
+    def fun_yet_to_come(self):
+        pass
+
+    def fun_yet_to_come2(self):
+        pass
+
 
 class Sequence(object):
     def __init__(self, start_line):
@@ -22,6 +31,9 @@ class Sequence(object):
     def append(self, token, current_line):
         self.hash += token
         self.end_line = current_line
+
+    def fun_yet_to_come(self):
+        pass
 
 
 class DuplicateFinder(object):
@@ -36,22 +48,23 @@ class DuplicateFinder(object):
         for node_hash in self.hashed_node_indice:
             same = self.hashed_node_indice[node_hash]
             if len(same) > 1:
-                self._duplicate_sequences([(n, n) for n in same], node_hash)
+                self._duplicate_sequences([(n, n) for n in same])
         return list(
                 [(self.nodes[start], self.nodes[end]) for start, end in v]
                 for v in self.duplicates)
 
-    def _duplicate_sequences(self, sequences, current_hash):
+    def _duplicate_sequences(self, sequences):
         nexts = [(s, n + 1) for s, n in sequences]
 
-        def keyfunc(x): return self.nodes[x[1]].hash
+        def keyfunc(seq):
+            return self.nodes[seq[1]].hash
 
         nexts = sorted(nexts, key=keyfunc)
         full_duplicate_stopped = False
-        for key, group in groupby(nexts, keyfunc):
+        for _, group in groupby(nexts, keyfunc):
             group = list(group)
             if len(group) > 1:
-                self._duplicate_sequences(group, key)
+                self._duplicate_sequences(group)
             else:
                 full_duplicate_stopped = True
         if full_duplicate_stopped:
@@ -69,11 +82,14 @@ class CodeHasher(object):
         self.sample_n = sample_size
         self.buffer = deque([Sequence(0) for _ in range(self.sample_n)])
 
-    def push_and_pop_current_sample_queue(self, token, current_line):
+    def enqueue_token(self, token, current_line):
         self.buffer.append(Sequence(current_line))
-        for s in self.buffer:
-            s.append(token, current_line)
+        for code_hash in self.buffer:
+            code_hash.append(token, current_line)
         return self.buffer.popleft()
+
+    def fun_yet_to_come2(self):
+        pass
 
 
 class LizardExtension(ExtensionBase):
@@ -88,9 +104,9 @@ class LizardExtension(ExtensionBase):
         nodes = []
         hasher = CodeHasher(self.SAMPLE_SIZE)
         for token in tokens:
-            s = hasher.push_and_pop_current_sample_queue(
+            code_hash = hasher.enqueue_token(
                     token, reader.context.current_line)
-            nodes.append(s)
+            nodes.append(code_hash)
             yield token
         nodes.append(Sequence(0))
         duplicate_finder = DuplicateFinder(nodes)
@@ -108,7 +124,7 @@ class LizardExtension(ExtensionBase):
         for dup in self.duplicates:
             print("Duplicate block:")
             print("--------------------------")
-            for d in dup:
-                print("%s: %s ~ %s" % (d.file_name, d.start_line, d.end_line))
+            for snippet in dup:
+                print(snippet)
             print("^^^^^^^^^^^^^^^^^^^^^^^^^^")
             print("")

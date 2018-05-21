@@ -1,3 +1,7 @@
+'''
+DefaultOrderedDict is a combinated OrderedDict and
+defaultdict.
+'''
 from collections import OrderedDict
 
 
