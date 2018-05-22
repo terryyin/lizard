@@ -162,7 +162,7 @@ def arg_parser(prog=None):
                         dest="number",
                         default=0)
     parser.add_argument("-x", "--exclude",
-                        help='''Exclude files that match this pattern. * matches
+                        help='''Exclude files that match the pattern. * matches
                         everything,
                         ? matches any single character, "./folder/*" exclude
                         everything in the folder recursively. Multiple patterns
@@ -197,8 +197,8 @@ def arg_parser(prog=None):
                         const=html_output,
                         dest="printer")
     parser.add_argument("-m", "--modified",
-                        help='''Calculate modified cyclomatic complexity number,
-                        which count a switch/case with multiple cases as
+                        help='''Calculate modified cyclomatic complexity number
+                        , which count a switch/case with multiple cases as
                         one CCN.''',
                         action="append_const",
                         const="modified",

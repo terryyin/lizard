@@ -69,7 +69,8 @@ class CodeStateMachine(object):
 
 
 class CodeReader(object):
-    ''' CodeReaders are used to parse function structures from code of different
+    ''' CodeReaders are used to parse function structures from
+    code of different
     language. Each language will need a subclass of CodeReader.  '''
 
     ext = []
