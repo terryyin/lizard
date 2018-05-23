@@ -4,6 +4,7 @@
 This module extends the default output formatting to include HTML.
 '''
 
+from __future__ import print_function
 import os
 import sys
 import datetime
