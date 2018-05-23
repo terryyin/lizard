@@ -6,8 +6,8 @@ from collections import OrderedDict
 
 
 class DefaultOrderedDict(OrderedDict):
-    def __init__(self, default_factory=None, *a, **kw):
-        OrderedDict.__init__(self, *a, **kw)
+    def __init__(self, default_factory=None):
+        OrderedDict.__init__(self)
         self.default_factory = default_factory
 
     def __getitem__(self, key):
@@ -26,16 +26,5 @@ class DefaultOrderedDict(OrderedDict):
         if self.default_factory is None:
             args = tuple()
         else:
-            args = self.default_factory,
+            args = (self.default_factory,)
         return type(self), args, None, None, self.items()
-
-    def copy(self):
-        return self.__copy__()
-
-    def __copy__(self):
-        return type(self)(self.default_factory, self)
-
-    def __deepcopy__(self, memo):
-        import copy
-        return type(self)(self.default_factory,
-                          copy.deepcopy(self.items()))
