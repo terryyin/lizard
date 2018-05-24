@@ -73,7 +73,7 @@ class TestDuplicateExtension(unittest.TestCase):
                 )
         self.assertEqual(2, len(self.detector.duplicates))
 
-    def xtest_three_functions_that_are_the_same(self):
+    def test_three_functions_that_are_the_same(self):
         self.detect(
                 self.builder
                 .six_line_function("func1")
@@ -85,6 +85,15 @@ class TestDuplicateExtension(unittest.TestCase):
                 )
         self.assertEqual(2, len(self.detector.duplicates))
         self.assertEqual(3, len(self.detector.duplicates[1]))
+
+    def test_duplicate_with_different_integer_value(self):
+        self.detect(
+                self.builder
+                .six_line_function(number_value="123")
+                .six_line_function(number_value="456")
+                .code
+                )
+        self.assertEqual(1, len(self.detector.duplicates))
 
 
 
@@ -107,21 +116,21 @@ class CFunctionBuilder(object):
         '''%(name)
         return self
 
-    def six_line_function(self, name='func6'):
+    def six_line_function(self, name='func6', number_value="10", string_value='"abc"'):
         self.code += ''' void %s(int param) {
                 int result, i = 0;
-                for (; i < 10; i++) {
-                    result += i * i;
+                for (; i < %s; i++) {
+                    result += i * i; print(%s);
                 }
             }
-        '''%(name)
+        '''%(name, number_value, string_value)
         return self
 
     def part_of_six_line_function(self, name='func6'):
         self.code += ''' void %s(int param) {
                 int result, i = 0;
                 for (; i < 10; i++) {
-                    result += i * i;
+                    result += i * i; print("abc");
                     then = "I do something else";
                 }
             }

@@ -30,6 +30,8 @@ class Sequence(object):
         self.start_line = self.end_line = start_line
 
     def append(self, token, current_line):
+        if token[0].isdigit():
+            token = '0'
         self.hash += token
         self.end_line = current_line
 
