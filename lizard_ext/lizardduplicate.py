@@ -2,7 +2,7 @@
 Get Duplicated parameter lists
 '''
 from __future__ import print_function
-from collections import deque
+from collections import deque, defaultdict
 from itertools import groupby
 from .default_ordered_dict import DefaultOrderedDict
 from .extension_base import ExtensionBase
@@ -17,6 +17,9 @@ class CodeSnippet(object):
     def __str__(self):
         return "%s: %s ~ %s" % (self.file_name, self.start_line, self.end_line)
 
+    def __repr__(self):
+        return str(self)
+
     def fun_yet_to_come(self):
         pass
 
@@ -25,18 +28,23 @@ class CodeSnippet(object):
 
 
 class Sequence(object):
+
     IGNORE_CONSTANT_VALUE_COUNT = 3
+
     def __init__(self, start_line):
         self.hash = ''
         self.constant_count = 0
+        self.token_register = defaultdict(lambda: 'v'+str(len(self.token_register)))
         self.start_line = self.end_line = start_line
 
     def append(self, token, current_line):
-        if self.constant_count < self.IGNORE_CONSTANT_VALUE_COUNT \
-                and token[0].isdigit() or token[0] in ("'", '"'):
-            token = '0'
-            self.constant_count += 1
-        self.hash += token
+        if (token[0].isdigit() or token[0] in ("'", '"')) and\
+            self.constant_count < self.IGNORE_CONSTANT_VALUE_COUNT:
+                self.token_register[token] = '10000'
+                self.constant_count += 1
+        elif not token[0].isalpha():
+            self.token_register[token] = token
+        self.hash += self.token_register[token]
         self.end_line = current_line
 
     def fun_yet_to_come(self):
