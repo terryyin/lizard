@@ -63,7 +63,11 @@ def analyze(paths, exclude_pattern=None, threads=1, exts=None,
     result = map_files_to_analyzer(files, file_analyzer, threads)
     if regression:
         result = [r for r in result]
-    return result
+    for module_info in result:
+        for extension in extensions:
+            if hasattr(extension, 'reduce'):
+                extension.reduce(module_info)
+        yield module_info
 
 
 def _extension_arg(parser):
@@ -536,6 +540,11 @@ class FileAnalyzer(object):  # pylint: disable=R0903
         return context.fileinfo
 
 
+def map_files_to_analyzer(files, analyzer, working_threads):
+    mapmethod = get_map_method(working_threads)
+    return mapmethod(analyzer, files)
+
+
 def warning_filter(option, module_infos):
     for file_info in module_infos:
         if file_info:
@@ -760,9 +769,6 @@ def print_and_save_modules(all_fileinfos, extensions, scheme):
     saved_fileinfos = []
     print(scheme.function_info_head())
     for module_info in all_fileinfos:
-        for extension in extensions:
-            if hasattr(extension, 'reduce'):
-                extension.reduce(module_info)
         if module_info:
             saved_fileinfos.append(module_info)
             for fun in module_info.function_list:
@@ -843,11 +849,6 @@ def get_map_method(working_threads):
         return pool.imap_unordered
     except ImportError:
         return map
-
-
-def map_files_to_analyzer(files, file_analyzer, working_threads):
-    mapmethod = get_map_method(working_threads)
-    return mapmethod(file_analyzer, files)
 
 
 def md5_hash_file(full_path_name):
