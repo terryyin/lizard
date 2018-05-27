@@ -100,7 +100,7 @@ class NestingStackWithUnifiedTokens(object):
     def add_bare_nesting(self):
         self.current_scope = set()
         self.scope_stack.append(self.current_scope)
-        self._decorated.add_bare_nesting()
+        return self._decorated.add_bare_nesting()
 
     def pop_nesting(self):
         self.constant_count = 0
@@ -108,6 +108,7 @@ class NestingStackWithUnifiedTokens(object):
             for token in self.scope_stack.pop():
                 del self.token_register[token]
             self.current_scope = self.scope_stack[-1]
+        return self._decorated.pop_nesting()
 
     def _unified_token(self, token):
         if (token[0].isdigit() or token[0] in ("'", '"')):
