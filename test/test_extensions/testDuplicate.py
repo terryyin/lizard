@@ -85,7 +85,7 @@ class TestDuplicateExtension(unittest.TestCase):
                 .code
                 )
         self.assertEqual(2, len(self.detector.duplicates))
-        self.assertEqual(3, len(self.detector.duplicates[1]))
+        self.assertEqual(3, len(self.detector.duplicates[0]))
 
     def test_duplicate_with_different_integer_value(self):
         self.detect(
@@ -111,6 +111,13 @@ class TestDuplicateExtension(unittest.TestCase):
                 "b={" + ", ".join(str(i) for i in range(100, 200)) + "};"
                 )
         self.assertEqual(0, len(self.detector.duplicates))
+
+    def test_duplicate_with_2_big_blocks(self):
+        self.detect(
+                "a={" + ", ".join(str(i) for i in range(100)) + "};" +
+                "b={" + ", ".join(str(i) for i in range(100)) + "};"
+                )
+        self.assertEqual(1, len(self.detector.duplicates))
 
     def test_duplicate_with_different_variable_name(self):
         self.detect(

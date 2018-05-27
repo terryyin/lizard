@@ -58,22 +58,25 @@ class DuplicateFinder(object):
                 for v in self.duplicates)
 
     def _duplicate_sequences(self, sequences):
-        nexts = [(s, n + 1) for s, n in sequences]
 
         def keyfunc(seq):
             return self.nodes[seq[1]].hash
 
-        nexts = sorted(nexts, key=keyfunc)
-        full_duplicate_stopped = False
-        for _, group in groupby(nexts, keyfunc):
-            group = list(group)
-            if len(group) > 1:
-                self._duplicate_sequences(group)
-            else:
-                full_duplicate_stopped = True
-        if full_duplicate_stopped:
-            if not self.full_inclusive_sequences(sequences):
-                self.duplicates.append(sequences)
+        queues = deque([sequences])
+        while queues:
+            sequences = queues.popleft()
+            nexts = [(s, n + 1) for s, n in sequences]
+            nexts = sorted(nexts, key=keyfunc)
+            full_duplicate_stopped = False
+            for _, group in groupby(nexts, keyfunc):
+                group = list(group)
+                if len(group) > 1:
+                    queues.append(group)
+                else:
+                    full_duplicate_stopped = True
+            if full_duplicate_stopped:
+                if not self.full_inclusive_sequences(sequences):
+                    self.duplicates.append(sequences)
 
     def full_inclusive_sequences(self, sequences):
         return any(
