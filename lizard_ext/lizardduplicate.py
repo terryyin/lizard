@@ -25,13 +25,17 @@ class CodeSnippet(object):
 
 
 class Sequence(object):
+    IGNORE_CONSTANT_VALUE_COUNT = 3
     def __init__(self, start_line):
         self.hash = ''
+        self.constant_count = 0
         self.start_line = self.end_line = start_line
 
     def append(self, token, current_line):
-        if token[0].isdigit():
+        if self.constant_count < self.IGNORE_CONSTANT_VALUE_COUNT \
+                and token[0].isdigit() or token[0] in ("'", '"'):
             token = '0'
+            self.constant_count += 1
         self.hash += token
         self.end_line = current_line
 
@@ -97,7 +101,7 @@ class CodeHasher(object):
 
 class LizardExtension(ExtensionBase):
 
-    SAMPLE_SIZE = 21
+    SAMPLE_SIZE = 31
 
     def __init__(self, context=None):
         self.duplicates = []

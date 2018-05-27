@@ -95,6 +95,28 @@ class TestDuplicateExtension(unittest.TestCase):
                 )
         self.assertEqual(1, len(self.detector.duplicates))
 
+    def test_duplicate_with_different_string_value(self):
+        self.detect(
+                self.builder
+                .six_line_function(string_value='"abc"')
+                .six_line_function(string_value="'def'")
+                .code
+                )
+        self.assertEqual(1, len(self.detector.duplicates))
+
+    def test_duplicate_with_value_dense_block(self):
+        self.detect(
+                "a={" + ", ".join(str(i) for i in range(100)) + "};" +
+                "b={" + ", ".join(str(i) for i in range(100, 200)) + "};"
+                )
+        self.assertEqual(0, len(self.detector.duplicates))
+
+
+
+
+
+
+
 
 
 class CFunctionBuilder(object):
@@ -120,7 +142,7 @@ class CFunctionBuilder(object):
         self.code += ''' void %s(int param) {
                 int result, i = 0;
                 for (; i < %s; i++) {
-                    result += i * i; print(%s);
+                     print(%s);result += i * i;
                 }
             }
         '''%(name, number_value, string_value)
@@ -130,7 +152,7 @@ class CFunctionBuilder(object):
         self.code += ''' void %s(int param) {
                 int result, i = 0;
                 for (; i < 10; i++) {
-                    result += i * i; print("abc");
+                     print("abc");result += i * i;
                     then = "I do something else";
                 }
             }
