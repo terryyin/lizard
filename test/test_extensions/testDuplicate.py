@@ -34,9 +34,9 @@ class TestDuplicateExtension(unittest.TestCase):
                 .code
                 )
         self.assertEqual(2, len(self.detector.duplicates[0]))
-        self.assertEqual(2, self.detector.duplicates[0][0].start_line)
+        self.assertEqual(3, self.detector.duplicates[0][0].start_line)
         self.assertEqual(8, self.detector.duplicates[0][0].end_line)
-        self.assertEqual(8, self.detector.duplicates[0][1].start_line)
+        self.assertEqual(9, self.detector.duplicates[0][1].start_line)
         self.assertEqual(14, self.detector.duplicates[0][1].end_line)
 
     def test_two_5_line_functions_that_are_exactly_the_same_detail(self):
@@ -48,9 +48,9 @@ class TestDuplicateExtension(unittest.TestCase):
                 .code
                 )
         self.assertEqual(2, len(self.detector.duplicates[0]))
-        self.assertEqual(2, self.detector.duplicates[0][0].start_line)
+        self.assertEqual(3, self.detector.duplicates[0][0].start_line)
         self.assertEqual(7, self.detector.duplicates[0][0].end_line)
-        self.assertEqual(7, self.detector.duplicates[0][1].start_line)
+        self.assertEqual(8, self.detector.duplicates[0][1].start_line)
         self.assertEqual(12, self.detector.duplicates[0][1].end_line)
 
     def test_two_functions_that_are_not_the_same(self):
@@ -72,7 +72,7 @@ class TestDuplicateExtension(unittest.TestCase):
                 .code
                 )
         #this result is wrong
-        self.assertEqual(3, len(self.detector.duplicates))
+        self.assertEqual(2, len(self.detector.duplicates))
 
     def test_three_functions_that_are_the_same(self):
         self.detect(
@@ -120,6 +120,12 @@ class TestDuplicateExtension(unittest.TestCase):
                 .code
                 )
         self.assertEqual(1, len(self.detector.duplicates))
+
+    def test_many_identifiers_together(self):
+        self.detect(
+                " ".join("v"+str(i) for i in range(100))
+                )
+        self.assertEqual(0, len(self.detector.duplicates))
 
 
 class CFunctionBuilder(object):
