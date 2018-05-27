@@ -2,7 +2,7 @@
 Get Duplicated parameter lists
 '''
 from __future__ import print_function
-from collections import deque, defaultdict
+from collections import deque
 from itertools import groupby
 from .default_ordered_dict import DefaultOrderedDict
 from .extension_base import ExtensionBase
@@ -81,22 +81,9 @@ class DuplicateFinder(object):
             for dup in self.duplicates)
 
 
-class CodeHasher(object):
-    def __init__(self, sample_size):
-        self.sample_n = sample_size
-        self.buffer = deque([Sequence(0) for _ in range(self.sample_n)])
-
-    def enqueue_token(self, token, file_info_builder):
-        unified_token = file_info_builder.unified_token(token)
-        current_line = file_info_builder.current_line
-        self.buffer.append(Sequence(current_line))
-        for code_hash in self.buffer:
-            code_hash.append_token(unified_token, current_line)
-        return self.buffer.popleft()
-
-
 class NestingStackWithUnifiedTokens(object):
 
+    SAMPLE_SIZE = 31
     IGNORE_CONSTANT_VALUE_COUNT = 3
 
     def __init__(self, decorated):
@@ -105,6 +92,7 @@ class NestingStackWithUnifiedTokens(object):
         self.constant_count = 0
         self.current_scope = set()
         self.scope_stack = [self.current_scope]
+        self.buffer = deque([Sequence(0) for _ in range(self.SAMPLE_SIZE)])
 
     def __getattr__(self, attr):
         return getattr(self._decorated, attr)
@@ -116,13 +104,12 @@ class NestingStackWithUnifiedTokens(object):
 
     def pop_nesting(self):
         self.constant_count = 0
-        print(self.token_register)
-        for token in self.scope_stack.pop():
-            del self.token_register[token]
-        self.current_scope = self.scope_stack[-1]
+        if len(self.scope_stack) > 1:
+            for token in self.scope_stack.pop():
+                del self.token_register[token]
+            self.current_scope = self.scope_stack[-1]
 
-
-    def unified_token(self, token):
+    def _unified_token(self, token):
         if (token[0].isdigit() or token[0] in ("'", '"')):
             if self.constant_count < self.IGNORE_CONSTANT_VALUE_COUNT:
                 self.constant_count += 1
@@ -134,22 +121,27 @@ class NestingStackWithUnifiedTokens(object):
             return self.token_register[token]
         return token
 
+    def enqueue_token(self, token, current_line):
+        unified_token = self._unified_token(token)
+        self.buffer.append(Sequence(current_line))
+        for code_hash in self.buffer:
+            code_hash.append_token(unified_token, current_line)
+        return self.buffer.popleft()
+
 
 class LizardExtension(ExtensionBase):
-
-    SAMPLE_SIZE = 31
 
     def __init__(self, context=None):
         self.duplicates = []
         super(LizardExtension, self).__init__(context)
 
     def __call__(self, tokens, reader):
-        reader.context._nesting_stack = NestingStackWithUnifiedTokens(reader.context._nesting_stack)
+        token_unifier = reader.context.decorate_nesting_stack(
+                NestingStackWithUnifiedTokens)
         nodes = []
-        hasher = CodeHasher(self.SAMPLE_SIZE)
         for token in tokens:
-            code_hash = hasher.enqueue_token(
-                    token, reader.context)
+            code_hash = token_unifier.enqueue_token(
+                    token, reader.context.current_line)
             nodes.append(code_hash)
             yield token
         nodes.append(Sequence(0))

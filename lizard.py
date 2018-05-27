@@ -395,6 +395,10 @@ class FileInfoBuilder(object):
         # delegating to _nesting_stack
         return getattr(self._nesting_stack, attr)
 
+    def decorate_nesting_stack(self, decorate_class):
+        self._nesting_stack = decorate_class(self._nesting_stack)
+        return self._nesting_stack
+
     def pop_nesting(self):
         nest = self._nesting_stack.pop_nesting()
         if isinstance(nest, FunctionInfo):
