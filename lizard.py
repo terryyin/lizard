@@ -57,8 +57,12 @@ def analyze(paths, exclude_pattern=None, threads=1, exts=None,
     statistics.
     '''
     exclude_pattern = exclude_pattern or []
-    extensions = exts or []
     files = get_all_source_files(paths, exclude_pattern, lans)
+    return analyze_files(files, threads, exts, regression)
+
+
+def analyze_files(files, threads=1, exts=None, regression=False):
+    extensions = exts or []
     file_analyzer = FileAnalyzer(extensions)
     result = map_files_to_analyzer(files, file_analyzer, threads)
     if regression:

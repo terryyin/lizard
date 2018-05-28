@@ -1,6 +1,9 @@
 import unittest
+from mock import patch
 from ..testHelpers import get_cpp_fileinfo_with_extension
 from lizard_ext.lizardduplicate import LizardExtension as DuplicateDetector
+from lizard import analyze_files
+
 
 class TestDuplicateExtension(unittest.TestCase):
 
@@ -9,135 +12,169 @@ class TestDuplicateExtension(unittest.TestCase):
         self.builder = CFunctionBuilder()
 
     def detect(self, code):
-        return get_cpp_fileinfo_with_extension(code, self.detector)
+        self.detector.reduce(
+                get_cpp_fileinfo_with_extension(code, self.detector)
+            )
+        return self.detector.get_duplicates()
 
     def test_empty_file(self):
-        self.detect('')
-        self.assertEqual([], self.detector.duplicates)
+        duplicates = self.detect('')
+        self.assertEqual([], duplicates)
 
     def test_two_functions_that_are_exactly_the_same(self):
-        self.detect(
+        duplicates = self.detect(
                 self.builder
                 .six_line_function("func1")
                 .six_line_function("func1")
-                .code
+                .build()
                 )
-        self.assertEqual(1, len(self.detector.duplicates))
-        self.assertEqual("a.cpp", self.detector.duplicates[0][0].file_name)
+        self.assertEqual(1, len(duplicates))
+        self.assertEqual("a.cpp", duplicates[0][0].file_name)
 
     def test_two_functions_that_are_exactly_the_same_detail(self):
-        self.detect(
+        duplicates = self.detect(
                 self.builder
                 .empty_function()
                 .six_line_function("func1")
                 .six_line_function("func2")
-                .code
+                .build()
                 )
-        self.assertEqual(2, len(self.detector.duplicates[0]))
-        self.assertEqual(3, self.detector.duplicates[0][0].start_line)
-        self.assertEqual(8, self.detector.duplicates[0][0].end_line)
-        self.assertEqual(9, self.detector.duplicates[0][1].start_line)
-        self.assertEqual(14, self.detector.duplicates[0][1].end_line)
+        self.assertEqual(2, len(duplicates[0]))
+        self.assertEqual(3, duplicates[0][0].start_line)
+        self.assertEqual(8, duplicates[0][0].end_line)
+        self.assertEqual(9, duplicates[0][1].start_line)
+        self.assertEqual(14, duplicates[0][1].end_line)
 
     def test_two_5_line_functions_that_are_exactly_the_same_detail(self):
-        self.detect(
+        duplicates = self.detect(
                 self.builder
                 .empty_function()
                 .five_line_function("func1")
                 .five_line_function("func2")
-                .code
+                .build()
                 )
-        self.assertEqual(2, len(self.detector.duplicates[0]))
-        self.assertEqual(3, self.detector.duplicates[0][0].start_line)
-        self.assertEqual(7, self.detector.duplicates[0][0].end_line)
-        self.assertEqual(8, self.detector.duplicates[0][1].start_line)
-        self.assertEqual(12, self.detector.duplicates[0][1].end_line)
+        self.assertEqual(2, len(duplicates[0]))
+        self.assertEqual(3, duplicates[0][0].start_line)
+        self.assertEqual(7, duplicates[0][0].end_line)
+        self.assertEqual(8, duplicates[0][1].start_line)
+        self.assertEqual(12, duplicates[0][1].end_line)
 
     def test_two_functions_that_are_not_the_same(self):
-        self.detect(
+        duplicates = self.detect(
                 self.builder
                 .six_line_function()
                 .empty_function()
-                .code
+                .build()
                 )
-        self.assertEqual(0, len(self.detector.duplicates))
+        self.assertEqual(0, len(duplicates))
 
     def test_2_duplicates(self):
-        self.detect(
+        duplicates = self.detect(
                 self.builder
                 .six_line_function()
                 .six_line_function()
                 .different_six_line_function()
                 .different_six_line_function()
-                .code
+                .build()
                 )
         #this result is wrong
-        self.assertEqual(2, len(self.detector.duplicates))
+        self.assertEqual(2, len(duplicates))
 
     def test_three_functions_that_are_the_same(self):
-        self.detect(
+        duplicates = self.detect(
                 self.builder
                 .six_line_function("func1")
                 .empty_function()
                 .six_line_function("func2")
                 .empty_function()
                 .part_of_six_line_function("func3")
-                .code
+                .build()
                 )
-        self.assertEqual(2, len(self.detector.duplicates))
-        self.assertEqual(3, len(self.detector.duplicates[0]))
+        self.assertEqual(2, len(duplicates))
+        self.assertEqual(3, len(duplicates[0]))
 
     def test_duplicate_with_different_integer_value(self):
-        self.detect(
+        duplicates = self.detect(
                 self.builder
                 .six_line_function(number_value="123")
                 .six_line_function(number_value="456")
-                .code
+                .build()
                 )
-        self.assertEqual(1, len(self.detector.duplicates))
+        self.assertEqual(1, len(duplicates))
 
     def test_duplicate_with_different_string_value(self):
-        self.detect(
+        duplicates = self.detect(
                 self.builder
                 .six_line_function(string_value='"abc"')
                 .six_line_function(string_value="'def'")
-                .code
+                .build()
                 )
-        self.assertEqual(1, len(self.detector.duplicates))
+        self.assertEqual(1, len(duplicates))
 
     def test_duplicate_with_value_dense_block(self):
-        self.detect(
+        duplicates = self.detect(
                 "a={" + ", ".join(str(i) for i in range(100)) + "};" +
                 "b={" + ", ".join(str(i) for i in range(100, 200)) + "};"
                 )
-        self.assertEqual(0, len(self.detector.duplicates))
+        self.assertEqual(0, len(duplicates))
 
     def test_duplicate_with_2_big_blocks(self):
-        self.detect(
+        duplicates = self.detect(
                 "a={" + ", ".join(str(i) for i in range(100)) + "};" +
                 "b={" + ", ".join(str(i) for i in range(100)) + "};"
                 )
-        self.assertEqual(1, len(self.detector.duplicates))
+        self.assertEqual(1, len(duplicates))
 
     def test_duplicate_with_different_variable_name(self):
-        self.detect(
+        duplicates = self.detect(
                 self.builder
                 .six_line_function(variable_name='abc')
                 .six_line_function(variable_name="def")
-                .code
+                .build()
                 )
-        self.assertEqual(1, len(self.detector.duplicates))
+        self.assertEqual(1, len(duplicates))
 
     def test_many_identifiers_together(self):
-        self.detect(
+        duplicates = self.detect(
                 " ".join("v"+str(i) for i in range(100))
                 )
-        self.assertEqual(0, len(self.detector.duplicates))
+        self.assertEqual(0, len(duplicates))
+
+
+class TestDuplicateExtensionAcrossFiles(unittest.TestCase):
+
+    def setUp(self):
+        self.detector = DuplicateDetector()
+        self.builder = CFunctionBuilder()
+
+    @patch('lizard.auto_read', create=True)
+    def detect(self, code1, code2, auto_read):
+        auto_read.side_effect = lambda x: {'f1.cpp':code1, 'f2.cpp':code2}[x]
+        list(analyze_files(['f1.cpp', 'f2.cpp'], exts=[self.detector]))
+        return self.detector.get_duplicates()
+
+    def test_basic_duplicate(self):
+        duplicates = self.detect(
+                self.builder
+                .six_line_function()
+                .build(),
+                self.builder
+                .six_line_function()
+                .build()
+                )
+        self.assertEqual(1, len(duplicates))
+        self.assertEqual("f1.cpp", duplicates[0][0].file_name)
+        self.assertEqual("f2.cpp", duplicates[0][1].file_name)
 
 
 class CFunctionBuilder(object):
     def __init__(self):
         self.code = ''
+
+    def build(self):
+        code = self.code
+        self.code = ''
+        return code
 
     def empty_function(self):
         self.code += ''' void func0() {
@@ -184,4 +221,5 @@ class CFunctionBuilder(object):
             }
         '''%(name)
         return self
+
 

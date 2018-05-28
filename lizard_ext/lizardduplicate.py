@@ -48,19 +48,20 @@ class DuplicateFinder(object):
         for i, node in enumerate(self.nodes):
             self.hashed_node_indice[node.hash].append(i)
 
-    def find(self):
+    def find_start_and_ends(self):
         for node_hash in self.hashed_node_indice:
             same = self.hashed_node_indice[node_hash]
             if len(same) > 1:
                 self._duplicate_sequences([(n, n) for n in same])
-        return list(
-                [(self.nodes[start], self.nodes[end]) for start, end in v]
-                for v in self.duplicates)
+        return self.duplicates
 
     def _duplicate_sequences(self, sequences):
 
         def keyfunc(seq):
-            return self.nodes[seq[1]].hash
+            try:
+                return self.nodes[seq[1]].hash
+            except IndexError:
+                return ''
 
         queues = deque([sequences])
         while queues:
@@ -136,32 +137,52 @@ class NestingStackWithUnifiedTokens(object):
 class LizardExtension(ExtensionBase):
 
     def __init__(self, context=None):
-        self.duplicates = []
+        self.nodes = []
+        self.fileinfos = []
         super(LizardExtension, self).__init__(context)
 
     def __call__(self, tokens, reader):
         token_unifier = reader.context.decorate_nesting_stack(
                 NestingStackWithUnifiedTokens)
-        nodes = []
+        reader.context.fileinfo.hash_nodes = nodes = []
         for token in tokens:
             code_hash = token_unifier.enqueue_token(
                     token, reader.context.current_line)
             nodes.append(code_hash)
             yield token
         nodes.append(Sequence(0))
-        duplicate_finder = DuplicateFinder(nodes)
-        for seq in duplicate_finder.find():
-            self.add_duplicate(seq, reader.context.fileinfo.filename)
 
-    def add_duplicate(self, sequences, file_name):
-        self.duplicates.append([
-            CodeSnippet(seq[0].start_line, seq[-1].end_line, file_name)
-            for seq in sequences])
+    def reduce(self, fileinfo):
+        self.fileinfos.append((len(self.nodes), fileinfo))
+        self.nodes += fileinfo.hash_nodes
+
+    def get_duplicates(self):
+        duplicate_finder = DuplicateFinder(self.nodes)
+        duplicates = []
+        for start_and_ends in duplicate_finder.find_start_and_ends():
+            duplicates.append(self._create_code_snippets(start_and_ends))
+        return duplicates
+
+    def _create_code_snippets(self, start_and_ends):
+        return [
+            CodeSnippet(
+                self.nodes[start].start_line,
+                self.nodes[end].end_line,
+                self._get_fileinfo_by_token_index(start).filename)
+            for start, end in start_and_ends]
+
+    def _get_fileinfo_by_token_index(self, index):
+        last_fileinfo = (-1, None)
+        for fileinfo in self.fileinfos:
+            if fileinfo[0] > index:
+                break
+            last_fileinfo = fileinfo
+        return last_fileinfo[1]
 
     def print_result(self):
         print("Duplicates")
         print("===================================")
-        for dup in self.duplicates:
+        for dup in self.get_duplicates():
             print("Duplicate block:")
             print("--------------------------")
             for snippet in dup:
