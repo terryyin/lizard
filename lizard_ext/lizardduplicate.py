@@ -48,13 +48,17 @@ class Sequence(object):
 
 class DuplicateFinder(object):
 
-    def __init__(self, nodes, boundaries):
+    def __init__(self, nodes, boundaries, collapse_repeat_tokens=4):
         self.duplicates = []
         self.nodes = nodes
         self.boundaries = set(boundaries)
         self.hashed_node_indice = DefaultOrderedDict(list)
-        for i, node in enumerate(self.nodes):
-            self.hashed_node_indice[node.hash].append(i)
+        recent = deque([''] * collapse_repeat_tokens)
+        for i, node_hash in enumerate(n.hash for n in self.nodes):
+            if node_hash not in recent:
+                self.hashed_node_indice[node_hash].append(i)
+            recent.append(node_hash)
+            recent.popleft()
 
     def find_start_and_ends(self):
         for node_hash in self.hashed_node_indice:
@@ -147,7 +151,7 @@ class NestingStackWithUnifiedTokens(object):
             seq = self.buffer.popleft()
             if self._is_const(seq.token):
                 self.constant_count -= 1
-            if self.constant_count > self.SAMPLE_SIZE / 4:
+            if self.constant_count > self.SAMPLE_SIZE / 5:
                 seq.hash = seq.actual
             return seq
 
