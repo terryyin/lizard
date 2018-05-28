@@ -96,7 +96,7 @@ class DuplicateFinder(object):
 
 class NestingStackWithUnifiedTokens(object):
 
-    SAMPLE_SIZE = 61
+    SAMPLE_SIZE = 31
     IGNORE_CONSTANT_VALUE_COUNT = 3
 
     def __init__(self, decorated):
