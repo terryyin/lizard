@@ -46,30 +46,15 @@ class Sequence(object):
         pass
 
 
-class TerminalSequence(object):
-    def __init__(self):
-        self.counter = 0
-
-    @property
-    def hash(self):
-        self.counter = (self.counter + 1) % 1000000
-        return str(self.counter)
-
-    def fun_yet_to_come(self):
-        pass
-
-
 class DuplicateFinder(object):
 
-    TERMINAL_EQUEUNCE = TerminalSequence()
-
-    def __init__(self, nodes):
+    def __init__(self, nodes, boundaries):
         self.duplicates = []
         self.nodes = nodes
+        self.boundaries = set(boundaries)
         self.hashed_node_indice = DefaultOrderedDict(list)
         for i, node in enumerate(self.nodes):
-            if node is not self.TERMINAL_EQUEUNCE:
-                self.hashed_node_indice[node.hash].append(i)
+            self.hashed_node_indice[node.hash].append(i)
 
     def find_start_and_ends(self):
         for node_hash in self.hashed_node_indice:
@@ -89,7 +74,8 @@ class DuplicateFinder(object):
         queues = deque([sequences])
         while queues:
             sequences = queues.popleft()
-            nexts = [(s, n + 1) for s, n in sequences]
+            nexts = [(s, n + 1) for s, n in sequences
+                     if n+1 not in self.boundaries]
             nexts = sorted(nexts, key=keyfunc)
             full_duplicate_stopped = False
             for _, group in groupby(nexts, keyfunc):
@@ -110,7 +96,7 @@ class DuplicateFinder(object):
 
 class NestingStackWithUnifiedTokens(object):
 
-    SAMPLE_SIZE = 31
+    SAMPLE_SIZE = 61
     IGNORE_CONSTANT_VALUE_COUNT = 3
 
     def __init__(self, decorated):
@@ -175,14 +161,14 @@ class LizardExtension(ExtensionBase):
             if code_hash:
                 nodes.append(code_hash)
             yield token
-        nodes.append(DuplicateFinder.TERMINAL_EQUEUNCE)
 
     def reduce(self, fileinfo):
         self.fileinfos.append((len(self.nodes), fileinfo))
         self.nodes += fileinfo.hash_nodes
 
     def get_duplicates(self):
-        duplicate_finder = DuplicateFinder(self.nodes)
+        boundaries = [info[0] for info in self.fileinfos]
+        duplicate_finder = DuplicateFinder(self.nodes, boundaries)
         duplicates = []
         for start_and_ends in duplicate_finder.find_start_and_ends():
             duplicates.append(self._create_code_snippets(start_and_ends))

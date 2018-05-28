@@ -11,7 +11,7 @@ class TestDuplicateFinder(unittest.TestCase):
 
     def find_in(self, nodes):
         nodes = list(Node("%s@%s"%(v, i), v) for i,v in enumerate(nodes + [-1]))
-        finder = DuplicateFinder(nodes)
+        finder = DuplicateFinder(nodes, [0])
         dups = finder.find_start_and_ends()
         dups = list(
                 [(nodes[start], nodes[end]) for start, end in v]
