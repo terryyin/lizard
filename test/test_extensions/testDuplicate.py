@@ -2,7 +2,7 @@ import unittest
 from mock import patch
 from ..testHelpers import get_cpp_fileinfo_with_extension
 from lizard_ext.lizardduplicate import LizardExtension as DuplicateDetector
-from lizard import analyze_files
+from lizard import analyze_files, get_extensions
 
 
 class TestDuplicateExtension(unittest.TestCase):
@@ -150,7 +150,8 @@ class TestDuplicateExtensionAcrossFiles(unittest.TestCase):
     @patch('lizard.auto_read', create=True)
     def detect(self, code1, code2, auto_read):
         auto_read.side_effect = lambda x: {'f1.cpp':code1, 'f2.cpp':code2}[x]
-        list(analyze_files(['f1.cpp', 'f2.cpp'], exts=[self.detector]))
+        extensions = get_extensions([self.detector])
+        list(analyze_files(['f1.cpp', 'f2.cpp'], exts=extensions))
         return self.detector.get_duplicates()
 
     def test_basic_duplicate(self):
@@ -159,12 +160,17 @@ class TestDuplicateExtensionAcrossFiles(unittest.TestCase):
                 .six_line_function()
                 .build(),
                 self.builder
+                .five_line_function()
                 .six_line_function()
                 .build()
                 )
         self.assertEqual(1, len(duplicates))
         self.assertEqual("f1.cpp", duplicates[0][0].file_name)
         self.assertEqual("f2.cpp", duplicates[0][1].file_name)
+        self.assertEqual(1, duplicates[0][0].start_line)
+        self.assertEqual(6, duplicates[0][0].end_line)
+        self.assertEqual(6, duplicates[0][1].start_line)
+        self.assertEqual(11, duplicates[0][1].end_line)
 
 
 class CFunctionBuilder(object):

@@ -15,7 +15,7 @@ class CodeSnippet(object):
         self.file_name = file_name
 
     def __str__(self):
-        return "%s: %s ~ %s" % (self.file_name, self.start_line, self.end_line)
+        return "%s:%s ~ %s" % (self.file_name, self.start_line, self.end_line)
 
     def __repr__(self):
         return str(self)
@@ -36,17 +36,40 @@ class Sequence(object):
         self.hash += unified_token
         self.end_line = end_line
 
+    def __str__(self):
+        return "<%s-%s: %s>" % (self.start_line, self.end_line, self.hash)
+
+    def __repr__(self):
+        return str(self)
+
+    def fun_yet_to_come(self):
+        pass
+
+
+class TerminalSequence(object):
+    def __init__(self):
+        self.counter = 0
+
+    @property
+    def hash(self):
+        self.counter = (self.counter + 1) % 1000000
+        return str(self.counter)
+
     def fun_yet_to_come(self):
         pass
 
 
 class DuplicateFinder(object):
+
+    TERMINAL_EQUEUNCE = TerminalSequence()
+
     def __init__(self, nodes):
         self.duplicates = []
         self.nodes = nodes
         self.hashed_node_indice = DefaultOrderedDict(list)
         for i, node in enumerate(self.nodes):
-            self.hashed_node_indice[node.hash].append(i)
+            if node is not self.TERMINAL_EQUEUNCE:
+                self.hashed_node_indice[node.hash].append(i)
 
     def find_start_and_ends(self):
         for node_hash in self.hashed_node_indice:
@@ -96,7 +119,7 @@ class NestingStackWithUnifiedTokens(object):
         self.constant_count = 0
         self.current_scope = set()
         self.scope_stack = [self.current_scope]
-        self.buffer = deque([Sequence(0) for _ in range(self.SAMPLE_SIZE)])
+        self.buffer = deque()
 
     def __getattr__(self, attr):
         return getattr(self._decorated, attr)
@@ -121,7 +144,7 @@ class NestingStackWithUnifiedTokens(object):
                 return '10000'
         elif token[0].isalpha():
             if token not in self.token_register:
-                self.token_register[token] = str(len(self.current_scope))
+                self.token_register[token] = 'v'+str(len(self.current_scope))
                 self.current_scope.add(token)
             return self.token_register[token]
         return token
@@ -131,7 +154,8 @@ class NestingStackWithUnifiedTokens(object):
         self.buffer.append(Sequence(current_line))
         for code_hash in self.buffer:
             code_hash.append_token(unified_token, current_line)
-        return self.buffer.popleft()
+        if len(self.buffer) > self.SAMPLE_SIZE:
+            return self.buffer.popleft()
 
 
 class LizardExtension(ExtensionBase):
@@ -148,9 +172,10 @@ class LizardExtension(ExtensionBase):
         for token in tokens:
             code_hash = token_unifier.enqueue_token(
                     token, reader.context.current_line)
-            nodes.append(code_hash)
+            if code_hash:
+                nodes.append(code_hash)
             yield token
-        nodes.append(Sequence(0))
+        nodes.append(DuplicateFinder.TERMINAL_EQUEUNCE)
 
     def reduce(self, fileinfo):
         self.fileinfos.append((len(self.nodes), fileinfo))
