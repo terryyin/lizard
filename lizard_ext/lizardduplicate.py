@@ -28,11 +28,14 @@ class CodeSnippet(object):
 
 
 class Sequence(object):
-    def __init__(self, start_line):
+    def __init__(self, token, start_line):
+        self.token = token
         self.hash = ''
+        self.actual = ''
         self.start_line = self.end_line = start_line
 
-    def append_token(self, unified_token, end_line):
+    def append_token(self, token, unified_token, end_line):
+        self.actual += token
         self.hash += unified_token
         self.end_line = end_line
 
@@ -41,9 +44,6 @@ class Sequence(object):
 
     def __repr__(self):
         return str(self)
-
-    def fun_yet_to_come(self):
-        pass
 
 
 class DuplicateFinder(object):
@@ -116,18 +116,19 @@ class NestingStackWithUnifiedTokens(object):
         return self._decorated.add_bare_nesting()
 
     def pop_nesting(self):
-        self.constant_count = 0
         if len(self.scope_stack) > 1:
             for token in self.scope_stack.pop():
                 del self.token_register[token]
             self.current_scope = self.scope_stack[-1]
         return self._decorated.pop_nesting()
 
+    @staticmethod
+    def _is_const(token):
+        return token[0].isdigit() or token[0] in ("'", '"')
+
     def _unified_token(self, token):
-        if (token[0].isdigit() or token[0] in ("'", '"')):
-            if self.constant_count < self.IGNORE_CONSTANT_VALUE_COUNT:
-                self.constant_count += 1
-                return '10000'
+        if self._is_const(token):
+            return '10000'
         elif token[0].isalpha():
             if token not in self.token_register:
                 self.token_register[token] = 'v'+str(len(self.current_scope))
@@ -137,11 +138,18 @@ class NestingStackWithUnifiedTokens(object):
 
     def enqueue_token(self, token, current_line):
         unified_token = self._unified_token(token)
-        self.buffer.append(Sequence(current_line))
+        self.buffer.append(Sequence(token, current_line))
+        if self._is_const(token):
+            self.constant_count += 1
         for code_hash in self.buffer:
-            code_hash.append_token(unified_token, current_line)
+            code_hash.append_token(token, unified_token, current_line)
         if len(self.buffer) > self.SAMPLE_SIZE:
-            return self.buffer.popleft()
+            seq = self.buffer.popleft()
+            if self._is_const(seq.token):
+                self.constant_count -= 1
+            if self.constant_count > self.SAMPLE_SIZE / 4:
+                seq.hash = seq.actual
+            return seq
 
 
 class LizardExtension(ExtensionBase):

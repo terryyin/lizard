@@ -118,6 +118,13 @@ class TestDuplicateExtension(unittest.TestCase):
                 )
         self.assertEqual(0, len(duplicates))
 
+    def xtest_duplicate_with_value_dense_block_in_brackets(self):
+        duplicates = self.detect(
+                "a={" + ", ".join("{"+str(i)+"}" for i in range(100)) + "};" +
+                "b={" + ", ".join("{"+str(i)+"}" for i in range(100, 200)) + "};"
+                )
+        self.assertEqual(0, len(duplicates))
+
     def test_duplicate_with_2_big_blocks(self):
         duplicates = self.detect(
                 "a={" + ", ".join(str(i) for i in range(100)) + "};" +
