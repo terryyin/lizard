@@ -28,14 +28,11 @@ class CodeSnippet(object):
 
 
 class Sequence(object):
-    def __init__(self, token, start_line):
-        self.token = token
+    def __init__(self, start_line):
         self.hash = ''
-        self.actual = ''
         self.start_line = self.end_line = start_line
 
-    def append_token(self, token, unified_token, end_line):
-        self.actual += token
+    def append_token(self, unified_token, end_line):
         self.hash += unified_token
         self.end_line = end_line
 
@@ -110,6 +107,7 @@ class NestingStackWithUnifiedTokens(object):
         self.current_scope = set()
         self.scope_stack = [self.current_scope]
         self.buffer = deque()
+        self.unified_tokens = []
 
     def __getattr__(self, attr):
         return getattr(self._decorated, attr)
@@ -141,19 +139,24 @@ class NestingStackWithUnifiedTokens(object):
         return token
 
     def enqueue_token(self, token, current_line):
-        unified_token = self._unified_token(token)
-        self.buffer.append(Sequence(token, current_line))
+        try:
+            if self._is_const(self.unified_tokens[-self.SAMPLE_SIZE]):
+                self.constant_count -= 1
+        except IndexError:
+            pass
         if self._is_const(token):
             self.constant_count += 1
-        for code_hash in self.buffer:
-            code_hash.append_token(token, unified_token, current_line)
-        if len(self.buffer) > self.SAMPLE_SIZE:
-            seq = self.buffer.popleft()
-            if self._is_const(seq.token):
-                self.constant_count -= 1
-            if self.constant_count > self.SAMPLE_SIZE / 5:
-                seq.hash = seq.actual
-            return seq
+        if self.constant_count <= self.SAMPLE_SIZE / 5:
+            token = self._unified_token(token)
+        self.unified_tokens.append((token, current_line,))
+
+    def samples(self):
+        for unified_token, current_line in self.unified_tokens:
+            self.buffer.append(Sequence(current_line))
+            for code_hash in self.buffer:
+                code_hash.append_token(unified_token, current_line)
+            if len(self.buffer) > self.SAMPLE_SIZE:
+                yield self.buffer.popleft()
 
 
 class LizardExtension(ExtensionBase):
@@ -166,13 +169,10 @@ class LizardExtension(ExtensionBase):
     def __call__(self, tokens, reader):
         token_unifier = reader.context.decorate_nesting_stack(
                 NestingStackWithUnifiedTokens)
-        reader.context.fileinfo.hash_nodes = nodes = []
         for token in tokens:
-            code_hash = token_unifier.enqueue_token(
-                    token, reader.context.current_line)
-            if code_hash:
-                nodes.append(code_hash)
+            token_unifier.enqueue_token(token, reader.context.current_line)
             yield token
+        reader.context.fileinfo.hash_nodes = list(token_unifier.samples())
 
     def reduce(self, fileinfo):
         self.fileinfos.append((len(self.nodes), fileinfo))
