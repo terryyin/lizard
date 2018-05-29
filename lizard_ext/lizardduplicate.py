@@ -49,10 +49,11 @@ class DuplicateFinder(object):
                  collapse_repeat_tokens=20, min_duplicate_tokens=0):
         self.min_duplicate_tokens = min_duplicate_tokens
         self.current_file_duplicates = None
+        self.duplicate_token_count = 0
         self.nodes = nodes
         self.boundaries = set(boundaries + [len(nodes)])
         self.hashed_node_indice = DefaultOrderedDict(list)
-        for i, node_hash in enumerate(n.hash for n in self.nodes):
+        for i, node_hash in enumerate(n.hash for n in nodes):
             if i in self.boundaries:
                 recent = deque([''] * collapse_repeat_tokens)
             if node_hash not in recent:
@@ -61,18 +62,32 @@ class DuplicateFinder(object):
             recent.popleft()
 
     def find_start_and_ends(self):
-        total = len(self.hashed_node_indice)
         for i, same in enumerate(self.hashed_node_indice.values()):
             if i in self.boundaries:
                 self.current_file_duplicates = []
             if i % 1000 == 0:
                 pass
-                #print("# -----------progress: %d.2%%" % (i * 100 / total))
+                # total = len(self.hashed_node_indice)
+                # print("# -----------progress: %d.2%%" % (i * 100 / total))
             if len(same) > 1:
                 for dup in self._duplicate_sequences(same):
-                    if dup[0][1] - dup[0][0] >= self.min_duplicate_tokens:
+                    token_count = dup[0][1] - dup[0][0]
+                    if token_count >= self.min_duplicate_tokens:
                         self.current_file_duplicates.append(dup)
+                        self.duplicate_token_count += (
+                                len(dup) * (
+                                    token_count +
+                                    NestingStackWithUnifiedTokens.SAMPLE_SIZE))
                         yield dup
+
+    def duplicate_rate(self):
+        try:
+            return self.duplicate_token_count / (
+                    len(self.nodes) +
+                    (len(self.boundaries) - 1) *
+                    (NestingStackWithUnifiedTokens.SAMPLE_SIZE - 2))
+        except ZeroDivisionError:
+            return 0
 
     def _duplicate_sequences(self, same):
 
@@ -179,6 +194,7 @@ class LizardExtension(ExtensionBase):
     def __init__(self, context=None):
         self.nodes = []
         self.fileinfos = []
+        self.saved_duplicate_rate = None
         super(LizardExtension, self).__init__(context)
 
     def __call__(self, tokens, reader):
@@ -193,7 +209,7 @@ class LizardExtension(ExtensionBase):
         self.fileinfos.append((len(self.nodes), fileinfo))
         self.nodes += fileinfo.hash_nodes
 
-    def get_duplicates(self, min_duplicate_tokens=50):
+    def get_duplicates(self, min_duplicate_tokens=100):
         boundaries = [info[0] for info in self.fileinfos]
         min_t = min_duplicate_tokens - \
             NestingStackWithUnifiedTokens.SAMPLE_SIZE
@@ -203,6 +219,10 @@ class LizardExtension(ExtensionBase):
                 min_duplicate_tokens=min_t)
         for start_and_ends in duplicate_finder.find_start_and_ends():
             yield self._create_code_snippets(start_and_ends)
+        self.saved_duplicate_rate = duplicate_finder.duplicate_rate()
+
+    def duplicate_rate(self):
+        return self.saved_duplicate_rate
 
     def _create_code_snippets(self, start_and_ends):
         return [
@@ -230,3 +250,4 @@ class LizardExtension(ExtensionBase):
                 print(snippet)
             print("^^^^^^^^^^^^^^^^^^^^^^^^^^")
             print("")
+        print("Total duplicate rate: %d.2%%" % (self.duplicate_rate() * 100))

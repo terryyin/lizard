@@ -30,6 +30,7 @@ class TestDuplicateExtension(unittest.TestCase):
                 )
         self.assertEqual(1, len(duplicates))
         self.assertEqual("a.cpp", duplicates[0][0].file_name)
+        self.assertEqual(1, self.detector.duplicate_rate())
 
     def test_two_functions_that_are_exactly_the_same_detail(self):
         duplicates = self.detect(
@@ -67,6 +68,7 @@ class TestDuplicateExtension(unittest.TestCase):
                 .build()
                 )
         self.assertEqual(0, len(duplicates))
+        self.assertEqual(0, self.detector.duplicate_rate())
 
     def test_2_duplicates(self):
         duplicates = self.detect(
@@ -77,8 +79,8 @@ class TestDuplicateExtension(unittest.TestCase):
                 .different_six_line_function()
                 .build()
                 )
-        #this result is wrong
         self.assertEqual(2, len(duplicates))
+        self.assertEqual(1, self.detector.duplicate_rate())
 
     def test_three_functions_that_are_the_same(self):
         duplicates = self.detect(
@@ -101,6 +103,7 @@ class TestDuplicateExtension(unittest.TestCase):
                 .build()
                 )
         self.assertEqual(1, len(duplicates))
+        self.assertEqual(1, self.detector.duplicate_rate())
 
     def test_duplicate_with_different_string_value(self):
         duplicates = self.detect(
@@ -221,6 +224,7 @@ class TestDuplicateExtensionAcrossFiles(unittest.TestCase):
         self.assertEqual(6, duplicates[0][0].end_line)
         self.assertEqual(6, duplicates[0][1].start_line)
         self.assertEqual(11, duplicates[0][1].end_line)
+        self.assertAlmostEqual(0.666666666, self.detector.duplicate_rate())
 
     def test_more_duplicate(self):
         duplicates = self.detect({
