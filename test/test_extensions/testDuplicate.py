@@ -11,11 +11,11 @@ class TestDuplicateExtension(unittest.TestCase):
         self.detector = DuplicateDetector()
         self.builder = CFunctionBuilder()
 
-    def detect(self, code):
+    def detect(self, code, min_duplicate_tokens = 31):
         self.detector.reduce(
                 get_cpp_fileinfo_with_extension(code, self.detector)
             )
-        return self.detector.get_duplicates()
+        return self.detector.get_duplicates(min_duplicate_tokens)
 
     def test_empty_file(self):
         duplicates = self.detect('')
@@ -165,6 +165,30 @@ class TestDuplicateExtension(unittest.TestCase):
         print(duplicates)
         self.assertEqual(1, len(duplicates))
 
+    def test_threshold(self):
+        duplicates = self.detect(
+                self.builder
+                .six_line_function()
+                .six_line_function()
+                .build(),
+                min_duplicate_tokens = 50
+                )
+        print(duplicates)
+        self.assertEqual(0, len(duplicates))
+
+    def test_threshold_exceeded(self):
+        duplicates = self.detect(
+                self.builder
+                .six_line_function()
+                .five_line_function()
+                .six_line_function()
+                .five_line_function()
+                .build(),
+                min_duplicate_tokens = 50
+                )
+        print(duplicates)
+        self.assertEqual(1, len(duplicates))
+
 
 
 class TestDuplicateExtensionAcrossFiles(unittest.TestCase):
@@ -178,7 +202,7 @@ class TestDuplicateExtensionAcrossFiles(unittest.TestCase):
         auto_read.side_effect = lambda x: {'f1.cpp':code1, 'f2.cpp':code2}[x]
         extensions = get_extensions([self.detector])
         list(analyze_files(['f1.cpp', 'f2.cpp'], exts=extensions))
-        return self.detector.get_duplicates()
+        return self.detector.get_duplicates(30)
 
     def test_basic_duplicate(self):
         duplicates = self.detect(
