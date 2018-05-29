@@ -45,10 +45,10 @@ class Sequence(object):
 
 class DuplicateFinder(object):
 
-    def __init__(self, nodes, boundaries, collapse_repeat_tokens=4):
+    def __init__(self, nodes, boundaries, collapse_repeat_tokens=20):
         self.duplicates = []
         self.nodes = nodes
-        self.boundaries = set(boundaries)
+        self.boundaries = set(boundaries + [len(nodes)])
         self.hashed_node_indice = DefaultOrderedDict(list)
         recent = deque([''] * collapse_repeat_tokens)
         for i, node_hash in enumerate(n.hash for n in self.nodes):
@@ -58,13 +58,13 @@ class DuplicateFinder(object):
             recent.popleft()
 
     def find_start_and_ends(self):
-        for node_hash in self.hashed_node_indice:
-            same = self.hashed_node_indice[node_hash]
+        for same in self.hashed_node_indice.values():
             if len(same) > 1:
-                self._duplicate_sequences([(n, n) for n in same])
+                for dup in self._duplicate_sequences(same):
+                    self.duplicates.append(dup)
         return self.duplicates
 
-    def _duplicate_sequences(self, sequences):
+    def _duplicate_sequences(self, same):
 
         def keyfunc(seq):
             try:
@@ -72,13 +72,17 @@ class DuplicateFinder(object):
             except IndexError:
                 return ''
 
+        sequences = [(n, n) for n in same]
+        starts = set(same)
         queues = deque([sequences])
         while queues:
             sequences = queues.popleft()
+            if self.full_inclusive_sequences(sequences):
+                continue
             nexts = [(s, n + 1) for s, n in sequences
-                     if n+1 not in self.boundaries]
+                     if n+1 not in self.boundaries and n+1 not in starts]
             nexts = sorted(nexts, key=keyfunc)
-            full_duplicate_stopped = False
+            full_duplicate_stopped = not nexts
             for _, group in groupby(nexts, keyfunc):
                 group = list(group)
                 if len(group) > 1:
@@ -86,19 +90,20 @@ class DuplicateFinder(object):
                 else:
                     full_duplicate_stopped = True
             if full_duplicate_stopped:
-                if not self.full_inclusive_sequences(sequences):
-                    self.duplicates.append(sequences)
+                yield sequences
 
     def full_inclusive_sequences(self, sequences):
         return any(
-            len(dup) == len(sequences) and dup[0][1] == sequences[0][1]
+            len(dup) == len(sequences) and
+            dup[0][0] <= sequences[0][0] and
+            dup[0][1] >= sequences[0][1]
             for dup in self.duplicates)
 
 
 class NestingStackWithUnifiedTokens(object):
 
     SAMPLE_SIZE = 31
-    IGNORE_CONSTANT_VALUE_COUNT = 3
+    IGNORE_CONSTANT_VALUE_COUNT = 4
 
     def __init__(self, decorated):
         self._decorated = decorated
@@ -106,7 +111,6 @@ class NestingStackWithUnifiedTokens(object):
         self.constant_count = 0
         self.current_scope = set()
         self.scope_stack = [self.current_scope]
-        self.buffer = deque()
         self.unified_tokens = []
 
     def __getattr__(self, attr):
@@ -151,12 +155,13 @@ class NestingStackWithUnifiedTokens(object):
         self.unified_tokens.append((token, current_line,))
 
     def samples(self):
+        buf = deque()
         for unified_token, current_line in self.unified_tokens:
-            self.buffer.append(Sequence(current_line))
-            for code_hash in self.buffer:
+            buf.append(Sequence(current_line))
+            for code_hash in buf:
                 code_hash.append_token(unified_token, current_line)
-            if len(self.buffer) > self.SAMPLE_SIZE:
-                yield self.buffer.popleft()
+            if len(buf) > self.SAMPLE_SIZE:
+                yield buf.popleft()
 
 
 class LizardExtension(ExtensionBase):

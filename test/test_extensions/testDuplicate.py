@@ -153,6 +153,19 @@ class TestDuplicateExtension(unittest.TestCase):
                 )
         self.assertEqual(0, len(duplicates))
 
+    def test_repeating_patterns(self):
+        duplicates = self.detect(
+                self.builder
+                .six_line_function()
+                .six_line_function()
+                .six_line_function()
+                .six_line_function()
+                .build()
+                )
+        print(duplicates)
+        self.assertEqual(1, len(duplicates))
+
+
 
 class TestDuplicateExtensionAcrossFiles(unittest.TestCase):
 
