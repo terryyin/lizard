@@ -15,7 +15,7 @@ class TestDuplicateExtension(unittest.TestCase):
         self.detector.reduce(
                 get_cpp_fileinfo_with_extension(code, self.detector)
             )
-        return self.detector.get_duplicates(min_duplicate_tokens)
+        return list(self.detector.get_duplicates(min_duplicate_tokens))
 
     def test_empty_file(self):
         duplicates = self.detect('')
@@ -198,22 +198,22 @@ class TestDuplicateExtensionAcrossFiles(unittest.TestCase):
         self.builder = CFunctionBuilder()
 
     @patch('lizard.auto_read', create=True)
-    def detect(self, code1, code2, auto_read):
-        auto_read.side_effect = lambda x: {'f1.cpp':code1, 'f2.cpp':code2}[x]
+    def detect(self, source_files, auto_read):
+        auto_read.side_effect = lambda filename: source_files[filename]
         extensions = get_extensions([self.detector])
-        list(analyze_files(['f1.cpp', 'f2.cpp'], exts=extensions))
-        return self.detector.get_duplicates(30)
+        list(analyze_files(source_files.keys(), exts=extensions))
+        return list(self.detector.get_duplicates(30))
 
     def test_basic_duplicate(self):
-        duplicates = self.detect(
-                self.builder
-                .six_line_function()
-                .build(),
-                self.builder
-                .five_line_function()
-                .six_line_function()
+        duplicates = self.detect({
+                'f1.cpp': self.builder
+                    .six_line_function()
+                    .build(),
+                'f2.cpp': self.builder
+                    .five_line_function()
+                    .six_line_function()
                 .build()
-                )
+                })
         self.assertEqual(1, len(duplicates))
         self.assertEqual("f1.cpp", duplicates[0][0].file_name)
         self.assertEqual("f2.cpp", duplicates[0][1].file_name)
@@ -221,6 +221,20 @@ class TestDuplicateExtensionAcrossFiles(unittest.TestCase):
         self.assertEqual(6, duplicates[0][0].end_line)
         self.assertEqual(6, duplicates[0][1].start_line)
         self.assertEqual(11, duplicates[0][1].end_line)
+
+    def test_more_duplicate(self):
+        duplicates = self.detect({
+                'f1.cpp': self.builder
+                    .six_line_function()
+                    .build(),
+                'f2.cpp': self.builder
+                    .six_line_function()
+                    .build(),
+                'f3.cpp': self.builder
+                    .six_line_function()
+                    .build()
+                })
+        self.assertEqual(1, len(duplicates))
 
 
 class CFunctionBuilder(object):

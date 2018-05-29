@@ -221,7 +221,7 @@ Code Duplicate Detector
 
 
 Generate A Tag Cloud For Your Code
------------------------------
+----------------------------------
 
 You can generate a "Tag cloud" of your code by the following command. It counts the identifiers in your code (ignoring the comments).
 
@@ -319,7 +319,7 @@ Lizard may choose not to deal with some advanced or complicated language feature
 
 
 Literatures Refering to Lizard
------------
+------------------------------
 
 Lizard is often used in software related researches. If you used it to support your work, you may contact the lizard author to add your work in the following list.
 

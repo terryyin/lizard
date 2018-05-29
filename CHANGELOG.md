@@ -1,6 +1,6 @@
 # Change Log
 
-## 1.15.0
+## 1.15.1
 
 An important new feature -- duplicate detector -- in the form of an
 extension.
