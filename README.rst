@@ -10,8 +10,10 @@
 
 |
 
-Lizard is an extensible Cyclomatic Complexity Analyzer for many imperative programming languages
-including C/C++ (doesn't require all the header files or Java imports).
+Lizard is an extensible Cyclomatic Complexity Analyzer for many programming languages
+including C/C++ (doesn't require all the header files or Java imports). It also does
+copy-paste detection (code clone detection/code duplicate detection) and many other forms of static
+code analysis.
 
 A list of supported languages:
 
@@ -209,6 +211,14 @@ The option `-Tparameter_count=10` is equal to `-a10`.
 
 You can also do `-Tnloc=10` to set the limit of the NLOC. Any function that
 has NLOC greater than 10 will generate a warning.
+
+Code Duplicate Detector
+-----------------------------
+
+::
+
+   lizard -Eduplicate <path to your code>
+
 
 Generate A Tag Cloud For Your Code
 -----------------------------

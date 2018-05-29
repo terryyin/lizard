@@ -1,5 +1,18 @@
 # Change Log
 
+## 1.15.0
+
+An important new feature -- duplicate detector -- in the form of an
+extension.
+
+Ussage:
+
+    lizard -Eduplicate
+
+The current version hasn't had any performance optimzation yet. Yet, it
+can scan 1000 cpp files in less than 5 minutes.
+
+
 ## 1.14.10
 
 in
