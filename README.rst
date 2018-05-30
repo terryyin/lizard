@@ -212,6 +212,14 @@ The option `-Tparameter_count=10` is equal to `-a10`.
 You can also do `-Tnloc=10` to set the limit of the NLOC. Any function that
 has NLOC greater than 10 will generate a warning.
 
+Generated code
+-----------------------------
+
+Lizard has a simple solution with generated code. Any code in a source file that is following
+a comment containing "GENERATED CODE" will be ignored completely. The ignored code will not
+generate any data, except the file counting.
+
+
 Code Duplicate Detector
 -----------------------------
 
