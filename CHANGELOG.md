@@ -1,5 +1,9 @@
 # Change Log
 
+## Next coming up
+
+Code after comments containing "GENERATED CODE" will be ignored
+
 ## 1.15.1
 
 An important new feature -- duplicate detector -- in the form of an

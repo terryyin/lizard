@@ -476,6 +476,8 @@ def comment_counter(tokens, reader):
                 yield '\n'
             if comment.strip().startswith("#lizard forgive"):
                 reader.context.forgive = True
+            if "GENERATED CODE" in comment:
+                return
         else:
             yield token
 

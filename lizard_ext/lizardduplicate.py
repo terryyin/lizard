@@ -250,4 +250,4 @@ class LizardExtension(ExtensionBase):
                 print(snippet)
             print("^^^^^^^^^^^^^^^^^^^^^^^^^^")
             print("")
-        print("Total duplicate rate: %d.2%%" % (self.duplicate_rate() * 100))
+        print("Total duplicate rate: %.2f%%" % (self.duplicate_rate() * 100))
