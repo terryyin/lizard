@@ -52,6 +52,7 @@ class DuplicateFinder(object):
         self.min_duplicate_tokens = min_duplicate_tokens * 2
         self.sample_size = sample_size
         self.current_file_duplicates = None
+        self.dup_starts = None
         self.duplicate_token_count = 0
         self.nodes = nodes
         self.boundaries = set(boundaries + [len(nodes)])
@@ -74,11 +75,11 @@ class DuplicateFinder(object):
                 # total = len(self.hashed_node_indice)
                 # print("# -----------progress: %d.2%%" % (i * 100 / total))
             new_starts = [x for x in same if x not in self.dup_starts]
-            self.dup_starts |=set(n-self.sample_size for n in same)
+            self.dup_starts |= set(n - self.sample_size for n in same)
             if len(new_starts) > 1:
                 for dup in self._duplicate_sequences(new_starts):
-                    token_count = len(dup) * (dup[0][1] - dup[0][0] +
-                                    self.sample_size)
+                    token_count = len(dup) * \
+                            (dup[0][1] - dup[0][0] + self.sample_size)
                     if token_count >= self.min_duplicate_tokens:
                         self.current_file_duplicates.append(dup)
                         self.duplicate_token_count += token_count
@@ -107,7 +108,8 @@ class DuplicateFinder(object):
             if self.full_inclusive_sequences(sequences):
                 continue
             nexts = [(s, n + 1) for s, n in sequences
-                     if n+1 not in self.boundaries and n+1 not in self.dup_starts]
+                     if n+1 not in self.boundaries
+                     and n+1 not in self.dup_starts]
             nexts = sorted(nexts, key=keyfunc)
             full_duplicate_stopped = len(nexts) < len(sequences)
             for _, group in groupby(nexts, keyfunc):
@@ -130,7 +132,7 @@ class DuplicateFinder(object):
 class NestingStackWithUnifiedTokens(object):
 
     SAMPLE_SIZE = 31
-    IGNORE_CONSTANT_VALUE_COUNT = 6
+    IGNORE_CONSTANT_VALUE_COUNT = 10
 
     def __init__(self, decorated):
         self._decorated = decorated
@@ -160,8 +162,10 @@ class NestingStackWithUnifiedTokens(object):
         return token[0].isdigit() or token[0] in ("'", '"')
 
     def _unified_token(self, token):
+        if token == '-':
+            return '+'
         if self._is_const(token):
-            return '10000'
+            return '1'
         elif token[0].isalpha():
             if token not in self.token_register:
                 self.token_register[token] = 'v'+str(len(self.current_scope))
@@ -217,7 +221,7 @@ class LizardExtension(ExtensionBase):
                 self.nodes,
                 boundaries,
                 min_duplicate_tokens=min_duplicate_tokens,
-                sample_size = NestingStackWithUnifiedTokens.SAMPLE_SIZE)
+                sample_size=NestingStackWithUnifiedTokens.SAMPLE_SIZE)
         for start_and_ends in duplicate_finder.find_start_and_ends():
             yield self._create_code_snippets(start_and_ends)
         self.saved_duplicate_rate = duplicate_finder.duplicate_rate()

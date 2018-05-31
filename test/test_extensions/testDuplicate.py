@@ -114,6 +114,15 @@ class TestDuplicateExtension(unittest.TestCase):
                 )
         self.assertEqual(1, len(duplicates))
 
+    def test_duplicate_with_different_operator(self):
+        duplicates = self.detect(
+                self.builder
+                .six_line_function(operator='+')
+                .six_line_function(operator='-')
+                .build()
+                )
+        self.assertEqual(1, len(duplicates))
+
     def test_duplicate_with_value_dense_block(self):
         duplicates = self.detect(
                 "a={" + ", ".join(str(i) for i in range(100)) + "};" +
@@ -166,6 +175,18 @@ class TestDuplicateExtension(unittest.TestCase):
                 .build()
                 )
         self.assertEqual(1, len(duplicates))
+
+    def test_repeating_patterns_multiple_matches(self):
+        duplicates = self.detect(
+                self.builder
+                .five_line_function()
+                .six_line_function()
+                .five_line_function()
+                .six_line_function()
+                .six_line_function()
+                .build()
+                )
+        self.assertEqual(2, len(duplicates))
 
     def test_threshold(self):
         duplicates = self.detect(
@@ -270,27 +291,27 @@ class CFunctionBuilder(object):
     def five_line_function(self, name='func6'):
         self.code += ''' string %s(int param, T t) {
                 for (int i; i < 100; i++)
-                    result += i * i;
+                    result += i + i;
                 return i * 5 + 1015;
             }
         '''%(name)
         return self
 
-    def six_line_function(self, name='func6', variable_name='result', number_value="10", string_value='"abc"'):
+    def six_line_function(self, name='func6', variable_name='result', number_value="10", string_value='"abc"', operator="+"):
         self.code += ''' void %s(int param) {
                 int %s, i = 0;
                 for (; i < %s; i++) {
-                     print(%s);%s += i * i;
+                     print(%s);%s += i %s i;
                 }
             }
-        '''%(name, variable_name, number_value, string_value, variable_name)
+        '''%(name, variable_name, number_value, string_value, variable_name, operator)
         return self
 
     def part_of_six_line_function(self, name='func6'):
         self.code += ''' void %s(int param) {
                 int result, i = 0;
                 for (; i < 10; i++) {
-                     print("abc");result += i * i;
+                     print("abc");result += i + i;
                     then = "I do something else";
                 }
             }
