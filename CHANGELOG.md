@@ -1,10 +1,7 @@
 # Change Log
 
-## Next coming up
+## 1.15.2
 
-Code after comments containing "GENERATED CODE" will be ignored
-
-## 1.15.1
 
 An important new feature -- duplicate detector -- in the form of an
 extension.
@@ -14,8 +11,9 @@ Ussage:
     lizard -Eduplicate
 
 The current version hasn't had any performance optimzation yet. Yet, it
-can scan 1000 cpp files in less than 5 minutes.
+can scan 1000 cpp files in less than 2 minutes.
 
+Code after comments containing "GENERATED CODE" will be ignored.
 
 ## 1.14.10
 

@@ -209,7 +209,7 @@ class LizardExtension(ExtensionBase):
         self.fileinfos.append((len(self.nodes), fileinfo))
         self.nodes += fileinfo.hash_nodes
 
-    def get_duplicates(self, min_duplicate_tokens=100):
+    def get_duplicates(self, min_duplicate_tokens=70):
         boundaries = [info[0] for info in self.fileinfos]
         min_t = min_duplicate_tokens - \
             NestingStackWithUnifiedTokens.SAMPLE_SIZE
