@@ -80,7 +80,7 @@ class TestDuplicateExtension(unittest.TestCase):
                 .build()
                 )
         self.assertEqual(2, len(duplicates))
-        self.assertEqual(1, self.detector.duplicate_rate())
+        self.assertAlmostEqual(0.98550724637, self.detector.duplicate_rate())
 
     def test_three_functions_that_are_the_same(self):
         duplicates = self.detect(
@@ -165,7 +165,6 @@ class TestDuplicateExtension(unittest.TestCase):
                 .six_line_function()
                 .build()
                 )
-        print(duplicates)
         self.assertEqual(1, len(duplicates))
 
     def test_threshold(self):
@@ -176,8 +175,21 @@ class TestDuplicateExtension(unittest.TestCase):
                 .build(),
                 min_duplicate_tokens = 50
                 )
-        print(duplicates)
         self.assertEqual(0, len(duplicates))
+
+    def test_threshold_with_too_many_repeatings(self):
+        duplicates = self.detect(
+                self.builder
+                .six_line_function()
+                .six_line_function()
+                .six_line_function()
+                .build(),
+                min_duplicate_tokens = 50
+                )
+        self.assertEqual(1, len(duplicates))
+        self.assertEqual(3, len(duplicates[0]))
+        self.assertEqual(1, duplicates[0][0].start_line)
+        self.assertEqual(6, duplicates[0][0].end_line)
 
     def test_threshold_exceeded(self):
         duplicates = self.detect(
@@ -189,7 +201,6 @@ class TestDuplicateExtension(unittest.TestCase):
                 .build(),
                 min_duplicate_tokens = 50
                 )
-        print(duplicates)
         self.assertEqual(1, len(duplicates))
 
 
