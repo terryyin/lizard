@@ -1,6 +1,6 @@
 application: lizardanalyzer
 version: 1
-runtime: python27
+runtime: python36
 api_version: 1
 threadsafe: true
 
@@ -12,6 +12,8 @@ libraries:
 - name: jinja2
   version: latest
 - name: markupsafe
+  version: latest
+- name: lizard
   version: latest
 
 skip_files:
