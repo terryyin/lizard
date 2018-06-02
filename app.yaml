@@ -1,25 +1,23 @@
 application: lizardanalyzer
 version: 1
-runtime: python36
+runtime: python27
 api_version: 1
 threadsafe: true
 
 handlers:
-- url: .*
-  script: index.app
+- url: /favicon\.ico
+  static_files: website/static/favicon.ico
+  upload: website/static/favicon\.ico
+- url: /
+  static_files: index.html
+  upload: index.html
+- url: /website/static
+  static_dir: website/static
+- url: /.*
+  script: website.application
 
 libraries:
-- name: jinja2
-  version: latest
-- name: markupsafe
+- name: webapp2
   version: latest
 - name: lizard
   version: latest
-
-skip_files:
-- ^(.*/)?#.*#$
-- ^(.*/)?.*~$
-- ^(.*/)?.*\.py[co]$
-- ^(.*/)?.*/RCS/.*$
-- ^(.*/)?\..*$
-#- ^(.*/)?.*lib/local/.*
