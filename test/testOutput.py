@@ -4,7 +4,7 @@ from mock import Mock, patch
 from test.helper_stream import StreamStdoutTestCase
 import os
 from lizard import print_warnings, print_and_save_modules, FunctionInfo, FileInformation,\
-    print_result, get_extensions, OutputScheme, get_warnings, print_clang_style_warning,\
+    print_result, print_extension_results, get_extensions, OutputScheme, get_warnings, print_clang_style_warning,\
     parse_args
 from lizard_ext import xml_output
 
@@ -125,10 +125,8 @@ class TestAllOutput(StreamStdoutTestCase):
         self.foo = FunctionInfo("foo", 'FILENAME', 100)
 
     def test_print_extension_results(self):
-        file_infos = []
         extension = Mock(FUNCTION_INFO = {})
-        option = Mock(CCN=15, thresholds={}, number = 0, extensions = [extension], whitelist='')
-        print_result(file_infos, option, OutputScheme(option.extensions))
+        print_extension_results([extension])
         self.assertEqual(1, extension.print_result.call_count)
 
     def test_should_not_print_extension_results_when_not_implemented(self):

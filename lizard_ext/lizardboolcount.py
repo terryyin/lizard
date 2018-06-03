@@ -16,13 +16,15 @@ class LizardExtension(object):  # pylint: disable=R0903
                 reader.context.fileinfo.bool_count += 1
             yield token
 
-    def reduce(self, fileinfo):
+    def cross_file_process(self, fileinfos):
         '''
         Combine the statistics from each file.
         '''
-        if hasattr(fileinfo, "bool_count"):
-            self.total_bool += fileinfo.bool_count
-        self.total_token += fileinfo.token_count
+        for fileinfo in fileinfos:
+            if hasattr(fileinfo, "bool_count"):
+                self.total_bool += fileinfo.bool_count
+            self.total_token += fileinfo.token_count
+            yield fileinfo
 
     def print_result(self):
         if self.total_token == 0:

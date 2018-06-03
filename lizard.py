@@ -814,9 +814,6 @@ def print_result(result, option, scheme):
     warnings = get_warnings(result, option)
     warning_count, warning_nloc = print_warnings(option, scheme, warnings)
     print_total(warning_count, warning_nloc, result, scheme)
-    for extension in option.extensions:
-        if hasattr(extension, 'print_result'):
-            extension.print_result()
     return warning_count
 
 
@@ -992,9 +989,15 @@ def main(argv=None):
         options.languages,
         regression=schema.any_regression())
     warning_count = printer(result, options, schema)
+    print_extension_results(options.extensions)
+    list(result)
     if 0 <= options.number < warning_count:
         sys.exit(1)
 
+def print_extension_results(extensions):
+    for extension in extensions:
+        if hasattr(extension, 'print_result'):
+            extension.print_result()
 
 if __name__ == "__main__":
     main()
