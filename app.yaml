@@ -1,0 +1,19 @@
+runtime: python27
+api_version: 1
+threadsafe: true
+
+handlers:
+- url: /favicon\.ico
+  static_files: website/static/favicon.ico
+  upload: website/static/favicon\.ico
+- url: /
+  static_files: index.html
+  upload: index.html
+- url: /website/static
+  static_dir: website/static
+- url: /.*
+  script: website.application
+
+libraries:
+- name: webapp2
+  version: latest

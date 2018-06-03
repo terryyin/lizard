@@ -211,9 +211,11 @@ class LizardExtension(ExtensionBase):
             yield token
         reader.context.fileinfo.hash_nodes = list(token_unifier.samples())
 
-    def reduce(self, fileinfo):
-        self.fileinfos.append((len(self.nodes), fileinfo))
-        self.nodes += fileinfo.hash_nodes
+    def cross_file_process(self, fileinfos):
+        for fileinfo in fileinfos:
+            self.fileinfos.append((len(self.nodes), fileinfo))
+            self.nodes += fileinfo.hash_nodes
+            yield fileinfo
 
     def get_duplicates(self, min_duplicate_tokens=70):
         boundaries = [info[0] for info in self.fileinfos]

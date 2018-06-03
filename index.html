@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html ng-app="lizardApp">
+  <head>
+    <link rel="stylesheet" type="text/css" href="website/static/bower/bootstrap/dist/css/bootstrap.css" />
+    <script src="website/static/bower/angular/angular.js"></script>
+    <script src="website/static/controllers.js"></script>
+  </head>
+  <body style="padding-top: 70px;">
+    <!-- Fixed navbar -->
+    <div class="navbar navbar-inverse" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a href="/" class="nav-brand navbar-left">
+            <img src="website/static/img/logo.png" style="width:40px;" />
+          </a>
+          <a class="navbar-brand" href="#">
+            Lizard <em>code complexity analyzer</em></a>
+
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="#">Home</a></li>
+            <li><a href="#try">Try Online</a></li>
+            <li><a href="https://github.com/terryyin/lizard">github</a></li>
+            <li><a href="https://pypi.python.org/pypi/lizard">Download</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+    <div class="container theme-showcase" role="main">
+      <div class="jumbotron">
+        <h1>Complex is better</h1>
+        <p>Than complicated. It's OK to build very complex software,
+        but you don't have to build it in a complicated way. Lizard is a
+        free open source tool
+        that analyse the complexity of your source code right away supporting many programming languages, without any extra setup.
+        It also does code clone / copy-paste detection.
+        </p>
+        <p><a href="https://pypi.python.org/pypi/lizard" class="btn btn-primary btn-lg" role="button">Download &raquo;</a></p>
+      </div>
+    </div>
+    <div class="row container center-block" ng-controller="SourceFormController as source" ng-submit="submit()">
+      <div class="col-md-6">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h4><a id="try">Try Lizard in Your Browser</a></h4>
+          </div>
+          <div class="panel-body">
+            <form method="post"  role="form" class="form-horizontal">
+              <div class="input-group">
+                <select ng-init="source.lang = source.lang || '.c'"
+                  ng-model="source.lang" class="form-control" ng-options="lang for lang in ['.c','.cpp','.java','.js', '.py', '.m','.h', '.rb', '.swift']"  title="Language">
+                </select>
+                <span class="input-group-btn">
+                  <input type="submit" value="Analyse" class="btn btn-primary">
+                </span>
+              </div>
+              <div><textarea name="content"  class="form-control" rows="10" ng-model="source.code" placeholder="Paste your source code here..."></textarea></div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h4>
+              {{progress}}
+            </h4>
+          </div>
+          <div class="panel-body">
+            <span class="label label-info">File Type <span class="badge">{{result.filename}}</span></span>
+            <span class="label label-info">Token Count <span class="badge">{{result.token_count}}</span></span>
+            <span class="label label-info">NLOC <span class="badge">{{result.nloc}}</span></span>
+          </div>
+            <table class="table table-hover">
+              <tr>
+                <th> Function Name </th>
+                <th> NLOC </th>
+                <th> Complexity </th>
+                <th> Token # </th>
+                <th> Parameter # </th>
+              </tr>
+              <tr ng-repeat="fun in result.function_list">
+                <td>{{fun.name}}</td>
+                <td align=right>{{fun.nloc}}</td>
+                <td align=right>{{fun.cyclomatic_complexity}}</td>
+                <td align=right>{{fun.token_count}}</td>
+                <td align=right>{{fun.parameter_count}}</td>
+              </tr>
+            </table>
+        </div>
+      </div>
+      <a href="https://github.com/terryyin/lizard"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png" alt="Fork me on GitHub"></a>
+      <script src="website/static/bower/jquery/jquery.min.js"></script>
+      <script src="website/static/bower/bootstrap/dist/js/bootstrap.min.js"></script>
+
+    </body>
+  </html>

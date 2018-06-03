@@ -51,8 +51,7 @@ class TestWordCountPlugin(unittest.TestCase):
 
     def test_reduce_the_result(self):
         list(self.ext(["a"], self.reader))
-        self.ext.reduce(self.reader.fileinfo)
-        self.ext.reduce(self.reader.fileinfo)
+        list(self.ext.cross_file_process([self.reader.fileinfo, self.reader.fileinfo]))
         self.assertEqual(2, self.ext.result['a'])
 
 class TestWordCountOutput(unittest.TestCase):

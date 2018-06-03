@@ -12,9 +12,9 @@ class TestDuplicateExtension(unittest.TestCase):
         self.builder = CFunctionBuilder()
 
     def detect(self, code, min_duplicate_tokens = 31):
-        self.detector.reduce(
-                get_cpp_fileinfo_with_extension(code, self.detector)
-            )
+        list(self.detector.cross_file_process(
+                [get_cpp_fileinfo_with_extension(code, self.detector)]
+            ))
         return list(self.detector.get_duplicates(min_duplicate_tokens))
 
     def test_empty_file(self):

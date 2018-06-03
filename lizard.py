@@ -67,11 +67,10 @@ def analyze_files(files, threads=1, exts=None, regression=False):
     result = map_files_to_analyzer(files, file_analyzer, threads)
     if regression:
         result = [r for r in result]
-    for module_info in result:
-        for extension in extensions:
-            if hasattr(extension, 'reduce'):
-                extension.reduce(module_info)
-        yield module_info
+    for extension in extensions:
+        if hasattr(extension, 'cross_file_process'):
+            result = extension.cross_file_process(result)
+    return result
 
 
 def _extension_arg(parser):

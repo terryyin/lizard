@@ -11,7 +11,7 @@ def fanio(*code):
     ext = FanInOut()
     def process(ext, code):
         result = FileAnalyzer(get_extensions([ext])).analyze_source_code("a.cpp", code)
-        ext.reduce(result)
+        list(ext.cross_file_process([result]))
         return result
     results = [process(ext, code) for code in code]
     return results[0].function_list[0]

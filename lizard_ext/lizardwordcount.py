@@ -32,15 +32,17 @@ class LizardExtension(object):
                 result[token] = result.get(token, 0) + 1
             yield token
 
-    def reduce(self, fileinfo):
+    def cross_file_process(self, fileinfos):
         '''
         Combine the statistics from each file.
         Because the statistics came from multiple thread tasks. This function
         needs to be called to collect the combined result.
         '''
-        if hasattr(fileinfo, "wordCount"):
-            for k, val in fileinfo.wordCount.items():
-                self.result[k] = self.result.get(k, 0) + val
+        for fileinfo in fileinfos:
+            if hasattr(fileinfo, "wordCount"):
+                for k, val in fileinfo.wordCount.items():
+                    self.result[k] = self.result.get(k, 0) + val
+            yield fileinfo
 
     def print_result(self):
         with open(self.HTML_FILENAME, 'w') as html_file:

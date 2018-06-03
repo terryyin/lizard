@@ -25,16 +25,18 @@ class LizardExtension(ExtensionBase):
         self.all_count_per_file = Counter()
         super(LizardExtension, self).__init__(context)
 
-    def reduce(self, fileinfo):
-        flt = [
-                f for f in fileinfo.function_list
-                if len(f.parameters) >= DEFAULT_MIN_PARAM_COUNT
-             ]
-        self.all_count.update(self._parameters(f) for f in flt)
-        self.all_count_per_file.update(set(self._parameters(f) for f in flt))
-        for flist in fileinfo.function_list:
-            flist.parameter_list_duplicates = 0
-            flist.parameter_list_duplicated_in_files = 0
+    def cross_file_process(self, fileinfos):
+        for fileinfo in fileinfos:
+            flt = [
+                    f for f in fileinfo.function_list
+                    if len(f.parameters) >= DEFAULT_MIN_PARAM_COUNT
+                 ]
+            self.all_count.update(self._parameters(f) for f in flt)
+            self.all_count_per_file.update(
+                    set(self._parameters(f) for f in flt))
+            for flist in fileinfo.function_list:
+                flist.parameter_list_duplicates = 0
+                flist.parameter_list_duplicated_in_files = 0
 
     def reduce_again(self, fileinfo):
         for flist in fileinfo.function_list:

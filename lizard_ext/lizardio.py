@@ -57,16 +57,18 @@ class LizardExtension(ExtensionBase):
             self.context.current_function.tokens = list()
         self.context.current_function.tokens.append(token)
 
-    def reduce(self, fileinfo):
-        try:
-            new_funcs = {f.unqualified_name: f for f in
-                         fileinfo.function_list}
-            self.all_methods.update(new_funcs)
-            self._add_to_fan_outs(new_funcs.keys())
-            self._add_to_general_fan_out()
-            self._add_to_fan_ins(fileinfo.function_list)
-        except (AttributeError, TypeError, ValueError):
-            pass
+    def cross_file_process(self, fileinfos):
+        for fileinfo in fileinfos:
+            try:
+                new_funcs = {f.unqualified_name: f for f in
+                             fileinfo.function_list}
+                self.all_methods.update(new_funcs)
+                self._add_to_fan_outs(new_funcs.keys())
+                self._add_to_general_fan_out()
+                self._add_to_fan_ins(fileinfo.function_list)
+            except (AttributeError, TypeError, ValueError):
+                pass
+            yield fileinfo
 
     def _add_to_fan_outs(self, keys):
         for other_func in self.all_methods.values():

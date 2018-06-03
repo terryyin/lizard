@@ -54,12 +54,11 @@ class Test_using_muliple_base_extensions(unittest.TestCase):
 
     def test_reduce_func_in_lizardio(self):
         lizard_object = None
-        self.assertRaises((AttributeError, TypeError, ValueError), self.ext.reduce(lizard_object))
+        self.assertRaises((AttributeError, TypeError, ValueError), list(self.ext.cross_file_process([lizard_object])))
 
 
     def test_all_extention_simultaneously(self):
-
-        self.ext.reduce(self.lizard_object)
+        list(self.ext.cross_file_process([self.lizard_object]))
         correct_max_nd = {'foo': 1,
                           'bar': 0}
         correct_max_nested_struct = {'foo': 1,
