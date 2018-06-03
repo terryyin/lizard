@@ -36,16 +36,13 @@ class LizardExtension(ExtensionBase):
     FUNCTION_INFO = {
         "fan_in": {
             "caption": " fan_in ",
-            "average_caption": " avg_fan_in ",
-            "regression": True},
+            "average_caption": " avg_fan_in "},
         "fan_out": {
             "caption": " fan_out ",
-            "average_caption": " avg_fan_out ",
-            "regression": True},
+            "average_caption": " avg_fan_out "},
         "general_fan_out": {
             "caption": " general_fan_out ",
-            "average_caption": " avg_general_fan_out ",
-            "regression": True}
+            "average_caption": " avg_general_fan_out "}
     }
 
     def __init__(self, context=None):

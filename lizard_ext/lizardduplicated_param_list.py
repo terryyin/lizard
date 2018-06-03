@@ -12,12 +12,10 @@ class LizardExtension(ExtensionBase):
     FUNCTION_INFO = {
         "parameter_list_duplicates": {
             "caption": " dup_param_list ",
-            "average_caption": " avg_dpl ",
-            "regression": True},
+            "average_caption": " avg_dpl "},
         "parameter_list_duplicated_in_files": {
             "caption": " dup_param_list_f ",
-            "average_caption": " avg_dpl_f ",
-            "regression": True},
+            "average_caption": " avg_dpl_f "},
     }
 
     def __init__(self, context=None):
@@ -26,6 +24,7 @@ class LizardExtension(ExtensionBase):
         super(LizardExtension, self).__init__(context)
 
     def cross_file_process(self, fileinfos):
+        saved_file_infos = []
         for fileinfo in fileinfos:
             flt = [
                     f for f in fileinfo.function_list
@@ -37,8 +36,12 @@ class LizardExtension(ExtensionBase):
             for flist in fileinfo.function_list:
                 flist.parameter_list_duplicates = 0
                 flist.parameter_list_duplicated_in_files = 0
+            yield fileinfo
+            saved_file_infos.append(fileinfo)
+        for fileinfo in saved_file_infos:
+            self._reduce_again(fileinfo)
 
-    def reduce_again(self, fileinfo):
+    def _reduce_again(self, fileinfo):
         for flist in fileinfo.function_list:
             flist.parameter_list_duplicates = self.all_count[
                 self._parameters(flist)]

@@ -51,22 +51,20 @@ DEFAULT_CCN_THRESHOLD, DEFAULT_WHITELIST, \
 
 # pylint: disable-msg=too-many-arguments
 def analyze(paths, exclude_pattern=None, threads=1, exts=None,
-            lans=None, regression=False):
+            lans=None):
     '''
     returns an iterator of file information that contains function
     statistics.
     '''
     exclude_pattern = exclude_pattern or []
     files = get_all_source_files(paths, exclude_pattern, lans)
-    return analyze_files(files, threads, exts, regression)
+    return analyze_files(files, threads, exts)
 
 
-def analyze_files(files, threads=1, exts=None, regression=False):
+def analyze_files(files, threads=1, exts=None):
     extensions = exts or []
     file_analyzer = FileAnalyzer(extensions)
     result = map_files_to_analyzer(files, file_analyzer, threads)
-    if regression:
-        result = [r for r in result]
     for extension in extensions:
         if hasattr(extension, 'cross_file_process'):
             result = extension.cross_file_process(result)
@@ -611,11 +609,6 @@ class OutputScheme(object):
                 'average_caption': 'if defined, will add averge function
                                     to FileInfomation and show in the
                                     end result.
-                'regression': True 'if there's any regression, the result
-                               won't show until all the files are processed.
-                               This is
-                               used when some cross-files statistics are
-                               needed. e.g. fan-in and fan-out'
             }
         }
     '''
@@ -638,10 +631,9 @@ class OutputScheme(object):
             {
                 'caption': caption,
                 'value': part,
-                'avg_caption': average,
-                'regression': regression
+                'avg_caption': average
             }
-            for caption, part, average, regression in self._ext_member_info()]
+            for caption, part, average in self._ext_member_info()]
         self.items.append({'caption': " location  ", 'value': 'location'})
 
     def patch_for_extensions(self):
@@ -651,9 +643,6 @@ class OutputScheme(object):
         for item in self.items:
             if 'avg_caption' in item:
                 _patch(item["value"])
-
-    def any_regression(self):
-        return any(item.get('regression') for item in self.items)
 
     def any_silent(self):
         return any(hasattr(ex, 'silent_all_others') for ex in self.extensions)
@@ -668,8 +657,7 @@ class OutputScheme(object):
                     yield (
                         ext.FUNCTION_INFO[key].get("caption", None),
                         key,
-                        ext.FUNCTION_INFO[key].get("average_caption", None),
-                        ext.FUNCTION_INFO[key].get("regression", None))
+                        ext.FUNCTION_INFO[key].get("average_caption", None))
 
     def captions(self):
         caps = [item.get('caption') for item in self.items]
@@ -770,7 +758,7 @@ def print_total(warning_count, warning_nloc, saved_result, scheme):
                   nloc_rate=(warning_nloc/nloc_in_functions)))
 
 
-def print_and_save_modules(all_fileinfos, extensions, scheme):
+def print_and_save_modules(all_fileinfos, scheme):
     saved_fileinfos = []
     print(scheme.function_info_head())
     for module_info in all_fileinfos:
@@ -781,10 +769,6 @@ def print_and_save_modules(all_fileinfos, extensions, scheme):
                     print(scheme.function_info(fun))
                 except UnicodeEncodeError:
                     print("Found ill-formatted unicode function name.")
-    for extension in extensions:
-        if hasattr(extension, 'reduce_again'):
-            for module_info in saved_fileinfos:
-                extension.reduce_again(module_info)
     print("%d file analyzed." % (len(saved_fileinfos)))
     print("==============================================================")
     print("NLOC   " + scheme.average_captions() + " function_cnt    file")
@@ -810,7 +794,7 @@ def get_warnings(code_infos, option):
 
 
 def print_result(result, option, scheme):
-    result = print_and_save_modules(result, option.extensions, scheme)
+    result = print_and_save_modules(result, scheme)
     warnings = get_warnings(result, option)
     warning_count, warning_nloc = print_warnings(option, scheme, warnings)
     print_total(warning_count, warning_nloc, result, scheme)
@@ -986,18 +970,19 @@ def main(argv=None):
         options.exclude,
         options.working_threads,
         options.extensions,
-        options.languages,
-        regression=schema.any_regression())
+        options.languages)
     warning_count = printer(result, options, schema)
     print_extension_results(options.extensions)
     list(result)
     if 0 <= options.number < warning_count:
         sys.exit(1)
 
+
 def print_extension_results(extensions):
     for extension in extensions:
         if hasattr(extension, 'print_result'):
             extension.print_result()
+
 
 if __name__ == "__main__":
     main()
