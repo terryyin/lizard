@@ -43,16 +43,58 @@ class Sequence(object):
         return str(self)
 
 
-class DuplicateFinder(object):
+class InvolvingScope(object):
+    def __init__(self, boundaries, keyfunc):
+        self.current_file_duplicates = []
+        self.dup_starts = set()
+        self.boundaries = boundaries
+        self.keyfunc = keyfunc
 
-    def __init__(self, nodes, boundaries,
-                 collapse_repeat_tokens=20,
-                 min_duplicate_tokens=0,
-                 sample_size=0):
-        self.min_duplicate_tokens = min_duplicate_tokens * 2
-        self.sample_size = sample_size
-        self.current_file_duplicates = None
-        self.dup_starts = None
+    def same_beginning(self, same, before_same):
+        new_starts = [x for x in same if x not in self.dup_starts]
+        self.dup_starts |= before_same
+        if len(new_starts) > 1:
+            for dup in self._duplicate_sequences(new_starts):
+                self.current_file_duplicates.append(dup)
+                yield dup
+
+    def fun_yet_to_come2(self):
+        pass
+
+    def _duplicate_sequences(self, same):
+        sequences = [(n, n) for n in same]
+        queues = deque([sequences])
+        while queues:
+            sequences = queues.popleft()
+            if self._full_inclusive_sequences(sequences):
+                continue
+            nexts = [(s, n + 1) for s, n in sequences
+                     if n+1 not in self.boundaries
+                     and n+1 not in self.dup_starts]
+            nexts = sorted(nexts, key=self.keyfunc)
+            full_duplicate_stopped = len(nexts) < len(sequences)
+            for _, group in groupby(nexts, self.keyfunc):
+                group = list(group)
+                if len(group) > 1:
+                    queues.append(group)
+                else:
+                    full_duplicate_stopped = True
+            if full_duplicate_stopped:
+                yield sequences
+
+    def _full_inclusive_sequences(self, sequences):
+        return any(
+            len(dup) == len(sequences) and
+            dup[0][0] <= sequences[0][0] and
+            dup[0][1] >= sequences[0][1]
+            for dup in self.current_file_duplicates)
+
+
+class DuplicateFinder(object):
+    def __init__(self, nodes, boundaries, **options):
+        collapse_repeat_tokens = options.get("collapse_repeat_tokens", 20)
+        self.min_duplicate_tokens = options.get("min_duplicate_tokens", 0) * 2
+        self.sample_size = options.get("sample_size", 0)
         self.duplicate_token_count = 0
         self.nodes = nodes
         self.boundaries = set(boundaries + [len(nodes)])
@@ -68,22 +110,15 @@ class DuplicateFinder(object):
     def find_start_and_ends(self):
         for i, same in enumerate(self.hashed_node_indice.values()):
             if i in self.boundaries:
-                self.current_file_duplicates = []
-                self.dup_starts = set()
-            if i % 1000 == 0:
-                pass
-                # total = len(self.hashed_node_indice)
-                # print("# -----------progress: %d.2%%" % (i * 100 / total))
-            new_starts = [x for x in same if x not in self.dup_starts]
-            self.dup_starts |= set(n - self.sample_size for n in same)
-            if len(new_starts) > 1:
-                for dup in self._duplicate_sequences(new_starts):
-                    token_count = len(dup) * \
-                            (dup[0][1] - dup[0][0] + self.sample_size)
-                    if token_count >= self.min_duplicate_tokens:
-                        self.current_file_duplicates.append(dup)
-                        self.duplicate_token_count += token_count
-                        yield dup
+                scope = InvolvingScope(self.boundaries, self._keyfunc)
+            before_same = set(n - self.sample_size for n in same)
+            for dup in scope.same_beginning(
+                    same, before_same):
+                token_count = len(dup) * \
+                        (dup[0][1] - dup[0][0] + self.sample_size)
+                if token_count >= self.min_duplicate_tokens:
+                    self.duplicate_token_count += token_count
+                    yield dup
 
     def duplicate_rate(self):
         try:
@@ -93,40 +128,17 @@ class DuplicateFinder(object):
         except ZeroDivisionError:
             return 0
 
-    def _duplicate_sequences(self, same):
+    def unique_rate(self):
+        try:
+            return len(self.hashed_node_indice) / len(self.nodes)
+        except ZeroDivisionError:
+            return 0
 
-        def keyfunc(seq):
-            try:
-                return self.nodes[seq[1]].hash
-            except IndexError:
-                return ''
-
-        sequences = [(n, n) for n in same]
-        queues = deque([sequences])
-        while queues:
-            sequences = queues.popleft()
-            if self.full_inclusive_sequences(sequences):
-                continue
-            nexts = [(s, n + 1) for s, n in sequences
-                     if n+1 not in self.boundaries
-                     and n+1 not in self.dup_starts]
-            nexts = sorted(nexts, key=keyfunc)
-            full_duplicate_stopped = len(nexts) < len(sequences)
-            for _, group in groupby(nexts, keyfunc):
-                group = list(group)
-                if len(group) > 1:
-                    queues.append(group)
-                else:
-                    full_duplicate_stopped = True
-            if full_duplicate_stopped:
-                yield sequences
-
-    def full_inclusive_sequences(self, sequences):
-        return any(
-            len(dup) == len(sequences) and
-            dup[0][0] <= sequences[0][0] and
-            dup[0][1] >= sequences[0][1]
-            for dup in self.current_file_duplicates)
+    def _keyfunc(self, seq):
+        try:
+            return self.nodes[seq[1]].hash
+        except IndexError:
+            return ''
 
 
 class NestingStackWithUnifiedTokens(object):
@@ -201,6 +213,7 @@ class LizardExtension(ExtensionBase):
         self.nodes = []
         self.fileinfos = []
         self.saved_duplicate_rate = None
+        self.saved_unique_rate = None
         super(LizardExtension, self).__init__(context)
 
     def __call__(self, tokens, reader):
@@ -227,9 +240,13 @@ class LizardExtension(ExtensionBase):
         for start_and_ends in duplicate_finder.find_start_and_ends():
             yield self._create_code_snippets(start_and_ends)
         self.saved_duplicate_rate = duplicate_finder.duplicate_rate()
+        self.saved_unique_rate = duplicate_finder.unique_rate()
 
     def duplicate_rate(self):
         return self.saved_duplicate_rate
+
+    def unique_rate(self):
+        return self.saved_unique_rate
 
     def _create_code_snippets(self, start_and_ends):
         return [
@@ -258,3 +275,4 @@ class LizardExtension(ExtensionBase):
             print("^^^^^^^^^^^^^^^^^^^^^^^^^^")
             print("")
         print("Total duplicate rate: %.2f%%" % (self.duplicate_rate() * 100))
+        print("Total unique rate: %.2f%%" % (self.unique_rate() * 100))
