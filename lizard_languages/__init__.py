@@ -12,6 +12,7 @@ from .csharp import CSharpReader
 from .php import PHPReader
 from .scala import ScalaReader
 from .gdscript import GDScriptReader
+from .go import GoReader
 
 
 def languages():
