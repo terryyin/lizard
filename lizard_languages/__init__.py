@@ -28,7 +28,9 @@ def languages():
         PHPReader,
         SwiftReader,
         ScalaReader,
-        GDScriptReader]
+        GDScriptReader,
+        GoReader
+    ]
 
 
 def get_reader_for(filename):

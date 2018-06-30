@@ -23,6 +23,11 @@ class CodeStateMachine(object):
         if token is not None:
             return self(token)
 
+    def next_if(self, state, token, expected):
+        if token != expected:
+            return
+        self.next(state, token)
+
     def sm_return(self):
         self.to_exit = True
 

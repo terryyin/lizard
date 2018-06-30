@@ -301,6 +301,9 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
         self.long_name += app
 
     def add_to_long_name(self, app):
+        if self.long_name:
+            if self.long_name[-1].isalpha() and app[0].isalpha():
+                self.long_name += ' '
         self.long_name += app
 
     def add_parameter(self, token):
