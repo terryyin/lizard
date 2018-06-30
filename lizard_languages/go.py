@@ -27,21 +27,15 @@ class GoStates(CodeStateMachine):  # pylint: disable=R0903
         if token == '(':
             return self.next(self._member_function, token)
         self.context.add_to_function_name(token)
-        self._state = self._expect_function_dec
+        self._state = self._function_dec
 
     @CodeStateMachine.read_inside_brackets_then("()", '_function_name')
     def _member_function(self, tokens):
         self.context.add_to_long_function_name(tokens)
 
-
-    def _expect_function_dec(self, token):
-        if token == '(':
-            self._state = self._function_dec
-
+    @CodeStateMachine.read_inside_brackets_then("()", '_expect_function_impl')
     def _function_dec(self, token):
-        if token == ')':
-            self._state = self._expect_function_impl
-        else:
+        if token not in '()':
             self.context.parameter(token)
 
     def _expect_function_impl(self, token):
