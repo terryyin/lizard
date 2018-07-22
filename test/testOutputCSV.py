@@ -4,7 +4,7 @@ import sys
 from lizard_ext import csv_output
 from test.helper_stream import StreamStdoutTestCase
 from lizard import parse_args, print_and_save_modules, FunctionInfo, FileInformation,\
-    get_extensions, OutputScheme
+    get_extensions, OutputScheme, AllResult
 
 
 class TestCSVOutput(StreamStdoutTestCase):
@@ -20,13 +20,13 @@ class TestCSVOutput(StreamStdoutTestCase):
 
 
     def test_csv_header(self):
-        csv_output([self.fileSummary], True)
+        csv_output(AllResult([self.fileSummary]), True)
         self.assertRegexpMatches(sys.stdout.stream,
                                  r"NLOC,CCN,token,PARAM,length,location,file,function,long_name,start,end")
 
 
     def test_csv_no_header(self):
-        csv_output([self.fileSummary], False)
+        csv_output(AllResult([self.fileSummary]), False)
         self.assertEquals(
             '1,1,1,0,0,"foo@100-100@FILENAME","FILENAME","foo","foo",100,100',
             sys.stdout.stream.splitlines()[0]
@@ -38,7 +38,7 @@ class TestCSVOutput(StreamStdoutTestCase):
         self.foo.cyclomatic_complexity = 16
         fileStat = FileInformation("FILENAME", 1, [self.foo])
 
-        csv_output([fileStat], True)
+        csv_output(AllResult([fileStat]), True)
 
         self.assertEquals(
             '1,16,1,0,0,"foo@100-100@FILENAME","FILENAME","foo","foo",100,100',

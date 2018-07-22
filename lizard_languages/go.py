@@ -45,4 +45,3 @@ class GoStates(CodeStateMachine):  # pylint: disable=R0903
     def _function_impl(self, _):
         self._state = self._state_global
         self.context.end_of_function()
-

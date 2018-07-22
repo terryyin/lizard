@@ -734,17 +734,26 @@ def print_no_warnings(option):
     print("\n" + "=" * len(warn_str) + "\n" + warn_str)
 
 
-def print_total(warning_count, warning_nloc, saved_result, scheme):
-    file_infos = list(file_info for file_info in saved_result if file_info)
-    all_fun = list(itertools.chain(*(file_info.function_list
-                                     for file_info in file_infos)))
-    cnt = len(all_fun) or 1
-    nloc_in_functions = sum([f.nloc for f in all_fun]) or 1
-    all_in_one = FileInformation(
-            "",
-            sum([f.nloc for f in file_infos]),
-            all_fun)
+class AllResult(object):
+    def __init__(self, result):
+        self.result = list(file_info for file_info in result if file_info)
+        self.all_fun = list(itertools.chain(*(file_info.function_list
+                                            for file_info in self.result)))
 
+    def function_count(self):
+        return len(self.all_fun) or 1
+
+    def nloc_in_functions(self):
+        return sum([f.nloc for f in self.all_fun]) or 1
+
+    def as_fileinfo(self):
+        return FileInformation(
+                    "",
+                    sum([f.nloc for f in self.result]),
+                    self.all_fun)
+
+
+def print_total(warning_count, warning_nloc, all_result, scheme):
     print("=" * 90)
     print("Total nloc  " + scheme.average_captions() + "  Fun Cnt  Warning"
           " cnt   Fun Rt   nloc Rt")
@@ -754,11 +763,11 @@ def print_total(warning_count, warning_nloc, saved_result, scheme):
         scheme.average_formatter() +
         "{function_count:9d}{warning_count:13d}" +
         "{function_rate:10.2f}{nloc_rate:8.2f}").format(
-                  module=all_in_one,
-                  function_count=cnt,
+                  module=all_result.as_fileinfo(),
+                  function_count=all_result.function_count(),
                   warning_count=warning_count,
-                  function_rate=(warning_count/cnt),
-                  nloc_rate=(warning_nloc/nloc_in_functions)))
+                  function_rate=(warning_count/all_result.function_count()),
+                  nloc_rate=(warning_nloc/all_result.nloc_in_functions())))
 
 
 def print_and_save_modules(all_fileinfos, scheme):
@@ -796,11 +805,11 @@ def get_warnings(code_infos, option):
     return warnings
 
 
-def print_result(result, option, scheme):
+def print_result(result, option, scheme, total_factory):
     result = print_and_save_modules(result, scheme)
     warnings = get_warnings(result, option)
     warning_count, warning_nloc = print_warnings(option, scheme, warnings)
-    print_total(warning_count, warning_nloc, result, scheme)
+    print_total(warning_count, warning_nloc, total_factory(result), scheme)
     return warning_count
 
 
@@ -974,7 +983,7 @@ def main(argv=None):
         options.working_threads,
         options.extensions,
         options.languages)
-    warning_count = printer(result, options, schema)
+    warning_count = printer(result, options, schema, AllResult)
     print_extension_results(options.extensions)
     list(result)
     if 0 <= options.number < warning_count:

@@ -5,11 +5,11 @@ from test.helper_stream import StreamStdoutTestCase
 import os
 from lizard import print_warnings, print_and_save_modules, FunctionInfo, FileInformation,\
     print_result, print_extension_results, get_extensions, OutputScheme, get_warnings, print_clang_style_warning,\
-    parse_args
+    parse_args, AllResult
 from lizard_ext import xml_output
 
 def print_result_with_scheme(result, option):
-    return print_result(result, option, OutputScheme(option.extensions))
+    return print_result(result, option, OutputScheme(option.extensions), AllResult)
 
 class TestFunctionOutput(StreamStdoutTestCase):
 
@@ -158,7 +158,7 @@ class TestXMLOutput(unittest.TestCase):
     foo = FunctionInfo("foo", '', 100)
     foo.cyclomatic_complexity = 16
     file_infos = [FileInformation('f1.c', 1, [foo])]
-    xml = xml_output(file_infos, True)
+    xml = xml_output(AllResult(file_infos), True)
 
     def test_xml_output(self):
         self.assertIn('''foo at f1.c:100''', self.xml)
@@ -167,7 +167,7 @@ class TestXMLOutput(unittest.TestCase):
         self.assertIn('''<?xml-stylesheet type="text/xsl" href="https://raw.githubusercontent.com/terryyin/lizard/master/lizard.xsl"?>''', self.xml)
 
     def test_xml_output_on_empty_folder(self):
-        xml_empty = xml_output([], True)
+        xml_empty = xml_output(AllResult([]), True)
         self.assertIn('''<sum label="NCSS" value="0"/>''', xml_empty)
         self.assertIn('''<sum label="CCN" value="0"/>''', xml_empty)
         self.assertIn('''<sum label="Functions" value="0"/>''', xml_empty)

@@ -10,7 +10,7 @@ import sys
 import datetime
 
 
-def html_output(result, options, _):
+def html_output(result, options, *_):
     try:
         from jinja2 import Environment, FileSystemLoader, select_autoescape
     except ImportError:
@@ -37,10 +37,10 @@ def html_output(result, options, _):
         cwd = os.path.dirname(os.path.abspath(__file__))
     env = Environment(loader=FileSystemLoader(cwd),
                       autoescape=select_autoescape(['html']))
-    date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
     output = env.get_template('template.html').render(
             title='Lizard code complexity report',
-            date=date, thresholds=options.thresholds, files=file_list)
+            date=datetime.datetime.now().strftime('%Y-%m-%d %H:%M'),
+            thresholds=options.thresholds, files=file_list)
     print(output)
     return 0
 

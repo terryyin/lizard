@@ -5,7 +5,8 @@ Jenkens has plugin for cppncss format result to display the diagram.
 '''
 
 
-def xml_output(result, verbose):
+def xml_output(all_result, verbose):
+    result = all_result.result
     import xml.dom.minidom
 
     impl = xml.dom.minidom.getDOMImplementation()
@@ -20,7 +21,7 @@ def xml_output(result, verbose):
     doc.insertBefore(processing_instruction, root)
 
     root.appendChild(_create_function_measure(doc, result, verbose))
-    root.appendChild(_create_file_measure(doc, result))
+    root.appendChild(_create_file_measure(doc, result, all_result))
 
     return doc.toprettyxml()
 
@@ -55,42 +56,41 @@ def _create_function_measure(doc, result, verbose):
     return measure
 
 
-def _create_file_measure(doc, result):
+def _create_file_measure(doc, result, all_result):
+    all_in_one = all_result.as_fileinfo()
     measure = doc.createElement("measure")
     measure.setAttribute("type", "File")
     measure.appendChild(
         _create_labels(doc, ["Nr.", "NCSS", "CCN", "Functions"]))
 
     file_nr = 0
-    file_total_ncss = 0
     file_total_ccn = 0
     file_total_funcs = 0
 
     for source_file in result:
         file_nr += 1
-        file_total_ncss += source_file.nloc
         file_total_ccn += source_file.CCN
         file_total_funcs += len(source_file.function_list)
         measure.appendChild(
             _create_file_node(doc, source_file, file_nr))
 
     if file_nr != 0:
-        file_summary = [("NCSS", file_total_ncss / file_nr),
+        file_summary = [("NCSS", all_in_one.nloc / file_nr),
                         ("CCN", file_total_ccn / file_nr),
                         ("Functions", file_total_funcs / file_nr)]
         for key, val in file_summary:
             measure.appendChild(
                 _create_labeled_value_item(doc, 'average', key, val))
 
-    summary = [("NCSS", file_total_ncss),
+    summary = [("NCSS", all_in_one.nloc),
                ("CCN", file_total_ccn),
                ("Functions", file_total_funcs)]
     for key, val in summary:
         measure.appendChild(_create_labeled_value_item(doc, 'sum', key, val))
 
     if file_total_funcs != 0:
-        summary = [("NCSS", file_total_ncss/file_total_funcs),
-                   ("CCN", file_total_ccn/file_total_funcs)]
+        summary = [("NCSS", all_in_one.average_nloc),
+                   ("CCN", all_in_one.average_cyclomatic_complexity)]
         for key, val in summary:
             measure.appendChild(_create_labeled_value_item(
                 doc, 'average', key, val))

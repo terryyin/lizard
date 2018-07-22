@@ -2,7 +2,7 @@ from mock import Mock, patch
 import unittest
 import sys
 from lizard_ext import html_output
-from lizard import parse_args, FunctionInfo, FileInformation
+from lizard import parse_args, FunctionInfo, FileInformation, AllResult
 from test.helper_stream import StreamStdoutTestCase
 
 
@@ -16,6 +16,6 @@ class TestHTMLOutput(StreamStdoutTestCase):
         self.scheme = Mock()
 
     def test_should_have_html_body(self):
-        html_output([self.fileSummary], self.option, None)
+        html_output([self.fileSummary], self.option, None, AllResult)
         self.assertRegexpMatches(sys.stdout.stream,
                 r"\<html\>")

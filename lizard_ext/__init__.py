@@ -8,16 +8,11 @@ from .xmloutput import xml_output
 from .auto_open import auto_open, auto_read
 
 
-def print_xml(results, options, _):
-    print(xml_output(list(results), options.verbose))
+def print_xml(results, options, _, total_factory):
+    print(xml_output(total_factory(list(results)), options.verbose))
     return 0
 
 
-def print_csv(results, options, _):
-    csv_output(list(results), options.verbose)
-    return 0
-
-
-def print_output(results, options, _):
-    html_output(list(results), options, _)
+def print_csv(results, options, _, total_factory):
+    csv_output(total_factory(list(results)), options.verbose)
     return 0
