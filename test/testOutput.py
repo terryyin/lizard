@@ -60,7 +60,7 @@ class TestWarningOutput(StreamStdoutTestCase):
         self.assertIn("cyclomatic_complexity > 15", sys.stdout.stream)
 
     def test_no_news_is_good_news(self):
-        count = print_clang_style_warning([], self.option, None)
+        count = print_clang_style_warning([], self.option, None, None)
         self.assertEqual('', sys.stdout.stream)
         self.assertEqual(0, count)
 
@@ -69,7 +69,7 @@ class TestWarningOutput(StreamStdoutTestCase):
         self.foo.max_nesting_depth = 10
         fileSummary = FileInformation("FILENAME", 123, [self.foo])
         scheme = OutputScheme([Ext()])
-        count = print_clang_style_warning([fileSummary], self.option, scheme)
+        count = print_clang_style_warning([fileSummary], self.option, scheme, None)
         self.assertIn("FILENAME:100: warning: foo has 1 NLOC, 30 CCN, 1 token, 0 PARAM, 0 length, 10 ND\n", sys.stdout.stream)
         self.assertEqual(1, count)
 

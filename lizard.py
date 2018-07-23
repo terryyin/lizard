@@ -822,7 +822,7 @@ def silent_printer(result, *_):
     return 0
 
 
-def print_clang_style_warning(code_infos, option, scheme):
+def print_clang_style_warning(code_infos, option, scheme, _):
     count = 0
     for warning in get_warnings(code_infos, option):
         print(scheme.clang_warning_format().format(f=warning))

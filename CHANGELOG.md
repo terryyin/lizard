@@ -1,7 +1,13 @@
 # Change Log
 
-## 1.15.2
+## 1.15.5
 
+Minor fix for the average NCSS (lines of code) in the XML output.
+Previously, the average NCSS per function included code outside any
+function. Now this is fixed.
+
+
+## 1.15.2
 
 An important new feature -- duplicate detector -- in the form of an
 extension.
