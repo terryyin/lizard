@@ -10,16 +10,40 @@ import os
 import re
 from setuptools import setup, Command
 
-here = os.path.dirname(os.path.abspath(__file__))
-version = '0.0.0'
-changes = os.path.join(here, "CHANGELOG.md")
-pattern = r'^\#*\s*(?P<version>[0-9]+.[0-9]+(.[0-9]+)?)'
-with codecs.open(changes, encoding='utf-8') as changes:
-    for line in changes:
-        match = re.match(pattern, line)
-        if match:
-            version = match.group("version")
-            break
+try:
+    here = os.path.dirname(os.path.abspath(__file__))
+    version = '0.0.0'
+    changes = os.path.join(here, "CHANGELOG.md")
+    pattern = r'^\#*\s*(?P<version>[0-9]+.[0-9]+(.[0-9]+)?)'
+    with codecs.open(changes, encoding='utf-8') as changes:
+        for line in changes:
+            match = re.match(pattern, line)
+            if match:
+                version = match.group("version")
+                break
+
+
+    # Save last Version
+    def save_version():
+        version_path = os.path.join(here, "lizard_ext/version.py")
+
+        with open(version_path) as version_file_read:
+            content_file = version_file_read.read()
+
+        VSRE = r"^version = ['\"]([^'\"]*)['\"]"
+        mo = re.search(VSRE, content_file, re.M)
+        current_version = mo.group(1)
+
+        content_file = content_file.replace(current_version, "{}".format(version))
+
+        with open(version_path, 'w') as version_file_write:
+            version_file_write.write(content_file)
+
+
+    save_version()
+
+except:
+    from lizard_ext import version
 
 
 class VersionCommand(Command):
@@ -34,26 +58,6 @@ class VersionCommand(Command):
 
     def run(self):
         print(version)
-
-# Save last Version
-def save_version():
-    version_path = os.path.join(here, "lizard_ext/version.py")
-
-    with open(version_path) as version_file_read:
-        content_file = version_file_read.read()
-
-    VSRE = r"^version = ['\"]([^'\"]*)['\"]"
-    mo = re.search(VSRE, content_file, re.M)
-    current_version = mo.group(1)
-
-    content_file = content_file.replace(current_version, "{}".format(version))
-
-    with open(version_path, 'w') as version_file_write:
-        version_file_write.write(content_file)
-
-
-save_version()
-
 
 
 setup(

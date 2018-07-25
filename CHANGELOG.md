@@ -1,6 +1,6 @@
 # Change Log
 
-## 1.15.5
+## 1.15.6
 
 Minor fix for the average NCSS (lines of code) in the XML output.
 Previously, the average NCSS per function included code outside any
