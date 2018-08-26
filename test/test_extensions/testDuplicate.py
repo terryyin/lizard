@@ -108,8 +108,8 @@ class TestDuplicateExtension(unittest.TestCase):
     def test_duplicate_with_different_string_value(self):
         duplicates = self.detect(
                 self.builder
-                .six_line_function(string_value='"abc"')
-                .six_line_function(string_value="'def'")
+                .six_line_function(rvalue='"abc"')
+                .six_line_function(rvalue="'def'")
                 .build()
                 )
         self.assertEqual(1, len(duplicates))
@@ -224,6 +224,26 @@ class TestDuplicateExtension(unittest.TestCase):
                 )
         self.assertEqual(1, len(duplicates))
 
+    def test_identifier_after_dot_should_not_be_commonized(self):
+        duplicates = self.detect(
+                self.builder
+                .six_line_function(rvalue="var.method()")
+                .six_line_function(rvalue="var.different_method()")
+                .build(),
+                min_duplicate_tokens = 40
+                )
+        self.assertEqual(0, len(duplicates))
+
+    def test_identifier_after_arrow_should_not_be_commonized(self):
+        duplicates = self.detect(
+                self.builder
+                .six_line_function(rvalue="var->method()")
+                .six_line_function(rvalue="var->different_method()")
+                .build(),
+                min_duplicate_tokens = 40
+                )
+        self.assertEqual(0, len(duplicates))
+
 
 
 class TestDuplicateExtensionAcrossFiles(unittest.TestCase):
@@ -297,14 +317,14 @@ class CFunctionBuilder(object):
         '''%(name)
         return self
 
-    def six_line_function(self, name='func6', variable_name='result', number_value="10", string_value='"abc"', operator="+"):
+    def six_line_function(self, name='func6', variable_name='result', number_value="10", rvalue='"abc"', operator="+"):
         self.code += ''' void %s(int param) {
                 int %s, i = 0;
                 for (; i < %s; i++) {
                      print(%s);%s += i %s i;
                 }
             }
-        '''%(name, variable_name, number_value, string_value, variable_name, operator)
+        '''%(name, variable_name, number_value, rvalue, variable_name, operator)
         return self
 
     def part_of_six_line_function(self, name='func6'):

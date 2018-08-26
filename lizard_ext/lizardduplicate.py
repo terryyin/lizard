@@ -153,6 +153,7 @@ class NestingStackWithUnifiedTokens(object):
         self.current_scope = set()
         self.scope_stack = [self.current_scope]
         self.unified_tokens = []
+        self.previous_token = None
 
     def __getattr__(self, attr):
         return getattr(self._decorated, attr)
@@ -174,6 +175,8 @@ class NestingStackWithUnifiedTokens(object):
         return token[0].isdigit() or token[0] in ("'", '"')
 
     def _unified_token(self, token):
+        if self.previous_token in (".", "->"):
+            return token
         if token == '-':
             return '+'
         if self._is_const(token):
@@ -196,6 +199,7 @@ class NestingStackWithUnifiedTokens(object):
         if self.constant_count <= self.SAMPLE_SIZE / 5:
             token = self._unified_token(token)
         self.unified_tokens.append((token, current_line,))
+        self.previous_token = token
 
     def samples(self):
         buf = deque()
