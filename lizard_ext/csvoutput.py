@@ -32,7 +32,7 @@ def csv_output(result, verbose):
                         source_function.cyclomatic_complexity,
                         source_function.token_count,
                         len(source_function.parameters),
-                        source_function.end_line - source_function.start_line,
+                        source_function.length,
                         "{}@{}-{}@{}".format(
                             source_function.name.replace("\"", "'"),
                             source_function.start_line,
