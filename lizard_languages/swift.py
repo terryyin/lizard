@@ -32,7 +32,7 @@ class SwiftStates(CodeStateMachine):  # pylint: disable=R0903
             self._state = self._function_name
         if token == 'init':
             self._function_name(token)
-        if token in ('get', 'set', 'deinit'):
+        if token in ('get', 'set', 'willSet', 'didSet', 'deinit'):
             self.context.start_new_function(token)
             self._state = self._expect_function_impl
         if token == 'protocol':
@@ -40,7 +40,7 @@ class SwiftStates(CodeStateMachine):  # pylint: disable=R0903
         if token in ('let', 'var', 'case', ','):
             self._state = self._expect_declaration_name
 
-    def _expect_declaration_name(self, token):
+    def _expect_declaration_name(self, _):
         self._state = self._state_global
 
     def _function_name(self, token):
