@@ -30,7 +30,7 @@ class SwiftStates(CodeStateMachine):  # pylint: disable=R0903
     def _state_global(self, token):
         if token == 'func':
             self._state = self._function_name
-        if token == 'init':
+        if token in ('init', 'subscript'):
             self._function_name(token)
         if token in ('get', 'set', 'willSet', 'didSet', 'deinit'):
             self.context.start_new_function(token)
