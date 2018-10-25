@@ -23,7 +23,7 @@ class LizardExtension(object):  # pylint: disable=R0903
                            "dependency_count"):
                 reader.context.current_function.dependency_count = 0
             # this accounts for java, c, c++ and python's import
-            if token == "import" or token == "#include":
+            if token in ("import", "#include"):
                 if import_as_list != []:
                     import_list.append(import_as_list)
                 expect_dependency = dependency_type[token]

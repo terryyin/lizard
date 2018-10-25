@@ -582,7 +582,7 @@ def whitelist_filter(warnings, script=None, whitelist=None):
     def get_whitelist(whitelist):
         if os.path.isfile(whitelist):
             return open(whitelist, mode='r').read()
-        elif whitelist != DEFAULT_WHITELIST:
+        if whitelist != DEFAULT_WHITELIST:
             print("WARNING: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             print("WARNING: the whitelist \""+whitelist+"\" doesn't exist.")
         return ''

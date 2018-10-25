@@ -181,7 +181,7 @@ class NestingStackWithUnifiedTokens(object):
             return '+'
         if self._is_const(token):
             return '1'
-        elif token[0].isalpha():
+        if token[0].isalpha():
             if token not in self.token_register:
                 self.token_register[token] = 'v'+str(len(self.current_scope))
                 self.current_scope.add(token)
