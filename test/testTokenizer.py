@@ -3,7 +3,7 @@ from lizard_languages.code_reader import CodeReader
 generate_tokens = CodeReader.generate_tokens
 
 
-class Test_generate_tonken(unittest.TestCase):
+class Test_generate_token(unittest.TestCase):
 
     def check_tokens(self, source, *expect):
         tokens = generate_tokens(source)
@@ -45,12 +45,12 @@ class Test_generate_tonken(unittest.TestCase):
         tokens = generate_tokens('abc\ndef')
         self.assertTrue('def' in tokens)
 
-    def test_with_mutiple_line_string(self):
+    def test_with_multiple_line_string(self):
         tokens = generate_tokens('"sss\nsss" t')
         self.assertTrue('t' in tokens)
 
 
-class Test_generate_tonken_for_marcos(unittest.TestCase):
+class Test_generate_token_for_macros(unittest.TestCase):
 
     def test_define(self):
         define =  '''#define xx()\
@@ -92,7 +92,7 @@ class Test_generate_tonken_for_marcos(unittest.TestCase):
         tokens = generate_tokens(comment)
         self.assertEqual(1, len(tokens))
 
-class Test_generate_tonken_for_comments(unittest.TestCase):
+class Test_generate_token_for_comments(unittest.TestCase):
 
     def test_c_style_comment(self):
         tokens = generate_tokens("/***\n**/")

@@ -1,5 +1,5 @@
 '''
-Base class for all langauge parsers
+Base class for all language parsers
 '''
 
 import re

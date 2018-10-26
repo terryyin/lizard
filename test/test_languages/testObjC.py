@@ -28,7 +28,7 @@ class Test_objc_lizard(unittest.TestCase):
         self.assertEqual("replaceScene:", result[0].name)
         self.assertEqual("replaceScene:( CCScene * )", result[0].long_name)
 
-    def test_one_objc_functio_nwith_two_param(self):
+    def test_one_objc_function_with_two_param(self):
         result = self.create_objc_lizard("- (BOOL)scanJSONObject:(id *)outObject error:(NSError **)outError {}")
         self.assertEqual("scanJSONObject: error:", result[0].name)
         self.assertEqual("scanJSONObject:( id * ) error:( NSError ** )", result[0].long_name)

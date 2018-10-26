@@ -12,11 +12,11 @@ function. Now this is fixed.
 An important new feature -- duplicate detector -- in the form of an
 extension.
 
-Ussage:
+Usage:
 
     lizard -Eduplicate
 
-The current version hasn't had any performance optimzation yet. Yet, it
+The current version hasn't had any performance optimization yet. Yet, it
 can scan 1000 cpp files in less than 2 minutes.
 
 Code after comments containing "GENERATED CODE" will be ignored.
@@ -39,7 +39,7 @@ Support CSV & HTML format output
 
 ## 1.13.0
 
-No new feature. Just swtich to new pypi server.
+No new feature. Just switch to new pypi server.
 
 
 ### Added
@@ -48,7 +48,7 @@ No new feature. Just swtich to new pypi server.
 ## [0.12.7] - 2016-11-1
 - 2016.04.2 Support PHP.
 - 2016.03.26 Support C#.
-- 2016.02.2 Add option -EMcCabe for ignoring fall-through swith/cases, thanks to @@vicgonzalez
+- 2016.02.2 Add option -EMcCabe for ignoring fall-through switch/cases, thanks to @@vicgonzalez
 - 2016.01.31 Add support for Ruby
 - 2016.01.29 Add -T option to set limit for any field
 - 2015.12.17 Add support for Swift

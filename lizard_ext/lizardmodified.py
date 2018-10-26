@@ -1,6 +1,6 @@
 '''
 This is an extension of lizard,
-It lets lizard to use modified cycolmatic complexicity number,
+It lets lizard to use modified cyclomatic complexity number,
 where the whole switch/case will be counted as 1.
 '''
 

@@ -44,8 +44,8 @@ class TestOptionParsing(unittest.TestCase):
 
     @patch.object(sys, 'exit')
     @patch('sys.stderr')
-    def test_unknlown_argument_exit(self, _, mock_exit):
-        options = parse_args(['lizard', '--unkown'])
+    def test_unknown_argument_exit(self, _, mock_exit):
+        options = parse_args(['lizard', '--unknown'])
         mock_exit.assert_called_with(2)
 
     @patch.object(sys, 'exit')

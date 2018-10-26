@@ -9,7 +9,7 @@ def get_cpp_fileinfo_with_extension(source_code, extension):
 def get_cpp_function_list_with_extension(source_code, extension):
     return get_cpp_fileinfo_with_extension(source_code, extension).function_list
 
-def get_python_function_list_with_extnesion(source_code, extension):
+def get_python_function_list_with_extension(source_code, extension):
     return FileAnalyzer(get_extensions([extension])).analyze_source_code("a.py", source_code).function_list
 
 def get_cpp_function_list(source_code):

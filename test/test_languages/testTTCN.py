@@ -297,7 +297,7 @@ class Test_parser_for_TTCN(unittest.TestCase):
         self.assertEqual("fun", result[0].name)
         self.assertEqual("@deterministic fun()", result[0].long_name)
 
-    def test_brakets_before_function(self):
+    def test_brackets_before_function(self):
         result = get_ttcn_function_list('''module err{\n()\n}''')
         self.assertEqual(0, len(result))
 

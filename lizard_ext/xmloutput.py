@@ -1,7 +1,7 @@
 '''
 Thanks for Holy Wen from Nokia Siemens Networks to let me use his code
 to put the result into xml file that is compatible with cppncss.
-Jenkens has plugin for cppncss format result to display the diagram.
+Jenkins has plugin for cppncss format result to display the diagram.
 '''
 
 
