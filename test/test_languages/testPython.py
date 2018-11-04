@@ -1,16 +1,16 @@
 import unittest
 import inspect
-from ..testHelpers import get_python_function_list_with_extnesion
+from ..testHelpers import get_python_function_list_with_extension
 from lizard_ext.lizardnd import LizardExtension as NestDepth
 from lizard_languages.python import PythonReader
 
 
 def get_python_function_list(source_code):
-    return get_python_function_list_with_extnesion(source_code, NestDepth())
+    return get_python_function_list_with_extension(source_code, NestDepth())
 
 
 class Test_tokenizer_for_Python(unittest.TestCase):
-    def test_commment_with_quote(self):
+    def test_comment_with_quote(self):
         tokens = PythonReader.generate_tokens("#'\n''")
         self.assertEqual(["#'", "\n", "''"], tokens)
 
@@ -182,7 +182,7 @@ class Test_parser_for_Python(unittest.TestCase):
         self.assertEqual("a", functions[0].name)
         self.assertEqual("b", functions[1].name)
 
-    def test_nested_depth_metric_muliple_continous_loop_statements(self):
+    def test_nested_depth_metric_multiple_continuous_loop_statements(self):
         class namespace9:
             def function1():
                 if IamOnEarth:
@@ -195,7 +195,7 @@ class Test_parser_for_Python(unittest.TestCase):
         self.assertEqual(2, functions[0].max_nesting_depth)
         self.assertEqual(5, functions[0].end_line)
 
-    def xtest_nested_depth_metric_muliple_discrete_loop_statement(self):
+    def xtest_nested_depth_metric_multiple_discrete_loop_statement(self):
         class namespace10:
             def function1():
                 if IamOnEarth:

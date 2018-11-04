@@ -101,7 +101,7 @@ def analyze_with_extension(code):
 
 class Test_end_2_end(unittest.TestCase):
 
-    def test_exention_in_user(self):
+    def test_extension_in_user(self):
         result = analyze_with_extension("#if\nxxaa#else\nint a(){}\n#endif")
         self.assertEqual(0, len(result))
 

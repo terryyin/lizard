@@ -117,7 +117,7 @@ class CLikeNestingStackStates(CodeStateMachine):
 
     @CodeStateMachine.read_until_then(')({;')
     def _read_namespace_name(self, token, saved):
-        """Processes namespace/class/struct names from declrations."""
+        """Processes namespace/class/struct names from declarations."""
         self._state = self._state_global
         if token == "{":
             self.context.add_namespace(''.join(itertools.takewhile(

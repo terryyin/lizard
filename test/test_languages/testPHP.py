@@ -40,7 +40,7 @@ class Test_tokenizing_PHP(unittest.TestCase):
     def test_multiple_line_string_alternative(self):
         self.check_tokens(['<<<blah xxx blah'], '<?php<<<blah xxx blah?>')
 
-    def test_doller_var(self):
+    def test_dollar_var(self):
         self.check_tokens(['$a'], '<?$a?>')
 
     def test_code_block_without_closing(self):

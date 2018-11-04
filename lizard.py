@@ -602,15 +602,15 @@ class OutputScheme(object):
     Collect the schema of the data columns.
     Each extension can define some additional data columns to
     the FunctionInfo structure, or even add properties to
-    the FileInfomation structure.
+    the FileInformation structure.
 
     In any extension class, define a class level variable:
 
         FUNCTION_INFO = {
             'column_name' : {
                 'caption': 'if defined, will show the column in result',
-                'average_caption': 'if defined, will add averge function
-                                    to FileInfomation and show in the
+                'average_caption': 'if defined, will add average function
+                                    to FileInformation and show in the
                                     end result.
             }
         }

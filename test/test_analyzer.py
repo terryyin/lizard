@@ -63,7 +63,7 @@ class Test_FileAnalyzer(unittest.TestCase):
         r = map_files_to_analyzer(["f1.c"], self.analyzer, 2)
         self.assertEqual(1, len([x for x in r]))
 
-    def test_fileInfomation(self, mock_open):
+    def test_fileInformation(self, mock_open):
         mock_open.return_value = "int foo(){haha();\n}"
         r = map_files_to_analyzer(["f1.c"], self.analyzer, 1)
         fileInfo = list(r)[0]
@@ -126,11 +126,11 @@ class TestWarningFilterWithWhitelist(unittest.TestCase):
         warnings = whitelist_filter([FunctionInfo("class::foo", 'filename')], 'class::foo')
         self.assertEqual(0, len(list(warnings)))
 
-    def test_should_filter_mutiple_functions_defined_on_one_line(self):
+    def test_should_filter_multiple_functions_defined_on_one_line(self):
         warnings = whitelist_filter(self.WARNINGS, 'foo, bar')
         self.assertEqual(0, len(list(warnings)))
 
-    def test_should_filter_mutiple_lines_of_whitelist(self):
+    def test_should_filter_multiple_lines_of_whitelist(self):
         warnings = whitelist_filter(self.WARNINGS, 'foo\n bar')
         self.assertEqual(0, len(list(warnings)))
 

@@ -2,18 +2,18 @@ import unittest
 from lizard import analyze_file, FileAnalyzer, get_extensions
 
 
-def get_csharpe_fileinfo(source_code):
+def get_csharp_fileinfo(source_code):
     return analyze_file.analyze_source_code("a.cs", source_code)
 
 
-def get_csharpe_function_list(source_code):
-    return get_csharpe_fileinfo(source_code).function_list
+def get_csharp_function_list(source_code):
+    return get_csharp_fileinfo(source_code).function_list
 
 
-class TestCsharpe(unittest.TestCase):
+class TestCsharp(unittest.TestCase):
 
     def test_function_with_one(self):
-        result = get_csharpe_function_list('''
+        result = get_csharp_function_list('''
             public void Method()
             {
                 Console.WriteLine("Hello World!");
@@ -22,7 +22,7 @@ class TestCsharpe(unittest.TestCase):
         self.assertEqual(1, result[0].cyclomatic_complexity)
 
     def test_function_with_two(self):
-        result = get_csharpe_function_list('''
+        result = get_csharp_function_list('''
             void Method(bool condition)
             {
                 if (condition)
@@ -34,7 +34,7 @@ class TestCsharpe(unittest.TestCase):
         self.assertEqual(2, result[0].cyclomatic_complexity)
 
     def test_function_with_three(self):
-        result = get_csharpe_function_list('''
+        result = get_csharp_function_list('''
             public void Method(bool condition1, bool condition2)
             {
                 if (condition1 || condition2)
@@ -46,7 +46,7 @@ class TestCsharpe(unittest.TestCase):
         self.assertEqual(3, result[0].cyclomatic_complexity)
 
     def test_function_with_eight(self):
-        result = get_csharpe_function_list('''
+        result = get_csharp_function_list('''
             public void Method(DayOfWeek day)
             {
 
@@ -80,8 +80,8 @@ class TestCsharpe(unittest.TestCase):
         ''')
         self.assertEqual(8, result[0].cyclomatic_complexity)
 
-    def test_null_coalecing_operator(self):
-        result = get_csharpe_function_list('''
+    def test_null_coalescing_operator(self):
+        result = get_csharp_function_list('''
             public void Method()
             {
                 a ?? b;

@@ -1,7 +1,7 @@
 import unittest
 
 from .testHelpers import get_cpp_function_list_with_extension, \
-    get_python_function_list_with_extnesion
+    get_python_function_list_with_extension
 from lizard_ext.lizardns import LizardExtension as NestedStructure
 
 
@@ -10,7 +10,7 @@ def process_cpp(source):
 
 
 def process_python(source):
-    return get_python_function_list_with_extnesion(source, NestedStructure())
+    return get_python_function_list_with_extension(source, NestedStructure())
 
 
 class TestCppNestedStructures(unittest.TestCase):
