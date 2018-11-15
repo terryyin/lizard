@@ -76,7 +76,8 @@ class LizardExtension(object):
                         var tagCloud = new TagCloud(canvas.width,
                             canvas.height, ctx);
                         tagCloud.render([''')
-            tags = sorted(self.result, key=self.result.get, reverse=True)[:400]
+            tags = sorted(self.result)
+            tags = sorted(tags, key=self.result.get, reverse=True)[:400]
             for k in tags:
                 html_file.write(
                     ' ' * 40 + '["%s", %d],\n' % (
