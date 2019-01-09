@@ -830,7 +830,7 @@ def print_clang_style_warning(code_infos, option, scheme, _):
     return count
 
 
-def print_msvs_style_warning(code_infos, option, scheme):
+def print_msvs_style_warning(code_infos, option, scheme, _):
     count = 0
     for warning in get_warnings(code_infos, option):
         print(scheme.msvs_warning_format().format(f=warning))
