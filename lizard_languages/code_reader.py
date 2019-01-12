@@ -119,7 +119,8 @@ class CodeReader(object):
                 r"|//" + _until_end +
                 r"|\#" +
                 r"|:=|::|\*\*" +
-                r"|\<\s*\?\s*\>" +
+                r"|<\s*.*?\s*>.*?<\/\s*.*?\s*>" +
+                r"|<\s*.*?\s*\/>" +
                 r"|" + r"|".join(re.escape(s) for s in combined_symbols) +
                 r"|\\\n" +
                 r"|\n" +
