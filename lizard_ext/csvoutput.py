@@ -22,7 +22,7 @@ import sys
 
 def csv_output(result, verbose):
     # make output is utf-8
-    sys.stdout = UnicodeStreamFilter(sys.stdout)
+    # sys.stdout = UnicodeStreamFilter(sys.stdout)
     result = result.result
     if verbose:
         print("NLOC,CCN,token,PARAM,length,location,file,function," +
