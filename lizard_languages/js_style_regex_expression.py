@@ -7,7 +7,7 @@ import re
 
 def js_style_regex_expression(func):
     def generate_tokens_with_regex(source_code, _=""):
-        regx_regx = r"|/(?:\\/|[^/])+?/[igm]*"
+        regx_regx = r"|\/(\S*?[^\s\\]\/)+?(igm)*"
         regx_pattern = re.compile(regx_regx)
         word_pattern = re.compile(r'\w+')
         tokens = func(source_code, regx_regx)
