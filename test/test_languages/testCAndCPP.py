@@ -634,7 +634,9 @@ class Test_Big(unittest.TestCase):
         """
         result = get_cpp_function_list(code)
         self.assertEqual(1, len(result))
-        self.assertEqual(2, result[0].cyclomatic_complexity)
+        # this function have 'if' and '&&' so, it will be 3
+        # link: https://stackoverflow.com/questions/15240922/cyclomatic-complexity-with-compound-conditions-and-short-circuiting
+        self.assertEqual(3, result[0].cyclomatic_complexity)
 
 
 
