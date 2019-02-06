@@ -11,7 +11,7 @@ class CSharpReader(CLikeReader):
     ext = ['cs']
     language_names = ['csharp']
 
-    conditions = set(['if', 'for', 'while', '&&', '||', '?', 'catch',
+    _conditions = set(['if', 'for', 'while', '&&', '||', '?', 'catch',
                       'case', '??'])
 
     @staticmethod

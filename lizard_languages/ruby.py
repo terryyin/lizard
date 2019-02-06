@@ -100,7 +100,7 @@ class RubyReader(CodeReader, ScriptLanguageMixIn):
 
     ext = ['rb']
     language_names = ['ruby']
-    conditions = set(['if', 'until', 'for', 'while', 'and', 'or',
+    _conditions = set(['if', 'until', 'for', 'while', 'and', 'or',
                       'elsif', 'rescue', 'ensure', 'when', '||', '&&', '?'])
 
     def __init__(self, context):

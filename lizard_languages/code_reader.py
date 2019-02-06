@@ -3,6 +3,7 @@ Base class for all language parsers
 '''
 
 import re
+from copy import copy
 
 
 class CodeStateMachine(object):
@@ -81,12 +82,13 @@ class CodeReader(object):
     ext = []
     languages = None
     extra_subclasses = set()
-    conditions = set(['if', 'for', 'while', '&&', '||', '?', 'catch',
+    _conditions = set(['if', 'for', 'while', '&&', '||', '?', 'catch',
                       'case'])
 
     def __init__(self, context):
         self.parallel_states = []
         self.context = context
+        self.conditions = copy(self._conditions)
 
     @classmethod
     def match_filename(cls, filename):

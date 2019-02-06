@@ -29,7 +29,7 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
 
     ext = ['py']
     language_names = ['python']
-    conditions = set(['if', 'for', 'while', 'and', 'or',
+    _conditions = set(['if', 'for', 'while', 'and', 'or',
                       'elif', 'except', 'finally'])
 
     def __init__(self, context):
