@@ -48,6 +48,8 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
             self.brace_count = 0
             self.context.start_new_function(self.function_name or 'function')
             self._state = self._dec
+            if token == '(':
+                self._dec(token)
 
     def _field(self, token):
         self.last_tokens += token
@@ -56,7 +58,7 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
     def _dec(self, token):
         if token == ')':
             self._state = self._state_global
-        else:
+        elif token != '(':
             self.context.parameter(token)
             return
         self.context.add_to_long_function_name(" " + token)

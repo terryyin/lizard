@@ -106,20 +106,23 @@ class CodeReader(object):
             # DO NOT put any sub groups in the regex. Good for performance
             _until_end = r"(?:\\\n|[^\n])*"
             combined_symbols = ["||", "&&", "===", "!==", "==", "!=", "<=",
-                                ">=", "->",
+                                ">=", "->", "=>",
                                 "++", "--", '+=', '-=',
+                                "+", "-", '*', '/',
                                 '*=', '/=', '^=', '&=', '|=', "..."]
             token_pattern = re.compile(
                 r"(?:" +
-                r"/\*.*?\*/" +
+                r"\/\*.*?\*\/" +
                 addition +
                 r"|\w+" +
                 r"|\"(?:\\.|[^\"\\])*\"" +
                 r"|\'(?:\\.|[^\'\\])*?\'" +
-                r"|//" + _until_end +
+                r"|\/\/" + _until_end +
                 r"|\#" +
                 r"|:=|::|\*\*" +
-                r"|\<\s*\?\s*\>" +
+                r"|<\s*.*?\s*>.*?<\/\s*.*?\s*>" +
+                r"|<\s*.*?\s*\/>" +
+                r"|<\s*\?\s*>" +
                 r"|" + r"|".join(re.escape(s) for s in combined_symbols) +
                 r"|\\\n" +
                 r"|\n" +

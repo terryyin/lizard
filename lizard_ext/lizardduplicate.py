@@ -122,7 +122,7 @@ class DuplicateFinder(object):
 
     def duplicate_rate(self):
         try:
-            return self.duplicate_token_count / (
+            return self.duplicate_token_count * 1.0 / (
                     len(self.nodes) +
                     (len(self.boundaries) - 1) * (self.sample_size - 2))
         except ZeroDivisionError:

@@ -16,8 +16,13 @@ due to the nature of CSV outputs. The differences are:
      * Function line end
 '''
 
+from encoder import UnicodeStreamFilter
+import sys
+
 
 def csv_output(result, verbose):
+    # make output is utf-8
+    # sys.stdout = UnicodeStreamFilter(sys.stdout)
     result = result.result
     if verbose:
         print("NLOC,CCN,token,PARAM,length,location,file,function," +
