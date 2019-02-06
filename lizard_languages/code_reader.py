@@ -105,8 +105,8 @@ class CodeReader(object):
         def _generate_tokens(source_code, addition):
             # DO NOT put any sub groups in the regex. Good for performance
             _until_end = r"(?:\\\n|[^\n])*"
-            combined_symbols = ["||", "&&", "===", "!==", "==", "!=", "<=",
-                                ">=", "->", "=>",
+            combined_symbols = ["<<=", ">>=", "||", "&&", "===", "!==",
+                                "==", "!=", "<=", ">=", "->", "=>",
                                 "++", "--", '+=', '-=',
                                 "+", "-", '*', '/',
                                 '*=', '/=', '^=', '&=', '|=', "..."]
