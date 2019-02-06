@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.15.7
+
+Fix a bug in MSVS format output.
+
 ## 1.15.6
 
 Minor fix for the average NCSS (lines of code) in the XML output.
