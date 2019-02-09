@@ -13,6 +13,7 @@ from .php import PHPReader
 from .scala import ScalaReader
 from .gdscript import GDScriptReader
 from .go import GoReader
+from .lua import LuaReader
 
 
 def languages():
@@ -29,7 +30,8 @@ def languages():
         SwiftReader,
         ScalaReader,
         GDScriptReader,
-        GoReader
+        GoReader,
+        LuaReader
     ]
 
 
