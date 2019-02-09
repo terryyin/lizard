@@ -97,7 +97,8 @@ class RubylikeReader(CodeReader, ScriptLanguageMixIn):
     # pylint: disable=R0903
 
     _conditions = set(['if', 'until', 'for', 'while', 'and', 'or',
-                      'elsif', 'rescue', 'ensure', 'when', '||', '&&', '?'])
+                       'elsif', 'elseif', 'rescue',
+                       'ensure', 'when', '||', '&&', '?'])
 
     def __init__(self, context, **identifiers):
         super(RubylikeReader, self).__init__(context)

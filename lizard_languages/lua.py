@@ -21,7 +21,7 @@ class LuaReader(RubylikeReader):
         return RubylikeReader.generate_tokens(
             source_code,
             r"|\-\-\[\[.*?\]\]" +
-            r"|\[\[.*?\]\]" +
+            r"|\[\=*\[.*?\]\=*\]" +
             r"|\-\-.*?$" +
             addition)
 
