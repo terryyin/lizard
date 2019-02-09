@@ -30,6 +30,7 @@ A list of supported languages:
 -  Scala
 -  GDScript
 -  Golang
+-  Lua
 
 By default lizard will search for any source code that it knows and mix
 all the results together. This might not be what you want. You can use

@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.16.1
+
+Add Lua to the languages.
+
 ## 1.15.7
 
 Fix a bug in MSVS format output.
