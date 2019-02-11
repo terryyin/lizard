@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.16.3
+
+Fix the performance issue
+
 ## 1.16.1
 
 Add Lua to the languages.
