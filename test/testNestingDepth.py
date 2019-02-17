@@ -129,3 +129,5 @@ class TestCppNestingDepth(unittest.TestCase):
         self.assertEqual(1, result[0].max_nesting_depth)
         self.assertEqual(2, result[1].max_nesting_depth)
         self.assertEqual(2, result[2].max_nesting_depth)
+
+

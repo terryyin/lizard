@@ -10,10 +10,10 @@ tests3:
 	python3 -m unittest test
 
 pep8:
-	pycodestyle lizard.py lizard_ext lizard_languages # test
+	pycodestyle lizard.py lizard_ext lizard_languages
 
 pylint:
-	pylint --rcfile pylintrc lizard.py lizard_ext lizard_languages
+	pylint --exit-zero --rcfile pylintrc lizard.py lizard_ext lizard_languages
 
 deps:
 	pip install -r dev_requirements.txt
