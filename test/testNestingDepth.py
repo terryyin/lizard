@@ -129,3 +129,16 @@ class TestCppNestingDepth(unittest.TestCase):
         self.assertEqual(1, result[0].max_nesting_depth)
         self.assertEqual(2, result[1].max_nesting_depth)
         self.assertEqual(2, result[2].max_nesting_depth)
+
+    def test_one_function_nd_with_addl_statement_in_if(self):
+        result = get_cpp_with_nestdepth("""
+        int fun() {
+            if(a)   {
+                b;
+                if (c) {
+                    d;
+                }
+            }
+        }""")
+        self.assertEqual(2, result[0].max_nesting_depth)
+
