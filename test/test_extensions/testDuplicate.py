@@ -1,4 +1,3 @@
-import sys
 import unittest
 from mock import patch
 from ..testHelpers import get_cpp_fileinfo_with_extension
@@ -257,11 +256,9 @@ class TestDuplicateExtensionAcrossFiles(unittest.TestCase):
     def detect(self, source_files, auto_read):
         auto_read.side_effect = lambda filename: source_files[filename]
         extensions = get_extensions([self.detector])
-        list(analyze_files(source_files.keys(), exts=extensions))
+        list(analyze_files(sorted(source_files.keys()), exts=extensions))
         return list(self.detector.get_duplicates(30))
 
-    @unittest.skipIf((3, 4) <= sys.version_info < (3, 6),
-                     "FIXME: intermitent AssertionError: 'f1.cpp' != 'f2.cpp'")
     def test_basic_duplicate(self):
         duplicates = self.detect({
                 'f1.cpp': self.builder
