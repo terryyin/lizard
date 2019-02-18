@@ -58,6 +58,8 @@ class Test_FileAnalyzer(unittest.TestCase):
         r = map_files_to_analyzer(["f1.c"], self.analyzer, 1)
         self.assertEqual(1, len([x for x in r]))
 
+    @unittest.skipIf(sys.platform == 'win32' and sys.version_info < (3, ),
+                     'mock_open does not get patched in child thread (!?)')
     def test_analyze_c_file_with_multiple_thread(self, mock_open):
         file_handle = mock_open.return_value = "int foo(){haha();\n}"
         r = map_files_to_analyzer(["f1.c"], self.analyzer, 2)

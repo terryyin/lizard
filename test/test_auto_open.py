@@ -1,8 +1,8 @@
 # coding=utf-8
 import unittest
 import codecs
+import io
 import os
-from mock import patch, Mock
 from tempfile import NamedTemporaryFile
 from lizard_ext import auto_open, auto_read
 
@@ -10,29 +10,32 @@ from lizard_ext import auto_open, auto_read
 class TestAutoOpen(unittest.TestCase):
 
     def write_and_read(self, encoding, content):
-        f = NamedTemporaryFile(delete=False)
-        filename = f.name
-        f.close()
-
-        with codecs.open(filename, 'w+b', encoding=encoding) as fh:
+        with NamedTemporaryFile() as f:
+            filename = f.name
+        with io.open(filename, 'w+b') as fh:
             fh.write(content)
             fh.flush()
-            handle = auto_open(filename, 'rU')
+        with auto_open(filename, 'rt', encoding=encoding) as handle:
             result = handle.read()
-
         os.unlink(filename)
         return result
 
     def test_ascii(self):
-        result = self.write_and_read("ascii", "abcd123")
+        result = self.write_and_read("ascii", "abcd123".encode('ascii'))
         self.assertEqual("abcd123", result)
 
     def test_utf_8(self):
-        result = self.write_and_read("utf-8", u"天下太平")
-        self.assertEqual("天下太平", result)
+        result = self.write_and_read("utf-8", u"天下太平".encode('utf-8'))
+        self.assertEqual(u"天下太平", result)
 
     def test_utf_8_with_bom(self):
-        result = self.write_and_read("utf-8-sig", u"天下太平")
+        binary = codecs.BOM_UTF8 + u"天下太平".encode('utf-8')
+        result = self.write_and_read("utf-8-sig", binary)
+        self.assertEqual(u"天下太平", result)
+
+    def test_utf_8_with_unexpected_bom(self):
+        binary = codecs.BOM_UTF8 + u"天下太平".encode('utf-8')
+        result = self.write_and_read("utf-8", binary)
         self.assertEqual(u"天下太平", result)
 
 
