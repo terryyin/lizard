@@ -19,11 +19,11 @@ def auto_open(*args, **kwargs):
 
     '''
     size = min(32, os.path.getsize(args[0]))
-    with open(args[0], 'rb') as binary:
+    with io.open(args[0], 'rb') as binary:
         if binary.read(size).startswith(codecs.BOM_UTF8):
             kwargs["encoding"] = 'utf-8-sig'
             return io.open(*args, **kwargs)
-    return open(*args, **kwargs)
+    return io.open(*args, **kwargs)
 
 
 def auto_read(filename):
