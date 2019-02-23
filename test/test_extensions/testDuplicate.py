@@ -256,7 +256,7 @@ class TestDuplicateExtensionAcrossFiles(unittest.TestCase):
     def detect(self, source_files, auto_read):
         auto_read.side_effect = lambda filename: source_files[filename]
         extensions = get_extensions([self.detector])
-        list(analyze_files(source_files.keys(), exts=extensions))
+        list(analyze_files(sorted(source_files.keys()), exts=extensions))
         return list(self.detector.get_duplicates(30))
 
     def test_basic_duplicate(self):
