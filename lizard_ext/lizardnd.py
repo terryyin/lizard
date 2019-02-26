@@ -31,7 +31,7 @@ class LizardExtension(object):  # pylint: disable=R0903
             loops = reader.loops
         else:
             loops = set(['if', 'foreach', 'for', 'while', '&&', '||',
-                         '?', 'catch', 'case', 'try'])
+                         '?', 'catch', 'case', 'try', 'def'])
         if hasattr(reader, "bracket"):
             bracket = reader.bracket
         else:
