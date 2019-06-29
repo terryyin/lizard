@@ -31,7 +31,6 @@ class SwiftReader(CodeReader, CCppCommentsMixin):
         def replace_label(tokens, target, replace):
             for i in range(0, len(tokens) - len(target)):
                 if tokens[i:i + len(target)] == target:
-                    print(tokens[i:i + len(target)])
                     for j in range(0, len(replace)):
                         tokens[i + j] = replace[j]
             return tokens
