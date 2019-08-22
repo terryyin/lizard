@@ -965,7 +965,7 @@ def infer_printer_from_file_ext(path):
 
 def open_output_file(path):
     try:
-        return open(path, 'w', encoding='utf-8')
+        return open(path, 'w')
     except OSError:
         msg = "Error: failed to open output file '{}'\n.".format(path)
         sys.stderr.write(msg)

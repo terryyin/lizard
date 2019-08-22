@@ -43,7 +43,7 @@ class TestFileOutputIntegration(unittest.TestCase):
             self.assertEqual(expected_md5, computed_md5)
 
     def test_default(self):
-        self.output_test("test", "ef6dafce35a7d1d76c6c2e0533c5abb6")
+        self.output_test("test", "eac0d9e24290640a281a5a87c6118acc")
 
     def test_csv(self):
         self.output_test("test.csv", "4e808054b31ffbd90e93282f6dd3e95f")
@@ -54,4 +54,4 @@ class TestFileOutputIntegration(unittest.TestCase):
         self.output_test("test.html")
 
     def test_xml(self):
-        self.output_test("test.xml", "cac48f4e8f55fd49306b69aabc2b498e")
+        self.output_test("test.xml", "8338082a4bcf8faaa89a05503a85b315")
