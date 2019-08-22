@@ -50,8 +50,6 @@ class TestFileOutputIntegration(unittest.TestCase):
         self.output_test("test.csv", header)
 
     def test_html(self):
-        # No MD5 check for HTML output, because it is not reproducible
-        # (includes a timestamp).
         header = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">"
         self.output_test("test.html", header)
 
