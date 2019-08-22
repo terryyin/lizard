@@ -21,6 +21,7 @@ languages including C/C++ (doesn't require all the header files).
 For more information visit http://www.lizard.ws
 """
 from __future__ import print_function, division
+import codecs
 import sys
 import itertools
 import re
@@ -965,7 +966,7 @@ def infer_printer_from_file_ext(path):
 
 def open_output_file(path):
     try:
-        return open(path, 'w')
+        return codecs.open(path, 'w', encoding='utf8')
     except OSError:
         msg = "Error: failed to open output file '{}'\n.".format(path)
         sys.stderr.write(msg)

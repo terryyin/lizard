@@ -2,7 +2,7 @@ from os.path import join
 from shutil import rmtree
 from tempfile import mkdtemp
 import unittest
-from lizard import html_output, print_xml, md5_hash_file, parse_args, main
+from lizard import html_output, print_xml, parse_args, main
 
 
 class TestFileOutputArgParsing(unittest.TestCase):
@@ -34,24 +34,27 @@ class TestFileOutputIntegration(unittest.TestCase):
         rmtree(self.tmp_dir)
         print("Tmp directory '{}' deleted.\n".format(self.tmp_dir))
 
-    def output_test(self, file_name, expected_md5=None):
+    def output_test(self, file_name, expected_first_line):
         path = join(self.tmp_dir, file_name)
         args = ["lizard", "--verbose", "--output_file", path, "test/data"]
         main(args)
-        if expected_md5:
-            computed_md5 = md5_hash_file(path)
-            self.assertEqual(expected_md5, computed_md5)
+        first_line = open(path, 'r').readline().strip('\n')
+        self.assertEqual(first_line, expected_first_line)
 
     def test_default(self):
-        self.output_test("test", "eac0d9e24290640a281a5a87c6118acc")
+        header = "================================================"
+        self.output_test("test", header)
 
     def test_csv(self):
-        self.output_test("test.csv", "4e808054b31ffbd90e93282f6dd3e95f")
+        header = "NLOC,CCN,token,PARAM,length,location,file,function,long_name,start,end"
+        self.output_test("test.csv", header)
 
     def test_html(self):
         # No MD5 check for HTML output, because it is not reproducible
         # (includes a timestamp).
-        self.output_test("test.html")
+        header = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">"
+        self.output_test("test.html", header)
 
     def test_xml(self):
-        self.output_test("test.xml", "8338082a4bcf8faaa89a05503a85b315")
+        header = "<?xml version=\"1.0\" ?>"
+        self.output_test("test.xml", header)
