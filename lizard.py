@@ -859,8 +859,11 @@ def get_map_method(working_threads):
 def md5_hash_file(full_path_name):
     ''' return md5 hash of a file '''
     try:
-        with auto_open(full_path_name, mode='rb') as source_file:
-            code_md5 = hashlib.md5(source_file.read())
+        with auto_open(full_path_name, mode='r') as source_file:
+            if sys.version_info[0] == 3:
+                code_md5 = hashlib.md5(source_file.read().encode('utf-8'))
+            else:
+                code_md5 = hashlib.md5(source_file.read())
         return code_md5.hexdigest()
     except IOError:
         return None
