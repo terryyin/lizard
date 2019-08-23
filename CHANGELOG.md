@@ -1,5 +1,16 @@
 # Change Log
 
+## 1.16.4
+
+Bug fixes:
+
+'for' keyword in Swift label should not be counted as ccn.
+
+'guard' keyword should be counted.
+
+'-o' or '--output_file' parameter added.
+
+
 ## 1.16.3
 
 Fix the performance issue
