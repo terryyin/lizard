@@ -234,6 +234,7 @@ class Test_parser_for_Swift(unittest.TestCase):
         ''')
         self.assertEqual(1, result[0].cyclomatic_complexity)
 
+
     def test_for_label(self):
         result = get_swift_function_list('''
             func f0() { something(for: .something) }
@@ -247,3 +248,12 @@ class Test_parser_for_Swift(unittest.TestCase):
         self.assertEqual(1, result[2].cyclomatic_complexity)
         self.assertEqual(2, result[3].cyclomatic_complexity)
         self.assertEqual(1, result[4].cyclomatic_complexity)
+
+    def test_guard(self):
+        # `guard isValid else { return }` equal to `if isValid { return }`
+        # ccn = 2
+        result = get_swift_function_list('''
+            func f() { guard isValid else { return } }
+        ''')
+        self.assertEqual(2, result[0].cyclomatic_complexity)
+
