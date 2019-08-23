@@ -67,20 +67,20 @@
   <tr>
 	<td style="background-color:LightSteelBlue">{{ func.name }}</td>
 	<td></td>
-	{% if func.cyclomatic_complexity >= thresholds["cyclomatic_complexity"] %}
+	{% if func.cyclomatic_complexity > thresholds["cyclomatic_complexity"] %}
 	   <td class="greater-value">{{ func.cyclomatic_complexity }}</td>
 	{% else %}
 	   <td class="lesser-value">{{ func.cyclomatic_complexity }}</td>
 	{% endif %}
 
-	{% if func.nloc >= thresholds["length"] %}
+	{% if func.nloc > thresholds["length"] %}
 	   <td class="greater-value">{{ func.nloc }}</td>
 	{% else %}
 	   <td class="lesser-value">{{ func.nloc}}</td>
 	{% endif %}
 
 	{% if thresholds["token_count"] %}
-	   {% if func.token_count >= thresholds["token_count"] %}
+	   {% if func.token_count > thresholds["token_count"] %}
 	      <td class="greater-value">{{ func.token_count }}</td>
 	   {% else %}
 	      <td class="lesser-value">{{ func.token_count }}</td>
@@ -89,7 +89,7 @@
 	   <td class="value">{{ func.token_count }}</td>
 	{% endif %}
 
-	{% if func.parameters|length >= thresholds["parameter_count"] %}
+	{% if func.parameters|length > thresholds["parameter_count"] %}
 	   <td class="greater-value">{{ func.parameters|length }}</td>
 	{% else %}
 	   <td class="lesser-value">{{ func.parameters|length }}</td>

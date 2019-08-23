@@ -87,7 +87,7 @@ class TestWarningOutput(StreamStdoutTestCase):
         print_warnings(self.option, self.scheme, (x for x in []))
 
 
-class TestFileOutput(StreamStdoutTestCase):
+class TestFileInformationOutput(StreamStdoutTestCase):
 
     def test_print_and_save_detail_information(self):
         scheme = OutputScheme([])

@@ -21,6 +21,7 @@ languages including C/C++ (doesn't require all the header files).
 For more information visit http://www.lizard.ws
 """
 from __future__ import print_function, division
+import codecs
 import sys
 import itertools
 import re
@@ -128,6 +129,13 @@ def arg_parser(prog=None):
                         ''',
                         type=str,
                         dest="input_file")
+    parser.add_argument("-o", "--output_file",
+                        help='''Output file. The output format is inferred
+                        from the file extension (e.g. .html), unless it is
+                        explicitly specified (e.g. using --xml).
+                        ''',
+                        type=str,
+                        dest="output_file")
     parser.add_argument("-L", "--length",
                         help='''Threshold for maximum function length
                         warning. The default value is %d.
@@ -933,7 +941,36 @@ def parse_args(argv):
         opt.thresholds["length"] = opt.length
     if "parameter_count" not in opt.thresholds:
         opt.thresholds["parameter_count"] = opt.arguments
+    if opt.output_file:
+        inferred_printer = infer_printer_from_file_ext(opt.output_file)
+        if inferred_printer:
+            if not opt.printer:
+                opt.printer = inferred_printer
+            else:
+                msg = "Warning: overriding output file extension.\n"
+                sys.stderr.write(msg)
     return opt
+
+
+def infer_printer_from_file_ext(path):
+    mapping = {
+        '.csv': print_csv,
+        '.htm': html_output,
+        '.html': html_output,
+        '.xml': print_xml
+    }
+    _, ext = os.path.splitext(path)
+    printer = mapping.get(ext)
+    return printer
+
+
+def open_output_file(path):
+    try:
+        return codecs.open(path, 'w', encoding='utf8')
+    except OSError:
+        msg = "Error: failed to open output file '{}'\n.".format(path)
+        sys.stderr.write(msg)
+        sys.exit(2)
 
 
 def get_extensions(extension_names):
@@ -977,6 +1014,11 @@ def main(argv=None):
     schema.patch_for_extensions()
     if options.input_file:
         options.paths = auto_read(options.input_file).splitlines()
+    original_stdout = sys.stdout
+    output_file = None
+    if options.output_file:
+        output_file = open_output_file(options.output_file)
+        sys.stdout = output_file
     result = analyze(
         options.paths,
         options.exclude,
@@ -986,6 +1028,9 @@ def main(argv=None):
     warning_count = printer(result, options, schema, AllResult)
     print_extension_results(options.extensions)
     list(result)
+    if output_file:
+        sys.stdout = original_stdout
+        output_file.close()
     if 0 <= options.number < warning_count:
         sys.exit(1)
 
