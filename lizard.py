@@ -880,9 +880,6 @@ def get_all_source_files(paths, exclude_patterns, lans):
     duplicate using set of hashes for previous files '''
     hash_set = set()
 
-    print("exclude_patterns")
-    print(exclude_patterns)
-
     def _support(reader):
         return not lans or set(lans).intersection(
             reader.language_names)

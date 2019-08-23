@@ -329,7 +329,7 @@ Lizard may choose not to deal with some advanced or complicated language feature
 
 
 Literatures Referring to Lizard
-------------------------------
+-------------------------------
 
 Lizard is often used in software related researches. If you used it to support your work, you may contact the lizard author to add your work in the following list.
 
