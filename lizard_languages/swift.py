@@ -11,6 +11,8 @@ class SwiftReader(CodeReader, CCppCommentsMixin):
 
     ext = ['swift']
     language_names = ['swift']
+    _conditions = set(['if', 'for', 'while', '&&', '||', '?', 'catch',
+                      'case', 'guard'])
 
     def __init__(self, context):
         super(SwiftReader, self).__init__(context)
