@@ -17,6 +17,8 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
     def _state_global(self, token):
         if token == 'function':
             self._state = self._function
+        elif token in ('=>',):
+            self._state = self._arrow_function
         elif token in ('=', ':'):
             self.function_name = self.last_tokens
         elif token in '.':
@@ -39,17 +41,26 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
             self.context.current_function = self.function_stack.pop()
             self.brace_count = self.context.current_function.brace_count
 
+    def _arrow_function(self, token):
+        self._push_function_to_stack("(anonymous)")
+        if token != '{':
+            self._pop_function_from_stack()
+        self.next(self._state_global, token)
+
     def _function(self, token):
         if token != '(':
             self.function_name = token
         else:
-            self.context.current_function.brace_count = self.brace_count
-            self.function_stack.append(self.context.current_function)
-            self.brace_count = 0
-            self.context.start_new_function(self.function_name or 'function')
+            self._push_function_to_stack(self.function_name or 'function')
             self._state = self._dec
             if token == '(':
                 self._dec(token)
+
+    def _push_function_to_stack(self, name):
+        self.context.current_function.brace_count = self.brace_count
+        self.function_stack.append(self.context.current_function)
+        self.brace_count = 0
+        self.context.start_new_function(name)
 
     def _field(self, token):
         self.last_tokens += token
