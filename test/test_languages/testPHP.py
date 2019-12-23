@@ -88,3 +88,7 @@ class Test_parser_for_PHP(unittest.TestCase):
     def test_interface(self):
         functions = get_php_function_list("<?php function a(); ?>")
         self.assertEqual(0, len(functions))
+
+    def test_interface2(self):
+        functions = get_php_function_list("<?php function a(); class C{}?>")
+        self.assertEqual(0, len(functions))

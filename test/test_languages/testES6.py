@@ -34,8 +34,15 @@ class Test_parser_for_JavaScript_ES6(unittest.TestCase):
     def test_complexity(self):
         functions = get_js_function_list("""
             x=>a && b
-
         """)
         self.assertEqual(2, functions[0].cyclomatic_complexity)
+
+    def test_nested(self):
+        functions = get_js_function_list("""
+            function a(){x=>a;}
+        """)
+        self.assertEqual(2, len(functions))
+        self.assertEqual('a', functions[1].name)
+
 
 

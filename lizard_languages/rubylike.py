@@ -43,6 +43,9 @@ class RubylikeStateMachine(CodeStateMachine):
         elif token == "=begin":
             self.sub_state(state_embedded_doc)
 
+    def is_newline(self):
+        return self.context.newline or self.last_token == ";"
+
     def _def(self, token):
         self.context.start_new_function(token)
         self.next(self._def_continue)
