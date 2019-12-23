@@ -30,10 +30,17 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
             elif token == '}':
                 self.brace_count -= 1
                 if self.brace_count == 0:
-                    self._state = self._state_global
                     self._pop_function_from_stack()
+            elif self.is_newline() or token == '*EOF*':
+                if self.brace_count == 0:
+                    self._pop_function_from_stack()
+
             self.last_tokens = token
             self.function_name = ''
+
+    def eof(self):
+        if self.brace_count == 0:
+            self._pop_function_from_stack()
 
     def _pop_function_from_stack(self):
         self.context.end_of_function()
@@ -43,8 +50,6 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
 
     def _arrow_function(self, token):
         self._push_function_to_stack("(anonymous)")
-        if token != '{':
-            self._pop_function_from_stack()
         self.next(self._state_global, token)
 
     def _function(self, token):

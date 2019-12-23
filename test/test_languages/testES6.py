@@ -20,10 +20,22 @@ class Test_parser_for_JavaScript_ES6(unittest.TestCase):
         """)
         self.assertEqual(2, len(functions))
 
+    def test_two_functions_with_semicolon(self):
+        functions = get_js_function_list("""x=>x; x=>x;""")
+        self.assertEqual(2, len(functions))
+
     def test_function_with_block(self):
         functions = get_js_function_list("""
             x=>{return 0;}
         """)
         self.assertEqual(1, len(functions))
         self.assertEqual("(anonymous)", functions[0].name)
+
+    def test_complexity(self):
+        functions = get_js_function_list("""
+            x=>a && b
+
+        """)
+        self.assertEqual(2, functions[0].cyclomatic_complexity)
+
 

@@ -21,9 +21,6 @@ class RubylikeStateMachine(CodeStateMachine):
     def _clone(self):
         return RubylikeStateMachine(self.context, self.identifiers)
 
-    def is_newline(self):
-        return self.context.newline or self.last_token == ";"
-
     def _state_global(self, token):
         if token in ("end", "}"):
             self.sm_return()

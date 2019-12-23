@@ -29,6 +29,9 @@ class CodeStateMachine(object):
             return
         self.next(state, token)
 
+    def is_newline(self):
+        return self.context.newline or self.last_token == ";"
+
     def sm_return(self):
         self.to_exit = True
 
