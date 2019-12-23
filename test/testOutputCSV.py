@@ -21,7 +21,7 @@ class TestCSVOutput(StreamStdoutTestCase):
 
     def test_csv_header(self):
         csv_output(AllResult([self.fileSummary]), True)
-        self.assertRegexpMatches(sys.stdout.stream,
+        self.assertRegex(sys.stdout.stream,
                                  r"NLOC,CCN,token,PARAM,length,location,file,function,long_name,start,end")
 
 
