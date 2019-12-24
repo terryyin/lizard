@@ -9,10 +9,9 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
     def __init__(self, context):
         super(JavaScriptStyleLanguageStates, self).__init__(context)
         # start from one, so global level will never count
-        self.brace_count = 1
         self.last_tokens = ''
         self.function_name = ''
-        self.function_stack = []
+        self.saved_function = None
 
     def _state_global(self, token):
         if token == 'function':
@@ -25,40 +24,35 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
             self._state = self._field
             self.last_tokens += token
         else:
-            if token == '{':
-                self.brace_count += 1
-            elif token == '}':
-                self.brace_count -= 1
-                if self.brace_count == 0:
-                    self._pop_function_from_stack()
-            elif self.context.newline or token in(';', '*EOF*'):
-                self.function_name = ''
-                if self.brace_count == 0:
-                    self._pop_function_from_stack()
-                    if(self.context.newline):
-                        self._state(token)
+            if token in '{(':
+                self.sub_state(
+                    JavaScriptStyleLanguageStates(self.context),
+                    self._pop_function_from_stack)
+            elif token in ('}', ')', '*EOF*'):
+                self.sm_return()
+            elif self.context.newline or token == ';':
+                self._pop_function_from_stack()
 
             self.last_tokens = token
 
-    def eof(self):
-        if self.brace_count == 0:
-            self._pop_function_from_stack()
+    def before_return(self):
+        self._pop_function_from_stack()
 
     def _push_function_to_stack(self):
-        self.context.current_function.brace_count = self.brace_count
-        self.function_stack.append(self.context.current_function)
-        self.brace_count = 0
+        self.saved_function = self.context.current_function
         self.context.start_new_function(self.function_name or '(anonymous)')
         self.function_name = ''
 
     def _pop_function_from_stack(self):
-        self.context.end_of_function()
+        self.function_name = ''
+        if self.saved_function:
+            self.context.end_of_function()
         self._pop_function_and_discard()
 
     def _pop_function_and_discard(self):
-        if self.function_stack:
-            self.context.current_function = self.function_stack.pop()
-            self.brace_count = self.context.current_function.brace_count
+        if self.saved_function:
+            self.context.current_function = self.saved_function
+            self.saved_function = None
 
     def _arrow_function(self, token):
         self._push_function_to_stack()

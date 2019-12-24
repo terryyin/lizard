@@ -44,7 +44,22 @@ class Test_parser_for_JavaScript_ES6(unittest.TestCase):
         self.assertEqual(2, len(functions))
         self.assertEqual('a', functions[1].name)
 
-    def test_nested(self):
+    def test_nested2(self):
+        functions = get_js_function_list("""
+            function a(){m.map(x=>a) && b}
+        """)
+        self.assertEqual('(anonymous)', functions[0].name)
+        self.assertEqual(1, functions[0].cyclomatic_complexity)
+        self.assertEqual(2, functions[1].cyclomatic_complexity)
+
+    def test_nested3(self):
+        functions = get_js_function_list("""
+            function a(){x=>a}
+        """)
+        self.assertEqual(2, len(functions))
+        self.assertEqual('a', functions[1].name)
+
+    def test_nested_complexity(self):
         functions = get_js_function_list("""
             x=>{
                 a&&b;
@@ -52,12 +67,6 @@ class Test_parser_for_JavaScript_ES6(unittest.TestCase):
                 }
         """)
         self.assertEqual(3, functions[0].cyclomatic_complexity)
-
-    def test_function_name(self):
-        functions = get_js_function_list("""
-            const x=function(a) {}
-        """)
-        self.assertEqual('x', functions[0].name)
 
     def test_arraw_function_name(self):
         functions = get_js_function_list("""
