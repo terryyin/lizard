@@ -129,4 +129,30 @@ class Test_parser_for_JavaScript_ES6(unittest.TestCase):
         self.assertEqual(1, len(functions))
         self.assertEqual('range', functions[0].name)
 
+    def test_statement_block(self):
+        functions = get_js_function_list("""
+            function a(e) {
+                if (id == 'current') {
+                    a() {}
+                } else {
+                    a() {}
+                }
+                do{ a() {} }while(x);
+                switch(x){ a() {} }
+                for(x){ a() {} }
+                for await (x){ a() {} }
+                while(x){ a() {} }
+                try{
+                    a(){}
+                } catch (x) {
+                    a() {}
+                } final {
+                    a() {}
+                }
+            }
+
+        """)
+        self.assertEqual(1, len(functions))
+        self.assertEqual('a', functions[0].name)
+
     # TBD: Method Properties

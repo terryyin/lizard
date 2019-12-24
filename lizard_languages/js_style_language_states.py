@@ -15,6 +15,10 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
     def _state_global(self, token):
         if token == 'function':
             self._state = self._function
+        elif token in ('if', 'switch', 'for', 'while', 'catch'):
+            self.next(self._expecting_condition_and_statement_block)
+        elif token in ('else', 'do', 'try', 'final'):
+            self.next(self._expecting_statement_or_block)
         elif token in ('=>',):
             self._state = self._arrow_function
         elif token == '=':
@@ -40,6 +44,31 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
 
     def before_return(self):
         self._pop_function_from_stack()
+
+    def _expecting_condition_and_statement_block(self, token):
+        def callback():
+            self.next(self._expecting_statement_or_block)
+
+        if token == "await":
+            return
+
+        if token != '(':
+            self.next(self._state_global, token)
+            return
+
+        self.sub_state(
+            JavaScriptStyleLanguageStates(self.context),
+            callback)
+
+    def _expecting_statement_or_block(self, token):
+        def callback():
+            self.next(self._state_global)
+        if token == "{":
+            self.sub_state(
+                JavaScriptStyleLanguageStates(self.context),
+                callback)
+        else:
+            self.next(self._state_global, token)
 
     def _push_function_to_stack(self):
         self.saved_function = self.context.current_function
