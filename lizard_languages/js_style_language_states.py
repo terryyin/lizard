@@ -8,7 +8,6 @@ from .code_reader import CodeStateMachine
 class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
     def __init__(self, context):
         super(JavaScriptStyleLanguageStates, self).__init__(context)
-        # start from one, so global level will never count
         self.last_tokens = ''
         self.function_name = ''
         self.saved_function = None
@@ -18,19 +17,23 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
             self._state = self._function
         elif token in ('=>',):
             self._state = self._arrow_function
-        elif token in ('=', ':'):
+        elif token == '=':
             self.function_name = self.last_tokens
         elif token in '.':
             self._state = self._field
             self.last_tokens += token
         else:
             if token in '{(':
-                self.sub_state(
-                    JavaScriptStyleLanguageStates(self.context),
-                    self._pop_function_from_stack)
+                if self.saved_function or token == "(":
+                    self.sub_state(
+                        JavaScriptStyleLanguageStates(self.context),
+                        self._pop_function_from_stack)
+                else:
+                    self.sub_state(ES6ObjectStates(self.context))
             elif token in ('}', ')', '*EOF*'):
                 self.sm_return()
             elif self.context.newline or token == ';':
+                self.function_name = ''
                 self._pop_function_from_stack()
 
             self.last_tokens = token
@@ -41,10 +44,8 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
     def _push_function_to_stack(self):
         self.saved_function = self.context.current_function
         self.context.start_new_function(self.function_name or '(anonymous)')
-        self.function_name = ''
 
     def _pop_function_from_stack(self):
-        self.function_name = ''
         if self.saved_function:
             self.context.end_of_function()
         self._pop_function_and_discard()
@@ -59,6 +60,8 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
         self.next(self._state_global, token)
 
     def _function(self, token):
+        if token == '*':
+            return
         if token != '(':
             self.function_name = token
         else:
@@ -83,3 +86,17 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
         if token != '{':
             self._pop_function_and_discard()
         self.next(self._state_global, token)
+
+
+class ES6ObjectStates(JavaScriptStyleLanguageStates):  # pylint: disable=R0903
+    def __init__(self, context):
+        super(ES6ObjectStates, self).__init__(context)
+
+    def _state_global(self, token):
+        if token == ':':
+            self.function_name = self.last_tokens
+        elif token == '(':
+            self._function(self.last_tokens)
+            self.next(self._function, token)
+        else:
+            super(ES6ObjectStates, self)._state_global(token)
