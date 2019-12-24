@@ -71,7 +71,7 @@ class Test_parser_for_PHP(unittest.TestCase):
 
     def test_not_a_function_assigning_to_a_name(self):
         functions = get_php_function_list("<?php abc=3; function (a, b){} ?>")
-        self.assertEqual('function', functions[0].name)
+        self.assertEqual('(anonymous)', functions[0].name)
 
     def test_function_without_name_assign_to_field(self):
         functions = get_php_function_list("<?php a.b.c = function (a, b){} ?>")

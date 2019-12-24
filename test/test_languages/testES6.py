@@ -44,5 +44,30 @@ class Test_parser_for_JavaScript_ES6(unittest.TestCase):
         self.assertEqual(2, len(functions))
         self.assertEqual('a', functions[1].name)
 
+    def test_nested(self):
+        functions = get_js_function_list("""
+            x=>{
+                a&&b;
+                b&&c;
+                }
+        """)
+        self.assertEqual(3, functions[0].cyclomatic_complexity)
 
+    def test_function_name(self):
+        functions = get_js_function_list("""
+            const x=function(a) {}
+        """)
+        self.assertEqual('x', functions[0].name)
+
+    def test_arraw_function_name(self):
+        functions = get_js_function_list("""
+            const x=a=>1
+        """)
+        self.assertEqual('x', functions[0].name)
+
+    def xtest_arraw_function_with_multiple_param(self):
+        functions = get_js_function_list("""
+            const x=(a, b=3)=>1
+        """)
+        self.assertEqual('x', functions[0].name)
 

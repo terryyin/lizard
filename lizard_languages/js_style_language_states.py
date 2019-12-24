@@ -32,23 +32,24 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
                 if self.brace_count == 0:
                     self._pop_function_from_stack()
             elif self.context.newline or token in(';', '*EOF*'):
+                self.function_name = ''
                 if self.brace_count == 0:
                     self._pop_function_from_stack()
                     if(self.context.newline):
                         self._state(token)
 
             self.last_tokens = token
-            self.function_name = ''
 
     def eof(self):
         if self.brace_count == 0:
             self._pop_function_from_stack()
 
-    def _push_function_to_stack(self, name):
+    def _push_function_to_stack(self):
         self.context.current_function.brace_count = self.brace_count
         self.function_stack.append(self.context.current_function)
         self.brace_count = 0
-        self.context.start_new_function(name)
+        self.context.start_new_function(self.function_name or '(anonymous)')
+        self.function_name = ''
 
     def _pop_function_from_stack(self):
         self.context.end_of_function()
@@ -60,14 +61,14 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
             self.brace_count = self.context.current_function.brace_count
 
     def _arrow_function(self, token):
-        self._push_function_to_stack("(anonymous)")
+        self._push_function_to_stack()
         self.next(self._state_global, token)
 
     def _function(self, token):
         if token != '(':
             self.function_name = token
         else:
-            self._push_function_to_stack(self.function_name or 'function')
+            self._push_function_to_stack()
             self._state = self._dec
             if token == '(':
                 self._dec(token)
