@@ -39,3 +39,34 @@ class TestRust(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual(2, result[0].cyclomatic_complexity)
 
+    def test_generic(self):
+        result = get_rust_function_list('''
+        fn largest<T>(list: &[T]) -> T {
+            let mut largest = list[0];
+
+            for &item in list.iter() {
+                if item > largest {
+                    largest = item;
+                }
+            }
+
+            largest
+        }
+
+        fn main() {
+            match a() {}
+        }
+        ''')
+        self.assertEqual(2, len(result))
+        self.assertEqual('largest', result[0].name)
+        self.assertEqual(3, result[0].cyclomatic_complexity)
+
+    def test_generic_with_where(self):
+        result = get_rust_function_list('''
+        fn some_function<T, U>(t: T, u: U) -> i32
+            where T: Display + Clone,
+                  U: Clone + Debug {
+                  }
+        ''')
+        self.assertEqual(1, len(result))
+        self.assertEqual(2, result[0].cyclomatic_complexity)
