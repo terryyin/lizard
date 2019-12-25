@@ -20,7 +20,7 @@ A list of supported languages:
 -  C/C++ (works with C++14)
 -  Java
 -  C# (C Sharp)
--  JavaScript
+-  JavaScript (With ES6)
 -  Objective-C
 -  Swift
 -  Python

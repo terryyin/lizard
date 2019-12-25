@@ -14,6 +14,7 @@ from .scala import ScalaReader
 from .gdscript import GDScriptReader
 from .go import GoReader
 from .lua import LuaReader
+from .rust import RustReader
 
 
 def languages():
@@ -31,7 +32,8 @@ def languages():
         ScalaReader,
         GDScriptReader,
         GoReader,
-        LuaReader
+        LuaReader,
+        RustReader
     ]
 
 
