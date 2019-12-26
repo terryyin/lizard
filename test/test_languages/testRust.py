@@ -70,3 +70,18 @@ class TestRust(unittest.TestCase):
         ''')
         self.assertEqual(1, len(result))
         self.assertEqual(2, result[0].cyclomatic_complexity)
+
+    def test_nested_functions(self):
+        result = get_rust_function_list('''
+        fn main() {
+            let x = 4;
+
+            fn equal_to_x(z: i32) -> bool { z == x }
+
+            let y = 4;
+
+            assert!(equal_to_x(y));
+        }
+        ''')
+        self.assertEqual(1, len(result))
+        self.assertEqual(2, result[0].cyclomatic_complexity)

@@ -34,7 +34,7 @@ class ObjCStates(CLikeStates):  # pylint: disable=R0903
             super(ObjCStates, self)._state_dec_to_imp(token)
             if self._state != self._state_imp:
                 self._state = self._state_objc_dec_begin
-                self.context.start_new_function(token)
+                self.context.restart_new_function(token)
 
     def _state_objc_dec_begin(self, token):
         if token == ':':

@@ -23,7 +23,7 @@ class RubylikeStateMachine(CodeStateMachine):
 
     def _state_global(self, token):
         if token in ("end", "}"):
-            self.sm_return()
+            self.statemachine_return()
         elif token == self.identifiers['FUNCTION']:
             self._state = self._def
             self.next(self._def)
@@ -47,12 +47,12 @@ class RubylikeStateMachine(CodeStateMachine):
         return self.context.newline or self.last_token == ";"
 
     def _def(self, token):
-        self.context.start_new_function(token)
+        self.context.restart_new_function(token)
         self.next(self._def_continue)
 
     def _it(self, token):
         if token in ('do', '{'):
-            self.context.start_new_function(self.last_token)
+            self.context.restart_new_function(self.last_token)
             self.next(self._def_continue)
 
     def _def_continue(self, token):

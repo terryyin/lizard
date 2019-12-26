@@ -12,7 +12,7 @@ class GoLikeStates(CodeStateMachine):  # pylint: disable=R0903
     def _state_global(self, token):
         if token == self.FUNC_KEYWORD:
             self._state = self._function_name
-        self.context.start_new_function('')
+        self.context.push_new_function('')
 
     def _function_name(self, token):
         if token == '(':

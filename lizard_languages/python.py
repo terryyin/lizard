@@ -74,7 +74,7 @@ class PythonStates(CodeStateMachine):  # pylint: disable=R0903
 
     def _function(self, token):
         if token != '(':
-            self.context.start_new_function(token)
+            self.context.restart_new_function(token)
             self.context.add_to_long_function_name("(")
         else:
             self._state = self._dec

@@ -37,12 +37,12 @@ class TTCNStates(CLikeStates):  # pylint: disable=R0903
     def _state_global(self, token):
         if token == 'testcase':
             self._state = self._state_function
-            self.context.start_new_function('__testcase__')
+            self.context.restart_new_function('__testcase__')
         elif token == 'function':
             self._state = self._state_function
-            self.context.start_new_function('')
+            self.context.restart_new_function('')
         elif token == 'control':
-            self.context.start_new_function('__control__')
+            self.context.restart_new_function('__control__')
             self._state = self._state_dec_to_imp
 
     def _state_function(self, token):

@@ -29,9 +29,9 @@ class CodeStateMachine(object):
             return
         self.next(state, token)
 
-    def sm_return(self):
+    def statemachine_return(self):
         self.to_exit = True
-        self.before_return()
+        self.statemachine_before_return()
 
     def sub_state(self, state, callback=None, token=None):
         self.saved_state = self._state
@@ -50,7 +50,7 @@ class CodeStateMachine(object):
     def _state_global(self, token):
         pass
 
-    def before_return(self):
+    def statemachine_before_return(self):
         pass
 
     @staticmethod
