@@ -18,8 +18,8 @@ class RubylikeStateMachine(CodeStateMachine):
         self.identifiers = identifiers
         super(RubylikeStateMachine, self).__init__(context)
 
-    def _clone(self):
-        return RubylikeStateMachine(self.context, self.identifiers)
+    def statemachine_clone(self):
+        return self.__class__(self.context, self.identifiers)
 
     def _state_global(self, token):
         if token in ("end", "}"):
@@ -31,13 +31,13 @@ class RubylikeStateMachine(CodeStateMachine):
             self._state = self._it
         elif token in ("begin", "do", "class", "module", "{", "${"
                        ) and self.last_token != ".":
-            self.sub_state(self._clone())
+            self.sub_state(self.statemachine_clone())
         elif token in ("while", "for"):
             if self.is_newline():
                 self.next(self._for_while)
         elif token in ("if", "unless"):
             if self.is_newline():
-                self.sub_state(self._clone())
+                self.sub_state(self.statemachine_clone())
             else:
                 self.next(self._if)
         elif token == "=begin":
@@ -65,7 +65,7 @@ class RubylikeStateMachine(CodeStateMachine):
         elif token == "(":
             self.next(self._def_parameters)
         else:
-            self.sub_state(self._clone(), callback, token)
+            self.sub_state(self.statemachine_clone(), callback, token)
 
     def _def_class_method(self, token):
         self.context.add_to_function_name(token)
@@ -84,13 +84,13 @@ class RubylikeStateMachine(CodeStateMachine):
             self.next(self._state_global, token)
         elif token == "then":
             self.next(self._state_global)
-            self.sub_state(self._clone())
+            self.sub_state(self.statemachine_clone())
 
     def _for_while(self, token):
         if self.is_newline() or token == "do":
             self.next(self._state_global)
             if token != "end":
-                self.sub_state(self._clone())
+                self.sub_state(self.statemachine_clone())
 
 
 class RubylikeReader(CodeReader, ScriptLanguageMixIn):

@@ -83,5 +83,4 @@ class TestRust(unittest.TestCase):
             assert!(equal_to_x(y));
         }
         ''')
-        self.assertEqual(1, len(result))
-        self.assertEqual(2, result[0].cyclomatic_complexity)
+        self.assertEqual(2, len(result))

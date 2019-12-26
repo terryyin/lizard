@@ -10,7 +10,7 @@ class Test_tokenizing_ES6(unittest.TestCase):
 
     def check_tokens(self, expect, source):
         tokens = list(JavaScriptReader.generate_tokens(source))
-        self.assertEqual(expect + ["*EOF*"], tokens)
+        self.assertEqual(expect, tokens)
 
     def test_dollar_var(self):
         self.check_tokens(['`abc`'], '`abc`')

@@ -19,6 +19,9 @@ class CodeStateMachine(object):
         self.rut_tokens = []
         self.br_count = 0
 
+    def statemachine_clone(self):
+        return self.__class__(self.context)
+
     def next(self, state, token=None):
         self._state = state
         if token is not None:
@@ -157,6 +160,8 @@ class CodeReader(object):
             for state in self.parallel_states:
                 state(token)
             yield token
+        for state in self.parallel_states:
+            state.statemachine_before_return()
         self.eof()
 
     def eof(self):

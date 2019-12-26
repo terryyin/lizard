@@ -10,9 +10,13 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
         super(JavaScriptStyleLanguageStates, self).__init__(context)
         self.last_tokens = ''
         self.function_name = ''
-        self.saved_function = None
+        self.started_function = None
 
     def _state_global(self, token):
+        if token in '.':
+            self._state = self._field
+            self.last_tokens += token
+            return
         if token == 'function':
             self._state = self._function
         elif token in ('if', 'switch', 'for', 'while', 'catch'):
@@ -23,24 +27,23 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
             self._state = self._arrow_function
         elif token == '=':
             self.function_name = self.last_tokens
-        elif token in '.':
-            self._state = self._field
-            self.last_tokens += token
-        else:
-            if token in '{(':
-                if self.saved_function or token == "(":
-                    self.sub_state(
-                        JavaScriptStyleLanguageStates(self.context),
-                        self._pop_function_from_stack)
-                else:
-                    self.sub_state(ES6ObjectStates(self.context))
-            elif token in ('}', ')', '*EOF*'):
-                self.statemachine_return()
-            elif self.context.newline or token == ';':
-                self.function_name = ''
-                self._pop_function_from_stack()
+        elif token == "(":
+            self.sub_state(
+                JavaScriptStyleLanguageStates(self.context))
+        elif token in '{':
+            if self.started_function:
+                self.sub_state(
+                    JavaScriptStyleLanguageStates(self.context),
+                    self._pop_function_from_stack)
+            else:
+                self.sub_state(ES6ObjectStates(self.context))
+        elif token in ('}', ')'):
+            self.statemachine_return()
+        elif self.context.newline or token == ';':
+            self.function_name = ''
+            self._pop_function_from_stack()
 
-            self.last_tokens = token
+        self.last_tokens = token
 
     def statemachine_before_return(self):
         self._pop_function_from_stack()
@@ -71,13 +74,13 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
             self.next(self._state_global, token)
 
     def _push_function_to_stack(self):
-        self.saved_function = self.context.current_function
+        self.started_function = True
         self.context.push_new_function(self.function_name or '(anonymous)')
 
     def _pop_function_from_stack(self):
-        if self.saved_function:
+        if self.started_function:
             self.context.end_of_function()
-        self.saved_function = None
+        self.started_function = None
 
     def _arrow_function(self, token):
         self._push_function_to_stack()
@@ -108,7 +111,7 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
 
     def _state_expecting_function_opening_bracket(self, token):
         if token != '{':
-            self.saved_function = None
+            self.started_function = None
         self.next(self._state_global, token)
 
 
