@@ -12,7 +12,7 @@ def get_python_function_list(source_code):
 class Test_tokenizer_for_Python(unittest.TestCase):
     def test_comment_with_quote(self):
         tokens = PythonReader.generate_tokens("#'\n''")
-        self.assertEqual(["#'", "\n", "''"], tokens)
+        self.assertEqual(["#'", "\n", "''"], list(tokens))
 
 
 class Test_Python_nesting_level(unittest.TestCase):

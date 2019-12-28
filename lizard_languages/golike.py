@@ -9,16 +9,12 @@ class GoLikeStates(CodeStateMachine):  # pylint: disable=R0903
 
     FUNC_KEYWORD = 'func'
 
-    def __init__(self, context):
-        super(GoLikeStates, self).__init__(context)
-
     def _state_global(self, token):
         if token == self.FUNC_KEYWORD:
             self._state = self._function_name
             self.context.push_new_function('')
         elif token in '{':
             self.sub_state(self.statemachine_clone())
-            pass
         elif token in '}':
             self.statemachine_return()
 

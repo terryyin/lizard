@@ -456,7 +456,6 @@ class FileInfoBuilder(object):
     def add_condition(self, inc=1):
         self.current_function.cyclomatic_complexity += inc
 
-
     def add_to_long_function_name(self, app):
         self.current_function.add_to_long_name(app)
 

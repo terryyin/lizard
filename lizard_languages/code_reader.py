@@ -6,7 +6,7 @@ import re
 from copy import copy
 
 
-class CodeStateMachine(object):
+class CodeStateMachine:
     ''' the state machine '''
     # pylint: disable=R0903
     # pylint: disable=R0902
@@ -81,7 +81,7 @@ class CodeStateMachine(object):
         return decorator
 
 
-class CodeReader(object):
+class CodeReader:
     ''' CodeReaders are used to parse function structures from
     code of different
     language. Each language will need a subclass of CodeReader.  '''
@@ -152,7 +152,7 @@ class CodeReader(object):
             if macro:
                 yield macro
 
-        return [t for t in _generate_tokens(source_code, addition)]
+        return _generate_tokens(source_code, addition)
 
     def __call__(self, tokens, reader):
         self.context = reader.context

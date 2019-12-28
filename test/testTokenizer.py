@@ -1,6 +1,7 @@
 import unittest
 from lizard_languages.code_reader import CodeReader
-generate_tokens = CodeReader.generate_tokens
+def generate_tokens(source):
+    return [t for t in CodeReader.generate_tokens(source)]
 
 
 class Test_generate_token(unittest.TestCase):
