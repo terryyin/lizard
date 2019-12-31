@@ -28,7 +28,21 @@ class Test_tokenizing_JSX(unittest.TestCase):
         self.check_tokens(['(', '<b><b>xxx</b></b>', ')'], '(<b><b>xxx</b></b>)')
 
     def test_with_embeded_code(self):
-        self.check_tokens(['<abc>{', '}</abc>'], '<abc>{}</abc>')
+        self.check_tokens(['<abc>', '{', 'x', '}', '</abc>'], '<abc>{x}</abc>')
+
+    def test_with_attributes(self):
+        self.check_tokens(['<abc>a</abc>'], '<abc x="x">a</abc>')
+
+    def test_with_embeded_attributes(self):
+        self.check_tokens(['{', 'y', '}', '<abc>a</abc>', '<a></a>'], '<abc x={y}>a</abc><a></a>')
+
+    def test_less_than(self):
+        self.check_tokens(['a', '<', '3', ' ', 'x', '>'], 'a<3 x>')
+
+    def test_with_less_than2(self):
+        self.check_tokens(['a', '<', 'b', ' ', 'and', ' ', 'c', '>', ' ', 'd'], 'a<b and c> d')
+
+
 
 class Test_parser_for_JavaScript_X(unittest.TestCase):
 
