@@ -33,7 +33,7 @@ class JavaScriptReader(CodeReader, CCppCommentsMixin):
         self.parallel_states = [JavaScriptStyleLanguageStates(context)]
 
 
-class Tokenizer:
+class Tokenizer(object):
     def __init__(self):
         self.sub_tokenizer = None
         self._ended = False
@@ -56,14 +56,24 @@ class Tokenizer:
 
 
 class JSTokenizer(Tokenizer):
+    def __init__(self):
+        super(JSTokenizer, self).__init__()
+        self.depth = 1
+
     def process_token(self, token):
         if token == "<":
             self.sub_tokenizer = XMLTagWithAttrTokenizer()
             return
         if token == "{":
-            self.sub_tokenizer = JSTokenizer()
+            self.depth += 1
         elif token == "}":
-            self.stop()
+            self.depth -= 1
+            if self.depth == 0:
+                self.stop()
+                # {} in JSX is not listed as token
+                # otherwise it will be regarded
+                # as JS object
+                return
         yield token
 
 
@@ -122,7 +132,6 @@ class XMLTagWithAttrTokenizer(Tokenizer):
         if token[0] in "'\"":
             self.state = self._after_tag
         elif token == "{":
-            yield token
             self.cache.append("}")
             self.sub_tokenizer = JSTokenizer()
             self.state = self._after_tag
@@ -138,6 +147,5 @@ class XMLTagWithAttrTokenizer(Tokenizer):
             return self.flush()
 
         if token == '{':
-            self.cache.pop()
             self.sub_tokenizer = JSTokenizer()
-            return self.flush() + ['{']
+            return self.flush()

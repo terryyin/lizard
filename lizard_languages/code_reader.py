@@ -6,7 +6,7 @@ import re
 from copy import copy
 
 
-class CodeStateMachine:
+class CodeStateMachine(object):
     ''' the state machine '''
     # pylint: disable=R0903
     # pylint: disable=R0902
