@@ -8,7 +8,7 @@ def count_spaces(token):
     return len(token.replace('\t', ' ' * 8))
 
 
-class PythonIndents(object):  # pylint: disable=R0902
+class PythonIndents:  # pylint: disable=R0902
     def __init__(self, context):
         self.indents = [0]
         self.context = context

@@ -31,10 +31,10 @@ class Test_tokenizing_JSX(unittest.TestCase):
         self.check_tokens(['<abc>', '{', 'x', '}', '</abc>'], '<abc>{x}</abc>')
 
     def test_with_attributes(self):
-        self.check_tokens(['<abc>a</abc>'], '<abc x="x">a</abc>')
+        self.check_tokens(['<abc x="x">a</abc>'], '<abc x="x">a</abc>')
 
     def test_with_embeded_attributes(self):
-        self.check_tokens(['{', 'y', '}', '<abc>a</abc>', '<a></a>'], '<abc x={y}>a</abc><a></a>')
+        self.check_tokens(['{', 'y', '}', '<abc x={}>a</abc>', '<a></a>'], '<abc x={y}>a</abc><a></a>')
 
     def test_less_than(self):
         self.check_tokens(['a', '<', '3', ' ', 'x', '>'], 'a<3 x>')
