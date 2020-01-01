@@ -22,10 +22,10 @@ class Test_tokenizing_JSX(unittest.TestCase):
         self.check_tokens(['(', '<abc>xxx  +yyy</abc>', ')'], '(<abc>xxx  +yyy</abc>)')
 
     def test_nested(self):
-        self.check_tokens(['(', '<abc><b>xxx</b></abc>', ')'], '(<abc><b>xxx</b></abc>)')
+        self.check_tokens(['(', '<abc>', '<b>xxx</b>', '</abc>', ')'], '(<abc><b>xxx</b></abc>)')
 
     def test_nested_save_tag(self):
-        self.check_tokens(['(', '<b><b>xxx</b></b>', ')'], '(<b><b>xxx</b></b>)')
+        self.check_tokens(['(', '<b>', '<b>xxx</b>', '</b>', ')'], '(<b><b>xxx</b></b>)')
 
     def test_with_embeded_code(self):
         self.check_tokens(['<abc>', '{', 'x', '}', '</abc>'], '<abc>{x}</abc>')

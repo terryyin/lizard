@@ -2,7 +2,6 @@
 Language parser for JavaScript
 '''
 
-import re
 from .code_reader import CodeReader
 from .clike import CCppCommentsMixin
 from .js_style_regex_expression import js_style_regex_expression
@@ -18,17 +17,10 @@ class JavaScriptReader(CodeReader, CCppCommentsMixin):
     @staticmethod
     @js_style_regex_expression
     def generate_tokens(source_code, addition='', token_class=None):
-        raw_openning = r"\<(\w+)\s*(?P<self_close>\/?)\>"
-        raw_closing = r"\<\/(\w+)\>"
         addition = addition +\
             r"|(?:\$\w+)" + \
-            r"|(?:"+raw_openning + r")" + \
-            r"|(?:"+raw_closing + r")" + \
             r"|(?:\<\/\w+\>)" + \
             r"|`.*?`"
-
-        xml_openning = re.compile(raw_openning)
-        xml_closing = re.compile(raw_closing)
 
         class Tokenizer:
             def __init__(self):
@@ -62,13 +54,6 @@ class JavaScriptReader(CodeReader, CCppCommentsMixin):
                     self.sub_tokenizer = JSTokenizer()
                 elif token == "}":
                     self.ended = True
-                else:
-                    mch = xml_openning.match(token)
-                    if not self.openning and mch:
-                        if mch['self_close'] != '/':
-                            self.openning = mch[1]
-                            self.sub_tokenizer = XMLTokenizer(mch[1])
-                            return
                 yield token
 
         class XMLTagWithAttrTokenizer(Tokenizer):
@@ -88,6 +73,10 @@ class JavaScriptReader(CodeReader, CCppCommentsMixin):
                 self.ended = True
                 return self.cache
 
+            def flush(self):
+                tmp, self.cache = self.cache, []
+                return [''.join(tmp)]
+
             def _global_state(self, token):
                 if not token.isidentifier():
                     return self.abort()
@@ -99,11 +88,19 @@ class JavaScriptReader(CodeReader, CCppCommentsMixin):
                 if token == '>':
                     self.sub_tokenizer = XMLTokenizer(self.tag)
                     self.state = None
+                elif token == "/":
+                    self.state = self._expecting_self_closing
                 elif token.isidentifier():
                     self.state = self._expecting_equal_sign
                 else:
                     return self.abort()
                 return ()
+
+            def _expecting_self_closing(self, token):
+                if token == ">":
+                    self.ended = True
+                    return self.flush()
+                return self.abort()
 
             def _expecting_equal_sign(self, token):
                 if token == '=':
@@ -125,34 +122,27 @@ class JavaScriptReader(CodeReader, CCppCommentsMixin):
                 if self.state is None:
                     self.ended = True
 
-        class XMLTokenizer(Tokenizer):
+        class XMLTokenizer(XMLTagWithAttrTokenizer):
             def __init__(self, tag):
                 super(XMLTokenizer, self).__init__()
-                self.tag = tag
-                self.depth = 1
-                self.saved = '<'+tag+'>'
+                self.cache = ['<'+tag+'>']
+                self.state = self._body
 
-            def process_token(self, token):
+            def _body(self, token):
+                if token == "<":
+                    self.sub_tokenizer = XMLTagWithAttrTokenizer()
+                    self.cache.pop()
+                    return self.flush()
 
-                mch = xml_openning.match(token)
-                if mch and mch[1] == self.tag:
-                    self.depth += 1
-                mch = xml_closing.match(token)
-                if mch and mch[1] == self.tag:
-                    self.depth -= 1
-                    if self.depth == 0:
-                        yield self.saved + token
-                        self.saved = ''
-                        self.ended = True
-                        return
-                if self.saved:
-                    if token == '{':
-                        yield self.saved
-                        self.saved = ""
-                        yield '{'
-                        self.sub_tokenizer = JSTokenizer()
-                    else:
-                        self.saved += token
+                if token.startswith("</"):
+                    self.ended = True
+                    return self.flush()
+
+                if token == '{':
+                    self.cache.pop()
+                    self.sub_tokenizer = JSTokenizer()
+                    return self.flush() + ['{']
+                return ()
 
         js_tokenizer = JSTokenizer()
         for token in CodeReader.generate_tokens(
