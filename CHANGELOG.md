@@ -1,5 +1,10 @@
 # Change Log
 
+## 1.17.0
+
+Support JavaScript with ES6 and JSX.
+Support Rust
+
 ## 1.16.6
 
 Bug fixes:
