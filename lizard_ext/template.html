@@ -55,7 +55,7 @@
 {% for file in files %}
   <tr><td colspan="7" style="background-color:LightBlue;">Source file: <b>{{ file.filename }}</b></td></tr>
 {% if file.functions|length > 0 %}
-<tr><th>Function name</th><th></th><th>Cyclomatic complexity ({{ thresholds["cyclomatic_complexity"] }})</th><th>LOC ({{ thresholds["length"] }})</th><th>
+<tr><th>Function name</th><th></th><th>Cyclomatic complexity ({{ thresholds["cyclomatic_complexity"] }})</th><th>LOC ({{ thresholds["nloc"] }})</th><th>
 	{% if thresholds["token_count"] %}
 	   Token count ({{ thresholds["token_count"] }})
 	{% else %}
@@ -73,7 +73,7 @@
 	   <td class="lesser-value">{{ func.cyclomatic_complexity }}</td>
 	{% endif %}
 
-	{% if func.nloc > thresholds["length"] %}
+	{% if func.nloc > thresholds["nloc"] %}
 	   <td class="greater-value">{{ func.nloc }}</td>
 	{% else %}
 	   <td class="lesser-value">{{ func.nloc}}</td>
