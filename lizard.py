@@ -63,7 +63,7 @@ def analyze(paths, exclude_pattern=None, threads=1, exts=None,
 
 
 def analyze_files(files, threads=1, exts=None):
-    extensions = exts or []
+    extensions = exts or get_extensions([])
     file_analyzer = FileAnalyzer(extensions)
     result = map_files_to_analyzer(files, file_analyzer, threads)
     for extension in extensions:
