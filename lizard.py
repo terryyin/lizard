@@ -944,6 +944,8 @@ def parse_args(argv):
         opt.thresholds["max_nested_structures"] = opt.NS
     if "length" not in opt.thresholds:
         opt.thresholds["length"] = opt.length
+    if "nloc" not in opt.thresholds:
+        opt.thresholds["nloc"] = 1000000
     if "parameter_count" not in opt.thresholds:
         opt.thresholds["parameter_count"] = opt.arguments
     if opt.output_file:
