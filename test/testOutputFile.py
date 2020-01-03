@@ -50,7 +50,7 @@ class TestFileOutputIntegration(unittest.TestCase):
         self.output_test("test.csv", header)
 
     def test_html(self):
-        header = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">"
+        header = "<!DOCTYPE HTML PUBLIC"
         self.output_test("test.html", header)
 
     def test_xml(self):
