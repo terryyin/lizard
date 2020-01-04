@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.17.2
+
+Fix missing file when install
+
+## 1.17.1
+
+Fix HTML Output template problem.
+
 ## 1.17.0
 
 Support JavaScript with ES6 and JSX.

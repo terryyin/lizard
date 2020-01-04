@@ -101,7 +101,7 @@ class XMLTagWithAttrTokenizer(Tokenizer):
         return [''.join(tmp)]
 
     def _global_state(self, token):
-        if not token.isidentifier():
+        if not isidentifier(token):
             return self.abort()
         self.tag = token
         self.state = self._after_tag
@@ -111,7 +111,7 @@ class XMLTagWithAttrTokenizer(Tokenizer):
             self.state = self._body
         elif token == "/":
             self.state = self._expecting_self_closing
-        elif token.isidentifier():
+        elif isidentifier(token):
             self.state = self._expecting_equal_sign
         else:
             return self.abort()
@@ -149,3 +149,10 @@ class XMLTagWithAttrTokenizer(Tokenizer):
         if token == '{':
             self.sub_tokenizer = JSTokenizer()
             return self.flush()
+
+
+def isidentifier(token):
+    try:
+        return token.isidentifier()
+    except AttributeError:
+        return token.encode(encoding='UTF-8')[0].isalpha()

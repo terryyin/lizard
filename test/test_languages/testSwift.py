@@ -1,12 +1,22 @@
 import unittest
 import inspect
 from lizard import analyze_file, FileAnalyzer, get_extensions
+from lizard_languages import SwiftReader
 
 
 def get_swift_function_list(source_code):
     return analyze_file.analyze_source_code(
         "a.swift", source_code).function_list
 
+
+class Test_tokenizing_Swift(unittest.TestCase):
+
+    def check_tokens(self, expect, source):
+        tokens = list(SwiftReader.generate_tokens(source))
+        self.assertEqual(expect, tokens)
+
+    def test_dollar_var(self):
+        self.check_tokens(['`a`'], '`a`')
 
 class Test_parser_for_Swift(unittest.TestCase):
 
@@ -17,7 +27,7 @@ class Test_parser_for_Swift(unittest.TestCase):
     def test_no_function(self):
         result = get_swift_function_list('''
             for name in names {
-                print("Hello, \(name)!")
+                print("Hello, \\(name)!")
             }
                 ''')
         self.assertEqual(0, len(result))
@@ -186,11 +196,11 @@ class Test_parser_for_Swift(unittest.TestCase):
             class StepCounter {
                 var totalSteps: Int = 0 {
                     willSet(newTotalSteps) {
-                        print("About to set totalSteps to \(newTotalSteps)")
+                        print("About to set totalSteps to \\(newTotalSteps)")
                     }
                     didSet {
                         if totalSteps > oldValue  {
-                            print("Added \(totalSteps - oldValue) steps")
+                            print("Added \\(totalSteps - oldValue) steps")
                         }
                     }
                 }
@@ -208,7 +218,7 @@ class Test_parser_for_Swift(unittest.TestCase):
                 func `default`() {}
             }
                 ''')
-        self.assertEqual("default", result[0].name)
+        self.assertEqual("`default`", result[0].name)
 
     def test_generic_function(self):
         result = get_swift_function_list('''
@@ -216,7 +226,7 @@ class Test_parser_for_Swift(unittest.TestCase):
                 ''')
         self.assertEqual("f", result[0].name)
 
-    def xtest_generic_function(self):
+    def test_generic_function(self):
         result = get_swift_function_list('''
         func f<C1, C2: Container where (C1.t == C2.t)> (c1: C1, c: C2) -> Bool {}
                 ''')
@@ -256,4 +266,12 @@ class Test_parser_for_Swift(unittest.TestCase):
             func f() { guard isValid else { return } }
         ''')
         self.assertEqual(2, result[0].cyclomatic_complexity)
+
+    def test_nested(self):
+        result = get_swift_function_list('''
+            func f() {
+                func stepForward(input: Int) -> Int { return input + 1 }
+            }
+        ''')
+        self.assertEqual(2, len(result))
 

@@ -44,9 +44,7 @@ class Test_objc_lizard(unittest.TestCase):
             + (return_type)classMethod
             {
                 if (failure){
-
                      //wefailed
-
                  }
             }
             - (return_type)instanceMethod
