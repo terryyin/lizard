@@ -1,7 +1,6 @@
 '''
 Language parser for Scala
 '''
-from .swift import SwiftStates
 from .code_reader import CodeReader
 from .clike import CCppCommentsMixin
 from .golike import GoLikeStates

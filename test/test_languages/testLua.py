@@ -146,3 +146,32 @@ class Test_parser_for_Lua(unittest.TestCase):
                 ''')
         self.assertEqual(1, len(result))
         self.assertEqual('V.f', result[0].name)
+
+    def test_anonymous(self):
+        result = get_function_list('''
+            function(self, neigh, id)
+            end
+                ''')
+        self.assertEqual(1, len(result))
+        self.assertEqual('(anonymous)', result[0].name)
+
+    def test_anonymous_with_assignment(self):
+        result = get_function_list('''
+            a = function(self, neigh, id)
+            end
+                ''')
+        self.assertEqual(1, len(result))
+        self.assertEqual('a', result[0].name)
+
+    def test_nested_functions(self):
+        result = get_function_list('''
+        function addn(x)
+          function sum(y)
+            return x+y
+          end
+          return sum
+        end
+                ''')
+        self.assertEqual(2, len(result))
+        self.assertEqual('sum', result[0].name)
+        self.assertEqual('addn', result[1].name)

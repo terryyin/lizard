@@ -36,12 +36,12 @@ class SwiftReader(CodeReader, CCppCommentsMixin):
         def replace_label(tokens, target, replace):
             for i in range(0, len(tokens) - len(target)):
                 if tokens[i:i + len(target)] == target:
-                    for j in range(0, len(replace)):
-                        tokens[i + j] = replace[j]
+                    for j, repl in enumerate(replace):
+                        tokens[i + j] = repl
             return tokens
-        for c in (c for c in self.conditions if c.isalpha()):
-            tokens = replace_label(tokens, ["(", c, ":"], ["(", "_" + c, ":"])
-            tokens = replace_label(tokens, [",", c, ":"], [",", "_" + c, ":"])
+        for k in (k for k in self.conditions if k.isalpha()):
+            tokens = replace_label(tokens, ["(", k, ":"], ["(", "_" + k, ":"])
+            tokens = replace_label(tokens, [",", k, ":"], [",", "_" + k, ":"])
         return tokens
 
 

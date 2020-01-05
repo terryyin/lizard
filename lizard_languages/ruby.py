@@ -22,9 +22,6 @@ class RubyReader(RubylikeReader):
     ext = ['rb']
     language_names = ['ruby']
 
-    def __init__(self, context):
-        super(RubyReader, self).__init__(context, FUNCTION='def')
-
     @staticmethod
     @js_style_regex_expression
     def generate_tokens(source_code, addition='', token_class=None):

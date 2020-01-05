@@ -13,18 +13,15 @@ def state_embedded_doc(token):
 
 class RubylikeStateMachine(CodeStateMachine):
     # pylint: disable=R0903
+    FUNC_KEYWORD = 'def'
 
-    def __init__(self, context, identifiers):
-        self.identifiers = identifiers
+    def __init__(self, context):
         super(RubylikeStateMachine, self).__init__(context)
-
-    def statemachine_clone(self):
-        return self.__class__(self.context, self.identifiers)
 
     def _state_global(self, token):
         if token in ("end", "}"):
             self.statemachine_return()
-        elif token == self.identifiers['FUNCTION']:
+        elif token == self.FUNC_KEYWORD:
             self._state = self._def
             self.next(self._def)
         elif token == 'it':
@@ -47,12 +44,16 @@ class RubylikeStateMachine(CodeStateMachine):
         return self.context.newline or self.last_token == ";"
 
     def _def(self, token):
-        self.context.restart_new_function(token)
+        if token == '(':
+            self.context.push_new_function('(anonymous)')
+            self.next(self._def_parameters)
+            return
+        self.context.push_new_function(token)
         self.next(self._def_continue)
 
     def _it(self, token):
         if token in ('do', '{'):
-            self.context.restart_new_function(self.last_token)
+            self.context.push_new_function(self.last_token)
             self.next(self._def_continue)
 
     def _def_continue(self, token):
@@ -100,6 +101,6 @@ class RubylikeReader(CodeReader, ScriptLanguageMixIn):
                        'elsif', 'elseif', 'rescue',
                        'ensure', 'when', '||', '&&', '?'])
 
-    def __init__(self, context, **identifiers):
+    def __init__(self, context):
         super(RubylikeReader, self).__init__(context)
-        self.parallel_states = [RubylikeStateMachine(context, identifiers)]
+        self.parallel_states = [RubylikeStateMachine(context)]
