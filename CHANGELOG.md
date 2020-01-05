@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.17.3
+
+Bug fixing in Lua and Scala support
+
 ## 1.17.2
 
 Fix missing file when install
