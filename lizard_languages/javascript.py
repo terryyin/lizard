@@ -21,7 +21,6 @@ class JavaScriptReader(CodeReader, CCppCommentsMixin):
             r"|(?:\$\w+)" + \
             r"|(?:\<\/\w+\>)" + \
             r"|`.*?`"
-
         js_tokenizer = JSTokenizer()
         for token in CodeReader.generate_tokens(
                 source_code, addition, token_class):

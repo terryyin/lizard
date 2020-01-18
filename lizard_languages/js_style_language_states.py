@@ -36,7 +36,7 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
                     JavaScriptStyleLanguageStates(self.context),
                     self._pop_function_from_stack)
             else:
-                self.sub_state(ES6ObjectStates(self.context))
+                self.read_object()
         elif token in ('}', ')'):
             self.statemachine_return()
         elif self.context.newline or token == ';':
@@ -44,6 +44,9 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
             self._pop_function_from_stack()
 
         self.last_tokens = token
+
+    def read_object(self):
+        self.sub_state(ES6ObjectStates(self.context))
 
     def statemachine_before_return(self):
         self._pop_function_from_stack()
@@ -103,13 +106,13 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
 
     def _dec(self, token):
         if token == ')':
-            self._state = self._state_expecting_function_opening_bracket
+            self._state = self._expecting_func_opening_bracket
         elif token != '(':
             self.context.parameter(token)
             return
         self.context.add_to_long_function_name(" " + token)
 
-    def _state_expecting_function_opening_bracket(self, token):
+    def _expecting_func_opening_bracket(self, token):
         if token != '{':
             self.started_function = None
         self.next(self._state_global, token)
