@@ -306,7 +306,7 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
 
     @property
     def parameters(self):
-        matches = [re.search(r'(\w+)(=.*)?$', f) for f in self.full_parameters]
+        matches = [re.search(r'(\w+)(\s=.*)?$', f) for f in self.full_parameters]
         return [m.group(1) for m in matches if m]
 
     def add_to_function_name(self, app):
@@ -327,7 +327,7 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
         elif token == ",":
             self.full_parameters.append('')
         else:
-            self.full_parameters[-1] += token
+            self.full_parameters[-1] += " " + token
 
 
 class FileInformation(object):  # pylint: disable=R0903
