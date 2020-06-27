@@ -1,5 +1,10 @@
 # Change Log
 
+## 1.17.4
+
+Bug fixing in function parameter names. Previously if the parameter has
+default value, it will take the value as the parameter name.
+
 ## 1.17.3
 
 Bug fixing in Lua and Scala support
