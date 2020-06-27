@@ -278,7 +278,7 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
         self.long_name = name
         self.start_line = start_line
         self.end_line = start_line
-        self.parameters = []
+        self.full_parameters = []
         self.filename = filename
         self.top_nesting_level = -1
         self.length = 0
@@ -302,7 +302,12 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
                         " %(name)s@%(start_line)s-%(end_line)s@%(filename)s"
                         % self.__dict__)
 
-    parameter_count = property(lambda self: len(self.parameters))
+    parameter_count = property(lambda self: len(self.full_parameters))
+
+    @property
+    def parameters(self):
+        matches = [re.search(r'(\w+)(=.*)?$', f) for f in self.full_parameters]
+        return [m.group(1) for m in matches if m]
 
     def add_to_function_name(self, app):
         self.name += app
@@ -317,10 +322,12 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
     def add_parameter(self, token):
         self.add_to_long_name(" " + token)
 
-        if not self.parameters or token == ",":
-            self.parameters.append(token)
+        if not self.full_parameters:
+            self.full_parameters.append(token)
+        elif token == ",":
+            self.full_parameters.append('')
         else:
-            self.parameters[-1] = token
+            self.full_parameters[-1] += token
 
 
 class FileInformation(object):  # pylint: disable=R0903

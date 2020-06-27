@@ -98,6 +98,14 @@ class Test_parser_for_Python(unittest.TestCase):
         functions = get_python_function_list(inspect.getsource(namespace2))
         self.assertEqual(2, functions[0].parameter_count)
 
+    def test_parameter_count_with_default_value(self):
+        class namespace_df:
+            def function_with_2_parameters_and_default_value(a, b=None):
+                pass
+        functions = get_python_function_list(inspect.getsource(namespace_df))
+        self.assertEqual(2, functions[0].parameter_count)
+        self.assertEqual(['a', 'b'], functions[0].parameters)
+
     def test_function_end(self):
         class namespace3:
             def simple_function(self):
