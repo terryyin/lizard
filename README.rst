@@ -340,5 +340,5 @@ Lizard is often used in software related researches. If you used it to support y
 
 Lizard is also used as a plugin for fastlane to help check code complexity and submit xml report to sonar.
 
-- [fastlane-plugin-lizard](https://github.com/liaogz82/fastlane-plugin-lizard)
-- [sonar](https://github.com/Backelite/sonar-swift/blob/develop/docs/sonarqube-fastlane.md)
+- `fastlane-plugin-lizard <https://github.com/liaogz82/fastlane-plugin-lizard>`_
+- `sonar <https://github.com/Backelite/sonar-swift/blob/develop/docs/sonarqube-fastlane.md>`_
