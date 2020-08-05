@@ -4,7 +4,7 @@ from ..testHelpers import get_cpp_fileinfo, get_cpp_function_list
 
 class Test_C_Token_extension(unittest.TestCase):
 
-    def test_connecting_marcro(self):
+    def test_connecting_macro(self):
         extended = CLikeReader(None).preprocess(("a##b c", ))
         #tbd
 
@@ -282,7 +282,7 @@ class Test_c_cpp_lizard(unittest.TestCase):
         result = get_cpp_function_list("class c {{}}")
         self.assertEqual(0, len(result))
 
-    def test_braket_that_is_not_a_namespace(self):
+    def test_bracket_that_is_not_a_namespace(self):
         result = get_cpp_function_list("class c { {};int f(){}};")
         self.assertEqual(1, len(result))
         self.assertEqual("c::f", result[0].name)
@@ -608,9 +608,6 @@ int mySecondFunction()
         self.assertEqual('mySecondFunction', result[1].name)
 
 
-
-
-
 class Test_Big(unittest.TestCase):
 
     def test_trouble(self):
@@ -634,7 +631,7 @@ class Test_Big(unittest.TestCase):
         """
         result = get_cpp_function_list(code)
         self.assertEqual(1, len(result))
-        self.assertEqual(2, result[0].cyclomatic_complexity)
+        self.assertEqual(3, result[0].cyclomatic_complexity)
 
 
 

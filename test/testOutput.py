@@ -25,21 +25,21 @@ class TestFunctionOutput(StreamStdoutTestCase):
 
     def test_function_info_header_should_have_the_captions(self):
         print_and_save_modules([],  self.scheme)
-        self.assertEquals("  NLOC    CCN   token  PARAM  length  location  ", sys.stdout.stream.splitlines()[1])
+        self.assertEqual("  NLOC    CCN   token  PARAM  length  location  ", sys.stdout.stream.splitlines()[1])
 
     def test_function_info_header_should_have_the_captions_of_external_extensions(self):
         external_extension = Mock(FUNCTION_INFO = {"xx": {"caption":"*external_extension*"}}, ordering_index=-1)
         extensions = get_extensions([external_extension])
         scheme = OutputScheme(extensions)
         print_and_save_modules([],  scheme)
-        self.assertEquals("  NLOC    CCN   token  PARAM  length *external_extension* location  ", sys.stdout.stream.splitlines()[1])
+        self.assertEqual("  NLOC    CCN   token  PARAM  length *external_extension* location  ", sys.stdout.stream.splitlines()[1])
 
     def test_print_fileinfo(self):
         self.foo.end_line = 100
         self.foo.cyclomatic_complexity = 16
         fileStat = FileInformation("FILENAME", 1, [self.foo])
         print_and_save_modules([fileStat],  self.scheme)
-        self.assertEquals("       1     16      1      0       0 foo@100-100@FILENAME", sys.stdout.stream.splitlines()[3])
+        self.assertEqual("       1     16      1      0       0 foo@100-100@FILENAME", sys.stdout.stream.splitlines()[3])
 
 
 class Ext(object):
@@ -87,7 +87,7 @@ class TestWarningOutput(StreamStdoutTestCase):
         print_warnings(self.option, self.scheme, (x for x in []))
 
 
-class TestFileOutput(StreamStdoutTestCase):
+class TestFileInformationOutput(StreamStdoutTestCase):
 
     def test_print_and_save_detail_information(self):
         scheme = OutputScheme([])

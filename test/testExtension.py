@@ -40,7 +40,7 @@ class Test_using_extensions(unittest.TestCase):
         self.assertEqual(self.file_info.average_max_nesting_depth, 1.5)
 
 
-class Test_using_muliple_base_extensions(unittest.TestCase):
+class Test_using_multiple_base_extensions(unittest.TestCase):
     def setUp(self):
         self.ext = FanInOut()
         self.lizard_object = FileAnalyzer(get_extensions(
@@ -57,7 +57,7 @@ class Test_using_muliple_base_extensions(unittest.TestCase):
         self.assertRaises((AttributeError, TypeError, ValueError), list(self.ext.cross_file_process([lizard_object])))
 
 
-    def test_all_extention_simultaneously(self):
+    def test_all_extension_simultaneously(self):
         list(self.ext.cross_file_process([self.lizard_object]))
         correct_max_nd = {'foo': 1,
                           'bar': 0}

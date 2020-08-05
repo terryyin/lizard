@@ -2,7 +2,7 @@ import unittest
 from .testHelpers import get_cpp_function_list_with_extension
 from lizard_ext.lizardignoreassert import LizardExtension
 
-class TestAssersionExtension(unittest.TestCase):
+class TestAssertionExtension(unittest.TestCase):
     def test_exclusion_of_assert(self):
         result = get_cpp_function_list_with_extension("void fun() { assert(a && b && c); }", LizardExtension())
         self.assertEqual(1, result[0].cyclomatic_complexity)

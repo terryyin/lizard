@@ -43,7 +43,7 @@ class TestFilesFilter(unittest.TestCase):
 
     @patch('lizard.md5_hash_file')
     @patch.object(os, "walk")
-    def test_assigned_lanagues(self, mock_os_walk, md5):
+    def test_assigned_languages(self, mock_os_walk, md5):
         mock_os_walk.return_value = (['.',
                                       None,
                                       ['temp.c', 'useful.cpp', 'x.java', 'x.js']],)

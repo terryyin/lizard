@@ -23,6 +23,10 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
         if token == '{':
             self._state_dec_to_imp(token)
 
+    def try_new_function(self, name):
+        self.context.try_new_function(name)
+        self._state = self._state_function
+
     def _state_global(self, token):
         if token == '@':
             self._state = self._state_decorator

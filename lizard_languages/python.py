@@ -8,7 +8,7 @@ def count_spaces(token):
     return len(token.replace('\t', ' ' * 8))
 
 
-class PythonIndents(object):  # pylint: disable=R0902
+class PythonIndents:  # pylint: disable=R0902
     def __init__(self, context):
         self.indents = [0]
         self.context = context
@@ -29,7 +29,7 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
 
     ext = ['py']
     language_names = ['python']
-    conditions = set(['if', 'for', 'while', 'and', 'or',
+    _conditions = set(['if', 'for', 'while', 'and', 'or',
                       'elif', 'except', 'finally'])
 
     def __init__(self, context):
@@ -74,7 +74,7 @@ class PythonStates(CodeStateMachine):  # pylint: disable=R0903
 
     def _function(self, token):
         if token != '(':
-            self.context.start_new_function(token)
+            self.context.restart_new_function(token)
             self.context.add_to_long_function_name("(")
         else:
             self._state = self._dec

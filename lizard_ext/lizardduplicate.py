@@ -122,7 +122,7 @@ class DuplicateFinder(object):
 
     def duplicate_rate(self):
         try:
-            return self.duplicate_token_count / (
+            return self.duplicate_token_count * 1.0 / (
                     len(self.nodes) +
                     (len(self.boundaries) - 1) * (self.sample_size - 2))
         except ZeroDivisionError:
@@ -181,7 +181,7 @@ class NestingStackWithUnifiedTokens(object):
             return '+'
         if self._is_const(token):
             return '1'
-        elif token[0].isalpha():
+        if token[0].isalpha():
             if token not in self.token_register:
                 self.token_register[token] = 'v'+str(len(self.current_scope))
                 self.current_scope.add(token)

@@ -23,7 +23,6 @@ class TestScala(unittest.TestCase):
             }
                 ''')
         self.assertEqual(0, len(result))
-
     def test_function(self):
         result = get_scala_function_list('''
             def foo() { }
@@ -65,7 +64,7 @@ class TestScala(unittest.TestCase):
                 }
             }''')
         self.assertEqual(1, result[0].parameter_count)
-        self.assertEqual(6, result[0].cyclomatic_complexity)
+        self.assertEqual(5, result[0].cyclomatic_complexity)
 
     def test_comments(self):
         result = get_scala_function_list('''
@@ -88,3 +87,44 @@ class TestScala(unittest.TestCase):
         self.assertEqual(1, result[0].parameter_count)
         self.assertEqual(2, result[0].cyclomatic_complexity)
         self.assertEqual(1, result[0].parameter_count)
+
+    def test_field(self):
+        result = get_scala_function_list('''
+            class A {
+                def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
+                def list(): Future[Seq[Person]] = db.run {
+                  people.result
+                }
+            }
+            ''')
+        self.assertEqual(1, len(result))
+        self.assertEqual('list', result[0].name)
+
+    def test_oneliner(self):
+        result = get_scala_function_list('''
+                def list(): Future[Seq[Person]] = a && b
+                def list1(): Future[Seq[Person]] = a && b
+            ''')
+        self.assertEqual(2, len(result))
+        self.assertEqual('list', result[0].name)
+        self.assertEqual(2, result[0].cyclomatic_complexity)
+
+    def test_oneliner_with_braces(self):
+        result = get_scala_function_list('''
+                def list(): Future[Seq[Person]] = a + {
+                a && b}
+                def list(): Future[Seq[Person]] = a + {
+                a && b}
+            ''')
+        self.assertEqual(2, len(result))
+        self.assertEqual('list', result[0].name)
+        self.assertEqual(2, result[0].cyclomatic_complexity)
+
+    def test_nested(self):
+        result = get_scala_function_list('''
+                def list1(): Future[Seq[Person]] = a + {
+                    def list2(): Future[Seq[Person]] = a + b
+                }
+            ''')
+        self.assertEqual(2, len(result))
+        self.assertEqual('list2', result[0].name)

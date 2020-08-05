@@ -57,7 +57,7 @@ class Test_parser_for_JavaScript(unittest.TestCase):
 
     def test_not_a_function_assigning_to_a_name(self):
         functions = get_js_function_list("abc=3; function (a, b){}")
-        self.assertEqual('function', functions[0].name)
+        self.assertEqual('(anonymous)', functions[0].name)
 
     def test_function_without_name_assign_to_field(self):
         functions = get_js_function_list("a.b.c = function (a, b){}")
@@ -71,6 +71,21 @@ class Test_parser_for_JavaScript(unittest.TestCase):
         functions = get_js_function_list("function a(){function b(){}}")
         self.assertEqual('b', functions[0].name)
         self.assertEqual('a', functions[1].name)
+
+    # test "<>" error match in "< b) {} } function b () { return (dispatch, getState) =>"
+    def test_function_in_arrow(self):
+        functions = get_js_function_list(
+            "function a () {f (a < b) {} } function b () { return (dispatch, getState) => {} }")
+        self.assertEqual('a', functions[0].name)
+        self.assertEqual('(anonymous)', functions[1].name)
+        self.assertEqual('b', functions[2].name)
+
+    # test long_name, fix "a x, y)" to "a (x, y)"
+    def test_function_long_name(self):
+        functions = get_js_function_list(
+            "function a (x, y) {if (a < b) {} } function b () { return (dispatch, getState) => {} }")
+        self.assertEqual('a ( x , y )', functions[0].long_name)
+        self.assertEqual('b ( )', functions[2].long_name)
 
     def test_global(self):
         functions = get_js_function_list("{}")

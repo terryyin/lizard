@@ -1,5 +1,5 @@
 '''
-This is an extension to lizard. It count the reccurance of every identifier
+This is an extension to lizard. It counts the recurrence of every identifier
 in the source code (ignoring the comments and strings), and then generate
 a tag cloud based on the popularity of the identifiers.
 The tag cloud is generated on an HTML5 canvas. So it will eventually save
@@ -76,7 +76,8 @@ class LizardExtension(object):
                         var tagCloud = new TagCloud(canvas.width,
                             canvas.height, ctx);
                         tagCloud.render([''')
-            tags = sorted(self.result, key=self.result.get, reverse=True)[:400]
+            tags = sorted(self.result)
+            tags = sorted(tags, key=self.result.get, reverse=True)[:400]
             for k in tags:
                 html_file.write(
                     ' ' * 40 + '["%s", %d],\n' % (

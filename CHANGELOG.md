@@ -1,5 +1,50 @@
 # Change Log
 
+## 1.17.4
+
+Bug fixing in function parameter names. Previously if the parameter has
+default value, it will take the value as the parameter name.
+
+## 1.17.3
+
+Bug fixing in Lua and Scala support
+
+## 1.17.2
+
+Fix missing file when install
+
+## 1.17.1
+
+Fix HTML Output template problem.
+
+## 1.17.0
+
+Support JavaScript with ES6 and JSX.
+Support Rust
+
+## 1.16.6
+
+Bug fixes:
+
+'for' keyword in Swift label should not be counted as ccn.
+
+'guard' keyword should be counted.
+
+'-o' or '--output_file' parameter added.
+
+
+## 1.16.3
+
+Fix the performance issue
+
+## 1.16.1
+
+Add Lua to the languages.
+
+## 1.15.7
+
+Fix a bug in MSVS format output.
+
 ## 1.15.6
 
 Minor fix for the average NCSS (lines of code) in the XML output.
@@ -12,11 +57,11 @@ function. Now this is fixed.
 An important new feature -- duplicate detector -- in the form of an
 extension.
 
-Ussage:
+Usage:
 
     lizard -Eduplicate
 
-The current version hasn't had any performance optimzation yet. Yet, it
+The current version hasn't had any performance optimization yet. Yet, it
 can scan 1000 cpp files in less than 2 minutes.
 
 Code after comments containing "GENERATED CODE" will be ignored.
@@ -39,7 +84,7 @@ Support CSV & HTML format output
 
 ## 1.13.0
 
-No new feature. Just swtich to new pypi server.
+No new feature. Just switch to new pypi server.
 
 
 ### Added
@@ -48,7 +93,7 @@ No new feature. Just swtich to new pypi server.
 ## [0.12.7] - 2016-11-1
 - 2016.04.2 Support PHP.
 - 2016.03.26 Support C#.
-- 2016.02.2 Add option -EMcCabe for ignoring fall-through swith/cases, thanks to @@vicgonzalez
+- 2016.02.2 Add option -EMcCabe for ignoring fall-through switch/cases, thanks to @@vicgonzalez
 - 2016.01.31 Add support for Ruby
 - 2016.01.29 Add -T option to set limit for any field
 - 2015.12.17 Add support for Swift

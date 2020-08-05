@@ -30,8 +30,8 @@ class LizardExtension(object):  # pylint: disable=R0903
         if hasattr(reader, "loops"):
             loops = reader.loops
         else:
-            loops = set(['if', 'else', 'foreach', 'for', 'while', '&&', '||',
-                         '?', 'catch', 'case', 'try'])
+            loops = set(['if', 'foreach', 'for', 'while', '&&', '||',
+                         '?', 'catch', 'case', 'try', 'def'])
         if hasattr(reader, "bracket"):
             bracket = reader.bracket
         else:
@@ -67,8 +67,6 @@ def check_loop_brackets(reader, l_depth, hidden_brackets):
     if hidden_brackets > 0:
         reader.context.add_hidden_bracket_condition(-1)
         l_depth = reader.context.add_nd_condition(-1)
-    if l_depth == 1:
-        reader.context.add_nd_condition(-1)
 
 
 class NDFileInfoAddition(FileInfoBuilder):

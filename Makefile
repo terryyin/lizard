@@ -10,20 +10,20 @@ tests3:
 	python3 -m unittest test
 
 pep8:
-	pycodestyle lizard.py lizard_ext lizard_languages # test
+	pycodestyle lizard.py lizard_ext lizard_languages
 
 pylint:
-	pylint --rcfile pylintrc lizard.py lizard_ext lizard_languages
+	pylint --exit-zero --rcfile pylintrc lizard.py lizard_ext lizard_languages
 
 deps:
-	pip install -r dev_requirements.txt
+	pip3 install -r dev_requirements.txt
 
 pip-upgrade:
-	pip install --upgrade -r dev_requirements.txt
+	pip3 install --upgrade -r dev_requirements.txt
 
 build: test
-	python setup.py sdist
-	python setup.py bdist_wheel
+	python3 setup.py sdist
+	python3 setup.py bdist_wheel
 
 release: build
 	git tag `python setup.py -q version`

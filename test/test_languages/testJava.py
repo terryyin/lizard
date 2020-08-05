@@ -35,3 +35,11 @@ class TestJava(unittest.TestCase):
     def test_class_name_with_interface(self):
         result = get_java_function_list("class A implements B { void f(){}}")
         self.assertEqual('A::f', result[0].name)
+
+    def test_operator_as_an_overloaded_identifier(self):
+        """it turns out you can overload the operator keyword"""
+        result = get_java_function_list("""
+            package operator; class A { void f(){}}
+        """)
+        self.assertEqual("A::f", result[0].name)
+

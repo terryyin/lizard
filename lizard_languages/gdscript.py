@@ -9,7 +9,7 @@ class GDScriptReader(PythonReader):
 
     ext = ['gd']
     language_names = ['GDScript']
-    conditions = set(['if', 'else', 'for', 'while', '&&', '||', '?', 'catch',
+    _conditions = set(['if', 'else', 'for', 'while', '&&', '||', '?', 'catch',
                       'case', 'do'])
 
     def __init__(self, context):

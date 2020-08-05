@@ -10,9 +10,9 @@ class TTCNReader(CLikeReader):  # pylint: disable=R0903
     ext = ['ttcn', 'ttcnpp']
     language_names = ['ttcn', 'ttcn3']
 
-    conditions = set(['if', 'else', 'for', 'while', 'altstep',
-                      'case', 'goto', 'alt', 'interleave',
-                      'and', 'or', 'xor'])
+    _conditions = set(['if', 'else', 'for', 'while',
+                       'altstep', 'case', 'goto', 'alt',
+                       'interleave', 'and', 'or', 'xor'])
 
     def __init__(self, context):
         super(TTCNReader, self).__init__(context)
@@ -37,12 +37,12 @@ class TTCNStates(CLikeStates):  # pylint: disable=R0903
     def _state_global(self, token):
         if token == 'testcase':
             self._state = self._state_function
-            self.context.start_new_function('__testcase__')
+            self.context.restart_new_function('__testcase__')
         elif token == 'function':
             self._state = self._state_function
-            self.context.start_new_function('')
+            self.context.restart_new_function('')
         elif token == 'control':
-            self.context.start_new_function('__control__')
+            self.context.restart_new_function('__control__')
             self._state = self._state_dec_to_imp
 
     def _state_function(self, token):

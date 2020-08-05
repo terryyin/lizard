@@ -27,7 +27,7 @@ class TestCSVOutput(StreamStdoutTestCase):
 
     def test_csv_no_header(self):
         csv_output(AllResult([self.fileSummary]), False)
-        self.assertEquals(
+        self.assertEqual(
             '1,1,1,0,0,"foo@100-100@FILENAME","FILENAME","foo","foo",100,100',
             sys.stdout.stream.splitlines()[0]
         )
@@ -40,7 +40,7 @@ class TestCSVOutput(StreamStdoutTestCase):
 
         csv_output(AllResult([fileStat]), True)
 
-        self.assertEquals(
+        self.assertEqual(
             '1,16,1,0,0,"foo@100-100@FILENAME","FILENAME","foo","foo",100,100',
             sys.stdout.stream.splitlines()[1]
         )

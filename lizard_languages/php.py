@@ -13,8 +13,8 @@ class PHPReader(CodeReader, CCppCommentsMixin):
 
     ext = ['php']
     language_names = ['php']
-    conditions = set(['if', 'elseif', 'for', 'while', '&&', '||', '?', 'catch',
-                      'case'])
+    _conditions = set(['if', 'elseif', 'for', 'while', '&&', '||', '?',
+                       'catch', 'case'])
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):

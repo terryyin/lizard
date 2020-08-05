@@ -13,6 +13,9 @@ from .php import PHPReader
 from .scala import ScalaReader
 from .gdscript import GDScriptReader
 from .go import GoReader
+from .lua import LuaReader
+from .rust import RustReader
+from .typescript import TypeScriptReader
 
 
 def languages():
@@ -29,7 +32,10 @@ def languages():
         SwiftReader,
         ScalaReader,
         GDScriptReader,
-        GoReader
+        GoReader,
+        LuaReader,
+        RustReader,
+        TypeScriptReader
     ]
 
 

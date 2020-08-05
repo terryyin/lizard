@@ -20,8 +20,8 @@ A list of supported languages:
 -  C/C++ (works with C++14)
 -  Java
 -  C# (C Sharp)
--  JavaScript
--  Objective C
+-  JavaScript (With ES6 and JSX)
+-  Objective-C
 -  Swift
 -  Python
 -  Ruby
@@ -30,6 +30,8 @@ A list of supported languages:
 -  Scala
 -  GDScript
 -  Golang
+-  Lua
+-  Rust
 
 By default lizard will search for any source code that it knows and mix
 all the results together. This might not be what you want. You can use
@@ -110,8 +112,8 @@ Options
                         left empty, it'll search for all languages it knows.
                             lizard -l cpp -l java
                         searches for C++ and Java code.
-                        The available languages are: cpp, java, javascript,
-                        python, objectivec, ttcn
+                        The available languages are: cpp, csharp, java,
+                        javascript, objectivec, php, python, ruby, swift, ttcn
   -V, --verbose         Output in verbose mode (long function name)
   -C CCN, --CCN CCN     Threshold for cyclomatic complexity number warning.
                         The default value is 15. Functions with CCN bigger
@@ -275,7 +277,7 @@ This is an example whitelist:
    #whitelizard.txt
    #The file name can only be whitelizard.txt and put it in the current folder.
    #You may have commented lines begin with #.
-   function_name1, function_name2 # list function names in mulitple lines or split with comma.
+   function_name1, function_name2 # list function names in multiple lines or split with comma.
    file/path/name:function1, function2  # you can also specify the filename
 
 Options in Comments
@@ -327,8 +329,8 @@ Lizard may choose not to deal with some advanced or complicated language feature
   inside of template arguments.
 
 
-Literatures Refering to Lizard
-------------------------------
+Literatures Referring to Lizard
+-------------------------------
 
 Lizard is often used in software related researches. If you used it to support your work, you may contact the lizard author to add your work in the following list.
 
@@ -338,5 +340,5 @@ Lizard is often used in software related researches. If you used it to support y
 
 Lizard is also used as a plugin for fastlane to help check code complexity and submit xml report to sonar.
 
-- [fastlane-plugin-lizard](https://github.com/liaogz82/fastlane-plugin-lizard)
-- [sonar](https://github.com/Backelite/sonar-swift/blob/develop/docs/sonarqube-fastlane.md)
+- `fastlane-plugin-lizard <https://github.com/liaogz82/fastlane-plugin-lizard>`_
+- `sonar <https://github.com/Backelite/sonar-swift/blob/develop/docs/sonarqube-fastlane.md>`_
