@@ -22,6 +22,8 @@ class GoLikeStates(CodeStateMachine):  # pylint: disable=R0903
         if token != '`':
             if token == '(':
                 return self.next(self._member_function, token)
+            if token == '{':
+                return self.next(self._expect_function_impl, token)
             self.context.add_to_function_name(token)
             self._state = self._expect_function_dec
 
