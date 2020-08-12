@@ -14,11 +14,8 @@ virtualenv:
   system_site_packages: true
 
 install:
-  - pip install -e .
   - pip install -r dev_requirements.txt
-  - python setup.py build install
   - pip install .
 
 script:
-  - pip freeze
-  - make
+  - bash ./build.sh
