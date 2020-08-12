@@ -12,6 +12,9 @@ pip install -e .
 echo Prepare requirements within the Virtual Environments
 venv/bin/pip install -r dev_requirements.txt
 
+echo Show the environment
+venv/bin/pip freeze
+
 echo Install setup.py
 python setup.py build install
 

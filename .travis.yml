@@ -11,4 +11,4 @@ python:
 os: linux
 
 script:
-  - build.sh
+  - bash ./build.sh
