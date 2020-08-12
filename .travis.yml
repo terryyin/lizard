@@ -10,12 +10,5 @@ python:
 
 os: linux
 
-virtualenv:
-  system_site_packages: true
-
-install:
-  - pip install -r requirements
-  - pip install .
-
 script:
   - bash ./build.sh
