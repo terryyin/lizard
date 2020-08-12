@@ -20,4 +20,6 @@ install:
   - pip install .
 
 script:
-  - bash ./build.sh
+  - python3 -m venv venv
+  - pip freeze
+  - make

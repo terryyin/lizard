@@ -1,8 +1,5 @@
 #!/bin/bash
 
-echo Setup virtual environment
-python -m venv venv
-
 echo Show the environment
 pip freeze
 
