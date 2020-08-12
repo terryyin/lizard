@@ -10,5 +10,10 @@ python:
 
 os: linux
 
+install:
+  - pip install -e .
+  - pip install -r dev_requirements.txt
+  - python setup.py build install
+
 script:
-  - build.sh
+  - make
