@@ -4,7 +4,8 @@ all: extensive pylint
 extensive: tests pep8
 
 tests:
-	py.test test
+	coverage run --source=lizard.py,lizard_ext,lizard_language -m pytest test
+	coverage report -m
 
 tests3:
 	python3 -m unittest test

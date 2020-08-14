@@ -1,4 +1,4 @@
-''' extensions of lizard '''
+""" extensions of lizard """
 
 from __future__ import print_function
 from .version import version
@@ -14,5 +14,5 @@ def print_xml(results, options, _, total_factory):
 
 
 def print_csv(results, options, _, total_factory):
-    csv_output(total_factory(list(results)), options.verbose)
+    csv_output(total_factory(list(results)), options)
     return 0

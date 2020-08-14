@@ -1,12 +1,12 @@
-'''
+"""
 This is an extension of lizard, that counts the 'exit points'
 in every function.
-'''
+"""
 
 
-class LizardExtension(object):  # pylint: disable=R0903
+class LizardExtension:  # pylint: disable=R0903
 
-    FUNCTION_INFO = {"exit_count": {"caption": " exits "}}
+    FUNCTION_INFO = {"exit_count": {"caption": "exits"}}
 
     def __call__(self, tokens, reader):
         first_return = False
