@@ -72,10 +72,16 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
     def pile_up_within_block(self):
         self.structure_piles[-1] += 1
         cur_level = sum(self.structure_piles)
+        # Is there a path around _state_global?
+        if not hasattr(self.context.current_function, "max_nested_structures"):
+            self.context.current_function.max_nested_structures = 0
         if self.context.current_function.max_nested_structures < cur_level:
             self.context.current_function.max_nested_structures = cur_level
 
     def _state_global(self, token):
+        # Necessary to prevent functions without nested blocks to fail
+        if not hasattr(self.context.current_function, "max_nested_structures"):
+            self.context.current_function.max_nested_structures = 0
         if token == '{':
             self.structure_piles.append(0)
         elif token in ';}':

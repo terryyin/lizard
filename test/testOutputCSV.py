@@ -32,11 +32,9 @@ class TestCSVOutput(StreamStdoutTestCase):
         extension_mock.__class__.__name__ = 'LizardExtension'
         extension_mock.FUNCTION_INFO = {"exit_count": {"caption": "exits"}}
         options_mock.extensions = [extension_mock]
-
         results = AllResult([self.fileSummary])
         results.result[0].function_list[0].exit_count = 1
         csv_output(results, options_mock)
-
         self.assertRegexpMatches(sys.stdout.stream,
                                  r"NLOC,CCN,token,PARAM,length,location,file,function,long_name,start,end,exits")
 
@@ -68,8 +66,6 @@ class TestCSVOutput(StreamStdoutTestCase):
             sys.stdout.stream.splitlines()[0]
         )
 
-
-
     def test_print_fileinfo(self):
         options_mock = Mock()
         options_mock.verbose = True
@@ -77,10 +73,9 @@ class TestCSVOutput(StreamStdoutTestCase):
 
         self.foo.end_line = 100
         self.foo.cyclomatic_complexity = 16
-        fileStat = FileInformation("FILENAME", 1, [self.foo])
+        file_stat = FileInformation("FILENAME", 1, [self.foo])
 
-        csv_output(AllResult([fileStat]), options_mock)
-
+        csv_output(AllResult([file_stat]), options_mock)
         self.assertEqual(
             '1,16,1,0,0,"foo@100-100@FILENAME","FILENAME","foo","foo",100,100',
             sys.stdout.stream.splitlines()[1]
@@ -93,9 +88,9 @@ class TestCSVOutput(StreamStdoutTestCase):
 
         self.foo.end_line = 100
         self.foo.cyclomatic_complexity = 16
-        fileStat = FileInformation("FILENAME", 1, [self.foo])
+        file_stat = FileInformation("FILENAME", 1, [self.foo])
 
-        csv_output(AllResult([fileStat]), options_mock)
+        csv_output(AllResult([file_stat]), options_mock)
 
         self.assertEqual(
             '1,16,1,0,0,"foo@100-100@FILENAME","FILENAME","foo","foo",100,100',
