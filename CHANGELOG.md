@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.17.6
+
+Bug fixing. `.mm` file was not recognized as object-c(++) file.
+
 ## 1.17.5
 
 Bug fixing in function parameter names. Previously if the parameter has
