@@ -2,4 +2,6 @@
 # Add a new version in the CHANGELOG.md in the root folder instead
 #
 # pylint: disable=missing-docstring,invalid-name
-version = "1.17.4"
+
+version = "1.17.5"
+
