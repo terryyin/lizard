@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.17.7
+
+Bug fixing. `typedef` being read properly.
+
 ## 1.17.6
 
 Bug fixing. `.mm` file was not recognized as object-c(++) file.
