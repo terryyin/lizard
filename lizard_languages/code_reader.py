@@ -1,15 +1,17 @@
-'''
+"""
 Base class for all language parsers
-'''
+"""
 
 import re
 from copy import copy
 
 
 class CodeStateMachine(object):
-    ''' the state machine '''
+    """ the state machine """
     # pylint: disable=R0903
     # pylint: disable=R0902
+    # pylint: disable=E1102
+    # disabled E1102 see https://github.com/PyCQA/pylint/issues/1493
     def __init__(self, context):
         self.context = context
         self.saved_state = self._state = self._state_global
@@ -41,7 +43,7 @@ class CodeStateMachine(object):
         self.callback = callback
         self.next(state, token)
 
-    def __call__(self, token):
+    def __call__(self, token, reader=None):
         if self._state(token):
             self.next(self.saved_state)
             if self.callback:
@@ -82,15 +84,14 @@ class CodeStateMachine(object):
 
 
 class CodeReader:
-    ''' CodeReaders are used to parse function structures from
+    """ CodeReaders are used to parse function structures from
     code of different
-    language. Each language will need a subclass of CodeReader.  '''
+    language. Each language will need a subclass of CodeReader.  """
 
     ext = []
     languages = None
     extra_subclasses = set()
-    _conditions = set(['if', 'for', 'while', '&&', '||', '?', 'catch',
-                      'case'])
+    _conditions = {'if', 'for', 'while', '&&', '||', '?', 'catch', 'case'}
 
     def __init__(self, context):
         self.parallel_states = []
@@ -111,7 +112,7 @@ class CodeReader:
         if not token_class:
             token_class = create_token
 
-        def _generate_tokens(source_code, addition):
+        def _generate_tokens(source, add):
             # DO NOT put any sub groups in the regex. Good for performance
             _until_end = r"(?:\\\n|[^\n])*"
             combined_symbols = ["<<=", ">>=", "||", "&&", "===", "!==",
@@ -122,7 +123,7 @@ class CodeReader:
             token_pattern = re.compile(
                 r"(?:" +
                 r"\/\*.*?\*\/" +
-                addition +
+                add +
                 r"|\w+" +
                 r"|\"(?:\\.|[^\"\\])*\"" +
                 r"|\'(?:\\.|[^\'\\])*?\'" +
@@ -136,7 +137,7 @@ class CodeReader:
                 r"|[^\S\n]+" +
                 r"|.)", re.M | re.S)
             macro = ""
-            for match in token_pattern.finditer(source_code):
+            for match in token_pattern.finditer(source):
                 token = token_class(match)
                 if macro:
                     if "\\\n" in token or "\n" not in token:
