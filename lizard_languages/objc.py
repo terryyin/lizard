@@ -5,7 +5,7 @@ from .clike import CLikeReader, CLikeStates, CLikeNestingStackStates
 
 class ObjCReader(CLikeReader):
 
-    ext = ['m']
+    ext = ['m', 'mm']
     language_names = ['objectivec', 'objective-c', 'objc']
 
     def __init__(self, context):
