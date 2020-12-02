@@ -285,6 +285,7 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
         self.fan_in = 0
         self.fan_out = 0
         self.general_fan_out = 0
+        self.line_to_ccn = {}
 
     @property
     def name_in_space(self):
@@ -463,6 +464,10 @@ class FileInfoBuilder(object):
 
     def add_condition(self, inc=1):
         self.current_function.cyclomatic_complexity += inc
+        if self.current_function.line_to_ccn.__contains__(self.current_line):
+            self.current_function.line_to_ccn[self.current_line] += inc
+        else:
+            self.current_function.line_to_ccn[self.current_line] = 1
 
     def add_to_long_function_name(self, app):
         self.current_function.add_to_long_name(app)

@@ -38,7 +38,7 @@ def csv_output(result, options):
         for caption in extension_captions:
             extension_caption = "{},{}".format(extension_caption, caption)
         print("NLOC,CCN,token,PARAM,length,location,file,function," +
-              "long_name,start,end{}".format(extension_caption))
+              "long_name,start,end{},{{line:ccn}}".format(extension_caption))
 
     for source_file in result:
         if source_file:
@@ -49,7 +49,7 @@ def csv_output(result, options):
                         extension_string = '{},{}'.\
                             format(extension_string,
                                    source_function.__getattribute__(variable))
-                    print('{},{},{},{},{},"{}","{}","{}","{}",{},{}{}'.format(
+                    print('{},{},{},{},{},"{}","{}","{}","{}",{},{}{},"{}"'.format(
                         source_function.nloc,
                         source_function.cyclomatic_complexity,
                         source_function.token_count,
@@ -66,5 +66,6 @@ def csv_output(result, options):
                         source_function.long_name.replace("\"", "'"),
                         source_function.start_line,
                         source_function.end_line,
-                        extension_string
+                        extension_string,
+                        str(source_function.line_to_ccn)
                     ))
