@@ -43,3 +43,12 @@ class TestJava(unittest.TestCase):
         """)
         self.assertEqual("A::f", result[0].name)
 
+    def test_abstract_function_without_body_following_method(self):
+        result = get_java_function_list("abstract void fun(); void fun1(){}")
+        self.assertEqual("fun1", result[0].name)
+        self.assertEqual(1, len(result))
+
+    def test_abstract_function_without_body_with_throws_following_method(self):
+        result = get_java_function_list("abstract void fun() throws e; void fun2(){}")
+        self.assertEqual("fun2", result[0].name)          # passed
+        self.assertEqual(1, len(result))                 # failed
