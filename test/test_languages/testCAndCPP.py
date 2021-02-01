@@ -639,7 +639,6 @@ class Test_Big(unittest.TestCase):
         self.assertEqual(3, result[0].cyclomatic_complexity)
 
 
-
 class Test_Dialects(unittest.TestCase):
 
     def test_cuda_kernel_launch(self):

@@ -114,3 +114,20 @@ class Test_end_2_end(unittest.TestCase):
         }
         """)
         self.assertEqual(5, result[0].length)
+
+    def test_line_number_after_slash(self):
+        result = analyze_with_extension(r"""
+            #define mymacro(_value) \
+            { \
+            if (_typeSize == 2) \
+            _value = htobe64(_value); \
+            } \
+            }
+
+            void foo(void)
+            {
+            int i=0;
+            i++;
+            }
+        """)
+        self.assertEqual(9, result[0].start_line)
