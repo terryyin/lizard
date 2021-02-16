@@ -89,7 +89,7 @@ class CLikeNestingStackStates(CodeStateMachine):
     The handling of these complex cases is unspecified and can be ignored.
     """
 
-    __namespace_separators = [":", "final", "[", "extends", 'implements']
+    __namespace_separators = ['<', ":", "final", "[", "extends", 'implements']
 
     def _state_global(self, token):
         """Dual-purpose state for global and structure bodies."""

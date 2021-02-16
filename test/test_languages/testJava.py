@@ -52,3 +52,8 @@ class TestJava(unittest.TestCase):
         result = get_java_function_list("abstract void fun() throws e; void fun2(){}")
         self.assertEqual("fun2", result[0].name)
         self.assertEqual(1, len(result))
+
+    def test_generic_type_with_extends(self):
+        result = get_java_function_list("class B<T extends C> {void fun(T t) {}}")
+         # actual "B<T::fun"
+        self.assertEqual("B::fun", result[0].name)
