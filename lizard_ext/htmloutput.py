@@ -137,10 +137,10 @@ Cyclomatic complexity
        <td class="value">{{ func.token_count }}</td>
     {% endif %}
 
-    {% if func.parameters|length > thresholds["parameter_count"] %}
-       <td class="greater-value">{{ func.parameters|length }}</td>
+    {% if func.full_parameters|length > thresholds["parameter_count"] %}
+       <td class="greater-value">{{ func.full_parameters|length }}</td>
     {% else %}
-       <td class="lesser-value">{{ func.parameters|length }}</td>
+       <td class="lesser-value">{{ func.full_parameters|length }}</td>
     {% endif %}
   </tr>
   {% endfor %}
