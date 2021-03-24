@@ -221,7 +221,7 @@ def arg_parser(prog=None):
     parser.add_argument("-s", "--sort",
                         help='''Sort the warning with field. The field can be
                         nloc, cyclomatic_complexity, token_count,
-                        p#arameter_count, etc. Or an customized field.''',
+                        parameter_count, etc. Or an customized field.''',
                         action="append",
                         dest="sorting",
                         default=[])
