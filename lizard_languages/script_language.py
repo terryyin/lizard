@@ -14,7 +14,7 @@ class ScriptLanguageMixIn(object):
 
     @staticmethod
     def generate_common_tokens(source_code, addition, match_holder=None):
-        _until_end = r"(?:\\\n|[^\n])*"
+        _until_end = r"(?:[^\n])*"
         return CodeReader.generate_tokens(
             source_code,
             r"|\#" + _until_end + addition,
