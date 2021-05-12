@@ -182,6 +182,31 @@ class Test_parser_for_Python(unittest.TestCase):
         self.assertEqual("function1", functions[1].name)
         self.assertEqual(4, functions[1].end_line)
 
+    
+    def test_comment_line_break(self):
+        class namespace11:
+            def function1():
+                # This is a comment with a line break\
+                if IamOnEarth:
+                    return toMars()
+        functions = get_python_function_list(inspect.getsource(namespace11))
+        self.assertEqual(1, len(functions))
+        self.assertEqual("function1", functions[0].name)
+        self.assertEqual(2, functions[0].cyclomatic_complexity)
+        self.assertEqual(5, functions[0].end_line)
+
+    def test_line_break(self):
+        class namespace11:
+            def function1():
+                if IamOnEarth\
+                    or IamOnMoon:
+                    return toMars()
+        functions = get_python_function_list(inspect.getsource(namespace11))
+        self.assertEqual(1, len(functions))
+        self.assertEqual("function1", functions[0].name)
+        self.assertEqual(3, functions[0].cyclomatic_complexity)
+        self.assertEqual(5, functions[0].end_line)
+
     def xtest_one_line_functions(self):
         class namespace8:
             def a( ):pass
