@@ -13,8 +13,8 @@ class PythonIndents:  # pylint: disable=R0902
         self.indents = [0]
         self.context = context
 
-    def set_nesting(self, spaces):
-        while self.indents[-1] > spaces:
+    def set_nesting(self, spaces, token = ""):
+        while self.indents[-1] > spaces and (not token.startswith(")")):
             self.indents.pop()
             self.context.pop_nesting()
         if self.indents[-1] < spaces:
@@ -53,7 +53,7 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
                         current_leading_spaces += count_spaces(token)
                     else:
                         if not token.startswith('#'):
-                            indents.set_nesting(current_leading_spaces)
+                            indents.set_nesting(current_leading_spaces, token)
                         reading_leading_space = False
             else:
                 reading_leading_space = True
