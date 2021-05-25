@@ -91,6 +91,24 @@ class Test_parser_for_Python(unittest.TestCase):
         functions = get_python_function_list(source)
         self.assertEqual(2, len(functions))
 
+    def test_multi_line_function_def_function_end(self):
+        source = """
+            def foo(arg1,
+                arg2,
+            ):
+                return True
+
+            def foo2(arg1,
+                arg2,
+                arg3
+            ):
+                if True:
+                    return False
+            """
+        functions = get_python_function_list(source)
+        self.assertEqual(3, functions[0].end_line)
+        self.assertEqual(9, functions[1].end_line)
+
     def test_parameter_count(self):
         class namespace2:
             def function_with_2_parameters(a, b):
