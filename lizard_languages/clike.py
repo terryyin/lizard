@@ -89,7 +89,7 @@ class CLikeNestingStackStates(CodeStateMachine):
     The handling of these complex cases is unspecified and can be ignored.
     """
 
-    __namespace_separators = [":", "final", "[", "extends", 'implements']
+    __namespace_separators = ['<', ":", "final", "[", "extends", 'implements']
 
     def _state_global(self, token):
         """Dual-purpose state for global and structure bodies."""
@@ -205,6 +205,8 @@ class CLikeStates(CodeStateMachine):
             self.context.add_to_long_function_name(" " + token)
         elif token == 'throw':
             self._state = self._state_throw
+        elif token == 'throws':
+            self._state = self._state_throws
         elif token == '->':
             self._state = self._state_trailing_return
         elif token == 'noexcept':
@@ -230,6 +232,11 @@ class CLikeStates(CodeStateMachine):
     @CodeStateMachine.read_inside_brackets_then("()")
     def _state_throw(self, _):
         self._state = self._state_dec_to_imp
+
+    @CodeStateMachine.read_until_then(';{')
+    def _state_throws(self, token, _):
+        self._state = self._state_dec_to_imp
+        self._state(token)
 
     def _state_noexcept(self, token):
         if token == '(':

@@ -24,12 +24,13 @@ class LizardExtension(object):  # pylint: disable=R0903
                             else_count -= last.count("#else")
                             if last.startswith("#if"):
                                 break
-                elif not else_count and not (
-                            if_stack and if_stack[-1].startswith("#elif")):
-                    yield token
-                else:
                     for _ in range(token.count('\n')):
                         yield '\n'
+                elif else_count:
+                    for _ in range(token.count('\n')):
+                        yield '\n'
+                elif not (if_stack and if_stack[-1].startswith("#elif")):
+                    yield token
 
         if "c" not in reader.ext:
             return tokens

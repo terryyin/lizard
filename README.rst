@@ -21,6 +21,7 @@ A list of supported languages:
 -  Java
 -  C# (C Sharp)
 -  JavaScript (With ES6 and JSX)
+-  TypeScript
 -  Objective-C
 -  Swift
 -  Python
@@ -108,60 +109,64 @@ Options
   -h, --help            show this help message and exit
   --version             show program's version number and exit
   -l LANGUAGES, --languages LANGUAGES
-                        List the programming languages you want to analyze. if
-                        left empty, it'll search for all languages it knows.
-                            lizard -l cpp -l java
-                        searches for C++ and Java code.
-                        The available languages are: cpp, csharp, java,
-                        javascript, objectivec, php, python, ruby, swift, ttcn
+                        List the programming languages you want to analyze. if left empty, it'll
+                        search for all languages it knows. `lizard -l cpp -l java`searches for
+                        C++ and Java code. The available languages are: cpp, java, csharp,
+                        javascript, python, objectivec, ttcn, ruby, php, swift, scala, GDScript,
+                        go, lua, rust, typescript
   -V, --verbose         Output in verbose mode (long function name)
-  -C CCN, --CCN CCN     Threshold for cyclomatic complexity number warning.
-                        The default value is 15. Functions with CCN bigger
-                        than it will generate warning
+  -C CCN, --CCN CCN     Threshold for cyclomatic complexity number warning. The default value is
+                        15. Functions with CCN bigger than it will generate warning
+  -f INPUT_FILE, --input_file INPUT_FILE
+                        get a list of filenames from the given file
+  -o OUTPUT_FILE, --output_file OUTPUT_FILE
+                        Output file. The output format is inferred from the file extension (e.g.
+                        .html), unless it is explicitly specified (e.g. using --xml).
   -L LENGTH, --length LENGTH
-                        Threshold for maximum function length warning. The
-                        default value is 1000. Functions length bigger than it
-                        will generate warning
+                        Threshold for maximum function length warning. The default value is 1000.
+                        Functions length bigger than it will generate warning
   -a ARGUMENTS, --arguments ARGUMENTS
                         Limit for number of parameters
-  -w, --warnings_only   Show warnings only, using clang/gcc's warning format
-                        for printing warnings.
-                        http://clang.llvm.org/docs/UsersManual.html#cmdoption-
+  -w, --warnings_only   Show warnings only, using clang/gcc's warning format for printing
+                        warnings. http://clang.llvm.org/docs/UsersManual.html#cmdoption-
                         fdiagnostics-format
+  --warning-msvs        Show warnings only, using Visual Studio's warning format for printing
+                        warnings. https://msdn.microsoft.com/en-us/library/yxkt8b26.aspx
   -i NUMBER, --ignore_warnings NUMBER
-                        If the number of warnings is equal or less than the
-                        number, the tool will exit normally, otherwise it will
-                        generate error. Useful in makefile for legacy code.
+                        If the number of warnings is equal or less than the number, the tool will
+                        exit normally; otherwise, it will generate error. If the number is
+                        negative, the tool exits normally regardless of the number of warnings.
+                        Useful in makefile for legacy code.
   -x EXCLUDE, --exclude EXCLUDE
-                        Exclude files that match this pattern. * matches
-                        everything, ? matches any single character,
-                        "./folder/*" exclude everything in the folder
-                        recursively. Multiple patterns can be specified. Don't
-                        forget to add "" around the pattern.
-  --csv                 Generate CSV output as a transform of the default
-                        output
-  -X, --xml             Generate XML in cppncss style instead of the tabular
-                        output. Useful to generate report in Jenkins server
+                        Exclude files that match the pattern. * matches everything, ? matches any
+                        single character, "./folder/*" exclude everything in the folder
+                        recursively. Multiple patterns can be specified. Don't forget to add ""
+                        around the pattern.
   -t WORKING_THREADS, --working_threads WORKING_THREADS
-                        number of working threads. The default value is 1.
-                        Using a bigger number can fully utilize the CPU and
-                        often faster.
-  -m, --modified        Calculate modified cyclomatic complexity number,
-                        which count a switch/case with multiple cases as
-                        one CCN.
+                        number of working threads. The default value is 1. Using a bigger number
+                        can fully utilize the CPU and often faster.
+  -X, --xml             Generate XML in cppncss style instead of the tabular output. Useful to
+                        generate report in Jenkins server
+  --csv                 Generate CSV output as a transform of the default output
+  -H, --html            Output HTML report
+  -m, --modified        Calculate modified cyclomatic complexity number , which count a
+                        switch/case with multiple cases as one CCN.
   -E EXTENSIONS, --extension EXTENSIONS
-                        User the extensions. The available extensions are:
-                        -Ecpre: it will ignore code in the #else branch.
-                        -Ewordcount: count word frequencies and generate tag
-                        cloud. -Eoutside: include the global code as one
-                        function.
+                        User the extensions. The available extensions are: -Ecpre: it will ignore
+                        code in the #else branch. -Ewordcount: count word frequencies and
+                        generate tag cloud. -Eoutside: include the global code as one function.
+                        -EIgnoreAssert: to ignore all code in assert. -ENS: count nested control
+                        structures.
   -s SORTING, --sort SORTING
                         Sort the warning with field. The field can be nloc,
-                        cyclomatic_complexity, token_count, parameter_count,
-                        etc. Or an customized file.
+                        cyclomatic_complexity, token_count, parameter_count, etc. Or an customized field.
+  -T THRESHOLDS, --Threshold THRESHOLDS
+                        Set the limit for a field. The field can be nloc, cyclomatic_complexity,
+                        token_count, parameter_count, etc. Or an customized file. Lizard will
+                        report warning if a function exceed the limit
   -W WHITELIST, --whitelist WHITELIST
-                        The path and file name to the whitelist file. It's
-                        './whitelizard.txt' by default.
+                        The path and file name to the whitelist file. It's './whitelizard.txt' by
+                        default. Find more information in README.
 
 
 Example use
@@ -342,3 +347,4 @@ Lizard is also used as a plugin for fastlane to help check code complexity and s
 
 - `fastlane-plugin-lizard <https://github.com/liaogz82/fastlane-plugin-lizard>`_
 - `sonar <https://github.com/Backelite/sonar-swift/blob/develop/docs/sonarqube-fastlane.md>`_
+- `European research project FASTEN (Fine-grained Analysis of SofTware Ecosystems as Networks, <http://fasten-project.eu/)>, for a quality analyzer (<https://github.com/fasten-project/quality-analyzer>)`_

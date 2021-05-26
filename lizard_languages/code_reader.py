@@ -63,10 +63,10 @@ class CodeStateMachine(object):
         def decorator(func):
             def read_until_matching_brackets(self, token):
                 self.br_count += {brs[0]: 1, brs[1]: -1}.get(token, 0)
-                if self.br_count == 0 and end_state is not None:
-                    self.next(getattr(self, end_state))
                 if self.br_count == 0 or end_state is not None:
                     func(self, token)
+                if self.br_count == 0 and end_state is not None:
+                    self.next(getattr(self, end_state))
             return read_until_matching_brackets
         return decorator
 
