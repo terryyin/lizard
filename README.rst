@@ -156,7 +156,7 @@ Options
                         code in the #else branch. -Ewordcount: count word frequencies and
                         generate tag cloud. -Eoutside: include the global code as one function.
                         -EIgnoreAssert: to ignore all code in assert. -ENS: count nested control
-                        structures.
+                        structures. -Eduplicate: detect duplicate code.
   -s SORTING, --sort SORTING
                         Sort the warning with field. The field can be nloc,
                         cyclomatic_complexity, token_count, parameter_count, etc. Or an customized field.

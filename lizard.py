@@ -74,12 +74,13 @@ def analyze_files(files, threads=1, exts=None):
 
 def _extension_arg(parser):
     parser.add_argument("-E", "--extension",
-                        help='''User the extensions. The available extensions
+                        help='''Use the extensions. The available extensions
                         are: -Ecpre: it will ignore code in the #else branch.
                         -Ewordcount: count word frequencies and generate tag
                         cloud. -Eoutside: include the global code as one
-                        function.  -EIgnoreAssert: to ignore all code in
-                        assert. -ENS: count nested control structures.''',
+                        function. -EIgnoreAssert: to ignore all code in
+                        assert. -ENS: count nested control structures.
+                        -Eduplicate: detect duplicate code.''',
                         action="append",
                         dest="extensions",
                         default=[])
