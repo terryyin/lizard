@@ -152,7 +152,7 @@ Options
   -m, --modified        Calculate modified cyclomatic complexity number , which count a
                         switch/case with multiple cases as one CCN.
   -E EXTENSIONS, --extension EXTENSIONS
-                        User the extensions. The available extensions are: -Ecpre: it will ignore
+                        Use the extensions. The available extensions are: -Ecpre: it will ignore
                         code in the #else branch. -Ewordcount: count word frequencies and
                         generate tag cloud. -Eoutside: include the global code as one function.
                         -EIgnoreAssert: to ignore all code in assert. -ENS: count nested control
