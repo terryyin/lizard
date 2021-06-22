@@ -43,7 +43,7 @@ class FortranReader(CodeReader, FortranCommentsMixin):
             r'|\.OR\.' +
             r'|\.AND\.' +
             r'|ELSE +IF' +
-            ''.join(fr'|END[ \t]+{_}' for _ in FortranReader._blocks) +
+            ''.join(r'|END[ \t]+{0}'.format(_) for _ in FortranReader._blocks) +
             addition,
             token_class)
 
@@ -77,7 +77,7 @@ class FortranReader(CodeReader, FortranCommentsMixin):
 class FortranStates(CodeStateMachine):
     # pylint: disable=line-too-long
     # pylint: disable=protected-access
-    _ends = re.compile('(?:'+'|'.join(fr'END\s*{_}' for _ in FortranReader._blocks)+')', re.I)
+    _ends = re.compile('(?:'+'|'.join(r'END\s*{0}'.format(_) for _ in FortranReader._blocks)+')', re.I)
 
     def __init__(self, context, reader):
         super(FortranStates, self).__init__(context)
