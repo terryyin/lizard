@@ -31,7 +31,7 @@ class FortranReader(CodeReader, FortranCommentsMixin):
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
-        _until_end = r"(?:\\\n|[^\n])*"
+        _until_end = r'(?:\\\n|[^\n])*'
         return CodeReader.generate_tokens(
             source_code,
             r'(?i)' +
@@ -150,7 +150,7 @@ class FortranStates(CodeStateMachine):
             self.reset_state()
 
     def _ignore_if_label(self, token):
-        if token.isnumeric():
+        if all(char in "0123456789" for char in token):
             self.reset_state()
         else:
             self.context.add_bare_nesting()
