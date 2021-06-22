@@ -57,10 +57,10 @@ class FortranReader(CodeReader, FortranCommentsMixin):
             macro = re.match(r'#\s*(\w+)', token)
             if macro:
                 macro = macro.group(1).lower()
-                if macro in ('if', 'ifdef', 'elif'):
+                if macro in ('if', 'ifdef', 'ifndef', 'elif'):
                     self.context.add_condition()
                 if macro_depth > 0:
-                    if macro in ('if', 'ifdef'):
+                    if macro in ('if', 'ifdef', 'ifndef'):
                         macro_depth += 1
                     elif macro == 'endif':
                         macro_depth -= 1
