@@ -6,7 +6,8 @@ import re
 from .code_reader import CodeStateMachine, CodeReader
 
 
-class FortranCommentsMixin(object):  # pylint: disable=R0903
+# pylint: disable=R0903
+class FortranCommentsMixin(object):
     @staticmethod
     def get_comment_from_token(token):
         if token.startswith('!'):
@@ -22,7 +23,7 @@ class FortranReader(CodeReader, FortranCommentsMixin):
     _conditions = set((
         'IF', 'DO', '.AND.', '.OR.', 'CASE',
         'if', 'do', '.and.', '.or.', 'case'))
-    _blocks = ['PROGRAM', 'MODULE', 'SUBROUTINE', 'FUNCTION', 'TYPE', 'INTERFACE', 'BLOCK', 'IF', 'DO', 'WHERE', 'SELECT']
+    _blocks = ['PROGRAM', 'MODULE', 'SUBROUTINE', 'FUNCTION', 'TYPE', 'INTERFACE', 'BLOCK', 'IF', 'DO', 'FORALL', 'WHERE', 'SELECT', 'ASSOCIATE']
 
     def __init__(self, context):
         super(FortranReader, self).__init__(context)
@@ -70,7 +71,7 @@ class FortranReader(CodeReader, FortranCommentsMixin):
                 # only the first branch of #if #elif #else
                 # is read by the FortranStateMachine
                 self.macro_disabled = macro_depth != 0
-            elif not (token.isspace() or token == '\n'):
+            elif not token.isspace() or token == '\n':
                 yield token
 
 # pylint: disable=R0903
@@ -116,7 +117,7 @@ class FortranStates(CodeStateMachine):
             self._state = self._ignore_if_paren
         elif token_upper in ('DO',):
             self._state = self._ignore_if_label
-        elif token_upper in ('WHERE', 'SELECT', 'INTERFACE'):
+        elif token_upper in ('FORALL', 'WHERE', 'SELECT', 'INTERFACE', 'ASSOCIATE'):
             self.context.add_bare_nesting()
         elif token_upper == 'ELSE':
             self.context.pop_nesting()

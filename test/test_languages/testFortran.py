@@ -110,7 +110,7 @@ class TestFortran(unittest.TestCase):
             end if
             if (b) then
                 call sub(b)
-            else if (c) then
+            else  if (c) then
                 call sub(c)
             end if
         endsubroutine test
@@ -163,7 +163,7 @@ class TestFortran(unittest.TestCase):
         #ifdef TEST
             subroutine test
         #elif TEST2
-            #if TEST3
+            #ifndef TEST3
                 subroutine test3
                 end subroutine
             #elif TEST4
