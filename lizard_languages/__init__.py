@@ -16,6 +16,7 @@ from .go import GoReader
 from .lua import LuaReader
 from .rust import RustReader
 from .typescript import TypeScriptReader
+from .fortran import FortranReader
 
 
 def languages():
@@ -35,7 +36,8 @@ def languages():
         GoReader,
         LuaReader,
         RustReader,
-        TypeScriptReader
+        TypeScriptReader,
+        FortranReader
     ]
 
 
