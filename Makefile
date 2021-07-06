@@ -17,10 +17,10 @@ pylint:
 	pylint --exit-zero --rcfile pylintrc lizard.py lizard_ext lizard_languages
 
 deps:
-	pip3 install -r dev_requirements.txt
+	pip3 install --user -r dev_requirements.txt
 
 pip-upgrade:
-	pip3 install --upgrade -r dev_requirements.txt
+	pip3 install --user --upgrade -r dev_requirements.txt
 
 build: test
 	python3 setup.py sdist

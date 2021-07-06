@@ -1,5 +1,10 @@
 # Change Log
 
+## 1.17.8
+
+Add Fortran to the language supported
+
+
 ## 1.17.7
 
 Bug fixing. `typedef` being read properly.

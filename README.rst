@@ -348,5 +348,6 @@ Lizard is also used as a plugin for fastlane to help check code complexity and s
 
 - `fastlane-plugin-lizard <https://github.com/liaogz82/fastlane-plugin-lizard>`_
 - `sonar <https://github.com/Backelite/sonar-swift/blob/develop/docs/sonarqube-fastlane.md>`_
-- `European research project FASTEN (Fine-grained Analysis of SofTware Ecosystems as Networks, <http://fasten-project.eu/)>, for a quality analyzer (<https://github.com/fasten-project/quality-analyzer>)`_
+- `European research project FASTEN (Fine-grained Analysis of SofTware Ecosystems as Networks, <http://fasten-project.eu/)>`_
+  - `for a quality analyzer <https://github.com/fasten-project/quality-analyzer>`_
 
