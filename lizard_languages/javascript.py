@@ -11,7 +11,7 @@ from .js_style_language_states import JavaScriptStyleLanguageStates
 class JavaScriptReader(CodeReader, CCppCommentsMixin):
     # pylint: disable=R0903
 
-    ext = ['js']
+    ext = ['js', 'jsx']
     language_names = ['javascript', 'js']
 
     @staticmethod

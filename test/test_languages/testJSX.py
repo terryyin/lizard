@@ -4,7 +4,7 @@ from lizard_languages import JavaScriptReader
 
 
 def get_js_function_list(source_code):
-    return analyze_file.analyze_source_code("a.js", source_code).function_list
+    return analyze_file.analyze_source_code("a.jsx", source_code).function_list
 
 class Test_tokenizing_JSX(unittest.TestCase):
 
