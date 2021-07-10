@@ -11,7 +11,7 @@ in mkShell {
     python39Packages.pip
     python39Packages.setuptools
     vim
-    git
+    git less
   ];
   shellHook = ''
     export PYTHONUSERBASE=$PWD/.local

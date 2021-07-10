@@ -130,7 +130,7 @@ class CodeReader:
                 r"|\/\/" + _until_end +
                 r"|\#" +
                 r"|:=|::|\*\*" +
-                r"|\<\s*\?\s*\>" +
+                r"|\<\s*\?(?:\s*extends\s+\w+)?\s*\>" +
                 r"|" + r"|".join(re.escape(s) for s in combined_symbols) +
                 r"|\\\n" +
                 r"|\n" +

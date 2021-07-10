@@ -57,3 +57,10 @@ class TestJava(unittest.TestCase):
         result = get_java_function_list("class B<T extends C> {void fun(T t) {}}")
          # actual "B<T::fun"
         self.assertEqual("B::fun", result[0].name)
+
+
+    def test_generic_type_with_question_mark(self):
+        result = get_java_function_list("void A(){ List<? extends x> list;}}")
+        self.assertEqual(1, len(result))
+        self.assertEqual("A", result[0].name)
+        self.assertEqual(1, result[0].cyclomatic_complexity)
