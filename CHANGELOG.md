@@ -1,6 +1,19 @@
 # Change Log
 
-## 1.17.4
+## 1.17.8
+
+Add Fortran to the language supported
+
+
+## 1.17.7
+
+Bug fixing. `typedef` being read properly.
+
+## 1.17.6
+
+Bug fixing. `.mm` file was not recognized as object-c(++) file.
+
+## 1.17.5
 
 Bug fixing in function parameter names. Previously if the parameter has
 default value, it will take the value as the parameter name.

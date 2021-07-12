@@ -39,3 +39,4 @@ dist/
 *.sw[a-z]
 .idea
 .pytest_cache/
+.local/

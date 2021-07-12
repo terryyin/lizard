@@ -18,4 +18,5 @@ class TestHTMLOutput(StreamStdoutTestCase):
     def test_should_have_html_body(self):
         html_output([self.fileSummary], self.option, None, AllResult)
         self.assertRegexpMatches(sys.stdout.stream,
-                r"\<html\>")
+                                 r"\<html\>")
+
