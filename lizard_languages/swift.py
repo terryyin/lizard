@@ -7,7 +7,24 @@ from .clike import CCppCommentsMixin
 from .golike import GoLikeStates
 
 
-class SwiftReader(CodeReader, CCppCommentsMixin):
+class SwiftReplaceLabel:
+    def preprocess(self, tokens):
+        tokens = list(t for t in tokens if not t.isspace() or t == '\n')
+
+        def replace_label(tokens, target, replace):
+            for i in range(0, len(tokens) - len(target)):
+                if tokens[i:i + len(target)] == target:
+                    for j, repl in enumerate(replace):
+                        tokens[i + j] = repl
+            return tokens
+
+        for k in (k for k in self.conditions if k.isalpha()):
+            tokens = replace_label(tokens, ["(", k, ":"], ["(", "_" + k, ":"])
+            tokens = replace_label(tokens, [",", k, ":"], [",", "_" + k, ":"])
+        return tokens
+
+
+class SwiftReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
     # pylint: disable=R0903
 
     FUNC_KEYWORD = 'def'
@@ -29,20 +46,6 @@ class SwiftReader(CodeReader, CCppCommentsMixin):
             r"|\w+\!" +
             r"|\?\?" +
             addition)
-
-    def preprocess(self, tokens):
-        tokens = list(t for t in tokens if not t.isspace() or t == '\n')
-
-        def replace_label(tokens, target, replace):
-            for i in range(0, len(tokens) - len(target)):
-                if tokens[i:i + len(target)] == target:
-                    for j, repl in enumerate(replace):
-                        tokens[i + j] = repl
-            return tokens
-        for k in (k for k in self.conditions if k.isalpha()):
-            tokens = replace_label(tokens, ["(", k, ":"], ["(", "_" + k, ":"])
-            tokens = replace_label(tokens, [",", k, ":"], [",", "_" + k, ":"])
-        return tokens
 
 
 class SwiftStates(GoLikeStates):  # pylint: disable=R0903
