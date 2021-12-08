@@ -3,6 +3,7 @@
 from .clike import CLikeReader
 from .java import JavaReader
 from .javascript import JavaScriptReader
+from .kotlin import KotlinReader
 from .python import PythonReader
 from .objc import ObjCReader
 from .ttcn import TTCNReader
@@ -37,7 +38,8 @@ def languages():
         LuaReader,
         RustReader,
         TypeScriptReader,
-        FortranReader
+        FortranReader,
+        KotlinReader
     ]
 
 
