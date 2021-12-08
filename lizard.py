@@ -560,10 +560,13 @@ class FileAnalyzer(object):  # pylint: disable=R0903
         context = FileInfoBuilder(filename)
         reader = (get_reader_for(filename) or CLikeReader)(context)
         tokens = reader.generate_tokens(code)
-        for processor in self.processors:
-            tokens = processor(tokens, reader)
-        for _ in reader(tokens, reader):
-            pass
+        try:
+            for processor in self.processors:
+                tokens = processor(tokens, reader)
+            for _ in reader(tokens, reader):
+                pass
+        except RecursionError as e:
+            sys.stderr.write(f"[skip] fail to process {filename} with RecursionError - {e}\n")
         return context.fileinfo
 
 
