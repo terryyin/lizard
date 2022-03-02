@@ -281,7 +281,6 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
         self.full_parameters = []
         self.filename = filename
         self.top_nesting_level = -1
-        self.length = 0
         self.fan_in = 0
         self.fan_out = 0
         self.general_fan_out = 0
@@ -309,6 +308,10 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
         matches = [re.search(r'(\w+)(\s=.*)?$', f)
                    for f in self.full_parameters]
         return [m.group(1) for m in matches if m]
+
+    @property
+    def length(self):
+        return self.end_line - self.start_line + int(self.start_line != self.end_line)
 
     def add_to_function_name(self, app):
         self.name += app
@@ -438,8 +441,6 @@ class FileInfoBuilder(object):
         self.fileinfo.nloc += count
         self.current_function.nloc += count
         self.current_function.end_line = self.current_line
-        self.current_function.length = \
-            self.current_line - self.current_function.start_line + 1
         self.newline = count > 0
 
     def try_new_function(self, name):
