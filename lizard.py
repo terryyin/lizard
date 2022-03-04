@@ -311,7 +311,7 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
 
     @property
     def length(self):
-        return self.end_line - self.start_line + int(self.start_line != self.end_line)
+        return self.end_line - self.start_line + 1
 
     def add_to_function_name(self, app):
         self.name += app

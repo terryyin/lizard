@@ -39,7 +39,7 @@ class TestFunctionOutput(StreamStdoutTestCase):
         self.foo.cyclomatic_complexity = 16
         fileStat = FileInformation("FILENAME", 1, [self.foo])
         print_and_save_modules([fileStat],  self.scheme)
-        self.assertEqual("       1     16      1      0       0 foo@100-100@FILENAME", sys.stdout.stream.splitlines()[3])
+        self.assertEqual("       1     16      1      0       1 foo@100-100@FILENAME", sys.stdout.stream.splitlines()[3])
 
 
 class Ext(object):
@@ -70,7 +70,7 @@ class TestWarningOutput(StreamStdoutTestCase):
         fileSummary = FileInformation("FILENAME", 123, [self.foo])
         scheme = OutputScheme([Ext()])
         count = print_clang_style_warning([fileSummary], self.option, scheme, None)
-        self.assertIn("FILENAME:100: warning: foo has 1 NLOC, 30 CCN, 1 token, 0 PARAM, 0 length, 10 ND\n", sys.stdout.stream)
+        self.assertIn("FILENAME:100: warning: foo has 1 NLOC, 30 CCN, 1 token, 0 PARAM, 1 length, 10 ND\n", sys.stdout.stream)
         self.assertEqual(1, count)
 
     def test_sort_warning(self):

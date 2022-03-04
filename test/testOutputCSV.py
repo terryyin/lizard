@@ -44,7 +44,7 @@ class TestCSVOutput(StreamStdoutTestCase):
         options_mock.extensions = []
         csv_output(AllResult([self.fileSummary]), options_mock)
         self.assertEqual(
-            '1,1,1,0,0,"foo@100-100@FILENAME","FILENAME","foo","foo",100,100',
+            '1,1,1,0,1,"foo@100-100@FILENAME","FILENAME","foo","foo",100,100',
             sys.stdout.stream.splitlines()[0]
         )
 
@@ -62,7 +62,7 @@ class TestCSVOutput(StreamStdoutTestCase):
         csv_output(results, options_mock)
 
         self.assertEqual(
-            '1,1,1,0,0,"foo@100-100@FILENAME","FILENAME","foo","foo",100,100,1',
+            '1,1,1,0,1,"foo@100-100@FILENAME","FILENAME","foo","foo",100,100,1',
             sys.stdout.stream.splitlines()[0]
         )
 
@@ -77,7 +77,7 @@ class TestCSVOutput(StreamStdoutTestCase):
 
         csv_output(AllResult([file_stat]), options_mock)
         self.assertEqual(
-            '1,16,1,0,0,"foo@100-100@FILENAME","FILENAME","foo","foo",100,100',
+            '1,16,1,0,1,"foo@100-100@FILENAME","FILENAME","foo","foo",100,100',
             sys.stdout.stream.splitlines()[1]
         )
 
@@ -93,6 +93,6 @@ class TestCSVOutput(StreamStdoutTestCase):
         csv_output(AllResult([file_stat]), options_mock)
 
         self.assertEqual(
-            '1,16,1,0,0,"foo@100-100@FILENAME","FILENAME","foo","foo",100,100',
+            '1,16,1,0,1,"foo@100-100@FILENAME","FILENAME","foo","foo",100,100',
             sys.stdout.stream.splitlines()[1]
         )
