@@ -67,6 +67,9 @@ setup(
         '''It works with Java, C/C++, JavaScript, Python, Ruby, Swift, Objective C. Metrics includes cyclomatic complexity number etc.''',
     long_description=open('README.rst').read(),
     url='http://www.lizard.ws',
+    project_urls={
+        'Source': 'https://github.com/terryyin/lizard',
+    },
     download_url='https://pypi.python.org/lizard/',
     license='MIT',
     platforms='any',
