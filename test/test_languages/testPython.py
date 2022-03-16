@@ -105,10 +105,18 @@ class Test_parser_for_Python(unittest.TestCase):
             ):
                 if True:
                     return False
+
+            def foo3(arg1,
+                     arg2,
+                     arg3
+            ):
+                if True:
+                    return False
             """
         functions = get_python_function_list(source)
         self.assertEqual(6, functions[0].end_line)
         self.assertEqual(13, functions[1].end_line)
+        self.assertEqual(20, functions[2].end_line)
 
     def test_parameter_count(self):
         class namespace2:
