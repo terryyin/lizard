@@ -105,18 +105,35 @@ class Test_parser_for_Python(unittest.TestCase):
             ):
                 if True:
                     return False
-
-            def foo3(arg1,
-                     arg2,
-                     arg3
-            ):
-                if True:
-                    return False
             """
         functions = get_python_function_list(source)
         self.assertEqual(6, functions[0].end_line)
         self.assertEqual(13, functions[1].end_line)
-        self.assertEqual(20, functions[2].end_line)
+
+    def test_multi_line_function_def_with_indentation_more_than_function_body(self):
+        def function(arg1,
+                     arg2
+                     ):
+            if True:
+                return False
+
+        functions = get_python_function_list(inspect.getsource(function))
+        self.assertEqual(5, functions[0].nloc)
+        self.assertEqual(5, functions[0].end_line)
+
+    def test_function_surrounded_by_global_statements(self):
+        source = """
+        s1 = 'global statement'
+        def function(arg1,
+                     arg2
+                     ):
+            if True:
+                return False
+        s2 = 'global statement'
+        """
+        functions = get_python_function_list(source)
+        self.assertEqual(5, functions[0].nloc)
+        self.assertEqual(7, functions[0].end_line)
 
     def test_parameter_count(self):
         class namespace2:
