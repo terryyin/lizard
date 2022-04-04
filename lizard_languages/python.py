@@ -53,7 +53,9 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
                         current_leading_spaces += count_spaces(token)
                     else:
                         if not token.startswith('#'):
-                            indents.set_nesting(current_leading_spaces, token)
+                            current_function = self.context.current_function
+                            if current_function.name == '*global*' or current_function.long_name.endswith(')'):
+                                indents.set_nesting(current_leading_spaces, token)
                         reading_leading_space = False
             else:
                 reading_leading_space = True
