@@ -68,6 +68,44 @@ class Test_parser_for_Go(unittest.TestCase):
                 ''')
         self.assertEqual(2, result[0].cyclomatic_complexity)
 
+    def test_one_function_with_return_empty_interface(self):
+        result = get_go_function_list('''
+            func sayGoodbye() interface{} {
+                if ++diceRoll == 7 { diceRoll = 1 }
+            }
+                ''')
+        self.assertEqual(1, len(result))
+        self.assertEqual("sayGoodbye", result[0].name)
+        self.assertEqual(3, result[0].length)
+
+    def test_nest_function(self):
+        result = get_go_function_list('''
+            func sayGoodbye() {
+                f1 := func() {}
+                f2 := func(n int) {}
+                f3 := func() int {
+                    return 0
+                }
+            }
+                ''')
+        self.assertEqual(4, len(result))
+
+        self.assertEqual("", result[0].name)
+        self.assertEqual("", result[0].long_name)
+        self.assertEqual(1, result[0].length)
+
+        self.assertEqual("", result[1].name)
+        self.assertEqual(" n int", result[1].long_name)
+        self.assertEqual(1, result[1].length)
+        self.assertEqual(['n int'], result[1].full_parameters)
+
+        self.assertEqual("", result[2].name)
+        self.assertEqual("", result[2].long_name)
+        self.assertEqual(3, result[2].length)
+
+        self.assertEqual("sayGoodbye", result[3].name)
+        self.assertEqual(7, result[3].length)
+
     def test_interface(self):
         result = get_go_function_list('''
 			type geometry interface{
