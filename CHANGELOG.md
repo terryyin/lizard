@@ -1,5 +1,12 @@
 # Change Log
 
+## 1.17.9
+
+Bug fix:
+  Java generic like List<? extends String>
+  JSX file extension
+
+
 ## 1.17.8
 
 Add Fortran to the language supported

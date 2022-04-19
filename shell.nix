@@ -4,8 +4,6 @@ let
   apple_sdk = darwin.apple_sdk.frameworks;
 in mkShell {
   name = "lizard";
-  MYSQL_HOME = builtins.getEnv "MYSQL_HOME";
-  MYSQL_DATADIR = builtins.getEnv "MYSQL_DATADIR";
   buildInputs = [
     python3Full
     python39Packages.pip
