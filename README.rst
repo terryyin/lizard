@@ -81,7 +81,7 @@ Or if you've got the source:
 
 ::
 
-   [sudo] python setup.py install --install-dir=/path/to/installation/directory/
+   [sudo] python setup.py install --prefix=/path/to/installation/directory/
 
 Usage
 -----
