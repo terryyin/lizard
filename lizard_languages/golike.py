@@ -21,7 +21,11 @@ class GoLikeStates(CodeStateMachine):  # pylint: disable=R0903
     def _function_name(self, token):
         if token != '`':
             if token == '(':
-                return self.next(self._member_function, token)
+                if len(self.context.stacked_functions) > 0\
+                        and self.context.stacked_functions[-1].name != '*global*':
+                    return self.next(self._function_dec, token)
+                else:
+                    return self.next(self._member_function, token)
             if token == '{':
                 return self.next(self._expect_function_impl, token)
             self.context.add_to_function_name(token)
@@ -49,7 +53,8 @@ class GoLikeStates(CodeStateMachine):  # pylint: disable=R0903
             self.context.parameter(token)
 
     def _expect_function_impl(self, token):
-        self.next_if(self._function_impl, token, '{')
+        if token == '{' and self.last_token != 'interface':
+            self.next(self._function_impl, token)
 
     def _function_impl(self, _):
         def callback():
