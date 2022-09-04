@@ -3,7 +3,7 @@ import sys
 from mock import Mock, patch
 from test.helper_stream import StreamStdoutTestCase
 import os
-from lizard import print_warnings, print_and_save_modules, FunctionInfo, FileInformation,\
+from lizard import print_warnings, save_modules, print_modules, FunctionInfo, FileInformation,\
     print_result, print_extension_results, get_extensions, OutputScheme, get_warnings, print_clang_style_warning,\
     parse_args, AllResult
 from lizard_ext import xml_output
@@ -20,25 +20,29 @@ class TestFunctionOutput(StreamStdoutTestCase):
         self.foo = FunctionInfo("foo", 'FILENAME', 100)
 
     def test_function_info_header_should_have_a_box(self):
-        print_and_save_modules([],  self.scheme)
+        result = save_modules([])
+        print_modules(result,  self.scheme)
         self.assertIn("=" * 20, sys.stdout.stream.splitlines()[0])
 
     def test_function_info_header_should_have_the_captions(self):
-        print_and_save_modules([],  self.scheme)
+        result = save_modules([])
+        print_modules(result,  self.scheme)
         self.assertEqual("  NLOC    CCN   token  PARAM  length  location  ", sys.stdout.stream.splitlines()[1])
 
     def test_function_info_header_should_have_the_captions_of_external_extensions(self):
         external_extension = Mock(FUNCTION_INFO = {"xx": {"caption":"*external_extension*"}}, ordering_index=-1)
         extensions = get_extensions([external_extension])
         scheme = OutputScheme(extensions)
-        print_and_save_modules([],  scheme)
+        result = save_modules([])
+        print_modules(result,  scheme)
         self.assertEqual("  NLOC    CCN   token  PARAM  length *external_extension* location  ", sys.stdout.stream.splitlines()[1])
 
     def test_print_fileinfo(self):
         self.foo.end_line = 100
         self.foo.cyclomatic_complexity = 16
         fileStat = FileInformation("FILENAME", 1, [self.foo])
-        print_and_save_modules([fileStat],  self.scheme)
+        result = save_modules([fileStat])
+        print_modules(result,  self.scheme)
         self.assertEqual("       1     16      1      0       1 foo@100-100@FILENAME", sys.stdout.stream.splitlines()[3])
 
 
@@ -92,22 +96,24 @@ class TestFileInformationOutput(StreamStdoutTestCase):
     def test_print_and_save_detail_information(self):
         scheme = OutputScheme([])
         fileSummary = FileInformation("FILENAME", 123, [])
-        print_and_save_modules([fileSummary], scheme)
+        result = save_modules([fileSummary])
+        print_modules(result, scheme)
         self.assertIn("    123       0.0     0.0        0.0         0     FILENAME\n", sys.stdout.stream)
 
     def test_print_and_save_detail_information_with_ext(self):
         scheme = OutputScheme([Ext()])
         fileSummary = FileInformation("FILENAME", 123, [])
-        print_and_save_modules([fileSummary], scheme)
+        result = save_modules([fileSummary])
+        print_modules(result, scheme)
         self.assertIn("Avg.ND", sys.stdout.stream)
         self.assertIn("    123       0.0     0.0        0.0     0.0         0     FILENAME", sys.stdout.stream)
 
 
     def test_print_file_summary_only_once(self):
         scheme = OutputScheme([])
-        print_and_save_modules(
-                            [FileInformation("FILENAME1", 123, []),
-                             FileInformation("FILENAME2", 123, [])], scheme)
+        result = save_modules([FileInformation("FILENAME1", 123, []),
+                             FileInformation("FILENAME2", 123, [])])
+        print_modules(result, scheme)
         self.assertEqual(1, sys.stdout.stream.count("FILENAME1"))
 
 

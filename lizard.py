@@ -29,6 +29,8 @@ import os
 from fnmatch import fnmatch
 import hashlib
 
+import specialTermPrint
+
 if sys.version[0] == '2':
     from future_builtins import map, filter  # pylint: disable=W0622, F0401
 
@@ -116,6 +118,11 @@ def arg_parser(prog=None):
                         action="store_true",
                         dest="verbose",
                         default=False)
+    parser.add_argument("--short",
+                        help="Output only warnings and total summary",
+                        action="store_false",
+                        dest="short",
+                        default=True)
     parser.add_argument("-C", "--CCN",
                         help='''Threshold for cyclomatic complexity number
                         warning. The default value is %d.
@@ -622,6 +629,25 @@ def whitelist_filter(warnings, script=None, whitelist=None):
             yield warning
 
 
+class AllResult(object):
+    def __init__(self, result):
+        self.result = list(file_info for file_info in result if file_info)
+        self.all_fun = list(itertools.chain(*(file_info.function_list
+                                            for file_info in self.result)))
+
+    def function_count(self):
+        return len(self.all_fun) or 1
+
+    def nloc_in_functions(self):
+        return sum([f.nloc for f in self.all_fun]) or 1
+
+    def as_fileinfo(self):
+        return FileInformation(
+                    "",
+                    sum([f.nloc for f in self.result]),
+                    self.all_fun)
+
+
 class OutputScheme(object):
     '''
     Collect the schema of the data columns.
@@ -734,48 +760,78 @@ class OutputScheme(object):
                 ]))
 
 
+def save_modules(all_fileinfos):
+    saved_fileinfos = []
+
+    for module_info in all_fileinfos:
+        if module_info:
+            saved_fileinfos.append(module_info)
+
+    return saved_fileinfos
+
+
+def print_modules(saved_fileinfos, scheme):
+    # Print function info
+    print(scheme.function_info_head())
+    for module_info in saved_fileinfos:
+        for fun in module_info.function_list:
+            try:
+                print(scheme.function_info(fun))
+            except UnicodeEncodeError:
+                print("Found ill-formatted unicode function name.")
+
+    ## Print module info
+    print(f"{len(saved_fileinfos)} file analyzed.")
+    print("==============================================================")
+    print("NLOC   " + scheme.average_captions() + " function_cnt    file")
+    print("--------------------------------------------------------------")
+    for module_info in saved_fileinfos:
+        print((
+            "{module.nloc:7d}" +
+            scheme.average_formatter() +
+            "{function_count:10d}" +
+            "     {module.filename}").format(
+                module=module_info,
+                function_count=len(module_info.function_list)))
+
+
+def get_warnings(code_infos, option):
+    warnings = whitelist_filter(warning_filter(option, code_infos),
+                                whitelist=option.whitelist)
+    if isinstance(option.sorting, list) and option.sorting:
+        warnings = sorted(warnings, reverse=True, key=lambda x: getattr(
+            x, option.sorting[0]))
+    return warnings
+
+
+def print_no_warnings(option):
+    warn_str = specialTermPrint.green_bold_str(
+        "No thresholds exceeded ({0})".format(
+            ' or '.join("{0} > {1}".format(
+                k, val) for k, val in option.thresholds.items())))
+
+    print("=" * len(warn_str) + "\n" + warn_str)
+
+
 def print_warnings(option, scheme, warnings):
     warning_count = 0
     warning_nloc = 0
-    warn_str = "!!!! Warnings ({0}) !!!!".format(
-        ' or '.join("{0} > {1}".format(
-            k, val) for k, val in option.thresholds.items()))
+    warn_str = specialTermPrint.red_bold_str(
+        "!!!! Warnings ({0}) !!!!".format(
+            ' or '.join("{0} > {1}".format(
+                k, val) for k, val in option.thresholds.items())))
+
     for warning in warnings:
         if warning_count == 0:
-            print("\n" + "=" * len(warn_str) + "\n" + warn_str)
+            print("=" * len(warn_str) + "\n" + warn_str)
             print(scheme.function_info_head())
         warning_count += 1
         warning_nloc += warning.nloc
         print(scheme.function_info(warning))
     if warning_count == 0:
         print_no_warnings(option)
+
     return warning_count, warning_nloc
-
-
-def print_no_warnings(option):
-    warn_str = "No thresholds exceeded ({0})".format(
-        ' or '.join("{0} > {1}".format(
-            k, val) for k, val in option.thresholds.items()))
-    print("\n" + "=" * len(warn_str) + "\n" + warn_str)
-
-
-class AllResult(object):
-    def __init__(self, result):
-        self.result = list(file_info for file_info in result if file_info)
-        self.all_fun = list(itertools.chain(*(file_info.function_list
-                                            for file_info in self.result)))
-
-    def function_count(self):
-        return len(self.all_fun) or 1
-
-    def nloc_in_functions(self):
-        return sum([f.nloc for f in self.all_fun]) or 1
-
-    def as_fileinfo(self):
-        return FileInformation(
-                    "",
-                    sum([f.nloc for f in self.result]),
-                    self.all_fun)
 
 
 def print_total(warning_count, warning_nloc, all_result, scheme):
@@ -795,46 +851,15 @@ def print_total(warning_count, warning_nloc, all_result, scheme):
                   nloc_rate=(warning_nloc/all_result.nloc_in_functions())))
 
 
-def print_and_save_modules(all_fileinfos, scheme):
-    saved_fileinfos = []
-    print(scheme.function_info_head())
-    for module_info in all_fileinfos:
-        if module_info:
-            saved_fileinfos.append(module_info)
-            for fun in module_info.function_list:
-                try:
-                    print(scheme.function_info(fun))
-                except UnicodeEncodeError:
-                    print("Found ill-formatted unicode function name.")
-    print("%d file analyzed." % (len(saved_fileinfos)))
-    print("==============================================================")
-    print("NLOC   " + scheme.average_captions() + " function_cnt    file")
-    print("--------------------------------------------------------------")
-    for module_info in saved_fileinfos:
-        print((
-            "{module.nloc:7d}" +
-            scheme.average_formatter() +
-            "{function_count:10d}" +
-            "     {module.filename}").format(
-            module=module_info,
-            function_count=len(module_info.function_list)))
-    return saved_fileinfos
-
-
-def get_warnings(code_infos, option):
-    warnings = whitelist_filter(warning_filter(option, code_infos),
-                                whitelist=option.whitelist)
-    if isinstance(option.sorting, list) and option.sorting:
-        warnings = sorted(warnings, reverse=True, key=lambda x: getattr(
-            x, option.sorting[0]))
-    return warnings
-
-
 def print_result(result, option, scheme, total_factory):
-    result = print_and_save_modules(result, scheme)
+    result = save_modules(result)
     warnings = get_warnings(result, option)
+
+    if option.short:
+        print_modules(result, scheme)
     warning_count, warning_nloc = print_warnings(option, scheme, warnings)
     print_total(warning_count, warning_nloc, total_factory(result), scheme)
+
     return warning_count
 
 
