@@ -781,7 +781,7 @@ def print_modules(saved_fileinfos, scheme):
                 print("Found ill-formatted unicode function name.")
 
     ## Print module info
-    print(f"{len(saved_fileinfos)} file analyzed.")
+    print("%d file analyzed." % (len(saved_fileinfos)))
     print("==============================================================")
     print("NLOC   " + scheme.average_captions() + " function_cnt    file")
     print("--------------------------------------------------------------")
