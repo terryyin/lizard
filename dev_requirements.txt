@@ -1,6 +1,6 @@
 mock
 coverage
-pygments==2.7.4
+pygments
 nose
 pycodestyle
 wheel
