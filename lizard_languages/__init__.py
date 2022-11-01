@@ -18,6 +18,7 @@ from .lua import LuaReader
 from .rust import RustReader
 from .typescript import TypeScriptReader
 from .fortran import FortranReader
+from .solidity import SolidityReader
 
 
 def languages():
@@ -39,7 +40,8 @@ def languages():
         RustReader,
         TypeScriptReader,
         FortranReader,
-        KotlinReader
+        KotlinReader,
+	SolidityReader,
     ]
 
 
