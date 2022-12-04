@@ -26,45 +26,60 @@ class TestErlang(unittest.TestCase):
         ''')
         self.assertEqual(3, len(result))
         self.assertEqual('tail_recursive_fib', result[0].name)
+        self.assertEqual('lookup', result[1].name)
+        self.assertEqual('lookup', result[2].name)
+
     def test_return(self):
         result = get_erlang_function_list('''
-        fn plus_one(x: i32) -> i32 {
-            x + 1;
-        }
+        replace(Whole,Old,New) ->
+            OldLen = length(Old),
+            ReplaceInit = fun (Next, NewWhole) ->
+                      case lists:prefix(Old, [Next|NewWhole]) of
+                          true ->
+                              {_,Rest} = lists:split(OldLen-1, NewWhole),
+                              New ++ Rest;
+                          false -> [Next|NewWhole]
+                      end
+                  end,
+        lists:foldr(ReplaceInit, [], Whole).
         ''')
-        self.assertEqual(1, len(result))
-        self.assertEqual('plus_one', result[0].name)
+        self.assertEqual(2, len(result))
+        self.assertEqual('fun', result[0].name)
+        self.assertEqual('replace', result[1].name)
 
     def test_if(self):
         result = get_erlang_function_list('''
-        fn main() {
-            match a() {}
-        }
+        insert([{K, V}|Rest], Tree) ->
+            insert(Rest, insert(K, V, Tree)).
         ''')
         self.assertEqual(1, len(result))
         self.assertEqual(2, result[0].cyclomatic_complexity)
 
     def test_generic(self):
         result = get_erlang_function_list('''
-        fn largest<T>(list: &[T]) -> T {
-            let mut largest = list[0];
+        %% @doc Insert a new Key into the Tree.
+        %%      If the Key already exists, it will be replaced.
+        %%
+        %% @spec insert(integer(), term(), tree()) -> tree().
+        insert(K, V, _Tree = ?EMPTY_NODE) ->
+            {node, {K, V, init(), init()}};
+        insert(K, V, _Tree = {node, {NodeK, NodeV, Left, Right}}) ->
+            if K == NodeK -> % replace
+                {node, {K, V, Left, Right}}
+            ; K  < NodeK ->
+                {node, {NodeK, NodeV, insert(K, V, Left), Right}}
+            ; K  > NodeK ->
+                {node, {NodeK, NodeV, Left, insert(K, V, Right)}}
+            end.
 
-            for &item in list.iter() {
-                if item > largest {
-                    largest = item;
-                }
-            }
-
-            largest
-        }
-
-        fn main() {
-            match a() {}
-        }
+        %% @private
+        insert([], Tree) -> Tree;
+        insert([{K, V}|Rest], Tree) ->
+            insert(Rest, insert(K, V, Tree)).
         ''')
-        self.assertEqual(2, len(result))
-        self.assertEqual('largest', result[0].name)
-        self.assertEqual(3, result[0].cyclomatic_complexity)
+        self.assertEqual(4, len(result))
+        self.assertEqual('insert', result[0].name)
+        self.assertEqual(10, result[1].cyclomatic_complexity)
 
     def test_generic_with_where(self):
         result = get_erlang_function_list('''
