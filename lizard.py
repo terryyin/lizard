@@ -483,14 +483,6 @@ class FileInfoBuilder(object):
         else:
             self.current_function = self.global_pseudo_function
 
-    def pop_function(self):
-        curr = self.current_function
-        if self.stacked_functions:
-            self.current_function = self.stacked_functions.pop()
-        else:
-            self.current_function = self.global_pseudo_function
-        return curr
-
 
 def preprocessing(tokens, reader):
     if hasattr(reader, "preprocess"):

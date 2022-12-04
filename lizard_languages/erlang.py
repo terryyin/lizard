@@ -108,5 +108,13 @@ class ErlangStates(CodeStateMachine):
     def func_match_failed(self, token):
         self.punctuated = False
         self._state = self._state_global
-        self.context.add_condition(self.context.pop_function().cyclomatic_complexity)
+        self.context.add_condition(self.pop_function().cyclomatic_complexity)
         self.next(self._state_global, token)
+
+    def pop_function(self):
+        curr = self.context.current_function
+        if self.context.stacked_functions:
+            self.context.current_function = self.context.stacked_functions.pop()
+        else:
+            self.context.current_function = self.context.global_pseudo_function
+        return curr
