@@ -65,7 +65,6 @@ class ErlangStates(CodeStateMachine):
         else:
             self.func_match_failed(token)
 
-
     def _start_of_params(self, token):
         if token == ')':
             self.rbr += 1
@@ -111,45 +110,3 @@ class ErlangStates(CodeStateMachine):
         self._state = self._state_global
         self.context.add_condition(self.context.pop_function().cyclomatic_complexity)
         self.next(self._state_global, token)
-
-# --------------------------------
-#     def _state_global(self, token):
-#         if token == '-':
-#             self.punctuated = True
-#         elif func_name_pattern.match(token) and not self.punctuated:
-#             self._state = self._function
-#             self.context.restart_new_function(token)
-#             self.context.add_to_long_function_name("(")
-#         else:
-#             self.punctuated = False
-#
-#     def _function(self, token):
-#         if token == '(':
-#             self._state = self._dec
-#
-#     def _dec(self, token):
-#         if token == ')':
-#             self._state = self._state_colon
-#             self.punctuated = False
-#         else:
-#             self.context.parameter(token)
-#             return
-#         self.context.add_to_long_function_name(" " + token)
-#
-#     def _state_colon(self, token):
-#         if token == '-':
-#             self.punctuated = True
-#         elif token == '>' and self.punctuated:
-#             self.next(self._state_first_line)
-#         else:
-#             self.punctuated = False
-#             self._state = self._state_global
-#
-#     def _state_first_line(self, token):
-#         self._state = self._state_global
-#         self._state_global(token)
-#         self.context.end_of_function()
-#
-#
-#
-# ---------------------------------------------------
