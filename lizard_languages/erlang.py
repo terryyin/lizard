@@ -13,7 +13,7 @@ class ErlangReader(CodeReader):
 
     ext = ['erl', 'hrl', 'es', 'escript']
     language_names = ['erlang']
-    _conditions = {'and', 'case', 'catch', 'if', 'not', 'or', '?', 'when', '=='}
+    _conditions = {'and', 'case', 'catch', 'if', 'not', 'or', '?', 'when'}
 
     def __init__(self, context):
         super(ErlangReader, self).__init__(context)

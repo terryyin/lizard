@@ -29,6 +29,12 @@ class TestErlang(unittest.TestCase):
         self.assertEqual('lookup', result[1].name)
         self.assertEqual('lookup', result[2].name)
 
+    def test_empty(self):
+        result = get_erlang_function_list('''
+
+                ''')
+        self.assertEqual(0, len(result))
+
     def test_nested(self):
         result = get_erlang_function_list('''
         replace(Whole,Old,New) ->
@@ -79,7 +85,7 @@ class TestErlang(unittest.TestCase):
         ''')
         self.assertEqual(4, len(result))
         self.assertEqual('insert', result[0].name)
-        self.assertEqual(3, result[1].cyclomatic_complexity)
+        self.assertEqual(2, result[1].cyclomatic_complexity)
 
     def test_many_func_usages(self):
         result = get_erlang_function_list('''
