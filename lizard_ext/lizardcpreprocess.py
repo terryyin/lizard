@@ -1,8 +1,8 @@
 '''
 This is an extension of lizard,
 It helps to deal with C code with preprocessors that
-is hard to parse. It works by always ignoring the code
-between #else and #end.
+is hard to parse. It works by checking the first if
+condition and deciding to take that or the final else
 '''
 
 from pprint import pprint
@@ -42,13 +42,13 @@ class LizardExtension(object):  # pylint: disable=R0903
                     if_condition = if_stack[-1]
                     part = part_stack[-1]
                     if if_condition.startswith("#if 0"): # skip if, take else
-                        if part == 'if':
+                        if part in ('if', 'ifdef', 'ifndef'):
                             for _ in range(token.count('\n')):
                                 yield '\n'
                         elif part == 'else':
                             yield token
                     else:                                # take if, skip else
-                        if part == 'if':
+                        if part in ('if', 'ifdef', 'ifndef'):
                             yield token
                         elif part == 'else':
                             for _ in range(token.count('\n')):
@@ -62,4 +62,7 @@ class LizardExtension(object):  # pylint: disable=R0903
 
         if "c" not in reader.ext:
             return tokens
-        return preprocess_tokens(tokens)
+        tokens = preprocess_tokens(tokens)
+        for token in tokens:
+            pprint(token)
+        return tokens

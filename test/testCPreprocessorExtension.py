@@ -78,6 +78,14 @@ class TestCPreprocessor(unittest.TestCase):
         """)
         self.assertIn("1", tokens)
 
+    def test_should_handle_take_if_branch_on_ifndef(self):
+        tokens = process_code("""
+        #ifndef BLAH
+        1
+        #endif
+        """)
+        self.assertIn("1", tokens)
+
     def test_should_handle_take_if_branch_on_if1(self):
         tokens = process_code("""
         #if 1
