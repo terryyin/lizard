@@ -6,10 +6,12 @@ between #else and #end.
 '''
 
 from pprint import pprint
+import re
 
 class LizardExtension(object):  # pylint: disable=R0903
 
     ordering_index = 0
+    macro_pattern = re.compile(r"#\s*(\w+)\s*(.*)", re.M | re.S)
 
     def __call__(self, tokens, reader):
         def preprocess_tokens(tokens):
@@ -21,16 +23,16 @@ class LizardExtension(object):  # pylint: disable=R0903
                 # ifdef = if defined
                 # ifndef = if !defined
                 # #if #elif #else #endif
-                if token.startswith("#"):
-                    if token.startswith('#if'):
+                macro = self.macro_pattern.match(token)
+                if macro:
+                    op = macro.group(1)
+                    if op in ('if', 'ifdef', 'ifndef'):
                         if_stack.append(token)
-                        part_stack.append(token)
-
-                    if token.startswith('#elif') or token.startswith('#else'):
+                        part_stack.append(op)
+                    elif op in ('elif', 'else'):
                         part_stack.pop()
-                        part_stack.append(token)
-
-                    if token.startswith("#endif"):
+                        part_stack.append(op)
+                    elif op == 'endif':
                         if_stack.pop()
                         part_stack.pop()
 
@@ -40,19 +42,19 @@ class LizardExtension(object):  # pylint: disable=R0903
                     if_condition = if_stack[-1]
                     part = part_stack[-1]
                     if if_condition.startswith("#if 0"): # skip if, take else
-                        if part.startswith("#if"):
+                        if part == 'if':
                             for _ in range(token.count('\n')):
                                 yield '\n'
-                        elif part.startswith("#else"):
+                        elif part == 'else':
                             yield token
                     else:                                # take if, skip else
-                        if part.startswith("#if"):
+                        if part == 'if':
                             yield token
-                        elif part.startswith("#else"):
+                        elif part == 'else':
                             for _ in range(token.count('\n')):
                                 yield '\n'
                     # always skip elif's
-                    if part.startswith("#elif"):
+                    if part == 'elif':
                         for _ in range(token.count('\n')):
                             yield '\n'
                 else:
