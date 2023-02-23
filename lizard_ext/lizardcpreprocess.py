@@ -37,12 +37,21 @@ class LizardExtension(object):  # pylint: disable=R0903
                     for _ in range(token.count('\n')):
                         yield '\n'
                 elif part_stack:
+                    if_condition = if_stack[-1]
                     part = part_stack[-1]
-                    if part.startswith("#else"):
-                        for _ in range(token.count('\n')):
-                            yield '\n'
-                    if part.startswith("#if"):
-                        yield token
+                    if if_condition.startswith("#if 0"): # skip if, take else
+                        if part.startswith("#if"):
+                            for _ in range(token.count('\n')):
+                                yield '\n'
+                        elif part.startswith("#else"):
+                            yield token
+                    else:                                # take if, skip else
+                        if part.startswith("#if"):
+                            yield token
+                        elif part.startswith("#else"):
+                            for _ in range(token.count('\n')):
+                                yield '\n'
+                    # always skip elif's
                     if part.startswith("#elif"):
                         for _ in range(token.count('\n')):
                             yield '\n'

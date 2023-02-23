@@ -78,6 +78,28 @@ class TestCPreprocessor(unittest.TestCase):
         """)
         self.assertIn("1", tokens)
 
+    def test_should_handle_take_if_branch_on_if1(self):
+        tokens = process_code("""
+        #if 1
+        1
+        #else
+        2
+        #endif
+        """)
+        self.assertIn("1", tokens)
+        self.assertNotIn("2", tokens)
+
+    def test_should_handle_take_else_branch_on_if0(self):
+        tokens = process_code("""
+        #if 0
+        1
+        #else
+        2
+        #endif
+        """)
+        self.assertNotIn("1", tokens)
+        self.assertIn("2", tokens)
+
     def test_should_handle_multiple_elifs(self):
         tokens = process_code("""
         #if defined(BLAH1)
