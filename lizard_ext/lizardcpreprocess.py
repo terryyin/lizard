@@ -5,7 +5,6 @@ is hard to parse. It works by checking the first if
 condition and deciding to take that or the final else
 '''
 
-from pprint import pprint
 import re
 
 class LizardExtension(object):  # pylint: disable=R0903
@@ -19,10 +18,6 @@ class LizardExtension(object):  # pylint: disable=R0903
             part_stack = [] # current parts, unstacked on endif
 
             for token in tokens:
-                # define -> store key / value 
-                # ifdef = if defined
-                # ifndef = if !defined
-                # #if #elif #else #endif
                 macro = self.macro_pattern.match(token)
                 if macro:
                     op = macro.group(1)
@@ -62,7 +57,4 @@ class LizardExtension(object):  # pylint: disable=R0903
 
         if "c" not in reader.ext:
             return tokens
-        tokens = preprocess_tokens(tokens)
-        for token in tokens:
-            pprint(token)
-        return tokens
+        return preprocess_tokens(tokens)
