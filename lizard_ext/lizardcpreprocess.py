@@ -14,46 +14,47 @@ class LizardExtension(object):  # pylint: disable=R0903
 
     def __call__(self, tokens, reader):
         def preprocess_tokens(tokens):
-            if_stack   = [] # if's with condition
-            part_stack = [] # current parts, unstacked on endif
+            if_stack        = []     # if-like directive with condition
+            directive_stack = []     # current directive, unstacked on endif
 
             for token in tokens:
                 macro = self.macro_pattern.match(token)
                 if macro:
-                    op = macro.group(1)
-                    if op in ('if', 'ifdef', 'ifndef'):
-                        if_stack.append(token)
-                        part_stack.append(op)
-                    elif op in ('elif', 'else'):
-                        part_stack.pop()
-                        part_stack.append(op)
-                    elif op == 'endif':
-                        if_stack.pop()
-                        part_stack.pop()
-
-                    for _ in range(token.count('\n')):
-                        yield '\n'
-                elif part_stack:
+                    directive = macro.group(1)
+                    _update_stacks(directive, token, if_stack, directive_stack)
+                    yield from _blank_lines(token)
+                elif directive_stack:
                     if_condition = if_stack[-1]
-                    part = part_stack[-1]
-                    if if_condition.startswith("#if 0"): # skip if, take else
-                        if part in ('if', 'ifdef', 'ifndef'):
-                            for _ in range(token.count('\n')):
-                                yield '\n'
-                        elif part == 'else':
-                            yield token
-                    else:                                # take if, skip else
-                        if part in ('if', 'ifdef', 'ifndef'):
-                            yield token
-                        elif part == 'else':
-                            for _ in range(token.count('\n')):
-                                yield '\n'
-                    # always skip elif's
-                    if part == 'elif':
-                        for _ in range(token.count('\n')):
-                            yield '\n'
+                    directive = directive_stack[-1]
+                    yield from _handle_condition(token, if_condition, directive)
                 else:
                     yield token
+
+        def _update_stacks(directive, token, ifs, directives):
+            if directive in ('if', 'ifdef', 'ifndef'):   # push on the stack
+                ifs.append(token)
+                directives.append('if')
+            elif directive in ('elif', 'else'):          # replace the directive
+                directives.pop()
+                directives.append(directive)
+            elif directive == 'endif':                   # pop from stack
+                ifs.pop()
+                directives.pop()
+
+        def _filter_tokens(token, current_directive, keep):
+            if current_directive == keep:
+                return token
+            return _blank_lines(token)
+
+        def _handle_condition(token, if_condition, directive):
+            keep = 'if' # default
+            if if_condition.startswith("#if 0"): # skip if, take else
+                keep = 'else'
+            return _filter_tokens(token, directive, keep)
+
+        def _blank_lines(token):
+            for _ in range(token.count('\n')):
+                yield '\n'
 
         if "c" not in reader.ext:
             return tokens
