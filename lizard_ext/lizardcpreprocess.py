@@ -21,7 +21,7 @@ class LizardExtension(object):  # pylint: disable=R0903
                 macro = self.macro_pattern.match(token)
                 if macro:
                     directive = macro.group(1)
-                    _update_stacks(directive, token, if_stack, directive_stack)
+                    _update_stacks(token, directive, if_stack, directive_stack)
                     yield from _blank_lines(token)
                 elif directive_stack:
                     if_condition = if_stack[-1]
@@ -30,7 +30,7 @@ class LizardExtension(object):  # pylint: disable=R0903
                 else:
                     yield token
 
-        def _update_stacks(directive, token, ifs, directives):
+        def _update_stacks(token, directive, ifs, directives):
             if directive in ('if', 'ifdef', 'ifndef'):   # push on the stack
                 ifs.append(token)
                 directives.append('if')
@@ -41,8 +41,8 @@ class LizardExtension(object):  # pylint: disable=R0903
                 ifs.pop()
                 directives.pop()
 
-        def _filter_tokens(token, current_directive, keep):
-            if current_directive == keep:
+        def _filter_token(token, directive, keep):
+            if directive == keep:
                 return token
             return _blank_lines(token)
 
@@ -50,7 +50,7 @@ class LizardExtension(object):  # pylint: disable=R0903
             keep = 'if' # default
             if if_condition.startswith("#if 0"): # skip if, take else
                 keep = 'else'
-            return _filter_tokens(token, directive, keep)
+            return _filter_token(token, directive, keep)
 
         def _blank_lines(token):
             for _ in range(token.count('\n')):
