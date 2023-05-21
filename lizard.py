@@ -120,9 +120,9 @@ def arg_parser(prog=None):
                         default=False)
     parser.add_argument("--short",
                         help="Output only warnings and total summary",
-                        action="store_false",
+                        action="store_true",
                         dest="short",
-                        default=True)
+                        default=False)
     parser.add_argument("-C", "--CCN",
                         help='''Threshold for cyclomatic complexity number
                         warning. The default value is %d.
@@ -855,7 +855,7 @@ def print_result(result, option, scheme, total_factory):
     result = save_modules(result)
     warnings = get_warnings(result, option)
 
-    if option.short:
+    if option.short is False:
         print_modules(result, scheme)
     warning_count, warning_nloc = print_warnings(option, scheme, warnings)
     print_total(warning_count, warning_nloc, total_factory(result), scheme)
