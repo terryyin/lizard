@@ -35,6 +35,8 @@ A list of supported languages:
 -  Rust
 -  Fortran
 -  Kotlin
+-  Solidity
+-  Erlang
 
 By default lizard will search for any source code that it knows and mix
 all the results together. This might not be what you want. You can use

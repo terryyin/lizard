@@ -1,6 +1,7 @@
 ''' programming languages of lizard '''
 
 from .clike import CLikeReader
+from .erlang import ErlangReader
 from .java import JavaReader
 from .javascript import JavaScriptReader
 from .kotlin import KotlinReader
@@ -18,6 +19,7 @@ from .lua import LuaReader
 from .rust import RustReader
 from .typescript import TypeScriptReader
 from .fortran import FortranReader
+from .solidity import SolidityReader
 
 
 def languages():
@@ -39,7 +41,9 @@ def languages():
         RustReader,
         TypeScriptReader,
         FortranReader,
-        KotlinReader
+        KotlinReader,
+        SolidityReader,
+        ErlangReader,
     ]
 
 
