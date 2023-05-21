@@ -45,6 +45,16 @@ class TestFunctionOutput(StreamStdoutTestCase):
         print_modules(result,  self.scheme)
         self.assertEqual("       1     16      1      0       1 foo@100-100@FILENAME", sys.stdout.stream.splitlines()[3])
 
+    def test_print_result_short(self):
+        """Test that fileinfo is not printed if `short` option is specified"""
+        self.foo.end_line = 100
+        self.foo.cyclomatic_complexity = 16
+        option = parse_args("app")
+        option.short = True
+        fileStat = FileInformation("FILENAME", 1, [self.foo])
+        result = print_result_with_scheme([fileStat], option)
+        self.assertNotEqual("       1     16      1      0       1 foo@100-100@FILENAME", sys.stdout.stream.splitlines()[1])
+
 
 class Ext(object):
     FUNCTION_INFO = {"max_nesting_depth": {"caption": "  ND  ", "average_caption": " Avg.ND "}}
