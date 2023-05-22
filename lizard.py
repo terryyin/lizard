@@ -761,26 +761,22 @@ class OutputScheme(object):
 
 
 def save_modules(all_fileinfos):
-    saved_fileinfos = []
-
     for module_info in all_fileinfos:
         if module_info:
-            saved_fileinfos.append(module_info)
-
-    return saved_fileinfos
+            yield module_info
 
 
-def print_modules(saved_fileinfos, scheme):
-    # Print function info
-    print(scheme.function_info_head())
-    for module_info in saved_fileinfos:
-        for fun in module_info.function_list:
-            try:
-                print(scheme.function_info(fun))
-            except UnicodeEncodeError:
-                print("Found ill-formatted unicode function name.")
+def print_functions_info(module_info, scheme):
+    """Print functions info"""
+    for fun in module_info.function_list:
+        try:
+            print(scheme.function_info(fun))
+        except UnicodeEncodeError:
+            print("Found ill-formatted unicode function name.")
 
-    ## Print module info
+
+def print_files_info(saved_fileinfos, scheme):
+    """Print files info"""
     print("%d file analyzed." % (len(saved_fileinfos)))
     print("==============================================================")
     print("NLOC   " + scheme.average_captions() + " function_cnt    file")
@@ -852,13 +848,27 @@ def print_total(warning_count, warning_nloc, all_result, scheme):
 
 
 def print_result(result, option, scheme, total_factory):
-    result = save_modules(result)
-    warnings = get_warnings(result, option)
+    saved_fileinfos = []
 
     if option.short is False:
-        print_modules(result, scheme)
+        print(scheme.function_info_head())
+
+    for module_info in save_modules(result):
+        saved_fileinfos.append(module_info)
+        if option.short is False:
+            print_functions_info(module_info, scheme)
+
+    if option.short is False:
+        print_files_info(saved_fileinfos, scheme)
+
+    warnings = get_warnings(saved_fileinfos, option)
+
     warning_count, warning_nloc = print_warnings(option, scheme, warnings)
-    print_total(warning_count, warning_nloc, total_factory(result), scheme)
+
+    print_total(warning_count,
+                warning_nloc,
+                total_factory(saved_fileinfos),
+                scheme)
 
     return warning_count
 
