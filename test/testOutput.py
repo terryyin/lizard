@@ -45,15 +45,45 @@ class TestFunctionOutput(StreamStdoutTestCase):
         print_modules(result,  self.scheme)
         self.assertEqual("       1     16      1      0       1 foo@100-100@FILENAME", sys.stdout.stream.splitlines()[3])
 
-    def test_print_result_short(self):
+    def test_print_result_short_no_warning(self):
+        """Test that fileinfo is not printed if `short` option is specified"""
+        self.foo.end_line = 100
+        self.foo.cyclomatic_complexity = 14
+        option = parse_args("app")
+        option.CCN = 15
+        option.short = True
+        filename = "FILENAME"
+        fileStat = FileInformation(filename, 1, [self.foo])
+        result = print_result_with_scheme([fileStat], option)
+
+        # Test that there is NO filename ("FILENAME") in output as complexity WAS NOT exceeded
+        # and we used `--short option`
+        # If short option wouldn't be used FILENAME should occur 2 times (1 for functions, 1 for file)
+        filename_found_cnt = 0
+        for line in sys.stdout.stream.splitlines():
+            if filename in line:
+                filename_found_cnt += 1
+        self.assertEqual(0, filename_found_cnt)
+
+    def test_print_result_short_warning(self):
         """Test that fileinfo is not printed if `short` option is specified"""
         self.foo.end_line = 100
         self.foo.cyclomatic_complexity = 16
         option = parse_args("app")
+        option.CCN = 15
         option.short = True
-        fileStat = FileInformation("FILENAME", 1, [self.foo])
+        filename = "FILENAME"
+        fileStat = FileInformation(filename, 1, [self.foo])
         result = print_result_with_scheme([fileStat], option)
-        self.assertNotEqual("       1     16      1      0       1 foo@100-100@FILENAME", sys.stdout.stream.splitlines()[1])
+
+        # Test that there is ONLY ONE filename ("FILENAME") in output as complexity WAS exceeded
+        # and we used `--short option`
+        # If short option wouldn't be used FILENAME should occur 3 times (1 for functions, 1 for file, 1 for warning)
+        filename_found_cnt = 0
+        for line in sys.stdout.stream.splitlines():
+            if filename in line:
+                filename_found_cnt += 1
+        self.assertEqual(1, filename_found_cnt)
 
 
 class Ext(object):
