@@ -4,6 +4,8 @@ Base class for all language parsers
 
 import re
 from copy import copy
+from functools import reduce
+from operator import or_
 
 
 class CodeStateMachine(object):
@@ -112,7 +114,7 @@ class CodeReader:
         if not token_class:
             token_class = create_token
 
-        def _generate_tokens(source, add):
+        def _generate_tokens(source, add, flags=re.NOFLAG):
             # DO NOT put any sub groups in the regex. Good for performance
             _until_end = r"(?:\\\n|[^\n])*"
             combined_symbols = ["<<=", ">>=", "||", "&&", "===", "!==",
@@ -136,7 +138,7 @@ class CodeReader:
                 r"|\\\n" +
                 r"|\n" +
                 r"|[^\S\n]+" +
-                r"|.)", re.M | re.S)
+                r"|.)", re.M | re.S | flags)
             macro = ""
             for match in token_pattern.finditer(source):
                 token = token_class(match)
@@ -154,7 +156,21 @@ class CodeReader:
             if macro:
                 yield macro
 
-        return _generate_tokens(source_code, addition)
+        flag_dict = {
+            'a': re.A,  # ASCII-only matching
+            'i': re.I,  # Ignore case
+            'L': re.L,  # Locale dependent
+            'm': re.M,  # Multi-line
+            's': re.S,  # Dot matches all
+            'u': re.U,  # Unicode matching
+            'x': re.X   # Verbose
+        }
+
+        pattern = re.compile(r'\(\?[aiLmsux]+\)')
+        re_flags = ''.join(opt[2:-1] for opt in pattern.findall(addition))
+        flags = reduce(or_, (flag_dict[flag] for flag in re_flags), re.NOFLAG)
+
+        return _generate_tokens(source_code, pattern.sub('', addition), flags=flags)
 
     def __call__(self, tokens, reader):
         self.context = reader.context
