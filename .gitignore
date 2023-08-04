@@ -40,3 +40,5 @@ dist/
 .idea
 .pytest_cache/
 .local/
+
+.DS_Store
