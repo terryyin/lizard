@@ -364,7 +364,6 @@ class NestingStack(object):
     def __init__(self):
         self.nesting_stack = []
         self.pending_function = None
-        self.function_stack = []
 
     def with_namespace(self, name):
         return ''.join([x.name_in_space for x in self.nesting_stack] + [name])
