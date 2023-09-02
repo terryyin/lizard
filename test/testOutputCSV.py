@@ -22,7 +22,7 @@ class TestCSVOutput(StreamStdoutTestCase):
         options_mock.verbose = True
         options_mock.extensions = []
         csv_output(AllResult([self.fileSummary]), options_mock)
-        self.assertRegexpMatches(sys.stdout.stream,
+        self.assertRegex(sys.stdout.stream,
                                  r"NLOC,CCN,token,PARAM,length,location,file,function,long_name,start,end")
 
     def test_csv_header_with_extension(self):
@@ -35,7 +35,7 @@ class TestCSVOutput(StreamStdoutTestCase):
         results = AllResult([self.fileSummary])
         results.result[0].function_list[0].exit_count = 1
         csv_output(results, options_mock)
-        self.assertRegexpMatches(sys.stdout.stream,
+        self.assertRegex(sys.stdout.stream,
                                  r"NLOC,CCN,token,PARAM,length,location,file,function,long_name,start,end,exits")
 
     def test_csv_no_header(self):
