@@ -93,15 +93,19 @@ class Test_c_cpp_lizard(unittest.TestCase):
         result = get_cpp_function_list("""int fun(){char *a="\\\\";}""")
         self.assertEqual(1, len(result))
 
-    def test_number_with_thousands_seperator_since_cpp14(self):
+    def test_number_with_thousands_separator_since_cpp14(self):
         result = get_cpp_function_list("""int fun(){
             int a= 100'000; if(b) c; return 123'456'789;
         }""")
         self.assertEqual(1, len(result))
         self.assertEqual(2, result[0].cyclomatic_complexity)
 
-    def test_function_with_no_param(self):
+    def test_function_with_no_param_omitted(self):
         result = get_cpp_function_list("int fun(){}")
+        self.assertEqual(0, result[0].parameter_count)
+
+    def test_function_with_no_param_void(self):
+        result = get_cpp_function_list("int fun(void){}")
         self.assertEqual(0, result[0].parameter_count)
 
     def test_function_with_1_param(self):

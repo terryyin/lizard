@@ -196,7 +196,8 @@ class CLikeStates(CodeStateMachine):
             else:
                 self.next(self._state_global)
         elif len(self.bracket_stack) == 1:
-            self.context.parameter(token)
+            if token != 'void': # void is a reserved keyword, meaning no parameters
+                self.context.parameter(token)
             return
         self.context.add_to_long_function_name(token)
 
