@@ -42,3 +42,6 @@ dist/
 .local/
 
 .DS_Store
+
+dev-env
+*.xml

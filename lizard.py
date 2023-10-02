@@ -336,11 +336,12 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
 
 class FileInformation(object):  # pylint: disable=R0903
 
-    def __init__(self, filename, nloc, function_list=None):
+    def __init__(self, filename, nloc, function_list=None,public_count_functions=0):
         self.filename = filename
         self.nloc = nloc
         self.function_list = function_list or []
         self.token_count = 0
+        self.public_count_functions = public_count_functions
 
     average_nloc = property(lambda self: self.functions_average("nloc"))
     average_token_count = property(
@@ -761,6 +762,7 @@ def print_no_warnings(option):
 class AllResult(object):
     def __init__(self, result):
         self.result = list(file_info for file_info in result if file_info)
+        self.public_count_functions = sum([file_info.public_count_functions or 0 for file_info in self.result])
         self.all_fun = list(itertools.chain(*(file_info.function_list
                                             for file_info in self.result)))
 
@@ -774,7 +776,9 @@ class AllResult(object):
         return FileInformation(
                     "",
                     sum([f.nloc for f in self.result]),
-                    self.all_fun)
+                    self.all_fun,
+                    self.public_count_functions
+        )
 
 
 def print_total(warning_count, warning_nloc, all_result, scheme):

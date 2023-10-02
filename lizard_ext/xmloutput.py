@@ -53,6 +53,11 @@ def _create_function_measure(doc, result, verbose):
                 measure.appendChild(
                     _create_labeled_value_item(
                         doc, 'average', "CCN", str(total_func_ccn / number)))
+
+            if source_file.public_count_functions > 0:
+                measure.appendChild(
+                    _create_labeled_value_item(
+                        doc, 'sum', "Public Functions", str(source_file.public_count_functions)))
     return measure
 
 
@@ -60,8 +65,12 @@ def _create_file_measure(doc, result, all_result):
     all_in_one = all_result.as_fileinfo()
     measure = doc.createElement("measure")
     measure.setAttribute("type", "File")
+    labels = ["Nr.", "NCSS", "CCN", "Functions"]
+    if all_in_one.public_count_functions > 0:
+        labels.append("Public Functions")
+
     measure.appendChild(
-        _create_labels(doc, ["Nr.", "NCSS", "CCN", "Functions"]))
+        _create_labels(doc, labels))
 
     file_nr = 0
     file_total_ccn = 0
@@ -84,7 +93,11 @@ def _create_file_measure(doc, result, all_result):
 
     summary = [("NCSS", all_in_one.nloc),
                ("CCN", file_total_ccn),
-               ("Functions", file_total_funcs)]
+               ("Functions", file_total_funcs),]
+
+    if all_in_one.public_count_functions > 0:
+        summary.append(("Public Functions", all_in_one.public_count_functions))
+
     for key, val in summary:
         measure.appendChild(_create_labeled_value_item(doc, 'sum', key, val))
 
@@ -164,4 +177,11 @@ def _create_file_node(doc, source_file, file_nr):
     text4 = doc.createTextNode(str(len(source_file.function_list)))
     value4.appendChild(text4)
     item.appendChild(value4)
+
+    if source_file.public_count_functions > 0:
+        value5 = doc.createElement("value")
+        text5 = doc.createTextNode(str(source_file.public_count_functions))
+        value5.appendChild(text5)
+        item.appendChild(value5)
+
     return item
