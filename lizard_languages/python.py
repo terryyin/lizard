@@ -84,6 +84,8 @@ class PythonStates(CodeStateMachine):  # pylint: disable=R0903
     def _dec(self, token):
         if token == ')':
             self._state = self._state_colon
+        elif token == '[':
+            self._state = self._state_parameterized_type_annotation
         else:
             self.context.parameter(token)
             return
@@ -100,3 +102,8 @@ class PythonStates(CodeStateMachine):  # pylint: disable=R0903
         if token.startswith('"""') or token.startswith("'''"):
             self.context.add_nloc(-token.count('\n') - 1)
         self._state_global(token)
+
+    def _state_parameterized_type_annotation(self, token):
+        self.context.add_to_long_function_name(" " + token)
+        if token == ']':
+            self._state = self._dec
