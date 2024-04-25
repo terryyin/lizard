@@ -301,11 +301,17 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
                         " %(name)s@%(start_line)s-%(end_line)s@%(filename)s"
                         % self.__dict__)
 
-    parameter_count = property(lambda self: len(self.full_parameters))
+    parameter_count = property(lambda self: len(self.parameters))
 
     @property
     def parameters(self):
-        matches = [re.search(r'(\w+)(\s=.*)?$', f)
+        # Exclude empty tokens as parameters. These can occur in languages
+        # allowing a trailing comma on the last parameter in an function
+        # argument list.
+        # Regex matches the parameter name, then optionally:
+        # - a default value given after an '=' sign
+        # - a type annotation given after a ':'
+        matches = [re.search(r'(\w+)(\s=.*)?(\s:.*)?$', f)
                    for f in self.full_parameters]
         return [m.group(1) for m in matches if m]
 

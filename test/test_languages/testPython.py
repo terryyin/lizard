@@ -149,6 +149,62 @@ class Test_parser_for_Python(unittest.TestCase):
         functions = get_python_function_list(inspect.getsource(namespace_df))
         self.assertEqual(2, functions[0].parameter_count)
         self.assertEqual(['a', 'b'], functions[0].parameters)
+        self.assertEqual("function_with_2_parameters_and_default_value( a , b = None )",
+                         functions[0].long_name)
+
+    def test_parameter_count_with_type_annotations(self):
+        functions = get_python_function_list('''
+            def function_with_3_parameters(a: str, b: int, c: float):
+                pass
+        ''')
+        self.assertEqual(1, len(functions))
+        self.assertEqual(3, functions[0].parameter_count)
+        self.assertEqual(['a', 'b', 'c'], functions[0].parameters)
+        self.assertEqual("function_with_3_parameters( a : str , b : int , c : float )",
+                         functions[0].long_name)
+
+    def test_parameter_count_with_type_annotation_and_default(self):
+        functions = get_python_function_list('''
+            def function_with_3_parameters(a: int = 1):
+                pass
+        ''')
+        self.assertEqual(1, len(functions))
+        self.assertEqual(1, functions[0].parameter_count)
+        self.assertEqual(['a'], functions[0].parameters)
+        self.assertEqual("function_with_3_parameters( a : int = 1 )",
+                         functions[0].long_name)
+
+    def test_parameter_count_with_parameterized_type_annotations(self):
+        functions = get_python_function_list('''
+            def function_with_parameterized_parameter(a: dict[str, tuple[int, float]]):
+                pass
+            def function_with_3_parameterized_parameters(a: dict[str, int],
+                                                         b: list[float],
+                                                         c: tuple[int, float, str]
+                                                         ):
+                pass
+                
+        ''')
+        self.assertEqual(2, len(functions))
+        self.assertEqual(1, functions[0].parameter_count)
+        self.assertEqual(['a'], functions[0].parameters)
+        self.assertEqual("function_with_parameterized_parameter( a : dict [ str , tuple [ int , float ] ] )",
+                         functions[0].long_name)
+        self.assertEqual(3, functions[1].parameter_count)
+        self.assertEqual(['a', 'b', 'c'], functions[1].parameters)
+        self.assertEqual("function_with_3_parameterized_parameters( a : dict [ str , int ] , b : list [ float ] , c : tuple [ int , float , str ] )",
+                         functions[1].long_name)
+
+    def test_parameter_count_with_trailing_comma(self):
+        functions = get_python_function_list('''
+            def foo(arg1,
+                    arg2,
+                    ):
+                # comment
+                return True
+        ''')
+        self.assertEqual(2, functions[0].parameter_count)
+        self.assertEqual(['arg1', 'arg2'], functions[0].parameters)
 
     def test_function_end(self):
         class namespace3:
