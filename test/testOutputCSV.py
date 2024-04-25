@@ -3,8 +3,8 @@ import unittest
 import sys
 from lizard_ext import csv_output
 from test.helper_stream import StreamStdoutTestCase
-from lizard import parse_args, print_and_save_modules, FunctionInfo, FileInformation,\
-    get_extensions, OutputScheme, AllResult
+from lizard import parse_args, FunctionInfo, FileInformation, get_extensions,\
+    OutputScheme, AllResult
 
 
 class TestCSVOutput(StreamStdoutTestCase):
