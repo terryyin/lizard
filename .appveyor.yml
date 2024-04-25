@@ -1,7 +1,9 @@
+image: Visual Studio 2022
+
 environment:
     matrix:
-        - PYTHON: Python27
-        - PYTHON: Python35
+        - PYTHON: Python38
+        - PYTHON: Python310
 
 install:
     - C:\%PYTHON%\Scripts\pip install -e .
