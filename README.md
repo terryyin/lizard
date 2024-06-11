@@ -35,9 +35,9 @@ next we constructed the report by doing 'coverage report' and we downloaded this
 
 ## Daniel Buis
 
-<Function 1 name>
+the first function I chose was the DefaultOrderedDict from default_ordered_dict.py in the lizard_ext directory based on its current coverage and complexity. (coverage of 65%)
 
-<Show a patch (diff) or a link to a commit made in your forked repository that shows the instrumented code to gather coverage measurements>
+this is a link to a commit made in our forked repository that shows the instrumented code to gather coverage measurements: https://github.com/terryyin/lizard/commit/4b4018e3c41bae26b1ed7a8cd375dccb6d0e1cde 
 
 <Provide a screenshot of the coverage results output by the instrumentation>
 
@@ -89,11 +89,14 @@ next we constructed the report by doing 'coverage report' and we downloaded this
 
 <Test 1>
 
-<Show a patch (diff) or a link to a commit made in your forked repository that shows the new/enhanced test>
+this is a link to a commit made in our forked repository that shows the new/enhanced test:
+https://github.com/terryyin/lizard/commit/6023cb2e157647e107c068485dccd0d48dd3f8b9 
 
-<Provide a screenshot of the old coverage results (the same as you already showed above)>
+The old coverage results:
+![Old coverage 1](Screenshots/Old_coverage_Daniel1.png)
 
-<Provide a screenshot of the new coverage results>
+The new coverage results:
+![improved coverage 1](/Screenshots/Improved_Coverage_Daniel1.png)
 
 <State the coverage improvement with a number and elaborate on why the coverage is improved>
 
