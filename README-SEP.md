@@ -21,11 +21,15 @@ Programming language: Python
 
 We used coverage.py and entered the following command in the main directory of lizard: coverage run -m pytest test
 this gave the following output:
+
 ![output pytest](/Screenshots/Output_pytest.png)
 
 next we constructed the report by doing 'coverage report' and we downloaded this with 'coverage html'. the test also included some python packages that we ignored for this assigment and exluded them in the screenshots. the following two images are the result of 'coverage report' inside the terminal:
+
+![output coverage report 0](/Screenshots/Coverage_report0.png)
 ![output coverage report 1](/Screenshots/Coverage_report1.png)
 ![output coverage report 2](/Screenshots/Coverage_report2.png)
+
 
 ### Your own coverage tool
 
