@@ -35,15 +35,18 @@ next we constructed the report by doing 'coverage report' and we downloaded this
 
 ## Daniel Buis
 
-the first function I chose was the DefaultOrderedDict from default_ordered_dict.py in the lizard_ext directory based on its current coverage and complexity. (coverage of 65%)
+the first function I chose was the DefaultOrderedDict class from default_ordered_dict.py in the lizard_ext directory based on its current coverage and complexity. (coverage of 65%)
 
 this is a link to a commit made in our forked repository that shows the instrumented code to gather coverage measurements: https://github.com/terryyin/lizard/commit/a5acace166a5ba4c966d90f15e28ea95affb6e94
 
-<Provide a screenshot of the coverage results output by the instrumentation>
+TODO: Provide a screenshot of the coverage results output by the instrumentation
 
-<Function 2 name>
+the second function I chose was the_state_nested_end from erlangt.py in the lizard_languages directory based on its current coverage and complexity. (coverage of 91%)
 
-<Provide the same kind of information provided for Function 1>
+this is a link to a commit made in our forked repository that shows the instrumented code to gather coverage measurements: https://github.com/terryyin/lizard/commit/62cd7242b49e2bac7438e139358c6bec6f53da24
+
+TODO: Provide a screenshot of the coverage results output by the instrumentation
+
 
 ## Kristóf Földházi
 
@@ -100,20 +103,28 @@ test_reduce_without_default_factory
 This test creates an instance of DefaultOrderedDict without a default_factory.
 It calls the __reduce__ method, which should return a tuple representing the instance.
 
-to sum up, with these test we improve coverage from 65% to 82% with:
-- Both cases where the default_factory is provided and not provided are tested.
-- The behavior of the __missing__ method is checked for both scenarios.
-- The __reduce__ method's behavior is verified for both scenarios.
-
 Test 2:
+this is a link to a commit made in our forked repository that shows the new/enhanced test: https://github.com/terryyin/lizard/commit/38030d9a1662e55480f94d360e65de5c7df528c1
 
-<Show a patch (diff) or a link to a commit made in your forked repository that shows the new/enhanced test>
+The old coverage results:
+![Old coverage 2](Screenshots/Old_coverage_Daniel2.png)
 
-<Provide a screenshot of the old coverage results (the same as you already showed above)>
+The new coverage results:
+![improved coverage 2](/Screenshots/Improved_Coverage_Daniel2.png)
 
-<Provide a screenshot of the new coverage results>
+test_state_nested_end_with_dot:
+This test sets up the state machine to be in _state_nested_end. It pushes a function named 'fun' onto the stack. It then feeds the '.' token to the state machine.
+The presence of 'fun' in the stack should trigger the nested end condition, calling self.statemachine_return() and then transitioning to _state_global.
+This covers the condition if token == '.' or token == ',' and checks the inner condition if len(self.context.stacked_functions) > 1 and self.context.stacked_functions[-1].name == 'fun'.
 
-<State the coverage improvement with a number and elaborate on why the coverage is improved>
+test_state_nested_end_with_comma:
+Similar setup as the previous test but feeds the ',' token. This test ensures that the nested end condition is checked for ',' as well, covering both possible tokens in the condition if token == '.' or token == ','.
+
+test_state_nested_end_no_fun:
+Sets up the state machine to be in _state_nested_end. Pushes a function named 'not_fun' onto the stack. feeds the '.' token to the state machine. This test ensures that if the stacked function's name is not 'fun', the state transitions back to _state_global without calling self.statemachine_return(). This covers the case where the inner condition if self.context.stacked_functions[-1].name == 'fun' is not met.
+
+test_state_nested_end_with_no_stacked_functions:
+Sets up the state machine to be in _state_nested_end without any functions on the stack. Feeds the '.' token to the state machine. This test ensures that if there are no stacked functions, the state transitions back to _state_global. This covers the case where the condition if len(self.context.stacked_functions) > 1 is not met.
 
 ## Kristóf Földházi
 
