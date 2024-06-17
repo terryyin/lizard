@@ -43,7 +43,7 @@ TODO: Provide a screenshot of the coverage results output by the instrumentation
 
 the second function I chose was the_state_nested_end from erlangt.py in the lizard_languages directory based on its current coverage and complexity. (coverage of 91%)
 
-this is a link to a commit made in our forked repository that shows the instrumented code to gather coverage measurements: https://github.com/terryyin/lizard/commit/62cd7242b49e2bac7438e139358c6bec6f53da24
+this is a link to a commit made in our forked repository that shows the instrumented code to gather coverage measurements: https://github.com/terryyin/lizard/commit/e7d461eba21e6222b38b6be9a6816a572740f874
 
 TODO: Provide a screenshot of the coverage results output by the instrumentation
 
@@ -104,7 +104,7 @@ This test creates an instance of DefaultOrderedDict without a default_factory.
 It calls the __reduce__ method, which should return a tuple representing the instance.
 
 Test 2:
-this is a link to a commit made in our forked repository that shows the new/enhanced test: https://github.com/terryyin/lizard/commit/38030d9a1662e55480f94d360e65de5c7df528c1
+this is a link to a commit made in our forked repository that shows the new/enhanced test: https://github.com/terryyin/lizard/commit/a98c6d7c447f6813a03e424a1cb720e3d507edc6
 
 The old coverage results:
 ![Old coverage 2](Screenshots/Old_coverage_Daniel2.png)
@@ -117,14 +117,6 @@ This test sets up the state machine to be in _state_nested_end. It pushes a func
 The presence of 'fun' in the stack should trigger the nested end condition, calling self.statemachine_return() and then transitioning to _state_global.
 This covers the condition if token == '.' or token == ',' and checks the inner condition if len(self.context.stacked_functions) > 1 and self.context.stacked_functions[-1].name == 'fun'.
 
-test_state_nested_end_with_comma:
-Similar setup as the previous test but feeds the ',' token. This test ensures that the nested end condition is checked for ',' as well, covering both possible tokens in the condition if token == '.' or token == ','.
-
-test_state_nested_end_no_fun:
-Sets up the state machine to be in _state_nested_end. Pushes a function named 'not_fun' onto the stack. feeds the '.' token to the state machine. This test ensures that if the stacked function's name is not 'fun', the state transitions back to _state_global without calling self.statemachine_return(). This covers the case where the inner condition if self.context.stacked_functions[-1].name == 'fun' is not met.
-
-test_state_nested_end_with_no_stacked_functions:
-Sets up the state machine to be in _state_nested_end without any functions on the stack. Feeds the '.' token to the state machine. This test ensures that if there are no stacked functions, the state transitions back to _state_global. This covers the case where the condition if len(self.context.stacked_functions) > 1 is not met.
 
 ## Kristóf Földházi
 
