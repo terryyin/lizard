@@ -37,7 +37,7 @@ next we constructed the report by doing 'coverage report' and we downloaded this
 
 the first function I chose was the DefaultOrderedDict from default_ordered_dict.py in the lizard_ext directory based on its current coverage and complexity. (coverage of 65%)
 
-this is a link to a commit made in our forked repository that shows the instrumented code to gather coverage measurements: https://github.com/terryyin/lizard/commit/4b4018e3c41bae26b1ed7a8cd375dccb6d0e1cde 
+this is a link to a commit made in our forked repository that shows the instrumented code to gather coverage measurements: https://github.com/terryyin/lizard/commit/a5acace166a5ba4c966d90f15e28ea95affb6e94
 
 <Provide a screenshot of the coverage results output by the instrumentation>
 
@@ -67,29 +67,15 @@ In this commit you can see the code i added to measure the coverage of these fun
 In this screenshot you can see the coverage results of these changes resulting in a coverage of 44% over these 2 functions and a total coverage of 87% on this file as shown in the screenshots in the existing tool section.
 ![output own coverage tool Darian](/Screenshots/Coverage_personal_tool_Darian.png)
 
-
-## Barnabas Turán
-
-<Function 1 name>
-
-<Show a patch (diff) or a link to a commit made in your forked repository that shows the instrumented code to gather coverage measurements>
-
-<Provide a screenshot of the coverage results output by the instrumentation>
-
-<Function 2 name>
-
-<Provide the same kind of information provided for Function 1>
-
 ## Coverage improvement
 
 ### Individual tests
 
 ## Daniel Buis
 
-<Test 1>
-
+Test 1:
 this is a link to a commit made in our forked repository that shows the new/enhanced test:
-https://github.com/terryyin/lizard/commit/6023cb2e157647e107c068485dccd0d48dd3f8b9 
+https://github.com/terryyin/lizard/commit/c09a3fb081fd58d454fe06088f9d7dbe6dbd4081
 
 The old coverage results:
 ![Old coverage 1](Screenshots/Old_coverage_Daniel1.png)
@@ -97,11 +83,37 @@ The old coverage results:
 The new coverage results:
 ![improved coverage 1](/Screenshots/Improved_Coverage_Daniel1.png)
 
+
+test_default_ordered_dict_with_default_factory:
+This test creates an instance of DefaultOrderedDict with int as the default_factory.
+It then tries to access a missing key, which should trigger the __missing__ method and use the default_factory to set the default value.
+
+test_default_ordered_dict_without_default_factory:
+This test creates an instance of DefaultOrderedDict without a default_factory.
+It then tries to access a missing key, which should trigger the __missing__ method and raise a KeyError.
+
+test_reduce_with_default_factory:
+This test creates an instance of DefaultOrderedDict with int as the default_factory.
+It calls the __reduce__ method, which should return a tuple representing the instance.
+
+test_reduce_without_default_factory
+This test creates an instance of DefaultOrderedDict without a default_factory.
+It calls the __reduce__ method, which should return a tuple representing the instance.
+
+to sum up, with these test we improve coverage from 65% to 82% with:
+- Both cases where the default_factory is provided and not provided are tested.
+- The behavior of the __missing__ method is checked for both scenarios.
+- The __reduce__ method's behavior is verified for both scenarios.
+
+Test 2:
+
+<Show a patch (diff) or a link to a commit made in your forked repository that shows the new/enhanced test>
+
+<Provide a screenshot of the old coverage results (the same as you already showed above)>
+
+<Provide a screenshot of the new coverage results>
+
 <State the coverage improvement with a number and elaborate on why the coverage is improved>
-
-<Test 2>
-
-<Provide the same kind of information provided for Test 1>
 
 ## Kristóf Földházi
 
@@ -148,26 +160,15 @@ The new coverage results
 Before the second new test the coverage was 89% as stated above and after the second new test the coverage is improved to 91%.
 The new test covers one branch in the _state_global function, namely the PROGRAM branch, and tests if this branch is properly executed.
 
-## Barnabas Turán
-
-<Test 1>
-
-<Show a patch (diff) or a link to a commit made in your forked repository that shows the new/enhanced test>
-
-<Provide a screenshot of the old coverage results (the same as you already showed above)>
-
-<Provide a screenshot of the new coverage results>
-
-<State the coverage improvement with a number and elaborate on why the coverage is improved>
-
-<Test 2>
-
-<Provide the same kind of information provided for Test 1>
 
 ### Overall
 
 
-<Provide a screenshot of the old coverage results by running an existing tool (the same as you already showed above)>
+This is a screenshot of the old coverage results, we retrieved by running an existing tool (the same as we already showed above)
+
+![output coverage report 0](/Screenshots/Coverage_report0.png)
+![output coverage report 1](/Screenshots/Coverage_report1.png)
+![output coverage report 2](/Screenshots/Coverage_report2.png)
 
 
 <Provide a screenshot of the new coverage results by running the existing tool using all test modifications made by the group>
