@@ -80,7 +80,7 @@ In this screenshot you can see the coverage results of these changes resulting i
 
 Test 1:
 this is a link to a commit made in our forked repository that shows the new/enhanced test:
-https://github.com/Djaro08/lizard-SEP/commit/a58cae72cf51eb2ba055c82d7257a8bd9ea67614
+https://github.com/Djaro08/lizard-SEP/commit/c7bd8ddc761acec37844bf5c466a407796dbad7b
 
 The old coverage results:
 ![Old coverage 1](Screenshots/Old_coverage_Daniel1.png)
@@ -106,7 +106,7 @@ This test creates an instance of DefaultOrderedDict without a default_factory.
 It calls the __reduce__ method, which should return a tuple representing the instance.
 
 Test 2:
-this is a link to a commit made in our forked repository that shows the new/enhanced test: https://github.com/Djaro08/lizard-SEP/commit/553aac6e687264a60e018636fb67b5c373bb4ab2 
+this is a link to a commit made in our forked repository that shows the new/enhanced test: https://github.com/terryyin/lizard/commit/a58cae72cf51eb2ba055c82d7257a8bd9ea67614 
 
 The old coverage results:
 ![Old coverage 2](Screenshots/Old_coverage_Daniel2.png)
