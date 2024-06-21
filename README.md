@@ -37,15 +37,17 @@ next we constructed the report by doing 'coverage report' and we downloaded this
 
 the first function I chose was the DefaultOrderedDict class from default_ordered_dict.py in the lizard_ext directory based on its current coverage and complexity. (coverage of 65%)
 
-this is a link to a commit made in our forked repository that shows the instrumented code to gather coverage measurements: https://github.com/terryyin/lizard/commit/a5acace166a5ba4c966d90f15e28ea95affb6e94
+this is a link to a commit made in our forked repository that shows the instrumented code to gather coverage measurements: UPDATED_LINK
 
-TODO: Provide a screenshot of the coverage results output by the instrumentation
+this is the output of the instrumentation after running the tests:
+![instrumentation output](/Screenshots/Instrumentation_output_daniel1.png)
 
 the second function I chose was the_state_nested_end from erlangt.py in the lizard_languages directory based on its current coverage and complexity. (coverage of 91%)
 
-this is a link to a commit made in our forked repository that shows the instrumented code to gather coverage measurements: https://github.com/terryyin/lizard/commit/e7d461eba21e6222b38b6be9a6816a572740f874
+this is a link to a commit made in our forked repository that shows the instrumented code to gather coverage measurements: https://github.com/Djaro08/lizard-SEP/commit/7d847957c796bfa690bd6a188ed77018fc7bfa5c
 
-TODO: Provide a screenshot of the coverage results output by the instrumentation
+this is the output of the instrumentation after running the tests:
+![instrumentation output](/Screenshots/Instrumentation_output_daniel2.png)
 
 
 ## Kristóf Földházi
