@@ -124,18 +124,27 @@ This covers the condition if token == '.' or token == ',' and checks the inner c
 ## Kristóf Földházi
 
 <Test 1>
+Here is the link for the first improved test: LINK
+Old coverage result: 
+![nexif_original](https://github.com/terryyin/lizard/assets/121450186/801ad305-66eb-4a5e-a945-5f502cf8e51f)
+New coverage result: 
+![nextif_after](https://github.com/terryyin/lizard/assets/121450186/98aedc2e-34ab-4c2f-b133-60cb5c6eac7a)
 
-<Show a patch (diff) or a link to a commit made in your forked repository that shows the new/enhanced test>
 
-<Provide a screenshot of the old coverage results (the same as you already showed above)>
+---
 
-<Provide a screenshot of the new coverage results>
+
+
+Here is the link for the second improved test: LINK
+Old coverage result:
+![Screenshot 2024-06-16 194931](https://github.com/terryyin/lizard/assets/121450186/112cf0fe-13a7-4547-9c2b-cb753002d672)
+New coverage result:
+
+![Screenshot 2024-06-16 200304](https://github.com/terryyin/lizard/assets/121450186/5cf02840-5cb4-4880-a2c9-73182c1d8b04)
+
 
 <State the coverage improvement with a number and elaborate on why the coverage is improved>
 
-<Test 2>
-
-<Provide the same kind of information provided for Test 1>
 
 ## Darian de Graaf
 
