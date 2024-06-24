@@ -138,8 +138,8 @@ New coverage result:
 Here is the link for the second improved test: LINK
 Old coverage result:
 ![Screenshot 2024-06-16 194931](https://github.com/terryyin/lizard/assets/121450186/112cf0fe-13a7-4547-9c2b-cb753002d672)
-New coverage result:
 
+New coverage result:
 ![Screenshot 2024-06-16 200304](https://github.com/terryyin/lizard/assets/121450186/5cf02840-5cb4-4880-a2c9-73182c1d8b04)
 
 
