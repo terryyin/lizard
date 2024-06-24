@@ -97,14 +97,30 @@ class NDFileInfoAddition(FileInfoBuilder):
         return self.current_function.bracket_loop
 
 
+branch_coverage = {
+    "has_func_branch": False, 
+    "no_func_branch": False    
+}
+
+def print_coverage():
+    has_func_hit = branch_coverage["has_func_branch"]
+    no_func_hit = branch_coverage["no_func_branch"]
+    print(f"Branch 'has_func_branch' was {'hit' if has_func_hit else 'not hit'}")
+    print(f"Branch 'no_func_branch' was {'hit' if no_func_hit else 'not hit'}")
+
 def get_method(cls, name):
-    """ python3 doesn't need the __func__ to get the func of the
-        method.
-    """
+    """ python3 doesn't need the __func__ to get the func of the method. """
     method = getattr(cls, name)
     if hasattr(method, "__func__"):
+        branch_coverage["has_func_branch"] = True
         method = method.__func__
+    else:
+        branch_coverage["no_func_branch"] = True
     return method
+
+
+
+
 
 
 def patch(frm, accept_class):
@@ -131,3 +147,5 @@ def _init_nesting_depth_data(self, *_):
 
 patch(NDFileInfoAddition, FileInfoBuilder)
 patch_append_method(_init_nesting_depth_data, FunctionInfo, "__init__")
+
+
