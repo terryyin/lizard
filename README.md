@@ -52,8 +52,11 @@ this is the output of the instrumentation after running the tests:
 
 ## Kristóf Földházi
 
+For my first function, I chose next_if from code_reader.py Here is the link to the pull request that shows how I measured branch coverage: 
+LINK
 
-<Show a patch (diff) or a link to a commit made in your forked repository that shows the instrumented code to gather coverage measurements>
+here is the output of the coverage measurement: 
+![nextif_coverage](https://github.com/terryyin/lizard/assets/121450186/a5457074-ae30-4557-b34c-4214efe0552f)
 
 <Provide a screenshot of the coverage results output by the instrumentation>
 
