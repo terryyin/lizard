@@ -52,17 +52,16 @@ this is the output of the instrumentation after running the tests:
 
 ## Kristóf Földházi
 
-For my first function, I chose next_if from code_reader.py Here is the link to the pull request that shows how I measured branch coverage: 
+For my first function, I chose next_if from code_reader.py Here is the link to the commit that shows how I measured branch coverage: 
 LINK
 
 here is the output of the coverage measurement: 
 ![nextif_coverage](https://github.com/terryyin/lizard/assets/121450186/a5457074-ae30-4557-b34c-4214efe0552f)
 
-<Provide a screenshot of the coverage results output by the instrumentation>
+As for my second function, I choose get_method from lizardnd.py. Here is the link to the commit that shows how I measured branch coverage: LINK
 
-<Function 2 name>
-
-<Provide the same kind of information provided for Function 1>
+here is the output of the coverage measurement: 
+![lizad_nd_branch_coverage](https://github.com/terryyin/lizard/assets/121450186/f4d6e975-55b5-4ee1-86ac-3d6f6ca8bcd2)
 
 ## Darian de Graaf
 
