@@ -7,6 +7,10 @@ from copy import copy
 from functools import reduce
 from operator import or_
 
+next_if_branch_coverage = {
+    "token_not_equal_branch": False,  # Branch where token != expected
+    "token_equal_branch": False      # Branch where token == expected
+}
 
 class CodeStateMachine(object):
     """ the state machine """
@@ -30,11 +34,20 @@ class CodeStateMachine(object):
         self._state = state
         if token is not None:
             return self(token)
+        
+
+
+
 
     def next_if(self, state, token, expected):
         if token != expected:
+            next_if_branch_coverage["token_not_equal_branch"] = True
             return
+        next_if_branch_coverage["token_equal_branch"] = True
         self.next(state, token)
+
+
+
 
     def statemachine_return(self):
         self.to_exit = True
@@ -114,7 +127,7 @@ class CodeReader:
         if not token_class:
             token_class = create_token
 
-        def _generate_tokens(source, add, flags=re.NOFLAG):
+        def _generate_tokens(source, add, flags=re.IGNORECASE):
             # DO NOT put any sub groups in the regex. Good for performance
             _until_end = r"(?:\\\n|[^\n])*"
             combined_symbols = ["<<=", ">>=", "||", "&&", "===", "!==",
@@ -170,7 +183,7 @@ class CodeReader:
 
         pattern = re.compile(r'\(\?[aiLmsux]+\)')
         re_flags = ''.join(opt[2:-1] for opt in pattern.findall(addition))
-        flags = reduce(or_, (flag_dict[flag] for flag in re_flags), re.NOFLAG)
+        flags = reduce(or_, (flag_dict[flag] for flag in re_flags), re.IGNORECASE)
 
         return _generate_tokens(source_code, pattern.sub('', addition), flags=flags)
 
@@ -186,3 +199,10 @@ class CodeReader:
 
     def eof(self):
         pass
+    
+    
+def print_next_if_coverage():
+    token_not_equal_hit = next_if_branch_coverage["token_not_equal_branch"]
+    token_equal_hit = next_if_branch_coverage["token_equal_branch"]
+    print(f"Branch 'token_not_equal_branch' was {'hit' if token_not_equal_hit else 'not hit'}")
+    print(f"Branch 'token_equal_branch' was {'hit' if token_equal_hit else 'not hit'}")
