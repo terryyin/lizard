@@ -100,6 +100,20 @@ class Test_c_cpp_lizard(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual(2, result[0].cyclomatic_complexity)
 
+    def test_hex_number_with_thousands_separator_since_cpp14(self):
+        result = get_cpp_function_list("""int fun(){
+            int a= 0x12ab'34cd; if(b) c; return 0xEF56'7890'1A2B;
+        }""")
+        self.assertEqual(1, len(result))
+        self.assertEqual(2, result[0].cyclomatic_complexity)
+
+    def test_bin_number_with_thousands_separator_since_cpp14(self):
+        result = get_cpp_function_list("""int fun(){
+            int a= 0b0101'1100; if(b) c; return 0b1111'0000'1100'1110;
+        }""")
+        self.assertEqual(1, len(result))
+        self.assertEqual(2, result[0].cyclomatic_complexity)
+
     def test_function_with_no_param_omitted(self):
         result = get_cpp_function_list("int fun(){}")
         self.assertEqual(0, result[0].parameter_count)
