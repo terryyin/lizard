@@ -13,10 +13,31 @@ class GoLikeStates(CodeStateMachine):  # pylint: disable=R0903
         if token == self.FUNC_KEYWORD:
             self._state = self._function_name
             self.context.push_new_function('')
+        elif token == 'type':
+            self._state = self._type_definition
         elif token in '{':
             self.sub_state(self.statemachine_clone())
         elif token in '}':
             self.statemachine_return()
+
+    def _type_definition(self, token):
+        self._state = self._after_type_name
+
+    def _after_type_name(self, token):
+        if token == 'struct':
+            self._state = self._struct_definition
+        elif token == 'interface':
+            self._state = self._interface_definition
+        else:
+            self._state = self._state_global
+
+    @CodeStateMachine.read_inside_brackets_then("{}", "_state_global")
+    def _struct_definition(self, tokens):
+        pass
+
+    @CodeStateMachine.read_inside_brackets_then("{}", "_state_global")
+    def _interface_definition(self, tokens):
+        pass
 
     def _function_name(self, token):
         if token != '`':

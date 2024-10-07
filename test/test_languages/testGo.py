@@ -127,3 +127,28 @@ class Test_parser_for_Go(unittest.TestCase):
                 ''')
         self.assertEqual(0, len(result))
 
+    def test_struct_with_func_followed_by_function_with_receiver(self):
+        result = get_go_function_list('''
+            type Geometry struct {
+                isEqual func(float64, float64) error
+            }
+
+            func (g *Geometry) sayGoodbye() { }
+                ''')
+
+        self.assertEqual(1, len(result))
+        self.assertEqual("sayGoodbye", result[0].name)
+
+    def test_interface_with_func_followed_by_function_with_receiver(self):
+        result = get_go_function_list('''
+            type MyComparator struct{}
+
+            type Comparator interface {
+                Handle(func(int) string)
+            }
+
+            func (m MyComparator) Handle(f func(int) string) {}
+                ''')
+
+        self.assertEqual(1, len(result))
+        self.assertEqual("Handle", result[0].name)
