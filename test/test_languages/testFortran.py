@@ -185,3 +185,18 @@ class TestFortran(unittest.TestCase):
         self.assertEqual(2, len(result))
         self.assertEqual('test', result[0].name)
         self.assertEqual('test7', result[1].name)
+
+    def test_case_insensitive_tokens(self):
+        '''Test that tokens are matched case-insensitively'''
+        result = get_fortran_function_list('''
+        subroutine test
+            If (a) Then
+                CALL sub(a)
+            elseIF (b) THEN
+                call SUB(b)
+            END IF
+        ENDsubroutine test
+        ''')
+        self.assertEqual(1, len(result))
+        self.assertEqual('test', result[0].name)
+        self.assertEqual(2, result[0].cyclomatic_complexity)

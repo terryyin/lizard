@@ -35,11 +35,10 @@ class FortranReader(CodeReader, FortranCommentsMixin):
         _until_end = r'(?:\\\n|[^\n])*'
         return CodeReader.generate_tokens(
             source_code,
-            r'(?i)' +
-            r'|\/\/' +
+            r'(?i)'
+            r'\/\/' +
             r'|\#' + _until_end +
             r'|\!' + _until_end +
-            r'|^C' + _until_end +
             r'|^\*' + _until_end +
             r'|\.OR\.' +
             r'|\.AND\.' +
@@ -124,6 +123,8 @@ class FortranStates(CodeStateMachine):
             self.context.add_bare_nesting()
         elif token_upper.replace(' ', '') == 'ELSEIF':
             self.context.pop_nesting()
+            if token_upper == 'ELSEIF':
+                self.context.add_condition()
             self._state = self._if
         elif token_upper == 'END' or self._ends.match(token):
             self.context.pop_nesting()
