@@ -114,7 +114,7 @@ class CodeReader:
         if not token_class:
             token_class = create_token
 
-        def _generate_tokens(source, add, flags=re.NOFLAG):
+        def _generate_tokens(source, add, flags=0):
             # DO NOT put any sub groups in the regex. Good for performance
             _until_end = r"(?:\\\n|[^\n])*"
             combined_symbols = ["<<=", ">>=", "||", "&&", "===", "!==",
@@ -170,7 +170,7 @@ class CodeReader:
 
         pattern = re.compile(r'\(\?[aiLmsux]+\)')
         re_flags = ''.join(opt[2:-1] for opt in pattern.findall(addition))
-        flags = reduce(or_, (flag_dict[flag] for flag in re_flags), re.NOFLAG)
+        flags = reduce(or_, (flag_dict[flag] for flag in re_flags), 0)
 
         return _generate_tokens(source_code, pattern.sub('', addition), flags=flags)
 
