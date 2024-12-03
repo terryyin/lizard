@@ -42,3 +42,4 @@ dist/
 .local/
 
 .DS_Store
+.venv/

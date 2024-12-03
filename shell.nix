@@ -8,19 +8,19 @@ in mkShell {
     python3Full
     python39Packages.pip
     python39Packages.setuptools
+    python39Packages.virtualenv
     vim
     git less
   ];
   shellHook = ''
-    export PYTHONUSERBASE=$PWD/.local
-    export USER_SITE=`python -c "import site; print(site.USER_SITE)"`
-
-    # bug? it will print 3.8 somehow
-    export USER_SITE=${"\$\{USER_SITE//3.8/3.9}"}
-
-    export PYTHONPATH=$PYTHONPATH:$USER_SITE
-    export PATH=$PATH:$PYTHONUSERBASE/bin
-    make deps
+    # Create and activate virtual environment
+    python -m venv .venv
+    source .venv/bin/activate
+    
+    # Install dependencies
+    pip install -r dev_requirements.txt
+    
+    # Add local bin to PATH
+    export PATH=$PATH:$PWD/.venv/bin
   '';
-
 }

@@ -1,5 +1,10 @@
 # Change Log
 
+## 1.17.13
+
+Bug fix:
+  Replace re.NOFLAG with 0 to make it compatible with Python 3.10+
+
 ## 1.17.12
 
 Bug fix:
