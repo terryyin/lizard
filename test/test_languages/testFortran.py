@@ -200,3 +200,94 @@ class TestFortran(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual('test', result[0].name)
         self.assertEqual(2, result[0].cyclomatic_complexity)
+
+    def test_submodule_parsing(self):
+        '''Test that submodules are correctly parsed'''
+        result = get_fortran_function_list('''
+        submodule (parent) child
+            module procedure sub1
+                integer :: x
+            end procedure
+
+            module procedure sub2
+                real :: y
+            end procedure
+        end submodule
+        ''')
+        self.assertEqual(2, len(result))
+        self.assertEqual('sub1', result[0].name)
+        self.assertEqual('sub2', result[1].name)
+
+    def test_module_procedure_parsing(self):
+        '''Test that module procedures are correctly parsed'''
+        result = get_fortran_function_list('''
+        module mymod
+            interface
+                module subroutine sub1(x)
+                    integer :: x
+                end subroutine
+
+                module function func1(y) result(z)
+                    real :: y, z
+                end function
+            end interface
+        end module
+        ''')
+        self.assertEqual(2, len(result))
+        self.assertEqual('mymod::sub1', result[0].name)
+        self.assertEqual('mymod::func1', result[1].name)
+
+    def test_case_sensitivity_with_module_procedures(self):
+        '''Test that module procedures are found regardless of case'''
+        result = get_fortran_function_list('''
+        MODULE mymod
+            INTERFACE
+                module SUBROUTINE sub1(x)
+                    integer :: x
+                end SUBROUTINE
+
+                MODULE function func1(y)
+                    real :: y
+                end function
+            end INTERFACE
+        END MODULE
+
+        SUBMODULE (mymod) mysubmod
+            module procedure SUB1
+                x = 1
+            end procedure
+
+            module procedure FUNC1
+                func1 = y * 2
+            end procedure
+        end SUBMODULE
+        ''')
+        self.assertEqual(2, len(result))
+        self.assertEqual('mymod::sub1', result[0].name)
+        self.assertEqual('mymod::func1', result[1].name)
+
+    def test_procedure_decorators(self):
+        '''Test that procedures with decorators are correctly parsed'''
+        result = get_fortran_function_list('''
+        module mymod
+            interface
+                ! These should be found due to decorators
+                module recursive subroutine sub1(x)
+                    integer :: x
+                end subroutine
+
+                module elemental function func1(y)
+                    real :: y
+                end function
+
+                ! This might be missed due to lack of decorator
+                module function func2(z)
+                    complex :: z
+                end function
+            end interface
+        end module
+        ''')
+        # The issue report suggests decorated procedures are found while non-decorated ones might be missed
+        self.assertEqual(2, len(result))  # Only the decorated ones should be found
+        self.assertTrue(any(f.name == 'mymod::sub1' for f in result))  # Recursive one found
+        self.assertTrue(any(f.name == 'mymod::func1' for f in result))  # Elemental one found
