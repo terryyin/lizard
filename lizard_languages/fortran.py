@@ -104,8 +104,12 @@ class FortranStates(CodeStateMachine):
             self.next(self._ignore_expr, token)
         elif token_upper in ('PROGRAM',):
             self._state = self._namespace
+        elif token_upper in ('RECURSIVE', 'ELEMENTAL'):
+            # Skip procedure decorators
+            self.reset_state()
         elif token_upper == 'MODULE':
-            self._state = self._module
+            # Check next token to see if it's a procedure declaration
+            self._state = self._module_or_procedure
         elif token_upper in ('SUBROUTINE', 'FUNCTION'):
             self._state = self._function_name
         elif token_upper == 'TYPE':
@@ -215,3 +219,11 @@ class FortranStates(CodeStateMachine):
             self.reset_state()
         else:
             self.reset_state(token)
+
+    def _module_or_procedure(self, token):
+        token_upper = token.upper()
+        if token_upper in ('SUBROUTINE', 'FUNCTION'):
+            self._state = self._function_name
+        else:
+            self._state = self._module
+            self._module(token)
