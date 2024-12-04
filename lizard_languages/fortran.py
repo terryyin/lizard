@@ -16,6 +16,9 @@ class FortranReader(CodeReader, FortranCommentsMixin):
 
     ext = ['f70', 'f90', 'f95', 'f03', 'f08', 'f', 'for', 'ftn', 'fpp']
     language_names = ['fortran']
+
+    # Conditions need to have all the cases because the matching is case-insensitive
+    # and is not done here.
     _conditions = {
         'IF', 'DO', '.AND.', '.OR.', 'CASE',
         'if', 'do', '.and.', '.or.', 'case'
@@ -73,6 +76,14 @@ class FortranReader(CodeReader, FortranCommentsMixin):
 class FortranStates(CodeStateMachine):
     _ends = re.compile('|'.join(r'END\s*{0}'.format(_) for _ in FortranReader._blocks), re.I)
 
+    # Define token groups to eliminate duplication
+    IGNORE_NEXT_TOKENS = {'%', '::', 'SAVE', 'DATA'}
+    IGNORE_VAR_TOKENS = {'INTEGER', 'REAL', 'COMPLEX', 'LOGICAL', 'CHARACTER'}
+    RESET_STATE_TOKENS = {'RECURSIVE', 'ELEMENTAL'}
+    FUNCTION_NAME_TOKENS = {'SUBROUTINE', 'FUNCTION'}
+    NESTING_KEYWORDS = {'FORALL', 'WHERE', 'SELECT', 'INTERFACE', 'ASSOCIATE'}
+    PROCEDURE_TOKENS = {'PROCEDURE'}
+
     def __init__(self, context, reader):
         super().__init__(context)
         self.reader = reader
@@ -91,20 +102,20 @@ class FortranStates(CodeStateMachine):
 
     def _state_global(self, token):
         token_upper = token.upper()
-        if token_upper in ('%', '::', 'SAVE', 'DATA'):
+        if token_upper in self.IGNORE_NEXT_TOKENS:
             self._state = self._ignore_next
-        elif token_upper in ('INTEGER', 'REAL', 'COMPLEX', 'LOGICAL', 'CHARACTER'):
+        elif token_upper in self.IGNORE_VAR_TOKENS:
             self._state = self._ignore_var
         elif token == '(':
             self.next(self._ignore_expr, token)
+        elif token_upper in self.RESET_STATE_TOKENS:
+            self.reset_state()
+        elif token_upper in self.FUNCTION_NAME_TOKENS:
+            self._state = self._function_name
         elif token_upper == 'PROGRAM':
             self._state = self._namespace
-        elif token_upper in ('RECURSIVE', 'ELEMENTAL'):
-            self.reset_state()
         elif token_upper == 'MODULE':
             self._state = self._module_or_procedure
-        elif token_upper in ('SUBROUTINE', 'FUNCTION'):
-            self._state = self._function_name
         elif token_upper == 'TYPE':
             self._state = self._type
         elif token_upper == 'IF':
@@ -113,7 +124,7 @@ class FortranStates(CodeStateMachine):
             self._state = self._ignore_if_paren
         elif token_upper == 'DO':
             self._state = self._ignore_if_label
-        elif token_upper in ('FORALL', 'WHERE', 'SELECT', 'INTERFACE', 'ASSOCIATE'):
+        elif token_upper in self.NESTING_KEYWORDS:
             self.context.add_bare_nesting()
         elif token_upper == 'ELSE':
             self.context.pop_nesting()
@@ -135,7 +146,7 @@ class FortranStates(CodeStateMachine):
         self.reset_state()
 
     def _ignore_var(self, token):
-        if token.upper() in ('SUBROUTINE', 'FUNCTION'):
+        if token.upper() in self.FUNCTION_NAME_TOKENS:
             self.reset_state(token)
         else:
             self.reset_state()
@@ -180,10 +191,18 @@ class FortranStates(CodeStateMachine):
         self.reset_state(token)
 
     def _module(self, token):
-        if token.upper() == 'PROCEDURE':
-            self.reset_state()
+        if token.upper() in self.FUNCTION_NAME_TOKENS:
+            self._state = self._function_name
+        elif token.upper() in self.PROCEDURE_TOKENS:
+            self._state = self._procedure
         else:
             self._namespace(token)
+
+    def _procedure(self, token):
+        if token.upper() in self.FUNCTION_NAME_TOKENS:
+            self._state = self._function_name
+        else:
+            self.reset_state(token)
 
     def _type(self, token):
         if token in (',', '::') or token[0].isalpha():
@@ -214,8 +233,8 @@ class FortranStates(CodeStateMachine):
 
     def _module_or_procedure(self, token):
         token_upper = token.upper()
-        if token_upper in ('SUBROUTINE', 'FUNCTION'):
-            self._state = self._function_name
+        if token_upper in self.PROCEDURE_TOKENS:
+            self._state = self._procedure
         else:
             self._state = self._module
             self._module(token)
