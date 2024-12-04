@@ -5,58 +5,57 @@ Language parser for Fortran.
 import re
 from .code_reader import CodeStateMachine, CodeReader
 
-
-# pylint: disable=R0903
-class FortranCommentsMixin(object):
+class FortranCommentsMixin:
     @staticmethod
     def get_comment_from_token(token):
         if token.startswith('!'):
             return token[1:]
 
-
-# pylint: disable=R0903
 class FortranReader(CodeReader, FortranCommentsMixin):
-    ''' This is the reader for Fortran. '''
+    '''This is the reader for Fortran.'''
 
     ext = ['f70', 'f90', 'f95', 'f03', 'f08', 'f', 'for', 'ftn', 'fpp']
     language_names = ['fortran']
-    _conditions = set((
+    _conditions = {
         'IF', 'DO', '.AND.', '.OR.', 'CASE',
-        'if', 'do', '.and.', '.or.', 'case'))
-    _blocks = ['PROGRAM', 'MODULE', 'SUBROUTINE', 'FUNCTION', 'TYPE', 'INTERFACE', 'BLOCK', 'IF', 'DO', 'FORALL', 'WHERE', 'SELECT', 'ASSOCIATE']
+        'if', 'do', '.and.', '.or.', 'case'
+    }
+    _blocks = [
+        'PROGRAM', 'MODULE', 'SUBROUTINE', 'FUNCTION', 'TYPE', 'INTERFACE', 'BLOCK',
+        'IF', 'DO', 'FORALL', 'WHERE', 'SELECT', 'ASSOCIATE'
+    ]
 
     def __init__(self, context):
-        super(FortranReader, self).__init__(context)
+        super().__init__(context)
         self.macro_disabled = False
         self.parallel_states = [FortranStates(context, self)]
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
         _until_end = r'(?:\\\n|[^\n])*'
-        return CodeReader.generate_tokens(
-            source_code,
+        block_endings = '|'.join(r'END[ \t]+{0}'.format(_) for _ in FortranReader._blocks)
+        patterns = (
             r'(?i)'
-            r'\/\/' +
-            r'|\#' + _until_end +
-            r'|\!' + _until_end +
-            r'|^\*' + _until_end +
-            r'|\.OR\.' +
-            r'|\.AND\.' +
-            r'|ELSE +IF' +
-            ''.join(r'|END[ \t]+{0}'.format(_) for _ in FortranReader._blocks) +
-            addition,
-            token_class)
+            r'\/\/|'
+            r'\#' + _until_end + r'|'
+            r'\!' + _until_end + r'|'
+            r'^\*' + _until_end + r'|'
+            r'\.OR\.|'
+            r'\.AND\.|'
+            r'ELSE +IF|' + block_endings + addition
+        )
+        return CodeReader.generate_tokens(source_code, patterns, token_class)
 
     def preprocess(self, tokens):
         macro_depth = 0
         new_line = True
         for token in tokens:
-            if new_line and token[0].upper() in ('c', 'C', '*'):
-                token = '!'+token[1:]
+            if new_line and token[0].upper() in ('C', '*'):
+                token = '!' + token[1:]
             new_line = token == '\n'
-            macro = re.match(r'#\s*(\w+)', token)
-            if macro:
-                macro = macro.group(1).lower()
+            macro_match = re.match(r'#\s*(\w+)', token)
+            if macro_match:
+                macro = macro_match.group(1).lower()
                 if macro in ('if', 'ifdef', 'ifndef', 'elif'):
                     self.context.add_condition()
                 if macro_depth > 0:
@@ -66,22 +65,18 @@ class FortranReader(CodeReader, FortranCommentsMixin):
                         macro_depth -= 1
                 elif macro in ('else', 'elif'):
                     macro_depth += 1
-                # In order to don't mess the nesting,
-                # only the first branch of #if #elif #else
-                # is read by the FortranStateMachine
+                # Only the first branch of #if #elif #else is read
                 self.macro_disabled = macro_depth != 0
             elif not token.isspace() or token == '\n':
                 yield token
 
-# pylint: disable=R0903
 class FortranStates(CodeStateMachine):
-    # pylint: disable=line-too-long
-    # pylint: disable=protected-access
-    _ends = re.compile('(?:'+'|'.join(r'END\s*{0}'.format(_) for _ in FortranReader._blocks)+')', re.I)
+    _ends = re.compile('|'.join(r'END\s*{0}'.format(_) for _ in FortranReader._blocks), re.I)
 
     def __init__(self, context, reader):
-        super(FortranStates, self).__init__(context)
+        super().__init__(context)
         self.reader = reader
+        self.last_token = None
 
     def __call__(self, token, reader=None):
         if self.reader.macro_disabled:
@@ -98,17 +93,15 @@ class FortranStates(CodeStateMachine):
         token_upper = token.upper()
         if token_upper in ('%', '::', 'SAVE', 'DATA'):
             self._state = self._ignore_next
-        elif token_upper in ('INTEGER', 'REAL','COMPLEX','LOGICAL', 'CHARACTER'):
+        elif token_upper in ('INTEGER', 'REAL', 'COMPLEX', 'LOGICAL', 'CHARACTER'):
             self._state = self._ignore_var
         elif token == '(':
             self.next(self._ignore_expr, token)
-        elif token_upper in ('PROGRAM',):
+        elif token_upper == 'PROGRAM':
             self._state = self._namespace
         elif token_upper in ('RECURSIVE', 'ELEMENTAL'):
-            # Skip procedure decorators
             self.reset_state()
         elif token_upper == 'MODULE':
-            # Check next token to see if it's a procedure declaration
             self._state = self._module_or_procedure
         elif token_upper in ('SUBROUTINE', 'FUNCTION'):
             self._state = self._function_name
@@ -116,9 +109,9 @@ class FortranStates(CodeStateMachine):
             self._state = self._type
         elif token_upper == 'IF':
             self._state = self._if
-        elif token_upper in ('BLOCK',):
+        elif token_upper == 'BLOCK':
             self._state = self._ignore_if_paren
-        elif token_upper in ('DO',):
+        elif token_upper == 'DO':
             self._state = self._ignore_if_label
         elif token_upper in ('FORALL', 'WHERE', 'SELECT', 'INTERFACE', 'ASSOCIATE'):
             self.context.add_bare_nesting()
@@ -138,7 +131,6 @@ class FortranStates(CodeStateMachine):
         if token is not None:
             self._state_global(token)
 
-    # pylint: disable=unused-argument
     def _ignore_next(self, token):
         self.reset_state()
 
@@ -156,7 +148,7 @@ class FortranStates(CodeStateMachine):
             self.reset_state()
 
     def _ignore_if_label(self, token):
-        if all(char in "0123456789" for char in token):
+        if token.isdigit():
             self.reset_state()
         else:
             self.context.add_bare_nesting()
