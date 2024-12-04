@@ -36,8 +36,9 @@ class FortranReader(CodeReader, FortranCommentsMixin):
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
         _until_end = r'(?:\\\n|[^\n])*'
-        block_endings = '|'.join(r'END[ \t]+{0}'.format(_) for _ in FortranReader._blocks)
-        patterns = (
+        block_endings = '|'.join(r'END\s*{0}'.format(_) for _ in FortranReader._blocks)
+        # Include all patterns and the (?i) flag in addition
+        addition = (
             r'(?i)'
             r'\/\/|'
             r'\#' + _until_end + r'|'
@@ -45,9 +46,11 @@ class FortranReader(CodeReader, FortranCommentsMixin):
             r'^\*' + _until_end + r'|'
             r'\.OR\.|'
             r'\.AND\.|'
-            r'ELSE +IF|' + block_endings + addition
+            r'ELSE\s+IF|'
+            r'MODULE\s+PROCEDURE|'
+            + block_endings + addition
         )
-        return CodeReader.generate_tokens(source_code, patterns, token_class)
+        return CodeReader.generate_tokens(source_code, addition=addition, token_class=token_class)
 
     def preprocess(self, tokens):
         macro_depth = 0
@@ -82,7 +85,7 @@ class FortranStates(CodeStateMachine):
     RESET_STATE_TOKENS = {'RECURSIVE', 'ELEMENTAL'}
     FUNCTION_NAME_TOKENS = {'SUBROUTINE', 'FUNCTION'}
     NESTING_KEYWORDS = {'FORALL', 'WHERE', 'SELECT', 'INTERFACE', 'ASSOCIATE'}
-    PROCEDURE_TOKENS = {'PROCEDURE'}
+    PROCEDURE_TOKENS = {'PROCEDURE', 'MODULE PROCEDURE'}
 
     def __init__(self, context, reader):
         super().__init__(context)
@@ -208,9 +211,14 @@ class FortranStates(CodeStateMachine):
             self._namespace(token)
 
     def _procedure(self, token):
-        if not self.in_interface:
+        # Start a new function regardless of context
+        if self.last_token and self.last_token.upper() == 'MODULE':
+            # For "module procedure" case, use the current token as function name
             self.context.restart_new_function(token)
-            self.context.add_bare_nesting()
+        else:
+            # For standalone "procedure" case
+            self.context.restart_new_function(token)
+        self.context.add_bare_nesting()
         self.reset_state()
 
     def _type(self, token):
@@ -234,7 +242,8 @@ class FortranStates(CodeStateMachine):
         pass
 
     def _if_then(self, token):
-        if token.upper() == 'THEN':
+        token_upper = token.upper()
+        if token_upper == 'THEN':
             self.context.add_bare_nesting()
             self.reset_state()
         else:
@@ -242,7 +251,7 @@ class FortranStates(CodeStateMachine):
 
     def _module_or_procedure(self, token):
         token_upper = token.upper()
-        if token_upper in self.PROCEDURE_TOKENS:
+        if token_upper == 'PROCEDURE':
             self._state = self._procedure
         else:
             self._state = self._module
