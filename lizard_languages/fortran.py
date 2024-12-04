@@ -24,7 +24,7 @@ class FortranReader(CodeReader, FortranCommentsMixin):
         'if', 'do', '.and.', '.or.', 'case'
     }
     _blocks = [
-        'PROGRAM', 'MODULE', 'SUBROUTINE', 'FUNCTION', 'TYPE', 'INTERFACE', 'BLOCK',
+        'PROGRAM', 'MODULE', 'SUBMODULE', 'SUBROUTINE', 'FUNCTION', 'TYPE', 'INTERFACE', 'BLOCK',
         'IF', 'DO', 'FORALL', 'WHERE', 'SELECT', 'ASSOCIATE'
     ]
 
@@ -88,6 +88,7 @@ class FortranStates(CodeStateMachine):
         super().__init__(context)
         self.reader = reader
         self.last_token = None
+        self.in_interface = False
 
     def __call__(self, token, reader=None):
         if self.reader.macro_disabled:
@@ -116,6 +117,9 @@ class FortranStates(CodeStateMachine):
             self._state = self._namespace
         elif token_upper == 'MODULE':
             self._state = self._module_or_procedure
+        elif token_upper == 'SUBMODULE':
+            self._state = self._module
+            self._module(token)
         elif token_upper == 'TYPE':
             self._state = self._type
         elif token_upper == 'IF':
@@ -126,6 +130,8 @@ class FortranStates(CodeStateMachine):
             self._state = self._ignore_if_label
         elif token_upper in self.NESTING_KEYWORDS:
             self.context.add_bare_nesting()
+            if token_upper == 'INTERFACE':
+                self.in_interface = True
         elif token_upper == 'ELSE':
             self.context.pop_nesting()
             self.context.add_bare_nesting()
@@ -135,6 +141,9 @@ class FortranStates(CodeStateMachine):
                 self.context.add_condition()
             self._state = self._if
         elif token_upper == 'END' or self._ends.match(token):
+            end_token_upper = token_upper.replace(' ', '')
+            if end_token_upper.startswith('ENDINTERFACE'):
+                self.in_interface = False
             self.context.pop_nesting()
 
     def reset_state(self, token=None):
@@ -199,10 +208,10 @@ class FortranStates(CodeStateMachine):
             self._namespace(token)
 
     def _procedure(self, token):
-        if token.upper() in self.FUNCTION_NAME_TOKENS:
-            self._state = self._function_name
-        else:
-            self.reset_state(token)
+        if not self.in_interface:
+            self.context.restart_new_function(token)
+            self.context.add_bare_nesting()
+        self.reset_state()
 
     def _type(self, token):
         if token in (',', '::') or token[0].isalpha():

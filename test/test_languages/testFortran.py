@@ -215,8 +215,8 @@ class TestFortran(unittest.TestCase):
         end submodule
         ''')
         self.assertEqual(2, len(result))
-        self.assertEqual('sub1', result[0].name)
-        self.assertEqual('sub2', result[1].name)
+        self.assertEqual('submodule::sub1', result[0].name)
+        self.assertEqual('submodule::sub2', result[1].name)
 
     def test_module_procedure_parsing(self):
         '''Test that module procedures are correctly parsed'''
