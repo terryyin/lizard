@@ -2,6 +2,7 @@
 
 from .code_reader import CodeReader, CodeStateMachine
 from .script_language import ScriptLanguageMixIn
+from .python_attributes import operators, keywords, expression_grouping
 
 
 def count_spaces(token):
@@ -41,6 +42,21 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
         return ScriptLanguageMixIn.generate_common_tokens(
                 source_code,
                 r"|\'\'\'.*?\'\'\'" + r'|\"\"\".*?\"\"\"', token_class)
+
+    @staticmethod
+    def external_dependencies(function_tokens: [str]) -> list[str]:
+        """ Filter token list of a function to function calls """
+        function_calls = []
+
+        # 1. Function indicator is an opening bracket
+        _indices = [i for i, e in enumerate(function_tokens) if e == "("]
+
+        # 2. For each found indicator check for previous token if valid function name
+        restricted_predecessor = operators | keywords | expression_grouping
+        for _idx in _indices:
+            if function_tokens[_idx - 1] not in restricted_predecessor:
+                function_calls.append(function_tokens[_idx - 1])
+        return function_calls
 
     def preprocess(self, tokens):
         indents = PythonIndents(self.context)

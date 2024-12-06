@@ -1,36 +1,43 @@
 '''
-Fan in and Fan out (again)
+Fan in and Fan out
 '''
-from collections import Counter
+
+from lizard_languages import get_reader_for
+
 from .extension_base import ExtensionBase
-
-
-def get_all_indices(value, token_list):
-    indices = []
-    idx = -1
-    while True:
-        try:
-            idx = token_list.index(value, idx + 1)
-            indices.append(idx)
-        except ValueError:
-            break
-    return indices
 
 
 class LizardExtension(ExtensionBase):
     '''
-        Runs the Lizard Extension for the calculation of structural
-        fan-in and fan-out of every procedures in the source code.
+        Runs the Lizard Extension for calculation of fan-in and fan-out
+        metric in the source code.
 
-        Explanation of terms:
-        'ExtensionBase': Base class for all lizard extensions
+        Currently supported languages:
+            - CLike:
+                - Fan-In:          The count of functions this function is called.
+                - Fan-Out:         The count of function called in this function.
+                - General Fan-Out: The count of functions called in this function.
+            - Python
+                - Fan-In:          The count of functions this function is called.
+                - Fan-Out:         The count of functions called in this function.
+                - General Fan-Out: The count of different functions called in this function.
 
-        Calculates:
-                'fan_in':                     Number of structural fan-in
-                'fan_out':		              Number of structural fan-out
-                                              in the local scope
-                'general_fan_out'             Number of structural fan-out
-                                              in the global scope
+        Metric definition:
+            Fan-In:          The grade of units/entities dependent on this code part inside the unit.
+            Fan-Out:         The grade of units/entities this code part depends on.
+            General Fan-Out: A more general grade of units/entities this code part depends on.
+
+        Limitation:
+            - Metric definition depends on language: Functional languages this metric is different
+              calculated than object-oriented languages (because of language design).
+            - Metric calculation depends on reader extension: Only CodeReader with implemented
+              function `external_dependencies` are used to calculate the fan-out metric.
+            - Exact metric calculation depends on not-existent knowledge: Programming languages can
+              own a lot of features which are not known at calculation time, e.g.:
+                - defines/templates (C/C++)
+                - compiler/interpreter introduced hidden function calls (SPARC, x86, PowerPC)
+                - different language versions (python {2.7/3.11/...}, C{99/11/..}
+            - Cross file calculation is no problem on simple fan-out, but for
     '''
 
     FUNCTION_INFO = {
@@ -46,7 +53,6 @@ class LizardExtension(ExtensionBase):
     }
 
     def __init__(self, context=None):
-        self.all_methods = {}
         super(LizardExtension, self).__init__(context)
 
     def _state_global(self, token):
@@ -54,39 +60,32 @@ class LizardExtension(ExtensionBase):
             self.context.current_function.tokens = list()
         self.context.current_function.tokens.append(token)
 
-    def cross_file_process(self, fileinfos):
-        for fileinfo in fileinfos:
+    def cross_file_process(self, file_information_map):
+        for _file in file_information_map:
             try:
-                new_funcs = {f.unqualified_name: f for f in
-                             fileinfo.function_list}
-                self.all_methods.update(new_funcs)
-                self._add_to_fan_outs(new_funcs.keys())
-                self._add_to_general_fan_out()
-                self._add_to_fan_ins(fileinfo.function_list)
+                self._calculate_dependencies(_file)
             except (AttributeError, TypeError, ValueError):
                 pass
-            yield fileinfo
+            yield _file
 
-    def _add_to_fan_outs(self, keys):
-        for other_func in self.all_methods.values():
-            intersect = Counter(keys) & Counter(other_func.tokens)
-            other_func.fan_out += len(list(intersect.elements()))
-
-    def _add_to_general_fan_out(self):
-        structures = set(['if', 'else', 'elif', 'for', 'foreach', 'while',
-                          'do', 'try', 'catch', 'switch', 'finally',
-                          'except', 'with'])
-        punctuations = set(['(', ')', '{', '}'])
-        for other_func in self.all_methods.values():
-            bracket_indexes = get_all_indices('(', other_func.tokens)
-            for idx in bracket_indexes[1:]:
-                # Suggestion ?
-                if other_func.tokens[idx - 1] not in (structures |
-                                                      punctuations):
-                    other_func.general_fan_out += 1
-
-    def _add_to_fan_ins(self, new_funcs):
-        for func in new_funcs:
-            for name in func.tokens:
-                if name in self.all_methods:
-                    self.all_methods[name].fan_in += 1
+    def _calculate_dependencies(self, fileinfo) -> None:
+        """Compute Fan-Out"""
+        try:
+            _reader = get_reader_for(fileinfo.filename)
+            _all_dependencies = []
+            if not hasattr(_reader, 'external_dependencies'):
+                for _function in fileinfo.function_list:
+                    _function.general_fan_out = -1
+                    _function.fan_out = -1
+                    _function.fan_in = -1
+            else:
+                for _function in fileinfo.function_list:
+                    _dependencies = _reader.external_dependencies(_function.tokens)
+                    _function.general_fan_out = len(set(_dependencies))
+                    _function.fan_out = len(_dependencies)
+                    _all_dependencies.append(_dependencies)
+                for _function in fileinfo.function_list:
+                    _internal_calls = [x for x in _all_dependencies if x == _function.name]
+                    _function.fan_in = len(_internal_calls)
+        except Exception as e:
+            print(e)
