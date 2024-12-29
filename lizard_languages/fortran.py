@@ -5,11 +5,13 @@ Language parser for Fortran.
 import re
 from .code_reader import CodeStateMachine, CodeReader
 
+
 class FortranCommentsMixin:
     @staticmethod
     def get_comment_from_token(token):
         if token.startswith('!'):
             return token[1:]
+
 
 class FortranReader(CodeReader, FortranCommentsMixin):
     '''This is the reader for Fortran.'''
@@ -75,6 +77,7 @@ class FortranReader(CodeReader, FortranCommentsMixin):
                 self.macro_disabled = macro_depth != 0
             elif not token.isspace() or token == '\n':
                 yield token
+
 
 class FortranStates(CodeStateMachine):
     _ends = re.compile('|'.join(r'END\s*{0}'.format(_) for _ in FortranReader._blocks), re.I)
