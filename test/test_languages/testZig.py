@@ -22,74 +22,52 @@ class TestZig(unittest.TestCase):
         """)
         self.assertEqual(1, result[0].cyclomatic_complexity)
 
-    @unittest.skip("")
     def test_function_with_two(self):
         result = get_zig_function_list("""
-            void Method(bool condition)
-            {
-                if (condition)
-                {
-                    Console.WriteLine("Hello World!");
+            const std = @import("std");
+
+            pub fn main() !void {
+                if (condition) {
+                    std.debug.print("Hello, World!\n", .{});
                 }
             }
         """)
         self.assertEqual(2, result[0].cyclomatic_complexity)
 
-    @unittest.skip("")
     def test_function_with_three(self):
         result = get_zig_function_list("""
-            public void Method(bool condition1, bool condition2)
-            {
-                if (condition1 || condition2)
-                {
-                    Console.WriteLine("Hello World!");
+            const std = @import("std");
+
+            pub fn main() !void {
+                if (condition1 or condition2) {
+                    std.debug.print("Hello, World!\n", .{});
                 }
             }
         """)
         self.assertEqual(3, result[0].cyclomatic_complexity)
 
-    @unittest.skip("")
     def test_function_with_eight(self):
         result = get_zig_function_list("""
-            public void Method(DayOfWeek day)
-            {
+            const std = @import("std");
 
-                    switch (day)
-                    {
-                        case DayOfWeek.Monday:
-                            Console.WriteLine("Today is Monday!");
-                            break;
-                        case DayOfWeek.Tuesday:
-                            Console.WriteLine("Today is Tuesday!");
-                            break;
-                        case DayOfWeek.Wednesday:
-                            Console.WriteLine("Today is Wednesday!");
-                            break;
-                        case DayOfWeek.Thursday:
-                            Console.WriteLine("Today is Thursday!");
-                            break;
-                        case DayOfWeek.Friday:
-                            Console.WriteLine("Today is Friday!");
-                            break;
-                        case DayOfWeek.Saturday:
-                            Console.WriteLine("Today is Saturday!");
-                            break;
-                        case DayOfWeek.Sunday:
-                            Console.WriteLine("Today is Sunday!");
-                            break;
-                    }
+            pub fn main() !void {
+                switch (day) {
+                    .Monday => std.debug.print("Today is Monday!\n", .{}),
+                    .Tuesday => std.debug.print("Today is Tuesday!\n", .{}),
+                    .Wednesday => std.debug.print("Today is Wednesday!\n", .{}),
+                    .Thursday => std.debug.print("Today is Thursday!\n", .{}),
+                    .Friday => std.debug.print("Today is Friday!\n", .{}),
+                    .Saturday => std.debug.print("Today is Saturday!\n", .{}),
+                    .Sunday => std.debug.print("Today is Sunday!\n", .{}),
                 }
-
             }
         """)
         self.assertEqual(8, result[0].cyclomatic_complexity)
 
-    @unittest.skip("")
     def test_null_coalescing_operator(self):
         result = get_zig_function_list("""
-            public void Method()
-            {
-                a ?? b;
+            pub fn main() !void {
+                a orelse b;
             }
         """)
         self.assertEqual(2, result[0].cyclomatic_complexity)
