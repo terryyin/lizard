@@ -1,5 +1,6 @@
 ''' programming languages of lizard '''
 
+from lizard_languages.zig import ZigReader
 from .clike import CLikeReader
 from .erlang import ErlangReader
 from .java import JavaReader
@@ -44,6 +45,7 @@ def languages():
         KotlinReader,
         SolidityReader,
         ErlangReader,
+        ZigReader,
     ]
 
 
