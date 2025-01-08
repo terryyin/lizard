@@ -205,3 +205,29 @@ class TestZig(unittest.TestCase):
             }
         """)
         self.assertEqual(2, result[0].cyclomatic_complexity)
+
+    def test_for_loop(self):
+        result = get_zig_function_list("""
+            const std = @import("std");
+
+            pub fn main() !void {
+                for (0..5) {
+                    std.debug.print("Hello, World!\n", .{});
+                }
+            }
+        """)
+        self.assertEqual(2, result[0].cyclomatic_complexity)
+
+    def test_while_loop(self):
+        result = get_zig_function_list("""
+            const std = @import("std");
+
+            pub fn main() !void {
+                var i: usize = 1;
+                while (i < 10) {
+                    std.debug.print("Hello, World!\n", .{});
+                    i *= 2;
+                }
+            }
+        """)
+        self.assertEqual(2, result[0].cyclomatic_complexity)
