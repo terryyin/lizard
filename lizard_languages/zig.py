@@ -2,6 +2,8 @@
 Language parser for Zig
 """
 
+from __future__ import annotations
+
 from .clike import CCppCommentsMixin
 from .code_reader import CodeReader
 from .golike import GoLikeStates
@@ -21,3 +23,5 @@ class ZigReader(CodeReader, CCppCommentsMixin):
 
 class ZigStates(GoLikeStates):  # pylint: disable=R0903
     FUNC_KEYWORD = "fn"
+
+    _type_definition = GoLikeStates._state_global
