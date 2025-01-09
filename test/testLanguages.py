@@ -1,6 +1,7 @@
 import unittest
 from lizard_languages import get_reader_for, CLikeReader, JavaReader, ObjCReader, JavaScriptReader, ScalaReader,\
     GDScriptReader, SolidityReader, ErlangReader
+from lizard_languages.zig import ZigReader
 
 
 class TestLanguageChooser(unittest.TestCase):
@@ -36,3 +37,6 @@ class TestLanguageChooser(unittest.TestCase):
 
     def test_erlang(self):
         self.assertEqual(ErlangReader, get_reader_for("a.erl"))
+
+    def test_zig(self):
+        self.assertEqual(ZigReader, get_reader_for("a.zig"))

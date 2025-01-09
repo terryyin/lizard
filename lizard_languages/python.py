@@ -13,7 +13,7 @@ class PythonIndents:  # pylint: disable=R0902
         self.indents = [0]
         self.context = context
 
-    def set_nesting(self, spaces, token = ""):
+    def set_nesting(self, spaces, token=""):
         while self.indents[-1] > spaces and (not token.startswith(")")):
             self.indents.pop()
             self.context.pop_nesting()
