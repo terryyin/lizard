@@ -196,6 +196,15 @@ class TestZig(unittest.TestCase):
         """)
         self.assertEqual(2, result[0].cyclomatic_complexity)
 
+    def test_try_operator(self):
+        result = get_zig_function_list("""
+            pub fn main(str: []u8) !void {
+                const number = try parseU64(str, 10);
+                _ = number;
+            }
+        """)
+        self.assertEqual(2, result[0].cyclomatic_complexity)
+
     def test_catch_operator(self):
         result = get_zig_function_list("""
             pub fn main() !void {

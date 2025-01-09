@@ -14,7 +14,7 @@ class ZigReader(CodeReader, CCppCommentsMixin):
 
     ext = ["zig"]
     language_names = ["zig"]
-    _conditions = {"if", "for", "while", "and", "or", "orelse", "catch", "=>"}
+    _conditions = {"if", "for", "while", "and", "or", "orelse", "try", "catch", "=>"}
 
     def __init__(self, context):
         super(ZigReader, self).__init__(context)
