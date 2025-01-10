@@ -42,6 +42,13 @@ class TestOptionParsing(unittest.TestCase):
         options = parse_args(['lizard', '-a123'])
         self.assertEqual(123, options.thresholds['parameter_count'])
 
+    def test_short(self):
+        options = parse_args(['lizard'])
+        self.assertEqual(False, options.short)
+
+        options = parse_args(['lizard', '--short'])
+        self.assertEqual(True, options.short)
+
     @patch.object(sys, 'exit')
     @patch('sys.stderr')
     def test_unknown_argument_exit(self, _, mock_exit):
