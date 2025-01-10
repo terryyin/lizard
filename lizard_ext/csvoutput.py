@@ -24,14 +24,11 @@ def csv_output(result, options):
     extension_captions = []
     for extension in options.extensions:
         if extension.__class__.__name__ == 'LizardExtension':
-            if hasattr(extension, 'FUNCTION_INFO') and \
-                    len(list(extension.FUNCTION_INFO)) == 1:
-                extension_variable = list(extension.FUNCTION_INFO)[0]
-                extension_variables.append(extension_variable)
-                var_extension = extension.FUNCTION_INFO[extension_variable]
-                extension_caption = var_extension['caption'] \
-                    if 'caption' in var_extension else 'No_caption'
-                extension_captions.append(extension_caption)
+            if hasattr(extension, 'FUNCTION_INFO'):
+                for column_name, entry in extension.FUNCTION_INFO.items():
+                    extension_variables.append(column_name)
+                    extension_caption = entry['caption'] if 'caption' in entry else 'No_caption'
+                    extension_captions.append(extension_caption)
 
     if options.verbose:
         extension_caption = ""
