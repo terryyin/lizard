@@ -40,3 +40,7 @@ based on @tsx.py and @jsx.py , as well as @testTSX.py @testJSX.py , please add s
 5. The vue reader shouldn't process js or ts content by itself but send to @javascript.py or @typescript.py 
 
 run all new test and fix if the test fail. Add temporary debug info to understand what's going on first before applying fix when necessary.
+
+---------
+
+It looks like the XMLTagWithAttrTokenizer from @javascript.py belongs to @jsx.py , isn't it? Please move it out.
