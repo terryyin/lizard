@@ -44,3 +44,7 @@ run all new test and fix if the test fail. Add temporary debug info to understan
 ---------
 
 It looks like the XMLTagWithAttrTokenizer from @javascript.py belongs to @jsx.py , isn't it? Please move it out.
+
+---------
+
+@tsx.py @jsx.py should be doing very similar things. please refactor to remove the duplicate, inccluding conceptually duplicate code.

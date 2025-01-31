@@ -4,12 +4,12 @@ Language parser for TSX
 
 from .typescript import TypeScriptReader, TypeScriptStates
 from .javascript import JSTokenizer
-from .jsx import XMLTagWithAttrTokenizer, isidentifier
+from .jsx import JSXMixin
 from .code_reader import CodeReader
 from .js_style_regex_expression import js_style_regex_expression
 
 
-class TSXReader(TypeScriptReader):
+class TSXReader(TypeScriptReader, JSXMixin):
     # pylint: disable=R0903
 
     ext = ['tsx']
@@ -18,15 +18,7 @@ class TSXReader(TypeScriptReader):
     @staticmethod
     @js_style_regex_expression
     def generate_tokens(source_code, addition='', token_class=None):
-        addition = addition +\
-            r"|(?:\$\w+)" + \
-            r"|(?:\<\/\w+\>)" + \
-            r"|`.*?`"
-        js_tokenizer = JSTokenizer()
-        for token in CodeReader.generate_tokens(
-                source_code, addition, token_class):
-            for tok in js_tokenizer(token):
-                yield tok
+        return JSXMixin.generate_tokens(source_code, addition, token_class)
 
     def __init__(self, context):
         super(TSXReader, self).__init__(context)

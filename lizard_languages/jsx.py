@@ -5,15 +5,11 @@ Language parser for JSX
 from .javascript import JavaScriptReader, JSTokenizer
 from .code_reader import CodeReader
 from .js_style_regex_expression import js_style_regex_expression
-from .javascript import Tokenizer  # Added import for base Tokenizer class
+from .javascript import Tokenizer
 
 
-class JSXReader(JavaScriptReader):
-    # pylint: disable=R0903
-
-    ext = ['jsx']
-    language_names = ['jsx']
-
+class JSXMixin:
+    '''Base mixin class for JSX/TSX shared functionality'''
     @staticmethod
     @js_style_regex_expression
     def generate_tokens(source_code, addition='', token_class=None):
@@ -26,6 +22,18 @@ class JSXReader(JavaScriptReader):
                 source_code, addition, token_class):
             for tok in js_tokenizer(token):
                 yield tok
+
+
+class JSXReader(JavaScriptReader, JSXMixin):
+    # pylint: disable=R0903
+
+    ext = ['jsx']
+    language_names = ['jsx']
+
+    @staticmethod
+    @js_style_regex_expression
+    def generate_tokens(source_code, addition='', token_class=None):
+        return JSXMixin.generate_tokens(source_code, addition, token_class)
 
 
 class XMLTagWithAttrTokenizer(Tokenizer):
