@@ -31,6 +31,30 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
 
 class TypeScriptStates(JavaScriptStyleLanguageStates):
 
+    def _state_global(self, token):
+        if token == ':':
+            # When we see a type annotation in global state, store the last tokens
+            # but don't treat it as a function name yet
+            self._potential_name = self.last_tokens
+            self.next(self._type_annotation)
+            return
+        if token == '=>':
+            # For arrow functions, we want to treat them as anonymous
+            self.function_name = ''
+            self._state = self._arrow_function
+            return
+        super(TypeScriptStates, self)._state_global(token)
+
+    def _type_annotation(self, token):
+        if token == '=':
+            # We're back to an assignment, restore the potential name
+            if hasattr(self, '_potential_name'):
+                self.last_tokens = self._potential_name
+                delattr(self, '_potential_name')
+            self.next(self._state_global, token)
+        else:
+            self.next(self._type_annotation)
+
     def _expecting_func_opening_bracket(self, token):
         if token == ':':
             self.next(self._expecting_default)
@@ -47,3 +71,5 @@ class TypeScriptStates(JavaScriptStyleLanguageStates):
             self.next(self._state_global)
         elif token == '{':
             self.next(self._expecting_func_opening_bracket, token)
+        elif token == '=':
+            self.next(self._state_global, token)

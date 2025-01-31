@@ -60,7 +60,7 @@ class Test_parser_for_TypeScript_X(unittest.TestCase):
         functions = get_tsx_function_list(code)
         self.assertEqual("(anonymous)", functions[0].name)
 
-    def xtest_type_annotation(self):
+    def test_type_annotation(self):
         code = '''
           const MyComponent: React.FC = () => {
             return <div>Hello</div>;
