@@ -7,6 +7,7 @@ from .code_reader import CodeReader
 from .clike import CCppCommentsMixin
 from .js_style_language_states import JavaScriptStyleLanguageStates, ES6ObjectStates
 from .js_style_regex_expression import js_style_regex_expression
+from .javascript import JSTokenizer
 
 
 class TypeScriptReader(CodeReader, CCppCommentsMixin):
@@ -25,8 +26,14 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
     @js_style_regex_expression
     def generate_tokens(source_code, addition='', token_class=None):
         addition = addition +\
-            r"|(?:\w+\?)"
-        return CodeReader.generate_tokens(source_code, addition, token_class)
+            r"|(?:\$\w+)" + \
+            r"|(?:\w+\?)" + \
+            r"|`.*?`"
+        js_tokenizer = JSTokenizer()
+        for token in CodeReader.generate_tokens(
+                source_code, addition, token_class):
+            for tok in js_tokenizer(token):
+                yield tok
 
 
 class TypeScriptStates(JavaScriptStyleLanguageStates):

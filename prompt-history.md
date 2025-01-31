@@ -52,3 +52,7 @@ It looks like the XMLTagWithAttrTokenizer from @javascript.py belongs to @jsx.py
 ---------
 
 @tsx.py and@jsx.py should be doing very similar things. But TSX has a TSXStates as parallel_states, but JSX doesn't need one. Why? please commonize the solution.
+
+---------
+
+TypeScript is a super set of JavaScript, right? If so, all test in @testJavaScript.py should also pass with a TypeScriptReader from @typescript.py . Please change @testJavaScript.py to use TypeScriptReader instead, run all the test. Then make the test pass by copying solution from @javascript.py to @typescript.py if it's missing there. The goal is to eventually remove @javascript.py . When runing tests, always run all the tests.
