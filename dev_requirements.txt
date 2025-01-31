@@ -8,3 +8,4 @@ pylint
 pytest
 twine
 jinja2
+platformdirs
