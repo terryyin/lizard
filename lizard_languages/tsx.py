@@ -22,16 +22,4 @@ class TSXReader(TypeScriptReader, JSXMixin):
 
     def __init__(self, context):
         super(TSXReader, self).__init__(context)
-        self.parallel_states = [TSXStates(context)]
-
-
-class TSXStates(TypeScriptStates):
-    def _expecting_func_opening_bracket(self, token):
-        if token == '<':
-            self.next(self._expecting_jsx)
-            return
-        super(TSXStates, self)._expecting_func_opening_bracket(token)
-
-    def _expecting_jsx(self, token):
-        if token == '>':
-            self.next(self._expecting_func_opening_bracket) 
+        # No need for parallel states since JSX handling is in the mixin 

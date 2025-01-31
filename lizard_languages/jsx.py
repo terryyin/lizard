@@ -23,6 +23,16 @@ class JSXMixin:
             for tok in js_tokenizer(token):
                 yield tok
 
+    def _expecting_func_opening_bracket(self, token):
+        if token == '<':
+            self.next(self._expecting_jsx)
+            return
+        super()._expecting_func_opening_bracket(token)
+
+    def _expecting_jsx(self, token):
+        if token == '>':
+            self.next(self._expecting_func_opening_bracket)
+
 
 class JSXReader(JavaScriptReader, JSXMixin):
     # pylint: disable=R0903

@@ -48,3 +48,7 @@ It looks like the XMLTagWithAttrTokenizer from @javascript.py belongs to @jsx.py
 ---------
 
 @tsx.py @jsx.py should be doing very similar things. please refactor to remove the duplicate, inccluding conceptually duplicate code.
+
+---------
+
+@tsx.py and@jsx.py should be doing very similar things. But TSX has a TSXStates as parallel_states, but JSX doesn't need one. Why? please commonize the solution.
