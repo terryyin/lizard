@@ -22,6 +22,7 @@ from .typescript import TypeScriptReader
 from .fortran import FortranReader
 from .solidity import SolidityReader
 from .jsx import JSXReader
+from .tsx import TSXReader
 
 
 def languages():
@@ -48,6 +49,7 @@ def languages():
         ErlangReader,
         ZigReader,
         JSXReader,
+        TSXReader,
     ]
 
 
