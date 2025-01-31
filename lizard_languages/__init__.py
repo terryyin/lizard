@@ -23,7 +23,6 @@ from .fortran import FortranReader
 from .solidity import SolidityReader
 from .jsx import JSXReader
 from .tsx import TSXReader
-from .vue import VueReader
 
 
 def languages():
@@ -51,7 +50,6 @@ def languages():
         ZigReader,
         JSXReader,
         TSXReader,
-        VueReader,
     ]
 
 
