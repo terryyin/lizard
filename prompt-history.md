@@ -30,3 +30,13 @@ run it and make the fix if the test fail. Please don't hard code the name 'metho
 ---------
 
 (all vue js related code removed. plan to try again.)
+
+based on @tsx.py and @jsx.py , as well as @testTSX.py @testJSX.py , please add support for VueJS files, which should support both lang="js" and lang="ts". Don't forget @__init__.py 
+
+1. to process vue code, a preprocess is probably needed like in @swift.py or @python.py ; don't add preprocess if not needed
+2. it should identify if it's currently process the template, the style, or the script block
+3. Then send the token to the cresponding sub reader to process
+4. perhaps use parallel states as in @clike.py or @objc.py 
+5. The vue reader shouldn't process js or ts content by itself but send to @javascript.py or @typescript.py 
+
+run all new test and fix if the test fail. Add temporary debug info to understand what's going on first before applying fix when necessary.
