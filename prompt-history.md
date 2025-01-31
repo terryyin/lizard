@@ -7,3 +7,7 @@ please add support for TSX file similar to @jsx.py and add test similar to @test
 ---------
 
 one test failed. It seems the problem is not in @tsx.py but the basic typescript @typescript.py support is incorrect. Please fix it. Make sure both @testTSX.py and @testTypeScript.py still pass.
+
+---------
+
+based on @tsx.py and @jsx.py , as well as @testTSX.py @testJSX.py , please add support for VueJS files, which should support both lang="js" and lang="ts". Don't forget @__init__.py 
