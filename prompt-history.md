@@ -30,3 +30,7 @@ run it and make the fix if the test fail. Please don't hard code the name 'metho
 ---------
 
 (all vue js related code removed. plan to try again.)
+
+based on @tsx.py and @jsx.py , as well as @testTSX.py @testJSX.py , please add support for VueJS files, which should support both lang="js" and lang="ts". Don't forget @__init__.py 
+
+to process vue code, a preprocess is probably needed like in @swift.py or @python.py , so that it can distinguish the template and style from script. Run all the new test added and make sure they all pass.
