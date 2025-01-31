@@ -117,11 +117,13 @@ class CodeReader:
         def _generate_tokens(source, add, flags=0):
             # DO NOT put any sub groups in the regex. Good for performance
             _until_end = r"(?:\\\n|[^\n])*"
-            combined_symbols = ["<<=", ">>=", "||", "&&", "===", "!==",
-                                "==", "!=", "<=", ">=", "->", "=>",
-                                "++", "--", '+=', '-=',
-                                "+", "-", '*', '/',
-                                '*=', '/=', '^=', '&=', '|=', "..."]
+            combined_symbols = [
+                "<<=", ">>=", "||", "&&", "===", "!==",
+                "==", "!=", "<=", ">=", "->", "=>",
+                "++", "--", '+=', '-=',
+                "+", "-", '*', '/',
+                '*=', '/=', '^=', '&=', '|=', "..."
+            ]
             token_pattern = re.compile(
                 r"(?:" +
                 r"\/\*.*?\*\/" +
@@ -171,8 +173,12 @@ class CodeReader:
         pattern = re.compile(r'\(\?[aiLmsux]+\)')
         re_flags = ''.join(opt[2:-1] for opt in pattern.findall(addition))
         flags = reduce(or_, (flag_dict[flag] for flag in re_flags), 0)
+        cleaned_addition = pattern.sub('', addition)
 
-        return _generate_tokens(source_code, pattern.sub('', addition), flags=flags)
+        return _generate_tokens(
+            source_code,
+            cleaned_addition,
+            flags=flags)
 
     def __call__(self, tokens, reader):
         self.context = reader.context

@@ -572,7 +572,9 @@ class FileAnalyzer(object):  # pylint: disable=R0903
             for _ in reader(tokens, reader):
                 pass
         except RecursionError as e:
-            sys.stderr.write("[skip] fail to process '%s' with RecursionError - %s\n" % (filename, e))
+            sys.stderr.write(
+                "[skip] fail to process '%s' with RecursionError - %s\n" %
+                (filename, e))
         return context.fileinfo
 
 

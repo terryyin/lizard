@@ -26,8 +26,12 @@ class ErlangReader(CodeReader):
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
-        return map(lambda x: x[1], filter(lambda x: x[0] != py_token.Whitespace,
-                                          lex(source_code, lexer=lexers.get_lexer_by_name('erlang'))))
+        lexer = lexers.get_lexer_by_name('erlang')
+        tokens = lex(source_code, lexer=lexer)
+        return map(
+            lambda x: x[1],
+            filter(lambda x: x[0] != py_token.Whitespace, tokens)
+        )
 
 
 class ErlangStates(CodeStateMachine):
@@ -77,8 +81,8 @@ class ErlangStates(CodeStateMachine):
         if token == '-':
             self.punctuated = True
         elif token == '>' and self.punctuated:
-            if len(self.context.stacked_functions) <= 1 or \
-                    self.context.current_function.name == 'fun':
+            if (len(self.context.stacked_functions) <= 1 or
+                    self.context.current_function.name == 'fun'):
                 self.next(self._state_func_first_line, token)
         else:
             self.func_match_failed(token)
@@ -93,8 +97,8 @@ class ErlangStates(CodeStateMachine):
 
     def _state_nested_end(self, token):
         if token == '.' or token == ',':
-            if len(self.context.stacked_functions) > 1 \
-                    and self.context.stacked_functions[-1].name == 'fun':
+            if (len(self.context.stacked_functions) > 1 and
+                    self.context.stacked_functions[-1].name == 'fun'):
                 self.statemachine_return()
                 return
 

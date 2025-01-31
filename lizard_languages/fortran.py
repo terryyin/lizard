@@ -6,6 +6,7 @@ import re
 from .code_reader import CodeStateMachine, CodeReader
 
 
+
 class FortranCommentsMixin:
     @staticmethod
     def get_comment_from_token(token):
@@ -26,8 +27,8 @@ class FortranReader(CodeReader, FortranCommentsMixin):
         'if', 'do', '.and.', '.or.', 'case'
     }
     _blocks = [
-        'PROGRAM', 'MODULE', 'SUBMODULE', 'SUBROUTINE', 'FUNCTION', 'TYPE', 'INTERFACE', 'BLOCK',
-        'IF', 'DO', 'FORALL', 'WHERE', 'SELECT', 'ASSOCIATE'
+        'PROGRAM', 'MODULE', 'SUBMODULE', 'SUBROUTINE', 'FUNCTION', 'TYPE',
+        'INTERFACE', 'BLOCK', 'IF', 'DO', 'FORALL', 'WHERE', 'SELECT', 'ASSOCIATE'
     ]
 
     def __init__(self, context):
@@ -52,7 +53,8 @@ class FortranReader(CodeReader, FortranCommentsMixin):
             r'MODULE\s+PROCEDURE|'
             + block_endings + addition
         )
-        return CodeReader.generate_tokens(source_code, addition=addition, token_class=token_class)
+        return CodeReader.generate_tokens(
+            source_code, addition=addition, token_class=token_class)
 
     def preprocess(self, tokens):
         macro_depth = 0
@@ -80,7 +82,8 @@ class FortranReader(CodeReader, FortranCommentsMixin):
 
 
 class FortranStates(CodeStateMachine):
-    _ends = re.compile('|'.join(r'END\s*{0}'.format(_) for _ in FortranReader._blocks), re.I)
+    _ends = re.compile(
+        '|'.join(r'END\s*{0}'.format(_) for _ in FortranReader._blocks), re.I)
 
     # Define token groups to eliminate duplication
     IGNORE_NEXT_TOKENS = {'%', '::', 'SAVE', 'DATA'}
@@ -253,9 +256,7 @@ class FortranStates(CodeStateMachine):
             self.reset_state(token)
 
     def _module_or_procedure(self, token):
-        token_upper = token.upper()
-        if token_upper == 'PROCEDURE':
+        if token.upper() == 'PROCEDURE':
             self._state = self._procedure
         else:
-            self._state = self._module
             self._module(token)

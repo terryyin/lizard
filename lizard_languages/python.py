@@ -29,8 +29,10 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
 
     ext = ['py']
     language_names = ['python']
-    _conditions = set(['if', 'for', 'while', 'and', 'or',
-                      'elif', 'except', 'finally'])
+    _conditions = set([
+        'if', 'for', 'while', 'and', 'or',
+        'elif', 'except', 'finally'
+    ])
 
     def __init__(self, context):
         super(PythonReader, self).__init__(context)
@@ -39,8 +41,9 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
         return ScriptLanguageMixIn.generate_common_tokens(
-                source_code,
-                r"|\'\'\'.*?\'\'\'" + r'|\"\"\".*?\"\"\"', token_class)
+            source_code,
+            r"|\'\'\'.*?\'\'\'" + r'|\"\"\".*?\"\"\"',
+            token_class)
 
     def preprocess(self, tokens):
         indents = PythonIndents(self.context)
@@ -54,7 +57,8 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
                     else:
                         if not token.startswith('#'):
                             current_function = self.context.current_function
-                            if current_function.name == '*global*' or current_function.long_name.endswith(')'):
+                            if (current_function.name == '*global*' or
+                                    current_function.long_name.endswith(')')):
                                 indents.set_nesting(current_leading_spaces, token)
                         reading_leading_space = False
             else:

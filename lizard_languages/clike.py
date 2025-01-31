@@ -182,7 +182,7 @@ class CLikeStates(CodeStateMachine):
             self.context.add_to_function_name(' ' + token)
 
     def _state_name_with_space(self, token):
-        self._state = self._state_operator\
+        self._state = self._state_operator \
             if token == 'operator' else self._state_function
         self.context.add_to_function_name(token)
 
