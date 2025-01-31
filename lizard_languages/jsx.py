@@ -2,10 +2,10 @@
 Language parser for JSX
 '''
 
-from .javascript import JavaScriptReader, JSTokenizer
+from .javascript import JavaScriptReader
+from .typescript import JSTokenizer, Tokenizer
 from .code_reader import CodeReader
 from .js_style_regex_expression import js_style_regex_expression
-from .javascript import Tokenizer
 
 
 class JSXMixin:

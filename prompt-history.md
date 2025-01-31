@@ -56,3 +56,10 @@ It looks like the XMLTagWithAttrTokenizer from @javascript.py belongs to @jsx.py
 ---------
 
 TypeScript is a super set of JavaScript, right? If so, all test in @testJavaScript.py should also pass with a TypeScriptReader from @typescript.py . Please change @testJavaScript.py to use TypeScriptReader instead, run all the test. Then make the test pass by copying solution from @javascript.py to @typescript.py if it's missing there. The goal is to eventually remove @javascript.py . When runing tests, always run all the tests.
+
+---------
+
+TypeScript is a super set of JavaScript, right? If so, 
+
+1. move Tokenizer and JSTokenizer from @javascript.py to @typescript.py; remove them from @javascript.py  ; update all the references. 
+2. make JavaScriptReader in @javascript.py a subclass of TypeScriptReader
