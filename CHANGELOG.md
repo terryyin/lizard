@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.17.14
+
+Add TSX support.
+
 ## 1.17.13
 
 Bug fix:
