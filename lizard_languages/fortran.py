@@ -6,7 +6,6 @@ import re
 from .code_reader import CodeStateMachine, CodeReader
 
 
-
 class FortranCommentsMixin:
     @staticmethod
     def get_comment_from_token(token):
