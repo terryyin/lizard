@@ -1,0 +1,149 @@
+---
+description: Guide for adding or modifying programming language support in Lizard
+globs: lizard_languages/*.py, test/test_languages/*.py
+---
+# Adding Language Support to Lizard Code Analyzer
+
+This guide explains how to add or modify support for programming languages in the Lizard code complexity analyzer.
+
+## Overview
+
+Lizard uses a state machine-based approach to parse code. Each language implementation consists of:
+
+1. A language reader class that inherits from `CodeReader`
+2. Token generation and processing logic
+3. Language-specific state handling
+
+## Step-by-Step Guide
+
+### 1. Create Language Reader Class
+
+Create a new file in `lizard_languages/` named after your language (e.g., `mylang.py`). The basic structure should be:
+
+```python
+from .code_reader import CodeReader
+from .clike import CCppCommentsMixin  # If language has C-style comments
+
+class MyLanguageReader(CodeReader, CCppCommentsMixin):
+    # File extensions for your language
+    ext = ['mylang']
+    
+    # Language names (used in command line args)
+    language_names = ['mylanguage', 'mylang']
+    
+    def __init__(self, context):
+        super(MyLanguageReader, self).__init__(context)
+        # Initialize language-specific state machine
+```
+
+### 2. Implement Token Generation
+
+Define how your language's code should be tokenized:
+
+```python
+@staticmethod
+def generate_tokens(source_code, addition='', token_class=None):
+    # Add language-specific token patterns
+    addition = addition + r"|pattern1|pattern2"
+    
+    # Use existing token generator or create custom one
+    return CodeReader.generate_tokens(source_code, addition, token_class)
+```
+
+### 3. State Machine Implementation
+
+Choose one of these approaches:
+
+a. For C-like languages:
+   - Inherit from `CLikeReader` or extend `CLikeStates`
+   - Customize token handling as needed
+
+b. For custom syntax:
+   - Create a custom state machine class
+   - Implement state transitions for your language
+
+### 4. Add Test Cases
+
+Create test file in `test/test_languages/testMyLang.py`:
+
+```python
+import unittest
+from lizard import analyze_file, FileAnalyzer, get_extensions
+from lizard_languages import MyLanguageReader
+
+class TestMyLanguage(unittest.TestCase):
+    def setUp(self):
+        self.analyzer = FileAnalyzer(get_extensions([MyLanguageReader]))
+    
+    def test_basic_parsing(self):
+        result = analyze_file.analyze_source_code("test.mylang", code)
+        self.assertEqual(expected, result.function_list[0].cyclomatic_complexity)
+```
+
+## Key Concepts
+
+### State Machine
+- Use `CodeStateMachine` for handling language states
+- Implement state transitions for:
+  - Function declarations
+  - Nested scopes
+  - Control structures
+
+### Token Processing
+- Handle special tokens (strings, comments, etc.)
+- Track nesting levels and scope
+- Count cyclomatic complexity
+
+### Metrics Collection
+- Function/method identification
+- Complexity calculation
+- NLOC (Non-empty Lines of Code)
+- CCN (Cyclomatic Complexity Number)
+
+## Best Practices
+
+1. **Inheritance**: 
+   - Use existing base classes when possible
+   - Share common functionality through mixins
+
+2. **Testing**:
+   - Cover basic syntax
+   - Test edge cases
+   - Include complex real-world examples
+
+3. **Performance**:
+   - Optimize token generation
+   - Minimize state transitions
+   - Use efficient regex patterns
+
+4. **Maintenance**:
+   - Document language-specific behaviors
+   - Keep state machine logic simple
+   - Follow existing patterns in the codebase
+
+## Examples
+
+Reference existing implementations:
+- `javascript.py` for dynamic languages
+- `clike.py` for C-style languages
+- `python.py` for indentation-based languages
+
+## Integration
+
+1. Add your reader to `lizard_languages/__init__.py`
+2. Update documentation if needed
+3. Add test cases
+4. Verify with real code samples
+
+## Testing Your Implementation
+
+```bash
+make test  # Run all tests
+python -m pytest test/test_languages/testMyLang.py  # Test specific language
+```
+
+Remember to handle:
+- Comments (single-line, multi-line)
+- String literals
+- Language-specific keywords
+- Special syntax constructs
