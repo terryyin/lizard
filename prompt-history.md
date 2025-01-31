@@ -26,3 +26,7 @@ add a new test for code
         """
 
 run it and make the fix if the test fail. Please don't hard code the name 'methods'. It's just a nested object and can be anything.
+
+---------
+
+(all vue js related code removed. plan to try again.)
