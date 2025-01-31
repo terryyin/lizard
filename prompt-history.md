@@ -1,0 +1,1 @@
+This project (Lizard) support JSX files, but the implementation is together with javascript support @javascript.py . Please extract the jsx support from the javascript support. Also update @testJSX.py and make sure @testJavaScript.py still pass.

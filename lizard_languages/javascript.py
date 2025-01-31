@@ -11,7 +11,7 @@ from .js_style_language_states import JavaScriptStyleLanguageStates
 class JavaScriptReader(CodeReader, CCppCommentsMixin):
     # pylint: disable=R0903
 
-    ext = ['js', 'jsx']
+    ext = ['js']
     language_names = ['javascript', 'js']
 
     @staticmethod
@@ -19,7 +19,6 @@ class JavaScriptReader(CodeReader, CCppCommentsMixin):
     def generate_tokens(source_code, addition='', token_class=None):
         addition = addition +\
             r"|(?:\$\w+)" + \
-            r"|(?:\<\/\w+\>)" + \
             r"|`.*?`"
         js_tokenizer = JSTokenizer()
         for token in CodeReader.generate_tokens(
@@ -69,9 +68,6 @@ class JSTokenizer(Tokenizer):
             self.depth -= 1
             if self.depth == 0:
                 self.stop()
-                # {} in JSX is not listed as token
-                # otherwise it will be regarded
-                # as JS object
                 return
         yield token
 

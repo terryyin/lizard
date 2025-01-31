@@ -1,15 +1,15 @@
 import unittest
 from lizard import  analyze_file, FileAnalyzer, get_extensions
-from lizard_languages import JavaScriptReader
+from lizard_languages import JSXReader
 
 
-def get_js_function_list(source_code):
+def get_jsx_function_list(source_code):
     return analyze_file.analyze_source_code("a.jsx", source_code).function_list
 
 class Test_tokenizing_JSX(unittest.TestCase):
 
     def check_tokens(self, expect, source):
-        tokens = list(JavaScriptReader.generate_tokens(source))
+        tokens = list(JSXReader.generate_tokens(source))
         self.assertEqual(expect, tokens)
 
     def test_simple_standalone(self):
@@ -49,7 +49,7 @@ class Test_tokenizing_JSX(unittest.TestCase):
 class Test_parser_for_JavaScript_X(unittest.TestCase):
 
     def test_simple_function(self):
-        functions = get_js_function_list("x=>x")
+        functions = get_jsx_function_list("x=>x")
         self.assertEqual("(anonymous)", functions[0].name)
 
     def test_complicated(self):
@@ -57,6 +57,6 @@ class Test_parser_for_JavaScript_X(unittest.TestCase):
           <StaticQuery render={data => ()} />
         '''
 
-        functions = get_js_function_list(code)
+        functions = get_jsx_function_list(code)
         self.assertEqual("(anonymous)", functions[0].name)
 

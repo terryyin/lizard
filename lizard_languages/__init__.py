@@ -21,6 +21,7 @@ from .rust import RustReader
 from .typescript import TypeScriptReader
 from .fortran import FortranReader
 from .solidity import SolidityReader
+from .jsx import JSXReader
 
 
 def languages():
@@ -46,6 +47,7 @@ def languages():
         SolidityReader,
         ErlangReader,
         ZigReader,
+        JSXReader,
     ]
 
 
