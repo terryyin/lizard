@@ -3,7 +3,8 @@ Language parser for TSX
 '''
 
 from .typescript import TypeScriptReader, TypeScriptStates
-from .javascript import JSTokenizer, XMLTagWithAttrTokenizer, isidentifier
+from .javascript import JSTokenizer
+from .jsx import XMLTagWithAttrTokenizer, isidentifier
 from .code_reader import CodeReader
 from .js_style_regex_expression import js_style_regex_expression
 
