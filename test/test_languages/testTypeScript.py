@@ -68,4 +68,18 @@ class Test_parser_for_TypeScript(unittest.TestCase):
         self.assertEqual(1, functions[0].cyclomatic_complexity)
         self.assertEqual("test", functions[0].name)
 
+    def test_nested_object_method(self):
+        functions = get_ts_function_list("""
+        export default {
+            methods: { 
+                test(): number {
+                    return 1;
+                }
+            }
+        }
+        """)
+        self.assertEqual(1, len(functions))
+        self.assertEqual(1, functions[0].cyclomatic_complexity)
+        self.assertEqual("test", functions[0].name)
+
 

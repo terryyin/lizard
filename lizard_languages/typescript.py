@@ -98,6 +98,10 @@ class TypeScriptObjectStates(ES6ObjectStates):
             self.function_name = self.last_tokens
             self.next(self._method_return_type)
             return
+        elif token == '{':
+            # Handle nested objects
+            self.read_object()
+            return
         super(TypeScriptObjectStates, self)._state_global(token)
 
     def _method_return_type(self, token):
