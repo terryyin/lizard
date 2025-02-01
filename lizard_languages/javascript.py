@@ -17,4 +17,3 @@ class JavaScriptReader(TypeScriptReader):
 
     def __init__(self, context):
         super(JavaScriptReader, self).__init__(context)
-        self.parallel_states = [JavaScriptStyleLanguageStates(context)]

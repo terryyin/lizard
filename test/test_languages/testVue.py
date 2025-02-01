@@ -29,8 +29,7 @@ class TestVue(unittest.TestCase):
         </script>
         '''
         functions = get_vue_function_list(code)
-        self.assertEqual(1, len(functions))
-        self.assertEqual("hello", functions[0].name)
+        self.assertEqual(["hello"], [f.name for f in functions])
 
     def test_ts_function(self):
         code = '''
@@ -73,8 +72,5 @@ class TestVue(unittest.TestCase):
         </script>
         '''
         functions = get_vue_function_list(code)
-        self.assertEqual(3, len(functions))
-        self.assertEqual("helper1", functions[0].name)
-        self.assertEqual("method1", functions[1].name)
-        self.assertEqual("method2", functions[2].name)
-        self.assertEqual(2, functions[2].cyclomatic_complexity) 
+        self.assertEqual(["helper1", "method1", "method2"], [f.name for f in functions])
+        self.assertEqual(2, functions[2].cyclomatic_complexity)
