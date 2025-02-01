@@ -67,5 +67,5 @@ class Test_parser_for_TypeScript_X(unittest.TestCase):
           }
         '''
         functions = get_tsx_function_list(code)
-        self.assertEqual("(anonymous)", functions[0].name)
+        self.assertEqual("MyComponent", functions[0].name)
         self.assertEqual(1, functions[0].cyclomatic_complexity) 

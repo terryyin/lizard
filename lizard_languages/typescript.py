@@ -91,8 +91,11 @@ class TypeScriptStates(JavaScriptStyleLanguageStates):
             self.next(self._type_annotation)
             return
         if token == '=>':
-            # For arrow functions, we want to treat them as anonymous
-            self.function_name = ''
+            # For arrow functions, preserve the name if it was assigned
+            if hasattr(self, 'function_name') and self.function_name:
+                pass  # Keep the existing function name from assignment
+            else:
+                self.function_name = ''
             self._state = self._arrow_function
             return
         super(TypeScriptStates, self)._state_global(token)
@@ -142,9 +145,13 @@ class TypeScriptStates(JavaScriptStyleLanguageStates):
 class TypeScriptObjectStates(ES6ObjectStates):
     def _state_global(self, token):
         if token == ':' and self.last_tokens:
-            # Handle method with return type
-            self.function_name = self.last_tokens
+            if self.last_tokens.strip():
+                self.function_name = self.last_tokens
             self.next(self._method_return_type)
+            return
+        elif token == '=>' and hasattr(self, 'function_name') and self.function_name:
+            self._push_function_to_stack()
+            self.next(self._state_global)
             return
         elif token == '{':
             # Handle nested objects
@@ -156,5 +163,8 @@ class TypeScriptObjectStates(ES6ObjectStates):
         if token == '{':
             self._push_function_to_stack()
             self.next(self._state_global, token)
+        elif token == '=>':
+            self._push_function_to_stack()
+            self.next(self._state_global)
         else:
             self.next(self._method_return_type)
