@@ -78,9 +78,8 @@ class Test_parser_for_TypeScript(unittest.TestCase):
             }
         }
         """)
-        self.assertEqual(1, len(functions))
+        self.assertEqual(["test"], [f.name for f in functions])
         self.assertEqual(1, functions[0].cyclomatic_complexity)
-        self.assertEqual("test", functions[0].name)
 
     def test_nested_object_with_not_type_method(self):
         functions = get_ts_function_list("""
@@ -92,9 +91,18 @@ class Test_parser_for_TypeScript(unittest.TestCase):
             }
         }
         """)
-        self.assertEqual(1, len(functions))
-        self.assertEqual(1, functions[0].cyclomatic_complexity)
-        self.assertEqual("test", functions[0].name)
+        self.assertEqual(["test"], [f.name for f in functions])
+
+    def test_simple_object_property(self):
+        functions = get_ts_function_list("""
+        const obj = {
+            prop: 42,
+            method() {
+                return 1;
+            }
+        }
+        """)
+        self.assertEqual(["method"], [f.name for f in functions])
 
 
 
