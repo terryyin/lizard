@@ -41,8 +41,7 @@ class Test_parser_for_TypeScript(unittest.TestCase):
                 console.log("This is my warning message");
             }
         """)
-        self.assertEqual(1, len(functions))
-        self.assertEqual("warnUser", functions[0].name)
+        self.assertEqual(["warnUser"], [f.name for f in functions])
 
     def test_function_with_default(self):
         functions = get_ts_function_list("""
