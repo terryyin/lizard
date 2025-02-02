@@ -3,7 +3,7 @@ Language parser for JavaScript
 '''
 
 import re
-from .code_reader import CodeReader
+from .code_reader import CodeReader, CodeStateMachine
 from .clike import CCppCommentsMixin
 from .js_style_language_states import JavaScriptStyleLanguageStates, ES6ObjectStates
 from .js_style_regex_expression import js_style_regex_expression
@@ -88,5 +88,12 @@ class TypeScriptStates(JavaScriptStyleLanguageStates):
             super(TypeScriptStates, self)._expecting_func_opening_bracket(token)
     
     def _type_annotation(self, token):
+        if token == '{':
+            self.next(self._inline_type_annotation, token)
+        else:
+            self.next(self._expecting_func_opening_bracket)
+
+    @CodeStateMachine.read_inside_brackets_then("{}")
+    def _inline_type_annotation(self, _):
         self.next(self._expecting_func_opening_bracket)
 
