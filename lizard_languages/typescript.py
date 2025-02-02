@@ -145,9 +145,9 @@ class TypeScriptStates(JavaScriptStyleLanguageStates):
 class TypeScriptObjectStates(ES6ObjectStates):
     def _state_global(self, token):
         if token == ':' and self.last_tokens:
-            # Only treat it as a function if it's followed by a type annotation
-            # Don't treat simple object properties as functions
-            self.next(self._property_or_method)
+            if self.last_tokens.strip():
+                self.function_name = self.last_tokens
+            self.next(self._method_return_type)
             return
         elif token == '=>' and hasattr(self, 'function_name') and self.function_name:
             self._push_function_to_stack()
@@ -157,22 +157,7 @@ class TypeScriptObjectStates(ES6ObjectStates):
             # Handle nested objects
             self.read_object()
             return
-        elif token == '(' and self.last_tokens:
-            # This is a method declaration
-            self.function_name = self.last_tokens
-            self._push_function_to_stack()
-            self.next(self._state_global)
-            return
         super(TypeScriptObjectStates, self)._state_global(token)
-
-    def _property_or_method(self, token):
-        if token == '{':
-            # If we see an opening brace after a colon, it's an object
-            self.read_object()
-            self.next(self._state_global)
-        else:
-            # Skip the type annotation or value
-            self.next(self._state_global)
 
     def _method_return_type(self, token):
         if token == '{':
