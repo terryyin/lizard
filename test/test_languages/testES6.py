@@ -109,11 +109,7 @@ class Test_parser_for_JavaScript_ES6(unittest.TestCase):
             get i(){return 1;}
             }
         """)
-        self.assertEqual(4, len(functions))
-        self.assertEqual('f', functions[0].name)
-        self.assertEqual('g', functions[1].name)
-        self.assertEqual('h', functions[2].name)
-        self.assertEqual('i', functions[3].name)
+        self.assertEqual(['f', 'g', 'h', 'i'], [f.name for f in functions])
 
     def test_generator_function(self):
         functions = get_js_function_list("""
