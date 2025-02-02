@@ -36,6 +36,12 @@ class Test_parser_for_TypeScript(unittest.TestCase):
 
     def test_function_declare(self):
         functions = get_ts_function_list("""
+            declare function create(o): void;
+        """)
+        self.assertEqual([], [f.name for f in functions])
+
+    def test_function_declare_and_a_function(self):
+        functions = get_ts_function_list("""
             declare function create(o: object | null): void;
             function warnUser() {
                 console.log("This is my warning message");

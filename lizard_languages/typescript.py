@@ -88,5 +88,5 @@ class TypeScriptStates(JavaScriptStyleLanguageStates):
             super(TypeScriptStates, self)._expecting_func_opening_bracket(token)
     
     def _type_annotation(self, token):
-        self.next(self._state_global)
+        self.next(self._expecting_func_opening_bracket)
 

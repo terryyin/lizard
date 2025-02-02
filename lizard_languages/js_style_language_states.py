@@ -113,6 +113,7 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
         self.context.add_to_long_function_name(" " + token)
 
     def _expecting_func_opening_bracket(self, token):
+        print("JavaScriptStyleLanguageStates.", token)
         if token != '{':
             self.started_function = None
         self.next(self._state_global, token)
