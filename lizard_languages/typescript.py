@@ -80,3 +80,14 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
 class TypeScriptStates(JavaScriptStyleLanguageStates):
     def __init__(self, context):
         super(TypeScriptStates, self).__init__(context)
+
+    def _expecting_func_opening_bracket(self, token):
+        if token == ':':
+            self._state = self._type_annotation
+        else:
+            super(TypeScriptStates, self)._expecting_func_opening_bracket(token)
+    
+    def _type_annotation(self, token):
+        if token == '{':
+            self.next(self._state_global, token)
+
