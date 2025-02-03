@@ -1,5 +1,10 @@
 # Change Log
 
+## 1.17.16
+
+Add support for gitignore files.
+A few bug fixes.
+
 ## 1.17.15
 
 Add VueJS support.
