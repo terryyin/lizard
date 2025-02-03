@@ -967,7 +967,7 @@ def parse_args(argv):
         if inferred_printer:
             if not opt.printer:
                 opt.printer = inferred_printer
-            else:
+            elif opt.printer != inferred_printer:
                 msg = "Warning: overriding output file extension.\n"
                 sys.stderr.write(msg)
     return opt

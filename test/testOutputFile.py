@@ -56,3 +56,62 @@ class TestFileOutputIntegration(unittest.TestCase):
     def test_xml(self):
         header = "<?xml version=\"1.0\" ?>"
         self.output_test("test.xml", header)
+
+    def test_html_output_with_extension(self):
+        """Test that using --html with .html extension works correctly without warnings"""
+        path = join(self.tmp_dir, "test.html")
+        args = ["lizard", "--length", "75", "--CCN", "20", "--arguments", "3",
+               "--warnings_only", "--sort", "cyclomatic_complexity", "--html",
+               "--output_file", path, "test/data"]
+        
+        # Capture stdout to check for warnings
+        import sys
+        from io import StringIO
+        stdout = StringIO()
+        old_stdout = sys.stdout
+        sys.stdout = stdout
+        
+        try:
+            main(args)
+            output = stdout.getvalue()
+            self.assertNotIn("Warning: overriding output file extension", output,
+                           "Should not show extension warning when using .html extension with --html")
+            
+            # Verify the file exists and has HTML content
+            with open(path, 'r') as f:
+                content = f.read()
+                self.assertTrue(content.startswith("<!DOCTYPE HTML PUBLIC"),
+                              "Output file should contain HTML content")
+        finally:
+            sys.stdout = old_stdout
+
+    def test_html_extension_warning(self):
+        """Test that using --html with .html extension works correctly without warnings,
+        but using a different format with .html extension shows a warning"""
+        path = join(self.tmp_dir, "test.html")
+        
+        # Capture stderr to check for warnings
+        import sys
+        from io import StringIO
+        stderr = StringIO()
+        old_stderr = sys.stderr
+        sys.stderr = stderr
+        
+        try:
+            # First test: --html with .html extension should not warn
+            args = ["lizard", "--html", "--output_file", path, "test/data"]
+            main(args)
+            output = stderr.getvalue()
+            self.assertNotIn("Warning: overriding output file extension", output,
+                           "Should not show warning when format matches extension")
+            stderr.truncate(0)
+            stderr.seek(0)
+            
+            # Second test: --xml with .html extension should warn
+            args = ["lizard", "--xml", "--output_file", path, "test/data"]
+            main(args)
+            output = stderr.getvalue()
+            self.assertIn("Warning: overriding output file extension", output,
+                         "Should show warning when format doesn't match extension")
+        finally:
+            sys.stderr = old_stderr
