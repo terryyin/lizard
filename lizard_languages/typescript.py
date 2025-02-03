@@ -5,7 +5,7 @@ Language parser for JavaScript
 import re
 from .code_reader import CodeReader, CodeStateMachine
 from .clike import CCppCommentsMixin
-from .js_style_language_states import JavaScriptStyleLanguageStates
+from .js_style_language_states import ES6ObjectStates, JavaScriptStyleLanguageStates
 from .js_style_regex_expression import js_style_regex_expression
 
 
@@ -81,6 +81,9 @@ class TypeScriptStates(JavaScriptStyleLanguageStates):
     def __init__(self, context):
         super(TypeScriptStates, self).__init__(context)
 
+    def read_object(self):
+        self.sub_state(TypeScriptObjectStates(self.context))
+
     def _expecting_func_opening_bracket(self, token):
         if token == ':':
             self.next(self._type_annotation)
@@ -97,3 +100,6 @@ class TypeScriptStates(JavaScriptStyleLanguageStates):
     def _inline_type_annotation(self, _):
         self.next(self._expecting_func_opening_bracket)
 
+class TypeScriptObjectStates(ES6ObjectStates, TypeScriptStates):
+    def __init__(self, context):
+        super(TypeScriptObjectStates, self).__init__(context)

@@ -63,16 +63,14 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
             return
 
         self.sub_state(
-            self.__class__(self.context),
-            callback)
+            self.__class__(self.context), callback)
 
     def _expecting_statement_or_block(self, token):
         def callback():
             self.next(self._state_global)
         if token == "{":
             self.sub_state(
-                self.__class__(self.context),
-                callback)
+                self.__class__(self.context), callback)
         else:
             self.next(self._state_global, token)
 
@@ -113,7 +111,6 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
         self.context.add_to_long_function_name(" " + token)
 
     def _expecting_func_opening_bracket(self, token):
-        print("JavaScriptStyleLanguageStates.", token)
         if token != '{':
             self.started_function = None
         self.next(self._state_global, token)
