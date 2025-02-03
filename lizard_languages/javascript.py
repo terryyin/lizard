@@ -12,7 +12,7 @@ from .typescript import TypeScriptReader, JSTokenizer
 class JavaScriptReader(TypeScriptReader):
     # pylint: disable=R0903
 
-    ext = ['js']
+    ext = ['js', 'cjs', 'mjs']
     language_names = ['javascript', 'js']
 
     def __init__(self, context):
