@@ -99,3 +99,19 @@ lizard --length 75 \
 		   --output_file reports/complexity/complexity.html \
 		   source
 If I run it without the .html extension, the warning goes away but the output file does not have the .html extension despite being formatted like an html file.
+
+---------
+
+
+To support java 23. Please add these test cases to @testJava.py :
+
+test_sealed_class_with_permits_clause
+test_sealed_interface_with_permits_clause
+test_lambda_expression_simple
+test_lambda_expression_with_multiple_parameters
+test_method_reference_expression
+test_record_compact_constructor
+test_enum_declaration_with_methods
+test_local_class_inside_method
+test_switch_expression_with_yield
+test_pattern_matching_instanceof

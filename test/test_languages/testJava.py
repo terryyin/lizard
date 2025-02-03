@@ -145,7 +145,7 @@ class TestJava(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual("Person::printInfo", result[0].name)
 
-    def xtest_enum_declaration_with_methods(self):
+    def test_enum_declaration_with_methods(self):
         result = get_java_function_list("""
             enum Day {
                 MONDAY, TUESDAY;
