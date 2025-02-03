@@ -96,21 +96,24 @@ class TypeScriptStates(JavaScriptStyleLanguageStates):
 
     def _consume_type_annotation(self):
         typeStates = TypeScriptTypeAnnotationStates(self.context)
+
         def callback():
             if typeStates.saved_token:
                 self(typeStates.saved_token)
         self.sub_state(typeStates, callback)
 
+
 class TypeScriptTypeAnnotationStates(CodeStateMachine):
     def __init__(self, context):
         super(TypeScriptTypeAnnotationStates, self).__init__(context)
         self.saved_token = None
+
     def _state_global(self, token):
         if token == '{':
             self.next(self._inline_type_annotation, token)
         else:
             self.next(self._state_simple_type, token)
-    
+
     def _state_simple_type(self, token):
         if token in '{=;':
             self.saved_token = token

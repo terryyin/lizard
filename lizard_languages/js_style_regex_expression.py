@@ -23,7 +23,7 @@ def js_style_regex_expression(func):
                     prev_token = tokens[i-1].strip()
                     if prev_token and prev_token[-1] in '=,({[?:!&|;':
                         is_regex = True
-                
+
                 if is_regex:
                     # This is likely a regex pattern start
                     regex_tokens = [token]

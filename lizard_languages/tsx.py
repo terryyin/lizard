@@ -21,4 +21,4 @@ class TSXReader(TypeScriptReader, JSXMixin):
 
     def __init__(self, context):
         super(TSXReader, self).__init__(context)
-        # No need for parallel states since JSX handling is in the mixin 
+        # No need for parallel states since JSX handling is in the mixin

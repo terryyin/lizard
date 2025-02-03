@@ -23,7 +23,7 @@ class VueReader(TypeScriptReader):
 
     def preprocess(self, tokens):
         current_block = None
-        
+
         for token in tokens:
             if token.startswith('<script'):
                 current_block = 'script'
