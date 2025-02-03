@@ -896,14 +896,43 @@ def md5_hash_file(full_path_name):
 def get_all_source_files(paths, exclude_patterns, lans):
     '''
     Function counts md5 hash for the given file and checks if it isn't a
-    duplicate using set of hashes for previous files '''
+    duplicate using set of hashes for previous files.
+    
+    If a .gitignore file is found in any of the given paths, it will be used
+    to filter out files that match the gitignore patterns.
+    '''
     hash_set = set()
+    gitignore_spec = None
+    base_path = None
+
+    def _load_gitignore():
+        nonlocal gitignore_spec, base_path
+        try:
+            import pathspec
+            for path in paths:
+                gitignore_path = os.path.join(path, '.gitignore')
+                if os.path.exists(gitignore_path):
+                    with open(gitignore_path, 'r') as gitignore_file:
+                        # Read lines and strip whitespace and empty lines
+                        patterns = [line.strip() for line in gitignore_file.readlines()]
+                        patterns = [p for p in patterns if p and not p.startswith('#')]
+                        gitignore_spec = pathspec.PathSpec.from_lines('gitwildmatch', patterns)
+                        base_path = path
+                    break
+        except ImportError:
+            pass
 
     def _support(reader):
         return not lans or set(lans).intersection(
             reader.language_names)
 
     def _validate_file(pathname):
+        if gitignore_spec is not None and base_path is not None:
+            rel_path = os.path.relpath(pathname, base_path)
+            # Normalize path separators for consistent matching
+            rel_path = rel_path.replace(os.sep, '/')
+            if gitignore_spec.match_file(rel_path):
+                return False
         return (
             pathname in paths or (
                 get_reader_for(pathname) and
@@ -926,6 +955,7 @@ def get_all_source_files(paths, exclude_patterns, lans):
                     for filename in files:
                         yield os.path.join(root, filename)
 
+    _load_gitignore()
     return filter(_validate_file, all_listed_files(paths))
 
 

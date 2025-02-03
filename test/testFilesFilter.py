@@ -126,3 +126,34 @@ class TestFilesFilter(unittest.TestCase):
         else:
             file_names = ["./f1.cpp", "./f2.cpp"]
         self.assertEqual(file_names, list(files))
+
+    @patch.object(os.path, "exists")
+    @patch.object(os.path, "relpath")
+    @patch.object(os, "walk")
+    @patch("builtins.open", create=True)
+    def test_gitignore_filter(self, mock_open, mock_os_walk, mock_relpath, mock_exists):
+        mock_os_walk.return_value = (['.',
+                                    None,
+                                    ['temp.c', 'node_modules/file.js', 'useful.cpp']], )
+        
+        def exists_side_effect(path):
+            return path.endswith('.gitignore')
+        mock_exists.side_effect = exists_side_effect
+        
+        def relpath_side_effect(path, start):
+            # Return paths in a normalized format
+            if path.startswith('./'):
+                path = path[2:]
+            return path.replace(os.sep, '/')
+        mock_relpath.side_effect = relpath_side_effect
+        
+        mock_file = mock_open.return_value.__enter__.return_value
+        mock_file.readlines.return_value = ["node_modules/\n", "*.c\n"]
+        mock_file.read.return_value = "node_modules/\n*.c\n"
+        
+        files = get_all_source_files(["dir"], [], [])
+        if which_system() == "Windows":
+            file_names = [".\\useful.cpp"]
+        else:
+            file_names = ["./useful.cpp"]
+        self.assertEqual(file_names, list(files))
