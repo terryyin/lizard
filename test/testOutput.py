@@ -125,7 +125,7 @@ class TestAllOutput(StreamStdoutTestCase):
     def test_should_not_print_extension_results_when_not_implemented(self):
         file_infos = []
         option = Mock(CCN=15, number = 0, thresholds={}, extensions = [object()], whitelist='')
-        return print_result_with_scheme(file_infos, option)
+        print_result_with_scheme(file_infos, option)
 
     def test_print_result(self):
         file_infos = [FileInformation('f1.c', 1, []), FileInformation('f2.c', 1, [])]
