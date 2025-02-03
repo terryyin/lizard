@@ -64,3 +64,12 @@ class TestJava(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual("A", result[0].name)
         self.assertEqual(1, result[0].cyclomatic_complexity)
+
+    def test_record(self):
+        result = get_java_function_list("""
+            record Point(int x, int y) {
+                public int sum() { return x + y; }
+            }
+        """)
+        self.assertEqual(1, len(result))
+        self.assertEqual("Point::sum", result[0].name)
