@@ -9,11 +9,12 @@ from .script_language import ScriptLanguageMixIn
 
 class MyToken(str):
     def __new__(cls, value, *_):
-        return super(MyToken, cls).__new__(cls, value.group(0))
+        val = value.group(0) if hasattr(value, 'group') else value
+        return super(MyToken, cls).__new__(cls, val)
 
     def __init__(self, value):
         super(MyToken, self).__init__()
-        self.begin = value.start()
+        self.begin = value.start() if hasattr(value, 'start') else 0
 
 
 class RubyReader(RubylikeReader):

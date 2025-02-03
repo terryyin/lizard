@@ -1,6 +1,8 @@
 import unittest
 from lizard import analyze_file, FileAnalyzer, get_extensions
-from lizard_languages import RubyReader
+from lizard_languages.ruby import RubyReader, MyToken
+import pickle
+import re
 
 
 def get_ruby_function_list(source_code):
@@ -73,6 +75,21 @@ class Test_tokenizing_Ruby(unittest.TestCase):
         self.check_tokens(['a!'], r'''a!''')
         self.check_tokens(['a?'], r'''a?''')
 
+    def test_MyToken_serialization(self):
+        # Test with regex match object
+        match = re.match(r'\w+', 'test123')
+        token = MyToken(match)
+        pickled = pickle.dumps(token)
+        unpickled = pickle.loads(pickled)
+        self.assertEqual(str(token), str(unpickled))
+        self.assertEqual(token.begin, unpickled.begin)
+        
+        # Test with plain string
+        token_str = MyToken('test123')
+        pickled_str = pickle.dumps(token_str)
+        unpickled_str = pickle.loads(pickled_str)
+        self.assertEqual(str(token_str), str(unpickled_str))
+        self.assertEqual(token_str.begin, unpickled_str.begin)
 
 
 class Test_parser_for_Ruby(unittest.TestCase):
