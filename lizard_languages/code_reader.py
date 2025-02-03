@@ -50,6 +50,7 @@ class CodeStateMachine(object):
             self.next(self.saved_state)
             if self.callback:
                 self.callback()
+                self.callback = None
         self.last_token = token
         if self.to_exit:
             return True

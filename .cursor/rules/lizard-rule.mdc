@@ -1,7 +1,10 @@
 ---
 description: Guide for adding or modifying programming language support in Lizard
-globs: lizard_languages/*.py, test/test_languages/*.py
+globs:
+  - "lizard_languages/*.py"
+  - "test/test_languages/*.py"
 ---
+
 # Adding Language Support to Lizard Code Analyzer
 
 This guide explains how to add or modify support for programming languages in the Lizard code complexity analyzer.

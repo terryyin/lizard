@@ -82,22 +82,38 @@ class TypeScriptStates(JavaScriptStyleLanguageStates):
         super(TypeScriptStates, self).__init__(context)
 
     def _state_global(self, token):
+        if not self.as_object:
+            if token == ':':
+                self._consume_type_annotation()
+                return
         super(TypeScriptStates, self)._state_global(token)
 
     def _expecting_func_opening_bracket(self, token):
         if token == ':':
-            self.sub_state(TypeScriptTypeAnnotationStates(self.context))
+            self._consume_type_annotation()
         else:
             super(TypeScriptStates, self)._expecting_func_opening_bracket(token)
+
+    def _consume_type_annotation(self):
+        typeStates = TypeScriptTypeAnnotationStates(self.context)
+        def callback():
+            if typeStates.saved_token:
+                self(typeStates.saved_token)
+        self.sub_state(typeStates, callback)
 
 class TypeScriptTypeAnnotationStates(CodeStateMachine):
     def __init__(self, context):
         super(TypeScriptTypeAnnotationStates, self).__init__(context)
-
+        self.saved_token = None
     def _state_global(self, token):
         if token == '{':
             self.next(self._inline_type_annotation, token)
         else:
+            self.next(self._state_simple_type, token)
+    
+    def _state_simple_type(self, token):
+        if token in '{=;':
+            self.saved_token = token
             self.statemachine_return()
 
     @CodeStateMachine.read_inside_brackets_then("{}")
