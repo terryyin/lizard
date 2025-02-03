@@ -22,6 +22,7 @@ A list of supported languages:
 -  C# (C Sharp)
 -  JavaScript (With ES6 and JSX)
 -  TypeScript (With TSX)
+-  VueJS
 -  Objective-C
 -  Swift
 -  Python

@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.17.15
+
+Add VueJS support.
+
 ## 1.17.14
 
 Add TSX support.
