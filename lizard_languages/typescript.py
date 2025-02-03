@@ -88,6 +88,7 @@ class TypeScriptStates(JavaScriptStyleLanguageStates):
             super(TypeScriptStates, self)._expecting_func_opening_bracket(token)
     
     def _type_annotation(self, token):
+        print(token)
         if token == '{':
             self.next(self._inline_type_annotation, token)
         else:
