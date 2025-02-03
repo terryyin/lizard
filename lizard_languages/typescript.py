@@ -5,7 +5,7 @@ Language parser for JavaScript
 import re
 from .code_reader import CodeReader, CodeStateMachine
 from .clike import CCppCommentsMixin
-from .js_style_language_states import JavaScriptStyleLanguageStates, ES6ObjectStates
+from .js_style_language_states import JavaScriptStyleLanguageStates
 from .js_style_regex_expression import js_style_regex_expression
 
 

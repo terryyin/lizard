@@ -29,11 +29,11 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
             self.function_name = self.last_tokens
         elif token == "(":
             self.sub_state(
-                JavaScriptStyleLanguageStates(self.context))
+                self.__class__(self.context))
         elif token in '{':
             if self.started_function:
                 self.sub_state(
-                    JavaScriptStyleLanguageStates(self.context),
+                    self.__class__(self.context),
                     self._pop_function_from_stack)
             else:
                 self.read_object()
@@ -63,7 +63,7 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
             return
 
         self.sub_state(
-            JavaScriptStyleLanguageStates(self.context),
+            self.__class__(self.context),
             callback)
 
     def _expecting_statement_or_block(self, token):
@@ -71,7 +71,7 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
             self.next(self._state_global)
         if token == "{":
             self.sub_state(
-                JavaScriptStyleLanguageStates(self.context),
+                self.__class__(self.context),
                 callback)
         else:
             self.next(self._state_global, token)
