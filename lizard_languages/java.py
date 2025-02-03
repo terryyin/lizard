@@ -37,7 +37,7 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
         if token == '@':
             self._state = self._state_decorator
             return
-        if token in ("class", "record"):
+        if token in ("class", "record", "enum"):
             self.class_name = None
             self._state = self._state_class_declaration
             return
