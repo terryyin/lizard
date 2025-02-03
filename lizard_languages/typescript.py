@@ -100,6 +100,15 @@ class TypeScriptStates(JavaScriptStyleLanguageStates):
     def _inline_type_annotation(self, _):
         self.next(self._expecting_func_opening_bracket)
 
-class TypeScriptObjectStates(ES6ObjectStates, TypeScriptStates):
+class TypeScriptObjectStates(TypeScriptStates):
     def __init__(self, context):
         super(TypeScriptObjectStates, self).__init__(context)
+
+    def _state_global(self, token):
+        if token == ':':
+            self.function_name = self.last_tokens
+        elif token == '(':
+            self._function(self.last_tokens)
+            self.next(self._function, token)
+        else:
+            super(TypeScriptObjectStates, self)._state_global(token)
