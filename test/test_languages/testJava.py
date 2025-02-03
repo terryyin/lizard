@@ -133,7 +133,7 @@ class TestJava(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual("Processor::process", result[0].name)
 
-    def xtest_record_compact_constructor(self):
+    def test_record_compact_constructor(self):
         result = get_java_function_list("""
             record Person(String name, int age) {
                 Person {
