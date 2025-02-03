@@ -298,8 +298,7 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
         return self.name.split('::')[-1]
 
     location = property(lambda self:
-                        " %(name)s@%(start_line)s-%(end_line)s@%(filename)s"
-                        % self.__dict__)
+                        f" {self.name}@{self.start_line}-{self.end_line}@{self.filename}")
 
     parameter_count = property(lambda self: len(self.parameters))
 
@@ -723,17 +722,13 @@ class OutputScheme(object):
             if e.get("avg_caption", None)])
 
     def clang_warning_format(self):
-        return (
-            "{f.filename}:{f.start_line}: warning: {f.name} has " +
-            ", ".join([
-                "{{f.{ext[value]}}} {caption}"
-                .format(ext=e, caption=e['caption'].strip())
-                for e in self.items[:-1]
-                ]))
+        return ("{f.filename}:{f.start_line}: warning: {f.name} has {f.nloc} NLOC, "
+                "{f.cyclomatic_complexity} CCN, {f.token_count} token, {f.parameter_count} PARAM, "
+                "{f.length} length, {f.max_nesting_depth} ND")
 
     def msvs_warning_format(self):
         return (
-            "{f.filename}({f.start_line}): warning: {f.name} has " +
+            "{f.filename}({f.start_line}): warning: {f.name} ({f.long_name}) has " +
             ", ".join([
                 "{{f.{ext[value]}}} {caption}"
                 .format(ext=e, caption=e['caption'].strip())

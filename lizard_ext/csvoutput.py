@@ -36,9 +36,9 @@ def csv_output(result, options):
     if options.verbose:
         extension_caption = ""
         for caption in extension_captions:
-            extension_caption = "{},{}".format(extension_caption, caption)
-        print("NLOC,CCN,token,PARAM,length,location,file,function," +
-              "long_name,start,end{}".format(extension_caption))
+            extension_caption = f"{extension_caption},{caption}"
+        print(f"NLOC,CCN,token,PARAM,length,location,file,function," +
+              f"long_name,start,end{extension_caption}")
 
     for source_file in result:
         if source_file:
@@ -46,25 +46,11 @@ def csv_output(result, options):
                 if source_function:
                     extension_string = ''
                     for variable in extension_variables:
-                        extension_string = '{},{}'.\
-                            format(extension_string,
-                                   source_function.__getattribute__(variable))
-                    print('{},{},{},{},{},"{}","{}","{}","{}",{},{}{}'.format(
-                        source_function.nloc,
-                        source_function.cyclomatic_complexity,
-                        source_function.token_count,
-                        len(source_function.parameters),
-                        source_function.length,
-                        "{}@{}-{}@{}".format(
-                            source_function.name.replace("\"", "'"),
-                            source_function.start_line,
-                            source_function.end_line,
-                            source_file.filename
-                        ),
-                        source_file.filename,
-                        source_function.name.replace("\"", "'"),
-                        source_function.long_name.replace("\"", "'"),
-                        source_function.start_line,
-                        source_function.end_line,
-                        extension_string
-                    ))
+                        extension_string = f"{extension_string},{source_function.__getattribute__(variable)}"
+                    print(f"{source_function.nloc},{source_function.cyclomatic_complexity},"
+                          f"{source_function.token_count},{len(source_function.parameters)},"
+                          f'{source_function.length},"{source_function.name.replace(chr(34), chr(39))}@'
+                          f'{source_function.start_line}-{source_function.end_line}@{source_file.filename}",'
+                          f'"{source_file.filename}","{source_function.name.replace(chr(34), chr(39))}",'
+                          f'"{source_function.long_name.replace(chr(34), chr(39))}",'
+                          f"{source_function.start_line},{source_function.end_line}{extension_string}")

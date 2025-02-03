@@ -33,7 +33,7 @@ class Tokenizer(object):
 
 class JSTokenizer(Tokenizer):
     def __init__(self):
-        super(JSTokenizer, self).__init__()
+        super().__init__()
         self.depth = 1
 
     def process_token(self, token):
@@ -60,7 +60,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                        'catch', 'case'])
 
     def __init__(self, context):
-        super(TypeScriptReader, self).__init__(context)
+        super().__init__(context)
         self.parallel_states = [TypeScriptStates(context)]
 
     @staticmethod
@@ -79,20 +79,20 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
 
 class TypeScriptStates(JavaScriptStyleLanguageStates):
     def __init__(self, context):
-        super(TypeScriptStates, self).__init__(context)
+        super().__init__(context)
 
     def _state_global(self, token):
         if not self.as_object:
             if token == ':':
                 self._consume_type_annotation()
                 return
-        super(TypeScriptStates, self)._state_global(token)
+        super()._state_global(token)
 
     def _expecting_func_opening_bracket(self, token):
         if token == ':':
             self._consume_type_annotation()
         else:
-            super(TypeScriptStates, self)._expecting_func_opening_bracket(token)
+            super()._expecting_func_opening_bracket(token)
 
     def _consume_type_annotation(self):
         typeStates = TypeScriptTypeAnnotationStates(self.context)
@@ -105,7 +105,7 @@ class TypeScriptStates(JavaScriptStyleLanguageStates):
 
 class TypeScriptTypeAnnotationStates(CodeStateMachine):
     def __init__(self, context):
-        super(TypeScriptTypeAnnotationStates, self).__init__(context)
+        super().__init__(context)
         self.saved_token = None
 
     def _state_global(self, token):

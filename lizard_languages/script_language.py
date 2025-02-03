@@ -4,7 +4,7 @@ Common behaviours of script languages
 from .code_reader import CodeReader
 
 
-class ScriptLanguageMixIn(object):
+class ScriptLanguageMixIn:
     # pylint: disable=R0903
 
     @staticmethod

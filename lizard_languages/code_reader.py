@@ -8,7 +8,7 @@ from functools import reduce
 from operator import or_
 
 
-class CodeStateMachine(object):
+class CodeStateMachine:
     """ the state machine """
     # pylint: disable=R0903
     # pylint: disable=R0902
