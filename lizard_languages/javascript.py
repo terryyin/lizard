@@ -2,11 +2,7 @@
 Language parser for JavaScript
 '''
 
-from .code_reader import CodeReader
-from .clike import CCppCommentsMixin
-from .js_style_regex_expression import js_style_regex_expression
-from .js_style_language_states import JavaScriptStyleLanguageStates
-from .typescript import TypeScriptReader, JSTokenizer
+from .typescript import TypeScriptReader 
 
 
 class JavaScriptReader(TypeScriptReader):

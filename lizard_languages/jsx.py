@@ -8,6 +8,20 @@ from .code_reader import CodeReader
 from .js_style_regex_expression import js_style_regex_expression
 
 
+class TSXTokenizer(JSTokenizer):
+    def __init__(self):
+        super().__init__()
+
+    def process_token(self, token):
+        if token == "<":
+            from .jsx import XMLTagWithAttrTokenizer  # Import only when needed
+            self.sub_tokenizer = XMLTagWithAttrTokenizer()
+            return
+    
+        for tok in super().process_token(token):
+            yield tok
+
+
 class JSXMixin:
     '''Base mixin class for JSX/TSX shared functionality'''
     @staticmethod
@@ -17,7 +31,7 @@ class JSXMixin:
             r"|(?:\$\w+)" + \
             r"|(?:\<\/\w+\>)" + \
             r"|`.*?`"
-        js_tokenizer = JSTokenizer()
+        js_tokenizer = TSXTokenizer()
         for token in CodeReader.generate_tokens(
                 source_code, addition, token_class):
             for tok in js_tokenizer(token):
@@ -102,7 +116,7 @@ class XMLTagWithAttrTokenizer(Tokenizer):
             self.state = self._after_tag
         elif token == "{":
             self.cache.append("}")
-            self.sub_tokenizer = JSTokenizer()
+            self.sub_tokenizer = TSXTokenizer()
             self.state = self._after_tag
 
     def _body(self, token):
@@ -116,7 +130,7 @@ class XMLTagWithAttrTokenizer(Tokenizer):
             return self.flush()
 
         if token == '{':
-            self.sub_tokenizer = JSTokenizer()
+            self.sub_tokenizer = TSXTokenizer()
             return self.flush()
 
 

@@ -37,10 +37,6 @@ class JSTokenizer(Tokenizer):
         self.depth = 1
 
     def process_token(self, token):
-        if token == "<":
-            from .jsx import XMLTagWithAttrTokenizer  # Import only when needed
-            self.sub_tokenizer = XMLTagWithAttrTokenizer()
-            return
         if token == "{":
             self.depth += 1
         elif token == "}":

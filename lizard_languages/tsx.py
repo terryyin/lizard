@@ -2,9 +2,8 @@
 Language parser for TSX
 '''
 
-from .typescript import TypeScriptReader, TypeScriptStates, JSTokenizer
+from .typescript import TypeScriptReader
 from .jsx import JSXMixin
-from .code_reader import CodeReader
 from .js_style_regex_expression import js_style_regex_expression
 
 
