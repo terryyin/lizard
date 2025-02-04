@@ -77,7 +77,7 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
         if token == '{':
             def callback():
                 self._state = self._state_global
-            self.sub_state(JavaClassBodyStates(self.class_name, self.context), callback, token)
+            self.sub_state(JavaClassBodyStates(self.class_name, self.is_record, self.context), callback, token)
         elif token == '(':  # Record parameters
             self._state = self._state_record_parameters
         elif token[0].isalpha():
@@ -114,9 +114,10 @@ class JavaFunctionBodyStates(JavaStates):
         pass
 
 class JavaClassBodyStates(JavaStates):
-    def __init__(self, class_name, context):
+    def __init__(self, class_name, is_record, context):
         super(JavaClassBodyStates, self).__init__(context)
         self.class_name = class_name
+        self.is_record = is_record
 
     def _state_global(self, token):
         print(token)
