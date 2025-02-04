@@ -157,7 +157,7 @@ class TestJava(unittest.TestCase):
         self.assertEqual("Day::printSchedule", result[0].name)
         self.assertEqual("Day::printAll", result[1].name)
 
-    def xtest_local_class_inside_method(self):
+    def test_local_class_inside_method(self):
         result = get_java_function_list("""
             class Outer {
                 void method() {

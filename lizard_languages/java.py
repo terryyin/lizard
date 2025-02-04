@@ -2,6 +2,7 @@
 Language parser for Java
 '''
 
+from lizard_languages.code_reader import CodeStateMachine
 from .clike import CLikeReader, CLikeStates, CLikeNestingStackStates
 
 
@@ -28,6 +29,11 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
     def _state_old_c_params(self, token):
         if token == '{':
             self._state_dec_to_imp(token)
+
+    def _state_imp(self, token):
+        def callback():
+            self.next(self._state_global)
+        self.sub_state(JavaFunctionBodyStates(self.context), callback, token)
 
     def try_new_function(self, name):
         # Don't create a function for record compact constructor
@@ -87,3 +93,11 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
         if token == '}':
             self.in_record_constructor = False
             self._state = self._state_global
+
+class JavaFunctionBodyStates(JavaStates):
+    def __init__(self, context):
+        super(JavaFunctionBodyStates, self).__init__(context)
+
+    @CodeStateMachine.read_inside_brackets_then("{}")
+    def _state_global(self, _):
+        self.statemachine_return()
