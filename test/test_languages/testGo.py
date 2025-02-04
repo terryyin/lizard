@@ -152,3 +152,17 @@ class Test_parser_for_Go(unittest.TestCase):
 
         self.assertEqual(1, len(result))
         self.assertEqual("Handle", result[0].name)
+
+    def test_sql_query_with_question_marks(self):
+        result = get_go_function_list('''
+            func getQuery(dbIndex uint32, tbIndex uint32) string {
+                query := fmt.Sprintf(`INSERT INTO online_docs_%d.online_docs_notify_%d
+                (a, b, c, d, e, f, g, h, i, j)
+                VALUES (?, ?, ?, ?, ?, ?, ?, FROM_UNIXTIME(?), ?, %d)`,
+                dbIndex, tbIndex, notifyStatusNew)
+                return query
+            }
+                ''')
+        self.assertEqual(1, len(result))
+        self.assertEqual("getQuery", result[0].name)
+        self.assertEqual(1, result[0].cyclomatic_complexity)
