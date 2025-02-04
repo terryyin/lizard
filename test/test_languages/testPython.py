@@ -14,6 +14,54 @@ class Test_tokenizer_for_Python(unittest.TestCase):
         tokens = PythonReader.generate_tokens("#'\n''")
         self.assertEqual(["#'", "\n", "''"], list(tokens))
 
+    def test_multiline_string_tokens(self):
+        code = '''"""First line
+Second line with 'single quotes'
+Third line with "double quotes"
+Fourth line with mixed quotes
+Fifth line with # comment markers
+"""'''
+        tokens = list(PythonReader.generate_tokens(code))
+        self.assertEqual(1, len(tokens))  # The entire multi-line string should be one token
+        self.assertEqual(code, tokens[0])  # The token should preserve the exact string
+
+    def test_block_string_is_one_token(self):
+        code = 'def a():\n    a = """\na b c d e f g h i"""\n    return a\n'
+        functions = get_python_function_list(code)
+        self.assertEqual(9, functions[0].token_count)
+        self.assertEqual(4, functions[0].end_line)
+
+    def check_function_info(self, source, expect_token_count, expect_nloc, expect_endline):
+        functions = get_python_function_list(source)
+        self.assertEqual(expect_token_count, functions[0].token_count)
+        self.assertEqual(expect_nloc, functions[0].nloc)
+        self.assertEqual(expect_endline, functions[0].end_line)
+
+    def test_block_string(self):
+        self.check_function_info('def f():\n a="""block string"""', 7, 2, 2)
+        self.check_function_info("def f():\n a='''block string'''", 7, 2, 2)
+        self.check_function_info("def f():\n a='''block string'''", 7, 2, 2)
+        self.check_function_info("def f():\n a='''block\n string'''", 7, 3, 3)
+        self.check_function_info("def f():\n a='''block\n '''", 7, 3, 3)
+
+    def test_docstring_is_not_counted_in_nloc(self):
+        self.check_function_info("def f():\n '''block\n '''\n pass", 6, 2, 4)
+
+    def test_complex_multiline_string(self):
+        code = '''def f():
+            x = """First line
+                Second line with 'single quotes'
+                Third line with "double quotes"
+                Fourth line with mixed quotes
+                Fifth line with # comment markers
+                """
+            return x'''
+        functions = get_python_function_list(code)
+        self.assertEqual(1, len(functions))
+        self.assertEqual(9, functions[0].token_count)  # def, f, (), :, x, =, multiline-string, return, x
+        self.assertEqual(8, functions[0].nloc)  # 8 lines total
+        self.assertEqual(8, functions[0].end_line)
+
 
 class Test_Python_nesting_level(unittest.TestCase):
 
@@ -354,34 +402,6 @@ class Test_parser_for_Python(unittest.TestCase):
         functions = get_python_function_list(code)
         self.assertEqual(9, functions[0].cyclomatic_complexity)
         self.assertEqual(8, functions[0].max_nesting_depth)
-
-
-    def test_block_string_is_one_token(self):
-        code =  'def a():\n' + \
-                "    a = '''\n" +\
-                "a b c d e f g h i'''\n"+\
-                "    return a\n"
-        functions = get_python_function_list(code)
-        self.assertEqual(9, functions[0].token_count)
-        self.assertEqual(4, functions[0].end_line)
-
-    def check_function_info(self, source, expect_token_count, expect_nloc, expect_endline):
-        functions = get_python_function_list(source)
-        self.assertEqual(expect_token_count, functions[0].token_count)
-        self.assertEqual(expect_nloc, functions[0].nloc)
-        self.assertEqual(expect_endline, functions[0].end_line)
-
-    def test_block_string(self):
-        self.check_function_info('def f():\n a="""block string"""', 7, 2, 2)
-        self.check_function_info("def f():\n a='''block string'''", 7, 2, 2)
-        self.check_function_info("def f():\n a='''block string'''", 7, 2, 2)
-        self.check_function_info("def f():\n a='''block\n string'''", 7, 3, 3)
-        self.check_function_info("def f():\n a='''block\n '''", 7, 3, 3)
-
-    def test_docstring_is_not_counted_in_nloc(self):
-        self.check_function_info("def f():\n '''block\n '''\n pass", 6, 2, 4)
-
-    #global complexity
 
 
 def top_level_function_for_test():
