@@ -46,15 +46,19 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
         if self.class_name and self.context.current_function:
             self.context.current_function.name = f"{self.class_name}::{name}"
 
-    def _state_global(self, token):
-        if token == '@':
-            self._state = self._state_decorator
-            return
+    def _try_start_a_class(self, token):
         if token in ("class", "record", "enum"):
             self.class_name = None
             self.is_record = token == "record"
             self.in_record_constructor = False
             self._state = self._state_class_declaration
+            return True
+
+    def _state_global(self, token):
+        if token == '@':
+            self._state = self._state_decorator
+            return
+        if self._try_start_a_class(token):
             return
         if not self.in_record_constructor:  # Only process as potential function if not in record constructor
             super(JavaStates, self)._state_global(token)
@@ -71,7 +75,9 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
 
     def _state_class_declaration(self, token):
         if token == '{':
-            self._state = self._state_global
+            def callback():
+                self._state = self._state_global
+            self.sub_state(JavaClassBodyStates(self.class_name, self.context), callback, token)
         elif token == '(':  # Record parameters
             self._state = self._state_record_parameters
         elif token[0].isalpha():
@@ -98,6 +104,22 @@ class JavaFunctionBodyStates(JavaStates):
     def __init__(self, context):
         super(JavaFunctionBodyStates, self).__init__(context)
 
-    @CodeStateMachine.read_inside_brackets_then("{}")
-    def _state_global(self, _):
-        self.statemachine_return()
+    @CodeStateMachine.read_inside_brackets_then("{}", "_state_dummy")
+    def _state_global(self, token):
+        self._try_start_a_class(token)
+        if self.br_count == 0:
+            self.statemachine_return()
+
+    def _state_dummy(self, _):
+        pass
+
+class JavaClassBodyStates(JavaStates):
+    def __init__(self, class_name, context):
+        super(JavaClassBodyStates, self).__init__(context)
+        self.class_name = class_name
+
+    def _state_global(self, token):
+        print(token)
+        super()._state_global(token)
+        if token == '}':
+            self.statemachine_return()

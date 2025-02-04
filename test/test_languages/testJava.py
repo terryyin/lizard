@@ -169,8 +169,8 @@ class TestJava(unittest.TestCase):
             }
         """)
         self.assertEqual(2, len(result))
-        self.assertEqual("Outer::method", result[0].name)
-        self.assertEqual("Local::innerMethod", result[1].name)
+        self.assertEqual("Outer::method", result[1].name)
+        self.assertEqual("Local::innerMethod", result[0].name)
 
     def test_switch_expression_with_yield(self):
         result = get_java_function_list("""
