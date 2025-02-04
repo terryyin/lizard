@@ -200,3 +200,32 @@ class TestJava(unittest.TestCase):
         """)
         self.assertEqual(1, len(result))
         self.assertEqual("PatternMatch::process", result[0].name)
+
+    def xtest_anonymous_class_complexity(self):
+        result = get_java_function_list("""
+            class Demo {
+                public void test() {
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if(true) {
+                                System.out.println("Hello");
+                            }
+                        }
+                        
+                        public void testA() {
+                            if(true) {
+                                System.out.println("World!");
+                            }
+                        }
+                    }).start();
+                }
+            }
+        """)
+        self.assertEqual(3, len(result))  # Should find test, run and testA methods
+        main_function = next(f for f in result if f.name == "Demo::test")
+        self.assertEqual(1, main_function.cyclomatic_complexity)  # Main function should have complexity of 1
+        run_method = next(f for f in result if f.name.endswith("::run"))
+        self.assertEqual(2, run_method.cyclomatic_complexity)  # run method has one if, so complexity 2
+        testA_method = next(f for f in result if f.name.endswith("::testA"))
+        self.assertEqual(2, testA_method.cyclomatic_complexity)  # testA has one if, so complexity 2
