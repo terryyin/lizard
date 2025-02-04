@@ -201,7 +201,7 @@ class TestJava(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual("PatternMatch::process", result[0].name)
 
-    def xtest_anonymous_class_complexity(self):
+    def test_anonymous_class_complexity(self):
         result = get_java_function_list("""
             class Demo {
                 public void test() {

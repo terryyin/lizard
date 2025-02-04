@@ -105,13 +105,30 @@ class JavaFunctionBodyStates(JavaStates):
         super(JavaFunctionBodyStates, self).__init__(context)
 
     @CodeStateMachine.read_inside_brackets_then("{}", "_state_dummy")
+    @CodeStateMachine.read_inside_brackets_then("()", "_state_dummy")
     def _state_global(self, token):
+        if token == "new":
+            self.next(self._state_new)
         self._try_start_a_class(token)
         if self.br_count == 0:
             self.statemachine_return()
 
     def _state_dummy(self, _):
         pass
+
+    def _state_new(self, token):
+        self.next(self._state_new_parameters)
+
+    def _state_new_parameters(self, token):
+        if token == "(":
+            self.sub_state(JavaFunctionBodyStates(self.context), None, token)
+            return
+        if token == "{":
+            def callback():
+                self.next(self._state_global)
+            self.sub_state(JavaClassBodyStates("(anonymous)", False, self.context), callback, token)
+            return
+        self.next(self._state_global)
 
 class JavaClassBodyStates(JavaStates):
     def __init__(self, class_name, is_record, context):
@@ -120,7 +137,6 @@ class JavaClassBodyStates(JavaStates):
         self.is_record = is_record
 
     def _state_global(self, token):
-        print(token)
         super()._state_global(token)
         if token == '}':
             self.statemachine_return()
