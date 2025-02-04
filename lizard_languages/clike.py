@@ -30,6 +30,14 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
                 CLikeNestingStackStates(context),
                 CppRValueRefStates(context))
 
+    @staticmethod
+    def generate_tokens(source_code, addition='', token_class=None):
+        # Add pattern for floating point literals to the token generation
+        addition = r"|(?:\d*\.\d+(?:[eE][-+]?\d+)?)" + \
+                  r"|(?:\d+\.(?:\d+)?(?:[eE][-+]?\d+)?)" + \
+                  addition
+        return CodeReader.generate_tokens(source_code, addition, token_class)
+
     def preprocess(self, tokens):
         tilde = False
         for token in tokens:

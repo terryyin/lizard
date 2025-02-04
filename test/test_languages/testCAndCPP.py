@@ -505,6 +505,25 @@ class Test_c_cpp_lizard(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual("A::foo", result[0].name)
 
+    def test_aggregate_initialization_with_double(self):
+        result = get_cpp_function_list('''
+            struct Bar {
+                double value;
+            };
+
+            void foo() {
+                Bar bar = {1.};
+                double x = 1.0;
+                double y = .5;
+                double z = 1.e-10;
+            }
+
+            void bar() {}
+        ''')
+        self.assertEqual(2, len(result))
+        self.assertEqual("foo", result[0].name)
+        self.assertEqual("bar", result[1].name)
+
 class Test_cpp11_Attributes(unittest.TestCase):
     """C++11 extendable attributes can appear pretty much anywhere."""
 
