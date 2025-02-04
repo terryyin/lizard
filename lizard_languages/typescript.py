@@ -111,10 +111,18 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
             self.next(self._state_simple_type, token)
 
     def _state_simple_type(self, token):
-        if token in '{=;':
+        print(token)
+        if token == '<':
+            print(token)
+            self.next(self._state_generic_type, token)
+        elif token in '{=;':
             self.saved_token = token
             self.statemachine_return()
 
     @CodeStateMachine.read_inside_brackets_then("{}")
     def _inline_type_annotation(self, _):
+        self.statemachine_return()
+
+    @CodeStateMachine.read_inside_brackets_then("<>")
+    def _state_generic_type(self, token):
         self.statemachine_return()

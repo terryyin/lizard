@@ -157,3 +157,60 @@ class Test_parser_for_TypeScript(unittest.TestCase):
         self.assertEqual(["helper1", "method1", "method2"], [f.name for f in functions])
         self.assertEqual(2, functions[2].cyclomatic_complexity)
 
+    def test_type_annotation_with_generic(self):
+        code = '''
+             class BaseType {
+                required(): RequiredType<this> {
+                    return result;
+                }
+            }
+        '''
+        functions = get_ts_function_list(code)
+        self.assertEqual(
+            ["required"],
+            [f.name for f in functions]
+        )
+        for f in functions:
+            self.assertEqual(1, f.cyclomatic_complexity)
+
+
+    def test_abstract_class_methods(self):
+        code = '''
+             export abstract class BaseType {
+                required(): RequiredType<this> {
+                    return result;
+                }
+
+                forbidden(): never {
+                    return this as any as never;
+                }
+
+                options(options: Joi.ValidationOptions) {
+                    return this;
+                }
+
+                strict(isStrict?: boolean) {
+                    return this;
+                }
+
+                default(value: any) {
+                    return this;
+                }
+
+                error(err: Error | Joi.ValidationErrorFunction) {
+                    return this;
+                }
+
+                nullable(): UnionType<this, ConstType<null>> {
+                    return this as any;
+                }
+            }
+        '''
+        functions = get_ts_function_list(code)
+        self.assertEqual(
+            ["required", "forbidden", "options", "strict", "default", "error", "nullable"],
+            [f.name for f in functions]
+        )
+        for f in functions:
+            self.assertEqual(1, f.cyclomatic_complexity)
+
