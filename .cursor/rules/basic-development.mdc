@@ -1,0 +1,19 @@
+---
+description: The basic development guideline for any changes
+globs: **/*.py
+---
+# The fundamental development guideline for making any changes
+
+## Run Test
+
+Always run all tests instead of just one test file
+
+```bash
+python -m pytest   # Run all tests
+```
+
+## Automated test practices
+
+* All code and logic need to be covered by unit test
+* Try to test end to end, external observable pre and post state change, as much as possible
+* Don't mock any code unless it's about file system
