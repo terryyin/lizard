@@ -1,0 +1,16 @@
+---
+description: Guideline for fixing issues
+globs: 
+---
+
+# When fixing an issue (e.g. from Github issues) please:
+
+1. find where is the right place to add a new unit test to reproduce the issue
+2. add a new unit test
+3. run all test to see if the test really fails
+4. fix the issue until all test pass
+5. clean up
+6. run all unit test at last to confirm things are still working.
+
+follow [basic-development.mdc](mdc:.cursor/rules/basic-development.mdc)
+

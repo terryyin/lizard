@@ -139,7 +139,7 @@ Reference existing implementations:
 ## Testing Your Implementation
 
 ```bash
-make test  # Run all tests
+python -m pytest   # Run all tests
 python -m pytest test/test_languages/testMyLang.py  # Test specific language
 ```
 
