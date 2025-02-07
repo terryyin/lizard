@@ -284,6 +284,7 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
         self.fan_in = 0
         self.fan_out = 0
         self.general_fan_out = 0
+        self.max_nesting_depth = 0  # Initialize max_nesting_depth to 0
 
     @property
     def name_in_space(self):

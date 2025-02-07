@@ -86,6 +86,15 @@ class TestWarningOutput(StreamStdoutTestCase):
         self.option.sorting = ['cyclomatic_complexity']
         print_warnings(self.option, self.scheme, (x for x in []))
 
+    def test_warning_when_max_nesting_depth_missing(self):
+        self.foo.cyclomatic_complexity = 30
+        # Intentionally not setting max_nesting_depth
+        fileSummary = FileInformation("FILENAME", 123, [self.foo])
+        scheme = OutputScheme([Ext()])
+        count = print_clang_style_warning([fileSummary], self.option, scheme, None)
+        self.assertIn("FILENAME:100: warning: foo has 1 NLOC, 30 CCN, 1 token, 0 PARAM, 1 length", sys.stdout.stream)
+        self.assertEqual(1, count)
+
 
 class TestFileInformationOutput(StreamStdoutTestCase):
 

@@ -115,3 +115,114 @@ test_enum_declaration_with_methods
 test_local_class_inside_method
 test_switch_expression_with_yield
 test_pattern_matching_instanceof
+
+---------
+
+Got the following issue. Please:
+
+1. find where is the right place to add a new unit test to reproduce the issue
+2. add a new unit test
+3. run all test to see if the test really fails
+4. fix the issue until all test pass
+5. clean up
+6. run all test at least to confirm things are still working.
+
+-------------
+The issue:
+
+I am using lizard in a tool I manage called Statick. When we run lizard we use the -w flag by default, and we are seeing lizard crash. I am seeing the same behavior when running the lizard tool on its own. This behavior does not happen in v1.17.10, but it does occur in 1.17.17. I have narrowed it down to a change between v1.17.14 and v1.17.15, persisting on through v1.17.17.
+
+A minimal example is to use the C file at the bottom of this post as input. Save it as test.c. Then run
+
+lizard test.c
+That runs fine. Now add the -w flag. This crashes with Traceback
+
+$ lizard --version
+1.17.17
+$ lizard -w test.c 
+Traceback (most recent call last):
+  File "/home/thomas/.local/bin/lizard", line 8, in <module>
+    sys.exit(main())
+  File "/home/thomas/.local/lib/python3.10/site-packages/lizard.py", line 1079, in main
+    warning_count = printer(result, options, schema, AllResult)
+  File "/home/thomas/.local/lib/python3.10/site-packages/lizard.py", line 855, in print_clang_style_warning
+    print(scheme.clang_warning_format().format(f=warning))
+AttributeError: 'FunctionInfo' object has no attribute 'max_nesting_depth'
+In v1.17.14 there is no problem and I see the warning.
+
+$ lizard --version
+1.17.14
+$ lizard -w test.c 
+test.c:2: warning: func has 52 NLOC, 16 CCN, 143 token, 0 PARAM, 69 length
+The test.c file I am using is
+
+#include <stdlib.h>
+void func()
+{
+  int a, b, c, d, e, f, g, h, i, j, k, l, m, n, o;
+
+  if (a)
+  {
+    // Do nothing.
+  }
+  else if (b)
+  {
+    // Do nothing.
+  }
+  else if (c)
+  {
+    // Do nothing.
+  }
+  else if (d)
+  {
+    // Do nothing.
+  }
+  else if (e)
+  {
+    // Do nothing.
+  }
+  else if (f)
+  {
+    // Do nothing.
+  }
+  else if (g)
+  {
+    // Do nothing.
+  }
+  else if (h)
+  {
+    // Do nothing.
+  }
+  else if (i)
+  {
+    // Do nothing.
+  }
+  else if (j)
+  {
+    // Do nothing.
+  }
+  else if (k)
+  {
+    // Do nothing.
+  }
+  else if (l)
+  {
+    // Do nothing.
+  }
+  else if (m)
+  {
+    // Do nothing.
+  }
+  else if (n)
+  {
+    // Do nothing.
+  }
+  else if (o)
+  {
+    // Do nothing.
+  }
+  else
+  {
+    // Do nothing.
+  }
+}
