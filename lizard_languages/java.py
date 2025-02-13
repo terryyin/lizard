@@ -123,12 +123,13 @@ class JavaFunctionBodyStates(JavaStates):
         if token == "(":
             self.sub_state(JavaFunctionBodyStates(self.context), None, token)
             return
+        print(token)
         if token == "{":
             def callback():
                 self.next(self._state_global)
             self.sub_state(JavaClassBodyStates("(anonymous)", False, self.context), callback, token)
             return
-        self.next(self._state_global)
+        self.next(self._state_global, token)
 
 class JavaClassBodyStates(JavaStates):
     def __init__(self, class_name, is_record, context):
