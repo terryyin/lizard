@@ -34,6 +34,8 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
         elif token in ('else', 'do', 'try', 'final'):
             self.next(self._expecting_statement_or_block)
         elif token in ('=>',):
+            if self.function_name:
+                self._push_function_to_stack()
             self._state = self._arrow_function
         elif token == '=':
             self.function_name = self.last_tokens
@@ -100,7 +102,13 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
 
     def _arrow_function(self, token):
         self._push_function_to_stack()
-        self.next(self._state_global, token)
+        # Handle arrow function body
+        if token == '{':
+            # Block body
+            self.next(self._state_global, token)
+        else:
+            # Expression body
+            self.next(self._state_global, token)
 
     def _function(self, token):
         if token == '*':
