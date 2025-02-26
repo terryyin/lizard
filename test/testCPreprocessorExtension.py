@@ -1,6 +1,6 @@
 import unittest
 from mock import Mock, patch
-from lizard_ext.lizardcpre import LizardExtension as CPreprocessor
+from lizard_ext.lizardcpreprocess import LizardExtension as CPreprocessor
 from .testHelpers import get_cpp_function_list_with_extension
 from lizard_languages.code_reader import CodeReader
 generate_tokens = CodeReader.generate_tokens
@@ -77,6 +77,47 @@ class TestCPreprocessor(unittest.TestCase):
         1
         """)
         self.assertIn("1", tokens)
+
+    def test_should_handle_take_if_branch_on_ifndef(self):
+        tokens = process_code("""
+        #ifndef BLAH
+        1
+        #endif
+        """)
+        self.assertIn("1", tokens)
+
+    def test_should_handle_take_if_branch_on_if1(self):
+        tokens = process_code("""
+        #if 1
+        1
+        #else
+        2
+        #endif
+        """)
+        self.assertIn("1", tokens)
+        self.assertNotIn("2", tokens)
+
+    def test_should_handle_take_if_branch_on_if1_with_space_after_hash(self):
+        tokens = process_code("""
+        # if 1
+        1
+        # else
+        2
+        # endif
+        """)
+        self.assertIn("1", tokens)
+        self.assertNotIn("2", tokens)
+
+    def test_should_handle_take_else_branch_on_if0(self):
+        tokens = process_code("""
+        #if 0
+        1
+        #else
+        2
+        #endif
+        """)
+        self.assertNotIn("1", tokens)
+        self.assertIn("2", tokens)
 
     def test_should_handle_multiple_elifs(self):
         tokens = process_code("""
