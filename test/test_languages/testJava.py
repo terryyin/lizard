@@ -315,7 +315,6 @@ public class GitRepository implements SCM {
 }
 """
         result = get_java_function_list(code)
-        print("\nFound methods:", [f.name for f in result])  # Debug output
         self.assertEqual(4, len(result))  # Should find 4 methods: getChangeSets, firstParentsOnly, getDiffBetweenCommits, deleteMMBranch
 
     def test_very_complex_java_class_with_try_resources_and_nested_types(self):
@@ -385,7 +384,6 @@ public class GitRepository implements SCM {
 }
 """
         result = get_java_function_list(code)
-        print("\nFound methods:", [f.name for f in result])  # Debug output
         self.assertEqual(5, len(result))  # Should find 5 methods: info, getDiffBetweenCommits (2), diffToModification, and LocalClass::localMethod
 
     def test_try_with_resources(self):

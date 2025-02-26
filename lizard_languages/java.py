@@ -123,7 +123,6 @@ class JavaFunctionBodyStates(JavaStates):
         if token == "(":
             self.sub_state(JavaFunctionBodyStates(self.context), None, token)
             return
-        print(token)
         if token == "{":
             def callback():
                 self.next(self._state_global)
