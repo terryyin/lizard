@@ -215,6 +215,44 @@ class TestPerl(unittest.TestCase):
         for_control = next(f for f in result.function_list if f.name == 'ForLoopTest::for_with_control_flow')
         self.assertEqual(4, for_control.cyclomatic_complexity)
 
+    def test_perl_compound_conditions(self):
+        result = analyze_file(os.path.join(os.path.dirname(__file__), "testdata/perl_compound_conditions.pl"))
+        
+        function_names = [f.name for f in result.function_list]
+        self.assertEqual(8, len(result.function_list), f"Found functions: {function_names}")
+        
+        # Simple AND has complexity 3 (1 base + 1 if + 1 && operator)
+        simple_and = next(f for f in result.function_list if f.name == 'CompoundConditionTest::simple_and')
+        self.assertEqual(3, simple_and.cyclomatic_complexity)
+        
+        # Simple OR has complexity 3 (1 base + 1 if + 1 || operator)
+        simple_or = next(f for f in result.function_list if f.name == 'CompoundConditionTest::simple_or')
+        self.assertEqual(3, simple_or.cyclomatic_complexity)
+        
+        # Multiple AND has complexity 4 (1 base + 1 if + 2 && operators)
+        multiple_and = next(f for f in result.function_list if f.name == 'CompoundConditionTest::multiple_and')
+        self.assertEqual(4, multiple_and.cyclomatic_complexity)
+        
+        # Multiple OR has complexity 4 (1 base + 1 if + 2 || operators)
+        multiple_or = next(f for f in result.function_list if f.name == 'CompoundConditionTest::multiple_or')
+        self.assertEqual(4, multiple_or.cyclomatic_complexity)
+        
+        # Mixed conditions has complexity 4 (1 base + 1 if + 1 && + 1 ||)
+        mixed = next(f for f in result.function_list if f.name == 'CompoundConditionTest::mixed_conditions')
+        self.assertEqual(4, mixed.cyclomatic_complexity)
+        
+        # Complex conditions with parentheses has complexity 5 (1 base + 1 if + 1 && + 2 ||)
+        complex_parens = next(f for f in result.function_list if f.name == 'CompoundConditionTest::complex_with_parens')
+        self.assertEqual(5, complex_parens.cyclomatic_complexity)
+        
+        # Compound in loop has complexity 3 (1 base + 1 while + 1 &&)
+        compound_loop = next(f for f in result.function_list if f.name == 'CompoundConditionTest::compound_in_loop')
+        self.assertEqual(3, compound_loop.cyclomatic_complexity)
+        
+        # Compound with assignment has complexity 3 (1 base + 1 while + 1 &&)
+        compound_assign = next(f for f in result.function_list if f.name == 'CompoundConditionTest::compound_with_assignment')
+        self.assertEqual(3, compound_assign.cyclomatic_complexity)
+
     def test_perl_forgive_comment(self):
         result = analyze_file(os.path.join(os.path.dirname(__file__), "testdata/perl_forgive.pl"))
         self.assertEqual(0, len(result.function_list))  # Function should be forgiven

@@ -11,7 +11,7 @@
   - [x] `unless` conditions (completed)
   - [x] `while` and `until` loops (completed)
   - [x] `for` and `foreach` loops (completed)
-  - [ ] Compound conditions with `&&` and `||`
+  - [x] Compound conditions with `&&` and `||` (completed)
   - [ ] Ternary operator `?:`
 
 ## Medium Priority (Advanced Features)

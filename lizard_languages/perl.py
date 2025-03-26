@@ -64,7 +64,7 @@ class PerlReader(CodeReader, ScriptLanguageMixIn):
 
 
 class PerlStates(CodeStateMachine):
-    _conditions = set(['if', 'elsif', 'unless', 'while', 'until', 'for', 'foreach'])
+    _conditions = set(['if', 'elsif', 'unless', 'while', 'until', 'for', 'foreach', '&&', '||', '?', 'when'])
 
     def __init__(self, context):
         super(PerlStates, self).__init__(context)
