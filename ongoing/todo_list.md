@@ -1,11 +1,11 @@
 # TODO List for Perl Language Support
 
 ## High Priority (Basic Function and Control Flow)
-- [ ] Test basic function variations
+- [x] Test basic function variations
   - [x] Package methods (e.g. `Package::method`) (completed)
   - [x] Methods with attributes (e.g. `sub method :attr`) (completed)
   - [x] Anonymous subroutines (completed)
-  - [ ] One-liner functions
+  - [x] One-liner functions (completed)
 - [ ] Test core control structures
   - [ ] `if-elsif-else` chains
   - [ ] `unless` conditions
@@ -35,8 +35,3 @@
   - [ ] `eval` blocks
   - [ ] `try-catch` like patterns
 - [ ] Test POD documentation impact on parsing
-
-## Documentation
-- [ ] Document all supported Perl syntax features
-- [ ] Add examples for each supported construct
-- [ ] Update language specification 

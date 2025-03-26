@@ -164,6 +164,15 @@ class PerlStates(CodeStateMachine):
         elif token == ':':
             self.in_attribute = True
         elif token == ';':
+            # Forward declaration like "sub func_name;"
+            if self.function_name:
+                full_name = self.function_name
+                if self.package_name:
+                    full_name = f"{self.package_name}::{self.function_name}"
+                self.context.try_new_function(full_name)
+                self.context.confirm_new_function()
+                # Empty function body
+                self.context.end_of_function()
             self.next(self._state_global)
         elif token == 'sub':
             # Handle anonymous subroutine like 'callback(sub { ... })'
@@ -200,6 +209,9 @@ class PerlStates(CodeStateMachine):
             if self.brace_count == 0:
                 self.context.end_of_function()
                 self.next(self._state_global)
+        elif token == '?':
+            # Ternary operator increases complexity
+            self.context.add_condition()
         elif token == 'sub':
             # Handle nested anonymous subroutines
             self.anonymous_count += 1

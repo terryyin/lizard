@@ -69,6 +69,36 @@ class TestPerl(unittest.TestCase):
                          if f.name == 'AnonymousTest::$extra_anon')
         self.assertEqual(1, extra_anon.cyclomatic_complexity)
 
+    def test_perl_oneliners(self):
+        result = analyze_file(os.path.join(os.path.dirname(__file__), "testdata/perl_oneliners.pl"))
+        
+        function_names = [f.name for f in result.function_list]
+        self.assertEqual(6, len(result.function_list), f"Found functions: {function_names}")
+        
+        # Functions should be properly named with their package
+        simple = next(f for f in result.function_list if f.name == 'OneLinerTest::simple_oneliner')
+        self.assertEqual(1, simple.cyclomatic_complexity)
+        
+        # Function with parameter
+        param = next(f for f in result.function_list if f.name == 'OneLinerTest::param_oneliner')
+        self.assertEqual(1, param.cyclomatic_complexity)
+        
+        # One-liner with condition should have higher complexity (1 + 2 operator characters)
+        condition = next(f for f in result.function_list if f.name == 'OneLinerTest::condition_oneliner')
+        self.assertEqual(3, condition.cyclomatic_complexity)  # 1 base + 1 for ? + 1 for :
+        
+        # Multi-statement should maintain complexity 1
+        multi = next(f for f in result.function_list if f.name == 'OneLinerTest::multi_statement_oneliner')
+        self.assertEqual(1, multi.cyclomatic_complexity)
+        
+        # Package switch should work with one-liners
+        pkg = next(f for f in result.function_list if f.name == 'AnotherPackage::pkg_oneliner')
+        self.assertEqual(1, pkg.cyclomatic_complexity)
+        
+        # Forward declaration should be recognized
+        empty = next(f for f in result.function_list if f.name == 'OneLinerTest::empty_oneliner')
+        self.assertEqual(1, empty.cyclomatic_complexity)
+
     def test_perl_forgive_comment(self):
         result = analyze_file(os.path.join(os.path.dirname(__file__), "testdata/perl_forgive.pl"))
         self.assertEqual(0, len(result.function_list))  # Function should be forgiven
