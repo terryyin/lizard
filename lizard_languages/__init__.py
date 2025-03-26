@@ -24,6 +24,7 @@ from .solidity import SolidityReader
 from .jsx import JSXReader
 from .tsx import TSXReader
 from .vue import VueReader
+from .perl import PerlReader
 
 
 def languages():
@@ -52,6 +53,7 @@ def languages():
         JSXReader,
         TSXReader,
         VueReader,
+        PerlReader,
     ]
 
 
