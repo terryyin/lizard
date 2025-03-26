@@ -402,6 +402,32 @@ class TestPerl(unittest.TestCase):
         complex_case = next(f for f in result.function_list if f.name == 'GivenWhenTest::given_when_complex')
         self.assertEqual(8, complex_case.cyclomatic_complexity)
 
+    def test_perl_do_while(self):
+        result = analyze_file(os.path.join(os.path.dirname(__file__), "testdata/perl_do_while.pl"))
+        
+        function_names = [f.name for f in result.function_list]
+        self.assertEqual(5, len(result.function_list), f"Found functions: {function_names}")
+        
+        # Simple do-while should have complexity 3 (1 base + 1 do + 1 while condition)
+        simple = next(f for f in result.function_list if f.name == 'DoWhileTest::simple_do_while')
+        self.assertEqual(3, simple.cyclomatic_complexity)
+        
+        # Do-while with complex condition should have complexity 4 (1 base + 1 do + 2 operators: > and &&)
+        complex_do = next(f for f in result.function_list if f.name == 'DoWhileTest::complex_do_while')
+        self.assertEqual(4, complex_do.cyclomatic_complexity)
+        
+        # Nested do-while loops should have complexity 5 (1 base + 2 do + 2 while conditions)
+        nested = next(f for f in result.function_list if f.name == 'DoWhileTest::nested_do_while')
+        self.assertEqual(5, nested.cyclomatic_complexity)
+        
+        # Do-while with if inside should have complexity 4 (1 base + 1 do + 1 while + 1 if)
+        with_if = next(f for f in result.function_list if f.name == 'DoWhileTest::do_while_with_if')
+        self.assertEqual(4, with_if.cyclomatic_complexity)
+        
+        # Do-while with control flow should have complexity 5 (1 base + 1 do + 1 while + 2 conditions: next if, last if)
+        control = next(f for f in result.function_list if f.name == 'DoWhileTest::do_while_with_control')
+        self.assertEqual(5, control.cyclomatic_complexity)
+
     def test_perl_forgive_comment(self):
         result = analyze_file(os.path.join(os.path.dirname(__file__), "testdata/perl_forgive.pl"))
         self.assertEqual(0, len(result.function_list))  # Function should be forgiven

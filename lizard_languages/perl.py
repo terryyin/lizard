@@ -19,7 +19,7 @@ class PerlReader(CodeReader, ScriptLanguageMixIn):
 
     ext = ['pl', 'pm']
     language_names = ['perl']
-    _conditions = set(['if', 'elsif', 'unless', 'while', 'until', 'for', 'foreach', '&&', '||', '?', ':', 'when', 'given', 'default'])
+    _conditions = set(['if', 'elsif', 'unless', 'while', 'until', 'for', 'foreach', '&&', '||', '?', ':', 'when', 'given', 'default', 'do'])
 
     def __init__(self, context):
         super(PerlReader, self).__init__(context)
@@ -64,7 +64,7 @@ class PerlReader(CodeReader, ScriptLanguageMixIn):
 
 
 class PerlStates(CodeStateMachine):
-    _conditions = set(['if', 'elsif', 'unless', 'while', 'until', 'for', 'foreach', '&&', '||', '?', ':', 'when', 'given', 'default'])
+    _conditions = set(['if', 'elsif', 'unless', 'while', 'until', 'for', 'foreach', '&&', '||', '?', ':', 'when', 'given', 'default', 'do'])
 
     def __init__(self, context):
         super(PerlStates, self).__init__(context)
