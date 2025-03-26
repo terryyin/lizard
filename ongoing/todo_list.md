@@ -10,7 +10,7 @@
   - [x] `if-elsif-else` chains (completed)
   - [x] `unless` conditions (completed)
   - [x] `while` and `until` loops (completed)
-  - [ ] `for` and `foreach` loops
+  - [x] `for` and `foreach` loops (completed)
   - [ ] Compound conditions with `&&` and `||`
   - [ ] Ternary operator `?:`
 

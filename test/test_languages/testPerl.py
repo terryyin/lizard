@@ -181,6 +181,40 @@ class TestPerl(unittest.TestCase):
         while_with_if = next(f for f in result.function_list if f.name == 'LoopTest::while_with_if')
         self.assertEqual(3, while_with_if.cyclomatic_complexity)
 
+    def test_perl_for_foreach_loops(self):
+        result = analyze_file(os.path.join(os.path.dirname(__file__), "testdata/perl_control_for.pl"))
+        
+        function_names = [f.name for f in result.function_list]
+        self.assertEqual(7, len(result.function_list), f"Found functions: {function_names}")
+        
+        # C-style for loop should have complexity 2 (1 base + 1 loop condition)
+        c_style_for = next(f for f in result.function_list if f.name == 'ForLoopTest::c_style_for')
+        self.assertEqual(2, c_style_for.cyclomatic_complexity)
+        
+        # For loop with complex condition should have complexity 3 (1 base + 2 operators: < and &&)
+        for_complex = next(f for f in result.function_list if f.name == 'ForLoopTest::for_complex_condition')
+        self.assertEqual(3, for_complex.cyclomatic_complexity)
+        
+        # Nested for loops should have complexity 3 (1 base + 2 for loops)
+        nested_for = next(f for f in result.function_list if f.name == 'ForLoopTest::nested_for')
+        self.assertEqual(3, nested_for.cyclomatic_complexity)
+        
+        # Simple foreach should have complexity 2 (1 base + 1 loop)
+        simple_foreach = next(f for f in result.function_list if f.name == 'ForLoopTest::simple_foreach_array')
+        self.assertEqual(2, simple_foreach.cyclomatic_complexity)
+        
+        # Foreach with implicit variable should have complexity 2 (1 base + 1 loop)
+        foreach_implicit = next(f for f in result.function_list if f.name == 'ForLoopTest::foreach_implicit')
+        self.assertEqual(2, foreach_implicit.cyclomatic_complexity)
+        
+        # Foreach with hash should have complexity 2 (1 base + 1 loop)
+        foreach_hash = next(f for f in result.function_list if f.name == 'ForLoopTest::foreach_hash')
+        self.assertEqual(2, foreach_hash.cyclomatic_complexity)
+        
+        # For loop with control flow should have complexity 4 (1 base + 1 for + 2 conditions: next if, last if)
+        for_control = next(f for f in result.function_list if f.name == 'ForLoopTest::for_with_control_flow')
+        self.assertEqual(4, for_control.cyclomatic_complexity)
+
     def test_perl_forgive_comment(self):
         result = analyze_file(os.path.join(os.path.dirname(__file__), "testdata/perl_forgive.pl"))
         self.assertEqual(0, len(result.function_list))  # Function should be forgiven
