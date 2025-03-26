@@ -9,7 +9,7 @@
 - [ ] Test core control structures
   - [x] `if-elsif-else` chains (completed)
   - [x] `unless` conditions (completed)
-  - [ ] `while` and `until` loops
+  - [x] `while` and `until` loops (completed)
   - [ ] `for` and `foreach` loops
   - [ ] Compound conditions with `&&` and `||`
   - [ ] Ternary operator `?:`

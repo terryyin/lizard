@@ -151,6 +151,36 @@ class TestPerl(unittest.TestCase):
         unless_multi = next(f for f in result.function_list if f.name == 'UnlessTest::unless_multi')
         self.assertEqual(3, unless_multi.cyclomatic_complexity)
 
+    def test_perl_while_until_loops(self):
+        result = analyze_file(os.path.join(os.path.dirname(__file__), "testdata/perl_control_loops.pl"))
+        
+        function_names = [f.name for f in result.function_list]
+        self.assertEqual(6, len(result.function_list), f"Found functions: {function_names}")
+        
+        # Simple while should have complexity 2 (1 base + 1 condition)
+        simple_while = next(f for f in result.function_list if f.name == 'LoopTest::simple_while')
+        self.assertEqual(2, simple_while.cyclomatic_complexity)
+        
+        # While with compound condition should have complexity 3 (1 base + 2 operators: < and &&)
+        while_condition = next(f for f in result.function_list if f.name == 'LoopTest::while_condition')
+        self.assertEqual(3, while_condition.cyclomatic_complexity)
+        
+        # Nested while loops should have complexity 3 (1 base + 2 while statements)
+        nested_while = next(f for f in result.function_list if f.name == 'LoopTest::nested_while')
+        self.assertEqual(3, nested_while.cyclomatic_complexity)
+        
+        # Simple until should have complexity 2 (1 base + 1 condition)
+        simple_until = next(f for f in result.function_list if f.name == 'LoopTest::simple_until')
+        self.assertEqual(2, simple_until.cyclomatic_complexity)
+        
+        # Until with complex condition should have complexity 3 (1 base + 2 operators: >= and ||)
+        until_condition = next(f for f in result.function_list if f.name == 'LoopTest::until_condition')
+        self.assertEqual(3, until_condition.cyclomatic_complexity)
+        
+        # While with an if inside should have complexity 3 (1 base + 1 while + 1 if)
+        while_with_if = next(f for f in result.function_list if f.name == 'LoopTest::while_with_if')
+        self.assertEqual(3, while_with_if.cyclomatic_complexity)
+
     def test_perl_forgive_comment(self):
         result = analyze_file(os.path.join(os.path.dirname(__file__), "testdata/perl_forgive.pl"))
         self.assertEqual(0, len(result.function_list))  # Function should be forgiven
