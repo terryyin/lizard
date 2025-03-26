@@ -99,6 +99,32 @@ class TestPerl(unittest.TestCase):
         empty = next(f for f in result.function_list if f.name == 'OneLinerTest::empty_oneliner')
         self.assertEqual(1, empty.cyclomatic_complexity)
 
+    def test_perl_if_elsif_else_chains(self):
+        result = analyze_file(os.path.join(os.path.dirname(__file__), "testdata/perl_control_if.pl"))
+        
+        function_names = [f.name for f in result.function_list]
+        self.assertEqual(5, len(result.function_list), f"Found functions: {function_names}")
+        
+        # Simple if should have complexity 2 (1 base + 1 condition)
+        simple_if = next(f for f in result.function_list if f.name == 'ControlTest::simple_if')
+        self.assertEqual(2, simple_if.cyclomatic_complexity)
+        
+        # If-else should have complexity 2 (1 base + 1 condition)
+        if_else = next(f for f in result.function_list if f.name == 'ControlTest::if_else')
+        self.assertEqual(2, if_else.cyclomatic_complexity)
+        
+        # If-elsif-else should have complexity 3 (1 base + 2 conditions)
+        if_elsif_else = next(f for f in result.function_list if f.name == 'ControlTest::if_elsif_else')
+        self.assertEqual(3, if_elsif_else.cyclomatic_complexity)
+        
+        # Multiple elsif blocks should have complexity 5 (1 base + 4 conditions)
+        multi_elsif = next(f for f in result.function_list if f.name == 'ControlTest::multi_elsif')
+        self.assertEqual(5, multi_elsif.cyclomatic_complexity)
+        
+        # Nested if statements should have complexity 4 (1 base + 3 conditions)
+        nested_if = next(f for f in result.function_list if f.name == 'ControlTest::nested_if')
+        self.assertEqual(4, nested_if.cyclomatic_complexity)
+
     def test_perl_forgive_comment(self):
         result = analyze_file(os.path.join(os.path.dirname(__file__), "testdata/perl_forgive.pl"))
         self.assertEqual(0, len(result.function_list))  # Function should be forgiven

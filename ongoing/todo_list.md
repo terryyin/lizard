@@ -7,7 +7,7 @@
   - [x] Anonymous subroutines (completed)
   - [x] One-liner functions (completed)
 - [ ] Test core control structures
-  - [ ] `if-elsif-else` chains
+  - [x] `if-elsif-else` chains (completed)
   - [ ] `unless` conditions
   - [ ] `while` and `until` loops
   - [ ] `for` and `foreach` loops
@@ -35,3 +35,8 @@
   - [ ] `eval` blocks
   - [ ] `try-catch` like patterns
 - [ ] Test POD documentation impact on parsing
+
+## Documentation
+- [ ] Document all supported Perl syntax features
+- [ ] Add examples for each supported construct
+- [ ] Update language specification
