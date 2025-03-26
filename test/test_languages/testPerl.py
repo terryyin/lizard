@@ -11,6 +11,18 @@ class TestPerl(unittest.TestCase):
         self.assertEqual('sub_with_complexity', result.function_list[0].name)
         self.assertEqual(2, result.function_list[0].cyclomatic_complexity)
 
+    def test_perl_package_methods(self):
+        result = analyze_file(os.path.join(os.path.dirname(__file__), "testdata/perl_package.pl"))
+        self.assertEqual(2, len(result.function_list))
+        
+        # Test first method
+        method1 = next(f for f in result.function_list if f.name == 'MyPackage::my_method')
+        self.assertEqual(3, method1.cyclomatic_complexity)  # 1 + 2 conditions (if, elsif)
+        
+        # Test second method
+        method2 = next(f for f in result.function_list if f.name == 'MyPackage::another_method')
+        self.assertEqual(1, method2.cyclomatic_complexity)
+
     def test_perl_forgive_comment(self):
         result = analyze_file(os.path.join(os.path.dirname(__file__), "testdata/perl_forgive.pl"))
         self.assertEqual(0, len(result.function_list))  # Function should be forgiven

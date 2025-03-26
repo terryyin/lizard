@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.17.21
+
+Add Perl support.
+
 ## 1.17.19
 
 Bug fixes.

@@ -69,11 +69,14 @@ class PerlStates(CodeStateMachine):
     def __init__(self, context):
         super(PerlStates, self).__init__(context)
         self.function_name = ''
+        self.package_name = ''
         self.brace_count = 0
         self._state = self._state_global
 
     def _state_global(self, token):
-        if token == 'sub':
+        if token == 'package':
+            self.next(self._state_package_dec)
+        elif token == 'sub':
             self.function_name = ''
             self.next(self._state_function_dec)
         elif token == '{':
@@ -81,11 +84,19 @@ class PerlStates(CodeStateMachine):
         elif token == '}':
             self.brace_count -= 1
 
+    def _state_package_dec(self, token):
+        if not token.isspace():
+            self.package_name = token
+            self.next(self._state_global)
+
     def _state_function_dec(self, token):
         if token == '{':
             self.brace_count = 1
             if self.function_name:
-                self.context.try_new_function(self.function_name)
+                full_name = self.function_name
+                if self.package_name:
+                    full_name = f"{self.package_name}::{self.function_name}"
+                self.context.try_new_function(full_name)
                 self.context.confirm_new_function()
             self.next(self._state_function_body)
         elif token == ';':
