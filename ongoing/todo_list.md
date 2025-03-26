@@ -3,7 +3,7 @@
 ## High Priority (Basic Function and Control Flow)
 - [ ] Test basic function variations
   - [x] Package methods (e.g. `Package::method`) (completed)
-  - [ ] Methods with attributes (e.g. `sub method :attr`)
+  - [x] Methods with attributes (e.g. `sub method :attr`) (completed)
   - [ ] Anonymous subroutines
   - [ ] One-liner functions
 - [ ] Test core control structures

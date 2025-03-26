@@ -23,6 +23,22 @@ class TestPerl(unittest.TestCase):
         method2 = next(f for f in result.function_list if f.name == 'MyPackage::another_method')
         self.assertEqual(1, method2.cyclomatic_complexity)
 
+    def test_perl_method_attributes(self):
+        result = analyze_file(os.path.join(os.path.dirname(__file__), "testdata/perl_attributes.pl"))
+        self.assertEqual(3, len(result.function_list))
+        
+        # Test method with single attribute
+        method1 = next(f for f in result.function_list if f.name == 'TestAttributes::method_with_attr')
+        self.assertEqual(1, method1.cyclomatic_complexity)
+        
+        # Test method with multiple attributes
+        method2 = next(f for f in result.function_list if f.name == 'TestAttributes::lvalue_method')
+        self.assertEqual(1, method2.cyclomatic_complexity)
+        
+        # Test method with attribute and conditions
+        method3 = next(f for f in result.function_list if f.name == 'TestAttributes::complex_method')
+        self.assertEqual(3, method3.cyclomatic_complexity)  # 1 + 2 conditions (if, elsif)
+
     def test_perl_forgive_comment(self):
         result = analyze_file(os.path.join(os.path.dirname(__file__), "testdata/perl_forgive.pl"))
         self.assertEqual(0, len(result.function_list))  # Function should be forgiven

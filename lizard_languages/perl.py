@@ -71,6 +71,7 @@ class PerlStates(CodeStateMachine):
         self.function_name = ''
         self.package_name = ''
         self.brace_count = 0
+        self.in_attribute = False
         self._state = self._state_global
 
     def _state_global(self, token):
@@ -99,10 +100,16 @@ class PerlStates(CodeStateMachine):
                 self.context.try_new_function(full_name)
                 self.context.confirm_new_function()
             self.next(self._state_function_body)
+        elif token == ':':
+            self.in_attribute = True
         elif token == ';':
             self.next(self._state_global)
         elif not token.isspace():
-            self.function_name = token
+            if not self.in_attribute:
+                self.function_name = token
+            else:
+                # Skip attribute name
+                self.in_attribute = False
 
     def _state_function_body(self, token):
         if token == '{':
