@@ -8,7 +8,7 @@
   - [x] One-liner functions (completed)
 - [ ] Test core control structures
   - [x] `if-elsif-else` chains (completed)
-  - [ ] `unless` conditions
+  - [x] `unless` conditions (completed)
   - [ ] `while` and `until` loops
   - [ ] `for` and `foreach` loops
   - [ ] Compound conditions with `&&` and `||`

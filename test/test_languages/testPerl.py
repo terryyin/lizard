@@ -125,6 +125,32 @@ class TestPerl(unittest.TestCase):
         nested_if = next(f for f in result.function_list if f.name == 'ControlTest::nested_if')
         self.assertEqual(4, nested_if.cyclomatic_complexity)
 
+    def test_perl_unless_conditions(self):
+        result = analyze_file(os.path.join(os.path.dirname(__file__), "testdata/perl_control_unless.pl"))
+        
+        function_names = [f.name for f in result.function_list]
+        self.assertEqual(5, len(result.function_list), f"Found functions: {function_names}")
+        
+        # Simple unless should have complexity 2 (1 base + 1 condition)
+        simple_unless = next(f for f in result.function_list if f.name == 'UnlessTest::simple_unless')
+        self.assertEqual(2, simple_unless.cyclomatic_complexity)
+        
+        # Unless-else should have complexity 2 (1 base + 1 condition)
+        unless_else = next(f for f in result.function_list if f.name == 'UnlessTest::unless_else')
+        self.assertEqual(2, unless_else.cyclomatic_complexity)
+        
+        # Unless with complex condition should have complexity 3 (1 base + 2 operators: && and unless)
+        unless_complex = next(f for f in result.function_list if f.name == 'UnlessTest::unless_complex')
+        self.assertEqual(3, unless_complex.cyclomatic_complexity)
+        
+        # Nested unless should have complexity 3 (1 base + 2 unless statements)
+        nested_unless = next(f for f in result.function_list if f.name == 'UnlessTest::nested_unless')
+        self.assertEqual(3, nested_unless.cyclomatic_complexity)
+        
+        # Unless with if inside should have complexity 3 (1 base + 1 unless + 1 if)
+        unless_multi = next(f for f in result.function_list if f.name == 'UnlessTest::unless_multi')
+        self.assertEqual(3, unless_multi.cyclomatic_complexity)
+
     def test_perl_forgive_comment(self):
         result = analyze_file(os.path.join(os.path.dirname(__file__), "testdata/perl_forgive.pl"))
         self.assertEqual(0, len(result.function_list))  # Function should be forgiven
