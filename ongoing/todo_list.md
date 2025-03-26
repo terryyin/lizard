@@ -6,13 +6,13 @@
   - [x] Methods with attributes (e.g. `sub method :attr`) (completed)
   - [x] Anonymous subroutines (completed)
   - [x] One-liner functions (completed)
-- [ ] Test core control structures
+- [x] Test core control structures
   - [x] `if-elsif-else` chains (completed)
   - [x] `unless` conditions (completed)
   - [x] `while` and `until` loops (completed)
   - [x] `for` and `foreach` loops (completed)
   - [x] Compound conditions with `&&` and `||` (completed)
-  - [ ] Ternary operator `?:`
+  - [x] Ternary operator `?:` (completed)
 
 ## Medium Priority (Advanced Features)
 - [ ] Test block-level scoping and nested functions

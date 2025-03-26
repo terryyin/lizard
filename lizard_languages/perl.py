@@ -19,7 +19,7 @@ class PerlReader(CodeReader, ScriptLanguageMixIn):
 
     ext = ['pl', 'pm']
     language_names = ['perl']
-    _conditions = set(['if', 'elsif', 'unless', 'while', 'until', 'for', 'foreach', '&&', '||', '?', 'when'])
+    _conditions = set(['if', 'elsif', 'unless', 'while', 'until', 'for', 'foreach', '&&', '||', '?', ':', 'when'])
 
     def __init__(self, context):
         super(PerlReader, self).__init__(context)
@@ -64,7 +64,7 @@ class PerlReader(CodeReader, ScriptLanguageMixIn):
 
 
 class PerlStates(CodeStateMachine):
-    _conditions = set(['if', 'elsif', 'unless', 'while', 'until', 'for', 'foreach', '&&', '||', '?', 'when'])
+    _conditions = set(['if', 'elsif', 'unless', 'while', 'until', 'for', 'foreach', '&&', '||', '?', ':', 'when'])
 
     def __init__(self, context):
         super(PerlStates, self).__init__(context)
@@ -211,6 +211,9 @@ class PerlStates(CodeStateMachine):
                 self.next(self._state_global)
         elif token == '?':
             # Ternary operator increases complexity
+            self.context.add_condition()
+        elif token == ':':
+            # Colon part of ternary operator also increases complexity
             self.context.add_condition()
         elif token == 'sub':
             # Handle nested anonymous subroutines

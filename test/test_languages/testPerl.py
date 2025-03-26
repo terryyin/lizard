@@ -83,9 +83,9 @@ class TestPerl(unittest.TestCase):
         param = next(f for f in result.function_list if f.name == 'OneLinerTest::param_oneliner')
         self.assertEqual(1, param.cyclomatic_complexity)
         
-        # One-liner with condition should have higher complexity (1 + 2 operator characters)
+        # One-liner with condition should have higher complexity
         condition = next(f for f in result.function_list if f.name == 'OneLinerTest::condition_oneliner')
-        self.assertEqual(3, condition.cyclomatic_complexity)  # 1 base + 1 for ? + 1 for :
+        self.assertEqual(5, condition.cyclomatic_complexity)  # 1 base + 2 for ? + 2 for :
         
         # Multi-statement should maintain complexity 1
         multi = next(f for f in result.function_list if f.name == 'OneLinerTest::multi_statement_oneliner')
@@ -252,6 +252,40 @@ class TestPerl(unittest.TestCase):
         # Compound with assignment has complexity 3 (1 base + 1 while + 1 &&)
         compound_assign = next(f for f in result.function_list if f.name == 'CompoundConditionTest::compound_with_assignment')
         self.assertEqual(3, compound_assign.cyclomatic_complexity)
+
+    def test_perl_ternary_operator(self):
+        result = analyze_file(os.path.join(os.path.dirname(__file__), "testdata/perl_ternary.pl"))
+        
+        function_names = [f.name for f in result.function_list]
+        self.assertEqual(7, len(result.function_list), f"Found functions: {function_names}")
+        
+        # Simple ternary has complexity 5 (1 base + 2 ? + 2 :)
+        simple = next(f for f in result.function_list if f.name == 'TernaryTest::simple_ternary')
+        self.assertEqual(5, simple.cyclomatic_complexity)
+        
+        # Multiple ternary has complexity 9 (1 base + 4 ? + 4 :)
+        multiple = next(f for f in result.function_list if f.name == 'TernaryTest::multiple_ternary')
+        self.assertEqual(9, multiple.cyclomatic_complexity)
+        
+        # Complex ternary has complexity 11 (1 base + 4 ? + 4 : + 2 && operators)
+        complex_ternary = next(f for f in result.function_list if f.name == 'TernaryTest::complex_ternary')
+        self.assertEqual(11, complex_ternary.cyclomatic_complexity)
+        
+        # Ternary in assignment has complexity 5 (1 base + 2 ? + 2 :)
+        assignment = next(f for f in result.function_list if f.name == 'TernaryTest::ternary_in_assignment')
+        self.assertEqual(5, assignment.cyclomatic_complexity)
+        
+        # Ternary in return has complexity 5 (1 base + 2 ? + 2 :)
+        ret = next(f for f in result.function_list if f.name == 'TernaryTest::ternary_in_return')
+        self.assertEqual(5, ret.cyclomatic_complexity)
+        
+        # Ternary in function call has complexity 5 (1 base + 2 ? + 2 :)
+        call = next(f for f in result.function_list if f.name == 'TernaryTest::ternary_in_call')
+        self.assertEqual(5, call.cyclomatic_complexity)
+        
+        # Nested ternary has complexity 9 (1 base + 4 ? + 4 :)
+        nested = next(f for f in result.function_list if f.name == 'TernaryTest::nested_ternary')
+        self.assertEqual(9, nested.cyclomatic_complexity)
 
     def test_perl_forgive_comment(self):
         result = analyze_file(os.path.join(os.path.dirname(__file__), "testdata/perl_forgive.pl"))
