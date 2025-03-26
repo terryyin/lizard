@@ -70,8 +70,11 @@ class PerlStates(CodeStateMachine):
         super(PerlStates, self).__init__(context)
         self.function_name = ''
         self.package_name = ''
+        self.variable_name = ''
         self.brace_count = 0
+        self.paren_count = 0
         self.in_attribute = False
+        self.anonymous_count = 0
         self._state = self._state_global
 
     def _state_global(self, token):
@@ -84,11 +87,69 @@ class PerlStates(CodeStateMachine):
             self.brace_count += 1
         elif token == '}':
             self.brace_count -= 1
+        elif token == '(':
+            self.paren_count += 1
+            self.next(self._state_function_call)
+        elif token == '$' or token == 'my' or token == 'our' or token == 'local':
+            self.variable_name = ''
+            self.next(self._state_variable)
 
     def _state_package_dec(self, token):
         if not token.isspace():
             self.package_name = token
             self.next(self._state_global)
+
+    def _state_variable(self, token):
+        if token == '$':
+            # Skip the $ in variable names
+            pass
+        elif token == '=':
+            self.next(self._state_assignment)
+        elif token == ';':
+            self.variable_name = ''
+            self.next(self._state_global)
+        elif not token.isspace() and self.variable_name == '':
+            self.variable_name = token
+
+    def _state_assignment(self, token):
+        if token == 'sub':
+            self.next(self._state_anon_sub)
+        elif token == ';':
+            self.variable_name = ''
+            self.next(self._state_global)
+
+    def _state_function_call(self, token):
+        if token == 'sub':
+            # Inline anonymous subroutine as argument
+            self.anonymous_count += 1
+            full_name = f"<anonymous>"
+            if self.package_name:
+                full_name = f"{self.package_name}::{full_name}"
+            
+            self.context.try_new_function(full_name)
+            self.context.confirm_new_function()
+            self.next(self._state_anon_brace_search)
+        elif token == ')':
+            self.paren_count -= 1
+            if self.paren_count == 0:
+                self.next(self._state_global)
+        elif token == '(':
+            self.paren_count += 1
+
+    def _state_anon_sub(self, token):
+        if token == '{':
+            self.brace_count = 1
+            full_name = '<anonymous>'
+            # Use variable name if available for more readable function names
+            if self.variable_name:
+                full_name = '$' + self.variable_name
+            
+            if self.package_name:
+                full_name = f"{self.package_name}::{full_name}"
+            
+            self.context.try_new_function(full_name)
+            self.context.confirm_new_function()
+            self.next(self._state_function_body)
 
     def _state_function_dec(self, token):
         if token == '{':
@@ -104,12 +165,32 @@ class PerlStates(CodeStateMachine):
             self.in_attribute = True
         elif token == ';':
             self.next(self._state_global)
+        elif token == 'sub':
+            # Handle anonymous subroutine like 'callback(sub { ... })'
+            self.anonymous_count += 1
+            full_name = f"<anonymous>"
+            if self.package_name:
+                full_name = f"{self.package_name}::{full_name}"
+            self.context.try_new_function(full_name)
+            self.context.confirm_new_function()
+            self.next(self._state_anon_brace_search)
         elif not token.isspace():
             if not self.in_attribute:
                 self.function_name = token
             else:
                 # Skip attribute name
                 self.in_attribute = False
+
+    def _state_anon_brace_search(self, token):
+        if token == '{':
+            self.brace_count = 1
+            self.next(self._state_function_body)
+        elif token == '(':
+            self.paren_count += 1
+        elif token == ')':
+            self.paren_count -= 1
+            if self.paren_count == 0:
+                self.next(self._state_global)
 
     def _state_function_body(self, token):
         if token == '{':
@@ -118,4 +199,53 @@ class PerlStates(CodeStateMachine):
             self.brace_count -= 1
             if self.brace_count == 0:
                 self.context.end_of_function()
-                self.next(self._state_global) 
+                self.next(self._state_global)
+        elif token == 'sub':
+            # Handle nested anonymous subroutines
+            self.anonymous_count += 1
+            anon_name = f"<anonymous>"
+            if self.package_name:
+                anon_name = f"{self.package_name}::{anon_name}"
+            self.context.add_condition()  # Count sub as a condition as it creates a code branch
+        elif token == '(':
+            # Track function calls inside function body
+            self.paren_count += 1
+            self.next(self._state_nested_call)
+
+    def _state_nested_call(self, token):
+        if token == 'sub':
+            # Inline anonymous subroutine as argument
+            self.anonymous_count += 1
+            full_name = f"<anonymous>"
+            if self.package_name:
+                full_name = f"{self.package_name}::{full_name}"
+            
+            self.context.try_new_function(full_name)
+            self.context.confirm_new_function()
+            self.next(self._state_nested_anon_search)
+        elif token == ')':
+            self.paren_count -= 1
+            if self.paren_count == 0:
+                self.next(self._state_function_body)
+        elif token == '(':
+            self.paren_count += 1
+
+    def _state_nested_anon_search(self, token):
+        if token == '{':
+            self.brace_count += 1
+            self.next(self._state_nested_anon_body)
+        elif token == '(':
+            self.paren_count += 1
+        elif token == ')':
+            self.paren_count -= 1
+            if self.paren_count == 0:
+                self.next(self._state_function_body)
+
+    def _state_nested_anon_body(self, token):
+        if token == '{':
+            self.brace_count += 1
+        elif token == '}':
+            self.brace_count -= 1
+            if self.brace_count == 1:  # Back to outer function level
+                self.context.end_of_function()
+                self.next(self._state_function_body) 

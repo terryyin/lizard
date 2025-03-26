@@ -4,7 +4,7 @@
 - [ ] Test basic function variations
   - [x] Package methods (e.g. `Package::method`) (completed)
   - [x] Methods with attributes (e.g. `sub method :attr`) (completed)
-  - [ ] Anonymous subroutines
+  - [x] Anonymous subroutines (completed)
   - [ ] One-liner functions
 - [ ] Test core control structures
   - [ ] `if-elsif-else` chains

@@ -39,6 +39,36 @@ class TestPerl(unittest.TestCase):
         method3 = next(f for f in result.function_list if f.name == 'TestAttributes::complex_method')
         self.assertEqual(3, method3.cyclomatic_complexity)  # 1 + 2 conditions (if, elsif)
 
+    def test_perl_anonymous_subroutines(self):
+        result = analyze_file(os.path.join(os.path.dirname(__file__), "testdata/perl_anonymous.pl"))
+        
+        function_names = [f.name for f in result.function_list]
+        self.assertEqual(5, len(result.function_list), f"Found functions: {function_names}")
+        
+        # Regular named function
+        named_func = next(f for f in result.function_list if f.name == 'AnonymousTest::with_callback')
+        self.assertEqual(1, named_func.cyclomatic_complexity)
+        
+        # Check simple anonymous sub
+        simple_anon = next(f for f in result.function_list 
+                        if f.name == 'AnonymousTest::$simple_anon')
+        self.assertEqual(1, simple_anon.cyclomatic_complexity)
+        
+        # Check complex anonymous sub with conditionals
+        complex_anon = next(f for f in result.function_list 
+                         if f.name == 'AnonymousTest::$complex_anon')
+        self.assertEqual(3, complex_anon.cyclomatic_complexity)  # 1 + 2 conditions (if, elsif)
+        
+        # Check callback anonymous sub
+        callback_sub = next(f for f in result.function_list 
+                          if f.name == 'AnonymousTest::$callback_sub')
+        self.assertEqual(1, callback_sub.cyclomatic_complexity)
+        
+        # Check extra anonymous sub
+        extra_anon = next(f for f in result.function_list 
+                         if f.name == 'AnonymousTest::$extra_anon')
+        self.assertEqual(1, extra_anon.cyclomatic_complexity)
+
     def test_perl_forgive_comment(self):
         result = analyze_file(os.path.join(os.path.dirname(__file__), "testdata/perl_forgive.pl"))
         self.assertEqual(0, len(result.function_list))  # Function should be forgiven
