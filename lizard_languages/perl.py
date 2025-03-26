@@ -19,7 +19,7 @@ class PerlReader(CodeReader, ScriptLanguageMixIn):
 
     ext = ['pl', 'pm']
     language_names = ['perl']
-    _conditions = set(['if', 'elsif', 'unless', 'while', 'until', 'for', 'foreach', '&&', '||', '?', ':', 'when'])
+    _conditions = set(['if', 'elsif', 'unless', 'while', 'until', 'for', 'foreach', '&&', '||', '?', ':', 'when', 'given', 'default'])
 
     def __init__(self, context):
         super(PerlReader, self).__init__(context)
@@ -64,7 +64,7 @@ class PerlReader(CodeReader, ScriptLanguageMixIn):
 
 
 class PerlStates(CodeStateMachine):
-    _conditions = set(['if', 'elsif', 'unless', 'while', 'until', 'for', 'foreach', '&&', '||', '?', ':', 'when'])
+    _conditions = set(['if', 'elsif', 'unless', 'while', 'until', 'for', 'foreach', '&&', '||', '?', ':', 'when', 'given', 'default'])
 
     def __init__(self, context):
         super(PerlStates, self).__init__(context)
@@ -216,16 +216,65 @@ class PerlStates(CodeStateMachine):
             # Colon part of ternary operator also increases complexity
             self.context.add_condition()
         elif token == 'sub':
-            # Handle nested anonymous subroutines
-            self.anonymous_count += 1
-            anon_name = f"<anonymous>"
-            if self.package_name:
-                anon_name = f"{self.package_name}::{anon_name}"
-            self.context.add_condition()  # Count sub as a condition as it creates a code branch
+            # Check if it's a nested named subroutine or anonymous
+            self.next(self._state_nested_sub_dec)
         elif token == '(':
             # Track function calls inside function body
             self.paren_count += 1
             self.next(self._state_nested_call)
+
+    def _state_nested_sub_dec(self, token):
+        if token.isspace():
+            return
+        elif token == '{':
+            # Anonymous sub
+            self.brace_count += 1
+            self.anonymous_count += 1
+            anon_name = f"<anonymous>"
+            if self.package_name:
+                anon_name = f"{self.package_name}::{anon_name}"
+            self.context.add_condition()  # Count sub as a condition
+            self.next(self._state_function_body)
+        else:
+            # Named nested sub
+            nested_func_name = token
+            full_name = nested_func_name
+            if self.package_name:
+                full_name = f"{self.package_name}::{nested_func_name}"
+            
+            # Save current function state
+            saved_func_context = self.context
+            
+            # Create a new function for the nested sub
+            self.context.try_new_function(full_name)
+            self.context.confirm_new_function()
+            self.next(self._state_nested_named_sub_brace_search)
+
+    def _state_nested_named_sub_brace_search(self, token):
+        if token == '{':
+            self.brace_count = 1
+            self.next(self._state_nested_sub_body)
+        elif token.isspace():
+            return
+        elif token == ':':
+            # Handle attributes in nested sub
+            self.in_attribute = True
+            return
+        elif token == ';':
+            # Forward declaration
+            self.context.end_of_function()
+            self.next(self._state_function_body)
+
+    def _state_nested_sub_body(self, token):
+        if token == '{':
+            self.brace_count += 1
+        elif token == '}':
+            self.brace_count -= 1
+            if self.brace_count == 0:
+                # End the nested function
+                self.context.end_of_function()
+                # Return to parent function
+                self.next(self._state_function_body)
 
     def _state_nested_call(self, token):
         if token == 'sub':

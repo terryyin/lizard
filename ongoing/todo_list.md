@@ -15,12 +15,12 @@
   - [x] Ternary operator `?:` (completed)
 
 ## Medium Priority (Advanced Features)
-- [ ] Test block-level scoping and nested functions
-  - [ ] Nested subroutines
-  - [ ] Block-level variable scoping
-  - [ ] Package-level scoping
+- [x] Test block-level scoping and nested functions
+  - [x] Nested subroutines (completed)
+  - [x] Block-level variable scoping (completed)
+  - [x] Package-level scoping (completed)
 - [ ] Test special control structures
-  - [ ] `given-when` constructs
+  - [x] `given-when` constructs (completed)
   - [ ] `do-while` loops
   - [ ] Regular expression conditions
   - [ ] Method chaining
