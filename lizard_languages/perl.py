@@ -174,6 +174,11 @@ class PerlStates(CodeStateMachine):
                 # Empty function body
                 self.context.end_of_function()
             self.next(self._state_global)
+        elif token == '(':
+            # Function with parameter prototype like "sub fetch($)"
+            # Save the current function name and look for closing paren
+            self.paren_count = 1
+            self.next(self._state_function_prototype)
         elif token == 'sub':
             # Handle anonymous subroutine like 'callback(sub { ... })'
             self.anonymous_count += 1
@@ -189,6 +194,16 @@ class PerlStates(CodeStateMachine):
             else:
                 # Skip attribute name
                 self.in_attribute = False
+
+    def _state_function_prototype(self, token):
+        # Handle parameter prototypes after function name: sub fetch($) { ... }
+        if token == ')':
+            self.paren_count -= 1
+            if self.paren_count == 0:
+                # Return to function declaration state to handle the opening brace
+                self.next(self._state_function_dec)
+        elif token == '(':
+            self.paren_count += 1
 
     def _state_anon_brace_search(self, token):
         if token == '{':
