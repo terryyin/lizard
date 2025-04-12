@@ -1,5 +1,11 @@
 # Change Log
 
+## 1.17.24
+
+Added support for `#lizard forgive global` to suppress warnings for all code outside of functions, for languages like Python, Perl, etc, that allow global code.
+
+`#lizard forgive` at the global level will suppress warnings for all code after it.
+
 ## 1.17.23
 
 Bug fixes.
