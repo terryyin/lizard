@@ -418,6 +418,7 @@ class FileInfoBuilder(object):
         self.fileinfo = FileInformation(filename, 0)
         self.current_line = 0
         self.forgive = False
+        self.forgive_global = False
         self.newline = True
         self.global_pseudo_function = FunctionInfo('*global*', filename, 0)
         self.current_function = self.global_pseudo_function
@@ -481,7 +482,8 @@ class FileInfoBuilder(object):
 
     def end_of_function(self):
         if not self.forgive:
-            self.fileinfo.function_list.append(self.current_function)
+            if self.current_function.name != '*global*' or not self.forgive_global:
+                self.fileinfo.function_list.append(self.current_function)
         self.forgive = False
         if self.stacked_functions:
             self.current_function = self.stacked_functions.pop()
@@ -501,7 +503,9 @@ def comment_counter(tokens, reader):
         if comment is not None:
             for _ in comment.splitlines()[1:]:
                 yield '\n'
-            if comment.strip().startswith("#lizard forgive"):
+            if comment.strip().startswith("#lizard forgive global"):
+                reader.context.forgive_global = True
+            elif comment.strip().startswith("#lizard forgive"):
                 reader.context.forgive = True
             if "GENERATED CODE" in comment:
                 return

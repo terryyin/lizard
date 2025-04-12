@@ -303,13 +303,28 @@ Options in Comments
 -------------------
 
 You can use options in the comments of the source code to change the
-behavior of lizard. By putting "#lizard forgives" inside a function or
-before a function it will suppress the warning for that function.
+behavior of lizard. There are two types of forgiveness comments:
+
+1. Function forgiveness: Put "#lizard forgives" inside a function or before a function to suppress warnings for that function.
 
 ::
 
    int foo() {
-       // #lizard forgives the complexity
+       // #lizard forgives
+       ...
+   }
+
+2. Global code forgiveness: Put "#lizard forgive global" before global code to suppress warnings for all code outside of functions.
+
+::
+
+   // #lizard forgive global
+   int global_var = 0;
+   if (condition) {  // This complexity won't be counted
+       ...
+   }
+
+   int foo() {  // Functions are still counted normally
        ...
    }
 

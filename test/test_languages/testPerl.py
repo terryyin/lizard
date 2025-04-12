@@ -1,18 +1,63 @@
 import unittest
 from lizard import analyze_file, FileAnalyzer, get_extensions
+from ..testHelpers import get_cpp_function_list_with_extension
 import os
+from lizard_languages.code_reader import CodeReader
 
 
 class TestPerl(unittest.TestCase):
 
     def test_perl_function(self):
-        result = analyze_file(os.path.join(os.path.dirname(__file__), "testdata/perl1.pl"))
+        code = '''#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+# A simple Perl subroutine with complexity
+sub sub_with_complexity {
+    my ($param1, $param2) = @_;
+    
+    if ($param1 > 0) {
+        print "Positive\n";
+    }
+    
+    return $param1 + $param2;
+}'''
+        result = analyze_file.analyze_source_code("test.pl", code)
         self.assertEqual(1, len(result.function_list))
         self.assertEqual('sub_with_complexity', result.function_list[0].name)
         self.assertEqual(2, result.function_list[0].cyclomatic_complexity)
 
     def test_perl_package_methods(self):
-        result = analyze_file(os.path.join(os.path.dirname(__file__), "testdata/perl_package.pl"))
+        code = '''#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+package MyPackage;
+
+# A method in a package
+sub my_method {
+    my ($self, $param1) = @_;
+    
+    if ($param1 > 0) {
+        print "Positive\n";
+    }
+    elsif ($param1 < 0) {
+        print "Negative\n";
+    }
+    
+    return $param1 * 2;
+}
+
+# Another method to test multiple methods in package
+sub another_method {
+    my ($self) = @_;
+    return 42;
+}
+
+1; # End of package'''
+        result = analyze_file.analyze_source_code("test.pl", code)
         self.assertEqual(2, len(result.function_list))
         
         # Test first method
@@ -24,7 +69,43 @@ class TestPerl(unittest.TestCase):
         self.assertEqual(1, method2.cyclomatic_complexity)
 
     def test_perl_method_attributes(self):
-        result = analyze_file(os.path.join(os.path.dirname(__file__), "testdata/perl_attributes.pl"))
+        code = '''#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+package TestAttributes;
+
+# Method with a single attribute
+sub method_with_attr : method {
+    my ($self) = @_;
+    return "I'm a method";
+}
+
+# Method with multiple attributes
+sub lvalue_method : lvalue : method {
+    my ($self) = @_;
+    my $value = 42;
+    $value;  # returns lvalue
+}
+
+# Method with attribute and conditions
+sub complex_method : locked {
+    my ($self, $x) = @_;
+    
+    if ($x > 0) {
+        return "positive";
+    }
+    elsif ($x < 0) {
+        return "negative";
+    }
+    else {
+        return "zero";
+    }
+}
+
+1; # End of package'''
+        result = analyze_file.analyze_source_code("test.pl", code)
         self.assertEqual(3, len(result.function_list))
         
         # Test method with single attribute
@@ -456,11 +537,9 @@ sub complex_sub {{
                 f.write(code)
             try:
                 result = analyze_file("test.pl")
-                self.assertEqual(0, len(result.function_list), 
-                               f"Failed for comment format: {comment}")
+                self.assertEqual(0, len(result.function_list))
             finally:
-                if os.path.exists("test.pl"):
-                    os.remove("test.pl")
+                os.remove("test.pl")
 
     def test_perl_forgive_inside_sub(self):
         code = """
@@ -480,4 +559,52 @@ sub complex_sub {
             self.assertEqual(0, len(result.function_list))
         finally:
             if os.path.exists("test.pl"):
-                os.remove("test.pl") 
+                os.remove("test.pl")
+
+    def test_perl_forgive_global(self):
+        code = '''
+# Global code with complexity
+my $x = 1;
+if ($x > 0) {
+    print "Positive\\n";
+}
+elsif ($x < 0) {
+    print "Negative\\n";
+}
+else {
+    print "Zero\\n";
+}
+
+# #lizard forgive global
+# More global code with complexity
+my $y = 2;
+if ($y > 0) {
+    print "Y is positive\\n";
+}
+elsif ($y < 0) {
+    print "Y is negative\\n";
+}
+
+# This function should still be counted
+sub test_function {
+    my ($param) = @_;
+    if ($param > 0) {
+        print "Param is positive\\n";
+    }
+    elsif ($param < 0) {
+        print "Param is negative\\n";
+    }
+    else {
+        print "Param is zero\\n";
+    }
+}
+'''
+        result = analyze_file.analyze_source_code("test.pl", code)
+        
+        # Should have one function (test_function) since global code is forgiven
+        self.assertEqual(1, len(result.function_list))
+        
+        # Verify the function is the one we expect
+        function = result.function_list[0]
+        self.assertEqual("test_function", function.name)
+        self.assertEqual(3, function.cyclomatic_complexity)  # 1 base + 2 conditions (else doesn't count) 

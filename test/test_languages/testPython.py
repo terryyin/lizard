@@ -1,8 +1,10 @@
 import unittest
 import inspect
 from ..testHelpers import get_python_function_list_with_extension
+from lizard import analyze_file, FileAnalyzer, get_extensions
 from lizard_ext.lizardnd import LizardExtension as NestDepth
 from lizard_languages.python import PythonReader
+import os
 
 
 def get_python_function_list(source_code):
@@ -402,6 +404,44 @@ class Test_parser_for_Python(unittest.TestCase):
         functions = get_python_function_list(code)
         self.assertEqual(9, functions[0].cyclomatic_complexity)
         self.assertEqual(8, functions[0].max_nesting_depth)
+
+    def test_python_forgive_global(self):
+        code = '''
+# Global code with complexity
+x = 1
+if x > 0:
+    print("Positive")
+elif x < 0:
+    print("Negative")
+else:
+    print("Zero")
+
+# #lizard forgive global
+# More global code with complexity
+y = 2
+if y > 0:
+    print("Y is positive")
+elif y < 0:
+    print("Y is negative")
+
+# This function should still be counted
+def test_function(param):
+    if param > 0:
+        print("Param is positive")
+    elif param < 0:
+        print("Param is negative")
+    else:
+        print("Param is zero")
+'''
+        functions = get_python_function_list(code)
+        
+        # Should have one function (test_function) since global code is forgiven
+        self.assertEqual(1, len(functions))
+        
+        # Verify the function is the one we expect
+        function = functions[0]
+        self.assertEqual("test_function", function.name)
+        self.assertEqual(3, function.cyclomatic_complexity)  # 1 base + 2 conditions (else doesn't count)
 
 
 def top_level_function_for_test():
