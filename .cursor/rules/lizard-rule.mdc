@@ -1,6 +1,7 @@
 ---
-description: Guide for adding or modifying programming language support in Lizard
-globs: **/lizard_languages/**/*.py
+description: 
+globs: 
+alwaysApply: true
 ---
 
 # Adding Language Support to Lizard Code Analyzer

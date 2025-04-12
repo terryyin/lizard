@@ -1,6 +1,7 @@
 ---
-description: Guideline for fixing issues
+description: 
 globs: 
+alwaysApply: true
 ---
 
 # When fixing an issue (e.g. from Github issues) please:
