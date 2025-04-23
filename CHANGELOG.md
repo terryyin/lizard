@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.17.26
+
+A blank release to fix the installation issue.
+
+## 1.17.25
+
+Bug fixes. "lizard forgive" for python
+
 ## 1.17.24
 
 Added support for `#lizard forgive global` to suppress warnings for all code outside of functions, for languages like Python, Perl, etc, that allow global code.

@@ -3,4 +3,4 @@
 #
 # pylint: disable=missing-docstring,invalid-name
 
-version = "1.17.24"
+version = "1.17.26"
