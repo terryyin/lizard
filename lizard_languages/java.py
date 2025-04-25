@@ -25,13 +25,18 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
         self.class_name = None
         self.is_record = False
         self.in_record_constructor = False
+        self.in_method_body = False
 
     def _state_old_c_params(self, token):
         if token == '{':
             self._state_dec_to_imp(token)
 
     def _state_imp(self, token):
+        # When entering a function implementation, set the flag
+        self.in_method_body = True
         def callback():
+            # When exiting the function implementation, clear the flag
+            self.in_method_body = False
             self.next(self._state_global)
         self.sub_state(JavaFunctionBodyStates(self.context), callback, token)
 
@@ -103,15 +108,37 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
 class JavaFunctionBodyStates(JavaStates):
     def __init__(self, context):
         super(JavaFunctionBodyStates, self).__init__(context)
+        self.in_method_body = True
+        self.ignore_tokens = False  # Additional flag to ignore tokens that could confuse the parser
+        self.handling_dot_class = False  # Flag to handle .class token specifically
 
     @CodeStateMachine.read_inside_brackets_then("{}", "_state_dummy")
     @CodeStateMachine.read_inside_brackets_then("()", "_state_dummy")
     def _state_global(self, token):
+        # Special handling for .class token
+        if token == "." and not self.handling_dot_class:
+            self.handling_dot_class = True
+            return
+        if self.handling_dot_class:
+            self.handling_dot_class = False
+            if token == "class":
+                return  # Skip the 'class' token after a dot
+        
+        # Special handling for tokens that could confuse the parser
+        if self.ignore_tokens:
+            self.ignore_tokens = False
+            return
+            
         if token == "new":
             self.next(self._state_new)
-        self._try_start_a_class(token)
-        if self.br_count == 0:
-            self.statemachine_return()
+        else:
+            # Always try to parse class declarations, even in method bodies
+            # This ensures that local classes are properly detected
+            if self._try_start_a_class(token):
+                return
+            
+            if self.br_count == 0:
+                self.statemachine_return()
 
     def _state_dummy(self, _):
         pass

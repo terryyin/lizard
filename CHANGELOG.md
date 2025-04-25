@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.17.27
+
+Fix Java function count issue.
+
 ## 1.17.26
 
 A blank release to fix the installation issue.
