@@ -111,10 +111,19 @@ class JavaFunctionBodyStates(JavaStates):
         self.in_method_body = True
         self.ignore_tokens = False  # Additional flag to ignore tokens that could confuse the parser
         self.handling_dot_class = False  # Flag to handle .class token specifically
+        self.handling_method_ref = False  # Flag to handle method references
 
     @CodeStateMachine.read_inside_brackets_then("{}", "_state_dummy")
     @CodeStateMachine.read_inside_brackets_then("()", "_state_dummy")
     def _state_global(self, token):
+        # Handle method references (::new, ::methodName)
+        if token == "::":
+            self.handling_method_ref = True
+            return
+        if self.handling_method_ref:
+            self.handling_method_ref = False
+            return
+
         # Special handling for .class token
         if token == "." and not self.handling_dot_class:
             self.handling_dot_class = True
