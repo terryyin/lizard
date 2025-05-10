@@ -264,3 +264,98 @@ class NotebookApp {
         
         # Should not have 'foreach' as a function
         self.assertNotIn('foreach', function_names)
+
+    def test_modern_php8_features(self):
+        php_code = '''<?php
+        // Trait
+        trait Loggable {
+            public function log(string $message): void {
+                echo date('Y-m-d H:i:s') . ": $message\n";
+            }
+        }
+        
+        // Class using a trait
+        class Product {
+            use Loggable;
+            
+            // Constructor property promotion (PHP 8.0)
+            public function __construct(
+                private string $name,
+                private float $price,
+                private ?int $stock = null  // Nullable type
+            ) {
+                $this->log("Created new product: $name");
+            }
+            
+            // Arrow function (PHP 7.4)
+            public function applyDiscount(float $percent): float {
+                $calculate = fn($price, $discount) => $price * (1 - $discount/100);
+                return $calculate($this->price, $percent);
+            }
+            
+            // Union types (PHP 8.0)
+            public function getDetails(bool $includeStock = false): string|array {
+                if ($includeStock) {
+                    return [
+                        'name' => $this->name,
+                        'price' => $this->price,
+                        'stock' => $this->stock ?? 'Unknown'
+                    ];
+                }
+                return "{$this->name}: ${$this->price}";
+            }
+            
+            // Match expression (PHP 8.0)
+            public function getAvailability(): string {
+                return match(true) {
+                    $this->stock === null => 'Unknown',
+                    $this->stock <= 0 => 'Out of stock',
+                    $this->stock < 5 => 'Low stock',
+                    $this->stock >= 5 => 'In stock',
+                    default => 'Status unknown'
+                };
+            }
+            
+            // Named arguments (PHP 8.0) in a method call example
+            public function processOrder(int $quantity, bool $express = false): void {
+                $this->log(message: "Processing order for {$quantity} x {$this->name}");
+                
+                if ($express) {
+                    // Complex conditional for testing
+                    if ($quantity > 10 && $this->stock !== null && $this->stock >= $quantity) {
+                        $this->log("Express shipping approved");
+                    } else if ($quantity <= 10 || $this->stock === null) {
+                        $this->log("Standard shipping applied");
+                    }
+                }
+            }
+        }
+        
+        // Instantiation with named arguments
+        $product = new Product(
+            name: "PHP 8 Guide",
+            price: 29.99
+        );
+        ?>'''
+        
+        functions = get_php_function_list(php_code)
+        function_names = sorted(f.name for f in functions)
+        
+        # Check that all methods are detected
+        self.assertIn('Loggable::log', function_names)
+        self.assertIn('Product::__construct', function_names)
+        self.assertIn('Product::applyDiscount', function_names)
+        self.assertIn('Product::getDetails', function_names)
+        self.assertIn('Product::getAvailability', function_names)
+        self.assertIn('Product::processOrder', function_names)
+        
+        # Verify arrow function (fn) doesn't create a separate function entry
+        self.assertEqual(6, len(functions))
+        
+        # Verify cyclomatic complexity is calculated correctly for match expression
+        match_function = next(f for f in functions if f.name == 'Product::getAvailability')
+        self.assertEqual(2, match_function.cyclomatic_complexity)  # 1 (base) + 1 for match
+        
+        # Verify cyclomatic complexity for method with conditionals
+        process_order = next(f for f in functions if f.name == 'Product::processOrder')
+        self.assertEqual(7, process_order.cyclomatic_complexity)  # Current behavior shows 7 for this method

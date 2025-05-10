@@ -17,7 +17,9 @@ class PHPLanguageStates(CodeStateMachine):
         super(PHPLanguageStates, self).__init__(context)
         self.function_name = ''
         self.class_name = None
+        self.trait_name = None
         self.in_class = False
+        self.in_trait = False
         self.bracket_level = 0
         self.brace_level = 0
         self.started_function = False
@@ -25,18 +27,40 @@ class PHPLanguageStates(CodeStateMachine):
         self.last_tokens = ''
         self.is_function_declaration = False
         self.assignments = []
+        self.in_match = False
+        self.match_case_count = 0
         
     def _state_global(self, token):
         if token == 'class':
             self._state = self._class_declaration
+        elif token == 'trait':
+            self._state = self._trait_declaration
         elif token == 'function':
             self.is_function_declaration = True
             self._state = self._function_name
+        elif token == 'fn':
+            # Skip arrow functions (PHP 7.4+), don't treat them as full functions
+            pass
+        elif token == 'match':
+            self.in_match = True
+            self.match_case_count = 0
+            self.next(self._match_expression)
         elif token in ('if', 'switch', 'for', 'foreach', 'while', 'catch'):
             self.next(self._condition_expected)
         elif token in ('public', 'private', 'protected', 'static'):
             # Skip visibility modifiers
             pass
+        elif token == '=>' and self.in_match:
+            # Count each case in a match expression
+            self.match_case_count += 1
+        elif token == '}' and self.in_match:
+            # End of match expression
+            self.in_match = False
+            # Add the match cases to complexity (subtract 1 because the 'match' keyword is already counted)
+            if self.match_case_count > 0:
+                for _ in range(self.match_case_count - 1):
+                    self.context.add_condition()
+            self.match_case_count = 0
         elif token == '=':
             # Handle function assignment
             self.function_name = self.last_tokens.strip()
@@ -45,9 +69,13 @@ class PHPLanguageStates(CodeStateMachine):
             self.brace_level += 1
         elif token == '}':
             self.brace_level -= 1
-            if self.brace_level == 0 and self.in_class:
-                self.in_class = False
-                self.class_name = None
+            if self.brace_level == 0:
+                if self.in_class:
+                    self.in_class = False
+                    self.class_name = None
+                if self.in_trait:
+                    self.in_trait = False
+                    self.trait_name = None
                 
         # Update tokens
         self.last_token = token
@@ -59,6 +87,15 @@ class PHPLanguageStates(CodeStateMachine):
                 pass
             else:
                 self.last_tokens = ''
+    
+    def _trait_declaration(self, token):
+        if token and not token.isspace() and token not in ['{', '(']:
+            self.trait_name = token
+            self.in_trait = True
+            self._state = self._state_global
+        elif token == '{':
+            self.brace_level += 1
+            self._state = self._state_global
         
     def _class_declaration(self, token):
         if token and not token.isspace() and token not in ['{', '(', 'extends', 'implements']:
@@ -76,6 +113,10 @@ class PHPLanguageStates(CodeStateMachine):
                 # In class, use ClassName::methodName format
                 long_name = f"{self.class_name}::{method_name}"
                 short_name = method_name  # Store original name for compatibility with old tests
+            elif self.in_trait and self.trait_name:
+                # In trait, use TraitName::methodName format
+                long_name = f"{self.trait_name}::{method_name}"
+                short_name = method_name
             else:
                 long_name = method_name
                 short_name = method_name
@@ -87,6 +128,8 @@ class PHPLanguageStates(CodeStateMachine):
             # Anonymous function
             if self.in_class:
                 self.function_name = f"{self.class_name}::(anonymous)"
+            elif self.in_trait:
+                self.function_name = f"{self.trait_name}::(anonymous)"
             else:
                 if self.assignments and self.assignments[-1]:
                     self.function_name = self.assignments[-1]
@@ -169,6 +212,19 @@ class PHPLanguageStates(CodeStateMachine):
             if self.bracket_level == 0:
                 self._state = self._state_global
 
+    def _match_expression(self, token):
+        if token == '(':
+            self.bracket_level = 1
+            self._state = self._match_expression_continue
+            
+    def _match_expression_continue(self, token):
+        if token == '(':
+            self.bracket_level += 1
+        elif token == ')':
+            self.bracket_level -= 1
+            if self.bracket_level == 0:
+                self._state = self._state_global
+
 
 class PHPReader(CodeReader, CCppCommentsMixin):
     # pylint: disable=R0903
@@ -176,7 +232,7 @@ class PHPReader(CodeReader, CCppCommentsMixin):
     ext = ['php']
     language_names = ['php']
     _conditions = set(['if', 'elseif', 'for', 'foreach', 'while', '&&', '||', '?',
-                       'catch', 'case'])
+                       'catch', 'case', 'match'])
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
