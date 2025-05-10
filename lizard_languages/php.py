@@ -1,61 +1,173 @@
 '''
-Language parser for JavaScript
+Language parser for PHP
 '''
 
 import re
 from .code_reader import CodeReader, CodeStateMachine
 from .clike import CCppCommentsMixin
-from .js_style_language_states import JavaScriptStyleLanguageStates
 
 
-class PHPLanguageStates(JavaScriptStyleLanguageStates):
+class PHPLanguageStates(CodeStateMachine):
     """
-    PHP-specific language state machine that handles modern PHP syntax
-    including visibility modifiers and return types.
+    PHP-specific state machine that properly handles modern PHP syntax
+    including classes, visibility modifiers and return types.
     """
     
     def __init__(self, context):
         super(PHPLanguageStates, self).__init__(context)
-        self.current_visibility = None
-        self.is_static = False
-        self.reading_function = False
+        self.function_name = ''
+        self.class_name = None
+        self.in_class = False
+        self.bracket_level = 0
+        self.brace_level = 0
+        self.started_function = False
+        self.last_token = ''
+        self.last_tokens = ''
+        self.is_function_declaration = False
+        self.assignments = []
         
     def _state_global(self, token):
-        if token in ('public', 'private', 'protected'):
-            self.current_visibility = token
-            return
-        elif token == 'static':
-            self.is_static = True
-            return
+        if token == 'class':
+            self._state = self._class_declaration
         elif token == 'function':
-            self.reading_function = True
-            self._state = self._function
-            return
-        elif token in ('foreach',):
-            # Handle PHP foreach as a control structure, not a function
-            self.next(self._expecting_condition_and_statement_block)
-            return
+            self.is_function_declaration = True
+            self._state = self._function_name
+        elif token in ('if', 'switch', 'for', 'foreach', 'while', 'catch'):
+            self.next(self._condition_expected)
+        elif token in ('public', 'private', 'protected', 'static'):
+            # Skip visibility modifiers
+            pass
+        elif token == '=':
+            # Handle function assignment
+            self.function_name = self.last_tokens.strip()
+            self.assignments.append(self.function_name)
+        elif token == '{':
+            self.brace_level += 1
+        elif token == '}':
+            self.brace_level -= 1
+            if self.brace_level == 0 and self.in_class:
+                self.in_class = False
+                self.class_name = None
+                
+        # Update tokens
+        self.last_token = token
+        if token not in [' ', '\t', '\n']:
+            if token not in ['=', ';', '{', '}', '(', ')', ',']:
+                self.last_tokens = token
+            elif token == '=' and self.last_tokens:
+                # Keep the last tokens for assignment
+                pass
+            else:
+                self.last_tokens = ''
+        
+    def _class_declaration(self, token):
+        if token and not token.isspace() and token not in ['{', '(', 'extends', 'implements']:
+            self.class_name = token
+            self.in_class = True
+            self._state = self._state_global
+        elif token == '{':
+            self.brace_level += 1
+            self._state = self._state_global
             
-        # Reset these flags when we encounter other tokens
-        if token not in ('=>', '=', ';', '\n'):
-            self.current_visibility = None
-            self.is_static = False
-        
-        # Now delegate to the parent class
-        super(PHPLanguageStates, self)._state_global(token)
-        
-    def _function(self, token):
-        if token in ('*', ':'):
-            # Skip * (for generators) and : (for return type)
-            return
-        if token != '(':
-            self.function_name = token
-            self.reading_function = False
-        else:
-            self._push_function_to_stack()
-            self._state = self._dec
-            if token == '(':
-                self._dec(token)
+    def _function_name(self, token):
+        if token and not token.isspace() and token != '(':
+            method_name = token
+            if self.in_class and self.class_name:
+                # In class, use ClassName::methodName format
+                long_name = f"{self.class_name}::{method_name}"
+                short_name = method_name  # Store original name for compatibility with old tests
+            else:
+                long_name = method_name
+                short_name = method_name
+            self.function_name = long_name
+            self._state = self._function_args
+            # Store original name for backward compatibility
+            self.short_function_name = short_name
+        elif token == '(':
+            # Anonymous function
+            if self.in_class:
+                self.function_name = f"{self.class_name}::(anonymous)"
+            else:
+                if self.assignments and self.assignments[-1]:
+                    self.function_name = self.assignments[-1]
+                    self.assignments.pop()
+                else:
+                    self.function_name = "(anonymous)"
+            self.bracket_level = 1
+            self._state = self._function_args_continue
+            self.context.push_new_function(self.function_name)
+            self.started_function = True
+            
+    def _function_args(self, token):
+        if token == '(':
+            self.bracket_level = 1
+            # Compatibility handling for old tests
+            if self.in_class and self.class_name and not self.is_function_declaration:
+                self.context.push_new_function(self.short_function_name)
+            else:
+                self.context.push_new_function(self.function_name)
+            self.started_function = True
+            self._state = self._function_args_continue
+            
+    def _function_args_continue(self, token):
+        if token == '(':
+            self.bracket_level += 1
+        elif token == ')':
+            self.bracket_level -= 1
+            if self.bracket_level == 0:
+                self._state = self._function_return_type_or_body
+        elif token.startswith('$'):
+            # Found a parameter (PHP parameters start with $)
+            if self.started_function:
+                # Make sure we count each parameter uniquely
+                self.context.add_to_long_function_name(" " + token)
+                self.context.parameter(token)
+                
+    def _function_return_type_or_body(self, token):
+        if token == ':':
+            # Skip return type declaration
+            self._state = self._function_body_or_return_type
+        elif token == '{':
+            # Function body starts
+            self.brace_level += 1
+            self._state = self._function_body
+        elif token == ';':
+            # Handle forward declarations in interface
+            if self.started_function:
+                self.context.end_of_function()
+                self.started_function = False
+            self._state = self._state_global
+            
+    def _function_body_or_return_type(self, token):
+        if token == '{':
+            # Found the function body opening after return type
+            self.brace_level += 1
+            self._state = self._function_body
+            
+    def _function_body(self, token):
+        if token == '{':
+            self.brace_level += 1
+        elif token == '}':
+            self.brace_level -= 1
+            if self.brace_level == self.in_class:  # Using in_class as boolean (0/1)
+                # End of function
+                if self.started_function:
+                    self.context.end_of_function()
+                    self.started_function = False
+                self._state = self._state_global
+                
+    def _condition_expected(self, token):
+        if token == '(':
+            self.bracket_level = 1
+            self._state = self._condition_continue
+            
+    def _condition_continue(self, token):
+        if token == '(':
+            self.bracket_level += 1
+        elif token == ')':
+            self.bracket_level -= 1
+            if self.bracket_level == 0:
+                self._state = self._state_global
 
 
 class PHPReader(CodeReader, CCppCommentsMixin):
