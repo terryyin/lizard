@@ -92,3 +92,135 @@ class Test_parser_for_PHP(unittest.TestCase):
     def test_interface2(self):
         functions = get_php_function_list("<?php function a(); class C{}?>")
         self.assertEqual(0, len(functions))
+
+    def xtest_foreach_not_function_and_detects_real_functions(self):
+        php_code = '''<?php
+class Note {
+    public string $text;
+    public string $createdAt;
+
+    public function __construct(string $text) {
+        $this->text = $text;
+        $this->createdAt = date('Y-m-d H:i:s');
+    }
+
+    public function toArray(): array {
+        return ['text' => $this->text, 'createdAt' => $this->createdAt];
+    }
+
+    public static function fromArray(array $data): Note {
+        $note = new Note($data['text']);
+        $note->createdAt = $data['createdAt'];
+        return $note;
+    }
+}
+
+class NotebookApp {
+    private array $notes = [];
+    private string $dataFile = 'notes.json';
+
+    public function __construct() {
+        $this->loadNotes();
+    }
+
+    public function run(): void {
+        while (true) {
+            $this->printMenu();
+            $choice = trim(fgets(STDIN));
+            match ($choice) {
+                '1' => $this->addNote(),
+                '2' => $this->listNotes(),
+                '3' => $this->deleteNote(),
+                '4' => $this->exitApp(),
+                default => print("Invalid choice. Try again.\n")
+            };
+        }
+    }
+
+    private function printMenu(): void {
+        echo "\n== Notebook CLI App ==\n";
+        echo "1. Add Note\n";
+        echo "2. List Notes\n";
+        echo "3. Delete Note\n";
+        echo "4. Exit\n";
+        echo "Choose an option: ";
+    }
+
+    private function addNote(): void {
+        echo "Enter your note: ";
+        $text = trim(fgets(STDIN));
+        if ($text !== '') {
+            $note = new Note($text);
+            $this->notes[] = $note;
+            $this->saveNotes();
+            echo "Note added!\n";
+        } else {
+            echo "Empty note. Try again.\n";
+        }
+    }
+
+    private function listNotes(): void {
+        if (empty($this->notes)) {
+            echo "No notes available.\n";
+            return;
+        }
+        echo "\n== Your Notes ==\n";
+        foreach ($this->notes as $index => $note) {
+            echo "[" . ($index + 1) . "] {$note->text} ({$note->createdAt})\n";
+        }
+    }
+
+    private function deleteNote(): void {
+        $this->listNotes();
+        if (empty($this->notes)) return;
+
+        echo "Enter note number to delete: ";
+        $input = trim(fgets(STDIN));
+        $index = (int)$input - 1;
+
+        if (isset($this->notes[$index])) {
+            unset($this->notes[$index]);
+            $this->notes = array_values($this->notes); // reindex
+            $this->saveNotes();
+            echo "Note deleted.\n";
+        } else {
+            echo "Invalid note number.\n";
+        }
+    }
+
+    private function exitApp(): void {
+        echo "Saving and exiting... 👋\n";
+        $this->saveNotes();
+        exit(0);
+    }
+
+    private function saveNotes(): void {
+        $encoded = json_encode(array_map(fn($n) => $n->toArray(), $this->notes), JSON_PRETTY_PRINT);
+        file_put_contents($this->dataFile, $encoded);
+    }
+
+    private function loadNotes(): void {
+        if (file_exists($this->dataFile)) {
+            $raw = file_get_contents($this->dataFile);
+            $data = json_decode($raw, true);
+            $this->notes = array_map(fn($n) => Note::fromArray($n), $data);
+        }
+    }
+}
+?>'''
+        functions = get_php_function_list(php_code)
+        # Should find all real methods, and not treat 'foreach' as a function
+        function_names = sorted(f.name for f in functions)
+        self.assertIn('__construct', function_names)
+        self.assertIn('toArray', function_names)
+        self.assertIn('fromArray', function_names)
+        self.assertIn('run', function_names)
+        self.assertIn('printMenu', function_names)
+        self.assertIn('addNote', function_names)
+        self.assertIn('listNotes', function_names)
+        self.assertIn('deleteNote', function_names)
+        self.assertIn('exitApp', function_names)
+        self.assertIn('saveNotes', function_names)
+        self.assertIn('loadNotes', function_names)
+        # Should not have 'foreach' as a function
+        self.assertNotIn('foreach', function_names)
