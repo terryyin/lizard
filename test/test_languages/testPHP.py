@@ -93,6 +93,37 @@ class Test_parser_for_PHP(unittest.TestCase):
         functions = get_php_function_list("<?php function a(); class C{}?>")
         self.assertEqual(0, len(functions))
 
+    def test_foreach_is_not_a_function(self):
+        functions = get_php_function_list("<?php function test() { foreach($items as $item) { echo $item; } } ?>")
+        self.assertEqual(1, len(functions))
+        self.assertEqual("test", functions[0].name)
+        # 'foreach' should not be in the function names
+        function_names = [f.name for f in functions]
+        self.assertNotIn("foreach", function_names)
+
+    def xtest_modern_php_methods_with_modifiers(self):
+        php_code = '''<?php
+        class TestClass {
+            public function publicMethod(): string {
+                return "test";
+            }
+            
+            private function privateMethod(): void {
+                echo "test";
+            }
+            
+            protected static function staticMethod(int $param): bool {
+                return true;
+            }
+        }
+        ?>'''
+        functions = get_php_function_list(php_code)
+        self.assertEqual(3, len(functions))
+        function_names = sorted([f.name for f in functions])
+        self.assertIn("publicMethod", function_names)
+        self.assertIn("privateMethod", function_names)
+        self.assertIn("staticMethod", function_names)
+
     def xtest_foreach_not_function_and_detects_real_functions(self):
         php_code = '''<?php
 class Note {
