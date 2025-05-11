@@ -214,3 +214,41 @@ class Test_parser_for_TypeScript(unittest.TestCase):
         for f in functions:
             self.assertEqual(1, f.cyclomatic_complexity)
 
+    def xtest_arrow_function_with_type_annotation(self):
+        code = '''
+        fun((x: number) => x * 2);
+        const jsfun = (x) => x * 2;
+        const tsfun = (x: number) => x * 2;
+'''
+        functions = get_ts_function_list(code)
+        expected_methods = [
+            '(anonymous)',
+            'jsfun',
+            'tsfun',
+        ]
+        self.assertEqual(sorted(expected_methods), sorted([f.name for f in functions]))
+
+
+    def xtest_loopdemonstrator_methods(self):
+        code = '''
+class LoopDemonstrator {
+
+    forEachLoop(): void {
+        this.data.forEach((num: number) => console.log(num));
+    }
+
+    mapFunction(): void {
+        const doubled: number[] = this.data.map((x: number) => x * 2);
+    }
+}
+'''
+        functions = get_ts_function_list(code)
+        print('Detected function names:', [f.name for f in functions])
+        # Only the class methods should be detected, not callbacks or console.log
+        expected_methods = [
+            'constructor', 'basicForLoop', 'forOfLoop', 'forEachLoop', 'whileLoop',
+            'doWhileLoop', 'forInLoop', 'mapFunction', 'filterFunction', 'reduceFunction',
+            'generatorFunction', 'asyncForAwaitLoop'
+        ]
+        self.assertEqual(sorted(expected_methods), sorted([f.name for f in functions]))
+
