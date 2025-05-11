@@ -147,11 +147,15 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
     def _state_simple_type(self, token):
         if token == '<':
             self.next(self._state_generic_type, token)
-        elif token in '{=;':
+        elif token in '{=;)':
             self.saved_token = token
             self.statemachine_return()
         elif token == '(':
             self.next(self._function_type_annotation, token)
+        elif token == '=>':
+            # Handle arrow function after type annotation
+            self.saved_token = token
+            self.statemachine_return()
 
     @CodeStateMachine.read_inside_brackets_then("{}")
     def _inline_type_annotation(self, _):

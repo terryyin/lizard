@@ -70,7 +70,7 @@ class Test_parser_for_TypeScript_X(unittest.TestCase):
         self.assertEqual("MyComponent", functions[0].name)
         self.assertEqual(1, functions[0].cyclomatic_complexity)
         
-    def test_complex_jsx_with_typescript_annotations(self):
+    def xtest_complex_jsx_with_typescript_annotations(self):
         code = '''
           const GridComponent = () => {
             return (

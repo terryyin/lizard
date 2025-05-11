@@ -214,7 +214,14 @@ class Test_parser_for_TypeScript(unittest.TestCase):
         for f in functions:
             self.assertEqual(1, f.cyclomatic_complexity)
 
-    def xtest_arrow_function_with_type_annotation(self):
+    def test_anonymous_arrow_function_with_type_annotation(self):
+        code = 'fun((x: number) => x * 2)'
+        functions = get_ts_function_list(code)
+        expected_methods = [ '(anonymous)' ]
+        self.assertEqual(sorted(expected_methods), sorted([f.name for f in functions]))
+
+
+    def test_arrow_function_with_type_annotation(self):
         code = '''
         fun((x: number) => x * 2);
         const jsfun = (x) => x * 2;
