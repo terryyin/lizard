@@ -37,7 +37,7 @@ class Test_tokenizing_JavaScript(unittest.TestCase):
     def test_tokenizing_javascript_multiple_line_string(self):
         self.check_tokens(['"aaa\\\nbbb"'], '"aaa\\\nbbb"')
 
-    def xtest_tokenizing_template_literal_with_expression(self):
+    def test_tokenizing_template_literal_with_expression(self):
         self.check_tokens(['`hello ${', 'name', '}`'], '`hello ${name}`')
 
     def xtest_tokenizing_template_literal_multiline(self):
