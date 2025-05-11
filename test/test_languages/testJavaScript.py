@@ -109,23 +109,23 @@ class Test_parser_for_JavaScript(unittest.TestCase):
         functions = get_js_function_list("var obj = {get prop() {}}")
         self.assertEqual('get prop', functions[0].name)
 
-    def xtest_object_setter_method(self):
+    def test_object_setter_method(self):
         functions = get_js_function_list("var obj = {set prop(val) {}}")
         self.assertEqual('set prop', functions[0].name)
 
-    def xtest_async_function(self):
+    def test_async_function(self):
         functions = get_js_function_list("async function foo() {}")
         self.assertEqual('foo', functions[0].name)
 
-    def xtest_generator_function(self):
+    def test_generator_function(self):
         functions = get_js_function_list("function* gen() {}")
         self.assertEqual('gen', functions[0].name)
 
-    def xtest_async_generator_function(self):
+    def test_async_generator_function(self):
         functions = get_js_function_list("async function* gen() {}")
         self.assertEqual('gen', functions[0].name)
 
-    def xtest_class_method_decorators(self):
+    def test_class_method_decorators(self):
         code = '''
             class Example {
                 @decorator
@@ -135,7 +135,7 @@ class Test_parser_for_JavaScript(unittest.TestCase):
         functions = get_js_function_list(code)
         self.assertEqual('method', functions[0].name)
 
-    def xtest_nested_object_methods(self):
+    def test_nested_object_methods(self):
         code = '''
             const obj = {
                 outer: {
