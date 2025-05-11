@@ -62,27 +62,48 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
     @staticmethod
     @js_style_regex_expression
     def generate_tokens(source_code, addition='', token_class=None):
+        def split_template_literal(token, quote):
+            content = token[1:-1]
+            i = 0
+            # Special case for double-quoted strings starting with ${
+            if quote == '"' and content.startswith('${'):
+                yield '""'
+            while i < len(content):
+                idx = content.find('${', i)
+                if idx == -1:
+                    if i < len(content):
+                        yield quote + content[i:] + quote
+                    break
+                if idx > i and not (quote == '"' and idx == 0 and content.startswith('${')):
+                    yield quote + content[i:idx] + quote
+                yield '${'
+                i = idx + 2
+                expr_start = i
+                brace_count = 1
+                while i < len(content) and brace_count > 0:
+                    if content[i] == '{':
+                        brace_count += 1
+                    elif content[i] == '}':
+                        brace_count -= 1
+                    i += 1
+                expr = content[expr_start:i-1]
+                yield expr
+                yield '}'
+                content = content[i:]
+                i = 0
         # Restore original addition pattern for template literals
         addition = addition + r"|(?:\$\w+)" + r"|(?:\w+\?)" + r"|`.*?`"
         for token in CodeReader.generate_tokens(source_code, addition, token_class):
-            # Targeted post-processing for template literals with a single ${...}
             if (
                 isinstance(token, str)
-                and token.startswith('`')
+                and (token.startswith('`') or token.startswith('"'))
+                and token[0] == token[-1]
                 and '${' in token
-                and token.endswith('`')
             ):
-                # Try to split only if exactly one ${...} and one } before the ending `
-                start = token.find('${')
-                end = token.rfind('}')
-                if start != -1 and end != -1 and start < end:
-                    before = token[:start+2]  # include ${
-                    inside = token[start+2:end]
-                    after = token[end:]
-                    yield before
-                    yield inside
-                    yield after
-                    continue
+                quote = token[0]
+                for t in split_template_literal(token, quote):
+                    yield t
+                continue
             yield token
 
 

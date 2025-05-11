@@ -1,1 +1,1 @@
- 
+- [x] Fix ES6/JavaScript template string tokenization to match test expectations (completed) 
