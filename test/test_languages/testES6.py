@@ -109,7 +109,7 @@ class Test_parser_for_JavaScript_ES6(unittest.TestCase):
         """)
         self.assertEqual(['f', 'm'], [f.name for f in functions])
 
-    def xtest_class_with_prop_as_function(self):
+    def test_class_with_prop_as_function(self):
         functions = get_js_function_list("""
             class A {
             f(){}
@@ -119,7 +119,7 @@ class Test_parser_for_JavaScript_ES6(unittest.TestCase):
             get i(){return 1;}
             }
         """)
-        self.assertEqual(['f', 'm', 'g', 'h', 'i'], [f.name for f in functions])
+        self.assertEqual(['f', 'm', 'g', 'h', 'get i'], [f.name for f in functions])
 
     def test_generator_function(self):
         functions = get_js_function_list("""
