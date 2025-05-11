@@ -97,11 +97,11 @@ class Test_parser_for_JavaScript(unittest.TestCase):
         functions = get_js_function_list("{}")
         self.assertEqual(0, len(functions))
 
-    def xtest_object_method_shorthand(self):
+    def test_object_method_shorthand(self):
         functions = get_js_function_list("var obj = {method() {}}")
         self.assertEqual('method', functions[0].name)
 
-    def xtest_object_method_with_computed_name(self):
+    def test_object_method_with_computed_name(self):
         functions = get_js_function_list("var obj = {['computed' + 'Name']() {}}")
         self.assertEqual('computedName', functions[0].name)
 

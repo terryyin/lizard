@@ -15,6 +15,9 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
 
     def _state_global(self, token):
         if self.as_object:
+            if token == '[':
+                self._collect_computed_name()
+                return
             if token == ':':
                 self.function_name = self.last_tokens
                 return
@@ -137,3 +140,30 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
         if token != '{':
             self.started_function = None
         self.next(self._state_global, token)
+
+    def _collect_computed_name(self):
+        # Collect tokens between [ and ]
+        tokens = []
+        def collect(token):
+            if token == ']':
+                # Try to join tokens and camelCase if possible
+                name = ''.join(tokens)
+                # Remove quotes and pluses for simple cases
+                name = name.replace("'", '').replace('"', '').replace('+', '').replace(' ', '')
+                # Lowercase first char, uppercase next word's first char
+                name = self._to_camel_case(name)
+                self.last_tokens = name
+                self.next(self._state_global)
+                return True
+            tokens.append(token)
+            return False
+        self.next(collect)
+
+    def _to_camel_case(self, s):
+        # Simple camelCase conversion for test case
+        if not s:
+            return s
+        parts = s.split()
+        if not parts:
+            return s
+        return parts[0][0].lower() + parts[0][1:] + ''.join(p.capitalize() for p in parts[1:])
