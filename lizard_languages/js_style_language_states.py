@@ -12,9 +12,19 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
         self.function_name = ''
         self.started_function = None
         self.as_object = False
+        self._getter_setter_prefix = None
 
     def _state_global(self, token):
         if self.as_object:
+            # Support for getter/setter: look for 'get' or 'set' before method name
+            if token in ('get', 'set'):
+                self._getter_setter_prefix = token
+                return
+            if hasattr(self, '_getter_setter_prefix') and self._getter_setter_prefix:
+                # Next token is the property name
+                self.last_tokens = f"{self._getter_setter_prefix} {token}"
+                self._getter_setter_prefix = None
+                return
             if token == '[':
                 self._collect_computed_name()
                 return

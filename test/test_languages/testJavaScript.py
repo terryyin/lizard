@@ -40,7 +40,7 @@ class Test_tokenizing_JavaScript(unittest.TestCase):
     def test_tokenizing_template_literal_with_expression(self):
         self.check_tokens(['`hello ${', 'name', '}`'], '`hello ${name}`')
 
-    def xtest_tokenizing_template_literal_multiline(self):
+    def test_tokenizing_template_literal_multiline(self):
         self.check_tokens(['`hello\nworld`'], '`hello\nworld`')
 
 class Test_parser_for_JavaScript(unittest.TestCase):
@@ -105,7 +105,7 @@ class Test_parser_for_JavaScript(unittest.TestCase):
         functions = get_js_function_list("var obj = {['computed' + 'Name']() {}}")
         self.assertEqual('computedName', functions[0].name)
 
-    def xtest_object_getter_method(self):
+    def test_object_getter_method(self):
         functions = get_js_function_list("var obj = {get prop() {}}")
         self.assertEqual('get prop', functions[0].name)
 
