@@ -140,7 +140,7 @@ class PHPLanguageStates(CodeStateMachine):
             self._state = self._function_args_continue
             self.context.push_new_function(self.function_name)
             self.started_function = True
-            
+
     def _function_args(self, token):
         if token == '(':
             self.bracket_level = 1
@@ -151,7 +151,7 @@ class PHPLanguageStates(CodeStateMachine):
                 self.context.push_new_function(self.function_name)
             self.started_function = True
             self._state = self._function_args_continue
-            
+
     def _function_args_continue(self, token):
         if token == '(':
             self.bracket_level += 1
@@ -165,7 +165,7 @@ class PHPLanguageStates(CodeStateMachine):
                 # Make sure we count each parameter uniquely
                 self.context.add_to_long_function_name(" " + token)
                 self.context.parameter(token)
-                
+
     def _function_return_type_or_body(self, token):
         if token == ':':
             # Skip return type declaration
@@ -180,13 +180,13 @@ class PHPLanguageStates(CodeStateMachine):
                 self.context.end_of_function()
                 self.started_function = False
             self._state = self._state_global
-            
+
     def _function_body_or_return_type(self, token):
         if token == '{':
             # Found the function body opening after return type
             self.brace_level += 1
             self._state = self._function_body
-            
+
     def _function_body(self, token):
         if token == '{':
             self.brace_level += 1
@@ -198,12 +198,12 @@ class PHPLanguageStates(CodeStateMachine):
                     self.context.end_of_function()
                     self.started_function = False
                 self._state = self._state_global
-                
+
     def _condition_expected(self, token):
         if token == '(':
             self.bracket_level = 1
             self._state = self._condition_continue
-            
+
     def _condition_continue(self, token):
         if token == '(':
             self.bracket_level += 1
@@ -216,7 +216,7 @@ class PHPLanguageStates(CodeStateMachine):
         if token == '(':
             self.bracket_level = 1
             self._state = self._match_expression_continue
-            
+
     def _match_expression_continue(self, token):
         if token == '(':
             self.bracket_level += 1
