@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.17.30
+
+Fix TypeScript function detection issue.
+
 ## 1.17.29
 
 Fix modern PHP issues.
