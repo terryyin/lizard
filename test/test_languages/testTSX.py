@@ -85,7 +85,6 @@ class Test_parser_for_TypeScript_X(unittest.TestCase):
         functions = get_tsx_function_list(code)
         function_names = [f.name for f in functions]
         # The main function should be parsed correctly
-        print(f"DEBUG - All functions: {[f.name for f in functions]}")
         self.assertIn("(anonymous)", function_names)
         self.assertIn("GridComponent", function_names)
 
@@ -106,6 +105,25 @@ class Test_parser_for_TypeScript_X(unittest.TestCase):
         functions = get_tsx_function_list(code)
         function_names = [f.name for f in functions]
         # The main function should be parsed correctly
-        print(f"DEBUG - All functions: {[f.name for f in functions]}")
+        self.assertIn("(anonymous)", function_names)
+        self.assertIn("GridComponent", function_names)
+
+    def test_complex_jsx_with_typescript_annotations2(self):
+        code = '''
+          const GridComponent = () => {
+            return (
+              <div>
+                <Grid
+                  getRowId={ (model: GridRowModel) => model.id }
+                  onClick={ (e: React.MouseEvent) => handleClick(e) }
+                  onCreated={ (e: Event) => handleCreated(e) }
+                />
+              </div>
+            );
+          }
+        '''
+        functions = get_tsx_function_list(code)
+        function_names = [f.name for f in functions]
+        # The main function should be parsed correctly
         self.assertIn("(anonymous)", function_names)
         self.assertIn("GridComponent", function_names)
