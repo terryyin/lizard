@@ -124,7 +124,7 @@ class PerlStates(CodeStateMachine):
         if token == 'sub':
             # Inline anonymous subroutine as argument
             self.anonymous_count += 1
-            full_name = f"<anonymous>"
+            full_name = "<anonymous>"
             if self.package_name:
                 full_name = f"{self.package_name}::{full_name}"
 
@@ -184,7 +184,7 @@ class PerlStates(CodeStateMachine):
         elif token == 'sub':
             # Handle anonymous subroutine like 'callback(sub { ... })'
             self.anonymous_count += 1
-            full_name = f"<anonymous>"
+            full_name = "<anonymous>"
             if self.package_name:
                 full_name = f"{self.package_name}::{full_name}"
             self.context.try_new_function(full_name)
@@ -243,11 +243,11 @@ class PerlStates(CodeStateMachine):
     def _state_nested_sub_dec(self, token):
         if token.isspace():
             return
-        elif token == '{':
+        if token == '{':
             # Anonymous sub
             self.brace_count += 1
             self.anonymous_count += 1
-            anon_name = f"<anonymous>"
+            anon_name = "<anonymous>"
             if self.package_name:
                 anon_name = f"{self.package_name}::{anon_name}"
             self.context.add_condition()  # Count sub as a condition
@@ -294,7 +294,7 @@ class PerlStates(CodeStateMachine):
         if token == 'sub':
             # Inline anonymous subroutine as argument
             self.anonymous_count += 1
-            full_name = f"<anonymous>"
+            full_name = "<anonymous>"
             if self.package_name:
                 full_name = f"{self.package_name}::{full_name}"
 
