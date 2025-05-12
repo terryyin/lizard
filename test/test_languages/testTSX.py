@@ -96,6 +96,7 @@ class Test_parser_for_TypeScript_X(unittest.TestCase):
             return (
               <div>
                 <Grid
+                  style={{ width: '30%' }}
                   onClick={ (e: React.MouseEvent) => handleClick(e) }
                 />
               </div>

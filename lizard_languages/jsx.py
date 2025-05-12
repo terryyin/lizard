@@ -27,6 +27,16 @@ class JSXTypeScriptStates(TypeScriptStates):
 
 
     def _state_global(self, token):
+        # Handle arrow function in JSX/TSX prop context
+        if token == '=>':
+            if self.function_name and self.function_name != '(anonymous)' and not self.started_function:
+                self._push_function_to_stack()
+                self.function_name = '(anonymous)'
+                return
+            elif not self.started_function:
+                self.function_name = '(anonymous)'
+                self._push_function_to_stack()
+                return
         if not self.as_object:
             if token == ':':
                 self._consume_type_annotation()
@@ -209,7 +219,11 @@ class XMLTagWithAttrTokenizer(Tokenizer):
         if not token.isspace():
             result = self.state(token)
             if result is not None:
-                return result
+                if isinstance(result, list):
+                    for tok in result:
+                        yield tok
+                else:
+                    return result
         return ()
 
     def abort(self):
