@@ -1,5 +1,5 @@
 '''
-Language parser for Go lang
+Language parser for Rust lang
 '''
 
 from .code_reader import CodeReader
@@ -16,7 +16,7 @@ class RustReader(CodeReader, CCppCommentsMixin):
                       'case', 'match', 'where'])
 
     def __init__(self, context):
-        super(RustReader, self).__init__(context)
+        super().__init__(context)
         self.parallel_states = [RustStates(context)]
 
 
