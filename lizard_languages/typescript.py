@@ -111,6 +111,11 @@ class TypeScriptStates(JavaScriptStyleLanguageStates):
     def __init__(self, context):
         super().__init__(context)
 
+    def statemachine_before_return(self):
+        # Ensure the main function is closed at the end
+        if self.started_function:
+            self._pop_function_from_stack()
+
     def _state_global(self, token):
         if not self.as_object:
             if token == ':':

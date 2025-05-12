@@ -3,7 +3,7 @@ Language parser for TSX
 '''
 
 from .typescript import TypeScriptReader
-from .jsx import JSXMixin
+from .jsx import JSXMixin, JSXTypeScriptStates
 from .js_style_regex_expression import js_style_regex_expression
 
 
@@ -24,7 +24,8 @@ class TSXReader(TypeScriptReader, JSXMixin):
 
     def __init__(self, context):
         super(TSXReader, self).__init__(context)
-        # No need for parallel states since JSX handling is in the mixin
+        # Use JSXTypeScriptStates for better handling of TSX specific features
+        self.parallel_states = [JSXTypeScriptStates(context)]
 
     def _expecting_func_opening_bracket(self, token):
         # Handle TypeScript arrow functions with type annotations in JSX attributes

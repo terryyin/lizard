@@ -13,6 +13,7 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
         self.started_function = None
         self.as_object = False
         self._getter_setter_prefix = None
+        self.arrow_function_pending = False
 
     def _state_global(self, token):
         if self.as_object:
@@ -32,7 +33,9 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
                 self.function_name = self.last_tokens
                 return
             elif token == '(':
-                self._function(self.last_tokens)
+                if not self.started_function:
+                    self.arrow_function_pending = True
+                    self._function(self.last_tokens)
                 self.next(self._function, token)
                 return
 
@@ -47,8 +50,7 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
         elif token in ('else', 'do', 'try', 'final'):
             self.next(self._expecting_statement_or_block)
         elif token in ('=>',):
-            if self.function_name:
-                self._push_function_to_stack()
+            # Only handle arrow function body, do not push function here
             self._state = self._arrow_function
         elif token == '=':
             self.function_name = self.last_tokens
@@ -129,7 +131,9 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
         if token != '(':
             self.function_name = token
         else:
-            self._push_function_to_stack()
+            if not self.started_function:
+                self._push_function_to_stack()
+            self.arrow_function_pending = False
             self._state = self._dec
             if token == '(':
                 self._dec(token)
@@ -147,7 +151,8 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
         self.context.add_to_long_function_name(" " + token)
 
     def _expecting_func_opening_bracket(self, token):
-        if token != '{':
+        # Do not reset started_function for arrow functions (=>)
+        if token != '{' and token != '=>':
             self.started_function = None
         self.next(self._state_global, token)
 
