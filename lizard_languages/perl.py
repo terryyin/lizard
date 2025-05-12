@@ -55,7 +55,7 @@ class PerlReader(CodeReader, ScriptLanguageMixIn):
             stripped = token.lstrip('#').strip()
             if stripped.startswith('lizard forgives') or stripped.startswith('#lizard forgives'):
                 return '#lizard forgives'  # Return standardized forgiveness comment
-            return stripped  # Return the stripped comment for other cases
+            return stripped  # Return the stripped comment for other case
         return None
 
     @staticmethod
@@ -101,7 +101,7 @@ class PerlStates(CodeStateMachine):
 
     def _state_variable(self, token):
         if token == '$':
-            # Skip the $ in variable names
+            # Skip the $ in variable name
             pass
         elif token == '=':
             self.next(self._state_assignment)
@@ -140,7 +140,7 @@ class PerlStates(CodeStateMachine):
         if token == '{':
             self.brace_count = 1
             full_name = '<anonymous>'
-            # Use variable name if available for more readable function names
+            # Use variable name if available for more readable function name
             if self.variable_name:
                 full_name = '$' + self.variable_name
             
@@ -231,7 +231,7 @@ class PerlStates(CodeStateMachine):
             # Colon part of ternary operator also increases complexity
             self.context.add_condition()
         elif token == 'sub':
-            # Check if it's a nested named subroutine or anonymous
+            # Check if it's a nested named subroutine or anonymou
             self.next(self._state_nested_sub_dec)
         elif token == '(':
             # Track function calls inside function body
