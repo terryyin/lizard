@@ -92,7 +92,7 @@ class PerlStates(CodeStateMachine):
         elif token == '(':
             self.paren_count += 1
             self.next(self._state_function_call)
-        elif token == '$' or token == 'my' or token == 'our' or token == 'local':
+        elif token in ('$', 'my', 'our', 'local'):
             self.variable_name = ''
             self.next(self._state_variable)
 
@@ -258,9 +258,6 @@ class PerlStates(CodeStateMachine):
             full_name = nested_func_name
             if self.package_name:
                 full_name = f"{self.package_name}::{nested_func_name}"
-
-            # Save current function state
-            saved_func_context = self.context
 
             # Create a new function for the nested sub
             self.context.try_new_function(full_name)
