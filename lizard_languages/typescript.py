@@ -169,7 +169,7 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
     @CodeStateMachine.read_inside_brackets_then("<>")
     def _state_generic_type(self, token):
         self.statemachine_return()
-        
+
     @CodeStateMachine.read_inside_brackets_then("()")
     def _function_type_annotation(self, _):
         self.statemachine_return()

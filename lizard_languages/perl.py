@@ -125,7 +125,7 @@ class PerlStates(CodeStateMachine):
             full_name = f"<anonymous>"
             if self.package_name:
                 full_name = f"{self.package_name}::{full_name}"
-            
+
             self.context.try_new_function(full_name)
             self.context.confirm_new_function()
             self.next(self._state_anon_brace_search)
@@ -143,10 +143,10 @@ class PerlStates(CodeStateMachine):
             # Use variable name if available for more readable function name
             if self.variable_name:
                 full_name = '$' + self.variable_name
-            
+
             if self.package_name:
                 full_name = f"{self.package_name}::{full_name}"
-            
+
             self.context.try_new_function(full_name)
             self.context.confirm_new_function()
             self.next(self._state_function_body)
