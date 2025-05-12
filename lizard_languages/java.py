@@ -34,6 +34,7 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
     def _state_imp(self, token):
         # When entering a function implementation, set the flag
         self.in_method_body = True
+        
         def callback():
             # When exiting the function implementation, clear the flag
             self.in_method_body = False
@@ -105,6 +106,7 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
             self.in_record_constructor = False
             self._state = self._state_global
 
+
 class JavaFunctionBodyStates(JavaStates):
     def __init__(self, context):
         super(JavaFunctionBodyStates, self).__init__(context)
@@ -165,6 +167,7 @@ class JavaFunctionBodyStates(JavaStates):
             self.sub_state(JavaClassBodyStates("(anonymous)", False, self.context), callback, token)
             return
         self.next(self._state_global, token)
+
 
 class JavaClassBodyStates(JavaStates):
     def __init__(self, class_name, is_record, context):

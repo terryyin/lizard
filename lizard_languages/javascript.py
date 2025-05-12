@@ -2,7 +2,7 @@
 Language parser for JavaScript
 '''
 
-from .typescript import TypeScriptReader 
+from .typescript import TypeScriptReader
 
 
 class JavaScriptReader(TypeScriptReader):

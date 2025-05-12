@@ -51,23 +51,23 @@ class JSXTypeScriptStates(TypeScriptStates):
                     return
             elif token == ';' or self.context.newline:
                 self.in_variable_declaration = False
-                
+        
         # Handle arrow function in JSX/TSX prop context
         if token == '=>' and not self.in_variable_declaration:
             if not self.started_function:
                 self.function_name = '(anonymous)'
                 self._push_function_to_stack()
                 return
-                
+        
         if not self.as_object:
             if token == ':':
                 self._consume_type_annotation()
                 return
-                
+        
         # Pop anonymous function after closing '}' in TSX/JSX prop
         if token == '}' and self.started_function and self.function_name == '(anonymous)':
             self._pop_function_from_stack()
-                    
+        
         # Continue with regular TypeScript state handling
         super()._state_global(token)
 
@@ -134,7 +134,7 @@ class JSXMixin:
         def callback():
             # Return to the original function when done
             self.context.current_function = current_function
-            
+        
         self.sub_state(self.__class__(self.context), callback)
 
     def _expecting_arrow_function_body(self, token):
@@ -144,7 +144,7 @@ class JSXMixin:
         else:
             # Arrow function with expression body
             self.next(self._expecting_func_opening_bracket)
-            
+        
     def _function_body(self, token):
         if token == '}':
             # End of arrow function body
@@ -167,7 +167,7 @@ class JSXJavaScriptStyleLanguageStates(JavaScriptStyleLanguageStates):
             self.in_variable_declaration = True
             super()._state_global(token)
             return
-            
+        
         if hasattr(self, 'in_variable_declaration') and self.in_variable_declaration:
             if token == '=':
                 # We're in a variable assignment
@@ -200,7 +200,7 @@ class JSXJavaScriptStyleLanguageStates(JavaScriptStyleLanguageStates):
                 self.next(self._state_global, token)
                 return True
             return False
-            
+        
         self.next(skip_until_terminator)
 
 

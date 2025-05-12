@@ -902,7 +902,7 @@ def get_all_source_files(paths, exclude_patterns, lans):
     '''
     Function counts md5 hash for the given file and checks if it isn't a
     duplicate using set of hashes for previous files.
-    
+
     If a .gitignore file is found in any of the given paths, it will be used
     to filter out files that match the gitignore patterns.
     '''
