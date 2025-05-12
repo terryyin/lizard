@@ -159,6 +159,7 @@ class JavaScriptStyleLanguageStates(CodeStateMachine):  # pylint: disable=R0903
     def _collect_computed_name(self):
         # Collect tokens between [ and ]
         tokens = []
+
         def collect(token):
             if token == ']':
                 # Try to join tokens and camelCase if possible

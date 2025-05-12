@@ -31,7 +31,7 @@ class GoReader(CodeReader, CCppCommentsMixin):
                     state(token)
                 yield token
                 continue
-            
+
             # For non-backtick tokens, process normally
             for state in self.parallel_states:
                 state(token)
