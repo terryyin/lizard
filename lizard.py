@@ -43,6 +43,7 @@ try:
     from lizard_ext import print_csv
     from lizard_ext import html_output
     from lizard_ext import auto_open, auto_read
+    from lizard_ext import print_checkstyle
 except ImportError:
     sys.stderr.write("Cannot find the lizard_ext modules.")
 
@@ -217,6 +218,11 @@ def arg_parser(prog=None):
                         const="modified",
                         dest="extensions",
                         default=[])
+    parser.add_argument("--checkstyle",
+                        help='''Generate Checkstyle XML output for integration with Jenkins and other tools.''',
+                        action="store_const",
+                        const=print_checkstyle,
+                        dest="printer")
     _extension_arg(parser)
     parser.add_argument("-s", "--sort",
                         help='''Sort the warning with field. The field can be
@@ -1000,7 +1006,10 @@ def parse_args(argv):
     if opt.output_file:
         inferred_printer = infer_printer_from_file_ext(opt.output_file)
         if inferred_printer:
-            if not opt.printer:
+            # Always use print_checkstyle for .checkstyle.xml
+            if opt.output_file.lower().endswith('.checkstyle.xml'):
+                opt.printer = inferred_printer
+            elif not opt.printer:
                 opt.printer = inferred_printer
             elif opt.printer != inferred_printer:
                 msg = "Warning: overriding output file extension.\n"
@@ -1009,15 +1018,16 @@ def parse_args(argv):
 
 
 def infer_printer_from_file_ext(path):
-    mapping = {
-        '.csv': print_csv,
-        '.htm': html_output,
-        '.html': html_output,
-        '.xml': print_xml
-    }
-    _, ext = os.path.splitext(path)
-    printer = mapping.get(ext)
-    return printer
+    lower_path = path.lower()
+    if lower_path.endswith(".checkstyle.xml"):
+        return print_checkstyle
+    if lower_path.endswith(".html"):
+        return html_output
+    if lower_path.endswith(".xml"):
+        return print_xml
+    if lower_path.endswith(".csv"):
+        return print_csv
+    return None
 
 
 def open_output_file(path):
@@ -1072,16 +1082,27 @@ def main(argv=None):
         options.paths = auto_read(options.input_file).splitlines()
     original_stdout = sys.stdout
     output_file = None
-    if options.output_file:
-        output_file = open_output_file(options.output_file)
-        sys.stdout = output_file
     result = analyze(
         options.paths,
         options.exclude,
         options.working_threads,
         options.extensions,
         options.languages)
-    warning_count = printer(result, options, schema, AllResult)
+    warning_count = None
+    if options.output_file:
+        output_file = open_output_file(options.output_file)
+        sys.stdout = output_file
+        # Special handling for checkstyle output
+        if getattr(printer, "__name__", "") == "print_checkstyle":
+            warning_count = printer(result, options, schema, AllResult, file=output_file)
+        else:
+            warning_count = printer(result, options, schema, AllResult)
+    else:
+        # Special handling for checkstyle output
+        if getattr(printer, "__name__", "") == "print_checkstyle":
+            warning_count = printer(result, options, schema, AllResult, file=original_stdout)
+        else:
+            warning_count = printer(result, options, schema, AllResult)
     print_extension_results(options.extensions)
     list(result)
     if output_file:

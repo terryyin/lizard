@@ -7,6 +7,7 @@ from lizard import print_warnings, print_and_save_modules, FunctionInfo, FileInf
     print_result, print_extension_results, get_extensions, OutputScheme, get_warnings, print_clang_style_warning,\
     parse_args, AllResult
 from lizard_ext import xml_output
+from lizard_ext.checkstyleoutput import checkstyle_output
 
 def print_result_with_scheme(result, option):
     return print_result(result, option, OutputScheme(option.extensions), AllResult)
@@ -180,3 +181,21 @@ class TestXMLOutput(unittest.TestCase):
         self.assertIn('''<sum label="NCSS" value="0"/>''', xml_empty)
         self.assertIn('''<sum label="CCN" value="0"/>''', xml_empty)
         self.assertIn('''<sum label="Functions" value="0"/>''', xml_empty)
+
+
+class TestCheckstyleOutput(unittest.TestCase):
+    foo = FunctionInfo("foo", '', 100)
+    foo.cyclomatic_complexity = 16
+    file_infos = [FileInformation('f1.c', 1, [foo])]
+    from lizard_ext.checkstyleoutput import checkstyle_output
+    checkstyle_xml = checkstyle_output(AllResult(file_infos), True)
+
+    def test_checkstyle_output(self):
+        self.assertIn('<checkstyle', self.checkstyle_xml)
+        self.assertIn('<file', self.checkstyle_xml)
+        self.assertIn('<error', self.checkstyle_xml)
+        self.assertIn('foo has', self.checkstyle_xml)
+
+    def test_checkstyle_output_on_empty_folder(self):
+        xml_empty = checkstyle_output(AllResult([]), True)
+        self.assertIn('<checkstyle', xml_empty)

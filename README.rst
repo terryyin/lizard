@@ -163,6 +163,7 @@ Options
                         generate report in Jenkins server
   --csv                 Generate CSV output as a transform of the default output
   -H, --html            Output HTML report
+  --checkstyle          Generate Checkstyle XML output for integration with Jenkins and other tools
   -m, --modified        Calculate modified cyclomatic complexity number , which count a
                         switch/case with multiple cases as one CCN.
   -E EXTENSIONS, --extension EXTENSIONS

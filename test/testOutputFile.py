@@ -115,3 +115,34 @@ class TestFileOutputIntegration(unittest.TestCase):
                          "Should show warning when format doesn't match extension")
         finally:
             sys.stderr = old_stderr
+
+    def test_checkstyle(self):
+        header = "<?xml version=\"1.0\" ?>"
+        # Checkstyle output should start with XML declaration
+        self.output_test("test.checkstyle.xml", header)
+
+    def test_checkstyle_option(self):
+        # Create a temp C file with a function
+        c_path = join(self.tmp_dir, "foo.c")
+        with open(c_path, "w") as f:
+            f.write("int foo() { return 42; }\n")
+        path = join(self.tmp_dir, "test.checkstyle.xml")
+        args = ["lizard", "--checkstyle", "--output_file", path, c_path]
+        main(args)
+        with open(path, 'r') as f:
+            content = f.read()
+            self.assertIn('<checkstyle', content)
+            self.assertIn('<file', content)
+            self.assertIn('<error', content)
+
+    def test_checkstyle_extension_inference(self):
+        # Create a temp C file with a function
+        c_path = join(self.tmp_dir, "bar.c")
+        with open(c_path, "w") as f:
+            f.write("int bar() { return 24; }\n")
+        path = join(self.tmp_dir, "test.checkstyle.xml")
+        args = ["lizard", "--output_file", path, c_path]
+        main(args)
+        with open(path, 'r') as f:
+            content = f.read()
+            self.assertIn('<checkstyle', content)

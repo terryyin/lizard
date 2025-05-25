@@ -184,6 +184,13 @@ class CodeReader:
     def __call__(self, tokens, reader):
         self.context = reader.context
         for token in tokens:
+            # Allow language-specific token processing
+            if self.process_token(token):
+                for state in self.parallel_states:
+                    state(token)
+                yield token
+                continue
+
             for state in self.parallel_states:
                 state(token)
             yield token
@@ -193,3 +200,15 @@ class CodeReader:
 
     def eof(self):
         pass
+
+    def process_token(self, token):
+        """Process a token before normal handling.
+        Return True if the token has been handled specially and should skip normal processing.
+
+        Args:
+            token: The token being processed
+
+        Returns:
+            bool: True if the token should skip normal processing, False otherwise
+        """
+        return False
