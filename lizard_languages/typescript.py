@@ -150,6 +150,7 @@ class TypeScriptStates(CodeStateMachine):
             self.next(skip_declared_function)
             return
         self._ts_declare = False
+
         if self.as_object:
             # Support for getter/setter: look for 'get' or 'set' before method name
             if token in ('get', 'set'):

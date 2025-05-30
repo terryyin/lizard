@@ -58,11 +58,6 @@ class JSXTypeScriptStates(TypeScriptStates):
                 self._push_function_to_stack()
                 return
 
-        if not self.as_object:
-            if token == ':':
-                self._consume_type_annotation()
-                return
-
         # Pop anonymous function after closing '}' in TSX/JSX prop
         if token == '}' and self.started_function and self.function_name == '(anonymous)':
             self._pop_function_from_stack()
