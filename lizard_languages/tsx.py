@@ -37,42 +37,6 @@ class TSXReader(TypeScriptReader):
         # Use JSXTypeScriptStates for better handling of TSX specific features
         self.parallel_states = [JSXTypeScriptStates(context)]
 
-    def _expecting_func_opening_bracket(self, token):
-        # Handle TypeScript arrow functions with type annotations in JSX attributes
-        if token == ':':
-            self._consume_type_annotation()
-            return
-        if token == '<':
-            self.next(self._expecting_jsx)
-            return
-        if token == '=>':
-            self._handle_arrow_function()
-            return
-        super()._expecting_func_opening_bracket(token)
-
-    def _handle_arrow_function(self):
-        self.context.add_to_long_function_name(" => ")
-        current_function = self.context.current_function
-        self.context.restart_new_function('(anonymous)')
-        def callback():
-            self.context.current_function = current_function
-        self.sub_state(self.__class__(self.context), callback)
-
-    def _expecting_arrow_function_body(self, token):
-        if token == '{':
-            self.next(self._function_body)
-        else:
-            self.next(self._expecting_func_opening_bracket)
-
-    def _function_body(self, token):
-        if token == '}':
-            self.context.end_of_function()
-            self.next(self._expecting_func_opening_bracket)
-
-    def _expecting_jsx(self, token):
-        if token == '>':
-            self.next(self._expecting_func_opening_bracket)
-
 class JSXTypeScriptStates(CodeStateMachine):
     """State machine for JSX/TSX files using composition with TypeScriptStates"""
 
