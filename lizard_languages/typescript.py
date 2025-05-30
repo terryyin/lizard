@@ -64,17 +64,26 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
     def generate_tokens(source_code, addition='', token_class=None):
         def split_template_literal(token, quote):
             content = token[1:-1]
+            
+            # Always yield opening quote
+            yield quote
+            
+            # If no expressions, yield content as-is with quotes and closing quote
+            if '${' not in content:
+                if content:
+                    yield quote + content + quote
+                yield quote
+                return
+            
+            # Handle expressions
             i = 0
-            # Special case for double-quoted strings starting with ${
-            if quote == '"' and content.startswith('${'):
-                yield '""'
             while i < len(content):
                 idx = content.find('${', i)
                 if idx == -1:
                     if i < len(content):
                         yield quote + content[i:] + quote
                     break
-                if idx > i and not (quote == '"' and idx == 0 and content.startswith('${')):
+                if idx > i:
                     yield quote + content[i:idx] + quote
                 yield '${'
                 i = idx + 2
@@ -91,17 +100,20 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                 yield '}'
                 content = content[i:]
                 i = 0
+            
+            # Always yield closing quote
+            yield quote
+            
         # Restore original addition pattern for template literals
         addition = addition + r"|(?:\$\w+)" + r"|(?:\w+\?)" + r"|`.*?`"
         for token in CodeReader.generate_tokens(source_code, addition, token_class):
             if (
                 isinstance(token, str)
-                and (token.startswith('`') or token.startswith('"'))
-                and token[0] == token[-1]
-                and '${' in token
+                and token.startswith('`')
+                and token.endswith('`')
+                and len(token) > 1
             ):
-                quote = token[0]
-                for t in split_template_literal(token, quote):
+                for t in split_template_literal(token, '`'):
                     yield t
                 continue
             yield token

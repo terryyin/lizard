@@ -13,13 +13,10 @@ class Test_tokenizing_ES6(unittest.TestCase):
         self.assertEqual(expect, tokens)
 
     def test_dollar_var(self):
-        self.check_tokens(['`abc`'], '`abc`')
-
-    def test_dollar_var(self):
-        self.check_tokens(["`abc\ndef`"], """`abc\ndef`""")
+        self.check_tokens(["`", "`abc\ndef`", "`"], """`abc\ndef`""")
 
     def test_tokenizing_string_with_formatter(self):
-        self.check_tokens(['""', '${', '1', '}', '"a"' ], r'''"${1}a"''')
+        self.check_tokens(['"${1}a"'], r'"${1}a"')
 
 class Test_parser_for_JavaScript_ES6(unittest.TestCase):
 

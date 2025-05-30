@@ -38,10 +38,10 @@ class Test_tokenizing_JavaScript(unittest.TestCase):
         self.check_tokens(['"aaa\\\nbbb"'], '"aaa\\\nbbb"')
 
     def test_tokenizing_template_literal_with_expression(self):
-        self.check_tokens(['`hello `', '${', 'name', '}'], '`hello ${name}`')
+        self.check_tokens(['`', '`hello `', '${', 'name', '}', '`'], '`hello ${name}`')
 
     def test_tokenizing_template_literal_multiline(self):
-        self.check_tokens(['`hello\nworld`'], '`hello\nworld`')
+        self.check_tokens(['`','`hello\nworld`', '`'], '`hello\nworld`')
 
 class Test_parser_for_JavaScript(unittest.TestCase):
 
