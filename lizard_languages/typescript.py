@@ -129,11 +129,17 @@ class TypeScriptStates(JavaScriptStyleLanguageStates):
             self._pop_function_from_stack()
 
     def _state_global(self, token):
+        if token == '`':
+            self.next(self._state_template_literal)
         if not self.as_object:
             if token == ':':
                 self._consume_type_annotation()
                 return
         super()._state_global(token)
+
+    def _state_template_literal(self, token):
+        if token == '`':
+            self.next(self._state_global)
 
     def _expecting_func_opening_bracket(self, token):
         if token == ':':
