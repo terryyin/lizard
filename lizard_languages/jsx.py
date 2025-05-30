@@ -125,68 +125,6 @@ class TSXTokenizer(JSTokenizer):
             yield tok
 
 
-class JSXMixin:
-    '''Base mixin class for JSX/TSX shared functionality'''
-    @staticmethod
-    @js_style_regex_expression
-    def generate_tokens(source_code, addition='', token_class=None):
-        addition = addition +\
-            r"|(?:\$\w+)" + \
-            r"|(?:\<\/\w+\>)" + \
-            r"|(?:=>)" + \
-            r"|`.*?`"
-        js_tokenizer = TSXTokenizer()
-        for token in CodeReader.generate_tokens(
-                source_code, addition, token_class):
-            for tok in js_tokenizer(token):
-                yield tok
-
-    def _expecting_func_opening_bracket(self, token):
-        if token == '<':
-            self.next(self._expecting_jsx)
-            return
-        if token == '=>':
-            # Handle arrow functions in JSX attributes
-            self._handle_arrow_function()
-            return
-        super()._expecting_func_opening_bracket(token)
-
-    def _handle_arrow_function(self):
-        # Process arrow function in JSX context
-        self.context.add_to_long_function_name(" => ")
-
-        # Store the current function
-        current_function = self.context.current_function
-
-        # Create a new anonymous function
-        self.context.restart_new_function('(anonymous)')
-
-        # Set up for the arrow function body
-        def callback():
-            # Return to the original function when done
-            self.context.current_function = current_function
-
-        self.sub_state(self.__class__(self.context), callback)
-
-    def _expecting_arrow_function_body(self, token):
-        if token == '{':
-            # Arrow function with block body
-            self.next(self._function_body)
-        else:
-            # Arrow function with expression body
-            self.next(self._expecting_func_opening_bracket)
-
-    def _function_body(self, token):
-        if token == '}':
-            # End of arrow function body
-            self.context.end_of_function()
-            self.next(self._expecting_func_opening_bracket)
-
-    def _expecting_jsx(self, token):
-        if token == '>':
-            self.next(self._expecting_func_opening_bracket)
-
-
 class XMLTagWithAttrTokenizer(Tokenizer):
     def __init__(self):
         super(XMLTagWithAttrTokenizer, self).__init__()
