@@ -69,7 +69,7 @@ class Test_parser_for_JavaScript_X(unittest.TestCase):
                   getRowId={ (model) => model.id }
                   onClick={ (e) => handleClick(e) }
                   style={{ width: '30%' }}
-                  onKeyDown={(e) => { 
+                  onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       doSomething();
                     }
@@ -81,7 +81,7 @@ class Test_parser_for_JavaScript_X(unittest.TestCase):
         '''
         functions = get_jsx_function_list(code)
         # The main function should be parsed correctly
-        self.assertEqual("(anonymous)", functions[0].name)
+        self.assertEqual("GridComponent", functions[0].name)
         # The function should have the correct complexity
         self.assertEqual(1, functions[0].cyclomatic_complexity)
 

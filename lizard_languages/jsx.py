@@ -4,24 +4,28 @@ Language parser for JSX
 
 from .javascript import JavaScriptReader
 from .typescript import JSTokenizer, Tokenizer, TypeScriptStates
-from .code_reader import CodeReader
+from .code_reader import CodeReader, CodeStateMachine
 from .js_style_regex_expression import js_style_regex_expression
 
 
-class JSXTypeScriptStates(TypeScriptStates):
-    """State machine for JSX/TSX files extending TypeScriptStates"""
+class JSXTypeScriptStates(CodeStateMachine):
+    """State machine for JSX/TSX files using composition with TypeScriptStates"""
 
     def __init__(self, context):
         super().__init__(context)
-        # Initialize attributes that might be accessed later
-        self._parent_function_name = None
+        self.ts_states = TypeScriptStates(context)
         self.in_variable_declaration = False
-        self.last_variable_name = None
+        self._pending_variable_name = None  # Track variable name through type annotation
+        self.last_tokens = self.ts_states.last_tokens
+        self.function_name = self.ts_states.function_name
+        self.started_function = self.ts_states.started_function
+        self.context = context
+        self._state = self._state_global
 
     def statemachine_before_return(self):
         # Ensure the main function is closed at the end
-        if self.started_function:
-            self._pop_function_from_stack()
+        if self.ts_states.started_function:
+            self.ts_states._pop_function_from_stack()
             # After popping, if current_function is not *global*, pop again to add to function_list
             if self.context.current_function and self.context.current_function.name != "*global*":
                 self.context.end_of_function()
@@ -30,43 +34,76 @@ class JSXTypeScriptStates(TypeScriptStates):
         # Handle variable declarations
         if token in ('const', 'let', 'var'):
             self.in_variable_declaration = True
-            super()._state_global(token)
+            self.ts_states._state_global(token)
+            self._sync_from_ts()
             return
 
         if self.in_variable_declaration:
             if token == '=':
                 # Save the variable name when we see the assignment
-                self.last_variable_name = self.last_tokens.strip()
-                super()._state_global(token)
+                self._pending_variable_name = self.ts_states.last_tokens.strip()
+                self.ts_states._state_global(token)
+                self._sync_from_ts()
+                return
+            elif token == ':':
+                # Type annotation after variable name
+                self._pending_variable_name = self.ts_states.last_tokens.strip()
+                self.ts_states._state_global(token)
+                self._sync_from_ts()
                 return
             elif token == '=>':
-                # We're in an arrow function with a variable assignment
-                if self.last_variable_name and not self.started_function:
-                    self.function_name = self.last_variable_name
-                    self._push_function_to_stack()
+                # Arrow function with variable assignment (with or without type annotation)
+                if self._pending_variable_name and not self.ts_states.started_function:
+                    self.ts_states.function_name = self._pending_variable_name
+                    self.ts_states._push_function_to_stack()
                     self.in_variable_declaration = False
-                    # Switch to arrow function state to handle the body
+                    self._pending_variable_name = None
                     self._state = self._arrow_function
+                    self._sync_from_ts()
                     return
             elif token == ';' or self.context.newline:
                 self.in_variable_declaration = False
+                self._pending_variable_name = None
 
         # Handle arrow function in JSX/TSX prop context
         if token == '=>' and not self.in_variable_declaration:
-            if not self.started_function:
-                self.function_name = '(anonymous)'
-                self._push_function_to_stack()
+            if not self.ts_states.started_function:
+                self.ts_states.function_name = '(anonymous)'
+                self.ts_states._push_function_to_stack()
+                self._sync_from_ts()
                 return
 
         # Pop anonymous function after closing '}' in TSX/JSX prop
-        if token == '}' and self.started_function and self.function_name == '(anonymous)':
-            self._pop_function_from_stack()
+        if token == '}' and self.ts_states.started_function and self.ts_states.function_name == '(anonymous)':
+            self.ts_states._pop_function_from_stack()
+            self._sync_from_ts()
 
         # Continue with regular TypeScript state handling
-        super()._state_global(token)
+        self.ts_states._state_global(token)
+        self._sync_from_ts()
 
     def _arrow_function(self, token):
-        self.next(self._state_global, token)
+        self._state = self._state_global
+        self._state(token)
+
+    def next(self, state, *args, **kwargs):
+        # Set the next state for this state machine
+        self._state = state
+        if args or kwargs:
+            self._state(*args, **kwargs)
+
+    def sub_state(self, submachine, callback=None, *args, **kwargs):
+        # Delegate to TypeScriptStates' sub_state
+        return self.ts_states.sub_state(submachine, callback, *args, **kwargs)
+
+    def statemachine_return(self):
+        return self.ts_states.statemachine_return()
+
+    def _sync_from_ts(self):
+        # Keep key attributes in sync for compatibility
+        self.last_tokens = self.ts_states.last_tokens
+        self.function_name = self.ts_states.function_name
+        self.started_function = self.ts_states.started_function
 
 
 class TSXTokenizer(JSTokenizer):
