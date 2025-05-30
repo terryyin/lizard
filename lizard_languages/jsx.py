@@ -6,7 +6,6 @@ from .javascript import JavaScriptReader
 from .typescript import JSTokenizer, Tokenizer, TypeScriptStates
 from .code_reader import CodeReader
 from .js_style_regex_expression import js_style_regex_expression
-from .js_style_language_states import JavaScriptStyleLanguageStates
 
 
 class JSXTypeScriptStates(TypeScriptStates):
@@ -156,7 +155,7 @@ class JSXMixin:
             self.next(self._expecting_func_opening_bracket)
 
 
-class JSXJavaScriptStyleLanguageStates(JavaScriptStyleLanguageStates):
+class JSXJavaScriptStyleLanguageStates(TypeScriptStates):
     def __init__(self, context):
         super(JSXJavaScriptStyleLanguageStates, self).__init__(context)
 
