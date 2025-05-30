@@ -10,8 +10,8 @@ from .js_style_regex_expression import js_style_regex_expression
 class TSXReader(TypeScriptReader, JSXMixin):
     # pylint: disable=R0903
 
-    ext = ['tsx']
-    language_names = ['tsx']
+    ext = ['tsx', 'jsx']
+    language_names = ['tsx', 'jsx']
 
     @staticmethod
     @js_style_regex_expression

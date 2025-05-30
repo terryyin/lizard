@@ -2,7 +2,6 @@
 Language parser for JSX
 '''
 
-from .javascript import JavaScriptReader
 from .typescript import JSTokenizer, Tokenizer, TypeScriptStates
 from .code_reader import CodeReader, CodeStateMachine
 from .js_style_regex_expression import js_style_regex_expression
@@ -186,27 +185,6 @@ class JSXMixin:
     def _expecting_jsx(self, token):
         if token == '>':
             self.next(self._expecting_func_opening_bracket)
-
-
-class JSXReader(JavaScriptReader, JSXMixin):
-    # pylint: disable=R0903
-
-    ext = ['jsx']
-    language_names = ['jsx']
-
-    @staticmethod
-    @js_style_regex_expression
-    def generate_tokens(source_code, addition='', token_class=None):
-        # Add support for JSX syntax patterns
-        addition = addition + \
-            r"|(?:<[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)*>)" + \
-            r"|(?:<\/[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)*>)"
-        return JSXMixin.generate_tokens(source_code, addition, token_class)
-
-    def __init__(self, context):
-        super(JSXReader, self).__init__(context)
-        # Use our JSXTypeScriptStates for better handling of JSX
-        self.parallel_states = [JSXTypeScriptStates(context)]
 
 
 class XMLTagWithAttrTokenizer(Tokenizer):
