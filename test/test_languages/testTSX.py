@@ -60,11 +60,20 @@ class Test_parser_for_TypeScript_X(unittest.TestCase):
         functions = get_tsx_function_list(code)
         self.assertEqual("(anonymous)", functions[0].name)
 
-    @unittest.skip("Skipping type annotation test")
     def test_type_annotation(self):
         code = '''
           const MyComponent: React.FC = () => {
             return <div>Hello</div>;
+          }
+        '''
+        functions = get_tsx_function_list(code)
+        self.assertEqual("MyComponent", functions[0].name)
+        self.assertEqual(1, functions[0].cyclomatic_complexity)
+
+    def test_plain_type_annotation(self):
+        code = '''
+          const MyComponent: React.FC = () => {
+            return "hello";
           }
         '''
         functions = get_tsx_function_list(code)

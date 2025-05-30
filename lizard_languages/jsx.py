@@ -40,8 +40,9 @@ class JSXTypeScriptStates(CodeStateMachine):
 
         if self.in_variable_declaration:
             if token == '=':
-                # Save the variable name when we see the assignment
-                self._pending_variable_name = self.ts_states.last_tokens.strip()
+                # Save the variable name when we see the assignment (only if not already set by type annotation)
+                if not self._pending_variable_name:
+                    self._pending_variable_name = self.ts_states.last_tokens.strip()
                 self.ts_states._state_global(token)
                 self._sync_from_ts()
                 return

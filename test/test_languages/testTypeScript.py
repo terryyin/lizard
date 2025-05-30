@@ -235,3 +235,13 @@ class Test_parser_for_TypeScript(unittest.TestCase):
         ]
         self.assertEqual(sorted(expected_methods), sorted([f.name for f in functions]))
 
+
+    def test_plain_type_annotation(self):
+        code = '''
+          const MyComponent: React.FC = () => {
+            return "hello";
+          }
+        '''
+        functions = get_ts_function_list(code)
+        self.assertEqual("MyComponent", functions[0].name)
+        self.assertEqual(1, functions[0].cyclomatic_complexity)
