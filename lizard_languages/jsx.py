@@ -155,54 +155,6 @@ class JSXMixin:
             self.next(self._expecting_func_opening_bracket)
 
 
-class JSXJavaScriptStyleLanguageStates(TypeScriptStates):
-    def __init__(self, context):
-        super(JSXJavaScriptStyleLanguageStates, self).__init__(context)
-
-    def _state_global(self, token):
-        # Handle variable declarations
-        if token in ('const', 'let', 'var'):
-            # Remember that we're in a variable declaration
-            self.in_variable_declaration = True
-            super()._state_global(token)
-            return
-
-        if hasattr(self, 'in_variable_declaration') and self.in_variable_declaration:
-            if token == '=':
-                # We're in a variable assignment
-                self.function_name = self.last_tokens.strip()
-                super()._state_global(token)
-                return
-            elif token == '=>':
-                # We're in an arrow function with a variable assignment
-                if not self.started_function and self.function_name:
-                    self._push_function_to_stack()
-                self._state = self._arrow_function
-                return
-            elif token == ';' or self.context.newline:
-                # End of variable declaration
-                self.in_variable_declaration = False
-
-        super()._state_global(token)
-
-    def _expecting_func_opening_bracket(self, token):
-        if token == ':':
-            # Handle type annotations like TypeScript does
-            self._consume_type_annotation()
-            return
-        super()._expecting_func_opening_bracket(token)
-
-    def _consume_type_annotation(self):
-        # Skip over type annotations (simplified version of TypeScript's behavior)
-        def skip_until_terminator(token):
-            if token in ['{', '=', ';', ')', '(', '=>']:
-                self.next(self._state_global, token)
-                return True
-            return False
-
-        self.next(skip_until_terminator)
-
-
 class JSXReader(JavaScriptReader, JSXMixin):
     # pylint: disable=R0903
 
