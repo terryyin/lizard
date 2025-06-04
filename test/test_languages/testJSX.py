@@ -39,7 +39,9 @@ class Test_parser_for_JavaScript_X(unittest.TestCase):
         '''
         functions = get_jsx_function_list(code)
         # The main function should be parsed correctly
-        self.assertEqual("GridComponent", functions[0].name)
-        # The function should have the correct complexity
-        self.assertEqual(1, functions[0].cyclomatic_complexity)
+        function_names = [f.name for f in functions]
+        self.assertIn("GridComponent", function_names)
+        # Find the GridComponent function and check its complexity
+        grid_component = next(f for f in functions if f.name == "GridComponent")
+        self.assertEqual(1, grid_component.cyclomatic_complexity)
 

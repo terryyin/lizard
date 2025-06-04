@@ -40,100 +40,302 @@ class TSXReader(TypeScriptReader):
 class JSXTypeScriptStates(CodeStateMachine):
     """State machine for JSX/TSX files using composition with TypeScriptStates"""
 
-    def __init__(self, context):
+    def __init__(self, context, inside_function=False):
         super().__init__(context)
-        self.ts_states = TypeScriptStates(context)
-        self.in_variable_declaration = False
-        self._pending_variable_name = None  # Track variable name through type annotation
-        self.last_tokens = self.ts_states.last_tokens
-        self.function_name = self.ts_states.function_name
-        self.started_function = self.ts_states.started_function
-        self.context = context
-        self._state = self._state_global
+        self.last_token = ''
+        self.function_name = ''
+        self.started_function = None
+        self.pending_function_name = ''
+        self._ts_declare = False
+        self._conditions = set(['if', 'elseif', 'for', 'while', '&&', '||', '?',
+                               'catch', 'case'])
+        self.inside_function = inside_function  # Track if we're already inside a function
 
     def statemachine_before_return(self):
-        # Ensure the main function is closed at the end
-        if self.ts_states.started_function:
-            self.ts_states._pop_function_from_stack()
-            # After popping, if current_function is not *global*, pop again to add to function_list
-            if self.context.current_function and self.context.current_function.name != "*global*":
-                self.context.end_of_function()
+        # Ensure any pending function is closed - this should make the main function appear first
+        if self.started_function:
+            self._pop_function_from_stack()
 
     def _state_global(self, token):
-        # Handle variable declarations
-        if token in ('const', 'let', 'var'):
-            self.in_variable_declaration = True
-            self.ts_states._state_global(token)
-            self._sync_from_ts()
+        # Handle TypeScript declare keyword
+        if token == 'declare':
+            self._ts_declare = True
+            return
+        if token == 'function' and self._ts_declare:
+            # Skip declared functions
+            self._ts_declare = False
+            self.next(self._skip_until_semicolon)
+            return
+        self._ts_declare = False
+
+        # Handle function keyword
+        if token == 'function':
+            self.next(self._function_name_state)
             return
 
-        if self.in_variable_declaration:
-            if token == '=':
-                # Save the variable name when we see the assignment (only if not already set by type annotation)
-                if not self._pending_variable_name:
-                    self._pending_variable_name = self.ts_states.last_tokens.strip()
-                self.ts_states._state_global(token)
-                self._sync_from_ts()
-                return
-            elif token == ':':
-                # Type annotation after variable name
-                self._pending_variable_name = self.ts_states.last_tokens.strip()
-                self.ts_states._state_global(token)
-                self._sync_from_ts()
-                return
-            elif token == '=>':
-                # Arrow function with variable assignment (with or without type annotation)
-                if self._pending_variable_name and not self.ts_states.started_function:
-                    self.ts_states.function_name = self._pending_variable_name
-                    self.ts_states._push_function_to_stack()
-                    self.in_variable_declaration = False
-                    self._pending_variable_name = None
-                    self._state = self._arrow_function
-                    self._sync_from_ts()
-                    return
-            elif token == ';' or self.context.newline:
-                self.in_variable_declaration = False
-                self._pending_variable_name = None
+        # Handle arrow functions: look for => 
+        if token == '=>':
+            # Start arrow function with pending name or anonymous
+            self._start_arrow_function()
+            return
 
-        # Handle arrow function in JSX/TSX prop context
-        if token == '=>' and not self.in_variable_declaration:
-            if not self.ts_states.started_function:
-                self.ts_states.function_name = '(anonymous)'
-                self.ts_states._push_function_to_stack()
-                self._sync_from_ts()
-                return
+        # Handle control flow for cyclomatic complexity
+        if token in ('if', 'switch', 'for', 'while', 'catch'):
+            if self.started_function or self.inside_function:
+                self.context.add_condition()
+            self.next(self._expecting_condition_and_statement)
+            return
+        elif token in ('else', 'do', 'try', 'finally'):
+            self.next(self._expecting_statement_or_block)
+            return
+        elif token in ('&&', '||', '?'):
+            if self.started_function or self.inside_function:
+                self.context.add_condition()
+            return
+        elif token == 'case':
+            if self.started_function or self.inside_function:
+                self.context.add_condition()
+            return
 
-        # Pop anonymous function after closing '}' in TSX/JSX prop
-        if token == '}' and self.ts_states.started_function and self.ts_states.function_name == '(anonymous)':
-            self.ts_states._pop_function_from_stack()
-            self._sync_from_ts()
+        # Handle assignment for function names - only if not inside a function
+        if token == '=' and not self.inside_function:
+            # If we don't have a pending name yet, use the last token  
+            if not self.pending_function_name:
+                self.pending_function_name = self.last_token
+            return
 
-        # Continue with regular TypeScript state handling
-        self.ts_states._state_global(token)
-        self._sync_from_ts()
+        # Handle type annotations
+        if token == ':' and not self.inside_function:
+            # This could be a type annotation before assignment (e.g., const name: Type = ...)
+            # Store the current token as potential function name and consume the type
+            if not self.pending_function_name:
+                self.pending_function_name = self.last_token
+            self._consume_type_annotation()
+            return
 
-    def _arrow_function(self, token):
-        self._state = self._state_global
-        self._state(token)
+        # Handle braces
+        if token == '{':
+            if self.started_function or self.inside_function:
+                # Function body - stay in current function
+                nested_state = self.__class__(self.context, inside_function=True)
+                self.sub_state(nested_state)
+            else:
+                # Object or block
+                self.sub_state(self.__class__(self.context))
+            return
+        elif token == '}':
+            self.statemachine_return()
+            return
 
-    def next(self, state, *args, **kwargs):
-        # Set the next state for this state machine
-        self._state = state
-        if args or kwargs:
-            self._state(*args, **kwargs)
+        # Handle parentheses - be careful with arrow function parameters
+        if token == '(':
+            if self.pending_function_name:
+                # This might be arrow function parameters, handle in-line
+                self.next(self._arrow_function_params)
+            else:
+                # Regular parentheses grouping or function call
+                nested_state = self.__class__(self.context, inside_function=self.inside_function)
+                self.sub_state(nested_state)
+            return
+        elif token == ')':
+            self.statemachine_return()
+            return
 
-    def sub_state(self, submachine, callback=None, *args, **kwargs):
-        # Delegate to TypeScriptStates' sub_state
-        return self.ts_states.sub_state(submachine, callback, *args, **kwargs)
+        # Handle end of statement
+        if token == ';' or self.context.newline:
+            if not self.inside_function:
+                self.pending_function_name = ''
+            self._pop_function_from_stack()
 
-    def statemachine_return(self):
-        return self.ts_states.statemachine_return()
+        self.last_token = token
 
-    def _sync_from_ts(self):
-        # Keep key attributes in sync for compatibility
-        self.last_tokens = self.ts_states.last_tokens
-        self.function_name = self.ts_states.function_name
-        self.started_function = self.ts_states.started_function
+    def _function_name_state(self, token):
+        """Handle function name after 'function' keyword"""
+        if token == '(':
+            # Anonymous function
+            self._start_function('(anonymous)')
+            self.next(self._function_parameters, token)
+        else:
+            # Named function
+            self._start_function(token)
+            self.next(self._expecting_function_params)
+
+    def _expecting_function_params(self, token):
+        """Expect opening parenthesis for function parameters"""
+        if token == '(':
+            self.next(self._function_parameters, token)
+        else:
+            # Not a function, return to global state
+            self.next(self._state_global, token)
+
+    def _function_parameters(self, token):
+        """Handle function parameters"""
+        if token == ')':
+            self.next(self._expecting_function_body)
+        elif token == '(':
+            # Nested parentheses in parameters
+            self.sub_state(self.__class__(self.context))
+        else:
+            # Parameter token
+            if token not in (',', ':', '=', '?', '...') and token.isalnum():
+                self.context.parameter(token)
+
+    def _expecting_function_body(self, token):
+        """Expect function body (could be block or expression for arrow functions)"""
+        if token == '{':
+            # Block body - create new scope but stay in current function
+            def callback():
+                self.next(self._state_global)
+            nested_state = self.__class__(self.context, inside_function=True)
+            # Don't start a new function in the nested state
+            self.sub_state(nested_state, callback)
+        elif token == ':':
+            # Type annotation for return type
+            self._consume_type_annotation()
+        else:
+            # Expression body or other tokens - continue in global state
+            self.next(self._state_global, token)
+
+    def _start_arrow_function(self):
+        """Start an arrow function with pending name or anonymous"""
+        name = self.pending_function_name or '(anonymous)'
+        
+        if self.inside_function:
+            # For nested functions, create and immediately close them
+            # This ensures they're detected but don't interfere with the main function
+            self.context.push_new_function(name)
+            self.context.end_of_function()
+        else:
+            # For top-level functions, use normal processing
+            self._start_function(name)
+        
+        self.pending_function_name = ''
+
+    def _start_function(self, name):
+        """Start a new function"""
+        # Always start a new function - nested functions are separate functions
+        self.context.push_new_function(name)
+        # Track that we started a function for proper cleanup
+        self.started_function = True
+        self.function_name = name
+
+    def _pop_function_from_stack(self):
+        """End current function"""
+        if self.started_function:
+            self.context.end_of_function()
+            self.started_function = None
+            self.function_name = ''
+
+    def _expecting_condition_and_statement(self, token):
+        """Handle conditional statements with conditions"""
+        if token == '(':
+            # Condition in parentheses
+            def callback():
+                self.next(self._expecting_statement_or_block)
+            nested_state = self.__class__(self.context, inside_function=self.inside_function)
+            self.sub_state(nested_state, callback)
+        else:
+            # No parentheses, go directly to statement
+            self.next(self._state_global, token)
+
+    def _expecting_statement_or_block(self, token):
+        """Handle statement or block after control flow"""
+        if token == '{':
+            # Block statement
+            def callback():
+                self.next(self._state_global)
+            nested_state = self.__class__(self.context, inside_function=self.inside_function)
+            self.sub_state(nested_state, callback)
+        else:
+            # Single statement
+            self.next(self._state_global, token)
+
+    def _consume_type_annotation(self):
+        """Handle TypeScript type annotations"""
+        def callback():
+            # Continue with any saved token from the type annotation handler
+            type_handler = self.sub_state_instance
+            if hasattr(type_handler, 'saved_token') and type_handler.saved_token:
+                self.next(self._state_global, type_handler.saved_token)
+            else:
+                self.next(self._state_global)
+        
+        type_handler = JSXTypeAnnotationHandler(self.context)
+        self.sub_state_instance = type_handler  # Store reference to access saved_token
+        self.sub_state(type_handler, callback)
+
+    def _skip_until_semicolon(self, token):
+        """Skip tokens until semicolon or newline (for declare statements)"""
+        if token == ';' or self.context.newline:
+            self.next(self._state_global)
+
+    def _arrow_function_params(self, token):
+        """Handle arrow function parameters without losing function name"""
+        if token == ')':
+            # End of parameters, expect => next
+            self.next(self._expecting_arrow)
+        elif token == '(':
+            # Nested parentheses in parameters
+            nested_state = self.__class__(self.context, inside_function=self.inside_function)
+            self.sub_state(nested_state)
+        else:
+            # Parameter token - add to context if it's a valid parameter
+            if token not in (',', ':', '=', '?', '...') and token.isalnum():
+                # Don't add parameters yet, wait for arrow to confirm it's a function
+                pass
+
+    def _expecting_arrow(self, token):
+        """Expect => after arrow function parameters"""
+        if token == '=>':
+            # Confirmed arrow function, start it now
+            self._start_arrow_function()
+        elif token == ':':
+            # Type annotation for return type
+            self._consume_type_annotation()
+        else:
+            # Not an arrow function, return to global state
+            self.pending_function_name = ''
+            self.next(self._state_global, token)
+
+
+class JSXTypeAnnotationHandler(CodeStateMachine):
+    """Handle TypeScript type annotations in JSX/TSX"""
+    
+    def __init__(self, context):
+        super().__init__(context)
+        self.depth = 0
+        self.saved_token = None
+
+    def _state_global(self, token):
+        if token == '<':
+            # Generic type
+            self.depth += 1
+        elif token == '>':
+            self.depth -= 1
+            if self.depth < 0:
+                # End of type annotation
+                self.saved_token = token
+                self.statemachine_return()
+        elif token in ('=', ';', ')', '}', '=>') and self.depth == 0:
+            # End of type annotation
+            self.saved_token = token
+            self.statemachine_return()
+        elif token == '{':
+            # Object type annotation
+            self.next(self._object_type)
+        elif token == '(':
+            # Function type annotation
+            self.next(self._function_type)
+
+    def _object_type(self, token):
+        """Handle object type annotations like { width: string }"""
+        if token == '}':
+            self.next(self._state_global)
+
+    def _function_type(self, token):
+        """Handle function type annotations like (param: Type) => ReturnType"""
+        if token == ')':
+            self.next(self._state_global)
 
 
 class TSXTokenizer(JSTokenizer):
