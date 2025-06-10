@@ -3,14 +3,16 @@ import sys
 from mock import Mock, patch
 from test.helper_stream import StreamStdoutTestCase
 import os
-from lizard import print_warnings, print_and_save_modules, FunctionInfo, FileInformation,\
+from lizard import print_warnings, FunctionInfo, FileInformation,\
     print_result, print_extension_results, get_extensions, OutputScheme, get_warnings, print_clang_style_warning,\
     parse_args, AllResult
 from lizard_ext import xml_output
 from lizard_ext.checkstyleoutput import checkstyle_output
 
+
 def print_result_with_scheme(result, option):
     return print_result(result, option, OutputScheme(option.extensions), AllResult)
+
 
 class TestFunctionOutput(StreamStdoutTestCase):
 
@@ -19,28 +21,70 @@ class TestFunctionOutput(StreamStdoutTestCase):
         self.extensions = get_extensions([])
         self.scheme = OutputScheme(self.extensions)
         self.foo = FunctionInfo("foo", 'FILENAME', 100)
+        self.option = parse_args("app")
 
     def test_function_info_header_should_have_a_box(self):
-        print_and_save_modules([],  self.scheme)
+        print_result_with_scheme([], self.option)
         self.assertIn("=" * 20, sys.stdout.stream.splitlines()[0])
 
     def test_function_info_header_should_have_the_captions(self):
-        print_and_save_modules([],  self.scheme)
+        print_result_with_scheme([], self.option)
         self.assertEqual("  NLOC    CCN   token  PARAM  length  location  ", sys.stdout.stream.splitlines()[1])
 
     def test_function_info_header_should_have_the_captions_of_external_extensions(self):
-        external_extension = Mock(FUNCTION_INFO = {"xx": {"caption":"*external_extension*"}}, ordering_index=-1)
+        external_extension = Mock(FUNCTION_INFO = {"xx": {"caption": "*external_extension*"}}, ordering_index=-1)
         extensions = get_extensions([external_extension])
         scheme = OutputScheme(extensions)
-        print_and_save_modules([],  scheme)
+        print_result([], self.option,  scheme, AllResult)
         self.assertEqual("  NLOC    CCN   token  PARAM  length *external_extension* location  ", sys.stdout.stream.splitlines()[1])
 
     def test_print_fileinfo(self):
         self.foo.end_line = 100
         self.foo.cyclomatic_complexity = 16
         fileStat = FileInformation("FILENAME", 1, [self.foo])
-        print_and_save_modules([fileStat],  self.scheme)
+        print_result_with_scheme([fileStat], self.option)
         self.assertEqual("       1     16      1      0       1 foo@100-100@FILENAME", sys.stdout.stream.splitlines()[3])
+
+    def test_print_result_short_no_warning(self):
+        """Test that fileinfo is not printed if `short` option is specified"""
+        option = parse_args("app")
+        self.foo.end_line = 100
+        self.foo.cyclomatic_complexity = 14
+        option = parse_args("app")
+        option.CCN = 15
+        option.short = True
+        filename = "FILENAME"
+        fileStat = FileInformation(filename, 1, [self.foo])
+        result = print_result_with_scheme([fileStat], option)
+
+        # Test that there is NO filename ("FILENAME") in output as complexity WAS NOT exceeded
+        # and we used `--short option`
+        # If short option wouldn't be used FILENAME should occur 2 times (1 for functions, 1 for file)
+        filename_found_cnt = 0
+        for line in sys.stdout.stream.splitlines():
+            if filename in line:
+                filename_found_cnt += 1
+        self.assertEqual(0, filename_found_cnt)
+
+    def test_print_result_short_warning(self):
+        """Test that fileinfo is not printed if `short` option is specified"""
+        self.foo.end_line = 100
+        self.foo.cyclomatic_complexity = 16
+        option = parse_args("app")
+        option.CCN = 15
+        option.short = True
+        filename = "FILENAME"
+        fileStat = FileInformation(filename, 1, [self.foo])
+        result = print_result_with_scheme([fileStat], option)
+
+        # Test that there is ONLY ONE filename ("FILENAME") in output as complexity WAS exceeded
+        # and we used `--short option`
+        # If short option wouldn't be used FILENAME should occur 3 times (1 for functions, 1 for file, 1 for warning)
+        filename_found_cnt = 0
+        for line in sys.stdout.stream.splitlines():
+            if filename in line:
+                filename_found_cnt += 1
+        self.assertEqual(1, filename_found_cnt)
 
 
 class Ext(object):
@@ -53,7 +97,6 @@ class TestWarningOutput(StreamStdoutTestCase):
         StreamStdoutTestCase.setUp(self)
         self.option = parse_args("app")
         self.foo = FunctionInfo("foo", 'FILENAME', 100)
-        fileSummary = FileInformation("FILENAME", 123, [self.foo])
         self.scheme = Mock()
 
     def test_should_have_header_when_warning_only_is_off(self):
@@ -99,25 +142,30 @@ class TestWarningOutput(StreamStdoutTestCase):
 
 class TestFileInformationOutput(StreamStdoutTestCase):
 
+    def setUp(self):
+        StreamStdoutTestCase.setUp(self)
+        self.option = parse_args("app")
+
     def test_print_and_save_detail_information(self):
         scheme = OutputScheme([])
         fileSummary = FileInformation("FILENAME", 123, [])
-        print_and_save_modules([fileSummary], scheme)
+        print_result([fileSummary], self.option,  scheme, AllResult)
         self.assertIn("    123       0.0     0.0        0.0         0     FILENAME\n", sys.stdout.stream)
 
     def test_print_and_save_detail_information_with_ext(self):
         scheme = OutputScheme([Ext()])
         fileSummary = FileInformation("FILENAME", 123, [])
-        print_and_save_modules([fileSummary], scheme)
+        print_result([fileSummary], self.option,  scheme, AllResult)
         self.assertIn("Avg.ND", sys.stdout.stream)
         self.assertIn("    123       0.0     0.0        0.0     0.0         0     FILENAME", sys.stdout.stream)
 
-
     def test_print_file_summary_only_once(self):
         scheme = OutputScheme([])
-        print_and_save_modules(
-                            [FileInformation("FILENAME1", 123, []),
-                             FileInformation("FILENAME2", 123, [])], scheme)
+        print_result([FileInformation("FILENAME1", 123, []),
+                      FileInformation("FILENAME2", 123, [])],
+                     self.option,
+                     scheme,
+                     AllResult)
         self.assertEqual(1, sys.stdout.stream.count("FILENAME1"))
 
 
@@ -139,7 +187,7 @@ class TestAllOutput(StreamStdoutTestCase):
 
     def test_print_result(self):
         file_infos = [FileInformation('f1.c', 1, []), FileInformation('f2.c', 1, [])]
-        option = Mock(CCN=15,thresholds={},  number = 0, extensions=[], whitelist='')
+        option = Mock(CCN=15, thresholds={}, number=0, extensions=[], whitelist='')
         self.assertEqual(0, print_result_with_scheme(file_infos, option))
 
     @patch.object(os.path, 'isfile')
@@ -148,7 +196,7 @@ class TestAllOutput(StreamStdoutTestCase):
         mock_isfile.return_value = True
         mock_open.return_value.read.return_value = script
         file_infos = [FileInformation('f1.c', 1, [self.foo])]
-        option = Mock(thresholds={'cyclomatic_complexity':15, 'length':1000}, CCN=15, number = 0, arguments=100, length=1000, extensions=[])
+        option = Mock(thresholds={'cyclomatic_complexity': 15, 'length': 1000}, CCN=15, number = 0, arguments=100, length=1000, extensions=[])
         return print_result_with_scheme(file_infos, option)
 
     def test_exit_with_non_zero_when_more_warning_than_ignored_number(self):
