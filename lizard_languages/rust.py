@@ -19,6 +19,11 @@ class RustReader(CodeReader, CCppCommentsMixin):
         super().__init__(context)
         self.parallel_states = [RustStates(context)]
 
+    @staticmethod
+    def generate_tokens(source_code, addition='', token_class=None):
+        addition = r"|(?:'\w+\b)"  # lifetimes, labels
+        return CodeReader.generate_tokens(source_code, addition, token_class)
+
 
 class RustStates(GoLikeStates):  # pylint: disable=R0903
     FUNC_KEYWORD = 'fn'

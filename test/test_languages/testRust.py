@@ -84,3 +84,13 @@ class TestRust(unittest.TestCase):
         }
         ''')
         self.assertEqual(2, len(result))
+
+    def test_lifetime(self):
+        result = get_rust_function_list('''
+        pub fn func<'a>(a: &'a i64)
+        {
+            _ = a
+        }
+        ''')
+
+        self.assertEqual(1, len(result))
