@@ -623,7 +623,7 @@ def whitelist_filter(warnings, script=None, whitelist=None):
 
     def get_whitelist(whitelist):
         if os.path.isfile(whitelist):
-            return open(whitelist, mode='r').read()
+            return auto_read(whitelist)
         if whitelist != DEFAULT_WHITELIST:
             print("WARNING: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             print("WARNING: the whitelist \""+whitelist+"\" doesn't exist.")
@@ -923,12 +923,12 @@ def get_all_source_files(paths, exclude_patterns, lans):
             for path in paths:
                 gitignore_path = os.path.join(path, '.gitignore')
                 if os.path.exists(gitignore_path):
-                    with open(gitignore_path, 'r') as gitignore_file:
-                        # Read lines and strip whitespace and empty lines
-                        patterns = [line.strip() for line in gitignore_file.readlines()]
-                        patterns = [p for p in patterns if p and not p.startswith('#')]
-                        gitignore_spec = pathspec.PathSpec.from_lines('gitwildmatch', patterns)
-                        base_path = path
+                    gitignore_file = auto_read(gitignore_path)
+                    # Read lines and strip whitespace and empty lines
+                    patterns = [line.strip() for line in gitignore_file.splitlines()]
+                    patterns = [p for p in patterns if p and not p.startswith('#')]
+                    gitignore_spec = pathspec.PathSpec.from_lines('gitwildmatch', patterns)
+                    base_path = path
                     break
         except ImportError:
             pass
