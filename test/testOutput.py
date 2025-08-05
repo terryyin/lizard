@@ -143,12 +143,12 @@ class TestAllOutput(StreamStdoutTestCase):
         self.assertEqual(0, print_result_with_scheme(file_infos, option))
 
     @patch.object(os.path, 'isfile')
-    @patch('lizard.open', create=True)
-    def check_whitelist(self, script, mock_open, mock_isfile):
+    @patch('lizard.auto_read')
+    def check_whitelist(self, script, mock_auto_read, mock_isfile):
         mock_isfile.return_value = True
-        mock_open.return_value.read.return_value = script
+        mock_auto_read.return_value = script
         file_infos = [FileInformation('f1.c', 1, [self.foo])]
-        option = Mock(thresholds={'cyclomatic_complexity':15, 'length':1000}, CCN=15, number = 0, arguments=100, length=1000, extensions=[])
+        option = Mock(thresholds={'cyclomatic_complexity':15, 'length':1000}, CCN=15, number = 0, arguments=100, length=1000, extensions=[], whitelist='whitelist.txt')
         return print_result_with_scheme(file_infos, option)
 
     def test_exit_with_non_zero_when_more_warning_than_ignored_number(self):

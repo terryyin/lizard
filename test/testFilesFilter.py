@@ -130,8 +130,8 @@ class TestFilesFilter(unittest.TestCase):
     @patch.object(os.path, "exists")
     @patch.object(os.path, "relpath")
     @patch.object(os, "walk")
-    @patch("builtins.open", create=True)
-    def test_gitignore_filter(self, mock_open, mock_os_walk, mock_relpath, mock_exists):
+    @patch("lizard.auto_read")
+    def test_gitignore_filter(self, mock_auto_read, mock_os_walk, mock_relpath, mock_exists):
         mock_os_walk.return_value = (['.',
                                     None,
                                     ['temp.c', 'node_modules/file.js', 'useful.cpp']], )
@@ -147,9 +147,7 @@ class TestFilesFilter(unittest.TestCase):
             return path.replace(os.sep, '/')
         mock_relpath.side_effect = relpath_side_effect
         
-        mock_file = mock_open.return_value.__enter__.return_value
-        mock_file.readlines.return_value = ["node_modules/\n", "*.c\n"]
-        mock_file.read.return_value = "node_modules/\n*.c\n"
+        mock_auto_read.return_value = "node_modules/\n*.c\n"
         
         files = get_all_source_files(["dir"], [], [])
         if which_system() == "Windows":
