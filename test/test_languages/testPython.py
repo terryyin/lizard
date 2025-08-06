@@ -376,6 +376,75 @@ class Test_parser_for_Python(unittest.TestCase):
         functions = get_python_function_list(inspect.getsource(function_with_comments))
         self.assertEqual(2, functions[0].nloc)
 
+    def test_triple_quoted_strings_as_comments_not_counted_in_nloc(self):
+        """Test that triple-quoted strings used as comments are not counted in NLOC"""
+        # Single line triple-quoted string as comment
+        code1 = '''def test_func():
+    x = 1
+    """This is a comment, not a docstring."""
+    return x
+'''
+        functions = get_python_function_list(code1)
+        self.assertEqual(3, functions[0].nloc)  # def, x=1, return x
+        
+    def test_multiline_triple_quoted_strings_as_comments_not_counted_in_nloc(self):
+        """Test that multiline triple-quoted strings used as comments are not counted in NLOC"""
+        code = '''def test_func():
+    x = 1
+    """This is a multiline comment.
+    It spans multiple lines.
+    And should not be counted."""
+    return x
+'''
+        functions = get_python_function_list(code)
+        self.assertEqual(3, functions[0].nloc)  # def, x=1, return x
+        
+    def test_single_quoted_triple_strings_as_comments_not_counted_in_nloc(self):
+        """Test that single-quoted triple strings used as comments are not counted in NLOC"""
+        code = '''def test_func():
+    x = 1
+    \'''This is also a comment.
+    Using single quotes instead of double.
+    Should also not be counted.\'''
+    return x
+'''
+        functions = get_python_function_list(code)
+        self.assertEqual(3, functions[0].nloc)  # def, x=1, return x
+        
+    def test_docstring_still_not_counted_in_nloc(self):
+        """Test that docstrings (first statement) are still correctly excluded from NLOC"""
+        code = '''def test_func():
+    """This is a proper docstring."""
+    x = 1
+    return x
+'''
+        functions = get_python_function_list(code)
+        self.assertEqual(3, functions[0].nloc)  # def, x=1, return x
+        
+    def test_mixed_comments_and_triple_quoted_strings_not_counted_in_nloc(self):
+        """Test mixed regular comments and triple-quoted strings as comments"""
+        code = '''def test_func():
+    x = 1
+    # Regular comment
+    """Triple-quoted comment."""
+    y = 2
+    \'''Another triple-quoted comment.\'''
+    # Another regular comment
+    return x + y
+'''
+        functions = get_python_function_list(code)
+        self.assertEqual(4, functions[0].nloc)  # def, x=1, y=2, return x+y
+        
+    def test_triple_quoted_string_assigned_to_variable_counted_in_nloc(self):
+        """Test that triple-quoted strings assigned to variables ARE counted in NLOC"""
+        code = '''def test_func():
+    x = 1
+    comment = """This is assigned to a variable, so it's code."""
+    return x
+'''
+        functions = get_python_function_list(code)
+        self.assertEqual(4, functions[0].nloc)  # def, x=1, comment=..., return x
+
     def test_odd_blank_line(self):
         code =  "class c:\n" + \
                 "    def f():\n" +\

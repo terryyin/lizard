@@ -37,6 +37,7 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
     def __init__(self, context):
         super(PythonReader, self).__init__(context)
         self.parallel_states = [PythonStates(context, self)]
+        self._last_meaningful_token = None  # Track the last meaningful token
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
@@ -45,6 +46,41 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
             r"|(?:\"\"\"(?:\\.|[^\"]|\"(?!\"\")|\"\"(?!\"))*\"\"\")" +
             r"|(?:\'\'\'(?:\\.|[^\']|\'(?!\'\')|\'\'(?!\'))*\'\'\')",
             token_class)
+
+    def process_token(self, token):
+        """Process triple-quoted strings used as comments.
+        
+        Triple-quoted strings that are not docstrings (i.e., not immediately
+        after function definitions) should be treated like comments and not
+        counted in NLOC, but only if they appear to be standalone statements
+        rather than part of assignments or other expressions.
+        
+        Returns:
+            bool: True if the token was handled specially, False otherwise
+        """
+        if (token.startswith('"""') or token.startswith("'''")) and len(token) >= 6:
+            # Check if this is likely a standalone comment (not a docstring)
+            # Docstrings are handled separately in _state_first_line
+            current_state = self.parallel_states[0]._state
+            
+            # If we're not in the first line state, check if this is a standalone string
+            if current_state != current_state.__self__._state_first_line:
+                # Check if the immediate previous meaningful token suggests this is part of an expression
+                assignment_tokens = ['=', '+=', '-=', '*=', '/=', '%=', '//=', '**=', '&=', '|=', '^=',
+                                   '<<=', '>>=', '(', 'return', ',', '[', '+', '-', '*', '/', '%']
+                
+                is_part_of_expression = self._last_meaningful_token in assignment_tokens
+                
+                # Only treat as comment if it's NOT part of an expression
+                if not is_part_of_expression:
+                    # Subtract the NLOC contribution of this triple-quoted string
+                    self.context.add_nloc(-(token.count('\n') + 1))
+        
+        # Update last meaningful token (ignore whitespace and newlines)
+        if token not in ['\n', ' ', '\t'] and not token.isspace():
+            self._last_meaningful_token = token
+                
+        return False  # Continue with normal processing
 
     def preprocess(self, tokens):
         indents = PythonIndents(self.context)
