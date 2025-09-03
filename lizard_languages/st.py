@@ -3,7 +3,7 @@ Language parser for Structured Text.
 '''
 
 import re
-import itertools
+# import itertools
 from .code_reader import CodeStateMachine, CodeReader
 
 
@@ -15,7 +15,6 @@ class StCommentsMixin(object):  # pylint: disable=R0903
             return token[2:]
 
 
-# pylint: disable=R0903
 class StReader(CodeReader, StCommentsMixin):
     ''' This is the reader for Structured Text. '''
 
@@ -23,19 +22,53 @@ class StReader(CodeReader, StCommentsMixin):
     language_names = ['st']
     macro_pattern = re.compile(r"#\s*(\w+)\s*(.*)", re.M | re.S)
 
+    # track block starters
+    _conditions = set([
+        'if', 'elsif', 'else', 'case', 'for', 'while', 'repeat',
+        'IF', 'ELSIF', 'ELSE', 'CASE', 'FOR', 'WHILE', 'REPEAT'
+         ])
+
+    _functions = set([
+        'FUNCTION_BLOCK', 'FUNCTION', 'ACTION'
+    ])
+
+    _blocks = set([
+        'IF', 'FOR', 'WHILE', 'REPEAT',
+    ])
+
+    _ends = set(
+        [f'END_{_}' for _ in _functions] +
+        [f'END_{_}' for _ in _blocks]
+    )
+
+    _declerations = set([
+        'VAR_INPUT', 'VAR_OUTPUT', 'VAR_IN_OUT', 'END_VAR',
+    ])
+
     def __init__(self, context):
         super(StReader, self).__init__(context)
         self.parallel_states = (
-            StNestingStates(context),
-            StDeclarationStates(context)
+            StStates(context, self),
         )
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
-        # Add pattern for floating point literals to the token generation
-        addition = r"|(?:\d*\.\d+(?:[eE][-+]?\d+)?)" + \
-                  r"|(?:\d+\.(?:\d+)?(?:[eE][-+]?\d+)?)" + \
-                  addition
+
+        # Capture everything until end of logical line, where lines may be continued with \ at the end.”
+        _until_end = r'(?:\\\n|[^\n])*'
+        block_endings = '|'.join(f'END_{_}' for _ in StReader._blocks)
+        addition = (
+            r'(?i)'  # case-insensitive
+            r'//' + _until_end + r'|'    # line comment
+            r'\(\*' + _until_end + r'|'  # block comment  (* ... *)
+            r'OR|'
+            r'AND|'
+            r'XOR|'
+            r'NOT|'
+            r'ELSE\s+IF|'
+            + block_endings + addition
+        )
+
         return CodeReader.generate_tokens(source_code, addition, token_class)
 
     def preprocess(self, tokens):
@@ -44,7 +77,7 @@ class StReader(CodeReader, StCommentsMixin):
             macro = self.macro_pattern.match(token)
             if macro:
                 directive = macro.group(1).lower()
-                if directive in ("if", "ifdef", "elif"):
+                if directive in ("if", "ifdef", "ifndef", "elif"):
                     self.context.add_condition()
                 elif directive == "include":
                     yield "#include"
@@ -52,51 +85,86 @@ class StReader(CodeReader, StCommentsMixin):
                 for _ in macro.group(2).splitlines()[1:]:
                     yield "\n"
             else:
-                yield token
+                # Eliminate Whitespace
+                if not token.isspace() or token == '\n':
+                    yield token
 
 
-class StNestingStates(CodeStateMachine):
-    """Track nesting levels in Structured Text."""
+class StStates(CodeStateMachine):
+    """Track Structured Text State."""
 
-    def _state_global(self, token: str):
-        low = token.lower()
+    def __init__(self, context, reader):
+        super().__init__(context)
+        self.reader = reader
+        self.last_token = None
 
-        # Control flow structures
-        if low in ("if", "case", "for", "while", "repeat"):
+    def __call__(self, token, reader=None):
+        if self._state(token):
+            self.next(self.saved_state)
+            if self.callback:
+                self.callback()
+        self.last_token = token
+        if self.to_exit:
+            return True
+
+    def _state_global(self, token):
+        token_upper = token.upper()
+
+        if token_upper in StReader._functions:
+            self._state = self._function_name
+        elif token_upper in StReader._blocks:
             self.context.add_bare_nesting()
-        elif low in ("end_if", "end_case", "end_for", "end_while", "until", "end_repeat"):
-            self.context.pop_nesting()
-
-        # Actions
-        elif low == "action":
+        elif token_upper == "IF":
+            self._state = self._if
+        elif token_upper == "CASE":
             self.context.add_bare_nesting()
-        elif low == "end_action":
+        elif token_upper.startswith("END") or token in StReader._ends:
             self.context.pop_nesting()
 
-        # Program and function blocks
-        elif low in ("program", "function", "function_block"):
-            self.context.add_bare_nesting()
-        elif low in ("end_program", "end_function", "end_function_block"):
-            self.context.pop_nesting()
+    def reset_state(self, token=None):
+        self._state = self._state_global
+        if token is not None:
+            self._state_global(token)
 
+    def _function_name(self, token):
+        self.context.restart_new_function(token)
+        self.context.add_to_long_function_name('(')
+        self._state = self._function_has_param
 
-class StDeclarationStates(CodeStateMachine):
-    """Track VAR ... END_VAR blocks for declarations."""
-
-    def _state_global(self, token: str):
-        low = token.lower()
-        if low == "var":
-            self._state = self._in_var_block
-            self.context.add_bare_nesting()
-        elif low == "end_var":
-            self.context.pop_nesting()
-            self._state = self._state_global
-
-    def _in_var_block(self, token: str):
-        low = token.lower()
-        if low == "end_var":
-            self.context.pop_nesting()
-            self._state = self._state_global
+    def _function_has_param(self, token):
+        if token == '(':
+            self.next(self._function_params, token)
         else:
-            # Treat as declaration inside VAR block
+            self._function(token)
+
+    @CodeStateMachine.read_inside_brackets_then('()', '_function')
+    def _function_params(self, token):
+        if token not in '()':
             self.context.parameter(token)
+
+    def _function(self, token):
+        self.context.add_to_long_function_name(' )')
+        self.context.add_bare_nesting()
+        self.reset_state(token)
+
+
+
+
+
+
+    def _if(self, token):
+        if token == "(":
+            self.next(self._if_cond, token)
+        else:
+            self.reset_state(token)
+
+    @CodeStateMachine.read_inside_brackets_then("()", "_if_then")
+    def _if_cond(self, token):
+        pass
+
+    def _if_then(self, token):
+        if token.upper() in {"THEN"}:
+            self.context.add_bare_nesting()
+            self.reset_state()
+        else:
+            self.reset_state(token)
