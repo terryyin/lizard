@@ -1,5 +1,11 @@
 from lizard import analyze_file, FileAnalyzer, get_extensions
 
+def get_st_fileinfo(source_code):
+    return analyze_file.analyze_source_code("a.st", source_code)
+
+def get_st_function_list(source_code):
+    return get_st_fileinfo(source_code).function_list
+
 def get_cpp_fileinfo(source_code):
     return analyze_file.analyze_source_code("a.cpp", source_code)
 
