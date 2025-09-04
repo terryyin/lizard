@@ -18,15 +18,15 @@ class StCommentsMixin(object):  # pylint: disable=R0903
 class StReader(CodeReader, StCommentsMixin):
     ''' This is the reader for Structured Text. '''
 
-    ext = ["st", "typ", "var"]
+    ext = ["st", "typ", "var", "fun"]
     language_names = ['st']
     macro_pattern = re.compile(r"#\s*(\w+)\s*(.*)", re.M | re.S)
 
     # track block starters
     _conditions = set([
-        'if', 'elsif', 'else', 'case', 'for', 'while', 'repeat',
-        'IF', 'ELSIF', 'ELSE', 'CASE', 'FOR', 'WHILE', 'REPEAT'
-         ])
+        'if', 'elsif', 'case', 'for', 'while', 'repeat',
+        'IF', 'ELSIF', 'CASE', 'FOR', 'WHILE', 'REPEAT'
+    ])
 
     _functions = set([
         'FUNCTION_BLOCK', 'FUNCTION', 'ACTION'
@@ -44,6 +44,12 @@ class StReader(CodeReader, StCommentsMixin):
     _declerations = set([
         'VAR_INPUT', 'VAR_OUTPUT', 'VAR_IN_OUT', 'END_VAR',
     ])
+
+    # Nesting Depth
+    loops = [
+        'if', 'case', 'for', 'while', 'repeat',
+        'IF', 'CASE', 'FOR', 'WHILE', 'REPEAT'
+    ]
 
     def __init__(self, context):
         super(StReader, self).__init__(context)
@@ -114,10 +120,6 @@ class StStates(CodeStateMachine):
             self._state = self._function_name
         elif token_upper in StReader._blocks:
             self.context.add_bare_nesting()
-        elif token_upper == "IF":
-            self._state = self._if
-        elif token_upper == "CASE":
-            self.context.add_bare_nesting()
         elif token_upper.startswith("END") or token in StReader._ends:
             self.context.pop_nesting()
 
@@ -128,13 +130,15 @@ class StStates(CodeStateMachine):
 
     def _function_name(self, token):
         self.context.restart_new_function(token)
-        self.context.add_to_long_function_name('(')
-        self._state = self._function_has_param
+        self.context.add_to_long_function_name('() -> ')
+        self._state = self._function_has_return
 
-    def _function_has_param(self, token):
+    def _function_has_return(self, token):
+        # Check for return values
         if token == '(':
             self.next(self._function_params, token)
         else:
+            self.context.add_to_long_function_name('void')
             self._function(token)
 
     @CodeStateMachine.read_inside_brackets_then('()', '_function')
@@ -143,28 +147,5 @@ class StStates(CodeStateMachine):
             self.context.parameter(token)
 
     def _function(self, token):
-        self.context.add_to_long_function_name(' )')
         self.context.add_bare_nesting()
         self.reset_state(token)
-
-
-
-
-
-
-    def _if(self, token):
-        if token == "(":
-            self.next(self._if_cond, token)
-        else:
-            self.reset_state(token)
-
-    @CodeStateMachine.read_inside_brackets_then("()", "_if_then")
-    def _if_cond(self, token):
-        pass
-
-    def _if_then(self, token):
-        if token.upper() in {"THEN"}:
-            self.context.add_bare_nesting()
-            self.reset_state()
-        else:
-            self.reset_state(token)
