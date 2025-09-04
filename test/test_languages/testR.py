@@ -419,6 +419,98 @@ class TestRFunctionParsing(unittest.TestCase):
         # print_positive: base + for + if = 3
         self.assertEqual(3, print_func.cyclomatic_complexity)
 
+    def test_multiple_assignment(self):
+        """Test multiple assignment operators for function definitions."""
+        code = '''
+        # Multiple assignment: both func5 and func6 should be detected
+        func5 <- func6 <- function(x, y) {
+            if (x > y) {
+                return(x * 2)
+            } else {
+                return(y * 2)
+            }
+        }
+        
+        # Another multiple assignment
+        a <- b <- c <- function(data) {
+            for (i in 1:length(data)) {
+                if (data[i] < 0) {
+                    data[i] <- 0
+                }
+            }
+            return(data)
+        }
+        '''
+        functions = get_r_function_list(code)
+        self.assertEqual(5, len(functions), "Should detect all functions in multiple assignment")
+        
+        func5 = next((f for f in functions if f.name == "func5"), None)
+        func6 = next((f for f in functions if f.name == "func6"), None)
+        func_a = next((f for f in functions if f.name == "a"), None)
+        func_b = next((f for f in functions if f.name == "b"), None)
+        func_c = next((f for f in functions if f.name == "c"), None)
+        
+        self.assertIsNotNone(func5, "func5 should be detected in multiple assignment")
+        self.assertIsNotNone(func6, "func6 should be detected in multiple assignment")
+        self.assertIsNotNone(func_a, "a should be detected in multiple assignment")
+        self.assertIsNotNone(func_b, "b should be detected in multiple assignment")
+        self.assertIsNotNone(func_c, "c should be detected in multiple assignment")
+        
+        # All functions should have the same complexity since they're the same function
+        # func5/func6: base + if = 2
+        self.assertEqual(2, func5.cyclomatic_complexity)
+        self.assertEqual(2, func6.cyclomatic_complexity)
+        # a/b/c: base + for + if = 3
+        self.assertEqual(3, func_a.cyclomatic_complexity)
+        self.assertEqual(3, func_b.cyclomatic_complexity)
+        self.assertEqual(3, func_c.cyclomatic_complexity)
+
+    def test_parenthesized_assignments(self):
+        """Test parenthesized assignment expressions."""
+        code = '''
+        # Function assigned within parentheses
+        (func_in_parens <- function(x) {
+            if (x > 0) {
+                return(x^2)
+            } else {
+                return(0)
+            }
+        })
+        
+        # More complex parenthesized expression
+        result <- (helper_func <- function(data, threshold) {
+            for (i in 1:length(data)) {
+                if (data[i] > threshold) {
+                    data[i] <- threshold
+                }
+            }
+            return(data)
+        })(some_data, 100)
+        
+        # Nested parentheses
+        ((nested_func <- function(a, b) {
+            return(a * b)
+        }))
+        '''
+        functions = get_r_function_list(code)
+        self.assertEqual(3, len(functions), "Should detect functions in parenthesized assignments")
+        
+        func_in_parens = next((f for f in functions if f.name == "func_in_parens"), None)
+        helper_func = next((f for f in functions if f.name == "helper_func"), None)
+        nested_func = next((f for f in functions if f.name == "nested_func"), None)
+        
+        self.assertIsNotNone(func_in_parens, "func_in_parens should be detected")
+        self.assertIsNotNone(helper_func, "helper_func should be detected")
+        self.assertIsNotNone(nested_func, "nested_func should be detected")
+        
+        # Check complexities
+        # func_in_parens: base + if = 2
+        self.assertEqual(2, func_in_parens.cyclomatic_complexity)
+        # helper_func: base + for + if = 3
+        self.assertEqual(3, helper_func.cyclomatic_complexity)
+        # nested_func: base = 1
+        self.assertEqual(1, nested_func.cyclomatic_complexity)
+
 
 class TestRFileExtensions(unittest.TestCase):
     """Test R file extension matching."""

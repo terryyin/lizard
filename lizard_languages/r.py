@@ -56,6 +56,7 @@ class RStates(CodeStateMachine):
         self.recent_tokens = []  # Track recent tokens to find function names
         self.brace_count = 0  # Track brace nesting for function bodies
         self.in_braced_function = False  # Track if current function uses braces
+        self.additional_function_names = []  # Store additional names for multiple assignment
         
     def _state_global(self, token):
         """Global state - looking for function definitions."""
@@ -72,47 +73,68 @@ class RStates(CodeStateMachine):
                 # recent_tokens now contains [..., assignment_op, 'function']
                 assignment_op = self.recent_tokens[-2]  # The token before 'function'
                 if assignment_op in ['<-', '=']:
-                    # Find function name (should be before the assignment operator)
-                    # Handle dotted names like print.myclass
-                    func_name = self._extract_function_name()
-                    self._start_function(func_name)
+                    # Handle multiple assignments by creating separate functions
+                    func_names = self._extract_function_names()
+                    
+                    # Create the first function (this will be the main one with the function body)
+                    self._start_function(func_names[0])
                     self._state = self._function_params
+                    
+                    # Store additional names for later processing
+                    self.additional_function_names = func_names[1:] if len(func_names) > 1 else []
                     return
             
             # If we get here, it's an anonymous function or not a proper assignment
             self._start_function("(anonymous)")
             self._state = self._function_params
                 
-    def _extract_function_name(self):
-        """Extract function name from recent tokens, handling dotted names like print.myclass."""
+    def _extract_function_names(self):
+        """Extract all function names from recent tokens, handling multiple assignments."""
         if len(self.recent_tokens) < 3:
-            return "(anonymous)"
+            return ["(anonymous)"]
         
-        # Look backwards from the assignment operator to find the complete function name
-        # recent_tokens ends with [..., assignment_op, 'function']
-        # We need to find the start of the function name before the assignment operator
+        # Look backwards from the assignment operator to find all function names
+        # For multiple assignment like: a <- b <- c <- function(...)
+        # recent_tokens ends with [..., 'a', '<-', 'b', '<-', 'c', '<-', 'function']
         assignment_index = len(self.recent_tokens) - 2  # Position of assignment operator
         
-        # Collect tokens that form the function name (going backwards)
-        name_tokens = []
+        function_names = []
         i = assignment_index - 1  # Start from token before assignment operator
+        current_name_tokens = []
         
         while i >= 0:
             token = self.recent_tokens[i]
+            
+            # If we hit an assignment operator, we've found a complete variable name
+            if token in ['<-', '=']:
+                if current_name_tokens:
+                    function_names.append(''.join(reversed(current_name_tokens)))
+                    current_name_tokens = []
+                i -= 1
+                continue
+            
             # Stop if we hit keywords or operators that shouldn't be part of function names
-            if token in ['function', '<-', '=', '(', ')', '{', '}', '\n']:
+            if token in ['function', '(', ')', '{', '}', '\n']:
                 break
+                
             # Valid R identifier characters and dots
             if token.replace('_', 'a').replace('.', 'a').isalnum() or token == '.':
-                name_tokens.insert(0, token)  # Insert at beginning to maintain order
+                current_name_tokens.append(token)
                 i -= 1
             else:
                 break
         
-        if name_tokens:
-            return ''.join(name_tokens)
-        else:
-            return "(anonymous)"
+        # Add the last name if we have one
+        if current_name_tokens:
+            function_names.append(''.join(reversed(current_name_tokens)))
+        
+        # Return names in the correct order (left to right as they appear in code)
+        return list(reversed(function_names)) if function_names else ["(anonymous)"]
+    
+    def _extract_function_name(self):
+        """Extract the first function name (for backward compatibility)."""
+        names = self._extract_function_names()
+        return names[0] if names else "(anonymous)"
     
     def _start_function(self, name):
         """Start tracking a new function."""
@@ -170,13 +192,18 @@ class RStates(CodeStateMachine):
                     # End current function first
                     self.context.end_of_function()
                     
+                    # Handle multiple assignments for nested functions too
+                    func_names = self._extract_function_names()
+                    
                     # Start a new function for the nested function
-                    func_name = self._extract_function_name()
-                    self._start_function(func_name)
+                    self._start_function(func_names[0])
                     self._state = self._function_params
                     # Reset brace counting for the new function
                     self.brace_count = 0
                     self.in_braced_function = False
+                    
+                    # Store additional names for later processing
+                    self.additional_function_names = func_names[1:] if len(func_names) > 1 else []
                     return
             
         # For single-line functions without braces, end at newline
@@ -203,10 +230,35 @@ class RStates(CodeStateMachine):
             return
         
         # If we encounter anything else, this is not a right assignment
-        # End the function and process this token in global state
-        self.context.end_of_function()
+        # End the function and create additional functions for multiple assignments
+        self._finalize_function_with_multiple_assignments()
         self._state = self._state_global
         self._state_global(token)
+        
+    def _finalize_function_with_multiple_assignments(self):
+        """End the current function and create additional functions for multiple assignments."""
+        # Get the current function's information before ending it
+        current_func = self.context.current_function
+        
+        # End the current function
+        self.context.end_of_function()
+        
+        # Create additional function entries for multiple assignments
+        if self.additional_function_names and current_func:
+            for func_name in self.additional_function_names:
+                # Create a new function with the same complexity and line info
+                self.context.restart_new_function(func_name)
+                # Copy the complexity from the original function
+                if hasattr(current_func, 'cyclomatic_complexity'):
+                    self.context.current_function.cyclomatic_complexity = current_func.cyclomatic_complexity
+                # Set the same line range
+                self.context.current_function.start_line = current_func.start_line
+                self.context.current_function.end_line = current_func.end_line
+                # End this function immediately
+                self.context.end_of_function()
+        
+        # Clear the additional names
+        self.additional_function_names = []
         
     def _read_right_assignment_name(self, token):
         """Read the function name after right assignment operator."""
@@ -220,19 +272,19 @@ class RStates(CodeStateMachine):
             if self.context.current_function:
                 self.context.current_function.name = token
             
-            # End the function and return to global state
-            self.context.end_of_function()
+            # End the function and create additional functions for multiple assignments
+            self._finalize_function_with_multiple_assignments()
             self._state = self._state_global
             return
         
         # If we get something unexpected, treat as anonymous function
-        self.context.end_of_function()
+        self._finalize_function_with_multiple_assignments()
         self._state = self._state_global
         self._state_global(token)
         
     def statemachine_before_return(self):
         """Called when processing is complete - end any open functions."""
         if self._state in [self._function_body, self._check_right_assignment, self._read_right_assignment_name]:
-            # End any open function
+            # End any open function and process multiple assignments
             if hasattr(self.context, 'current_function') and self.context.current_function:
-                self.context.end_of_function()
+                self._finalize_function_with_multiple_assignments()
