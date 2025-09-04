@@ -12,7 +12,7 @@ class RReader(CodeReader, ScriptLanguageMixIn):
     ext = ['r', 'R']
     language_names = ['r', 'rlang']
 
-    _conditions = set(['if', 'for', 'while', 'repeat', '&&', '||', '?'])
+    _conditions = set(['if', 'for', 'while', 'repeat'])
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
@@ -122,8 +122,6 @@ class RStates(CodeStateMachine):
         if self.brace_depth == 0 and token in (',', ')', '}', '\n'):
             self.context.end_of_function()
             self._finish_function()
-            # Re-handle current token in restored state
-            self._state(token)
             return
         if token == 'function':
             # Nested function inside body
