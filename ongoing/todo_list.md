@@ -1,3 +1,8 @@
+- [x] Research R syntax and plan lizard support in `ongoing/r_support.md` (completed)
+- [x] Add tests for R: tokenizing, functions, anonymous, nested, names, complexity (completed)
+- [x] Implement `RReader` and state machine for functions and control flow (completed)
+- [x] Register `RReader` in `lizard_languages/__init__.py` (completed)
+- [x] Run pytest and iterate until tests pass (completed)
 - [x] Fix ES6/JavaScript template string tokenization to match test expectations (completed)
 - [ ] Create or update `ongoing/checkstyle_output.md` with requirements and design notes.
 - [ ] Add `--checkstyle` option to the CLI and ensure it appears in `lizard --help`.
