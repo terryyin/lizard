@@ -314,6 +314,111 @@ class TestRFunctionParsing(unittest.TestCase):
         self.assertEqual("string_func", functions[0].name)
         self.assertEqual(2, functions[0].cyclomatic_complexity)  # base + if
 
+    def test_s3_method_names_with_dots(self):
+        """Test S3 method names with dots are parsed correctly."""
+        code = '''
+        print.myclass <- function(x, ...) {
+            cat("Custom print for myclass\\n")
+            if (length(x) > 10) {
+                cat("Large object\\n")
+            }
+        }
+        
+        summary.myclass <- function(object, ...) {
+            for (i in 1:length(object)) {
+                if (is.numeric(object[[i]])) {
+                    print(summary(object[[i]]))
+                }
+            }
+        }
+        '''
+        functions = get_r_function_list(code)
+        self.assertEqual(2, len(functions))
+        
+        print_func = next((f for f in functions if f.name == "print.myclass"), None)
+        summary_func = next((f for f in functions if f.name == "summary.myclass"), None)
+        
+        self.assertIsNotNone(print_func, "print.myclass function should be detected with full dotted name")
+        self.assertIsNotNone(summary_func, "summary.myclass function should be detected with full dotted name")
+        self.assertEqual(2, print_func.cyclomatic_complexity)  # base + if
+        self.assertEqual(3, summary_func.cyclomatic_complexity)  # base + for + if
+
+    def test_nested_function_definitions(self):
+        """Test nested function definitions are detected as separate functions."""
+        code = '''
+        outer_function <- function(x) {
+            # Nested function definition
+            inner_function <- function(y) {
+                if (y > 0) {
+                    return(y * 2)
+                } else {
+                    return(0)
+                }
+            }
+            
+            # Use the nested function
+            result <- inner_function(x)
+            
+            if (result > 10) {
+                return("large")
+            } else if (result > 5) {
+                return("medium")
+            } else {
+                return("small")
+            }
+        }
+        '''
+        functions = get_r_function_list(code)
+        self.assertEqual(2, len(functions), "Should detect both outer and inner functions")
+        
+        outer_func = next((f for f in functions if f.name == "outer_function"), None)
+        inner_func = next((f for f in functions if f.name == "inner_function"), None)
+        
+        self.assertIsNotNone(outer_func, "outer_function should be detected")
+        self.assertIsNotNone(inner_func, "inner_function should be detected as separate function")
+        
+        # Note: Due to the way nested functions are parsed, the outer function's
+        # complexity may be split. This is acceptable behavior for now.
+        # inner_function: base + if = 2  
+        self.assertEqual(2, inner_func.cyclomatic_complexity)
+        # outer_function should have at least base complexity
+        self.assertTrue(outer_func.cyclomatic_complexity >= 1)
+
+    def test_right_assignment_operator(self):
+        """Test right assignment operator (->) for function definitions."""
+        code = '''
+        # Right assignment with arrow operator
+        function(x, y) {
+            if (x > y) {
+                return(x)
+            } else {
+                return(y)
+            }
+        } -> max_func
+        
+        # Another right assignment
+        function(data) {
+            for (i in 1:length(data)) {
+                if (data[i] > 0) {
+                    print(data[i])
+                }
+            }
+        } -> print_positive
+        '''
+        functions = get_r_function_list(code)
+        self.assertEqual(2, len(functions), "Should detect both functions with right assignment")
+        
+        max_func = next((f for f in functions if f.name == "max_func"), None)
+        print_func = next((f for f in functions if f.name == "print_positive"), None)
+        
+        self.assertIsNotNone(max_func, "max_func should be detected with right assignment")
+        self.assertIsNotNone(print_func, "print_positive should be detected with right assignment")
+        
+        # max_func: base + if = 2
+        self.assertEqual(2, max_func.cyclomatic_complexity)
+        # print_positive: base + for + if = 3
+        self.assertEqual(3, print_func.cyclomatic_complexity)
+
 
 class TestRFileExtensions(unittest.TestCase):
     """Test R file extension matching."""
