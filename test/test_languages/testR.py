@@ -83,7 +83,7 @@ class TestRFunctionParsing(unittest.TestCase):
             if (x > 0) {
                 print("positive")
             } else if (x < 0) {
-                print("negative") 
+                print("negative")
             } else {
                 print("zero")
             }
@@ -121,7 +121,7 @@ class TestRFunctionParsing(unittest.TestCase):
             while (x > 1) {
                 x <- x / 2
             }
-            
+
             repeat {
                 x <- x * 2
                 if (x > 100) break
@@ -141,7 +141,7 @@ class TestRFunctionParsing(unittest.TestCase):
             if (a > 0 && b < 10 || c == 5) {
                 return(1)
             }
-            
+
             if (a %in% c(1, 2, 3) & b != 0) {
                 return(2)
             }
@@ -178,7 +178,7 @@ class TestRFunctionParsing(unittest.TestCase):
             tryCatch({
                 result <- 1 / x
                 return(result)
-            }, 
+            },
             error = function(e) {
                 return(NA)
             },
@@ -258,7 +258,7 @@ class TestRFunctionParsing(unittest.TestCase):
             if (x > 0) return(1)
             return(0)
         }
-        
+
         func2 <- function(y) {
             for (i in 1:y) {
                 print(i)
@@ -267,10 +267,10 @@ class TestRFunctionParsing(unittest.TestCase):
         '''
         functions = get_r_function_list(code)
         self.assertEqual(2, len(functions))
-        
+
         func1 = next((f for f in functions if f.name == "func1"), None)
         func2 = next((f for f in functions if f.name == "func2"), None)
-        
+
         self.assertIsNotNone(func1)
         self.assertIsNotNone(func2)
         self.assertEqual(2, func1.cyclomatic_complexity)  # base + if
@@ -283,7 +283,7 @@ class TestRFunctionParsing(unittest.TestCase):
         commented_func <- function(x) {
             # This is a comment
             y <- x + 1  # Inline comment
-            
+
             # Multi-line logic
             if (x > 0) {  # Positive check
                 return("positive")
@@ -303,7 +303,7 @@ class TestRFunctionParsing(unittest.TestCase):
         string_func <- function() {
             single_quote <- 'Hello World'
             double_quote <- "Hello World"
-            
+
             if (single_quote == double_quote) {
                 return(TRUE)
             }
@@ -323,7 +323,7 @@ class TestRFunctionParsing(unittest.TestCase):
                 cat("Large object\\n")
             }
         }
-        
+
         summary.myclass <- function(object, ...) {
             for (i in 1:length(object)) {
                 if (is.numeric(object[[i]])) {
@@ -334,10 +334,10 @@ class TestRFunctionParsing(unittest.TestCase):
         '''
         functions = get_r_function_list(code)
         self.assertEqual(2, len(functions))
-        
+
         print_func = next((f for f in functions if f.name == "print.myclass"), None)
         summary_func = next((f for f in functions if f.name == "summary.myclass"), None)
-        
+
         self.assertIsNotNone(print_func, "print.myclass function should be detected with full dotted name")
         self.assertIsNotNone(summary_func, "summary.myclass function should be detected with full dotted name")
         self.assertEqual(2, print_func.cyclomatic_complexity)  # base + if
@@ -355,10 +355,10 @@ class TestRFunctionParsing(unittest.TestCase):
                     return(0)
                 }
             }
-            
+
             # Use the nested function
             result <- inner_function(x)
-            
+
             if (result > 10) {
                 return("large")
             } else if (result > 5) {
@@ -370,16 +370,16 @@ class TestRFunctionParsing(unittest.TestCase):
         '''
         functions = get_r_function_list(code)
         self.assertEqual(2, len(functions), "Should detect both outer and inner functions")
-        
+
         outer_func = next((f for f in functions if f.name == "outer_function"), None)
         inner_func = next((f for f in functions if f.name == "inner_function"), None)
-        
+
         self.assertIsNotNone(outer_func, "outer_function should be detected")
         self.assertIsNotNone(inner_func, "inner_function should be detected as separate function")
-        
+
         # Note: Due to the way nested functions are parsed, the outer function's
         # complexity may be split. This is acceptable behavior for now.
-        # inner_function: base + if = 2  
+        # inner_function: base + if = 2
         self.assertEqual(2, inner_func.cyclomatic_complexity)
         # outer_function should have at least base complexity
         self.assertTrue(outer_func.cyclomatic_complexity >= 1)
@@ -395,7 +395,7 @@ class TestRFunctionParsing(unittest.TestCase):
                 return(y)
             }
         } -> max_func
-        
+
         # Another right assignment
         function(data) {
             for (i in 1:length(data)) {
@@ -407,13 +407,13 @@ class TestRFunctionParsing(unittest.TestCase):
         '''
         functions = get_r_function_list(code)
         self.assertEqual(2, len(functions), "Should detect both functions with right assignment")
-        
+
         max_func = next((f for f in functions if f.name == "max_func"), None)
         print_func = next((f for f in functions if f.name == "print_positive"), None)
-        
+
         self.assertIsNotNone(max_func, "max_func should be detected with right assignment")
         self.assertIsNotNone(print_func, "print_positive should be detected with right assignment")
-        
+
         # max_func: base + if = 2
         self.assertEqual(2, max_func.cyclomatic_complexity)
         # print_positive: base + for + if = 3
@@ -430,7 +430,7 @@ class TestRFunctionParsing(unittest.TestCase):
                 return(y * 2)
             }
         }
-        
+
         # Another multiple assignment
         a <- b <- c <- function(data) {
             for (i in 1:length(data)) {
@@ -443,19 +443,19 @@ class TestRFunctionParsing(unittest.TestCase):
         '''
         functions = get_r_function_list(code)
         self.assertEqual(5, len(functions), "Should detect all functions in multiple assignment")
-        
+
         func5 = next((f for f in functions if f.name == "func5"), None)
         func6 = next((f for f in functions if f.name == "func6"), None)
         func_a = next((f for f in functions if f.name == "a"), None)
         func_b = next((f for f in functions if f.name == "b"), None)
         func_c = next((f for f in functions if f.name == "c"), None)
-        
+
         self.assertIsNotNone(func5, "func5 should be detected in multiple assignment")
         self.assertIsNotNone(func6, "func6 should be detected in multiple assignment")
         self.assertIsNotNone(func_a, "a should be detected in multiple assignment")
         self.assertIsNotNone(func_b, "b should be detected in multiple assignment")
         self.assertIsNotNone(func_c, "c should be detected in multiple assignment")
-        
+
         # All functions should have the same complexity since they're the same function
         # func5/func6: base + if = 2
         self.assertEqual(2, func5.cyclomatic_complexity)
@@ -476,7 +476,7 @@ class TestRFunctionParsing(unittest.TestCase):
                 return(0)
             }
         })
-        
+
         # More complex parenthesized expression
         result <- (helper_func <- function(data, threshold) {
             for (i in 1:length(data)) {
@@ -486,7 +486,7 @@ class TestRFunctionParsing(unittest.TestCase):
             }
             return(data)
         })(some_data, 100)
-        
+
         # Nested parentheses
         ((nested_func <- function(a, b) {
             return(a * b)
@@ -494,15 +494,15 @@ class TestRFunctionParsing(unittest.TestCase):
         '''
         functions = get_r_function_list(code)
         self.assertEqual(3, len(functions), "Should detect functions in parenthesized assignments")
-        
+
         func_in_parens = next((f for f in functions if f.name == "func_in_parens"), None)
         helper_func = next((f for f in functions if f.name == "helper_func"), None)
         nested_func = next((f for f in functions if f.name == "nested_func"), None)
-        
+
         self.assertIsNotNone(func_in_parens, "func_in_parens should be detected")
         self.assertIsNotNone(helper_func, "helper_func should be detected")
         self.assertIsNotNone(nested_func, "nested_func should be detected")
-        
+
         # Check complexities
         # func_in_parens: base + if = 2
         self.assertEqual(2, func_in_parens.cyclomatic_complexity)
@@ -521,7 +521,7 @@ class TestRFileExtensions(unittest.TestCase):
         self.assertTrue(RReader.match_filename("test.R"))
         self.assertTrue(RReader.match_filename("path/to/script.r"))
         self.assertTrue(RReader.match_filename("path/to/script.R"))
-        
+
         # Should not match other extensions
         self.assertFalse(RReader.match_filename("test.py"))
         self.assertFalse(RReader.match_filename("test.rb"))
