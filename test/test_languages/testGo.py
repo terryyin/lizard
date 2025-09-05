@@ -17,7 +17,7 @@ class Test_parser_for_Go(unittest.TestCase):
     def test_no_function(self):
         result = get_go_function_list('''
         for name, ok := range names; ok {
-                print("Hello, \(name)!")
+                print("Hello, \\(name)!")
             }
                 ''')
         self.assertEqual(0, len(result))
