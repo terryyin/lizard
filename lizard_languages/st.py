@@ -18,7 +18,7 @@ class StCommentsMixin(object):  # pylint: disable=R0903
 class StReader(CodeReader, StCommentsMixin):
     ''' This is the reader for Structured Text. '''
 
-    ext = ["st", "typ", "var", "fun"]
+    ext = ["st"]
     language_names = ['st']
     macro_pattern = re.compile(r"#\s*(\w+)\s*(.*)", re.M | re.S)
 
@@ -40,10 +40,6 @@ class StReader(CodeReader, StCommentsMixin):
         [f'END_{_}' for _ in _functions] +
         [f'END_{_}' for _ in _blocks]
     )
-
-    _declerations = set([
-        'VAR_INPUT', 'VAR_OUTPUT', 'VAR_IN_OUT', 'END_VAR',
-    ])
 
     # Nesting Depth
     loops = [
@@ -130,21 +126,7 @@ class StStates(CodeStateMachine):
 
     def _function_name(self, token):
         self.context.restart_new_function(token)
-        self.context.add_to_long_function_name('() -> ')
-        self._state = self._function_has_return
-
-    def _function_has_return(self, token):
-        # Check for return values
-        if token == '(':
-            self.next(self._function_params, token)
-        else:
-            self.context.add_to_long_function_name('void')
-            self._function(token)
-
-    @CodeStateMachine.read_inside_brackets_then('()', '_function')
-    def _function_params(self, token):
-        if token not in '()':
-            self.context.parameter(token)
+        self._state = self._function
 
     def _function(self, token):
         self.context.add_bare_nesting()
