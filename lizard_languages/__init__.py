@@ -25,6 +25,7 @@ from .tsx import TSXReader
 from .vue import VueReader
 from .perl import PerlReader
 from .st import StReader
+from .r import RReader
 
 
 def languages():
@@ -54,6 +55,7 @@ def languages():
         VueReader,
         PerlReader,
         StReader,
+        RReader,
     ]
 
 
