@@ -93,6 +93,23 @@ class Test_st_lizard(unittest.TestCase):
         self.assertEqual(6, result[1].start_line)
         self.assertEqual(9, result[1].end_line)
 
+    def test_nested_actions(self):
+        ''' Nesting Depth of Functions is 1. '''
+        result = get_st_function_list(
+            '''
+            ACTION ac1:
+                // Comment
+                action := bar;
+                bar := ACTION;
+                function := bar;
+                bar := FUNCTION;
+            END_ACTION
+            ''')
+        self.assertEqual(1, len(result))
+        self.assertEqual("ac1", result[0].name)
+        self.assertEqual(2, result[0].start_line)
+        self.assertEqual(8, result[0].end_line)
+
 
 class Test_st_cyclomatic_complexity(unittest.TestCase):
 

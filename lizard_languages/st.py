@@ -112,7 +112,7 @@ class StStates(CodeStateMachine):
     def _state_global(self, token):
         token_upper = token.upper()
 
-        if token_upper in StReader._functions:
+        if token_upper in StReader._functions and self.context.current_function.top_nesting_level < 0:
             self._state = self._function_name
         elif token_upper in StReader._blocks:
             self.context.add_bare_nesting()
