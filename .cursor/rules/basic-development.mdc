@@ -1,16 +1,32 @@
 ---
-description: The basic development guideline for any changes
-globs: **/*.py
+alwaysApply: true
 ---
 # The fundamental development guideline for making any changes
+
+# Running command in terminal
+
+This project use nix to manage the development envioroment. So we need to run `nix develop` once first in every new terminal window to start the nix enviroment. For AI agent, add `nix develop -c` before any terminal command: 
+
+```
+nix develop -c <command>
+```
+
 
 ## Run Test
 
 Always run all tests instead of just one test file
 
 ```bash
-python -m pytest   # Run all tests
+nix develop -c python -m pytest   # Run all tests
 ```
+
+## Run All Test and Format checking
+
+
+```bash
+nix develop -c make
+```
+
 
 ## Automated test practices
 
