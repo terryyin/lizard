@@ -335,3 +335,46 @@ class Test_st_nesting_level(unittest.TestCase):
             """)
         self.assertEqual(0, result[1].top_nesting_level)
         self.assertEqual(3, result[1].max_nesting_depth)
+
+    def test_st_nd_level_case(self):
+        result = get_st_with_nestdepth(
+            '''
+            ACTION ac1 :
+                FOR i := 0 TO 1 DO
+                    CASE a OF
+
+                        1:
+
+                            IF b THEN
+                                c := 1;
+                                IF b THEN
+                                    IF b THEN
+                                        c := 2;
+                                    ELSIF b THEN
+                                        c := 2;
+                                    ELSIF b THEN
+                                        c := 2;
+                                    END_IF
+                                END_IF;
+                            END_IF
+
+                        2:
+                            IF b THEN
+                                IF b THEN
+                                    c := 3;
+                                END_IF
+                            END_IF
+
+                            IF b THEN
+                                c := 3;
+                            END_IF
+
+                    END_CASE
+
+                END_FOR;
+
+            END_ACTION
+            '''
+        )
+        self.assertEqual(0, result[0].top_nesting_level)
+        self.assertEqual(4, result[0].max_nesting_depth)

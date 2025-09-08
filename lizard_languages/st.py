@@ -33,19 +33,19 @@ class StReader(CodeReader, StCommentsMixin):
     ])
 
     _blocks = set([
-        'IF', 'FOR', 'WHILE', 'REPEAT',
+        'IF', 'FOR', 'WHILE', 'CASE', 'REPEAT',
     ])
 
-    _ends = set(
-        [f'END_{_}' for _ in _functions] +
-        [f'END_{_}' for _ in _blocks]
-    )
+    _ends = set([
+        'END',
+    ])
 
     # Nesting Depth
     loops = [
         'if', 'case', 'for', 'while', 'repeat',
         'IF', 'CASE', 'FOR', 'WHILE', 'REPEAT'
     ]
+    bracket = 'END'
 
     def __init__(self, context):
         super(StReader, self).__init__(context)
@@ -87,7 +87,13 @@ class StReader(CodeReader, StCommentsMixin):
                 for _ in macro.group(2).splitlines()[1:]:
                     yield "\n"
             else:
-                # Eliminate Whitespace
+                # ST normalization: collapse END_* into END
+                upper_tok = token.upper()
+                if upper_tok.startswith("END_"):
+                    yield "END"
+                    continue
+
+                # Eliminate whitespace, keep line breaks
                 if not token.isspace() or token == '\n':
                     yield token
 
@@ -116,7 +122,7 @@ class StStates(CodeStateMachine):
             self._state = self._function_name
         elif token_upper in StReader._blocks:
             self.context.add_bare_nesting()
-        elif token_upper.startswith("END") or token in StReader._ends:
+        elif token in StReader._ends:
             self.context.pop_nesting()
 
     def reset_state(self, token=None):
