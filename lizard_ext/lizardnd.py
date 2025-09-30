@@ -45,11 +45,43 @@ class LizardExtension(object):  # pylint: disable=R0903
         else:
             indent_indicator = ';'
         for token in tokens:
-            if token in loops:
+            # Handle opening parenthesis - start of condition
+            if token == '(':
+                reader.context.set_in_condition(True)
+                reader.context.increment_condition_depth()
+                reader.context.set_logical_operator_added(False)  # Reset for new condition
+            # Handle closing parenthesis - end of condition
+            elif token == ')':
+                reader.context.decrement_condition_depth()
+                if reader.context.get_condition_depth() == 0:
+                    reader.context.set_in_condition(False)
+                    reader.context.set_logical_operator_added(False)
+            
+            # Handle logical operators && and || within conditions
+            elif token in ('&&', '||'):
+                if reader.context.get_in_condition():
+                    # Only add nesting depth for the first logical operator in a condition
+                    # Subsequent && or || operators in the same condition don't add depth
+                    if not reader.context.get_logical_operator_added():
+                        l_depth = reader.context.add_nd_condition()
+                        if not reader.context.get_loop_status():
+                            reader.context.add_hidden_bracket_condition()
+                            reader.context.loop_bracket_status()
+                        reader.context.set_logical_operator_added(True)
+                else:
+                    # Not in a condition, treat as regular nesting
+                    l_depth = reader.context.add_nd_condition()
+                    if not reader.context.get_loop_status():
+                        reader.context.add_hidden_bracket_condition()
+                        reader.context.loop_bracket_status()
+            
+            # Handle other loop keywords (if, for, while, etc.)
+            elif token in loops and token not in ('&&', '||'):
                 l_depth = reader.context.add_nd_condition()
                 if not reader.context.get_loop_status():
                     reader.context.add_hidden_bracket_condition()
                     reader.context.loop_bracket_status()
+            
             if token == loop_indicator:
                 reader.context.loop_bracket_status()
             if token == bracket:
@@ -82,6 +114,7 @@ class NDFileInfoAddition(FileInfoBuilder):
         self.current_function.nesting_depth = 0
         self.current_function.hidden_bracket = 0
         self.current_function.bracket_loop = False
+        self.reset_condition_tracking()
 
     def add_hidden_bracket_condition(self, inc=1):
         self.current_function.hidden_bracket += inc
@@ -95,6 +128,33 @@ class NDFileInfoAddition(FileInfoBuilder):
 
     def get_loop_status(self):
         return self.current_function.bracket_loop
+
+    def set_in_condition(self, in_condition):
+        self.current_function.in_condition = in_condition
+
+    def get_in_condition(self):
+        return self.current_function.in_condition
+
+    def increment_condition_depth(self):
+        self.current_function.condition_depth += 1
+
+    def decrement_condition_depth(self):
+        if self.current_function.condition_depth > 0:
+            self.current_function.condition_depth -= 1
+
+    def get_condition_depth(self):
+        return self.current_function.condition_depth
+
+    def reset_condition_tracking(self):
+        self.current_function.in_condition = False
+        self.current_function.condition_depth = 0
+        self.current_function.logical_operator_added = False
+
+    def set_logical_operator_added(self, added):
+        self.current_function.logical_operator_added = added
+
+    def get_logical_operator_added(self):
+        return self.current_function.logical_operator_added
 
 
 def get_method(cls, name):
@@ -127,6 +187,9 @@ def _init_nesting_depth_data(self, *_):
     self.max_nesting_depth = 0
     self.hidden_bracket = 0
     self.bracket_loop = False
+    self.in_condition = False  # Track if we're inside a condition
+    self.condition_depth = 0   # Track nesting depth within conditions
+    self.logical_operator_added = False  # Track if we've added nesting for logical operators in current condition
 
 
 patch(NDFileInfoAddition, FileInfoBuilder)
