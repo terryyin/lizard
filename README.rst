@@ -41,6 +41,7 @@ A list of supported languages:
 -  Zig
 -  Perl
 -  Structured Text (St)
+-  R
 
 By default lizard will search for any source code that it knows and mix
 all the results together. This might not be what you want. You can use
