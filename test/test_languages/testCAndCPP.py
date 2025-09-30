@@ -703,3 +703,46 @@ class Test_Dialects(unittest.TestCase):
                 }''')
         self.assertEqual(1, len(result))
         self.assertEqual(2, result[0].cyclomatic_complexity)
+
+    def test_lambda_expression_issue_429(self):
+        """Test lambda expression parsing issue from GitHub issue #429."""
+        # This is the exact code from the issue that causes problems
+        code = """
+auto CombPairHash = [](const CombPair &pair) {
+  return pair.first ^ (pair.second<<1); };
+
+int main() {
+    return 0;
+}
+"""
+        result = get_cpp_function_list(code)
+        # Should find the main function, lambda should not be treated as a function
+        self.assertEqual(1, len(result))
+        self.assertEqual("main", result[0].name)
+
+    def test_lambda_expression_with_capture(self):
+        """Test lambda expression with capture list."""
+        code = """
+auto lambda = [&](int x) { return x * 2; };
+
+void foo() {
+    auto result = lambda(5);
+}
+"""
+        result = get_cpp_function_list(code)
+        # Should find the foo function, lambda should not be treated as a function
+        self.assertEqual(1, len(result))
+        self.assertEqual("foo", result[0].name)
+
+    def test_lambda_expression_in_function(self):
+        """Test lambda expression inside a function."""
+        code = """
+void process() {
+    auto lambda = [](int x) { return x + 1; };
+    int result = lambda(10);
+}
+"""
+        result = get_cpp_function_list(code)
+        # Should find the process function
+        self.assertEqual(1, len(result))
+        self.assertEqual("process", result[0].name)
