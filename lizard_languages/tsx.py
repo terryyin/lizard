@@ -37,6 +37,7 @@ class TSXReader(TypeScriptReader):
         # Use JSXTypeScriptStates for better handling of TSX specific features
         self.parallel_states = [JSXTypeScriptStates(context)]
 
+
 class JSXTypeScriptStates(CodeStateMachine):
     """State machine for JSX/TSX files using composition with TypeScriptStates"""
 
@@ -73,7 +74,7 @@ class JSXTypeScriptStates(CodeStateMachine):
             self.next(self._function_name_state)
             return
 
-        # Handle arrow functions: look for => 
+        # Handle arrow functions: look for =>
         if token == '=>':
             # Start arrow function with pending name or anonymous
             self._start_arrow_function()
@@ -99,7 +100,7 @@ class JSXTypeScriptStates(CodeStateMachine):
 
         # Handle assignment for function names - only if not inside a function
         if token == '=' and not self.inside_function:
-            # If we don't have a pending name yet, use the last token  
+            # If we don't have a pending name yet, use the last token
             if not self.pending_function_name:
                 self.pending_function_name = self.last_token
             return
@@ -199,7 +200,7 @@ class JSXTypeScriptStates(CodeStateMachine):
     def _start_arrow_function(self):
         """Start an arrow function with pending name or anonymous"""
         name = self.pending_function_name or '(anonymous)'
-        
+
         if self.inside_function:
             # For nested functions, create and immediately close them
             # This ensures they're detected but don't interfere with the main function
@@ -208,7 +209,7 @@ class JSXTypeScriptStates(CodeStateMachine):
         else:
             # For top-level functions, use normal processing
             self._start_function(name)
-        
+
         self.pending_function_name = ''
 
     def _start_function(self, name):
@@ -259,7 +260,7 @@ class JSXTypeScriptStates(CodeStateMachine):
                 self.next(self._state_global, type_handler.saved_token)
             else:
                 self.next(self._state_global)
-        
+
         type_handler = JSXTypeAnnotationHandler(self.context)
         self.sub_state_instance = type_handler  # Store reference to access saved_token
         self.sub_state(type_handler, callback)
@@ -300,7 +301,7 @@ class JSXTypeScriptStates(CodeStateMachine):
 
 class JSXTypeAnnotationHandler(CodeStateMachine):
     """Handle TypeScript type annotations in JSX/TSX"""
-    
+
     def __init__(self, context):
         super().__init__(context)
         self.depth = 0

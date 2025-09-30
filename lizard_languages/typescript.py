@@ -63,17 +63,17 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
     def generate_tokens(source_code, addition='', token_class=None):
         def split_template_literal(token, quote):
             content = token[1:-1]
-            
+
             # Always yield opening quote
             yield quote
-            
+
             # If no expressions, yield content as-is with quotes and closing quote
             if '${' not in content:
                 if content:
                     yield quote + content + quote
                 yield quote
                 return
-            
+
             # Handle expressions
             i = 0
             while i < len(content):
@@ -99,10 +99,10 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                 yield '}'
                 content = content[i:]
                 i = 0
-            
+
             # Always yield closing quote
             yield quote
-            
+
         # Restore original addition pattern for template literals
         addition = addition + r"|(?:\$\w+)" + r"|(?:\w+\?)" + r"|`.*?`"
         for token in CodeReader.generate_tokens(source_code, addition, token_class):
@@ -142,6 +142,7 @@ class TypeScriptStates(CodeStateMachine):
             # Skip declared function
             self._ts_declare = False
             # Skip tokens until semicolon or newline
+
             def skip_declared_function(t):
                 if t == ';' or self.context.newline:
                     self.next(self._state_global)
@@ -167,7 +168,7 @@ class TypeScriptStates(CodeStateMachine):
             if token == ':':
                 self.function_name = self.last_tokens
                 return
-            elif token == '(': 
+            elif token == '(':
                 if not self.started_function:
                     self.arrow_function_pending = True
                     self._function(self.last_tokens)
@@ -266,14 +267,14 @@ class TypeScriptStates(CodeStateMachine):
     def _function(self, token):
         if token == '*':
             return
-        if token != '(': 
+        if token != '(':
             self.function_name = token
         else:
             if not self.started_function:
                 self._push_function_to_stack()
             self.arrow_function_pending = False
             self._state = self._dec
-            if token == '(': 
+            if token == '(':
                 self._dec(token)
 
     def _field(self, token):
@@ -283,7 +284,7 @@ class TypeScriptStates(CodeStateMachine):
     def _dec(self, token):
         if token == ')':
             self._state = self._expecting_func_opening_bracket
-        elif token != '(': 
+        elif token != '(':
             self.context.parameter(token)
             return
         self.context.add_to_long_function_name(" " + token)

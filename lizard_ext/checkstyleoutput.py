@@ -2,6 +2,7 @@
 Checkstyle XML output for Lizard
 '''
 
+
 def checkstyle_output(all_result, verbose):
     result = all_result.result
     import xml.etree.ElementTree as ET
@@ -20,7 +21,8 @@ def checkstyle_output(all_result, verbose):
                     line=str(func.start_line),
                     column="0",
                     severity="info",
-                    message=f"{func.name} has {func.nloc} NLOC, {func.cyclomatic_complexity} CCN, {func.token_count} token, {len(func.parameters)} PARAM, {func.length} length",
+                    message=f"{func.name} has {func.nloc} NLOC, {func.cyclomatic_complexity} CCN, "
+                           f"{func.token_count} token, {len(func.parameters)} PARAM, {func.length} length",
                     source="lizard"
                 )
 
@@ -28,4 +30,4 @@ def checkstyle_output(all_result, verbose):
     import xml.dom.minidom
     rough_string = ET.tostring(checkstyle, 'utf-8')
     reparsed = xml.dom.minidom.parseString(rough_string)
-    return reparsed.toprettyxml(indent="  ") 
+    return reparsed.toprettyxml(indent="  ")

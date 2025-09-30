@@ -1,5 +1,24 @@
 # Change Log
 
+## 1.18.0
+
+### New Features
+- Add R language support with comprehensive function parsing
+- Add Structured Text (St) language support
+- Add C++ lambda expression support for improved parsing
+- Add Nesting Depth feature for better code analysis
+
+### Improvements
+- Enhanced R function parsing for multiple assignments
+- Improved string interpolation handling in Go
+- Better function nesting detection
+- Updated documentation to include new supported languages
+
+### Bug Fixes
+- Fix nesting depth calculation issues
+- Fix function nesting problems
+- Various parsing improvements across multiple languages
+
 ## 1.17.30
 
 Fix TypeScript function detection issue.
