@@ -164,7 +164,7 @@ Options
   -X, --xml             Generate XML in cppncss style instead of the tabular output. Useful to
                         generate report in Jenkins server
   --csv                 Generate CSV output as a transform of the default output
-  -H, --html            Output HTML report
+  -H, --html            Output HTML report with interactive DataTables (sortable, searchable, filterable)
   --checkstyle          Generate Checkstyle XML output for integration with Jenkins and other tools
   -m, --modified        Calculate modified cyclomatic complexity number , which count a
                         switch/case with multiple cases as one CCN.

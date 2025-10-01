@@ -48,6 +48,12 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
  <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <title>Code complexity report</title>
+  <!-- DataTables CSS -->
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <!-- DataTables JS -->
+  <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
   <style>
     h2
     {
@@ -88,6 +94,42 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
           font-family: sans-serif;
           white-space: nowrap;
         }
+    td.file-header
+        {
+          background-color: LightBlue;
+          font-weight: bold;
+        }
+    td.function-name
+        {
+          background-color: LightSteelBlue;
+        }
+    /* DataTables wrapper styling */
+    .dataTables_wrapper {
+          margin: 0 auto;
+          width: 95%;
+        }
+    /* Fallback styling if DataTables CSS doesn't load */
+    table#complexityTable {
+          border-collapse: collapse;
+          width: 95%;
+          margin: 0 auto;
+        }
+    table#complexityTable th {
+          background-color: #4CAF50;
+          color: white;
+          padding: 10px;
+          text-align: left;
+          border: 1px solid #ddd;
+        }
+    table#complexityTable td {
+          border: 1px solid #ddd;
+        }
+    table#complexityTable tr:nth-child(even) {
+          background-color: #f2f2f2;
+        }
+    table#complexityTable tr:hover {
+          background-color: #ddd;
+        }
   </style>
  </head>
  <body>
@@ -95,26 +137,29 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
 
 <center>
 
-<table>
+<table id="complexityTable" class="display" style="width:100%">
+  <thead>
+    <tr>
+      <th>File</th>
+      <th>Function name</th>
+      <th>Cyclomatic complexity ({{ thresholds["cyclomatic_complexity"] }})</th>
+      <th>LOC ({{ thresholds["nloc"] }})</th>
+      <th>
+        {% if thresholds["token_count"] %}
+           Token count ({{ thresholds["token_count"] }})
+        {% else %}
+           Token count
+        {% endif %}
+      </th>
+      <th>Parameter count ({{ thresholds["parameter_count"] }})</th>
+    </tr>
+  </thead>
+  <tbody>
 {% for file in files %}
-  <tr><td colspan="7" style="background-color:LightBlue;">
-  Source file: <b>{{ file.filename }}</b></td></tr>
-{% if file.functions|length > 0 %}
-<tr><th>Function name</th><th></th><th>
-Cyclomatic complexity
-({{ thresholds["cyclomatic_complexity"] }})
-</th><th>LOC ({{ thresholds["nloc"] }})</th><th>
-    {% if thresholds["token_count"] %}
-       Token count ({{ thresholds["token_count"] }})
-    {% else %}
-       Token count
-    {% endif %}
-</th><th>Parameter count ({{ thresholds["parameter_count"] }})</th></tr>
-{% endif %}
   {% for func in file.functions %}
   <tr>
-    <td style="background-color:LightSteelBlue">{{ func.name }}</td>
-    <td></td>
+    <td>{{ file.filename }}</td>
+    <td class="function-name">{{ func.name }}</td>
     {% if func.cyclomatic_complexity > thresholds["cyclomatic_complexity"] %}
        <td class="greater-value">{{ func.cyclomatic_complexity }}</td>
     {% else %}
@@ -145,6 +190,7 @@ Cyclomatic complexity
   </tr>
   {% endfor %}
 {% endfor %}
+  </tbody>
 </table>
 <center>
 
@@ -154,6 +200,29 @@ Cyclomatic complexity
     <a href="http://www.lizard.ws/">Lizard</a> on {{ date }}
     </td></tr>
 </table>
+
+<script>
+// Gracefully degrade if CDN is unavailable
+if (typeof jQuery !== 'undefined' && typeof jQuery.fn.dataTable !== 'undefined') {
+    $(document).ready(function() {
+        try {
+            $('#complexityTable').DataTable({
+                "pageLength": 25,
+                "order": [[2, "desc"]],  // Sort by cyclomatic complexity descending by default
+                "columnDefs": [
+                    { "type": "num", "targets": [2, 3, 4, 5] }  // Ensure numeric sorting for metric columns
+                ]
+            });
+        } catch (e) {
+            console.warn('DataTables initialization failed. Displaying static table.', e);
+        }
+    });
+} else {
+    // Fallback: Table will display as static HTML
+    console.info('DataTables not available. Displaying static HTML table.');
+}
+</script>
+
  </body>
 </html>
 
