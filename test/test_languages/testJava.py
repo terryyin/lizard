@@ -70,9 +70,8 @@ public String funcB() {
 
     def test_generic_type_with_extends(self):
         result = get_java_function_list("class B<T extends C> {void fun(T t) {}}")
-         # actual "B<T::fun"
+        # actual "B<T::fun"
         self.assertEqual("B::fun", result[0].name)
-
 
     def test_generic_type_with_question_mark(self):
         result = get_java_function_list("void A(){ List<? extends x> list;}}")
@@ -418,3 +417,69 @@ public class Test {
 """
         result = get_java_function_list(code)
         self.assertEqual(2, len(result))  # Should find both methods
+
+    def test_wildcard_in_map_generics_ccn(self):
+        """Test for issue #435: wildcard in Java Map generics should not increase CCN"""
+        code = """
+import java.util.List;
+import java.util.Map;
+import org.apache.commons.lang3.tuple.Triple;
+
+public class TestWildcard {
+  // correct: CCN=1
+  void test1(Object obj) {
+    boolean isList = obj instanceof List<?>;
+    List<?> list1 = (List<?>) obj;
+    List<String> list2 = (List<String>) obj;
+    List<? extends CharSequence> list3 = (List<? extends CharSequence>) obj;
+  }
+
+  // correct: CCN=1
+  void test2(Object obj) {
+    boolean isMap = obj instanceof Map;
+    Map map1 = (Map) obj;
+    Map<String, String> map2 = (Map<String, String>) obj;
+  }
+
+  // incorrect: CCN=3, should be 1
+  void test3(Object obj) {
+    boolean isMap = obj instanceof Map<?, ?>;
+  }
+
+  // incorrect: CCN=5, should be 1
+  void test4(Object obj) {
+    Map<?, ?> map = (Map<?, ?>) obj;
+  }
+
+  // incorrect: CCN=5, should be 1
+  void test5(Object obj) {
+    Map<? extends CharSequence, ? extends CharSequence> map = (Map<? extends CharSequence, ? extends CharSequence>) obj;
+  }
+
+  // incorrect: CCN=5, should be 1
+  void test6(Object obj) {
+    Map<String, ?> map1 = (Map<String, ?>) obj;
+    Map<?, String> map2 = (Map<?, String>) obj;
+  }
+
+  // incorrect: CCN=5, should be 1
+  void test7(Object obj) {
+    Map<String, ? extends CharSequence> map1 = (Map<String, ? extends CharSequence>) obj;
+    Map<? extends CharSequence, String> map2 = (Map<? extends CharSequence, String>) obj;
+  }
+
+  // incorrect: CCN=7, should be 1
+  void test8(Object obj) {
+    Triple<?, ?, ?> triple = (Triple<?, ?, ?>) obj;
+  }
+}
+"""
+        result = get_java_function_list(code)
+        self.assertEqual(8, len(result))
+
+        # All functions should have CCN=1, as none have actual control flow
+        for func in result:
+            self.assertEqual(
+                1, func.cyclomatic_complexity,
+                f"Function {func.name} should have CCN=1, got "
+                f"{func.cyclomatic_complexity}")
