@@ -383,3 +383,12 @@ Lizard is also used as a plugin for fastlane to help check code complexity and s
 - `European research project FASTEN (Fine-grained Analysis of SofTware Ecosystems as Networks, <http://fasten-project.eu/)>`_
   - `for a quality analyzer <https://github.com/fasten-project/quality-analyzer>`_
 
+How To Contribute
+-----------------
+
+Contributions are welcome. Please refer to the rules and development workflow in:
+
+- https://github.com/terryyin/lizard/tree/master/.cursor/rules
+
+These guidelines are usable by both AI assistants and human contributors — what works for AI works for "I" as well — to keep changes cohesive, simple, and well-tested.
+
