@@ -26,6 +26,7 @@ from .vue import VueReader
 from .perl import PerlReader
 from .st import StReader
 from .r import RReader
+from .plsql import PLSQLReader
 
 
 def languages():
@@ -56,6 +57,7 @@ def languages():
         PerlReader,
         StReader,
         RReader,
+        PLSQLReader,
     ]
 
 
