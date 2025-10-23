@@ -42,6 +42,7 @@ A list of supported languages:
 -  Perl
 -  Structured Text (St)
 -  R
+-  PL/SQL
 
 By default lizard will search for any source code that it knows and mix
 all the results together. This might not be what you want. You can use
@@ -129,7 +130,7 @@ Options
                         search for all languages it knows. `lizard -l cpp -l java`searches for
                         C++ and Java code. The available languages are: cpp, java, csharp,
                         javascript, python, objectivec, ttcn, ruby, php, swift, scala, GDScript,
-                        go, lua, rust, typescript
+                        go, lua, rust, typescript, plsql
   -V, --verbose         Output in verbose mode (long function name)
   -C CCN, --CCN CCN     Threshold for cyclomatic complexity number warning. The default value is
                         15. Functions with CCN bigger than it will generate warning
