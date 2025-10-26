@@ -111,11 +111,11 @@ class TestPLSQL(unittest.TestCase):
             LOOP
                 EXIT WHEN x > 10;
             END LOOP;
-            
+
             WHILE x < 100 LOOP
                 NULL;
             END LOOP;
-            
+
             FOR i IN 1..10 LOOP
                 NULL;
             END LOOP;
@@ -194,7 +194,7 @@ class TestPLSQL(unittest.TestCase):
             BEGIN
                 NULL;
             END pkg_proc;
-            
+
             FUNCTION pkg_func RETURN NUMBER IS
             BEGIN
                 RETURN 1;
@@ -258,13 +258,13 @@ class TestPLSQL(unittest.TestCase):
           v_status VARCHAR2(20);
         BEGIN
           SELECT status INTO v_status FROM orders WHERE order_id = p_order_id;
-          
+
           IF v_status = 'NEW' THEN
             UPDATE orders SET status = 'PROCESSING' WHERE order_id = p_order_id;
           ELSIF v_status = 'PENDING' THEN
             UPDATE orders SET status = 'APPROVED' WHERE order_id = p_order_id;
           END IF;
-          
+
           COMMIT;
         EXCEPTION
           WHEN NO_DATA_FOUND THEN
@@ -319,3 +319,433 @@ class TestPLSQL(unittest.TestCase):
         result = get_plsql_function_list(code)
         self.assertEqual(1, len(result))
         self.assertGreater(result[0].nloc, 0)
+
+    def test_schema_qualified_procedure(self):
+        code = """
+        CREATE OR REPLACE PROCEDURE my_schema.simple_proc IS
+        BEGIN
+            NULL;
+        END simple_proc;
+        """
+        result = get_plsql_function_list(code)
+        self.assertEqual(1, len(result))
+        self.assertEqual("simple_proc", result[0].name)
+        # Complexity: 1 (base)
+        self.assertEqual(1, result[0].cyclomatic_complexity)
+
+    def test_schema_qualified_function(self):
+        code = """
+        CREATE OR REPLACE FUNCTION my_schema.simple_func RETURN NUMBER IS
+        BEGIN
+            RETURN 1;
+        END simple_func;
+        """
+        result = get_plsql_function_list(code)
+        self.assertEqual(1, len(result))
+        self.assertEqual("simple_func", result[0].name)
+        # Complexity: 1 (base)
+        self.assertEqual(1, result[0].cyclomatic_complexity)
+
+    def test_schema_qualified_with_parameters(self):
+        code = """
+        CREATE OR REPLACE PROCEDURE my_schema.process_order(
+            p_order_id IN NUMBER,
+            p_status OUT VARCHAR2
+        ) IS
+        BEGIN
+            NULL;
+        END process_order;
+        """
+        result = get_plsql_function_list(code)
+        self.assertEqual(1, len(result))
+        self.assertEqual("process_order", result[0].name)
+        self.assertEqual(2, result[0].parameter_count)
+        # Complexity: 1 (base)
+        self.assertEqual(1, result[0].cyclomatic_complexity)
+
+    def test_schema_qualified_trigger(self):
+        code = """
+        CREATE OR REPLACE TRIGGER my_schema.update_timestamp
+        BEFORE UPDATE ON my_table
+        FOR EACH ROW
+        BEGIN
+            :NEW.updated_date := SYSDATE;
+        END update_timestamp;
+        """
+        result = get_plsql_function_list(code)
+        self.assertEqual(1, len(result))
+        self.assertEqual("update_timestamp", result[0].name)
+        # Complexity: 1 (base)
+        self.assertEqual(1, result[0].cyclomatic_complexity)
+
+    def test_schema_qualified_trigger_with_declare(self):
+        code = """
+        CREATE OR REPLACE TRIGGER my_schema.audit_trigger
+        AFTER INSERT OR UPDATE OR DELETE ON my_table
+        FOR EACH ROW
+        DECLARE
+            v_action VARCHAR2(10);
+        BEGIN
+            IF INSERTING THEN
+                v_action := 'INSERT';
+            ELSIF UPDATING THEN
+                v_action := 'UPDATE';
+            ELSE
+                v_action := 'DELETE';
+            END IF;
+        END audit_trigger;
+        """
+        result = get_plsql_function_list(code)
+        self.assertEqual(1, len(result))
+        self.assertEqual("audit_trigger", result[0].name)
+        # Complexity: 1 (base) + 1 (IF) + 1 (ELSIF) = 3
+        # Note: ELSE doesn't add complexity, only decision points (IF/ELSIF)
+        self.assertEqual(3, result[0].cyclomatic_complexity)
+
+    def test_schema_qualified_function_with_table_reference(self):
+        # This tests that we don't confuse table.column references with schema.object
+        code = """
+        CREATE OR REPLACE FUNCTION my_schema.get_user_login(i_user_id NUMBER)
+        RETURN user_table.login%TYPE IS
+            v_login user_table.login%TYPE;
+        BEGIN
+            SELECT login INTO v_login FROM user_table WHERE id = i_user_id;
+            RETURN v_login;
+        EXCEPTION
+            WHEN NO_DATA_FOUND THEN
+                RETURN NULL;
+        END get_user_login;
+        """
+        result = get_plsql_function_list(code)
+        self.assertEqual(1, len(result))
+        self.assertEqual("get_user_login", result[0].name)
+        # Complexity: 1 (base) + 1 (WHEN exception handler) = 2
+        self.assertEqual(2, result[0].cyclomatic_complexity)
+
+    def test_schema_qualified_with_inline_comments(self):
+        # Test that inline comments don't interfere with schema-qualified name parsing
+        code = """
+        -- This is a header comment
+        CREATE OR REPLACE PROCEDURE my_schema.process_data( -- procedure with schema
+            p_id IN NUMBER  -- input parameter
+        ) IS
+            v_count NUMBER; -- local variable
+        BEGIN
+            -- Count records
+            SELECT COUNT(*) INTO v_count FROM my_table WHERE id = p_id;
+
+            -- Check if found
+            IF v_count > 0 THEN
+                NULL; -- do something
+            END IF;
+        END process_data;
+        """
+        result = get_plsql_function_list(code)
+        self.assertEqual(1, len(result))
+        self.assertEqual("process_data", result[0].name)
+        self.assertEqual(1, result[0].parameter_count)  # 1 parameter
+        # Complexity: 1 (base) + 1 (IF) = 2
+        self.assertEqual(2, result[0].cyclomatic_complexity)
+        # NLOC assertion omitted due to limitation in core comment handling
+
+    def test_schema_qualified_with_block_comments(self):
+        # Test that multi-line comments don't interfere with parsing
+        code = """
+        /*
+         * This function calculates something important.
+         * Created: 2025-01-01
+         * Author: Test Developer
+         *
+         * History:
+         * 2025-01-01 - Initial creation
+         */
+        CREATE OR REPLACE FUNCTION my_schema.calculate_value(
+            /* Input value */ p_input NUMBER
+        ) RETURN NUMBER IS
+            /* Local variables */
+            v_result NUMBER;
+            v_temp NUMBER; /* temporary storage */
+        BEGIN
+            /*
+             * Main calculation logic
+             * This is a complex calculation
+             */
+            IF p_input > 0 THEN
+                v_result := p_input * 2; /* double it */
+            ELSIF p_input < 0 THEN
+                v_result := p_input * -1; /* make positive */
+            ELSE
+                v_result := 0; /* default */
+            END IF;
+
+            /* Return the result */
+            RETURN v_result;
+        END calculate_value;
+        """
+        result = get_plsql_function_list(code)
+        self.assertEqual(1, len(result))
+        self.assertEqual("calculate_value", result[0].name)
+        self.assertEqual(1, result[0].parameter_count)  # 1 parameter
+        # Complexity: 1 (base) + 1 (IF) + 1 (ELSIF) = 3
+        self.assertEqual(3, result[0].cyclomatic_complexity)
+        # NLOC assertion omitted due to limitation in core comment handling
+
+    def test_schema_qualified_with_mixed_comments(self):
+        # Test both inline and block comments together
+        code = """
+        /* Package header comment */
+        CREATE OR REPLACE TRIGGER my_schema.audit_changes -- audit trigger
+        AFTER INSERT OR UPDATE /* handle both operations */ OR DELETE
+        ON my_table
+        FOR EACH ROW
+        DECLARE
+            -- Local variables
+            v_operation VARCHAR2(10); /* operation type */
+        BEGIN
+            /*
+             * Determine operation type
+             */
+            IF INSERTING THEN -- new record
+                v_operation := 'INSERT';
+            ELSIF UPDATING THEN -- modified record
+                v_operation := 'UPDATE'; /* set to update */
+            ELSE -- deleted record
+                v_operation := 'DELETE';
+            END IF; -- end operation check
+
+            -- Log the operation (commented out for now)
+            -- DBMS_OUTPUT.PUT_LINE('Operation: ' || v_operation);
+        END audit_changes; -- end trigger
+        """
+        result = get_plsql_function_list(code)
+        self.assertEqual(1, len(result))
+        self.assertEqual("audit_changes", result[0].name)
+        # Complexity: 1 (base) + 1 (IF) + 1 (ELSIF) = 3
+        self.assertEqual(3, result[0].cyclomatic_complexity)
+        # NLOC assertion omitted due to known limitation in core comment handling
+
+    def test_continue_statement(self):
+        code = """
+        CREATE PROCEDURE test_continue IS
+        BEGIN
+            FOR i IN 1..10 LOOP
+                IF i = 5 THEN
+                    CONTINUE;
+                END IF;
+                NULL;
+            END LOOP;
+        END;
+        """
+        result = get_plsql_function_list(code)
+        self.assertEqual(1, len(result))
+        # Complexity: 1 (base) + 1 (FOR) + 1 (IF) = 3
+        self.assertEqual(3, result[0].cyclomatic_complexity)
+
+    def test_continue_when_statement(self):
+        code = """
+        CREATE PROCEDURE test_continue_when IS
+        BEGIN
+            FOR i IN 1..10 LOOP
+                CONTINUE WHEN i = 5;
+                NULL;
+            END LOOP;
+        END;
+        """
+        result = get_plsql_function_list(code)
+        self.assertEqual(1, len(result))
+        # Complexity: 1 (base) + 1 (FOR) + 1 (WHEN from CONTINUE WHEN) = 3
+        self.assertEqual(3, result[0].cyclomatic_complexity)
+
+    def test_return_in_loop(self):
+        code = """
+        CREATE FUNCTION find_value(p_target NUMBER) RETURN NUMBER IS
+        BEGIN
+            FOR i IN 1..10 LOOP
+                IF i = p_target THEN
+                    RETURN i;
+                END IF;
+            END LOOP;
+            RETURN -1;
+        END;
+        """
+        result = get_plsql_function_list(code)
+        self.assertEqual(1, len(result))
+        # Complexity: 1 (base) + 1 (FOR) + 1 (IF) = 3
+        self.assertEqual(3, result[0].cyclomatic_complexity)
+
+    def test_exit_when_explicit(self):
+        code = """
+        CREATE PROCEDURE test_exit_when IS
+        BEGIN
+            LOOP
+                EXIT WHEN x > 10;
+                x := x + 1;
+            END LOOP;
+        END;
+        """
+        result = get_plsql_function_list(code)
+        self.assertEqual(1, len(result))
+        # Complexity: 1 (base) + 1 (LOOP) = 2
+        # Note: EXIT WHEN's WHEN is filtered out by preprocessor (it's not a branch, just a conditional exit)
+        self.assertEqual(2, result[0].cyclomatic_complexity)
+
+    def test_goto_statement(self):
+        code = """
+        CREATE PROCEDURE test_goto IS
+        BEGIN
+            IF x > 10 THEN
+                GOTO error_handler;
+            END IF;
+            NULL;
+            <<error_handler>>
+            DBMS_OUTPUT.PUT_LINE('Error');
+        END;
+        """
+        result = get_plsql_function_list(code)
+        self.assertEqual(1, len(result))
+        # Complexity: 1 (base) + 1 (IF) = 2
+        # GOTO doesn't add complexity, it's just a jump
+        self.assertEqual(2, result[0].cyclomatic_complexity)
+
+    def test_cursor_for_loop(self):
+        code = """
+        CREATE PROCEDURE test_cursor_loop IS
+        BEGIN
+            FOR rec IN (SELECT * FROM users WHERE active = 1) LOOP
+                DBMS_OUTPUT.PUT_LINE(rec.name);
+            END LOOP;
+        END;
+        """
+        result = get_plsql_function_list(code)
+        self.assertEqual(1, len(result))
+        # Complexity: 1 (base) + 1 (FOR loop) = 2
+        self.assertEqual(2, result[0].cyclomatic_complexity)
+
+    def test_explicit_cursor_declaration(self):
+        code = """
+        CREATE PROCEDURE test_cursor IS
+            CURSOR c_users IS
+                SELECT * FROM users;
+            v_user users%ROWTYPE;
+        BEGIN
+            OPEN c_users;
+            LOOP
+                FETCH c_users INTO v_user;
+                EXIT WHEN c_users%NOTFOUND;
+                NULL;
+            END LOOP;
+            CLOSE c_users;
+        END;
+        """
+        result = get_plsql_function_list(code)
+        self.assertEqual(1, len(result))
+        # Complexity: 1 (base) + 1 (LOOP) = 2
+        # Note: EXIT WHEN's WHEN is filtered out by preprocessor
+        self.assertEqual(2, result[0].cyclomatic_complexity)
+
+    def test_trigger_before_insert(self):
+        code = """
+        CREATE OR REPLACE TRIGGER orders_before_insert
+        BEFORE INSERT
+        ON orders
+        FOR EACH ROW
+        DECLARE
+            v_username VARCHAR2(10);
+        BEGIN
+            SELECT user INTO v_username FROM dual;
+            :new.create_date := sysdate;
+            :new.created_by := v_username;
+        END;
+        """
+        result = get_plsql_function_list(code)
+        self.assertEqual(1, len(result))
+        self.assertEqual("orders_before_insert", result[0].name)
+        self.assertEqual(1, result[0].cyclomatic_complexity)
+
+    def test_trigger_with_conditionals(self):
+        code = """
+        CREATE TRIGGER salary_check
+        BEFORE INSERT OR UPDATE OF salary
+        ON employees
+        FOR EACH ROW
+        BEGIN
+            IF :new.salary > 100000 THEN
+                RAISE_APPLICATION_ERROR(-20001, 'Salary too high');
+            END IF;
+        END;
+        """
+        result = get_plsql_function_list(code)
+        self.assertEqual(1, len(result))
+        self.assertEqual("salary_check", result[0].name)
+        # Complexity: 1 (base) + 1 (IF) = 2
+        self.assertEqual(2, result[0].cyclomatic_complexity)
+
+    def test_type_declaration_in_procedure(self):
+        code = """
+        CREATE PROCEDURE test_type IS
+            TYPE t_numbers IS TABLE OF NUMBER;
+            v_nums t_numbers;
+        BEGIN
+            v_nums := t_numbers(1, 2, 3);
+            FOR i IN 1..v_nums.COUNT LOOP
+                NULL;
+            END LOOP;
+        END;
+        """
+        result = get_plsql_function_list(code)
+        self.assertEqual(1, len(result))
+        # Complexity: 1 (base) + 1 (FOR) = 2
+        self.assertEqual(2, result[0].cyclomatic_complexity)
+
+    def test_nested_exception_handlers(self):
+        code = """
+        CREATE PROCEDURE test_nested_exceptions IS
+        BEGIN
+            BEGIN
+                NULL;
+            EXCEPTION
+                WHEN NO_DATA_FOUND THEN
+                    NULL;
+            END;
+            NULL;
+        EXCEPTION
+            WHEN OTHERS THEN
+                NULL;
+        END;
+        """
+        result = get_plsql_function_list(code)
+        # Note: Inner BEGIN/END creates a nested anonymous block which may be counted as a separate function
+        # depending on implementation. This is checking the current behavior.
+        self.assertGreaterEqual(len(result), 1)
+        # The main procedure should have complexity: 1 (base) + 1 (outer WHEN) = 2
+        # (inner WHEN belongs to the nested block)
+        main_proc = [r for r in result if r.name == "test_nested_exceptions"][0]
+        self.assertEqual(2, main_proc.cyclomatic_complexity)
+
+    def test_package_specification(self):
+        code = """
+        CREATE OR REPLACE PACKAGE my_package IS
+            PROCEDURE proc1;
+            FUNCTION func1 RETURN NUMBER;
+        END my_package;
+        """
+        result = get_plsql_function_list(code)
+        # Package specs just declare signatures, no implementations
+        self.assertEqual(0, len(result))
+
+    def test_anonymous_block_with_nested_function(self):
+        code = """
+        DECLARE
+            FUNCTION inner_func RETURN NUMBER IS
+            BEGIN
+                RETURN 1;
+            END;
+        BEGIN
+            DBMS_OUTPUT.PUT_LINE(inner_func);
+        END;
+        """
+        result = get_plsql_function_list(code)
+        # Anonymous block itself should not be counted
+        # But nested function should be counted
+        self.assertEqual(1, len(result))
+        self.assertEqual("inner_func", result[0].name)

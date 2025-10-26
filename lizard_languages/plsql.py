@@ -1,5 +1,35 @@
 """
 Language parser for PL/SQL (Oracle's Procedural Language extension to SQL)
+
+This module implements complexity analysis for PL/SQL code, supporting:
+- Procedures, Functions, and Triggers
+- Package Bodies (not specifications - they only contain signatures)
+- Nested procedures and functions
+- Anonymous blocks with nested functions (blocks themselves aren't counted)
+- Control structures: IF/ELSIF/ELSE, CASE/WHEN, LOOP/WHILE/FOR
+- Exception handlers
+- Cursor declarations and cursor FOR loops
+
+Design Decisions:
+- EXIT WHEN: The WHEN keyword is filtered out by the preprocessor because
+  "EXIT WHEN condition" is not a branching construct - it's a conditional
+  exit that doesn't create alternate execution paths. The LOOP itself adds
+  complexity.
+
+- CONTINUE WHEN: Similar to EXIT WHEN, the WHEN is counted as it does create
+  a branch in the loop execution.
+
+- GOTO: Does not add to cyclomatic complexity as it's just an unconditional
+  jump, not a decision point.
+
+- Standalone LOOP: Adds +1 complexity as it creates a repeating path.
+
+- FOR/WHILE LOOP: The FOR/WHILE keyword adds complexity; the following LOOP
+  keyword is part of the same construct and doesn't add additional complexity.
+
+- Parameter Counting: Currently counts all non-whitespace tokens and commas
+  in parameter lists. This approach works but differs from some other language
+  implementations.
 """
 
 from .code_reader import CodeReader, CodeStateMachine
@@ -97,6 +127,19 @@ class PLSQLReader(CodeReader, CCppCommentsMixin):
         addition = r"|--[^\n]*" + addition  # Single-line comment starting with --
         return CodeReader.generate_tokens(source_code, addition, token_class)
 
+    def get_comment_from_token(self, token):
+        """
+        Override to recognize PL/SQL's -- line comments in addition to /* */ block comments.
+        PL/SQL uses -- for single-line comments (like SQL standard).
+
+        Note: This method correctly identifies -- comments, but due to a limitation in
+        the NLOC calculation, these comments may still be counted in NLOC.
+        """
+        if token.startswith("--"):
+            return token  # Return full comment token (like Lua does)
+        # Delegate to parent for /* */ and // comments
+        return super().get_comment_from_token(token)
+
 
 class PLSQLStates(CodeStateMachine):
     """
@@ -112,13 +155,15 @@ class PLSQLStates(CodeStateMachine):
         )
 
     def _state_global(self, token):
-        """Global state - looking for function/procedure declarations."""
+        """Global state - looking for function/procedure/trigger declarations."""
         token_lower = token.lower()
 
         if token_lower == "procedure":
             self.next(self._procedure_name)
         elif token_lower == "function":
             self.next(self._function_name)
+        elif token_lower == "trigger":
+            self.next(self._trigger_name)
 
     def _procedure_name(self, token):
         """Read procedure name."""
@@ -141,13 +186,25 @@ class PLSQLStates(CodeStateMachine):
 
     def _procedure_after_name(self, token):
         """After procedure name, look for parameters or IS/AS."""
-        if token == "(":
+        if token == ".":
+            # Schema-qualified name: the previous token was the schema,
+            # next non-whitespace token will be the actual procedure name
+            self.next(self._procedure_name_after_dot)
+        elif token == "(":
             self.in_parameter_list = True
             self.next(self._parameters, "(")
         elif token.lower() in ("is", "as"):
             self.context.confirm_new_function()
             self.next(self._state_before_begin)
         # Skip whitespace and other tokens
+
+    def _procedure_name_after_dot(self, token):
+        """Read the actual procedure name after schema.dot."""
+        if token.isspace() or token == "\n":
+            return
+        # Replace the previous (schema) name with the actual procedure name
+        self.context.current_function.name = token
+        self.next(self._procedure_after_name)
 
     def _function_name(self, token):
         """Read function name."""
@@ -172,7 +229,11 @@ class PLSQLStates(CodeStateMachine):
 
     def _function_after_name(self, token):
         """After function name, look for parameters, RETURN, or IS/AS."""
-        if token == "(":
+        if token == ".":
+            # Schema-qualified name: the previous token was the schema,
+            # next non-whitespace token will be the actual function name
+            self.next(self._function_name_after_dot)
+        elif token == "(":
             self.in_parameter_list = True
             self.next(self._parameters, "(")
         elif token.lower() == "return":
@@ -181,6 +242,14 @@ class PLSQLStates(CodeStateMachine):
             self.context.confirm_new_function()
             self.next(self._state_before_begin)
         # Skip whitespace and other tokens
+
+    def _function_name_after_dot(self, token):
+        """Read the actual function name after schema.dot."""
+        if token.isspace() or token == "\n":
+            return
+        # Replace the previous (schema) name with the actual function name
+        self.context.current_function.name = token
+        self.next(self._function_after_name)
 
     def _return_type(self, token):
         """Skip return type declaration."""
@@ -209,6 +278,48 @@ class PLSQLStates(CodeStateMachine):
             self.context.confirm_new_function()
             self.next(self._state_before_begin)
         # Skip whitespace and other tokens
+
+    def _trigger_name(self, token):
+        """Read trigger name."""
+        if token.isspace() or token == "\n":
+            return
+        # Trigger name found
+        self.context.try_new_function(token)
+        self.seen_trigger_name_token = False  # Track if we've seen non-whitespace after name
+        self.next(self._trigger_after_name)
+
+    def _trigger_after_name(self, token):
+        """After trigger name, skip until DECLARE or BEGIN."""
+        token_lower = token.lower()
+
+        # Only check for dot immediately after trigger name (before any other tokens)
+        if token == "." and not self.seen_trigger_name_token:
+            # Schema-qualified name: the previous token was the schema,
+            # next non-whitespace token will be the actual trigger name
+            self.next(self._trigger_name_after_dot)
+            return
+
+        # Mark that we've seen a non-whitespace token after the trigger name
+        if not token.isspace() and token != "\n":
+            self.seen_trigger_name_token = True
+
+        if token_lower == "declare":
+            self.context.confirm_new_function()
+            self.next(self._state_before_begin)
+        elif token_lower == "begin":
+            self.context.confirm_new_function()
+            self.br_count = 1
+            self.next(self._state_body)
+        # Skip everything else (BEFORE/AFTER, INSERT/UPDATE/DELETE, ON table_name, FOR EACH ROW, etc.)
+
+    def _trigger_name_after_dot(self, token):
+        """Read the actual trigger name after schema.dot."""
+        if token.isspace() or token == "\n":
+            return
+        # Replace the previous (schema) name with the actual trigger name
+        self.context.current_function.name = token
+        self.seen_trigger_name_token = False  # Reset for the real trigger name
+        self.next(self._trigger_after_name)
 
     def _state_before_begin(self, token):
         """
