@@ -128,6 +128,9 @@ class TypeScriptStates(CodeStateMachine):
         self._getter_setter_prefix = None
         self.arrow_function_pending = False
         self._ts_declare = False  # Track if 'declare' was seen
+        self._static_seen = False  # Track if 'static' was seen
+        self._async_seen = False  # Track if 'async' was seen
+        self._prev_token = ''  # Track previous token to detect method calls
 
     def statemachine_before_return(self):
         # Ensure the main function is closed at the end
@@ -152,6 +155,20 @@ class TypeScriptStates(CodeStateMachine):
             return
         self._ts_declare = False
 
+        # Track static and async modifiers
+        if token == 'static':
+            self._static_seen = True
+            self._prev_token = token
+            return
+        if token == 'async':
+            self._async_seen = True
+            self._prev_token = token
+            return
+        if token == 'new':
+            # Track 'new' keyword to avoid treating constructors as functions
+            self._prev_token = token
+            return
+
         if self.as_object:
             # Support for getter/setter: look for 'get' or 'set' before method name
             if token in ('get', 'set'):
@@ -169,15 +186,26 @@ class TypeScriptStates(CodeStateMachine):
                 self.function_name = self.last_tokens
                 return
             elif token == '(':
+                # Check if this is a method call (previous token was . or this/identifier)
+                if self._prev_token == '.' or self._prev_token == 'new':
+                    # This is a method call, not a function definition
+                    self._prev_token = token
+                    return
                 if not self.started_function:
                     self.arrow_function_pending = True
                     self._function(self.last_tokens)
                 self.next(self._function, token)
                 return
+            # If we've seen async/static and this is an identifier, it's likely a method name
+            elif (self._async_seen or self._static_seen) and token not in ('*', 'function'):
+                # This is a method name after async/static
+                self.last_tokens = token
+                return
 
         if token in '.':
             self._state = self._field
             self.last_tokens += token
+            self._prev_token = token
             return
         if token == 'function':
             self._state = self._function
@@ -191,8 +219,14 @@ class TypeScriptStates(CodeStateMachine):
         elif token == '=':
             self.function_name = self.last_tokens
         elif token == "(":
-            self.sub_state(
-                self.__class__(self.context))
+            # Check if this is a method call or constructor
+            if self._prev_token == '.' or self._prev_token == 'new':
+                # This is a method call or constructor, not a function definition
+                self.sub_state(
+                    self.__class__(self.context))
+            else:
+                self.sub_state(
+                    self.__class__(self.context))
         elif token in '{':
             if self.started_function:
                 self.sub_state(
@@ -205,14 +239,21 @@ class TypeScriptStates(CodeStateMachine):
         elif self.context.newline or token == ';':
             self.function_name = ''
             self._pop_function_from_stack()
+            # Reset modifiers on newline/semicolon
+            self._static_seen = False
+            self._async_seen = False
 
         if token == '`':
             self.next(self._state_template_literal)
         if not self.as_object:
             if token == ':':
                 self._consume_type_annotation()
+                self._prev_token = token
                 return
         self.last_tokens = token
+        # Don't overwrite _prev_token if it's 'new' or '.' (preserve for next token)
+        if self._prev_token not in ('new', '.'):
+            self._prev_token = token
 
     def read_object(self):
         def callback():
@@ -220,7 +261,13 @@ class TypeScriptStates(CodeStateMachine):
 
         object_reader = self.__class__(self.context)
         object_reader.as_object = True
+        # Pass along the modifier flags
+        object_reader._static_seen = self._static_seen
+        object_reader._async_seen = self._async_seen
         self.sub_state(object_reader, callback)
+        # Reset modifiers after entering object
+        self._static_seen = False
+        self._async_seen = False
 
     def _expecting_condition_and_statement_block(self, token):
         def callback():
@@ -269,6 +316,9 @@ class TypeScriptStates(CodeStateMachine):
             return
         if token != '(':
             self.function_name = token
+            # Reset modifiers after setting function name
+            self._static_seen = False
+            self._async_seen = False
         else:
             if not self.started_function:
                 self._push_function_to_stack()
