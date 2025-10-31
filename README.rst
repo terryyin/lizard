@@ -17,32 +17,32 @@ code analysis.
 
 A list of supported languages:
 
--  C/C++ (works with C++14)
--  Java
 -  C# (C Sharp)
--  JavaScript (With ES6 and JSX)
--  TypeScript (With TSX)
--  VueJS
--  Objective-C
--  Swift
--  Python
--  Ruby
--  TTCN-3
--  PHP
--  Scala
+-  C/C++ (works with C++14)
+-  Erlang
+-  Fortran
 -  GDScript
 -  Golang
--  Lua
--  Rust
--  Fortran
+-  Java
+-  JavaScript (With ES6 and JSX)
 -  Kotlin
--  Solidity
--  Erlang
--  Zig
+-  Lua
+-  Objective-C
 -  Perl
--  Structured Text (St)
--  R
+-  PHP
 -  PL/SQL
+-  Python
+-  R
+-  Ruby
+-  Rust
+-  Scala
+-  Solidity
+-  Structured Text (St)
+-  Swift
+-  TTCN-3
+-  TypeScript (With TSX)
+-  VueJS
+-  Zig
 
 By default lizard will search for any source code that it knows and mix
 all the results together. This might not be what you want. You can use
