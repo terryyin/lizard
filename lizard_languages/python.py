@@ -110,14 +110,34 @@ class PythonStates(CodeStateMachine):  # pylint: disable=R0903
     def __init__(self, context, reader):
         super(PythonStates, self).__init__(context)
         self.reader = reader
+        self.has_non_decorator_stmt = False  # Track if current function has statements besides def/return
 
     def _state_global(self, token):
         if token == 'def':
+            # Check if we're defining a nested function
+            # If current function exists and has non-decorator statements, nested function should increase nesting
+            if self.context.current_function and self.has_non_decorator_stmt:
+                self.is_nested_in_non_decorator = True
+            else:
+                self.is_nested_in_non_decorator = False
             self._state = self._function
+        elif token not in ('return', '"""', "'''") and not token.startswith('"""') and not token.startswith("'''"):
+            # Any statement other than def, return, or docstrings marks this as non-decorator
+            self.has_non_decorator_stmt = True
 
     def _function(self, token):
         if token != '(':
-            self.context.restart_new_function(token)
+            # For nested functions in non-decorator patterns, use push to preserve nesting
+            # For pure decorator patterns, use restart (nesting=0 for nested function)
+            if hasattr(self, 'is_nested_in_non_decorator') and self.is_nested_in_non_decorator:
+                self.context.push_new_function(token)
+                # Adjust initial_nesting_level so nested function's content gets nesting bonus
+                # Subtract 1 from initial_nesting_level to account for the nested function's own nesting
+                self.context.current_function.initial_nesting_level -= 1
+            else:
+                self.context.restart_new_function(token)
+            # Reset decorator tracking for the new function
+            self.has_non_decorator_stmt = False
             self.context.add_to_long_function_name("(")
         else:
             self._state = self._dec

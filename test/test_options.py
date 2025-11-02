@@ -58,13 +58,13 @@ class TestOptionParsing(unittest.TestCase):
     @patch('sys.stderr', new_callable=StringIO)
     def test_sorting_factor_does_not_exist_error_message(self, mock_stderr, mock_exit):
         options = parse_args(['lizard', '-sdoesnotexist'])
-        self.assertEqual("Wrong field name 'doesnotexist'.\nCandidates are: nloc, cyclomatic_complexity, token_count, parameter_count, length, location\n", mock_stderr.getvalue())
+        self.assertEqual("Wrong field name 'doesnotexist'.\nCandidates are: nloc, cyclomatic_complexity, cognitive_complexity, token_count, parameter_count, length, location\n", mock_stderr.getvalue())
 
     @patch.object(sys, 'exit')
     @patch('sys.stderr', new_callable=StringIO)
     def test_sorting_factor_does_not_exist_error_message_with_ext(self, mock_stderr, mock_exit):
         options = parse_args(['lizard', '-sdoesnotexist', '-End'])
-        self.assertEqual("Wrong field name 'doesnotexist'.\nCandidates are: nloc, cyclomatic_complexity, token_count, parameter_count, length, max_nesting_depth, location\n", mock_stderr.getvalue())
+        self.assertEqual("Wrong field name 'doesnotexist'.\nCandidates are: nloc, cyclomatic_complexity, cognitive_complexity, token_count, parameter_count, length, max_nesting_depth, location\n", mock_stderr.getvalue())
 
     @patch.object(sys, 'exit')
     @patch('sys.stderr')

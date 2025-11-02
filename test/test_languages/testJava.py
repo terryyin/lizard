@@ -483,3 +483,337 @@ public class TestWildcard {
                 1, func.cyclomatic_complexity,
                 f"Function {func.name} should have CCN=1, got "
                 f"{func.cyclomatic_complexity}")
+
+
+class Test_Java_Cognitive_Complexity(unittest.TestCase):
+    """Test Cognitive Complexity calculations for Java code"""
+
+    def test_simple_method_has_zero_cogc(self):
+        """Simple method with no control flow should have CogC = 0"""
+        code = '''
+public class Simple {
+    public int add(int x, int y) {
+        return x + y;
+    }
+}
+'''
+        functions = get_java_function_list(code)
+        self.assertEqual(0, functions[0].cognitive_complexity)
+
+    def test_nested_loops_increase_cogc_more_than_ccn(self):
+        """Nested loops should increase CogC more than CCN"""
+        code = '''
+public class Nested {
+    public void nested() {
+        for (int i = 0; i < 10; i++) {      // +1
+            for (int j = 0; j < 10; j++) {  // +2 (nesting=1)
+                if (i == j) {               // +3 (nesting=2)
+                    System.out.println(i);
+                }
+            }
+        }
+    }
+}
+'''
+        functions = get_java_function_list(code)
+        # CogC = 1 + 2 + 3 = 6
+        # CCN = 3 (for, for, if)
+        self.assertGreaterEqual(functions[0].cognitive_complexity, 3)
+
+    def test_switch_statement_counts_as_one(self):
+        """Switch statement should count as +1 regardless of cases"""
+        code = '''
+public class Switcher {
+    public String getWord(int number) {
+        switch (number) {  // +1 for entire switch
+            case 1:
+                return "one";
+            case 2:
+                return "a couple";
+            case 3:
+                return "a few";
+            default:
+                return "lots";
+        }
+    }
+}
+'''
+        functions = get_java_function_list(code)
+        # CogC = 1 (entire switch)
+        # SPEC REQUIREMENT: CogC = 1
+        # CCN = 4 (case, case, case, default)
+        self.assertEqual(1, functions[0].cognitive_complexity)
+        self.assertLess(functions[0].cognitive_complexity,
+                       functions[0].cyclomatic_complexity)
+
+    def test_try_catch_finally(self):
+        """try-catch-finally should count catch clauses"""
+        code = '''
+public class ErrorHandler {
+    public void handle() {
+        try {
+            riskyOperation();
+        } catch (IOException e) {  // +1
+            logError(e);
+        } catch (Exception e) {    // +1
+            handleError(e);
+        } finally {
+            cleanup();
+        }
+    }
+}
+'''
+        functions = get_java_function_list(code)
+        # CogC = 2 (two catch clauses)
+        self.assertEqual(2, functions[0].cognitive_complexity)
+
+    def test_nested_try_catch(self):
+        """Nested try-catch should get nesting penalty"""
+        code = '''
+public class NestedError {
+    public void handle() {
+        try {
+            if (condition) {           // +1
+                try {
+                    riskyOp();
+                } catch (Exception e) { // +2 (nesting=1)
+                    handle(e);
+                }
+            }
+        } catch (Exception e) {        // +1
+            log(e);
+        }
+    }
+}
+'''
+        functions = get_java_function_list(code)
+        # CogC = 1 (if) + 2 (nested catch) + 1 (outer catch) = 4
+        self.assertEqual(4, functions[0].cognitive_complexity)
+
+    def test_binary_logical_operators(self):
+        """Binary logical operators in sequence"""
+        code = '''
+public class Logical {
+    public boolean check() {
+        if (a && b && c) {     // +1 for if, +1 for && sequence
+            return true;
+        }
+        if (d || e || f) {     // +1 for if, +1 for || sequence
+            return false;
+        }
+        return false;
+    }
+}
+'''
+        functions = get_java_function_list(code)
+        # CogC = 1 (if) + 1 (&&) + 1 (if) + 1 (||) = 4
+        self.assertEqual(4, functions[0].cognitive_complexity)
+
+    def test_org_sonar_java_resolve_JavaSymbol_java(self):
+        """Appendix C: Examples From org.sonar.java.resolve.JavaSymbol.java in the SonarJava analyzer TREAT THIS LIKE GOSBEL"""
+        code = '''
+@Nullable
+private MethodJavaSymbol overriddenSymbolFrom(ClassJavaType classType) {
+	if (classType.isUnknown()) {
+		return Symbols.unknownMethodSymbol;
+	}
+
+	boolean unknownFound = false;
+	List<JavaSymbol> symbols = classType.getSymbol().members().lookup(name);
+	for (JavaSymbol overrideSymbol : symbols) {
+		if (overrideSymbol.isKind(JavaSymbol.MTH)
+			    && !overrideSymbol.isStatic()) {
+		MethodJavaSymbol methodJavaSymbol = (MethodJavaSymbol)overrideSymbol;
+		if (canOverride(methodJavaSymbol)) {
+			Boolean overriding = checkOverridingParameters(methodJavaSymbol, 
+                            classType);
+				if (overriding == null) {
+					if (!unknownFound) {
+						unknownFound = true;
+					}
+				} else if (overriding) {
+					return methodJavaSymbol;
+				}
+			}
+		}
+	}
+
+	if (unknownFound) {
+		return Symbols.unknownMethodSymbol;
+	}
+	return null;
+}
+'''
+        functions = get_java_function_list(code)
+     
+        self.assertEqual(19, functions[0].cognitive_complexity)
+
+    def test_com_persistit_TimelyResource_java(self):
+        """Appendix C from specification"""
+        code = '''
+private void addVersion(final Entry entry, final Transaction txn)
+		throws PersistitInterruptedException, RollbackException {
+	final TransactionIndex ti = _persistit.getTransactionIndex();
+	while (true) {
+		try {
+			synchronized (this) {
+				if (frst != null) {
+					if (frst.getVersion() > entry.getVersion()) {
+						throw new RollbackException();
+					}
+					if (txn.isActive()) {
+						for
+                                (Entry e = frst; e != null; e = e.getPrevious()) {
+                            final long version = e.getVersion();
+                            final long depends = ti.wwDependency(version,
+                                txn.getTransactionStatus(), 0);
+                            if (depends == TIMED_OUT) {
+                                throw new WWRetryException(version);
+                            }
+                            if (depends != 0
+                                    && depends != ABORTED) {
+                                throw new RollbackException();
+                            }
+					    }
+				    }
+                }
+                entry.setPrevious(frst);
+                frst = entry;
+                break;
+            }
+        } catch (final WWRetryException re) {
+            try {
+                final long depends = _persistit.getTransactionIndex()
+                        .wwDependency(re.getVersionHandle(),txn.getTransactionStatus(),
+                        SharedResource.DEFAULT_MAX_WAIT_TIME);
+                if (depends != 0
+                        && depends != ABORTED) {
+                    throw new RollbackException();
+                }
+            } catch (final InterruptedException ie) {
+                throw new PersistitInterruptedException(ie);				
+            }
+        } catch (final InterruptedException ie) {
+            throw new PersistitInterruptedException(ie);
+        }
+	}
+}
+'''
+        functions = get_java_function_list(code)
+        # SPEC REQUIREMENT: CogC = 35
+        self.assertEqual(35, functions[0].cognitive_complexity)
+
+    def test_org_sonar_api_utils_WildcardPattern_java(self):
+        """Appendix C from specification"""
+        code = '''
+private static String toRegexp(String antPattern, String directorySeparator) {
+	final String escapedDirectorySeparator = "\\\\" + directorySeparator;
+	final StringBuilder sb = new StringBuilder(antPattern.length());
+	sb.append('^');
+	int i = antPattern.startsWith("/") || antPattern.startsWith("\\\\") ? 1 : 0;
+
+	while (i < antPattern.length()) {
+		final char ch = antPattern.charAt(i);
+		if (SPECIAL_CHARS.indexOf(ch) != -1) {
+			sb.append('\\\\').append(ch);
+		} else if (ch == '*') {
+			if (i + 1 < antPattern.length() && antPattern.charAt(i + 1) == '*') {
+				if (i + 2 < antPattern.length() && isSlash(antPattern.charAt(i + 2))) {
+					sb.append("(?:.*").append(escapedDirectorySeparator).append("|)");
+					i += 2;
+				} else {
+					sb.append(".*");
+					i += 1;
+				}
+			} else {
+				sb.append("[^").append(escapedDirectorySeparator).append("]*?");
+			}
+		} else if (ch == '?') {
+			sb.append("[^").append(escapedDirectorySeparator).append("]");
+		} else if (isSlash(ch)) {
+			sb.append(escapedDirectorySeparator);
+		} else {
+			sb.append(ch);
+		}
+		i++;
+	}
+	sb.append('$');
+	return sb.toString();
+}
+'''
+        functions = get_java_function_list(code)
+        # SPEC REQUIREMENT: CogC = 20
+        self.assertEqual(20, functions[0].cognitive_complexity)
+
+    def test_Increment_for_nested_flow_break_structures_A(self):
+        """Increment for nested flow-break structures from spec"""
+        code = '''
+void myMethod () {
+	try {
+            if (condition1) { 						// +1
+                for (int i = 0; i < 10; i++) { 		// +2 (nesting=1)
+                    while (condition2) { … } 		// +3 (nesting=2)
+                }
+            }
+        } catch (ExcepType1 | ExcepType2 e) { 		// +1
+            if (condition2) { … } 					// +2 (nesting=1)
+        }
+    } 												// Cognitive Complexity 9
+}
+'''
+        functions = get_java_function_list(code)
+        # SPEC REQUIREMENT: CogC = 9
+        self.assertEqual(9, functions[0].cognitive_complexity)
+
+    def test_Increment_for_nested_flow_break_structures_B(self):
+        """Increment for nested flow-break structures with lambda from spec"""
+        code = '''
+void myMethod2 () {
+	Runnable r = () -> { 			// +0 (but nesting level is now 1)
+		if (condition1) { … } 		// +2 (nesting=1)
+	};
+}                                   // Cognitive Complexity 2
+'''
+        functions = get_java_function_list(code)
+        # SPEC REQUIREMENT: CogC = 2
+        self.assertEqual(2, functions[0].cognitive_complexity)
+
+    def test_sumOfPrimes_from_spec(self):
+        """Sum of primes with labeled continue from spec"""
+        code = '''
+int sumOfPrimes(int max) {
+	int total = 0;
+	OUT: for (int i = 1; i <= max; ++i) { 	    // +1
+		for (int j = 2; j < i; ++j) { 			// +2
+			if (i % j == 0) { 					// +3
+				continue OUT; 					// +1
+			}
+		}
+		total += i;
+	}
+	return total;
+} 												// Cognitive Complexity 7
+'''
+        functions = get_java_function_list(code)
+        # SPEC REQUIREMENT: CogC = 7
+        self.assertEqual(7, functions[0].cognitive_complexity)
+
+    def test_getWords_switch_from_spec(self):
+        """Switch statement from spec"""
+        code = '''
+String getWords(int number) {
+	switch (number) { 			// +1
+	case 1:
+		return "one";
+	case 2:
+		return "a couple";
+	case 3:
+		return "a few";
+	default:
+		return "lots";
+	}
+} 								// Cognitive Complexity 1
+'''
+        functions = get_java_function_list(code)
+        # SPEC REQUIREMENT: CogC = 1
+        self.assertEqual(1, functions[0].cognitive_complexity)

@@ -191,7 +191,9 @@ class TypeScriptStates(CodeStateMachine):
                     # This is a method call, not a function definition
                     self._prev_token = token
                     return
-                if not self.started_function:
+                # Only treat identifier( as potential function definition if we're truly at global/top scope
+                # (not inside a function OR a lambda)
+                if not self.started_function and self.context.lambda_depth == 0:
                     self.arrow_function_pending = True
                     self._function(self.last_tokens)
                 self.next(self._function, token)
@@ -210,6 +212,11 @@ class TypeScriptStates(CodeStateMachine):
         if token == 'function':
             self._state = self._function
         elif token in ('if', 'switch', 'for', 'while', 'catch'):
+            # Track if this is a top-level structural increment (not nested)
+            # Top-level means: inside a function but not nested in any control structures
+            # For JavaScript, current_nesting_level == initial_nesting_level means we're at function top-level
+            if self.context.current_function and self.context.current_nesting_level == self.context.current_function.initial_nesting_level:
+                self.context.has_top_level_increment = True
             self.next(self._expecting_condition_and_statement_block)
         elif token in ('else', 'do', 'try', 'final'):
             self.next(self._expecting_statement_or_block)
@@ -293,13 +300,79 @@ class TypeScriptStates(CodeStateMachine):
             self.next(self._state_global, token)
 
     def _push_function_to_stack(self):
-        self.started_function = True
-        self.context.push_new_function(self.function_name or '(anonymous)')
+        # Determine if this is a true function (needs FunctionInfo) or a lambda (just increases nesting)
+        # A function is a lambda if it's anonymous AND inside another function
+        # OR if it's a named nested function inside a non-class function (JavaScript compensating usage)
+        is_inside_function = self.context.stacked_functions or self.context.lambda_depth > 0
+
+        # JavaScript compensating usage (spec lines 392-426):
+        # Nested functions in "faux class" pattern should aggregate to parent
+        # Rules:
+        # 1. Anonymous functions inside any function -> lambda
+        # 2. Named functions with property assignment (foo.bar = function) -> lambda if inside function
+        # 3. Named functions at lambda_depth > 0 -> lambda (nested callbacks)
+        # 4. Class methods (regular function declarations in class-like context) -> separate function
+
+        # Check if this looks like a property assignment pattern (name contains '.' or '::')
+        is_property_assignment = self.function_name and ('.' in self.function_name or '::' in self.function_name)
+
+        if not self.function_name:
+            # Anonymous function - treat as lambda if inside any function
+            is_lambda = is_inside_function
+        elif is_property_assignment and is_inside_function and self.context.lambda_depth == 0:
+            # Property assignment like "bar.myFun = function()" inside a function -> lambda (compensating usage)
+            is_lambda = True
+        elif self.context.lambda_depth > 0:
+            # Already inside a lambda - always treat as nested lambda
+            is_lambda = True
+        else:
+            # Regular named function at top level or in class - separate FunctionInfo
+            is_lambda = False
+
+        # Check if parent function has top-level structural increments (before creating new function)
+        parent_has_increments = self.context.has_top_level_increment
+
+        if is_lambda:
+            # This is an anonymous callback inside another function
+            # Don't create a new FunctionInfo, just mark for nesting increase
+            # JavaScript compensating usage (spec lines 392-426):
+            # - For first-level nested functions in purely declarative outer functions: nesting=0
+            # - For first-level nested functions in non-declarative outer functions: nesting=1
+            # - For lambdas nested inside other lambdas (lambda_depth >= 1): ALWAYS increase nesting
+            #
+            # The rule only applies to direct children of top-level functions, not to deeply nested lambdas
+            if self.context.lambda_depth >= 1:
+                # We're already inside a lambda, so always increase nesting for nested lambdas
+                self.context.enter_lambda()
+                self.is_lambda_with_nesting = True
+            elif parent_has_increments:
+                # First-level lambda in non-declarative function: increase nesting
+                self.context.enter_lambda()
+                self.is_lambda_with_nesting = True  # Track that we need to call exit_lambda()
+            else:
+                # First-level lambda in purely declarative function: don't increase nesting (compensating usage)
+                self.is_lambda_with_nesting = False
+            self.started_function = False  # Don't track as a real function
+            self.is_lambda = True  # Track that this is a lambda for cleanup
+        else:
+            # This is a real function (named or top-level)
+            self.started_function = True
+            self.is_lambda = False
+            self.context.push_new_function(self.function_name or '(anonymous)')
+
+        # Reset the flag for the new function (stored in context)
+        self.context.has_top_level_increment = False
 
     def _pop_function_from_stack(self):
         if self.started_function:
             self.context.end_of_function()
+        elif hasattr(self, 'is_lambda') and self.is_lambda:
+            # Exiting a lambda - decrease lambda depth only if we increased it
+            if hasattr(self, 'is_lambda_with_nesting') and self.is_lambda_with_nesting:
+                self.context.exit_lambda()
         self.started_function = None
+        self.is_lambda = False
+        self.is_lambda_with_nesting = False
 
     def _arrow_function(self, token):
         self._push_function_to_stack()

@@ -42,7 +42,7 @@ class TestFileOutputIntegration(unittest.TestCase):
         self.assertEqual(first_line, expected_first_line)
 
     def test_default(self):
-        header = "================================================"
+        header = "======================================================="
         self.output_test("test", header)
 
     def test_csv(self):

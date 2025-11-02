@@ -714,13 +714,13 @@ class TestPLSQL(unittest.TestCase):
         END;
         """
         result = get_plsql_function_list(code)
-        # Note: Inner BEGIN/END creates a nested anonymous block which may be counted as a separate function
-        # depending on implementation. This is checking the current behavior.
-        self.assertGreaterEqual(len(result), 1)
-        # The main procedure should have complexity: 1 (base) + 1 (outer WHEN) = 2
-        # (inner WHEN belongs to the nested block)
-        main_proc = [r for r in result if r.name == "test_nested_exceptions"][0]
-        self.assertEqual(2, main_proc.cyclomatic_complexity)
+        # Nested BEGIN/END blocks with EXCEPTION sections are handled as part of the parent procedure
+        self.assertEqual(1, len(result))
+        # The main procedure has complexity: 1 (base) + 1 (inner WHEN) + 1 (outer WHEN) = 3
+        # Both WHEN clauses are counted as they both add decision points to the procedure
+        main_proc = result[0]
+        self.assertEqual("test_nested_exceptions", main_proc.name)
+        self.assertEqual(3, main_proc.cyclomatic_complexity)
 
     def test_package_specification(self):
         code = """
@@ -749,3 +749,120 @@ class TestPLSQL(unittest.TestCase):
         # But nested function should be counted
         self.assertEqual(1, len(result))
         self.assertEqual("inner_func", result[0].name)
+
+
+class Test_PLSQL_Cognitive_Complexity(unittest.TestCase):
+    """Cognitive Complexity tests for PL/SQL"""
+
+    def test_simple_function_has_zero_cogc(self):
+        """Simple straight-line function should have CogC=0"""
+        code = """
+CREATE OR REPLACE FUNCTION simple_func RETURN NUMBER IS
+    v_result NUMBER;
+BEGIN
+    v_result := 5 * 2;
+    RETURN v_result;
+END;
+"""
+        functions = get_plsql_function_list(code)
+        self.assertEqual(0, functions[0].cognitive_complexity)
+
+    def test_single_if_statement(self):
+        """Single IF statement should be CogC=1"""
+        code = """
+CREATE OR REPLACE FUNCTION check_value(p_value NUMBER) RETURN VARCHAR2 IS
+BEGIN
+    IF p_value > 0 THEN         -- +1
+        RETURN 'positive';
+    END IF;
+    RETURN 'non-positive';
+END;
+"""
+        functions = get_plsql_function_list(code)
+        self.assertEqual(1, functions[0].cognitive_complexity)
+
+    def test_nested_loops_with_nesting_penalty(self):
+        """Nested structures demonstrate nesting penalty multiplication"""
+        code = """
+CREATE OR REPLACE FUNCTION nested_loops RETURN NUMBER IS
+    v_count NUMBER := 0;
+BEGIN
+    FOR i IN 1..10 LOOP                 -- +1
+        FOR j IN 1..10 LOOP             -- +2 (nesting=1)
+            IF i = j THEN                -- +3 (nesting=2)
+                v_count := v_count + 1;
+            END IF;
+        END LOOP;
+    END LOOP;
+    RETURN v_count;
+END;  -- Total CogC = 6
+"""
+        functions = get_plsql_function_list(code)
+        self.assertEqual(6, functions[0].cognitive_complexity)
+
+    def test_case_statement_counts_as_one(self):
+        """CASE statement counts as 1 regardless of number of branches"""
+        code = """
+CREATE OR REPLACE FUNCTION get_day(p_day NUMBER) RETURN VARCHAR2 IS
+BEGIN
+    RETURN CASE p_day           -- +1
+        WHEN 1 THEN 'Monday'
+        WHEN 2 THEN 'Tuesday'
+        WHEN 3 THEN 'Wednesday'
+        ELSE 'Unknown'
+    END;
+END;  -- Total CogC = 1
+"""
+        functions = get_plsql_function_list(code)
+        self.assertEqual(1, functions[0].cognitive_complexity)
+
+    def test_binary_logical_operators(self):
+        """Binary logical operator sequences"""
+        code = """
+CREATE OR REPLACE FUNCTION complex_condition(a BOOLEAN, b BOOLEAN, c BOOLEAN,
+                                             d BOOLEAN, e BOOLEAN) RETURN BOOLEAN IS
+BEGIN
+    IF a AND b AND c THEN       -- +1 for IF, +1 for AND sequence
+        RETURN TRUE;
+    END IF;
+    IF d OR e THEN              -- +1 for IF, +1 for OR sequence
+        RETURN FALSE;
+    END IF;
+    RETURN FALSE;
+END;  -- Total CogC = 4
+"""
+        functions = get_plsql_function_list(code)
+        self.assertEqual(4, functions[0].cognitive_complexity)
+
+    def test_exception_handler(self):
+        """Exception handler (EXCEPTION WHEN) should add complexity"""
+        code = """
+CREATE OR REPLACE FUNCTION safe_divide(p_num NUMBER, p_den NUMBER) RETURN NUMBER IS
+BEGIN
+    RETURN p_num / p_den;
+EXCEPTION
+    WHEN ZERO_DIVIDE THEN       -- +1
+        RETURN NULL;
+    WHEN OTHERS THEN            -- +1
+        RAISE;
+END;  -- Total CogC = 2
+"""
+        functions = get_plsql_function_list(code)
+        self.assertEqual(2, functions[0].cognitive_complexity)
+
+    def test_cursor_loop(self):
+        """Cursor FOR loop counts as loop"""
+        code = """
+CREATE OR REPLACE FUNCTION process_employees RETURN NUMBER IS
+    v_count NUMBER := 0;
+BEGIN
+    FOR emp_rec IN (SELECT * FROM employees) LOOP   -- +1
+        IF emp_rec.salary > 50000 THEN              -- +2 (nesting=1)
+            v_count := v_count + 1;
+        END IF;
+    END LOOP;
+    RETURN v_count;
+END;  -- Total CogC = 3
+"""
+        functions = get_plsql_function_list(code)
+        self.assertEqual(3, functions[0].cognitive_complexity)
