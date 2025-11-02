@@ -1,0 +1,508 @@
+"""
+This is an extension of lizard that calculates Cognitive Complexity
+for every function.
+
+Cognitive Complexity is a metric designed to measure the relative difficulty of
+understanding code's control flow. Unlike Cyclomatic Complexity, which is based
+on a mathematical model of the number of linearly independent paths through code,
+Cognitive Complexity uses human judgment to assess the mental effort required to
+understand control flow structures.
+
+This implementation follows the Cognitive Complexity specification version 1.2
+by SonarSource (19 April 2017). For details, see cognitive_complexity_theory.rst
+in the repository root.
+"""
+
+DEFAULT_COGC_THRESHOLD = 15
+
+
+class LizardExtension(object):  # pylint: disable=R0903
+    """Cognitive Complexity extension for Lizard."""
+
+    FUNCTION_INFO = {
+        "cognitive_complexity": {
+            "caption": " CogC  ",
+            "average_caption": " Avg.CogC "
+        }
+    }
+
+    @staticmethod
+    def set_args(parser):
+        parser.add_argument(
+            "-G", "--CogC",
+            help='''Threshold for Cognitive Complexity warning.
+            The default value is %d.
+            Functions with CogC bigger than it will generate warning
+            ''' % DEFAULT_COGC_THRESHOLD,
+            type=int,
+            dest="CogC",
+            default=DEFAULT_COGC_THRESHOLD)
+
+    def __call__(self, tokens, reader):
+        '''
+        Calculate Cognitive Complexity according to the specification.
+        Three basic rules:
+        1. Ignore shorthand structures (methods, null-coalescing)
+        2. Increment for breaks in linear flow
+        3. Increment for nesting
+        '''
+        context = reader.context
+        prev_token = None
+        in_switch = False
+        switch_nesting = 0
+        after_else = False  # Track if we just saw 'else'
+        in_do_while = False  # Track if we're in a do-while construct
+        after_break_continue = False  # Track if we just saw break/continue
+        saw_question_mark = False  # Track if we saw '?' (to check for ?. operator)
+        in_exception_block = False  # Track if we're in PL/SQL EXCEPTION block
+        after_loop_keyword = False  # Track if we just saw 'for' or 'while' (for Lua/Ruby 'do')
+
+        # Erlang-specific tracking for clause-based constructs
+        is_erlang = hasattr(reader, 'language_names') and 'erlang' in reader.language_names
+        erlang_if_case_depth = 0  # Track nesting depth of if/case blocks
+        after_semicolon_in_if_case = False  # Track if we saw ';' inside if/case
+        after_dash_in_erlang = False  # Track if we saw '-' (for '->' arrow detection)
+
+        # Stack to track which braces increase nesting
+        # Each entry is (brace_depth, increases_nesting)
+        nesting_stack = []
+        brace_depth = 0
+        pending_nesting_increase = False
+        pending_try_block = False  # Track if we just saw 'try'
+        try_block_stack = []  # Track which braces are try blocks (excluded from nesting)
+
+        # Structural keywords that increase both complexity and nesting
+        # Includes C preprocessor directives like #if, #ifdef (spec line 143)
+        # repeat is for Lua's repeat...until loop
+        structural_keywords = {'if', 'for', 'while', 'foreach', 'repeat', '#if', '#ifdef', '#elif'}
+        # 'case' is special: it's a structural keyword in Erlang and ST, but not in C/C++/Java (where it's a switch label)
+        if hasattr(reader, 'language_names') and ('erlang' in reader.language_names or 'st' in reader.language_names):
+            structural_keywords.add('case')
+        # catch/except and try (except is Python, catch is C++/Java/C#/JavaScript)
+        catch_keywords = {'catch', 'except'}
+        # Keywords that create blocks but don't increase cognitive nesting (spec line 234, 537)
+        try_keywords = {'try', 'synchronized'}
+        # Labeled jumps
+        jump_keywords = {'goto'}
+        # PL/SQL exception block keyword
+        exception_keywords = {'exception'}
+
+        for token in tokens:
+            # Check if previous token was '?' and current is not '.'
+            # If so, the '?' was a ternary operator
+            if saw_question_mark:
+                if token != '.':
+                    # The '?' was a ternary operator, count it
+                    context.add_cognitive_complexity()
+                # Reset the flag regardless
+                saw_question_mark = False
+
+            # Track opening braces
+            if token == '{':
+                brace_depth += 1
+                # Check if this is a try block (excluded from cognitive nesting)
+                if pending_try_block:
+                    context.cogc_excluded_nesting += 1
+                    try_block_stack.append(True)
+                    pending_try_block = False
+                else:
+                    try_block_stack.append(False)
+
+                # Check if this brace should increase nesting
+                # Both structural keywords (if, for, etc.) and lambdas increase nesting
+                if pending_nesting_increase or context.pending_lambda_nesting:
+                    context.increase_cogc_nesting()
+                    nesting_stack.append(True)  # This brace increases nesting
+                    pending_nesting_increase = False
+                    context.pending_lambda_nesting = False
+                else:
+                    nesting_stack.append(False)  # This brace doesn't increase nesting
+                after_else = False  # Reset after_else when we see a brace
+                after_loop_keyword = False  # Reset for/while tracking (C++ uses {, not do)
+                context.pending_structural_nesting = False  # Reset to avoid double-nesting in clike.py
+                # Reset binary logical operator tracking (new statement/block)
+                context.cogc_last_operator = None
+
+            # Track closing braces (including PL/SQL's }nosync for END IF/LOOP/CASE)
+            elif token == '}' or token == '}nosync':
+                # Check if this closes a try block
+                if try_block_stack:
+                    is_try_block = try_block_stack.pop()
+                    if is_try_block:
+                        context.cogc_excluded_nesting -= 1
+
+                if nesting_stack:
+                    increased_nesting = nesting_stack.pop()
+                    if increased_nesting:
+                        context.decrease_cogc_nesting()
+                brace_depth -= 1
+                # Check if we exited a switch
+                if in_switch and brace_depth == switch_nesting:
+                    in_switch = False
+                after_else = False  # Reset after_else
+
+            # Track closing 'end' keyword (for Lua/Ruby/Erlang)
+            # Note: Fortran also has 'end' tokens, but Fortran calls pop_nesting() which handles
+            # CogC stack automatically. We only handle structural nesting (True) here.
+            elif token == 'end':
+                # Erlang: track exiting if/case block
+                if is_erlang and erlang_if_case_depth > 0:
+                    erlang_if_case_depth -= 1
+                # Only pop if we added structural nesting for a control structure
+                # Non-structural nesting (False) is handled by language state machine's pop_nesting()
+                if context.cogc_nesting_stack and context.cogc_nesting_stack[-1]:
+                    # This is a structural nesting level (if/while/for/case), pop it
+                    context.decrease_cogc_nesting()
+                after_else = False  # Reset after_else
+                # Reset binary operator tracking (new statement/block)
+                context.cogc_last_operator = None
+
+            # C/C++ preprocessor directives: #if, #ifdef, #elif (spec line 143)
+            # These are counted as structural increments like regular 'if'
+            # Unlike regular 'if', preprocessor directives don't have braces, so we increase nesting immediately
+            elif token.startswith('#if') or token.startswith('#elif'):
+                context.add_cognitive_complexity()
+                # Preprocessor directives don't use braces, so increase nesting immediately
+                context.increase_cogc_nesting()
+
+            # Structural increments: if, for, while, foreach
+            elif token in structural_keywords:
+                # Don't count 'if' after 'else' (else-if is one increment)
+                if not (token == 'if' and after_else):
+                    # Don't count 'while' if it's the end of a do-while
+                    if not (token == 'while' and in_do_while):
+                        context.add_cognitive_complexity()
+                        pending_nesting_increase = True
+                        # For brace-less languages (Python), increase nesting immediately
+                        # The next add_bare_nesting() will mark it properly
+                        context.pending_structural_nesting = True
+                else:
+                    # This is the 'if' part of 'else if', still needs to set nesting
+                    pending_nesting_increase = True
+                    context.pending_structural_nesting = True
+                after_else = False
+                if token == 'while' and in_do_while:
+                    in_do_while = False
+                # Track if we saw 'for' or 'while' (for Lua/Ruby where 'do' follows)
+                if token in ('for', 'while'):
+                    after_loop_keyword = True
+                # Erlang: track if we entered an if or case block
+                if is_erlang and token in ('if', 'case'):
+                    erlang_if_case_depth += 1
+
+            # do-while loop (C/C++/Java) or do keyword after for/while (Lua/Ruby)
+            elif token == 'do':
+                # In Lua/Ruby, 'do' follows 'for' or 'while' and shouldn't be counted separately
+                # In C/C++/Java, 'do' starts a do-while loop and should be counted
+                if not after_loop_keyword:
+                    # C-style do-while
+                    context.add_cognitive_complexity()
+                    pending_nesting_increase = True
+                    in_do_while = True
+                else:
+                    # Lua/Ruby-style: do follows for/while, add nesting for the block
+                    if context.pending_structural_nesting:
+                        context.add_bare_nesting()
+                after_loop_keyword = False  # Reset the flag
+                # Reset binary operator tracking (new block starting)
+                context.cogc_last_operator = None
+
+            # else and else-if
+            # These are HYBRID increments (spec line 144-147, Appendix B2/B3):
+            # - They ADD to complexity (+1)
+            # - They DO increase nesting level for things inside them
+            # - But they DON'T get nesting penalty themselves (mental cost already paid)
+            # NOTE: 'else' inside a switch/match statement does NOT add complexity
+            # (the switch itself already counted as +1)
+            elif token == 'else' and not in_switch:
+                # Fundamental increment: +1 without nesting multiplier
+                context.current_function.cognitive_complexity += 1
+                pending_nesting_increase = True
+                after_else = True
+
+            # elif/elseif/elsif/else if (some languages use elsif like PL/SQL, Ruby; Fortran uses 'else if')
+            elif token in ('elif', 'elseif', 'elsif', 'else if'):
+                # Fundamental increment: +1 without nesting multiplier
+                context.current_function.cognitive_complexity += 1
+                pending_nesting_increase = True
+
+            # catch clause (or PL/SQL EXCEPTION WHEN)
+            elif token in catch_keywords or (in_exception_block and token == 'when'):
+                context.add_cognitive_complexity()
+                pending_nesting_increase = True
+
+            # PL/SQL EXCEPTION keyword - following WHEN clauses act like catch
+            elif token in exception_keywords:
+                in_exception_block = True
+
+            # try doesn't add complexity, and try blocks don't increase nesting (spec line 234)
+            elif token in try_keywords:
+                pending_try_block = True
+
+            # Switch/match statement - single increment for entire switch
+            # (switch in C/Java/JavaScript, match in Rust/Scala)
+            elif token in ('switch', 'match'):
+                context.add_cognitive_complexity()
+                in_switch = True
+                switch_nesting = brace_depth
+                pending_nesting_increase = True
+
+            # Ternary operator (? :) - treat like if statement (spec line 143, 470, 481, 490)
+            # Note: We only increment on '?', not on ':', to avoid double-counting
+            # The '?' increments and increases nesting, the ':' doesn't add anything
+            elif token == '?':
+                # Check if this is the ternary operator or optional chaining (?.))
+                # Optional chaining would have '.' as next token, but we don't have lookahead here
+                # For now, assume all '?' are ternary (optional chaining is rare and doesn't affect complexity much)
+                context.add_cognitive_complexity()
+                pending_nesting_increase = True
+
+            # Binary logical operators: sequences (fundamental increment - no nesting multiplier)
+            # Note: 'and'/'or' are Python, '&&'/'||' are C/C++/Java/JavaScript, '.and.'/'.or.' are Fortran
+            # 'andalso'/'orelse' are Erlang
+            elif token.lower() in ('&&', '||', 'and', 'or', '.and.', '.or.', 'andalso', 'orelse'):
+                # Normalize operator for comparison (and/&&/.and./andalso are equivalent, or/||/.or./orelse are equivalent)
+                normalized = 'and' if token.lower() in ('&&', 'and', '.and.', 'andalso') else 'or'
+                # Only increment on first operator or when switching operator types
+                if context.cogc_last_operator != normalized:
+                    # This is a fundamental increment: +1 without nesting multiplier (spec line 209-216)
+                    context.current_function.cognitive_complexity += 1
+                    context.cogc_last_operator = normalized
+
+            # Ternary operator: condition ? true_value : false_value
+            # The '?' acts like an 'if' statement (spec line 470, 481, 490)
+            # But ignore null-coalescing operators: ?. and ?? (spec line 119-135)
+            elif token == '?':
+                # Check if this is null-coalescing (?. or ??) or ternary
+                # If previous token is also '?', this is ?? (null-coalescing, handled as single token in C#)
+                # Note: We need to wait to see if next token is '.' to determine if this is ?.
+                # For now, mark that we saw a '?' and check on the next iteration.
+                # We use a flag to defer the decision.
+                saw_question_mark = True
+
+            # Labeled jumps: goto LABEL, break LABEL, continue LABEL
+            # goto always counts, break/continue only count if followed by a label
+            elif token in jump_keywords:
+                # goto always adds +1 (fundamental increment without nesting multiplier)
+                context.current_function.cognitive_complexity += 1
+            elif token in ('break', 'continue'):
+                # Mark that we saw break/continue, will check next token to see if it's a label
+                after_break_continue = True
+            # Check if current token is a label after break/continue
+            elif after_break_continue:
+                # If the token after break/continue is not a semicolon or brace, it's likely a label
+                if token not in (';', '}', '\\n'):
+                    # This is a labeled jump: add +1 (fundamental increment)
+                    context.current_function.cognitive_complexity += 1
+                after_break_continue = False
+
+            # Handle 'then' keyword (starts body of if/while in Lua/Ruby)
+            # DISABLED: Fortran also handles 'then' and this causes double nesting
+            # elif token == 'then':
+            #     # If this follows a structural keyword (if/while), add nesting
+            #     if context.pending_structural_nesting:
+            #         context.add_bare_nesting()
+            #     context.cogc_last_operator = None
+
+            # Erlang: handle clause separators in if/case statements
+            # Each clause after the first (separated by ';') counts like an elsif
+            elif is_erlang and token == ';' and erlang_if_case_depth > 0:
+                # Mark that we saw a semicolon inside an if/case block
+                after_semicolon_in_if_case = True
+                context.cogc_last_operator = None
+
+            # Erlang: track '-' which might be part of '->' arrow
+            elif is_erlang and token == '-':
+                after_dash_in_erlang = True
+
+            # Erlang: '>' after '-' forms '->' (arrow operator)
+            # When this appears after ';' in if/case, it indicates a new clause (like elsif)
+            elif is_erlang and token == '>' and after_dash_in_erlang:
+                after_dash_in_erlang = False
+                if after_semicolon_in_if_case:
+                    # This is a new clause in an if/case statement
+                    # NOTE: Due to Erlang parser limitations, this increment may go to the wrong function
+                    # when ';' appears in if/case blocks (parser treats ';' as function terminator)
+                    context.add_cognitive_complexity()
+                    after_semicolon_in_if_case = False
+                context.cogc_last_operator = None
+
+            # Reset operator tracking on statement boundaries
+            elif token in (';', '\\n', '{'):
+                context.cogc_last_operator = None
+
+            prev_token = token
+            yield token
+
+
+def _cogc_bare_nesting_hook(context):
+    """Hook for add_bare_nesting() to handle CogC structural nesting."""
+    # Check if this is structural nesting (for brace-less languages like Lua/Ruby/Python)
+    # If pending_structural_nesting is True, this block increases CogC nesting
+    if context.pending_structural_nesting:
+        context.increase_cogc_nesting()
+        context.pending_structural_nesting = False
+    else:
+        # Mark that this nesting level does NOT increase cognitive complexity
+        # (Only structural control flow like if/for/while increases CogC nesting)
+        context.cogc_nesting_stack.append(False)
+
+
+def _cogc_pop_nesting_hook(context):
+    """Hook for pop_nesting() to handle CogC nesting stack."""
+    # Check if this nesting level corresponds to cognitive complexity nesting
+    if context.cogc_nesting_stack and context.cogc_nesting_stack[-1]:
+        context.decrease_cogc_nesting()
+    elif context.cogc_nesting_stack:
+        context.cogc_nesting_stack.pop()  # Pop the False marker
+
+
+class CogCFileInfoAddition(object):
+    """Methods to add to FileInfoBuilder for Cognitive Complexity tracking."""
+
+    def add_cognitive_complexity(self, inc=1):
+        '''Add to cognitive complexity with current nesting level'''
+        # Calculate nesting using both tracking methods:
+        # 1. current_nesting_level: Bracket-based nesting from NestingStack (used by C/C++/Java)
+        # 2. cogc_nesting_level: Control-flow based nesting (used for all languages, especially JavaScript)
+        #
+        # For languages with NestingStack (C/C++/Java):
+        #   - Use current_nesting_level minus initial offset
+        # For languages without NestingStack (JavaScript):
+        #   - Use cogc_nesting_level plus any initial cogc nesting (e.g., from preprocessor directives)
+        #
+        # We use the maximum of both to support both approaches
+        nesting_from_stack = max(0, self.current_nesting_level - self.current_function.initial_nesting_level - 1)
+        nesting_from_cogc = self.cogc_nesting_level + self.current_function.initial_cogc_nesting_level
+        nesting = max(nesting_from_stack, nesting_from_cogc) - self.cogc_excluded_nesting
+        nesting = max(0, nesting)
+        self.current_function.cognitive_complexity += inc + nesting
+
+    def increase_cogc_nesting(self):
+        '''Increase cognitive complexity nesting level for structural control flow'''
+        self.cogc_nesting_level += 1
+        # Always add a True marker to track this cognitive nesting level
+        self.cogc_nesting_stack.append(True)
+
+    def decrease_cogc_nesting(self):
+        '''Decrease cognitive complexity nesting level'''
+        if self.cogc_nesting_level > 0:
+            self.cogc_nesting_level -= 1
+        if self.cogc_nesting_stack:
+            self.cogc_nesting_stack.pop()
+
+    def reset_cogc_nesting(self):
+        '''Reset cognitive complexity nesting level (e.g., at function boundary)'''
+        self.cogc_nesting_level = 0
+        self.cogc_last_operator = None
+        self.cogc_nesting_stack = []
+
+    def enter_lambda(self):
+        '''Mark that a lambda/anonymous function is being entered.
+        This increases nesting for code inside the lambda, but does NOT create a new FunctionInfo.
+        The complexity of the lambda body is added to the current (parent) function.
+        '''
+        self.pending_lambda_nesting = True
+        self.lambda_depth += 1
+
+    def exit_lambda(self):
+        '''Mark that a lambda/anonymous function is being exited.'''
+        if self.lambda_depth > 0:
+            self.lambda_depth -= 1
+
+
+def get_method(cls, name):
+    """ python3 doesn't need the __func__ to get the func of the
+        method.
+    """
+    method = getattr(cls, name)
+    if hasattr(method, "__func__"):
+        method = method.__func__
+    return method
+
+
+def patch(frm, accept_class):
+    for method in [k for k in frm.__dict__ if not k.startswith("_")]:
+        setattr(accept_class, method, get_method(frm, method))
+
+
+def patch_append_method(frm, accept_class, method_name):
+    old_method = get_method(accept_class, method_name)
+
+    def appended(*args, **kargs):
+        old_method(*args, **kargs)
+        frm(*args, **kargs)
+
+    setattr(accept_class, method_name, appended)
+
+
+def _init_cogc_data(self, *_):
+    """Initialize Cognitive Complexity tracking fields in FunctionInfo."""
+    self.cognitive_complexity = 0
+    self.initial_nesting_level = 0  # Track bracket-based nesting level at function start (for CogC)
+    self.initial_cogc_nesting_level = 0  # Track control-flow nesting at function start (for preprocessor directives)
+
+
+def _init_cogc_context_data(self, filename):
+    """Initialize Cognitive Complexity context variables in FileInfoBuilder."""
+    # Cognitive complexity tracking
+    self.cogc_nesting_level = 0
+    self.cogc_last_operator = None  # Track last binary logical operator seen (normalized)
+    self.cogc_nesting_stack = []  # Track which nesting levels are from structural control flow
+    self.cogc_excluded_nesting = 0  # Track nesting levels that don't count (try blocks)
+    self.pending_lambda_nesting = False  # Track if next brace should increase nesting for lambda
+    self.lambda_depth = 0  # Track how many lambdas deep we are (for JavaScript nested lambdas)
+    self.has_top_level_increment = False  # Track if current function has top-level structural increments (JavaScript)
+    self.pending_structural_nesting = False  # Track if next bare nesting is for structural keyword (brace-less languages)
+
+    # Register hooks for nesting tracking
+    if not hasattr(self, '_bare_nesting_hooks'):
+        self._bare_nesting_hooks = []
+    if not hasattr(self, '_pop_nesting_hooks'):
+        self._pop_nesting_hooks = []
+    self._bare_nesting_hooks.append(_cogc_bare_nesting_hook)
+    self._pop_nesting_hooks.append(_cogc_pop_nesting_hook)
+
+
+def _reset_cogc_on_push_function(self, name):
+    """Reset CogC nesting when pushing a new function (for nested functions)."""
+    self.reset_cogc_nesting()
+
+
+def _init_cogc_on_try_new_function(self, name):
+    """Store initial nesting levels for CogC calculation."""
+    # Store the initial nesting level for cognitive complexity calculation
+    # This accounts for classes/namespaces that the function is nested in
+    self.current_function.initial_nesting_level = self.current_nesting_level
+    # Store the initial cogc nesting separately (e.g., from preprocessor directives)
+    # This will be added to cogc-based nesting calculations
+    self.current_function.initial_cogc_nesting_level = self.cogc_nesting_level
+
+
+def _inherit_cogc_from_global(self):
+    """Inherit CogC from global if function is inside preprocessor block."""
+    # If the function is inside a preprocessor block (cogc_nesting_level > 0),
+    # inherit the CogC from global preprocessor directives
+    if self.current_function.initial_cogc_nesting_level > 0:
+        self.current_function.cognitive_complexity = self.global_pseudo_function.cognitive_complexity
+
+
+# Lazy import to avoid circular dependency (lizard.py imports this module at load time)
+import sys
+# Handle both 'lizard' module import and '__main__' execution
+if '__main__' in sys.modules and hasattr(sys.modules['__main__'], 'FileInfoBuilder'):
+    # Running as script (python lizard.py)
+    main_module = sys.modules['__main__']
+    FileInfoBuilder = main_module.FileInfoBuilder
+    FunctionInfo = main_module.FunctionInfo
+else:
+    # Normal import (from lizard import ...)
+    from lizard import FileInfoBuilder, FunctionInfo
+
+# Monkey-patch FileInfoBuilder and FunctionInfo
+patch(CogCFileInfoAddition, FileInfoBuilder)
+patch_append_method(_init_cogc_data, FunctionInfo, "__init__")
+patch_append_method(_init_cogc_context_data, FileInfoBuilder, "__init__")
+patch_append_method(_reset_cogc_on_push_function, FileInfoBuilder, "push_new_function")
+patch_append_method(_init_cogc_on_try_new_function, FileInfoBuilder, "try_new_function")
+patch_append_method(_inherit_cogc_from_global, FileInfoBuilder, "confirm_new_function")

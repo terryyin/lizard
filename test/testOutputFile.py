@@ -46,7 +46,8 @@ class TestFileOutputIntegration(unittest.TestCase):
         self.output_test("test", header)
 
     def test_csv(self):
-        header = "NLOC,CCN,token,PARAM,length,location,file,function,long_name,start,end"
+        # CogC is now included by default as an extension
+        header = "NLOC,CCN,token,PARAM,length,location,file,function,long_name,start,end, CogC  "
         self.output_test("test.csv", header)
 
     def test_html(self):

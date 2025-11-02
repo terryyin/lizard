@@ -9,7 +9,7 @@ import sys
 import datetime
 
 
-def html_output(result, options, *_):
+def html_output(result, options, schema, *_):
     try:
         from jinja2 import Template
     except ImportError:
@@ -28,17 +28,39 @@ def html_output(result, options, *_):
                     func_list.append(source_function_dict)
                     source_file_dict["functions"] = func_list
         file_list.append(source_file_dict)
+
+    # Build column schema for dynamic rendering
+    columns = []
+    for item in schema.items:
+        if item.get('caption'):
+            columns.append({
+                'name': item['value'],
+                'caption': item['caption'].strip(),
+                'threshold_key': item['value']
+            })
+
     output = Template(TEMPLATE).render(
             title='Lizard code complexity report',
             date=datetime.datetime.now().strftime('%Y-%m-%d %H:%M'),
-            thresholds=options.thresholds, files=file_list)
+            thresholds=options.thresholds, files=file_list, columns=columns)
     print(output)
     return 0
 
 
 def _create_dict(obj):
+    # Start with instance attributes
+    result = obj.__dict__.copy()
 
-    return obj.__dict__
+    # Add computed properties that are needed for display
+    # These are properties defined in FunctionInfo that aren't in __dict__
+    if hasattr(obj, 'length'):
+        result['length'] = obj.length
+    if hasattr(obj, 'parameter_count'):
+        result['parameter_count'] = obj.parameter_count
+    if hasattr(obj, 'location'):
+        result['location'] = obj.location
+
+    return result
 
 
 TEMPLATE = '''<!DOCTYPE HTML PUBLIC
@@ -142,16 +164,9 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
     <tr>
       <th>File</th>
       <th>Function name</th>
-      <th>Cyclomatic complexity ({{ thresholds["cyclomatic_complexity"] }})</th>
-      <th>LOC ({{ thresholds["nloc"] }})</th>
-      <th>
-        {% if thresholds["token_count"] %}
-           Token count ({{ thresholds["token_count"] }})
-        {% else %}
-           Token count
-        {% endif %}
-      </th>
-      <th>Parameter count ({{ thresholds["parameter_count"] }})</th>
+      {% for col in columns %}
+      <th>{{ col.caption }}{% if thresholds.get(col.threshold_key) %} ({{ thresholds[col.threshold_key] }}){% endif %}</th>
+      {% endfor %}
     </tr>
   </thead>
   <tbody>
@@ -160,33 +175,21 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
   <tr>
     <td>{{ file.filename }}</td>
     <td class="function-name">{{ func.name }}</td>
-    {% if func.cyclomatic_complexity > thresholds["cyclomatic_complexity"] %}
-       <td class="greater-value">{{ func.cyclomatic_complexity }}</td>
+    {% for col in columns %}
+    {% if col.name == 'parameter_count' %}
+      {% set col_value = func['full_parameters']|length %}
     {% else %}
-       <td class="lesser-value">{{ func.cyclomatic_complexity }}</td>
+      {% set col_value = func[col.name] %}
     {% endif %}
-
-    {% if func.nloc > thresholds["nloc"] %}
-       <td class="greater-value">{{ func.nloc }}</td>
+    {% set threshold = thresholds.get(col.threshold_key) %}
+    {% if threshold and col_value > threshold %}
+       <td class="greater-value">{{ col_value }}</td>
+    {% elif threshold %}
+       <td class="lesser-value">{{ col_value }}</td>
     {% else %}
-       <td class="lesser-value">{{ func.nloc}}</td>
+       <td class="value">{{ col_value }}</td>
     {% endif %}
-
-    {% if thresholds["token_count"] %}
-       {% if func.token_count > thresholds["token_count"] %}
-          <td class="greater-value">{{ func.token_count }}</td>
-       {% else %}
-          <td class="lesser-value">{{ func.token_count }}</td>
-       {% endif %}
-    {% else %}
-       <td class="value">{{ func.token_count }}</td>
-    {% endif %}
-
-    {% if func.full_parameters|length > thresholds["parameter_count"] %}
-       <td class="greater-value">{{ func.full_parameters|length }}</td>
-    {% else %}
-       <td class="lesser-value">{{ func.full_parameters|length }}</td>
-    {% endif %}
+    {% endfor %}
   </tr>
   {% endfor %}
 {% endfor %}
@@ -206,11 +209,18 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
 if (typeof jQuery !== 'undefined' && typeof jQuery.fn.dataTable !== 'undefined') {
     $(document).ready(function() {
         try {
+            // Generate column indices for numeric columns (all except File and Function name)
+            var numColumns = $('#complexityTable thead th').length;
+            var numericColumns = [];
+            for (var i = 2; i < numColumns; i++) {
+                numericColumns.push(i);
+            }
+
             $('#complexityTable').DataTable({
                 "pageLength": 25,
-                "order": [[2, "desc"]],  // Sort by cyclomatic complexity descending by default
+                "order": [[2, "desc"]],  // Sort by first metric column descending by default
                 "columnDefs": [
-                    { "type": "num", "targets": [2, 3, 4, 5] }  // Ensure numeric sorting for metric columns
+                    { "type": "num", "targets": numericColumns }  // Ensure numeric sorting for metric columns
                 ]
             });
         } catch (e) {

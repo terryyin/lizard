@@ -26,21 +26,24 @@ class TestFunctionOutput(StreamStdoutTestCase):
 
     def test_function_info_header_should_have_the_captions(self):
         print_and_save_modules([],  self.scheme)
-        self.assertEqual("  NLOC    CCN   CogC   token  PARAM  length  location  ", sys.stdout.stream.splitlines()[1])
+        # CogC is now added by extension, so it appears after length
+        self.assertEqual("  NLOC    CCN   token  PARAM  length  CogC   location  ", sys.stdout.stream.splitlines()[1])
 
     def test_function_info_header_should_have_the_captions_of_external_extensions(self):
         external_extension = Mock(FUNCTION_INFO = {"xx": {"caption":"*external_extension*"}}, ordering_index=-1)
         extensions = get_extensions([external_extension])
         scheme = OutputScheme(extensions)
         print_and_save_modules([],  scheme)
-        self.assertEqual("  NLOC    CCN   CogC   token  PARAM  length *external_extension* location  ", sys.stdout.stream.splitlines()[1])
+        # External extension with ordering_index=-1 is inserted before cogc
+        self.assertEqual("  NLOC    CCN   token  PARAM  length *external_extension* CogC   location  ", sys.stdout.stream.splitlines()[1])
 
     def test_print_fileinfo(self):
         self.foo.end_line = 100
         self.foo.cyclomatic_complexity = 16
         fileStat = FileInformation("FILENAME", 1, [self.foo])
         print_and_save_modules([fileStat],  self.scheme)
-        self.assertEqual("       1     16      0      1      0       1 foo@100-100@FILENAME", sys.stdout.stream.splitlines()[3])
+        # Column order changed: NLOC CCN token PARAM length CogC location
+        self.assertEqual("       1     16      1      0       1      0 foo@100-100@FILENAME", sys.stdout.stream.splitlines()[3])
 
 
 class Ext(object):
@@ -103,7 +106,8 @@ class TestFileInformationOutput(StreamStdoutTestCase):
         scheme = OutputScheme([])
         fileSummary = FileInformation("FILENAME", 123, [])
         print_and_save_modules([fileSummary], scheme)
-        self.assertIn("    123       0.0     0.0       0.0        0.0         0     FILENAME\n", sys.stdout.stream)
+        # CogC is no longer included when OutputScheme([]) is used (no extensions)
+        self.assertIn("    123       0.0     0.0        0.0         0     FILENAME\n", sys.stdout.stream)
 
     def test_print_and_save_detail_information_with_ext(self):
         scheme = OutputScheme([Ext()])
@@ -111,7 +115,8 @@ class TestFileInformationOutput(StreamStdoutTestCase):
         fileSummary = FileInformation("FILENAME", 123, [])
         print_and_save_modules([fileSummary], scheme)
         self.assertIn("Avg.ND", sys.stdout.stream)
-        self.assertIn("    123       0.0     0.0       0.0        0.0     0.0         0     FILENAME", sys.stdout.stream)
+        # CogC is not included when only Ext() is used (no cogc extension in the list)
+        self.assertIn("    123       0.0     0.0        0.0     0.0         0     FILENAME", sys.stdout.stream)
 
 
     def test_print_file_summary_only_once(self):
