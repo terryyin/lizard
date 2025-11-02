@@ -38,6 +38,248 @@ class LizardExtension(object):  # pylint: disable=R0903
             dest="CogC",
             default=DEFAULT_COGC_THRESHOLD)
 
+    def _create_initial_state(self, reader):
+        """Create initial state dictionary for token processing."""
+        is_erlang = hasattr(reader, 'language_names') and 'erlang' in reader.language_names
+
+        return {
+            'in_switch': False,
+            'switch_nesting': 0,
+            'after_else': False,
+            'in_do_while': False,
+            'after_break_continue': False,
+            'saw_question_mark': False,
+            'in_exception_block': False,
+            'after_loop_keyword': False,
+            'is_erlang': is_erlang,
+            'erlang_if_case_depth': 0,
+            'after_semicolon_in_if_case': False,
+            'after_dash_in_erlang': False,
+            'nesting_stack': [],
+            'brace_depth': 0,
+            'pending_nesting_increase': False,
+            'pending_try_block': False,
+            'try_block_stack': [],
+        }
+
+    def _handle_binary_logical_operator(self, context, token):
+        """Handle binary logical operators: &&, ||, and, or, etc.
+
+        Fundamental increment - no nesting multiplier (spec line 209-216).
+        Only increment on first operator or when switching operator types.
+        """
+        # Normalize operator for comparison
+        # and/&&/.and./andalso are equivalent, or/||/.or./orelse are equivalent
+        normalized = 'and' if token.lower() in ('&&', 'and', '.and.', 'andalso') else 'or'
+
+        # Only increment on first operator or when switching operator types
+        if context.cogc_last_operator != normalized:
+            # This is a fundamental increment: +1 without nesting multiplier
+            context.current_function.cognitive_complexity += 1
+            context.cogc_last_operator = normalized
+
+    def _handle_break_continue_label(self, context, token):
+        """Check if break/continue is followed by a label.
+
+        Returns True if this token was processed, False otherwise.
+        Labeled jumps add +1 (fundamental increment).
+        """
+        # If token is not a statement terminator, it's a label
+        if token not in (';', '}', '\\n'):
+            # This is a labeled jump: add +1 (fundamental increment)
+            context.current_function.cognitive_complexity += 1
+        return True  # Processed
+
+    def _handle_opening_brace(self, context, brace_depth, pending_try_block,
+                               pending_nesting_increase, try_block_stack, nesting_stack):
+        """Handle opening brace: try blocks, nesting, lambdas.
+
+        Returns updated values for: brace_depth, pending_try_block, pending_nesting_increase
+        """
+        brace_depth += 1
+
+        # Check if this is a try block (excluded from cognitive nesting)
+        if pending_try_block:
+            context.cogc_excluded_nesting += 1
+            try_block_stack.append(True)
+            pending_try_block = False
+        else:
+            try_block_stack.append(False)
+
+        # Check if this brace should increase nesting
+        # Both structural keywords (if, for, etc.) and lambdas increase nesting
+        if pending_nesting_increase or context.pending_lambda_nesting:
+            context.increase_cogc_nesting()
+            nesting_stack.append(True)  # This brace increases nesting
+            pending_nesting_increase = False
+            context.pending_lambda_nesting = False
+        else:
+            nesting_stack.append(False)  # This brace doesn't increase nesting
+
+        # Reset flags
+        context.pending_structural_nesting = False  # Reset to avoid double-nesting in clike.py
+        context.cogc_last_operator = None  # Reset binary logical operator tracking
+
+        return brace_depth, pending_try_block, pending_nesting_increase
+
+    def _handle_closing_brace(self, context, brace_depth, in_switch, switch_nesting,
+                               try_block_stack, nesting_stack):
+        """Handle closing brace or }nosync.
+
+        Returns updated values for: brace_depth, in_switch
+        """
+        # Check if this closes a try block
+        if try_block_stack:
+            is_try_block = try_block_stack.pop()
+            if is_try_block:
+                context.cogc_excluded_nesting -= 1
+
+        if nesting_stack:
+            increased_nesting = nesting_stack.pop()
+            if increased_nesting:
+                context.decrease_cogc_nesting()
+
+        brace_depth -= 1
+
+        # Check if we exited a switch
+        if in_switch and brace_depth == switch_nesting:
+            in_switch = False
+
+        return brace_depth, in_switch
+
+    def _handle_end_keyword(self, context, is_erlang, erlang_if_case_depth):
+        """Handle 'end' keyword for Lua/Ruby/Erlang.
+
+        Note: Fortran also has 'end' tokens, but Fortran calls pop_nesting() which handles
+        CogC stack automatically. We only handle structural nesting (True) here.
+
+        Returns updated erlang_if_case_depth.
+        """
+        # Erlang: track exiting if/case block
+        if is_erlang and erlang_if_case_depth > 0:
+            erlang_if_case_depth -= 1
+
+        # Only pop if we added structural nesting for a control structure
+        # Non-structural nesting (False) is handled by language state machine's pop_nesting()
+        if context.cogc_nesting_stack and context.cogc_nesting_stack[-1]:
+            # This is a structural nesting level (if/while/for/case), pop it
+            context.decrease_cogc_nesting()
+
+        # Reset binary operator tracking (new statement/block)
+        context.cogc_last_operator = None
+
+        return erlang_if_case_depth
+
+    def _handle_structural_keyword(self, context, token, after_else, in_do_while,
+                                    erlang_if_case_depth, is_erlang, pending_nesting_increase):
+        """Handle structural keywords: if, for, while, foreach, repeat.
+
+        These keywords increase both complexity and nesting level.
+        Special cases:
+        - Don't count 'if' after 'else' (else-if is one increment total)
+        - Don't count 'while' at end of do-while loop
+        - Track for/while to distinguish C do-while from Lua/Ruby do-after-loop
+        - Track Erlang if/case depth for clause separator handling
+
+        Returns updated values for: after_else, in_do_while, erlang_if_case_depth,
+                                     after_loop_keyword, pending_nesting_increase
+        """
+        after_loop_keyword = False
+
+        # Don't count 'if' after 'else' (else-if is one increment)
+        if not (token == 'if' and after_else):
+            # Don't count 'while' if it's the end of a do-while
+            if not (token == 'while' and in_do_while):
+                context.add_cognitive_complexity()
+                pending_nesting_increase = True
+                # For brace-less languages (Python), increase nesting immediately
+                # The next add_bare_nesting() will mark it properly
+                context.pending_structural_nesting = True
+        else:
+            # This is the 'if' part of 'else if', still needs to set nesting
+            pending_nesting_increase = True
+            context.pending_structural_nesting = True
+
+        after_else = False
+
+        if token == 'while' and in_do_while:
+            in_do_while = False
+
+        # Track if we saw 'for' or 'while' (for Lua/Ruby where 'do' follows)
+        if token in ('for', 'while'):
+            after_loop_keyword = True
+
+        # Erlang: track if we entered an if or case block
+        if is_erlang and token in ('if', 'case'):
+            erlang_if_case_depth += 1
+
+        return after_else, in_do_while, erlang_if_case_depth, after_loop_keyword, pending_nesting_increase
+
+    def _handle_do_keyword(self, context, after_loop_keyword, in_do_while, pending_nesting_increase):
+        """Handle 'do' keyword - distinguish C do-while from Lua/Ruby do-after-loop.
+
+        In Lua/Ruby, 'do' follows 'for'/'while' and doesn't add complexity (already counted).
+        In C/C++/Java, 'do' starts a do-while loop and should be counted.
+
+        Returns updated values for: after_loop_keyword, in_do_while, pending_nesting_increase
+        """
+        # In Lua/Ruby, 'do' follows 'for' or 'while' and shouldn't be counted separately
+        # In C/C++/Java, 'do' starts a do-while loop and should be counted
+        if not after_loop_keyword:
+            # C-style do-while
+            context.add_cognitive_complexity()
+            pending_nesting_increase = True
+            in_do_while = True
+        else:
+            # Lua/Ruby-style: do follows for/while, add nesting for the block
+            if context.pending_structural_nesting:
+                context.add_bare_nesting()
+
+        after_loop_keyword = False  # Reset the flag
+
+        # Reset binary operator tracking (new block starting)
+        context.cogc_last_operator = None
+
+        return after_loop_keyword, in_do_while, pending_nesting_increase
+
+    def _handle_erlang_clause_separator(self, context, token, erlang_if_case_depth,
+                                         after_semicolon_in_if_case, after_dash_in_erlang):
+        """Handle Erlang clause separators in if/case statements.
+
+        Erlang uses ';' to separate clauses and '->' to start clause bodies.
+        Each clause after the first (pattern: '; ... ->') counts like an elsif.
+
+        Returns tuple of (handled, after_semicolon_in_if_case, after_dash_in_erlang)
+        where handled=True if this method processed the token.
+        """
+        # Erlang: handle semicolon in if/case statements
+        if token == ';' and erlang_if_case_depth > 0:
+            # Mark that we saw a semicolon inside an if/case block
+            after_semicolon_in_if_case = True
+            context.cogc_last_operator = None
+            return True, after_semicolon_in_if_case, after_dash_in_erlang
+
+        # Erlang: track '-' which might be part of '->' arrow
+        elif token == '-':
+            after_dash_in_erlang = True
+            return True, after_semicolon_in_if_case, after_dash_in_erlang
+
+        # Erlang: '>' after '-' forms '->' (arrow operator)
+        # When this appears after ';' in if/case, it indicates a new clause (like elsif)
+        elif token == '>' and after_dash_in_erlang:
+            after_dash_in_erlang = False
+            if after_semicolon_in_if_case:
+                # This is a new clause in an if/case statement
+                # NOTE: Due to Erlang parser limitations, this increment may go to the wrong function
+                # when ';' appears in if/case blocks (parser treats ';' as function terminator)
+                context.add_cognitive_complexity()
+                after_semicolon_in_if_case = False
+            context.cogc_last_operator = None
+            return True, after_semicolon_in_if_case, after_dash_in_erlang
+
+        # Not handled by this method
+        return False, after_semicolon_in_if_case, after_dash_in_erlang
+
     def __call__(self, tokens, reader):
         '''
         Calculate Cognitive Complexity according to the specification.
@@ -48,28 +290,26 @@ class LizardExtension(object):  # pylint: disable=R0903
         '''
         context = reader.context
         prev_token = None
-        in_switch = False
-        switch_nesting = 0
-        after_else = False  # Track if we just saw 'else'
-        in_do_while = False  # Track if we're in a do-while construct
-        after_break_continue = False  # Track if we just saw break/continue
-        saw_question_mark = False  # Track if we saw '?' (to check for ?. operator)
-        in_exception_block = False  # Track if we're in PL/SQL EXCEPTION block
-        after_loop_keyword = False  # Track if we just saw 'for' or 'while' (for Lua/Ruby 'do')
 
-        # Erlang-specific tracking for clause-based constructs
-        is_erlang = hasattr(reader, 'language_names') and 'erlang' in reader.language_names
-        erlang_if_case_depth = 0  # Track nesting depth of if/case blocks
-        after_semicolon_in_if_case = False  # Track if we saw ';' inside if/case
-        after_dash_in_erlang = False  # Track if we saw '-' (for '->' arrow detection)
-
-        # Stack to track which braces increase nesting
-        # Each entry is (brace_depth, increases_nesting)
-        nesting_stack = []
-        brace_depth = 0
-        pending_nesting_increase = False
-        pending_try_block = False  # Track if we just saw 'try'
-        try_block_stack = []  # Track which braces are try blocks (excluded from nesting)
+        # Initialize state variables
+        state = self._create_initial_state(reader)
+        in_switch = state['in_switch']
+        switch_nesting = state['switch_nesting']
+        after_else = state['after_else']
+        in_do_while = state['in_do_while']
+        after_break_continue = state['after_break_continue']
+        saw_question_mark = state['saw_question_mark']
+        in_exception_block = state['in_exception_block']
+        after_loop_keyword = state['after_loop_keyword']
+        is_erlang = state['is_erlang']
+        erlang_if_case_depth = state['erlang_if_case_depth']
+        after_semicolon_in_if_case = state['after_semicolon_in_if_case']
+        after_dash_in_erlang = state['after_dash_in_erlang']
+        nesting_stack = state['nesting_stack']
+        brace_depth = state['brace_depth']
+        pending_nesting_increase = state['pending_nesting_increase']
+        pending_try_block = state['pending_try_block']
+        try_block_stack = state['try_block_stack']
 
         # Structural keywords that increase both complexity and nesting
         # Includes C preprocessor directives like #if, #ifdef (spec line 143)
@@ -88,74 +328,36 @@ class LizardExtension(object):  # pylint: disable=R0903
         exception_keywords = {'exception'}
 
         for token in tokens:
-            # Check if previous token was '?' and current is not '.'
+            # Check if previous token was '?' and current is not '.' or '?'
             # If so, the '?' was a ternary operator
+            # (Ignore null-coalescing: ?. and ??)
             if saw_question_mark:
-                if token != '.':
+                if token not in ('.', '?'):
                     # The '?' was a ternary operator, count it
                     context.add_cognitive_complexity()
+                    pending_nesting_increase = True
                 # Reset the flag regardless
                 saw_question_mark = False
 
             # Track opening braces
             if token == '{':
-                brace_depth += 1
-                # Check if this is a try block (excluded from cognitive nesting)
-                if pending_try_block:
-                    context.cogc_excluded_nesting += 1
-                    try_block_stack.append(True)
-                    pending_try_block = False
-                else:
-                    try_block_stack.append(False)
-
-                # Check if this brace should increase nesting
-                # Both structural keywords (if, for, etc.) and lambdas increase nesting
-                if pending_nesting_increase or context.pending_lambda_nesting:
-                    context.increase_cogc_nesting()
-                    nesting_stack.append(True)  # This brace increases nesting
-                    pending_nesting_increase = False
-                    context.pending_lambda_nesting = False
-                else:
-                    nesting_stack.append(False)  # This brace doesn't increase nesting
+                brace_depth, pending_try_block, pending_nesting_increase = \
+                    self._handle_opening_brace(context, brace_depth, pending_try_block,
+                                               pending_nesting_increase, try_block_stack, nesting_stack)
                 after_else = False  # Reset after_else when we see a brace
                 after_loop_keyword = False  # Reset for/while tracking (C++ uses {, not do)
-                context.pending_structural_nesting = False  # Reset to avoid double-nesting in clike.py
-                # Reset binary logical operator tracking (new statement/block)
-                context.cogc_last_operator = None
 
             # Track closing braces (including PL/SQL's }nosync for END IF/LOOP/CASE)
             elif token == '}' or token == '}nosync':
-                # Check if this closes a try block
-                if try_block_stack:
-                    is_try_block = try_block_stack.pop()
-                    if is_try_block:
-                        context.cogc_excluded_nesting -= 1
-
-                if nesting_stack:
-                    increased_nesting = nesting_stack.pop()
-                    if increased_nesting:
-                        context.decrease_cogc_nesting()
-                brace_depth -= 1
-                # Check if we exited a switch
-                if in_switch and brace_depth == switch_nesting:
-                    in_switch = False
+                brace_depth, in_switch = \
+                    self._handle_closing_brace(context, brace_depth, in_switch, switch_nesting,
+                                               try_block_stack, nesting_stack)
                 after_else = False  # Reset after_else
 
             # Track closing 'end' keyword (for Lua/Ruby/Erlang)
-            # Note: Fortran also has 'end' tokens, but Fortran calls pop_nesting() which handles
-            # CogC stack automatically. We only handle structural nesting (True) here.
             elif token == 'end':
-                # Erlang: track exiting if/case block
-                if is_erlang and erlang_if_case_depth > 0:
-                    erlang_if_case_depth -= 1
-                # Only pop if we added structural nesting for a control structure
-                # Non-structural nesting (False) is handled by language state machine's pop_nesting()
-                if context.cogc_nesting_stack and context.cogc_nesting_stack[-1]:
-                    # This is a structural nesting level (if/while/for/case), pop it
-                    context.decrease_cogc_nesting()
+                erlang_if_case_depth = self._handle_end_keyword(context, is_erlang, erlang_if_case_depth)
                 after_else = False  # Reset after_else
-                # Reset binary operator tracking (new statement/block)
-                context.cogc_last_operator = None
 
             # C/C++ preprocessor directives: #if, #ifdef, #elif (spec line 143)
             # These are counted as structural increments like regular 'if'
@@ -167,45 +369,14 @@ class LizardExtension(object):  # pylint: disable=R0903
 
             # Structural increments: if, for, while, foreach
             elif token in structural_keywords:
-                # Don't count 'if' after 'else' (else-if is one increment)
-                if not (token == 'if' and after_else):
-                    # Don't count 'while' if it's the end of a do-while
-                    if not (token == 'while' and in_do_while):
-                        context.add_cognitive_complexity()
-                        pending_nesting_increase = True
-                        # For brace-less languages (Python), increase nesting immediately
-                        # The next add_bare_nesting() will mark it properly
-                        context.pending_structural_nesting = True
-                else:
-                    # This is the 'if' part of 'else if', still needs to set nesting
-                    pending_nesting_increase = True
-                    context.pending_structural_nesting = True
-                after_else = False
-                if token == 'while' and in_do_while:
-                    in_do_while = False
-                # Track if we saw 'for' or 'while' (for Lua/Ruby where 'do' follows)
-                if token in ('for', 'while'):
-                    after_loop_keyword = True
-                # Erlang: track if we entered an if or case block
-                if is_erlang and token in ('if', 'case'):
-                    erlang_if_case_depth += 1
+                after_else, in_do_while, erlang_if_case_depth, after_loop_keyword, pending_nesting_increase = \
+                    self._handle_structural_keyword(context, token, after_else, in_do_while,
+                                                     erlang_if_case_depth, is_erlang, pending_nesting_increase)
 
             # do-while loop (C/C++/Java) or do keyword after for/while (Lua/Ruby)
             elif token == 'do':
-                # In Lua/Ruby, 'do' follows 'for' or 'while' and shouldn't be counted separately
-                # In C/C++/Java, 'do' starts a do-while loop and should be counted
-                if not after_loop_keyword:
-                    # C-style do-while
-                    context.add_cognitive_complexity()
-                    pending_nesting_increase = True
-                    in_do_while = True
-                else:
-                    # Lua/Ruby-style: do follows for/while, add nesting for the block
-                    if context.pending_structural_nesting:
-                        context.add_bare_nesting()
-                after_loop_keyword = False  # Reset the flag
-                # Reset binary operator tracking (new block starting)
-                context.cogc_last_operator = None
+                after_loop_keyword, in_do_while, pending_nesting_increase = \
+                    self._handle_do_keyword(context, after_loop_keyword, in_do_while, pending_nesting_increase)
 
             # else and else-if
             # These are HYBRID increments (spec line 144-147, Appendix B2/B3):
@@ -247,27 +418,9 @@ class LizardExtension(object):  # pylint: disable=R0903
                 switch_nesting = brace_depth
                 pending_nesting_increase = True
 
-            # Ternary operator (? :) - treat like if statement (spec line 143, 470, 481, 490)
-            # Note: We only increment on '?', not on ':', to avoid double-counting
-            # The '?' increments and increases nesting, the ':' doesn't add anything
-            elif token == '?':
-                # Check if this is the ternary operator or optional chaining (?.))
-                # Optional chaining would have '.' as next token, but we don't have lookahead here
-                # For now, assume all '?' are ternary (optional chaining is rare and doesn't affect complexity much)
-                context.add_cognitive_complexity()
-                pending_nesting_increase = True
-
-            # Binary logical operators: sequences (fundamental increment - no nesting multiplier)
-            # Note: 'and'/'or' are Python, '&&'/'||' are C/C++/Java/JavaScript, '.and.'/'.or.' are Fortran
-            # 'andalso'/'orelse' are Erlang
+            # Binary logical operators: &&, ||, and, or, etc.
             elif token.lower() in ('&&', '||', 'and', 'or', '.and.', '.or.', 'andalso', 'orelse'):
-                # Normalize operator for comparison (and/&&/.and./andalso are equivalent, or/||/.or./orelse are equivalent)
-                normalized = 'and' if token.lower() in ('&&', 'and', '.and.', 'andalso') else 'or'
-                # Only increment on first operator or when switching operator types
-                if context.cogc_last_operator != normalized:
-                    # This is a fundamental increment: +1 without nesting multiplier (spec line 209-216)
-                    context.current_function.cognitive_complexity += 1
-                    context.cogc_last_operator = normalized
+                self._handle_binary_logical_operator(context, token)
 
             # Ternary operator: condition ? true_value : false_value
             # The '?' acts like an 'if' statement (spec line 470, 481, 490)
@@ -290,10 +443,7 @@ class LizardExtension(object):  # pylint: disable=R0903
                 after_break_continue = True
             # Check if current token is a label after break/continue
             elif after_break_continue:
-                # If the token after break/continue is not a semicolon or brace, it's likely a label
-                if token not in (';', '}', '\\n'):
-                    # This is a labeled jump: add +1 (fundamental increment)
-                    context.current_function.cognitive_complexity += 1
+                self._handle_break_continue_label(context, token)
                 after_break_continue = False
 
             # Handle 'then' keyword (starts body of if/while in Lua/Ruby)
@@ -306,26 +456,15 @@ class LizardExtension(object):  # pylint: disable=R0903
 
             # Erlang: handle clause separators in if/case statements
             # Each clause after the first (separated by ';') counts like an elsif
-            elif is_erlang and token == ';' and erlang_if_case_depth > 0:
-                # Mark that we saw a semicolon inside an if/case block
-                after_semicolon_in_if_case = True
-                context.cogc_last_operator = None
-
-            # Erlang: track '-' which might be part of '->' arrow
-            elif is_erlang and token == '-':
-                after_dash_in_erlang = True
-
-            # Erlang: '>' after '-' forms '->' (arrow operator)
-            # When this appears after ';' in if/case, it indicates a new clause (like elsif)
-            elif is_erlang and token == '>' and after_dash_in_erlang:
-                after_dash_in_erlang = False
-                if after_semicolon_in_if_case:
-                    # This is a new clause in an if/case statement
-                    # NOTE: Due to Erlang parser limitations, this increment may go to the wrong function
-                    # when ';' appears in if/case blocks (parser treats ';' as function terminator)
-                    context.add_cognitive_complexity()
-                    after_semicolon_in_if_case = False
-                context.cogc_last_operator = None
+            elif is_erlang:
+                handled, after_semicolon_in_if_case, after_dash_in_erlang = \
+                    self._handle_erlang_clause_separator(context, token, erlang_if_case_depth,
+                                                          after_semicolon_in_if_case, after_dash_in_erlang)
+                # If not handled, fall through to the final elif (operator tracking reset)
+                if not handled:
+                    # Reset operator tracking on statement boundaries
+                    if token in (';', '\\n', '{'):
+                        context.cogc_last_operator = None
 
             # Reset operator tracking on statement boundaries
             elif token in (';', '\\n', '{'):

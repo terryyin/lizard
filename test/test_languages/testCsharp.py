@@ -212,9 +212,7 @@ public class LinqTest {
 }
 '''
         functions = get_csharp_function_list(code)
-        # NOTE: Currently counts '?' in null-coalescing as ternary (+1)
-        # TODO: Distinguish between ternary '?' and null-coalescing '??'
-        self.assertEqual(1, functions[0].cognitive_complexity)
+        self.assertEqual(0, functions[0].cognitive_complexity)
 
     def test_try_catch_finally(self):
         """try-catch-finally should count catch clauses"""

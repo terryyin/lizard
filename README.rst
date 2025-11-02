@@ -22,65 +22,32 @@ By default lizard will search for any source code that it knows and mix
 all the results together. This might not be what you want. You can use
 the "-l" option to select language(s).
 
-+-------------------+---------------+---------------+------------------------------------------------+
-| Language          | CCN Support   | CogC Support  | Notes                                          |
-+===================+===============+===============+================================================+
-| C/C++             | ✓             | ✓             | Works with C++14; full CogC support with tests |
-+-------------------+---------------+---------------+------------------------------------------------+
-| C# (C Sharp)      | ✓             | ✓             | Full CogC support with tests                   |
-+-------------------+---------------+---------------+------------------------------------------------+
-| Erlang            | ✓             | Partial       | Partial CogC support; multi-clause if/case     |
-|                   |               |               | statements limited by parser (2/4 tests pass)  |
-+-------------------+---------------+---------------+------------------------------------------------+
-| Fortran           | ✓             | ✓             | Full CogC support with tests                   |
-+-------------------+---------------+---------------+------------------------------------------------+
-| GDScript          | ✓             | ✓             | Full CogC support with tests                   |
-+-------------------+---------------+---------------+------------------------------------------------+
-| Golang            | ✓             | ✓             | Full CogC support with tests                   |
-+-------------------+---------------+---------------+------------------------------------------------+
-| Java              | ✓             | ✓             | Full CogC support with tests                   |
-+-------------------+---------------+---------------+------------------------------------------------+
-| JavaScript        | ✓             | ✓             | With ES6 and JSX; full CogC support with tests |
-+-------------------+---------------+---------------+------------------------------------------------+
-| Kotlin            | ✓             | ✓             | Elvis operator (?:) doesn't count toward CogC  |
-+-------------------+---------------+---------------+------------------------------------------------+
-| Lua               | ✓             | ✓             | Full CogC support with tests                   |
-+-------------------+---------------+---------------+------------------------------------------------+
-| Objective-C       | ✓             | ✓             | Full CogC support with tests                   |
-+-------------------+---------------+---------------+------------------------------------------------+
-| Perl              | ✓             | ✓             | Full CogC support with tests                   |
-+-------------------+---------------+---------------+------------------------------------------------+
-| PHP               | ✓             | ✓             | Full CogC support with tests                   |
-+-------------------+---------------+---------------+------------------------------------------------+
-| PL/SQL            | ✓             | ✓             | Full CogC support with tests; nested           |
-|                   |               |               | procedures in declaration section and nested   |
-|                   |               |               | anonymous blocks are not yet supported         |
-+-------------------+---------------+---------------+------------------------------------------------+
-| Python            | ✓             | ✓             | Full CogC support with tests                   |
-+-------------------+---------------+---------------+------------------------------------------------+
-| R                 | ✓             | ✓             | Full CogC support with tests                   |
-+-------------------+---------------+---------------+------------------------------------------------+
-| Ruby              | ✓             | ✓             | Full CogC support with tests                   |
-+-------------------+---------------+---------------+------------------------------------------------+
-| Rust              | ✓             | ✓             | Full CogC support with tests                   |
-+-------------------+---------------+---------------+------------------------------------------------+
-| Scala             | ✓             | ✓             | Full CogC support with tests                   |
-+-------------------+---------------+---------------+------------------------------------------------+
-| Solidity          | ✓             | ✓             | Full CogC support with tests                   |
-+-------------------+---------------+---------------+------------------------------------------------+
-| Structured Text   | ✓             | Partial       | CogC tests skipped; missing import in test     |
-|                   |               |               | file (4/4 tests need analyze_file import)     |
-+-------------------+---------------+---------------+------------------------------------------------+
-| Swift             | ✓             | ✓             | Full CogC support with tests                   |
-+-------------------+---------------+---------------+------------------------------------------------+
-| TTCN-3            | ✓             | ✓             | Full CogC support with tests                   |
-+-------------------+---------------+---------------+------------------------------------------------+
-| TypeScript        | ✓             | ✓             | With TSX; full CogC support with tests         |
-+-------------------+---------------+---------------+------------------------------------------------+
-| VueJS             | ✓             | ✓             | Full CogC support with tests                   |
-+-------------------+---------------+---------------+------------------------------------------------+
-| Zig               | ✓             | ✓             | Full CogC support with tests                   |
-+-------------------+---------------+---------------+------------------------------------------------+
+-  **C/C++** - Works with C++14
+-  **C# (C Sharp)**
+-  **Erlang** - Partial CogC support; multi-clause if/case statements limited by parser
+-  **Fortran**
+-  **GDScript**
+-  **Golang**
+-  **Java**
+-  **JavaScript** - With ES6 and JSX
+-  **Kotlin** - Elvis operator (?:) doesn't count toward CogC
+-  **Lua**
+-  **Objective-C**
+-  **Perl**
+-  **PHP**
+-  **PL/SQL** - Nested procedures in declaration section and nested anonymous blocks are not yet supported
+-  **Python**
+-  **R**
+-  **Ruby**
+-  **Rust**
+-  **Scala**
+-  **Solidity**
+-  **Structured Text (ST)** - Partial CogC support; tests skipped due to missing import in test file
+-  **Swift**
+-  **TTCN-3**
+-  **TypeScript** - With TSX
+-  **VueJS**
+-  **Zig**
 
 It counts
 
@@ -119,7 +86,7 @@ Example usage::
 
 The CogC column appears in all output formats (tabular, XML, HTML, CSV, Checkstyle).
 For more details about the Cognitive Complexity algorithm, see the
-`Cognitive_Complexity.md <Cognitive_Complexity.md>`_ specification.
+`cognitive_complexity_theory.rst <cognitive_complexity_theory.rst>`_ documentation.
 
 This tool actually calculates how complex the code 'looks' rather than
 how complex the code really 'is'. People will need this tool because it's

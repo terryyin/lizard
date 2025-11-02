@@ -3,7 +3,7 @@ Test Cognitive Complexity calculations.
 Tests based on the Cognitive Complexity specification.
 '''
 import unittest
-from .testHelpers import get_cpp_function_list
+from ..testHelpers import get_cpp_function_list
 
 
 class TestCognitiveComplexityBasic(unittest.TestCase):

@@ -342,15 +342,16 @@ Implementation in Lizard
 Pipeline Integration
 --------------------
 
-Cognitive Complexity is calculated by the ``cognitive_complexity_counter``
-function, which is part of the token processing pipeline in ``lizard.py``:
+Cognitive Complexity is implemented as a Lizard extension in
+``lizard_ext/lizardcogc.py``. The extension integrates into the token
+processing pipeline as a generator that processes tokens sequentially:
 
 ::
 
     preprocessing → comment_counter → line_counter → token_counter →
-    condition_counter → cognitive_complexity_counter
+    condition_counter → cognitive_complexity_counter (extension)
 
-The counter processes tokens sequentially, maintaining state about nesting
+The extension processes tokens sequentially, maintaining state about nesting
 levels, current operators, and pending structural elements.
 
 Dual Nesting Tracking
@@ -370,7 +371,7 @@ Lizard uses two parallel approaches to track nesting, taking the maximum of both
    - Works for all languages, including brace-less (Python)
    - Required for languages where braces don't indicate cognitive nesting
 
-**Nesting calculation** (from ``lizard.py:519-536``):
+**Nesting calculation** (from ``lizard_ext/lizardcogc.py``):
 
 .. code-block:: python
 
@@ -379,7 +380,8 @@ Lizard uses two parallel approaches to track nesting, taking the maximum of both
         nesting_from_stack = max(0,
             self.current_nesting_level -
             self.current_function.initial_nesting_level - 1)
-        nesting_from_cogc = self.cogc_nesting_level
+        nesting_from_cogc = self.cogc_nesting_level +
+            self.current_function.initial_cogc_nesting_level
 
         # Take maximum, subtract excluded nesting (try blocks)
         nesting = max(nesting_from_stack, nesting_from_cogc) - \
@@ -810,7 +812,7 @@ specification version 1.2 by SonarSource. Key specification sections:
 Test Cases
 ----------
 
-The file ``test/testCogCFromSpec.py`` contains test cases directly from the
+The file ``test/test_extensions/testCogCFromSpec.py`` contains test cases directly from the
 specification. These tests are marked with:
 
 ::
@@ -834,7 +836,7 @@ The key insights are:
 3. **Shorthand helps** - Don't penalize readability aids
 4. **Context matters** - else-if is simpler than the if was already understood
 
-Lizard's implementation uses a sophisticated dual-tracking approach to support
+Lizard's implementation uses a dual-tracking approach to support
 both bracket-based and control-flow-based nesting across diverse languages, with
 special handling for language-specific patterns as outlined in the specification's
 appendices.
@@ -847,5 +849,5 @@ References
 ==========
 
 - Cognitive Complexity specification v1.2 (2017) by SonarSource
-- ``lizard.py`` lines 643-840 for core implementation
+- ``lizard_ext/lizardcogc.py`` for core implementation (extension)
 - ``lizard_languages/`` for language-specific adaptations
