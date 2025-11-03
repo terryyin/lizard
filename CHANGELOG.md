@@ -1,5 +1,23 @@
 # Change Log
 
+## 1.19.0
+
+### New Features
+- Add PL/SQL language support with comprehensive parsing for procedures, functions, and triggers
+- Add support for schema-qualified names in PL/SQL parser
+
+### Improvements
+- Enhanced JavaScript and TypeScript parsing with improved static and async method detection
+- Better method call detection to avoid false positives in JavaScript/TypeScript
+- Improved previous token context tracking for accurate function detection
+- Reorganized supported languages list in README alphabetically
+
+### Bug Fixes
+- Fix line count calculation issue when encountering empty lines after macro definition continuation markers
+
+### Documentation
+- Add contribution guidelines to README
+
 ## 1.18.0
 
 ### New Features
