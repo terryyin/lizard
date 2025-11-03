@@ -89,7 +89,7 @@ class SDLReader(CodeReader, CCppCommentsMixin):
     _logical_operators = {'AND', 'OR'}
     _case_keywords = set()
     _ternary_operators = set()
-    _conditions = _control_flow_keywords | _logical_operators  # Keep for compatibility
+    # Note: No need to define _conditions - base class builds it automatically
 
     def _is_condition(self, token, last_token):
         if token == ':' and last_token == ')':

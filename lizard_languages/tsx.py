@@ -48,13 +48,8 @@ class JSXTypeScriptStates(CodeStateMachine):
         self.started_function = None
         self.pending_function_name = ''
         self._ts_declare = False
-        # Separated condition categories (instance-level for TSX)
-        self._control_flow_keywords = {'if', 'elseif', 'for', 'while', 'catch'}
-        self._logical_operators = {'&&', '||'}
-        self._case_keywords = {'case'}
-        self._ternary_operators = {'?'}
-        self._conditions = (self._control_flow_keywords | self._logical_operators |
-                          self._case_keywords | self._ternary_operators)
+        # Note: Condition categories come from TypeScriptReader class level,
+        # no need to define instance-level duplicates
         self.inside_function = inside_function  # Track if we're already inside a function
 
     def statemachine_before_return(self):
