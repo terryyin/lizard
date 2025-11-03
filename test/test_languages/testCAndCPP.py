@@ -761,25 +761,25 @@ int add(int x, int y) {
         functions = get_cpp_function_list(code)
         self.assertEqual(0, functions[0].cognitive_complexity)
 
-    def test_sum_of_primes_from_spec(self):
-        """From Cognitive Complexity spec Example 1 - CogC should be 7"""
+    def test_labeled_continue_with_nested_loops(self):
+        """Test labeled continue with nested loops - CogC should be 7"""
         code = '''
-int sumOfPrimes(int max) {
-    int total = 0;
-    OUT: for (int i = 1; i <= max; ++i) {    // +1
-        for (int j = 2; j < i; ++j) {        // +2 (nesting=1)
-            if (i % j == 0) {                // +3 (nesting=2)
-                continue OUT;                 // +1 for goto
+int processValues(int limit) {
+    int result = 0;
+    OUTER: for (int i = 1; i <= limit; ++i) {  // +1
+        for (int j = 2; j < i; ++j) {          // +2 (nesting=1)
+            if (i % j == 0) {                  // +3 (nesting=2)
+                continue OUTER;                // +1 (labeled jump)
             }
         }
-        total += i;
+        result += i;
     }
-    return total;
+    return result;
 }
 '''
         functions = get_cpp_function_list(code)
         # FROM COGNITIVE COMPLEXITY SPEC: CogC = 7 (1+2+3+1)
-        # This is Example 1 from the specification - THE AUTHORITATIVE TEST CASE
+        # This is  from the specification - ONE OF THE AUTHORITATIVE TEST CASES
         self.assertEqual(7, functions[0].cognitive_complexity)
         self.assertEqual(4, functions[0].cyclomatic_complexity)
 

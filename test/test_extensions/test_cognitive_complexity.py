@@ -159,26 +159,24 @@ class TestCognitiveComplexityNesting(unittest.TestCase):
 class TestCognitiveComplexitySpecExamples(unittest.TestCase):
     '''Test examples from the specification document'''
 
-    def test_sum_of_primes_example(self):
-        # From specification Example 1
+    def test_labeled_continue_with_nested_loops(self):
+        # Test labeled continue (goto to label) with nested loops
         result = get_cpp_function_list("""
-            int sumOfPrimes(int max) {
-                int total = 0;
-                OUT: for (int i = 1; i <= max; ++i) {    // +1
-                    for (int j = 2; j < i; ++j) {        // +2 (nesting=1)
-                        if (i % j == 0) {                // +3 (nesting=2)
-                            continue OUT;                // +1 (goto to label)
+            int findValidNumbers(int limit) {
+                int count = 0;
+                SKIP: for (int i = 1; i <= limit; ++i) {  // +1
+                    for (int j = 2; j < i; ++j) {         // +2 (nesting=1)
+                        if (i % j == 0) {                 // +3 (nesting=2)
+                            continue SKIP;                // +1 (labeled jump)
                         }
                     }
-                    total += i;
+                    count += i;
                 }
-                return total;
+                return count;
             }
         """)
-        # Expected: 7 (1 + 2 + 3 + 1)
-        # Note: The label and goto may not be fully supported yet
-        # For now, we expect at least 6 from the nested structures
-        self.assertGreaterEqual(result[0].cognitive_complexity, 6)
+        # Expected: 7 (1 + 2 + 3 + 1) from specification
+        self.assertEqual(7, result[0].cognitive_complexity)
 
 
 class TestCognitiveComplexityLinearFlow(unittest.TestCase):
@@ -357,22 +355,22 @@ class TestCognitiveComplexityComparison(unittest.TestCase):
     def test_cogc_vs_ccn_nested_structures(self):
         '''Nested structures: CogC should be higher than CCN'''
         result = get_cpp_function_list("""
-            int sumOfPrimes(int max) {
-                int total = 0;
-                for (int i = 1; i <= max; ++i) {
-                    for (int j = 2; j < i; ++j) {
-                        if (i % j == 0) {
+            int calculateResult(int limit) {
+                int count = 0;
+                for (int i = 1; i <= limit; ++i) {          // CogC: +1, CCN: +1
+                    for (int j = 2; j < i; ++j) {           // CogC: +2, CCN: +1
+                        if (i % j == 0) {                   // CogC: +3, CCN: +1
                             continue;
                         }
                     }
-                    total += i;
+                    count += i;
                 }
-                return total;
+                return count;
             }
         """)
         # CogC accounts for nesting: 1 + 2 + 3 = 6
-        # CCN doesn't: 1 + 1 + 1 = 4 (base + for + for + if)
-        self.assertGreaterEqual(result[0].cognitive_complexity, 6)
+        # CCN doesn't: 1 + 1 + 1 + 1 = 4 (base + for + for + if)
+        self.assertEqual(6, result[0].cognitive_complexity)
         self.assertEqual(4, result[0].cyclomatic_complexity)
         self.assertGreater(result[0].cognitive_complexity,
                           result[0].cyclomatic_complexity)

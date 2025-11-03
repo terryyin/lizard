@@ -312,7 +312,7 @@ class LizardExtension(object):  # pylint: disable=R0903
         try_block_stack = state['try_block_stack']
 
         # Structural keywords that increase both complexity and nesting
-        # Includes C preprocessor directives like #if, #ifdef (spec line 143)
+        # Includes C preprocessor directives like #if, #ifdef
         # repeat is for Lua's repeat...until loop
         structural_keywords = {'if', 'for', 'while', 'foreach', 'repeat', '#if', '#ifdef', '#elif'}
         # 'case' is special: it's a structural keyword in Erlang and ST, but not in C/C++/Java (where it's a switch label)
@@ -320,7 +320,7 @@ class LizardExtension(object):  # pylint: disable=R0903
             structural_keywords.add('case')
         # catch/except and try (except is Python, catch is C++/Java/C#/JavaScript)
         catch_keywords = {'catch', 'except'}
-        # Keywords that create blocks but don't increase cognitive nesting (spec line 234, 537)
+        # Keywords that create blocks but don't increase cognitive nesting
         try_keywords = {'try', 'synchronized'}
         # Labeled jumps
         jump_keywords = {'goto'}
@@ -359,7 +359,7 @@ class LizardExtension(object):  # pylint: disable=R0903
                 erlang_if_case_depth = self._handle_end_keyword(context, is_erlang, erlang_if_case_depth)
                 after_else = False  # Reset after_else
 
-            # C/C++ preprocessor directives: #if, #ifdef, #elif (spec line 143)
+            # C/C++ preprocessor directives: #if, #ifdef, #elif
             # These are counted as structural increments like regular 'if'
             # Unlike regular 'if', preprocessor directives don't have braces, so we increase nesting immediately
             elif token.startswith('#if') or token.startswith('#elif'):
@@ -379,7 +379,7 @@ class LizardExtension(object):  # pylint: disable=R0903
                     self._handle_do_keyword(context, after_loop_keyword, in_do_while, pending_nesting_increase)
 
             # else and else-if
-            # These are HYBRID increments (spec line 144-147, Appendix B2/B3):
+            # These are HYBRID increments:
             # - They ADD to complexity (+1)
             # - They DO increase nesting level for things inside them
             # - But they DON'T get nesting penalty themselves (mental cost already paid)
@@ -423,8 +423,8 @@ class LizardExtension(object):  # pylint: disable=R0903
                 self._handle_binary_logical_operator(context, token)
 
             # Ternary operator: condition ? true_value : false_value
-            # The '?' acts like an 'if' statement (spec line 470, 481, 490)
-            # But ignore null-coalescing operators: ?. and ?? (spec line 119-135)
+            # The '?' acts like an 'if' statement
+            # But ignore null-coalescing operators: ?. and ??
             elif token == '?':
                 # Check if this is null-coalescing (?. or ??) or ternary
                 # If previous token is also '?', this is ?? (null-coalescing, handled as single token in C#)
@@ -446,13 +446,6 @@ class LizardExtension(object):  # pylint: disable=R0903
                 self._handle_break_continue_label(context, token)
                 after_break_continue = False
 
-            # Handle 'then' keyword (starts body of if/while in Lua/Ruby)
-            # DISABLED: Fortran also handles 'then' and this causes double nesting
-            # elif token == 'then':
-            #     # If this follows a structural keyword (if/while), add nesting
-            #     if context.pending_structural_nesting:
-            #         context.add_bare_nesting()
-            #     context.cogc_last_operator = None
 
             # Erlang: handle clause separators in if/case statements
             # Each clause after the first (separated by ';') counts like an elsif

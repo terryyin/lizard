@@ -12,8 +12,8 @@ Cognitive Complexity uses human judgment to assess the mental effort required to
 understand control flow structures.
 
 This implementation follows the **Cognitive Complexity specification version 1.2**
-by SonarSource (19 April 2017). The full specification is available in the
-repository at ``Cognitive_Complexity.md``.
+by SonarSource (19 April 2017). The full specification is available at:
+https://www.sonarsource.com/docs/CognitiveComplexity.pdf
 
 The key insight is that not all control flow structures impose equal mental burden.
 For example, a ``switch`` statement with five cases is easier to understand than

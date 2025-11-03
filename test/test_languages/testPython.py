@@ -613,49 +613,49 @@ def logical():
         # CogC = 4 (1+1 for first if+&&, 1+1 for second if+||)
         self.assertEqual(4, functions[0].cognitive_complexity)
 
-    def test_Decorators_A(self):
-        """Appendix A: Decorators - purely declarative function"""
+    def test_decorator_pattern_no_nesting_penalty(self):
+        """Test Python decorator pattern (purely declarative) - CogC=1"""
         code = '''
-def a_decorator(a, b):
-	def inner(func): 				# nesting = 0
-		if condition: 				# +1
-			print(b)
-		func()
-	return inner 					# total = 1
+def create_wrapper(x, y):
+	def wrapper(target):            # nesting = 0 (decorator pattern)
+		if should_process:      # +1
+			log(y)
+		target()
+	return wrapper                  # total = 1
 '''
         functions = get_python_function_list(code)
-        # CogC = 1
+        # CogC = 1 (decorator pattern: nested function doesn't get nesting penalty)
         self.assertEqual(1, functions[0].cognitive_complexity)
 
-    def test_Decorators_B(self):
-        """Appendix A: Decorators - non-declarative function"""
+    def test_non_decorator_pattern_with_nesting_penalty(self):
+        """Test non-decorator pattern (has additional statements) - CogC=2"""
         code = '''
-def not_a_decorator(a, b):
-	my_var = a*b
-	def inner(func):				# nesting = 1
-		if condition: 				# +1 structure, +1 nesting
-			print(b)
-		func()
-	return inner 					# total = 2
+def complex_function(x, y):
+	result = x*y                    # Additional statement breaks decorator pattern
+	def nested(target):             # nesting = 1 (not pure decorator)
+		if should_execute:      # +1 structure, +1 nesting = +2
+			output(y)
+		target()
+	return nested                   # total = 2
 '''
         functions = get_python_function_list(code)
-        # CogC = 2
+        # CogC = 2 (not a decorator pattern, so nested function gets nesting penalty)
         self.assertEqual(2, functions[0].cognitive_complexity)
 
-    def test_Decorators_C(self):
-        """Appendix A: Decorators - decorator generator"""
+    def test_nested_decorator_pattern(self):
+        """Test nested decorator generator pattern - CogC=1"""
         code = '''
-def decorator_generator(a):
-	def generator(func):
-		def decorator(func):	# nesting = 0
-			if condition: 			# +1
-				print(b)
-			return func()
+def create_decorator_factory(config):
+	def factory(handler):
+		def decorator(handler):  # nesting = 0 (nested decorator pattern)
+			if is_valid:     # +1
+				execute(config)
+			return handler()
 		return decorator
-	return generator 			# total = 1
+	return factory                   # total = 1
 '''
         functions = get_python_function_list(code)
-        # CogC = 1
+        # CogC = 1 (nested decorator pattern: inner function doesn't get nesting penalty)
         self.assertEqual(1, functions[0].cognitive_complexity)
 
  

@@ -737,99 +737,98 @@ function logical() {
         # CogC should count if statements and logical operator sequences
         self.assertEqual(4, functions[0].cognitive_complexity)
 
-    def test_model_js(self):
-        """Appendix C: Examples From From model.js in YUI TREAT THIS LIKE GOSBEL"""
+    def test_complex_async_operation_with_nested_callbacks(self):
+        """Test complex async operation with deeply nested callbacks - CogC=20"""
         code = '''
-var model = {
-save: function (options, callback) {
-	var self = this;
+var handler = {
+process: function (config, done) {
+	var ctx = this;
 
-	if (typeof options === 'function') { // +1
-		callback = options;
-		options = {};
+	if (typeof config === 'function') {     // +1
+		done = config;
+		config = {};
 	}
 
-	options || (options = {}); // +1
+	config || (config = {});                // +1 (binary operator)
 
-	self._validate(self.toJSON(), function (err) {
-		if (err) { // +2 (nesting = 1)
-			callback && callback.call(null, err); // +1
+	ctx._check(ctx.getData(), function (error) {
+		if (error) {                    // +2 (nesting=1)
+			done && done.call(null, error);  // +1 (binary operator)
 			return;
 		}
 
-		self.sync(self.isNew() ? 'create' : 'update', // +2 (nesting = 1)
-			options, function (err, response) {
-			var facade = {
-					options : options,
-					response: response
+		ctx.execute(ctx.isReady() ? 'start' : 'retry',  // +2 (nesting=1, ternary)
+			config, function (error, result) {
+			var context = {
+					config : config,
+					result: result
 				},
-			parsed;
+			data;
 
-			if (err) { // +3 (nesting = 2)
-				facade.error = err;
-				facade.src = 'save';
-				self.fire(EVT_ERROR, facade);
+			if (error) {                // +3 (nesting=2)
+				context.error = error;
+				context.source = 'process';
+				ctx.trigger(EVT_ERROR, context);
 
-			} else { // +1
-				if (!self._saveEvent) { // +4 (nesting = 3)
-					self._saveEvent = self.publish(EVT_SAVE, {
-						preventable: false
+			} else {                    // +1 (else)
+				if (!ctx._event) {      // +4 (nesting=3)
+					ctx._event = ctx.register(EVT_COMPLETE, {
+						cancelable: false
 					});
 				}
-				if (response) { // +4 (nesting = 3)
-					parsed = facade.parsed = self._parse(response);
-					self.setAttrs(parsed, options);
+				if (result) {           // +4 (nesting=3)
+					data = context.data = ctx._transform(result);
+					ctx.update(data, config);
 				}
 
-				self.changed = {};
-				self.fire(EVT_SAVE, facade);
+				ctx.state = {};
+				ctx.trigger(EVT_COMPLETE, context);
 			}
 
-			callback && callback.apply(null, arguments); // +1
+			done && done.apply(null, arguments);  // +1 (binary operator)
 		});
 	});
-	return self;
-} // total complexity = 20
+	return ctx;
+}  // total complexity = 20
 };
 '''
         functions = get_js_function_list(code)
-        # SPEC REQUIREMENT: CogC = 20 from Appendix C example
+        # CogC = 20 (same structure as spec example, transformed to avoid copyright)
         self.assertEqual(20, functions[0].cognitive_complexity)
 
-    def test_JavaScript_Missing_class_structures_A(self):
-        """Appendix A: JavaScript compensating usage - declarative function"""
+    def test_outer_function_declarative_pattern(self):
+        """Test outer function with only declarations (nesting not applied) - CogC=1"""
         code = '''
-function(...) { 					// declarative; ignored
-	var foo;
+function(...) {                     // declarative; purely for organization
+	var config;
 
-	bar.myFun = function(…) { 		// nesting = 0
-		if(condition) {			 	// +1
+	api.handler = function(…) {     // nesting = 0 (outer is declarative)
+		if(isEnabled) {         // +1
 			...
 		}
 	}
-} 									// total complexity = 1
+}                                    // total complexity = 1
 '''
         functions = get_js_function_list(code)
-        # SPEC REQUIREMENT: CogC = 1
-        # DO NOT CHANGE THIS VALUE - FIX THE IMPLEMENTATION INSTEAD
+        # CogC = 1 (outer function is declarative, so nested function has nesting=0)
         self.assertEqual(1, functions[0].cognitive_complexity)
 
-    def test_JavaScript_Missing_class_structures_B(self):
-        """Appendix A: JavaScript compensating usage - non-declarative function"""
+    def test_outer_function_non_declarative_pattern(self):
+        """Test outer function with control flow (nesting applied) - CogC=3"""
         code = '''
-function(...) { 					// non-declarative; not ignored
-	var foo;
-    if (condition) { 				// +1; top-level structural increment
+function(...) {                     // non-declarative; has control flow
+	var config;
+    if (isReady) {                  // +1; top-level structural increment
         ...
 	}
 
-	bar.myFun = function(…) { 		// nesting = 1
-		if(condition) {             // +2
+	api.handler = function(…) {     // nesting = 1 (outer has control flow)
+		if(isEnabled) {         // +2 (nesting=1)
 		    ...
 		}
 	}
-} 									// total complexity = 3
+}                                    // total complexity = 3
 '''
         functions = get_js_function_list(code)
-        # SPEC REQUIREMENT: CogC = 3
+        # CogC = 3 (outer function has control flow, so nested function gets nesting penalty)
         self.assertEqual(3, functions[0].cognitive_complexity)

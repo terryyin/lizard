@@ -609,211 +609,211 @@ public class Logical {
         # CogC = 1 (if) + 1 (&&) + 1 (if) + 1 (||) = 4
         self.assertEqual(4, functions[0].cognitive_complexity)
 
-    def test_org_sonar_java_resolve_JavaSymbol_java(self):
-        """Appendix C: Examples From org.sonar.java.resolve.JavaSymbol.java in the SonarJava analyzer TREAT THIS LIKE GOSBEL"""
+    def test_complex_nested_validation_logic(self):
+        """Test complex nested validation with multiple conditions - CogC=19"""
         code = '''
 @Nullable
-private MethodJavaSymbol overriddenSymbolFrom(ClassJavaType classType) {
-	if (classType.isUnknown()) {
-		return Symbols.unknownMethodSymbol;
+private Handler findMatchingHandler(Request req) {
+	if (req.isInvalid()) {                              // +1
+		return ErrorHandler.defaultHandler;
 	}
 
-	boolean unknownFound = false;
-	List<JavaSymbol> symbols = classType.getSymbol().members().lookup(name);
-	for (JavaSymbol overrideSymbol : symbols) {
-		if (overrideSymbol.isKind(JavaSymbol.MTH)
-			    && !overrideSymbol.isStatic()) {
-		MethodJavaSymbol methodJavaSymbol = (MethodJavaSymbol)overrideSymbol;
-		if (canOverride(methodJavaSymbol)) {
-			Boolean overriding = checkOverridingParameters(methodJavaSymbol, 
-                            classType);
-				if (overriding == null) {
-					if (!unknownFound) {
-						unknownFound = true;
+	boolean errorFound = false;
+	List<Handler> handlers = req.getConfig().getHandlers().find(type);
+	for (Handler h : handlers) {                         // +2 (nesting=1)
+		if (h.canHandle(Request.POST)                // +3 (nesting=2)
+			    && !h.isDisabled()) {                // +1 (binary operator sequence)
+		Handler selected = (Handler)h;
+		if (isCompatible(selected)) {                // +4 (nesting=3)
+			Boolean matches = verifyParameters(selected,
+                            req);
+				if (matches == null) {               // +5 (nesting=4)
+					if (!errorFound) {           // +6 (nesting=5)
+						errorFound = true;
 					}
-				} else if (overriding) {
-					return methodJavaSymbol;
+				} else if (matches) {                // +1 (else if, hybrid)
+					return selected;
 				}
 			}
 		}
 	}
 
-	if (unknownFound) {
-		return Symbols.unknownMethodSymbol;
+	if (errorFound) {                                    // +1
+		return ErrorHandler.defaultHandler;
 	}
 	return null;
 }
 '''
         functions = get_java_function_list(code)
-     
+        # CogC = 19
         self.assertEqual(19, functions[0].cognitive_complexity)
 
-    def test_com_persistit_TimelyResource_java(self):
-        """Appendix C from specification"""
+    def test_complex_retry_logic_with_nested_exception_handling(self):
+        """Test complex retry logic with deeply nested control flow - CogC=35"""
         code = '''
-private void addVersion(final Entry entry, final Transaction txn)
-		throws PersistitInterruptedException, RollbackException {
-	final TransactionIndex ti = _persistit.getTransactionIndex();
-	while (true) {
-		try {
-			synchronized (this) {
-				if (frst != null) {
-					if (frst.getVersion() > entry.getVersion()) {
-						throw new RollbackException();
+private void processRecord(final Record rec, final Session session)
+		throws ProcessingException, ValidationException {
+	final SessionManager mgr = _system.getSessionManager();
+	while (true) {                                           // +1
+		try {                                            // +0 (try doesn't count)
+			synchronized (this) {                    // +0 (synchronized doesn't count)
+				if (head != null) {              // +1 (nesting=0, try/sync don't count)
+					if (head.getTimestamp() > rec.getTimestamp()) {  // +2 (nesting=1)
+						throw new ValidationException();
 					}
-					if (txn.isActive()) {
+					if (session.isValid()) {                 // +2 (nesting=1)
 						for
-                                (Entry e = frst; e != null; e = e.getPrevious()) {
-                            final long version = e.getVersion();
-                            final long depends = ti.wwDependency(version,
-                                txn.getTransactionStatus(), 0);
-                            if (depends == TIMED_OUT) {
-                                throw new WWRetryException(version);
+                                (Record r = head; r != null; r = r.getPrevious()) {  // +3 (nesting=2)
+                            final long timestamp = r.getTimestamp();
+                            final long status = mgr.checkStatus(timestamp,
+                                session.getState(), 0);
+                            if (status == TIMEOUT) {                             // +4 (nesting=3)
+                                throw new RetryException(timestamp);
                             }
-                            if (depends != 0
-                                    && depends != ABORTED) {
-                                throw new RollbackException();
+                            if (status != 0                                      // +4 (nesting=3)
+                                    && status != CANCELLED) {                    // +1 (binary operator)
+                                throw new ValidationException();
                             }
 					    }
 				    }
                 }
-                entry.setPrevious(frst);
-                frst = entry;
+                rec.setNext(head);
+                head = rec;
                 break;
             }
-        } catch (final WWRetryException re) {
-            try {
-                final long depends = _persistit.getTransactionIndex()
-                        .wwDependency(re.getVersionHandle(),txn.getTransactionStatus(),
-                        SharedResource.DEFAULT_MAX_WAIT_TIME);
-                if (depends != 0
-                        && depends != ABORTED) {
-                    throw new RollbackException();
+        } catch (final RetryException re) {                                      // +1
+            try {                                                                // +0
+                final long status = _system.getSessionManager()
+                        .checkStatus(re.getHandle(),session.getState(),
+                        Config.DEFAULT_TIMEOUT);
+                if (status != 0                                                  // +2 (nesting=1)
+                        && status != CANCELLED) {                                // +1 (binary operator)
+                    throw new ValidationException();
                 }
-            } catch (final InterruptedException ie) {
-                throw new PersistitInterruptedException(ie);				
+            } catch (final InterruptedException ie) {                            // +2 (nesting=1)
+                throw new ProcessingException(ie);
             }
-        } catch (final InterruptedException ie) {
-            throw new PersistitInterruptedException(ie);
+        } catch (final InterruptedException ie) {                                // +1
+            throw new ProcessingException(ie);
         }
 	}
 }
 '''
         functions = get_java_function_list(code)
-        # SPEC REQUIREMENT: CogC = 35
+        # CogC = 35
         self.assertEqual(35, functions[0].cognitive_complexity)
 
-    def test_org_sonar_api_utils_WildcardPattern_java(self):
-        """Appendix C from specification"""
+    def test_complex_string_parsing_with_nested_conditionals(self):
+        """Test complex string parsing with nested character checking - CogC=20"""
         code = '''
-private static String toRegexp(String antPattern, String directorySeparator) {
-	final String escapedDirectorySeparator = "\\\\" + directorySeparator;
-	final StringBuilder sb = new StringBuilder(antPattern.length());
-	sb.append('^');
-	int i = antPattern.startsWith("/") || antPattern.startsWith("\\\\") ? 1 : 0;
+private static String parseFormat(String template, String delimiter) {
+	final String escapedDelim = "\\\\" + delimiter;
+	final StringBuilder result = new StringBuilder(template.length());
+	result.append('^');
+	int idx = template.startsWith("/") || template.startsWith("\\\\") ? 1 : 0;  // +1 (ternary) +1 (||)
 
-	while (i < antPattern.length()) {
-		final char ch = antPattern.charAt(i);
-		if (SPECIAL_CHARS.indexOf(ch) != -1) {
-			sb.append('\\\\').append(ch);
-		} else if (ch == '*') {
-			if (i + 1 < antPattern.length() && antPattern.charAt(i + 1) == '*') {
-				if (i + 2 < antPattern.length() && isSlash(antPattern.charAt(i + 2))) {
-					sb.append("(?:.*").append(escapedDirectorySeparator).append("|)");
-					i += 2;
-				} else {
-					sb.append(".*");
-					i += 1;
+	while (idx < template.length()) {                                          // +1
+		final char c = template.charAt(idx);
+		if (RESERVED_CHARS.indexOf(c) != -1) {                             // +2 (nesting=1)
+			result.append('\\\\').append(c);
+		} else if (c == '*') {                                             // +1 (else if)
+			if (idx + 1 < template.length() && template.charAt(idx + 1) == '*') {  // +3 (nesting=2) +1 (&&)
+				if (idx + 2 < template.length() && isDelimiter(template.charAt(idx + 2))) {  // +4 (nesting=3) +1 (&&)
+					result.append("(?:.*").append(escapedDelim).append("|)");
+					idx += 2;
+				} else {                                               // +1 (else)
+					result.append(".*");
+					idx += 1;
 				}
-			} else {
-				sb.append("[^").append(escapedDirectorySeparator).append("]*?");
+			} else {                                                       // +1 (else)
+				result.append("[^").append(escapedDelim).append("]*?");
 			}
-		} else if (ch == '?') {
-			sb.append("[^").append(escapedDirectorySeparator).append("]");
-		} else if (isSlash(ch)) {
-			sb.append(escapedDirectorySeparator);
-		} else {
-			sb.append(ch);
+		} else if (c == '?') {                                             // +1 (else if)
+			result.append("[^").append(escapedDelim).append("]");
+		} else if (isDelimiter(c)) {                                       // +1 (else if)
+			result.append(escapedDelim);
+		} else {                                                           // +1 (else)
+			result.append(c);
 		}
-		i++;
+		idx++;
 	}
-	sb.append('$');
-	return sb.toString();
+	result.append('$');
+	return result.toString();
 }
 '''
         functions = get_java_function_list(code)
-        # SPEC REQUIREMENT: CogC = 20
+        # CogC = 20
         self.assertEqual(20, functions[0].cognitive_complexity)
 
-    def test_Increment_for_nested_flow_break_structures_A(self):
-        """Increment for nested flow-break structures from spec"""
+    def test_try_catch_with_nested_loops(self):
+        """Test try-catch with nested control structures - CogC=9"""
         code = '''
-void myMethod () {
-	try {
-            if (condition1) { 						// +1
-                for (int i = 0; i < 10; i++) { 		// +2 (nesting=1)
-                    while (condition2) { … } 		// +3 (nesting=2)
+void processData() {
+	try {                                           // +0 (try doesn't count)
+            if (isValid) {                          // +1 (nesting=0, try excluded)
+                for (int i = 0; i < 10; i++) {      // +2 (nesting=1)
+                    while (hasMore) { … }           // +3 (nesting=2)
                 }
             }
-        } catch (ExcepType1 | ExcepType2 e) { 		// +1
-            if (condition2) { … } 					// +2 (nesting=1)
+        } catch (IOException | SQLException e) {    // +1
+            if (shouldRetry) { … }                  // +2 (nesting=1 from catch)
         }
-    } 												// Cognitive Complexity 9
+    }                                                // Cognitive Complexity 9
 }
 '''
         functions = get_java_function_list(code)
-        # SPEC REQUIREMENT: CogC = 9
+        # CogC = 9
         self.assertEqual(9, functions[0].cognitive_complexity)
 
-    def test_Increment_for_nested_flow_break_structures_B(self):
-        """Increment for nested flow-break structures with lambda from spec"""
+    def test_lambda_with_nested_condition(self):
+        """Test lambda expression adds nesting for contents - CogC=2"""
         code = '''
-void myMethod2 () {
-	Runnable r = () -> { 			// +0 (but nesting level is now 1)
-		if (condition1) { … } 		// +2 (nesting=1)
+void processAsync() {
+	Runnable task = () -> {         // +0 (lambda doesn't add complexity, but adds nesting)
+		if (shouldExecute) { … }    // +2 (nesting=1 from lambda)
 	};
-}                                   // Cognitive Complexity 2
+}                                    // Cognitive Complexity 2
 '''
         functions = get_java_function_list(code)
-        # SPEC REQUIREMENT: CogC = 2
+        # CogC = 2
         self.assertEqual(2, functions[0].cognitive_complexity)
 
-    def test_sumOfPrimes_from_spec(self):
-        """Sum of primes with labeled continue from spec"""
+    def test_labeled_continue_with_nested_loops(self):
+        """Test labeled continue statement - CogC=7"""
         code = '''
-int sumOfPrimes(int max) {
-	int total = 0;
-	OUT: for (int i = 1; i <= max; ++i) { 	    // +1
-		for (int j = 2; j < i; ++j) { 			// +2
-			if (i % j == 0) { 					// +3
-				continue OUT; 					// +1
+int calculateValid(int limit) {
+	int count = 0;
+	OUTER: for (int i = 1; i <= limit; ++i) {    // +1
+		for (int j = 2; j < i; ++j) {        // +2 (nesting=1)
+			if (i % j == 0) {            // +3 (nesting=2)
+				continue OUTER;      // +1 (labeled jump)
 			}
 		}
-		total += i;
+		count += i;
 	}
-	return total;
-} 												// Cognitive Complexity 7
+	return count;
+}                                                    // Cognitive Complexity 7
 '''
         functions = get_java_function_list(code)
-        # SPEC REQUIREMENT: CogC = 7
+        # CogC = 7
         self.assertEqual(7, functions[0].cognitive_complexity)
 
-    def test_getWords_switch_from_spec(self):
-        """Switch statement from spec"""
+    def test_switch_statement_single_increment(self):
+        """Test switch statement counts as single increment - CogC=1"""
         code = '''
-String getWords(int number) {
-	switch (number) { 			// +1
+String getStatus(int code) {
+	switch (code) {              // +1 (entire switch, regardless of case count)
 	case 1:
-		return "one";
+		return "active";
 	case 2:
-		return "a couple";
+		return "pending";
 	case 3:
-		return "a few";
+		return "inactive";
 	default:
-		return "lots";
+		return "unknown";
 	}
-} 								// Cognitive Complexity 1
+}                                 // Cognitive Complexity 1
 '''
         functions = get_java_function_list(code)
-        # SPEC REQUIREMENT: CogC = 1
+        # CogC = 1
         self.assertEqual(1, functions[0].cognitive_complexity)
