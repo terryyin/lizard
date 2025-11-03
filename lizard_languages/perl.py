@@ -19,8 +19,13 @@ class PerlReader(CodeReader, ScriptLanguageMixIn):
 
     ext = ['pl', 'pm']
     language_names = ['perl']
-    _conditions = set(['if', 'elsif', 'unless', 'while', 'until', 'for', 'foreach',
-                       '&&', '||', '?', ':', 'when', 'given', 'default', 'do'])
+    
+    # Separated condition categories
+    _control_flow_keywords = {'if', 'elsif', 'unless', 'while', 'until', 'for', 
+                              'foreach', 'when', 'given', 'default', 'do'}
+    _logical_operators = {'&&', '||'}  # Perl also has 'and', 'or' with different precedence
+    _case_keywords = set()
+    _ternary_operators = {'?', ':'}  # Both parts of ternary operator
 
     def __init__(self, context):
         super(PerlReader, self).__init__(context)
@@ -65,8 +70,7 @@ class PerlReader(CodeReader, ScriptLanguageMixIn):
 
 
 class PerlStates(CodeStateMachine):
-    _conditions = set(['if', 'elsif', 'unless', 'while', 'until', 'for', 'foreach',
-                       '&&', '||', '?', ':', 'when', 'given', 'default', 'do'])
+    # Note: _conditions removed - now inherited from PerlReader
 
     def __init__(self, context):
         super(PerlStates, self).__init__(context)

@@ -9,8 +9,13 @@ class GDScriptReader(PythonReader):
 
     ext = ['gd']
     language_names = ['GDScript']
-    _conditions = set(['if', 'else', 'for', 'while', '&&', '||', '?', 'catch',
-                      'case', 'do'])
+    
+    # Separated condition categories
+    _control_flow_keywords = {'if', 'for', 'while', 'catch', 'do'}
+    _logical_operators = {'&&', '||'}
+    _case_keywords = {'case'}
+    _ternary_operators = {'?'}
+    # Note: 'else' was in original but shouldn't add to CCN independently
 
     def __init__(self, context):
         super(GDScriptReader, self).__init__(context)

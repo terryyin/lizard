@@ -97,9 +97,12 @@ class RubylikeStateMachine(CodeStateMachine):
 class RubylikeReader(CodeReader, ScriptLanguageMixIn):
     # pylint: disable=R0903
 
-    _conditions = set(['if', 'until', 'for', 'while', 'and', 'or',
-                       'elsif', 'elseif', 'rescue',
-                       'ensure', 'when', '||', '&&', '?'])
+    # Separated condition categories
+    _control_flow_keywords = {'if', 'elsif', 'elseif', 'until', 'for', 'while', 
+                              'rescue', 'ensure', 'when'}
+    _logical_operators = {'and', 'or', '||', '&&'}  # Both word and symbol forms
+    _case_keywords = set()  # Ruby uses 'when' for case expressions
+    _ternary_operators = {'?'}
 
     def __init__(self, context):
         super(RubylikeReader, self).__init__(context)

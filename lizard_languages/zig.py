@@ -12,7 +12,13 @@ from .golike import GoLikeStates
 class ZigReader(CodeReader, CCppCommentsMixin):
     ext = ["zig"]
     language_names = ["zig"]
-    _conditions = {"if", "for", "while", "and", "or", "orelse", "try", "catch", "=>"}
+    
+    # Separated condition categories
+    _control_flow_keywords = {"if", "for", "while", "try", "catch"}
+    _logical_operators = {"and", "or", "orelse"}  # orelse is Zig's null coalescing
+    _case_keywords = set()
+    # Note: '=>' is for error union and switch cases in Zig
+    _ternary_operators = {"=>"}
 
     def __init__(self, context):
         super().__init__(context)

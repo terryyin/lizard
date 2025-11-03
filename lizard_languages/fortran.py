@@ -19,12 +19,11 @@ class FortranReader(CodeReader, FortranCommentsMixin):
     ext = ['f70', 'f90', 'f95', 'f03', 'f08', 'f', 'for', 'ftn', 'fpp']
     language_names = ['fortran']
 
-    # Conditions need to have all the cases because the matching is case-insensitive
-    # and is not done here.
-    _conditions = {
-        'IF', 'DO', '.AND.', '.OR.', 'CASE',
-        'if', 'do', '.and.', '.or.', 'case'
-    }
+    # Separated condition categories (case-insensitive language)
+    _control_flow_keywords = {'IF', 'DO', 'if', 'do'}
+    _logical_operators = {'.AND.', '.OR.', '.and.', '.or.'}
+    _case_keywords = {'CASE', 'case'}
+    _ternary_operators = set()
     _blocks = [
         'PROGRAM', 'MODULE', 'SUBMODULE', 'SUBROUTINE', 'FUNCTION', 'TYPE',
         'INTERFACE', 'BLOCK', 'IF', 'DO', 'FORALL', 'WHERE', 'SELECT', 'ASSOCIATE'
