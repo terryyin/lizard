@@ -2,13 +2,8 @@
 
 ## Completed
 
-### Separate Conditions Refactoring ✅
-- [x] Separated condition concepts into 4 distinct categories
-- [x] Updated all 21+ language readers
-- [x] Updated all 4 extensions
-- [x] Comprehensive test coverage (1021 tests passing)
-- [x] Documentation created
-- [x] Fully backward compatible
+### Condition Categories Refactoring ✅
+All phases complete. See `CONDITIONS_REFACTORING.md` for details.
 
 ## Active
 

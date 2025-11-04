@@ -100,9 +100,6 @@ class CodeReader:
     _logical_operators = {'&&', '||'}
     _case_keywords = {'case'}
     _ternary_operators = {'?'}
-    
-    # For compatibility with custom readers that may define _conditions directly
-    _conditions = None
 
     @classmethod
     def _build_conditions(cls):
@@ -119,13 +116,8 @@ class CodeReader:
         self.parallel_states = []
         self.context = context
         
-        # Build combined conditions set
-        if self.__class__._conditions is not None:
-            # Subclass defines _conditions directly
-            self.conditions = copy(self.__class__._conditions)
-        else:
-            # Build from separated categories
-            self.conditions = copy(self.__class__._build_conditions())
+        # Build combined conditions set from separated categories
+        self.conditions = copy(self.__class__._build_conditions())
         
         # Expose individual categories for extensions
         self.control_flow_keywords = copy(self.__class__._control_flow_keywords)

@@ -202,24 +202,20 @@ reader.ternary_operators       # Set: Ternary operators only
 
 All are mutable sets that extensions can modify.
 
-## Backward Compatibility
+## Language Reader Pattern
 
-The base class supports two approaches for defining conditions:
+All language readers define separated condition categories:
 
 ```python
-# Approach 1: Define _conditions directly (for compatibility)
-class CustomReader(CodeReader):
-    _conditions = {'if', 'for', '&&', '||', 'case', '?'}  # Combined set
-
-# Approach 2: Use separated categories (recommended)
-class ModernReader(CodeReader):
+class LanguageReader(CodeReader):
+    # Define each category based on language syntax
     _control_flow_keywords = {'if', 'for'}
     _logical_operators = {'&&', '||'}
     _case_keywords = {'case'}
     _ternary_operators = {'?'}
 ```
 
-Both approaches work identically. Separated categories provide better semantics and enable extensions to target specific types.
+The base class automatically combines these into `self.conditions` for CCN calculation, while also exposing individual categories for extensions to use.
 
 ## Quick Reference Table
 
