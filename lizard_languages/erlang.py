@@ -20,8 +20,7 @@ class ErlangReader(CodeReader):
     _case_keywords = {'case'}
     # Note: '?' in Erlang is a macro expansion operator (e.g., ?MODULE, ?EMPTY_NODE)
     # Unlike C-style ternary, it's for compile-time macro substitution
-    # Decision: Keep it in ternary_operators for CCN counting (historical compatibility)
-    # Rationale: Macro usage can add complexity to understanding code
+    # Included in ternary_operators because macro usage adds to code complexity
     _ternary_operators = {'?'}
 
     def __init__(self, context):

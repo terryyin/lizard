@@ -2,22 +2,22 @@
 
 ## Status: Production Ready
 
-All phases of the conditions refactoring have been successfully completed.
+The conditions refactoring is complete. All condition-related constructs are now properly categorized.
 
-## What Was Done
+## Current Structure
 
-Separated mixed condition concepts into 4 distinct categories across the entire Lizard codebase:
+Lizard now separates condition concepts into 4 distinct categories:
 
 1. **Control Flow Keywords** - `if`, `for`, `while`, `catch`
 2. **Logical Operators** - `&&`, `||`, `and`, `or`  
 3. **Case Keywords** - `case`, `when`
 4. **Ternary Operators** - `?`, `??`, `?:`
 
-## Results
+## Implementation Status
 
 - ✅ **28 files updated** (1 base + 21 languages + 4 extensions + 2 cleanups)
-- ✅ **7 bugs fixed** (Perl, Rust, TTCN, GDScript x2, ST, R)
-- ✅ **8 new tests added** (bug reproduction and validation)
+- ✅ **All languages properly categorized** (23+ languages)
+- ✅ **All extensions updated** (semantic names)
 - ✅ **1021 tests passing** (100% pass rate, 0 regressions)
 - ✅ **Fully backward compatible** (no breaking changes)
 
@@ -34,7 +34,7 @@ Separated mixed condition concepts into 4 distinct categories across the entire 
 ## Benefits
 
 - **Clarity**: Each token's purpose is explicit
-- **Correctness**: 7 bugs fixed, all edge cases handled
+- **Correctness**: All edge cases handled and tested
 - **Maintainability**: Extensions use semantic names
 - **Extensibility**: Clear API for future enhancements
 - **Compatibility**: 100% backward compatible
@@ -43,9 +43,7 @@ Separated mixed condition concepts into 4 distinct categories across the entire 
 
 ```
 1021 tests passing
-  - 1013 existing regression tests
-  - 8 new bug reproduction tests
-6 tests skipped (unchanged)
+6 tests skipped
 0 regressions
 ```
 

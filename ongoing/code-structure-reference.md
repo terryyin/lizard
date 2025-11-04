@@ -204,22 +204,22 @@ All are mutable sets that extensions can modify.
 
 ## Backward Compatibility
 
-The base class supports old-style `_conditions`:
+The base class supports two approaches for defining conditions:
 
 ```python
-# Old style (still supported):
-class OldReader(CodeReader):
-    _conditions = {'if', 'for', '&&', '||', 'case', '?'}  # Mixed
+# Approach 1: Define _conditions directly (for compatibility)
+class CustomReader(CodeReader):
+    _conditions = {'if', 'for', '&&', '||', 'case', '?'}  # Combined set
 
-# New style (recommended):
-class NewReader(CodeReader):
+# Approach 2: Use separated categories (recommended)
+class ModernReader(CodeReader):
     _control_flow_keywords = {'if', 'for'}
     _logical_operators = {'&&', '||'}
     _case_keywords = {'case'}
     _ternary_operators = {'?'}
 ```
 
-Both work identically. The new style provides better semantics.
+Both approaches work identically. Separated categories provide better semantics and enable extensions to target specific types.
 
 ## Quick Reference Table
 

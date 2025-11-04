@@ -95,12 +95,10 @@ class TestRust(unittest.TestCase):
 
         self.assertEqual(1, len(result))
 
-    def test_match_arms_not_case(self):
+    def test_case_as_identifier(self):
         """
-        BUG: Rust _conditions includes 'case' keyword, but Rust doesn't have 'case'.
-        Rust uses 'match' expressions with arms, not switch/case.
-        
-        This test verifies that 'case' as a variable name doesn't incorrectly add to CCN.
+        Test that 'case' used as an identifier doesn't add to CCN.
+        Rust doesn't have 'case' keyword (uses match expressions with arms).
         """
         code = '''
         fn handle_case_variable(case: i32) -> i32 {
@@ -116,11 +114,10 @@ class TestRust(unittest.TestCase):
         result = get_rust_function_list(code)
         self.assertEqual(1, len(result))
         
-        # Should be 2: base(1) + match(1) = 2
-        # If 'case' incorrectly adds, it would be higher
-        # Since 'case' appears as variable name, it shouldn't add to CCN
+        # Expected: 2 = base(1) + match(1)
+        # 'case' as identifier should not add to CCN
         self.assertEqual(2, result[0].cyclomatic_complexity,
-                        "Rust doesn't have 'case' keyword - 'case' as identifier shouldn't add to CCN")
+                        "'case' as identifier doesn't add to CCN")
 
     def test_match_expression_complexity(self):
         """

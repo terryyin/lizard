@@ -15,8 +15,6 @@ class GDScriptReader(PythonReader):
     _logical_operators = {'&&', '||'}
     _case_keywords = {'case'}
     _ternary_operators = {'?'}
-    # Note: 'else' was in original but shouldn't add to CCN independently
-    # Fixed: Added 'elif' which was missing
 
     def __init__(self, context):
         super(GDScriptReader, self).__init__(context)

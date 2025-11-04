@@ -16,13 +16,10 @@ class TestGDScript(unittest.TestCase):
             "    pass")
         self.assertEqual(1, len(functions))
 
-    def test_else_keyword_and_missing_elif(self):
+    def test_elif_keyword(self):
         """
-        BUG 1: GDScript _conditions included 'else' keyword (now removed in refactoring)
-        BUG 2: GDScript is missing 'elif' keyword in _control_flow_keywords
-        
-        GDScript uses Python-like syntax with if/elif/else, but elif wasn't included.
-        This test documents the current behavior.
+        Test that GDScript correctly counts elif keyword.
+        GDScript uses Python-like syntax with if/elif/else.
         """
         code = '''
 func test_if_else(x, y):
@@ -41,9 +38,6 @@ func test_if_else(x, y):
         functions = get_gdscript_function_list(code)
         self.assertEqual(1, len(functions))
         
-        # Fixed: 4 = base(1) + if(1) + if(1) + elif(1)
-        current_ccn = functions[0].cyclomatic_complexity
-        
-        # Bug fixed: elif now counted correctly
-        self.assertEqual(4, current_ccn, 
+        # Expected: 4 = base(1) + if(1) + if(1) + elif(1)
+        self.assertEqual(4, functions[0].cyclomatic_complexity, 
                         "GDScript should count elif keyword")

@@ -512,17 +512,13 @@ class TestRFunctionParsing(unittest.TestCase):
         self.assertEqual(1, nested_func.cyclomatic_complexity)
 
 
-class TestROperatorBugs(unittest.TestCase):
-    """Test cases to reproduce identified bugs with R operators."""
+class TestROperators(unittest.TestCase):
+    """Test cases for R language operators."""
 
     def test_element_wise_vs_short_circuit_operators(self):
         """
-        BUG: R has both element-wise (&, |) and short-circuit (&&, ||) operators.
-        Element-wise operators on vectors are data operations, not control flow.
-        This test demonstrates whether they should be counted differently.
-        
-        Current behavior: Both types add to CCN
-        Expected behavior: TBD - should element-wise operators count?
+        Test that R correctly counts both element-wise (&, |) and short-circuit (&&, ||) operators.
+        Both types add to CCN as they represent conditional logic.
         """
         code = '''
         vector_ops <- function(x, y) {
@@ -541,25 +537,19 @@ class TestROperatorBugs(unittest.TestCase):
         functions = get_r_function_list(code)
         self.assertEqual(1, len(functions))
         
-        # Current behavior: 4 = base(1) + if(1) + &&(1) + &(1) + |(1) = 5
-        # But wait, the comment says 4... let me check
-        # Actually: base(1) + if(1) + &&(1) + &(1) + |(1) = 5
+        # Expected: base(1) + if(1) + &&(1) + &(1) + |(1) = 5
         current_ccn = functions[0].cyclomatic_complexity
-        
-        # Decision: Keep all operators (both short-circuit and element-wise)
-        # Rationale: Both represent conditional logic, even in vectorized context
-        # Users can use -Enonstrict to exclude logical operators if desired
         self.assertEqual(5, current_ccn,
-                        "R should count both short-circuit (&&, ||) and element-wise (&, |) operators")
+                        "R counts both short-circuit (&&, ||) and element-wise (&, |) operators")
 
-    def test_element_wise_in_assignment_not_control_flow(self):
+    def test_element_wise_operators_in_vectorized_code(self):
         """
-        Demonstrate that element-wise operators in assignments are not control flow.
-        This is pure data transformation, not branching logic.
+        Test that element-wise operators in vectorized operations count toward CCN.
+        Even vectorized operations represent conditional logic.
         """
         code = '''
         pure_vectorization <- function(vec1, vec2, vec3) {
-            # These are all vectorized operations, no control flow
+            # These are all vectorized operations
             result1 <- vec1 & vec2
             result2 <- vec1 | vec2
             result3 <- (vec1 > 0) & (vec2 < 10)
@@ -571,14 +561,11 @@ class TestROperatorBugs(unittest.TestCase):
         functions = get_r_function_list(code)
         self.assertEqual(1, len(functions))
         
-        # Decision: Even vectorized operations involve conditional logic
-        # result1 <- vec1 & vec2  means "for each element, apply AND condition"
-        # This is still conditional logic, just vectorized
-        current_ccn = functions[0].cyclomatic_complexity
-        
         # Expected: 6 = base(1) + 5 element-wise operators (2 &, 3 |)
+        # Vectorized operations represent conditional logic (element-wise)
+        current_ccn = functions[0].cyclomatic_complexity
         self.assertEqual(6, current_ccn,
-                        "Vectorized operators still represent conditional logic")
+                        "Vectorized operators represent conditional logic")
 
 
 class TestRFileExtensions(unittest.TestCase):

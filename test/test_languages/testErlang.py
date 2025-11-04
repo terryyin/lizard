@@ -137,11 +137,9 @@ class TestErlang(unittest.TestCase):
 
     def test_question_mark_macro_operator(self):
         """
-        NOTE: In Erlang, '?' is a macro expansion operator, NOT a ternary operator.
-        Example: ?MODULE expands to current module name, ?EMPTY_NODE is a macro constant.
-        
-        This test documents that '?' in Erlang is different from C-style ternary.
-        It's debatable whether macro usage should add to CCN.
+        Test that Erlang '?' macro expansion operator adds to CCN.
+        In Erlang, '?' is for macro expansion (e.g., ?MODULE, ?EMPTY_NODE),
+        not a C-style ternary operator. Macro usage adds to code complexity.
         """
         code = '''
         get_value(Key) ->
@@ -154,11 +152,7 @@ class TestErlang(unittest.TestCase):
         result = get_erlang_function_list(code)
         self.assertEqual(1, len(result))
         
-        # Decision: Keep current behavior - macro expansions add to CCN
-        # Rationale: While macros are compile-time, they add to code understanding complexity
         # Expected: base(1) + case(1) + ?DEFAULT_VALUE(1) + ?LOOKUP_TABLE(1) = 4
         current_ccn = result[0].cyclomatic_complexity
-        
-        # Document accepted behavior: macros count toward complexity
         self.assertEqual(4, current_ccn,
-                        "Erlang macro expansions (?) add to complexity for code understanding")
+                        "Erlang macro expansions (?) add to complexity")

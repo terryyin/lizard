@@ -323,12 +323,10 @@ class Test_parser_for_TTCN(unittest.TestCase):
                 }''')
         self.assertEqual(0, len(result))
 
-    def test_else_keyword_in_conditions(self):
+    def test_if_else_complexity(self):
         """
-        BUG: TTCN _conditions included 'else' keyword, which is unusual.
-        Typically 'else' doesn't add to CCN independently - it's part of if-else.
-        
-        This test documents whether 'else' should add to complexity.
+        Test that TTCN correctly counts if-else structures.
+        The 'else' keyword doesn't add to CCN independently - only decision points count.
         """
         result = get_ttcn_function_list('''
             module test_else {
@@ -350,15 +348,11 @@ class Test_parser_for_TTCN(unittest.TestCase):
             }''')
         self.assertEqual(1, len(result))
         
-        # Standard CCN counting: base(1) + if(1) + if(1) + else_if(if counted as 1) = 4
-        # If 'else' adds: could be higher (3 'else' keywords = +3 more)
+        # Expected: base(1) + if(1) + if(1) + if(1) = 4
+        # 'else' clauses don't add to CCN
         current_ccn = result[0].cyclomatic_complexity
-        
-        # Document expected behavior
-        # Without 'else': CCN = 4 (base + 3 decision points)
-        # With 'else': CCN = 7 (base + 3 decision points + 3 else clauses)
-        self.assertTrue(current_ccn >= 4,
-                       f"CCN should be at least 4, got {current_ccn}")
+        self.assertEqual(4, current_ccn,
+                       "TTCN counts decision points, not else clauses")
 
 
 class Test_Preprocessing(unittest.TestCase):
