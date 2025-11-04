@@ -12,12 +12,14 @@ class RReader(CodeReader, ScriptLanguageMixIn):
     ext = ['r', 'R']
     language_names = ['r', 'R']
 
-    # R-specific conditions that increase cyclomatic complexity
-    _conditions = {
-        'if', 'else if', 'for', 'while', 'repeat', 'switch',
-        '&&', '||', '&', '|', 'ifelse',
-        'tryCatch', 'try'
-    }
+    # Separated condition categories
+    _control_flow_keywords = {'if', 'else if', 'for', 'while', 'repeat', 'switch',
+                              'tryCatch', 'try', 'ifelse'}  # ifelse is a vectorized control function
+    # R has both short-circuit (&&, ||) and element-wise (&, |) operators
+    # TODO: Consider whether element-wise operators should count toward CCN
+    _logical_operators = {'&&', '||', '&', '|'}
+    _case_keywords = set()
+    _ternary_operators = set()
 
     def __init__(self, context):
         super(RReader, self).__init__(context)

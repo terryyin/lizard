@@ -29,10 +29,12 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
 
     ext = ['py']
     language_names = ['python']
-    _conditions = set([
-        'if', 'for', 'while', 'and', 'or',
-        'elif', 'except', 'finally'
-    ])
+    
+    # Separated condition categories
+    _control_flow_keywords = {'if', 'elif', 'for', 'while', 'except', 'finally'}
+    _logical_operators = {'and', 'or'}
+    _case_keywords = set()  # Python uses if/elif, not case
+    _ternary_operators = set()  # Python uses 'x if c else y' syntax, not ?
 
     def __init__(self, context):
         super(PythonReader, self).__init__(context)

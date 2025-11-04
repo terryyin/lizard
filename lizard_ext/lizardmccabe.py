@@ -14,9 +14,14 @@ from .extension_base import ExtensionBase
 
 
 class LizardExtension(ExtensionBase):  # pylint: disable=R0903
+    """
+    McCabe extension: only counts the first 'case' in a switch statement.
+    Consecutive cases without code between them don't add to complexity.
+    Works by detecting case tokens (conceptually from reader.case_keywords).
+    """
 
     def _state_global(self, token):
-        if token == "case":
+        if token == "case":  # Detect case keywords
             self._state = self._in_case
 
     def _in_case(self, token):

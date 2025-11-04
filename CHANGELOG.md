@@ -1,6 +1,5 @@
 # Change Log
-
-## 1.19.0 (Unreleased)
+## 1.20.0 (Unreleased)
 
 ### New Features
 - **Cognitive Complexity metric**: Added built-in support for Cognitive Complexity (CogC) alongside Cyclomatic Complexity
@@ -16,6 +15,26 @@
 ### Improvements
 - Comprehensive test suite with 50+ new tests for Cognitive Complexity across multiple languages
 - Updated documentation with Cognitive Complexity usage examples
+
+
+## 1.19.0
+
+### New Features
+- Add PL/SQL language support with comprehensive parsing for procedures, functions, and triggers
+- Add support for schema-qualified names in PL/SQL parser
+
+### Improvements
+- Enhanced JavaScript and TypeScript parsing with improved static and async method detection
+- Better method call detection to avoid false positives in JavaScript/TypeScript
+- Improved previous token context tracking for accurate function detection
+- Reorganized supported languages list in README alphabetically
+
+### Bug Fixes
+- Fix line count calculation issue when encountering empty lines after macro definition continuation markers
+
+### Documentation
+- Add contribution guidelines to README
+
 
 ## 1.18.0
 

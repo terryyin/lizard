@@ -45,10 +45,13 @@ class PLSQLReader(CodeReader, CCppCommentsMixin):
     ext = ["sql", "pks", "pkb", "pls", "plb", "pck"]
     language_names = ["plsql", "pl/sql"]
 
-    # PL/SQL conditions for cyclomatic complexity
+    # Separated condition categories
     # Note: 'loop' is NOT in this set to avoid double-counting FOR LOOP and WHILE LOOP
     # Standalone LOOP is handled manually by the state machine
-    _conditions = {"if", "elsif", "when", "while", "for", "and", "or"}
+    _control_flow_keywords = {"if", "elsif", "when", "while", "for"}
+    _logical_operators = {"and", "or"}
+    _case_keywords = set()  # PL/SQL uses 'when' in case expressions
+    _ternary_operators = set()
 
     def __init__(self, context):
         super(PLSQLReader, self).__init__(context)

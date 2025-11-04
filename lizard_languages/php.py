@@ -231,8 +231,12 @@ class PHPReader(CodeReader, CCppCommentsMixin):
 
     ext = ['php']
     language_names = ['php']
-    _conditions = set(['if', 'elseif', 'for', 'foreach', 'while', '&&', '||', '?',
-                       'catch', 'case', 'match'])
+    
+    # Separated condition categories
+    _control_flow_keywords = {'if', 'elseif', 'for', 'foreach', 'while', 'catch', 'match'}
+    _logical_operators = {'&&', '||'}  # PHP also has 'and', 'or' with different precedence
+    _case_keywords = {'case'}
+    _ternary_operators = {'?'}
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):

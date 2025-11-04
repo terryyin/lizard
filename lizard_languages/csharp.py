@@ -11,8 +11,11 @@ class CSharpReader(CLikeReader):
     ext = ['cs']
     language_names = ['csharp']
 
-    _conditions = set(['if', 'for', 'while', '&&', '||', '?', 'catch',
-                      'case', '??'])
+    # Separated condition categories
+    _control_flow_keywords = {'if', 'for', 'while', 'catch'}
+    _logical_operators = {'&&', '||'}
+    _case_keywords = {'case'}
+    _ternary_operators = {'?', '??'}  # C# has both ?: and ?? (null-coalescing)
 
     def __init__(self, context):
         super(CSharpReader, self).__init__(context)

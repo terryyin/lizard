@@ -18,10 +18,6 @@ code analysis.
 Supported Languages
 ~~~~~~~~~~~~~~~~~~~
 
-By default lizard will search for any source code that it knows and mix
-all the results together. This might not be what you want. You can use
-the "-l" option to select language(s).
-
 -  **C/C++** - Works with C++14
 -  **C# (C Sharp)**
 -  **Erlang** - Partial CogC support; multi-clause if/case statements limited by parser
@@ -48,6 +44,12 @@ the "-l" option to select language(s).
 -  **TypeScript** - With TSX
 -  **VueJS**
 -  **Zig**
+
+
+By default lizard will search for any source code that it knows and mix
+all the results together. This might not be what you want. You can use
+the "-l" option to select language(s).
+
 
 It counts
 

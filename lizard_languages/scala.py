@@ -12,8 +12,12 @@ class ScalaReader(CodeReader, CCppCommentsMixin):
 
     ext = ['scala']
     language_names = ['scala']
-    _conditions = set(['if', 'for', 'while', '&&', '||', '?', 'catch',
-                      'case', 'do'])
+    
+    # Separated condition categories
+    _control_flow_keywords = {'if', 'for', 'while', 'catch', 'do'}
+    _logical_operators = {'&&', '||'}
+    _case_keywords = {'case'}  # Pattern matching
+    _ternary_operators = {'?'}
 
     def __init__(self, context):
         super(ScalaReader, self).__init__(context)

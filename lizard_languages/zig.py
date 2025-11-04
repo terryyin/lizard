@@ -15,7 +15,13 @@ class ZigReader(CodeReader, CCppCommentsMixin):
     # Note: => counts for CCN (each case)
     # For CogC, switch counts as +1 total (handled by cognitive_complexity_counter)
     # switch itself doesn't count for CCN (only the case arms do)
-    _conditions = {"if", "for", "while", "and", "or", "orelse", "try", "catch", "=>"}
+    
+    # Separated condition categories
+    _control_flow_keywords = {"if", "for", "while", "try", "catch"}
+    _logical_operators = {"and", "or", "orelse"}  # orelse is Zig's null coalescing
+    _case_keywords = set()
+    # Note: '=>' is for error union and switch cases in Zig
+    _ternary_operators = {"=>"}
 
     def __init__(self, context):
         super().__init__(context)

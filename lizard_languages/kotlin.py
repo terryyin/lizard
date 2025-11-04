@@ -13,9 +13,12 @@ class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
 
     ext = ['kt', 'kts']
     language_names = ['kotlin']
-    _conditions = {
-        'if', 'for', 'while', 'catch', '&&', '||', '?:'
-    }
+    
+    # Separated condition categories
+    _control_flow_keywords = {'if', 'for', 'while', 'catch'}
+    _logical_operators = {'&&', '||'}
+    _case_keywords = set()  # Kotlin uses 'when' expressions, not case
+    _ternary_operators = {'?:'}  # Elvis operator
 
     def __init__(self, context):
         super(KotlinReader, self).__init__(context)

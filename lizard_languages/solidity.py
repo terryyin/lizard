@@ -11,7 +11,12 @@ class SolidityReader(CodeReader, CCppCommentsMixin):
 
     ext = ['sol']
     language_names = ['solidity']
-    _conditions = set(['if', 'for', 'while', '&&', '||', '?'])
+    
+    # Separated condition categories
+    _control_flow_keywords = {'if', 'for', 'while'}
+    _logical_operators = {'&&', '||'}
+    _case_keywords = set()
+    _ternary_operators = {'?'}
 
     def __init__(self, context):
         super(SolidityReader, self).__init__(context)

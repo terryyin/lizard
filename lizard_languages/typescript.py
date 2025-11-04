@@ -51,8 +51,12 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
 
     ext = ['ts']
     language_names = ['typescript', 'ts']
-    _conditions = set(['if', 'elseif', 'for', 'while', '&&', '||', '?',
-                       'catch', 'case'])
+    
+    # Separated condition categories
+    _control_flow_keywords = {'if', 'elseif', 'for', 'while', 'catch'}
+    _logical_operators = {'&&', '||'}
+    _case_keywords = {'case'}
+    _ternary_operators = {'?'}
 
     def __init__(self, context):
         super().__init__(context)

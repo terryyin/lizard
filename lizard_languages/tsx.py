@@ -48,8 +48,8 @@ class JSXTypeScriptStates(CodeStateMachine):
         self.started_function = None
         self.pending_function_name = ''
         self._ts_declare = False
-        self._conditions = set(['if', 'elseif', 'for', 'while', '&&', '||', '?',
-                               'catch', 'case'])
+        # Note: Condition categories come from TypeScriptReader class level,
+        # no need to define instance-level duplicates
         self.inside_function = inside_function  # Track if we're already inside a function
 
     def statemachine_before_return(self):

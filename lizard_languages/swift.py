@@ -30,8 +30,12 @@ class SwiftReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
     FUNC_KEYWORD = 'def'
     ext = ['swift']
     language_names = ['swift']
-    _conditions = set(['if', 'for', 'while', '&&', '||', '?', 'catch',
-                      'case', 'guard'])
+    
+    # Separated condition categories
+    _control_flow_keywords = {'if', 'for', 'while', 'catch', 'guard'}
+    _logical_operators = {'&&', '||'}
+    _case_keywords = {'case'}  # Pattern matching
+    _ternary_operators = {'?'}
 
     def __init__(self, context):
         super(SwiftReader, self).__init__(context)

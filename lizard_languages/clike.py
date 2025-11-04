@@ -56,7 +56,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
                     elif macro.group(1) == 'include':
                         yield "#include"
                         yield macro.group(2) or "\"\""
-                    for _ in macro.group(2).splitlines()[1:]:
+                    for _ in macro.group(2).split('\n')[1:]:
                         yield '\n'
                 else:
                     yield token

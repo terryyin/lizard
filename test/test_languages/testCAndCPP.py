@@ -656,6 +656,24 @@ int mySecondFunction()
         self.assertEqual(2, len(result))
         self.assertEqual('mySecondFunction', result[1].name)
 
+    def test_macro_continuation_with_empty_line_issue_439(self):
+        """Test issue from PR #439: macro continuation followed by empty line.
+        
+        This test verifies that line counting is correct when a macro definition
+        uses a continuation marker (\\) followed by an empty line before a function.
+        """
+        # Using explicit newlines to ensure an empty line exists after the macro
+        code = "#define  SQ(x) ((x)*(x)) \\\n\nbool foo(status *pstat)\n{\n    return true;\n}\n"
+        result = get_cpp_function_list(code)
+        self.assertEqual(1, len(result))
+        self.assertEqual('foo', result[0].name)
+        # The function should start at line 3 (after #define line 1 and empty line 2)
+        # and end at line 6 (the closing brace)
+        self.assertEqual(3, result[0].start_line, 
+                        "Function should start at line 3 after macro and empty line")
+        self.assertEqual(6, result[0].end_line,
+                        "Function should end at line 6")
+
 
 class Test_Big(unittest.TestCase):
 
