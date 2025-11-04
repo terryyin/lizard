@@ -18,7 +18,10 @@ class ErlangReader(CodeReader):
     _control_flow_keywords = {'if', 'catch', 'when'}  # when is used in guards
     _logical_operators = {'and', 'or', 'not'}
     _case_keywords = {'case'}
-    # Note: '?' in Erlang is a macro operator, not ternary, but adds to CCN
+    # Note: '?' in Erlang is a macro expansion operator (e.g., ?MODULE, ?EMPTY_NODE)
+    # Unlike C-style ternary, it's for compile-time macro substitution
+    # Decision: Keep it in ternary_operators for CCN counting (historical compatibility)
+    # Rationale: Macro usage can add complexity to understanding code
     _ternary_operators = {'?'}
 
     def __init__(self, context):

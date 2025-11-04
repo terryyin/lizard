@@ -249,6 +249,35 @@ class Test_st_cyclomatic_complexity(unittest.TestCase):
         self.assertEqual(1, result[0].cyclomatic_complexity)
         self.assertEqual(6, result[1].cyclomatic_complexity)
 
+    def test_logical_operators_and_or(self):
+        """
+        BUG: ST (Structured Text) has AND/OR logical operators but they were
+        NOT in the original _conditions set. This test checks if they should be.
+        
+        ST uses AND, OR for boolean logic (case-insensitive).
+        """
+        result = get_st_function_list(
+            """
+            ACTION test_logic:
+                IF (a > 0) AND (b > 0) OR (c > 0) THEN
+                    x := 1;
+                END_IF
+                
+                IF (d > 0) AND (e > 0) THEN
+                    y := 2;
+                END_IF
+            END_ACTION
+            """)
+        self.assertEqual(1, len(result))
+        
+        # Fixed: AND/OR operators now counted
+        # Expected: base(1) + IF(1) + AND(1) + OR(1) + IF(1) + AND(1) = 6
+        current_ccn = result[0].cyclomatic_complexity
+        
+        # Bug fixed: AND/OR operators should be counted like other languages
+        self.assertEqual(6, current_ccn,
+                        "ST should count AND/OR logical operators")
+
 
 class Test_st_nesting_level(unittest.TestCase):
 

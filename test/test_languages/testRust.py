@@ -94,3 +94,52 @@ class TestRust(unittest.TestCase):
         ''')
 
         self.assertEqual(1, len(result))
+
+    def test_match_arms_not_case(self):
+        """
+        BUG: Rust _conditions includes 'case' keyword, but Rust doesn't have 'case'.
+        Rust uses 'match' expressions with arms, not switch/case.
+        
+        This test verifies that 'case' as a variable name doesn't incorrectly add to CCN.
+        """
+        code = '''
+        fn handle_case_variable(case: i32) -> i32 {
+            let case_value = case;
+            match case_value {
+                1 => println!("one"),
+                2 => println!("two"),
+                _ => println!("other"),
+            }
+            case
+        }
+        '''
+        result = get_rust_function_list(code)
+        self.assertEqual(1, len(result))
+        
+        # Should be 2: base(1) + match(1) = 2
+        # If 'case' incorrectly adds, it would be higher
+        # Since 'case' appears as variable name, it shouldn't add to CCN
+        self.assertEqual(2, result[0].cyclomatic_complexity,
+                        "Rust doesn't have 'case' keyword - 'case' as identifier shouldn't add to CCN")
+
+    def test_match_expression_complexity(self):
+        """
+        Test that Rust match expressions are counted correctly.
+        Rust uses match arms (with =>), not case statements.
+        """
+        code = '''
+        fn categorize(value: i32) -> &'static str {
+            match value {
+                1 | 2 | 3 => "small",
+                4 | 5 => "medium",
+                6..=10 => "large",
+                _ => "other",
+            }
+        }
+        '''
+        result = get_rust_function_list(code)
+        self.assertEqual(1, len(result))
+        
+        # Should be 2: base(1) + match(1) = 2
+        # The || in match arms (1 | 2) is pattern matching, not logical operator
+        self.assertEqual(2, result[0].cyclomatic_complexity)

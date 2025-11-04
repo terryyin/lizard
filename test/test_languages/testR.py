@@ -512,6 +512,75 @@ class TestRFunctionParsing(unittest.TestCase):
         self.assertEqual(1, nested_func.cyclomatic_complexity)
 
 
+class TestROperatorBugs(unittest.TestCase):
+    """Test cases to reproduce identified bugs with R operators."""
+
+    def test_element_wise_vs_short_circuit_operators(self):
+        """
+        BUG: R has both element-wise (&, |) and short-circuit (&&, ||) operators.
+        Element-wise operators on vectors are data operations, not control flow.
+        This test demonstrates whether they should be counted differently.
+        
+        Current behavior: Both types add to CCN
+        Expected behavior: TBD - should element-wise operators count?
+        """
+        code = '''
+        vector_ops <- function(x, y) {
+            # Short-circuit operators (control flow decisions)
+            if (x[1] > 0 && y[1] > 0) {
+                result1 <- TRUE
+            }
+            
+            # Element-wise operators (vectorized data operations)
+            flags <- (x > 0) & (y > 0)
+            results <- (x < 10) | (y < 10)
+            
+            return(flags)
+        }
+        '''
+        functions = get_r_function_list(code)
+        self.assertEqual(1, len(functions))
+        
+        # Current behavior: 4 = base(1) + if(1) + &&(1) + &(1) + |(1) = 5
+        # But wait, the comment says 4... let me check
+        # Actually: base(1) + if(1) + &&(1) + &(1) + |(1) = 5
+        current_ccn = functions[0].cyclomatic_complexity
+        
+        # Decision: Keep all operators (both short-circuit and element-wise)
+        # Rationale: Both represent conditional logic, even in vectorized context
+        # Users can use -Enonstrict to exclude logical operators if desired
+        self.assertEqual(5, current_ccn,
+                        "R should count both short-circuit (&&, ||) and element-wise (&, |) operators")
+
+    def test_element_wise_in_assignment_not_control_flow(self):
+        """
+        Demonstrate that element-wise operators in assignments are not control flow.
+        This is pure data transformation, not branching logic.
+        """
+        code = '''
+        pure_vectorization <- function(vec1, vec2, vec3) {
+            # These are all vectorized operations, no control flow
+            result1 <- vec1 & vec2
+            result2 <- vec1 | vec2
+            result3 <- (vec1 > 0) & (vec2 < 10)
+            combined <- result1 | result2 | result3
+            
+            return(combined)
+        }
+        '''
+        functions = get_r_function_list(code)
+        self.assertEqual(1, len(functions))
+        
+        # Decision: Even vectorized operations involve conditional logic
+        # result1 <- vec1 & vec2  means "for each element, apply AND condition"
+        # This is still conditional logic, just vectorized
+        current_ccn = functions[0].cyclomatic_complexity
+        
+        # Expected: 6 = base(1) + 5 element-wise operators (2 &, 3 |)
+        self.assertEqual(6, current_ccn,
+                        "Vectorized operators still represent conditional logic")
+
+
 class TestRFileExtensions(unittest.TestCase):
     """Test R file extension matching."""
 

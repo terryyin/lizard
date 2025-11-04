@@ -16,7 +16,10 @@ class RReader(CodeReader, ScriptLanguageMixIn):
     _control_flow_keywords = {'if', 'else if', 'for', 'while', 'repeat', 'switch',
                               'tryCatch', 'try', 'ifelse'}  # ifelse is a vectorized control function
     # R has both short-circuit (&&, ||) and element-wise (&, |) operators
-    # TODO: Consider whether element-wise operators should count toward CCN
+    # Decision: Keep both types in logical_operators because:
+    # - Even in vectorized context, they represent conditional logic
+    # - Consistent with other languages that count all logical operators
+    # - Users can use -Enonstrict to exclude all logical operators if desired
     _logical_operators = {'&&', '||', '&', '|'}
     _case_keywords = set()
     _ternary_operators = set()
