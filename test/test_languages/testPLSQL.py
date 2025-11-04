@@ -72,6 +72,7 @@ class TestPLSQL(unittest.TestCase):
     def test_if_elsif_else(self):
         code = """
         CREATE PROCEDURE test_proc IS
+            x NUMBER := 1;
         BEGIN
             IF x = 1 THEN
                 NULL;
@@ -90,6 +91,7 @@ class TestPLSQL(unittest.TestCase):
     def test_case_statement(self):
         code = """
         CREATE PROCEDURE test_case IS
+            status VARCHAR2(20) := 'NEW';
         BEGIN
             CASE status
                 WHEN 'NEW' THEN
@@ -107,6 +109,7 @@ class TestPLSQL(unittest.TestCase):
     def test_loop_structures(self):
         code = """
         CREATE PROCEDURE test_loops IS
+            x NUMBER := 0;
         BEGIN
             LOOP
                 EXIT WHEN x > 10;
@@ -127,6 +130,9 @@ class TestPLSQL(unittest.TestCase):
     def test_logical_operators(self):
         code = """
         CREATE PROCEDURE test_logic IS
+            x NUMBER := 1;
+            y NUMBER := 2;
+            z NUMBER := 3;
         BEGIN
             IF x = 1 AND y = 2 OR z = 3 THEN
                 NULL;
@@ -576,6 +582,7 @@ class TestPLSQL(unittest.TestCase):
     def test_exit_when_explicit(self):
         code = """
         CREATE PROCEDURE test_exit_when IS
+            x NUMBER := 0;
         BEGIN
             LOOP
                 EXIT WHEN x > 10;
@@ -592,6 +599,7 @@ class TestPLSQL(unittest.TestCase):
     def test_goto_statement(self):
         code = """
         CREATE PROCEDURE test_goto IS
+            x NUMBER := 15;
         BEGIN
             IF x > 10 THEN
                 GOTO error_handler;
