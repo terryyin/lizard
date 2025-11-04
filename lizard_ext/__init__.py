@@ -21,7 +21,6 @@ def print_csv(results, options, _, total_factory):
 
 def print_checkstyle(results, options, _, total_factory, file=None):
     import sys
-    print("DEBUG: print_checkstyle called", file=sys.stderr)
     output = checkstyle_output(total_factory(list(results)), options.verbose)
     if file is None:
         file = sys.stdout
