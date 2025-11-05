@@ -12,12 +12,27 @@ class PythonIndents:  # pylint: disable=R0902
     def __init__(self, context):
         self.indents = [0]
         self.context = context
+        self.bracket_depth = 0  # Track bracket/paren/brace depth
+
+    def update_bracket_depth(self, token):
+        """Update bracket depth based on token"""
+        if token in ('[', '(', '{'):
+            self.bracket_depth += 1
+        elif token in (']', ')', '}'):
+            self.bracket_depth = max(0, self.bracket_depth - 1)
 
     def set_nesting(self, spaces, token=""):
-        while self.indents[-1] > spaces and (not token.startswith(")")):
+        # Don't pop nesting when token starts with closing bracket/paren/brace
+        # This handles multi-line constructs where the closing token has less indentation:
+        # - Function declarations: def f(a,\n  b\n):
+        # - List comprehensions: items = [\n    x for x in range(10)\n]
+        # - Dict/set comprehensions: data = {\n    k: v for k, v in pairs\n}
+        while self.indents[-1] > spaces and (not token.startswith((")", "]", "}"))):
             self.indents.pop()
             self.context.pop_nesting()
-        if self.indents[-1] < spaces:
+        # Only add nesting for increased indentation if we're NOT inside brackets
+        # This prevents comprehensions from polluting the nesting stack
+        if self.indents[-1] < spaces and self.bracket_depth == 0:
             self.indents.append(spaces)
             self.context.add_bare_nesting()
 
@@ -89,6 +104,9 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
         current_leading_spaces = 0
         reading_leading_space = True
         for token in tokens:
+            # Update bracket depth for every token
+            indents.update_bracket_depth(token)
+
             if token != '\n':
                 if reading_leading_space:
                     if token.isspace():
@@ -117,8 +135,10 @@ class PythonStates(CodeStateMachine):  # pylint: disable=R0903
     def _state_global(self, token):
         if token == 'def':
             # Check if we're defining a nested function
-            # If current function exists and has non-decorator statements, nested function should increase nesting
-            if self.context.current_function and self.has_non_decorator_stmt:
+            # If current function exists (and is NOT *global*) and has non-decorator statements,
+            # nested function should increase nesting
+            current_func = self.context.current_function
+            if current_func and current_func.name != '*global*' and self.has_non_decorator_stmt:
                 self.is_nested_in_non_decorator = True
             else:
                 self.is_nested_in_non_decorator = False

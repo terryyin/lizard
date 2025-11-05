@@ -11,7 +11,7 @@ on a mathematical model of the number of linearly independent paths through code
 Cognitive Complexity uses human judgment to assess the mental effort required to
 understand control flow structures.
 
-This implementation follows the **Cognitive Complexity specification version 1.2**
+This implementation follows the spirit of **Cognitive Complexity specification version 1.2**
 by SonarSource (19 April 2017). The full specification is available at:
 https://www.sonarsource.com/docs/CognitiveComplexity.pdf
 
@@ -784,15 +784,11 @@ When CogC values don't match expected results:
    Verify ``cogc_excluded_nesting`` increments for try blocks and decrements
    when they close.
 
-6. **Compare against specification examples**
-
-   Use tests from ``test/testCogCFromSpec.py`` which are direct translations
-   of the specification examples.
 
 Specification Compliance
 =========================
 
-This implementation aims for 100% compliance with the Cognitive Complexity
+This implementation aims for spirit of Cognitive Complexity
 specification version 1.2 by SonarSource. Key specification sections:
 
 - **1**: Three basic rules and four increment types
@@ -805,24 +801,64 @@ specification version 1.2 by SonarSource. Key specification sections:
 - **8**: Jumps to labels
 - **9**: Nesting increments and try block exclusion
 - **10**: Lambdas and nested methods
-- **Appendix A**: Compensating usages (COBOL, JavaScript, Python)
-- **Appendix B**: Formal specification enumeration
-- **Appendix C**: Real-world examples with expected scores
 
-Test Cases
-----------
 
-The file ``test/test_extensions/testCogCFromSpec.py`` contains test cases directly from the
-specification. These tests are marked with:
+Line-by-Line Reporting
+-----------------------
+
+Lizard supports detailed line-by-line reporting of Cognitive Complexity increments,
+which is useful for debugging, learning, and comparing with other tools like SonarQube.
+
+Usage
+~~~~~
+
+Use the ``--cogc-lines`` CLI option to display a breakdown of each increment:
 
 ::
 
-    # SPEC REQUIREMENT: [description]
+    lizard --cogc-lines myfile.py
 
+Example output:
 
-These are canonical examples and their expected values must not be changed to
-match an incomplete implementation. If these tests fail, the implementation
-needs to be fixed.
+::
+
+    !!!! Warnings (cognitive_complexity > 15) !!!!
+    =======================================================
+      NLOC    CCN   token  PARAM  length  CogC   location
+    -------------------------------------------------------
+          86     15    408      4     106     17 generate_sql@138-243@myfile.py
+
+      Cognitive Complexity Line-by-Line Breakdown:
+      Line   Inc   Nesting  Reason                         Token
+      ----------------------------------------------------------------------
+      148    +3    2        for in comprehension           for
+      153    +3    2        if in comprehension            if
+      156    +2    1        if statement                   if
+      190    +2    1        for statement                  for
+      192    +3    2        for statement                  for
+      201    +4    3        if statement                   if
+      ----------------------------------------------------------------------
+      Total: 17
+
+Each line shows:
+
+- **Line**: Source code line number
+- **Inc**: Total increment (base + nesting)
+- **Nesting**: Nesting level at that point
+- **Reason**: Why the increment occurred
+- **Token**: The specific token that caused it
+
+Benefits
+~~~~~~~~
+
+1. **Debugging**: Understand why Lizard calculates a specific CogC value
+2. **Comparison**: Compare with SonarQube's line-by-line breakdown
+3. **Learning**: See which code patterns increase complexity
+4. **Refactoring**: Identify specific lines that could be simplified
+
+The breakdown shows both structural increments (if, for, while) and operator
+increments (and, or), with their nesting levels, making it clear how the total
+is calculated.
 
 Conclusion
 ==========

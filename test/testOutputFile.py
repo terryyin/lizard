@@ -42,12 +42,13 @@ class TestFileOutputIntegration(unittest.TestCase):
         self.assertEqual(first_line, expected_first_line)
 
     def test_default(self):
-        header = "======================================================="
+        # CogC no longer included by default (only with -Ecogc flag)
+        header = "================================================"
         self.output_test("test", header)
 
     def test_csv(self):
-        # CogC is now included by default as an extension
-        header = "NLOC,CCN,token,PARAM,length,location,file,function,long_name,start,end, CogC  "
+        # CogC no longer included by default (only with -Ecogc flag)
+        header = "NLOC,CCN,token,PARAM,length,location,file,function,long_name,start,end"
         self.output_test("test.csv", header)
 
     def test_html(self):

@@ -37,10 +37,21 @@ class LizardExtension(object):  # pylint: disable=R0903
             type=int,
             dest="CogC",
             default=DEFAULT_COGC_THRESHOLD)
+        parser.add_argument(
+            "--cogc-lines",
+            help='''Show line-by-line breakdown of Cognitive Complexity increments
+            for functions that exceed thresholds. Only works with default text output
+            (not HTML/XML/CSV). Useful for debugging and understanding what contributes
+            to complexity.
+            ''',
+            action="store_true",
+            dest="cogc_lines",
+            default=False)
 
     def _create_initial_state(self, reader):
         """Create initial state dictionary for token processing."""
         is_erlang = hasattr(reader, 'language_names') and 'erlang' in reader.language_names
+        is_python = hasattr(reader, 'language_names') and 'python' in reader.language_names
 
         return {
             'in_switch': False,
@@ -52,6 +63,7 @@ class LizardExtension(object):  # pylint: disable=R0903
             'in_exception_block': False,
             'after_loop_keyword': False,
             'is_erlang': is_erlang,
+            'is_python': is_python,
             'erlang_if_case_depth': 0,
             'after_semicolon_in_if_case': False,
             'after_dash_in_erlang': False,
@@ -60,6 +72,7 @@ class LizardExtension(object):  # pylint: disable=R0903
             'pending_nesting_increase': False,
             'pending_try_block': False,
             'try_block_stack': [],
+            'bracket_depth': 0,  # Track [], (), {} depth for Python comprehensions
         }
 
     def _handle_binary_logical_operator(self, context, token):
@@ -75,6 +88,17 @@ class LizardExtension(object):  # pylint: disable=R0903
         # Only increment on first operator or when switching operator types
         if context.cogc_last_operator != normalized:
             # This is a fundamental increment: +1 without nesting multiplier
+            # Record manually since we're not using add_cognitive_complexity
+            context.current_function.cognitive_complexity_increments.append({
+                'line': context.current_line,
+                'increment': 1,
+                'base_increment': 1,
+                'nesting': 0,  # Logical operators don't get nesting multiplier
+                'nesting_from_stack': 0,
+                'nesting_from_cogc': 0,
+                'reason': f"{normalized} operator",
+                'token': token
+            })
             context.current_function.cognitive_complexity += 1
             context.cogc_last_operator = normalized
 
@@ -87,6 +111,17 @@ class LizardExtension(object):  # pylint: disable=R0903
         # If token is not a statement terminator, it's a label
         if token not in (';', '}', '\\n'):
             # This is a labeled jump: add +1 (fundamental increment)
+            # Record the increment for line-by-line reporting
+            context.current_function.cognitive_complexity_increments.append({
+                'line': context.current_line,
+                'increment': 1,
+                'base_increment': 1,
+                'nesting': 0,
+                'nesting_from_stack': 0,
+                'nesting_from_cogc': 0,
+                'reason': f'labeled jump to {token}',
+                'token': token
+            })
             context.current_function.cognitive_complexity += 1
         return True  # Processed
 
@@ -171,7 +206,8 @@ class LizardExtension(object):  # pylint: disable=R0903
         return erlang_if_case_depth
 
     def _handle_structural_keyword(self, context, token, after_else, in_do_while,
-                                    erlang_if_case_depth, is_erlang, pending_nesting_increase):
+                                    erlang_if_case_depth, is_erlang, pending_nesting_increase,
+                                    inside_brackets=False):
         """Handle structural keywords: if, for, while, foreach, repeat.
 
         These keywords increase both complexity and nesting level.
@@ -180,6 +216,7 @@ class LizardExtension(object):  # pylint: disable=R0903
         - Don't count 'while' at end of do-while loop
         - Track for/while to distinguish C do-while from Lua/Ruby do-after-loop
         - Track Erlang if/case depth for clause separator handling
+        - Python: Don't set pending_structural_nesting when inside brackets (comprehensions)
 
         Returns updated values for: after_else, in_do_while, erlang_if_case_depth,
                                      after_loop_keyword, pending_nesting_increase
@@ -190,15 +227,23 @@ class LizardExtension(object):  # pylint: disable=R0903
         if not (token == 'if' and after_else):
             # Don't count 'while' if it's the end of a do-while
             if not (token == 'while' and in_do_while):
-                context.add_cognitive_complexity()
+                # Provide detailed reason for the increment
+                if inside_brackets:
+                    reason = f"{token} in comprehension"
+                else:
+                    reason = f"{token} statement"
+                context.add_cognitive_complexity(inc=1, reason=reason, token=token)
                 pending_nesting_increase = True
                 # For brace-less languages (Python), increase nesting immediately
                 # The next add_bare_nesting() will mark it properly
-                context.pending_structural_nesting = True
+                # BUT: Skip if inside brackets (comprehensions don't create structural nesting)
+                if not inside_brackets:
+                    context.pending_structural_nesting = True
         else:
             # This is the 'if' part of 'else if', still needs to set nesting
             pending_nesting_increase = True
-            context.pending_structural_nesting = True
+            if not inside_brackets:
+                context.pending_structural_nesting = True
 
         after_else = False
 
@@ -227,7 +272,7 @@ class LizardExtension(object):  # pylint: disable=R0903
         # In C/C++/Java, 'do' starts a do-while loop and should be counted
         if not after_loop_keyword:
             # C-style do-while
-            context.add_cognitive_complexity()
+            context.add_cognitive_complexity(inc=1, reason="do-while loop", token="do")
             pending_nesting_increase = True
             in_do_while = True
         else:
@@ -272,7 +317,7 @@ class LizardExtension(object):  # pylint: disable=R0903
                 # This is a new clause in an if/case statement
                 # NOTE: Due to Erlang parser limitations, this increment may go to the wrong function
                 # when ';' appears in if/case blocks (parser treats ';' as function terminator)
-                context.add_cognitive_complexity()
+                context.add_cognitive_complexity(inc=1, reason="case clause", token=";")
                 after_semicolon_in_if_case = False
             context.cogc_last_operator = None
             return True, after_semicolon_in_if_case, after_dash_in_erlang
@@ -302,6 +347,7 @@ class LizardExtension(object):  # pylint: disable=R0903
         in_exception_block = state['in_exception_block']
         after_loop_keyword = state['after_loop_keyword']
         is_erlang = state['is_erlang']
+        is_python = state['is_python']
         erlang_if_case_depth = state['erlang_if_case_depth']
         after_semicolon_in_if_case = state['after_semicolon_in_if_case']
         after_dash_in_erlang = state['after_dash_in_erlang']
@@ -310,6 +356,7 @@ class LizardExtension(object):  # pylint: disable=R0903
         pending_nesting_increase = state['pending_nesting_increase']
         pending_try_block = state['pending_try_block']
         try_block_stack = state['try_block_stack']
+        bracket_depth = state['bracket_depth']
 
         # Structural keywords that increase both complexity and nesting
         # Includes C preprocessor directives like #if, #ifdef
@@ -328,13 +375,26 @@ class LizardExtension(object):  # pylint: disable=R0903
         exception_keywords = {'exception'}
 
         for token in tokens:
+            # Python: Track bracket depth for comprehensions
+            # When inside [], (), or {}, control flow keywords should not set pending_structural_nesting
+            if is_python:
+                if token in ('[', '(', '{'):
+                    bracket_depth += 1
+                elif token in (']', ')', '}'):
+                    bracket_depth = max(0, bracket_depth - 1)
+                    # Clear pending_structural_nesting when closing brackets
+                    # This prevents leakage from comprehensions to subsequent blocks
+                    context.pending_structural_nesting = False
+                    # Reset binary logical operator tracking (exiting comprehension/expression)
+                    context.cogc_last_operator = None
+
             # Check if previous token was '?' and current is not '.' or '?'
             # If so, the '?' was a ternary operator
             # (Ignore null-coalescing: ?. and ??)
             if saw_question_mark:
                 if token not in ('.', '?'):
                     # The '?' was a ternary operator, count it
-                    context.add_cognitive_complexity()
+                    context.add_cognitive_complexity(inc=1, reason="ternary operator", token="?")
                     pending_nesting_increase = True
                 # Reset the flag regardless
                 saw_question_mark = False
@@ -363,15 +423,21 @@ class LizardExtension(object):  # pylint: disable=R0903
             # These are counted as structural increments like regular 'if'
             # Unlike regular 'if', preprocessor directives don't have braces, so we increase nesting immediately
             elif token.startswith('#if') or token.startswith('#elif'):
-                context.add_cognitive_complexity()
+                context.add_cognitive_complexity(inc=1, reason=f"{token} preprocessor directive", token=token)
                 # Preprocessor directives don't use braces, so increase nesting immediately
                 context.increase_cogc_nesting()
 
             # Structural increments: if, for, while, foreach
             elif token in structural_keywords:
+                # Python: Pass bracket_depth to indicate if we're inside comprehensions
+                inside_brackets = is_python and bracket_depth > 0
+                # DEBUG
+                #if is_python:
+                #    print(f"DEBUG: token={token}, bracket_depth={bracket_depth}, inside_brackets={inside_brackets}")
                 after_else, in_do_while, erlang_if_case_depth, after_loop_keyword, pending_nesting_increase = \
                     self._handle_structural_keyword(context, token, after_else, in_do_while,
-                                                     erlang_if_case_depth, is_erlang, pending_nesting_increase)
+                                                     erlang_if_case_depth, is_erlang, pending_nesting_increase,
+                                                     inside_brackets)
 
             # do-while loop (C/C++/Java) or do keyword after for/while (Lua/Ruby)
             elif token == 'do':
@@ -387,6 +453,17 @@ class LizardExtension(object):  # pylint: disable=R0903
             # (the switch itself already counted as +1)
             elif token == 'else' and not in_switch:
                 # Fundamental increment: +1 without nesting multiplier
+                # Record the increment for line-by-line reporting
+                context.current_function.cognitive_complexity_increments.append({
+                    'line': context.current_line,
+                    'increment': 1,
+                    'base_increment': 1,
+                    'nesting': 0,
+                    'nesting_from_stack': 0,
+                    'nesting_from_cogc': 0,
+                    'reason': 'else statement',
+                    'token': token
+                })
                 context.current_function.cognitive_complexity += 1
                 pending_nesting_increase = True
                 after_else = True
@@ -394,12 +471,24 @@ class LizardExtension(object):  # pylint: disable=R0903
             # elif/elseif/elsif/else if (some languages use elsif like PL/SQL, Ruby; Fortran uses 'else if')
             elif token in ('elif', 'elseif', 'elsif', 'else if'):
                 # Fundamental increment: +1 without nesting multiplier
+                # Record the increment for line-by-line reporting
+                context.current_function.cognitive_complexity_increments.append({
+                    'line': context.current_line,
+                    'increment': 1,
+                    'base_increment': 1,
+                    'nesting': 0,
+                    'nesting_from_stack': 0,
+                    'nesting_from_cogc': 0,
+                    'reason': 'elif statement',
+                    'token': token
+                })
                 context.current_function.cognitive_complexity += 1
                 pending_nesting_increase = True
 
             # catch clause (or PL/SQL EXCEPTION WHEN)
             elif token in catch_keywords or (in_exception_block and token == 'when'):
-                context.add_cognitive_complexity()
+                reason = f"{token} clause"
+                context.add_cognitive_complexity(inc=1, reason=reason, token=token)
                 pending_nesting_increase = True
 
             # PL/SQL EXCEPTION keyword - following WHEN clauses act like catch
@@ -413,14 +502,22 @@ class LizardExtension(object):  # pylint: disable=R0903
             # Switch/match statement - single increment for entire switch
             # (switch in C/Java/JavaScript, match in Rust/Scala)
             elif token in ('switch', 'match'):
-                context.add_cognitive_complexity()
+                context.add_cognitive_complexity(inc=1, reason=f"{token} statement", token=token)
                 in_switch = True
                 switch_nesting = brace_depth
                 pending_nesting_increase = True
 
             # Binary logical operators: &&, ||, and, or, etc.
+            # Note: || is string concatenation in SQL/PL/SQL, not a logical operator
             elif token.lower() in ('&&', '||', 'and', 'or', '.and.', '.or.', 'andalso', 'orelse'):
-                self._handle_binary_logical_operator(context, token)
+                # Skip || in SQL/PL/SQL languages (it's concatenation, not OR)
+                is_sql_language = hasattr(reader, 'language_names') and any(
+                    lang in reader.language_names for lang in ['plsql', 'pl/sql', 'sql']
+                )
+                if token == '||' and is_sql_language:
+                    pass  # Skip - this is concatenation, not logical OR
+                else:
+                    self._handle_binary_logical_operator(context, token)
 
             # Ternary operator: condition ? true_value : false_value
             # The '?' acts like an 'if' statement
@@ -437,6 +534,17 @@ class LizardExtension(object):  # pylint: disable=R0903
             # goto always counts, break/continue only count if followed by a label
             elif token in jump_keywords:
                 # goto always adds +1 (fundamental increment without nesting multiplier)
+                # Record the increment for line-by-line reporting
+                context.current_function.cognitive_complexity_increments.append({
+                    'line': context.current_line,
+                    'increment': 1,
+                    'base_increment': 1,
+                    'nesting': 0,
+                    'nesting_from_stack': 0,
+                    'nesting_from_cogc': 0,
+                    'reason': f'{token} statement',
+                    'token': token
+                })
                 context.current_function.cognitive_complexity += 1
             elif token in ('break', 'continue'):
                 # Mark that we saw break/continue, will check next token to see if it's a label
@@ -492,8 +600,14 @@ def _cogc_pop_nesting_hook(context):
 class CogCFileInfoAddition(object):
     """Methods to add to FileInfoBuilder for Cognitive Complexity tracking."""
 
-    def add_cognitive_complexity(self, inc=1):
-        '''Add to cognitive complexity with current nesting level'''
+    def add_cognitive_complexity(self, inc=1, reason="", token=""):
+        '''Add to cognitive complexity with current nesting level
+
+        Args:
+            inc: Base increment (usually 1)
+            reason: Human-readable reason for the increment (e.g., "if statement", "for loop")
+            token: The token that caused the increment
+        '''
         # Calculate nesting using both tracking methods:
         # 1. current_nesting_level: Bracket-based nesting from NestingStack (used by C/C++/Java)
         # 2. cogc_nesting_level: Control-flow based nesting (used for all languages, especially JavaScript)
@@ -508,7 +622,21 @@ class CogCFileInfoAddition(object):
         nesting_from_cogc = self.cogc_nesting_level + self.current_function.initial_cogc_nesting_level
         nesting = max(nesting_from_stack, nesting_from_cogc) - self.cogc_excluded_nesting
         nesting = max(0, nesting)
-        self.current_function.cognitive_complexity += inc + nesting
+        total_inc = inc + nesting
+
+        # Record the increment for line-by-line reporting
+        self.current_function.cognitive_complexity_increments.append({
+            'line': self.current_line,
+            'increment': total_inc,
+            'base_increment': inc,
+            'nesting': nesting,
+            'nesting_from_stack': nesting_from_stack,
+            'nesting_from_cogc': nesting_from_cogc,
+            'reason': reason,
+            'token': token
+        })
+
+        self.current_function.cognitive_complexity += total_inc
 
     def increase_cogc_nesting(self):
         '''Increase cognitive complexity nesting level for structural control flow'''
@@ -573,6 +701,7 @@ def _init_cogc_data(self, *_):
     self.cognitive_complexity = 0
     self.initial_nesting_level = 0  # Track bracket-based nesting level at function start (for CogC)
     self.initial_cogc_nesting_level = 0  # Track control-flow nesting at function start (for preprocessor directives)
+    self.cognitive_complexity_increments = []  # Track line-by-line CogC increments for debugging/reporting
 
 
 def _init_cogc_context_data(self, filename):
@@ -638,3 +767,52 @@ patch_append_method(_init_cogc_context_data, FileInfoBuilder, "__init__")
 patch_append_method(_reset_cogc_on_push_function, FileInfoBuilder, "push_new_function")
 patch_append_method(_init_cogc_on_try_new_function, FileInfoBuilder, "try_new_function")
 patch_append_method(_inherit_cogc_from_global, FileInfoBuilder, "confirm_new_function")
+
+
+def format_cogc_line_breakdown(function):
+    """Format line-by-line cognitive complexity breakdown for a function.
+
+    Args:
+        function: FunctionInfo object with cognitive_complexity_increments
+
+    Returns:
+        String with formatted line-by-line breakdown
+    """
+    if not hasattr(function, 'cognitive_complexity_increments'):
+        return ""
+
+    if not function.cognitive_complexity_increments:
+        return ""
+
+    # Group by line to show all increments for each line together
+    line_increments = {}
+    for inc in function.cognitive_complexity_increments:
+        line = inc['line']
+        if line not in line_increments:
+            line_increments[line] = []
+        line_increments[line].append(inc)
+
+    output = []
+    # Add a clear separator and function identifier
+    output.append("")
+    output.append("  " + "=" * 78)
+    output.append(f"  Cognitive Complexity Breakdown for: {function.name}")
+    output.append(f"  Location: {function.filename}:{function.start_line}-{function.end_line}")
+    output.append("  " + "=" * 78)
+    output.append(f"  {'Line':<6} {'Inc':<5} {'Nesting':<8} {'Reason':<30} {'Token':<15}")
+    output.append(f"  {'-'*78}")
+
+    for line in sorted(line_increments.keys()):
+        for inc in line_increments[line]:
+            output.append(f"  {inc['line']:<6} "
+                         f"+{inc['increment']:<4} "
+                         f"{inc['nesting']:<8} "
+                         f"{inc['reason']:<30} "
+                         f"{inc['token']:<15}")
+
+    output.append(f"  {'-'*78}")
+    output.append(f"  Total Cognitive Complexity: {function.cognitive_complexity}")
+    output.append("  " + "=" * 78)
+    output.append("")
+
+    return "\n".join(output)

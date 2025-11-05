@@ -26,24 +26,24 @@ class TestFunctionOutput(StreamStdoutTestCase):
 
     def test_function_info_header_should_have_the_captions(self):
         print_and_save_modules([],  self.scheme)
-        # CogC is now added by extension, so it appears after length
-        self.assertEqual("  NLOC    CCN   token  PARAM  length  CogC   location  ", sys.stdout.stream.splitlines()[1])
+        # CogC is not included when no extensions are loaded
+        self.assertEqual("  NLOC    CCN   token  PARAM  length  location  ", sys.stdout.stream.splitlines()[1])
 
     def test_function_info_header_should_have_the_captions_of_external_extensions(self):
         external_extension = Mock(FUNCTION_INFO = {"xx": {"caption":"*external_extension*"}}, ordering_index=-1)
         extensions = get_extensions([external_extension])
         scheme = OutputScheme(extensions)
         print_and_save_modules([],  scheme)
-        # External extension with ordering_index=-1 is inserted before cogc
-        self.assertEqual("  NLOC    CCN   token  PARAM  length *external_extension* CogC   location  ", sys.stdout.stream.splitlines()[1])
+        # External extension appears after length (CogC is not loaded)
+        self.assertEqual("  NLOC    CCN   token  PARAM  length *external_extension* location  ", sys.stdout.stream.splitlines()[1])
 
     def test_print_fileinfo(self):
         self.foo.end_line = 100
         self.foo.cyclomatic_complexity = 16
         fileStat = FileInformation("FILENAME", 1, [self.foo])
         print_and_save_modules([fileStat],  self.scheme)
-        # Column order changed: NLOC CCN token PARAM length CogC location
-        self.assertEqual("       1     16      1      0       1      0 foo@100-100@FILENAME", sys.stdout.stream.splitlines()[3])
+        # Column order: NLOC CCN token PARAM length location (no CogC without extension)
+        self.assertEqual("       1     16      1      0       1 foo@100-100@FILENAME", sys.stdout.stream.splitlines()[3])
 
 
 class Ext(object):
@@ -74,7 +74,8 @@ class TestWarningOutput(StreamStdoutTestCase):
         fileSummary = FileInformation("FILENAME", 123, [self.foo])
         scheme = OutputScheme([Ext()])
         count = print_clang_style_warning([fileSummary], self.option, scheme, None)
-        self.assertIn("FILENAME:100: warning: foo has 1 NLOC, 30 CCN, 0 CogC, 1 token, 0 PARAM, 1 length, 10 ND\n", sys.stdout.stream)
+        # CogC not included when CogC extension not loaded
+        self.assertIn("FILENAME:100: warning: foo has 1 NLOC, 30 CCN, 1 token, 0 PARAM, 1 length, 10 ND\n", sys.stdout.stream)
         self.assertEqual(1, count)
 
     def test_sort_warning(self):
@@ -96,7 +97,8 @@ class TestWarningOutput(StreamStdoutTestCase):
         fileSummary = FileInformation("FILENAME", 123, [self.foo])
         scheme = OutputScheme([Ext()])
         count = print_clang_style_warning([fileSummary], self.option, scheme, None)
-        self.assertIn("FILENAME:100: warning: foo has 1 NLOC, 30 CCN, 0 CogC, 1 token, 0 PARAM, 1 length", sys.stdout.stream)
+        # CogC not included when CogC extension not loaded
+        self.assertIn("FILENAME:100: warning: foo has 1 NLOC, 30 CCN, 1 token, 0 PARAM, 1 length", sys.stdout.stream)
         self.assertEqual(1, count)
 
 

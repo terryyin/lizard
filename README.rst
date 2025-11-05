@@ -68,27 +68,81 @@ Cognitive Complexity
 
 Lizard supports Cognitive Complexity alongside Cyclomatic Complexity.
 Cognitive Complexity is a metric designed to measure how difficult code is
-to understand, addressing several limitations of Cyclomatic Complexity:
+to understand:
 
 -  **Switch statements**: Counted as +1 total (vs +1 per case in CCN)
 -  **Nesting awareness**: Nested structures get additional increments based on depth
 -  **Binary operators**: Sequences of the same operator count as +1
 -  **Readability focus**: Matches programmer intuition about code difficulty
 
-Example usage::
+To use Cognitive Complexity, add the ``-Ecogc`` extension flag::
 
-   # Set Cognitive Complexity threshold to 15
-   lizard -G 15 mycode/
+   # Enable CogC with default threshold (15)
+   lizard -Ecogc mycode/
+
+   # Set Cognitive Complexity threshold to 100
+   lizard -Ecogc -G 100 mycode/
 
    # Sort by Cognitive Complexity
-   lizard -s cognitive_complexity mycode/
+   lizard -Ecogc -s cognitive_complexity mycode/
 
    # Use both CCN and CogC thresholds
-   lizard -C 15 -G 15 mycode/
+   lizard -Ecogc -C 15 -G 15 mycode/
 
-The CogC column appears in all output formats (tabular, XML, HTML, CSV, Checkstyle).
+   # Show line-by-line CogC breakdown for debugging
+   lizard -Ecogc --cogc-lines mycode/
+
+When enabled, the CogC column appears in all output formats (tabular, XML, HTML, CSV, Checkstyle).
+
+**Line-by-Line Reporting**: Use the ``--cogc-lines`` option to see a detailed breakdown
+of each Cognitive Complexity increment. This is useful for:
+
+-  Understanding why a function has high complexity
+-  Learning which patterns increase complexity
+-  Identifying specific lines to refactor
+
+**Note**: The ``--cogc-lines`` option only works with default text output. It does not
+work with HTML, XML, or CSV output formats.
+
+Example output::
+
+    ==============================================================================
+    Cognitive Complexity Breakdown for: some_function
+    Location: build_install.py:138-206
+    ==============================================================================
+    Line   Inc   Nesting  Reason                         Token
+    ------------------------------------------------------------------------------
+    148    +1    0        for in comprehension           for
+    148    +1    0        if in comprehension            if
+    154    +1    0        or operator                    or
+    156    +1    0        if statement                   if
+    190    +1    0        for statement                  for
+    192    +2    1        for statement                  for
+    197    +3    2        for in comprehension           for
+    198    +3    2        if in comprehension            if
+    199    +1    0        and operator                   and
+    201    +3    2        if statement                   if
+    ------------------------------------------------------------------------------
+    Total Cognitive Complexity: 17
+    ==============================================================================
+
 For more details about the Cognitive Complexity algorithm, see the
 `cognitive_complexity_theory.rst <cognitive_complexity_theory.rst>`_ documentation.
+
+**Output Format Behavior**
+
+Different output formats handle thresholds and line-by-line reporting differently:
+
+- **Default text output**: Shows only functions that exceed thresholds in the warnings
+  section. Supports ``--cogc-lines`` for detailed breakdowns.
+- **HTML output** (``-H`` or ``--html``): Shows ALL functions in an interactive table,
+  with color-coding for cells that exceed thresholds (red for exceeding, green for within).
+  Does not support ``--cogc-lines``. This allows you to explore all code metrics, not just
+  warnings.
+- **XML/CSV/Checkstyle**: Shows all functions. Do not support ``--cogc-lines``.
+
+Use default text output when you want to see only problematic functions. Use HTML when
+you want to explore and sort all functions interactively.
 
 This tool actually calculates how complex the code 'looks' rather than
 how complex the code really 'is'. People will need this tool because it's

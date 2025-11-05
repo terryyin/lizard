@@ -42,21 +42,22 @@ class TestHTMLOutput(StreamStdoutTestCase):
         # Check for fallback styling
         self.assertIn("table#complexityTable", sys.stdout.stream)
 
-    def test_should_include_cogc_column(self):
-        # CogC should be included automatically as a default extension
+    def test_should_include_standard_columns(self):
+        # CogC is not included by default (only with -Ecogc flag)
         html_output([self.fileSummary], self.option, self.scheme, AllResult)
-        # Check for CogC header in table
-        self.assertIn("CogC", sys.stdout.stream)
-        # Verify it appears in a table header context
-        self.assertIn("<th>CogC", sys.stdout.stream)
+        # Check for standard columns
+        self.assertIn("<th>NLOC", sys.stdout.stream)
+        self.assertIn("<th>CCN", sys.stdout.stream)
+        # CogC should NOT be present without explicit extension loading
+        self.assertNotIn("<th>CogC", sys.stdout.stream)
 
-    def test_should_include_all_extension_columns_dynamically(self):
+    def test_should_include_all_columns_dynamically(self):
         # Verify HTML output includes all columns from schema dynamically
         html_output([self.fileSummary], self.option, self.scheme, AllResult)
         # Check for standard columns
         self.assertIn("<th>NLOC", sys.stdout.stream)
         self.assertIn("<th>CCN", sys.stdout.stream)
-        self.assertIn("<th>CogC", sys.stdout.stream)
+        self.assertIn("<th>token", sys.stdout.stream)
         # Check that function values are rendered
         self.assertIn("foo", sys.stdout.stream)  # function name
         self.assertIn("FILENAME", sys.stdout.stream)  # file name

@@ -206,7 +206,9 @@ def arg_parser(prog=None):
                         const=print_csv,
                         dest="printer")
     parser.add_argument("-H", "--html",
-                        help='''Output HTML report''',
+                        help='''Output HTML report. Note: HTML output includes ALL functions
+                        (not filtered by thresholds), but color-codes cells that exceed thresholds.
+                        Use default output to see only warnings.''',
                         action="store_const",
                         const=html_output,
                         dest="printer")
@@ -291,6 +293,8 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
         self.fan_out = 0
         self.general_fan_out = 0
         self.max_nesting_depth = 0  # Initialize max_nesting_depth to 0
+        self.cognitive_complexity = 0  # Initialize cognitive_complexity to 0
+        self.initial_nesting_level = 0  # Track nesting level at function start (for JavaScript/TypeScript)
 
     @property
     def name_in_space(self):
@@ -436,6 +440,8 @@ class FileInfoBuilder(object):
         self.stacked_functions = []
         self.stacked_pending_functions = []  # Save pending_function for nested functions (PLSQL)
         self._nesting_stack = NestingStack()
+        self.lambda_depth = 0  # Track lambda nesting depth (for JavaScript/TypeScript)
+        self.has_top_level_increment = False  # Track if function has structural increments (JavaScript/TypeScript)
 
     def __getattr__(self, attr):
         # delegating to _nesting_stack
@@ -510,6 +516,16 @@ class FileInfoBuilder(object):
 
     def parameter(self, token):
         self.current_function.add_parameter(token)
+
+    def enter_lambda(self):
+        '''Track lambda/anonymous function entry (for JavaScript/TypeScript).
+        Increases lambda_depth but does not create new FunctionInfo.'''
+        self.lambda_depth += 1
+
+    def exit_lambda(self):
+        '''Track lambda/anonymous function exit (for JavaScript/TypeScript).'''
+        if self.lambda_depth > 0:
+            self.lambda_depth -= 1
 
     def end_of_function(self):
         if not self.forgive:
@@ -762,9 +778,13 @@ class OutputScheme(object):
             if e.get("avg_caption", None)])
 
     def clang_warning_format(self):
-        return ("{f.filename}:{f.start_line}: warning: {f.name} has {f.nloc} NLOC, "
-                "{f.cyclomatic_complexity} CCN, {f.cognitive_complexity} CogC, {f.token_count} token, {f.parameter_count} PARAM, "
-                "{f.length} length, {f.max_nesting_depth} ND")
+        # Build format dynamically based on loaded extensions
+        ext_parts = ", ".join([
+            "{{f.{ext[value]}}} {caption}"
+            .format(ext=e, caption=e['caption'].strip())
+            for e in self.items[:-1]  # Exclude location
+        ])
+        return "{f.filename}:{f.start_line}: warning: {f.name} has " + ext_parts
 
     def msvs_warning_format(self):
         return (
@@ -789,6 +809,17 @@ def print_warnings(option, scheme, warnings):
         warning_count += 1
         warning_nloc += warning.nloc
         print(scheme.function_info(warning))
+
+        # Print CogC line-by-line breakdown if requested
+        if hasattr(option, 'cogc_lines') and option.cogc_lines:
+            try:
+                from lizard_ext.lizardcogc import format_cogc_line_breakdown
+                breakdown = format_cogc_line_breakdown(warning)
+                if breakdown:
+                    print(breakdown)
+            except (ImportError, AttributeError):
+                pass  # CogC extension not available
+
     if warning_count == 0:
         print_no_warnings(option)
     return warning_count, warning_nloc
@@ -1072,11 +1103,6 @@ def open_output_file(path):
 
 def get_extensions(extension_names):
     from importlib import import_module as im
-
-    # Add cogc (Cognitive Complexity) as a default extension
-    # Only prepend if not already present
-    if 'cogc' not in extension_names:
-        extension_names = ['cogc'] + list(extension_names)
 
     def expand_extensions(existing):
         for name in extension_names:

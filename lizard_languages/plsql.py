@@ -506,10 +506,15 @@ class PLSQLStates(CodeStateMachine):
                 self.br_count -= 1
                 if self.br_count == 0:
                     # This END closes the function/procedure
-                    # Pop the FunctionInfo from the nesting stack
-                    # (pop_nesting will call end_of_function when it pops a FunctionInfo)
+                    # Pop all remaining nested structures AND the FunctionInfo from the nesting stack
+                    # Keep popping until we pop a FunctionInfo (which calls end_of_function)
+                    from lizard import FunctionInfo
                     has_parent = len(self.context.stacked_functions) > 0
-                    self.context.pop_nesting()
+                    while self.context.nesting_stack:
+                        popped = self.context.pop_nesting()
+                        if isinstance(popped, FunctionInfo):
+                            # Found and popped the function, we're done
+                            break
                     if has_parent:
                         self.next(self._state_before_begin)
                     else:

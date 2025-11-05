@@ -6,42 +6,42 @@ class TestCognitiveComplexityCLI(unittest.TestCase):
     """Test CLI integration for Cognitive Complexity (-G/--CogC option)"""
 
     def test_cogc_default_threshold(self):
-        """Test that default CogC threshold is 15"""
-        options = parse_args(['lizard'])
+        """Test that default CogC threshold is 15 when extension is loaded"""
+        options = parse_args(['lizard', '-Ecogc'])
         self.assertEqual(15, options.CogC)
         self.assertEqual(15, options.thresholds['cognitive_complexity'])
 
     def test_cogc_short_option(self):
         """Test -G option sets CogC threshold"""
-        options = parse_args(['lizard', '-G20'])
+        options = parse_args(['lizard', '-Ecogc', '-G20'])
         self.assertEqual(20, options.CogC)
         self.assertEqual(20, options.thresholds['cognitive_complexity'])
 
     def test_cogc_long_option(self):
         """Test --CogC option sets CogC threshold"""
-        options = parse_args(['lizard', '--CogC', '25'])
+        options = parse_args(['lizard', '-Ecogc', '--CogC', '25'])
         self.assertEqual(25, options.CogC)
         self.assertEqual(25, options.thresholds['cognitive_complexity'])
 
     def test_cogc_with_ccn_threshold(self):
         """Test that CogC and CCN thresholds work together"""
-        options = parse_args(['lizard', '-C10', '-G20'])
+        options = parse_args(['lizard', '-Ecogc', '-C10', '-G20'])
         self.assertEqual(10, options.thresholds['cyclomatic_complexity'])
         self.assertEqual(20, options.thresholds['cognitive_complexity'])
 
     def test_cogc_threshold_via_T_option(self):
-        """Test -T option can set cognitive_complexity threshold"""
-        options = parse_args(['lizard', '-Tcognitive_complexity=30'])
+        """Test -T option can set cognitive_complexity threshold when extension is loaded"""
+        options = parse_args(['lizard', '-Ecogc', '-Tcognitive_complexity=30'])
         self.assertEqual(30, options.thresholds['cognitive_complexity'])
 
     def test_cogc_T_option_overrides_G_option(self):
         """Test that -T option overrides -G option"""
-        options = parse_args(['lizard', '-G20', '-Tcognitive_complexity=30'])
+        options = parse_args(['lizard', '-Ecogc', '-G20', '-Tcognitive_complexity=30'])
         self.assertEqual(30, options.thresholds['cognitive_complexity'])
 
     def test_cogc_sorting(self):
-        """Test sorting by cognitive_complexity"""
-        options = parse_args(['lizard', '-scognitive_complexity'])
+        """Test sorting by cognitive_complexity when extension is loaded"""
+        options = parse_args(['lizard', '-Ecogc', '-scognitive_complexity'])
         self.assertEqual('cognitive_complexity', options.sorting[0])
 
 
@@ -50,7 +50,7 @@ class TestCognitiveComplexityWarningFilter(unittest.TestCase):
 
     def test_warning_when_cogc_exceeds_threshold(self):
         """Test warning is generated when CogC exceeds threshold"""
-        options = parse_args(['lizard', '-G10'])
+        options = parse_args(['lizard', '-Ecogc', '-G10'])
         foo = FunctionInfo("foo", 'test.py', 1)
         foo.cognitive_complexity = 15  # Exceeds threshold of 10
         foo.cyclomatic_complexity = 5   # Below CCN threshold
@@ -62,7 +62,7 @@ class TestCognitiveComplexityWarningFilter(unittest.TestCase):
 
     def test_no_warning_when_cogc_below_threshold(self):
         """Test no warning when CogC is below threshold"""
-        options = parse_args(['lizard', '-G20'])
+        options = parse_args(['lizard', '-Ecogc', '-G20'])
         foo = FunctionInfo("foo", 'test.py', 1)
         foo.cognitive_complexity = 10  # Below threshold of 20
         foo.cyclomatic_complexity = 5   # Below CCN threshold
@@ -73,7 +73,7 @@ class TestCognitiveComplexityWarningFilter(unittest.TestCase):
 
     def test_warning_when_either_ccn_or_cogc_exceeds(self):
         """Test warning when either CCN or CogC exceeds threshold"""
-        options = parse_args(['lizard', '-C10', '-G10'])
+        options = parse_args(['lizard', '-Ecogc', '-C10', '-G10'])
 
         # Function with high CCN but low CogC
         foo = FunctionInfo("foo", 'test.py', 1)
@@ -94,7 +94,7 @@ class TestCognitiveComplexityWarningFilter(unittest.TestCase):
 
     def test_warning_sorting_by_cogc(self):
         """Test warnings are sorted by CogC correctly"""
-        options = parse_args(['lizard', '-G5', '-scognitive_complexity'])
+        options = parse_args(['lizard', '-Ecogc', '-G5', '-scognitive_complexity'])
 
         foo = FunctionInfo("foo", 'test.py', 1)
         foo.cognitive_complexity = 10
@@ -119,7 +119,7 @@ class TestCognitiveComplexityWarningFilter(unittest.TestCase):
 
     def test_cogc_exact_threshold_no_warning(self):
         """Test no warning when CogC equals threshold (not greater than)"""
-        options = parse_args(['lizard', '-G15'])
+        options = parse_args(['lizard', '-Ecogc', '-G15'])
         foo = FunctionInfo("foo", 'test.py', 1)
         foo.cognitive_complexity = 15  # Equals threshold
         foo.cyclomatic_complexity = 5
@@ -130,7 +130,7 @@ class TestCognitiveComplexityWarningFilter(unittest.TestCase):
 
     def test_cogc_threshold_plus_one_warning(self):
         """Test warning when CogC is threshold + 1"""
-        options = parse_args(['lizard', '-G15'])
+        options = parse_args(['lizard', '-Ecogc', '-G15'])
         foo = FunctionInfo("foo", 'test.py', 1)
         foo.cognitive_complexity = 16  # One more than threshold
         foo.cyclomatic_complexity = 5
