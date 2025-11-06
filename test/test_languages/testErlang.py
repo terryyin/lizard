@@ -136,3 +136,24 @@ class TestErlang(unittest.TestCase):
         self.assertEqual(3, result[0].cyclomatic_complexity)
 
 
+    def test_question_mark_macro_operator(self):
+        """
+        Test that Erlang '?' macro expansion operator adds to CCN.
+        In Erlang, '?' is for macro expansion (e.g., ?MODULE, ?EMPTY_NODE),
+        not a C-style ternary operator. Macro usage adds to code complexity.
+        """
+        code = '''
+        get_value(Key) ->
+            Value = ?DEFAULT_VALUE,
+            case ?LOOKUP_TABLE of
+                undefined -> Value;
+                Table -> fetch(Key, Table)
+            end.
+        '''
+        result = get_erlang_function_list(code)
+        self.assertEqual(1, len(result))
+        
+        # Expected: base(1) + case(1) + ?DEFAULT_VALUE(1) + ?LOOKUP_TABLE(1) = 4
+        current_ccn = result[0].cyclomatic_complexity
+        self.assertEqual(4, current_ccn,
+                        "Erlang macro expansions (?) add to complexity")

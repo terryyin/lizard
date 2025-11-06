@@ -15,7 +15,6 @@ class TTCNReader(CLikeReader):  # pylint: disable=R0903
     _logical_operators = {'and', 'or', 'xor'}
     _case_keywords = {'case'}
     _ternary_operators = set()
-    # Note: 'else' was in original but shouldn't add to CCN independently
 
     def __init__(self, context):
         super(TTCNReader, self).__init__(context)

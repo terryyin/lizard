@@ -323,6 +323,37 @@ class Test_parser_for_TTCN(unittest.TestCase):
                 }''')
         self.assertEqual(0, len(result))
 
+    def test_if_else_complexity(self):
+        """
+        Test that TTCN correctly counts if-else structures.
+        The 'else' keyword doesn't add to CCN independently - only decision points count.
+        """
+        result = get_ttcn_function_list('''
+            module test_else {
+                function test_if_else() {
+                    if (condition1) {
+                        x := 1;
+                    } else {
+                        x := 2;
+                    }
+                    
+                    if (condition2) {
+                        y := 1;
+                    } else if (condition3) {
+                        y := 2;
+                    } else {
+                        y := 3;
+                    }
+                }
+            }''')
+        self.assertEqual(1, len(result))
+        
+        # Expected: base(1) + if(1) + if(1) + if(1) = 4
+        # 'else' clauses don't add to CCN
+        current_ccn = result[0].cyclomatic_complexity
+        self.assertEqual(4, current_ccn,
+                       "TTCN counts decision points, not else clauses")
+
 
 class Test_Preprocessing(unittest.TestCase):
 

@@ -27,7 +27,8 @@ class StReader(CodeReader, StCommentsMixin):
         'if', 'elsif', 'for', 'while', 'repeat',
         'IF', 'ELSIF', 'FOR', 'WHILE', 'REPEAT'
     }
-    _logical_operators = set()  # ST uses AND/OR but they weren't in original _conditions
+    # ST is case-insensitive, so include both lowercase and uppercase forms
+    _logical_operators = {'and', 'or', 'AND', 'OR'}
     _case_keywords = {'case', 'CASE'}
     _ternary_operators = set()
 

@@ -512,6 +512,62 @@ class TestRFunctionParsing(unittest.TestCase):
         self.assertEqual(1, nested_func.cyclomatic_complexity)
 
 
+class TestROperators(unittest.TestCase):
+    """Test cases for R language operators."""
+
+    def test_element_wise_vs_short_circuit_operators(self):
+        """
+        Test that R correctly counts both element-wise (&, |) and short-circuit (&&, ||) operators.
+        Both types add to CCN as they represent conditional logic.
+        """
+        code = '''
+        vector_ops <- function(x, y) {
+            # Short-circuit operators (control flow decisions)
+            if (x[1] > 0 && y[1] > 0) {
+                result1 <- TRUE
+            }
+            
+            # Element-wise operators (vectorized data operations)
+            flags <- (x > 0) & (y > 0)
+            results <- (x < 10) | (y < 10)
+            
+            return(flags)
+        }
+        '''
+        functions = get_r_function_list(code)
+        self.assertEqual(1, len(functions))
+        
+        # Expected: base(1) + if(1) + &&(1) + &(1) + |(1) = 5
+        current_ccn = functions[0].cyclomatic_complexity
+        self.assertEqual(5, current_ccn,
+                        "R counts both short-circuit (&&, ||) and element-wise (&, |) operators")
+
+    def test_element_wise_operators_in_vectorized_code(self):
+        """
+        Test that element-wise operators in vectorized operations count toward CCN.
+        Even vectorized operations represent conditional logic.
+        """
+        code = '''
+        pure_vectorization <- function(vec1, vec2, vec3) {
+            # These are all vectorized operations
+            result1 <- vec1 & vec2
+            result2 <- vec1 | vec2
+            result3 <- (vec1 > 0) & (vec2 < 10)
+            combined <- result1 | result2 | result3
+            
+            return(combined)
+        }
+        '''
+        functions = get_r_function_list(code)
+        self.assertEqual(1, len(functions))
+        
+        # Expected: 6 = base(1) + 5 element-wise operators (2 &, 3 |)
+        # Vectorized operations represent conditional logic (element-wise)
+        current_ccn = functions[0].cyclomatic_complexity
+        self.assertEqual(6, current_ccn,
+                        "Vectorized operators represent conditional logic")
+
+
 class TestRFileExtensions(unittest.TestCase):
     """Test R file extension matching."""
 

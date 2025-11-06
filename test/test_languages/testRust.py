@@ -96,3 +96,48 @@ class TestRust(unittest.TestCase):
         self.assertEqual(1, len(result))
 
 
+    def test_case_as_identifier(self):
+        """
+        Test that 'case' used as an identifier doesn't add to CCN.
+        Rust doesn't have 'case' keyword (uses match expressions with arms).
+        """
+        code = '''
+        fn handle_case_variable(case: i32) -> i32 {
+            let case_value = case;
+            match case_value {
+                1 => println!("one"),
+                2 => println!("two"),
+                _ => println!("other"),
+            }
+            case
+        }
+        '''
+        result = get_rust_function_list(code)
+        self.assertEqual(1, len(result))
+        
+        # Expected: 2 = base(1) + match(1)
+        # 'case' as identifier should not add to CCN
+        self.assertEqual(2, result[0].cyclomatic_complexity,
+                        "'case' as identifier doesn't add to CCN")
+
+    def test_match_expression_complexity(self):
+        """
+        Test that Rust match expressions are counted correctly.
+        Rust uses match arms (with =>), not case statements.
+        """
+        code = '''
+        fn categorize(value: i32) -> &'static str {
+            match value {
+                1 | 2 | 3 => "small",
+                4 | 5 => "medium",
+                6..=10 => "large",
+                _ => "other",
+            }
+        }
+        '''
+        result = get_rust_function_list(code)
+        self.assertEqual(1, len(result))
+        
+        # Should be 2: base(1) + match(1) = 2
+        # The || in match arms (1 | 2) is pattern matching, not logical operator
+        self.assertEqual(2, result[0].cyclomatic_complexity)
