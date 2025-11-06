@@ -26,6 +26,7 @@ class TestFunctionOutput(StreamStdoutTestCase):
 
     def test_function_info_header_should_have_the_captions(self):
         print_and_save_modules([],  self.scheme)
+        # CogC is not included when no extensions are loaded
         self.assertEqual("  NLOC    CCN   token  PARAM  length  location  ", sys.stdout.stream.splitlines()[1])
 
     def test_function_info_header_should_have_the_captions_of_external_extensions(self):
@@ -33,6 +34,7 @@ class TestFunctionOutput(StreamStdoutTestCase):
         extensions = get_extensions([external_extension])
         scheme = OutputScheme(extensions)
         print_and_save_modules([],  scheme)
+        # External extension appears after length (CogC is not loaded)
         self.assertEqual("  NLOC    CCN   token  PARAM  length *external_extension* location  ", sys.stdout.stream.splitlines()[1])
 
     def test_print_fileinfo(self):
@@ -40,6 +42,7 @@ class TestFunctionOutput(StreamStdoutTestCase):
         self.foo.cyclomatic_complexity = 16
         fileStat = FileInformation("FILENAME", 1, [self.foo])
         print_and_save_modules([fileStat],  self.scheme)
+        # Column order: NLOC CCN token PARAM length location (no CogC without extension)
         self.assertEqual("       1     16      1      0       1 foo@100-100@FILENAME", sys.stdout.stream.splitlines()[3])
 
 
@@ -71,6 +74,7 @@ class TestWarningOutput(StreamStdoutTestCase):
         fileSummary = FileInformation("FILENAME", 123, [self.foo])
         scheme = OutputScheme([Ext()])
         count = print_clang_style_warning([fileSummary], self.option, scheme, None)
+        # CogC not included when CogC extension not loaded
         self.assertIn("FILENAME:100: warning: foo has 1 NLOC, 30 CCN, 1 token, 0 PARAM, 1 length, 10 ND\n", sys.stdout.stream)
         self.assertEqual(1, count)
 
@@ -93,6 +97,7 @@ class TestWarningOutput(StreamStdoutTestCase):
         fileSummary = FileInformation("FILENAME", 123, [self.foo])
         scheme = OutputScheme([Ext()])
         count = print_clang_style_warning([fileSummary], self.option, scheme, None)
+        # CogC not included when CogC extension not loaded
         self.assertIn("FILENAME:100: warning: foo has 1 NLOC, 30 CCN, 1 token, 0 PARAM, 1 length", sys.stdout.stream)
         self.assertEqual(1, count)
 
@@ -103,13 +108,16 @@ class TestFileInformationOutput(StreamStdoutTestCase):
         scheme = OutputScheme([])
         fileSummary = FileInformation("FILENAME", 123, [])
         print_and_save_modules([fileSummary], scheme)
+        # CogC is no longer included when OutputScheme([]) is used (no extensions)
         self.assertIn("    123       0.0     0.0        0.0         0     FILENAME\n", sys.stdout.stream)
 
     def test_print_and_save_detail_information_with_ext(self):
         scheme = OutputScheme([Ext()])
+        scheme.patch_for_extensions()
         fileSummary = FileInformation("FILENAME", 123, [])
         print_and_save_modules([fileSummary], scheme)
         self.assertIn("Avg.ND", sys.stdout.stream)
+        # CogC is not included when only Ext() is used (no cogc extension in the list)
         self.assertIn("    123       0.0     0.0        0.0     0.0         0     FILENAME", sys.stdout.stream)
 
 

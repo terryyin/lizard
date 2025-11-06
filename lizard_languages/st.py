@@ -91,10 +91,17 @@ class StReader(CodeReader, StCommentsMixin):
                 for _ in macro.group(2).splitlines()[1:]:
                     yield "\n"
             else:
-                # ST normalization: collapse END_* into END
+                # ST normalization: collapse END_* into END, except for END_VAR which doesn't match a structural block
                 upper_tok = token.upper()
-                if upper_tok.startswith("END_"):
+                if upper_tok.startswith("END_") and upper_tok not in ('END_VAR', 'END_TYPE', 'END_STRUCT'):
                     yield "END"
+                    continue
+
+                # Normalize structural keywords to lowercase for CogC tracking
+                # This allows lizard.py's structural_keywords check to work with ST's uppercase syntax
+                # Note: ELSE is NOT normalized because 'else' alone doesn't add to CogC (only 'elsif' does)
+                if upper_tok in ('IF', 'FOR', 'WHILE', 'CASE', 'REPEAT', 'ELSIF'):
+                    yield token.lower()
                     continue
 
                 # Eliminate whitespace, keep line breaks

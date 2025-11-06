@@ -12,12 +12,27 @@ class PythonIndents:  # pylint: disable=R0902
     def __init__(self, context):
         self.indents = [0]
         self.context = context
+        self.bracket_depth = 0  # Track bracket/paren/brace depth
+
+    def update_bracket_depth(self, token):
+        """Update bracket depth based on token"""
+        if token in ('[', '(', '{'):
+            self.bracket_depth += 1
+        elif token in (']', ')', '}'):
+            self.bracket_depth = max(0, self.bracket_depth - 1)
 
     def set_nesting(self, spaces, token=""):
-        while self.indents[-1] > spaces and (not token.startswith(")")):
+        # Don't pop nesting when token starts with closing bracket/paren/brace
+        # This handles multi-line constructs where the closing token has less indentation:
+        # - Function declarations: def f(a,\n  b\n):
+        # - List comprehensions: items = [\n    x for x in range(10)\n]
+        # - Dict/set comprehensions: data = {\n    k: v for k, v in pairs\n}
+        while self.indents[-1] > spaces and (not token.startswith((")", "]", "}"))):
             self.indents.pop()
             self.context.pop_nesting()
-        if self.indents[-1] < spaces:
+        # Only add nesting for increased indentation if we're NOT inside brackets
+        # This prevents comprehensions from polluting the nesting stack
+        if self.indents[-1] < spaces and self.bracket_depth == 0:
             self.indents.append(spaces)
             self.context.add_bare_nesting()
 
@@ -89,6 +104,9 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
         current_leading_spaces = 0
         reading_leading_space = True
         for token in tokens:
+            # Update bracket depth for every token
+            indents.update_bracket_depth(token)
+
             if token != '\n':
                 if reading_leading_space:
                     if token.isspace():
@@ -112,14 +130,36 @@ class PythonStates(CodeStateMachine):  # pylint: disable=R0903
     def __init__(self, context, reader):
         super(PythonStates, self).__init__(context)
         self.reader = reader
+        self.has_non_decorator_stmt = False  # Track if current function has statements besides def/return
 
     def _state_global(self, token):
         if token == 'def':
+            # Check if we're defining a nested function
+            # If current function exists (and is NOT *global*) and has non-decorator statements,
+            # nested function should increase nesting
+            current_func = self.context.current_function
+            if current_func and current_func.name != '*global*' and self.has_non_decorator_stmt:
+                self.is_nested_in_non_decorator = True
+            else:
+                self.is_nested_in_non_decorator = False
             self._state = self._function
+        elif token not in ('return', '"""', "'''") and not token.startswith('"""') and not token.startswith("'''"):
+            # Any statement other than def, return, or docstrings marks this as non-decorator
+            self.has_non_decorator_stmt = True
 
     def _function(self, token):
         if token != '(':
-            self.context.restart_new_function(token)
+            # For nested functions in non-decorator patterns, use push to preserve nesting
+            # For pure decorator patterns, use restart (nesting=0 for nested function)
+            if hasattr(self, 'is_nested_in_non_decorator') and self.is_nested_in_non_decorator:
+                self.context.push_new_function(token)
+                # Adjust initial_nesting_level so nested function's content gets nesting bonus
+                # Subtract 1 from initial_nesting_level to account for the nested function's own nesting
+                self.context.current_function.initial_nesting_level -= 1
+            else:
+                self.context.restart_new_function(token)
+            # Reset decorator tracking for the new function
+            self.has_non_decorator_stmt = False
             self.context.add_to_long_function_name("(")
         else:
             self._state = self._dec

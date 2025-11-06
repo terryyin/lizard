@@ -128,3 +128,5 @@ class TestScala(unittest.TestCase):
             ''')
         self.assertEqual(2, len(result))
         self.assertEqual('list2', result[0].name)
+
+

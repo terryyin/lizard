@@ -291,3 +291,5 @@ class TestFortran(unittest.TestCase):
         self.assertIn('mymod::recursive::sub1', [f.name for f in result], "Recursive procedure not found")  # Recursive one
         self.assertIn('mymod::recursive::elemental::func1', [f.name for f in result], "Elemental procedure not found")  # Elemental one
         self.assertIn('mymod::recursive::elemental::func2', [f.name for f in result], "Non-decorated procedure not found")  # Non-decorated one
+
+

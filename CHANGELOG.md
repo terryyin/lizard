@@ -1,4 +1,13 @@
 # Change Log
+## 1.20.0 (Unreleased)
+
+### New Features
+- **Cognitive Complexity metric**: Added built-in support for Cognitive Complexity (CogC) alongside Cyclomatic Complexity
+  - `-G`/`--CogC` command-line option for setting Cognitive Complexity threshold (default: 15)
+  - CogC column added to all output formats (tabular, XML, HTML, CSV, Checkstyle)
+  - Support for sorting by `cognitive_complexity`
+  - See `cognitive_complexity_theory.rst` for full specification
+
 
 ## 1.19.0
 
@@ -17,6 +26,7 @@
 
 ### Documentation
 - Add contribution guidelines to README
+
 
 ## 1.18.0
 

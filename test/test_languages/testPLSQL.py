@@ -72,6 +72,7 @@ class TestPLSQL(unittest.TestCase):
     def test_if_elsif_else(self):
         code = """
         CREATE PROCEDURE test_proc IS
+            x NUMBER := 1;
         BEGIN
             IF x = 1 THEN
                 NULL;
@@ -90,6 +91,7 @@ class TestPLSQL(unittest.TestCase):
     def test_case_statement(self):
         code = """
         CREATE PROCEDURE test_case IS
+            status VARCHAR2(20) := 'NEW';
         BEGIN
             CASE status
                 WHEN 'NEW' THEN
@@ -107,6 +109,7 @@ class TestPLSQL(unittest.TestCase):
     def test_loop_structures(self):
         code = """
         CREATE PROCEDURE test_loops IS
+            x NUMBER := 0;
         BEGIN
             LOOP
                 EXIT WHEN x > 10;
@@ -127,6 +130,9 @@ class TestPLSQL(unittest.TestCase):
     def test_logical_operators(self):
         code = """
         CREATE PROCEDURE test_logic IS
+            x NUMBER := 1;
+            y NUMBER := 2;
+            z NUMBER := 3;
         BEGIN
             IF x = 1 AND y = 2 OR z = 3 THEN
                 NULL;
@@ -576,6 +582,7 @@ class TestPLSQL(unittest.TestCase):
     def test_exit_when_explicit(self):
         code = """
         CREATE PROCEDURE test_exit_when IS
+            x NUMBER := 0;
         BEGIN
             LOOP
                 EXIT WHEN x > 10;
@@ -592,6 +599,7 @@ class TestPLSQL(unittest.TestCase):
     def test_goto_statement(self):
         code = """
         CREATE PROCEDURE test_goto IS
+            x NUMBER := 15;
         BEGIN
             IF x > 10 THEN
                 GOTO error_handler;
@@ -714,13 +722,13 @@ class TestPLSQL(unittest.TestCase):
         END;
         """
         result = get_plsql_function_list(code)
-        # Note: Inner BEGIN/END creates a nested anonymous block which may be counted as a separate function
-        # depending on implementation. This is checking the current behavior.
-        self.assertGreaterEqual(len(result), 1)
-        # The main procedure should have complexity: 1 (base) + 1 (outer WHEN) = 2
-        # (inner WHEN belongs to the nested block)
-        main_proc = [r for r in result if r.name == "test_nested_exceptions"][0]
-        self.assertEqual(2, main_proc.cyclomatic_complexity)
+        # Nested BEGIN/END blocks with EXCEPTION sections are handled as part of the parent procedure
+        self.assertEqual(1, len(result))
+        # The main procedure has complexity: 1 (base) + 1 (inner WHEN) + 1 (outer WHEN) = 3
+        # Both WHEN clauses are counted as they both add decision points to the procedure
+        main_proc = result[0]
+        self.assertEqual("test_nested_exceptions", main_proc.name)
+        self.assertEqual(3, main_proc.cyclomatic_complexity)
 
     def test_package_specification(self):
         code = """
@@ -749,3 +757,5 @@ class TestPLSQL(unittest.TestCase):
         # But nested function should be counted
         self.assertEqual(1, len(result))
         self.assertEqual("inner_func", result[0].name)
+
+

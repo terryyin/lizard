@@ -135,6 +135,7 @@ class TestErlang(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual(3, result[0].cyclomatic_complexity)
 
+
     def test_question_mark_macro_operator(self):
         """
         Test that Erlang '?' macro expansion operator adds to CCN.

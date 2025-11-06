@@ -359,3 +359,5 @@ class NotebookApp {
         # Verify cyclomatic complexity for method with conditionals
         process_order = next(f for f in functions if f.name == 'Product::processOrder')
         self.assertEqual(7, process_order.cyclomatic_complexity)  # Current behavior shows 7 for this method
+
+

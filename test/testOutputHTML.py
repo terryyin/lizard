@@ -2,7 +2,7 @@ from mock import Mock, patch
 import unittest
 import sys
 from lizard_ext import html_output
-from lizard import parse_args, FunctionInfo, FileInformation, AllResult
+from lizard import parse_args, FunctionInfo, FileInformation, AllResult, get_extensions, OutputScheme
 from test.helper_stream import StreamStdoutTestCase
 
 
@@ -13,14 +13,15 @@ class TestHTMLOutput(StreamStdoutTestCase):
         self.option = parse_args("app")
         self.foo = FunctionInfo("foo", 'FILENAME', 100)
         self.fileSummary = FileInformation("FILENAME", 123, [self.foo])
-        self.scheme = Mock()
+        self.extensions = get_extensions([])
+        self.scheme = OutputScheme(self.extensions)
 
     def test_should_have_html_body(self):
-        html_output([self.fileSummary], self.option, None, AllResult)
+        html_output([self.fileSummary], self.option, self.scheme, AllResult)
         self.assertRegex(sys.stdout.stream, r"\<html\>")
 
     def test_should_have_datatables_integration(self):
-        html_output([self.fileSummary], self.option, None, AllResult)
+        html_output([self.fileSummary], self.option, self.scheme, AllResult)
         # Check for DataTables CSS
         self.assertIn("datatables.net", sys.stdout.stream)
         # Check for jQuery
@@ -31,7 +32,7 @@ class TestHTMLOutput(StreamStdoutTestCase):
         self.assertIn("complexityTable", sys.stdout.stream)
 
     def test_should_have_graceful_degradation(self):
-        html_output([self.fileSummary], self.option, None, AllResult)
+        html_output([self.fileSummary], self.option, self.scheme, AllResult)
         # Check for graceful degradation checks
         self.assertIn("typeof jQuery", sys.stdout.stream)
         self.assertIn("typeof jQuery.fn.dataTable", sys.stdout.stream)
@@ -40,3 +41,23 @@ class TestHTMLOutput(StreamStdoutTestCase):
         self.assertIn("catch (e)", sys.stdout.stream)
         # Check for fallback styling
         self.assertIn("table#complexityTable", sys.stdout.stream)
+
+    def test_should_include_standard_columns(self):
+        # CogC is not included by default (only with -Ecogc flag)
+        html_output([self.fileSummary], self.option, self.scheme, AllResult)
+        # Check for standard columns
+        self.assertIn("<th>NLOC", sys.stdout.stream)
+        self.assertIn("<th>CCN", sys.stdout.stream)
+        # CogC should NOT be present without explicit extension loading
+        self.assertNotIn("<th>CogC", sys.stdout.stream)
+
+    def test_should_include_all_columns_dynamically(self):
+        # Verify HTML output includes all columns from schema dynamically
+        html_output([self.fileSummary], self.option, self.scheme, AllResult)
+        # Check for standard columns
+        self.assertIn("<th>NLOC", sys.stdout.stream)
+        self.assertIn("<th>CCN", sys.stdout.stream)
+        self.assertIn("<th>token", sys.stdout.stream)
+        # Check that function values are rendered
+        self.assertIn("foo", sys.stdout.stream)  # function name
+        self.assertIn("FILENAME", sys.stdout.stream)  # file name

@@ -607,4 +607,7 @@ sub test_function {
         # Verify the function is the one we expect
         function = result.function_list[0]
         self.assertEqual("test_function", function.name)
-        self.assertEqual(3, function.cyclomatic_complexity)  # 1 base + 2 conditions (else doesn't count) 
+        # 1 base + 2 conditions (else doesn't count)
+        self.assertEqual(3, function.cyclomatic_complexity) 
+
+

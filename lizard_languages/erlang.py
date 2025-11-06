@@ -46,6 +46,12 @@ class ErlangStates(CodeStateMachine):
     # pylint: disable=R0903
 
     func_name_pattern = re.compile("[a-zA-Z]+[a-zA-Z0-9_]*")
+    # Erlang reserved keywords that should not be treated as function names
+    reserved_keywords = {
+        'if', 'case', 'when', 'of', 'end', 'after', 'begin', 'catch', 'try',
+        'andalso', 'orelse', 'and', 'or', 'not', 'xor',
+        'true', 'false'
+    }
 
     def __init__(self, context):
         super(ErlangStates, self).__init__(context)
@@ -54,9 +60,10 @@ class ErlangStates(CodeStateMachine):
     def _state_global(self, token):
         if token == '-':
             self.punctuated = True
-        elif self.func_name_pattern.match(token) and not self.punctuated:
-            self.context.push_new_function(token)
-            self._state = self._state_after_name
+        elif self.func_name_pattern.match(token) and not self.punctuated and token not in self.reserved_keywords:
+            # Don't push function yet - wait to see if it's followed by '('
+            self.potential_function_name = token
+            self._state = self._check_function_start
         elif token == 'end':
             self._state = self._state_nested_end
         elif token == '.' or token == ';':
@@ -64,7 +71,23 @@ class ErlangStates(CodeStateMachine):
         else:
             self.punctuated = False
 
+    def _check_function_start(self, token):
+        # Check if the previous token was actually a function name (followed by '(')
+        if token == '(':
+            self.context.push_new_function(self.potential_function_name)
+            self._state = self._state_start_of_params
+            self.context.add_to_long_function_name(token)
+            self.lbr = 1
+            self.rbr = 0
+        else:
+            # Not a function, go back to global state
+            self.punctuated = False
+            self._state = self._state_global
+            # Process current token in global state
+            self._state_global(token)
+
     def _state_after_name(self, token):
+        # This state is no longer used since we check for '(' in _check_function_start
         if token == '(':
             self._state = self._state_start_of_params
             self.context.add_to_long_function_name(token)

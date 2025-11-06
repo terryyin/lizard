@@ -45,3 +45,5 @@ class TestSolidity(unittest.TestCase):
         )
         self.assertEqual(1, len(result))
         self.assertEqual('named', result[0].name)
+
+

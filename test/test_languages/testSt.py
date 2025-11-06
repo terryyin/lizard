@@ -1,6 +1,7 @@
 import unittest
 from ..testHelpers import get_st_fileinfo, get_st_function_list, get_st_function_list_with_extension
 from lizard_ext.lizardnd import LizardExtension as NestDepth
+from lizard import analyze_file
 
 
 def get_st_with_nestdepth(source):
@@ -402,3 +403,5 @@ class Test_st_nesting_level(unittest.TestCase):
         )
         self.assertEqual(0, result[0].top_nesting_level)
         self.assertEqual(4, result[0].max_nesting_depth)
+
+

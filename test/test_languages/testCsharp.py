@@ -139,3 +139,5 @@ class TestCsharp(unittest.TestCase):
                        "Method should have complexity of 1")
         self.assertEqual(1, constructor_func.cyclomatic_complexity,
                        "Constructor should have complexity of 1")
+
+

@@ -764,3 +764,5 @@ void process() {
         # Should find the process function
         self.assertEqual(1, len(result))
         self.assertEqual("process", result[0].name)
+
+

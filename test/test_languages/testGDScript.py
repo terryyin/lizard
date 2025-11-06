@@ -16,6 +16,7 @@ class TestGDScript(unittest.TestCase):
             "    pass")
         self.assertEqual(1, len(functions))
 
+
     def test_elif_keyword(self):
         """
         Test that GDScript correctly counts elif keyword.

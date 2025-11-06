@@ -483,3 +483,5 @@ public class TestWildcard {
                 1, func.cyclomatic_complexity,
                 f"Function {func.name} should have CCN=1, got "
                 f"{func.cyclomatic_complexity}")
+
+

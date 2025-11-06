@@ -74,3 +74,5 @@ class TestVue(unittest.TestCase):
         functions = get_vue_function_list(code)
         self.assertEqual(["helper1", "method1", "method2"], [f.name for f in functions])
         self.assertEqual(2, functions[2].cyclomatic_complexity)
+
+
