@@ -6,15 +6,7 @@
   - `-G`/`--CogC` command-line option for setting Cognitive Complexity threshold (default: 15)
   - CogC column added to all output formats (tabular, XML, HTML, CSV, Checkstyle)
   - Support for sorting by `cognitive_complexity`
-  - Nesting-aware complexity calculation that better reflects code understandability
-  - Switch statements count as +1 regardless of case count (vs CCN which counts each case)
-  - Binary logical operator sequences counted more intuitively
   - See `cognitive_complexity_theory.rst` for full specification
-  - Add PL/SQL language support
-  
-### Improvements
-- Comprehensive test suite with 50+ new tests for Cognitive Complexity across multiple languages
-- Updated documentation with Cognitive Complexity usage examples
 
 
 ## 1.19.0
