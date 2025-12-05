@@ -1109,7 +1109,8 @@ def main(argv=None):
         sys.stdout = original_stdout
         output_file.close()
     if 0 <= options.number < warning_count:
-        sys.exit(1)
+        return 1
+    return 0
 
 
 def print_extension_results(extensions):
@@ -1119,4 +1120,4 @@ def print_extension_results(extensions):
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
