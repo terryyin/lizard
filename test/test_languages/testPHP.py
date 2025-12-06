@@ -359,3 +359,32 @@ class NotebookApp {
         # Verify cyclomatic complexity for method with conditionals
         process_order = next(f for f in functions if f.name == 'Product::processOrder')
         self.assertEqual(7, process_order.cyclomatic_complexity)  # Current behavior shows 7 for this method
+
+    def test_trait_with_multiple_functions(self):
+        """Test that traits with multiple functions are parsed correctly.
+
+        Bug reported in GitHub issue: traits only detected the first function
+        and treated it as spanning the entire file.
+        """
+        php_code = '''<?php
+trait A {
+    function foo() {
+        return 1;
+    }
+
+    function bar() {
+        return 2;
+    }
+}
+?>'''
+        functions = get_php_function_list(php_code)
+        self.assertEqual(2, len(functions))
+        function_names = sorted(f.name for f in functions)
+        self.assertIn('A::foo', function_names)
+        self.assertIn('A::bar', function_names)
+
+        # Verify each function has correct metrics
+        foo = next(f for f in functions if f.name == 'A::foo')
+        bar = next(f for f in functions if f.name == 'A::bar')
+        self.assertEqual(3, foo.nloc)  # 3 lines of code
+        self.assertEqual(3, bar.nloc)  # 3 lines of code
