@@ -359,3 +359,20 @@ class NotebookApp {
         # Verify cyclomatic complexity for method with conditionals
         process_order = next(f for f in functions if f.name == 'Product::processOrder')
         self.assertEqual(7, process_order.cyclomatic_complexity)  # Current behavior shows 7 for this method
+
+    def test_use_function_does_not_override_first_function(self):
+        """Test that 'use function' import statements don't override actual function names.
+
+        Bug: https://github.com/terryyin/lizard/issues/442
+        """
+        php_code = '''<?php
+use function bar;
+class A {
+    function foo() {
+        return 1;
+    }
+}
+'''
+        functions = get_php_function_list(php_code)
+        self.assertEqual(1, len(functions))
+        self.assertEqual('A::foo', functions[0].name)
