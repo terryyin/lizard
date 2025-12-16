@@ -70,6 +70,8 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
         self.structure_piles = [0]
 
     def pile_up_within_block(self):
+        if not self.structure_piles:
+            return
         self.structure_piles[-1] += 1
         cur_level = sum(self.structure_piles)
         # Is there a path around _state_global?
@@ -85,9 +87,10 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
         if token == '{':
             self.structure_piles.append(0)
         elif token in ';}':
-            if token == '}':
+            if token == '}' and self.structure_piles:
                 self.structure_piles.pop()
-            self._state = self._block_ending
+            if self.structure_piles:
+                self._state = self._block_ending
         elif token in self.structures:
             self._state = self._in_structure_head
 
@@ -98,6 +101,9 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
         self._state(token)
 
     def _block_ending(self, token):
+        if not self.structure_piles:
+            self._state = self._state_global
+            return self._state(token)
         if token in self.matching_structures:
             self.structure_piles[-1] -= 1
         else:

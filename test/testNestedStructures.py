@@ -1,7 +1,7 @@
 import unittest
 
 from .testHelpers import get_cpp_function_list_with_extension, \
-    get_python_function_list_with_extension
+    get_python_function_list_with_extension, get_swift_function_list_with_extension
 from lizard_ext.lizardns import LizardExtension as NestedStructure
 
 
@@ -11,6 +11,10 @@ def process_cpp(source):
 
 def process_python(source):
     return get_python_function_list_with_extension(source, NestedStructure())
+
+
+def process_swift(source):
+    return get_swift_function_list_with_extension(source, NestedStructure())
 
 
 class TestCppNestedStructures(unittest.TestCase):
@@ -515,3 +519,79 @@ class X: #TestPythonNestedStructures(unittest.TestCase):
                     print(j)
         """)
         self.assertEqual(2, result[0].max_nested_structures)
+
+
+class TestSwiftNestedStructures(unittest.TestCase):
+    """Test nested structures extension with Swift code."""
+
+    def test_swift_trailing_closure_with_label(self):
+        """Swift trailing closure syntax should not crash the extension.
+        
+        This tests the fix for unbalanced braces from the parser's perspective
+        when using Swift's trailing closure syntax with labels like:
+        } contentStates: {
+        """
+        result = process_swift("""
+        struct Test {
+            func hello() {
+                if true {
+                    print("hello")
+                }
+            }
+        }
+        """)
+        self.assertEqual(1, result[0].max_nested_structures)
+
+    def test_swift_preview_macro_does_not_crash(self):
+        """Swift #Preview macro with trailing closures should not crash.
+        
+        The #Preview macro uses trailing closure syntax that can produce
+        unbalanced braces from the parser's perspective.
+        """
+        result = process_swift("""
+        struct Widget {
+            func render() {
+                for item in items {
+                    if item.visible {
+                        draw(item)
+                    }
+                }
+            }
+        }
+        
+        #Preview("Test") {
+            Widget()
+        } contentStates: {
+            State()
+        }
+        """)
+        self.assertEqual(2, result[0].max_nested_structures)
+
+    def test_swift_unbalanced_closing_brace_semicolon(self):
+        """Standalone }; pattern should not crash the extension.
+        
+        This is a minimal reproduction case for the IndexError that occurred
+        when structure_piles became empty.
+        """
+        # This should not raise an exception
+        result = process_swift("};")
+        self.assertEqual(0, len(result))
+
+    def test_swift_multiple_trailing_closures(self):
+        """Multiple trailing closures should be handled gracefully."""
+        result = process_swift("""
+        struct View {
+            func body() {
+                VStack {
+                    if condition {
+                        Text("Hello")
+                    }
+                } label: {
+                    Image()
+                } trailing: {
+                    Button()
+                }
+            }
+        }
+        """)
+        self.assertEqual(1, result[0].max_nested_structures)
