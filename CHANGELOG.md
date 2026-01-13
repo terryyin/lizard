@@ -1,5 +1,17 @@
 # Change Log
 
+## 1.20.0
+
+### Bug Fixes
+- Fix IndexError crash when parsing C++ raw string literals containing braces (issue #451)
+  - Added proper tokenization for C++ raw string literals (R"delimiter(content)delimiter")
+  - Enhanced lizardns extension with defensive invariant protection
+  - Prevents misinterpretation of braces within string literals as structural elements
+
+### Improvements
+- Improved robustness of nested structures counting extension
+- Better error handling for edge cases in tokenization
+
 ## 1.19.0
 
 ### New Features
