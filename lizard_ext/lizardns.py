@@ -67,10 +67,35 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
 
     def __init__(self):
         super(LizardExtension, self).__init__(None)
-        self.structure_piles = [0]
+        self.structure_piles = [0]  # Invariant: must always have at least one element
+
+    def _push_scope(self):
+        """Push a new scope level. Safe to call anytime."""
+        self.structure_piles.append(0)
+
+    def _pop_scope(self):
+        """Pop a scope level. Maintains invariant of at least one element."""
+        if len(self.structure_piles) > 1:
+            self.structure_piles.pop()
+
+    def _increment_current_scope(self):
+        """Increment structure count in current scope. Safe even if piles corrupted."""
+        if not self.structure_piles:
+            self.structure_piles = [0]  # Restore invariant
+        self.structure_piles[-1] += 1
+
+    def _reset_or_decrement_current_scope(self, decrement=False):
+        """Reset or decrement current scope counter. Safe even if piles corrupted."""
+        if not self.structure_piles:
+            self.structure_piles = [0]  # Restore invariant
+            return
+        if decrement:
+            self.structure_piles[-1] -= 1
+        else:
+            self.structure_piles[-1] = 0
 
     def pile_up_within_block(self):
-        self.structure_piles[-1] += 1
+        self._increment_current_scope()
         cur_level = sum(self.structure_piles)
         # Is there a path around _state_global?
         if not hasattr(self.context.current_function, "max_nested_structures"):
@@ -83,10 +108,10 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
         if not hasattr(self.context.current_function, "max_nested_structures"):
             self.context.current_function.max_nested_structures = 0
         if token == '{':
-            self.structure_piles.append(0)
+            self._push_scope()
         elif token in ';}':
             if token == '}':
-                self.structure_piles.pop()
+                self._pop_scope()
             self._state = self._block_ending
         elif token in self.structures:
             self._state = self._in_structure_head
@@ -98,10 +123,8 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
         self._state(token)
 
     def _block_ending(self, token):
-        if token in self.matching_structures:
-            self.structure_piles[-1] -= 1
-        else:
-            self.structure_piles[-1] = 0
+        decrement = token in self.matching_structures
+        self._reset_or_decrement_current_scope(decrement=decrement)
         self._state = self._state_global
         self._state(token)
 
