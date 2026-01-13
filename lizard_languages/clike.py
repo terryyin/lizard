@@ -32,8 +32,11 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
-        # Add pattern for floating point literals to the token generation
-        addition = r"|(?:\d*\.\d+(?:[eE][-+]?\d+)?)" + \
+        # Add pattern for C++ raw string literals R"delimiter(content)delimiter"
+        # The delimiter can be empty or up to 16 chars (excluding parentheses, backslash, whitespace)
+        # Using a simplified pattern that handles most cases
+        addition = r"|R\"[^(\\]*\((?:[^)]|\)[^\"])*\)[^(\\]*\"" + \
+                  r"|(?:\d*\.\d+(?:[eE][-+]?\d+)?)" + \
                   r"|(?:\d+\.(?:\d+)?(?:[eE][-+]?\d+)?)" + \
                   addition
         return CodeReader.generate_tokens(source_code, addition, token_class)

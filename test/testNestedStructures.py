@@ -402,6 +402,34 @@ class TestCppNestedStructures(unittest.TestCase):
         ''')
         self.assertEqual(2, result[0].max_nested_structures)
 
+    def test_raw_string_literal_with_delimiter(self):
+        """Raw string literals with delimiters should be handled correctly."""
+        result = process_cpp(r'''
+        int fun() {
+            const char* s = R"delim(some {content} with )delim";
+            if (true) {
+                return 1;
+            }
+            return 0;
+        }
+        ''')
+        self.assertEqual(1, result[0].max_nested_structures)
+
+    def test_raw_string_literal_simple(self):
+        """Simple raw string literals should not interfere with complexity counting."""
+        result = process_cpp(r'''
+        int fun() {
+            const char* s = R"(hello world)";
+            if (a) {
+                if (b) {
+                    return c;
+                }
+            }
+            return 0;
+        }
+        ''')
+        self.assertEqual(2, result[0].max_nested_structures)
+
 
 class X: #TestPythonNestedStructures(unittest.TestCase):
 
