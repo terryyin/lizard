@@ -375,6 +375,33 @@ class TestCppNestedStructures(unittest.TestCase):
         """)
         self.assertEqual(1, result[0].max_nested_structures)
 
+    def test_raw_string_literal_with_braces(self):
+        """Raw string literals containing braces should not cause IndexError."""
+        result = process_cpp(r'''
+        int main() {
+            const char* json = R"({
+  "name": "Ada Lovelace",
+  "id": 101,
+  "languages": ["C++", "Python", "Assembly"],
+  "active": true,
+  "profile": {
+    "bio": "Mathematician & pioneer",
+    "links": {
+      "website": "https://example.com/ada",
+      "github": "https://github.com/ada"
+    }
+  }
+})";
+            for (int i = 1; i <= 3; ++i) {
+                for (int j = 1; j <= 3; ++j) {
+                    return i + j;
+                }
+            }
+            return 0;
+        }
+        ''')
+        self.assertEqual(2, result[0].max_nested_structures)
+
 
 class X: #TestPythonNestedStructures(unittest.TestCase):
 
