@@ -3,6 +3,9 @@
 ## 1.21.0
 
 ### Bug Fixes
+- Fix PHP parser incorrectly treating "use function" imports as function declarations (issue #442)
+  - PHP parser now correctly ignores function names in "use function" statements
+  - Function names are no longer overridden by imported function names
 - Fix Java parser incorrectly treating "record" variable names as keywords (issue #453)
   - Java parser now correctly distinguishes between the `record` keyword and variables named "record"
   - Variables named "record" inside method bodies are no longer misinterpreted as class declarations
