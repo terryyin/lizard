@@ -359,3 +359,43 @@ class NotebookApp {
         # Verify cyclomatic complexity for method with conditionals
         process_order = next(f for f in functions if f.name == 'Product::processOrder')
         self.assertEqual(7, process_order.cyclomatic_complexity)  # Current behavior shows 7 for this method
+
+    def test_use_function_statement_does_not_override_function_name(self):
+        """Test for issue #442: use function statements should not override function names"""
+        php_code = '''<?php
+use function bar;
+class A {
+    function foo() {
+        return 1;
+    }
+}
+?>'''
+        functions = get_php_function_list(php_code)
+        self.assertEqual(1, len(functions))
+        # The function name should be foo, not bar
+        self.assertEqual('A::foo', functions[0].name)
+        
+    def test_multiple_use_function_statements(self):
+        """Test multiple use function statements don't interfere with actual functions"""
+        php_code = '''<?php
+use function bar;
+use function baz;
+
+function realFunction() {
+    return 1;
+}
+
+class MyClass {
+    function myMethod() {
+        return 2;
+    }
+}
+?>'''
+        functions = get_php_function_list(php_code)
+        self.assertEqual(2, len(functions))
+        function_names = sorted([f.name for f in functions])
+        self.assertIn('realFunction', function_names)
+        self.assertIn('MyClass::myMethod', function_names)
+        # bar and baz should not be in the function list
+        self.assertNotIn('bar', function_names)
+        self.assertNotIn('baz', function_names)

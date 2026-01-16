@@ -29,13 +29,21 @@ class PHPLanguageStates(CodeStateMachine):
         self.assignments = []
         self.in_match = False
         self.match_case_count = 0
+        self.in_use_statement = False
 
     def _state_global(self, token):
-        if token == 'class':
+        if token == 'use':
+            # Enter use statement mode
+            self.in_use_statement = True
+        elif token == ';':
+            # End of use statement or any other statement
+            self.in_use_statement = False
+        elif token == 'class':
             self._state = self._class_declaration
         elif token == 'trait':
             self._state = self._trait_declaration
-        elif token == 'function':
+        elif token == 'function' and not self.in_use_statement:
+            # Only treat 'function' as function declaration if not in use statement
             self.is_function_declaration = True
             self._state = self._function_name
         elif token == 'fn':
