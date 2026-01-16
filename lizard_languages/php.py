@@ -192,7 +192,7 @@ class PHPLanguageStates(CodeStateMachine):
             self.brace_level += 1
         elif token == '}':
             self.brace_level -= 1
-            if self.brace_level == self.in_class:  # Using in_class as boolean (0/1)
+            if self.brace_level == (1 if (self.in_class or self.in_trait) else 0):
                 # End of function
                 if self.started_function:
                     self.context.end_of_function()
