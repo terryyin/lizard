@@ -29,21 +29,17 @@ class PHPLanguageStates(CodeStateMachine):
         self.assignments = []
         self.in_match = False
         self.match_case_count = 0
-        self.in_use_statement = False
 
     def _state_global(self, token):
         if token == 'use':
-            # Enter use statement mode
-            self.in_use_statement = True
-        elif token == ';':
-            # End of use statement or any other statement
-            self.in_use_statement = False
+            # Enter use statement state
+            self._state = self._state_use
         elif token == 'class':
             self._state = self._class_declaration
         elif token == 'trait':
             self._state = self._trait_declaration
-        elif token == 'function' and not self.in_use_statement:
-            # Only treat 'function' as function declaration if not in use statement
+        elif token == 'function':
+            # Treat 'function' as function declaration
             self.is_function_declaration = True
             self._state = self._function_name
         elif token == 'fn':
@@ -95,6 +91,13 @@ class PHPLanguageStates(CodeStateMachine):
                 pass
             else:
                 self.last_tokens = ''
+
+    def _state_use(self, token):
+        """Handle use statements (use function, use const, etc.)"""
+        if token == ';':
+            # End of use statement, return to global state
+            self._state = self._state_global
+        # Ignore all other tokens in use statements
 
     def _trait_declaration(self, token):
         if token and not token.isspace() and token not in ['{', '(']:
