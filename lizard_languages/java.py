@@ -54,11 +54,15 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
 
     def _try_start_a_class(self, token):
         if token in ("class", "record", "enum"):
+            # "record" inside method bodies is a variable name, not a keyword
+            if token == "record" and self.in_method_body:
+                return False
             self.class_name = None
             self.is_record = token == "record"
             self.in_record_constructor = False
             self._state = self._state_class_declaration
             return True
+        return False
 
     def _state_global(self, token):
         if token == '@':

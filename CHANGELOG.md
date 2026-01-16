@@ -1,5 +1,12 @@
 # Change Log
 
+## 1.21.0
+
+### Bug Fixes
+- Fix Java parser incorrectly treating "record" variable names as keywords (issue #453)
+  - Java parser now correctly distinguishes between the `record` keyword and variables named "record"
+  - Variables named "record" inside method bodies are no longer misinterpreted as class declarations
+
 ## 1.20.0
 
 ### Bug Fixes

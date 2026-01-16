@@ -483,3 +483,22 @@ public class TestWildcard {
                 1, func.cyclomatic_complexity,
                 f"Function {func.name} should have CCN=1, got "
                 f"{func.cyclomatic_complexity}")
+
+    def test_record_as_variable_name(self):
+        """Test for issue #453: 'record' as variable name should not be treated as record keyword"""
+        code = """
+public class Example {
+    public void process() {
+        String record = "test";
+        System.out.println(record);
+    }
+    
+    public void anotherMethod() {
+        System.out.println("hello");
+    }
+}
+"""
+        result = get_java_function_list(code)
+        self.assertEqual(2, len(result))
+        self.assertEqual("Example::process", result[0].name)
+        self.assertEqual("Example::anotherMethod", result[1].name)
