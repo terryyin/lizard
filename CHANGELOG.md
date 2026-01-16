@@ -6,6 +6,12 @@
 - Fix Java parser incorrectly treating "record" variable names as keywords (issue #453)
   - Java parser now correctly distinguishes between the `record` keyword and variables named "record"
   - Variables named "record" inside method bodies are no longer misinterpreted as class declarations
+- Fix C++ lambda parsing state machine issues (issue #443)
+  - Fixed lambda capture state incorrectly transitioning to global state instead of parameter parsing
+  - Added proper bracket tracking for lambda parameter lists and bodies
+  - Improved handling of nested brackets within lambda expressions
+  - Added support for lambda qualifiers (mutable, noexcept, constexpr, consteval)
+  - Added test case for multiple functions with static_cast expressions
 
 ## 1.20.0
 

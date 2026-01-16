@@ -94,7 +94,7 @@ class CodeReader:
     ext = []
     languages = None
     extra_subclasses = set()
-    
+
     # Condition categories - separate types that contribute to cyclomatic complexity
     _control_flow_keywords = {'if', 'for', 'while', 'catch'}
     _logical_operators = {'&&', '||'}
@@ -104,21 +104,21 @@ class CodeReader:
     @classmethod
     def _build_conditions(cls):
         """Build combined conditions set from separated categories.
-        
+
         Returns combined set of all condition types for CCN calculation.
         """
-        return (cls._control_flow_keywords | 
-                cls._logical_operators | 
-                cls._case_keywords | 
+        return (cls._control_flow_keywords |
+                cls._logical_operators |
+                cls._case_keywords |
                 cls._ternary_operators)
 
     def __init__(self, context):
         self.parallel_states = []
         self.context = context
-        
+
         # Build combined conditions set from separated categories
         self.conditions = copy(self.__class__._build_conditions())
-        
+
         # Expose individual categories for extensions
         self.control_flow_keywords = copy(self.__class__._control_flow_keywords)
         self.logical_operators = copy(self.__class__._logical_operators)

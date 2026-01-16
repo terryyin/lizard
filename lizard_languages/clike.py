@@ -322,53 +322,77 @@ class CLikeStates(CodeStateMachine):
     def _state_lambda_check(self, token):
         """Check if this is a lambda expression or a function attribute."""
         if token == ']':
-            # This is a lambda expression [](params) or [capture](params)
-            # Skip the lambda and continue parsing normally
+            # This is an empty capture list [](params)
             self._state = self._state_lambda_params
         elif token == '[':
             # This is a function attribute [[attribute]]
             self._state = self._state_attribute
         else:
             # This is a lambda with capture list [capture](params)
-            # Skip until we find the closing bracket
             self._state = self._state_lambda_capture
 
     def _state_lambda_params(self, token):
         """Handle lambda parameters and body."""
         if token == '(':
-            # Start of parameter list, skip until closing parenthesis
+            # Start of parameter list
+            self.bracket_stack.append('(')
             self._state = self._state_lambda_param_list
         else:
-            # No parameters, check for body
+            # No parameters, check for body or go back to global
             self._state = self._state_lambda_body
+            self._state(token)
 
     def _state_lambda_param_list(self, token):
-        """Handle lambda parameter list."""
-        if token == ')':
-            # End of parameter list, check for body
-            self._state = self._state_lambda_body
-        # Otherwise, continue in parameter list
+        """Handle lambda parameter list with proper bracket tracking."""
+        if token == '(':
+            self.bracket_stack.append('(')
+        elif token == ')':
+            if self.bracket_stack and self.bracket_stack[-1] == '(':
+                self.bracket_stack.pop()
+                if not self.bracket_stack:
+                    # End of parameter list, check for body
+                    self._state = self._state_lambda_body
+        elif token in ('<', '['):
+            self.bracket_stack.append(token)
+        elif token == '>' and self.bracket_stack and self.bracket_stack[-1] == '<':
+            self.bracket_stack.pop()
+        elif token == ']' and self.bracket_stack and self.bracket_stack[-1] == '[':
+            self.bracket_stack.pop()
 
     def _state_lambda_body(self, token):
-        """Handle lambda body."""
+        """Handle lambda body and qualifiers."""
         if token == '{':
-            # Start of lambda body, skip until closing brace
+            # Start of lambda body
+            self.bracket_stack.append('{')
             self._state = self._state_lambda_body_skip
-        elif token == ';':
-            # Lambda without body, just a semicolon
+        elif token in ('mutable', 'noexcept', 'constexpr', 'consteval'):
+            # Lambda qualifiers, stay in this state
+            pass
+        elif token == '->':
+            # Trailing return type, stay in this state until we find '{'
+            pass
+        elif token in (';', ',', ')'):
+            # Lambda declaration ended, return to global
             self._state = self._state_global
-        # Otherwise, continue
+            self._state(token)
+        else:
+            # Other tokens (type names, etc.) - stay in state
+            pass
 
     def _state_lambda_body_skip(self, token):
-        """Skip lambda body until closing brace."""
-        if token == '}':
-            # End of lambda body, continue parsing normally
-            self._state = self._state_global
-        # Otherwise, continue skipping
+        """Skip lambda body with proper brace tracking."""
+        if token == '{':
+            self.bracket_stack.append('{')
+        elif token == '}':
+            if self.bracket_stack and self.bracket_stack[-1] == '{':
+                self.bracket_stack.pop()
+                if not self.bracket_stack:
+                    # End of lambda body
+                    self._state = self._state_global
 
     def _state_lambda_capture(self, token):
         """Handle lambda capture list."""
         if token == ']':
-            # End of capture list, continue parsing normally
-            self._state = self._state_global
+            # End of capture list, now expect parameters
+            self._state = self._state_lambda_params
         # Otherwise, continue in capture list
