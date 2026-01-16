@@ -764,3 +764,34 @@ void process() {
         # Should find the process function
         self.assertEqual(1, len(result))
         self.assertEqual("process", result[0].name)
+
+    def test_multiple_functions_with_static_cast_issue_443(self):
+        """Test multiple void functions with multiple static_cast calls (issue #443)."""
+        # This reproduces a bug where lizard.analyze would freeze when iterating
+        # through the result map when analyzing files with multiple void functions
+        # containing multiple static_cast<...> calls
+        code = """
+void func1() {
+    int a = static_cast<int>(1.5);
+    double b = static_cast<double>(2);
+    long c = static_cast<long>(3.0);
+}
+
+void func2() {
+    int x = static_cast<int>(4.5);
+    double y = static_cast<double>(5);
+    long z = static_cast<long>(6.0);
+}
+
+void func3() {
+    int p = static_cast<int>(7.5);
+    double q = static_cast<double>(8);
+    long r = static_cast<long>(9.0);
+}
+"""
+        result = get_cpp_function_list(code)
+        # Should find all three functions without freezing
+        self.assertEqual(3, len(result))
+        self.assertEqual("func1", result[0].name)
+        self.assertEqual("func2", result[1].name)
+        self.assertEqual("func3", result[2].name)
