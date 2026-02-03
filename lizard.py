@@ -604,9 +604,16 @@ def warning_filter(option, module_infos):
     for file_info in module_infos:
         if file_info:
             for fun in file_info.function_list:
-                if any(getattr(fun, attr) > limit for attr, limit in
-                       option.thresholds.items()):
-                    yield fun
+                violated_metrics = [
+                    attr for attr, limit in option.thresholds.items()
+                    if getattr(fun, attr) > limit
+                ]
+                if not violated_metrics:
+                    continue
+                forgiven = getattr(fun, 'forgiven_metrics', set())
+                if all(metric in forgiven for metric in violated_metrics):
+                    continue
+                yield fun
 
 
 def whitelist_filter(warnings, script=None, whitelist=None):
