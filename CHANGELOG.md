@@ -2,6 +2,12 @@
 
 ## 1.21.0
 
+### New Features
+- Add selective metric forgiveness (issue #455)
+  - Use `#lizard forgives(length)` to forgive only specific metrics
+  - Use `#lizard forgives(length, parameter_count)` for multiple metrics
+  - `#lizard forgives` without parentheses continues to forgive all metrics (backward compatible)
+
 ### Bug Fixes
 - Fix PHP parser incorrectly treating "use function" imports as function declarations (issue #442)
   - PHP parser now correctly ignores function names in "use function" statements
