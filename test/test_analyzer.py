@@ -129,6 +129,18 @@ class TestWarningFilter(unittest.TestCase):
         self.assertEqual(1, len(warnings))
         self.assertEqual("long_complex", warnings[0].name)
 
+    def test_should_filter_when_all_violated_metrics_forgiven(self):
+        fun = FunctionInfo("multi", '', 1)
+        fun.end_line = 2000  # length violated
+        fun.full_parameters = ['a'] * 5  # 5 params
+        fun.forgiven_metrics = {'length', 'parameter_count'}
+        option = Mock(thresholds={
+            'cyclomatic_complexity': 15,
+            'length': 1000,
+            'parameter_count': 3})
+        warnings = list(warning_filter(option, [FileInformation("f", 1, [fun])]))
+        self.assertEqual(0, len(warnings))
+
 class TestWarningFilterWithWhitelist(unittest.TestCase):
 
     WARNINGS = [FunctionInfo("foo", 'filename'),

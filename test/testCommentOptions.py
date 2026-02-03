@@ -25,3 +25,11 @@ class TestCommentOptions(unittest.TestCase):
         self.assertEqual(1, len(fileinfo.function_list))
         self.assertEqual({'length'}, fileinfo.function_list[0].forgiven_metrics)
 
+    def test_function_with_multiple_metrics_forgiveness(self):
+        fileinfo = get_cpp_fileinfo(
+            "void foo(){/* #lizard forgives(length, parameter_count) */}")
+        self.assertEqual(1, len(fileinfo.function_list))
+        self.assertEqual(
+            {'length', 'parameter_count'},
+            fileinfo.function_list[0].forgiven_metrics)
+
