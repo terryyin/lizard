@@ -33,3 +33,7 @@ class TestCommentOptions(unittest.TestCase):
             {'length', 'parameter_count'},
             fileinfo.function_list[0].forgiven_metrics)
 
+    def test_function_with_forgives_without_parentheses_still_works(self):
+        function_list = get_cpp_function_list("void foo(){/* #lizard forgives */}")
+        self.assertEqual(0, len(function_list))
+
