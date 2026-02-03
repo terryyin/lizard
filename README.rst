@@ -318,6 +318,15 @@ behavior of lizard. There are two types of forgiveness comments:
        ...
    }
 
+   Selective forgiveness: Use "#lizard forgives(metric1, metric2)" to forgive only specific metrics (e.g. length, cyclomatic_complexity, parameter_count, nloc, token_count).
+
+::
+
+   int foo() {
+       // #lizard forgives(length)  // Forgive only length violations
+       ...
+   }
+
 2. Global code forgiveness: Put "#lizard forgive global" before global code to suppress warnings for all code outside of functions.
 
 ::
