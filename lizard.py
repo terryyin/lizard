@@ -291,6 +291,7 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
         self.fan_out = 0
         self.general_fan_out = 0
         self.max_nesting_depth = 0  # Initialize max_nesting_depth to 0
+        self.forgiven_metrics = set()
 
     @property
     def name_in_space(self):
@@ -509,9 +510,15 @@ def comment_counter(tokens, reader):
         if comment is not None:
             for _ in comment.splitlines()[1:]:
                 yield '\n'
-            if comment.strip().startswith("#lizard forgive global"):
+            stripped = comment.strip()
+            if stripped.startswith("#lizard forgive global"):
                 reader.context.forgive_global = True
-            elif comment.strip().startswith("#lizard forgive"):
+            elif stripped.startswith("#lizard forgives("):
+                match = re.search(r'#lizard forgives?\(([^)]*)\)', stripped)
+                if match:
+                    metrics = {m.strip() for m in match.group(1).split(',') if m.strip()}
+                    reader.context.current_function.forgiven_metrics.update(metrics)
+            elif stripped.startswith("#lizard forgive"):
                 reader.context.forgive = True
             if "GENERATED CODE" in comment:
                 return
