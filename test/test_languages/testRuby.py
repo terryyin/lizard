@@ -387,6 +387,47 @@ class Test_parser_for_Ruby_if_while_for(unittest.TestCase):
 
 
 
+class Test_parser_for_Ruby_performance(unittest.TestCase):
+
+    def test_no_hang_with_lt_operator_and_question_mark_methods(self):
+        # Regression test for catastrophic backtracking caused by the generic
+        # type lookahead regex when source has '<' (inheritance operator) and
+        # many '?' method calls (like .nil?, .blank?, .present?).
+        import threading
+
+        result_holder = []
+        exception_holder = []
+
+        def run():
+            try:
+                result_holder.append(get_ruby_function_list('''
+class WidgetController < ApplicationController
+  def list
+    @group_id = params[:search][:group_id] if params[:search] && params[:search][:group_id]
+    should_display = params[:search].present? || params[:sort].present?
+  end
+  def adapt
+    return unless request.post?
+    @widget_params = params[:presenter] || {}
+    @widget_params[:group_id] = actual_id if @widget_params[:group_id].blank?
+    @widget_params[:start_date] = Time.use_zone(TZ) { strptime(params.dig(:p, :d)) } if params.dig(:p, :d).present?
+    @widget_params[:label] = nil if params.dig(:p, :label).blank?
+  end
+end
+                '''))
+            except Exception as e:
+                exception_holder.append(e)
+
+        t = threading.Thread(target=run)
+        t.start()
+        t.join(timeout=5)
+        if t.is_alive():
+            self.fail("Ruby parser hung on file with '<' operator and '?' method calls")
+        if exception_holder:
+            raise exception_holder[0]
+        self.assertEqual(2, len(result_holder[0]))
+
+
 class Test_parser_for_Ruby_def(unittest.TestCase):
     def test_class_method(self):
         result = get_ruby_function_list('''
