@@ -29,6 +29,12 @@ import os
 from fnmatch import fnmatch
 import hashlib
 
+# Add script directory to sys.path for Python embeddable package / running from source
+# See: https://github.com/terryyin/lizard/issues/460
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+if _script_dir not in sys.path:
+    sys.path.insert(0, _script_dir)
+
 if sys.version[0] == '2':
     from future_builtins import map, filter  # pylint: disable=W0622, F0401
 

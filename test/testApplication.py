@@ -1,4 +1,5 @@
 import unittest
+import subprocess
 from mock import patch
 import lizard
 import os
@@ -99,3 +100,15 @@ class IntegrationTests(unittest.TestCase):
         self.assertFalse(mock_exit.called)
         self.runApplicationWithArgv(['lizard', '-i', '-1'])
         self.assertFalse(mock_exit.called)
+
+    def test_lizard_script_runs_with_version(self):
+        """Test lizard.py runs correctly when executed as script (issue #460)."""
+        lizard_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        lizard_py = os.path.join(lizard_dir, 'lizard.py')
+        result = subprocess.run(
+            [sys.executable, lizard_py, '--version'],
+            capture_output=True,
+            text=True,
+            cwd=lizard_dir,
+        )
+        self.assertEqual(result.returncode, 0, msg=result.stderr or result.stdout)
