@@ -31,9 +31,28 @@ import hashlib
 
 # Add script directory to sys.path for Python embeddable package / running from source
 # See: https://github.com/terryyin/lizard/issues/460
-_script_dir = os.path.dirname(os.path.abspath(__file__))
-if _script_dir not in sys.path:
-    sys.path.insert(0, _script_dir)
+# Use both __file__ and sys.argv[0]: embeddable Python on Windows may resolve them differently
+
+
+def _script_dirs():
+    dirs = []
+    try:
+        d = os.path.dirname(os.path.abspath(__file__))
+        if d:
+            dirs.append(d)
+    except NameError:
+        pass
+    if sys.argv and sys.argv[0]:
+        d = os.path.dirname(os.path.abspath(sys.argv[0]))
+        if d and d not in dirs:
+            dirs.append(d)
+    return dirs
+
+
+for _script_dir in _script_dirs():
+    if _script_dir not in sys.path:
+        sys.path.insert(0, _script_dir)
+
 
 if sys.version[0] == '2':
     from future_builtins import map, filter  # pylint: disable=W0622, F0401
