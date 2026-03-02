@@ -53,6 +53,13 @@ class Test_tokenizing_Ruby(unittest.TestCase):
     def test_shorthand_symbol(self):
         self.check_tokens(['class:', 'a'], r'''class:a''')
 
+    def test_percent_i_symbol_array(self):
+        """Ruby %i[] and %I[] - symbol array literals (issue #457)"""
+        self.check_tokens(
+            ['only:', ' ', '%i[add check_duplicate update_type_fields]'],
+            'only: %i[add check_duplicate update_type_fields]')
+        self.check_tokens(['%I[a b c]'], '%I[a b c]')
+
     def test_tokenizing_string_expression(self):
         self.check_tokens(['%{"}'], r'''%{"}''')
         self.check_tokens(['%{""}'], r'''%{""}''')
@@ -409,3 +416,20 @@ class Test_parser_for_Ruby_def(unittest.TestCase):
             end
                 ''')
         self.assertEqual(2, result[0].parameter_count)
+
+    def test_rails_controller_with_percent_i_and_safe_navigation(self):
+        """Issue #457: Parser must not hang on %i[] and &. constructs"""
+        code = '''
+before_action :adapt_widget_params, only: %i[add check_duplicate update_type_fields]
+def adapt_widget_params
+  @account_group_id = params[:presenter]&.delete(:account_group_id)
+  @widget_params = params[:presenter] || {}
+end
+def adapt_search_params
+  @account_group_id = params[:search]&.delete(:account_group_id)
+end
+'''
+        result = get_ruby_function_list(code)
+        self.assertEqual(2, len(result))
+        self.assertEqual("adapt_widget_params", result[0].name)
+        self.assertEqual("adapt_search_params", result[1].name)
