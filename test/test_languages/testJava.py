@@ -79,6 +79,19 @@ public String funcB() {
         self.assertEqual("A", result[0].name)
         self.assertEqual(1, result[0].cyclomatic_complexity)
 
+    def test_many_question_marks_after_less_than_no_freeze(self):
+        """Issue #459: Multiple ? after < causes catastrophic backtracking and freeze"""
+        code = """
+public void test() {
+    List<String> list = new ArrayList<>();
+    boolean b = list.size() < 10;
+    String str = "?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?";
+}
+"""
+        result = get_java_function_list(code)
+        self.assertEqual(1, len(result))
+        self.assertEqual("test", result[0].name)
+
     def test_record(self):
         result = get_java_function_list("""
             record Point(int x, int y) {

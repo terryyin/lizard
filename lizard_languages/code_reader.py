@@ -162,7 +162,7 @@ class CodeReader:
                 r"|\/\/" + _until_end +
                 r"|\#" +
                 r"|:=|::|\*\*" +
-                r"|\<(?=(?:[^<>]*\?)+[^<>]*\>)(?:[\w\s,.?]|(?:extends))+\>" +
+                r"|\<(?=(?:[^<>?]*\?)+[^<>]*\>)(?:[\w\s,.?]|(?:extends))+\>" +
                 r"|" + r"|".join(re.escape(s) for s in combined_symbols) +
                 r"|\\\n" +
                 r"|\n" +
