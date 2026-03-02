@@ -3,7 +3,7 @@
 #
 import unittest
 import sys
-from mock import patch, Mock
+from unittest.mock import patch, Mock
 from lizard_languages import CLikeReader
 from lizard import map_files_to_analyzer, FunctionInfo, analyze_file, FileInfoBuilder
 

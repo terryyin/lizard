@@ -1,6 +1,6 @@
 import unittest
 import sys
-from mock import Mock, patch
+from unittest.mock import Mock, patch
 from test.helper_stream import StreamStdoutTestCase
 import os
 from lizard import print_warnings, print_and_save_modules, FunctionInfo, FileInformation,\

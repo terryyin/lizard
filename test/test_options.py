@@ -1,6 +1,6 @@
 import unittest
 from lizard import parse_args
-from mock import patch
+from unittest.mock import patch
 import sys
 try:
     from StringIO import StringIO

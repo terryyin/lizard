@@ -1,6 +1,6 @@
 import unittest
 import platform
-from mock import patch
+from unittest.mock import patch
 from lizard import get_all_source_files
 import os
 

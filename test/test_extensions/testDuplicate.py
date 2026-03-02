@@ -1,5 +1,5 @@
 import unittest
-from mock import patch
+from unittest.mock import patch
 from ..testHelpers import get_cpp_fileinfo_with_extension
 from lizard_ext.lizardduplicate import LizardExtension as DuplicateDetector
 from lizard import analyze_files, get_extensions
