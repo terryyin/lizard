@@ -1,5 +1,14 @@
 # Change Log
 
+## 1.21.1
+
+### Bug Fixes
+- Fix Ruby parser hang on %i[] and %I[] symbol array literals (issue #457)
+- Fix regex in CodeReader to prevent catastrophic backtracking on multiple question marks after less than sign (issue #459)
+
+### Improvements
+- Add script directory to sys.path for running lizard.py from source (issue #460)
+
 ## 1.21.0
 
 ### New Features
