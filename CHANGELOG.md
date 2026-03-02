@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.21.2
+
 ### Bug Fixes
 - Fix nesting depth calculation for C++ `else if` chains (issue #418)
   - `else if () {}` is now treated as same nesting level as `if`, not as nested
