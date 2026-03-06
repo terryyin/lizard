@@ -318,8 +318,6 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
         self.fan_out = 0
         self.general_fan_out = 0
         self.max_nesting_depth = 0  # Initialize max_nesting_depth to 0
-        self.cognitive_complexity = 0  # Initialize cognitive_complexity to 0
-        self.initial_nesting_level = 0  # Track nesting level at function start (for JavaScript/TypeScript)
         self.forgiven_metrics = set()
 
     @property
@@ -466,8 +464,6 @@ class FileInfoBuilder(object):
         self.stacked_functions = []
         self.stacked_pending_functions = []  # Save pending_function for nested functions (PLSQL)
         self._nesting_stack = NestingStack()
-        self.lambda_depth = 0  # Track lambda nesting depth (for JavaScript/TypeScript)
-        self.has_top_level_increment = False  # Track if function has structural increments (JavaScript/TypeScript)
 
     def __getattr__(self, attr):
         # delegating to _nesting_stack
@@ -543,16 +539,6 @@ class FileInfoBuilder(object):
     def parameter(self, token):
         self.current_function.add_parameter(token)
 
-    def enter_lambda(self):
-        '''Track lambda/anonymous function entry (for JavaScript/TypeScript).
-        Increases lambda_depth but does not create new FunctionInfo.'''
-        self.lambda_depth += 1
-
-    def exit_lambda(self):
-        '''Track lambda/anonymous function exit (for JavaScript/TypeScript).'''
-        if self.lambda_depth > 0:
-            self.lambda_depth -= 1
-
     def end_of_function(self):
         if not self.forgive:
             if self.current_function.name != '*global*' or not self.forgive_global:
@@ -625,7 +611,6 @@ def condition_counter(tokens, reader):
         if token in conditions:
             reader.context.add_condition()
         yield token
-
 
 
 class FileAnalyzer(object):  # pylint: disable=R0903
@@ -1149,9 +1134,8 @@ def get_extensions(extension_names):
                     im('lizard_ext.lizard' + name.lower())
                     .LizardExtension()
                     if isinstance(name, str) else name)
-            index = len(existing) if not hasattr(ext, "ordering_index") else ext.ordering_index
-            # Handle Mock objects in tests that have Mock ordering_index
-            if hasattr(index, '_mock_name'):
+            index = getattr(ext, "ordering_index", None)
+            if not isinstance(index, int):
                 index = len(existing)
             existing.insert(index, ext)
         return existing

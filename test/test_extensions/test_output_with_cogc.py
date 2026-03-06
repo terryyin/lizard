@@ -1,7 +1,7 @@
 """Tests for output format when CogC extension is explicitly loaded"""
 import unittest
 import sys
-from mock import Mock
+from unittest.mock import Mock
 from test.helper_stream import StreamStdoutTestCase
 from lizard import (print_and_save_modules, FunctionInfo, FileInformation,
                    print_clang_style_warning, parse_args, get_extensions, OutputScheme)

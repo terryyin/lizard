@@ -48,33 +48,6 @@ class LizardExtension(object):  # pylint: disable=R0903
             dest="cogc_lines",
             default=False)
 
-    def _create_initial_state(self, reader):
-        """Create initial state dictionary for token processing."""
-        is_erlang = hasattr(reader, 'language_names') and 'erlang' in reader.language_names
-        is_python = hasattr(reader, 'language_names') and 'python' in reader.language_names
-
-        return {
-            'in_switch': False,
-            'switch_nesting': 0,
-            'after_else': False,
-            'in_do_while': False,
-            'after_break_continue': False,
-            'saw_question_mark': False,
-            'in_exception_block': False,
-            'after_loop_keyword': False,
-            'is_erlang': is_erlang,
-            'is_python': is_python,
-            'erlang_if_case_depth': 0,
-            'after_semicolon_in_if_case': False,
-            'after_dash_in_erlang': False,
-            'nesting_stack': [],
-            'brace_depth': 0,
-            'pending_nesting_increase': False,
-            'pending_try_block': False,
-            'try_block_stack': [],
-            'bracket_depth': 0,  # Track [], (), {} depth for Python comprehensions
-        }
-
     def _handle_binary_logical_operator(self, context, token):
         """Handle binary logical operators: &&, ||, and, or, etc.
 
@@ -336,34 +309,36 @@ class LizardExtension(object):  # pylint: disable=R0903
         context = reader.context
         prev_token = None
 
-        # Initialize state variables
-        state = self._create_initial_state(reader)
-        in_switch = state['in_switch']
-        switch_nesting = state['switch_nesting']
-        after_else = state['after_else']
-        in_do_while = state['in_do_while']
-        after_break_continue = state['after_break_continue']
-        saw_question_mark = state['saw_question_mark']
-        in_exception_block = state['in_exception_block']
-        after_loop_keyword = state['after_loop_keyword']
-        is_erlang = state['is_erlang']
-        is_python = state['is_python']
-        erlang_if_case_depth = state['erlang_if_case_depth']
-        after_semicolon_in_if_case = state['after_semicolon_in_if_case']
-        after_dash_in_erlang = state['after_dash_in_erlang']
-        nesting_stack = state['nesting_stack']
-        brace_depth = state['brace_depth']
-        pending_nesting_increase = state['pending_nesting_increase']
-        pending_try_block = state['pending_try_block']
-        try_block_stack = state['try_block_stack']
-        bracket_depth = state['bracket_depth']
+        # Language detection
+        lang_names = getattr(reader, 'language_names', [])
+        is_erlang = 'erlang' in lang_names
+        is_python = 'python' in lang_names
+
+        # Token loop state
+        in_switch = False
+        switch_nesting = 0
+        after_else = False
+        in_do_while = False
+        after_break_continue = False
+        saw_question_mark = False
+        in_exception_block = False
+        after_loop_keyword = False
+        erlang_if_case_depth = 0
+        after_semicolon_in_if_case = False
+        after_dash_in_erlang = False
+        nesting_stack = []
+        brace_depth = 0
+        pending_nesting_increase = False
+        pending_try_block = False
+        try_block_stack = []
+        bracket_depth = 0
 
         # Structural keywords that increase both complexity and nesting
         # Includes C preprocessor directives like #if, #ifdef
         # repeat is for Lua's repeat...until loop
         structural_keywords = {'if', 'for', 'while', 'foreach', 'repeat', '#if', '#ifdef', '#elif'}
         # 'case' is special: it's a structural keyword in Erlang and ST, but not in C/C++/Java (where it's a switch label)
-        if hasattr(reader, 'language_names') and ('erlang' in reader.language_names or 'st' in reader.language_names):
+        if 'erlang' in lang_names or 'st' in lang_names:
             structural_keywords.add('case')
         # catch/except and try (except is Python, catch is C++/Java/C#/JavaScript)
         catch_keywords = {'catch', 'except'}
@@ -431,9 +406,6 @@ class LizardExtension(object):  # pylint: disable=R0903
             elif token in structural_keywords:
                 # Python: Pass bracket_depth to indicate if we're inside comprehensions
                 inside_brackets = is_python and bracket_depth > 0
-                # DEBUG
-                #if is_python:
-                #    print(f"DEBUG: token={token}, bracket_depth={bracket_depth}, inside_brackets={inside_brackets}")
                 after_else, in_do_while, erlang_if_case_depth, after_loop_keyword, pending_nesting_increase = \
                     self._handle_structural_keyword(context, token, after_else, in_do_while,
                                                      erlang_if_case_depth, is_erlang, pending_nesting_increase,
@@ -511,8 +483,8 @@ class LizardExtension(object):  # pylint: disable=R0903
             # Note: || is string concatenation in SQL/PL/SQL, not a logical operator
             elif token.lower() in ('&&', '||', 'and', 'or', '.and.', '.or.', 'andalso', 'orelse'):
                 # Skip || in SQL/PL/SQL languages (it's concatenation, not OR)
-                is_sql_language = hasattr(reader, 'language_names') and any(
-                    lang in reader.language_names for lang in ['plsql', 'pl/sql', 'sql']
+                is_sql_language = any(
+                    lang in lang_names for lang in ['plsql', 'pl/sql', 'sql']
                 )
                 if token == '||' and is_sql_language:
                     pass  # Skip - this is concatenation, not logical OR

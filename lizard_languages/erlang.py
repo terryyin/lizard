@@ -86,16 +86,6 @@ class ErlangStates(CodeStateMachine):
             # Process current token in global state
             self._state_global(token)
 
-    def _state_after_name(self, token):
-        # This state is no longer used since we check for '(' in _check_function_start
-        if token == '(':
-            self._state = self._state_start_of_params
-            self.context.add_to_long_function_name(token)
-            self.lbr = 1
-            self.rbr = 0
-        else:
-            self.func_match_failed(token)
-
     def _state_start_of_params(self, token):
         if token == ')':
             self.rbr += 1
