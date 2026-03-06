@@ -30,10 +30,10 @@ class RubyReader(RubylikeReader):
             return ScriptLanguageMixIn.generate_common_tokens(
                 source,
                 r"|^\=begin|^\=end" +
-                r"|\%[qQrw]?\{(?:\\.|[^\}\\])*?\}" +
-                r"|\%[qQrw]?\[(?:\\.|[^\]\\])*?\]" +
-                r"|\%[qQrw]?\<(?:\\.|[^\>\\])*?\>" +
-                r"|\%[qQrw]?\((?:\\.|[^\>\\])*?\)" +
+                r"|\%[qQrwiI]?\{(?:\\.|[^\}\\])*?\}" +
+                r"|\%[qQrwiI]?\[(?:\\.|[^\]\\])*?\]" +
+                r"|\%[qQrwiI]?\<(?:\\.|[^\>\\])*?\>" +
+                r"|\%[qQrwiI]?\((?:\\.|[^\>\\])*?\)" +
                 r"|\w+:" +
                 r"|\$\w+" +
                 r"|\.+" +

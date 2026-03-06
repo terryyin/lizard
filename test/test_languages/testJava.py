@@ -79,6 +79,19 @@ public String funcB() {
         self.assertEqual("A", result[0].name)
         self.assertEqual(1, result[0].cyclomatic_complexity)
 
+    def test_many_question_marks_after_less_than_no_freeze(self):
+        """Issue #459: Multiple ? after < causes catastrophic backtracking and freeze"""
+        code = """
+public void test() {
+    List<String> list = new ArrayList<>();
+    boolean b = list.size() < 10;
+    String str = "?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?";
+}
+"""
+        result = get_java_function_list(code)
+        self.assertEqual(1, len(result))
+        self.assertEqual("test", result[0].name)
+
     def test_record(self):
         result = get_java_function_list("""
             record Point(int x, int y) {
@@ -485,3 +498,21 @@ public class TestWildcard {
                 f"{func.cyclomatic_complexity}")
 
 
+    def test_record_as_variable_name(self):
+        """Test for issue #453: 'record' as variable name should not be treated as record keyword"""
+        code = """
+public class Example {
+    public void process() {
+        String record = "test";
+        System.out.println(record);
+    }
+
+    public void anotherMethod() {
+        System.out.println("hello");
+    }
+}
+"""
+        result = get_java_function_list(code)
+        self.assertEqual(2, len(result))
+        self.assertEqual("Example::process", result[0].name)
+        self.assertEqual("Example::anotherMethod", result[1].name)

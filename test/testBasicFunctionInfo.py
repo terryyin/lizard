@@ -1,5 +1,5 @@
 import unittest
-from mock import Mock, patch
+from unittest.mock import Mock, patch
 from .testHelpers import get_cpp_fileinfo, get_cpp_function_list
 
 class Test_Token_Count(unittest.TestCase):

@@ -9,6 +9,58 @@
   - See `cognitive_complexity_theory.rst` for full specification
 
 
+## Unreleased
+
+## 1.21.2
+
+### Bug Fixes
+- Fix nesting depth calculation for C++ `else if` chains (issue #418)
+  - `else if () {}` is now treated as same nesting level as `if`, not as nested
+  - Matches behavior of similar tools and user expectations
+
+## 1.21.1
+
+### Bug Fixes
+- Fix Ruby parser hang on %i[] and %I[] symbol array literals (issue #457)
+- Fix regex in CodeReader to prevent catastrophic backtracking on multiple question marks after less than sign (issue #459)
+
+### Improvements
+- Add script directory to sys.path for running lizard.py from source (issue #460)
+
+## 1.21.0
+
+### New Features
+- Add selective metric forgiveness (issue #455)
+  - Use `#lizard forgives(length)` to forgive only specific metrics
+  - Use `#lizard forgives(length, parameter_count)` for multiple metrics
+  - `#lizard forgives` without parentheses continues to forgive all metrics (backward compatible)
+
+### Bug Fixes
+- Fix PHP parser incorrectly treating "use function" imports as function declarations (issue #442)
+  - PHP parser now correctly ignores function names in "use function" statements
+  - Function names are no longer overridden by imported function names
+- Fix Java parser incorrectly treating "record" variable names as keywords (issue #453)
+  - Java parser now correctly distinguishes between the `record` keyword and variables named "record"
+  - Variables named "record" inside method bodies are no longer misinterpreted as class declarations
+- Fix C++ lambda parsing state machine issues (issue #443)
+  - Fixed lambda capture state incorrectly transitioning to global state instead of parameter parsing
+  - Added proper bracket tracking for lambda parameter lists and bodies
+  - Improved handling of nested brackets within lambda expressions
+  - Added support for lambda qualifiers (mutable, noexcept, constexpr, consteval)
+  - Added test case for multiple functions with static_cast expressions
+
+## 1.20.0
+
+### Bug Fixes
+- Fix IndexError crash when parsing C++ raw string literals containing braces (issue #451)
+  - Added proper tokenization for C++ raw string literals (R"delimiter(content)delimiter")
+  - Enhanced lizardns extension with defensive invariant protection
+  - Prevents misinterpretation of braces within string literals as structural elements
+
+### Improvements
+- Improved robustness of nested structures counting extension
+- Better error handling for edge cases in tokenization
+
 ## 1.19.0
 
 ### New Features

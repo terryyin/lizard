@@ -29,6 +29,31 @@ import os
 from fnmatch import fnmatch
 import hashlib
 
+# Add script directory to sys.path for Python embeddable package / running from source
+# See: https://github.com/terryyin/lizard/issues/460
+# Use both __file__ and sys.argv[0]: embeddable Python on Windows may resolve them differently
+
+
+def _script_dirs():
+    dirs = []
+    try:
+        d = os.path.dirname(os.path.abspath(__file__))
+        if d:
+            dirs.append(d)
+    except NameError:
+        pass
+    if sys.argv and sys.argv[0]:
+        d = os.path.dirname(os.path.abspath(sys.argv[0]))
+        if d and d not in dirs:
+            dirs.append(d)
+    return dirs
+
+
+for _script_dir in _script_dirs():
+    if _script_dir not in sys.path:
+        sys.path.insert(0, _script_dir)
+
+
 if sys.version[0] == '2':
     from future_builtins import map, filter  # pylint: disable=W0622, F0401
 
@@ -295,6 +320,7 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
         self.max_nesting_depth = 0  # Initialize max_nesting_depth to 0
         self.cognitive_complexity = 0  # Initialize cognitive_complexity to 0
         self.initial_nesting_level = 0  # Track nesting level at function start (for JavaScript/TypeScript)
+        self.forgiven_metrics = set()
 
     @property
     def name_in_space(self):
@@ -553,9 +579,15 @@ def comment_counter(tokens, reader):
         if comment is not None:
             for _ in comment.splitlines()[1:]:
                 yield '\n'
-            if comment.strip().startswith("#lizard forgive global"):
+            stripped = comment.strip()
+            if stripped.startswith("#lizard forgive global"):
                 reader.context.forgive_global = True
-            elif comment.strip().startswith("#lizard forgive"):
+            elif stripped.startswith("#lizard forgives("):
+                match = re.search(r'#lizard forgives?\(([^)]*)\)', stripped)
+                if match:
+                    metrics = {m.strip() for m in match.group(1).split(',') if m.strip()}
+                    reader.context.current_function.forgiven_metrics.update(metrics)
+            elif stripped.startswith("#lizard forgive"):
                 reader.context.forgive = True
             if "GENERATED CODE" in comment:
                 return
@@ -642,9 +674,16 @@ def warning_filter(option, module_infos):
     for file_info in module_infos:
         if file_info:
             for fun in file_info.function_list:
-                if any(getattr(fun, attr) > limit for attr, limit in
-                       option.thresholds.items()):
-                    yield fun
+                violated_metrics = [
+                    attr for attr, limit in option.thresholds.items()
+                    if getattr(fun, attr) > limit
+                ]
+                if not violated_metrics:
+                    continue
+                forgiven = getattr(fun, 'forgiven_metrics', set())
+                if all(metric in forgiven for metric in violated_metrics):
+                    continue
+                yield fun
 
 
 def whitelist_filter(warnings, script=None, whitelist=None):
@@ -1172,7 +1211,8 @@ def main(argv=None):
         sys.stdout = original_stdout
         output_file.close()
     if 0 <= options.number < warning_count:
-        sys.exit(1)
+        return 1
+    return 0
 
 
 def print_extension_results(extensions):
@@ -1182,4 +1222,4 @@ def print_extension_results(extensions):
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

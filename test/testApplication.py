@@ -1,5 +1,6 @@
 import unittest
-from mock import patch
+import subprocess
+from unittest.mock import patch
 import lizard
 import os
 import sys
@@ -62,7 +63,7 @@ class IntegrationTests(unittest.TestCase):
             return self.returned_warning_count
         mock_open.return_value = src
         print_result.side_effect = store_result
-        lizard.main(argv)
+        self.exit_code = lizard.main(argv)
         return self.fileInfos
 
     @patch('lizard.md5_hash_file')
@@ -84,18 +85,28 @@ class IntegrationTests(unittest.TestCase):
         self.runApplicationWithArgv(['lizard', '--modified'])
         self.assertEqual(4, self.fileInfos[0].function_list[0].cyclomatic_complexity)
 
-    @patch.object(sys, 'exit')
-    def test_exit_code(self, mock_exit):
+    def test_exit_code(self):
         self.returned_warning_count = 6
         self.runApplicationWithArgv(['lizard', '-C5'])
-        mock_exit.assert_called_with(1)
+        self.assertEqual(self.exit_code, 1)
         self.runApplicationWithArgv(['lizard', '-i5'])
-        mock_exit.assert_called_with(1)
+        self.assertEqual(self.exit_code, 1)
 
-    @patch.object(sys, 'exit')
-    def test_exit_code_ignore_warnings(self, mock_exit):
+    def test_exit_code_ignore_warnings(self):
         self.returned_warning_count = 6
         self.runApplicationWithArgv(['lizard', '-i6'])
-        self.assertFalse(mock_exit.called)
+        self.assertEqual(self.exit_code, 0)
         self.runApplicationWithArgv(['lizard', '-i', '-1'])
-        self.assertFalse(mock_exit.called)
+        self.assertEqual(self.exit_code, 0)
+
+    def test_lizard_script_runs_with_version(self):
+        """Test lizard.py runs correctly when executed as script (issue #460)."""
+        lizard_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        lizard_py = os.path.join(lizard_dir, 'lizard.py')
+        result = subprocess.run(
+            [sys.executable, lizard_py, '--version'],
+            capture_output=True,
+            text=True,
+            cwd=lizard_dir,
+        )
+        self.assertEqual(result.returncode, 0, msg=result.stderr or result.stdout)

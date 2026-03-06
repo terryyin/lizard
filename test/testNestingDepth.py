@@ -43,7 +43,13 @@ class TestCppNestingDepth(unittest.TestCase):
 
     def test_one_function_nd_with_else_if(self):
         result = get_cpp_with_nestdepth("int fun(){if(a)b;else if (c) d;}")
-        self.assertEqual(2, result[0].max_nesting_depth)
+        self.assertEqual(1, result[0].max_nesting_depth)
+
+    def test_one_function_nd_with_else_if_chain(self):
+        """Issue #418: else if chains should not increase nesting depth"""
+        result = get_cpp_with_nestdepth(
+            "int fun(){if(a){}else if(b){}else if(c){}}")
+        self.assertEqual(1, result[0].max_nesting_depth)
 
     def test_one_function_nd_with_non_r_value_ref_in_body(self):
         result = get_cpp_with_nestdepth("int f() {a && b==c;}")

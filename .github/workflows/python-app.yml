@@ -41,3 +41,7 @@ jobs:
     - name: build and Install
       run: |
         python setup.py build install
+
+    - name: Run tests
+      run: |
+        python -m pytest
