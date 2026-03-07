@@ -166,3 +166,5 @@ class Test_parser_for_Go(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual("getQuery", result[0].name)
         self.assertEqual(1, result[0].cyclomatic_complexity)
+
+

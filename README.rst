@@ -15,49 +15,134 @@ including C/C++ (doesn't require all the header files or Java imports). It also 
 copy-paste detection (code clone detection/code duplicate detection) and many other forms of static
 code analysis.
 
-A list of supported languages:
+Supported Languages
+~~~~~~~~~~~~~~~~~~~
 
--  C# (C Sharp)
--  C/C++ (works with C++14)
--  Erlang
--  Fortran
--  GDScript
--  Golang
--  Java
--  JavaScript (With ES6 and JSX)
--  Kotlin
--  Lua
--  Objective-C
--  Perl
--  PHP
--  PL/SQL
--  Python
--  R
--  Ruby
--  Rust
--  Scala
--  Solidity
--  Structured Text (St)
--  Swift
--  TTCN-3
--  TypeScript (With TSX)
--  VueJS
--  Zig
+-  **C/C++** - Works with C++14
+-  **C# (C Sharp)**
+-  **Erlang** - Partial CogC support; multi-clause if/case statements limited by parser
+-  **Fortran**
+-  **GDScript**
+-  **Golang**
+-  **Java**
+-  **JavaScript** - With ES6 and JSX
+-  **Kotlin** - Elvis operator (?:) doesn't count toward CogC
+-  **Lua**
+-  **Objective-C**
+-  **Perl**
+-  **PHP**
+-  **PL/SQL** - Nested procedures in declaration section and nested anonymous blocks are not yet supported
+-  **Python**
+-  **R**
+-  **Ruby**
+-  **Rust**
+-  **Scala**
+-  **Solidity**
+-  **Structured Text (ST)** - Partial CogC support; tests skipped due to missing import in test file
+-  **Swift**
+-  **TTCN-3**
+-  **TypeScript** - With TSX
+-  **VueJS**
+-  **Zig**
+
 
 By default lizard will search for any source code that it knows and mix
 all the results together. This might not be what you want. You can use
 the "-l" option to select language(s).
 
+
 It counts
 
 -  the nloc (lines of code without comments),
 -  CCN (cyclomatic complexity number),
+-  CogC (Cognitive Complexity),
 -  token count of functions.
 -  parameter count of functions.
 
-You can set limitation for CCN (-C), the number of parameters (-a).
+You can set limitation for CCN (-C), CogC (-G), or the number of parameters (-a).
 Functions that exceed these limitations will generate warnings. The exit
 code of lizard will be none-Zero if there are warnings.
+
+Cognitive Complexity
+~~~~~~~~~~~~~~~~~~~~
+
+Lizard supports Cognitive Complexity alongside Cyclomatic Complexity.
+Cognitive Complexity is a metric designed to measure how difficult code is
+to understand:
+
+-  **Switch statements**: Counted as +1 total (vs +1 per case in CCN)
+-  **Nesting awareness**: Nested structures get additional increments based on depth
+-  **Binary operators**: Sequences of the same operator count as +1
+-  **Readability focus**: Matches programmer intuition about code difficulty
+
+To use Cognitive Complexity, add the ``-Ecogc`` extension flag::
+
+   # Enable CogC with default threshold (15)
+   lizard -Ecogc mycode/
+
+   # Set Cognitive Complexity threshold to 100
+   lizard -Ecogc -G 100 mycode/
+
+   # Sort by Cognitive Complexity
+   lizard -Ecogc -s cognitive_complexity mycode/
+
+   # Use both CCN and CogC thresholds
+   lizard -Ecogc -C 15 -G 15 mycode/
+
+   # Show line-by-line CogC breakdown for debugging
+   lizard -Ecogc --cogc-lines mycode/
+
+When enabled, the CogC column appears in all output formats (tabular, XML, HTML, CSV, Checkstyle).
+
+**Line-by-Line Reporting**: Use the ``--cogc-lines`` option to see a detailed breakdown
+of each Cognitive Complexity increment. This is useful for:
+
+-  Understanding why a function has high complexity
+-  Learning which patterns increase complexity
+-  Identifying specific lines to refactor
+
+**Note**: The ``--cogc-lines`` option only works with default text output. It does not
+work with HTML, XML, or CSV output formats.
+
+Example output::
+
+    ==============================================================================
+    Cognitive Complexity Breakdown for: some_function
+    Location: build_install.py:138-206
+    ==============================================================================
+    Line   Inc   Nesting  Reason                         Token
+    ------------------------------------------------------------------------------
+    148    +1    0        for in comprehension           for
+    148    +1    0        if in comprehension            if
+    154    +1    0        or operator                    or
+    156    +1    0        if statement                   if
+    190    +1    0        for statement                  for
+    192    +2    1        for statement                  for
+    197    +3    2        for in comprehension           for
+    198    +3    2        if in comprehension            if
+    199    +1    0        and operator                   and
+    201    +3    2        if statement                   if
+    ------------------------------------------------------------------------------
+    Total Cognitive Complexity: 17
+    ==============================================================================
+
+For more details about the Cognitive Complexity algorithm, see the
+`cognitive_complexity_theory.rst <cognitive_complexity_theory.rst>`_ documentation.
+
+**Output Format Behavior**
+
+Different output formats handle thresholds and line-by-line reporting differently:
+
+- **Default text output**: Shows only functions that exceed thresholds in the warnings
+  section. Supports ``--cogc-lines`` for detailed breakdowns.
+- **HTML output** (``-H`` or ``--html``): Shows ALL functions in an interactive table,
+  with color-coding for cells that exceed thresholds (red for exceeding, green for within).
+  Does not support ``--cogc-lines``. This allows you to explore all code metrics, not just
+  warnings.
+- **XML/CSV/Checkstyle**: Shows all functions. Do not support ``--cogc-lines``.
+
+Use default text output when you want to see only problematic functions. Use HTML when
+you want to explore and sort all functions interactively.
 
 This tool actually calculates how complex the code 'looks' rather than
 how complex the code really 'is'. People will need this tool because it's

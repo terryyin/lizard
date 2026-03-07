@@ -497,6 +497,7 @@ public class TestWildcard {
                 f"Function {func.name} should have CCN=1, got "
                 f"{func.cyclomatic_complexity}")
 
+
     def test_record_as_variable_name(self):
         """Test for issue #453: 'record' as variable name should not be treated as record keyword"""
         code = """
@@ -505,7 +506,7 @@ public class Example {
         String record = "test";
         System.out.println(record);
     }
-    
+
     public void anotherMethod() {
         System.out.println("hello");
     }

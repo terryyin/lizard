@@ -231,7 +231,9 @@ def arg_parser(prog=None):
                         const=print_csv,
                         dest="printer")
     parser.add_argument("-H", "--html",
-                        help='''Output HTML report''',
+                        help='''Output HTML report. Note: HTML output includes ALL functions
+                        (not filtered by thresholds), but color-codes cells that exceed thresholds.
+                        Use default output to see only warnings.''',
                         action="store_const",
                         const=html_output,
                         dest="printer")
@@ -385,15 +387,21 @@ class FileInformation(object):  # pylint: disable=R0903
         lambda self: self.functions_average("token_count"))
     average_cyclomatic_complexity = property(
         lambda self: self.functions_average("cyclomatic_complexity"))
+    average_cognitive_complexity = property(
+        lambda self: self.functions_average("cognitive_complexity"))
     CCN = property(
         lambda self:
         sum(fun.cyclomatic_complexity for fun in self.function_list))
+    CogC = property(
+        lambda self:
+        sum(getattr(fun, 'cognitive_complexity', 0)
+            for fun in self.function_list))
     ND = property(  # pylint: disable=C0103
         lambda self:
         sum(fun.max_nesting_depth for fun in self.function_list))
 
     def functions_average(self, att):
-        summary = sum(getattr(fun, att) for fun in self.function_list)
+        summary = sum(getattr(fun, att, 0) for fun in self.function_list)
         return summary / len(self.function_list) if self.function_list else 0
 
 
@@ -455,6 +463,7 @@ class FileInfoBuilder(object):
         self.global_pseudo_function = FunctionInfo('*global*', filename, 0)
         self.current_function = self.global_pseudo_function
         self.stacked_functions = []
+        self.stacked_pending_functions = []  # Save pending_function for nested functions (PLSQL)
         self._nesting_stack = NestingStack()
 
     def __getattr__(self, attr):
@@ -465,14 +474,31 @@ class FileInfoBuilder(object):
         self._nesting_stack = decorate_class(self._nesting_stack)
         return self._nesting_stack
 
+    def add_bare_nesting(self):
+        '''Add a bare nesting level (for Python indentation, function bodies, etc.)'''
+        self._nesting_stack.add_bare_nesting()
+        # Call registered hooks (e.g., for Cognitive Complexity tracking)
+        for hook in getattr(self, '_bare_nesting_hooks', []):
+            hook(self)
+
     def pop_nesting(self):
         nest = self._nesting_stack.pop_nesting()
+        # Call registered hooks (e.g., for Cognitive Complexity tracking)
+        for hook in getattr(self, '_pop_nesting_hooks', []):
+            hook(self)
         if isinstance(nest, FunctionInfo):
             endline = self.current_function.end_line
+            # Check if there are stacked functions (nested procedures/functions)
+            # If so, end_of_function() will restore the parent from stacked_functions
+            has_stacked_parent = bool(self.stacked_functions)
             self.end_of_function()
-            self.current_function = (
-                    self._nesting_stack.last_function or
-                    self.global_pseudo_function)
+            # Only restore from nesting_stack if there was no stacked parent
+            # (stacked_functions is used by PLSQL nested procedures, nesting_stack by most other languages)
+            # Also restore from nesting_stack if stacked parent was *global* (e.g., Python nested functions in classes)
+            if not has_stacked_parent or self.current_function.name == '*global*':
+                self.current_function = (
+                        self._nesting_stack.last_function or
+                        self.global_pseudo_function)
             self.current_function.end_line = endline
 
     def add_nloc(self, count):
@@ -498,6 +524,8 @@ class FileInfoBuilder(object):
 
     def push_new_function(self, name):
         self.stacked_functions.append(self.current_function)
+        # Save pending_function for nested functions (used by PLSQL nested procedures)
+        self.stacked_pending_functions.append(getattr(self._nesting_stack, 'pending_function', None))
         self.restart_new_function(name)
 
     def add_condition(self, inc=1):
@@ -519,6 +547,9 @@ class FileInfoBuilder(object):
         self.forgive = False
         if self.stacked_functions:
             self.current_function = self.stacked_functions.pop()
+            # Restore pending_function for nested functions (used by PLSQL nested procedures)
+            if self.stacked_pending_functions:
+                self._nesting_stack.pending_function = self.stacked_pending_functions.pop()
         else:
             self.current_function = self.global_pseudo_function
 
@@ -772,9 +803,13 @@ class OutputScheme(object):
             if e.get("avg_caption", None)])
 
     def clang_warning_format(self):
-        return ("{f.filename}:{f.start_line}: warning: {f.name} has {f.nloc} NLOC, "
-                "{f.cyclomatic_complexity} CCN, {f.token_count} token, {f.parameter_count} PARAM, "
-                "{f.length} length, {f.max_nesting_depth} ND")
+        # Build format dynamically based on loaded extensions
+        ext_parts = ", ".join([
+            "{{f.{ext[value]}}} {caption}"
+            .format(ext=e, caption=e['caption'].strip())
+            for e in self.items[:-1]  # Exclude location
+        ])
+        return "{f.filename}:{f.start_line}: warning: {f.name} has " + ext_parts
 
     def msvs_warning_format(self):
         return (
@@ -799,6 +834,17 @@ def print_warnings(option, scheme, warnings):
         warning_count += 1
         warning_nloc += warning.nloc
         print(scheme.function_info(warning))
+
+        # Print CogC line-by-line breakdown if requested
+        if hasattr(option, 'cogc_lines') and option.cogc_lines:
+            try:
+                from lizard_ext.lizardcogc import format_cogc_line_breakdown
+                breakdown = format_cogc_line_breakdown(warning)
+                if breakdown:
+                    print(breakdown)
+            except (ImportError, AttributeError):
+                pass  # CogC extension not available
+
     if warning_count == 0:
         print_no_warnings(option)
     return warning_count, warning_nloc
@@ -1032,6 +1078,8 @@ def parse_args(argv):
         sys.exit(2)
     if "cyclomatic_complexity" not in opt.thresholds:
         opt.thresholds["cyclomatic_complexity"] = opt.CCN
+    if "cognitive_complexity" not in opt.thresholds and hasattr(opt, "CogC"):
+        opt.thresholds["cognitive_complexity"] = opt.CogC
     if "max_nesting_depth" not in opt.thresholds and hasattr(opt, "ND"):
         opt.thresholds["max_nesting_depth"] = opt.ND
     if "max_nested_structures" not in opt.thresholds and hasattr(opt, "NS"):
@@ -1087,10 +1135,10 @@ def get_extensions(extension_names):
                     im('lizard_ext.lizard' + name.lower())
                     .LizardExtension()
                     if isinstance(name, str) else name)
-            existing.insert(
-                len(existing) if not hasattr(ext, "ordering_index") else
-                ext.ordering_index,
-                ext)
+            index = getattr(ext, "ordering_index", None)
+            if not isinstance(index, int):
+                index = len(existing)
+            existing.insert(index, ext)
         return existing
 
     return expand_extensions([

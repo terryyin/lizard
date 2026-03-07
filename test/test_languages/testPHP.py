@@ -360,6 +360,7 @@ class NotebookApp {
         process_order = next(f for f in functions if f.name == 'Product::processOrder')
         self.assertEqual(7, process_order.cyclomatic_complexity)  # Current behavior shows 7 for this method
 
+
     def test_use_function_statement_does_not_override_function_name(self):
         """Test for issue #442: use function statements should not override function names"""
         php_code = '''<?php
@@ -374,7 +375,7 @@ class A {
         self.assertEqual(1, len(functions))
         # The function name should be foo, not bar
         self.assertEqual('A::foo', functions[0].name)
-        
+
     def test_multiple_use_function_statements(self):
         """Test multiple use function statements don't interfere with actual functions"""
         php_code = '''<?php

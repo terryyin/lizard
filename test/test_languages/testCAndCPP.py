@@ -765,6 +765,7 @@ void process() {
         self.assertEqual(1, len(result))
         self.assertEqual("process", result[0].name)
 
+
     def test_multiple_functions_with_static_cast_issue_443(self):
         """Test multiple void functions with multiple static_cast calls (issue #443)."""
         # This reproduces a bug where lizard.analyze would freeze when iterating

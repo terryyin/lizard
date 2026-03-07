@@ -240,3 +240,5 @@ class TestZig(unittest.TestCase):
             }
         """)
         self.assertEqual(2, result[0].cyclomatic_complexity)
+
+

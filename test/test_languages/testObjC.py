@@ -114,3 +114,5 @@ class TestObjCLanguage(unittest.TestCase):
         self.assertEqual(1, len(result.function_list))
         self.assertEqual("application: willFinishLaunchingWithOptions:", result.function_list[0].name)
         self.assertNotEqual("if", result.function_list[0].name)  # Should not show "if" as function name
+
+

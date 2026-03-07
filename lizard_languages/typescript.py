@@ -195,7 +195,9 @@ class TypeScriptStates(CodeStateMachine):
                     # This is a method call, not a function definition
                     self._prev_token = token
                     return
-                if not self.started_function:
+                # Only treat identifier( as potential function definition if we're truly at global/top scope
+                # (not inside a function OR a lambda)
+                if not self.started_function and getattr(self.context, 'lambda_depth', 0) == 0:
                     self.arrow_function_pending = True
                     self._function(self.last_tokens)
                 self.next(self._function, token)
@@ -214,6 +216,13 @@ class TypeScriptStates(CodeStateMachine):
         if token == 'function':
             self._state = self._function
         elif token in ('if', 'switch', 'for', 'while', 'catch'):
+            # Track if this is a top-level structural increment (not nested)
+            # Top-level means: inside a function but not nested in any control structures
+            # For JavaScript, current_nesting_level == initial_nesting_level means we're at function top-level
+            if (self.context.current_function and
+                    hasattr(self.context.current_function, 'initial_nesting_level') and
+                    self.context.current_nesting_level == self.context.current_function.initial_nesting_level):
+                self.context.has_top_level_increment = True
             self.next(self._expecting_condition_and_statement_block)
         elif token in ('else', 'do', 'try', 'final'):
             self.next(self._expecting_statement_or_block)
@@ -297,13 +306,55 @@ class TypeScriptStates(CodeStateMachine):
             self.next(self._state_global, token)
 
     def _push_function_to_stack(self):
-        self.started_function = True
-        self.context.push_new_function(self.function_name or '(anonymous)')
+        # CogC lambda detection: aggregate anonymous/nested functions into parent
+        # Only active when CogC extension is loaded (provides enter_lambda/exit_lambda)
+        cogc_active = hasattr(self.context, 'enter_lambda')
+        lambda_depth = getattr(self.context, 'lambda_depth', 0)
+        is_inside_function = self.context.stacked_functions or lambda_depth > 0
+        is_lambda = False
+
+        if cogc_active:
+            # JavaScript compensating usage (spec lines 392-426):
+            # Nested functions in "faux class" pattern should aggregate to parent
+            is_property_assignment = self.function_name and ('.' in self.function_name or '::' in self.function_name)
+
+            if not self.function_name:
+                is_lambda = is_inside_function
+            elif is_property_assignment and is_inside_function and lambda_depth == 0:
+                is_lambda = True
+            elif lambda_depth > 0:
+                is_lambda = True
+
+        if is_lambda:
+            parent_has_increments = getattr(self.context, 'has_top_level_increment', False)
+            if lambda_depth >= 1:
+                self.context.enter_lambda()
+                self.is_lambda_with_nesting = True
+            elif parent_has_increments:
+                self.context.enter_lambda()
+                self.is_lambda_with_nesting = True
+            else:
+                self.is_lambda_with_nesting = False
+            self.started_function = False
+            self.is_lambda = True
+        else:
+            self.started_function = True
+            self.is_lambda = False
+            self.context.push_new_function(self.function_name or '(anonymous)')
+
+        if cogc_active:
+            self.context.has_top_level_increment = False
 
     def _pop_function_from_stack(self):
         if self.started_function:
             self.context.end_of_function()
+        elif hasattr(self, 'is_lambda') and self.is_lambda:
+            # Exiting a lambda - decrease lambda depth only if we increased it
+            if hasattr(self, 'is_lambda_with_nesting') and self.is_lambda_with_nesting:
+                self.context.exit_lambda()
         self.started_function = None
+        self.is_lambda = False
+        self.is_lambda_with_nesting = False
 
     def _arrow_function(self, token):
         self._push_function_to_stack()
