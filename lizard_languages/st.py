@@ -3,7 +3,6 @@ Language parser for Structured Text.
 '''
 
 import re
-# import itertools
 from .code_reader import CodeStateMachine, CodeReader
 
 
@@ -91,7 +90,8 @@ class StReader(CodeReader, StCommentsMixin):
                 for _ in macro.group(2).splitlines()[1:]:
                     yield "\n"
             else:
-                # ST normalization: collapse END_* into END, except for END_VAR which doesn't match a structural block
+                # ST normalization: collapse END_* into END, except END_VAR/END_TYPE/END_STRUCT
+                # which are variable/type declarations, not structural block terminators
                 upper_tok = token.upper()
                 if upper_tok.startswith("END_") and upper_tok not in ('END_VAR', 'END_TYPE', 'END_STRUCT'):
                     yield "END"

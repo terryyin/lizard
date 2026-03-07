@@ -54,8 +54,11 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
                 if macro:
                     if macro.group(1) in ('if', 'ifdef', 'elif'):
                         self.context.add_condition()
-                        # Yield the token so cognitive_complexity_counter can process it (spec line 143)
-                        yield token
+                        # Only yield preprocessor token when CogC extension is active,
+                        # so cognitive_complexity_counter can process it (spec line 143).
+                        # Without this gate, the token leaks into NLOC and token count.
+                        if getattr(self.context, '_cogc_active', False):
+                            yield token
                     elif macro.group(1) == 'include':
                         yield "#include"
                         yield macro.group(2) or "\"\""

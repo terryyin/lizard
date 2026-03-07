@@ -104,6 +104,8 @@ class PLSQLReader(CodeReader, CCppCommentsMixin):
         - Map ELSIF -> elif for consistency with other languages
         - Emit synthetic { after LOOP to increase nesting (FOR/WHILE LOOP constructs)
         """
+        # Check if CogC extension is actively processing - synthetic tokens only needed for CogC
+        cogc_active = getattr(self.context, '_cogc_active', False)
         last_nonwhitespace_token = None
         pending_tokens = []
         saw_for_or_while = False  # Track if we just saw FOR or WHILE
@@ -138,10 +140,12 @@ class PLSQLReader(CodeReader, CCppCommentsMixin):
                 ):
                     if token_upper in ("IF", "CASE", "LOOP", "WHILE", "FOR"):
                         # END IF, END CASE, END LOOP, END WHILE, END FOR
-                        # All close control structures with synthetic {
-                        # Emit "}nosync" to pop nesting without affecting br_count
-                        # (br_count only tracks BEGIN/END pairs)
-                        yield "}nosync"
+                        if cogc_active:
+                            # CogC: emit "}nosync" to pop nesting without affecting br_count
+                            yield "}nosync"
+                        else:
+                            # No CogC: merge into END_IF etc. (master behavior)
+                            yield "END_" + token_upper
                         last_nonwhitespace_token = None
                         pending_tokens = []
                         saw_for_or_while = False
@@ -163,23 +167,20 @@ class PLSQLReader(CodeReader, CCppCommentsMixin):
                     normalized = self._normalize_token(last_nonwhitespace_token)
                     yield normalized
 
-                    # If we just emitted 'loop', emit synthetic '{'
-                    # This applies to standalone LOOP, FOR LOOP, and WHILE LOOP
-                    if last_nonwhitespace_token.upper() == "LOOP":
-                        yield "{"
-                        saw_for_or_while = False
-                    # If we just emitted 'then' (from IF), emit synthetic '{'
-                    # This pushes IF blocks onto the nesting stack
-                    # But NOT for:
-                    # - THEN in EXCEPTION WHEN (those act like catch clauses)
-                    # - THEN in CASE WHEN (those act like switch cases)
-                    # - THEN in ELSIF (only emit { once per IF...END IF structure)
-                    elif (last_nonwhitespace_token.upper() == "THEN"
-                          and not in_exception_block
-                          and not in_case_expression
-                          and not saw_if_then):
-                        yield "{"
-                        saw_if_then = True  # Mark that we've emitted { for this IF statement
+                    # Emit synthetic '{' for CogC nesting tracking only
+                    if cogc_active:
+                        # If we just emitted 'loop', emit synthetic '{'
+                        if last_nonwhitespace_token.upper() == "LOOP":
+                            yield "{"
+                            saw_for_or_while = False
+                        # If we just emitted 'then' (from IF), emit synthetic '{'
+                        # But NOT for EXCEPTION WHEN, CASE WHEN, or ELSIF
+                        elif (last_nonwhitespace_token.upper() == "THEN"
+                              and not in_exception_block
+                              and not in_case_expression
+                              and not saw_if_then):
+                            yield "{"
+                            saw_if_then = True
 
                 for pending in pending_tokens:
                     yield pending
@@ -195,8 +196,7 @@ class PLSQLReader(CodeReader, CCppCommentsMixin):
         if last_nonwhitespace_token:
             normalized = self._normalize_token(last_nonwhitespace_token)
             yield normalized
-            # If we just emitted 'loop', emit synthetic '{'
-            if last_nonwhitespace_token.upper() == "LOOP":
+            if cogc_active and last_nonwhitespace_token.upper() == "LOOP":
                 yield "{"
         for pending in pending_tokens:
             yield pending
@@ -457,6 +457,11 @@ class PLSQLStates(CodeStateMachine):
         """
         token_lower = token.lower()
         token_upper = token.upper()
+
+        # Handle compound END keywords from non-CogC preprocessor path (END_IF, END_LOOP, etc.)
+        if token_upper.startswith("END_"):
+            self.last_control_keyword = None
+            return
 
         # Handle nested procedure/function declarations
         if token_lower == "procedure":

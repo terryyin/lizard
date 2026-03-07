@@ -48,6 +48,21 @@ class LizardExtension(object):  # pylint: disable=R0903
             dest="cogc_lines",
             default=False)
 
+    @staticmethod
+    def _add_fundamental_increment(context, reason, token):
+        """Record a fundamental increment (+1, no nesting penalty)."""
+        context.current_function.cognitive_complexity_increments.append({
+            'line': context.current_line,
+            'increment': 1,
+            'base_increment': 1,
+            'nesting': 0,
+            'nesting_from_stack': 0,
+            'nesting_from_cogc': 0,
+            'reason': reason,
+            'token': token
+        })
+        context.current_function.cognitive_complexity += 1
+
     def _handle_binary_logical_operator(self, context, token):
         """Handle binary logical operators: &&, ||, and, or, etc.
 
@@ -60,19 +75,7 @@ class LizardExtension(object):  # pylint: disable=R0903
 
         # Only increment on first operator or when switching operator types
         if context.cogc_last_operator != normalized:
-            # This is a fundamental increment: +1 without nesting multiplier
-            # Record manually since we're not using add_cognitive_complexity
-            context.current_function.cognitive_complexity_increments.append({
-                'line': context.current_line,
-                'increment': 1,
-                'base_increment': 1,
-                'nesting': 0,  # Logical operators don't get nesting multiplier
-                'nesting_from_stack': 0,
-                'nesting_from_cogc': 0,
-                'reason': f"{normalized} operator",
-                'token': token
-            })
-            context.current_function.cognitive_complexity += 1
+            self._add_fundamental_increment(context, f"{normalized} operator", token)
             context.cogc_last_operator = normalized
 
     def _handle_break_continue_label(self, context, token):
@@ -83,19 +86,7 @@ class LizardExtension(object):  # pylint: disable=R0903
         """
         # If token is not a statement terminator, it's a label
         if token not in (';', '}', '\\n'):
-            # This is a labeled jump: add +1 (fundamental increment)
-            # Record the increment for line-by-line reporting
-            context.current_function.cognitive_complexity_increments.append({
-                'line': context.current_line,
-                'increment': 1,
-                'base_increment': 1,
-                'nesting': 0,
-                'nesting_from_stack': 0,
-                'nesting_from_cogc': 0,
-                'reason': f'labeled jump to {token}',
-                'token': token
-            })
-            context.current_function.cognitive_complexity += 1
+            self._add_fundamental_increment(context, f'labeled jump to {token}', token)
         return True  # Processed
 
     def _handle_opening_brace(self, context, brace_depth, pending_try_block,
@@ -307,7 +298,8 @@ class LizardExtension(object):  # pylint: disable=R0903
         3. Increment for nesting
         '''
         context = reader.context
-        prev_token = None
+        # Signal to language readers that CogC is actively processing
+        context._cogc_active = True
 
         # Language detection
         lang_names = getattr(reader, 'language_names', [])
@@ -334,9 +326,10 @@ class LizardExtension(object):  # pylint: disable=R0903
         bracket_depth = 0
 
         # Structural keywords that increase both complexity and nesting
-        # Includes C preprocessor directives like #if, #ifdef
+        # Note: C preprocessor directives (#if, #ifdef, #elif) are handled separately
+        # via token.startswith() since they include trailing content (e.g., "#ifdef DEBUG")
         # repeat is for Lua's repeat...until loop
-        structural_keywords = {'if', 'for', 'while', 'foreach', 'repeat', '#if', '#ifdef', '#elif'}
+        structural_keywords = {'if', 'for', 'while', 'foreach', 'repeat'}
         # 'case' is special: it's a structural keyword in Erlang and ST, but not in C/C++/Java (where it's a switch label)
         if 'erlang' in lang_names or 'st' in lang_names:
             structural_keywords.add('case')
@@ -424,37 +417,13 @@ class LizardExtension(object):  # pylint: disable=R0903
             # NOTE: 'else' inside a switch/match statement does NOT add complexity
             # (the switch itself already counted as +1)
             elif token == 'else' and not in_switch:
-                # Fundamental increment: +1 without nesting multiplier
-                # Record the increment for line-by-line reporting
-                context.current_function.cognitive_complexity_increments.append({
-                    'line': context.current_line,
-                    'increment': 1,
-                    'base_increment': 1,
-                    'nesting': 0,
-                    'nesting_from_stack': 0,
-                    'nesting_from_cogc': 0,
-                    'reason': 'else statement',
-                    'token': token
-                })
-                context.current_function.cognitive_complexity += 1
+                self._add_fundamental_increment(context, 'else statement', token)
                 pending_nesting_increase = True
                 after_else = True
 
             # elif/elseif/elsif/else if (some languages use elsif like PL/SQL, Ruby; Fortran uses 'else if')
             elif token in ('elif', 'elseif', 'elsif', 'else if'):
-                # Fundamental increment: +1 without nesting multiplier
-                # Record the increment for line-by-line reporting
-                context.current_function.cognitive_complexity_increments.append({
-                    'line': context.current_line,
-                    'increment': 1,
-                    'base_increment': 1,
-                    'nesting': 0,
-                    'nesting_from_stack': 0,
-                    'nesting_from_cogc': 0,
-                    'reason': 'elif statement',
-                    'token': token
-                })
-                context.current_function.cognitive_complexity += 1
+                self._add_fundamental_increment(context, 'elif statement', token)
                 pending_nesting_increase = True
 
             # catch clause (or PL/SQL EXCEPTION WHEN)
@@ -505,19 +474,7 @@ class LizardExtension(object):  # pylint: disable=R0903
             # Labeled jumps: goto LABEL, break LABEL, continue LABEL
             # goto always counts, break/continue only count if followed by a label
             elif token in jump_keywords:
-                # goto always adds +1 (fundamental increment without nesting multiplier)
-                # Record the increment for line-by-line reporting
-                context.current_function.cognitive_complexity_increments.append({
-                    'line': context.current_line,
-                    'increment': 1,
-                    'base_increment': 1,
-                    'nesting': 0,
-                    'nesting_from_stack': 0,
-                    'nesting_from_cogc': 0,
-                    'reason': f'{token} statement',
-                    'token': token
-                })
-                context.current_function.cognitive_complexity += 1
+                self._add_fundamental_increment(context, f'{token} statement', token)
             elif token in ('break', 'continue'):
                 # Mark that we saw break/continue, will check next token to see if it's a label
                 after_break_continue = True
@@ -543,7 +500,6 @@ class LizardExtension(object):  # pylint: disable=R0903
             elif token in (';', '\\n', '{'):
                 context.cogc_last_operator = None
 
-            prev_token = token
             yield token
 
 
@@ -720,17 +676,21 @@ def _inherit_cogc_from_global(self):
         self.current_function.cognitive_complexity = self.global_pseudo_function.cognitive_complexity
 
 
-# Lazy import to avoid circular dependency (lizard.py imports this module at load time)
 import sys
-# Handle both 'lizard' module import and '__main__' execution
-if '__main__' in sys.modules and hasattr(sys.modules['__main__'], 'FileInfoBuilder'):
-    # Running as script (python lizard.py)
-    main_module = sys.modules['__main__']
-    FileInfoBuilder = main_module.FileInfoBuilder
-    FunctionInfo = main_module.FunctionInfo
-else:
-    # Normal import (from lizard import ...)
-    from lizard import FileInfoBuilder, FunctionInfo
+
+# When lizard.py is run as a script (python lizard.py), it becomes __main__
+# and `from lizard import ...` creates a second copy of the module with
+# different class objects. We must patch the classes actually in use.
+_lizard_module = sys.modules.get('__main__')
+if _lizard_module is None or not hasattr(_lizard_module, 'FileInfoBuilder'):
+    _lizard_module = sys.modules.get('lizard')
+if _lizard_module is None or not hasattr(_lizard_module, 'FileInfoBuilder'):
+    import lizard as _lizard_module
+
+FileInfoBuilder = _lizard_module.FileInfoBuilder
+FunctionInfo = _lizard_module.FunctionInfo
+assert FileInfoBuilder is not None and FunctionInfo is not None, \
+    "Failed to resolve lizard module classes for monkey-patching"
 
 # Monkey-patch FileInfoBuilder and FunctionInfo
 patch(CogCFileInfoAddition, FileInfoBuilder)

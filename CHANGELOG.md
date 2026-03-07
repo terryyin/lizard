@@ -1,5 +1,5 @@
 # Change Log
-## 1.20.0 (Unreleased)
+## 1.22.0 (Unreleased)
 
 ### New Features
 - **Cognitive Complexity metric**: Added built-in support for Cognitive Complexity (CogC) alongside Cyclomatic Complexity
@@ -8,8 +8,9 @@
   - Support for sorting by `cognitive_complexity`
   - See `cognitive_complexity_theory.rst` for full specification
 
-
-## Unreleased
+### Bug Fixes
+- Fix Structured Text (ST) `END_VAR`/`END_TYPE`/`END_STRUCT` incorrectly terminating function analysis
+- Fix Erlang reserved keywords being treated as potential function names
 
 ## 1.21.2
 

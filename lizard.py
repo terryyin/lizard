@@ -394,13 +394,14 @@ class FileInformation(object):  # pylint: disable=R0903
         sum(fun.cyclomatic_complexity for fun in self.function_list))
     CogC = property(
         lambda self:
-        sum(fun.cognitive_complexity for fun in self.function_list))
+        sum(getattr(fun, 'cognitive_complexity', 0)
+            for fun in self.function_list))
     ND = property(  # pylint: disable=C0103
         lambda self:
         sum(fun.max_nesting_depth for fun in self.function_list))
 
     def functions_average(self, att):
-        summary = sum(getattr(fun, att) for fun in self.function_list)
+        summary = sum(getattr(fun, att, 0) for fun in self.function_list)
         return summary / len(self.function_list) if self.function_list else 0
 
 
