@@ -584,5 +584,3 @@ class TestRFileExtensions(unittest.TestCase):
         self.assertFalse(RReader.match_filename("test.rs"))
 
 
-if __name__ == '__main__':
-    unittest.main()

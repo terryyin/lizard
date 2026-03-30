@@ -3,7 +3,6 @@ Language parser for Structured Text.
 '''
 
 import re
-# import itertools
 from .code_reader import CodeStateMachine, CodeReader
 
 
@@ -91,10 +90,18 @@ class StReader(CodeReader, StCommentsMixin):
                 for _ in macro.group(2).splitlines()[1:]:
                     yield "\n"
             else:
-                # ST normalization: collapse END_* into END
+                # ST normalization: collapse END_* into END, except END_VAR/END_TYPE/END_STRUCT
+                # which are variable/type declarations, not structural block terminators
                 upper_tok = token.upper()
-                if upper_tok.startswith("END_"):
+                if upper_tok.startswith("END_") and upper_tok not in ('END_VAR', 'END_TYPE', 'END_STRUCT'):
                     yield "END"
+                    continue
+
+                # Normalize structural keywords to lowercase for CogC tracking
+                # This allows lizard.py's structural_keywords check to work with ST's uppercase syntax
+                # Note: ELSE is NOT normalized because 'else' alone doesn't add to CogC (only 'elsif' does)
+                if upper_tok in ('IF', 'FOR', 'WHILE', 'CASE', 'REPEAT', 'ELSIF'):
+                    yield token.lower()
                     continue
 
                 # Eliminate whitespace, keep line breaks

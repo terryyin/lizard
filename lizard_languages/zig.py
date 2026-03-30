@@ -12,6 +12,9 @@ from .golike import GoLikeStates
 class ZigReader(CodeReader, CCppCommentsMixin):
     ext = ["zig"]
     language_names = ["zig"]
+    # Note: => counts for CCN (each case)
+    # For CogC, switch counts as +1 total (handled by cognitive_complexity_counter)
+    # switch itself doesn't count for CCN (only the case arms do)
     
     # Separated condition categories
     _control_flow_keywords = {"if", "for", "while", "try", "catch"}

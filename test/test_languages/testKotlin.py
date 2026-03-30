@@ -224,3 +224,5 @@ class Test_parser_for_Kotlin(unittest.TestCase):
         self.assertEqual("a", result[0].name)
         self.assertEqual("b", result[1].name)
         self.assertEqual("bar", result[2].name)
+
+

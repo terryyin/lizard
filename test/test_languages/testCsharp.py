@@ -140,44 +140,6 @@ class TestCsharp(unittest.TestCase):
         self.assertEqual(1, constructor_func.cyclomatic_complexity,
                        "Constructor should have complexity of 1")
 
-    def test_expression_bodied_methods(self):
-        """Test that expression-bodied methods (lambda-style syntax) are detected."""
-        result = get_csharp_function_list('''
-            using System;
-
-            public class SimpleCalculator
-            {
-                public int Add(int a, int b) => a + b;
-
-                public int Subtract(int a, int b)
-                {
-                    int result = a - b;
-                    return result;
-                }
-
-                public static void Main(string[] args)
-                {
-                    var calc = new SimpleCalculator();
-                    Console.WriteLine($"Addition: {calc.Add(30, 15)}");
-                    Console.WriteLine($"Subtraction: {calc.Subtract(30, 15)}");
-                }
-            }
-        ''')
-        
-        function_names = [f.name for f in result]
-        self.assertIn("SimpleCalculator::Add", function_names,
-                     f"Expected to find 'SimpleCalculator::Add' but only found: {function_names}")
-        self.assertIn("SimpleCalculator::Subtract", function_names,
-                     f"Expected to find 'SimpleCalculator::Subtract' but only found: {function_names}")
-        self.assertIn("SimpleCalculator::Main", function_names,
-                     f"Expected to find 'SimpleCalculator::Main' but only found: {function_names}")
-        
-        self.assertEqual(3, len(result),
-                        f"Expected 3 functions but found {len(result)}: {function_names}")
-        
-        add_func = next(f for f in result if f.name == "SimpleCalculator::Add")
-        self.assertEqual(1, add_func.cyclomatic_complexity,
-                        "Expression-bodied Add method should have complexity of 1")
 
     def test_expression_bodied_methods(self):
         """Test that expression-bodied methods (lambda-style syntax) are detected."""
@@ -202,7 +164,7 @@ class TestCsharp(unittest.TestCase):
                 }
             }
         ''')
-        
+
         function_names = [f.name for f in result]
         self.assertIn("SimpleCalculator::Add", function_names,
                      f"Expected to find 'SimpleCalculator::Add' but only found: {function_names}")
@@ -210,10 +172,10 @@ class TestCsharp(unittest.TestCase):
                      f"Expected to find 'SimpleCalculator::Subtract' but only found: {function_names}")
         self.assertIn("SimpleCalculator::Main", function_names,
                      f"Expected to find 'SimpleCalculator::Main' but only found: {function_names}")
-        
+
         self.assertEqual(3, len(result),
                         f"Expected 3 functions but found {len(result)}: {function_names}")
-        
+
         add_func = next(f for f in result if f.name == "SimpleCalculator::Add")
         self.assertEqual(1, add_func.cyclomatic_complexity,
                         "Expression-bodied Add method should have complexity of 1")

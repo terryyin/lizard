@@ -95,6 +95,7 @@ class TestRust(unittest.TestCase):
 
         self.assertEqual(1, len(result))
 
+
     def test_case_as_identifier(self):
         """
         Test that 'case' used as an identifier doesn't add to CCN.

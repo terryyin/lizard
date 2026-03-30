@@ -58,13 +58,15 @@ class TestOptionParsing(unittest.TestCase):
     @patch('sys.stderr', new_callable=StringIO)
     def test_sorting_factor_does_not_exist_error_message(self, mock_stderr, mock_exit):
         options = parse_args(['lizard', '-sdoesnotexist'])
+        # CogC is no longer a default extension, so cognitive_complexity is not in the default fields
         self.assertEqual("Wrong field name 'doesnotexist'.\nCandidates are: nloc, cyclomatic_complexity, token_count, parameter_count, length, location\n", mock_stderr.getvalue())
 
     @patch.object(sys, 'exit')
     @patch('sys.stderr', new_callable=StringIO)
     def test_sorting_factor_does_not_exist_error_message_with_ext(self, mock_stderr, mock_exit):
-        options = parse_args(['lizard', '-sdoesnotexist', '-End'])
-        self.assertEqual("Wrong field name 'doesnotexist'.\nCandidates are: nloc, cyclomatic_complexity, token_count, parameter_count, length, max_nesting_depth, location\n", mock_stderr.getvalue())
+        options = parse_args(['lizard', '-sdoesnotexist', '-End', '-Ecogc'])
+        # Extension fields (max_nesting_depth, cognitive_complexity) appear after base fields when extensions are loaded
+        self.assertEqual("Wrong field name 'doesnotexist'.\nCandidates are: nloc, cyclomatic_complexity, token_count, parameter_count, length, max_nesting_depth, cognitive_complexity, location\n", mock_stderr.getvalue())
 
     @patch.object(sys, 'exit')
     @patch('sys.stderr')

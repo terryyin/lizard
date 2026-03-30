@@ -417,6 +417,7 @@ class Test_parser_for_Ruby_def(unittest.TestCase):
                 ''')
         self.assertEqual(2, result[0].parameter_count)
 
+
     def test_rails_controller_with_percent_i_and_safe_navigation(self):
         """Issue #457: Parser must not hang on %i[] and &. constructs"""
         code = '''

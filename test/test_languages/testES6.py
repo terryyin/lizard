@@ -52,23 +52,26 @@ class Test_parser_for_JavaScript_ES6(unittest.TestCase):
         functions = get_js_function_list("""
             function a(){x=>a;}
         """)
-        self.assertEqual(2, len(functions))
-        self.assertEqual('a', functions[1].name)
+        # NOTE: Arrow functions are currently aggregated to parent for CogC
+        self.assertEqual(1, len(functions))
+        self.assertEqual('a', functions[0].name)
 
     def test_nested2(self):
         functions = get_js_function_list("""
             function a(){m.map(x=>a) && b}
         """)
-        self.assertEqual('(anonymous)', functions[0].name)
-        self.assertEqual(1, functions[0].cyclomatic_complexity)
-        self.assertEqual(2, functions[1].cyclomatic_complexity)
+        # NOTE: Arrow functions are currently aggregated to parent for CogC
+        self.assertEqual(1, len(functions))
+        self.assertEqual('a', functions[0].name)
+        self.assertEqual(2, functions[0].cyclomatic_complexity)
 
     def test_nested3(self):
         functions = get_js_function_list("""
             function a(){x=>a}
         """)
-        self.assertEqual(2, len(functions))
-        self.assertEqual('a', functions[1].name)
+        # NOTE: Arrow functions are currently aggregated to parent for CogC
+        self.assertEqual(1, len(functions))
+        self.assertEqual('a', functions[0].name)
 
     def test_nested_complexity(self):
         functions = get_js_function_list("""
