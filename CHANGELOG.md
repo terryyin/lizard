@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 1.21.3
+
+### Bug Fixes
+- Fix Java annotations with parenthesized arguments (e.g. `@Transactional(rollbackFor = Exception.class)`) being parsed as methods and corrupting complexity (issue #463)
+
 ## 1.21.2
 
 ### Bug Fixes
