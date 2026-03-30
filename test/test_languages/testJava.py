@@ -35,6 +35,27 @@ public String funcB() {
         result = get_java_function_list("@abc() void fun() throws e1, e2{}")
         self.assertEqual(1, len(result))
 
+    def test_transactional_rollback_for_annotation_issue_463(self):
+        """@Transactional(rollbackFor = Exception.class) must not parse inner names as methods."""
+        code = """
+public class LizardTest {
+    @Transactional(rollbackFor = Exception.class)
+    public void test1() {
+        List<String> list = new ArrayList<>();
+        if (CollectionUtils.isNotEmpty(list)) {
+            list.add("test");
+        }
+        for (String str : list) {
+            System.out.println(str);
+        }
+    }
+}
+"""
+        result = get_java_function_list(code)
+        self.assertEqual(1, len(result))
+        self.assertEqual("LizardTest::test1", result[0].name)
+        self.assertEqual(3, result[0].cyclomatic_complexity)
+
     def test_class_with_decorator(self):
         result = get_java_function_list("@abc() class funxx{ }")
         self.assertEqual(0, len(result))

@@ -76,9 +76,16 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
     def _state_decorator(self, _):
         self._state = self._state_post_decorator
 
+    @CodeStateMachine.read_inside_brackets_then("()", "_state_global")
+    def _state_annotation_arguments(self, token):
+        """Skip (...) after @Name so inner tokens are not parsed as methods."""
+        pass
+
     def _state_post_decorator(self, token):
         if token == '.':
             self._state = self._state_decorator
+        elif token == '(':
+            self.next(self._state_annotation_arguments, token)
         else:
             self._state = self._state_global
             self._state(token)
