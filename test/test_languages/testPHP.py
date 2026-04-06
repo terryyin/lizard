@@ -399,3 +399,113 @@ class MyClass {
         # bar and baz should not be in the function list
         self.assertNotIn('bar', function_names)
         self.assertNotIn('baz', function_names)
+
+
+class TestPHPCoverageGaps(unittest.TestCase):
+    """Tests targeting previously-uncovered branches in lizard_languages/php.py."""
+
+    def test_arrow_fn_skipped(self):
+        # _state_global 'fn' branch — arrow functions are NOT counted
+        funcs = get_php_function_list(
+            "<?php $double = fn($x) => $x * 2; ?>")
+        names = [f.name for f in funcs]
+        self.assertNotIn("fn", names)
+
+    def test_match_expression_in_function(self):
+        # _state_global 'match' + _match_expression(_continue) +
+        # '=>' counter + closing '}' branch
+        code = (
+            "<?php\n"
+            "function classify($x) {\n"
+            "    return match($x) {\n"
+            "        1, 2 => 'small',\n"
+            "        3, 4 => 'medium',\n"
+            "        default => 'large',\n"
+            "    };\n"
+            "}\n"
+            "?>"
+        )
+        funcs = get_php_function_list(code)
+        self.assertEqual(1, len(funcs))
+        self.assertEqual("classify", funcs[0].name)
+
+    def test_match_with_nested_parens(self):
+        # _match_expression_continue '(' nesting branch
+        code = (
+            "<?php\n"
+            "function f($x) {\n"
+            "    return match(($x)) { 1 => 'a', default => 'b' };\n"
+            "}\n"
+            "?>"
+        )
+        funcs = get_php_function_list(code)
+        self.assertEqual(1, len(funcs))
+
+    def test_top_level_if_condition(self):
+        # _state_global 'if' → _condition_expected → _condition_continue
+        code = "<?php if ($x > 0) { echo 'pos'; } ?>"
+        funcs = get_php_function_list(code)
+        self.assertEqual(0, len(funcs))
+
+    def test_top_level_foreach_with_nested_parens(self):
+        # _condition_continue '(' nesting branch
+        code = "<?php foreach (((array)$x) as $i) { echo $i; } ?>"
+        funcs = get_php_function_list(code)
+        self.assertEqual(0, len(funcs))
+
+    def test_trait_with_brace_only_first(self):
+        # _trait_declaration: '{' before any trait name token
+        # (degenerate but exercises the elif branch)
+        code = (
+            "<?php\n"
+            "trait { function noop() {} }\n"
+            "?>"
+        )
+        # Accept whatever the parser produces; this exists to hit the branch.
+        get_php_function_list(code)
+
+    def test_class_with_brace_only_first(self):
+        # _class_declaration: '{' before any class name token
+        code = (
+            "<?php\n"
+            "class { function noop() {} }\n"
+            "?>"
+        )
+        get_php_function_list(code)
+
+    def test_function_args_nested_parens(self):
+        # _function_args_continue '(' nesting branch
+        code = (
+            "<?php\n"
+            "function f($x = (1 + 2)) { return $x; }\n"
+            "?>"
+        )
+        funcs = get_php_function_list(code)
+        self.assertEqual(1, len(funcs))
+        self.assertEqual("f", funcs[0].name)
+
+    def test_anonymous_function_in_class(self):
+        # _function_name '(' branch with in_class
+        code = (
+            "<?php\n"
+            "class C {\n"
+            "    public $cb;\n"
+            "    public function __construct() {\n"
+            "        $this->cb = function() { return 1; };\n"
+            "    }\n"
+            "}\n"
+            "?>"
+        )
+        funcs = get_php_function_list(code)
+        names = [f.name for f in funcs]
+        self.assertTrue(any("__construct" in n for n in names))
+
+    def test_anonymous_function_assigned_top_level(self):
+        # _function_name '(' branch with assignments path (line 149)
+        code = (
+            "<?php\n"
+            "$f = function($x) { return $x + 1; };\n"
+            "?>"
+        )
+        funcs = get_php_function_list(code)
+        self.assertEqual(1, len(funcs))

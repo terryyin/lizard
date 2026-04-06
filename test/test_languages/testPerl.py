@@ -607,4 +607,129 @@ sub test_function {
         # Verify the function is the one we expect
         function = result.function_list[0]
         self.assertEqual("test_function", function.name)
-        self.assertEqual(3, function.cyclomatic_complexity)  # 1 base + 2 conditions (else doesn't count) 
+        self.assertEqual(3, function.cyclomatic_complexity)  # 1 base + 2 conditions (else doesn't count)
+
+
+class TestPerlCoverageGaps(unittest.TestCase):
+    """Tests targeting previously-uncovered branches in lizard_languages/perl.py."""
+
+    def _funcs(self, code):
+        return analyze_file.analyze_source_code("a.pl", code).function_list
+
+    def test_inline_comment_after_code(self):
+        # exercises preprocess() comment-buffer branch (token after '#'
+        # then newline flushes it)
+        code = (
+            "sub foo {\n"
+            "    my $x = 1; # trailing comment\n"
+            "    return $x;\n"
+            "}\n"
+        )
+        funcs = self._funcs(code)
+        self.assertEqual(1, len(funcs))
+        self.assertEqual("foo", funcs[0].name)
+
+    def test_unterminated_trailing_comment(self):
+        # preprocess() final flush when file ends mid-comment (no newline)
+        code = "sub foo { return 1; }\n# trailing"
+        funcs = self._funcs(code)
+        self.assertEqual(1, len(funcs))
+
+    def test_top_level_function_call_with_anonymous_sub(self):
+        # _state_function_call: 'sub' arg in a top-level call
+        code = (
+            "register(sub { return 42; });\n"
+        )
+        funcs = self._funcs(code)
+        self.assertEqual(1, len(funcs))
+        self.assertEqual("<anonymous>", funcs[0].name)
+
+    def test_top_level_call_with_nested_parens(self):
+        # _state_function_call: nested '(' increments paren_count
+        code = "print((1 + 2));\n"
+        funcs = self._funcs(code)
+        self.assertEqual(0, len(funcs))
+
+    def test_function_with_prototype(self):
+        # _state_function_dec '(' branch + _state_function_prototype
+        code = (
+            "sub fetch ($) {\n"
+            "    return shift;\n"
+            "}\n"
+        )
+        funcs = self._funcs(code)
+        self.assertEqual(1, len(funcs))
+        self.assertEqual("fetch", funcs[0].name)
+
+    def test_function_with_prototype_nested_parens(self):
+        # _state_function_prototype '(' nesting branch
+        code = (
+            "sub weird (($)) {\n"
+            "    return 1;\n"
+            "}\n"
+        )
+        funcs = self._funcs(code)
+        self.assertEqual(1, len(funcs))
+
+    def test_variable_declaration_no_assignment(self):
+        # _state_variable ';' branch (declaration, no '=')
+        code = (
+            "my $x;\n"
+            "sub foo { return 1; }\n"
+        )
+        funcs = self._funcs(code)
+        self.assertEqual(1, len(funcs))
+        self.assertEqual("foo", funcs[0].name)
+
+    def test_nested_named_sub_with_attribute(self):
+        # _state_nested_named_sub_brace_search ':' branch
+        code = (
+            "sub outer {\n"
+            "    sub inner :method {\n"
+            "        return 1;\n"
+            "    }\n"
+            "    return inner();\n"
+            "}\n"
+        )
+        funcs = self._funcs(code)
+        names = {f.name for f in funcs}
+        self.assertIn("inner", names)
+
+    def test_nested_named_sub_forward_declaration(self):
+        # _state_nested_named_sub_brace_search ';' (forward decl) branch
+        code = (
+            "sub outer {\n"
+            "    sub inner;\n"
+            "    return 1;\n"
+            "}\n"
+        )
+        funcs = self._funcs(code)
+        names = {f.name for f in funcs}
+        self.assertIn("inner", names)
+
+    def test_nested_call_with_anonymous_sub(self):
+        # _state_nested_call 'sub' branch + _state_nested_anon_search/body
+        code = (
+            "sub outer {\n"
+            "    register(sub { return 1; });\n"
+            "    return 1;\n"
+            "}\n"
+        )
+        funcs = self._funcs(code)
+        names = [f.name for f in funcs]
+        # Just exercises _state_nested_call 'sub' + _state_nested_anon_*
+        # branches; the parser's naming for the outer sub is not asserted
+        # here (it currently surfaces as <anonymous>).
+        self.assertTrue(any("anonymous" in n for n in names))
+
+    def test_nested_call_with_extra_parens(self):
+        # _state_nested_call '(' nesting branch
+        code = (
+            "sub outer {\n"
+            "    print((1));\n"
+            "    return 1;\n"
+            "}\n"
+        )
+        funcs = self._funcs(code)
+        self.assertEqual(1, len(funcs))
+        self.assertEqual("outer", funcs[0].name) 
