@@ -717,10 +717,12 @@ class TestPerlCoverageGaps(unittest.TestCase):
         )
         funcs = self._funcs(code)
         names = [f.name for f in funcs]
-        # Just exercises _state_nested_call 'sub' + _state_nested_anon_*
-        # branches; the parser's naming for the outer sub is not asserted
-        # here (it currently surfaces as <anonymous>).
-        self.assertTrue(any("anonymous" in n for n in names))
+        # Current parser behavior: inner anonymous sub is captured as
+        # <anonymous>, and the outer "sub outer" is lost (surfaces as
+        # *global*). Locking in the observed set so regressions in the
+        # _state_nested_call 'sub' branch are caught.
+        # TODO: outer sub should be named "outer" — pending parser fix.
+        self.assertEqual(["<anonymous>", "*global*"], names)
 
     def test_nested_call_with_extra_parens(self):
         # _state_nested_call '(' nesting branch

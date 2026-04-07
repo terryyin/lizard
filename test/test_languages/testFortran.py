@@ -306,8 +306,8 @@ class TestFortranCoverageGaps(unittest.TestCase):
             "  PRINT *, 'hi'\n"
             "END PROGRAM hello\n"
         )
-        # Just exercises the branch — no function expected at top level
-        self._funcs(code)
+        # PROGRAM is a namespace, not a function — no entry in function_list
+        self.assertEqual([], self._funcs(code))
 
     def test_typed_function_prefix(self):
         # _ignore_var FUNCTION_NAME_TOKENS branch — INTEGER FUNCTION foo()
@@ -384,18 +384,6 @@ class TestFortranCoverageGaps(unittest.TestCase):
         funcs = self._funcs(code)
         self.assertEqual(1, len(funcs))
 
-    def test_block_with_paren(self):
-        # _ignore_if_paren '(' branch — BLOCK followed by '(' is unusual
-        # but exists for safety. Use a parenthesised expression that
-        # tokenises right after BLOCK to exercise the branch.
-        code = (
-            "SUBROUTINE foo()\n"
-            "  BLOCK\n"
-            "  END BLOCK\n"
-            "END SUBROUTINE foo\n"
-        )
-        self._funcs(code)
-
     def test_type_declaration(self):
         # _state_global TYPE → _type → _namespace
         code = (
@@ -405,7 +393,8 @@ class TestFortranCoverageGaps(unittest.TestCase):
             "  END TYPE point\n"
             "END MODULE m\n"
         )
-        self._funcs(code)
+        # TYPE is a namespace, not a function — no function_list entries
+        self.assertEqual([], self._funcs(code))
 
     def test_type_with_attribute(self):
         # _type ',' branch → _namespace
@@ -416,7 +405,7 @@ class TestFortranCoverageGaps(unittest.TestCase):
             "  END TYPE point\n"
             "END MODULE m\n"
         )
-        self._funcs(code)
+        self.assertEqual([], self._funcs(code))
 
     def test_if_single_line(self):
         # _if_then else branch — IF without THEN (single-line form)

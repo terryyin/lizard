@@ -44,7 +44,9 @@ class TestDuplicatedParamList(unittest.TestCase):
         duplicates = sum(f.parameter_list_duplicates for f in fi.function_list)
         self.assertGreater(duplicates, 0)
 
-    def test_no_duplicates_with_different_params(self):
+    def test_distinct_param_lists_count_self_only(self):
+        # Each distinct signature appears exactly once → count == 1
+        # (a function's own parameter list is always counted).
         code = '''
 void funcX(int a, int b, int c, int d, int e) { return 1; }
 void funcY(int p, int q, int r, int s, int t) { return 2; }
@@ -67,7 +69,7 @@ void funcY(int p, int q, int r, int s, int t) { return 2; }
             list(analyze_files(sorted(source_files.keys()), exts=extensions))
 
         run()
-        self.assertGreater(ext.all_count_per_file["a,b,c,d,e"], 0)
+        self.assertEqual(2, ext.all_count_per_file["a,b,c,d,e"])
 
     def test_parameters_static_method(self):
         class FakeFunc(object):

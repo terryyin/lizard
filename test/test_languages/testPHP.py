@@ -408,8 +408,7 @@ class TestPHPCoverageGaps(unittest.TestCase):
         # _state_global 'fn' branch — arrow functions are NOT counted
         funcs = get_php_function_list(
             "<?php $double = fn($x) => $x * 2; ?>")
-        names = [f.name for f in funcs]
-        self.assertNotIn("fn", names)
+        self.assertEqual(0, len(funcs))
 
     def test_match_expression_in_function(self):
         # _state_global 'match' + _match_expression(_continue) +
@@ -455,14 +454,15 @@ class TestPHPCoverageGaps(unittest.TestCase):
 
     def test_trait_with_brace_only_first(self):
         # _trait_declaration: '{' before any trait name token
-        # (degenerate but exercises the elif branch)
+        # (degenerate but exercises the elif branch). Parser's
+        # fallback surfaces the inner method at top level.
         code = (
             "<?php\n"
             "trait { function noop() {} }\n"
             "?>"
         )
-        # Accept whatever the parser produces; this exists to hit the branch.
-        get_php_function_list(code)
+        funcs = get_php_function_list(code)
+        self.assertEqual(["noop"], [f.name for f in funcs])
 
     def test_class_with_brace_only_first(self):
         # _class_declaration: '{' before any class name token
@@ -471,7 +471,8 @@ class TestPHPCoverageGaps(unittest.TestCase):
             "class { function noop() {} }\n"
             "?>"
         )
-        get_php_function_list(code)
+        funcs = get_php_function_list(code)
+        self.assertEqual(["noop"], [f.name for f in funcs])
 
     def test_function_args_nested_parens(self):
         # _function_args_continue '(' nesting branch
@@ -509,3 +510,4 @@ class TestPHPCoverageGaps(unittest.TestCase):
         )
         funcs = get_php_function_list(code)
         self.assertEqual(1, len(funcs))
+        self.assertEqual("$f", funcs[0].name)
