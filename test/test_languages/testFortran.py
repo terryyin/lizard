@@ -433,3 +433,93 @@ class TestFortranCoverageGaps(unittest.TestCase):
         funcs = self._funcs(code)
         names = [f.name for f in funcs]
         self.assertTrue(any('foo' in n for n in names))
+
+    # ------------------------------------------------------------------
+    # Iteration 2 — reachable coverage gaps in fortran.py
+    # See docs/pr0-findings.md for methodology.
+    # ------------------------------------------------------------------
+
+    def test_fixed_form_c_comment_line(self):
+        # Target: fortran.py:62 — preprocess() C/*-style comment rewrite.
+        # Fixed-form Fortran (pre-F90) uses 'C' or '*' in column 1 as a
+        # comment marker; preprocess() rewrites it to '!' so downstream
+        # tokenization treats it as a comment.
+        # Counter-input MISSING: a C-style comment line must NOT be
+        # mistaken for code inside the function body (cyclomatic must
+        # stay at 1, not absorb the comment as a keyword).
+        code = (
+            "C this is a fixed-form comment\n"
+            "      SUBROUTINE foo()\n"
+            "* another fixed-form comment\n"
+            "      END SUBROUTINE foo\n"
+        )
+        funcs = self._funcs(code)
+        self.assertEqual(1, len(funcs))
+        self.assertEqual('foo', funcs[0].name)
+        self.assertEqual(1, funcs[0].cyclomatic_complexity)
+
+    def test_block_construct_with_parenthesis(self):
+        # Target: fortran.py:172 — _ignore_if_paren '(' branch.
+        # Existing test_block_construct uses bare BLOCK (no parens),
+        # which exits via the else branch at line 174.  This exercises
+        # the paren branch by placing a '(' immediately after BLOCK.
+        # Counter-input BOUNDARY: paired with test_block_construct,
+        # both BLOCK forms must yield exactly one function named 'foo'
+        # with cyclomatic 1 (the BLOCK itself must not add complexity).
+        code = (
+            "SUBROUTINE foo()\n"
+            "  BLOCK (1)\n"
+            "    INTEGER :: x\n"
+            "    x = 1\n"
+            "  END BLOCK\n"
+            "END SUBROUTINE foo\n"
+        )
+        funcs = self._funcs(code)
+        self.assertEqual(1, len(funcs))
+        self.assertEqual('foo', funcs[0].name)
+        self.assertEqual(1, funcs[0].cyclomatic_complexity)
+
+    def test_type_kind_spec_declaration(self):
+        # Target: fortran.py:232 — _type else branch.
+        # TYPE(name) is the derived-type kind-spec syntax for a variable
+        # declaration (not a type definition).  The '(' token fails the
+        # alpha/',' /'::' check at line 229, falling through to the else
+        # branch which resets state with the '(' re-emitted.
+        # Counter-input: paired with existing test_type_declaration
+        # (which uses 'TYPE :: point') and test_type_with_attribute
+        # (which uses 'TYPE, PUBLIC'), covering the three _type branches.
+        code = (
+            "SUBROUTINE foo()\n"
+            "  TYPE(point) :: p\n"
+            "  p%x = 1.0\n"
+            "END SUBROUTINE foo\n"
+        )
+        funcs = self._funcs(code)
+        self.assertEqual(1, len(funcs))
+        self.assertEqual('foo', funcs[0].name)
+
+    def test_if_identifier_not_keyword(self):
+        # Target: fortran.py:242 — _if else branch.
+        # When 'IF' appears but is not followed by '(' it cannot be an
+        # IF statement; the state machine must reset and reprocess the
+        # current token through _state_global.
+        #
+        # Observed quirk: lizard's generic cyclomatic counter still
+        # increments on every 'if' token regardless of whether the
+        # Fortran state machine treats it as a keyword, so the two
+        # 'if' occurrences below produce cyclomatic = 3 (1 + 2).  This
+        # is independent of fortran.py and not in PR0 scope; the test
+        # locks in the observed value so a regression in the _if else
+        # branch (which currently reaches line 242) would still be
+        # caught via the function-count / name assertions.
+        code = (
+            "SUBROUTINE foo()\n"
+            "  INTEGER :: if\n"
+            "  if = 1\n"
+            "END SUBROUTINE foo\n"
+        )
+        funcs = self._funcs(code)
+        self.assertEqual(1, len(funcs))
+        self.assertEqual('foo', funcs[0].name)
+        # Locks in current behavior; see note above.
+        self.assertEqual(3, funcs[0].cyclomatic_complexity)

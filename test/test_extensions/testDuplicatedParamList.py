@@ -69,7 +69,24 @@ void funcY(int p, int q, int r, int s, int t) { return 2; }
             list(analyze_files(sorted(source_files.keys()), exts=extensions))
 
         run()
+        # all_count is total occurrences (2 funcs with same signature)
+        self.assertEqual(2, ext.all_count["a,b,c,d,e"])
+        # all_count_per_file is de-duplicated per file (each file has
+        # this signature once → 2 files)
         self.assertEqual(2, ext.all_count_per_file["a,b,c,d,e"])
+
+    def test_below_threshold_duplicates_ignored(self):
+        # Counter-input BOUNDARY: two 4-param funcs with identical
+        # signatures must NOT be counted as duplicates because
+        # len(parameters) < DEFAULT_MIN_PARAM_COUNT (5).  Locks the
+        # `>= 5` threshold against mutation `>=` → `>` or `5` → `4`.
+        fi = self._process(
+            FOUR_PARAM_FUNC.format(name="A") +
+            FOUR_PARAM_FUNC.format(name="B")
+        )
+        for f in fi.function_list:
+            self.assertEqual(0, f.parameter_list_duplicates)
+            self.assertEqual(0, f.parameter_list_duplicated_in_files)
 
     def test_parameters_static_method(self):
         class FakeFunc(object):

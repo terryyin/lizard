@@ -511,3 +511,53 @@ class TestPHPCoverageGaps(unittest.TestCase):
         funcs = get_php_function_list(code)
         self.assertEqual(1, len(funcs))
         self.assertEqual("$f", funcs[0].name)
+
+    # ------------------------------------------------------------------
+    # Iteration 3 — reachable coverage gaps in php.py
+    # See docs/pr0-findings.md for methodology.
+    # ------------------------------------------------------------------
+
+    def test_top_level_match_expression(self):
+        # Targets: php.py:49-51, 59, 62-67, 227-229, 232-237
+        # The existing test_match_expression_in_function places 'match'
+        # inside a function body, where _state_global is not active —
+        # _function_body only tracks '{' / '}' and does NOT route other
+        # tokens to the global handler.  The match-related branches in
+        # _state_global (lines 48-67) and _match_expression(_continue)
+        # are therefore unreachable from inside a function.
+        #
+        # A top-level match expression is the only way to reach them.
+        # Counter-input BOUNDARY: the match must have >=2 arms so the
+        # '=>' counter (line 59) fires more than once, and the '}' end
+        # handler (lines 62-67) accumulates the cases.  We also nest
+        # the match's condition in extra parens to hit 232-233 (paren
+        # nesting branch of _match_expression_continue).
+        code = (
+            "<?php\n"
+            "$r = match(($x)) {\n"
+            "    1, 2 => 'small',\n"
+            "    3, 4 => 'medium',\n"
+            "    default => 'large',\n"
+            "};\n"
+            "?>"
+        )
+        funcs = get_php_function_list(code)
+        # Top-level code: no functions expected.
+        self.assertEqual(0, len(funcs))
+
+    def test_bare_top_level_anonymous_function(self):
+        # Target: php.py:149 — _function_name '(' branch, else path
+        # (no assignment, not in class/trait) — bare closure expression
+        # with no assignment target.
+        # Counter-input MISSING: paired with
+        # test_anonymous_function_assigned_top_level (which has an
+        # assignment and hits lines 145-147), this covers the fallback
+        # path where `self.assignments` is empty.
+        code = (
+            "<?php\n"
+            "function() { return 1; };\n"
+            "?>"
+        )
+        funcs = get_php_function_list(code)
+        self.assertEqual(1, len(funcs))
+        self.assertEqual("(anonymous)", funcs[0].name)
