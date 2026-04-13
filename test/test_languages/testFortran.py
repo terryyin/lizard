@@ -291,3 +291,235 @@ class TestFortran(unittest.TestCase):
         self.assertIn('mymod::recursive::sub1', [f.name for f in result], "Recursive procedure not found")  # Recursive one
         self.assertIn('mymod::recursive::elemental::func1', [f.name for f in result], "Elemental procedure not found")  # Elemental one
         self.assertIn('mymod::recursive::elemental::func2', [f.name for f in result], "Non-decorated procedure not found")  # Non-decorated one
+
+
+class TestFortranCoverageGaps(unittest.TestCase):
+    """Tests targeting previously-uncovered branches in lizard_languages/fortran.py."""
+
+    def _funcs(self, code):
+        return get_fortran_function_list(code)
+
+    def test_program_block(self):
+        # _state_global PROGRAM → _namespace
+        code = (
+            "PROGRAM hello\n"
+            "  PRINT *, 'hi'\n"
+            "END PROGRAM hello\n"
+        )
+        # PROGRAM is a namespace, not a function — no entry in function_list
+        self.assertEqual([], self._funcs(code))
+
+    def test_typed_function_prefix(self):
+        # _ignore_var FUNCTION_NAME_TOKENS branch — INTEGER FUNCTION foo()
+        code = (
+            "INTEGER FUNCTION square(x)\n"
+            "  INTEGER :: x\n"
+            "  square = x * x\n"
+            "END FUNCTION square\n"
+        )
+        funcs = self._funcs(code)
+        names = [f.name for f in funcs]
+        self.assertIn('square', names)
+
+    def test_typed_var_no_function(self):
+        # _ignore_var else branch — REAL :: x (just a var declaration)
+        code = (
+            "SUBROUTINE foo()\n"
+            "  REAL :: x\n"
+            "  x = 1.0\n"
+            "END SUBROUTINE foo\n"
+        )
+        funcs = self._funcs(code)
+        self.assertEqual(1, len(funcs))
+        self.assertEqual('foo', funcs[0].name)
+
+    def test_save_statement(self):
+        # IGNORE_NEXT_TOKENS 'SAVE' → _ignore_next
+        code = (
+            "SUBROUTINE foo()\n"
+            "  SAVE x\n"
+            "  INTEGER :: x\n"
+            "END SUBROUTINE foo\n"
+        )
+        funcs = self._funcs(code)
+        self.assertEqual(1, len(funcs))
+
+    def test_data_statement(self):
+        # IGNORE_NEXT_TOKENS 'DATA' → _ignore_next
+        code = (
+            "SUBROUTINE foo()\n"
+            "  INTEGER :: x\n"
+            "  DATA x /0/\n"
+            "END SUBROUTINE foo\n"
+        )
+        funcs = self._funcs(code)
+        self.assertEqual(1, len(funcs))
+
+    def test_recursive_function(self):
+        # RESET_STATE_TOKENS 'RECURSIVE' → reset_state
+        code = (
+            "RECURSIVE FUNCTION fact(n) RESULT(r)\n"
+            "  INTEGER :: n, r\n"
+            "  IF (n <= 1) THEN\n"
+            "    r = 1\n"
+            "  ELSE\n"
+            "    r = n * fact(n - 1)\n"
+            "  END IF\n"
+            "END FUNCTION fact\n"
+        )
+        funcs = self._funcs(code)
+        names = [f.name for f in funcs]
+        self.assertIn('fact', names)
+
+    def test_block_construct(self):
+        # _state_global BLOCK → _ignore_if_paren else branch
+        code = (
+            "SUBROUTINE foo()\n"
+            "  BLOCK\n"
+            "    INTEGER :: x\n"
+            "    x = 1\n"
+            "  END BLOCK\n"
+            "END SUBROUTINE foo\n"
+        )
+        funcs = self._funcs(code)
+        self.assertEqual(1, len(funcs))
+
+    def test_type_declaration(self):
+        # _state_global TYPE → _type → _namespace
+        code = (
+            "MODULE m\n"
+            "  TYPE :: point\n"
+            "    REAL :: x, y\n"
+            "  END TYPE point\n"
+            "END MODULE m\n"
+        )
+        # TYPE is a namespace, not a function — no function_list entries
+        self.assertEqual([], self._funcs(code))
+
+    def test_type_with_attribute(self):
+        # _type ',' branch → _namespace
+        code = (
+            "MODULE m\n"
+            "  TYPE, PUBLIC :: point\n"
+            "    REAL :: x\n"
+            "  END TYPE point\n"
+            "END MODULE m\n"
+        )
+        self.assertEqual([], self._funcs(code))
+
+    def test_if_single_line(self):
+        # _if_then else branch — IF without THEN (single-line form)
+        code = (
+            "SUBROUTINE foo(x)\n"
+            "  INTEGER :: x\n"
+            "  IF (x > 0) x = x + 1\n"
+            "END SUBROUTINE foo\n"
+        )
+        funcs = self._funcs(code)
+        self.assertEqual(1, len(funcs))
+        # Single-line IF should still bump CCN
+        self.assertGreaterEqual(funcs[0].cyclomatic_complexity, 2)
+
+    def test_submodule(self):
+        # _state_global SUBMODULE branch + _module else path
+        code = (
+            "SUBMODULE (parent) child\n"
+            "  CONTAINS\n"
+            "  SUBROUTINE foo()\n"
+            "    PRINT *, 'hi'\n"
+            "  END SUBROUTINE foo\n"
+            "END SUBMODULE child\n"
+        )
+        funcs = self._funcs(code)
+        names = [f.name for f in funcs]
+        self.assertTrue(any('foo' in n for n in names))
+
+    # ------------------------------------------------------------------
+    # Iteration 2 — reachable coverage gaps in fortran.py
+    # See docs/pr0-findings.md for methodology.
+    # ------------------------------------------------------------------
+
+    def test_fixed_form_c_comment_line(self):
+        # Target: fortran.py:62 — preprocess() C/*-style comment rewrite.
+        # Fixed-form Fortran (pre-F90) uses 'C' or '*' in column 1 as a
+        # comment marker; preprocess() rewrites it to '!' so downstream
+        # tokenization treats it as a comment.
+        # Counter-input MISSING: a C-style comment line must NOT be
+        # mistaken for code inside the function body (cyclomatic must
+        # stay at 1, not absorb the comment as a keyword).
+        code = (
+            "C this is a fixed-form comment\n"
+            "      SUBROUTINE foo()\n"
+            "* another fixed-form comment\n"
+            "      END SUBROUTINE foo\n"
+        )
+        funcs = self._funcs(code)
+        self.assertEqual(1, len(funcs))
+        self.assertEqual('foo', funcs[0].name)
+        self.assertEqual(1, funcs[0].cyclomatic_complexity)
+
+    def test_block_construct_with_parenthesis(self):
+        # Target: fortran.py:172 — _ignore_if_paren '(' branch.
+        # Existing test_block_construct uses bare BLOCK (no parens),
+        # which exits via the else branch at line 174.  This exercises
+        # the paren branch by placing a '(' immediately after BLOCK.
+        # Counter-input BOUNDARY: paired with test_block_construct,
+        # both BLOCK forms must yield exactly one function named 'foo'
+        # with cyclomatic 1 (the BLOCK itself must not add complexity).
+        code = (
+            "SUBROUTINE foo()\n"
+            "  BLOCK (1)\n"
+            "    INTEGER :: x\n"
+            "    x = 1\n"
+            "  END BLOCK\n"
+            "END SUBROUTINE foo\n"
+        )
+        funcs = self._funcs(code)
+        self.assertEqual(1, len(funcs))
+        self.assertEqual('foo', funcs[0].name)
+        self.assertEqual(1, funcs[0].cyclomatic_complexity)
+
+    def test_type_kind_spec_declaration(self):
+        # Target: fortran.py:232 — _type else branch.
+        # TYPE(name) is the derived-type kind-spec syntax for a variable
+        # declaration (not a type definition).  The '(' token fails the
+        # alpha/',' /'::' check at line 229, falling through to the else
+        # branch which resets state with the '(' re-emitted.
+        # Counter-input: paired with existing test_type_declaration
+        # (which uses 'TYPE :: point') and test_type_with_attribute
+        # (which uses 'TYPE, PUBLIC'), covering the three _type branches.
+        code = (
+            "SUBROUTINE foo()\n"
+            "  TYPE(point) :: p\n"
+            "  p%x = 1.0\n"
+            "END SUBROUTINE foo\n"
+        )
+        funcs = self._funcs(code)
+        self.assertEqual(1, len(funcs))
+        self.assertEqual('foo', funcs[0].name)
+
+    def test_if_identifier_not_keyword(self):
+        # Target: fortran.py:242 — _if else branch.
+        # When 'IF' appears but is not followed by '(' it cannot be an
+        # IF statement; the state machine must reset and reprocess the
+        # current token through _state_global.
+        #
+        # Observed quirk: lizard's generic cyclomatic counter still
+        # increments on every 'if' token regardless of whether the
+        # Fortran state machine treats it as a keyword, so the two
+        # 'if' occurrences below produce cyclomatic = 3 (1 + 2).  This
+        # is independent of fortran.py and not in PR0 scope; the test
+        # locks in the observed value so a regression in the _if else
+        # branch (which currently reaches line 242) would still be
+        # caught via the function-count / name assertions.
+        code = (
+            "SUBROUTINE foo()\n"
+            "  INTEGER :: if\n"
+            "  if = 1\n"
+            "END SUBROUTINE foo\n"
+        )
+        funcs = self._funcs(code)
+        self.assertEqual(1, len(funcs))
+        self.assertEqual('foo', funcs[0].name)
+        # Locks in current behavior; see note above.
+        self.assertEqual(3, funcs[0].cyclomatic_complexity)
