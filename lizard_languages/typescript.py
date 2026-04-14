@@ -130,7 +130,7 @@ class TypeScriptStates(CodeStateMachine):
         self.started_function = None
         self.as_object = False
         self._getter_setter_prefix = None
-        self.arrow_function_pending = False
+
         self._ts_declare = False  # Track if 'declare' was seen
         self._static_seen = False  # Track if 'static' was seen
         self._async_seen = False  # Track if 'async' was seen
@@ -272,7 +272,7 @@ class TypeScriptStates(CodeStateMachine):
                     self._prev_token = token
                     return
                 if not self.started_function:
-                    self.arrow_function_pending = True
+
                     self._function(self.last_tokens)
                 self.next(self._function, token)
                 return
@@ -326,7 +326,7 @@ class TypeScriptStates(CodeStateMachine):
                     self.sub_state(self.__class__(self.context))
                 else:
                     if not self.started_function:
-                        self.arrow_function_pending = True
+    
                         self._function(self.function_name)
                     self.next(self._function, token)
             else:
@@ -445,10 +445,8 @@ class TypeScriptStates(CodeStateMachine):
         else:
             if not self.started_function:
                 self._push_function_to_stack()
-            self.arrow_function_pending = False
             self._state = self._dec
-            if token == '(':
-                self._dec(token)
+            self._dec(token)
 
     def _field(self, token):
         self.last_tokens += token
