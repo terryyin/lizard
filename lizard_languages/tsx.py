@@ -24,6 +24,7 @@ class TSXReader(TypeScriptReader):
         addition = addition + \
             r"|(?:<[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)*>)" + \
             r"|(?:<\/[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)*>)" + \
+            r"|(?:#\w+)" + \
             r"|(?:\$\w+)" + \
             r"|(?:<\/\w+>)" + \
             r"|(?:=>)" + \
