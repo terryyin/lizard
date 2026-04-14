@@ -128,12 +128,6 @@ _TS_TYPE_KEYWORDS = frozenset([
     'object', 'unknown', 'never',
 ])
 
-# Built-in constructors/functions that should not be detected as function definitions.
-# These appear as `String(x)`, `Number(x)` etc. — calls, not definitions.
-_JS_BUILTIN_CALLABLES = frozenset([
-    'String', 'Number', 'Boolean', 'Array', 'Object',
-])
-
 
 class TypeScriptStates(CodeStateMachine):
     def __init__(self, context):
@@ -448,8 +442,6 @@ class TypeScriptStates(CodeStateMachine):
     def _push_function_to_stack(self):
         if self._in_abstract_context:
             return
-        if self.function_name in _JS_BUILTIN_CALLABLES:
-            return
         self.started_function = True
         self.context.push_new_function(self.function_name or '(anonymous)')
 
@@ -493,6 +485,7 @@ class TypeScriptStates(CodeStateMachine):
         else:
             if not self.started_function:
                 self._push_function_to_stack()
+            self._generic_depth_in_dec = 0
             self._state = self._dec
             self._dec(token)
 
@@ -506,15 +499,25 @@ class TypeScriptStates(CodeStateMachine):
         elif token != '(':
             # Filter out TypeScript type keywords and operators from parameter count
             if token == ',':
-                self.context.parameter(',')
+                # Ignore commas inside generic type brackets: Map<K, V>
+                if not getattr(self, '_generic_depth_in_dec', 0):
+                    self.context.parameter(',')
+            elif token == '<':
+                self._generic_depth_in_dec = getattr(
+                    self, '_generic_depth_in_dec', 0) + 1
+            elif token == '>':
+                depth = getattr(self, '_generic_depth_in_dec', 0)
+                if depth > 0:
+                    self._generic_depth_in_dec = depth - 1
             elif token in _TS_TYPE_KEYWORDS:
                 pass
             elif token in ('*', '+', '-', '/', '%', '=', '.'):
                 pass
-            elif (token.replace('_', '').replace('?', '').isalnum() and
-                  token.replace('?', '') and
-                  token.replace('?', '')[0].isalpha()):
-                self.context.parameter(token.replace('?', ''))
+            elif not getattr(self, '_generic_depth_in_dec', 0):
+                if (token.replace('_', '').replace('?', '').isalnum() and
+                        token.replace('?', '') and
+                        token.replace('?', '')[0].isalpha()):
+                    self.context.parameter(token.replace('?', ''))
             return
         self.context.add_to_long_function_name(" " + token)
 
