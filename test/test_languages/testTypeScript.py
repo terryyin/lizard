@@ -887,7 +887,7 @@ class Test_TypeScript_misc_patterns(unittest.TestCase):
         self.assertEqual(["safeFetch"], [f.name for f in functions])
 
     def test_class_arrow_field(self):
-        """Class arrow field should detect the arrow as anonymous"""
+        """Class arrow field should use the field name, not (anonymous)"""
         code = '''
         class Btn {
             handleClick = () => { console.log("click"); };
@@ -896,5 +896,105 @@ class Test_TypeScript_misc_patterns(unittest.TestCase):
         '''
         functions = get_ts_function_list(code)
         names = [f.name for f in functions]
-        self.assertIn("(anonymous)", names)
+        self.assertIn("handleClick", names)
         self.assertIn("render", names)
+
+
+class Test_ts_class_field_arrow_naming(unittest.TestCase):
+    """Class field arrows (field = () => {}) should be named by the field."""
+
+    def test_basic_class_field_arrow(self):
+        """handleClick = () => {} should be named handleClick"""
+        code = '''
+        class Btn {
+            handleClick = () => { console.log("click"); };
+        }
+        '''
+        functions = get_ts_function_list(code)
+        self.assertEqual(["handleClick"], [f.name for f in functions])
+
+    def test_multiple_class_field_arrows(self):
+        """Multiple field arrows should each get their field name"""
+        code = '''
+        class Form {
+            handleSubmit = () => { this.submit(); };
+            handleReset = () => { this.reset(); };
+            validate = (value: string) => { return value.length > 0; };
+        }
+        '''
+        functions = get_ts_function_list(code)
+        self.assertEqual(
+            ["handleSubmit", "handleReset", "validate"],
+            [f.name for f in functions])
+
+    def test_field_arrows_mixed_with_methods(self):
+        """Field arrows and regular methods should all be correctly named"""
+        code = '''
+        class UserDashboard {
+            handleLogin = () => { this.login(); };
+            handleLogout = () => { this.logout(); };
+            render() { return null; }
+            componentDidMount() { this.fetchData(); }
+        }
+        '''
+        functions = get_ts_function_list(code)
+        self.assertEqual(
+            ["handleLogin", "handleLogout", "render", "componentDidMount"],
+            [f.name for f in functions])
+
+    def test_typed_field_arrow(self):
+        """Field arrow with type annotation should use field name"""
+        code = '''
+        class Api {
+            fetchData = async (url: string): Promise<Response> => {
+                return fetch(url);
+            };
+        }
+        '''
+        functions = get_ts_function_list(code)
+        self.assertEqual(["fetchData"], [f.name for f in functions])
+
+    def test_field_arrow_after_typed_property(self):
+        """Field arrow after a typed property (not arrow) should be named"""
+        code = '''
+        class Counter {
+            count: number;
+            increment = () => { this.count++; };
+            decrement = () => { this.count--; };
+            getCount() { return this.count; }
+        }
+        '''
+        functions = get_ts_function_list(code)
+        self.assertEqual(
+            ["increment", "decrement", "getCount"],
+            [f.name for f in functions])
+
+    def test_static_field_arrow(self):
+        """Static field arrows should be detected (name may vary)"""
+        code = '''
+        class Logger {
+            static instance = () => { return new Logger(); };
+            log() { console.log("msg"); }
+        }
+        '''
+        functions = get_ts_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("log", names)
+        self.assertEqual(2, len(functions))
+
+    def test_inline_callbacks_remain_anonymous(self):
+        """Inline callbacks (.map, .filter) should stay (anonymous)"""
+        code = '''
+        class Processor {
+            process(items: string[]) {
+                return items
+                    .map(x => x.trim())
+                    .filter(x => x.length > 0);
+            }
+        }
+        '''
+        functions = get_ts_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("process", names)
+        anon_count = sum(1 for n in names if n == "(anonymous)")
+        self.assertGreaterEqual(anon_count, 2)
