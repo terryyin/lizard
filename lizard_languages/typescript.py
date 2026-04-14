@@ -107,8 +107,8 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
             # Always yield closing quote
             yield quote
 
-        # Restore original addition pattern for template literals
-        addition = addition + r"|(?:\$\w+)" + r"|(?:\w+\?)" + r"|`.*?`"
+        # Private method (#), dollar ($), optional chaining (?), template literals
+        addition = addition + r"|(?:#\w+)" + r"|(?:\$\w+)" + r"|(?:\w+\?)" + r"|`.*?`"
         for token in CodeReader.generate_tokens(source_code, addition, token_class):
             if (
                 isinstance(token, str)
@@ -120,6 +120,19 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                     yield t
                 continue
             yield token
+
+
+# TypeScript type keywords that should not be counted as parameters
+_TS_TYPE_KEYWORDS = frozenset([
+    'string', 'number', 'boolean', 'void', 'any',
+    'object', 'unknown', 'never',
+])
+
+# Built-in constructors/functions that should not be detected as function definitions.
+# These appear as `String(x)`, `Number(x)` etc. — calls, not definitions.
+_JS_BUILTIN_CALLABLES = frozenset([
+    'String', 'Number', 'Boolean', 'Array', 'Object',
+])
 
 
 class TypeScriptStates(CodeStateMachine):
@@ -136,6 +149,7 @@ class TypeScriptStates(CodeStateMachine):
         self._async_seen = False  # Track if 'async' was seen
         self._prev_token = ''  # Track previous token to detect method calls
         self._in_prop_value = False  # Track if inside property value (after ':')
+        self._in_abstract_context = False  # Track abstract method declarations
 
     def statemachine_before_return(self):
         # Ensure the main function is closed at the end
@@ -214,6 +228,31 @@ class TypeScriptStates(CodeStateMachine):
             self.next(handle_type_alias)
             return
 
+        # Skip interface declarations — method signatures are not runtime functions
+        if token == 'interface':
+            brace_count = 0
+            interface_started = False
+
+            def skip_interface(t):
+                nonlocal brace_count, interface_started
+                if t == '{':
+                    interface_started = True
+                    brace_count += 1
+                elif t == '}' and interface_started:
+                    brace_count -= 1
+                    if brace_count == 0:
+                        self.next(self._state_global)
+                        return True
+                return False
+
+            self.next(skip_interface)
+            return
+
+        # Track abstract modifier inside class bodies
+        if token == 'abstract' and self.as_object:
+            self._in_abstract_context = True
+            return
+
         # Track static and async modifiers
         if token == 'static':
             self._static_seen = True
@@ -244,7 +283,7 @@ class TypeScriptStates(CodeStateMachine):
             if token == ':':
                 # Only set function_name for valid identifiers
                 name = self.last_tokens
-                if name and (name[0].isalpha() or name[0] in ('_', '$')):
+                if name and (name[0].isalpha() or name[0] in ('_', '$', '#')):
                     self.function_name = name
                 self._in_prop_value = True
                 return
@@ -306,7 +345,7 @@ class TypeScriptStates(CodeStateMachine):
         elif token == '=':
             # Only set function_name for valid identifiers
             name = self.last_tokens
-            if name and (name[0].isalpha() or name[0] in ('_', '$')):
+            if name and (name[0].isalpha() or name[0] in ('_', '$', '#')):
                 self.function_name = name
         elif token == "(":
             # Check if this is a method call or constructor
@@ -347,6 +386,7 @@ class TypeScriptStates(CodeStateMachine):
             # Reset modifiers on newline/semicolon
             self._static_seen = False
             self._async_seen = False
+            self._in_abstract_context = False
             self._in_prop_value = False
 
         if token == '`':
@@ -401,6 +441,10 @@ class TypeScriptStates(CodeStateMachine):
             self.next(self._state_global, token)
 
     def _push_function_to_stack(self):
+        if self._in_abstract_context:
+            return
+        if self.function_name in _JS_BUILTIN_CALLABLES:
+            return
         self.started_function = True
         self.context.push_new_function(self.function_name or '(anonymous)')
 
@@ -430,7 +474,7 @@ class TypeScriptStates(CodeStateMachine):
             return
         if token != '(':
             # Only set function_name for valid identifiers
-            if token and (token[0].isalpha() or token[0] in ('_', '$')):
+            if token and (token[0].isalpha() or token[0] in ('_', '$', '#')):
                 self.function_name = token
             else:
                 self.function_name = ''
@@ -453,7 +497,17 @@ class TypeScriptStates(CodeStateMachine):
         if token == ')':
             self._state = self._expecting_func_opening_bracket
         elif token != '(':
-            self.context.parameter(token)
+            # Filter out TypeScript type keywords and operators from parameter count
+            if token == ',':
+                self.context.parameter(',')
+            elif token in _TS_TYPE_KEYWORDS:
+                pass
+            elif token in ('*', '+', '-', '/', '%', '=', '.'):
+                pass
+            elif (token.replace('_', '').replace('?', '').isalnum() and
+                  token.replace('?', '') and
+                  token.replace('?', '')[0].isalpha()):
+                self.context.parameter(token.replace('?', ''))
             return
         self.context.add_to_long_function_name(" " + token)
 
@@ -461,6 +515,12 @@ class TypeScriptStates(CodeStateMachine):
         # Do not reset started_function for arrow functions (=>)
         if token == ':':
             self._consume_type_annotation()
+        elif token == ';' and self.as_object and self._in_abstract_context:
+            # Abstract method declaration ends with ';' — no body
+            if self.started_function:
+                self._pop_function_from_stack()
+            self._in_abstract_context = False
+            self.next(self._state_global)
         elif token != '{' and token != '=>':
             if self.started_function:
                 # Arrow function not confirmed (no => or { after params).

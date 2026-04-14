@@ -273,7 +273,6 @@ class Test_ES6_optional_chaining_no_fp(unittest.TestCase):
 class Test_ES6_private_class_fields(unittest.TestCase):
     """Tests private class field methods."""
 
-    @unittest.skip("Requires #private field tokenizer enhancement")
     def test_private_field_methods(self):
         code = '''
         class Counter {

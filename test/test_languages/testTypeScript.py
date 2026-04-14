@@ -647,7 +647,6 @@ class Test_TypeScript_generic_arrow_functions(unittest.TestCase):
 class Test_TypeScript_interface_enum_no_fp(unittest.TestCase):
     """Tests that interfaces and enums do NOT produce false positives."""
 
-    @unittest.skip("Requires interface skipping enhancement")
     def test_interface_with_methods(self):
         """Interface method signatures should not be detected as functions"""
         code = '''
@@ -676,7 +675,6 @@ class Test_TypeScript_interface_enum_no_fp(unittest.TestCase):
         functions = get_ts_function_list(code)
         self.assertEqual(["createConfig"], [f.name for f in functions])
 
-    @unittest.skip("Requires interface skipping enhancement")
     def test_index_signature_no_fp(self):
         """Index signatures with arrow types should not be FPs"""
         code = '''
