@@ -1,5 +1,5 @@
 '''
-Language parser for JavaScript
+Language parser for TypeScript
 '''
 
 import re
@@ -51,7 +51,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
 
     ext = ['ts']
     language_names = ['typescript', 'ts']
-    
+
     # Separated condition categories
     _control_flow_keywords = {'if', 'elseif', 'for', 'while', 'catch'}
     _logical_operators = {'&&', '||'}
@@ -98,7 +98,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                     elif content[i] == '}':
                         brace_count -= 1
                     i += 1
-                expr = content[expr_start:i-1]
+                expr = content[expr_start:i - 1]
                 yield expr
                 yield '}'
                 content = content[i:]
@@ -135,6 +135,7 @@ class TypeScriptStates(CodeStateMachine):
         self._static_seen = False  # Track if 'static' was seen
         self._async_seen = False  # Track if 'async' was seen
         self._prev_token = ''  # Track previous token to detect method calls
+        self._in_prop_value = False  # Track if inside property value (after ':')
 
     def statemachine_before_return(self):
         # Ensure the main function is closed at the end
@@ -159,6 +160,60 @@ class TypeScriptStates(CodeStateMachine):
             return
         self._ts_declare = False
 
+        # Skip type alias declarations: type Name = { ... }
+        # These contain arrow signatures that are not runtime functions.
+        if token == 'type' and not self.as_object:
+            phase = [0]        # 0=expect name, 1=expect =, 2=after =
+            brace_count = [0]
+            generic_depth = [0]
+
+            def handle_type_alias(t):
+                if phase[0] == 0:
+                    if t and t[0].isalpha():
+                        phase[0] = 1
+                    else:
+                        self.last_tokens = 'type'
+                        self.next(self._state_global)
+                        self._state_global(t)
+                        return True
+                elif phase[0] == 1:
+                    if t == '<':
+                        generic_depth[0] = 1
+                        phase[0] = 3
+                    elif t == '=':
+                        phase[0] = 2
+                    elif t == ';':
+                        self.next(self._state_global)
+                        return True
+                elif phase[0] == 2:
+                    if t == '{':
+                        brace_count[0] = 1
+                        phase[0] = 4
+                    elif t == ';' or self.context.newline:
+                        self.next(self._state_global)
+                        if t != ';':
+                            self._state_global(t)
+                        return True
+                elif phase[0] == 3:
+                    if t == '<':
+                        generic_depth[0] += 1
+                    elif t == '>':
+                        generic_depth[0] -= 1
+                        if generic_depth[0] == 0:
+                            phase[0] = 1
+                elif phase[0] == 4:
+                    if t == '{':
+                        brace_count[0] += 1
+                    elif t == '}':
+                        brace_count[0] -= 1
+                        if brace_count[0] == 0:
+                            self.next(self._state_global)
+                            return True
+                return False
+
+            self.next(handle_type_alias)
+            return
+
         # Track static and async modifiers
         if token == 'static':
             self._static_seen = True
@@ -178,7 +233,7 @@ class TypeScriptStates(CodeStateMachine):
             if token in ('get', 'set'):
                 self._getter_setter_prefix = token
                 return
-            if hasattr(self, '_getter_setter_prefix') and self._getter_setter_prefix:
+            if self._getter_setter_prefix:
                 # Next token is the property name
                 self.last_tokens = f"{self._getter_setter_prefix} {token}"
                 self._getter_setter_prefix = None
@@ -187,12 +242,33 @@ class TypeScriptStates(CodeStateMachine):
                 self._collect_computed_name()
                 return
             if token == ':':
-                self.function_name = self.last_tokens
+                # Only set function_name for valid identifiers
+                name = self.last_tokens
+                if name and (name[0].isalpha() or name[0] in ('_', '$')):
+                    self.function_name = name
+                self._in_prop_value = True
+                return
+            elif token == '<' or (
+                    token.startswith('<') and token.endswith('>') and len(token) > 1):
+                # Generic type params on method: sortByKey<T>(...) {
+                # Handles both multi-token <T, U> and single-token <T> from TSX tokenizer.
+                if token == '<':
+                    self._consume_generic_type_params()
                 return
             elif token == '(':
-                # Check if this is a method call (previous token was . or this/identifier)
+                # Check if this is a method call (previous token was . or new)
                 if self._prev_token == '.' or self._prev_token == 'new':
-                    # This is a method call, not a function definition
+                    # Method call inside object — use sub_state so
+                    # the matching ')' doesn't escape the object reader.
+                    self.sub_state(self.__class__(self.context))
+                    self._prev_token = token
+                    return
+                # In property value (after ':'), identifier( is a function call
+                # unless it's the prop name itself: prop: (...) => {} is arrow fn
+                if self._in_prop_value and (
+                        not self.function_name
+                        or self.last_tokens != self.function_name):
+                    self.sub_state(self.__class__(self.context))
                     self._prev_token = token
                     return
                 if not self.started_function:
@@ -202,11 +278,19 @@ class TypeScriptStates(CodeStateMachine):
                 return
             # If we've seen async/static and this is an identifier, it's likely a method name
             elif (self._async_seen or self._static_seen) and token not in ('*', 'function'):
-                # This is a method name after async/static
-                self.last_tokens = token
-                return
+                if token == '=':
+                    # End of static/async field name — clear modifiers so
+                    # the value expression and subsequent members parse
+                    # normally.  e.g. `static propTypes = { ... };`
+                    self._static_seen = False
+                    self._async_seen = False
+                    # Fall through to the general '=' handler below
+                else:
+                    # This is a method name after async/static
+                    self.last_tokens = token
+                    return
 
-        if token in '.':
+        if token == '.':
             self._state = self._field
             self.last_tokens += token
             self._prev_token = token
@@ -218,20 +302,37 @@ class TypeScriptStates(CodeStateMachine):
         elif token in ('else', 'do', 'try', 'final'):
             self.next(self._expecting_statement_or_block)
         elif token in ('=>',):
-            # Only handle arrow function body, do not push function here
             self._state = self._arrow_function
         elif token == '=':
-            self.function_name = self.last_tokens
+            # Only set function_name for valid identifiers
+            name = self.last_tokens
+            if name and (name[0].isalpha() or name[0] in ('_', '$')):
+                self.function_name = name
         elif token == "(":
             # Check if this is a method call or constructor
             if self._prev_token == '.' or self._prev_token == 'new':
                 # This is a method call or constructor, not a function definition
                 self.sub_state(
                     self.__class__(self.context))
+            elif self.function_name:
+                # Distinguish arrow-function definition from function call:
+                #   const fn = (...) => {}   <- _prev_token is '=' or 'async'
+                #   const fn = someFunc(...)  <- _prev_token is an identifier
+                # In the second case, ( follows an identifier that differs
+                # from function_name, so it's a call — not a definition.
+                if (self.last_tokens != self.function_name
+                        and self._prev_token not in ('=', 'async', '>')):
+                    self.function_name = ''
+                    self.sub_state(self.__class__(self.context))
+                else:
+                    if not self.started_function:
+                        self.arrow_function_pending = True
+                        self._function(self.function_name)
+                    self.next(self._function, token)
             else:
                 self.sub_state(
                     self.__class__(self.context))
-        elif token in '{':
+        elif token == '{':
             if self.started_function:
                 self.sub_state(
                     self.__class__(self.context),
@@ -246,6 +347,7 @@ class TypeScriptStates(CodeStateMachine):
             # Reset modifiers on newline/semicolon
             self._static_seen = False
             self._async_seen = False
+            self._in_prop_value = False
 
         if token == '`':
             self.next(self._state_template_literal)
@@ -254,6 +356,8 @@ class TypeScriptStates(CodeStateMachine):
                 self._consume_type_annotation()
                 self._prev_token = token
                 return
+        if self.as_object and token == ',':
+            self._in_prop_value = False
         self.last_tokens = token
         # Don't overwrite _prev_token if it's 'new' or '.' (preserve for next token)
         if self._prev_token not in ('new', '.'):
@@ -304,22 +408,32 @@ class TypeScriptStates(CodeStateMachine):
         if self.started_function:
             self.context.end_of_function()
         self.started_function = None
+        self._in_prop_value = False
 
     def _arrow_function(self, token):
-        self._push_function_to_stack()
-        # Handle arrow function body
-        if token == '{':
-            # Block body
-            self.next(self._state_global, token)
-        else:
-            # Expression body
-            self.next(self._state_global, token)
+        if not self.started_function:
+            self._push_function_to_stack()
+        # Clear function_name so expression-body ( doesn't re-enter _function
+        self.function_name = ''
+        self.next(self._state_global, token)
 
     def _function(self, token):
         if token == '*':
             return
+        if token == '<':
+            # Generic type params: function name<T>(...) — consume <...>
+            # so function_name (already set) is preserved.
+            self._consume_generic_type_params()
+            return
+        if token.startswith('<') and token.endswith('>') and len(token) > 1:
+            # Single-token generic from TSX tokenizer (e.g., <T>, <Props>)
+            return
         if token != '(':
-            self.function_name = token
+            # Only set function_name for valid identifiers
+            if token and (token[0].isalpha() or token[0] in ('_', '$')):
+                self.function_name = token
+            else:
+                self.function_name = ''
             # Reset modifiers after setting function name
             self._static_seen = False
             self._async_seen = False
@@ -348,6 +462,12 @@ class TypeScriptStates(CodeStateMachine):
         if token == ':':
             self._consume_type_annotation()
         elif token != '{' and token != '=>':
+            if self.started_function:
+                # Arrow function not confirmed (no => or { after params).
+                # Use forgive to cleanly un-push the optimistic function
+                # so it doesn't appear in output or corrupt the stack.
+                self.context.forgive = True
+                self.context.end_of_function()
             self.started_function = None
         self.next(self._state_global, token)
 
@@ -382,6 +502,21 @@ class TypeScriptStates(CodeStateMachine):
         if not parts:
             return s
         return parts[0][0].lower() + parts[0][1:] + ''.join(p.capitalize() for p in parts[1:])
+
+    def _consume_generic_type_params(self):
+        """Consume <...> generic type parameters (e.g., method<T>(...))
+        so the method name in last_tokens is preserved."""
+        depth = 1
+
+        def consume(token):
+            nonlocal depth
+            if token == '<':
+                depth += 1
+            elif token == '>':
+                depth -= 1
+                if depth == 0:
+                    self.next(self._state_global)
+        self.next(consume)
 
     def _consume_type_annotation(self):
         typeStates = TypeScriptTypeAnnotationStates(self.context)
