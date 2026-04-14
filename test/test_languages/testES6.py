@@ -310,7 +310,7 @@ class Test_ES6_class_field_arrows(unittest.TestCase):
     """Tests class field arrow functions."""
 
     def test_class_arrow_fields(self):
-        """Arrow functions as class fields should be detected"""
+        """Arrow functions as class fields should use the field name"""
         code = '''
         class Btn {
             handleClick = () => { this.setState({clicked: true}); };
@@ -319,11 +319,9 @@ class Test_ES6_class_field_arrows(unittest.TestCase):
         }
         '''
         functions = get_js_function_list(code)
-        names = [f.name for f in functions]
-        # Arrow field functions are anonymous, method is named
-        self.assertIn("render", names)
-        anon_count = sum(1 for n in names if n == "(anonymous)")
-        self.assertGreaterEqual(anon_count, 2)
+        self.assertEqual(
+            ["handleClick", "handleHover", "render"],
+            [f.name for f in functions])
 
     def test_class_field_then_method(self):
         """Regular class method after arrow field should be detected"""
@@ -335,9 +333,37 @@ class Test_ES6_class_field_arrows(unittest.TestCase):
         }
         '''
         functions = get_js_function_list(code)
-        names = [f.name for f in functions]
-        self.assertIn("reset", names)
-        self.assertIn("getCount", names)
+        self.assertEqual(
+            ["tick", "reset", "getCount"],
+            [f.name for f in functions])
+
+    def test_field_arrow_with_params(self):
+        """Field arrow with parameters should use the field name"""
+        code = '''
+        class EventBus {
+            emit = (event, data) => { this.listeners[event](data); };
+            on = (event, cb) => { this.listeners[event] = cb; };
+        }
+        '''
+        functions = get_js_function_list(code)
+        self.assertEqual(
+            ["emit", "on"],
+            [f.name for f in functions])
+
+    def test_field_arrow_block_body(self):
+        """Field arrow with block body and complexity"""
+        code = '''
+        class Validator {
+            validate = (value) => {
+                if (!value) return false;
+                if (value.length < 3) return false;
+                return true;
+            };
+        }
+        '''
+        functions = get_js_function_list(code)
+        self.assertEqual(["validate"], [f.name for f in functions])
+        self.assertGreater(functions[0].cyclomatic_complexity, 1)
 
 
 class Test_ES6_optional_chaining_no_fp(unittest.TestCase):

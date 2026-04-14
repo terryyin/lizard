@@ -311,8 +311,13 @@ class TypeScriptStates(CodeStateMachine):
                     self._prev_token = token
                     return
                 if not self.started_function:
-
-                    self._function(self.last_tokens)
+                    # When last_tokens is '=' we're in a field assignment
+                    # pattern (field = () => {}), so use function_name which
+                    # was set by the '=' handler to the field name.
+                    if self.last_tokens == '=' and self.function_name:
+                        self._function(self.function_name)
+                    else:
+                        self._function(self.last_tokens)
                 self.next(self._function, token)
                 return
             # If we've seen async/static and this is an identifier, it's likely a method name
@@ -365,7 +370,6 @@ class TypeScriptStates(CodeStateMachine):
                     self.sub_state(self.__class__(self.context))
                 else:
                     if not self.started_function:
-    
                         self._function(self.function_name)
                     self.next(self._function, token)
             else:
