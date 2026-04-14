@@ -161,6 +161,66 @@ class Test_parser_for_JavaScript_ES6(unittest.TestCase):
     # TBD: Method Properties
 
 
+class Test_ES6_unparenthesized_arrow_params(unittest.TestCase):
+    """Tests class field arrows with unparenthesized single parameter."""
+
+    def test_async_unparenthesized_arrow(self):
+        """field = async x => {} should detect field and not break subsequent methods"""
+        code = '''
+        class Foo {
+            before() { return 1; }
+            handler = async x => { return x; };
+            after() { return 2; }
+        }
+        '''
+        functions = get_js_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("before", names)
+        self.assertIn("after", names)
+
+    def test_unparenthesized_arrow_no_async(self):
+        """field = x => {} should detect field and not break subsequent methods"""
+        code = '''
+        class Foo {
+            before() { return 1; }
+            transform = x => x * 2;
+            after() { return 2; }
+        }
+        '''
+        functions = get_js_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("before", names)
+        self.assertIn("after", names)
+
+    def test_async_unparenthesized_arrow_complex_body(self):
+        """async field arrow with complex body should not corrupt parser state"""
+        code = '''
+        class Service {
+            extractRules() { return {}; }
+            runExternal = async recordIds => {
+                if (recordIds.length > 0) {
+                    await this.doSomething();
+                }
+                return true;
+            };
+            runReset(record) {
+                if (typeof this.reset === "function") { this.reset(record); }
+            }
+            get tableClass() { return "test"; }
+            deleteRecord(isDeleted, itemIndex) {
+                try { this.records.splice(itemIndex, 1); } catch (err) { console.error(err); }
+            }
+        }
+        '''
+        functions = get_js_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("extractRules", names)
+        self.assertIn("runReset", names)
+        self.assertIn("get tableClass", names)
+        self.assertIn("deleteRecord", names)
+        self.assertNotIn("if", names)
+
+
 class Test_ES6_destructuring_params(unittest.TestCase):
     """Tests arrow functions with destructuring parameters."""
 

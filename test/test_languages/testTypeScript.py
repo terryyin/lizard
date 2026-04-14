@@ -900,3 +900,55 @@ class Test_TypeScript_misc_patterns(unittest.TestCase):
         names = [f.name for f in functions]
         self.assertIn("(anonymous)", names)
         self.assertIn("render", names)
+
+
+class Test_ts_async_unparenthesized_arrow(unittest.TestCase):
+    """async field = async x => {} must not corrupt parser state."""
+
+    def test_async_unparenthesized_arrow_in_class(self):
+        """field = async x => {} should not break subsequent methods"""
+        code = '''
+        class Foo {
+            before() { return 1; }
+            handler = async x => { return x; };
+            after() { return 2; }
+        }
+        '''
+        functions = get_ts_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("before", names)
+        self.assertIn("after", names)
+
+    def test_large_class_methods_after_async_arrow(self):
+        """LWC pattern: methods after async unparenthesized arrow must all be detected"""
+        code = '''
+        class ItemConfiguration {
+            extractRules() { return {}; }
+            runExternalDelete = async recordIdsInserted => {
+                if (typeof this.externalDelete === "function" && recordIdsInserted.length > 0) {
+                    await this.externalDelete(recordIdsInserted);
+                }
+                return true;
+            };
+            runExternalReset(record) {
+                if (typeof this.externalReset === "function") { this.externalReset(record); }
+            }
+            get tableClass() { return this.loading ? "slds-hide" : "slds-show"; }
+            deleteRecord(isDeleted, itemIndex) {
+                try { this.records.splice(itemIndex, 1); } catch (err) { console.error(err); }
+            }
+            bulkDeleteRecords(recordIds) {
+                recordIds.forEach(id => { this.deleteRecord(true, id); });
+            }
+            copyRecord(index) { return JSON.parse(JSON.stringify(this.records[index])); }
+        }
+        '''
+        functions = get_ts_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("extractRules", names)
+        self.assertIn("runExternalReset", names)
+        self.assertIn("get tableClass", names)
+        self.assertIn("deleteRecord", names)
+        self.assertIn("bulkDeleteRecords", names)
+        self.assertIn("copyRecord", names)
+        self.assertNotIn("if", names)
