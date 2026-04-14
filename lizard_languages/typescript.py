@@ -348,6 +348,7 @@ class TypeScriptStates(CodeStateMachine):
             self._static_seen = False
             self._async_seen = False
             self._in_prop_value = False
+            self._prev_token = ''
 
         if token == '`':
             self.next(self._state_template_literal)
