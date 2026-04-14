@@ -221,6 +221,41 @@ class Test_ES6_unparenthesized_arrow_params(unittest.TestCase):
         self.assertNotIn("if", names)
 
 
+class Test_ES6_dot_field_assignment(unittest.TestCase):
+    """Tests that field = OBJ.PROP does not break subsequent method detection."""
+
+    def test_dot_field_assignment(self):
+        """field = A.B; should not swallow the next method"""
+        code = 'class C { x = A.B; m1() {} m2() {} }'
+        functions = get_js_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("m1", names)
+        self.assertIn("m2", names)
+
+    def test_chained_dot_field_assignment(self):
+        """field = A.B.C; should not swallow the next method"""
+        code = 'class C { x = A.B.C; m1() {} m2() {} }'
+        functions = get_js_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("m1", names)
+        self.assertIn("m2", names)
+
+    def test_multiple_dot_field_assignments(self):
+        """Multiple field = OBJ.PROP should not swallow methods"""
+        code = '''
+        class C {
+            x = A.B;
+            y = C.D;
+            m1() { return 1; }
+            m2() { return 2; }
+        }
+        '''
+        functions = get_js_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("m1", names)
+        self.assertIn("m2", names)
+
+
 class Test_ES6_destructuring_params(unittest.TestCase):
     """Tests arrow functions with destructuring parameters."""
 
