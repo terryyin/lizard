@@ -277,7 +277,7 @@ class TypeScriptStates(CodeStateMachine):
                 self.next(self._function, token)
                 return
             # If we've seen async/static and this is an identifier, it's likely a method name
-            elif (self._async_seen or self._static_seen) and token not in ('*', 'function'):
+            elif (self._async_seen or self._static_seen) and token not in ('*', 'function', '=>'):
                 if token == '=':
                     # End of static/async field name — clear modifiers so
                     # the value expression and subsequent members parse
@@ -415,6 +415,10 @@ class TypeScriptStates(CodeStateMachine):
             self._push_function_to_stack()
         # Clear function_name so expression-body ( doesn't re-enter _function
         self.function_name = ''
+        # Clear modifiers so the body's opening { isn't captured by the
+        # async/static handler in the class body path.
+        self._async_seen = False
+        self._static_seen = False
         self.next(self._state_global, token)
 
     def _function(self, token):
