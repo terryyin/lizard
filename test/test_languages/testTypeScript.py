@@ -952,3 +952,47 @@ class Test_ts_async_unparenthesized_arrow(unittest.TestCase):
         self.assertIn("bulkDeleteRecords", names)
         self.assertIn("copyRecord", names)
         self.assertNotIn("if", names)
+
+
+class Test_ts_dot_field_assignment(unittest.TestCase):
+    """Tests that field = OBJ.PROP does not break subsequent method detection."""
+
+    def test_dot_field_assignment(self):
+        """field = A.B; should not swallow the next method"""
+        code = 'class C { x = A.B; m1() {} m2() {} }'
+        functions = get_ts_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("m1", names)
+        self.assertIn("m2", names)
+
+    def test_dot_field_with_type_annotation(self):
+        """Typed field = OBJ.PROP should not swallow methods"""
+        code = '''
+        class C {
+            mode: string = MODE.STANDARD;
+            method1(): void { return; }
+            method2(): number { return 1; }
+        }
+        '''
+        functions = get_ts_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("method1", names)
+        self.assertIn("method2", names)
+
+    def test_multiple_dot_fields_lwc_pattern(self):
+        """LWC pattern: multiple OBJ.PROP fields followed by methods"""
+        code = '''
+        class Widget {
+            settings = ITEM_ACTION_MODAL_SETTINGS;
+            modalMode = ITEM_ACTIONS.SPLIT;
+            status = AVAILABILITY_STATUS.PENDING;
+            getSettings() { return this.settings; }
+            getMode() { return this.modalMode; }
+            render() { return null; }
+        }
+        '''
+        functions = get_ts_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("getSettings", names)
+        self.assertIn("getMode", names)
+        self.assertIn("render", names)
