@@ -194,7 +194,6 @@ class Test_parser_for_JavaScript(unittest.TestCase):
         '''
         functions = get_js_function_list(code)
         found_methods = [f.name for f in functions]
-        print(f"DEBUG: Found methods: {found_methods}")
         expected_methods = ['constructor', 'init', 'render', 'updateUI']
         
         # Check each expected method individually to see which ones are missing
@@ -220,7 +219,6 @@ class Test_parser_for_JavaScript(unittest.TestCase):
         '''
         functions = get_js_function_list(code)
         found_methods = [f.name for f in functions]
-        print(f"DEBUG: Found methods: {found_methods}")
         expected_methods = ['constructor', 'init', 'render']
         
         # This should fail - only constructor will be detected, init and render will be missing
@@ -378,7 +376,6 @@ class Test_parser_for_JavaScript(unittest.TestCase):
         '''
         functions = get_js_function_list(code)
         found_methods = [f.name for f in functions]
-        print(f"DEBUG: Found methods in simple test: {found_methods}")
         
         self.assertIn('simpleMethod', found_methods, f"Method 'simpleMethod' should be detected. Found: {found_methods}")
 
@@ -589,3 +586,254 @@ class Test_parser_for_JavaScript(unittest.TestCase):
         # may not be detected due to parser state issues
         # See: processItems and filterUnique are missing due to complex object literal
         # with method calls in simulateApiCall's nested Promise/setTimeout callbacks
+
+
+class Test_JavaScript_prototype_methods(unittest.TestCase):
+    """Tests prototype-based patterns."""
+
+    def test_prototype_methods(self):
+        code = '''
+        function Greeter(name) { this.name = name; }
+        Greeter.prototype.greet = function() { return "Hello " + this.name; };
+        Greeter.prototype.farewell = function() { return "Bye " + this.name; };
+        '''
+        functions = get_js_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("Greeter", names)
+        self.assertIn("Greeter.prototype.greet", names)
+        self.assertIn("Greeter.prototype.farewell", names)
+
+    def test_prototype_arrow(self):
+        """Prototype assignment with arrow function"""
+        code = '''
+        function Counter() { this.count = 0; }
+        Counter.prototype.increment = function() { this.count++; };
+        Counter.prototype.getCount = function() { return this.count; };
+        '''
+        functions = get_js_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("Counter", names)
+        self.assertIn("Counter.prototype.increment", names)
+        self.assertIn("Counter.prototype.getCount", names)
+
+
+class Test_JavaScript_commonjs_exports(unittest.TestCase):
+    """Tests CommonJS module patterns."""
+
+    def test_module_exports_function(self):
+        code = '''
+        module.exports = function handler(req, res) {
+            res.send("ok");
+        };
+        exports.helper = function(x) { return x + 1; };
+        '''
+        functions = get_js_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("handler", names)
+        self.assertIn("exports.helper", names)
+
+    def test_named_exports(self):
+        code = '''
+        exports.add = function(a, b) { return a + b; };
+        exports.subtract = function(a, b) { return a - b; };
+        '''
+        functions = get_js_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("exports.add", names)
+        self.assertIn("exports.subtract", names)
+
+
+class Test_JavaScript_factory_functions(unittest.TestCase):
+    """Tests factory function patterns."""
+
+    def test_factory_returning_object_methods(self):
+        code = '''
+        function createUser(name, age) {
+            return {
+                getName() { return name; },
+                getAge() { return age; },
+                greet() { return "Hi " + name; }
+            };
+        }
+        '''
+        functions = get_js_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("createUser", names)
+        self.assertIn("getName", names)
+        self.assertIn("getAge", names)
+        self.assertIn("greet", names)
+
+    def test_revealing_module(self):
+        """Revealing module pattern"""
+        code = '''
+        const myModule = (function() {
+            function privateMethod() { return 42; }
+            function publicMethod() { return privateMethod(); }
+            return { publicMethod: publicMethod };
+        })();
+        '''
+        functions = get_js_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("privateMethod", names)
+        self.assertIn("publicMethod", names)
+
+
+class Test_JavaScript_promise_and_async(unittest.TestCase):
+    """Tests Promise chains and async patterns."""
+
+    def test_promise_chain_callbacks(self):
+        code = '''
+        function loadData(url) {
+            return fetch(url)
+                .then(res => res.json())
+                .then(data => data.items);
+        }
+        '''
+        functions = get_js_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("loadData", names)
+        anon_count = sum(1 for n in names if n == "(anonymous)")
+        self.assertGreaterEqual(anon_count, 2)  # two .then callbacks
+
+    def test_try_catch_async(self):
+        code = '''
+        async function safeFetch(url) {
+            try {
+                const res = await fetch(url);
+                return await res.json();
+            } catch (err) {
+                console.error(err);
+                return null;
+            }
+        }
+        '''
+        functions = get_js_function_list(code)
+        self.assertEqual(["safeFetch"], [f.name for f in functions])
+
+    def test_reduce_callback(self):
+        code = '''
+        function sum(arr) {
+            return arr.reduce((acc, x) => acc + x, 0);
+        }
+        '''
+        functions = get_js_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("sum", names)
+        self.assertIn("(anonymous)", names)
+
+
+class Test_JavaScript_event_listeners(unittest.TestCase):
+    """Tests DOM event listener patterns."""
+
+    def test_addEventListener_named(self):
+        """Named function in addEventListener should be detected"""
+        code = '''
+        function setupListeners(el) {
+            el.addEventListener("click", function handleClick(e) {
+                e.preventDefault();
+            });
+            el.addEventListener("keydown", (e) => {
+                if (e.key === "Enter") submit();
+            });
+        }
+        '''
+        functions = get_js_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("setupListeners", names)
+        self.assertIn("handleClick", names)
+        self.assertIn("(anonymous)", names)
+
+    def test_setTimeout_callback(self):
+        code = '''
+        function delayedLog(msg) {
+            setTimeout(function() {
+                console.log(msg);
+            }, 1000);
+        }
+        '''
+        functions = get_js_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("delayedLog", names)
+        self.assertIn("(anonymous)", names)
+
+
+class Test_JavaScript_class_inheritance(unittest.TestCase):
+    """Tests class inheritance patterns."""
+
+    def test_extends_with_methods(self):
+        code = '''
+        class Animal {
+            constructor(name) { this.name = name; }
+            speak() { return this.name + " makes a noise"; }
+        }
+        class Dog extends Animal {
+            constructor(name) { super(name); }
+            speak() { return this.name + " barks"; }
+            fetch(item) { return "fetched " + item; }
+        }
+        '''
+        functions = get_js_function_list(code)
+        names = [f.name for f in functions]
+        self.assertEqual(names.count("constructor"), 2)
+        self.assertEqual(names.count("speak"), 2)
+        self.assertIn("fetch", names)
+
+    def test_simple_class_methods(self):
+        """Simple class with no complexity should detect all methods"""
+        code = '''
+        class Calculator {
+            add(a, b) { return a + b; }
+            subtract(a, b) { return a - b; }
+            multiply(a, b) { return a * b; }
+            divide(a, b) {
+                if (b === 0) throw new Error("div by zero");
+                return a / b;
+            }
+        }
+        '''
+        functions = get_js_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("add", names)
+        self.assertIn("subtract", names)
+        self.assertIn("multiply", names)
+        self.assertIn("divide", names)
+        div = next(f for f in functions if f.name == "divide")
+        self.assertGreater(div.cyclomatic_complexity, 1)
+
+
+class Test_JavaScript_no_false_positives(unittest.TestCase):
+    """Tests that various non-function patterns don't produce FPs."""
+
+    def test_method_chaining_no_fp(self):
+        """Method chaining should not produce FPs"""
+        code = '''
+        function buildQuery(table) {
+            return db.select("*")
+                .from(table)
+                .where("active", true)
+                .orderBy("name");
+        }
+        '''
+        functions = get_js_function_list(code)
+        self.assertEqual(["buildQuery"], [f.name for f in functions])
+
+    def test_object_destructuring_no_fp(self):
+        """Destructuring assignment should not produce FPs"""
+        code = '''
+        function getConfig() {
+            const { host, port } = config;
+            return { host, port };
+        }
+        '''
+        functions = get_js_function_list(code)
+        self.assertEqual(["getConfig"], [f.name for f in functions])
+
+    def test_template_literal_no_fp(self):
+        """Template literal interpolation should not produce FPs"""
+        code = '''
+        function greet(name) {
+            return `Hello, ${name}! Welcome.`;
+        }
+        '''
+        functions = get_js_function_list(code)
+        self.assertEqual(["greet"], [f.name for f in functions])

@@ -22,6 +22,7 @@ from .typescript import TypeScriptReader
 from .fortran import FortranReader
 from .solidity import SolidityReader
 from .tsx import TSXReader
+from .tsx import JSXReader
 from .vue import VueReader
 from .perl import PerlReader
 from .st import StReader
@@ -53,6 +54,7 @@ def languages():
         ErlangReader,
         ZigReader,
         TSXReader,
+        JSXReader,
         VueReader,
         PerlReader,
         StReader,
