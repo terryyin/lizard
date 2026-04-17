@@ -1,24 +1,22 @@
 # Publish to PyPI when a version tag is pushed (e.g. 1.21.3).
 #
-# One-time PyPI setup (trusted publishing):
-# https://docs.pypi.org/trusted-publishers/adding-a-publisher/
+# Trusted publishing (recommended): https://docs.pypi.org/trusted-publishers/adding-a-publisher/
 #
-# PyPI trusted publisher must match the OIDC subject GitHub sends. This workflow
-# does not use a GitHub Environment, so the subject is:
-#   repo:terryyin/lizard
-# Add a pending publisher at https://pypi.org/manage/project/lizard/publishing/ :
-#   - Owner: terryyin
-#   - Repository name: lizard
-#   - Workflow name: release.yml
-#   - Environment name: (leave empty)
-# Optional: add `environment:` to the publish job and the same name on PyPI for
-# stricter scoping (subject becomes repo:terryyin/lizard:environment:<name>).
+# PyPI does not match on the JWT `sub` claim. It matches repository, owner,
+# repository_owner_id (numeric; see https://api.github.com/users/terryyin → "id"),
+# workflow filename parsed from job_workflow_ref (release.yml), and environment
+# (must be empty if this job has no `environment:` block).
+#
+# Tag pushes use a subject like repo:OWNER/REPO:ref:refs/tags/VERSION — that is
+# normal GitHub behavior and unrelated to PyPI lookup.
+#
+# Pre-filled “add publisher” URL (log in as a PyPI owner of `lizard`):
+#   https://pypi.org/manage/project/lizard/settings/publishing/?provider=github&owner=terryyin&repository=lizard&workflow_filename=release.yml
+#
+# Fallback: create a PyPI API token and add repo secret PYPI_API_TOKEN. When set,
+# the publish step uses it; when unset, the step uses OIDC (empty password).
 #
 # Troubleshooting: https://docs.pypi.org/trusted-publishers/troubleshooting/
-#
-# Fallback (API token): set repo secret PYPI_API_TOKEN and on the publish step add:
-#   with:
-#     password: ${{ secrets.PYPI_API_TOKEN }}
 
 name: Release — publish to PyPI
 
@@ -61,3 +59,5 @@ jobs:
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
