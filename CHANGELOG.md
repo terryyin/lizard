@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 1.21.6
+
+### Improvements
+- Release workflow: clarify how PyPI matches trusted publishers (repository owner id, workflow file, environment); add optional `PYPI_API_TOKEN` secret for token-based upload when OIDC is not used
+
 ## 1.21.5
 
 ### Improvements
