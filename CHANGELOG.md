@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 1.21.4
+
+### Bug Fixes
+- Fix Java parsing when a field initializer uses a class literal (`Type.class`), which could mis-parse the next method (e.g. `catch` treated as a method name) (issue #469)
+- Fix Java static initializer blocks (`static { ... }`) so control-flow keywords inside the block are not counted as methods (issue #469)
+- Fix Java double-brace anonymous classes (`new Foo() {{ ... }}`) so instance-initializer bodies are not parsed as class methods (issue #469)
+
 ## 1.21.3
 
 ### Bug Fixes
