@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 1.21.5
+
+### Improvements
+- Release workflow: publish to PyPI without a GitHub Environment so trusted publishing matches PyPI’s default GitHub publisher settings (owner, repository, `release.yml`, empty environment name)
+
 ## 1.21.4
 
 ### Bug Fixes
