@@ -518,6 +518,58 @@ public class TestWildcard {
                 f"Function {func.name} should have CCN=1, got "
                 f"{func.cyclomatic_complexity}")
 
+    def test_issue_469_field_class_literal_does_not_break_catch(self):
+        """Issue #469: Foo.class in a field initializer must not let 'catch' be parsed as a method."""
+        code = """
+public class A {
+    private String x = A.class.getName();
+    public void m() {
+        try {} catch (Exception e) {}
+    }
+}
+"""
+        result = get_java_function_list(code)
+        self.assertEqual(1, len(result))
+        self.assertEqual("A::m", result[0].name)
+
+    def test_issue_469_static_initializer_block(self):
+        """Issue #469: static { ... } must not treat if/while/for/switch as methods."""
+        code = """
+public class A {
+    static {
+        if (true) {}
+        while (false) {}
+        for (int i = 0; i < 1; i++) {}
+        switch (0) {}
+    }
+    void m() {}
+}
+"""
+        result = get_java_function_list(code)
+        self.assertEqual(1, len(result))
+        self.assertEqual("A::m", result[0].name)
+
+    def test_issue_469_double_brace_anonymous_initializer(self):
+        """Issue #469: new Type() {{ ... }} instance initializer must not add spurious methods."""
+        code = """
+import java.util.*;
+public class A {
+    Map<String, String> abc(String key) {
+        if (key != null) {
+            return new HashMap() {
+                {
+                    put("res_code", "1");
+                }
+            };
+        }
+        return null;
+    }
+}
+"""
+        result = get_java_function_list(code)
+        self.assertEqual(1, len(result))
+        self.assertEqual("A::abc", result[0].name)
+
     def test_record_as_variable_name(self):
         """Test for issue #453: 'record' as variable name should not be treated as record keyword"""
         code = """

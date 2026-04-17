@@ -26,6 +26,25 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
         self.is_record = False
         self.in_record_constructor = False
         self.in_method_body = False
+        self.handling_dot_class = False
+        self.handling_method_ref = False
+
+    def _consume_java_expression_tokens(self, token):
+        """Skip tokens that are not class declarations: Foo.class, Type::meth."""
+        if token == "::":
+            self.handling_method_ref = True
+            return True
+        if self.handling_method_ref:
+            self.handling_method_ref = False
+            return True
+        if token == "." and not self.handling_dot_class:
+            self.handling_dot_class = True
+            return True
+        if self.handling_dot_class:
+            self.handling_dot_class = False
+            if token == "class":
+                return True
+        return False
 
     def _state_old_c_params(self, token):
         if token == '{':
@@ -65,6 +84,8 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
         return False
 
     def _state_global(self, token):
+        if self._consume_java_expression_tokens(token):
+            return
         if token == '@':
             self._state = self._state_decorator
             return
@@ -123,28 +144,12 @@ class JavaFunctionBodyStates(JavaStates):
         super(JavaFunctionBodyStates, self).__init__(context)
         self.in_method_body = True
         self.ignore_tokens = False  # Additional flag to ignore tokens that could confuse the parser
-        self.handling_dot_class = False  # Flag to handle .class token specifically
-        self.handling_method_ref = False  # Flag to handle method references
 
     @CodeStateMachine.read_inside_brackets_then("{}", "_state_dummy")
     @CodeStateMachine.read_inside_brackets_then("()", "_state_dummy")
     def _state_global(self, token):
-        # Handle method references (::new, ::methodName)
-        if token == "::":
-            self.handling_method_ref = True
+        if self._consume_java_expression_tokens(token):
             return
-        if self.handling_method_ref:
-            self.handling_method_ref = False
-            return
-
-        # Special handling for .class token
-        if token == "." and not self.handling_dot_class:
-            self.handling_dot_class = True
-            return
-        if self.handling_dot_class:
-            self.handling_dot_class = False
-            if token == "class":
-                return  # Skip the 'class' token after a dot
 
         # Special handling for tokens that could confuse the parser
         if self.ignore_tokens:
@@ -185,8 +190,29 @@ class JavaClassBodyStates(JavaStates):
         super(JavaClassBodyStates, self).__init__(context)
         self.class_name = class_name
         self.is_record = is_record
+        self._after_static_keyword = False
 
     def _state_global(self, token):
+        if self._after_static_keyword:
+            self._after_static_keyword = False
+            if token == '{':
+                self.sub_state(JavaFunctionBodyStates(self.context), lambda: None, token)
+                return
+            JavaStates._state_global(self, 'static')
+            JavaStates._state_global(self, token)
+            if token == '}':
+                self.statemachine_return()
+            return
+
+        if token == 'static':
+            self._after_static_keyword = True
+            return
+
+        # Instance initializer block: { ... } after '{', '}', or ';' at class body level
+        if token == '{' and self.last_token in ('{', '}', ';'):
+            self.sub_state(JavaFunctionBodyStates(self.context), lambda: None, token)
+            return
+
         super()._state_global(token)
         if token == '}':
             self.statemachine_return()
