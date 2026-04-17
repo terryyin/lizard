@@ -3,18 +3,16 @@
 # One-time PyPI setup (trusted publishing):
 # https://docs.pypi.org/trusted-publishers/adding-a-publisher/
 #
-# PyPI trusted publisher must match the OIDC claims GitHub sends. This workflow
-# uses GitHub Environment "pypi", so the subject is:
-#   repo:terryyin/lizard:environment:pypi
-# Configure at https://pypi.org/manage/project/lizard/publishing/ :
+# PyPI trusted publisher must match the OIDC subject GitHub sends. This workflow
+# does not use a GitHub Environment, so the subject is:
+#   repo:terryyin/lizard
+# Add a pending publisher at https://pypi.org/manage/project/lizard/publishing/ :
 #   - Owner: terryyin
 #   - Repository name: lizard
 #   - Workflow name: release.yml
-#   - Environment name: pypi   <-- required; same as environment: below
-# Create the environment in GitHub: repo Settings → Environments → pypi
-#
-# To use PyPI with no environment instead, delete environment: below and leave
-# the Environment name field empty on PyPI (subject becomes repo:terryyin/lizard).
+#   - Environment name: (leave empty)
+# Optional: add `environment:` to the publish job and the same name on PyPI for
+# stricter scoping (subject becomes repo:terryyin/lizard:environment:<name>).
 #
 # Troubleshooting: https://docs.pypi.org/trusted-publishers/troubleshooting/
 #
@@ -53,9 +51,6 @@ jobs:
   publish:
     needs: build
     runs-on: ubuntu-latest
-    environment:
-      name: pypi
-      url: https://pypi.org/p/lizard/
     permissions:
       id-token: write
     steps:
