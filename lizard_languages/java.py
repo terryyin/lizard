@@ -72,16 +72,33 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
             self.context.current_function.name = f"{self.class_name}::{name}"
 
     def _try_start_a_class(self, token):
-        if token in ("class", "record", "enum"):
-            # "record" inside method bodies is a variable name, not a keyword
-            if token == "record" and self.in_method_body:
-                return False
+        if token in ("class", "enum"):
             self.class_name = None
-            self.is_record = token == "record"
+            self.is_record = False
             self.in_record_constructor = False
             self._state = self._state_class_declaration
             return True
+        if token == "record":
+            # "record" is a contextual keyword. Inside method bodies it is always
+            # an identifier. At class/global level it is only a keyword when the
+            # following token is an identifier (the record type name); otherwise
+            # it is an identifier (field or method name).
+            if self.in_method_body:
+                return False
+            self._state = self._state_after_record_keyword
+            return True
         return False
+
+    def _state_after_record_keyword(self, token):
+        if token and (token[0].isalpha() or token[0] == '_'):
+            self.class_name = None
+            self.is_record = True
+            self.in_record_constructor = False
+            self._state = self._state_class_declaration
+            self._state(token)
+            return
+        self.try_new_function("record")
+        self._state(token)
 
     def _state_global(self, token):
         if self._consume_java_expression_tokens(token):
@@ -191,6 +208,23 @@ class JavaClassBodyStates(JavaStates):
         self.class_name = class_name
         self.is_record = is_record
         self._after_static_keyword = False
+        # Nesting depth of unhandled braces seen inside the class body, e.g.
+        # array/field initializers `= { ... }`. The class's own opening brace
+        # is not counted (detected by last_token == None on the first call).
+        self._body_brace_depth = 0
+
+    def _handle_class_body_brace(self, token):
+        """Return True when `token` closes the enclosing class body."""
+        if token == '{':
+            if self.last_token is not None:
+                self._body_brace_depth += 1
+            return False
+        if token == '}':
+            if self._body_brace_depth > 0:
+                self._body_brace_depth -= 1
+                return False
+            return True
+        return False
 
     def _state_global(self, token):
         if self._after_static_keyword:
@@ -200,7 +234,7 @@ class JavaClassBodyStates(JavaStates):
                 return
             JavaStates._state_global(self, 'static')
             JavaStates._state_global(self, token)
-            if token == '}':
+            if self._handle_class_body_brace(token):
                 self.statemachine_return()
             return
 
@@ -214,5 +248,5 @@ class JavaClassBodyStates(JavaStates):
             return
 
         super()._state_global(token)
-        if token == '}':
+        if self._handle_class_body_brace(token):
             self.statemachine_return()

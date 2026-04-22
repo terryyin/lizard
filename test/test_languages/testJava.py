@@ -570,6 +570,101 @@ public class A {
         self.assertEqual(1, len(result))
         self.assertEqual("A::abc", result[0].name)
 
+    def test_issue_470_static_block_after_field_with_brace_initializer(self):
+        """Issue #470 bug1: static {...} after a field with `= {};` must not leak as a method."""
+        code = """
+public class LizardTest {
+    private String[] unixCmd = {};
+    static {
+        if (true) {
+        }
+    }
+    public void test1() {}
+}
+"""
+        result = get_java_function_list(code)
+        self.assertEqual(1, len(result))
+        self.assertEqual("LizardTest::test1", result[0].name)
+
+    def test_issue_470_record_as_field_name_followed_by_annotated_method(self):
+        """Issue #470 bug2: a field named `record` must not swallow the following method."""
+        code = """
+public class LizardTest {
+    private String record;
+
+    @Transactional(rollbackFor = Exception.class)
+    public void test1() {
+        List<String> list = new ArrayList<>();
+        if (CollectionUtils.isNotEmpty(list)) {
+            list.add("test");
+        }
+        for (String str : list) {
+            System.out.println(str);
+        }
+    }
+}
+"""
+        result = get_java_function_list(code)
+        self.assertEqual(1, len(result))
+        self.assertEqual("LizardTest::test1", result[0].name)
+        self.assertEqual(3, result[0].cyclomatic_complexity)
+
+    def test_issue_470_method_named_record(self):
+        """Issue #470 bug3: a method named `record` must be detected correctly."""
+        code = """
+public class LizardTest {
+    private String record(String name) {
+        if (name.equals("a")) {
+        }
+        for (int i = 0; i < 10; i++) {
+        }
+        return "";
+    }
+}
+"""
+        result = get_java_function_list(code)
+        self.assertEqual(1, len(result))
+        self.assertEqual("LizardTest::record", result[0].name)
+        self.assertEqual(3, result[0].cyclomatic_complexity)
+
+    def test_issue_470_full_example(self):
+        """Issue #470: the exact snippet from the bug report must report exactly two methods."""
+        code = """
+public class LizardTest {
+    private String[] unixCmd = {};
+    static {
+        if (true) {
+        }
+    }
+
+    private String record;
+
+    @Transactional(rollbackFor = Exception.class)
+    public void test1() {
+        List<String> list = new ArrayList<>();
+        if (CollectionUtils.isNotEmpty(list)) {
+            list.add("test");
+        }
+        for (String str : list) {
+            System.out.println(str);
+        }
+    }
+
+    private String record(String name) {
+        if (name.equals("a")) {
+
+        }
+        for (int i = 0; i < 10; i++) {
+
+        }
+        return "";
+    }
+}
+"""
+        result = get_java_function_list(code)
+        names = sorted(f.name for f in result)
+        self.assertEqual(["LizardTest::record", "LizardTest::test1"], names)
+
     def test_record_as_variable_name(self):
         """Test for issue #453: 'record' as variable name should not be treated as record keyword"""
         code = """
