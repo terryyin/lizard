@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 1.22.0
+
+### Improvements
+- **TypeScript, TSX, and JSX** — parsing and metrics are much closer to real code (PRs #467, #468):
+  - **TSX/JSX** use the same `TypeScriptStates` path as `.ts` (tokenizer-only layer for JSX), so **class methods** and **CCN** are no longer wrong or double-counted.
+  - **Skips** that reduce false functions: `interface { … }` method signatures, `type … =` value types, `abstract` method declarations without bodies; **ES2022** private names `#foo` in tokenization; **smarter parameters** (type keyword noise, commas inside `Map<…>`, etc.).
+  - **Class field arrows** (`handleClick = () => {}`) are reported under the **field name** instead of `(anonymous)`; better **call vs definition** and class-body cases (typed fields, `static` / `async` fields, LWC-style `async x =>` fields, `field = CONST.PROP;`, JSX attribute expressions).
+
 ## 1.21.7
 
 ### Bug Fixes
