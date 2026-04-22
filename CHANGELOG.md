@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 1.21.7
+
+### Bug Fixes
+- Java: treat `record` as a contextual keyword (field and method name `record` are no longer parsed as a record class); track brace depth for field array/object initializers so `= { }` does not end the class body before a `static` block (issue #470)
+
 ## 1.21.6
 
 ### Improvements
