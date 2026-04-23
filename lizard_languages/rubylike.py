@@ -98,7 +98,7 @@ class RubylikeReader(CodeReader, ScriptLanguageMixIn):
     # pylint: disable=R0903
 
     # Separated condition categories
-    _control_flow_keywords = {'if', 'elsif', 'elseif', 'until', 'for', 'while', 
+    _control_flow_keywords = {'if', 'elsif', 'elseif', 'until', 'for', 'while',
                               'rescue', 'ensure', 'when'}
     _logical_operators = {'and', 'or', '||', '&&'}  # Both word and symbol forms
     _case_keywords = set()  # Ruby uses 'when' for case expressions

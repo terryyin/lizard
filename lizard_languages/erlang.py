@@ -13,7 +13,7 @@ class ErlangReader(CodeReader):
 
     ext = ['erl', 'hrl', 'es', 'escript']
     language_names = ['erlang']
-    
+
     # Separated condition categories
     _control_flow_keywords = {'if', 'catch', 'when'}  # when is used in guards
     _logical_operators = {'and', 'or', 'not'}

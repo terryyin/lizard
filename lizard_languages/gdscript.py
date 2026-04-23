@@ -9,7 +9,7 @@ class GDScriptReader(PythonReader):
 
     ext = ['gd']
     language_names = ['GDScript']
-    
+
     # Separated condition categories
     _control_flow_keywords = {'if', 'elif', 'for', 'while', 'catch', 'do'}
     _logical_operators = {'&&', '||'}

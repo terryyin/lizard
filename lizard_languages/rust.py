@@ -12,7 +12,7 @@ class RustReader(CodeReader, CCppCommentsMixin):
 
     ext = ['rs']
     language_names = ['rust']
-    
+
     # Separated condition categories
     _control_flow_keywords = {'if', 'for', 'while', 'catch', 'match', 'where'}
     _logical_operators = {'&&', '||'}

@@ -29,7 +29,7 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
 
     ext = ['py']
     language_names = ['python']
-    
+
     # Separated condition categories
     _control_flow_keywords = {'if', 'elif', 'for', 'while', 'except', 'finally'}
     _logical_operators = {'and', 'or'}

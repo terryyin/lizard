@@ -13,7 +13,7 @@ class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
 
     ext = ['kt', 'kts']
     language_names = ['kotlin']
-    
+
     # Separated condition categories
     _control_flow_keywords = {'if', 'for', 'while', 'catch'}
     _logical_operators = {'&&', '||'}

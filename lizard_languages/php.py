@@ -242,7 +242,7 @@ class PHPReader(CodeReader, CCppCommentsMixin):
 
     ext = ['php']
     language_names = ['php']
-    
+
     # Separated condition categories
     _control_flow_keywords = {'if', 'elseif', 'for', 'foreach', 'while', 'catch', 'match'}
     _logical_operators = {'&&', '||'}  # PHP also has 'and', 'or' with different precedence
