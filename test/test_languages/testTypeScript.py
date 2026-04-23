@@ -15,6 +15,15 @@ class Test_tokenizing_TypeScript(unittest.TestCase):
     def test_simple(self):
         self.check_tokens(['abc?'], 'abc?')
 
+    def test_nested_template_literal_exact_tokens(self):
+        source_code = 'output.push(`${`${n}: `.padStart(w)}${s}`);'
+        expected_tokens = [
+            'output', '.', 'push', '(', '`', '${', 
+            '`${`', '$', '{', 'n', '}', ':', ' ', '`', 
+            '`.padStart(w)}`', '${', 's', '}', '`', ')', ';'
+        ]
+        self.check_tokens(expected_tokens, source_code)
+
 class Test_parser_for_TypeScript(unittest.TestCase):
 
     def test_simple_function(self):

@@ -98,6 +98,11 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                     elif content[i] == '}':
                         brace_count -= 1
                     i += 1
+
+                if brace_count > 0:
+                    yield token
+                    return
+
                 expr = content[expr_start:i - 1]
                 yield expr
                 yield '}'
