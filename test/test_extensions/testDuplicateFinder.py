@@ -52,7 +52,14 @@ class TestDuplicateFinder(unittest.TestCase):
     def test_partial_different_purpose(self):
         self.assertNotIn([("2@1", "3@2"), ("2@4", "3@5")], self.find_in([1,2,3,1,2,3,2]))
 
-
+    def test_overlapping_duplicate_rate(self):
+        finder = DuplicateFinder(
+                 list(Node("%s@%s" % (v, i), v) for i, v in enumerate([1, 1, 1, -1])),
+                 [0],
+                 collapse_repeat_tokens=0,
+                 sample_size=2)
+        list(finder.find_start_and_ends())
+        self.assertEqual(1.0, finder.duplicate_rate())
 
 
 
