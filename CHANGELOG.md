@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 1.22.1
+
+### Bug Fixes
+- TypeScript: prevent `IndexError` when parsing nested template literals (issue #471, PR #472)
+
 ## 1.22.0
 
 ### Improvements
