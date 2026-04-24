@@ -2,7 +2,7 @@ from flask import Flask, request, url_for, render_template
 from lizard import analyze_file
 import os
 app = Flask(__name__)
-app.config['DEBUG'] = True
+app.config['DEBUG'] = os.environ.get('FLASK_DEBUG', '').lower() in ('1', 'true', 'yes')
 
 
 @app.route('/')
