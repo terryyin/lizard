@@ -2,6 +2,7 @@
 Get Duplicated parameter lists
 '''
 from __future__ import print_function
+from bisect import bisect_right
 from collections import deque
 from itertools import groupby
 from .default_ordered_dict import DefaultOrderedDict
@@ -98,6 +99,8 @@ class DuplicateFinder(object):
         self.duplicate_token_count = 0
         self.nodes = nodes
         self.boundaries = set(boundaries + [len(nodes)])
+        self.sorted_boundaries = sorted(self.boundaries)
+        self.covered_duplicates = DefaultOrderedDict(list)
         self.hashed_node_indice = DefaultOrderedDict(list)
         for i, node_hash in enumerate(n.hash for n in nodes):
             if i in self.boundaries:
@@ -117,8 +120,37 @@ class DuplicateFinder(object):
                 token_count = len(dup) * \
                         (dup[0][1] - dup[0][0] + self.sample_size)
                 if token_count >= self.min_duplicate_tokens:
-                    self.duplicate_token_count += token_count
+                    self._add_duplicate_ranges(dup)
                     yield dup
+        self.duplicate_token_count = sum(
+            self._merged_token_count(intervals)
+            for intervals in self.covered_duplicates.values())
+
+    def _add_duplicate_ranges(self, dup):
+        for start, end in dup:
+            boundary_index = self._boundary_index(start)
+            boundary_start = self.sorted_boundaries[boundary_index]
+            self.covered_duplicates[boundary_index].append(
+                    (start - boundary_start,
+                     end - boundary_start + self.sample_size))
+
+    def _boundary_index(self, index):
+        return bisect_right(self.sorted_boundaries, index) - 1
+
+    @staticmethod
+    def _merged_token_count(intervals):
+        if not intervals:
+            return 0
+        intervals = sorted(intervals)
+        start, end = intervals[0]
+        token_count = 0
+        for current_start, current_end in intervals[1:]:
+            if current_start <= end:
+                end = max(end, current_end)
+            else:
+                token_count += end - start
+                start, end = current_start, current_end
+        return token_count + end - start
 
     def duplicate_rate(self):
         try:
