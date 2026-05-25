@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## 1.22.2
+
+### Bug Fixes
+- TypeScript: handle function stack correctly when starting a new function (avoids incorrect nesting / metrics)
+- Duplicate finder: avoid double-counting overlapping duplicate code ranges (PR #474)
+
+### Security
+- Demo Flask app (`index.py`): enable debug only when `FLASK_DEBUG` is set, not by default (PR #475)
+
 ## 1.22.1
 
 ### Bug Fixes
