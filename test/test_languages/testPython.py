@@ -513,5 +513,384 @@ def test_function(param):
         self.assertEqual(3, function.cyclomatic_complexity)  # 1 base + 2 conditions (else doesn't count)
 
 
+class Test_Python_match_case(unittest.TestCase):
+    """Tests for Python 3.10+ structural pattern matching (match/case)."""
+
+    def test_match_case_basic_complexity(self):
+        """Each case arm adds +1 to cyclomatic complexity."""
+        code = '''
+def f(x):
+    match x:
+        case 1:
+            return "one"
+        case 2:
+            return "two"
+        case _:
+            return "other"
+'''
+        functions = get_python_function_list(code)
+        self.assertEqual(1, len(functions))
+        # 1 base + 3 case arms
+        self.assertEqual(4, functions[0].cyclomatic_complexity)
+
+    def test_match_does_not_add_complexity_by_itself(self):
+        """match without case arms only has base complexity 1."""
+        code = '''
+def f(x):
+    match x:
+        case _:
+            pass
+'''
+        functions = get_python_function_list(code)
+        self.assertEqual(1, len(functions))
+        # 1 base + 1 case
+        self.assertEqual(2, functions[0].cyclomatic_complexity)
+
+    def test_match_case_with_guard(self):
+        """case with an if guard is a single arm; the guard is counted as 'if'."""
+        code = '''
+def classify(point):
+    match point:
+        case (x, y) if x == y:
+            return "diagonal"
+        case (x, y):
+            return "other"
+'''
+        functions = get_python_function_list(code)
+        self.assertEqual(1, len(functions))
+        # 1 base + 2 cases + 1 guard (if)
+        self.assertEqual(4, functions[0].cyclomatic_complexity)
+
+    def test_case_variable_not_counted_as_keyword(self):
+        """'case' used as a plain variable name must not add to complexity."""
+        code = '''
+def f():
+    case = 5
+    return case
+'''
+        functions = get_python_function_list(code)
+        self.assertEqual(1, len(functions))
+        # 1 base only; 'case = 5' is assignment, not a keyword
+        self.assertEqual(1, functions[0].cyclomatic_complexity)
+
+    def test_case_attribute_access_not_counted(self):
+        """'case.something' must not be counted as a case keyword."""
+        code = '''
+def f(case):
+    return case.value
+'''
+        functions = get_python_function_list(code)
+        self.assertEqual(1, len(functions))
+        self.assertEqual(1, functions[0].cyclomatic_complexity)
+
+    def test_case_member_access_not_counted(self):
+        """'foo.case' must not be counted as a case keyword."""
+        code = '''
+def f(foo):
+    return foo.case
+'''
+        functions = get_python_function_list(code)
+        self.assertEqual(1, len(functions))
+        self.assertEqual(1, functions[0].cyclomatic_complexity)
+
+    def test_case_annotated_assignment_not_counted(self):
+        """'case: int = 5' (type-annotated variable) must not add complexity."""
+        code = '''
+def f():
+    case: int = 5
+    return case
+'''
+        functions = get_python_function_list(code)
+        self.assertEqual(1, len(functions))
+        self.assertEqual(1, functions[0].cyclomatic_complexity)
+
+    def test_case_tuple_unpacking_not_counted(self):
+        """'case, other = 1, 2' (tuple unpacking) must not add complexity."""
+        code = '''
+def f():
+    case, other = 1, 2
+    return case + other
+'''
+        functions = get_python_function_list(code)
+        self.assertEqual(1, len(functions))
+        self.assertEqual(1, functions[0].cyclomatic_complexity)
+
+    def test_case_function_call_not_counted(self):
+        """'case(x)' as a function call must not add complexity."""
+        code = '''
+def f(x):
+    case(x)
+    return x
+'''
+        functions = get_python_function_list(code)
+        self.assertEqual(1, len(functions))
+        self.assertEqual(1, functions[0].cyclomatic_complexity)
+
+    def test_case_subscript_not_counted(self):
+        """'case[0]' as a subscript must not add complexity."""
+        code = '''
+def f(case):
+    return case[0]
+'''
+        functions = get_python_function_list(code)
+        self.assertEqual(1, len(functions))
+        self.assertEqual(1, functions[0].cyclomatic_complexity)
+
+    def test_case_parenthesized_pattern_counted(self):
+        """'case (x, y):' as a tuple pattern in a match arm must add complexity."""
+        code = '''
+def f(point):
+    match point:
+        case (x, y):
+            return x + y
+        case _:
+            return 0
+'''
+        functions = get_python_function_list(code)
+        self.assertEqual(1, len(functions))
+        self.assertEqual(3, functions[0].cyclomatic_complexity)
+
+    def test_case_sequence_pattern_counted(self):
+        """'case [0]:' as a sequence pattern in a match arm must add complexity."""
+        code = '''
+def f(lst):
+    match lst:
+        case [0]:
+            return "zero"
+        case _:
+            return "other"
+'''
+        functions = get_python_function_list(code)
+        self.assertEqual(1, len(functions))
+        self.assertEqual(3, functions[0].cyclomatic_complexity)
+
+    def test_case_nested_brackets_in_pattern_counted(self):
+        """'case (x, (y, z)):' — nested brackets in a pattern must add complexity."""
+        code = '''
+def f(point):
+    match point:
+        case (x, (y, z)):
+            return x + y + z
+'''
+        functions = get_python_function_list(code)
+        self.assertEqual(1, len(functions))
+        self.assertEqual(2, functions[0].cyclomatic_complexity)
+
+    def test_case_pattern_with_guard_counted(self):
+        """'case (x, y) if x > 0:' — the arm (and its guard 'if') must both add complexity."""
+        code = '''
+def f(point):
+    match point:
+        case (x, y) if x > 0:
+            return x
+'''
+        # 1 base + 1 case arm + 1 guard 'if' = 3
+        functions = get_python_function_list(code)
+        self.assertEqual(1, len(functions))
+        self.assertEqual(3, functions[0].cyclomatic_complexity)
+
+    def test_case_pattern_guard_with_dict_literal_counted(self):
+        """Guard containing a dict literal must not confuse the lookahead.
+
+        'case (x, y) if x in {0: "a", 1: "b"}:' — the ':' tokens inside the
+        dict literal are at depth > 0 and must not prematurely end the scan.
+        The case arm and the guard 'if' must both be counted.
+        """
+        code = '''
+def f(v):
+    match v:
+        case (x, y) if x in {0: "a", 1: "b"}:
+            return x
+'''
+        # 1 base + 1 case arm + 1 guard 'if' = 3
+        functions = get_python_function_list(code)
+        self.assertEqual(1, len(functions))
+        self.assertEqual(3, functions[0].cyclomatic_complexity)
+
+    def test_case_sequence_pattern_with_guard_counted(self):
+        """'case [x, y] if x > 0:' — sequence pattern with guard must add complexity."""
+        code = '''
+def f(lst):
+    match lst:
+        case [x, y] if x > 0:
+            return x
+'''
+        # 1 base + 1 case arm + 1 guard 'if' = 3
+        functions = get_python_function_list(code)
+        self.assertEqual(1, len(functions))
+        self.assertEqual(3, functions[0].cyclomatic_complexity)
+
+    def test_case_subscript_assignment_not_counted(self):
+        """'case[key] = value' (subscript assignment) must not add complexity."""
+        code = '''
+def f(case):
+    case[0] = 99
+    return case
+'''
+        functions = get_python_function_list(code)
+        self.assertEqual(1, len(functions))
+        self.assertEqual(1, functions[0].cyclomatic_complexity)
+
+    def test_case_multiline_pattern_counted(self):
+        """A match pattern spanning two lines (implicit continuation inside brackets)
+        must still be recognised and add complexity."""
+        code = '''
+def f(point):
+    match point:
+        case (x,
+              y):
+            return x + y
+'''
+        functions = get_python_function_list(code)
+        self.assertEqual(1, len(functions))
+        self.assertEqual(2, functions[0].cyclomatic_complexity)
+
+    def test_case_multiline_function_call_not_counted(self):
+        """A multi-line function call 'case(\\n    x\\n)' must not add complexity."""
+        code = '''
+def f(x):
+    case(
+        x
+    )
+    return x
+'''
+        functions = get_python_function_list(code)
+        self.assertEqual(1, len(functions))
+        self.assertEqual(1, functions[0].cyclomatic_complexity)
+
+    def test_match_function_call_not_counted(self):
+        """'match(x)' as a function call must not add complexity."""
+        code = '''
+def f(x):
+    match(x)
+    return x
+'''
+        functions = get_python_function_list(code)
+        self.assertEqual(1, len(functions))
+        self.assertEqual(1, functions[0].cyclomatic_complexity)
+
+    def test_match_variable_not_counted(self):
+        """'match' used as a plain variable or function name adds no complexity."""
+        code = '''
+def f(text):
+    match = re.match(r"\\d+", text)
+    return match
+'''
+        functions = get_python_function_list(code)
+        self.assertEqual(1, len(functions))
+        self.assertEqual(1, functions[0].cyclomatic_complexity)
+
+    def test_match_case_equivalent_complexity_to_if_elif(self):
+        """match/case with N arms should match complexity of if/elif chain with N-1 elifs.
+
+        Note: 'case _:' (wildcard/default) counts as +1 like any other case arm,
+        whereas 'else:' in an if/elif chain adds 0.  So a match with a wildcard
+        arm has one more complexity point than the equivalent if/elif/else chain.
+        To compare fairly, omit the wildcard arm and use a plain else.
+        """
+        if_code = '''
+def f(x):
+    if x == 1:
+        return "one"
+    elif x == 2:
+        return "two"
+    elif x == 3:
+        return "three"
+'''
+        match_code = '''
+def f(x):
+    match x:
+        case 1:
+            return "one"
+        case 2:
+            return "two"
+        case 3:
+            return "three"
+'''
+        if_funcs = get_python_function_list(if_code)
+        match_funcs = get_python_function_list(match_code)
+        # Both: 1 (base) + 3 (if/elif or case arms) = 4
+        self.assertEqual(if_funcs[0].cyclomatic_complexity,
+                         match_funcs[0].cyclomatic_complexity)
+
+    def test_match_wildcard_adds_one(self):
+        """'case _:' is counted as a case arm (+1), unlike 'else:' which is free."""
+        code_with_wildcard = '''
+def f(x):
+    match x:
+        case 1:
+            return "one"
+        case _:
+            return "other"
+'''
+        code_with_else = '''
+def f(x):
+    if x == 1:
+        return "one"
+    else:
+        return "other"
+'''
+        match_funcs = get_python_function_list(code_with_wildcard)
+        if_funcs = get_python_function_list(code_with_else)
+        # match: 1 + 2 (case 1 + case _) = 3
+        self.assertEqual(3, match_funcs[0].cyclomatic_complexity)
+        # if/else: 1 + 1 (if only, else is free) = 2
+        self.assertEqual(2, if_funcs[0].cyclomatic_complexity)
+
+
+class Test_Python_match_case_with_modified_ccn(unittest.TestCase):
+    """Tests for match/case interaction with the --modified CCN extension."""
+
+    def _get_funcs(self, code, *extensions):
+        from lizard import FileAnalyzer, get_extensions
+        return FileAnalyzer(get_extensions(list(extensions))).analyze_source_code(
+            "a.py", code).function_list
+
+    def test_match_case_not_cancelled_by_modified_extension(self):
+        """lizardmodified treats Python match/case like switch/case:
+        the whole block counts as 1 (not 1 per arm)."""
+        from lizard_ext.lizardnd import LizardExtension as NestDepth
+        from lizard_ext.lizardmodified import LizardExtension as Modified
+        code = '''
+def f(x):
+    match x:
+        case 1:
+            return "one"
+        case 2:
+            return "two"
+        case _:
+            return "other"
+'''
+        normal = self._get_funcs(code, NestDepth())
+        modified = self._get_funcs(code, NestDepth(), Modified())
+        # Regular CCN: 1 base + 3 case arms
+        self.assertEqual(4, normal[0].cyclomatic_complexity)
+        # Modified CCN: 1 base + 1 for the whole match block (like switch/case)
+        self.assertEqual(2, modified[0].cyclomatic_complexity)
+
+    def test_case_variable_not_penalised_by_modified_extension(self):
+        """'case = 5' must not drive complexity negative under lizardmodified."""
+        from lizard_ext.lizardnd import LizardExtension as NestDepth
+        from lizard_ext.lizardmodified import LizardExtension as Modified
+        code = '''
+def f():
+    case = 5
+    return case
+'''
+        modified = self._get_funcs(code, NestDepth(), Modified())
+        self.assertEqual(1, modified[0].cyclomatic_complexity)
+
+    def test_match_function_call_not_penalised_by_modified_extension(self):
+        """'match(x)' as a function call must not add a block bonus under lizardmodified."""
+        from lizard_ext.lizardnd import LizardExtension as NestDepth
+        from lizard_ext.lizardmodified import LizardExtension as Modified
+        code = '''
+def f(x):
+    match(x)
+    return x
+'''
+        modified = self._get_funcs(code, NestDepth(), Modified())
+        self.assertEqual(1, modified[0].cyclomatic_complexity)
+
 def top_level_function_for_test():
     pass

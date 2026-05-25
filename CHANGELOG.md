@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### New Features
+- **Python** — structural pattern matching (`match`/`case`, PEP 634, Python 3.10+) is now counted correctly:
+  - Each `case` arm adds +1 to cyclomatic complexity (like an `if`/`elif` branch)
+  - `case` guards (`case x if cond:`) count the `if` as a normal condition
+  - `case` and `match` used as plain variable names (assignments, attribute access, function calls, subscripts, tuple unpacking, annotated assignments) are not counted — soft-keyword disambiguation via lookahead in `preprocess`
+  - `--modified`: an entire `match`/`case` block counts as 1, consistent with `switch`/`case` in C-family languages
+
 ## 1.22.2
 
 ### Bug Fixes
