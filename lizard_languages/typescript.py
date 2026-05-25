@@ -339,6 +339,8 @@ class TypeScriptStates(CodeStateMachine):
             self._prev_token = token
             return
         if token == 'function':
+            if self.started_function and not self.as_object:
+                self._pop_function_from_stack()
             self._state = self._function
         elif token in ('if', 'switch', 'for', 'while', 'catch'):
             self.next(self._expecting_condition_and_statement_block)

@@ -1226,3 +1226,28 @@ class Test_ts_param_type_filtering(unittest.TestCase):
         code = 'function fn(a: Map<K, V>, b: Set<T>, c: number) {}'
         functions = get_ts_function_list(code)
         self.assertEqual(3, functions[0].parameter_count)
+
+    def test_parameter_count_with_union_return_type_and_following_function(self):
+        """Issue #476: union return type must not swallow the body opening brace."""
+        code = '''
+        export function function1 (
+          parameter1: Param1,
+          parameter2: Param2,
+          parameter3: Param3,
+          parameter4: Param4
+        ): something | undefined {
+          const newVariable = parameter1.newExample?.trim();
+          if (!newVariable) {
+            return undefined;
+          }
+
+          return something;
+        }
+
+        function function2(param1: Param1, param2: Param2): boolean {
+          return anotherFunction(param1.thing, param2.anotherThing);
+        }
+        '''
+        functions = get_ts_function_list(code)
+        self.assertEqual('function1', functions[0].name)
+        self.assertEqual(4, functions[0].parameter_count)
