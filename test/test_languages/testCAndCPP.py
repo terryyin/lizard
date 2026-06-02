@@ -795,3 +795,91 @@ void func3() {
         self.assertEqual("func1", result[0].name)
         self.assertEqual("func2", result[1].name)
         self.assertEqual("func3", result[2].name)
+
+
+class Test_cpp_raw_string_literals(unittest.TestCase):
+    """Issue #478: a C++ raw string literal must not corrupt function boundary
+    detection. The raw-string pattern added for #451 stopped a crash, but its
+    closing delimiter class also matched a double quote, so a raw string raced
+    past its terminator and swallowed the code that followed it."""
+
+    def test_raw_string_brace_init_keeps_following_function(self):
+        result = get_cpp_function_list(
+            'auto process()\n'
+            '{\n'
+            '    const auto r_pattern{R"(\\b\\w*R\\w*\\b)"};\n'
+            '    const auto e_pattern{R"(<Blah>(\\d+)</Blah>)"};\n'
+            '}\n'
+            '\n'
+            'int main()\n'
+            '{\n'
+            '    auto pat = "{}";\n'
+            '}\n')
+        self.assertEqual(2, len(result))
+        self.assertEqual("process", result[0].name)
+        self.assertEqual(1, result[0].start_line)
+        self.assertEqual(5, result[0].end_line)
+        self.assertEqual("main", result[1].name)
+        self.assertEqual(7, result[1].start_line)
+        self.assertEqual(10, result[1].end_line)
+
+    def test_raw_string_eq_init_keeps_function_bounds(self):
+        result = get_cpp_function_list(
+            'auto process()\n'
+            '{\n'
+            '    const auto r_pattern = R"(\\b\\w*R\\w*\\b)";\n'
+            '    const auto e_pattern = R"(<Blah>(\\d+)</Blah>)";\n'
+            '}\n'
+            '\n'
+            'int main()\n'
+            '{\n'
+            '    auto pat = "{}";\n'
+            '}\n')
+        self.assertEqual(2, len(result))
+        self.assertEqual("process", result[0].name)
+        self.assertEqual(1, result[0].start_line)
+        self.assertEqual(5, result[0].end_line)
+        self.assertEqual("main", result[1].name)
+        self.assertEqual(7, result[1].start_line)
+        self.assertEqual(10, result[1].end_line)
+
+    def test_raw_string_with_encoding_prefix(self):
+        result = get_cpp_function_list(
+            'int a()\n'
+            '{\n'
+            '    auto w = LR"(wide)";\n'
+            '    auto u = u8R"(utf8)";\n'
+            '}\n'
+            'int b()\n'
+            '{\n'
+            '    return 0;\n'
+            '}\n')
+        self.assertEqual(2, len(result))
+        self.assertEqual("a", result[0].name)
+        self.assertEqual(1, result[0].start_line)
+        self.assertEqual(5, result[0].end_line)
+        self.assertEqual("b", result[1].name)
+        self.assertEqual(6, result[1].start_line)
+        self.assertEqual(9, result[1].end_line)
+
+    def test_custom_delimiter_raw_string_keeps_following_function(self):
+        # Custom delimiters are not matched by the raw-string pattern; they fall
+        # through to the normal string rule. That is fine as long as they carry
+        # no embedded double quote, which is the overwhelmingly common case
+        # (JSON/HTML bodies with balanced braces). Lock that boundary here.
+        result = get_cpp_function_list(
+            'int a()\n'
+            '{\n'
+            '    auto j = R"json({"x": [1, 2]})json";\n'
+            '}\n'
+            'int b()\n'
+            '{\n'
+            '    return 0;\n'
+            '}\n')
+        self.assertEqual(2, len(result))
+        self.assertEqual("a", result[0].name)
+        self.assertEqual(1, result[0].start_line)
+        self.assertEqual(4, result[0].end_line)
+        self.assertEqual("b", result[1].name)
+        self.assertEqual(5, result[1].start_line)
+        self.assertEqual(8, result[1].end_line)
