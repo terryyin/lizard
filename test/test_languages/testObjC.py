@@ -70,6 +70,41 @@ class Test_objc_lizard(unittest.TestCase):
         self.assertEqual(2, len(result))
         self.assertEqual("classMethod", result[0].name)
 
+    def test_objc_method_with_block_param(self):
+        # issue #365: a block-typed parameter "(void (^)(...))" contains
+        # nested parens; the param-type scan must balance them instead of
+        # exiting on the inner ')', which previously garbled the selector
+        # name and the method's line range.
+        code = (
+            "@implementation TestLizard\n"
+            "+ (UIImage *)sgb_imageWithSize:(CGSize)size "
+            "drawBlock:(void (^)(CGContextRef context))drawBlock {\n"
+            "    if (!drawBlock) return nil;\n"
+            "    return nil;\n"
+            "}\n"
+            "@end\n"
+        )
+        result = self.create_objc_lizard(code)
+        self.assertEqual(1, len(result))
+        self.assertEqual("sgb_imageWithSize: drawBlock:", result[0].name)
+        # the desync also corrupted the line range, so pin it too
+        self.assertEqual(2, result[0].start_line)
+        self.assertEqual(5, result[0].end_line)
+
+    def test_objc_method_with_function_pointer_param(self):
+        # same nested-paren path as #365: a function-pointer parameter type
+        # (int (*)(int)) must not end the param type at its inner ')'.
+        code = (
+            "@implementation TestLizard\n"
+            "- (void)runWithCallback:(int (*)(int))cb {\n"
+            "    return;\n"
+            "}\n"
+            "@end\n"
+        )
+        result = self.create_objc_lizard(code)
+        self.assertEqual(1, len(result))
+        self.assertEqual("runWithCallback:", result[0].name)
+
 
 class TestObjCLanguage(unittest.TestCase):
     """Tests for the GitHub issue #428 fix - .mm file extension mapping"""
