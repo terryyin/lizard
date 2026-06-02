@@ -798,50 +798,74 @@ void func3() {
 
 
 class Test_cpp_raw_string_literals(unittest.TestCase):
-    """Issue #478: a C++ raw string literal must not corrupt function boundary
-    detection. The raw-string pattern added for #451 stopped a crash, but its
-    closing delimiter class also matched a double quote, so a raw string raced
-    past its terminator and swallowed the code that followed it."""
+    """Issue #478: C++ raw string literals must not corrupt function boundaries."""
 
-    def test_raw_string_brace_init_keeps_following_function(self):
+    _RAW_PATTERNS = (
+        '    const auto r_pattern{pattern0};\n'
+        '    const auto e_pattern{pattern1};\n',
+        '    const auto r_pattern = pattern0;\n'
+        '    const auto e_pattern = pattern1;\n',
+    )
+    _PATTERN0 = 'R"(\\b\\w*R\\w*\\b)"'
+    _PATTERN1 = 'R"(<Blah>(\\d+)</Blah>)"'
+
+    def _source_with_raw_strings(self, body_lines):
+        return (
+            'auto process()\n'
+            '{\n'
+            + body_lines.format(pattern0=self._PATTERN0, pattern1=self._PATTERN1)
+            + '}\n'
+            '\n'
+            'int main()\n'
+            '{\n'
+            '    auto pat = "{}";\n'
+            '}\n')
+
+    def _assert_process_and_main(self, result):
+        self.assertEqual(2, len(result))
+        self.assertEqual("process", result[0].name)
+        self.assertEqual(1, result[0].start_line)
+        self.assertEqual(5, result[0].end_line)
+        self.assertEqual("main", result[1].name)
+        self.assertEqual(7, result[1].start_line)
+        self.assertEqual(10, result[1].end_line)
+
+    def test_raw_string_init_keeps_following_function(self):
+        for name, body_lines in (
+                ('brace', self._RAW_PATTERNS[0]),
+                ('equals', self._RAW_PATTERNS[1]),
+        ):
+            with self.subTest(init=name):
+                result = get_cpp_function_list(
+                    self._source_with_raw_strings(body_lines))
+                self._assert_process_and_main(result)
+
+    def test_single_raw_string_in_function_keeps_following_function(self):
         result = get_cpp_function_list(
             'auto process()\n'
             '{\n'
             '    const auto r_pattern{R"(\\b\\w*R\\w*\\b)"};\n'
-            '    const auto e_pattern{R"(<Blah>(\\d+)</Blah>)"};\n'
             '}\n'
             '\n'
-            'int main()\n'
-            '{\n'
-            '    auto pat = "{}";\n'
-            '}\n')
+            'int main() { return 0; }\n')
         self.assertEqual(2, len(result))
         self.assertEqual("process", result[0].name)
         self.assertEqual(1, result[0].start_line)
-        self.assertEqual(5, result[0].end_line)
+        self.assertEqual(4, result[0].end_line)
         self.assertEqual("main", result[1].name)
-        self.assertEqual(7, result[1].start_line)
-        self.assertEqual(10, result[1].end_line)
+        self.assertEqual(6, result[1].start_line)
+        self.assertEqual(6, result[1].end_line)
 
-    def test_raw_string_eq_init_keeps_function_bounds(self):
-        result = get_cpp_function_list(
-            'auto process()\n'
-            '{\n'
-            '    const auto r_pattern = R"(\\b\\w*R\\w*\\b)";\n'
-            '    const auto e_pattern = R"(<Blah>(\\d+)</Blah>)";\n'
-            '}\n'
-            '\n'
-            'int main()\n'
-            '{\n'
-            '    auto pat = "{}";\n'
-            '}\n')
-        self.assertEqual(2, len(result))
-        self.assertEqual("process", result[0].name)
-        self.assertEqual(1, result[0].start_line)
-        self.assertEqual(5, result[0].end_line)
-        self.assertEqual("main", result[1].name)
-        self.assertEqual(7, result[1].start_line)
-        self.assertEqual(10, result[1].end_line)
+    def test_adjacent_raw_string_literals_tokenize_separately(self):
+        src = (
+            'const auto a{R"(\\b\\w*R\\w*\\b)"};\n'
+            '    const auto b{R"(<Blah>(\\d+)</Blah>)"};')
+        raw_tokens = [
+            t for t in CLikeReader.generate_tokens(src)
+            if t.startswith('R"(') and t.endswith(')"')]
+        self.assertEqual(
+            ['R"(\\b\\w*R\\w*\\b)"', 'R"(<Blah>(\\d+)</Blah>)"'],
+            raw_tokens)
 
     def test_raw_string_with_encoding_prefix(self):
         result = get_cpp_function_list(
