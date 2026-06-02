@@ -23,6 +23,10 @@ class ObjCReader(CLikeReader):
 
 
 class ObjCStates(CLikeStates):  # pylint: disable=R0903
+    def __init__(self, context):
+        super(ObjCStates, self).__init__(context)
+        self._objc_param_paren_depth = 0
+
     def _state_global(self, token):
         super(ObjCStates, self)._state_global(token)
         if token == 'typedef':
@@ -50,6 +54,7 @@ class ObjCStates(CLikeStates):  # pylint: disable=R0903
 
     def _state_objc_dec(self, token):
         if token == '(':
+            self._objc_param_paren_depth = 0
             self._state = self._state_objc_param_type
             self.context.add_to_long_function_name(token)
         elif token == ',':
@@ -61,8 +66,16 @@ class ObjCStates(CLikeStates):  # pylint: disable=R0903
             self.context.add_to_function_name(" " + token)
 
     def _state_objc_param_type(self, token):
-        if token == ')':
-            self._state = self._state_objc_param
+        # A block / function-pointer param type, e.g. (void (^)(int)), nests
+        # parentheses; balance them so the type ends at its matching ')'
+        # rather than the first inner one (issue #365).
+        if token == '(':
+            self._objc_param_paren_depth += 1
+        elif token == ')':
+            if self._objc_param_paren_depth > 0:
+                self._objc_param_paren_depth -= 1
+            else:
+                self._state = self._state_objc_param
         self.context.add_to_long_function_name(" " + token)
 
     def _state_objc_param(self, _):
