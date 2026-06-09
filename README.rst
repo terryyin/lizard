@@ -264,6 +264,31 @@ You can generate a "Tag cloud" of your code by the following command. It counts 
    lizard -EWordCount <path to your code>
 
 
+Extensions Documentation
+------------------------
+
+Lizard supports a comprehensive extension system for additional metrics, code analysis, and output formats.
+
+For detailed documentation on all available extensions with usage examples and CI/CD integration guides, see the
+`Extensions README <lizard_ext/README.md>`_.
+
+Available extension categories:
+
+- **Metric Extensions**: Nesting Depth (ND), Nested Structures (NS), McCabe, Statement Count, Exit Count, and more
+- **Analysis Extensions**: Code duplication detection, parameter list analysis, comment extraction
+- **Behavior Modifiers**: Ignore assertions, modified CCN, C preprocessor handling, global code inclusion
+- **Output Formatters**: CSV, HTML (interactive), XML (Jenkins), Checkstyle
+
+Quick examples:
+
+::
+
+   lizard -ENS --NS 2 your_code/              # Nested structures analysis
+   lizard --csv -V your_code/ > report.csv    # CSV output
+   lizard -H -o report.html your_code/        # Interactive HTML report
+   lizard -X your_code/ > jenkins.xml         # Jenkins XML output
+
+
 Using lizard as Python module
 -----------------------------
 
