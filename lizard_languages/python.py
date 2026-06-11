@@ -72,8 +72,12 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
-        tokens = ScriptLanguageMixIn.generate_common_tokens(
-            source_code, _PY_TRIPLE_QUOTE, token_class)
+        # Python comments end at the physical newline; a trailing '\' does not
+        # extend the comment to the next line (issue #317).
+        tokens = CodeReader.generate_tokens(
+            source_code,
+            r"|\#[^\n]*" + _PY_TRIPLE_QUOTE + addition,
+            token_class)
         return PythonReader._expand_fstring_interpolations(tokens, token_class)
 
     @staticmethod
@@ -81,9 +85,8 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
         """Re-tokenize the {...} interpolations of f-strings so control-flow
         keywords inside them reach the condition counter.
 
-        Addresses the f-string part of GitHub issue #317 (control flow inside
-        interpolations was invisible to the tokenizer). The original #317
-        report (backslash line continuation at end of a comment) is separate.
+        Addresses GitHub issue #317: control flow inside interpolations was
+        invisible to the tokenizer when the f-string was one opaque string token.
 
         The tokenizer emits the f-string prefix ('f', 'rf', ...) as its own
         token right before the string body, so an f-string is a prefix token

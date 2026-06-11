@@ -894,11 +894,7 @@ def f(x):
 
 
 class Test_Python_fstring_complexity(unittest.TestCase):
-    """Control flow inside f-string {...} interpolations must be counted.
-
-    Covers the f-string aspect of GitHub issue #317. The original report
-    (backslash line continuation at end of a comment) is tested separately.
-    """
+    """Control flow inside f-string {...} interpolations must be counted (#317)."""
 
     def test_fstring_comprehension_counts_for(self):
         functions = get_python_function_list(
@@ -973,9 +969,8 @@ class Test_Python_fstring_complexity(unittest.TestCase):
 
 
 class Test_Python_issue_317_comment_backslash(unittest.TestCase):
-    """Original #317: backslash at end of comment hides the next line from the tokenizer."""
+    """#317: backslash at end of comment must not swallow the next line."""
 
-    @unittest.expectedFailure
     def test_comment_backslash_hides_following_if(self):
         code = (
             'def testFunction(x):\n'
