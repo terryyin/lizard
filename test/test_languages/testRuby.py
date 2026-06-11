@@ -433,3 +433,23 @@ end
         self.assertEqual(2, len(result))
         self.assertEqual("adapt_widget_params", result[0].name)
         self.assertEqual("adapt_search_params", result[1].name)
+
+
+class Test_Ruby_comment_line_continuation(unittest.TestCase):
+    """A '#' comment ending in a backslash must not continue onto the next
+    line and swallow it (issue #317, the shared-tokenizer half)."""
+
+    def test_backslash_at_end_of_comment_keeps_next_line(self):
+        code = (
+            "def foo(x)\n"
+            "  # a trailing comment\\\n"
+            "  if x > 10\n"
+            "    return 1\n"
+            "  end\n"
+            "  return 0\n"
+            "end\n"
+        )
+        result = get_ruby_function_list(code)
+        self.assertEqual(1, len(result))
+        self.assertEqual("foo", result[0].name)
+        self.assertEqual(2, result[0].cyclomatic_complexity)
