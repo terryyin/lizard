@@ -4,6 +4,14 @@ from .code_reader import CodeReader, CodeStateMachine
 from .script_language import ScriptLanguageMixIn
 
 
+# Triple-quoted string patterns for the common tokenizer, so a whole
+# triple-quoted string is matched as a single token.
+_PY_TRIPLE_QUOTE = (
+    r"|(?:\"\"\"(?:\\.|[^\"]|\"(?!\"\")|\"\"(?!\"))*\"\"\")"
+    r"|(?:\'\'\'(?:\\.|[^\']|\'(?!\'\')|\'\'(?!\'))*\'\'\')"
+)
+
+
 def count_spaces(token):
     return len(token.replace('\t', ' ' * 8))
 
@@ -59,13 +67,89 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
         self._keyword_case = False   # set by _soft_keyword_lookahead: True when 'case' is a soft keyword
         self._keyword_match = False  # set by _soft_keyword_lookahead: True when 'match' is a soft keyword
 
+    # f-string prefixes (any case). rb/br are bytes and have no interpolation.
+    _FSTRING_PREFIXES = frozenset(('f', 'rf', 'fr'))
+
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
-        return ScriptLanguageMixIn.generate_common_tokens(
-            source_code,
-            r"|(?:\"\"\"(?:\\.|[^\"]|\"(?!\"\")|\"\"(?!\"))*\"\"\")" +
-            r"|(?:\'\'\'(?:\\.|[^\']|\'(?!\'\')|\'\'(?!\'))*\'\'\')",
-            token_class)
+        tokens = ScriptLanguageMixIn.generate_common_tokens(
+            source_code, _PY_TRIPLE_QUOTE, token_class)
+        return PythonReader._expand_fstring_interpolations(tokens, token_class)
+
+    @staticmethod
+    def _expand_fstring_interpolations(tokens, token_class):
+        """Re-tokenize the {...} interpolations of f-strings so control-flow
+        keywords inside them reach the condition counter (#317).
+
+        The tokenizer emits the f-string prefix ('f', 'rf', ...) as its own
+        token right before the string body, so an f-string is a prefix token
+        immediately followed by a string token.
+        """
+        prefix = None
+        for token in tokens:
+            if prefix is not None:
+                held, prefix = prefix, None
+                if isinstance(token, str) and token[:1] in ('"', "'"):
+                    yield held
+                    for inner in PythonReader._tokenize_fstring_body(
+                            token, token_class):
+                        yield inner
+                    continue
+                yield held
+                # not a string after all; fall through to classify this token
+            if isinstance(token, str) and \
+                    token.lower() in PythonReader._FSTRING_PREFIXES:
+                prefix = token
+                continue
+            yield token
+        if prefix is not None:
+            yield prefix
+
+    @staticmethod
+    def _tokenize_fstring_body(token, token_class):
+        """Split an f-string body into literal chunks (kept as string tokens)
+        and interpolation expressions (re-tokenized so inner keywords count).
+
+        '{{' and '}}' are literal braces, not interpolations. If the body has no
+        interpolation, the original token is yielded unchanged.
+        """
+        quote = token[:3] if token[:3] in ('"""', "'''") else token[:1]
+        body = token[len(quote):len(token) - len(quote)]
+        literal = []
+        produced = []
+        i, n = 0, len(body)
+        while i < n:
+            if body[i:i + 2] in ('{{', '}}'):
+                literal.append(body[i])
+                i += 2
+                continue
+            if body[i] == '{':
+                depth, j = 1, i + 1
+                while j < n and depth:
+                    if body[j] == '{':
+                        depth += 1
+                    elif body[j] == '}':
+                        depth -= 1
+                    j += 1
+                if literal:
+                    produced.append(quote + ''.join(literal) + quote)
+                    literal = []
+                # The interpolation is Python code: tokenize it as such, which
+                # also expands any nested f-string (recursion terminates on the
+                # ever-shorter interpolation body).
+                produced.extend(PythonReader.generate_tokens(
+                    body[i + 1:j - 1], '', token_class))
+                i = j
+                continue
+            literal.append(body[i])
+            i += 1
+        if not produced:
+            yield token  # no interpolation; leave the string token untouched
+            return
+        if literal:
+            produced.append(quote + ''.join(literal) + quote)
+        for tok in produced:
+            yield tok
 
     def process_token(self, token):
         """Process triple-quoted strings used as comments, and Python soft keywords.
