@@ -67,8 +67,8 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
         self._keyword_case = False   # set by _soft_keyword_lookahead: True when 'case' is a soft keyword
         self._keyword_match = False  # set by _soft_keyword_lookahead: True when 'match' is a soft keyword
 
-    # f-string prefixes (any case). rb/br are bytes and have no interpolation.
-    _FSTRING_PREFIXES = frozenset(('f', 'rf', 'fr'))
+    # str/bytes f-string prefixes (any case). Excludes bare b/rb (not f-strings).
+    _FSTRING_PREFIXES = frozenset(('f', 'rf', 'fr', 'bf', 'fb'))
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
@@ -79,7 +79,11 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
     @staticmethod
     def _expand_fstring_interpolations(tokens, token_class):
         """Re-tokenize the {...} interpolations of f-strings so control-flow
-        keywords inside them reach the condition counter (#317).
+        keywords inside them reach the condition counter.
+
+        Addresses the f-string part of GitHub issue #317 (control flow inside
+        interpolations was invisible to the tokenizer). The original #317
+        report (backslash line continuation at end of a comment) is separate.
 
         The tokenizer emits the f-string prefix ('f', 'rf', ...) as its own
         token right before the string body, so an f-string is a prefix token
@@ -106,12 +110,59 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
             yield prefix
 
     @staticmethod
+    def _skip_quoted_literal(body, pos):
+        """Advance past a Python string literal in body; return new position."""
+        n = len(body)
+        if pos + 2 < n and body[pos:pos + 3] in ('"""', "'''"):
+            quote = body[pos:pos + 3]
+            pos += 3
+            while pos < n:
+                if body[pos:pos + 3] == quote:
+                    return pos + 3
+                if body[pos] == '\\':
+                    pos += 2
+                    continue
+                pos += 1
+            return n
+        if pos < n and body[pos] in '"\'':
+            quote = body[pos]
+            pos += 1
+            while pos < n:
+                if body[pos] == '\\':
+                    pos += 2
+                    continue
+                if body[pos] == quote:
+                    return pos + 1
+                pos += 1
+            return n
+        return pos
+
+    @staticmethod
+    def _find_interpolation_end(body, start):
+        """Return index after the closing '}' of an interpolation opened at start."""
+        depth = 1
+        j = start + 1
+        n = len(body)
+        while j < n and depth:
+            if body[j] in '"\'':
+                j = PythonReader._skip_quoted_literal(body, j)
+                continue
+            if body[j] == '{':
+                depth += 1
+            elif body[j] == '}':
+                depth -= 1
+            j += 1
+        return j
+
+    @staticmethod
     def _tokenize_fstring_body(token, token_class):
         """Split an f-string body into literal chunks (kept as string tokens)
         and interpolation expressions (re-tokenized so inner keywords count).
 
-        '{{' and '}}' are literal braces, not interpolations. If the body has no
-        interpolation, the original token is yielded unchanged.
+        '{{' and '}}' are literal braces, not interpolations. Brace matching
+        inside an interpolation skips string literals so a '}' nested in quotes
+        does not end the expression early. If the body has no interpolation,
+        the original token is yielded unchanged.
         """
         quote = token[:3] if token[:3] in ('"""', "'''") else token[:1]
         body = token[len(quote):len(token) - len(quote)]
@@ -124,13 +175,7 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
                 i += 2
                 continue
             if body[i] == '{':
-                depth, j = 1, i + 1
-                while j < n and depth:
-                    if body[j] == '{':
-                        depth += 1
-                    elif body[j] == '}':
-                        depth -= 1
-                    j += 1
+                j = PythonReader._find_interpolation_end(body, i)
                 if literal:
                     produced.append(quote + ''.join(literal) + quote)
                     literal = []

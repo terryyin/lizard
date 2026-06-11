@@ -894,7 +894,11 @@ def f(x):
 
 
 class Test_Python_fstring_complexity(unittest.TestCase):
-    """Control flow inside f-string {...} interpolations must be counted (#317)."""
+    """Control flow inside f-string {...} interpolations must be counted.
+
+    Covers the f-string aspect of GitHub issue #317. The original report
+    (backslash line continuation at end of a comment) is tested separately.
+    """
 
     def test_fstring_comprehension_counts_for(self):
         functions = get_python_function_list(
@@ -939,6 +943,48 @@ class Test_Python_fstring_complexity(unittest.TestCase):
     def test_nested_fstring_counts_inner_control_flow(self):
         functions = get_python_function_list(
             'def f(items):\n    return f"{f\'{[x for x in items]}\'}"\n')
+        self.assertEqual(2, functions[0].cyclomatic_complexity)
+
+    def test_brace_inside_nested_string_in_interpolation(self):
+        # '}' inside a nested string must not terminate the interpolation early
+        functions = get_python_function_list(
+            'def f(x):\n    return f"{x or \'}\'}"\n')
+        self.assertEqual(2, functions[0].cyclomatic_complexity)
+
+    def test_ternary_after_string_containing_brace(self):
+        functions = get_python_function_list(
+            'def f(cond):\n    return f"{foo(\'}\') if cond else bar}"\n')
+        self.assertEqual(2, functions[0].cyclomatic_complexity)
+
+    def test_format_spec_does_not_add_complexity(self):
+        functions = get_python_function_list(
+            'def f(x):\n    return f"{x:.2f}"\n')
+        self.assertEqual(1, functions[0].cyclomatic_complexity)
+
+    def test_triple_quoted_fstring_with_interpolation(self):
+        functions = get_python_function_list(
+            'def f(items):\n    return f"""{\', \'.join([x for x in items])}"""\n')
+        self.assertEqual(2, functions[0].cyclomatic_complexity)
+
+    def test_bytes_fstring_counts_control_flow(self):
+        functions = get_python_function_list(
+            'def f(items):\n    return bf"{b\'x\' if items else b\'\'}"\n')
+        self.assertEqual(2, functions[0].cyclomatic_complexity)
+
+
+class Test_Python_issue_317_comment_backslash(unittest.TestCase):
+    """Original #317: backslash at end of comment hides the next line from the tokenizer."""
+
+    @unittest.expectedFailure
+    def test_comment_backslash_hides_following_if(self):
+        code = (
+            'def testFunction(x):\n'
+            '    # this is a comment\\\n'
+            '    if x > 10:\n'
+            '        return "Greater than 10"\n'
+            '    return "Lower"\n'
+        )
+        functions = get_python_function_list(code)
         self.assertEqual(2, functions[0].cyclomatic_complexity)
 
 
