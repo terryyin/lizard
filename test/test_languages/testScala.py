@@ -128,3 +128,30 @@ class TestScala(unittest.TestCase):
             ''')
         self.assertEqual(2, len(result))
         self.assertEqual('list2', result[0].name)
+
+    def test_generic_function_with_type_param(self):
+        result = get_scala_function_list('''
+            def identity[T](x: T): T = { x }
+                ''')
+        self.assertEqual(1, len(result))
+        self.assertEqual("identity", result[0].name)
+        self.assertEqual(1, result[0].parameter_count)
+
+    def test_generic_function_with_multiple_type_params(self):
+        result = get_scala_function_list('''
+            def merge[A, B](a: A, b: B): String = { a.toString + b.toString }
+                ''')
+        self.assertEqual(1, len(result))
+        self.assertEqual("merge", result[0].name)
+        self.assertEqual(2, result[0].parameter_count)
+
+    def test_generic_method_in_class_not_dropped(self):
+        result = get_scala_function_list('''
+            class Box {
+                def plain(x: Int): Int = { x + 1 }
+                def generic[T](x: T): T = { x }
+                def after(y: Int): Int = { y * 2 }
+            }
+                ''')
+        names = sorted(f.name for f in result)
+        self.assertEqual(["after", "generic", "plain"], names)
