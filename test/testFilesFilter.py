@@ -155,3 +155,46 @@ class TestFilesFilter(unittest.TestCase):
         else:
             file_names = ["./useful.cpp"]
         self.assertEqual(file_names, list(files))
+
+    @patch.object(os.path, "exists")
+    @patch.object(os.path, "relpath")
+    @patch.object(os, "walk")
+    @patch("lizard.auto_read")
+    @patch('lizard.md5_hash_file')
+    def test_gitignore_filter_can_be_disabled(self, md5, mock_auto_read,
+                                              mock_os_walk, mock_relpath,
+                                              mock_exists):
+        mock_os_walk.return_value = (['.',
+                                    None,
+                                    ['temp.c', 'node_modules/file.js', 'useful.cpp']], )
+        md5.side_effect = [1, 2, 3]
+        mock_exists.return_value = True
+        mock_relpath.side_effect = AssertionError(
+            "gitignore matching should not run")
+        mock_auto_read.side_effect = AssertionError(
+            ".gitignore should not be read")
+
+        files = get_all_source_files(["dir"], [], [], use_gitignore=False)
+        if which_system() == "Windows":
+            file_names = [".\\temp.c", ".\\node_modules/file.js", ".\\useful.cpp"]
+        else:
+            file_names = ["./temp.c", "./node_modules/file.js", "./useful.cpp"]
+        self.assertEqual(file_names, list(files))
+
+    @patch.object(os.path, "exists")
+    @patch.object(os, "walk")
+    @patch("lizard.auto_read")
+    def test_disabled_gitignore_does_not_parse_invalid_gitignore(self,
+                                                                 mock_auto_read,
+                                                                 mock_os_walk,
+                                                                 mock_exists):
+        mock_os_walk.return_value = (['.', None, ['useful.cpp']], )
+        mock_exists.return_value = True
+        mock_auto_read.return_value = "bin\\Debug\\\n"
+
+        files = get_all_source_files(["dir"], [], [], use_gitignore=False)
+        if which_system() == "Windows":
+            file_names = [".\\useful.cpp"]
+        else:
+            file_names = ["./useful.cpp"]
+        self.assertEqual(file_names, list(files))

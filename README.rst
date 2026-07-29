@@ -116,7 +116,11 @@ Use .gitignore file:
 
     lizard mySource/
 
-If there is a .gitignore file in the given path, lizard will automatically use it as an additional filter to exclude files that match the gitignore patterns. This is useful when you want to analyze only the tracked files in your git repository.
+If there is a .gitignore file in the given path, lizard will automatically use it as an additional filter to exclude files that match the gitignore patterns. This is useful when you want to analyze only the tracked files in your git repository. To analyze all discovered source files regardless of .gitignore, use --no-gitignore:
+
+::
+
+    lizard --no-gitignore mySource/
 
 Options
 ~~~~~~~
@@ -159,6 +163,7 @@ Options
                         single character, "./folder/*" exclude everything in the folder
                         recursively. Multiple patterns can be specified. Don't forget to add ""
                         around the pattern.
+  --no-gitignore        Do not use .gitignore files to exclude files.
   -t WORKING_THREADS, --working_threads WORKING_THREADS
                         number of working threads. The default value is 1. Using a bigger number
                         can fully utilize the CPU and often faster.
@@ -400,4 +405,3 @@ Contributions are welcome. Please refer to the rules and development workflow in
 - https://github.com/terryyin/lizard/tree/master/.cursor/rules
 
 These guidelines are usable by both AI assistants and human contributors — what works for AI works for "I" as well — to keep changes cohesive, simple, and well-tested.
-
