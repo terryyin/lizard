@@ -23,16 +23,40 @@ class ObjCReader(CLikeReader):
 
 
 class ObjCStates(CLikeStates):  # pylint: disable=R0903
+    # @interface and @protocol declare an API; a body may only appear in
+    # @implementation. Their contents must not reach the C-like states, where
+    # "Name () { ivars }" of a class extension looks like a function definition
+    # and is reported as one (issue #305).
+    _objc_declaration_keywords = ('interface', 'protocol')
+
     def __init__(self, context):
         super(ObjCStates, self).__init__(context)
         self._objc_param_paren_depth = 0
+        self._objc_after_at = False
 
     def _state_global(self, token):
+        if self._objc_after_at:
+            self._objc_after_at = False
+            if token in self._objc_declaration_keywords:
+                self._state = self._state_objc_declaration
+                return
+        if token == '@':
+            self._objc_after_at = True
         super(ObjCStates, self)._state_global(token)
         if token == 'typedef':
             self.next(self._typedef, token)
         elif token == '(':
             self.next(self._state_dec, token)
+
+    def _state_objc_declaration(self, token):
+        """Skip an @interface / @protocol section up to its @end."""
+        if self._objc_after_at:
+            self._objc_after_at = False
+            if token == 'end':
+                self._state = self._state_global
+                return
+        if token == '@':
+            self._objc_after_at = True
 
     def _state_dec_to_imp(self, token):
         if token in ("+", "-"):
