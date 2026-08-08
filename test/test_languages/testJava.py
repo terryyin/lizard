@@ -792,3 +792,20 @@ public class LizardTest {
             ["LizardTest::record", "LizardTest::test1"],
             names,
         )
+
+    def test_issue_312_structure_in_static_block(self):
+        result = get_java_function_list("""
+          static { if(){}; catch(){} }
+        """)
+        self.assertEqual(0, len(result))
+
+    def test_issue_312_control_structures_are_not_methods(self):
+        for code in (
+            "static { if (x) { } }",
+            "static { while (x) { } }",
+            "static { for (int i = 0; i < 1; i++) { } }",
+            "static { switch (x) { } }",
+            "static { synchronized (lock) { } }",
+            "static { try { } catch (Exception e) { } }",
+        ):
+            self.assertEqual([], get_java_function_list(code), code)
