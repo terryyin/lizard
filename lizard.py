@@ -948,6 +948,36 @@ def md5_hash_file(full_path_name):
         return None
 
 
+def _build_gitignore_spec(patterns):
+    try:
+        import pathspec
+        from pathspec.patterns.gitwildmatch import GitWildMatchPatternError
+    except ImportError:
+        return None
+
+    if not patterns:
+        return None
+
+    def _try_build(lines):
+        if not lines:
+            return None
+        return pathspec.PathSpec.from_lines('gitwildmatch', lines)
+
+    try:
+        return _try_build(patterns)
+    except GitWildMatchPatternError:
+        valid_patterns = []
+        for pattern in patterns:
+            for candidate in (pattern, pattern.replace('\\', '/')):
+                try:
+                    _try_build([candidate])
+                    valid_patterns.append(candidate)
+                    break
+                except GitWildMatchPatternError:
+                    continue
+        return _try_build(valid_patterns)
+
+
 def get_all_source_files(paths, exclude_patterns, lans, use_gitignore=True):
     '''
     Function counts md5 hash for the given file and checks if it isn't a
@@ -963,20 +993,16 @@ def get_all_source_files(paths, exclude_patterns, lans, use_gitignore=True):
 
     def _load_gitignore():
         nonlocal gitignore_spec, base_path
-        try:
-            import pathspec
-            for path in paths:
-                gitignore_path = os.path.join(path, '.gitignore')
-                if os.path.exists(gitignore_path):
-                    gitignore_file = auto_read(gitignore_path)
-                    # Read lines and strip whitespace and empty lines
-                    patterns = [line.strip() for line in gitignore_file.splitlines()]
-                    patterns = [p for p in patterns if p and not p.startswith('#')]
-                    gitignore_spec = pathspec.PathSpec.from_lines('gitwildmatch', patterns)
-                    base_path = path
-                    break
-        except ImportError:
-            pass
+        for path in paths:
+            gitignore_path = os.path.join(path, '.gitignore')
+            if os.path.exists(gitignore_path):
+                gitignore_file = auto_read(gitignore_path)
+                # Read lines and strip whitespace and empty lines
+                patterns = [line.strip() for line in gitignore_file.splitlines()]
+                patterns = [p for p in patterns if p and not p.startswith('#')]
+                gitignore_spec = _build_gitignore_spec(patterns)
+                base_path = path
+                break
 
     def _support(reader):
         return not lans or set(lans).intersection(

@@ -182,19 +182,64 @@ class TestFilesFilter(unittest.TestCase):
         self.assertEqual(file_names, list(files))
 
     @patch.object(os.path, "exists")
+    @patch.object(os.path, "relpath")
     @patch.object(os, "walk")
     @patch("lizard.auto_read")
-    def test_disabled_gitignore_does_not_parse_invalid_gitignore(self,
-                                                                 mock_auto_read,
-                                                                 mock_os_walk,
-                                                                 mock_exists):
-        mock_os_walk.return_value = (['.', None, ['useful.cpp']], )
-        mock_exists.return_value = True
+    def test_tolerates_invalid_windows_gitignore_pattern(self, mock_auto_read,
+                                                         mock_os_walk,
+                                                         mock_relpath,
+                                                         mock_exists):
+        mock_os_walk.return_value = (['.',
+                                    None,
+                                    ['useful.cpp']], )
+
+        def exists_side_effect(path):
+            return path.endswith('.gitignore')
+        mock_exists.side_effect = exists_side_effect
+
+        def relpath_side_effect(path, start):
+            if path.startswith('./'):
+                path = path[2:]
+            return path.replace(os.sep, '/')
+        mock_relpath.side_effect = relpath_side_effect
+
         mock_auto_read.return_value = "bin\\Debug\\\n"
 
-        files = get_all_source_files(["dir"], [], [], use_gitignore=False)
+        files = get_all_source_files(["dir"], [], [])
         if which_system() == "Windows":
             file_names = [".\\useful.cpp"]
         else:
             file_names = ["./useful.cpp"]
+        self.assertEqual(file_names, list(files))
+
+    @patch.object(os.path, "exists")
+    @patch.object(os.path, "relpath")
+    @patch.object(os, "walk")
+    @patch("lizard.auto_read")
+    def test_valid_gitignore_patterns_still_apply_with_invalid_lines(self,
+                                                                     mock_auto_read,
+                                                                     mock_os_walk,
+                                                                     mock_relpath,
+                                                                     mock_exists):
+        mock_os_walk.return_value = (['.',
+                                    None,
+                                    ['temp.c', 'node_modules/file.js', 'useful.cpp']], )
+
+        def exists_side_effect(path):
+            return path.endswith('.gitignore')
+        mock_exists.side_effect = exists_side_effect
+
+        def relpath_side_effect(path, start):
+            if path.startswith('./'):
+                path = path[2:]
+            return path.replace(os.sep, '/')
+        mock_relpath.side_effect = relpath_side_effect
+
+        mock_auto_read.return_value = "node_modules/\nbin\\Debug\\\n"
+
+        files = get_all_source_files(["dir"], [], [])
+        if which_system() == "Windows":
+            file_names = [".\\temp.c", ".\\useful.cpp"]
+        else:
+            file_names = ["./temp.c", "./useful.cpp"]
         self.assertEqual(file_names, list(files))
