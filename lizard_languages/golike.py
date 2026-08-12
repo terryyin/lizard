@@ -57,11 +57,20 @@ class GoLikeStates(CodeStateMachine):  # pylint: disable=R0903
             self.next(self._function_dec, token)
         elif token == "<":
             self.next(self._generalize, token)
+        elif token == "[":
+            # Square-bracket type parameters, e.g. Scala `def f[T](x: T)` or
+            # Go `func F[T any](x T)`. Skip them like the `<>` generics above
+            # so the following `(` params still register the function.
+            self.next(self._generalize_type_params, token)
         else:
             self._state = self._state_global
 
     @CodeStateMachine.read_inside_brackets_then("<>", "_expect_function_dec")
     def _generalize(self, tokens):
+        pass
+
+    @CodeStateMachine.read_inside_brackets_then("[]", "_expect_function_dec")
+    def _generalize_type_params(self, tokens):
         pass
 
     @CodeStateMachine.read_inside_brackets_then("()", '_function_name')
