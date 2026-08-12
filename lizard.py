@@ -105,7 +105,8 @@ def _extension_arg(parser):
                         -Ewordcount: count word frequencies and generate tag
                         cloud. -Eoutside: include the global code as one
                         function.  -EIgnoreAssert: to ignore all code in
-                        assert. -ENS: count nested control structures.''',
+                        assert. -ENS: count nested control structures.
+                        -Ehalstead: compute Halstead complexity metrics.''',
                         action="append",
                         dest="extensions",
                         default=[])
