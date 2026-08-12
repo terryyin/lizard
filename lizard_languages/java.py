@@ -15,6 +15,14 @@ _JAVA_TYPE_KEYWORDS = frozenset({
     'void', 'boolean', 'byte', 'char', 'short', 'int', 'long', 'float', 'double', 'var',
 })
 _JAVA_BRACE_COUNT = {'{': 1, '}': -1}
+# JLS 3.9: reserved keywords can never be a method name, so "keyword (...) { ... }"
+# is a statement, not a declaration. Without this, a control structure written at
+# a level where no class body state is active (e.g. a static initializer block at
+# the top of the token stream) is reported as a method.  See issue #312.
+_JAVA_STATEMENT_KEYWORDS = frozenset({
+    'if', 'else', 'for', 'while', 'do', 'switch', 'catch', 'try', 'finally',
+    'synchronized', 'return', 'throw', 'assert', 'break', 'continue', 'instanceof',
+})
 
 
 def _java_record_begins_type_declaration(last_token, after_unqualified_annotation):
@@ -138,6 +146,8 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
             self._state = self._state_decorator
             return
         if self._try_start_a_class(token, use_after_annotation):
+            return
+        if token in _JAVA_STATEMENT_KEYWORDS:
             return
         if not self.in_record_constructor:  # Only process as potential function if not in record constructor
             super(JavaStates, self)._state_global(token)
