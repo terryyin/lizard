@@ -949,33 +949,30 @@ def md5_hash_file(full_path_name):
 
 
 def _build_gitignore_spec(patterns):
+    '''
+    Builds a PathSpec from gitignore patterns, tolerating lines pathspec
+    can't parse (e.g. Windows-style paths with unescaped backslashes) by
+    normalizing separators or, failing that, dropping just that line.
+    '''
     try:
         import pathspec
         from pathspec.patterns.gitwildmatch import GitWildMatchPatternError
     except ImportError:
         return None
 
-    if not patterns:
+    def _valid_form(pattern):
+        for candidate in (pattern, pattern.replace('\\', '/')):
+            try:
+                pathspec.PathSpec.from_lines('gitwildmatch', [candidate])
+                return candidate
+            except GitWildMatchPatternError:
+                continue
         return None
 
-    def _try_build(lines):
-        if not lines:
-            return None
-        return pathspec.PathSpec.from_lines('gitwildmatch', lines)
-
-    try:
-        return _try_build(patterns)
-    except GitWildMatchPatternError:
-        valid_patterns = []
-        for pattern in patterns:
-            for candidate in (pattern, pattern.replace('\\', '/')):
-                try:
-                    _try_build([candidate])
-                    valid_patterns.append(candidate)
-                    break
-                except GitWildMatchPatternError:
-                    continue
-        return _try_build(valid_patterns)
+    valid_patterns = [p for p in (_valid_form(p) for p in patterns) if p]
+    if not valid_patterns:
+        return None
+    return pathspec.PathSpec.from_lines('gitwildmatch', valid_patterns)
 
 
 def get_all_source_files(paths, exclude_patterns, lans, use_gitignore=True):

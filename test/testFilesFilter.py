@@ -9,6 +9,21 @@ def which_system():
     return platform.system()
 
 
+def _wire_gitignore_fs_mocks(mock_exists, mock_relpath):
+    '''Makes os.path.exists/relpath behave as if only a .gitignore exists
+    on disk, so gitignore-matching tests don't need real filesystem access.
+    '''
+    def exists_side_effect(path):
+        return path.endswith('.gitignore')
+    mock_exists.side_effect = exists_side_effect
+
+    def relpath_side_effect(path, start):
+        if path.startswith('./'):
+            path = path[2:]
+        return path.replace(os.sep, '/')
+    mock_relpath.side_effect = relpath_side_effect
+
+
 class TestFilesFilter(unittest.TestCase):
     @patch.object(os, "walk")
     def test_no_matching(self, mock_os_walk):
@@ -135,18 +150,7 @@ class TestFilesFilter(unittest.TestCase):
         mock_os_walk.return_value = (['.',
                                     None,
                                     ['temp.c', 'node_modules/file.js', 'useful.cpp']], )
-        
-        def exists_side_effect(path):
-            return path.endswith('.gitignore')
-        mock_exists.side_effect = exists_side_effect
-        
-        def relpath_side_effect(path, start):
-            # Return paths in a normalized format
-            if path.startswith('./'):
-                path = path[2:]
-            return path.replace(os.sep, '/')
-        mock_relpath.side_effect = relpath_side_effect
-        
+        _wire_gitignore_fs_mocks(mock_exists, mock_relpath)
         mock_auto_read.return_value = "node_modules/\n*.c\n"
         
         files = get_all_source_files(["dir"], [], [])
@@ -192,17 +196,7 @@ class TestFilesFilter(unittest.TestCase):
         mock_os_walk.return_value = (['.',
                                     None,
                                     ['useful.cpp']], )
-
-        def exists_side_effect(path):
-            return path.endswith('.gitignore')
-        mock_exists.side_effect = exists_side_effect
-
-        def relpath_side_effect(path, start):
-            if path.startswith('./'):
-                path = path[2:]
-            return path.replace(os.sep, '/')
-        mock_relpath.side_effect = relpath_side_effect
-
+        _wire_gitignore_fs_mocks(mock_exists, mock_relpath)
         mock_auto_read.return_value = "bin\\Debug\\\n"
 
         files = get_all_source_files(["dir"], [], [])
@@ -224,17 +218,7 @@ class TestFilesFilter(unittest.TestCase):
         mock_os_walk.return_value = (['.',
                                     None,
                                     ['temp.c', 'node_modules/file.js', 'useful.cpp']], )
-
-        def exists_side_effect(path):
-            return path.endswith('.gitignore')
-        mock_exists.side_effect = exists_side_effect
-
-        def relpath_side_effect(path, start):
-            if path.startswith('./'):
-                path = path[2:]
-            return path.replace(os.sep, '/')
-        mock_relpath.side_effect = relpath_side_effect
-
+        _wire_gitignore_fs_mocks(mock_exists, mock_relpath)
         mock_auto_read.return_value = "node_modules/\nbin\\Debug\\\n"
 
         files = get_all_source_files(["dir"], [], [])
