@@ -27,8 +27,10 @@ to) other tools:
   drive ``token_count``.
 * **Operands** are identifiers (variable, function, attribute and parameter
   names), numeric literals, string literals and the literal keywords of the
-  language (``True``/``False``/``None`` in Python, ``true``/``false``/``null``
-  and friends elsewhere).
+  language (``True``/``False``/``None``/``...`` in Python, ``true``/``false``/``null``
+  and friends elsewhere).  Python string prefixes (``f``, ``b``, ``r``, ...) that
+  lizard emits as a separate token immediately before a quoted string are
+  skipped so only the string body counts as an operand.
 * **Operators** are operator and punctuation symbols (``+``, ``==``, ``.``,
   ``,``, ``:``, ``(``, ``)``, ``{``, ``}`` ...) together with the keywords that
   act as operators or control structures (``if``, ``for``, ``return``, ``def``,
@@ -204,6 +206,19 @@ class HalsteadClassifier(object):  # pylint: disable=too-few-public-methods
         # Anything else is operator/punctuation.
         return self.OPERATOR
 
+    def classify_with_next(self, token, next_token):
+        """Classify ``token``, optionally using the following token.
+
+        The base implementation ignores ``next_token``.  Language-specific
+        classifiers may override this when a one-token look-ahead is required
+        (for example Python string prefixes).
+        """
+        return self.classify(token)
+
+    def needs_next_token(self, token):
+        """Return True if classifying ``token`` should wait for the next token."""
+        return False
+
 
 class PythonHalsteadClassifier(HalsteadClassifier):  # pylint: disable=too-few-public-methods
     """Precise operator/operand classification for Python.
@@ -211,11 +226,37 @@ class PythonHalsteadClassifier(HalsteadClassifier):  # pylint: disable=too-few-p
     Every hard keyword is an operator except the value literals ``True``,
     ``False`` and ``None``.  Soft keywords (``match``, ``case``, ``type``,
     ``_``) are context dependent and are treated as ordinary identifiers, i.e.
-    operands.
+    operands.  Ellipsis (``...``) is a value literal and counted as an
+    operand.  String prefixes (``f``, ``b``, ``r``, ...) that lizard emits as
+    a separate token immediately before a quoted string are skipped so they
+    do not inflate the operand vocabulary; the same letters used as ordinary
+    identifiers still count as operands.
     """
 
     literal_keywords = frozenset({"True", "False", "None"})
     keyword_operators = frozenset(keyword.kwlist) - literal_keywords
+
+    #: Prefixes lizard may emit as their own token before a string literal.
+    STRING_PREFIXES = frozenset({
+        'r', 'u', 'f', 'b',
+        'fr', 'rf', 'br', 'rb', 'bf', 'fb',
+    })
+
+    def classify(self, token):
+        if token == '...':
+            return self.OPERAND
+        return super().classify(token)
+
+    def needs_next_token(self, token):
+        return self._is_string_prefix(token)
+
+    def classify_with_next(self, token, next_token):
+        if next_token and next_token[:1] in "\"'" and self._is_string_prefix(token):
+            return self.SKIP
+        return self.classify(token)
+
+    def _is_string_prefix(self, token):
+        return token.lower() in self.STRING_PREFIXES
 
 
 #: Registry of language-specific classifiers, keyed by lower-case language name.
@@ -326,8 +367,13 @@ class LizardExtension(object):  # pylint: disable=too-few-public-methods
         classifier = get_classifier(reader)
         operator = HalsteadClassifier.OPERATOR
         operand = HalsteadClassifier.OPERAND
-        for token in tokens:
-            function = reader.context.current_function
+        # Potential Python string prefixes are classified one token late so we
+        # can see whether a quoted string follows, without pulling ahead on the
+        # shared token stream (which would desync upstream line/token counters
+        # from the language reader).
+        deferred = None  # (function, token)
+
+        def apply_token(function, token, next_token):
             operators = getattr(function, "_halstead_operators", None)
             if operators is None:
                 # Patch the concrete class actually in use (which may be
@@ -336,9 +382,23 @@ class LizardExtension(object):  # pylint: disable=too-few-public-methods
                 ensure_function_info_patched(type(function))
                 operators = function._halstead_operators = Counter()
                 function._halstead_operands = Counter()
-            kind = classifier.classify(token)
+            kind = classifier.classify_with_next(token, next_token)
             if kind is operator:
                 operators[token] += 1
             elif kind is operand:
                 function._halstead_operands[token] += 1
+
+        for token in tokens:
+            function = reader.context.current_function
+            if deferred is not None:
+                deferred_function, deferred_token = deferred
+                deferred = None
+                apply_token(deferred_function, deferred_token, token)
+            if classifier.needs_next_token(token):
+                deferred = (function, token)
+            else:
+                apply_token(function, token, None)
             yield token
+        if deferred is not None:
+            deferred_function, deferred_token = deferred
+            apply_token(deferred_function, deferred_token, None)

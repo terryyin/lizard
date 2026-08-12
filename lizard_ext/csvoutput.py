@@ -23,10 +23,9 @@ def csv_output(result, options):
     extension_variables = []
     extension_captions = []
     for extension in options.extensions:
-        if extension.__class__.__name__ == 'LizardExtension':
-            if hasattr(extension, 'FUNCTION_INFO') and \
-                    len(list(extension.FUNCTION_INFO)) == 1:
-                extension_variable = list(extension.FUNCTION_INFO)[0]
+        if extension.__class__.__name__ == 'LizardExtension' and \
+            hasattr(extension, 'FUNCTION_INFO'):
+            for extension_variable in extension.FUNCTION_INFO:
                 extension_variables.append(extension_variable)
                 var_extension = extension.FUNCTION_INFO[extension_variable]
                 extension_caption = var_extension['caption'] \

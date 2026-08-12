@@ -162,6 +162,30 @@ class TestHalsteadClassification(unittest.TestCase):
         self.assertNotIn('True', function._halstead_operators)
         self.assertNotIn('None', function._halstead_operators)
 
+    def test_ellipsis_is_operand(self):
+        function = get_python_function('def f():\n    return ...\n')
+        self.assertIn('...', function._halstead_operands)
+        self.assertNotIn('...', function._halstead_operators)
+
+    def test_string_prefix_is_not_a_separate_operand(self):
+        function = get_python_function('def f():\n    return f"hi"\n')
+        self.assertNotIn('f', function._halstead_operands)
+        self.assertIn('"hi"', function._halstead_operands)
+
+    def test_bytes_and_raw_prefixes_are_not_separate_operands(self):
+        function = get_python_function(
+            'def f():\n'
+            '    return b"hi" + r"there"\n')
+        self.assertNotIn('b', function._halstead_operands)
+        self.assertNotIn('r', function._halstead_operands)
+        self.assertIn('"hi"', function._halstead_operands)
+        self.assertIn('"there"', function._halstead_operands)
+
+    def test_bare_prefix_letter_identifier_remains_operand(self):
+        # Without a following string token, f/b/r are ordinary names.
+        function = get_python_function('def g(f):\n    return f\n')
+        self.assertEqual(2, function._halstead_operands['f'])
+
 
 class TestHalsteadClassifierUnit(unittest.TestCase):
     """Directly exercise the classifier objects."""
@@ -214,10 +238,33 @@ class TestHalsteadClassifierUnit(unittest.TestCase):
             self.assertEqual(HalsteadClassifier.OPERAND,
                              self.generic.classify(token), token)
 
-    def test_bare_dot_and_ellipsis_stay_operators(self):
+    def test_bare_dot_and_ellipsis_stay_operators_for_generic(self):
+        # In C-family code ``...`` is pack-expansion punctuation, not a literal.
         for token in ('.', '..', '...', '.foo'):
             self.assertEqual(HalsteadClassifier.OPERATOR,
                              self.generic.classify(token), token)
+
+    def test_python_ellipsis_is_operand(self):
+        self.assertEqual(HalsteadClassifier.OPERAND,
+                         self.python.classify('...'))
+
+    def test_python_string_prefix_before_string_is_skipped(self):
+        for prefix in ('f', 'b', 'r', 'rf', 'fr', 'F', 'B'):
+            self.assertIs(
+                HalsteadClassifier.SKIP,
+                self.python.classify_with_next(prefix, '"hi"'),
+                prefix)
+
+    def test_python_string_prefix_without_string_is_operand(self):
+        for prefix in ('f', 'b', 'r'):
+            self.assertEqual(
+                HalsteadClassifier.OPERAND,
+                self.python.classify_with_next(prefix, '+'),
+                prefix)
+            self.assertEqual(
+                HalsteadClassifier.OPERAND,
+                self.python.classify_with_next(prefix, None),
+                prefix)
 
     def test_generic_c_family_keywords(self):
         self.assertEqual(HalsteadClassifier.OPERATOR,
