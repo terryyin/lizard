@@ -213,3 +213,17 @@ class Test_objc_interface(unittest.TestCase):
             "- (void)doIt { }\n"
             "@end\n")
         self.assertEqual(["doIt"], [f.name for f in result])
+
+    def test_protocol_forward_declaration_does_not_hide_implementation(self):
+        result = self.create_objc_lizard(
+            "@protocol Foo;\n"
+            "@implementation Bar\n"
+            "- (void)doIt { }\n"
+            "@end\n")
+        self.assertEqual(["doIt"], [f.name for f in result])
+
+    def test_protocol_expression_does_not_hide_following_function(self):
+        result = self.create_objc_lizard(
+            "@protocol(NSObject)\n"
+            "void f() { }\n")
+        self.assertEqual(["f"], [f.name for f in result])

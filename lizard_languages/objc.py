@@ -27,8 +27,6 @@ class ObjCStates(CLikeStates):  # pylint: disable=R0903
     # @implementation. Their contents must not reach the C-like states, where
     # "Name () { ivars }" of a class extension looks like a function definition
     # and is reported as one (issue #305).
-    _objc_declaration_keywords = ('interface', 'protocol')
-
     def __init__(self, context):
         super(ObjCStates, self).__init__(context)
         self._objc_param_paren_depth = 0
@@ -37,8 +35,11 @@ class ObjCStates(CLikeStates):  # pylint: disable=R0903
     def _state_global(self, token):
         if self._objc_after_at:
             self._objc_after_at = False
-            if token in self._objc_declaration_keywords:
+            if token == 'interface':
                 self._state = self._state_objc_declaration
+                return
+            if token == 'protocol':
+                self._state = self._state_objc_protocol_header
                 return
         if token == '@':
             self._objc_after_at = True
@@ -57,6 +58,20 @@ class ObjCStates(CLikeStates):  # pylint: disable=R0903
                 return
         if token == '@':
             self._objc_after_at = True
+
+    def _state_objc_protocol_header(self, token):
+        """Distinguish definitions from forward declarations and expressions."""
+        if token == '(':
+            self._state = self._state_objc_protocol_expression
+        elif token == ';':
+            self._state = self._state_global
+        elif token == '\n':
+            self._state = self._state_objc_declaration
+
+    def _state_objc_protocol_expression(self, token):
+        """Skip the argument of a file-scope @protocol(Name) expression."""
+        if token == ')':
+            self._state = self._state_global
 
     def _state_dec_to_imp(self, token):
         if token in ("+", "-"):
