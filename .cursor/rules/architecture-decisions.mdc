@@ -1,0 +1,12 @@
+---
+description: Architectural Decision Records — agent consume/cite/conflict; humans approve
+alwaysApply: true
+---
+
+# Architecture Decisions (ADRs)
+
+- **Human playbook** (propose / discuss / approve): `docs/adrs/README.md`
+- **Accepted ADRs** (current recommendations): `docs/adrs/*-accepted.md` — read explicitly
+- **Agent skill** (use / cite / conflict / maintain): `adr-awareness` in `.cursor/skills/adr-awareness/`
+- On architecture-shaped work, load relevant Accepted ADRs and follow them. Do not silently conflict. Do not approve ADRs; humans own the advice process.
+- Deviations require an explicit human-owned exception (trail it) or a human superseding ADR.

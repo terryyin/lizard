@@ -3,18 +3,19 @@ alwaysApply: true
 ---
 # The fundamental development guideline for making any changes
 
-# Running command in terminal
+## Running command in terminal
 
-This project use nix to manage the development envioroment. So we need to run `nix develop` once first in every new terminal window to start the nix enviroment. For AI agent, add `nix develop -c` before any terminal command: 
+This project uses nix to manage the development environment. Run `nix develop` once first in every new terminal window. For AI agents, add `nix develop -c` before any terminal command:
 
 ```
 nix develop -c <command>
 ```
 
+**Exception:** `git` commands do not need the Nix prefix — run them directly.
 
 ## Run Test
 
-Always run all tests instead of just one test file
+During a slice, targeted pytest files are enough. At issue-fix completion and **execute-plan wrap-up**, run the full suite:
 
 ```bash
 nix develop -c python -m pytest   # Run all tests
@@ -22,14 +23,13 @@ nix develop -c python -m pytest   # Run all tests
 
 ## Run All Test and Format checking
 
-
 ```bash
 nix develop -c make
 ```
-
 
 ## Automated test practices
 
 * All code and logic need to be covered by unit test
 * Try to test end to end, external observable pre and post state change, as much as possible
 * Don't mock any code unless it's about file system
+* Prefer `analyze_file` / `analyze_source_code` / CLI output as the test boundary

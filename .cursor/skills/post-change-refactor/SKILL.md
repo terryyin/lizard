@@ -5,19 +5,22 @@ description: >-
   Use concept-bounded scope even when completion requires untouched code, but
   Jidoka-stop before unapproved cross-subsystem refactoring. Remove duplication,
   unclear naming, shotgun surgery, dead / test-only / redundant code, and
-  oversized files; run related tests. Use after finishing implementation work,
-  before commit, or on: refactor change, clean up change, post-change
-  refactor, before commit cleanup, tidy current change.
+  oversized files; run related tests. Local slice wrap-up overlay (execute-plan /
+  gsd-execute-phase). Use after a slice, before commit, or on: refactor change,
+  clean up change, post-change refactor, before commit cleanup, tidy current
+  change.
 ---
 
 <objective>
 Clean concepts implicated by the **current uncommitted change** so they are
 cohesive, capability-named, and non-speculative, then return control for commit.
 
-Purpose: Local wrap-up gate before commit — structure only, no new behavior.
+Purpose: Local wrap-up gate required by `execute-plan` / `/gsd-execute-phase`
+(see `.cursor/rules/gsd-coexistence.mdc`). Structure-only: no new behavior.
 
 Output: Refactored tree + `## REFACTOR COMPLETE`, or an impact report +
-`## REFACTOR JIDOKA STOP`. **Do not commit** — the caller commits after success.
+`## REFACTOR JIDOKA STOP`. **Do not commit** — the caller commits after success
+(and pushes when closing a slice).
 </objective>
 
 <context>
@@ -46,11 +49,12 @@ git diff --cached
 
 **Plan justification (decision boundary):**
 Keep code justified by the **current change** or the **immediate next**
-plan unit when `.planning/` exists (read `STATE.md` and the active phase
-or quick dir). Anything justified only by a later phase, or by "we might
-need it later", is speculative — remove it. No plan → justification comes
-only from the current change. The immediate next plan unit may justify
-retaining code, but does not independently trigger unrelated refactoring.
+slice in the active plan
+(`.planning/phases/*/`, `.planning/quick/*/`, or legacy `ongoing/*.md`).
+Anything justified only by a later slice, or by "we might need it later",
+is speculative — remove it. No plan → justification comes only from the
+current change. The immediate next slice may justify retaining code, but
+does not independently trigger unrelated refactoring.
 
 **Subsystem boundary:** Core analyzer (`lizard.py`), language readers
 (`lizard_languages/`), and extensions (`lizard_ext/`) are separate subsystems.
@@ -59,9 +63,12 @@ create a crossing. Existing behavior work spanning subsystems also does not
 trigger the gate; the **refactoring itself** must require coordinated production
 edits across boundaries.
 
-**Invokers:** On-demand developer request, or any workflow that finishes
-implementation and hands off to commit (issue fix, language support, extension
-work, etc.).
+Optional caller context (when spawned from execute-plan):
+- Plan path and current slice text (for the immediate-next-slice justification
+  boundary)
+
+**Invokers:** `execute-plan` (fresh sub-agent before commit), issue fixes
+(`issue.mdc`), language support work, or on-demand developer request.
 </context>
 
 <process>
@@ -116,11 +123,11 @@ Do not repeat broad discovery. After all checks pass, return to the caller —
 - Read every new or renamed identifier — files, modules, classes, functions,
   variables, tests, fixtures.
 - Ask: does the name match what a domain reader expects? Does it match
-  Lizard's language (complexity metrics, language readers, tokens, state
-  machines, CCN, NLOC, extensions)?
+  Lizard's ubiquitous language (ADR-0001: CCN, NLOC, language reader, token,
+  state machine, extension)?
 - **Action:** rename when intent is unclear, misleading, mixes layers, or
-  leaks phase numbers / sequence info. Names describe **capability**, not
-  development history.
+  leaks GSD phase numbers / sequence info. Names describe **capability**, not
+  development history. GSD phase numbers belong only under `.planning/`.
 </step>
 
 <step name="shotgun_surgery">
@@ -138,7 +145,7 @@ Do not repeat broad discovery. After all checks pass, return to the caller —
 
 <step name="dead_redundant_code">
 Remove aggressively whatever the change introduced or exposed that is not
-justified by the current change or the immediate next plan unit:
+justified by the current change or the immediate next slice:
 
 - Code with no caller.
 - Unreachable branches.
@@ -153,7 +160,7 @@ justified by the current change or the immediate next plan unit:
   the test that drives a stable boundary (`analyze_file`,
   `analyze_source_code`, CLI output) per `basic-development.mdc`.
 
-When in doubt, **delete**. The next phase will reintroduce only what it needs.
+When in doubt, **delete**. The next slice will reintroduce only what it needs.
 </step>
 
 <step name="file_size">
@@ -194,7 +201,7 @@ the refactor (not the original change), fix it now.
 - Every candidate is triggered by the current change or highly related code
 - Edits are the smallest coherent concept-bounded set, including untouched files
 - No cross-subsystem refactoring without concept-specific human authorization
-- No speculative structure beyond current change / immediate next plan unit
+- No speculative structure beyond current change / immediate next slice
 - Duplication, naming, shotgun, dead-code, and 250-line checks applied
 - Related focused tests green
 - No commit created by this skill
@@ -213,7 +220,8 @@ On successful completion, report a short summary to the caller:
 ## REFACTOR COMPLETE
 ```
 
-Hand control back. **Do not commit** — the caller commits.
+Hand control back. **Do not commit** — the caller commits (and pushes when
+closing a slice).
 
 On a cross-subsystem gate, report only decision-relevant facts:
 
@@ -238,7 +246,7 @@ must not consider refactoring complete or commit until the human decides.
 - Do not initiate unrelated refactoring discovered during concept tracing.
 - Do not apply cross-subsystem refactoring without explicit, concept-specific
   human authorization.
-- Do not start a new phase or add new behavior — structure only.
+- Do not start a new slice or add new behavior — Structure only.
 - Do not run the entire test suite or trigger CI unless the change is broad
   enough that focused tests cannot cover it.
 </out_of_scope>

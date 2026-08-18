@@ -1,6 +1,4 @@
 ---
-description: 
-globs: 
 alwaysApply: true
 ---
 
@@ -8,10 +6,11 @@ alwaysApply: true
 
 1. find where is the right place to add a new unit test to reproduce the issue
 2. add a new unit test
-3. run all test to see if the test really fails
-4. fix the issue until all test pass
-5. clean up
-6. run all unit test at last to confirm things are still working.
+3. run tests to see if the test really fails (`nix develop -c python -m pytest` or the focused file)
+4. fix the issue until tests pass
+5. clean up — run **post-change-refactor** on the uncommitted change
+6. run the full suite at last to confirm things are still working
+
+If a fix / make-test-pass attempt overruns the time-box (~5 min scrutinize, >10 min hard stop): stop, revert or stash WIP, and use **slice-planning** (`.cursor/rules/planning.mdc`).
 
 follow [basic-development.mdc](mdc:.cursor/rules/basic-development.mdc)
-

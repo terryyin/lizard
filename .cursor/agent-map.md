@@ -14,7 +14,7 @@ Short navigation index — start here before diving into large modules. Skill co
 
 ## Domain Language
 
-Lizard measures **cyclomatic complexity (CCN)**, **NLOC** (non-comment lines of code), **function length**, **nesting depth**, and related metrics across many languages. Parsing uses **token generators** and **state machines** (`CodeStateMachine`, `CLikeStates`, language-specific readers). Prefer capability names (reader, token, CCN, extension) over phase or ticket numbers in product code.
+Canonical glossary: [ADR-0001](../docs/adrs/0001-ubiquitous-language-accepted.md). Lizard measures **CCN**, **NLOC**, **token count**, **parameter count**, and **nesting depth**. Parsing uses **token generators** and **state machines** (`CodeStateMachine`, `CLikeStates`, **language readers**). Prefer capability names over phase or ticket numbers in product code.
 
 ## Commands
 
@@ -41,12 +41,33 @@ Useful focused checks:
 ## Rules
 
 - Development & tests: `.cursor/rules/basic-development.mdc`
+- Slice grammar & planning layout: `.cursor/rules/planning.mdc`
+- GSD vs local wrap-up: `.cursor/rules/gsd-coexistence.mdc`
 - Adding / modifying language support: `.cursor/rules/lizard-rule.mdc`
 - Fixing issues (test-first workflow): `.cursor/rules/issue.mdc`
+- ADRs: `.cursor/rules/architecture-decisions.mdc`
+
+## Skills
+
+| Skill | When |
+|-------|------|
+| **slice-planning** | Decompose work into Behavior/Structure slices; time-box overrun |
+| **execute-plan** | Run a plan under `.planning/` with per-slice wrap-up |
+| **post-change-refactor** | Concept-bounded cleanup before commit (coordinator-owned) |
+| **adr-awareness** | Load / cite / conflict-check Accepted ADRs |
+
+## Architectural decisions (ADRs)
+
+- Human propose / discuss / approve: `docs/adrs/README.md`
+- Current recommendations: `docs/adrs/*-accepted.md` (read explicitly)
+- Agent use / cite / conflict / maintain: `.cursor/skills/adr-awareness/SKILL.md`
 
 ## Planning
 
-No active GSD milestone by default. If `.planning/` exists, read `STATE.md` and the active phase dir for the immediate next unit. Otherwise justification for retained code comes only from the current uncommitted change.
+Active work lives under `.planning/` (GSD `phases/`, `quick/`, `STATE`, … — see `gsd-coexistence.mdc`). `ongoing/` is legacy only — do not add new plans there. Read `STATE.md` and the active phase or quick dir for the immediate next slice. No `.planning/` yet → justification for retained code comes only from the current uncommitted change.
+
+**Hard slice quality:** Behavior vs Structure, stop-safe, one observable behavior — `planning.mdc`.
+**Per-slice wrap-up:** Jidoka → post-change-refactor → pep8 → full pytest → update plan → commit → push (**execute-plan**). Skills emit completion markers (e.g. `## REFACTOR COMPLETE`) for handoff.
 
 ## Test Style
 
