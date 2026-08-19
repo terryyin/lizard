@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+## 1.24.0
+
+### New Features
+- **Halstead metrics** (`-Ehalstead`) — per-function Halstead volume, difficulty, and effort (issue #464, PR #485)
+- **`--no-gitignore`** — analyze all discovered source files even when a `.gitignore` would exclude them (PR #488)
+- **PHP** — modern syntax is parsed without false functions (classes, traits, visibility, constructor property promotion, match expressions, arrow functions, union types, named arguments); null-coalescing / nullsafe operators no longer inflate nesting depth (issue #491)
+
+### Bug Fixes
+- Java: do not report control structures in a static block as methods (issue #312, PR #489)
+- Java: count anonymous classes in field initializers (issue #311, PR #483)
+- Java: treat `record` as a contextual keyword in field initializers and method declarations
+- Java: parse generic and qualified type names in anonymous classes
+- Go: register generic functions with `[...]` type parameters (PR #484)
+- CSV: emit columns for extensions that add multiple `FUNCTION_INFO` fields (PR #486)
+- Python: count control flow inside f-string interpolations (issue #317, PR #481)
+- Script: stop a `#` comment continuing past a trailing backslash (issue #317, PR #482)
+- Objective-C: handle nested parentheses in block / function-pointer parameter types (issue #365, PR #480)
+
 ## 1.23.0
 
 ### New Features
