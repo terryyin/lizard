@@ -353,17 +353,40 @@ class PythonStates(CodeStateMachine):  # pylint: disable=R0903
     def __init__(self, context, reader):
         super(PythonStates, self).__init__(context)
         self.reader = reader
+        self._type_param_depth = 0
 
     def _state_global(self, token):
         if token == 'def':
             self._state = self._function
 
     def _function(self, token):
-        if token != '(':
+        if token == '[':
+            # PEP 695 type params, e.g. `def f[T](x: T) -> T`. Skip them
+            # without calling restart_new_function, or the ']' before '('
+            # overwrites the function name.
+            self._type_param_depth = 1
+            self._state = self._state_type_parameters
+        elif token != '(':
             self.context.restart_new_function(token)
             self.context.add_to_long_function_name("(")
         else:
             self._state = self._dec
+
+    def _state_type_parameters(self, token):
+        # Consume a PEP 695 type param list, tracking nesting so bounds
+        # like `def f[T: list[int]](x)` work.
+        if token in ('def', 'class'):
+            # Unbalanced '[': truncated or invalid source. Neither keyword can
+            # appear inside a type param list, so treat this as the next
+            # definition instead of swallowing the rest of the file.
+            self._type_param_depth = 0
+            self.next(self._state_global, token)
+        elif token == '[':
+            self._type_param_depth += 1
+        elif token == ']':
+            self._type_param_depth -= 1
+            if self._type_param_depth == 0:
+                self._state = self._function
 
     def _dec(self, token):
         if token == ')':
