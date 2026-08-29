@@ -1,13 +1,7 @@
 import unittest
 
-from lizard import analyze_file
 from lizard_languages import KotlinReader
-
-
-def get_kotlin_function_list(source_code):
-    return analyze_file.analyze_source_code(
-        "a.kt", source_code
-    ).function_list
+from .kotlin_helpers import get_kotlin_function_list
 
 
 class Test_tokenizing_Kotlin(unittest.TestCase):
@@ -128,8 +122,7 @@ class Test_parser_for_Kotlin(unittest.TestCase):
                     }
             }
                 ''')
-        self.assertEqual("get", result[1].name)
-        self.assertEqual("set", result[0].name)
+        self.assertEqual(["get", "set"], [f.name for f in result])
 
     # https://docs.kotlin.org/kotlin-book/LanguageGuide/Properties.html#ID259
     def test_explicit_getter_setter(self):
@@ -146,8 +139,7 @@ class Test_parser_for_Kotlin(unittest.TestCase):
                 }
             }
                 ''')
-        self.assertEqual("set", result[0].name)
-        self.assertEqual("get", result[1].name)
+        self.assertEqual(["get", "set"], [f.name for f in result])
 
     def test_when_cases(self):
         result = get_kotlin_function_list('''

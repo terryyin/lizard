@@ -40,10 +40,15 @@ class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
 class KotlinStates(GoLikeStates):  # pylint: disable=R0903
 
     FUNC_KEYWORD = 'fun'
+    _EXPRESSION_BODY_ENDERS = {
+        'fun', 'class', 'interface', 'val', 'var', 'get', 'set',
+    }
 
     def __init__(self, context, in_when_cases=False):
         super().__init__(context)
         self._in_when_cases = in_when_cases
+        self._expr_nesting = 0
+        self._when_return_state = self._state_global
 
     def _state_global(self, token):
         if token in ('get', 'set'):
@@ -60,7 +65,7 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0903
         elif token == 'interface':
             self._state = self._interface
         elif token == 'when':
-            self._state = self._when_cases
+            self._start_when(self._state_global)
         else:
             super(KotlinStates, self)._state_global(token)
 
@@ -68,8 +73,45 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0903
         self._state = self._state_global
 
     def _expect_function_impl(self, token):
-        if token == '{' or token == '=':
+        if token == '=':
+            self._expr_nesting = 0
+            self._state = self._expression_body
+        elif token == '{':
             self.next(self._function_impl, token)
+
+    def _start_when(self, return_state):
+        self._when_return_state = return_state
+        self._state = self._when_cases
+
+    def _expression_body(self, token):
+        if token == 'when':
+            self._start_when(self._expression_body)
+            return
+        if token in '{([':
+            self._expr_nesting += 1
+            return
+        if token in ')]}':
+            if self._expr_nesting > 0:
+                self._expr_nesting -= 1
+                return
+            if token == '}':
+                self._end_expression_body(token)
+            return
+        if self._expr_nesting == 0 and self._is_expression_body_ender(token):
+            self._end_expression_body(token)
+
+    def _is_expression_body_ender(self, token):
+        if token == 'class' and self.last_token == '::':
+            return False
+        return token in self._EXPRESSION_BODY_ENDERS
+
+    def _end_expression_body(self, token):
+        self.context.end_of_function()
+        self.next(self._state_global, token)
+
+    def statemachine_before_return(self):
+        if self._state == self._expression_body:
+            self.context.end_of_function()
 
     @CodeStateMachine.read_inside_brackets_then("{}")
     def _interface(self, end_token):
@@ -89,7 +131,7 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0903
     def _when_cases(self, token):
         def callback():
             self.context.add_condition(inc=-1)
-            self.next(self._state_global)
+            self.next(self._when_return_state)
         if token != '{':
             return
         self.sub_state(KotlinStates(self.context, in_when_cases=True), callback)
