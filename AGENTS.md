@@ -36,6 +36,7 @@ Portable digest (details live in the cited always-applied rules):
 - **Execution wrap-up (required):** Jidoka → post-change-refactor → fresh format-changed agent → full pytest → update plan → commit → push (**execute-plan**; also `/gsd-execute-phase`). Skills emit completion markers for handoff.
 - **Story shaping:** use **story-decomposition** for broad or unclear requirements; one non-executable decomposition seed contains ordered candidate stories.
 - **Plan refinement:** use **slice-plan-refinement** in place when an existing PLAN is complex, sizing confidence is low, or execution overruns. Skip the extra pass when slice-planning already produced clear commit-sized leaves.
+- **Execution retrospective:** reconstruct a completed plan and its commits with **execution-retrospective**; audit the aggregate result and process, and stop after generating any follow-up PLAN without executing it.
 - **GSD** for milestones (`/gsd-onboard`, `/gsd-plan-phase`, `/gsd-execute-phase`, …); for one selected ad-hoc story use **slice-planning** → optional **slice-plan-refinement** → **execute-plan** under `.planning/quick/`.
 - **Non-compatible local overlays** (must keep): documented in `.cursor/rules/gsd-coexistence.mdc`.
 

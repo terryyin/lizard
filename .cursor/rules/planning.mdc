@@ -15,6 +15,7 @@ Apply `problem-decomposition.mdc` before writing or revising a plan.
 | One story-sized outcome is selected | Use **slice-planning** |
 | Existing PLAN has complex, low-confidence, or overrun leaves | Use **slice-plan-refinement** on the same PLAN; create no new artifact |
 | Existing PLAN already has clear, cohesive, plausibly commit-sized leaves | Execute directly; a separate refinement pass is optional |
+| Completed plan needs aggregate goal/code/process review | Use **execution-retrospective**; it may generate a follow-up PLAN but never executes it |
 | Work belongs to a milestone capability | Use GSD discuss/plan; rewrite its executable tasks to satisfy `problem-decomposition.mdc` |
 | Input is only a story-decomposition seed | Select one contained story before planning execution |
 

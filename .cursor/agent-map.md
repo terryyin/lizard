@@ -57,6 +57,7 @@ Useful focused checks:
 | **story-decomposition** | Broad or unclear requirements; ordered 3V candidate stories in one seed |
 | **slice-planning** | Turn one selected story into Behavior/Structure leaves |
 | **slice-plan-refinement** | Edit an existing PLAN in place when leaves are complex, low-confidence, or overrun |
+| **execution-retrospective** | Audit a completed plan and its commits; may generate, but never execute, a follow-up PLAN |
 | **execute-plan** | Run a plan under `.planning/` with per-slice wrap-up |
 | **post-change-refactor** | Concept-bounded cleanup before commit (coordinator-owned) |
 | **format-changed** | Fresh wrap-up agent: run selective pep8 on affected working-tree components before staging |
@@ -76,6 +77,7 @@ Useful focused checks:
 | Formal milestone | `.planning/phases/NN-slug/*-PLAN.md`, STATE, ROADMAP | `/gsd-plan-phase` → `/gsd-execute-phase` → `/gsd-ship` (+ local wrap-up) |
 | Ad-hoc | `.planning/quick/NNN-slug/PLAN.md` | **slice-planning** + **execute-plan** |
 | Optional refinement | Existing phase/quick PLAN; no new artifact | **slice-plan-refinement** |
+| Completed-plan audit | Git history plus optional follow-up PLAN | **execution-retrospective**; never executes the follow-up |
 | Legacy | `ongoing/*.md` | **execute-plan** only; do not migrate |
 
 Story-decomposition seeds are not executable: select one contained story, then
@@ -84,6 +86,9 @@ complex, sizing confidence is low, or execution overruns; straightforward plans
 may execute directly. **Hard decomposition quality:** one evaluable outcome at the
 current resolution; 3V stories; Behavior/Structure execution leaves —
 `problem-decomposition.mdc`. Plan artifact and lifecycle rules: `planning.mdc`.
+Use execution-retrospective after completion when the plan's aggregate diff,
+goal conformance, or execution process needs review; it reconstructs cleaned-up
+plans from Git history and stops after generating any follow-up PLAN.
 Do not write new flat `.planning/<name>.md` when `phases/` or `quick/` fits.
 **Per-slice wrap-up:** Jidoka → post-change-refactor → fresh **format-changed**
 agent → full pytest → update plan → commit → push (**execute-plan**). The
