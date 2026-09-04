@@ -51,8 +51,9 @@ These are **hard** in this repo even when GSD workflows omit them:
 |----------|--------|
 | Broad problem, unclear value/outcome, or several candidate stories | Local `story-decomposition` → one enriched `.planning/seeds/SEED-NNN-*.md`; select a story before planning execution |
 | New or ongoing **milestone / roadmap** | GSD: `/gsd-onboard` or `/gsd-new-milestone`, then discuss → plan → execute |
-| One clear story-sized ad-hoc outcome | Local `slice-planning` → `.planning/quick/NNN-slug/` (or a new `phases/` entry), then `execute-plan` |
-| Issue / language-support fix already small | `issue.mdc` / `lizard-rule.mdc`; if the time-box overruns, **slice-planning** |
+| One clear story-sized ad-hoc outcome | Local `slice-planning` → `.planning/quick/NNN-slug/` (or a new `phases/` entry), then `execute-plan` when straightforward |
+| Existing PLAN has complex, low-confidence, or overrun leaves | Local `slice-plan-refinement` edits the same PLAN, then `execute-plan` |
+| Issue / language-support fix already small | `issue.mdc` / `lizard-rule.mdc`; if the time-box overruns, **slice-plan-refinement** |
 | Resuming after a break | GSD progress/resume uses `STATE.md` as the project index. `execute-plan` resumes from the PLAN file (next undone slice) and must not write `STATE.md`. |
 
 ## Anti-patterns
@@ -60,6 +61,7 @@ These are **hard** in this repo even when GSD workflows omit them:
 - Flat new plans at `.planning/random.md` when a `phases/` or `quick/` dir would do.
 - Passing a story-decomposition seed directly to execute-plan without selecting
   one story and producing a slice plan.
+- Creating a second PLAN for refinement instead of editing the existing PLAN.
 - Leaving completed plan diaries forever under `.planning/`.
 - Running GSD execute **without** local Jidoka / refactor / fresh format-changed / commit+push wrap-up per slice.
 - Encoding GSD phase numbers in product file/test names.

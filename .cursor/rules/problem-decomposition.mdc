@@ -17,7 +17,10 @@ execution plan while a higher-level value or scope decision is unresolved.
 | **Execution leaf** | One story is selected and ready to implement | Behavior slices, plus only immediately enabling Structure slices |
 
 - Use **story-decomposition** for problem and story resolution.
-- Use **slice-planning** for execution resolution.
+- Use **slice-planning** to create the initial execution plan.
+- Use **slice-plan-refinement** on that same PLAN when its leaves are complex,
+  sizing confidence is low, or execution overruns. Skip refinement when the
+  initial plan is already straightforward and plausibly commit-sized.
 - A story-decomposition seed is not executable.
 
 ## Rules for every split
@@ -112,8 +115,9 @@ Estimate comparatively without implementation design or code inspection:
 - After five minutes, check whether the slice has multiple outcomes or hidden
   preparation and split when it does.
 - After ten minutes, stop, preserve the learning, safely park or revert only
-  attempt-owned WIP, and invoke **slice-planning**. Continue only with a stated
-  reason such as one focused test itself taking longer.
+  attempt-owned WIP, and invoke **slice-plan-refinement** on the current PLAN.
+  Continue only with a stated reason such as one focused test itself taking
+  longer.
 
 ## Correct these smells
 
@@ -125,7 +129,7 @@ Estimate comparatively without implementation design or code inspection:
 | Optimize for independent teams | Coordinate inside the shared story and integrate continuously |
 | Large story used as permanent specification | Keep the story as planning input; maintain behavior in executable examples and product documentation |
 | Prototype grows beyond its question | Limit it to the cheapest evidence needed for the uncertainty |
-| Slice grows or tests do not converge | Preserve learning and recursively re-slice |
+| Slice grows or tests do not converge | Preserve learning and run slice-plan-refinement on the current PLAN |
 | One giant AI task | Use bounded execution leaves with review after each |
 
 ## Learning escalation

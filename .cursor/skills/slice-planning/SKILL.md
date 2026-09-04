@@ -3,14 +3,17 @@ name: slice-planning
 description: >-
   Turn one selected story into an executable GSD-aligned plan of stop-safe
   Behavior/Structure leaves. Use when the story’s value, outcome, and boundaries
-  are clear, or when an execution attempt needs finer re-slicing. Use
-  story-decomposition for unresolved requirements or multiple candidate stories.
+  are clear. The result should be directly executable for straightforward work;
+  use slice-plan-refinement for a complex plan or an execution overrun.
 ---
 
 <objective>
 Write an executable PLAN for one selected story. Use
 `.cursor/rules/problem-decomposition.mdc` for slice decisions and
 `.cursor/rules/planning.mdc` for the artifact and lifecycle.
+
+Produce a sufficient one-pass plan for straightforward work. Do not depend on a
+later refinement pass to fix obvious multi-outcome or non-stop-safe slices.
 </objective>
 
 <input_gate>
@@ -54,7 +57,7 @@ Do not create slices per discovered file, component, or layer.
 </step>
 
 <step name="cut_and_order_leaves">
-Apply the execution-leaf gate and sizing rules from
+Apply the execution-leaf gate and an initial sizing pass from
 `problem-decomposition.mdc`.
 
 For every leaf:
@@ -66,20 +69,24 @@ For every leaf:
 5. Place Structure immediately before its Behavior.
 6. Order Behaviors by user value, then learning value, then genuine
    prerequisites.
+7. Split an obvious hard-limit or multi-beat slice before writing the plan.
 
 Do not end a slice on CI-breaking red; do not commit failing pytest.
 Keep product and test artifacts capability-named.
 </step>
 
-<step name="replan_an_oversized_attempt">
-When called after an execution overrun:
+<step name="decide_whether_refinement_is_needed">
+After the initial split, read only the `<refinement_triggers>` gate in
+`.cursor/skills/slice-plan-refinement/SKILL.md` and compare every leaf with it.
+Do not run the refinement process unless requested or a later execution workflow
+requires it.
 
-1. Preserve discoveries and identify attempt-owned WIP.
-2. Never discard pre-existing developer changes or ambiguous dirty state.
-3. Apply the five- and ten-minute decisions in `problem-decomposition.mdc`.
-4. Replace the oversized remainder with smaller leaves in the current PLAN.
-5. If evidence changes the selected story rather than only its leaves, mark the
-   PLAN as awaiting story decomposition review and stop.
+- If every leaf has one proof loop, a cohesive execution path, meets the target,
+  and has no unexplained hard-limit path, report **ready for direct execution**.
+- If any trigger remains, report **refinement recommended** and identify those
+  slices. Do not claim an execution-time guarantee.
+
+Refinement is optional for straightforward plans.
 </step>
 
 <step name="write_the_plan">
@@ -94,14 +101,16 @@ it before execution. Do not implement feature code while planning.
 <success_criteria>
 - Input is one selected and bounded story.
 - Every leaf passes the Behavior/Structure gate and names proof.
-- Leaves satisfy the execution sizing decisions.
+- Obvious oversized slices were split during the initial pass.
+- The response states direct-execution readiness or recommends refinement for
+  named slices.
 - The plan is under `.planning/phases/` or `.planning/quick/`.
 - Final response ends with `## SLICE PLAN WRITTEN`.
 </success_criteria>
 
 <output>
-Report the plan path, ordered leaves, key execution decisions, and any evidence
-that may require story-decomposition review.
+Report the plan path, ordered leaves, key execution decisions, and one of:
+`ready for direct execution` or `refinement recommended: <slices>`.
 
 ```text
 ## SLICE PLAN WRITTEN

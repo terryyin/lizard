@@ -55,7 +55,8 @@ Useful focused checks:
 | Skill | When |
 |-------|------|
 | **story-decomposition** | Broad or unclear requirements; ordered 3V candidate stories in one seed |
-| **slice-planning** | Turn one selected story into Behavior/Structure leaves; time-box overrun |
+| **slice-planning** | Turn one selected story into Behavior/Structure leaves |
+| **slice-plan-refinement** | Edit an existing PLAN in place when leaves are complex, low-confidence, or overrun |
 | **execute-plan** | Run a plan under `.planning/` with per-slice wrap-up |
 | **post-change-refactor** | Concept-bounded cleanup before commit (coordinator-owned) |
 | **format-changed** | Fresh wrap-up agent: run selective pep8 on affected working-tree components before staging |
@@ -74,10 +75,13 @@ Useful focused checks:
 | Story shaping | `.planning/seeds/SEED-NNN-slug.md` containing ordered candidate stories | **story-decomposition** |
 | Formal milestone | `.planning/phases/NN-slug/*-PLAN.md`, STATE, ROADMAP | `/gsd-plan-phase` → `/gsd-execute-phase` → `/gsd-ship` (+ local wrap-up) |
 | Ad-hoc | `.planning/quick/NNN-slug/PLAN.md` | **slice-planning** + **execute-plan** |
+| Optional refinement | Existing phase/quick PLAN; no new artifact | **slice-plan-refinement** |
 | Legacy | `ongoing/*.md` | **execute-plan** only; do not migrate |
 
 Story-decomposition seeds are not executable: select one contained story, then
-use slice-planning. **Hard decomposition quality:** one evaluable outcome at the
+use slice-planning. Run slice-plan-refinement only when the resulting PLAN is
+complex, sizing confidence is low, or execution overruns; straightforward plans
+may execute directly. **Hard decomposition quality:** one evaluable outcome at the
 current resolution; 3V stories; Behavior/Structure execution leaves —
 `problem-decomposition.mdc`. Plan artifact and lifecycle rules: `planning.mdc`.
 Do not write new flat `.planning/<name>.md` when `phases/` or `quick/` fits.

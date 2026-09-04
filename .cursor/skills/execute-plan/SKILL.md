@@ -37,8 +37,10 @@ Before executing, also read [delegation.md](references/delegation.md) and
 Every executable unit (slice, or GSD plan wave that is one slice) must obey
 **Behavior | Structure**, stop-safe, one observable behavior or its immediately
 enabling Structure
-(`.cursor/rules/problem-decomposition.mdc`). If it does not, stop and re-plan with
-**slice-planning** before implementing.
+(`.cursor/rules/problem-decomposition.mdc`). If an existing PLAN has a valid
+selected outcome but coarse or low-confidence leaves, use
+**slice-plan-refinement** before implementing. Straightforward commit-sized
+plans do not require a separate refinement pass.
 
 Reject a story-decomposition seed as execution input. Require a PLAN for one
 selected story or a GSD phase whose tasks already pass the execution-leaf gate.
@@ -114,11 +116,13 @@ decision** the developer needs. Then wait.
 ```
 1. Read the plan (GSD phase dir PLAN.md / GSD *-PLAN.md / quick PLAN.md)
 2. Find the next slice whose status is NOT "done"
-3. Pre-slice Jidoka + Behavior/Structure check
-   → If stop condition → report & STOP
+3. Pre-slice Jidoka + Behavior/Structure + refinement-trigger check
+   → If Jidoka stop condition → report & STOP
+   → If the selected outcome is valid but a refinement trigger applies, invoke
+     slice-plan-refinement on this PLAN, then reread it before continuing
 4. DELEGATE implementation only to a fresh sub-agent (see delegation)
 5. When implementer finishes:
-   a. If Jidoka stop / REVERT & SPLIT → handle as below; do not wrap up
+   a. If Jidoka stop / REVERT & REFINE → handle as below; do not wrap up
    b. Verify relevant tests were reported green (no intentional CI-breaking
       red) and `git status` shows uncommitted
       work (or a deliberate empty slice with a stated reason). Do not require
@@ -156,7 +160,7 @@ Delegate exactly as specified in [delegation.md](references/delegation.md).
 Run the coordinator-owned sequence in [wrap-up.md](references/wrap-up.md).
 </step>
 
-<step name="revert_and_split">
+<step name="revert_and_refine">
 A slice is **too big** when:
 
 - Changes span many unrelated files with no clear single behavior emerging.
@@ -174,11 +178,11 @@ When this happens:
    `git checkout .`, `git clean -fd`, or another command that can discard
    unrelated dirty state. If ownership cannot be isolated, stop for developer
    judgment.
-3. Invoke **slice-planning** to split into Behavior/Structure slices
-   sized for the ~5 minute fuzzy goal (including test execution).
+3. Invoke **slice-plan-refinement** on the same PLAN to replace the failed slice
+   with smaller Behavior/Structure leaves.
 4. Update the PLAN in the GSD phase or quick dir.
 5. Commit and push the updated plan.
-6. Return "reverted and split" to the coordinator (include elapsed time and
+6. Return "reverted and refined" to the coordinator (include elapsed time and
    whether the 10-minute hard trigger applied).
 </step>
 
@@ -190,6 +194,8 @@ When this happens:
   `## REFACTOR COMPLETE` → fresh format-changed Task →
   `## FORMAT CHANGED COMPLETE` → full pytest → plan update → commit → push
 - Pre- and post-slice Jidoka checks applied
+- Slice-plan-refinement invoked for coarse/low-confidence leaves and overruns,
+  but not required for straightforward commit-sized plans
 - Stale story decomposition stops execution after the current safe wrap-up
 - Parallel waves only when touch sets and PLAN writes do not conflict
 - Spent planning history cleaned when entire plan is done
