@@ -11,6 +11,6 @@ alwaysApply: true
 5. clean up — run **post-change-refactor** on the uncommitted change
 6. run the full suite at last to confirm things are still working
 
-If a fix / make-test-pass attempt overruns the time-box (~5 min scrutinize, >10 min hard stop): stop, revert or stash WIP, and use **slice-planning** (`.cursor/rules/planning.mdc`).
+If a fix / make-test-pass attempt overruns the time-box (~5 min scrutinize, >10 min hard stop): stop, revert or stash WIP, and use **slice-planning** (`.cursor/rules/problem-decomposition.mdc`).
 
 follow [basic-development.mdc](mdc:.cursor/rules/basic-development.mdc)

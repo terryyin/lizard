@@ -1,131 +1,88 @@
 ---
+description: Decisions for planning artifacts, proof, updates, and cleanup
 alwaysApply: true
 ---
-# Principles for Slice Delivery
 
-**Hard rule for every plan** (local or GSD): each **slice** is either **Behavior** or **Structure**, **stop-safe**, and delivers **one observable behavior** (or one structure change that enables only the immediate next behavior). GSD **phase** is a roadmap capability (`.planning/phases/NN-slug/`). Slice grammar is mandatory.
+# Planning
 
-## Vocabulary
+Apply `problem-decomposition.mdc` before writing or revising a plan.
 
-| Term | Owner | Meaning |
-|------|--------|---------|
-| **Milestone** | GSD | Versioned increment |
-| **Phase** | GSD | Roadmap capability. `### Phase N:`, `.planning/phases/NN-slug/` |
-| **Plan** | Shared | One `PLAN.md` (roadmap phase or `.planning/quick/`) |
-| **Slice** | Local | One Behavior or one Structure. Stop-safe wrap-up grain |
+## Route the work
 
-## Behavior and Structure distinction
+| Condition | Action |
+|-----------|--------|
+| Problem, value, expected outcome, or story boundaries are unresolved | Use **story-decomposition**; do not write an executable plan |
+| One story-sized outcome is selected | Use **slice-planning** |
+| Work belongs to a milestone capability | Use GSD discuss/plan; rewrite its executable tasks to satisfy `problem-decomposition.mdc` |
+| Input is only a story-decomposition seed | Select one contained story before planning execution |
 
-**Behavior** (external behavior) has 3 parts: **pre-condition**, **trigger**, and **post-condition**. Each part is:
+## Required PLAN contents
 
- * externally observable
- * of user value
- * typically involves state change.
+Keep only information needed for execution, proof, review, or resume:
 
-**Structure** (internal structure) is how code is organized. We want structure to be cohesive, mapped to the domain, and exposing as little information as possible from each module.
+1. **Source** — seed/story link when applicable.
+2. **Outcome and boundaries** — one selected story or the explicitly bounded
+   phase outcome.
+3. **Outside-in proof** — example, demonstration, or high-level unit signal
+   (`analyze_file`, `analyze_source_code`, CLI).
+4. **Ordered slices** — capability-named heading, type, status, and proof.
+5. **Current decisions** — only choices that constrain remaining work.
+6. **Learnings** — only discoveries that change assumptions or remaining slices.
 
-## Slice principles
+For each slice, record:
 
-Every slice is one of two types:
+```markdown
+### N. Capability outcome
+Type: Behavior | Structure
+Status: planned | in-progress | done
+Proof: <observable signal and focused verification>
 
-| Type | What it does | Constraint |
-|------|--------------|------------|
-| **Behavior** | Delivers user value directly observable from the external perspective. | Must be externally observable and testable. **One** observable behavior per slice. |
-| **Structure** | Restructures internals to prepare for the **immediate next** behavior slice, without changing any external behavior. | All changes must be **verifiable from the external perspective** (existing tests still pass, no observable difference). No speculative prep for slices beyond the next behavior slice. |
+Behavior: <pre-condition → trigger → post-condition>
+```
 
-### Sequencing rules
+For Structure, replace `Behavior` with the internal change and the immediate
+next Behavior it enables.
 
-1. **Stop-safe ordering** — The user may decide to stop after **any** slice. The value delivered must be proportional to (or greater than) the number of completed slices, with close to **zero waste** if remaining slices are never implemented.
-2. **Order by value** — Earlier slices = higher user value and usability first.
-3. **Many slices are good** — Split as finely as you can while each slice still meets the type constraints above.
-4. **Structure slices only justify themselves through the next behavior slice** — A structure slice that is not immediately followed by the behavior slice it enables is speculative waste.
+## Artifact locations
 
-**To decompose a task into slices**, use the **slice-planning** skill (or GSD `/gsd-plan-phase` / discuss — still apply this grammar to every plan task).
-
-### Time budget (one problem slice)
-
-Applies to any agent or sub-agent working on **one** breakdown — e.g. making a specific test pass, or solving one Behavior/Structure unit. Wall-clock includes implementation **and** test execution.
-
-| Elapsed | Expectation |
-|---------|-------------|
-| **≤ ~5 min** | Fuzzy goal. Size each slice so it can finish in about five minutes. |
-| **> 5 min** | Scrutinize the breakdown. Prefer finer decompose → revert WIP → retry a smaller slice when the slice was oversized or thrashing. |
-| **> 10 min** | **Hard trigger:** stop, revert uncommitted WIP for that attempt, finer-decompose with **slice-planning**, and retry — **unless** there is a stated good reason to continue (e.g. a single targeted test that itself needs >10 min, blocked on developer input, or irreversible mid-migration already validated). |
-
-Do not use Cursor timer hooks for this; agents self-enforce while working.
-
----
-
-## Planning layout (GSD-aligned)
-
-Active work lives under `.planning/`:
-
-| Path | Role |
-|------|------|
-| `.planning/PROJECT.md`, `REQUIREMENTS.md`, `ROADMAP.md`, `STATE.md`, `config.json` | GSD project memory (create via `/gsd-new-project` or `/gsd-onboard`) |
-| `.planning/phases/NN-slug/` | GSD phase directory: `*-CONTEXT.md`, `*-PLAN.md`, `*-SUMMARY.md`, `*-VERIFICATION.md`, … |
+| Path | Use |
+|------|-----|
+| `.planning/seeds/SEED-NNN-slug.md` | Non-executable parent problem and candidate stories |
+| `.planning/phases/NN-slug/` | GSD phase artifacts |
+| `.planning/quick/NNN-slug/PLAN.md` | Ad-hoc executable plan for a selected story |
 | `.planning/codebase/` | Codebase maps |
-| `.planning/quick/` | Ad-hoc plans that are not yet on the roadmap |
-| `ongoing/` | Legacy only — do not put new plans here |
+| `.planning/{PROJECT,REQUIREMENTS,ROADMAP,STATE}.md` | GSD project memory |
 
-Prefer GSD phase dirs and filenames. Local flat `.planning/<name>.md` is legacy-compatible for execute-plan but **new** plans should use `.planning/phases/NN-slug/` or `.planning/quick/NNN-slug/`.
+Do not add new plans under `ongoing/` or as flat files directly under
+`.planning/`. Do not use phase or slice numbers in product code, tests, classes,
+or permanent docs.
 
-**Product code, tests, and permanent docs** stay capability-named — never encode GSD phase or slice numbers there. Those numbers belong only under `.planning/`. In `PLAN.md`, number slices (`### 1. Capability heading`)
+## Proof decisions
 
-### Plan history (resume vs cleanup)
+| Situation | Plan |
+|-----------|------|
+| Main user behavior | Targeted high-level test via `analyze_file`, `analyze_source_code`, or CLI output |
+| Edge, error, or pure contract | Focused unit test at a domain-stable contract (`basic-development.mdc`) |
+| Existing untested behavior | Regression proof before changing it |
+| Multi-beat scenario cannot pass within one inner TDD beat | Do not commit red; keep driving until green |
+| Structure slice | Existing external behavior remains green |
+| Interim behavior | Name the later slice that removes or replaces it |
 
-- **While a plan is in progress:** keep enough history in the PLAN file (slice status, brief learnings, remaining slices) plus CONTEXT/SUMMARY so work can **stop and resume across sessions and environments**.
-- **As soon as the plan is fully executed** and outcomes live in code and permanent docs: **actively clean up** spent planning history (prune done-slice detail, delete disposable notes, drop obsolete SUMMARY/discussion noise). Keep only what still helps a future reader of the *product*, or a short pointer in ROADMAP if the milestone continues.
-- Do **not** leave completed plans as a permanent diary under `.planning/`.
+Run focused relevant tests during the slice. At execute-plan wrap-up, run the
+full pytest suite (`basic-development.mdc` — lizard's suite is cheap).
 
----
+## Update and cleanup decisions
 
-## Testing And Completion
-
-- Name tests and permanent artifacts by capability, not GSD phase or slice number.
-- Prefer unit tests through high-level entry points (`analyze_file`, `analyze_source_code`, CLI output); use direct unit tests only for pure helpers / edge paths that are themselves a domain-stable contract.
-- During a slice, run **targeted** pytest files for the change. At **execute-plan wrap-up**, run the **full** suite (`nix develop -c python -m pytest`) — lizard's suite is cheap (`basic-development.mdc`).
-- Do not leave failing tests that CI would run at a slice boundary.
-- Clean up dead code and update the plan before closing a slice.
-
-**CI / green commits:** Do not deliberately leave the tree in a state that would break CI. During a slice, run the tests relevant to the change; at wrap-up, run the full pytest suite. Never commit on TDD red.
-
-## Slice discipline (checklist)
-
-Before closing a slice and starting the next:
-
-1. **Clean up** — Remove dead or unreachable code; run **post-change-refactor** on the uncommitted change.
-2. **No failing tests that CI would run** — Targeted tests green during the slice; full pytest at wrap-up.
-3. **Jidoka** — Before starting a slice and after finishing it: stop for developer judgment on value/design forks, credentials, or unexpected blockers (see **execute-plan**).
-4. **Update the plan** — Mark the slice done; prune obsolete detail; adjust remaining slices from what you learned. Keep resume-useful history until the whole plan completes, then clean up (see **Plan history** above).
-5. **Deploy gate** — **Commit and push** only when CI-safe before the next slice. Required for local execute-plan and for GSD execute in this repo.
-6. **Parallelism** — Safe parallel execution (GSD waves / multiple sub-agents) is allowed when plans do not conflict on the same files or shared mutable state; otherwise run sequentially.
-
-### Test-driven workflow (when adding or changing behavior)
-
-1. Add or change the test; **run it** and confirm it **fails**.
-2. Confirm it fails for the **right reason** (not a typo or env issue).
-3. If the failure is unclear, **improve the assertion or message** so the next reader learns what was wrong.
-4. Implement the **smallest** change that makes the test pass.
-5. **Refactor** with tests green, then continue.
-
-**Commit only after one or more full cycles** (at least green) — never commit on red alone.
-
----
-
-## Interim behavior
-
-- **Allowed** when it gets the feature to users faster **or** gives the team **earlier observable-test feedback**.
-- **Remove** interim behavior when a **later slice** replaces it with the intended design.
-
-## Guardrails
-
-- NEVER encode GSD phase numbers in product code/tests/docs
-- NEVER leave completed plans as a permanent `.planning/` diary
-- NEVER skip commit+push between slices in this repo when running **execute-plan**
-- NEVER deliberately end a slice (or ship a commit) with CI-breaking failing tests
-- NEVER commit at the red step of TDD; wait until at least one full cycle is green
-
-## GSD coexistence
-
-Compatible defaults and **must-keep local** overlays: see `.cursor/rules/gsd-coexistence.mdc`.
+- While active, keep slice status, brief learnings, and remaining work in the
+  PLAN. `execute-plan` must not use `.planning/STATE.md` as slice resume state.
+- After a slice, update later leaves when evidence affects only the selected
+  story.
+- If evidence meets the parent-decomposition escalation conditions in
+  `problem-decomposition.mdc`, record the affected seed/story and stop for
+  human review instead of continuing.
+- Mark a slice done only after relevant tests, cleanup, post-change-refactor,
+  pep8, full pytest, plan update, and the Jidoka / commit / push gate required
+  by `execute-plan`.
+- When the whole plan is complete, remove spent diary and obsolete SUMMARY
+  detail. Keep enduring behavior in tests/product docs and enduring design in
+  code/ADRs.

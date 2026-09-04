@@ -33,3 +33,9 @@ nix develop -c make
 * Try to test end to end, external observable pre and post state change, as much as possible
 * Don't mock any code unless it's about file system
 * Prefer `analyze_file` / `analyze_source_code` / CLI output as the test boundary
+
+## Planning
+
+- Problem, story, and execution-leaf splits must pass the gates in
+  `problem-decomposition.mdc`; planning artifacts and lifecycle use
+  `planning.mdc`.

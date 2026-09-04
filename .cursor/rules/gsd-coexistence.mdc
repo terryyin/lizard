@@ -11,6 +11,8 @@ This repo uses **GSD** (global Cursor install: `/gsd-*`) for milestone scaffoldi
 |------|--------|---------|
 | **Milestone** | GSD | Versioned increment |
 | **Phase** | GSD | Roadmap capability. `### Phase N:`, `.planning/phases/NN-slug/`, `/gsd-plan-phase`, `/gsd-execute-phase` |
+| **Story decomposition** | Local | One parent problem with ordered 3V candidate stories; stored as a non-executable seed |
+| **Story** | Local | One Valuable, Visible, Vertical product outcome |
 | **Plan** | Shared | One `PLAN.md` |
 | **Slice** | Local | One Behavior or one Structure. Stop-safe. Commit+push grain |
 
@@ -18,7 +20,7 @@ This repo uses **GSD** (global Cursor install: `/gsd-*`) for milestone scaffoldi
 
 | Area | How they fit |
 |------|----------------|
-| **Folder layout** | Use GSD paths: `.planning/{PROJECT,REQUIREMENTS,ROADMAP,STATE}.md`, `config.json`, `.planning/phases/NN-slug/`, `.planning/codebase/`, `.planning/quick/`. |
+| **Folder layout** | Use GSD paths: `.planning/{PROJECT,REQUIREMENTS,ROADMAP,STATE}.md`, `config.json`, `.planning/seeds/`, `.planning/phases/NN-slug/`, `.planning/codebase/`, `.planning/quick/`. |
 | **Discuss / plan / verify artifacts** | GSD CONTEXT, PLAN, SUMMARY, VERIFICATION are fine **while the plan is active** (resume across sessions). |
 | **Execution engine** | Prefer `/gsd-execute-phase` **or** local `execute-plan` on the same PLAN — both must run the **local wrap-up per slice** (Jidoka, refactor, plan update, commit+push). |
 | **Parallel waves** | OK when file sets / mutable state do not overlap; otherwise sequential. |
@@ -32,8 +34,8 @@ These are **hard** in this repo even when GSD workflows omit them:
 
 | Local requirement | When it is needed | Why not drop it |
 |-------------------|-------------------|-----------------|
-| **Behavior vs Structure; stop-safe; one observable behavior per slice** | Every plan decomposition and every GSD PLAN task split | Prevents speculative structure and half-finished value if work stops mid-roadmap |
-| **Time budget per slice (~5 min fuzzy; >10 min hard finer-decompose)** | Agents/sub-agents making a test pass or solving one problem unit | Keeps breakdowns small; self-enforced (no Cursor timer hooks) — see `planning.mdc` |
+| **Problem → 3V story → Behavior/Structure gates** | Every requirement decomposition and every GSD PLAN task split | Reject unresolved outcomes, horizontal stories, and speculative Structure — see `problem-decomposition.mdc` |
+| **Resolution-specific sizing (story: ~30 min–few hours; leaf: ~5 min fuzzy, >10 min hard finer-decompose)** | Story shaping and agents making a test pass / solving one execution leaf | Keeps stories comparable and execution loops bounded without pretending estimates are precise — see `problem-decomposition.mdc` |
 | **Before- and after-slice Jidoka** | Every slice start/end | Stops autonomous runs on value/design/credential forks |
 | **After-slice plan update** | Every completed slice | Keeps remaining work accurate for resume |
 | **After-slice post-change-refactor** | Every slice before commit | Cohesion / dead code / 250-line discipline |
@@ -46,16 +48,20 @@ These are **hard** in this repo even when GSD workflows omit them:
 
 | Scenario | Prefer |
 |----------|--------|
+| Broad problem, unclear value/outcome, or several candidate stories | Local `story-decomposition` → one enriched `.planning/seeds/SEED-NNN-*.md`; select a story before planning execution |
 | New or ongoing **milestone / roadmap** | GSD: `/gsd-onboard` or `/gsd-new-milestone`, then discuss → plan → execute |
-| Small ad-hoc slice | Local `slice-planning` → `.planning/quick/NNN-slug/` (or a new `phases/` entry), then `execute-plan` |
+| One clear story-sized ad-hoc outcome | Local `slice-planning` → `.planning/quick/NNN-slug/` (or a new `phases/` entry), then `execute-plan` |
 | Issue / language-support fix already small | `issue.mdc` / `lizard-rule.mdc`; if the time-box overruns, **slice-planning** |
-| Resuming after a break | GSD progress/resume uses `STATE.md` as the project index. `execute-plan` resumes from the PLAN file (next undone slice). |
+| Resuming after a break | GSD progress/resume uses `STATE.md` as the project index. `execute-plan` resumes from the PLAN file (next undone slice) and must not write `STATE.md`. |
 
 ## Anti-patterns
 
-- Flat new plans at `.planning/random.md` when a `phases/` or `quick/` dir would do (legacy flat files still executable).
+- Flat new plans at `.planning/random.md` when a `phases/` or `quick/` dir would do.
+- Passing a story-decomposition seed directly to execute-plan without selecting
+  one story and producing a slice plan.
 - Leaving completed plan diaries forever under `.planning/`.
 - Running GSD execute **without** local Jidoka / refactor / commit+push wrap-up per slice.
 - Encoding GSD phase numbers in product file/test names.
 - Parallel agents on the same files or the same PLAN without coordination.
 - Enabling GSD `generate-claude-md` **workflow-enforcement** that forbids work outside GSD — conflicts with local domain skills and ad-hoc planning.
+- Updating `.planning/STATE.md` from `execute-plan` — slice status and learnings live in the PLAN being executed.

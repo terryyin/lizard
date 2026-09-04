@@ -1,0 +1,140 @@
+---
+description: Decisions for splitting problems, stories, and executable work
+alwaysApply: true
+---
+
+# Problem Decomposition
+
+Choose the decomposition resolution before splitting work. Do not produce an
+execution plan while a higher-level value or scope decision is unresolved.
+
+## Choose the resolution
+
+| Resolution | Use when | Required output |
+|------------|----------|-----------------|
+| **Problem / capability** | The user, problem, desired effect, constraint, or direction is unclear | One decision, assumption, or outcome that can be evaluated |
+| **Story / requirement** | The problem is clear but several product increments are possible | Ordered Valuable, Visible, Vertical stories |
+| **Execution leaf** | One story is selected and ready to implement | Behavior slices, plus only immediately enabling Structure slices |
+
+- Use **story-decomposition** for problem and story resolution.
+- Use **slice-planning** for execution resolution.
+- A story-decomposition seed is not executable.
+
+## Rules for every split
+
+| Judgment | Action |
+|----------|--------|
+| A child contains two independently useful outcomes or acceptance signals | Split it |
+| A child has no named evaluator or observable evidence | Refine it before keeping it |
+| Stopping after a child leaves only unused preparation | Merge it into the behavior it enables, or make it a Structure slice immediately before that Behavior |
+| A later child has higher user value or tests a more consequential assumption sooner | Move it earlier unless a genuine product prerequisite prevents that |
+| A child exists only to build a layer, component, activity, or generic framework | Put that work inside a vertical story or Behavior slice |
+| A general solution is proposed before one concrete case requires it | Implement the concrete case first |
+| New evidence invalidates the current parent outcome, story boundary, or ordering | Stop at a safe boundary and redo that parent decomposition |
+
+## Story gate: Valuable, Visible, Vertical
+
+Keep a candidate story only when all answers are **yes**:
+
+1. **Valuable:** Does it change an outcome for a named user or stakeholder?
+   “Needed for later work” is not sufficient.
+2. **Visible:** Can that user or stakeholder evaluate the result without
+   inspecting implementation?
+3. **Vertical:** Does it work end to end across every required layer?
+
+If any answer is no, revise the story. If the candidate is still necessary but
+not 3V, treat it as work inside another story rather than a separate story.
+
+A story does not need exhaustive acceptance scenarios. It must name one
+evaluable outcome and the boundaries that distinguish it from each sibling.
+
+## Execution-leaf gate
+
+Every executable slice is exactly one of:
+
+| Type | Required fields | Rejection condition |
+|------|-----------------|---------------------|
+| **Behavior** | Pre-condition, trigger, externally observable post-condition, outside-in proof | More than one independent post-condition |
+| **Structure** | Internal change, unchanged external behavior, immediate next Behavior it enables | It prepares for anything beyond the next Behavior |
+
+Place a Structure slice immediately before its Behavior. Verify existing
+external behavior remains green.
+
+## Decomposition procedure
+
+1. Restate a requested solution as: **user → current problem → desired effect →
+   genuine constraints**.
+2. Add a representative example, counterexample, boundary, and relevant
+   exception. For behavior, use pre-condition → trigger → post-condition.
+3. Generate cuts around user behavior, a product decision, a risk, or a learning
+   question. Reject cuts around technical layers or roles.
+4. At story resolution, apply the 3V gate. At execution resolution, apply the
+   Behavior/Structure gate.
+5. Order children by user value, then learning value, then genuine product
+   prerequisites.
+6. Check every stopping point. Remove or move preparation that would become
+   waste if later children are cancelled.
+7. After evidence arrives, repeat from the highest resolution it invalidates.
+
+## Permitted splitting moves
+
+- Narrow the user or stakeholder.
+- Narrow the pre-condition or data variation.
+- Deliver one workflow step that is independently usable and observable.
+- Separate common behavior from a later special policy or exception.
+- Separate a cheap assumption test from the broader outcome it may justify.
+- Use interim behavior when it provides usable value or earlier end-to-end
+  evidence; remove it in the replacing slice.
+
+Choose breadth-first or depth-first based on which yields earlier value or
+learning. In either case, retain an externally evaluable result.
+
+## Sizing decisions
+
+### Story hypotheses
+
+Estimate comparatively without implementation design or code inspection:
+
+| Band | Expected development effort |
+|------|-----------------------------|
+| **S** | About 30–60 minutes |
+| **M** | About 1–2 hours |
+| **L** | About 2–4 hours |
+
+- Record confidence and assumptions with each estimate.
+- Split a likely larger-than-L story by behavior, policy, risk, or learning.
+- Do not split a story merely to equalize estimates if the result fails the 3V
+  gate.
+
+### Execution leaves
+
+- Target about five minutes including focused verification.
+- After five minutes, check whether the slice has multiple outcomes or hidden
+  preparation and split when it does.
+- After ten minutes, stop, preserve the learning, safely park or revert only
+  attempt-owned WIP, and invoke **slice-planning**. Continue only with a stated
+  reason such as one focused test itself taking longer.
+
+## Correct these smells
+
+| Smell | Correction |
+|-------|------------|
+| Backend first, frontend later | Reassemble the work around one end-to-end behavior |
+| Separate requirement per component or specialist | Keep component work inside one vertical story |
+| Build the abstraction first | Implement the first concrete case, then extract after repetition |
+| Optimize for independent teams | Coordinate inside the shared story and integrate continuously |
+| Large story used as permanent specification | Keep the story as planning input; maintain behavior in executable examples and product documentation |
+| Prototype grows beyond its question | Limit it to the cheapest evidence needed for the uncertainty |
+| Slice grows or tests do not converge | Preserve learning and recursively re-slice |
+| One giant AI task | Use bounded execution leaves with review after each |
+
+## Learning escalation
+
+After each completed execution slice:
+
+- If evidence changes only the remaining leaves of the selected story, update
+  the active PLAN and continue.
+- If evidence changes the story’s user outcome, evaluation, boundary, value,
+  or its ordering relative to sibling stories, mark the PLAN as awaiting story
+  decomposition review, identify the affected seed/story, and stop for human
+  judgment.

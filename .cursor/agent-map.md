@@ -41,7 +41,8 @@ Useful focused checks:
 ## Rules
 
 - Development & tests: `.cursor/rules/basic-development.mdc`
-- Slice grammar & planning layout: `.cursor/rules/planning.mdc`
+- Problem, story, and execution-leaf splits: `.cursor/rules/problem-decomposition.mdc`
+- Planning artifacts and lifecycle: `.cursor/rules/planning.mdc`
 - GSD vs local wrap-up: `.cursor/rules/gsd-coexistence.mdc`
 - Adding / modifying language support: `.cursor/rules/lizard-rule.mdc`
 - Fixing issues (test-first workflow): `.cursor/rules/issue.mdc`
@@ -51,7 +52,8 @@ Useful focused checks:
 
 | Skill | When |
 |-------|------|
-| **slice-planning** | Decompose work into Behavior/Structure slices; time-box overrun |
+| **story-decomposition** | Broad or unclear requirements; ordered 3V candidate stories in one seed |
+| **slice-planning** | Turn one selected story into Behavior/Structure leaves; time-box overrun |
 | **execute-plan** | Run a plan under `.planning/` with per-slice wrap-up |
 | **post-change-refactor** | Concept-bounded cleanup before commit (coordinator-owned) |
 | **adr-awareness** | Load / cite / conflict-check Accepted ADRs |
@@ -62,12 +64,23 @@ Useful focused checks:
 - Current recommendations: `docs/adrs/*-accepted.md` (read explicitly)
 - Agent use / cite / conflict / maintain: `.cursor/skills/adr-awareness/SKILL.md`
 
-## Planning
+## Planning modes (GSD vs local)
 
-Active work lives under `.planning/` (GSD `phases/`, `quick/`, `STATE`, … — see `gsd-coexistence.mdc`). `ongoing/` is legacy only — do not add new plans there. Read `STATE.md` and the active phase or quick dir for the immediate next slice. No `.planning/` yet → justification for retained code comes only from the current uncommitted change.
+| Mode | Artifacts | Orchestrator |
+|------|-----------|--------------|
+| Story shaping | `.planning/seeds/SEED-NNN-slug.md` containing ordered candidate stories | **story-decomposition** |
+| Formal milestone | `.planning/phases/NN-slug/*-PLAN.md`, STATE, ROADMAP | `/gsd-plan-phase` → `/gsd-execute-phase` → `/gsd-ship` (+ local wrap-up) |
+| Ad-hoc | `.planning/quick/NNN-slug/PLAN.md` | **slice-planning** + **execute-plan** |
+| Legacy | `ongoing/*.md` | **execute-plan** only; do not migrate |
 
-**Hard slice quality:** Behavior vs Structure, stop-safe, one observable behavior — `planning.mdc`.
+Story-decomposition seeds are not executable: select one contained story, then
+use slice-planning. **Hard decomposition quality:** one evaluable outcome at the
+current resolution; 3V stories; Behavior/Structure execution leaves —
+`problem-decomposition.mdc`. Plan artifact and lifecycle rules: `planning.mdc`.
+Do not write new flat `.planning/<name>.md` when `phases/` or `quick/` fits.
 **Per-slice wrap-up:** Jidoka → post-change-refactor → pep8 → full pytest → update plan → commit → push (**execute-plan**). Skills emit completion markers (e.g. `## REFACTOR COMPLETE`) for handoff.
+
+No `.planning/` yet → justification for retained code comes only from the current uncommitted change.
 
 ## Test Style
 
