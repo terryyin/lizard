@@ -22,7 +22,7 @@ This repo uses **GSD** (global Cursor install: `/gsd-*`) for milestone scaffoldi
 |------|----------------|
 | **Folder layout** | Use GSD paths: `.planning/{PROJECT,REQUIREMENTS,ROADMAP,STATE}.md`, `config.json`, `.planning/seeds/`, `.planning/phases/NN-slug/`, `.planning/codebase/`, `.planning/quick/`. |
 | **Discuss / plan / verify artifacts** | GSD CONTEXT, PLAN, SUMMARY, VERIFICATION are fine **while the plan is active** (resume across sessions). |
-| **Execution engine** | Prefer `/gsd-execute-phase` **or** local `execute-plan` on the same PLAN — both must run the **local wrap-up per slice** (Jidoka, refactor, fresh selective-formatting agent, plan update, commit+push). |
+| **Execution engine** | Prefer `/gsd-execute-phase` **or** local `execute-plan` on the same PLAN — both must run the **local wrap-up per slice** (Jidoka, fresh refactor agent, one coordinator-run selective formatting command, plan update, commit+push). |
 | **Parallel waves** | OK when file sets / mutable state do not overlap; otherwise sequential. |
 | **Observable verification** | GSD goal-backward verify + local TDD — same intent; run relevant local tests as the evidence; full pytest at wrap-up. |
 | **Codebase maps** | `.planning/codebase/*` shared. |
@@ -39,7 +39,7 @@ These are **hard** in this repo even when GSD workflows omit them:
 | **Before- and after-slice Jidoka** | Every slice start/end | Stops autonomous runs on value/design/credential forks |
 | **After-slice plan update** | Every completed slice | Keeps remaining work accurate for resume |
 | **After-slice post-change-refactor** | Every slice before commit | Cohesion / dead code / 250-line discipline |
-| **After-slice selective formatting** | Every slice after refactor and before staging | A fresh **format-changed** agent prepares affected components explicitly; the pre-commit hook remains check-only |
+| **After-slice selective formatting** | Every slice after refactor and before the PLAN update/staging | The coordinator runs `./scripts/run.sh make format-changed` once and lets it select affected components (including a planning-only no-op); routine wrap-up does not spawn `format-changed`, and the pre-commit hook remains the independent check-only lint pass |
 | **After-slice commit + push** | Every closed slice before the next | Deploy gate; remote/CI catch issues early |
 | **Active history cleanup when the plan is done** | When the last slice is done and outcomes are in code/permanent docs | GSD tends to keep SUMMARYs; we prune spent planning diary |
 | **Nix prefix (`nix develop -c`)** | All tooling except `git` | Env contract GSD does not know |
@@ -64,7 +64,8 @@ These are **hard** in this repo even when GSD workflows omit them:
   one story and producing a slice plan.
 - Creating a second PLAN for refinement instead of editing the existing PLAN.
 - Leaving completed plan diaries forever under `.planning/`.
-- Running GSD execute **without** local Jidoka / refactor / fresh format-changed / commit+push wrap-up per slice.
+- Running GSD execute **without** local Jidoka / fresh refactor agent / one
+  coordinator-run `make format-changed` command / commit+push wrap-up per slice.
 - Encoding GSD phase numbers in product file/test names.
 - Parallel agents on the same files or the same PLAN without coordination.
 - Enabling GSD `generate-claude-md` **workflow-enforcement** that forbids work outside GSD — conflicts with local domain skills and ad-hoc planning.

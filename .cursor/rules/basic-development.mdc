@@ -30,12 +30,17 @@ nix develop -c make
 ## Format before commit
 
 Run `./scripts/run.sh make format-changed` before staging. It selects affected
-pep8 components from staged, unstaged, and nonignored untracked paths. Slice
-wrap-up delegates this to a fresh agent using the **format-changed** skill. The
-command reports style issues and does not rewrite files; apply only mechanical
-corrections. The pre-commit hook runs `make lint-changed` against affected
-staged components. It is check-only: it does not format files or mutate the Git
-index.
+pep8 components from staged, unstaged, and nonignored untracked paths. During
+slice wrap-up, the coordinator runs it once after refactor and before the PLAN
+update; it does not pre-filter paths or spawn a formatting agent. Repeat only
+after an intervening repair invalidates that preparation. The **format-changed**
+skill remains available for explicit on-demand use. The command reports style
+issues and does not rewrite files; apply only mechanical corrections. The
+pre-commit hook runs `make lint-changed` against affected staged components. It
+is check-only: it does not format files or mutate the Git index. Implementers
+and refactorers do not run `make format-changed` or standalone `make
+lint-changed`; the coordinator owns formatting and the hook owns the
+independent lint check.
 
 ## Automated test practices
 

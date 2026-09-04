@@ -1,9 +1,10 @@
 ---
 name: format-changed
 description: >-
-  Prepare working-tree changes for commit by selectively checking style on
-  affected components. Use after implementation and refactoring but before
-  staging; stop when a style result needs semantic or design judgment.
+  On-demand preparation of working-tree changes for commit by selectively
+  checking style on affected components. Use when explicitly requested outside
+  the routine execute-plan wrap-up; stop when a style result needs semantic or
+  design judgment.
 ---
 
 # Format Changed
@@ -11,6 +12,10 @@ description: >-
 Prepare the current working-tree changes for commit without taking ownership of
 Git state. The repository command owns changed-component detection; do not
 reproduce its path-to-component mapping in this skill or in ad hoc shell logic.
+
+This is an explicitly on-demand skill. Routine `execute-plan` wrap-up runs the
+same repository command directly and does not invoke this skill or spawn a
+formatting agent.
 
 ## Workflow
 

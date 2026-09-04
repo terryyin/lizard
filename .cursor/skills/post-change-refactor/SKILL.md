@@ -5,10 +5,10 @@ description: >-
   Use concept-bounded scope even when completion requires untouched code, but
   Jidoka-stop before unapproved cross-subsystem refactoring. Remove duplication,
   unclear naming, shotgun surgery, dead / test-only / redundant code, and
-  oversized files; run related tests. Local slice wrap-up overlay (execute-plan /
-  gsd-execute-phase). Use after a slice, before commit, or on: refactor change,
-  clean up change, post-change refactor, before commit cleanup, tidy current
-  change.
+  oversized files; run related tests only when the refactor edits. Local slice
+  wrap-up overlay (execute-plan / gsd-execute-phase). Use after a slice, before
+  commit, or on: refactor change, clean up change, post-change refactor, before
+  commit cleanup, tidy current change.
 ---
 
 <objective>
@@ -66,6 +66,8 @@ edits across boundaries.
 Optional caller context (when spawned from execute-plan):
 - Plan path and current slice text (for the immediate-next-slice justification
   boundary)
+- Implementer's compact `proof:` block(s), including each exact focused command
+  and the behavior or paths it covers
 
 **Invokers:** `execute-plan` (fresh sub-agent before commit), issue fixes
 (`issue.mdc`), language support work, or on-demand developer request.
@@ -79,8 +81,8 @@ report empty scope and emit `## REFACTOR COMPLETE` with no edits.
 </preflight_gate>
 
 <preflight_gate name="map_concept_impact">
-Before editing, perform a fast read-only pass over every check. For each
-candidate, record:
+Before editing, read [the refactor checks](references/refactor-checks.md) and
+perform a fast read-only pass over every check. For each candidate, record:
 
 1. The triggering issue and its connection to the current change.
 2. The minimum concept-bounded edit set needed for coherent completion.
@@ -101,83 +103,24 @@ first cross-subsystem edit and leave no partial candidate: reverse only this
 agent's edits for that candidate, never pre-existing user changes.
 </preflight_gate>
 
-After the gate passes, execute the recorded candidates **in check order**.
-Do not repeat broad discovery. After all checks pass, return to the caller —
-**do not commit** from inside this skill.
+After the gates, **decide first**: if `map_concept_impact` recorded no edit
+candidates (and the cross-subsystem gate did not stop), skip the edit steps
+and `confirm_related_tests`; report "none — already clean" and emit
+`## REFACTOR COMPLETE`. Do not run related tests as a pre-triage gate.
 
-<step name="duplication">
-- **"New" duplication** means at least one copy is newly introduced or
-  closely related to newly introduced code — not that every copy is new.
-  Collapse it even when the other side already existed.
-- Look for copy-pasted blocks and parallel structures with cosmetic
-  differences that the change introduced or made visible (new code
-  repeating logic that already lived elsewhere).
-- The same concept in two representations counts as duplication, not just
-  literal copies.
-- **Action:** collapse onto a single representation. Prefer reusing an
-  existing helper in the right layer (language reader, extension, shared
-  tokenizer utility in `code_reader.py`) over inventing a new one.
-</step>
-
-<step name="domain_naming">
-- Read every new or renamed identifier — files, modules, classes, functions,
-  variables, tests, fixtures.
-- Ask: does the name match what a domain reader expects? Does it match
-  Lizard's ubiquitous language (ADR-0001: CCN, NLOC, language reader, token,
-  state machine, extension)?
-- **Action:** rename when intent is unclear, misleading, mixes layers, or
-  leaks GSD phase numbers / sequence info. Names describe **capability**, not
-  development history. GSD phase numbers belong only under `.planning/`.
-</step>
-
-<step name="shotgun_surgery">
-- Shotgun surgery: **one logical concept** (e.g. a default threshold, a
-  language keyword list, an extension option name) forces edits in many
-  places for one purpose.
-- Give the concept **one** representation. The next change of that shape
-  should touch that place — not be scattered again.
-- Acceptable extra touchpoints: tests that assert the concept. Do not
-  hardcode the same value in reader, extension, CLI options, and test
-  fixtures in parallel.
-- **Action:** consolidate now behind one seam (one constant, config, or
-  module). Leave only low-likelihood one-offs unabstracted.
-</step>
-
-<step name="dead_redundant_code">
-Remove aggressively whatever the change introduced or exposed that is not
-justified by the current change or the immediate next slice:
-
-- Code with no caller.
-- Unreachable branches.
-- Pairs of edits that cancel each other (added then worked around, flags
-  that never flip).
-- Production code only exercised by unit tests — no real caller from the
-  CLI (`lizard` command), `analyze_file` API, language reader pipeline,
-  or extension hook.
-- Unit tests that overlap another test on the same observable surface
-  (same input/output, same entry point).
-- Tests that pin internal structure rather than observable behavior — prefer
-  the test that drives a stable boundary (`analyze_file`,
-  `analyze_source_code`, CLI output) per `basic-development.mdc`.
-
-When in doubt, **delete**. The next slice will reintroduce only what it needs.
-</step>
-
-<step name="file_size">
-For every file in the current diff and every file proposed for editing:
-
-```bash
-wc -l <path>
-```
-
-- Files **over 250 lines** must be split (applies to test code too).
-- Split along **cohesive seams** — one concept per module, not arbitrary
-  line cuts.
-- Update imports. Keep the public API stable for callers outside the change.
-</step>
+If there are edit candidates, execute them **in refactor-check order**, then
+`confirm_related_tests`. Do not repeat broad discovery. After all checks pass,
+return to the caller — **do not commit** from inside this skill.
 
 <step name="confirm_related_tests">
-Run **related** tests for the changed files — not the whole suite.
+Skip this step when triage recorded no refactor edits.
+
+When the caller provided compact proof, rerun only the handed-off command(s)
+whose covered behavior or paths the refactor edits invalidated — not the whole
+suite, and not before deciding to edit. If an edit moved the covered boundary
+so a handed-off command is no longer the right focused proof, state why and run
+a focused replacement. Do not rerun unaffected handed-off proof. Without a
+proof handoff, run related focused tests for the files this refactor changed.
 Use `nix develop -c …` for all commands except `git`.
 
 | Area touched | Focused command |
@@ -203,7 +146,9 @@ the refactor (not the original change), fix it now.
 - No cross-subsystem refactoring without concept-specific human authorization
 - No speculative structure beyond current change / immediate next slice
 - Duplication, naming, shotgun, dead-code, and 250-line checks applied
-- Related focused tests green
+- Invalidated handed-off proof (or related focused tests without a handoff)
+  green when this skill edited; skipped when triage made no edits
+- Successful and Jidoka handoffs report approximate active elapsed time
 - No commit created by this skill
 - Final output includes `## REFACTOR COMPLETE`
 </success_criteria>
@@ -214,7 +159,9 @@ On successful completion, report a short summary to the caller:
 1. Which checks led to changes — duplication / naming / shotgun / dead code /
    file size (or "none — already clean").
 2. Files renamed, extracted, split, or deleted.
-3. Which related tests were run and confirmed passing.
+3. Which related tests were run and confirmed passing — or
+   `skipped — no refactor edits`.
+4. Approximate active elapsed time spent on the refactor pass.
 
 ```
 ## REFACTOR COMPLETE
@@ -231,6 +178,7 @@ On a cross-subsystem gate, report only decision-relevant facts:
 4. Why a single-subsystem edit would be partial or misleading.
 5. Expected risk and focused validation.
 6. Choices: authorize it, defer it, or approve a described narrow exception.
+7. Approximate active elapsed time spent before the stop.
 
 End with:
 
@@ -249,4 +197,5 @@ must not consider refactoring complete or commit until the human decides.
 - Do not start a new slice or add new behavior — Structure only.
 - Do not run the entire test suite or trigger CI unless the change is broad
   enough that focused tests cannot cover it.
+- Do not run related tests when triage recorded no refactor edits.
 </out_of_scope>

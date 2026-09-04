@@ -37,8 +37,8 @@ Useful focused checks:
 | Extension | `nix develop -c python -m pytest test/test_extensions/test<Name>.py` |
 | CLI / options | `nix develop -c python -m pytest test/testApplication.py test/test_options.py` |
 | Style | `nix develop -c make pep8` or `nix develop -c make pylint` |
-| Style before commit | `./scripts/run.sh make format-changed` (format-changed skill; script owns component mapping) |
-| Lint staged | `./scripts/run.sh make lint-changed` |
+| Style before commit | Coordinator format of changed working-tree components: `./scripts/run.sh make format-changed` |
+| Lint staged | Pre-commit hook lint of changed staged components (not a routine standalone wrap-up command): `./scripts/run.sh make lint-changed` |
 
 ## Rules
 
@@ -60,7 +60,7 @@ Useful focused checks:
 | **execution-retrospective** | Audit a completed plan and its commits; may generate, but never execute, a follow-up PLAN |
 | **execute-plan** | Run a plan under `.planning/` with per-slice wrap-up |
 | **post-change-refactor** | Concept-bounded cleanup before commit (coordinator-owned) |
-| **format-changed** | Fresh wrap-up agent: run selective pep8 on affected working-tree components before staging |
+| **format-changed** | On-demand selective pep8 on affected working-tree components; routine wrap-up runs the command directly |
 | **adr-awareness** | Load / cite / conflict-check Accepted ADRs |
 
 ## Architectural decisions (ADRs)
@@ -90,10 +90,12 @@ Use execution-retrospective after completion when the plan's aggregate diff,
 goal conformance, or execution process needs review; it reconstructs cleaned-up
 plans from Git history and stops after generating any follow-up PLAN.
 Do not write new flat `.planning/<name>.md` when `phases/` or `quick/` fits.
-**Per-slice wrap-up:** Jidoka → post-change-refactor → fresh **format-changed**
-agent → full pytest → update plan → commit → push (**execute-plan**). The
-pre-commit hook lints staged components without mutation. Skills emit completion
-markers (e.g. `## REFACTOR COMPLETE`) for handoff.
+**Per-slice wrap-up:** Jidoka → fresh post-change-refactor agent → coordinator
+runs `./scripts/run.sh make format-changed` once → full pytest → update plan
+without a second routine formatting pass → commit → push (**execute-plan**).
+The pre-commit hook independently lints staged components without mutation.
+`format-changed` remains an on-demand skill; implementers and refactorers run
+neither that command nor standalone `make lint-changed`.
 
 No `.planning/` yet → justification for retained code comes only from the current uncommitted change.
 
