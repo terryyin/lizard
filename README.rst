@@ -405,3 +405,33 @@ Contributions are welcome. Please refer to the rules and development workflow in
 - https://github.com/terryyin/lizard/tree/master/.cursor/rules
 
 These guidelines are usable by both AI assistants and human contributors — what works for AI works for "I" as well — to keep changes cohesive, simple, and well-tested.
+
+Format changed components explicitly before staging::
+
+    ./scripts/run.sh make format-changed
+    git add <intended-paths>
+    git commit -m "..."
+
+``format-changed`` considers staged, unstaged, and nonignored untracked paths,
+then checks only the affected pep8 components (``lizard.py``, ``lizard_ext``,
+``lizard_languages``). Review those changes before staging the intended commit.
+
+A pre-commit hook then validates affected staged components with
+``make lint-changed``. It is check-only: it does not format files or mutate the
+working tree or Git index.
+
+**Setup:**
+The git hooks are version-controlled in ``scripts/git-hooks/``. To install them, run::
+
+    ./scripts/setup-git-hooks.sh
+
+This copies the hooks from ``scripts/git-hooks/`` to ``.git/hooks/`` and makes them executable.
+
+**Behavior:**
+
+- The hook runs automatically on every ``git commit``
+- It lints only the components affected by staged paths
+- If linting succeeds, the commit proceeds
+- If linting fails, the commit is blocked without staging or rewriting files
+
+The hook uses ``./scripts/run.sh``, which enters Nix when needed, so it works whether or not you are already in a nix shell.

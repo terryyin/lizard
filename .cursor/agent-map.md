@@ -37,6 +37,8 @@ Useful focused checks:
 | Extension | `nix develop -c python -m pytest test/test_extensions/test<Name>.py` |
 | CLI / options | `nix develop -c python -m pytest test/testApplication.py test/test_options.py` |
 | Style | `nix develop -c make pep8` or `nix develop -c make pylint` |
+| Style before commit | `./scripts/run.sh make format-changed` (format-changed skill; script owns component mapping) |
+| Lint staged | `./scripts/run.sh make lint-changed` |
 
 ## Rules
 
@@ -56,6 +58,7 @@ Useful focused checks:
 | **slice-planning** | Turn one selected story into Behavior/Structure leaves; time-box overrun |
 | **execute-plan** | Run a plan under `.planning/` with per-slice wrap-up |
 | **post-change-refactor** | Concept-bounded cleanup before commit (coordinator-owned) |
+| **format-changed** | Fresh wrap-up agent: run selective pep8 on affected working-tree components before staging |
 | **adr-awareness** | Load / cite / conflict-check Accepted ADRs |
 
 ## Architectural decisions (ADRs)
@@ -78,7 +81,10 @@ use slice-planning. **Hard decomposition quality:** one evaluable outcome at the
 current resolution; 3V stories; Behavior/Structure execution leaves —
 `problem-decomposition.mdc`. Plan artifact and lifecycle rules: `planning.mdc`.
 Do not write new flat `.planning/<name>.md` when `phases/` or `quick/` fits.
-**Per-slice wrap-up:** Jidoka → post-change-refactor → pep8 → full pytest → update plan → commit → push (**execute-plan**). Skills emit completion markers (e.g. `## REFACTOR COMPLETE`) for handoff.
+**Per-slice wrap-up:** Jidoka → post-change-refactor → fresh **format-changed**
+agent → full pytest → update plan → commit → push (**execute-plan**). The
+pre-commit hook lints staged components without mutation. Skills emit completion
+markers (e.g. `## REFACTOR COMPLETE`) for handoff.
 
 No `.planning/` yet → justification for retained code comes only from the current uncommitted change.
 

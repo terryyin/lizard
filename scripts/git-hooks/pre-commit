@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+#
+# Git pre-commit hook
+# Validates the staged changes before allowing commit
+#
+# This hook is installed from scripts/git-hooks/pre-commit to .git/hooks/pre-commit
+# Run: ./scripts/setup-git-hooks.sh to install
+
+set -e
+
+# Resolve the root of the working tree the commit is running in. Use `git rev-parse` so this
+# works in worktrees too: the hook file lives in the shared common .git/hooks dir, whose parent
+# is the main repo (not the worktree), so $HOOK_DIR/../.. would resolve to the wrong tree.
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+
+cd "$REPO_ROOT"
+
+# Lint only the components affected by staged changes. The hook intentionally
+# leaves both the working tree and index unchanged.
+exec ./scripts/run.sh make lint-changed

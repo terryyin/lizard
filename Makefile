@@ -1,4 +1,4 @@
-.PHONY: all tests pep8 pylint deps test-deps publish
+.PHONY: all tests pep8 pylint deps test-deps publish format-changed lint-changed
 
 all: extensive pylint
 extensive: tests pep8
@@ -12,6 +12,12 @@ tests3:
 
 pep8:
 	pycodestyle lizard.py lizard_ext lizard_languages
+
+format-changed:
+	./scripts/format_changed.sh
+
+lint-changed:
+	./scripts/lint_changed.sh
 
 pylint:
 	pylint --exit-zero --rcfile pylintrc lizard.py lizard_ext lizard_languages

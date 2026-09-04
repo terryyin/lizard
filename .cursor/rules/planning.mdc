@@ -81,8 +81,8 @@ full pytest suite (`basic-development.mdc` — lizard's suite is cheap).
   `problem-decomposition.mdc`, record the affected seed/story and stop for
   human review instead of continuing.
 - Mark a slice done only after relevant tests, cleanup, post-change-refactor,
-  pep8, full pytest, plan update, and the Jidoka / commit / push gate required
-  by `execute-plan`.
+  format-changed, full pytest, plan update, and the Jidoka / commit / push gate
+  required by `execute-plan`.
 - When the whole plan is complete, remove spent diary and obsolete SUMMARY
   detail. Keep enduring behavior in tests/product docs and enduring design in
   code/ADRs.

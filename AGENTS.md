@@ -25,6 +25,7 @@ Portable digest (details live in the cited always-applied rules):
 3. Capability naming — no GSD phase numbers in product artifacts (`planning.mdc`, ADR-0001)
 4. Test observables via high-level entry points (`analyze_file`, CLI) (`basic-development.mdc`)
 5. Do not mock parsing logic; mock only filesystem boundaries (`basic-development.mdc`)
+6. Prefer committing all changes and leaving none local; partial commits are deliberate exceptions, not forbidden
 
 ## Planning and slice delivery
 
@@ -32,7 +33,7 @@ Portable digest (details live in the cited always-applied rules):
 - **Hard decomposition grammar:** problem → 3V story → Behavior/Structure execution leaf; stop-safe, one evaluable outcome at the current resolution (`problem-decomposition.mdc`) — applies to GSD PLANs too.
 - **Time budget (self-enforced):** story hypotheses are roughly 30 minutes to a few hours; execution leaves target ~5 min including tests; >5 min → scrutinize; >10 min → hard finer-decompose unless a stated good reason (`problem-decomposition.mdc`).
 - **History:** keep resume-useful planning artifacts while a plan is in progress; **clean up** spent history when the plan is fully executed into code/permanent docs.
-- **Execution wrap-up (required):** Jidoka → post-change-refactor → pep8 → full pytest → update plan → commit → push (**execute-plan**; also `/gsd-execute-phase`). Skills emit completion markers for handoff.
+- **Execution wrap-up (required):** Jidoka → post-change-refactor → fresh format-changed agent → full pytest → update plan → commit → push (**execute-plan**; also `/gsd-execute-phase`). Skills emit completion markers for handoff.
 - **Story shaping:** use **story-decomposition** for broad or unclear requirements; one non-executable decomposition seed contains ordered candidate stories.
 - **GSD** for milestones (`/gsd-onboard`, `/gsd-plan-phase`, `/gsd-execute-phase`, …); **slice-planning** + **execute-plan** for one selected story under `.planning/quick/`.
 - **Non-compatible local overlays** (must keep): documented in `.cursor/rules/gsd-coexistence.mdc`.

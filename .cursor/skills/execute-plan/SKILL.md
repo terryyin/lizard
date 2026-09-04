@@ -4,14 +4,16 @@ description: >-
   Autonomously execute a plan under .planning/phases/ or
   .planning/quick/ .
   Applies local wrap-up on every slice: Jidoka, post-change-refactor,
-  plan update, commit, and push. Parallel waves OK when safe.
+  selective formatting, plan update, commit, and push. Parallel waves OK when
+  safe.
   Triggers on: execute plan, run plan, execute slices, start plan,
   do .planning, execute .planning, run .planning.
 ---
 
 <objective>
 Autonomously execute a GSD-aligned plan with **local wrap-up on every
-slice**: Jidoka gates, post-change-refactor, plan update, commit, and push.
+slice**: Jidoka gates, post-change-refactor, selective formatting, plan update,
+commit, and push.
 
 Purpose: Local execution overlay for GSD plans — complements
 `/gsd-execute-phase` but **requires** this repo's wrap-up per **slice** per
@@ -24,6 +26,8 @@ waiting on the developer.
 
 <context>
 **Mandatory first read:** `.cursor/agent-map.md` (navigation + focused test commands).
+Before executing, also read [delegation.md](references/delegation.md) and
+[wrap-up.md](references/wrap-up.md) in full.
 
 **Plan locations:**
 
@@ -47,10 +51,11 @@ yourself (except a single interactive slice). Delegate each slice to a **fresh
 sub-agent** so context does not accumulate.
 
 **Wrap-up ownership (hard):** The **coordinator** owns post-change-refactor,
-plan update, commit, and push. Implementers must **not** commit and must **not**
-run post-change-refactor themselves (nested agents routinely skip spawning a
-second Task). The coordinator spawns a **fresh** refactor agent and must see
-`## REFACTOR COMPLETE` (or handle `## REFACTOR JIDOKA STOP`) before committing.
+selective formatting, plan update, commit, and push. Implementers must **not**
+commit and must **not** run post-change-refactor themselves (nested agents
+routinely skip spawning a second Task). The coordinator spawns fresh refactor
+and formatting agents and must see their completion markers (or handle their
+Jidoka stops) before committing.
 
 **Resume:** The PLAN file being executed is the source of truth for remaining
 slices (status, learnings, adjusted later slices). Do **not** write
@@ -144,71 +149,11 @@ When the **entire** plan is complete: actively clean spent planning history per
 </step>
 
 <step name="delegation">
-Use the **Task tool** (`subagent_type: "generalPurpose"`; or GSD `gsd-executor`
-when inside `/gsd-execute-phase` — still require **coordinator-owned** wrap-up
-below; do not rely on `gsd-executor` to run local post-change-refactor).
-
-The implementer prompt **must** include:
-
-1. **Plan file path** and **which slice** to implement (paste the
-   slice text). Do **not** paste this skill or the full Jidoka list.
-2. **Jidoka:** stop and return on value/design forks, missing credentials,
-   undiagnosed unrelated failure, or ambiguity. Do not guess those.
-3. **Implementation rules**: `problem-decomposition.mdc` (Behavior/Structure,
-   stop-safety, **time budget** ~5 min fuzzy / >10 min hard finer-decompose) and
-   `planning.mdc` (proof, TDD, slice discipline,
-   **no commit on red**, **do not deliberately break CI**; run tests relevant
-   to the change during the slice; full pytest is coordinator wrap-up),
-   `gsd-coexistence.mdc`, and other applicable rules (`basic-development.mdc`,
-   `issue.mdc`, `lizard-rule.mdc`). **Naming:** capability/domain, never GSD
-   phase number.
-4. **Hard stop before wrap-up:** Do **not** commit, push, mark PLAN `done`, or
-   run post-change-refactor. Leave the tree uncommitted with relevant tests
-   green (CI-breaking failures are not acceptable).
-5. **Revert & split** if the slice is too big (`revert_and_split`).
-6. **Nix prefix**: `nix develop -c <command>`. Git does not need it.
-7. **Return**: short summary — ready for wrap-up (tests run), Jidoka stop, or
-   reverted and split. Do not claim slice "done" in git terms.
-
-**Do NOT pass entire plan history** — only the current slice. Resume context
-lives in the PLAN file on disk.
+Delegate exactly as specified in [delegation.md](references/delegation.md).
 </step>
 
 <step name="wrap_up">
-**Coordinator-owned** (after implementer returns with relevant tests green,
-uncommitted):
-
-1. **Spawn post-change-refactor** — Fresh Task (`generalPurpose`) that reads
-   `.cursor/skills/post-change-refactor/SKILL.md` and runs it end-to-end on the
-   current uncommitted change. Pass:
-   - Slice text being closed
-   - Plan file path (for immediate-next-slice justification)
-   - Nix prefix rule
-   - Do **not** commit
-   - Return must end with `## REFACTOR COMPLETE` or `## REFACTOR JIDOKA STOP`
-2. **Gate** — Proceed only on `## REFACTOR COMPLETE`. On Jidoka stop or missing
-   marker, follow the coordinator_loop rules above (do not commit).
-3. **Format** — `nix develop -c make pep8`. Fix any remaining issues.
-4. **Full tests** — `nix develop -c python -m pytest`. All must pass
-   (`basic-development.mdc` — lizard's suite is cheap enough for wrap-up).
-5. **Reflect & re-plan** — update the PLAN being executed (and SUMMARY if
-   present). Do **not** write `.planning/STATE.md`.
-   - Brief learnings that change remaining work.
-   - Mark slice **done**; prune obsolete detail from that slice.
-   - Adjust future slices when warranted.
-   - If the PLAN links a story-decomposition seed, apply the learning escalation
-     in `problem-decomposition.mdc`. Update leaf-only changes in the PLAN. For a
-     stale story decomposition, add an `awaiting story-decomposition review`
-     note naming the seed/story and affected field; do not alter sibling stories.
-6. **Post-slice Jidoka** — if learnings need developer judgment: commit and push
-   work so far, then return a Jidoka stop (do not silently continue). For stale
-   story decomposition, report the seed/story, evidence, affected field, and
-   required human decision.
-7. **Commit** — only when the tree would not intentionally break CI: no
-   failing tests from this change. Do **not** skip the full pytest suite at
-   this wrap-up (lizard's suite is cheap). Stage all changes; message may use
-   GSD-style `{type}({phase}-{plan}): …` or the repo's recent convention.
-8. **Push** — `git push`.
+Run the coordinator-owned sequence in [wrap-up.md](references/wrap-up.md).
 </step>
 
 <step name="revert_and_split">
@@ -241,7 +186,9 @@ When this happens:
 
 <success_criteria>
 - Each slice implemented by a fresh sub-agent (coordinator does not accumulate implementation context)
-- Coordinator owns wrap-up: fresh post-change-refactor Task → `## REFACTOR COMPLETE` → pep8 → full pytest → plan update → commit → push
+- Coordinator owns wrap-up: fresh post-change-refactor Task →
+  `## REFACTOR COMPLETE` → fresh format-changed Task →
+  `## FORMAT CHANGED COMPLETE` → full pytest → plan update → commit → push
 - Pre- and post-slice Jidoka checks applied
 - Stale story decomposition stops execution after the current safe wrap-up
 - Parallel waves only when touch sets and PLAN writes do not conflict
@@ -273,5 +220,8 @@ When the loop ends (all slices done or a stop condition):
 - Do not continue past a Jidoka stop without developer input.
 - Do not commit on TDD red alone, or close a slice with deliberate CI-breaking
   failures. Do not skip full pytest at wrap-up.
+- Do not stage or commit before the fresh format-changed agent completes.
 - Do not write `.planning/STATE.md`; execution state lives in the PLAN file.
+- Do not treat the lint-only pre-commit hook as a formatter or let it mutate Git
+  state.
 </out_of_scope>
