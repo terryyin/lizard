@@ -55,6 +55,7 @@ Useful focused checks:
 | Skill | When |
 |-------|------|
 | **story-decomposition** | Broad or unclear requirements; ordered 3V candidate stories in one seed |
+| **product-backlog** | Ordered queue of story titles linked to home seeds; details stay in seeds |
 | **slice-planning** | Turn one selected story into Behavior/Structure leaves |
 | **slice-plan-refinement** | Edit an existing PLAN in place when leaves are complex, low-confidence, or overrun |
 | **execution-retrospective** | Audit a completed plan and its commits; may generate, but never execute, a follow-up PLAN |
@@ -74,6 +75,7 @@ Useful focused checks:
 | Mode | Artifacts | Orchestrator |
 |------|-----------|--------------|
 | Story shaping | `.planning/seeds/SEED-NNN-slug.md` containing ordered candidate stories | **story-decomposition** |
+| Product backlog | `.planning/PRODUCT-BACKLOG.md` ordered story titles linked to home seeds | **product-backlog** |
 | Formal milestone | `.planning/phases/NN-slug/*-PLAN.md`, STATE, ROADMAP | `/gsd-plan-phase` → `/gsd-execute-phase` → `/gsd-ship` (+ local wrap-up) |
 | Ad-hoc | `.planning/quick/NNN-slug/PLAN.md` | **slice-planning** + **execute-plan** |
 | Optional refinement | Existing phase/quick PLAN; no new artifact | **slice-plan-refinement** |
@@ -90,6 +92,7 @@ Use execution-retrospective after completion when the plan's aggregate diff,
 goal conformance, or execution process needs review; it reconstructs cleaned-up
 plans from Git history and stops after generating any follow-up PLAN.
 Do not write new flat `.planning/<name>.md` when `phases/` or `quick/` fits.
+`.planning/PRODUCT-BACKLOG.md` is the ordered story queue, not a plan.
 **Per-slice wrap-up:** Jidoka → fresh post-change-refactor agent → coordinator
 runs `./scripts/run.sh make format-changed` once → full pytest → update plan
 without a second routine formatting pass → commit → push (**execute-plan**).

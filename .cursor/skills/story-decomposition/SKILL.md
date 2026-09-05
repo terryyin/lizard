@@ -81,6 +81,12 @@ For each candidate:
 Do not add file-level tasks, technical layers, APIs, or implementation design.
 Acceptance examples are optional here; include one only when it changes the
 story boundary.
+
+A seed is a story's home, not a feature boundary. Frame stories as user
+journeys that achieve a goal across related features when needed. Keep each
+story's requirements in one home seed and link from related seeds instead of
+duplicating them. Decompose only enough candidates for the current value or
+learning question; do not exhaust a feature for completeness.
 </step>
 
 <step name="estimate_and_order">
@@ -148,6 +154,13 @@ Use this body:
 
 Do not write an executable PLAN. Leave the seed uncommitted for review unless
 the user explicitly asks for a commit.
+
+When the user asks to queue or reprioritize stories, maintain
+`.planning/PRODUCT-BACKLOG.md` as the global ordered list of story titles linked
+to their home seed sections, with the seed ID. It contains no story details.
+Use stable anchors for new queued stories; local story numbering is not global
+priority. Unqueued candidates remain in their seeds. Backlog selection does
+not authorize execution.
 </step>
 
 </process>

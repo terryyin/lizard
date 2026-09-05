@@ -51,13 +51,14 @@ next Behavior it enables.
 | Path | Use |
 |------|-----|
 | `.planning/seeds/SEED-NNN-slug.md` | Non-executable parent problem and candidate stories |
+| `.planning/PRODUCT-BACKLOG.md` | Ordered queue of unfinished story titles linked to home seeds |
 | `.planning/phases/NN-slug/` | GSD phase artifacts |
 | `.planning/quick/NNN-slug/PLAN.md` | Ad-hoc executable plan for a selected story |
 | `.planning/codebase/` | Codebase maps |
 | `.planning/{PROJECT,REQUIREMENTS,ROADMAP,STATE}.md` | GSD project memory |
 
 Do not add new plans under `ongoing/` or as flat files directly under
-`.planning/`. Do not use phase or slice numbers in product code, tests, classes,
+`.planning/` (the product backlog is the exception). Do not use phase or slice numbers in product code, tests, classes,
 or permanent docs.
 
 ## Proof decisions
