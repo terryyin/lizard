@@ -24,7 +24,8 @@ selected story outcome.
 Require an existing PLAN under `.planning/phases/` or `.planning/quick/`.
 
 - No PLAN yet → use **slice-planning**.
-- Story outcome, value, or boundary must change → use **story-decomposition**.
+- Story understanding must change → use **story-refinement**; use
+  **story-decomposition** for parent-problem or candidate-ordering changes.
 - Existing slices are already clear, cohesive, single-proof-loop, meet the
   target, and have no unexplained hard-limit path → execute directly;
   refinement is optional.
@@ -48,8 +49,9 @@ Refine when any remaining slice:
 
 <step name="inspect_the_existing_plan">
 Read the PLAN and only the code/tests needed to judge execution boundaries.
-Preserve completed slices and the selected story contract. Apply planning.mdc's
-Proof decisions to the existing promise ownership and completed evidence.
+Preserve completed slices and the selected story's goal and scope.
+Apply planning.mdc's Proof decisions to the existing promise ownership and
+completed evidence.
 
 Classify each remaining slice:
 
@@ -59,8 +61,7 @@ Classify each remaining slice:
 | **Refine** | Same story, but the leaf violates its gate, has multiple beats, has low confidence, or could exceed the budget |
 | **Escalate** | A smaller viable cut would change the selected story or sibling-story order |
 
-Route **Escalate** to story-decomposition. Refine every **Refine** slice in this
-skill.
+Route **Escalate** using the input gate above. Refine every **Refine** slice here.
 </step>
 
 <step name="split_remaining_slices">

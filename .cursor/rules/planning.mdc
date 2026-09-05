@@ -11,22 +11,37 @@ Apply `problem-decomposition.mdc` before writing or revising a plan.
 
 | Condition | Action |
 |-----------|--------|
-| Problem, value, expected outcome, or story boundaries are unresolved | Use **story-decomposition**; do not write an executable plan |
-| One story-sized outcome is selected | Use **slice-planning** |
+| Parent problem or candidate selection is unresolved | Use **story-decomposition**; do not write an executable plan |
+| Selected stories need goal, scope, or examples clarified | Use **story-refinement** in their home seeds |
+| One story's goal, scope, and key examples are understood | Use **slice-planning** |
 | Existing PLAN has complex, low-confidence, or overrun leaves | Use **slice-plan-refinement** on the same PLAN; create no new artifact |
 | Existing PLAN already has clear, cohesive, plausibly commit-sized leaves | Execute directly; a separate refinement pass is optional |
 | Completed plan needs aggregate goal/code/process review | Use **execution-retrospective**; it may generate a follow-up PLAN but never executes it |
 | Work belongs to a milestone capability | Use GSD discuss/plan; rewrite its executable tasks to satisfy `problem-decomposition.mdc` |
 | Input is only a story-decomposition seed | Select one contained story before planning execution |
 
+## Scope discipline
+
+Deliver the understood story conservatively. Unexpected extras add unwanted
+complexity, even when intended as improvements. Clarify uncertain behavior when
+possible; otherwise assume it is out of scope and tell the developer what was
+considered and excluded. If exclusion prevents the stated goal or examples,
+resolve that question before dependent planning or implementation. Necessary
+implementation details are not extra product scope; speculative generality is.
+
+Refinement is revisable understanding. Discuss changes to goal or scope and
+update the home story and active plan together; discovery alone does not
+authorize expansion. Each Behavior must serve included scope or a key example;
+Structure must enable its immediate next Behavior.
+
 ## Required PLAN contents
 
 Keep only information needed for execution, proof, review, or resume:
 
 1. **Source** — seed/story link when applicable.
-2. **Outcome and boundaries** — one selected story or the explicitly bounded
-   phase outcome.
-3. **Outside-in proof** — example, demonstration, or high-level unit signal
+2. **Goal and scope** — one selected story or explicitly bounded phase outcome,
+   including material exclusions and assumptions.
+3. **Outside-in proof** — key examples and their demonstration or test signal
    (`analyze_file`, `analyze_source_code`, CLI).
 4. **Ordered slices** — capability-named heading, type, status, and proof.
 5. **Current decisions** — only choices that constrain remaining work.
@@ -50,7 +65,7 @@ next Behavior it enables.
 
 | Path | Use |
 |------|-----|
-| `.planning/seeds/SEED-NNN-slug.md` | Non-executable parent problem and candidate stories |
+| `.planning/seeds/SEED-NNN-slug.md` | Parent problem, candidate stories, and refinement in each story's home section |
 | `.planning/PRODUCT-BACKLOG.md` | Ordered queue of unfinished story titles linked to home seeds |
 | `.planning/phases/NN-slug/` | GSD phase artifacts |
 | `.planning/quick/NNN-slug/PLAN.md` | Ad-hoc executable plan for a selected story |
@@ -114,3 +129,7 @@ full pytest suite (`basic-development.mdc` — lizard's suite is cheap).
 - When the whole plan is complete, remove spent diary and obsolete SUMMARY
   detail. Keep enduring behavior in tests/product docs and enduring design in
   code/ADRs.
+- Reduce each implemented story's refinement detail to **Goal** and **Scope**
+  (including exclusions). Remove spent examples, UI sketches, and architectural
+  discussion once enduring knowledge is captured above; preserve its anchor,
+  completion status, and unfinished sibling stories.

@@ -12,6 +12,7 @@ This repo uses **GSD** (global Cursor install: `/gsd-*`) for milestone scaffoldi
 | **Milestone** | GSD | Versioned increment |
 | **Phase** | GSD | Roadmap capability. `### Phase N:`, `.planning/phases/NN-slug/`, `/gsd-plan-phase`, `/gsd-execute-phase` |
 | **Story decomposition** | Local | One parent problem with ordered 3V candidate stories; stored as a non-executable seed |
+| **Story refinement** | Local | Selected stories' goal, scope, and key examples; detail in each home seed |
 | **Story** | Local | One Valuable, Visible, Vertical product outcome |
 | **Plan** | Shared | One `PLAN.md` |
 | **Slice** | Local | One Behavior or one Structure. Stop-safe. Commit+push grain |
@@ -51,6 +52,7 @@ These are **hard** in this repo even when GSD workflows omit them:
 |----------|--------|
 | Broad problem, unclear value/outcome, or several candidate stories | Local `story-decomposition` → one enriched `.planning/seeds/SEED-NNN-*.md`; select a story before planning execution |
 | Queue or reprioritize unfinished stories across seeds | Local `product-backlog` → `.planning/PRODUCT-BACKLOG.md`; details stay in home seeds |
+| Clarify selected stories before planning | Local `story-refinement` → goal, scope, and examples in their home seeds |
 | New or ongoing **milestone / roadmap** | GSD: `/gsd-onboard` or `/gsd-new-milestone`, then discuss → plan → execute |
 | One clear story-sized ad-hoc outcome | Local `slice-planning` → `.planning/quick/NNN-slug/` (or a new `phases/` entry), then `execute-plan` when straightforward |
 | Existing PLAN has complex, low-confidence, or overrun leaves | Local `slice-plan-refinement` edits the same PLAN, then `execute-plan` |

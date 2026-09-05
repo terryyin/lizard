@@ -17,6 +17,8 @@ execution plan while a higher-level value or scope decision is unresolved.
 | **Execution leaf** | One story is selected and ready to implement | Behavior slices, plus only immediately enabling Structure slices |
 
 - Use **story-decomposition** for problem and story resolution.
+- Use **story-refinement** (`.cursor/skills/story-refinement/SKILL.md`) to clarify
+  selected stories' goal, scope, and examples in their home seeds.
 - Use **slice-planning** to create the initial execution plan.
 - Use **slice-plan-refinement** on that same PLAN when its leaves are complex,
   sizing confidence is low, or execution overruns. Skip refinement when the
@@ -138,7 +140,7 @@ After each completed execution slice:
 
 - If evidence changes only the remaining leaves of the selected story, update
   the active PLAN and continue.
-- If evidence changes the story’s user outcome, evaluation, boundary, value,
-  or its ordering relative to sibling stories, mark the PLAN as awaiting story
-  decomposition review, identify the affected seed/story, and stop for human
-  judgment.
+- If evidence changes the story's goal, examples, scope, or sibling ordering,
+  mark the PLAN as awaiting story review, identify the affected seed/story, and
+  stop for human judgment. Use story-refinement for selected-story detail;
+  story-decomposition for parent-problem or candidate-ordering changes.

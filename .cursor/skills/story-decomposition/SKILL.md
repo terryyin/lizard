@@ -3,8 +3,8 @@ name: story-decomposition
 description: >-
   Challenge and decompose a broad product problem into ordered
   Valuable/Visible/Vertical stories with rough effort hypotheses. Use when the
-  why, expected outcome, learning priority, or story boundaries are unresolved.
-  Writes one non-executable seed. Use slice-planning once one story is selected.
+  parent problem, candidate outcomes, or learning priority are unresolved.
+  Writes one non-executable seed. Use story-refinement for selected-story detail.
 ---
 
 <objective>
@@ -21,7 +21,8 @@ Use this skill when at least one is true:
 - multiple product outcomes or story boundaries must be chosen;
 - the highest-value or highest-learning first increment is disputed.
 
-If one 3V story is already selected and bounded, use **slice-planning**.
+For selected stories, use **story-refinement** to clarify goal, scope, and key
+examples; use **slice-planning** once one story is understood.
 </input_gate>
 
 <required_human_decisions>

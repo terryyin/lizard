@@ -31,7 +31,7 @@ moving a story, and update incoming links when needed.
 
 Add only actual stories with a named beneficiary and evaluable outcome. Use
 the repository's story-decomposition skill when those are unresolved; use
-slice-planning only after a story is selected for implementation. Reprioritizing
+story-refinement for selected-story detail, then slice-planning. Reprioritizing
 does not authorize execution or mean other seed candidates are cancelled.
 
 On completion, verify evidence, record completion in the home seed, and remove

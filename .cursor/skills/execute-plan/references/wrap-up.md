@@ -34,10 +34,10 @@ handoff if available. Reuse adequate/recovered proof; never randomly sample it.
    is the slice's named broader integration proof.
 5. Update the plan (and SUMMARY if present), never `.planning/STATE.md`: record
    brief relevant learnings, mark the slice done, prune obsolete detail, and
-   adjust future leaves. If a linked story decomposition became stale, add an
-   `awaiting story-decomposition review` note naming the seed/story and affected
-   field without altering sibling stories. This later PLAN-only edit does not
-   trigger a second formatting pass.
+   adjust future leaves. If linked story understanding became stale, add an
+   `awaiting story review` note naming the seed/story and affected field; route
+   via `problem-decomposition.mdc` without altering sibling stories. This PLAN
+   edit does not trigger a second formatting pass.
 6. If post-slice learning needs developer judgment, commit and push safe work so
    far, then return a Jidoka stop with the required decision.
 7. Commit only CI-safe work. Review the diff, prefer staging all changes so none
