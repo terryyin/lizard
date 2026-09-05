@@ -48,7 +48,8 @@ Refine when any remaining slice:
 
 <step name="inspect_the_existing_plan">
 Read the PLAN and only the code/tests needed to judge execution boundaries.
-Preserve completed slices and the selected story contract.
+Preserve completed slices and the selected story contract. Apply planning.mdc's
+Proof decisions to the existing promise ownership and completed evidence.
 
 Classify each remaining slice:
 
@@ -100,6 +101,8 @@ Edit the same PLAN using the slice format in `planning.mdc`.
 - Preserve completed-slice history needed for resume.
 - Replace obsolete planned detail rather than appending a second competing
   breakdown.
+- Reconcile promise ownership and observations against the original leaves
+  under planning.mdc's Proof decisions before declaring the revised PLAN ready.
 - Record only learnings that changed the refinement.
 - Do not implement, commit, or push unless the invoking workflow separately
   authorizes those actions.

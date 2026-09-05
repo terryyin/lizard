@@ -6,8 +6,9 @@ Use a fresh general-purpose sub-agent (or GSD `gsd-executor` when inside
 
 The implementer prompt must include:
 
-1. The plan path and current slice text, but not the full plan history or Jidoka
-   list.
+1. Plan path, current slice, and its mapped promises/observations from across
+   the selected contract under `planning.mdc`'s Proof decisions (including
+   applicable replacement/lifecycle obligations). Omit full history/Jidoka lists.
 2. A Jidoka stop for value/design forks, missing credentials, undiagnosed
    unrelated failures, or ambiguity.
 3. `problem-decomposition.mdc`, `planning.mdc`, and `gsd-coexistence.mdc`,
@@ -33,6 +34,8 @@ The implementer prompt must include:
      result: pass
    ```
 
+   Connect the returned evidence to those mapped promises; report uncovered
+   behavior as incomplete implementation, not refactor work.
    The command must be literal and complete. A placeholder, abbreviation, or
    paraphrase is missing or ambiguous proof.
 

@@ -63,6 +63,30 @@ or permanent docs.
 
 ## Proof decisions
 
+Map every checkable final-state promise in the selected contract, including
+Current decisions, to an owning leaf and observable proof. Use inline links or
+a compact table; no separate artifact. Include applicable promises, not the
+whole seed's aspirations; one proof may cover several promises.
+
+Preserve mappings through refinement, replacement, and resume, repointing
+replacement leaves before declaring readiness. Orphans leave the plan incomplete;
+completed evidence survives unless changes to its covered boundary invalidate it.
+
+For interim replacements, align the affected callers, fixtures, assertions, and
+documentation with final success/rejection behavior. Searches locate that scope;
+observable behavior proves completion. Keep work bounded to the replacement.
+
+When async ownership changes, require owner-boundary evidence of timely
+background failure observation while the named lifecycle owner runs, and
+applicable resource cleanup after failure/shutdown. An awaited throw alone
+proves neither. Timing comes from the selected lifecycle contract, not arbitrary
+timeouts; unchanged ownership adds no obligation or caller propagation tests.
+
+Accept coverage of promises, not passing commands alone. Missing observations
+leave the leaf incomplete and return to implementation before refactor or
+acceptance. Refactor may report gaps but cannot supply new behavior. Reuse proof
+under the execution workflow's existing invalidation policy.
+
 | Situation | Plan |
 |-----------|------|
 | Main user behavior | Targeted high-level test via `analyze_file`, `analyze_source_code`, or CLI output |

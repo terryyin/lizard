@@ -64,7 +64,8 @@ For every leaf:
 
 1. Choose Behavior or Structure.
 2. Record the required fields from the gate.
-3. Name focused verification.
+3. Name focused verification and connect the selected contract's promises to
+   owning leaves and observations under `planning.mdc`'s Proof decisions.
 4. Split if it contains multiple independent post-conditions.
 5. Place Structure immediately before its Behavior.
 6. Order Behaviors by user value, then learning value, then genuine

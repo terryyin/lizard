@@ -11,17 +11,8 @@ description: >-
 ---
 
 <objective>
-Autonomously execute a GSD-aligned plan with **local wrap-up on every
-slice**: Jidoka gates, post-change-refactor, selective formatting, plan update,
-commit, and push.
-
-Purpose: Local execution overlay for GSD plans — complements
-`/gsd-execute-phase` but **requires** this repo's wrap-up per **slice** per
-`.cursor/rules/gsd-coexistence.mdc`.
-
-Output: Slices completed with commits pushed, or a Jidoka stop report ending
-with `## PLAN EXECUTION COMPLETE` (all slices done) or a stop summary when
-waiting on the developer.
+Execute a GSD-aligned PLAN autonomously with the per-slice delivery contract in
+`.cursor/rules/gsd-coexistence.mdc`, including when using `/gsd-execute-phase`.
 </objective>
 
 <context>
@@ -31,219 +22,93 @@ Before executing, also read [delegation.md](references/delegation.md),
 [destructive-later-outcome-check.md](references/destructive-later-outcome-check.md),
 and [wrap-up.md](references/wrap-up.md) in full.
 
-**Plan locations:**
-
-1. `.planning/phases/NN-slug/*-PLAN.md`
-2. `.planning/quick/NNN-slug/PLAN.md` (or `*-PLAN.md`)
-
-Every executable unit (slice, or GSD plan wave that is one slice) must obey
-**Behavior | Structure**, stop-safe, one observable behavior or its immediately
-enabling Structure
-(`.cursor/rules/problem-decomposition.mdc`). If an existing PLAN has a valid
-selected outcome but coarse or low-confidence leaves, use
-**slice-plan-refinement** before implementing. Straightforward commit-sized
-plans do not require a separate refinement pass.
-
-Reject a story-decomposition seed as execution input. Require a PLAN for one
-selected story or a GSD phase whose tasks already pass the execution-leaf gate.
+**Input:** A PLAN under `.planning/phases/NN-slug/` or `.planning/quick/NNN-slug/`
+(`PLAN.md` or `*-PLAN.md`) for one selected story or bounded GSD phase; reject
+seeds. Every slice/wave must pass `problem-decomposition.mdc`'s stop-safe
+Behavior/Structure gate. Refine coarse or low-confidence leaves on the same
+PLAN before implementation; straightforward leaves may execute directly.
 
 **Git does not use the Nix prefix.** All other repo tooling does:
 `nix develop -c …`
 
-**Coordinator role:** You are a thin coordinator. You do **not** implement slices
-yourself (except a single interactive slice). Delegate each slice to a **fresh
-sub-agent** so context does not accumulate.
+**Ownership:** Delegate each slice to a fresh agent under `delegation.md`;
+implement locally only for a single interactive slice. The coordinator owns
+the mandatory `wrap-up.md` sequence, including independent refactor, formatting,
+plan update, commit, and push. Implementers stop before wrap-up.
 
-**Wrap-up ownership (hard):** The **coordinator** owns post-change-refactor,
-selective formatting, plan update, commit, and push. Implementers must **not**
-commit or run post-change-refactor, `make format-changed`, or standalone
-`make lint-changed` themselves. The coordinator spawns one fresh refactor agent
-and must see its completion marker (or handle its Jidoka stop), then runs
-`./scripts/run.sh make format-changed` directly once after refactor. The
-repository command owns component selection, including a no-op for
-planning-only changes; routine wrap-up does not spawn a formatting agent.
+**Resume:** Use the PLAN's status, learnings, and adjusted leaves as execution
+state; reconcile ownership and evidence under planning.mdc's Proof decisions.
+Do not write `.planning/STATE.md` or use it as execution/resume state.
 
-**Resume:** The PLAN file being executed is the source of truth for remaining
-slices (status, learnings, adjusted later slices). Do **not** write
-`.planning/STATE.md`, and do not treat it as execution or resume state.
-
-**Parallelism:** Run multiple independent plans/slices in parallel (GSD waves or
-fresh sub-agents) when `files_modified` / touch sets do not overlap and they do not
-contend on the same PLAN file. Otherwise run sequentially. Each parallel
-unit still gets its own coordinator-owned refactor → commit before the next
-dependent unit starts.
+**Parallelism:** Only when touch sets and PLAN writes do not overlap. Each unit
+completes its own coordinator-owned wrap-up before dependent work starts.
 </context>
 
 <process>
 
 <preflight_gate name="jidoka_stop_conditions">
-Run with full autonomy **but stop the line** when something requires a
-developer's brain.
+Check before delegation and after both implementer and refactor returns,
+even when tests pass. Stop for:
 
-**Stop and wait when:**
+- unresolved user-facing value trade-offs or structural choices affecting
+  future slices/architecture;
+- missing credentials/permissions or ambiguity that could waste a commit;
+- failures unresolved by focused diagnosis;
+- evidence changing the selected story's beneficiary, outcome, evaluation,
+  boundary, or sibling delivery/order.
 
-- **Value decision** — multiple valid directions with different user-facing
-  trade-offs; the plan says "TBD", "decide", "option A / B", or you discover
-  such a fork during implementation.
-- **Design decision** — a structural choice that affects future slices or
-  overall architecture.
-- **Authentication / credentials** — secrets, API keys, login flows, or
-  permissions the agent cannot supply.
-- **Unexpected failure you cannot diagnose** — test fails for reasons unrelated
-  to the current change, CI breaks on something external, etc.
-- **Ambiguity** — the slice description is unclear and guessing wrong would
-  waste a commit.
-- **Stale story decomposition** — evidence changes the selected story's
-  beneficiary, outcome, evaluation, or boundary; or changes whether/when a
-  sibling story should be delivered.
-
-When stopping: explain **what** you learned, **why** you stopped, and **what
-decision** the developer needs. Then wait.
-
-**Do NOT stop for:**
-
-- Routine implementation choices (naming, file placement, test structure) where
-  existing rules and conventions give a clear answer.
-- Minor refactoring needed to make the slice fit.
-- Test failures caused by your own change (fix them).
-
-**Check Jidoka both before and after each slice:**
-
-- **Before** (coordinator, on the slice *description*) — safe to start
-  autonomously? Value/design forks, ambiguity, missing credentials, Behavior/Structure
-  grammar.
-- **After** (implementer return + refactor return) — did work reveal something the
-  plan did not anticipate? Stop even if the slice succeeded.
+Explain the finding and required decision, then wait for the developer. At a
+post-slice stop, first deliver safe work as specified in `wrap-up.md`.
+Resolve routine naming/placement/test choices, minor refactoring, and failures
+caused by your own change without stopping.
 </preflight_gate>
 
 <step name="coordinator_loop">
 ```
-1. Read the plan (GSD phase dir PLAN.md / GSD *-PLAN.md / quick PLAN.md)
+1. Read the PLAN (slice headings/status or GSD tasks per planning.mdc).
 2. Find the next slice whose status is NOT "done"
-3. Pre-slice Jidoka + Behavior/Structure + refinement-trigger check; before
-   delegating destructive work, run the [named later-outcome check](references/destructive-later-outcome-check.md)
+3. Check Jidoka, Behavior/Structure, refinement triggers, and planning.mdc's Proof
+   decisions; for destructive work, run the [named later-outcome check](references/destructive-later-outcome-check.md)
    → If Jidoka stop condition → report & STOP
    → If the selected outcome is valid but a refinement trigger applies, invoke
      slice-plan-refinement on this PLAN, then reread it before continuing
-4. DELEGATE implementation only to a fresh sub-agent (see delegation)
+4. Delegate implementation under references/delegation.md.
 5. When implementer finishes:
    a. If Jidoka stop / REVERT & REFINE → handle as below; do not wrap up
-   b. Accept complete implementer proof by default: one or more compact
-      `proof:` blocks with the exact focused command, the behavior or paths it
-      covers, and `result: pass`. Do not recreate or randomly sample that proof.
-      Rerun relevant proof only when the handoff is missing or ambiguous, later
-      wrap-up work changed the covered boundary, or the slice closes a broader
-      integration proof the handoff did not run. Verify there is no intentional
-      CI-breaking red and `git status` shows uncommitted work (or a deliberate
-      empty slice with a stated reason). Do not require a full CI run before
-      wrap-up.
+   b. Apply the proof acceptance/reuse gate in references/wrap-up.md.
+      Verify git status shows uncommitted work (or an explained empty slice).
    c. If the implementer already committed → process failure: stop and report
       (do not continue as if wrap-up succeeded). Prefer fixing by soft-resetting
       an unpushed commit only when safe and the developer has not forbidden it;
       otherwise wait for developer judgment.
-6. COORDINATOR WRAP-UP (required — do not skip): follow `<step name="wrap_up">`.
+6. Run references/wrap-up.md end-to-end; recheck Jidoka after refactor.
 7. Go to step 1 (next slice)
 8. All slices done → clean up spent plan history (planning.mdc) → report & STOP
 ```
 
-Recognize slices by headings/status or GSD plan tasks. Typical local section:
-
-```markdown
-### Short capability description
-Type: Behavior | Structure
-Status: planned / in-progress / done
-
-Pre-condition / trigger / post-condition (Behavior)
-— or —
-Structure change + immediate next Behavior it unlocks
-```
-
-When the **entire** plan is complete: actively clean spent planning history per
-`planning.mdc` (keep product/code; drop disposable diary under `.planning/`).
-</step>
-
-<step name="delegation">
-Delegate exactly as specified in [delegation.md](references/delegation.md).
-</step>
-
-<step name="wrap_up">
-Run the coordinator-owned sequence in [wrap-up.md](references/wrap-up.md).
 </step>
 
 <step name="revert_and_refine">
-A slice is **too big** when:
-
-- Changes span many unrelated files with no clear single behavior emerging.
-- Tests are not converging after reasonable effort.
-- Wall-clock for the slice (implementation + test runs) exceeds the
-  **time budget** in `problem-decomposition.mdc`: scrutinize after **~5 min**; after
-  **>10 min**, finer decompose and retry is **required** unless a good reason
-  is stated (and reported to the coordinator / developer).
+A slice is too big when changes lack one coherent behavior, tests fail to
+converge, or it exceeds `problem-decomposition.mdc`'s budget: scrutinize after
+~5 minutes; after >10 minutes, refinement/retry is required unless a reason is
+stated to the coordinator/developer. Include implementation and test runtime.
 
 When this happens:
 
-1. Identify the exact tracked and untracked paths created or changed by this
-   attempt. Preserve every pre-existing developer change.
-2. Safely park or revert only attempt-owned WIP. Never use broad
-   `git checkout .`, `git clean -fd`, or another command that can discard
-   unrelated dirty state. If ownership cannot be isolated, stop for developer
-   judgment.
-3. Invoke **slice-plan-refinement** on the same PLAN to replace the failed slice
-   with smaller Behavior/Structure leaves.
-4. Update the PLAN in the GSD phase or quick dir.
-5. Commit and push the updated plan.
-6. Return "reverted and refined" to the coordinator (include elapsed time and
-   whether the 10-minute hard trigger applied).
+1. Inventory attempt-owned tracked/untracked paths and safely park or revert
+   only that WIP. Preserve pre-existing changes; never use broad `git checkout .`
+   or `git clean -fd`. Unclear ownership requires developer judgment.
+2. Invoke **slice-plan-refinement** on the same PLAN for smaller leaves.
+3. Have the coordinator commit and push the updated PLAN.
+4. Return "reverted and refined" with elapsed time and whether the hard trigger
+   applied.
 </step>
 
 </process>
 
-<success_criteria>
-- Each slice implemented by a fresh sub-agent (coordinator does not accumulate implementation context)
-- Coordinator owns wrap-up: fresh post-change-refactor sub-agent →
-  `## REFACTOR COMPLETE` → one direct
-  `./scripts/run.sh make format-changed` → full pytest → plan update without a
-  second routine formatting pass → commit (check-only lint hook) → push
-- Pre- and post-slice Jidoka checks applied
-- Slice-plan-refinement invoked for coarse/low-confidence leaves and overruns,
-  but not required for straightforward commit-sized plans
-- Stale story decomposition stops execution after the current safe wrap-up
-- Parallel waves only when touch sets and PLAN writes do not conflict
-- Spent planning history cleaned when entire plan is done
-- Final output includes `## PLAN EXECUTION COMPLETE` when all slices finish
-</success_criteria>
-
 <output>
-When the loop ends (all slices done or a stop condition):
-
-1. **Summary** — which slices were completed this run.
-2. **Current state** — the PLAN being executed and next undone slice for resume
-   (if stopped). Do not report GSD `STATE.md` as execution state.
-3. **Next action** — developer decision needed, or confirm cleanup done.
-
-```
-## PLAN EXECUTION COMPLETE
-```
-
-(Use when all slices are done. For Jidoka stops, report the stop reason and wait
-— do not emit the completion marker until the developer resolves and work resumes.)
+Report completed slices and cleanup, or the active PLAN, next undone slice,
+and required developer decision. Emit `## PLAN EXECUTION COMPLETE` only when all
+slices are done; a Jidoka stop waits without that marker.
 </output>
-
-<out_of_scope>
-- Do not implement slices in the coordinator agent (except single interactive slice).
-- Do not skip coordinator-owned post-change-refactor, commit, or push per slice.
-- Do not accept an implementer self-refactor or a missing `## REFACTOR COMPLETE` as wrap-up.
-- Do not pass full plan history to sub-agents.
-- Do not continue past a Jidoka stop without developer input.
-- Do not commit on TDD red alone, or close a slice with deliberate CI-breaking
-  failures. Do not skip full pytest at wrap-up.
-- Do not stage or commit before the coordinator's selective formatting command
-  succeeds.
-- Do not spawn `format-changed` during routine slice wrap-up; that skill remains
-  available for explicit on-demand use.
-- Do not run standalone `make lint-changed` during routine wrap-up; the commit
-  hook is the independent staged-component lint check.
-- Do not write `.planning/STATE.md`; execution state lives in the PLAN file.
-- Do not treat the lint-only pre-commit hook as a formatter or let it mutate Git
-  state.
-</out_of_scope>
