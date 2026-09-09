@@ -1,5 +1,5 @@
 {
-  description = "doughnut development environment";
+  description = "Lizard development environment";
 
   inputs.flake-utils.url = "github:numtide/flake-utils";
 

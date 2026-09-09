@@ -1,110 +1,49 @@
 # Agent Map
 
-Short navigation index — start here before diving into large modules. Skill contracts: `.cursor/skills/`.
+Short navigation index for the Lizard repository.
 
-## Work Areas
+## Work areas
 
-- **Core analyzer & CLI:** `lizard.py` — `analyze()`, `analyze_file`, `analyze_source_code`, option parsing, file discovery, output orchestration.
-- **Language readers:** `lizard_languages/` — one module per language; shared bases in `code_reader.py`, `clike.py`, `golike.py`, `rubylike.py`. Registration in `lizard_languages/__init__.py` (`languages()` list).
-- **Extensions:** `lizard_ext/` — output formatters (`htmloutput`, `csvoutput`, `xmloutput`, …), metric plugins (`lizardmccabe`, `lizardduplicate`, …), and `extension_base.py`. Wired from `lizard.py` and `lizard_ext/__init__.py`.
-- **Tests:** `test/` — mirror production layout:
-  - `test/test_languages/test<Lang>.py` per language reader
-  - `test/test_extensions/test<Name>.py` per extension
-  - Top-level integration: `test/test_analyzer.py`, `test/testApplication.py`, `test/testOutput.py`, `test/test_options.py`
+- **Core analyzer and CLI:** `lizard.py` — analysis entry points, option
+  parsing, file discovery, and output orchestration.
+- **Language readers:** `lizard_languages/` — one module per language, with
+  shared bases in `code_reader.py`, `clike.py`, `golike.py`, and `rubylike.py`.
+  Registration is in `lizard_languages/__init__.py`.
+- **Extensions:** `lizard_ext/` — output formatters, metric extensions, and
+  `extension_base.py`.
+- **Tests:** `test/` — language, extension, CLI, option, and analyzer coverage.
 
-## Domain Language
+## Domain language
 
-Canonical glossary: [ADR-0001](../docs/adrs/0001-ubiquitous-language-accepted.md). Lizard measures **CCN**, **NLOC**, **token count**, **parameter count**, and **nesting depth**. Parsing uses **token generators** and **state machines** (`CodeStateMachine`, `CLikeStates`, **language readers**). Prefer capability names over phase or ticket numbers in product code.
+Lizard measures CCN, NLOC, token count, parameter count, and nesting depth.
+Parsing uses token generators, state machines, and language readers. Prefer
+capability names over phase or ticket numbers in product code.
 
 ## Commands
 
-Run repo tooling through Nix. For AI agents, prefix every command except `git`:
-
-```bash
-nix develop -c <command>
-```
-
-**Exception:** `git` commands do not need the Nix prefix — run them directly (`git status`, `git diff`, `git commit`).
-
-Useful focused checks:
+Run repository tooling through Nix. Git commands are the exception.
 
 | Area | Command |
 |------|---------|
-| All tests + coverage | `nix develop -c make` |
+| All checks | `nix develop -c make` |
 | Full pytest suite | `nix develop -c python -m pytest` |
 | Core analyzer | `nix develop -c python -m pytest test/test_analyzer.py test/testOutput.py` |
 | Language reader | `nix develop -c python -m pytest test/test_languages/test<Lang>.py` |
 | Extension | `nix develop -c python -m pytest test/test_extensions/test<Name>.py` |
-| CLI / options | `nix develop -c python -m pytest test/testApplication.py test/test_options.py` |
+| CLI and options | `nix develop -c python -m pytest test/testApplication.py test/test_options.py` |
 | Style | `nix develop -c make pep8` or `nix develop -c make pylint` |
-| Style before commit | Coordinator format of changed working-tree components: `./scripts/run.sh make format-changed` |
-| Lint staged | Pre-commit hook lint of changed staged components (not a routine standalone wrap-up command): `./scripts/run.sh make lint-changed` |
 
-## Rules
+## Project rules
 
-- Development & tests: `.cursor/rules/basic-development.mdc`
-- Problem, story, and execution-leaf splits: `.cursor/rules/problem-decomposition.mdc`
-- Planning artifacts and lifecycle: `.cursor/rules/planning.mdc`
-- GSD vs local wrap-up: `.cursor/rules/gsd-coexistence.mdc`
-- Adding / modifying language support: `.cursor/rules/lizard-rule.mdc`
-- Fixing issues (test-first workflow): `.cursor/rules/issue.mdc`
-- ADRs: `.cursor/rules/architecture-decisions.mdc`
+- Development and tests: `.cursor/rules/basic-development.mdc`
+- Adding or modifying language support: `.cursor/rules/lizard-rule.mdc`
 
-## Skills
+Open Dough lifecycle skills are installed under `.agents/skills/dough-*` and
+discovered directly by supported agents. This repository does not maintain a
+second lifecycle-skill catalog or implementation.
 
-| Skill | When |
-|-------|------|
-| **story-decomposition** | Broad or unclear requirements; ordered 3V candidate stories in one seed |
-| **story-refinement** | Clarify selected stories' goal, scope, and key examples in their home seeds |
-| **product-backlog** | Ordered queue of story titles linked to home seeds; details stay in seeds |
-| **slice-planning** | Turn one selected story into Behavior/Structure leaves |
-| **slice-plan-refinement** | Edit an existing PLAN in place when leaves are complex, low-confidence, or overrun |
-| **execution-retrospective** | Audit a completed plan and its commits; may generate, but never execute, a follow-up PLAN |
-| **execute-plan** | Run a plan under `.planning/` with per-slice wrap-up |
-| **post-change-refactor** | Concept-bounded cleanup before commit (coordinator-owned) |
-| **format-changed** | On-demand selective pep8 on affected working-tree components; routine wrap-up runs the command directly |
-| **adr-awareness** | Load / cite / conflict-check Accepted ADRs |
+## Test style
 
-## Architectural decisions (ADRs)
-
-- Human propose / discuss / approve: `docs/adrs/README.md`
-- Current recommendations: `docs/adrs/*-accepted.md` (read explicitly)
-- Agent use / cite / conflict / maintain: `.cursor/skills/adr-awareness/SKILL.md`
-
-## Planning modes (GSD vs local)
-
-| Mode | Artifacts | Orchestrator |
-|------|-----------|--------------|
-| Story shaping | `.planning/seeds/SEED-NNN-slug.md` containing ordered candidate stories | **story-decomposition** |
-| Story refinement | Goal, scope, and key examples in each story's home seed | **story-refinement** |
-| Product backlog | `.planning/PRODUCT-BACKLOG.md` ordered story titles linked to home seeds | **product-backlog** |
-| Formal milestone | `.planning/phases/NN-slug/*-PLAN.md`, STATE, ROADMAP | `/gsd-plan-phase` → `/gsd-execute-phase` → `/gsd-ship` (+ local wrap-up) |
-| Ad-hoc | `.planning/quick/NNN-slug/PLAN.md` | **slice-planning** + **execute-plan** |
-| Optional refinement | Existing phase/quick PLAN; no new artifact | **slice-plan-refinement** |
-| Completed-plan audit | Git history plus optional follow-up PLAN | **execution-retrospective**; never executes the follow-up |
-| Legacy | `ongoing/*.md` | **execute-plan** only; do not migrate |
-
-Story-decomposition seeds are not executable: select a story, clarify its goal,
-scope, and examples with story-refinement as needed, then use slice-planning.
-Run slice-plan-refinement only when the resulting PLAN is complex, sizing
-confidence is low, or execution overruns; straightforward plans
-may execute directly. **Hard decomposition quality:** one evaluable outcome at the
-current resolution; 3V stories; Behavior/Structure execution leaves —
-`problem-decomposition.mdc`. Plan artifact and lifecycle rules: `planning.mdc`.
-Use execution-retrospective after completion when the plan's aggregate diff,
-goal conformance, or execution process needs review; it reconstructs cleaned-up
-plans from Git history and stops after generating any follow-up PLAN.
-Do not write new flat `.planning/<name>.md` when `phases/` or `quick/` fits.
-`.planning/PRODUCT-BACKLOG.md` is the ordered story queue, not a plan.
-**Per-slice wrap-up:** Jidoka → fresh post-change-refactor agent → coordinator
-runs `./scripts/run.sh make format-changed` once → full pytest → update plan
-without a second routine formatting pass → commit → push (**execute-plan**).
-The pre-commit hook independently lints staged components without mutation.
-`format-changed` remains an on-demand skill; implementers and refactorers run
-neither that command nor standalone `make lint-changed`.
-
-No `.planning/` yet → justification for retained code comes only from the current uncommitted change.
-
-## Test Style
-
-Prefer end-to-end observable behavior via `analyze_file.analyze_source_code`, `analyze_file` integration tests, and CLI output tests (`testApplication.py`). Do not mock parsing logic; mock only filesystem boundaries when needed. See `basic-development.mdc`.
+Prefer observable behavior through `analyze_file.analyze_source_code`,
+`analyze_file`, and CLI output. Do not mock parsing logic; mock only filesystem
+boundaries when necessary.

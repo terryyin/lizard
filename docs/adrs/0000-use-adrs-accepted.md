@@ -26,7 +26,7 @@ done. They are the wrong place for long-lived architectural constraints.
 3. **Agents consume, do not approve** — Coding agents must find and follow
    **Accepted** ADRs, cite them when relevant, and surface conflicts. They must
    not treat Propose/Discuss/Approve as their mandate. Skill:
-   `adr-awareness`.
+   `dough-adr-awareness`.
 4. **Recommendations** — Accepted ADRs guide daily work. Deviations need an
    explicit human-owned exception or a superseding ADR. Peers (and agents)
    challenge silent drift.
@@ -40,11 +40,10 @@ done. They are the wrong place for long-lived architectural constraints.
 - Humans keep authority; agents keep continuity.
 - Rejected and Superseded ADRs remain for archaeology; only Accepted ones are
   current recommendations.
-- Planning (GSD / slice-planning) stays for delivery; ADRs stay for durable
-  decisions.
+- Delivery planning stays separate from ADRs, which remain durable decisions.
 
 ## Related
 
 - Playbook: [README.md](./README.md)
-- Agent skill: `.cursor/skills/adr-awareness/SKILL.md`
+- Agent skill: `.agents/skills/dough-adr-awareness/SKILL.md`
 - Background: [advice process](https://www.reinventingorganizationswiki.com/Theory/Advice_Process/); ADR templates inspired by [Michael Nygard / joelparkerhenderson ADR](https://github.com/joelparkerhenderson/architecture-decision-record)

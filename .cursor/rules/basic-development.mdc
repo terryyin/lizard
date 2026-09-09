@@ -15,32 +15,18 @@ nix develop -c <command>
 
 ## Run Test
 
-During a slice, targeted pytest files are enough. At issue-fix completion and **execute-plan wrap-up**, run the full suite:
+During focused work, targeted pytest files are enough. Before completing a
+change, run the full suite:
 
 ```bash
 nix develop -c python -m pytest   # Run all tests
 ```
 
-## Run All Test and Format checking
+## Run all tests and format checking
 
 ```bash
 nix develop -c make
 ```
-
-## Format before commit
-
-Run `./scripts/run.sh make format-changed` before staging. It selects affected
-pep8 components from staged, unstaged, and nonignored untracked paths. During
-slice wrap-up, the coordinator runs it once after refactor and before the PLAN
-update; it does not pre-filter paths or spawn a formatting agent. Repeat only
-after an intervening repair invalidates that preparation. The **format-changed**
-skill remains available for explicit on-demand use. The command reports style
-issues and does not rewrite files; apply only mechanical corrections. The
-pre-commit hook runs `make lint-changed` against affected staged components. It
-is check-only: it does not format files or mutate the Git index. Implementers
-and refactorers do not run `make format-changed` or standalone `make
-lint-changed`; the coordinator owns formatting and the hook owns the
-independent lint check.
 
 ## Automated test practices
 
@@ -48,9 +34,3 @@ independent lint check.
 * Try to test end to end, external observable pre and post state change, as much as possible
 * Don't mock any code unless it's about file system
 * Prefer `analyze_file` / `analyze_source_code` / CLI output as the test boundary
-
-## Planning
-
-- Problem, story, and execution-leaf splits must pass the gates in
-  `problem-decomposition.mdc`; planning artifacts and lifecycle use
-  `planning.mdc`.

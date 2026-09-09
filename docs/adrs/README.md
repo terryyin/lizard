@@ -2,7 +2,7 @@
 
 Human playbook for **proposing, discussing, and approving** architectural
 decisions. Agents **use, cite, and help maintain** Accepted ADRs — they do not
-own approval. See `.cursor/skills/adr-awareness/SKILL.md`.
+own approval. See `.agents/skills/dough-adr-awareness/SKILL.md`.
 
 ## Advice process (authority)
 

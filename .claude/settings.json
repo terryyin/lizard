@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/skills/dough-execute-plan/scripts/ci-host-hook.mjs\" claude",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/skills/dough-execute-plan/scripts/ci-host-hook.mjs\" claude",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
