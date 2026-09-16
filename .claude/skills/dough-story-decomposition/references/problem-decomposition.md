@@ -8,7 +8,7 @@ Do not plan a lower level while a higher-level decision remains unresolved.
 | --- | --- | --- |
 | **Problem or capability** | The beneficiary, problem, desired effect, constraint, or direction is unclear | One evaluable decision, assumption, or outcome |
 | **Story** | The problem is understood but several useful outcomes are possible | Ordered Valuable, Visible, Vertical stories |
-| **Slice** | One story's goal, scope, and key examples are understood | Behavior slices and only immediately enabling Structure slices |
+| **Slice** | One story or bounded retrospective correction is understood | Behavior/Structure slices under [slice decomposition](#decompose-slices) |
 
 The levels are fractal: name the evaluator and observable result, split
 independent outcomes, order by value and learning, and make every stopping point
@@ -100,11 +100,10 @@ retaining an externally evaluable result. Start with a concrete case before a
 general solution; extract abstractions after repetition. Keep a prototype
 bounded to the cheapest evidence needed for its question.
 
-Estimate comparatively using the project's S/M/L definitions, without code
-inspection or implementation design. Record the band, confidence, and
-assumptions. Resolve missing band definitions before writing estimates. Split
-a likely larger-than-L story using the moves above; do not equalize estimates
-by making cuts that fail the 3V gate.
+Estimate comparatively using the project's S/M/L definitions. Record the band,
+confidence, and assumptions. Resolve missing band definitions before writing
+estimates. Split a likely larger-than-L story using the moves above; do not
+equalize estimates by making cuts that fail the 3V gate.
 
 ## Order and reassess
 
@@ -123,39 +122,68 @@ belongs in executable examples and product documentation.
 
 ## Decompose slices
 
-Use slices only after one story is understood and executable planning
-is authorized. Every slice is exactly one of:
+Use slices only after one story or a
+[bounded retrospective correction](../../dough-slice-planning/SKILL.md#require-understood-planning-input)
+is understood and executable planning is authorized. Every slice is exactly one of:
 
 | Type | Required content | Reject when |
 | --- | --- | --- |
 | **Behavior** | Pre-condition, trigger, one externally observable postcondition, and outside-in proof | It contains independent postconditions or proof loops |
-| **Structure** | Internal change, unchanged external behavior, and the immediate next Behavior it enables | It prepares for anything beyond that Behavior |
+| **Structure** | Internal change, unchanged external behavior, and the immediate next Behavior it enables, or the retrospective correction below | It prepares beyond that Behavior or evidenced correction |
 
-Tie every Behavior to included story scope or a key example. Put Structure
-immediately before its Behavior. Use the splitting moves above at this finer
+Tie every Behavior to included story or correction scope and an evaluable example.
+Put preparatory Structure immediately before its Behavior. Use the splitting moves above at this finer
 resolution, but do not split tests from the Behavior they prove or create slices
 around files, layers, components, specialists, or activities.
 
+For an evidenced retrospective correction that changes structure while preserving
+product behavior, a Structure slice may instead own that correction directly.
+Name the concrete architectural or test-suite weakness it removes and prove preserved behavior
+at the affected external boundaries in the same slice. Do not invent a new
+Behavior promise merely to justify the correction. Keep one bounded outcome and
+proof loop; this exception does not authorize speculative preparation.
+
+Evolve and implement the simplest common domain rule supported by the current
+examples and constraints. Apply the shared [examples and constraints
+distinction](../../dough-story-refinement/references/planning.md#examples-and-constraints):
+fixture counts and arrangements alone do not justify production gates. A later
+example should exercise or extend the model, not prescribe another recognizer
+or parallel representation. Deferred special behavior does not justify machinery
+for it now. Do not design a generic framework for hypothetical cases or expand
+delivery and verification promises to every naturally handled case. Retain
+independently justified constraints and their rejection proof.
+
+Assess the sequence cumulatively alongside slice size and proof ownership:
+are the examples exercising one coherent model or accumulating special cases?
+Explain the common rule supported by current evidence and any domain reason for
+separate rules. Delivery grouping alone cannot justify implementation structure.
+Revise unsupported design prescriptions within the authorized scope; use the shared
+[plan-conflict handoff](../../dough-execute-plan/references/execution-decisions.md#resolve-a-disputed-plan-restriction)
+for disputed product or plan constraints before conflicting
+changes. Passing each slice's proof does not answer this design question.
+
 Refine a slice when it has independent postconditions or proof loops, separable
 implementation beats before a green result, hidden preparation, low confidence
-at an execution or integration boundary, or a plausible path beyond the
-project's hard limit. Keep a multi-beat outside-in scenario explicitly
+at an execution or integration boundary, or, when a hard limit is supplied, a
+plausible path beyond it. Keep a multi-beat outside-in scenario explicitly
 unfinished until it is green; never make a CI-breaking state a delivery
 boundary.
 
 ## Size and escalate slices
 
 Use this project's slice target, hard limit, exceptions, and
-repeated-overrun threshold. Include implementation, focused verification, and
-slice-local cleanup in the sizing hypothesis. Resolve missing limits before
-claiming that a plan is ready for direct execution.
+repeated-overrun threshold when they are supplied. Include implementation,
+focused verification, and slice-local cleanup in the sizing hypothesis. Without
+a numeric target or hard limit, judge boundedness through the Behavior/Structure
+gate, one proof loop, and concrete execution or integration concerns; do not
+invent a timing policy or treat its absence as a refinement or readiness block.
 
-At the target, check for independent outcomes or hidden preparation and split
-when found. At the hard limit, stop unless a stated focused-test or external-wait
-exception applies. Preserve the learning and safely park or revert only
-attempt-owned work; preserve developer and unrelated work, and stop for human
-judgment when ownership is unclear. Renaming, retrying, or splitting a slice does
-not erase an overrun.
+At a supplied target, check for independent outcomes or hidden preparation and
+split when found. At a supplied hard limit, stop unless a stated focused-test or
+external-wait exception applies. Preserve the learning and safely park or revert
+only attempt-owned work; preserve developer and unrelated work, and stop for
+human judgment when ownership is unclear. Renaming, retrying, or splitting a
+slice does not erase an overrun.
 
 After a completed slice, update the same plan when evidence changes only its
 remaining slices. When evidence changes the story's goal, examples, scope, or

@@ -2,7 +2,8 @@
 name: dough-story-refinement
 description: >-
   Clarifies selected stories before execution planning by establishing goal,
-  scope, and key examples in each story's seed. Adds UI or architectural
+  scope, and key examples in each story's seed, distinguishing promises from
+  rejection constraints. Adds UI or architectural
   detail only when needed. Use for selected-story refinement, not broad problem
   decomposition, candidate selection, or slice sizing.
 ---
@@ -44,4 +45,5 @@ Read and follow [planning scope and lifecycle](references/planning.md) for the
 conversation, scope decisions, optional UI and architecture detail, seed updates,
 and cleanup after implementation.
 
-Report the story links, material exclusions, and unresolved decisions.
+Report the story links, material constraints and deferred promises, and
+unresolved decisions.

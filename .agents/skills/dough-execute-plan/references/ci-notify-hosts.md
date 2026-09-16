@@ -25,7 +25,7 @@ with observation only if the host hook adds separate `CI_MONITOR_READY`
 context. A receipt alone proves neither hook registration nor notification
 delivery. Rerun the probe after a host/session change.
 
-If readiness is missing, report an unavailable bridge once and continue the plan
+If readiness is missing, report an unavailable bridge once and continue execution
 without promising monitoring and without rewriting host settings. Missing
 readiness is explicitly unavailable coverage, not a reason to merge fragments or
 edit `.cursor/hooks.json` / `.claude/settings.json` from execute-plan. You may
@@ -49,7 +49,7 @@ of that labelled context means observation is not connected. Re-entering setup,
 including after a normal or repair push, reuses that directory and must not run
 the launcher again. The observer discovers each later selected branch push itself, so a
 push changes neither its owner binding nor its process handle. Continue
-delegation and plan execution immediately.
+delegation and execution immediately.
 
 The next coordinator hook invocation after a result is ready adds the event to the owning
 coordinator's context exactly once. Pending polls and successful CI add no

@@ -13,6 +13,8 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import {
   publishMailboxEvent,
   readWorkerIdentity,
+  registerPushedRevision,
+  observeRevisionCoverage,
   recordLostTerminalResult,
   recordTerminalResult,
   recordWorkerIdentity,
@@ -32,6 +34,8 @@ export {
   readWorkerIdentity,
   recordDeliveryProgress,
   recordWorkerIdentity,
+  readRevisionCoverage,
+  registerPushedRevision,
 } from "./ci-mailbox-store.mjs";
 
 export const checkoutRoot = fileURLToPath(
@@ -43,7 +47,6 @@ export const mailboxRoot =
   join("/tmp", `dough-ci-${process.getuid?.() ?? "user"}`);
 export const receiptPrefix = "CI_OBSERVER ";
 const resultPrefix = "CI_OBSERVER_RESULT ";
-
 export function readMailbox(
   directory,
   root = checkoutRoot,
@@ -62,7 +65,6 @@ export function readMailbox(
     throw new Error("CI mailbox belongs to another checkout");
   return request;
 }
-
 export function createMailbox(
   request,
   { root = checkoutRoot, storage = mailboxRoot } = {},
@@ -77,7 +79,6 @@ export function createMailbox(
   mkdirSync(join(directory, "events"), { mode: 0o700 });
   return directory;
 }
-
 export async function runMailboxWorker(
   directory,
   { observe, onRecord, root = checkoutRoot, storage = mailboxRoot } = {},
@@ -103,6 +104,8 @@ export async function runMailboxWorker(
         ...request,
         signal: abort.signal,
         emit: recordEvent,
+        observeCoverage: (runs) =>
+          observeRevisionCoverage(directory, runs, request),
       });
     status = abort.signal.aborted ? "stopped" : "finished";
     if (!abort.signal.aborted && event) recordEvent(event);
@@ -121,7 +124,6 @@ export async function runMailboxWorker(
   }
   recordTerminalResult(directory, request, status);
 }
-
 export async function streamMailboxWorker(request, options = {}) {
   const directory = createMailbox(request, options);
   const stopOnSignal = () => requestMailboxStop(directory, options);
@@ -145,12 +147,10 @@ export async function streamMailboxWorker(request, options = {}) {
   }
   return directory;
 }
-
 export function requestMailboxStop(directory, options = {}) {
   readMailbox(directory, options.root, options.storage);
   writeFileSync(join(directory, "stop"), "", { mode: 0o600 });
 }
-
 async function stopMailbox(directory) {
   requestMailboxStop(directory);
   try {
@@ -161,7 +161,6 @@ async function stopMailbox(directory) {
     return recordLostTerminalResult(directory);
   }
 }
-
 async function startMailbox(request) {
   const validRepository = /^[\w.-]+\/[\w.-]+$/.test(request.repo ?? "");
   const validExecution =
@@ -230,6 +229,13 @@ if (
     process.stdout.write(
       `${receiptPrefix}${JSON.stringify({ directory: probeMailbox() })}\n`,
     );
+  } else if (command === "register-push") {
+    const [directory, sha] = args;
+    readMailbox(directory);
+    const revision = registerPushedRevision(directory, sha);
+    process.stdout.write(
+      `${receiptPrefix}${JSON.stringify({ directory, revision })}\n`,
+    );
   } else if (command === "stop") {
     const directory = args[0];
     const terminal = await stopMailbox(directory);
@@ -238,7 +244,7 @@ if (
     );
   } else {
     throw new Error(
-      "Usage: ci-mailbox.mjs probe | start --execution OWNER/REPO BRANCH [BUDGET_MS] | stream --execution OWNER/REPO BRANCH [BUDGET_MS] | stop DIRECTORY",
+      "Usage: ci-mailbox.mjs probe | start --execution OWNER/REPO BRANCH [BUDGET_MS] | stream --execution OWNER/REPO BRANCH [BUDGET_MS] | register-push DIRECTORY SHA | stop DIRECTORY",
     );
   }
 }

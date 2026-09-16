@@ -1,6 +1,7 @@
 import { ciWorkflowFile } from "./ci-runs.mjs";
 
-export const ciAttemptKey = (runId, attempt) => `${runId}:${attempt}`;
+export const ciAttemptKey = (runId, attempt) =>
+  JSON.stringify([runId, attempt]);
 
 const ciRunFallbackKey = (runId, attempt) =>
   `${ciAttemptKey(runId, attempt)}:run`;
@@ -9,16 +10,13 @@ const ciJobKey = (runId, attempt, job) =>
   `${ciAttemptKey(runId, attempt)}:job:${job.jobId ?? job.name}`;
 
 export function reportedFailureEvidence(event) {
-  const evidence = [];
-  for (const failure of [event, ...(event.relatedFailures ?? [])]) {
-    if (failure.failedJobs?.length) {
-      for (const job of failure.failedJobs)
-        evidence.push(ciJobKey(failure.runId, failure.attempt, job));
-    } else {
-      evidence.push(ciRunFallbackKey(failure.runId, failure.attempt));
-    }
-  }
-  return evidence;
+  return [event, ...(event.relatedFailures ?? [])].flatMap((failure) =>
+    failure.failedJobs?.length
+      ? failure.failedJobs.map((job) =>
+          ciJobKey(failure.runId, failure.attempt, job),
+        )
+      : [ciRunFallbackKey(failure.runId, failure.attempt)],
+  );
 }
 
 export async function inspectRunsForFailure({
@@ -190,6 +188,29 @@ export async function inspectRunsForFailure({
   return { historyError, observationError };
 }
 
+export function createGitHubFailureAcquisition({ repo, gh }) {
+  const priorAttempts = new Map();
+  const reportedFailures = new Set();
+  const completedAttempts = new Set();
+
+  return async (runs, signal) => {
+    const result = await inspectRunsForFailure({
+      repo,
+      runs,
+      signal,
+      gh,
+      priorAttempts,
+      reportedFailures,
+      completedAttempts,
+    });
+    if (result.event) {
+      for (const evidence of reportedFailureEvidence(result.event))
+        reportedFailures.add(evidence);
+    }
+    return result;
+  };
+}
+
 function failureEvent({
   repo,
   run,
@@ -220,7 +241,6 @@ function isFailedJob(job) {
     !["success", "skipped", "neutral", "cancelled"].includes(job.conclusion)
   );
 }
-
 function failedJobEvidence(job) {
   return {
     ...(job.databaseId === undefined ? {} : { jobId: job.databaseId }),

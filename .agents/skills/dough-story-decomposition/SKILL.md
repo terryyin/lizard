@@ -10,8 +10,7 @@ description: >-
 # Story decomposition
 
 Produce one human-reviewed seed containing a clear parent problem and ordered
-candidate stories. Do not inspect implementation, perform technical design, or
-write an executable plan.
+candidate stories. Do not perform technical design or write an executable plan.
 
 ## Choose the workflow
 

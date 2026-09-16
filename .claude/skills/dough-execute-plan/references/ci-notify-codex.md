@@ -4,9 +4,15 @@ Follow [ci-monitor.md](ci-monitor.md) for CI selection and failure recovery.
 
 With `functions.exec`, `yield_control`, `notify`, `tools.exec_command`, and
 `tools.write_stdin`, start one yielded observer cell when execution begins,
-before the first push. On reentry, use the active plan's observer note to reuse
-a running cell and terminal `finished` entries to avoid restarting completed observation. Recover
-that note before considering replacement when volatile handles are lost.
+before the first push. On reentry, use the observer note in the active plan for
+planned execution or in the conversation for quick execution to reuse a running
+cell and terminal `finished` entries to avoid restarting completed observation.
+Recover that note before considering replacement when volatile handles are lost.
+Resolve `/ABSOLUTE/RESOLVED/SKILL` inside
+`/ABSOLUTE/VERIFIED/CHECKOUT_ROOT` by applying the selected-checkout invariant
+and stop rules in [runtime setup](runtime-setup.md) before evaluating the cell.
+Use the verified runtime path and checkout below; do not arm the cell or
+observer when setup stops.
 Substitute verified repository, checkout, and coordinator below:
 
 ```js
@@ -82,8 +88,8 @@ try {
 ```
 
 The initial yielded output exposes the session, directory, and PID. Save them
-with the cell ID, coordinator, and checkout in the active plan before the first
-push. Treat that note as the live handle: writes to `store` in a running cell
+with the cell ID, coordinator, and checkout in the active plan or quick-execution
+conversation before the first push. Treat that note as the live handle: writes to `store` in a running cell
 may remain invisible to other cells until it finishes. Do not use cross-cell
 `load`/`store` mutations to coordinate shutdown or detect a running observer.
 The parser retains chunk tails, consumes initial output before yielding, then notifies
@@ -100,15 +106,15 @@ has been independently supplied and verified for the installed host.
 When the shared [observer lifecycle](ci-monitor.md#own-one-observer) calls
 for shutdown:
 
-- With the receipt directory from the plan note, run
+- With the receipt directory from the observer note, run
   `node /ABSOLUTE/RESOLVED/SKILL/scripts/ci-mailbox.mjs stop DIRECTORY`
   from the verified checkout. Let the existing reader consume the stream's
   terminal result, then reap its cell with one bounded wait. Do not issue a
   second `write_stdin` while that reader owns the PTY: concurrent reads can
   consume each other's terminal output and invalidate the process handle.
   Confirm the stop receipt, terminal result, and process exit before marking
-  the plan note stopped. Cell termination alone proves no subprocess exit.
-- Without handles, recover the plan note. Match coordinator/checkout and validate
+  the observer note stopped. Cell termination alone proves no subprocess exit.
+- Without handles, recover the observer note. Match coordinator/checkout and validate
   the saved directory's `request.json` root, repository, branch, and execution
   mode. Run `node /ABSOLUTE/RESOLVED/SKILL/scripts/ci-mailbox.mjs stop DIRECTORY`
   from that checkout. Read its terminal receipt and `result.json`; confirm the
