@@ -1,7 +1,7 @@
 ---
-description: 
-globs: 
-alwaysApply: true
+name: lizard-language-support
+description: Add or modify a Lizard language reader. Use when adding language support, changing tokenization or state-machine parsing, or working in lizard_languages/ or test/test_languages/.
+paths: lizard_languages/**, test/test_languages/**
 ---
 
 # Adding Language Support to Lizard Code Analyzer

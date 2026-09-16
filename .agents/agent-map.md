@@ -35,8 +35,8 @@ Run repository tooling through Nix. Git commands are the exception.
 
 ## Project rules
 
-- Development and tests: `.cursor/rules/basic-development.mdc`
-- Adding or modifying language support: `.cursor/rules/lizard-rule.mdc`
+- Development and tests: `AGENTS.md`
+- Adding or modifying language support: `.agents/skills/lizard-language-support/SKILL.md`
 
 Open Dough lifecycle skills are installed under `.agents/skills/dough-*` and
 discovered directly by supported agents. This repository does not maintain a

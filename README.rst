@@ -400,9 +400,9 @@ Lizard is also used as a plugin for fastlane to help check code complexity and s
 How To Contribute
 -----------------
 
-Contributions are welcome. Project-specific development rules are in:
-
-- https://github.com/terryyin/lizard/tree/master/.cursor/rules
+Contributions are welcome. Project-specific development rules are in
+``AGENTS.md``. Adding a language reader uses
+``.agents/skills/lizard-language-support/``.
 
 AI lifecycle guidance is installed under ``.agents/skills/`` and
 ``.claude/skills/``.

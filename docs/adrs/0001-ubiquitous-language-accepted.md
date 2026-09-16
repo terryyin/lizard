@@ -62,4 +62,4 @@ terms here; do not supersede this ADR with a new one.
 - Superseded by: (none)
 - Links: playbook [README.md](./README.md); ADR-0000
   [use-adrs-accepted.md](./0000-use-adrs-accepted.md); navigation
-  `.cursor/agent-map.md`
+  `.agents/agent-map.md`
