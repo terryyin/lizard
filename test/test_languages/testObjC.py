@@ -149,3 +149,81 @@ class TestObjCLanguage(unittest.TestCase):
         self.assertEqual(1, len(result.function_list))
         self.assertEqual("application: willFinishLaunchingWithOptions:", result.function_list[0].name)
         self.assertNotEqual("if", result.function_list[0].name)  # Should not show "if" as function name
+
+class Test_objc_interface(unittest.TestCase):
+    """@interface / @protocol are declarations: they contain no implementation."""
+
+    def create_objc_lizard(self, source_code):
+        return analyze_file.analyze_source_code("a.m", source_code).function_list
+
+    def test_class_extension_with_instance_variables(self):
+        result = self.create_objc_lizard(
+            "@interface Foo ()\n"
+            "{\n"
+            "    int a;\n"
+            "}\n"
+            "@end\n")
+        self.assertEqual([], [f.name for f in result])
+
+    def test_category_with_instance_variables(self):
+        result = self.create_objc_lizard(
+            "@interface Foo (Private)\n"
+            "{\n"
+            "    int a;\n"
+            "}\n"
+            "@end\n")
+        self.assertEqual([], [f.name for f in result])
+
+    def test_issue_305_only_the_methods_are_counted(self):
+        result = self.create_objc_lizard(
+            '#import "OCCFile.h"\n'
+            "\n"
+            "@interface OCCFile ()\n"
+            "{\n"
+            "    CppFile* mCppFile;\n"
+            "}\n"
+            "\n"
+            "@end\n"
+            "\n"
+            "@implementation OCCFile\n"
+            "\n"
+            "- (id)init\n"
+            "{\n"
+            "    if (self == [super init])\n"
+            "    {\n"
+            '        printf("hi");\n'
+            "    }\n"
+            "    return self;\n"
+            "}\n"
+            "\n"
+            "-(void)dealloc\n"
+            "{\n"
+            "    delete mCppFile;\n"
+            "}\n"
+            "\n"
+            "@end\n")
+        self.assertEqual(["init", "dealloc"], [f.name for f in result])
+
+    def test_protocol_declaration_is_not_a_function(self):
+        result = self.create_objc_lizard(
+            "@protocol Bar\n"
+            "- (void)doIt;\n"
+            "@end\n"
+            "@implementation Foo\n"
+            "- (void)doIt { }\n"
+            "@end\n")
+        self.assertEqual(["doIt"], [f.name for f in result])
+
+    def test_protocol_forward_declaration_does_not_hide_implementation(self):
+        result = self.create_objc_lizard(
+            "@protocol Foo;\n"
+            "@implementation Bar\n"
+            "- (void)doIt { }\n"
+            "@end\n")
+        self.assertEqual(["doIt"], [f.name for f in result])
+
+    def test_protocol_expression_does_not_hide_following_function(self):
+        result = self.create_objc_lizard(
+            "@protocol(NSObject)\n"
+            "void f() { }\n")
+        self.assertEqual(["f"], [f.name for f in result])
