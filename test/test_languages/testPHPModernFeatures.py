@@ -216,3 +216,20 @@ class NotebookApp {
 
         process_order = next(f for f in functions if f.name == 'Product::processOrder')
         self.assertEqual(7, process_order.cyclomatic_complexity)
+
+    def test_each_trait_method_ends_at_its_own_brace(self):
+        # https://github.com/terryyin/lizard/issues/498
+        php_code = (
+            "<?php\n"
+            "trait T {\n"
+            "    public function a() {\n"
+            "        return 1;\n"
+            "    }\n"
+            "    public function b() {\n"
+            "        return 2;\n"
+            "    }\n"
+            "}\n"
+        )
+        functions = get_php_function_list(php_code)
+        self.assertEqual([('T::a', 3, 5), ('T::b', 6, 8)],
+                         [(f.name, f.start_line, f.end_line) for f in functions])

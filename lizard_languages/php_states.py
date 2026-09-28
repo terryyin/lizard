@@ -20,6 +20,7 @@ class PHPLanguageStates(CodeStateMachine):
         self.in_trait = False
         self.bracket_level = 0
         self.brace_level = 0
+        self.function_brace_level = 0
         self.started_function = False
         self.last_token = ''
         self.last_tokens = ''
@@ -180,9 +181,7 @@ class PHPLanguageStates(CodeStateMachine):
             # Skip return type declaration
             self._state = self._function_body_or_return_type
         elif token == '{':
-            # Function body starts
-            self.brace_level += 1
-            self._state = self._function_body
+            self._enter_function_body()
         elif token == ';':
             # Handle forward declarations in interface
             if self.started_function:
@@ -192,16 +191,19 @@ class PHPLanguageStates(CodeStateMachine):
 
     def _function_body_or_return_type(self, token):
         if token == '{':
-            # Found the function body opening after return type
-            self.brace_level += 1
-            self._state = self._function_body
+            self._enter_function_body()
+
+    def _enter_function_body(self):
+        self.function_brace_level = self.brace_level
+        self.brace_level += 1
+        self._state = self._function_body
 
     def _function_body(self, token):
         if token == '{':
             self.brace_level += 1
         elif token == '}':
             self.brace_level -= 1
-            if self.brace_level == self.in_class:  # Using in_class as boolean (0/1)
+            if self.brace_level == self.function_brace_level:
                 # End of function
                 if self.started_function:
                     self.context.end_of_function()
