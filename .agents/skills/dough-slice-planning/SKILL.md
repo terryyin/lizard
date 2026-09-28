@@ -1,57 +1,65 @@
 ---
 name: dough-slice-planning
 description: >-
-  Plans one understood, bounded story or retrospective correction as an
-  executable sequence of Behavior/Structure slices with outside-in proof and
-  safe stopping points. Use when a selected story is ready for implementation
-  planning or an execution retrospective has one bounded correction to plan.
-  Stays within the triggering instruction's execution authority: finish after
-  writing and reporting the plan unless that instruction explicitly also
-  requests execution.
-  Reports remaining slice-specific concerns or a limited no-concerns finding;
-  does not prescribe the next workflow action or certify execution readiness.
-  Concern evidence does not authorize execution.
+  Plans one understood, bounded story, retrospective correction, or remaining
+  work from an understood instruction as an executable sequence of
+  Behavior/Structure slices with outside-in proof and safe stopping points. Use
+  when a selected story is ready for implementation planning, an execution
+  retrospective has one bounded correction to plan, or authorized remaining
+  work from a sufficient instruction needs an ordinary plan. Stays within the
+  triggering instruction's execution authority: finish after writing and
+  reporting the plan unless that instruction explicitly also requests execution.
+  Invokes slice-plan refinement when remaining plan concerns can be resolved
+  within the understood outcome, then reports remaining concerns or a limited
+  no-concerns finding and records readiness through the shared preparation
+  procedure without granting Take or execution.
 ---
 
 # Slice planning
 
-Write one sufficient executable plan for one understood story or a bounded
-retrospective correction as described below. Stay within the
-triggering human or parent-agent instruction's explicit execution authority.
-Do not implement product code or invoke execution unless that instruction
-explicitly also requests execution after planning.
+Write one sufficient executable plan for one understood story, a bounded
+retrospective correction, or remaining work from an understood instruction as
+described below. Stay within the triggering human or parent-agent
+instruction's explicit execution authority. Do not implement product code or
+invoke execution unless that instruction explicitly also requests execution
+after planning.
 
 ## Require understood planning input
 
 Require one user or stakeholder outcome, its value, evaluable key examples, and
-boundaries from later stories. Use
-[dough-story-refinement](../dough-story-refinement/SKILL.md) when the selected
+boundaries from later work. Name the missing field and stop; do not invent a
+story, seed, or completed plan slices. Use
+[dough-story-refinement](../dough-story-refinement/SKILL.md) when a selected
 story's goal, scope, or examples are unresolved. Use
 [dough-story-decomposition](../dough-story-decomposition/SKILL.md) when the
 parent problem, candidate selection, or story ordering is unresolved. Never
-turn a decomposition seed directly into an execution plan.
+turn a decomposition seed directly into an execution plan. An understood
+instruction may be the source without a story. When its mission was
+[admitted](../dough-execute-plan/references/admit-accepted-work.md), plan that
+admitted story instead: the plan attaches to it, never to another story.
 
 For a correction handed off by
 [dough-execution-retrospective](../dough-execution-retrospective/SKILL.md#reconcile-findings-with-current-truth),
 use its evidenced current findings, one bounded correction outcome, affected
 concepts, preserved product promises and constraints, and evaluable proof as the
 planning input. Cite the original story and reviewed commits for provenance;
-do not invent a new feature story or require the correction to fit the old
+do not invent a feature promise or require the correction to fit the old
 story's implementation footprint. The retrospective owns current-truth checks,
 constraint disputes, and whether to amend an unfinished plan or create a
 follow-up. Missing correction scope or proof stops this planning path.
 
-Write the resulting correction plan with the authoritative correction input
-defined by
+For a new follow-up, write its minimal story and then its plan as
 [planning scope and lifecycle](../dough-story-refinement/references/planning.md#choose-the-planning-level)
-so later refinement and execution do not need a seed.
+defines; record preparation on that story. An amended plan or a plan-homed
+correction keeps its existing home and identity.
 
 ## Resolve execution context
 
 Before writing, identify from the user's instructions and this project's guidance:
 
-- the selected story and its seed, when one exists, or the retrospective
-  correction input and its source execution;
+- the selected story and its seed, when one exists, the retrospective
+  correction input, its source execution, and the seed hosting its story, or
+  the understood remaining-work instruction and any retained execution identity;
 - the executable-plan root, filename layout, format additions, status
   vocabulary, and lifecycle;
 - any supplied slice target and hard limit, including their permitted
@@ -62,8 +70,8 @@ Before writing, identify from the user's instructions and this project's guidanc
 - any phase or quick-task conventions that own the plan.
 
 Resolve these from this project, not this skill's location. First reuse a plan
-that is active under this project's status vocabulary and identifies the
-selected story or correction. Honor the retrospective's unfinished-plan
+that is active under this project's status vocabulary and identifies that
+source. Honor the retrospective's unfinished-plan
 amendment destination. Otherwise, inspect the established plan entries in the known
 root: use the number after the highest allocated entry, preserving its numeric
 padding and path layout rather than filling an old gap. Immediately before
@@ -79,8 +87,13 @@ or merely inferred location.
 
 ## Write the plan
 
-Record the source, goal, included scope, material exclusions, assumptions, and
-key examples without enlarging the story or bounded correction. Read and apply:
+Before writing to the plan, establish or reuse the required workspace under
+[preparation workspace](../dough-story-refinement/references/preparation-workspace.md),
+then, for a queued story,
+[announce the preparation assignment](../dough-story-refinement/references/preparation-assignment.md#announce-the-preparation-assignment);
+inspecting the story, code, or tests to prepare the plan needs neither on its
+own. Record the source, goal, included scope, material exclusions,
+assumptions, and key examples without enlarging that source. Read and apply:
 
 - [architectural thinking](references/architectural-thinking.md) to carry
   PFE findings, relevant accepted decisions, and only warranted short-term
@@ -91,40 +104,79 @@ key examples without enlarging the story or bounded correction. Read and apply:
   including executable proof ownership.
 
 Inspect only the code and tests needed to find the stable outside-in proof entry
-point, behavior to extend or preserve, genuine dependencies, and any Structure
-justified under the linked slice decomposition rules.
+point, behavior to extend or preserve, genuine dependencies, decisive premises,
+and any Structure justified under the linked slice decomposition rules.
 
-For a concrete uncertain infrastructure or storage assumption, reuse matching
-evidence or require one isolated representative proof against the relevant
-engine and version. Record the assumption, literal command, critical
-postcondition, and result in the plan. Failed proof changes the plan before
-broad implementation. Keep experiments off shared and production systems.
+A decisive premise is a factual claim about this project's current state that a
+slice's approach, sizing, or proof depends on: existing code and tests, host or
+environment state, fixture content, workload data, or a named proof or
+measurement command. Premises inherited from the story, such as "works as
+today", count the same as those you write. Before recording `ready`, establish
+each with the smallest safe observation: reading, searching, listing, a
+read-only host query, or one unpaid, side-effect-free local run of the named
+command. Observe the thing the claim is about, not only where you expect it: a
+claim that something has no test, or that a named proof exercises a behavior,
+is observed by searching for the existing tests and callers of what changes,
+wherever they live. For uncertain infrastructure or storage behavior, the
+observation is one isolated representative proof against the relevant engine
+and version, unless matching evidence exists. Record each premise, the literal
+observation, and its result in the plan. A false premise changes the plan
+before broad implementation. Do not inspect claims the approach does not depend
+on, and keep experiments off shared and production systems.
+
+When only a paid, credentialed, owner-held, or state-changing observation can
+settle a premise, observe its cheap parts now and make the remainder an early
+probe slice whose failure stops dependent slices and changes the plan. Such a
+plan can be `ready`; the probe's observation keeps its existing authority
+requirements.
 
 During construction, apply those decomposition, cumulative design, and sizing checks: correct
 obvious defects such as an independent second outcome before reporting, and
 preserve proof ownership and any supplied sizing constraints on every resulting
-slice. [dough-slice-plan-refinement](../dough-slice-plan-refinement/SKILL.md)
-owns resolving remaining concerns when the coordinator or invoking workflow
-separately requests it; do not invoke it as part of writing this plan.
+slice.
 
-## Report concern evidence
+After the plan file exists for a work item with a recorded identity, apply
+[record preparation facts](../dough-product-backlog/references/record-preparation.md)
+for the planned approach (omit assessment on that write).
 
-After constructing the plan, report remaining concerns rather than a workflow
-verdict:
+## Resolve fixable plan concerns
+
+When remaining concerns about slice boundaries, cumulative design, proof
+ownership, or sizing can be resolved within the understood outcome and scope,
+invoke [dough-slice-plan-refinement](../dough-slice-plan-refinement/SKILL.md)
+on the written plan before the final report and readiness assessment. This
+refinement is part of slice planning and needs no additional instruction;
+honor an explicit instruction to leave refinement to a later step. A plan
+without such concerns needs no refinement pass.
+
+Keep unresolved source questions and human-owned decisions outside this
+handoff. If refinement returns a missing input, disputed constraint, or a
+remaining concern it cannot resolve within scope, report it under the next
+section; do not repeat refinement without new evidence or widen the outcome.
+Refinement keeps the same plan, preparation workspace, and assignment. It
+grants neither execution nor publication authority.
+
+## Report concern evidence and assess readiness
+
+After constructing the plan, report remaining concerns, then record readiness
+through the shared procedure:
 
 - Name each remaining slice-specific concern with the affected slice, the
   reason (for example an integration assumption or repeated special-case
   design), and its consequence (for example uncertain sizing or duplicated
-  domain rules). Include concerns spanning successive slices. Do not prescribe refinement or certify execution
-  readiness.
-- When no concerns were identified in this assessment, say so narrowly. Do not
-  claim that no further refinement is required or treat that finding as
-  permission to execute.
+  domain rules). Include concerns spanning successive slices.
+- When no concerns were identified in this review, say so narrowly.
+- Then apply
+  [assess readiness at preparation completion](../dough-product-backlog/references/record-preparation.md#assess-readiness-at-preparation-completion):
+  remaining concerns become `not-ready` reasons; when none remain and the plan
+  has bounded slices with mapped proof and observed or probe-bounded decisive
+  premises, record `ready`. Do not prescribe the next workflow action, Take
+  the item, or start execution from this finding.
 
 The recipient chooses the next action under the triggering instruction's
-authority and project policy. Concern evidence is an assessment of the plan, not
-authorization to execute. It does not grant, expand, or replace the triggering
-instruction's execution authority.
+authority and project policy. The recorded assessment is agent judgment bound to
+content digests, not authorization to execute. It does not grant, expand, or
+replace the triggering instruction's execution authority.
 
 ## Stay within the triggering instruction
 
@@ -132,17 +184,22 @@ After writing and reporting the plan, the next action remains within the
 triggering human or parent-agent instruction:
 
 - Planning-only request: report the plan path, ordered slices,
-  considered-but-excluded additions, and remaining concerns or the limited
-  no-concerns finding, then stop. Do not implement and do not invoke execution.
-- Parent-agent delegation that asks only for slice planning: return the plan
-  and remaining concerns or the limited no-concerns finding to the parent. The
-  parent's broader implementation task is not an explicit execution request to
-  this planner.
+  considered-but-excluded additions, remaining concerns or the limited
+  no-concerns finding, and the recorded readiness assessment, then stop. Do
+  not implement and do not invoke execution.
+- Parent-agent delegation that asks only for slice planning: return the plan,
+  remaining concerns or the limited no-concerns finding, and the recorded
+  readiness assessment to the parent. The parent's broader implementation task
+  is not an explicit execution request to this planner.
 - Explicit plan-and-execute request: after reporting, the authorized workflow
   may continue into execution without asking again for the same authorization,
   subject to this project's gates and any unresolved concerns that still block
   progress. Prefer the project's established execution path (for example
   [dough-execute-plan](../dough-execute-plan/SKILL.md)) when that path applies.
+
+Apply [preparation workspace](../dough-story-refinement/references/preparation-workspace.md)'s
+keep or discard decision, then close or retain the workspace, when this
+session ends.
 
 After the matching case above, end with:
 

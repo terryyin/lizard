@@ -1,12 +1,9 @@
-import { pathToFileURL } from "node:url";
+import { isDirectCliEntry } from "./ci-direct-entry.mjs";
 import { executionBudgetMs, watchCiExecution } from "./watch-ci-execution.mjs";
 
 export { watchCiExecution };
 
-if (
-  process.argv[1] &&
-  import.meta.url === pathToFileURL(process.argv[1]).href
-) {
+if (isDirectCliEntry(import.meta.url, process.argv[1])) {
   const [mode, repo, branch, budget] = process.argv.slice(2);
   const maxDurationMs = budget ? Number(budget) : executionBudgetMs;
   if (!(

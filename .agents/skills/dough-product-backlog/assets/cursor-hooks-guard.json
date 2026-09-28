@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "preToolUse": [
+      {
+        "command": "node .agents/skills/dough-product-backlog/scripts/product-backlog-guard-hook.mjs . cursor",
+        "timeout": 5,
+        "matcher": "Write|StrReplace|Delete"
+      }
+    ]
+  }
+}

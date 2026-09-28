@@ -68,6 +68,17 @@ scope: <whole-set size under this project's conventions>
 
 Only when the user asks to queue or reprioritize stories, update the canonical
 product backlog as a global ordered list of story titles linked to their
-sections in seeds, with seed IDs. Keep story details in the seeds. Use the project's
-stable-anchor convention for new queued stories; local numbering is not global
-priority. Leave unqueued candidates in their seeds.
+sections in seeds, each entry recording the story's identity under
+[work item identity](../../dough-product-backlog/references/identity.md). Keep
+story details in the seeds. Use the project's stable-anchor convention for new
+queued stories; local numbering is not global priority. Leave unqueued
+candidates in their seeds.
+
+A queued story's identity is allocated once, from its seed ID and its anchor,
+and is then recorded rather than re-read from wherever its section currently
+sits. Renaming the seed file, moving it, or changing the story's anchor updates
+the link and the incoming references; it does not re-identify the story, and the
+recorded identity stays as it was. Preserve existing recorded identities and
+anchors when you edit a seed. When a write leaves a candidate with that
+recorded identity in its canonical section, apply
+[record preparation facts](../../dough-product-backlog/references/record-preparation.md).

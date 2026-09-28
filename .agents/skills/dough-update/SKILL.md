@@ -69,10 +69,13 @@ Ordinary Open Dough release updates remain available from the recorded source.
       <commit>`, and check out that commit detached. Confirm
       `git rev-parse HEAD` equals the peeled commit.
    c. Inspect that snapshot's `src/install/open-dough-release.sh`,
-      `src/install/open-dough-release-apply.sh`, `install.sh`, the helpers they
-      source (including `src/install/open-dough-register-hooks.sh`,
-      `src/install/open-dough-register-hooks.mjs`, and
-      `src/install/open-dough-register-hooks-merge.mjs` when present), and
+      `src/install/open-dough-release-apply.sh`, `install.sh`,
+      `src/install/open-dough-install-payload.sh`, the helpers they
+      source or run (including `src/install/open-dough-payload-bytes.mjs`,
+      `src/install/open-dough-register-hooks.sh`,
+      `src/install/open-dough-register-hooks.mjs`,
+      `src/install/open-dough-register-hooks-merge.mjs`, and
+      `src/install/open-dough-register-hooks-fragments.mjs` when present), and
       every release payload source they declare under `src/skills/`.
    d. Run the inspected helper, quoting paths. Codex may omit `--platform`.
       For an ordinary update of a recorded installation, run
@@ -87,7 +90,7 @@ Ordinary Open Dough release updates remain available from the recorded source.
       inspected files write solely to the release-declared payload paths
       under both native skill roots, each updater's `SOURCE` and `VERSION`
       records, and the managed host-hook settings they register
-      (`.cursor/hooks.json` and `.claude/settings.json`) in the captured
+      (`.codex/hooks.json`, `.cursor/hooks.json`, and `.claude/settings.json`) in the captured
       target project, preserving distributable source, unrelated project
       files, unrelated settings entries, and home guidance. Registration is an
       install/update concern; after apply, observation readiness and observer

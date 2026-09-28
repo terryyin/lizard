@@ -93,7 +93,7 @@ heading:
 ```
 
 `N` is the high-water from
-[Record supported process findings](../SKILL.md#record-supported-process-findings):
+[Record supported process findings](process-finding-recording.md#record-supported-process-findings):
 the highest local number ever allocated in this log, including removed
 issues. Never lower it.
 

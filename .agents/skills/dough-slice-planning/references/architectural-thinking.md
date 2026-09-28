@@ -60,10 +60,11 @@ If the project has no North Star location, the planner may choose one shared
 location in the plan. Do this only when the new topic is warranted; do not
 require a configuration setting or create the file for an ordinary plan.
 
-A North Star topic cannot override an Accepted ADR or become the sole home of
-an indispensable architectural assumption. Humans retain decisions about
-domain meaning and ADR acceptance, exceptions, and replacement. When
-indispensable domain or ADR context is missing or conflicts with the proposed
+A North Star topic cannot override an Accepted ADR, and it holds rules only
+temporarily: when it retires, a rule the product still needs moves to its
+[maintained home](#preserve-lasting-rules-before-deletion). Humans retain
+decisions about domain meaning and ADR acceptance, exceptions, and replacement.
+When indispensable domain or ADR context is missing or conflicts with the proposed
 direction, stop the dependent planning path with the evidence and decision
 needed. Continue independent planning work where safe, but do not present the
 affected path as executable.
@@ -89,10 +90,25 @@ When retiring a topic, delete its heading and text and remove or repair affected
 references consistently. Do not preserve an archive, registry, monitor, or
 completion record for the removed direction.
 
-The North Star cannot be the sole durable home of indispensable architectural
-context. Before deleting a topic that carries such context, require that context
-in this project's applicable durable, human-owned decision home, such as its ADR
-process, and resolve ownership through that existing decision process. Until
-that is resolved, keep the topic and its references, report the blocking gap,
-and do not claim closure. Do not turn retirement into a new review or approval
-ceremony.
+### Preserve lasting rules before deletion
+
+Apply this whenever wrap-up is about to delete a temporary record, including a
+North Star topic, spent plan, execution record, review, completed story section,
+or spent seed. Before deleting the last copy of a still-needed rule or current
+product fact, put it in its maintained home in this project:
+
+- A product-wide architectural decision belongs in this project's ADR process.
+  If it is not already Accepted there, keep the temporary record and its
+  references, report the context and the specific decision needed, and do not
+  claim closure. Humans own ADR acceptance, amendment, and supersession.
+- Feature-local behavior or design belongs in that feature's maintained
+  documentation, in its existing format. Write it there; it needs no ADR. Tests
+  that exercise related behavior do not replace that documentation.
+
+When the rule already has its maintained home, or the record holds only spent
+sequencing, delete the record without another copy or approval.
+
+If the maintained home is unclear, or the rule conflicts with an Accepted
+decision, keep the affected record and its references, name the missing context
+or the conflicting decision, and do not claim closure. Other eligible cleanup
+may proceed. Do not turn retirement into a new review or approval ceremony.

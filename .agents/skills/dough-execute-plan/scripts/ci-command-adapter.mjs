@@ -2,6 +2,8 @@ import { execFile } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { ciAttemptKey } from "./ci-failures.mjs";
+import { isFullGitRevision } from "./ci-revisions.mjs";
+import { createStartupRunFilter } from "./ci-runs.mjs";
 
 const configurationPath = ".planning/open-dough.json";
 const defaultAdapterTimeoutMs = 20_000;
@@ -31,6 +33,7 @@ export function createCommandRunAcquisition({
   root,
   timeoutMs = defaultAdapterTimeoutMs,
 }) {
+  const currentRuns = createStartupRunFilter();
   return async (signal) => {
     const response = await runAdapter(
       command,
@@ -39,8 +42,8 @@ export function createCommandRunAcquisition({
     );
     if (!response || !Array.isArray(response.attempts))
       throw new Error("CI adapter discovery must return an attempts array");
-    return response.attempts.map((attempt) =>
-      normalizeAttempt(attempt, branch),
+    return currentRuns(
+      response.attempts.map((attempt) => normalizeAttempt(attempt, branch)),
     );
   };
 }
@@ -129,7 +132,7 @@ function normalizeAttempt(attempt, branch) {
     !attempt ||
     !["string", "number"].includes(typeof attempt.runId) ||
     !["string", "number"].includes(typeof attempt.attemptId) ||
-    typeof attempt.sha !== "string" ||
+    !isFullGitRevision(attempt.sha) ||
     !["pending", "success", "failure", "incomplete"].includes(attempt.outcome)
   )
     throw new Error("CI adapter returned an invalid attempt");

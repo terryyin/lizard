@@ -1,32 +1,44 @@
 import { spawn } from "node:child_process";
 import { once } from "node:events";
 import {
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  watch,
-  writeFileSync,
-} from "node:fs";
-import { basename, join, resolve } from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+  checkoutRoot,
+  createMailbox,
+  mailboxRoot,
+  readMailbox,
+  receiptPrefix,
+} from "./ci-mailbox-location.mjs";
+import { isDirectCliEntry } from "./ci-direct-entry.mjs";
 import {
   publishMailboxEvent,
-  readWorkerIdentity,
-  registerPushedRevision,
-  observeRevisionCoverage,
-  recordLostTerminalResult,
   recordTerminalResult,
   recordWorkerIdentity,
-  terminalResultDeadlineCode,
   waitForTerminalResult,
 } from "./ci-mailbox-store.mjs";
 import {
+  listRegisteredRevisions,
+  observeRevisionCoverage,
+  registerPushedRevision,
+} from "./ci-mailbox-revision-coverage.mjs";
+import { watchMailboxChanges } from "./ci-mailbox-change-watch.mjs";
+import {
   mailboxWorkerPath,
-  terminateMailboxWorker,
+  withStreamWorkerIdentity,
 } from "./ci-mailbox-worker-process.mjs";
 import { executionBudgetMs, watchCiExecution } from "./watch-ci-execution.mjs";
+import { awaitRevision } from "./ci-mailbox-await.mjs";
+import {
+  completeRevision,
+  requestMailboxStop,
+  stopMailbox,
+} from "./ci-mailbox-complete.mjs";
 
+export {
+  checkoutRoot,
+  createMailbox,
+  mailboxRoot,
+  readMailbox,
+  receiptPrefix,
+} from "./ci-mailbox-location.mjs";
 export {
   publishMailboxEvent,
   readDeliveryProgress,
@@ -34,64 +46,26 @@ export {
   readWorkerIdentity,
   recordDeliveryProgress,
   recordWorkerIdentity,
+  workerLossReason,
+} from "./ci-mailbox-store.mjs";
+export {
   readRevisionCoverage,
   registerPushedRevision,
-} from "./ci-mailbox-store.mjs";
+} from "./ci-mailbox-revision-coverage.mjs";
+export { mailboxWorkerLoss } from "./ci-mailbox-worker-process.mjs";
+export {
+  completeRevision,
+  requestMailboxStop,
+} from "./ci-mailbox-complete.mjs";
 
-export const checkoutRoot = fileURLToPath(
-  new URL("../../../../", import.meta.url),
-);
-// Native hooks and Nix launchers share this directory; it must not follow TMPDIR.
-export const mailboxRoot =
-  process.env.DOUGH_CI_MAILBOX_ROOT ??
-  join("/tmp", `dough-ci-${process.getuid?.() ?? "user"}`);
-export const receiptPrefix = "CI_OBSERVER ";
 const resultPrefix = "CI_OBSERVER_RESULT ";
-export function readMailbox(
-  directory,
-  root = checkoutRoot,
-  storage = mailboxRoot,
-) {
-  if (
-    resolve(directory, "..") !== resolve(storage) ||
-    !/^watch-/.test(basename(directory))
-  ) {
-    throw new Error("CI mailbox is outside the observer directory");
-  }
-  const request = JSON.parse(
-    readFileSync(join(directory, "request.json"), "utf8"),
-  );
-  if (resolve(request.root) !== resolve(root))
-    throw new Error("CI mailbox belongs to another checkout");
-  return request;
-}
-export function createMailbox(
-  request,
-  { root = checkoutRoot, storage = mailboxRoot } = {},
-) {
-  mkdirSync(storage, { recursive: true, mode: 0o700 });
-  const directory = mkdtempSync(join(storage, "watch-"));
-  writeFileSync(
-    join(directory, "request.json"),
-    JSON.stringify({ ...request, root }),
-    { mode: 0o600 },
-  );
-  mkdirSync(join(directory, "events"), { mode: 0o700 });
-  return directory;
-}
 export async function runMailboxWorker(
   directory,
   { observe, onRecord, root = checkoutRoot, storage = mailboxRoot } = {},
 ) {
   const request = readMailbox(directory, root, storage);
-  const abort = new AbortController();
-  const stop = () => {
-    if (existsSync(join(directory, "stop"))) abort.abort();
-  };
-  const subscription = watch(directory, stop);
-  const stopFallback = setInterval(stop, 100);
-  stopFallback.unref();
-  stop();
+  const changes = watchMailboxChanges(directory);
+  const stopped = changes.stopSignal;
   const recordEvent = (event) => {
     const sequence = publishMailboxEvent(directory, event);
     onRecord?.({ sequence, event });
@@ -99,19 +73,23 @@ export async function runMailboxWorker(
   let status;
   try {
     let event;
-    if (!abort.signal.aborted)
+    if (!stopped.aborted)
       event = await (observe ?? watchCiExecution)({
         ...request,
-        signal: abort.signal,
+        signal: stopped,
         emit: recordEvent,
-        observeCoverage: (runs) =>
-          observeRevisionCoverage(directory, runs, request),
+        observeCoverage: (runs, observedAt, discoverAncestorCandidates) =>
+          observeRevisionCoverage(directory, runs, request, observedAt, {
+            discoverAncestorCandidates,
+          }),
+        registeredRevisions: async () => listRegisteredRevisions(directory),
+        armRegistrationWake: changes.armRegistrationWake,
       });
-    status = abort.signal.aborted ? "stopped" : "finished";
-    if (!abort.signal.aborted && event) recordEvent(event);
+    status = stopped.aborted ? "stopped" : "finished";
+    if (!stopped.aborted && event) recordEvent(event);
   } catch (error) {
-    status = abort.signal.aborted ? "stopped" : "finished";
-    if (!abort.signal.aborted)
+    status = stopped.aborted ? "stopped" : "finished";
+    if (!stopped.aborted)
       recordEvent({
         type: "CI_MONITOR_UNAVAILABLE",
         repo: request.repo,
@@ -119,49 +97,36 @@ export async function runMailboxWorker(
         reason: String(error).slice(0, 600),
       });
   } finally {
-    subscription.close();
-    clearInterval(stopFallback);
+    changes.close();
   }
   recordTerminalResult(directory, request, status);
 }
 export async function streamMailboxWorker(request, options = {}) {
   const directory = createMailbox(request, options);
-  const stopOnSignal = () => requestMailboxStop(directory, options);
-  if (options.stopOnSignal) {
-    process.once("SIGINT", stopOnSignal);
-    process.once("SIGTERM", stopOnSignal);
-  }
-  options.write?.(
-    `${receiptPrefix}${JSON.stringify({ directory, pid: process.pid })}\n`,
-  );
-  try {
-    await runMailboxWorker(directory, {
-      ...options,
-      onRecord: (record) => options.write?.(`${JSON.stringify(record)}\n`),
-    });
-  } finally {
-    if (options.stopOnSignal) {
-      process.removeListener("SIGINT", stopOnSignal);
-      process.removeListener("SIGTERM", stopOnSignal);
+  return withStreamWorkerIdentity(directory, async () => {
+    const stopOnSignal = () => requestMailboxStop(directory, options);
+    try {
+      if (options.stopOnSignal) {
+        process.once("SIGINT", stopOnSignal);
+        process.once("SIGTERM", stopOnSignal);
+      }
+      options.write?.(
+        `${receiptPrefix}${JSON.stringify({ directory, pid: process.pid })}\n`,
+      );
+      await runMailboxWorker(directory, {
+        ...options,
+        onRecord: (record) => options.write?.(`${JSON.stringify(record)}\n`),
+      });
+    } finally {
+      if (options.stopOnSignal) {
+        process.removeListener("SIGINT", stopOnSignal);
+        process.removeListener("SIGTERM", stopOnSignal);
+      }
     }
-  }
-  return directory;
+    return directory;
+  });
 }
-export function requestMailboxStop(directory, options = {}) {
-  readMailbox(directory, options.root, options.storage);
-  writeFileSync(join(directory, "stop"), "", { mode: 0o600 });
-}
-async function stopMailbox(directory) {
-  requestMailboxStop(directory);
-  try {
-    return await waitForTerminalResult(directory);
-  } catch (error) {
-    if (error.code !== terminalResultDeadlineCode) throw error;
-    await terminateMailboxWorker(readWorkerIdentity(directory), directory);
-    return recordLostTerminalResult(directory);
-  }
-}
-async function startMailbox(request) {
+export async function startExecutionMailbox(request, options = {}) {
   const validRepository = /^[\w.-]+\/[\w.-]+$/.test(request.repo ?? "");
   const validExecution =
     request.mode === "execution" &&
@@ -172,14 +137,15 @@ async function startMailbox(request) {
     request.maxDurationMs > 0;
   if (!validExecution)
     throw new Error("Expected --execution OWNER/REPO BRANCH [BUDGET_MS]");
-  const directory = createMailbox(request);
+  const directory = createMailbox(request, options);
   const child = spawn(
     process.execPath,
     [mailboxWorkerPath, "worker", directory],
     {
-      cwd: checkoutRoot,
+      cwd: options.root ?? checkoutRoot,
       detached: true,
       stdio: "ignore",
+      env: options.env,
     },
   );
   await once(child, "spawn");
@@ -195,10 +161,23 @@ export function probeMailbox(options = {}) {
   return directory;
 }
 
-if (
-  process.argv[1] &&
-  import.meta.url === pathToFileURL(process.argv[1]).href
-) {
+async function writeRevisionReceipt(run, directory, sha) {
+  const cancellation = new AbortController();
+  const cancel = () => cancellation.abort();
+  process.once("SIGINT", cancel);
+  process.once("SIGTERM", cancel);
+  try {
+    const result = await run(directory, sha, {
+      cancellation: cancellation.signal,
+    });
+    process.stdout.write(`${receiptPrefix}${JSON.stringify(result)}\n`);
+  } finally {
+    process.removeListener("SIGINT", cancel);
+    process.removeListener("SIGTERM", cancel);
+  }
+}
+
+if (isDirectCliEntry(import.meta.url, process.argv[1])) {
   const [command, ...args] = process.argv.slice(2);
   if (command === "worker") {
     await runMailboxWorker(args[0]);
@@ -220,7 +199,7 @@ if (
         `${resultPrefix}${JSON.stringify({ directory, terminal })}\n`,
       );
     } else {
-      const directory = await startMailbox(request);
+      const directory = await startExecutionMailbox(request);
       process.stdout.write(
         `${receiptPrefix}${JSON.stringify({ directory })}\n`,
       );
@@ -236,6 +215,12 @@ if (
     process.stdout.write(
       `${receiptPrefix}${JSON.stringify({ directory, revision })}\n`,
     );
+  } else if (command === "await-revision") {
+    const [directory, sha] = args;
+    await writeRevisionReceipt(awaitRevision, directory, sha);
+  } else if (command === "complete-revision") {
+    const [directory, sha] = args;
+    await writeRevisionReceipt(completeRevision, directory, sha);
   } else if (command === "stop") {
     const directory = args[0];
     const terminal = await stopMailbox(directory);
@@ -244,7 +229,7 @@ if (
     );
   } else {
     throw new Error(
-      "Usage: ci-mailbox.mjs probe | start --execution OWNER/REPO BRANCH [BUDGET_MS] | stream --execution OWNER/REPO BRANCH [BUDGET_MS] | register-push DIRECTORY SHA | stop DIRECTORY",
+      "Usage: ci-mailbox.mjs probe | start --execution OWNER/REPO BRANCH [BUDGET_MS] | stream --execution OWNER/REPO BRANCH [BUDGET_MS] | register-push DIRECTORY SHA | await-revision DIRECTORY SHA | complete-revision DIRECTORY SHA | stop DIRECTORY",
     );
   }
 }

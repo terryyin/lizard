@@ -128,13 +128,15 @@ is understood and executable planning is authorized. Every slice is exactly one 
 
 | Type | Required content | Reject when |
 | --- | --- | --- |
-| **Behavior** | Pre-condition, trigger, one externally observable postcondition, and outside-in proof | It contains independent postconditions or proof loops |
+| **Behavior** | Pre-condition, trigger, cohesive externally observable postconditions, and outside-in proof | Its postconditions or proof loops are independent |
 | **Structure** | Internal change, unchanged external behavior, and the immediate next Behavior it enables, or the retrospective correction below | It prepares beyond that Behavior or evidenced correction |
 
-Tie every Behavior to included story or correction scope and an evaluable example.
-Put preparatory Structure immediately before its Behavior. Use the splitting moves above at this finer
-resolution, but do not split tests from the Behavior they prove or create slices
-around files, layers, components, specialists, or activities.
+Tie every Behavior to story or correction scope and an evaluable example. Keep
+implementation, outside-in proof, and cleanup for one cohesive change together
+unless separation yields useful progress, learning, risk isolation, or recovery.
+Split independent outcomes or proof loops, not tests, files, layers, components,
+specialists, or activities. Put preparatory Structure immediately before its
+Behavior.
 
 For an evidenced retrospective correction that changes structure while preserving
 product behavior, a Structure slice may instead own that correction directly.
@@ -162,12 +164,11 @@ Revise unsupported design prescriptions within the authorized scope; use the sha
 for disputed product or plan constraints before conflicting
 changes. Passing each slice's proof does not answer this design question.
 
-Refine a slice when it has independent postconditions or proof loops, separable
-implementation beats before a green result, hidden preparation, low confidence
-at an execution or integration boundary, or, when a hard limit is supplied, a
-plausible path beyond it. Keep a multi-beat outside-in scenario explicitly
-unfinished until it is green; never make a CI-breaking state a delivery
-boundary.
+Rework boundaries when slices fragment one result or combine independent
+postconditions, proof loops, hidden preparation, credible execution or
+integration risk, or a supplied hard-limit concern. Consolidate, split, or
+retain accordingly. Keep a multi-beat outside-in scenario unfinished until
+green; never deliver a CI-breaking state.
 
 ## Size and escalate slices
 

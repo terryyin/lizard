@@ -8,9 +8,8 @@ The coordinator retains
 
 Give the agent:
 
-- The selected execution checkout and branch. For planned execution, pass the
-  complete retained execution identity; for quick execution, pass the location
-  retained in the conversation. Require all implementation commands and edits
+- The selected execution checkout and branch. Pass the complete retained
+  execution identity. Require all implementation commands and edits
   to run there rather than relying on the agent's inherited working directory.
 - The execution source and current slice with mapped promises and observations,
   including replacement and lifecycle obligations. For planned execution, pass
@@ -18,12 +17,14 @@ Give the agent:
   any relevant existing-solution finding and candidate evidence from the plan,
   plus new evidence that triggered a PFE revisit; a fresh agent does not repeat
   a still-valid search merely because delegation occurred. For a correction,
-  pass its complete plan-owned
-  [correction input](../../dough-story-refinement/references/planning.md#choose-the-planning-level)
-  rather than requiring a seed. For quick execution, pass the canonical story,
-  the explicit instruction to execute without slice planning, and the relevant
-  conversation context; require no plan or substitute execution record. Omit
-  unrelated plan or conversation history.
+  pass its complete
+  [correction input](../../dough-story-refinement/references/planning.md#choose-the-planning-level):
+  its minimal story and plan, or a plan-homed correction's plan alone. For
+  quick execution, pass the established
+  source — the canonical story and skip-planning instruction, or the contextual
+  instruction — plus relevant conversation context; require no plan, fabricated
+  story, or substitute execution record. Omit unrelated plan or conversation
+  history.
 - Any North Star topic cited by the delegated work and the evidence supporting
   it. Require the agent to return contrary evidence through [execution
   decisions](execution-decisions.md#resolve-conflicting-recorded-direction),
@@ -34,12 +35,30 @@ Give the agent:
   not to repeat completed compatible work or its unchanged proof. Treat the
   quick attempt and planned continuation as one execution, not two handoffs with
   independent histories.
-- [Execution decisions](execution-decisions.md), this project's slice budget and
-  exceptions, workflow precedence, and literal focused commands with the runtime
-  wrapper. Require relevant proof; broaden testing only when the slice, project
-  workflow, or human requires it.
-- Ownership of the slice's changes. State that other agents may share the
-  execution checkout and their work must be preserved.
+- [Execution decisions](execution-decisions.md), the resolved
+  [replanning permission](execution-decisions.md#choose-replanning-permission), this
+  project's slice budget and exceptions, workflow precedence, and literal
+  focused commands with the runtime wrapper. Require relevant proof; broaden
+  testing only when the slice, project workflow, or human requires it.
+  When replanning is disabled, an oversized stop returns the incomplete attempt in
+  place; do not plan, retry, invent backlog work, or clean up. The coordinator
+  applies the overrun branch.
+- When the slice includes an authorized live action, the plan's named
+  regression prerequisite and whether an accepted current observation of it
+  already exists. Require the agent apply [require current regression proof
+  before a live action](execution-decisions.md#require-current-regression-proof-before-a-live-action)
+  at the point it performs that action, not only at coordinator acceptance:
+  obtain the missing proof first, or leave the action unperformed and return
+  the exact obligation and gap. A passing operational or health check does not
+  relieve this requirement.
+- Ownership of the slice's changes. State that the Git stash stack is shared
+  across all worktrees and that unowned work, from humans or other sessions,
+  may be present in the checkout and must be preserved. The agent does not
+  stash, pop, reset, clean, check out paths, or switch branches in the shared
+  checkout; when it needs a pre-change baseline, it uses a separate temporary
+  checkout or reports the need back. The coordinator's
+  [CI repair pause](ci-monitor.md#handle-a-notification) is the only
+  sanctioned stash.
 - A stop before coordinator delivery: no commit, push, marking a planned slice
   done, refactor pass, selective formatting, or independent hook-owned lint
   command.
@@ -99,15 +118,23 @@ targeted return that gives the coordinator:
 - owned changed paths and the product or behavior boundaries they change;
 - literal proof commands and concrete observation locations, including the
   relevant setup and assertions or signals;
+- when filtered proof was used, which tests or observations were actually
+  selected versus the promises claimed as covered;
+- for each behavior presented as verified or covered, the observing assertion
+  or signal that exercises it — or an explicit untested / uncovered listing
+  instead of verified prose;
+- when a shared contract or shared operation changed, which current consumers
+  were considered (including relevant test-support callers) versus any suite or
+  caller still excluded as unaffected;
+- required observations still missing or explicitly untested, named as gaps —
+  a learning note alone is not acceptance evidence for those promises;
 - uncovered promises, contradictions, and other evidence gaps; and
 - only consequential learnings that affect acceptance or remaining work.
 
 Use source paths plus named tests, symbols, assertions, or signals as locations;
 include a bounded excerpt only when the location cannot expose the decisive
-evidence. Do not routinely attach the raw implementation trace, full command
-logs, or a duplicate full diff. The return is an index into inspectable work and
-evidence, not proof that the coordinator has inspected or accepted them. An
-implementation return does not establish slice completion.
+evidence. The coordinator inspects the returned work and decides slice completion
+under [proof acceptance](wrap-up.md#accept-proof).
 
 For each passing focused command, use:
 
@@ -122,7 +149,7 @@ proof:
   result: pass
 ```
 
-Connect proof to the planned slice's or quick story's promises. Placeholders,
+Connect proof to the planned slice's, quick story's, or instruction's promises. Placeholders,
 abbreviations, and paraphrases are ambiguous evidence. When no setup is needed,
 say `none`; do not omit the field or mistake behavior supplied by a fixture for
 product behavior. Report uncovered behavior as incomplete implementation; the

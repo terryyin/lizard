@@ -42,14 +42,29 @@ After readiness succeeds, launch with the verified runtime setup values:
 node '/ABSOLUTE/RESOLVED/SKILL/scripts/ci-mailbox.mjs' start --execution OWNER/REPO BRANCH
 ```
 
-This starts a detached non-AI process and returns immediately. Retain the one
+`BRANCH` is the authorized target from runtime setup, which may differ from
+the execution checkout branch. This starts a detached non-AI process and
+returns immediately. Retain the one
 directory from its `CI_OBSERVER` receipt as the coordinator's execution
 handle. The hook must add `CI observer attached to this coordinator`; absence
 of that labelled context means observation is not connected. Re-entering setup,
-including after a normal or repair push, reuses that directory and must not run
-the launcher again. The observer discovers each later selected branch push itself, so a
+including after a claim, normal, or repair publication, reuses that directory and must not run
+the launcher again. The observer discovers each later selected target-branch
+publication itself, so a
 push changes neither its owner binding nor its process handle. Continue
 delegation and execution immediately.
+
+If the detached worker behind this directory has died without recording a
+normal terminal result, the hook adds `CI observer lost its worker for this
+coordinator` instead — at the next ordinary interaction, not only when a new
+receipt arrives, and a repeated receipt for the same directory does not
+restore the attached message. Treat this exactly like other unavailable
+coverage: report it once and continue execution without promising monitoring.
+Do not restart the observer, guess another mailbox directory, or re-run the
+launcher to "recover" this directory; start a new observer only through
+ordinary setup for a later push. A worker that stopped normally (via the
+`stop` command below, or its own budget) is reported as ended coverage, not as
+this lost state.
 
 The next coordinator hook invocation after a result is ready adds the event to the owning
 coordinator's context exactly once. Pending polls and successful CI add no
@@ -57,8 +72,12 @@ context. The native hook selects durable records without advancing delivery
 progress, writes the unchanged host JSON, and acknowledges those records only
 after stdout reports a successful write. If the hook process is interrupted
 before that boundary, the next owning invocation can select the records again.
-The mailbox is claimed by checkout, host, conversation, and worker identity;
-Cursor additionally binds to the coordinator's `generation_id` because its
+The mailbox is claimed by checkout, host, conversation, and worker identity.
+A Git worktree of the same repository counts as the same checkout for that
+claim when each path is its Git toplevel and both share
+`git rev-parse --git-common-dir`; an unrelated repository remains another
+checkout. Probe and start still use the execution checkout's own installed
+runtime. Cursor additionally binds to the coordinator's `generation_id` because its
 children can share the conversation ID, and `beforeSubmitPrompt` updates that
 binding on a new user message; arbitrary child tool calls cannot rebind it, and
 missing generation identity fails the readiness probe. Claude Code isolates
@@ -71,10 +90,14 @@ Use the same shared mailbox directory for launcher and hooks as specified in
 runtime setup. Mailboxes survive stashing. Use the host's agent message and
 resume handles to follow the shared [pause contract](ci-monitor.md#pause-and-resume-writers).
 
-## Stop without waiting for CI
+## Stop for cancellation
 
-When the shared lifecycle calls for shutdown, stop using the exact saved
-directory:
+When the shared lifecycle calls for an explicit stop — human-judgment stop,
+cancellation, or coordinator replacement — consume delivered failures first,
+then stop using the exact saved directory. Normal execution completion uses the
+shared [completion operation](ci-monitor.md#await-the-applicable-revision-at-completion)
+instead; do not run this stop, a process poll, or a terminal-report read after
+that receipt — this stop command never substitutes for that completion operation.
 
 ```sh
 node '/ABSOLUTE/RESOLVED/SKILL/scripts/ci-mailbox.mjs' stop '/EXACT/RECORDED/MAILBOX'
@@ -82,14 +105,17 @@ node '/ABSOLUTE/RESOLVED/SKILL/scripts/ci-mailbox.mjs' stop '/EXACT/RECORDED/MAI
 
 This signals cancellation, including an outstanding GitHub request or polling
 timer. Its terminal wait is finite and checks authoritative `result.json` when
-the file notification is missed. If no terminal result arrives by that
-lifecycle deadline, the stop command reads the mailbox's recorded worker PID,
-validates that it still runs the exact Node worker command for this mailbox,
-and targets only that process; it revalidates before escalating the signal.
+the file notification is missed; it ends early once the recorded worker no
+longer runs, since only that worker publishes the result. If no terminal result
+arrives by then or by the lifecycle deadline, the stop command reads the
+mailbox's recorded worker PID, validates that it still runs the exact Node
+worker command for this mailbox, and targets only that process; it revalidates
+before escalating the signal.
 The command then returns an explicit lost-coverage terminal result instead of
 hanging or implying success. This is local process shutdown, not waiting for
 CI. The hook drains an already-finished event even if stop was requested. Unread
-records remain in the mailbox, and shutdown reports pending CI as unobserved.
+records remain in the mailbox, and shutdown reports any still-pending CI as
+unobserved.
 Handle delivered failures before claiming completion. Retain these small
 recovery records for interrupted sessions; never kill by a broad process-name
 pattern. The runtime budget also bounds an observer whose coordinator disappears.
