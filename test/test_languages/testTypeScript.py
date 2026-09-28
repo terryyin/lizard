@@ -1251,3 +1251,34 @@ class Test_ts_param_type_filtering(unittest.TestCase):
         functions = get_ts_function_list(code)
         self.assertEqual('function1', functions[0].name)
         self.assertEqual(4, functions[0].parameter_count)
+
+
+class Test_ts_function_end_after_literals(unittest.TestCase):
+    # https://github.com/terryyin/lizard/issues/497
+
+    def spans(self, code):
+        return [(f.name, f.start_line, f.end_line)
+                for f in get_ts_function_list(code)]
+
+    def test_regex_literal_as_call_argument(self):
+        code = (
+            "function a(s: string) {\n"
+            "  const m = s.match(/x/);\n"
+            "  return m;\n"
+            "}\n"
+            "function b() { return 1; }\n"
+            "function c() { return 2; }\n"
+        )
+        self.assertEqual([('a', 1, 4), ('b', 5, 5), ('c', 6, 6)],
+                         self.spans(code))
+
+    def test_backtick_in_string_inside_template_expression(self):
+        code = (
+            "function a(k: string, e: boolean) {\n"
+            "  return `${k}${e ? \" and `x` is empty\" : \"\"}`;\n"
+            "}\n"
+            "function b() { return 1; }\n"
+            "function c() { return 2; }\n"
+        )
+        self.assertEqual([('a', 1, 3), ('b', 4, 4), ('c', 5, 5)],
+                         self.spans(code))

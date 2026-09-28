@@ -43,6 +43,7 @@ def js_style_regex_expression(func):
                         result.append(combined)
                     else:
                         result.extend(regex_tokens)
+                    continue
                 else:
                     # This is a division operator
                     result.append(token)

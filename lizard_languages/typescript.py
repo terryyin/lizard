@@ -7,6 +7,12 @@ from .code_reader import CodeReader, CodeStateMachine
 from .clike import CCppCommentsMixin
 from .js_style_regex_expression import js_style_regex_expression
 
+# A template literal; quoted strings inside ${...} may contain backticks (#497).
+TEMPLATE_LITERAL = (
+    r"`(?:\\.|\$\{(?:\"(?:\\.|[^\"\\])*\"|'(?:\\.|[^'\\])*'"
+    r"|[^{}\"'`])*\}|[^`\\])*`"
+)
+
 
 class Tokenizer(object):
     def __init__(self):
@@ -113,7 +119,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
             yield quote
 
         # Private method (#), dollar ($), optional chaining (?), template literals
-        addition = addition + r"|(?:#\w+)" + r"|(?:\$\w+)" + r"|(?:\w+\?)" + r"|`.*?`"
+        addition = addition + r"|(?:#\w+)" + r"|(?:\$\w+)" + r"|(?:\w+\?)" + r"|" + TEMPLATE_LITERAL
         for token in CodeReader.generate_tokens(source_code, addition, token_class):
             if (
                 isinstance(token, str)
