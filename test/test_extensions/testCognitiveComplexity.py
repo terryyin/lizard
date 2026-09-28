@@ -5,6 +5,9 @@ The expected values follow SonarSource's white paper "Cognitive Complexity,
 a new way of measuring understandability" (G. Ann Campbell).  Comments like
 ``// +2 (nesting=1)`` use the paper's notation.
 """
+import os
+import subprocess
+import sys
 import unittest
 from unittest.mock import patch
 
@@ -691,6 +694,37 @@ class TestBackwardCompatibility(unittest.TestCase):
     def test_every_function_has_the_field(self):
         result = analyze("a.cpp", "void f(); void g() {}")
         self.assertEqual([0], [f.cognitive_complexity for f in result.function_list])
+
+
+class TestFunctionsTheExtensionNeverSees(unittest.TestCase):
+    """A body-less Perl ``sub fwd;`` is created and finished by the reader
+    within one step, between two tokens, so the extension is never handed a
+    token of it.  It still needs the field."""
+
+    test_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    fixture = os.path.join(test_dir, "test_languages", "testdata",
+                           "perl_oneliners.pl")
+
+    def test_bodyless_sub_has_zero_cognitive_complexity(self):
+        result = FileAnalyzer(get_extensions([Cognitive()]))(self.fixture)
+        by_name = dict((f.name, f.cognitive_complexity)
+                       for f in result.function_list)
+        self.assertEqual(6, len(by_name))
+        self.assertEqual(0, by_name['OneLinerTest::empty_oneliner'])
+        self.assertEqual(0, by_name['OneLinerTest::simple_oneliner'])
+        self.assertEqual(1, by_name['OneLinerTest::condition_oneliner'])  # ?:
+
+    def test_lizard_py_run_as_a_script(self):
+        """``python lizard.py -Ecognitive`` loads lizard twice, as ``__main__``
+        and as ``lizard``; the functions are instances of the former."""
+        lizard_dir = os.path.dirname(self.test_dir)
+        result = subprocess.run(
+            [sys.executable, os.path.join(lizard_dir, 'lizard.py'),
+             '-Ecognitive', self.fixture],
+            capture_output=True, text=True, cwd=lizard_dir)
+        self.assertEqual(0, result.returncode, msg=result.stderr or result.stdout)
+        self.assertRegex(result.stdout, r"\s0\s+OneLinerTest::empty_oneliner@")
+        self.assertRegex(result.stdout, r"\s1\s+OneLinerTest::condition_oneliner@")
 
 
 class TestCommandLine(unittest.TestCase):

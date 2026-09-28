@@ -33,10 +33,10 @@ lizard's C reader resolves them before any extension sees the tokens.
 The extension never changes the token stream or the language readers, so
 enabling it leaves every other metric untouched.
 """
+import sys
 from weakref import WeakKeyDictionary
 
 from lizard import FunctionInfo
-from lizard_ext.lizardnd import patch_append_method
 from lizard_languages.python import PythonReader
 
 DEFAULT_COGNITIVE_THRESHOLD = 15
@@ -62,17 +62,38 @@ class LizardExtension(object):  # pylint: disable=R0903
             default=DEFAULT_COGNITIVE_THRESHOLD)
 
     def __call__(self, tokens, reader):
+        _add_default_field(type(reader.context.global_pseudo_function))
         counter = _counter_for(reader)
         for token in tokens:
             counter.process(token)
             yield token
 
 
-def _init_cognitive_complexity(self, *_):
-    self.cognitive_complexity = 0
+def _add_default_field(function_info_class):
+    """Every function of the class reads ``cognitive_complexity`` as 0 until
+    the counter increments it.  A class attribute covers the functions this
+    extension never gets a token of: a Perl ``sub fwd;`` is created and
+    finished within one step of the reader, between two tokens."""
+    if 'cognitive_complexity' not in vars(function_info_class):
+        function_info_class.cognitive_complexity = 0
 
 
-patch_append_method(_init_cognitive_complexity, FunctionInfo, "__init__")
+def _add_default_everywhere():
+    """``python lizard.py`` runs lizard.py as ``__main__`` and importing
+    ``lizard`` above loads it a second time, so there are two FunctionInfo
+    classes and only the ``__main__`` one is instantiated.  Patching
+    ``__init__`` of the imported one would miss every function; the default
+    goes on both copies (``__mp_main__`` is a multiprocessing worker's name
+    for ``__main__``), and ``__call__`` repeats it on whatever class the
+    context really uses."""
+    _add_default_field(FunctionInfo)
+    for module in ('__main__', '__mp_main__'):
+        copy = getattr(sys.modules.get(module), 'FunctionInfo', None)
+        if isinstance(copy, type):
+            _add_default_field(copy)
+
+
+_add_default_everywhere()
 
 
 # ---------------------------------------------------------------------------
@@ -291,8 +312,6 @@ class _Counter(object):
         self.function = function
         if function not in self.states:
             self.states[function] = _FunctionState()
-            if not hasattr(function, 'cognitive_complexity'):
-                function.cognitive_complexity = 0
         self.state = self.states[function]
 
     def _in_body(self, function):
