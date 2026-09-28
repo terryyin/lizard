@@ -652,6 +652,57 @@ end
 """))
 
 
+class TestProfilesBuiltFromTheReaders(unittest.TestCase):
+    """The control-flow keywords come from the language readers; a profile
+    only adds what cyclomatic complexity does not count."""
+
+    def test_perl_keywords_come_from_its_reader(self):
+        # unless, until, if and elsif are all listed by PerlReader.
+        self.assertEqual([4], cogc("a.pl", """
+sub f { unless ($a) { x(); } until ($b) { y(); } if ($c) { } elsif ($d) { } }
+"""))
+
+    def test_php_elseif_foreach_and_match_come_from_its_reader(self):
+        self.assertEqual([4], cogc("a.php", """<?php
+function f($a) { if ($a) { } elseif ($b) { } foreach ($x as $y) { } $z = match($a) { 1 => 2 }; }
+"""))
+
+    def test_ruby_unless_is_added_to_what_the_reader_lists(self):
+        self.assertEqual([1], cogc("a.rb", """
+def f(a)
+  unless a
+    x
+  end
+end
+"""))
+
+    def test_lua_until_closes_repeat_and_is_not_counted(self):
+        self.assertEqual([1], cogc("a.lua", """
+function f(x)
+  repeat x = x + 1 until x > 3
+end
+"""))
+
+    def test_swift_guard_from_the_reader_and_repeat_from_the_profile(self):
+        self.assertEqual([2], cogc("a.swift", """
+func f() {
+  guard let x = y else { return }
+  repeat { } while a
+}
+"""))
+
+    def test_go_select_and_goto_are_added_by_the_profile(self):
+        self.assertEqual([3], cogc("a.go", """
+package main
+func f() {
+  for a { }      // +1
+  select { }     // +1
+  goto L         // +1
+L:
+}
+"""))
+
+
 class TestBackwardCompatibility(unittest.TestCase):
 
     source = """

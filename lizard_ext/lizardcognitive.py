@@ -34,6 +34,7 @@ The extension never changes the token stream or the language readers, so
 enabling it leaves every other metric untouched.
 """
 import sys
+from copy import copy
 from weakref import WeakKeyDictionary
 
 from lizard import FunctionInfo
@@ -88,9 +89,9 @@ def _add_default_everywhere():
     context really uses."""
     _add_default_field(FunctionInfo)
     for module in ('__main__', '__mp_main__'):
-        copy = getattr(sys.modules.get(module), 'FunctionInfo', None)
-        if isinstance(copy, type):
-            _add_default_field(copy)
+        cls = getattr(sys.modules.get(module), 'FunctionInfo', None)
+        if isinstance(cls, type):
+            _add_default_field(cls)
 
 
 _add_default_everywhere()
@@ -100,15 +101,35 @@ _add_default_everywhere()
 # Language profiles: which tokens play which role
 # ---------------------------------------------------------------------------
 
+# The readers list the control-flow keywords that add cyclomatic complexity
+# (``control_flow_keywords``); this is what those words mean here.  A word
+# means the same in every language that has it, so a profile only adds what
+# cyclomatic complexity does not count and no reader lists: ``switch``, ``do``,
+# ``goto``, Kotlin's ``when`` ...  ``case_keywords`` are case labels, which
+# add nothing; where ``case`` opens the statement (Ruby, PL/SQL, ST, Erlang)
+# the profile says so.  ``logical_operators`` are used as they are.
+_ROLES = {
+    'ifs': frozenset(('if', 'unless', 'guard')),
+    'else_ifs': frozenset(('elif', 'elsif', 'elseif', 'else if')),
+    'loops': frozenset(('for', 'foreach', 'while', 'until')),
+    'do_likes': frozenset(('do', 'repeat')),
+    'switches': frozenset(('match',)),
+    'catches': frozenset(('catch', 'except', 'rescue')),
+    'gotos': frozenset(('goto',)),
+}
+
+
 class _Profile(object):  # pylint: disable=R0902,R0903
+    """What a language adds to what its reader already knows."""
 
     # pylint: disable=R0913,R0914
-    def __init__(self, ifs=('if',), else_ifs=(), loops=('for', 'foreach', 'while'),
-                 do_likes=('do',), switches=('switch',), catches=('catch',),
-                 gotos=('goto',), jumps=('break', 'continue'), ternary=True,
+    def __init__(self, ifs=(), else_ifs=(), loops=(), do_likes=(),
+                 switches=(), catches=(), gotos=(), ignore=(),
+                 jumps=('break', 'continue'), ternary=True,
                  paren_heads=True, newline_ends_statement=False,
                  nullable_types=False, rvalue_refs=False, lambda_style=None,
                  case_insensitive=False, nesting=True):
+        # Structures the reader does not list; completed in ``for_reader``.
         self.ifs = frozenset(ifs)
         self.else_ifs = frozenset(else_ifs)
         self.loops = frozenset(loops)
@@ -116,6 +137,9 @@ class _Profile(object):  # pylint: disable=R0902,R0903
         self.switches = frozenset(switches)
         self.catches = frozenset(catches)
         self.gotos = frozenset(gotos)
+        # Keywords the reader lists that are no structure of their own here
+        # (Lua's ``until`` closes ``repeat``).
+        self.ignore = frozenset(ignore)
         self.jumps = frozenset(jumps)             # count when followed by a label
         self.ternary = ternary
         # Heads are parenthesized (``if (...)``); otherwise a head runs until
@@ -133,62 +157,64 @@ class _Profile(object):  # pylint: disable=R0902,R0903
         # False: blocks are not brace-delimited, nesting is not tracked.
         self.nesting = nesting
 
+    def for_reader(self, reader):
+        """A copy with the roles of the reader's control-flow keywords added."""
+        known = set(getattr(reader, 'control_flow_keywords', ())) - self.ignore
+        if self.case_insensitive:
+            known = set(word.lower() for word in known)
+        profile = copy(self)
+        for role, words in _ROLES.items():
+            setattr(profile, role, getattr(self, role) | (known & words))
+        return profile
+
+
+# What no reader lists because it adds no cyclomatic complexity.
+_C_LIKE = {'switches': ('switch',), 'do_likes': ('do',), 'gotos': ('goto',)}
+# Blocks are not brace-delimited: increments without nesting penalty.
+_FLAT = {'nesting': False, 'ternary': False, 'jumps': ()}
 
 _PROFILES = {
-    'cpp': _Profile(rvalue_refs=True, lambda_style='cpp'),
-    'objectivec': _Profile(rvalue_refs=True),
-    'java': _Profile(lambda_style='arrow'),
-    'csharp': _Profile(lambda_style='arrow', nullable_types=True),
-    'javascript': _Profile(newline_ends_statement=True),
-    'typescript': _Profile(newline_ends_statement=True),
-    'tsx': _Profile(newline_ends_statement=True),
-    'vue': _Profile(newline_ends_statement=True),
-    'go': _Profile(loops=('for',), do_likes=(), switches=('switch', 'select'),
-                   catches=(), ternary=False, paren_heads=False,
+    'cpp': _Profile(loops=('foreach',),         # Qt
+                    rvalue_refs=True, lambda_style='cpp', **_C_LIKE),
+    'objectivec': _Profile(loops=('foreach',), rvalue_refs=True, **_C_LIKE),
+    'java': _Profile(lambda_style='arrow', **_C_LIKE),
+    'csharp': _Profile(loops=('foreach',), lambda_style='arrow',
+                       nullable_types=True, **_C_LIKE),
+    'javascript': _Profile(newline_ends_statement=True, **_C_LIKE),
+    'typescript': _Profile(newline_ends_statement=True, **_C_LIKE),
+    'tsx': _Profile(newline_ends_statement=True, **_C_LIKE),
+    'vue': _Profile(newline_ends_statement=True, **_C_LIKE),
+    'php': _Profile(**_C_LIKE),
+    'ttcn': _Profile(**_C_LIKE),
+    'solidity': _Profile(catches=('catch',), **_C_LIKE),
+    'go': _Profile(switches=('switch', 'select'), gotos=('goto',),
+                   ternary=False, paren_heads=False,
                    newline_ends_statement=True),
-    'kotlin': _Profile(switches=('when',), gotos=(), nullable_types=True,
-                       newline_ends_statement=True),
-    'swift': _Profile(ifs=('if', 'guard'), do_likes=('repeat',), gotos=(),
+    'kotlin': _Profile(switches=('when',), do_likes=('do',),
+                       nullable_types=True, newline_ends_statement=True),
+    'swift': _Profile(switches=('switch',), do_likes=('repeat',),
                       nullable_types=True, paren_heads=False,
                       newline_ends_statement=True),
-    'rust': _Profile(loops=('for', 'while'), do_likes=('loop',),
-                     switches=('match',), catches=(), gotos=(),
+    'rust': _Profile(switches=('match',), do_likes=('loop',),
                      ternary=False, paren_heads=False),
-    'scala': _Profile(switches=('match',), gotos=(),
-                      newline_ends_statement=True),
-    'php': _Profile(else_ifs=('elseif',), switches=('switch', 'match')),
-    'perl': _Profile(ifs=('if', 'unless'), else_ifs=('elsif',),
-                     loops=('for', 'foreach', 'while', 'until'),
-                     jumps=('last', 'next', 'redo')),
-    'r': _Profile(loops=('for', 'while'), do_likes=('repeat',), switches=(),
-                  catches=(), gotos=(), ternary=False),
-    'zig': _Profile(loops=('for', 'while'), do_likes=(), gotos=(),
-                    ternary=False),
-    # Blocks are not brace-delimited: increments without nesting penalty.
-    'ruby': _Profile(ifs=('if', 'unless'), else_ifs=('elsif',),
-                     loops=('for', 'while', 'until'), do_likes=(),
-                     switches=('case',), catches=('rescue',), gotos=(),
-                     jumps=(), ternary=False, nesting=False),
-    'lua': _Profile(else_ifs=('elseif',), loops=('for', 'while', 'repeat'),
-                    do_likes=(), switches=(), catches=(), jumps=(),
-                    ternary=False, nesting=False),
-    'erlang': _Profile(loops=(), do_likes=(), switches=('case', 'receive'),
-                       gotos=(), jumps=(), ternary=False, nesting=False),
-    'fortran': _Profile(else_ifs=('elseif',), loops=('do',), do_likes=(),
-                        switches=('select',), catches=(), jumps=(),
-                        ternary=False, case_insensitive=True, nesting=False),
-    'plsql': _Profile(else_ifs=('elsif',), loops=('for', 'while'),
-                      do_likes=(), switches=('case',), catches=(), jumps=(),
-                      ternary=False, case_insensitive=True, nesting=False),
-    'st': _Profile(else_ifs=('elsif',), loops=('for', 'while', 'repeat'),
-                   do_likes=(), switches=('case',), catches=(), gotos=(),
-                   jumps=(), ternary=False, case_insensitive=True,
-                   nesting=False),
-    'tnsdl': _Profile(ternary=False, nesting=False),
+    'scala': _Profile(switches=('match',), newline_ends_statement=True),
+    'perl': _Profile(catches=('catch',),         # Try::Tiny
+                     gotos=('goto',), jumps=('last', 'next', 'redo')),
+    'r': _Profile(ternary=False),               # ``switch()`` is a function
+    'zig': _Profile(switches=('switch',), ternary=False),
+    'ruby': _Profile(ifs=('unless',), switches=('case',), **_FLAT),
+    'lua': _Profile(do_likes=('repeat',), gotos=('goto',), ignore=('until',),
+                    **_FLAT),
+    'erlang': _Profile(switches=('case', 'receive'), **_FLAT),
+    'fortran': _Profile(else_ifs=('elseif',), switches=('select',),
+                        gotos=('goto',), case_insensitive=True, **_FLAT),
+    'plsql': _Profile(switches=('case',), gotos=('goto',),
+                      case_insensitive=True, **_FLAT),
+    'st': _Profile(switches=('case',), case_insensitive=True, **_FLAT),
+    'tnsdl': _Profile(**_FLAT),
 }
 
-_PYTHON = _Profile(else_ifs=('elif',), loops=('for', 'while'),
-                   switches=('match',), catches=('except',))
+_PYTHON = _Profile(switches=('match',))
 
 # Readers that put the function on lizard's nesting stack only once its
 # body starts; for them declarations (``void f(T&& x)``) are skipped.
@@ -880,7 +906,7 @@ class _IndentCounter(_Counter):
 
 def _counter_for(reader):
     if isinstance(reader, PythonReader):
-        return _IndentCounter(reader, _PYTHON, gated=True)
+        return _IndentCounter(reader, _PYTHON.for_reader(reader), gated=True)
     name = reader.language_names[0]
-    return _BraceCounter(reader, _PROFILES.get(name, _Profile()),
-                         gated=name in _GATED_LANGUAGES)
+    profile = _PROFILES.get(name, _Profile()).for_reader(reader)
+    return _BraceCounter(reader, profile, gated=name in _GATED_LANGUAGES)
