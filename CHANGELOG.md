@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### New Features
+- **Cognitive Complexity** (`-Ecognitive`) — per-function Cognitive Complexity following SonarSource's specification (structural, hybrid, fundamental and nesting increments; `switch` and logical operator sequences count once; lambdas nest; direct recursion counts), with a `CogC` column, a `--CogC` threshold and a `cognitive_complexity` field for `-s`/`-T`. Implemented as an extension that leaves the language readers and all existing metrics untouched (issue #432)
+
 ## 1.24.0
 
 ### New Features

@@ -106,7 +106,9 @@ def _extension_arg(parser):
                         cloud. -Eoutside: include the global code as one
                         function.  -EIgnoreAssert: to ignore all code in
                         assert. -ENS: count nested control structures.
-                        -Ehalstead: compute Halstead complexity metrics.''',
+                        -Ehalstead: compute Halstead complexity metrics.
+                        -Ecognitive: compute Cognitive Complexity
+                        (SonarSource).''',
                         action="append",
                         dest="extensions",
                         default=[])
@@ -1067,6 +1069,8 @@ def parse_args(argv):
         opt.thresholds["max_nesting_depth"] = opt.ND
     if "max_nested_structures" not in opt.thresholds and hasattr(opt, "NS"):
         opt.thresholds["max_nested_structures"] = opt.NS
+    if "cognitive_complexity" not in opt.thresholds and hasattr(opt, "CogC"):
+        opt.thresholds["cognitive_complexity"] = opt.CogC
     if "length" not in opt.thresholds:
         opt.thresholds["length"] = opt.length
     if "nloc" not in opt.thresholds:

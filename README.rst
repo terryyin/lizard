@@ -179,7 +179,8 @@ Options
                         code in the #else branch. -Ewordcount: count word frequencies and
                         generate tag cloud. -Eoutside: include the global code as one function.
                         -EIgnoreAssert: to ignore all code in assert. -ENS: count nested control
-                        structures. -Ehalstead: compute Halstead complexity metrics.
+                        structures. -Ehalstead: compute Halstead complexity metrics. -Ecognitive:
+                        compute Cognitive Complexity (SonarSource).
   -s SORTING, --sort SORTING
                         Sort the warning with field. The field can be nloc,
                         cyclomatic_complexity, token_count, parameter_count, etc. Or an customized field.
@@ -267,6 +268,28 @@ You can generate a "Tag cloud" of your code by the following command. It counts 
 ::
 
    lizard -EWordCount <path to your code>
+
+
+Cognitive Complexity
+--------------------
+
+Cognitive Complexity (SonarSource, G. Ann Campbell) measures how hard a
+function is to *understand* rather than how many paths it has: a
+``switch`` counts one no matter how many cases it has, a sequence of like
+logical operators (``a && b && c``) counts one, and control structures cost
+more the deeper they are nested. Enable it as an extension; it adds a
+``CogC`` column, a ``--CogC`` warning threshold (15 by default) and a
+``cognitive_complexity`` field usable with ``-s`` and ``-T``:
+
+::
+
+   lizard -Ecognitive <path to your code>
+   lizard -Ecognitive --CogC 25 -s cognitive_complexity <path to your code>
+
+Nesting is followed for brace-delimited languages (C/C++, Java, C#,
+JavaScript/TypeScript, Go, Rust, Kotlin, Swift, PHP, ...) and for Python;
+for the other languages the increments are counted without the nesting
+penalty. C preprocessor conditionals are not counted.
 
 
 Using lizard as Python module
