@@ -24,7 +24,7 @@ class CCppCommentsMixin(object):  # pylint: disable=R0903
 class CLikeReader(CodeReader, CCppCommentsMixin):
     ''' This is the reader for C, C++ and Java. '''
 
-    ext = ["c", "cpp", "cc", "cxx", "h", "hpp"]
+    ext = ["c", "cpp", "cc", "cxx", "h", "hh", "hpp"]
     language_names = ['cpp', 'c']
     macro_pattern = re.compile(r"#\s*(\w+)\s*(.*)", re.M | re.S)
 
