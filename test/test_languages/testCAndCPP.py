@@ -354,6 +354,20 @@ class Test_c_cpp_lizard(unittest.TestCase):
         result = get_cpp_function_list("void fun<a,b<c>>(){} ")
         self.assertEqual('fun<a,b<c>>', result[0].name)
 
+    def test_user_defined_literal_operator(self):
+        result = get_cpp_function_list(
+            'int operator""_km(unsigned long long x){}')
+        self.assertEqual('operator""_km', result[0].name)
+
+    def test_using_literal_operator_does_not_swallow_next_function(self):
+        result = get_cpp_function_list('''
+            using ::my::ns::operator""_fmt;
+            enum class E { A, B, };
+            int f(int a) { if (a) return 1; return 0; }
+        ''')
+        self.assertEqual(["f"], [r.name for r in result])
+        self.assertEqual(4, result[0].start_line)
+
     def test_operator_overloading(self):
         result = get_cpp_function_list("bool operator +=(int b){}")
         self.assertEqual("operator +=", result[0].name)
