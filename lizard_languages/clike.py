@@ -203,10 +203,12 @@ class CLikeStates(CodeStateMachine):
             self._add_to_operator_name(token)
 
     def _add_to_operator_name(self, token):
-        # A user-defined literal suffix joins its `""`: operator""_km.
+        # Symbols join directly (operator<<, operator(), operator""_km);
+        # words are spaced (operator new, operator MyStruct&).
         name = self.context.current_function.name
-        joined = token.startswith('"') or name.endswith('"')
-        self.context.add_to_function_name(token if joined else ' ' + token)
+        word = token[0].isalnum() or token[0] == '_'
+        spaced = word and not name.endswith('"')
+        self.context.add_to_function_name(' ' + token if spaced else token)
 
     def _state_name_with_space(self, token):
         self._state = self._state_operator \
