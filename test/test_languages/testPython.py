@@ -276,6 +276,22 @@ class Test_parser_for_Python(unittest.TestCase):
         self.assertEqual(4, functions[0].parameter_count)
         self.assertEqual(['a', 'key', 'b', 'c'], functions[0].parameters)
 
+    def test_parameter_count_with_nested_brackets_in_a_type(self):
+        functions = get_python_function_list('''
+            def f(cb: Callable[[int, str], int] = None, d: dict[str, list[int]] = {}):
+                pass
+        ''')
+        self.assertEqual(2, functions[0].parameter_count)
+        self.assertEqual(['cb', 'd'], functions[0].parameters)
+
+    def test_parameter_count_with_comma_in_an_f_string_default_value(self):
+        functions = get_python_function_list('''
+            def f(x=f"{1,2}", y=f"{a}, {b}"):
+                pass
+        ''')
+        self.assertEqual(2, functions[0].parameter_count)
+        self.assertEqual(['x', 'y'], functions[0].parameters)
+
     def test_function_end(self):
         class namespace3:
             def simple_function(self):
