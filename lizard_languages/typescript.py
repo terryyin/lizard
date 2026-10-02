@@ -5,7 +5,7 @@ Language parser for TypeScript
 import re
 from .code_reader import CodeReader, CodeStateMachine
 from .clike import CCppCommentsMixin
-from .js_style_regex_expression import js_style_regex_expression
+from .js_style_regex_expression import js_style_regex_tokens
 
 # A template literal; quoted strings inside ${...} may contain backticks (#497).
 TEMPLATE_LITERAL = (
@@ -69,7 +69,6 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         self.parallel_states = [TypeScriptStates(context)]
 
     @staticmethod
-    @js_style_regex_expression
     def generate_tokens(source_code, addition='', token_class=None):
         def split_template_literal(token, quote):
             content = token[1:-1]
@@ -120,7 +119,8 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
 
         # Private method (#), dollar ($), optional chaining (?), template literals
         addition = addition + r"|(?:#\w+)" + r"|(?:\$\w+)" + r"|(?:\w+\?)" + r"|" + TEMPLATE_LITERAL
-        for token in CodeReader.generate_tokens(source_code, addition, token_class):
+        for token in js_style_regex_tokens(
+                CodeReader.generate_tokens, source_code, addition, token_class):
             if (
                 isinstance(token, str)
                 and token.startswith('`')
