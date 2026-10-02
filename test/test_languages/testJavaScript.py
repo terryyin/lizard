@@ -191,6 +191,38 @@ class Test_tokenizing_JavaScript(unittest.TestCase):
     def test_tokenizing_pattern(self):
         self.check_tokens([r'/\//'], r'/\//')
 
+    def test_regular_expression_ending_with_an_escaped_slash(self):
+        self.check_tokens(['(', r'/\//', '.', 'test', '(', 'a', ')', ')', '\n', 'b'],
+                          '(/\\//.test(a))\nb')
+
+    def test_regular_expression_with_a_hash(self):
+        self.check_tokens(['(', '/#/', '.', 'test', '(', 'a', ')', ')', '\n', 'b'],
+                          '(/#/.test(a))\nb')
+        self.check_tokens(['(', '/[?#]/', ')', '\n', 'b'], '(/[?#]/)\nb')
+
+    def test_regular_expression_with_a_quote(self):
+        self.check_tokens(['(', '/"/', ',', ' ', '"a"', ')'], '(/"/, "a")')
+        self.check_tokens(['(', "/'/", ',', ' ', "'a'", ')'], "(/'/, 'a')")
+        self.check_tokens(['(', '/`/', ',', ' ', '`', '`a`', '`', ')'], '(/`/, `a`)')
+
+    def test_regular_expression_with_a_slash_in_a_class(self):
+        self.check_tokens(['a', '=', '/[/]/', ';'], 'a=/[/]/;')
+
+    def test_regular_expression_with_spaces_and_flags(self):
+        self.check_tokens(['a', ' ', '=', ' ', '/a b/gi', ';'], 'a = /a b/gi;')
+
+    def test_regular_expression_after_a_keyword_or_an_arrow(self):
+        self.check_tokens(['return', ' ', '/#/', ';'], 'return /#/;')
+        self.check_tokens(['a', ' ', '=>', ' ', '/#/', ';'], 'a => /#/;')
+
+    def test_division_is_not_a_regular_expression(self):
+        self.check_tokens(['a', ' ', '/', ' ', 'b', ' ', '/', ' ', 'c'], 'a / b / c')
+        self.check_tokens(['(', 'a', ')', ' ', '/', ' ', 'b', ' ', '/', ' ', 'c'], '(a) / b / c')
+        self.check_tokens(['a', '[', '0', ']', '/', 'b', '/', 'c'], 'a[0]/b/c')
+
+    def test_a_slash_without_its_pair_is_not_a_regular_expression(self):
+        self.check_tokens(['a', '=', '/', 'b', '\n', 'c', '/', 'd'], 'a=/b\nc/d')
+
     def test_tokenizing_javascript_multiple_line_string(self):
         self.check_tokens(['"aaa\\\nbbb"'], '"aaa\\\nbbb"')
 

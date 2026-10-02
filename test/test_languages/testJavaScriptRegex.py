@@ -2,6 +2,8 @@ import unittest
 
 from lizard import analyze_file
 
+from .testJavaScript import get_js_function_list
+
 
 class TestJavaScriptRegex(unittest.TestCase):
     extensions = ('js', 'ts', 'jsx', 'tsx')
@@ -118,3 +120,95 @@ class TestJavaScriptRegex(unittest.TestCase):
         self.assertEqual([('a', 2, 5, 1), ('b', 6, 6, 2)], [
             (f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
             for f in functions])
+
+
+class Test_js_function_end_after_regular_expressions(unittest.TestCase):
+
+    def spans(self, regex, filename="a.js"):
+        code = (
+            "function a(s) {\n"
+            "  if (" + regex + ".test(s)) {\n"
+            "    return 1;\n"
+            "  }\n"
+            "  return 0;\n"
+            "}\n"
+            "function b(s) {\n"
+            "  return s;\n"
+            "}\n"
+        )
+        return [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                for f in analyze_file.analyze_source_code(filename, code).function_list]
+
+    def check_function_ends(self, regex):
+        for filename in ("a.js", "a.ts", "a.jsx", "a.tsx"):
+            self.assertEqual([('a', 1, 6, 2), ('b', 7, 9, 1)],
+                             self.spans(regex, filename),
+                             regex + " in " + filename)
+
+    def test_regex_with_a_hash(self):
+        self.check_function_ends("/#/")
+
+    def test_regex_with_a_hash_in_a_character_class(self):
+        self.check_function_ends("/[?#]/")
+
+    def test_regex_ending_with_an_escaped_slash(self):
+        self.check_function_ends(r"/\//")
+
+    def test_regex_with_a_double_quote(self):
+        self.check_function_ends('/"/')
+
+    def test_regex_with_a_single_quote(self):
+        self.check_function_ends("/'/")
+
+    def test_regex_with_a_backtick(self):
+        self.check_function_ends("/`/")
+
+    def test_regex_with_braces(self):
+        self.check_function_ends("/{/")
+        self.check_function_ends("/}/")
+
+    def test_regex_with_a_slash_in_a_character_class(self):
+        self.check_function_ends("/[/]/")
+
+    def test_regex_with_escaped_slashes(self):
+        self.check_function_ends(r"/a\/\/b/")
+        self.check_function_ends(r"/(\d+)\s*\/\/.*/")
+
+    def test_regex_with_a_flag(self):
+        self.check_function_ends("/x/g")
+
+    def test_regex_with_a_hash_after_return(self):
+        code = (
+            "function a(s) {\n"
+            "  return /#/.test(s) || s === 1;\n"
+            "}\n"
+            "function b(s) {\n"
+            "  return s;\n"
+            "}\n"
+        )
+        functions = get_js_function_list(code)
+        self.assertEqual([('a', 1, 3, 2), ('b', 4, 6, 1)],
+                         [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                          for f in functions])
+
+    def test_regex_with_a_quote_in_an_arrow_function(self):
+        code = (
+            "function a(list) {\n"
+            "  return list.filter(s => /\"/.test(s) || s === \"a\");\n"
+            "}\n"
+            "function b(s) {\n"
+            "  return s;\n"
+            "}\n"
+        )
+        functions = get_js_function_list(code)
+        self.assertEqual([('(anonymous)', 2, 2, 2), ('a', 1, 3, 1), ('b', 4, 6, 1)],
+                         [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                          for f in functions])
+
+    def test_operators_in_a_regex_are_not_conditions(self):
+        code = (
+            "function a(s) {\n"
+            "  return s.replace(/a ?b||c&&d/, '');\n"
+            "}\n"
+        )
+        self.assertEqual(1, get_js_function_list(code)[0].cyclomatic_complexity)

@@ -9,7 +9,16 @@ import re
 # expression-opening punctuation rule for distinguishing regex from division.
 REGEX_LITERAL = (r"/(?![/*])(?:\\[^\r\n]|\[(?:\\[^\r\n]|[^\\\]\r\n])*\]"
                  r"|[^/\\[\r\n])+/[a-z]*")
-REGEX_TOKEN = r"(?:\A|(?<=[=,({[?:!&|;]))\s*" + REGEX_LITERAL
+# A literal can also follow "=>" or a keyword after which an expression
+# starts, as in "return /#/.test(s)" or "s => /x/.test(s)": there the slash
+# cannot be a division.
+_KEYWORDS_BEFORE_REGEX = (
+    'return', 'typeof', 'instanceof', 'in', 'of', 'new', 'delete', 'void',
+    'throw', 'case', 'do', 'else', 'yield', 'await')
+REGEX_TOKEN = (r"(?:\A|(?<=[=,({[?:!&|;])|(?<==>)" +
+               "".join(r"|(?<=\b" + keyword + ")"
+                       for keyword in _KEYWORDS_BEFORE_REGEX) +
+               r")\s*" + REGEX_LITERAL)
 
 
 def js_style_regex_expression(func):
