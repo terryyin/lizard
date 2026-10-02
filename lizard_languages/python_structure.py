@@ -111,12 +111,23 @@ class PythonStates(CodeStateMachine):  # pylint: disable=R0903
 
     def _state_colon(self, token):
         if token == ':':
+            self.colon_line = self.context.current_line
             self.next(self._state_first_line)
+        elif token == '->':
+            self.next(self._state_return_type)
         else:
             self.next(self._state_global)
 
+    def _state_return_type(self, token):
+        if token == ':':
+            self._state_colon(token)
+        elif token in ('def', 'class'):
+            self.next(self._state_global, token)
+
     def _state_first_line(self, token):
         self._state = self._state_global
+        if self.context.current_line == self.colon_line:
+            self.reader.one_line_function = self.context.current_function
         if token.startswith('"""') or token.startswith("'''"):
             self.context.add_nloc(-token.count('\n') - 1)
         self._state_global(token)
