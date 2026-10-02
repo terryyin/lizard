@@ -191,13 +191,22 @@ class CLikeStates(CodeStateMachine):
     def _state_operator(self, token):
         if token != '(':
             self._state = self._state_operator_next
-        self.context.add_to_function_name(' ' + token)
+        self._add_to_operator_name(token)
 
     def _state_operator_next(self, token):
         if token == '(':
             self._state_function(token)
+        elif token in (';', '{', '}', '='):
+            # Not a definition, e.g. `using ns::operator""_km;`.
+            self.next(self._state_global, token)
         else:
-            self.context.add_to_function_name(' ' + token)
+            self._add_to_operator_name(token)
+
+    def _add_to_operator_name(self, token):
+        # A user-defined literal suffix joins its `""`: operator""_km.
+        name = self.context.current_function.name
+        joined = token.startswith('"') or name.endswith('"')
+        self.context.add_to_function_name(token if joined else ' ' + token)
 
     def _state_name_with_space(self, token):
         self._state = self._state_operator \
