@@ -370,30 +370,30 @@ class Test_c_cpp_lizard(unittest.TestCase):
 
     def test_operator_overloading(self):
         result = get_cpp_function_list("bool operator +=(int b){}")
-        self.assertEqual("operator +=", result[0].name)
+        self.assertEqual("operator+=", result[0].name)
 
     def test_operator_overloading_shift(self):
         result = get_cpp_function_list("bool operator <<(int b){}")
-        self.assertEqual("operator < <", result[0].name)
+        self.assertEqual("operator<<", result[0].name)
 
     def test_operator_with_complicated_name(self):
         result = get_cpp_function_list("operator MyStruct&(){}")
-        self.assertEqual("operator MyStruct &", result[0].name)
+        self.assertEqual("operator MyStruct&", result[0].name)
 
     def test_operator_overloading_with_namespace(self):
         result = get_cpp_function_list("bool TC::operator !(int b){}")
         self.assertEqual(1, len(result))
-        self.assertEqual("TC::operator !", result[0].name)
+        self.assertEqual("TC::operator!", result[0].name)
 
     def test_function_operator(self):
         result = get_cpp_function_list("bool TC::operator ()(int b){}")
         self.assertEqual(1, len(result))
-        self.assertEqual("TC::operator ( )", result[0].name)
+        self.assertEqual("TC::operator()", result[0].name)
 
     def test_inline_operator(self):
         result = get_cpp_function_list("class A { bool operator ()(int b) {} };")
         self.assertEqual(1, len(result))
-        self.assertEqual("A::operator ( )", result[0].name)
+        self.assertEqual("A::operator()", result[0].name)
 
     def test_namespace_alias(self):
         result = get_cpp_function_list(
