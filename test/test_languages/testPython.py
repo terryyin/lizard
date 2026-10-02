@@ -256,6 +256,26 @@ class Test_parser_for_Python(unittest.TestCase):
         self.assertEqual(2, functions[0].parameter_count)
         self.assertEqual(['arg1', 'arg2'], functions[0].parameters)
 
+    def test_parameter_count_with_comma_in_default_value(self):
+        functions = get_python_function_list('''
+            def f(a: dict[str, int], b: tuple[int, int] = (1, 2)):
+                pass
+            def g(a=[1, 2], b={'x': 1, 'y': 2}, c=max(1, 2)):
+                pass
+        ''')
+        self.assertEqual(2, functions[0].parameter_count)
+        self.assertEqual(['a', 'b'], functions[0].parameters)
+        self.assertEqual(3, functions[1].parameter_count)
+        self.assertEqual(['a', 'b', 'c'], functions[1].parameters)
+
+    def test_parameter_count_with_lambda_default_value(self):
+        functions = get_python_function_list('''
+            def f(a, key=lambda x, y: x, b=lambda: 0, c=lambda x: (x, 1)):
+                pass
+        ''')
+        self.assertEqual(4, functions[0].parameter_count)
+        self.assertEqual(['a', 'key', 'b', 'c'], functions[0].parameters)
+
     def test_function_end(self):
         class namespace3:
             def simple_function(self):
