@@ -332,13 +332,53 @@ class Test_parser_for_Python(unittest.TestCase):
         self.assertEqual("function1", functions[1].name)
         self.assertEqual(4, functions[1].end_line)
 
-    def xtest_one_line_functions(self):
+    def test_one_line_functions(self):
         class namespace8:
             def a( ):pass
             def b( ):pass
         functions = get_python_function_list(inspect.getsource(namespace8))
         self.assertEqual("a", functions[0].name)
         self.assertEqual("b", functions[1].name)
+
+    def test_one_line_function_between_functions(self):
+        functions = get_python_function_list(
+            "def before(a):\n"
+            "    return a\n"
+            "\n"
+            "def one_line(a): return a if a else 0\n"
+            "\n"
+            "def after(a):\n"
+            "    if a:\n"
+            "        return 1\n"
+            "    return 0\n")
+        self.assertEqual(
+            [('before', 1, 2, 1, 1), ('one_line', 4, 4, 2, 1),
+             ('after', 6, 9, 2, 1)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity,
+              f.parameter_count) for f in functions])
+
+    def test_one_line_functions_with_return_type(self):
+        functions = get_python_function_list(
+            "class Shape(Protocol):\n"
+            "    def area(self) -> float: ...\n"
+            "    def name(self) -> dict[str, int]: ...\n"
+            "def after(a):\n"
+            "    return a\n")
+        self.assertEqual(
+            [('area', 2, 2), ('name', 3, 3), ('after', 4, 5)],
+            [(f.name, f.start_line, f.end_line) for f in functions])
+
+    def test_one_line_function_inside_a_function(self):
+        functions = get_python_function_list(
+            "def outer(a):\n"
+            "    def inner(b): return b\n"
+            "    if a:\n"
+            "        return inner(a)\n"
+            "    return 0\n")
+        self.assertEqual(
+            [('outer.inner', 2, 2, 1), ('outer', 1, 5, 2)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+             for f in functions])
 
     def test_nested_depth_metric_multiple_continuous_loop_statements(self):
         class namespace9:
