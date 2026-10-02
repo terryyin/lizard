@@ -27,6 +27,22 @@ Fifth line with # comment markers
         self.assertEqual(1, len(tokens))  # The entire multi-line string should be one token
         self.assertEqual(code, tokens[0])  # The token should preserve the exact string
 
+    def test_floor_division_is_an_operator_not_a_comment(self):
+        tokens = PythonReader.generate_tokens("a // b and c\nx //= 2")
+        self.assertEqual(
+            ['a', ' ', '//', ' ', 'b', ' ', 'and', ' ', 'c', '\n',
+             'x', ' ', '//=', ' ', '2'],
+            list(tokens))
+
+    def test_floor_division_keeps_the_rest_of_the_line(self):
+        functions = get_python_function_list(
+            "def f(a, b):\n"
+            "    if a // b > 3 and b > 0:\n"
+            "        return a // 2\n"
+            "    return 0\n")
+        self.assertEqual(3, functions[0].cyclomatic_complexity)
+        self.assertEqual(24, functions[0].token_count)
+
     def test_block_string_is_one_token(self):
         code = 'def a():\n    a = """\na b c d e f g h i"""\n    return a\n'
         functions = get_python_function_list(code)
