@@ -181,6 +181,13 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
         brackets = 0
         for token in self._soft_keyword_lookahead(tokens):
             if token != '\n':
+                # A line that starts with the closing bracket of a bracket
+                # open on a line before goes on with that line: its
+                # indentation is not the one of a block. A definition cannot
+                # be inside brackets: one left open is closed there.
+                if reading_leading_space and token in ('def', 'class'):
+                    brackets = 0
+                continued = brackets > 0 and token in (')', ']', '}')
                 if token in ('(', '[', '{'):
                     brackets += 1
                 elif token in (')', ']', '}'):
@@ -189,7 +196,7 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
                     if token.isspace():
                         current_leading_spaces += count_spaces(token)
                     else:
-                        if not token.startswith('#'):
+                        if not token.startswith('#') and not continued:
                             current_function = self.context.current_function
                             if (current_function.name == '*global*' or
                                     current_function.long_name.endswith(')')):

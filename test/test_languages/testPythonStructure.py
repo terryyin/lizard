@@ -105,6 +105,25 @@ class Test_Python_function_structure(unittest.TestCase):
         self.assertEqual("simple_function", functions[0].name)
         self.assertEqual(3, functions[0].end_line)
 
+    def test_function_end_after_a_closing_bracket_on_its_own_line(self):
+        functions = get_python_function_list('''class A:
+    def __init__(self,
+                 b=None,
+                 s=("https", "wss")
+                 ):
+        """Doc."""
+        self.b = b
+        self.s = s
+
+    def g(self):
+        x = call(1,
+                 2
+                 )
+        return x
+''')
+        self.assertEqual([('__init__', 2, 8), ('g', 10, 14)],
+                         [(f.name, f.start_line, f.end_line) for f in functions])
+
     def test_nested_functions(self):
         class namespace5:
             def function1(a, b):
