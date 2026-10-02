@@ -14,6 +14,7 @@ Established start:
 - target: <trunk branch>
 - publishedSha: <published claim revision>
 - agent, plan, startingRevision, candidateSha: only when known
+- readiness: Changed since readiness review (only when reported)
 ```
 
 When the block is present:
@@ -23,6 +24,12 @@ When the block is present:
   profile, or branch publication; the start already did.
 - Retain `publishedSha`: the first increment's managed delivery uses it as its
   previously published base. Keep the other fields as your execution identity.
+- Retain any "Changed since readiness review" indication through continuation
+  and recovery. It informs you of changes after the recorded review; it does not
+  withdraw Ready or require another confirmation. Follow
+  [execution and resume](../../dough-product-backlog/references/record-preparation.md#execution-and-resume)
+  for scope alignment and readiness review; Take, resume and delivery do not
+  renew the reviewed basis.
 - Work in the named workspace and branch, not the directory you were opened in.
 - Continue at the checkout-bound setup and project command under
   [execution location](execution-location.md), then the first slice.

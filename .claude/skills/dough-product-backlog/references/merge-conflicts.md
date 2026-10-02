@@ -144,6 +144,11 @@ those adapters apply automatically; it is not a different or looser standard.
    reprioritize the remaining queue. An entry that only shifts position behind
    work a side took or removed keeps its priority; a reprioritization is a
    change to an entry's place among the entries around it.
+   When reconciling a retrospective follow-up queued by wrap-up, apply
+   [wrap-up's follow-up priority](../../dough-story-wrap-up/references/follow-up-disposition.md#preserve-follow-up-priority-during-reconciliation)
+   to resolve competition with another newly added top item. Identify that
+   follow-up from the available wrap-up context, not from branch labels or a
+   generic assumption that every new item takes priority.
 4. In **Taken**, retain surviving existing entries in order, then append new
    entries while preserving each side's addition order. Unless the project
    supplies a convention, interleave concurrent additions by repeatedly choosing

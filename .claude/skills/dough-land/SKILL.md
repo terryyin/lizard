@@ -89,8 +89,27 @@ never adds or removes an assignment profile.
 Apply [publish the candidate](../dough-execute-plan/references/publish-the-candidate.md)
 from the checkout, for that suffix and target; the default checkout is the
 owned workspace when it is the one landing; do not invent a second
-sequence. The check this caller supplies is that the candidate's own changes
-are the reviewed checkout content. A rewrite onto a newer target rechecks only
+sequence. The candidate's own changes must be the reviewed checkout content.
+On each fetched target, before rewriting the candidate and before the retry
+push after a rejection, run this candidate check from the landing checkout:
+
+```sh
+node <installed>/dough-land/scripts/queued-closure-check.mjs check --checkout <checkout> --remote <remote> --target-ref refs/heads/<branch>
+```
+
+The command fetches the target and checks every queued story the candidate
+closes against that tip. It identifies closures from the candidate's merge
+base with the fetched target: entries in that base's **Backlog list** that
+are in neither list at `HEAD`. It needs no retained one-shot context.
+
+| Result | Action |
+| --- | --- |
+| `clear` | Continue publication. An empty `closes` means no queued story was closed. |
+| `ownership-changed` | Push nothing; keep the checkout, branch, index, and commit. Report `ownership` and `error`, with publication, refresh, and cleanup not done. Leave the story to that owner and the developer. |
+| Other failure | Stop before pushing and report the error; preserve the checkout and Git state. |
+
+Do not resolve a backlog reconciliation conflict by removing the other side's
+entry. A rewrite onto a newer target rechecks only
 proof the combined change affects. Nothing is registered with a CI observer.
 
 A conflict, refusal, failed recheck, or second rejection stops here. Preserve

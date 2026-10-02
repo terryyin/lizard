@@ -108,8 +108,9 @@ assessment view, and current content basis for the home --link names as
 JSON. The basis covers the story's own section, the seed's shared context
 outside other stories' sections, and a distinct plan. Legacy absence is
 "not-recorded"; an unsupported schema version is "unsupported-version"; a
-stored assessment whose basis no longer matches is "needs-reassessment". It
-never writes.
+stored assessment retains ready/not-ready and its reasons. changedSinceReview
+is true when its reviewed basis no longer matches; it informs, never writes,
+and does not independently block authorized startup.
 
 Paths are resolved against the current directory; --file defaults to
 ${defaultBacklogPath}. Canonical home links and planned paths are resolved

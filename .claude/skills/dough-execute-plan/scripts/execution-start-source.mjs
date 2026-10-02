@@ -10,6 +10,7 @@ import { requireOneShotStart } from "./one-shot-ownership.mjs";
 import {
   defaultCheckoutReceipt,
   preparedReceipt,
+  reviewChangeReceipt,
 } from "./execution-start-receipt.mjs";
 import { sameSelectedSource } from "./execution-start-recovery.mjs";
 import { sessionPolicy, withSelectedLanding } from "./session-policy.mjs";
@@ -117,6 +118,7 @@ export async function existingClaim(request, ref, source = {}) {
     publishedSha: provenance.sha,
     created: false,
     ...(request.plan || !source.planTarget ? {} : { plan: source.planTarget }),
+    ...reviewChangeReceipt(source),
     ...reportedMaintenance(await maintenance(request)),
   };
 }

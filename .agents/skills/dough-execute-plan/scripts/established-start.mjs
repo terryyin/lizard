@@ -45,5 +45,8 @@ export function formatEstablishedStart(start) {
   const lines = [...always, ...known.filter(([key]) => start[key])].map(
     ([key, label]) => `- ${label}: ${start[key]}`,
   );
+  if (start.changedSinceReview) {
+    lines.push("- readiness: Changed since readiness review");
+  }
   return ["Established start:", ...lines].join("\n");
 }

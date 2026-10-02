@@ -1,8 +1,7 @@
 // Readiness assessment facts inside a story-state block: ready / not-ready,
 // blocking reasons, and the content basis the agent reviewed. The recorder
 // checks mechanical consistency only; it does not judge prose quality or grant
-// execution authority. Needs reassessment is a read-time mismatch signal, not
-// a stored status.
+// execution authority. Changes since review are a separate read-time fact.
 
 import { BacklogError, requireField } from "./product-backlog-refusal.mjs";
 import { basesEqual } from "./product-backlog-story-state-basis.mjs";
@@ -118,29 +117,20 @@ export function assessmentFromPayload(payload) {
   };
 }
 
-// Read-time view: absent, matching ready/not-ready, or needs reassessment
-// when the stored basis no longer matches current content. A stored basis
-// matches the current basis, or the former basis a record written before
-// story scoping carries; nothing is rewritten.
+// Read-time view retains the recorded judgment and reviewed basis. Change
+// since review is independent evidence, derived without rewriting the record.
+// Former whole-document bases stay interpretable under the same comparison.
 export function normalizeAssessmentView(recorded, currentBasis, formerBasis) {
   if (recorded === undefined) {
     return { status: "absent" };
-  }
-  if (
-    !basesEqual(recorded.basis, currentBasis) &&
-    !basesEqual(recorded.basis, formerBasis)
-  ) {
-    return {
-      status: "needs-reassessment",
-      recorded: recorded.status,
-      reasons: recorded.reasons,
-      basis: recorded.basis,
-    };
   }
   return {
     status: recorded.status,
     reasons: recorded.reasons,
     basis: recorded.basis,
+    changedSinceReview:
+      !basesEqual(recorded.basis, currentBasis) &&
+      !basesEqual(recorded.basis, formerBasis),
   };
 }
 

@@ -149,6 +149,13 @@ it for the triggering instruction, add a mandatory readiness gate on Take, or
 auto-start work from a ready badge. Membership in **Taken** or **Backlog list**
 never implies or renews ready.
 
+A digest mismatch retains the recorded Ready or Not ready judgment and reasons.
+The shared reader derives `changedSinceReview`; the dashboard and established
+start show "Changed since readiness review". This indication informs execution
+and does not independently block an authorized start with recorded Ready.
+Genuine Not ready, absent or invalid preparation and startup safeguards keep
+their existing handling.
+
 [dough-execute-plan](../../dough-execute-plan/SKILL.md) and
 [dough-story-wrap-up](../../dough-story-wrap-up/SKILL.md) follow this section.
 Do not invent a second readiness rule, status grammar, or parallel state file
@@ -168,9 +175,9 @@ When delivery updates an active plan — slice `Status: done`, accepted proof,
 learnings, or revised remaining slices — publish that plan evidence through the
 existing delivery path. Do not call `record-state` with `--assessment ready` (or
 otherwise renew readiness) merely because a slice finished. The shared reader's
-digest basis treats a changed plan as mismatched: `read-state` reports
-`needs-reassessment` until an agent actually reviews the current content and
-records a new assessment through
+digest basis treats a changed plan as mismatched: `read-state` retains the
+judgment and reports `changedSinceReview: true` until an agent actually reviews
+the current content and records a new assessment through
 [assess readiness at preparation completion](#assess-readiness-at-preparation-completion).
 
 Preserve recorded done status and accepted proof in the plan. They are
@@ -180,9 +187,9 @@ completion evidence, not a readiness renewal.
 
 When authorized execution or replanning changes story or plan scope (including
 in-place plan refinement of remaining work), leave the prior ready assessment
-mismatched until a real new assessment is recorded. Existing invalidation and
-replanning paths own the prose rewrite; this procedure only forbids treating
-the stale ready claim as current. After reviewing the changed content, record
+visible alongside its change indication until a real new assessment is recorded.
+The scope author still owns story/plan alignment and readiness review; existing
+replanning paths own the prose rewrite. After reviewing changed content, record
 ready or not-ready with the current digests — never by copying the old basis or
 auto-renewing on the write that caused the mismatch.
 
@@ -199,18 +206,15 @@ the procedures above; admission and Taken never renew or imply ready.
 [One-shot execution](../../dough-execute-plan/references/one-shot.md), which
 starts on fetched remote trunk or in the selected default checkout without a
 claim, and a supporting step of an active story create no canonical home,
-plan file, story-state block, or queue
-entry. They keep scope, decisions, progress, and proof in the conversation or
-the active story. Do not fabricate a seed, plan, or `record-state` write.
+plan file, story-state block, or queue entry. Keep their scope, decisions,
+progress and proof in the conversation or active story. Do not fabricate a seed, plan, or `record-state` write.
 
 ### Wrap-up cleanup
 
-Closure deletes spent source and plan history under
-[dough-story-wrap-up](../../dough-story-wrap-up/SKILL.md). Story-state blocks
-live inside those canonical homes; removing the home removes the block. There
-is no separate catalog tombstone. Preserve ordinary source/plan cleanup and
-Git history recovery. Do not invent a substitute readiness or progress record
-during wrap-up.
+Closure under [dough-story-wrap-up](../../dough-story-wrap-up/SKILL.md) deletes
+spent source and plan history. Removing a canonical home removes its story-state
+block; there is no catalog tombstone. Preserve source/plan cleanup and Git
+history recovery; create no substitute readiness or progress record.
 
 ## Canonical homes
 
@@ -239,11 +243,7 @@ node <installed>/scripts/product-backlog.mjs record-state \
   [--plan <path-relative-to-home>]
 ```
 
-Optional check without writing:
-
-```text
-node <installed>/scripts/product-backlog.mjs read-state --link <href>
-```
+Use the `read-state` command above to check without writing.
 
 `read-state` reports `not-recorded`, recorded refinement/approach, and any
 assessment view. Use it to confirm the facts just recorded. A refusal leaves

@@ -4,6 +4,13 @@
 import { reportedMaintenance } from "./execution-start-maintenance.mjs";
 import { remoteOf } from "./workspace-publication-ownership.mjs";
 
+// Initial publication and an existing claim forward the same observed fact.
+// Absence stays omitted; explicit false clears a retained change indication.
+export function reviewChangeReceipt(source) {
+  const changedSinceReview = source.preparation?.assessment.changedSinceReview;
+  return changedSinceReview === undefined ? {} : { changedSinceReview };
+}
+
 export function acceptedReceipt(
   request,
   selected,
@@ -25,6 +32,7 @@ export function acceptedReceipt(
       : {}),
     ...(request.remote ? {} : { remote: remoteOf(request) }),
     ...(request.plan || !source.planTarget ? {} : { plan: source.planTarget }),
+    ...reviewChangeReceipt(source),
     // The drafted canonical files this admission published from the
     // originating checkout, whose own copies stay as they were.
     ...(source.admission

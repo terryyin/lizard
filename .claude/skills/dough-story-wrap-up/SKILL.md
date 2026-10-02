@@ -83,28 +83,12 @@ For North Star topics cited, added, or revised by the completed work, apply the
 shared [topic-retirement instructions](../dough-slice-planning/references/architectural-thinking.md#retire-temporary-direction-during-ordinary-wrap-up)
 as part of ordinary closure.
 
-## Queue an existing follow-up plan first
+## Settle an existing follow-up plan
 
-When an existing follow-up plan is present, validate it against the
-correction-input contract above, then put its one canonical active home first in
-the queue. Do not refine, replan, or execute it. Preserve the plan contents
-needed for later execution. Handle that follow-up by its presence, including when
-retrospective advice is absent.
-
-Resolve one canonical active home under [dough-product-backlog](../dough-product-backlog/SKILL.md#canonical-active-homes):
-
-- Queue a follow-up's story, which every new correction has, under its
-  identity with the plan linked in its seed; do not also queue the plan.
-- Queue a plan-homed follow-up through its plan, its canonical active home; do
-  not create or recover a seed for it.
-- If required correction input is missing, name the missing field and do not
-  guess or queue the addition. Keep the follow-up plan and any other needed
-  active-work context, report the gap, and stop before deleting the completed
-  predecessor's history.
-
-Preserve unrelated queue order after that first item, near-future direction,
-and human text. Repeating wrap-up must recognize either canonical home and must
-not duplicate the follow-up or queue entry.
+When a retrospective follow-up exists, read and apply
+[follow-up disposition](references/follow-up-disposition.md) before closure:
+queue it first by default, or drop it only on explicit human instruction.
+Do not complete wrap-up with an unlisted follow-up.
 
 ## Apply product-review decisions
 
@@ -131,8 +115,9 @@ the choice; do not invent scope, launch discovery, or start another review.
 After supported follow-up queue changes and before deleting anything, make the
 current revision recoverable with this project's ordinary Git conventions.
 Commit all uncommitted owned review and closure-input changes in that revision:
-applicable retrospective edits to the process log in the execution checkout, an
-uncommitted active follow-up plan and its queue edit, assimilated product
+applicable retrospective edits to the process log in the execution checkout,
+uncommitted follow-up records (including an explicitly dropped follow-up before
+its deletion) and queue edits, assimilated product
 knowledge, and the spent material. Records the execution already committed in its
 [completion commit](../dough-execute-plan/references/finish-or-stop.md#record-execution-completion)
 need no second commit. Preserve unrelated changes and include only files or
@@ -157,6 +142,10 @@ Mode before-cleanup publication — delete the selected work's spent history und
   [dough-product-backlog](../dough-product-backlog/SKILL.md) `complete` command,
   which also deletes that work's agent profile, an owned closure change; and
 - links whose sole purpose is preserving that history.
+
+Also remove the owned follow-up records and entry selected for explicit drop
+above, after their Git recovery is established. Otherwise preserve active
+follow-ups and their queue entries.
 
 Remove empty directories belonging to the spent work, including untracked ones.
 The current snapshot must be free of that history, both tracked and untracked,
@@ -205,7 +194,9 @@ from the owned execution workspace, excluding any default checkout's
 unrelated commits and pending human edit.
 
 When the merge touches the product backlog, use the owned workspace's installed
-merge adapter as that procedure requires. A stopped result stays as Git left it.
+merge adapter as that procedure requires, preserving
+[follow-up priority](references/follow-up-disposition.md#preserve-follow-up-priority-during-reconciliation).
+A stopped result stays as Git left it.
 Resolve it through [a real conflict](../dough-product-backlog/references/merge-conflicts.md#a-real-conflict-resolve-by-hand-then-continue-through-the-same-adapter).
 If the adapter and that reference are unavailable, report the gap and leave the
 conflict. Stop when no coherent resolution is justified. Selected-work cleanup

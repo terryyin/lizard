@@ -6,8 +6,8 @@
 //
 // Missing structured fields are Not recorded — never inferred from free-form
 // Status prose. Unsupported schema version and legacy absence are distinct
-// results. Needs reassessment is reported on basis mismatch without rewriting
-// the source. Recording never grants execution authority.
+// results. Basis mismatch reports changes since review while retaining the
+// recorded judgment. Recording never grants execution authority.
 
 import {
   namedIdentity,
