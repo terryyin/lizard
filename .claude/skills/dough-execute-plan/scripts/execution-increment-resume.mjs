@@ -21,7 +21,7 @@ function hasCoverage(directory, sha) {
   );
 }
 
-function observerAdapter(directory, targetRef) {
+export function observerAdapter(directory, targetRef) {
   const receipts = readRevisionCoverage(directory).map((entry) => ({
     sha: entry.sha,
     target: targetRef,

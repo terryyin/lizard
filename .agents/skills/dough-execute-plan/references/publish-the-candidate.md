@@ -3,7 +3,7 @@
 Reusable remote-publication mechanics for one owned unpublished suffix onto a
 shared authorized target: fetch, reconcile in the owned workspace, rebase only
 that suffix, validate, push that exact candidate, and recover a rejected push.
-Local default-checkout access, preservation, and refresh are owned by
+Local default-checkout preservation and refresh are owned by
 [maintain the default checkout](maintain-default-checkout.md). Remote
 acceptance does not require that checkout to move, and a later maintenance
 result does not erase an accepted publication.
@@ -39,8 +39,6 @@ a different owned workspace. Do not stage, unstage, reset, stash, or otherwise
 change that edit in order to publish. Before mutating the default checkout —
 only when the owned workspace is that checkout, or when a maintenance step
 actually refreshes it — apply
-[establish access before local mutation](maintain-default-checkout.md#establish-access-before-local-mutation)
-and
 [preserve pending local work](maintain-default-checkout.md#preserve-pending-local-work).
 Those checks do not gate a remote push from a separate owned workspace. A
 maintenance stop does not register a publication the remote has not accepted,
@@ -128,8 +126,7 @@ Apply [Preconditions](#preconditions) before this sequence.
    by inspecting the default checkout and not refreshing it in this
    sequence. A caller attempts refresh only after this sequence, under
    [Refresh eligibility](maintain-default-checkout.md#refresh-eligibility).
-   Acceptance here is independent of that attempt. A deferred or unfinished
-   maintenance result is not an unfinished publication.
+   Acceptance here is independent of that attempt.
 
 ## Recover a rejected push
 
@@ -142,7 +139,7 @@ rewritten suffix no longer extends directly: that range includes another
 writer's commits. Recheck
 [Preconditions](#preconditions). If the owned workspace is the default
 checkout, recheck
-[default-checkout access and preservation](maintain-default-checkout.md)
+[default-checkout preservation](maintain-default-checkout.md#preserve-pending-local-work)
 before rebasing that checkout. A separate owned workspace does not wait on
 that checkout. When the applicable checks hold, reconcile only the suffix and
 retry one ordinary push:

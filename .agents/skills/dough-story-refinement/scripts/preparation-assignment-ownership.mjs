@@ -7,13 +7,8 @@
 // fast-forward brought into the workspace, so only that record counts. When
 // that workspace is lost, a developer addresses the assignment instead by its
 // profile path and allocation (preparation-assignment-lost-workspace.mjs).
-import { basename, dirname, join, resolve } from "node:path";
-import {
-  agentIdentity,
-  agentProfileDirectory,
-  agentReportError,
-  profileAgentName,
-} from "../../dough-product-backlog/scripts/product-backlog-agent-profile.mjs";
+import { dirname, join } from "node:path";
+import { agentIdentity } from "../../dough-product-backlog/scripts/product-backlog-agent-profile.mjs";
 import {
   addedProfile,
   profileAllocation,
@@ -24,6 +19,7 @@ import {
   backlogPath,
   fileAt,
   isAncestor,
+  preparationAssignmentRef,
 } from "../../dough-execute-plan/scripts/workspace-publication-ownership.mjs";
 
 export function stop(status, fields) {
@@ -32,60 +28,14 @@ export function stop(status, fields) {
 
 export const errorText = (error) => error.stderr || error.message;
 
+// Why a start cannot prepare in a workspace whose held assignment is another
+// story's.
+export const assignedElsewhereError =
+  "this workspace still holds a published assignment this request does not name; end it before preparing another";
+
 // Repository path of a rotation name's profile beside the backlog.
 export const profilePathOf = (name) =>
   join(dirname(backlogPath), agentIdentity(name).path);
-
-// Operations that publish to trunk need authority and a separate workspace.
-const publishing = new Set(["start", "abandon"]);
-
-// Why an abandonment addressed by profile path cannot be read as one, or
-// undefined when it can: a lost workspace's assignment is named by its
-// profile beside the backlog and its allocation, not by workspace or story.
-function addressingError(input) {
-  if (input.workspace !== undefined || input.identity !== undefined)
-    return "--profile addresses an assignment by its allocation; do not also name --workspace or --identity";
-  const directory = join(dirname(backlogPath), agentProfileDirectory);
-  if (
-    dirname(input.profile) !== directory ||
-    !profileAgentName(basename(input.profile))
-  )
-    return `--profile must name an agent profile under ${directory}/`;
-  return undefined;
-}
-
-// The validated request for an operation, or a stop saying why not.
-export function requestOf(operation, input) {
-  const addressed = operation === "abandon" && input.profile !== undefined;
-  const required = addressed
-    ? ["profile", "target"]
-    : ["workspace", "identity", "target"];
-  if (publishing.has(operation)) required.push("integration");
-  for (const field of required)
-    if (!input[field])
-      return stop("invalid-request", { error: `missing ${field}` });
-  const invalid = addressed && addressingError(input);
-  if (invalid) return stop("invalid-request", { error: invalid });
-  const request = {
-    ...input,
-    remote: input.remote ?? "origin",
-    ...(input.workspace ? { workspace: resolve(input.workspace) } : {}),
-    ...(input.integration ? { integration: resolve(input.integration) } : {}),
-  };
-  const reportError = agentReportError(request);
-  if (reportError) return stop("invalid-request", { error: reportError });
-  if (publishing.has(operation)) {
-    if (request.pushAuthorized !== true)
-      return stop("authority-required", {
-        error: "trunk publication authority must be established",
-      });
-    if (request.integration === request.workspace)
-      return stop("invalid-request", {
-        error: "preparation requires a separate owned workspace",
-      });
-  }
-  return { ok: true, request };
-}
 
 // The backlog list holding story `identity` on trunk `ref` ("Backlog list"
 // or "Taken"), or undefined when the backlog there lists it nowhere.
@@ -96,20 +46,19 @@ export async function storyListAt(cwd, ref, identity) {
     ?.list;
 }
 
-const recordRef = "refs/worktree/dough/preparation-assignment";
-
 // Remembers `sha` as this workspace's own announcement commit.
 export async function recordAllocation(workspace, sha) {
-  await git(workspace, "update-ref", recordRef, sha);
+  await git(workspace, "update-ref", preparationAssignmentRef, sha);
 }
 
 // Puts back the record a workspace held before (`sha`), or none.
 export async function restoreAllocation(workspace, sha) {
   if (sha) await recordAllocation(workspace, sha);
-  else await git(workspace, "update-ref", "-d", recordRef);
+  else await git(workspace, "update-ref", "-d", preparationAssignmentRef);
 }
 
-export const recordedAllocation = (workspace) => commitOf(workspace, recordRef);
+export const recordedAllocation = (workspace) =>
+  commitOf(workspace, preparationAssignmentRef);
 
 // The preparation profile the announcement commit `sha` added, as an
 // assignment: its name, path, allocation, and recorded facts. `only` narrows

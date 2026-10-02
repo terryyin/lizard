@@ -77,8 +77,9 @@ material coverage gaps. Never report `Good.` when blocked or incomplete.
 Omit narration, speculation, and completion markers. Do not start repair,
 root-cause, or permanent test changes.
 
-On normal completion, close a session-created workspace through the shared
-[exploration workspace lifecycle](references/exploration-workspace.md). It owns
-safe cleanup and exact retention when cleanup is unsafe. An admitted session,
-including one reporting `Good.`, then follows
+On normal completion, close or retain the workspace through the shared
+[exploration workspace lifecycle](references/exploration-workspace.md#close-or-retain-it).
+It owns which workspace is removed, safe cleanup, and exact retention when
+cleanup is unsafe. An admitted session, including one reporting `Good.`, then
+follows
 [finish the mission](../dough-execute-plan/references/admit-accepted-work.md#finish-the-mission).

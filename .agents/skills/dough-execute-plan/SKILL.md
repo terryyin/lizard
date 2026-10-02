@@ -10,7 +10,7 @@ description: >-
   list holds, such as a standalone review, investigation, or maintenance request,
   into Taken before its work starts. Does not decide story scope or quick-path
   eligibility. `--trunk` selects Trunk Mode; omitted mode keeps Story Branch Mode.
-  `--one-shot` publishes only the result of explicitly selected trivial work.
+  `--one-shot` keeps selected trivial work's result for review; `--auto-land` lands it.
   `--skip-retro` skips the automatic planned-execution retrospective. `--replan` and
   `--no-replan` choose whether an oversized attempt may continue through planning.
 ---
@@ -62,7 +62,7 @@ Resolve project context at the first boundary that needs it:
 
 - execution-source kind, slice target, hard limit, and exceptions;
   [replanning permission](references/execution-decisions.md#choose-replanning-permission);
-  integration checkout and branch for a claim, using the project's configured integration branch or `main` when none is supplied;
+  integration checkout, when one exists, and branch for a claim, using the project's configured integration branch or `main` when none is supplied;
   execution mode and location: default Story Branch Mode; `--trunk` or a clear
   equivalent selects Trunk Mode; explicit caller selection uses the current
   branch. Resolve contradictions before changing state. Mode never creates
@@ -74,7 +74,7 @@ Resolve project context at the first boundary that needs it:
   [trunk publication's Preconditions](references/trunk-publication.md#preconditions) before
   selecting the owned workspace and taking or admitting work, and before publishing a
   claim, validated increment, or owned repair — those preconditions resolve
-  publication inputs and defer shared-checkout access and preservation to
+  publication inputs and defer shared-checkout preservation to
   [maintain the default checkout](references/maintain-default-checkout.md);
 - generation triggers and commands when affected; and
 - [refactor context](../dough-post-change-refactor/SKILL.md) before refactor delegation.
@@ -101,32 +101,37 @@ for omitted/truncated passages or bounded investigations; another step alone nee
 ## Take or admit work
 
 After resolving execution source and authority, inspect the backlog before
-plan-status changes, observer startup, delegation, or implementation. Resolve
-the selective formatter and claim commit hook contract. An absent or understood
-check-only hook permits the transition; an unknown, mutating, failing, or
-disputed hook stops with the queue unchanged. Resolve [publication
+plan-status changes, observer startup, delegation, or implementation. Resolve the
+selective formatter and claim commit hook contract. An absent or understood
+check-only hook permits the transition; an unknown, mutating, failing, or disputed
+hook stops with the queue unchanged. Resolve [publication
 preconditions](references/trunk-publication.md#preconditions), including the
-authorized remote/trunk, before a Story Branch or Trunk Mode startup. Existing
-current-branch and host-owned checkout restrictions still apply.
+authorized remote/trunk, before a Story Branch or Trunk Mode startup that publishes
+a claim. Existing current-branch and host-owned checkout restrictions still apply.
+
+When your instruction carries an established start, follow [established
+start](references/established-start.md) instead of the start command below.
 
 For authorized queued Story Branch or Trunk Mode work, invoke the installed
 `scripts/execution-start.mjs start` once with the originating integration
-checkout, owned workspace path and branch, selected identity, stable execution
-publisher ID, mode (`trunk` or `story-branch`), actual remote and trunk branch,
-and the established `--push-authorized --workspace-authorized` flags. Supply
-your own `--host` (`claude`, `codex`, or `cursor`) and `--model`; omit either
-you cannot state rather than guess. Supply `--plan` as a path relative to the
-backlog directory when explicitly selected; the command also resolves the
-canonical published plan. Supply `--declared-owner` and matching `--requester`
-only when default-checkout access has actually been established. Missing
-declarations do not prevent a safe automatic refresh. The command fetches trunk,
-checks the published selected source and preparation, selects or reuses the
-workspace, names you as an agent, commits an isolated Take that publishes your
-agent profile, makes that agent the author of your workspace commits
-(`workspaceAuthorship: "not-configured"` means only the Take commit names the
-agent), confirms publication on remote trunk, publishes a Story Branch Mode
-execution branch at that Take so the branch the profile names exists on the
-remote, and reports local refresh separately.
+checkout as `--integration` when one exists. Without one, an existing owned
+workspace supplies repository access; to create a new workspace, supply an
+owned worktree of the repository or its common Git directory as
+`--repository`, which is only read from, never refreshed. Also supply the
+owned workspace path and branch, selected identity, stable execution publisher
+ID, mode (`trunk` or `story-branch`), actual remote and trunk branch, and the
+established `--push-authorized --workspace-authorized` flags. Supply your own `--host` (`claude`, `codex`, or
+`cursor`) and `--model`; omit either you cannot state rather than guess. Supply
+`--plan` as a path relative to the backlog directory when explicitly selected;
+the command also resolves the canonical published plan.
+The command fetches trunk, checks the published selected
+source and preparation, selects the workspace or reuses it under [refresh
+eligibility](references/maintain-default-checkout.md#refresh-eligibility), names you as an agent,
+commits an isolated Take that publishes your agent profile, makes that agent the
+author of your workspace commits (`workspaceAuthorship: "not-configured"` means
+only the Take commit names the agent), confirms publication on remote trunk,
+publishes a Story Branch Mode execution branch at that Take so the branch the
+profile names exists on the remote, and reports local refresh separately.
 
 Use its compact one-line result directly; do not filter or fetch it again.
 Values you supplied stay in your execution context and are not echoed. An
@@ -136,20 +141,20 @@ claim names one, `plan` or `remote` when resolved rather than supplied, and the
 default checkout's `maintenance` (`result`, plus `reason` when not refreshed).
 Retain them; the first increment's managed delivery uses `publishedSha` as its
 previously published base. `existing` (work already Taken under your claim)
-writes nothing and returns that claim's `publishedSha`. A deferred or stopped
-`maintenance` or an `earlierMaintenance` issue leaves accepted publication
-intact. A refusal or unconfirmed result (`ok: false`, non-zero exit) stops
-before implementation; report and act on its `status`, `error`, and any
-`recovery` or `provenance`, handling `developer-identity-refused` as under
-[agent commits](references/agent-commits.md). Inspect current Git state only
-when a reported reason needs it; never repeat a mutating command to obtain
-diagnostics. If publication is interrupted, invoke the same installed command
-with the retained workspace, branch, publisher ID, identity,
-`--starting-revision` and `--candidate-sha` from the last result (or its
-`recovery`) or confirmed pre-push candidate. Use the latest candidate SHA after
-a replay. A `resumed` result confirms current ownership through remote ancestry,
-even when trunk has advanced; it may finish eligible local refresh without
-another Take or push. A rival or ambiguous provenance stops implementation.
+writes nothing and returns that claim's `publishedSha`. No `maintenance`
+[result](references/maintain-default-checkout.md#independent-maintenance-outcome)
+or `earlierMaintenance` issue undoes accepted publication. A refusal or
+unconfirmed result (`ok: false`, non-zero exit) stops before implementation;
+report and act on its `status`, `error`, and any `recovery` or `provenance`,
+handling `developer-identity-refused` as under [agent
+commits](references/agent-commits.md). Inspect current Git state only when a
+reported reason needs it; never repeat a mutating command to obtain diagnostics.
+If publication is interrupted, invoke the same installed command with the
+retained workspace, branch, publisher ID, identity, `--starting-revision` and
+`--candidate-sha` from the last result (or its `recovery`) or confirmed pre-push
+candidate. Use the latest candidate SHA after a replay. A `resumed` result
+confirms current ownership through remote ancestry, even when trunk has
+advanced; it may finish eligible local refresh without another Take or push. A rival or ambiguous provenance stops implementation.
 Preserve the stopped candidate and exact recovery fields on an uncertain result.
 
 Every accepted start, new or resumed, then requires this project's
@@ -170,12 +175,11 @@ selected [one-shot work](references/one-shot.md) starts with `--one-shot` instea
 
 ## Choose the execution location
 
-Follow [execution location](references/execution-location.md) for mode,
-workspace creation, project-command readiness, reuse of host-established
-preparation for the selected checkout, retained identity, execution resume, push
-destination, and checkout-bound runtime. That reference applies the shared
-checkout ownership lifecycle for selection, local checkout role, and target
-selection.
+Follow [execution location](references/execution-location.md) for mode, workspace
+creation, project-command readiness, reuse of host-established preparation for the
+selected checkout, retained identity, execution resume, push destination, and
+checkout-bound runtime. That reference applies the shared checkout ownership
+lifecycle for selection, local checkout role, and target selection.
 
 ## Continue or recover at an execution boundary
 
@@ -236,11 +240,8 @@ Missing/contradictory execution identity requires the recovery decision above.
 5. Run [delivery](references/wrap-up.md#deliver-the-change) end to end. That
    delivery publishes through
    [increment and repair publication](references/trunk-publication.md#publish-an-execution-increment-or-repair).
-   After successful delivery, restart for remaining planned slices; a delivered
-   quick slice has no successor.
-
-Slices run one at a time in plan order, each finishing its delivery before the next
-starts; quick execution has one slice.
+   After successful delivery, restart for the next planned slice, one at a time:
+   each finishes its delivery before the next starts; a quick slice has no successor.
 
 ## Finish or stop
 

@@ -1,9 +1,6 @@
-// Published queued or continued Taken source, the selected story's section and
-// declared plan shared with admission, and local unpublished selected-source
-// checks.
-import { spawn } from "node:child_process";
-import { readFileSync } from "node:fs";
-import { dirname, join, posix, relative, resolve, sep } from "node:path";
+// Published queued or continued Taken source, and the selected story's section
+// and declared plan shared with admission.
+import { dirname, posix, relative, resolve, sep } from "node:path";
 import {
   parseBacklog,
   queueHeading,
@@ -58,21 +55,6 @@ export function sectionOf(source, href) {
   return { document, region, text: lines.join("\n") };
 }
 
-// The originating checkout's working-tree copy, or null when it has none.
-export function worktreeSource(root, path) {
-  try {
-    return readFileSync(join(root, path), "utf8");
-  } catch {
-    return null;
-  }
-}
-
-export async function mergeBase(integration, remoteRef) {
-  return (
-    await git(integration, "merge-base", "HEAD", remoteRef)
-  ).stdout.trim();
-}
-
 // Where the selected story's preparation lives and what it declares. The
 // canonical home's project path follows its backlog link; `declaredPlan`
 // resolves the plan a recorded approach names, relative to that home, and the
@@ -81,9 +63,9 @@ export async function mergeBase(integration, remoteRef) {
 // links it. Any other plan is its own file, linked by `planTarget`. `read`
 // reads the preparation recorded in a home's text, digesting the declared
 // plan's `planSource` when one is given.
-export function selectedPreparation(integration, href) {
+export function selectedPreparation(repository, href) {
   const homePath = within(
-    integration,
+    repository,
     posix.join(dirname(backlogPath), splitHref(href).path),
   );
   return {
@@ -91,7 +73,7 @@ export function selectedPreparation(integration, href) {
     declaredPlan(approach) {
       if (approach.kind !== "planned") return {};
       const declared = within(
-        integration,
+        repository,
         posix.join(dirname(homePath), approach.plan),
       );
       const planPath = planFileOf(declared);
@@ -106,104 +88,8 @@ export function selectedPreparation(integration, href) {
   };
 }
 
-// A version of the selected source to compare: a missing file, the whole
-// file, or the selected story's section (undefined when the file lacks it).
-function versionOf(source, href) {
-  if (source === null || !href) return source;
-  return sectionOf(source, href)?.text;
-}
-
-// `git cat-file --batch` output for `names`, as raw bytes.
-function catFileBatch(cwd, names) {
-  return new Promise((resolve, reject) => {
-    const child = spawn("git", ["cat-file", "--batch"], { cwd });
-    const chunks = [];
-    child.stdout.on("data", (chunk) => chunks.push(chunk));
-    child.stderr.resume();
-    child.stdin.on("error", () => {});
-    child.on("error", reject);
-    child.on("close", (code) =>
-      code === 0
-        ? resolve(Buffer.concat(chunks))
-        : reject(new Error(`git cat-file --batch exited ${code}`)),
-    );
-    child.stdin.end(names.map((name) => `${name}\n`).join(""));
-  });
-}
-
-// Blobs this small print identically through `git show`, far below its
-// output limit.
-const batchedBlobLimit = 256 * 1024;
-
-// The contents of `rev:path` for each name, as `show` returns them. One
-// batch answers each small blob; any other answer is read by `git show`.
-async function showAll(cwd, names) {
-  const results = names.map(() => undefined);
-  if (!names.some((name) => name.includes("\n"))) {
-    try {
-      const output = await catFileBatch(cwd, names);
-      let offset = 0;
-      for (const [index, name] of names.entries()) {
-        const end = output.indexOf(0x0a, offset);
-        if (end < 0) throw new Error("truncated cat-file output");
-        const header = output.toString("utf8", offset, end);
-        offset = end + 1;
-        if (header === `${name} missing` || header === `${name} ambiguous`)
-          continue;
-        const [, type, size] = header.split(" ");
-        const length = Number(size);
-        if (!/^\d+$/.test(size ?? "")) throw new Error("unexpected header");
-        if (type === "blob" && length <= batchedBlobLimit)
-          results[index] = output.toString("utf8", offset, offset + length);
-        offset += length + 1;
-      }
-    } catch {
-      results.fill(undefined);
-    }
-  }
-  return Promise.all(
-    names.map((name, index) => {
-      if (results[index] !== undefined) return results[index];
-      const split = name.indexOf(":");
-      return show(cwd, name.slice(0, split), name.slice(split + 1));
-    }),
-  );
-}
-
-// Whether, for each source in order, the originating checkout's HEAD, index
-// or worktree holds a version of its selected part (its `href` section, or
-// the whole file) that was never published: one matching neither its merge
-// base, fetched trunk, nor a `published` revision such as the claim that
-// admitted it and left its draft there. One merge base and one batch read
-// answer every source.
-async function unpublishedSources(integration, remoteRef, sources, published) {
-  const base = await mergeBase(integration, remoteRef);
-  const knownRevs = [base, remoteRef, ...published];
-  const revs = [...knownRevs, "HEAD", ""];
-  const read = await showAll(
-    integration,
-    sources.flatMap(({ path }) => revs.map((rev) => `${rev}:${path}`)),
-  );
-  return sources.map(({ path, href }, position) => {
-    const versions = read.slice(
-      position * revs.length,
-      (position + 1) * revs.length,
-    );
-    const known = new Set(
-      versions
-        .slice(0, knownRevs.length)
-        .map((source) => versionOf(source, href)),
-    );
-    const local = [
-      ...versions.slice(knownRevs.length),
-      worktreeSource(integration, path),
-    ];
-    return local.some((source) => !known.has(versionOf(source, href)));
-  });
-}
-
 export async function readPublishedExecutionSource(request, remoteRef) {
-  const backlog = await show(request.integration, remoteRef, backlogPath);
+  const backlog = await show(request.repository, remoteRef, backlogPath);
   if (backlog === null) throw new Error("fetched trunk has no product backlog");
   const entry = parseBacklog(backlog).entries.find(
     (item) => item.identity === request.identity,
@@ -217,7 +103,7 @@ export async function readPublishedExecutionSource(request, remoteRef) {
   let claim;
   if (entry.list === takenHeading && !request.retained) {
     claim = await claimProvenance(
-      request.integration,
+      request.repository,
       remoteRef,
       request.identity,
       backlogPath,
@@ -225,9 +111,9 @@ export async function readPublishedExecutionSource(request, remoteRef) {
     if (!claim?.publisher || claim.publisher !== request.publisherId)
       return { existing: entry, claim };
   }
-  const selection = selectedPreparation(request.integration, entry.href);
+  const selection = selectedPreparation(request.repository, entry.href);
   const { homePath } = selection;
-  const home = await show(request.integration, remoteRef, homePath);
+  const home = await show(request.repository, remoteRef, homePath);
   if (home === null)
     throw new Error("selected canonical home is absent on fetched trunk");
   const preview = selection.read(home);
@@ -238,7 +124,7 @@ export async function readPublishedExecutionSource(request, remoteRef) {
   let plan;
   if (preview.approach.kind === "planned") {
     if (!planIsCanonical) {
-      plan = await show(request.integration, remoteRef, planPath);
+      plan = await show(request.repository, remoteRef, planPath);
       if (plan === null) throw new Error("published plan is absent");
     }
     // A link to a section of the declared plan links that plan.
@@ -274,22 +160,6 @@ export async function readPublishedExecutionSource(request, remoteRef) {
     throw new Error(
       `published preparation is ${preparation.assessment.status}`,
     );
-  const published = claim ? [claim.sha] : [];
-  const [storyChanged, planChanged] = await unpublishedSources(
-    request.integration,
-    remoteRef,
-    [
-      { path: homePath, href: entry.href },
-      ...(plan !== undefined ? [{ path: planPath, href: null }] : []),
-    ],
-    published,
-  );
-  if (storyChanged)
-    throw new Error(
-      "unpublished selected story source in originating checkout",
-    );
-  if (planChanged)
-    throw new Error("unpublished selected plan in originating checkout");
   return {
     ...(claim ? { existing: entry, claim } : {}),
     entry,

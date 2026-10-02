@@ -25,24 +25,39 @@ with another identity.
 Story refinement, slice planning, and plan refinement of an existing queued
 story with a stable identity announce that story as **Preparing** before
 substantive work. Reading, discussing, answering questions, decomposing a
-candidate without a queued identity, bug triage, and a standalone
-retrospective record announce nothing.
+candidate without a queued identity, bug triage, a standalone retrospective
+record, and an explicitly selected
+[one-shot refinement](one-shot-refinement.md) announce nothing.
 
-After selecting the workspace and before its first record write, run:
+After selecting the workspace, or to select a new one, and before its first
+record write, run:
 
 ```text
 node <installed>/scripts/preparation-assignment.mjs start \
-  --integration <integration checkout> --workspace <owned workspace> \
+  [--integration <integration checkout>] \
+  [--repository <owned worktree or common Git directory>] \
+  --workspace <owned workspace> [--branch <new workspace branch>] \
   --identity <queued story identity> --remote <remote> --target <trunk branch> \
-  --push-authorized [--host claude|codex|cursor] [--model <model>] \
-  [--declared-owner <id> --requester <id>]
+  --push-authorized [--host claude|codex|cursor] [--model <model>]
 ```
 
-Use the recorded paths and target. Supply `--push-authorized` only when
-publishing to that target is authorized; without it the command stops. Supply
-your own host and model, omitting either you cannot state rather than guessing.
-Supply `--declared-owner` and a matching `--requester` only when access to the
-default checkout has actually been established.
+Use the recorded paths and target. Supply `--integration` when this project
+has an integration checkout; without one, the owned workspace supplies
+repository access. When no suitable owned workspace exists yet, name the new
+workspace path and supply `--branch` with a new branch name; without an
+integration checkout, also supply an owned worktree of the repository or its
+common Git directory as `--repository`, which is only read from, never
+refreshed. `start` fetches the target and, once it finds the story queued
+there, creates the workspace on that branch at fetched trunk before
+announcing. Its receipt then carries `selection` with `created: true`, the
+branch, and the starting revision, and `start` has written the workspace's
+[creation record](../../dough-manual-testing/references/exploration-workspace.md#close-or-retain-it).
+An existing path is the owned workspace you already selected or are resuming;
+a new announcement uses it under
+[refresh eligibility](../../dough-execute-plan/references/maintain-default-checkout.md#refresh-eligibility),
+fast-forwarding it when trunk has moved past it. Supply `--push-authorized` only when publishing to that target
+is authorized; without it the command stops. Supply your own host and model,
+omitting either you cannot state rather than guessing.
 
 Keep the receipt with this session and act on its `status`:
 
@@ -51,20 +66,26 @@ Keep the receipt with this session and act on its `status`:
   queue and your draft are unchanged. The command then attempts the same safe
   refresh of the integration checkout as Dough Land's
   [Refresh the default checkout](../../dough-land/SKILL.md#refresh-the-default-checkout)
-  and reports it in `refresh`. A deferred or stopped refresh preserves that
-  checkout without undoing the announcement. Begin preparing in the workspace.
+  and reports it in `refresh`; with no integration checkout supplied, its
+  `result` is `not applicable`. No refresh
+  [result](../../dough-execute-plan/references/maintain-default-checkout.md#independent-maintenance-outcome)
+  undoes the announcement. Begin preparing in the workspace.
 - `continued`: this workspace already holds the story's published assignment;
   nothing new is published. Run `start` at each preparation skill's first write
   in the session, and again on resuming after a pause, so slice planning after
   refinement or a resumed session keeps the same assignment instead of taking
   another name.
 - Any stop (`ok: false`): do not begin substantive preparation. Report the
-  receipt and preserve the workspace. `unpublished`: remote trunk did not
+  receipt and preserve the workspace. A stop before a new workspace was
+  created leaves no workspace or branch behind.
+  `workspace-selection-failed`: the new workspace could not be created at
+  fetched trunk; report its `error` and whatever path or branch partly exists,
+  without retrying or removing it. `unpublished`: remote trunk did not
   accept an announcement, so nothing is assigned; when the receipt carries a
   `candidateSha`, acceptance could not be checked, so rerun `start` in the same
   workspace, which settles it from the remote instead of announcing twice.
-  `workspace-not-isolated`: the workspace already holds edits or unpublished
-  commits; the announcement comes before the first write and never carries a
+  `workspace-not-isolated`: the workspace is not eligible, for the reason in
+  `error`; the announcement comes before the first write and never carries a
   draft. `workspace-assigned-elsewhere`: this workspace still holds a published
   assignment the request does not name, such as another story's; keep or
   abandon that preparation first.
@@ -171,9 +192,9 @@ From the owned workspace that announced it, run:
 
 ```text
 node <installed>/scripts/preparation-assignment.mjs abandon \
-  --integration <integration checkout> --workspace <owned workspace> \
+  [--integration <integration checkout>] --workspace <owned workspace> \
   --identity <queued story identity> --remote <remote> --target <trunk branch> \
-  --push-authorized [--declared-owner <id> --requester <id>]
+  --push-authorized
 ```
 
 It publishes a commit on the fetched target that only removes this

@@ -37,6 +37,45 @@ export const agentNames = Object.freeze([
   "Rina",
 ]);
 
+// Agents named for the Odd-e nerds. A second collection beside the rotation;
+// its names are recognized wherever an agent name is read.
+export const nerdAgentNames = Object.freeze([
+  "terry",
+  "stanly",
+  "bas",
+  "viktor",
+  "ziqing",
+  "aki",
+  "YeongSheng",
+  "Jane",
+  "chaifeng",
+  "jackson",
+  "juacompe",
+  "DavidKo",
+  "mrsn",
+  "joseph",
+  "steven",
+  "yilv",
+  "ebacky",
+  "bastiaan",
+  "ivan",
+  "d.kanai",
+  "jacked",
+  "darren",
+  "pyo",
+  "dbs",
+  "joey",
+  "ruuf",
+  "ealden",
+  "mike.li",
+  "philip",
+  "yusuke",
+]);
+
+// Every collection, searched by lookups. `agentNames` stays the rotation.
+export const agentCollections = Object.freeze([agentNames, nerdAgentNames]);
+const knownAgentNames = agentCollections.flat();
+
 // Hosts an agent may report, and the execution modes a Take records. The
 // `const` annotations keep each list's literal values for typed readers.
 export const agentHosts = Object.freeze(
@@ -55,7 +94,7 @@ export const agentActivities = Object.freeze(
 export const agentProfileDirectory = "agents";
 
 export function agentIdentity(name) {
-  if (!agentNames.includes(name))
+  if (!knownAgentNames.includes(name))
     throw new Error(`unknown agent name: ${name}`);
   const lower = name.toLowerCase();
   return {
@@ -66,26 +105,56 @@ export function agentIdentity(name) {
   };
 }
 
-// The rotation name whose agent (as a profile or Git author spells it, such as
-// "Yui-chan") is `agent`, or undefined when `agent` is not in the rotation.
+// The known name (any collection) whose agent (as a profile or Git author
+// spells it, such as "Yui-chan") is `agent`, or undefined when `agent` is in
+// no collection.
 export function agentNameOf(agent) {
-  return agentNames.find((name) => agentIdentity(name).agent === agent);
+  return knownAgentNames.find((name) => agentIdentity(name).agent === agent);
 }
 
-// The rotation name a profile file belongs to, or undefined when the file name
-// is not an agent profile.
+// The known name (any collection) a profile file belongs to, or undefined
+// when the file name is not an agent profile.
 export function profileAgentName(fileName) {
   const path = `${agentProfileDirectory}/${fileName}`;
-  return agentNames.find((name) => agentIdentity(name).path === path);
+  return knownAgentNames.find((name) => agentIdentity(name).path === path);
 }
 
-// The first name after `mostRecent` (the profile most recently added on trunk,
-// even if since released) that is not held, wrapping after Rina to Yui. With no
-// profile ever added, rotation starts at Yui. Undefined when all are held.
-export function selectAgentName(mostRecent, held) {
-  const start = agentNames.indexOf(mostRecent) + 1;
-  for (let offset = 0; offset < agentNames.length; offset += 1) {
-    const name = agentNames[(start + offset) % agentNames.length];
+// The project setting file that selects the rotation, and what it may say.
+export const agentSettingsPath = ".planning/open-dough.json";
+
+// The rotation new assignments draw from, given the setting file's text
+// (undefined when the file is absent): `{ ok: true, names }`, or
+// `{ ok: false, error }` naming the file and the `nerds` key when the file is
+// not JSON or `nerds` is anything but true.
+export function agentRotationFor(settingsText) {
+  if (settingsText === undefined) return { ok: true, names: agentNames };
+  let settings;
+  try {
+    settings = JSON.parse(settingsText);
+  } catch {
+    return {
+      ok: false,
+      error: `${agentSettingsPath} is not readable JSON, so the "nerds" key cannot be read`,
+    };
+  }
+  const nerds = settings?.nerds;
+  if (nerds === undefined) return { ok: true, names: agentNames };
+  if (nerds === true) return { ok: true, names: nerdAgentNames };
+  return {
+    ok: false,
+    error: `${agentSettingsPath} key "nerds" must be true when set`,
+  };
+}
+
+// The first name of `names` (the current rotation by default) after
+// `mostRecent` (the profile most recently added on trunk, even if since
+// released) that is not held, wrapping after the last to the first. When
+// `mostRecent` is in no such list, or no profile was ever added, rotation
+// starts at the first name. Undefined when all are held.
+export function selectAgentName(mostRecent, held, names = agentNames) {
+  const start = names.indexOf(mostRecent) + 1;
+  for (let offset = 0; offset < names.length; offset += 1) {
+    const name = names[(start + offset) % names.length];
     if (!held.includes(name)) return name;
   }
   return undefined;

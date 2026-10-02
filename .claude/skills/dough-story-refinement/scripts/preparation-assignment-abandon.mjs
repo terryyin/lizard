@@ -30,10 +30,10 @@ import {
   assignmentFields,
   errorText,
   noAssignment,
-  requestOf,
   stop,
   workspaceAssignment,
 } from "./preparation-assignment-ownership.mjs";
+import { requestOf } from "./preparation-assignment-request.mjs";
 
 // A commit on `tip` whose only change removes `own`'s profile, built in a
 // scratch index so the checkout's own index and files stay as they are. The

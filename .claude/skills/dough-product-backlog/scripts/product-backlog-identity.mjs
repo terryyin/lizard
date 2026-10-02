@@ -22,12 +22,26 @@ export function ambiguousHome(reason) {
 
 // A backlog link names a canonical home and, when that home holds more than
 // one story, the anchor of the story inside it. Everything that reads or
-// records an identity takes a link apart here.
+// records an identity takes a link apart here. The path is the file a Markdown
+// renderer opens, so percent-encoding such as `%20` is decoded; the anchor
+// stays as written because identities are composed from it.
 export function splitHref(href) {
   const marker = href.indexOf("#");
   return marker === -1
-    ? { path: href, anchor: "" }
-    : { path: href.slice(0, marker), anchor: href.slice(marker + 1) };
+    ? { path: decodePath(href), anchor: "" }
+    : {
+        path: decodePath(href.slice(0, marker)),
+        anchor: href.slice(marker + 1),
+      };
+}
+
+// A path whose percent signs are not valid escapes names a file literally.
+function decodePath(path) {
+  try {
+    return decodeURIComponent(path);
+  } catch {
+    return path;
+  }
 }
 
 // How an identity is spelled when it is first taken from a canonical home: the

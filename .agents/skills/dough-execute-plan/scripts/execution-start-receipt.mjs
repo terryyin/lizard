@@ -48,3 +48,17 @@ export function preparedReceipt(request, selected, maintained) {
     ...reportedMaintenance(maintained),
   };
 }
+
+// A prepared one-shot start in the default checkout: the selected checkout's
+// role, path, target branch, and actual HEAD as `startingRevision` (which may
+// hold local commits and sits beside any uncommitted content), and the
+// fetched trunk it was checked against. Nothing was created, refreshed, or
+// published.
+export function defaultCheckoutReceipt(request, selected, fetched) {
+  return {
+    ...selected,
+    status: "prepared",
+    fetched,
+    ...(request.remote ? {} : { remote: remoteOf(request) }),
+  };
+}

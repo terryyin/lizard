@@ -10,7 +10,7 @@ import {
 } from "./agent-assignments.mjs";
 import { git, revParse } from "./publication-git.mjs";
 import { commitWorkspaceClaim } from "./workspace-publication-claim.mjs";
-import { isAncestor } from "./workspace-publication-ownership.mjs";
+import { isAncestor, stopped } from "./workspace-publication-ownership.mjs";
 import {
   configureAgentAuthorship,
   workspaceAuthorship,
@@ -43,7 +43,12 @@ export function reselectClaimAgent(claimRequest, chosen, onAgent, admission) {
       chosen ??
       (await claimProfile(workspace, candidateSha, identity, backlogPath));
     if (!agent) return undefined;
-    const { name, held } = await nextAgentName(workspace, onto, backlogPath);
+    const { name, held, error } = await nextAgentName(
+      workspace,
+      onto,
+      backlogPath,
+    );
+    if (error) return stopped("agent-setting-invalid", { error });
     const collides = held.includes(agent.name);
     if (!collides && !admission) return undefined;
     const isolated =

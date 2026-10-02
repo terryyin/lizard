@@ -1,98 +1,43 @@
 // Publishes a queued story's preparation announcement before substantive
-// preparation, or continues the workspace's existing one. The announcement
-// commit adds only the assignment profile; the draft stays in the workspace.
-import { mkdirSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import {
-  agentIdentity,
-  renderAgentProfile,
-} from "../../dough-product-backlog/scripts/product-backlog-agent-profile.mjs";
-import { queueHeading } from "../../dough-product-backlog/scripts/product-backlog-document.mjs";
-import {
-  profileAllocation,
-  selectAgent,
-} from "../../dough-execute-plan/scripts/agent-assignments.mjs";
+// preparation, or continues the workspace's existing one, first creating a
+// missing workspace at fetched trunk. The announcement commit adds only the
+// assignment profile; the draft stays in the workspace.
+import { agentIdentity } from "../../dough-product-backlog/scripts/product-backlog-agent-profile.mjs";
+import { selectAgent } from "../../dough-execute-plan/scripts/agent-assignments.mjs";
 import { maintenance } from "../../dough-execute-plan/scripts/execution-start-maintenance.mjs";
+import { fastForwardToFetchedTrunk } from "../../dough-execute-plan/scripts/maintain-default-checkout.mjs";
 import {
   git,
-  lsRemoteSha,
   revParse,
   tryPushExactRef,
 } from "../../dough-execute-plan/scripts/publication-git.mjs";
 import {
   configureAgentAuthorship,
-  creditDeveloper,
   DeveloperIdentityRefused,
 } from "../../dough-execute-plan/scripts/workspace-agent-authorship.mjs";
 import {
   backlogPath,
-  isAncestor,
   remoteRef,
 } from "../../dough-execute-plan/scripts/workspace-publication-ownership.mjs";
 import {
+  assignedElsewhereError,
   assignmentFields,
   errorText,
-  profilePathOf,
-  recordAllocation,
   recordedAllocation,
   restoreAllocation,
-  requestOf,
   stop,
-  storyListAt,
   workspaceAssignment,
 } from "./preparation-assignment-ownership.mjs";
+import { requestOf } from "./preparation-assignment-request.mjs";
+import {
+  fetchQueuedTrunk,
+  selectPreparationWorkspace,
+} from "./preparation-assignment-trunk.mjs";
 
-// Commits only the new profile on top of fetched trunk, from a clean
-// workspace whose history trunk already contains; nothing else is staged.
-// The agent authors it and the developer committing it is credited; an
-// unusable developer throws DeveloperIdentityRefused before anything changes.
-async function commitAnnouncement(request, base, agent) {
-  const { workspace } = request;
-  const identity = agentIdentity(agent.name);
-  const message = await creditDeveloper(
-    workspace,
-    `Announce preparation: ${request.identity}\n\nPreparation-Identity: ${request.identity}\n`,
-    identity,
-  );
-  await git(workspace, "merge", "--ff-only", "--quiet", base);
-  const path = profilePathOf(agent.name);
-  mkdirSync(dirname(join(workspace, path)), { recursive: true });
-  writeFileSync(
-    join(workspace, path),
-    renderAgentProfile({
-      name: agent.name,
-      identity: request.identity,
-      activity: "preparation",
-      host: agent.host,
-      model: agent.model,
-    }),
-  );
-  await git(workspace, "add", "--", path);
-  await git(
-    workspace,
-    "commit",
-    "--quiet",
-    `--author=${identity.agent} <${identity.email}>`,
-    "-m",
-    message,
-  );
-  const sha = await revParse(workspace, "HEAD");
-  // Recorded before the push, so a rerun after a lost response recognizes
-  // its own announcement instead of making a second one.
-  await recordAllocation(workspace, sha);
-  return { path, sha };
-}
-
-// Whether remote trunk contains `sha` and still records it as the profile's
-// allocation, read from a fresh fetch and the remote's own tip.
-async function acceptedOnRemote(request, ref, sha, path) {
-  const { workspace, remote, target } = request;
-  await git(workspace, "fetch", "--quiet", remote);
-  const url = (await git(workspace, "remote", "get-url", remote)).stdout.trim();
-  const tip = await lsRemoteSha(url, `refs/heads/${target}`);
-  if (!tip || !(await isAncestor(workspace, sha, tip))) return false;
-  return (await profileAllocation(workspace, ref, path)) === sha;
-}
+import {
+  commitAnnouncement,
+  acceptedOnRemote,
+} from "./preparation-announcement.mjs";
 
 // Drops an announcement a stopped earlier run left in the workspace that
 // trunk never took, restoring the workspace it was built from.
@@ -108,23 +53,36 @@ export async function startPreparation(input) {
   const requested = requestOf("start", input);
   if (!requested.ok) return requested;
   const { request } = requested;
-  const { workspace, remote, target, identity } = request;
+  const selected = await selectPreparationWorkspace(request);
+  if (!selected.ok) return selected;
+  const { selection } = selected;
+  const result = await announce(request);
+  return selection ? { ...result, selection } : result;
+}
+
+async function announce(request) {
+  const { workspace, remote, target } = request;
   const ref = remoteRef(request);
-  let base;
-  try {
-    await git(workspace, "fetch", "--quiet", remote);
-    base = await revParse(workspace, ref);
-  } catch (error) {
-    return stop("source-refused", { workspace, error: errorText(error) });
-  }
-  if ((await storyListAt(workspace, ref, identity)) !== queueHeading)
-    return stop("not-queued", {
-      workspace,
-      fetched: base,
-      error: `${identity} is not queued on ${ref}`,
-    });
+  const trunk = await fetchQueuedTrunk(workspace, request);
+  if (!trunk.ok) return trunk;
+  let base = trunk.fetched;
   const recorded = recordedAllocation(workspace);
   const found = await workspaceAssignment(request, ref, recorded);
+  if (request.continueOnly) {
+    const facts = found.own && assignmentFields(request, found.own);
+    if (
+      found.state !== "held" ||
+      (request.expectedAllocation !== undefined &&
+        request.expectedAllocation !== facts?.allocation) ||
+      (request.expectedAgent !== undefined &&
+        request.expectedAgent !== facts?.agent)
+    )
+      return stop("continuation-refused", {
+        workspace,
+        error:
+          "the retained preparation's exact local allocation and published ownership could not be verified; no announcement was made",
+      });
+  }
   if (found.state === "held") {
     await configureAgentAuthorship(workspace, agentIdentity(found.own.name));
     return {
@@ -140,8 +98,7 @@ export async function startPreparation(input) {
       workspace,
       fetched: base,
       ...assignmentFields(found.assigned.profile, found.assigned),
-      error:
-        "this workspace still holds a published assignment this request does not name; end it before preparing another",
+      error: assignedElsewhereError,
     });
   // Only dropping an unconfirmed announcement changes the record.
   let previous = await recorded;
@@ -150,22 +107,25 @@ export async function startPreparation(input) {
     previous = await recordedAllocation(workspace);
   }
   const startHead = await revParse(workspace, "HEAD");
-  if (
-    (await git(workspace, "status", "--porcelain")).stdout !== "" ||
-    !(await isAncestor(workspace, startHead, ref))
-  )
+  // Refresh's eligibility on the workspace's own branch: only a fast-forward
+  // to fetched trunk, or already being there, continues.
+  const { reason } = await fastForwardToFetchedTrunk(workspace, base);
+  if (reason)
     return stop("workspace-not-isolated", {
       workspace,
       fetched: base,
-      error:
-        "a new announcement needs a clean workspace whose commits trunk already contains; nothing was published",
+      error: `a new announcement needs a workspace that fast-forwards to fetched trunk (${reason}); nothing was published`,
     });
-  // Stops with the workspace back where it started, even when a rebuild
-  // moved it onto newer trunk.
+  // Stops with the workspace back where it started, however it moved since.
   const unannounced = async (status, fields) => {
     await git(workspace, "reset", "--keep", "--quiet", startHead);
     await restoreAllocation(workspace, previous);
-    return stop(status, { workspace, fetched: base, ...fields });
+    return stop(status, {
+      workspace,
+      fetched: base,
+      unannounced: true,
+      ...fields,
+    });
   };
   let agent, announced;
   for (let attempt = 1; ; attempt += 1) {
@@ -180,7 +140,7 @@ export async function startPreparation(input) {
     }
     agent = chosen.agent;
     try {
-      announced = await commitAnnouncement(request, base, agent);
+      announced = await commitAnnouncement(request, agent);
     } catch (error) {
       if (!(error instanceof DeveloperIdentityRefused)) throw error;
       return unannounced("developer-identity-refused", {

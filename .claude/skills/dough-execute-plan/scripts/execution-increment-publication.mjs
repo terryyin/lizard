@@ -1,6 +1,7 @@
 // Git mechanics for one validated execution increment or owned repair.
 // The caller supplies the owned workspace, the owned unpublished suffix,
 // the authorized remote target, and how the accepted result is registered.
+// A previously published base that no fetched remote ref holds stops at once.
 // `onFetchedTarget` may stop on each fetched target tip before anything is
 // rewritten. When another writer advances the target, only that owned suffix
 // is reconciled; a changed candidate requires applicable proof before any
@@ -23,6 +24,7 @@ import {
   git,
   inspectDefaultCheckoutMaintenance,
   lsRemoteSha,
+  remoteHolds,
   revParse,
   tryPushExactRef,
 } from "./publication-git.mjs";
@@ -126,6 +128,16 @@ export async function publishExecutionIncrement({
   await git(workspace, "fetch", remote);
   let remoteTip = await fetchedTarget(workspace, targetRef, remote);
   const preRebaseSha = await revParse(workspace, branch);
+  // Commits under a base the remote does not hold are not this suffix: pushing
+  // would publish them and reconciling would rebase them off the branch.
+  if (!(await remoteHolds(workspace, previouslyPublishedBase, remote))) {
+    return stopped("unpublished-base", {
+      candidate: preRebaseSha,
+      preRebaseSha,
+      remoteTip,
+      previouslyPublishedBase,
+    });
+  }
   let candidate = preRebaseSha;
   let suffixBase = previouslyPublishedBase;
   let reconciliations = 0;
@@ -138,6 +150,27 @@ export async function publishExecutionIncrement({
       suffixBase,
       reconciliations,
     });
+  // Reconciles, advancing this attempt's state, or returns the stop.
+  const reconcileOnto = async (onto, upstream, retry = false) => {
+    const rewritten = await reconcileAndRequireProof({
+      workspace,
+      onto,
+      upstream,
+      branch,
+      backlogPath,
+      candidateFallback: candidate,
+      preRebaseSha,
+      previouslyPublishedBase,
+      priorSuffixBase: suffixBase,
+      validate,
+      validatedCandidate,
+      reconciliations,
+      retry,
+    });
+    if (!rewritten.ok) return rewritten.result;
+    ({ candidate, suffixBase, reconciliations } = rewritten);
+    return null;
+  };
   if (validatedCandidate && preRebaseSha !== validatedCandidate) {
     return stopped("candidate-mismatch", {
       candidate: preRebaseSha,
@@ -156,24 +189,8 @@ export async function publishExecutionIncrement({
   // Validated resume supplies previouslyPublishedBase as the tip the candidate
   // already extends. Only a further remote advance rewrites again.
   if (remoteTip && remoteTip !== previouslyPublishedBase) {
-    const rewritten = await reconcileAndRequireProof({
-      workspace,
-      onto: remoteTip,
-      upstream: previouslyPublishedBase,
-      branch,
-      backlogPath,
-      candidateFallback: candidate,
-      preRebaseSha,
-      previouslyPublishedBase,
-      priorSuffixBase: suffixBase,
-      validate,
-      validatedCandidate,
-      reconciliations,
-    });
-    if (!rewritten.ok) return rewritten.result;
-    candidate = rewritten.candidate;
-    suffixBase = rewritten.suffixBase;
-    reconciliations = rewritten.reconciliations;
+    const stop = await reconcileOnto(remoteTip, previouslyPublishedBase);
+    if (stop) return stop;
   }
 
   if (beforePush) {
@@ -185,25 +202,8 @@ export async function publishExecutionIncrement({
     remoteTip = await fetchedTarget(workspace, targetRef, remote);
     const heldRetry = await held(1);
     if (heldRetry) return heldRetry;
-    const rewritten = await reconcileAndRequireProof({
-      workspace,
-      onto: remoteTip,
-      upstream: suffixBase,
-      branch,
-      backlogPath,
-      candidateFallback: candidate,
-      preRebaseSha,
-      previouslyPublishedBase,
-      priorSuffixBase: suffixBase,
-      validate,
-      validatedCandidate,
-      reconciliations,
-      retry: true,
-    });
-    if (!rewritten.ok) return rewritten.result;
-    candidate = rewritten.candidate;
-    suffixBase = rewritten.suffixBase;
-    reconciliations = rewritten.reconciliations;
+    const stop = await reconcileOnto(remoteTip, suffixBase, true);
+    if (stop) return stop;
 
     if (beforeRetryPush) {
       await beforeRetryPush();

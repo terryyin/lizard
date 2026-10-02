@@ -53,6 +53,23 @@ preserve independently valid accepted evidence. Honor a developer's explicit
 changed promise; do not silently weaken it. Once sufficient current proof is
 supplied, proceed without another approval or blanket rerun.
 
+Read every gap, loss, or limitation the return names, and every fixture or
+setup change that turns a failing scenario green, against the selected story's
+goal, key examples, and stated exclusions before accepting the slice. A named
+gap is input for this check, not a fault. A gap that contradicts the goal or a
+key example returns to implementation in the same slice, even when the story
+never lists it as a promise or an exclusion; recording it as a learning or
+calling it out of scope does not accept it, and a test that pins the loss is
+not proof of the example. Only a gap the story explicitly defers becomes an
+owner decision on whether that deferral still stands, and it stops only that
+path. A gap outside the goal that costs the user nothing is accepted; keep the
+observation only when it changes remaining work. When the return reshapes or
+simplifies a fixture or setup, check the example in its real shape, the real
+file or input it names; green on a fixture the example does not describe does
+not accept it. Examine a limit that could lose the only copy of paused or saved
+work for that consequence; guidance for a neighbouring case does not authorize
+it.
+
 During this slice, accept only observations supported by inspected locations and
 results. Retain the promise, accepted boundary, inspected locations, and literal
 command in the slice wrap-up for refactoring. Expand inspection to the smallest
@@ -173,14 +190,18 @@ and continue that unfinished obligation only.
    revision as committed and pending publication. Do not push. Remote refs
    stay unchanged, and the checkout identity stays the recorded path.
    With that authority, invoke the installed managed delivery entry point from
-   that same checkout. The receipt is the accepted SHA, the authorized target,
+   that same checkout, passing its `HEAD` from before this operation's first
+   commit as `--previously-published-base`. Handle an `unpublished-base` stop
+   as [current-branch publication](trunk-publication.md#publish-an-execution-increment-or-repair)
+   does.
+   The receipt is the accepted SHA, the authorized target,
    and the observation result (attached, reused, or an explicit coverage gap).
    Do not run a separate observer probe, start, or `register-push` for this
    managed path, and do not copy mailbox directories by hand. A pending human
    edit on that checkout stays out of the published commit.
-   When the selected checkout is the default checkout, apply
-   [default-checkout preservation](maintain-default-checkout.md#preserve-pending-local-work)
-   before mutating it. A local commit or a local merge stays a local
+   When the selected checkout is the default checkout, follow its
+   [direct edit](maintain-default-checkout.md#direct-edit) checks before
+   mutating it. A local commit or a local merge stays a local
    operation; do not report it as remote publication. Codex, Cursor, and
    Claude keep the recorded checkout and authorized target their existing
    adapters already supply. A rejected push follows

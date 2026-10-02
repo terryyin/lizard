@@ -1,0 +1,58 @@
+{
+  "command": "dough-story-refinement",
+  "default": "Without options, refine straightforwardly: establish Goal, Scope, and Key examples without mandatory alternatives or analogy exercises.",
+  "selection": "Options may be combined. Flag order has no meaning; apply all selected instructions together within one refinement, unless the developer asks in ordinary language for a sequence. Baseline inquiry, evidence checks, and human ownership of goal and scope decisions apply in every mode. When Explore and Borrow are both selected, treat each borrowed mechanism as one candidate in Explore's single comparison, judged against the same goal and constraints as the other options and not favored because it is an analogy. Clarify is an explicit emphasis on scope and examples, in addition to default refinement. When refinement has recommended a direction or clarified scope, each other selected option applies to that direction or scope instead of adding another pass. When Challenge and Clarify are both selected, Challenge's strongest doubt informs Clarify's scope decision within the same refinement; Challenge alone does not shrink scope. When they disagree, expose the trade-off for the developer's decision. When Investigate and Stress-test are both selected, investigate a failure scenario whose plausibility is itself a hypothesis before relying on it; it becomes an example only if observable.",
+  "options": [
+    {
+      "flag": "--explore",
+      "label": "Explore",
+      "summary": "Develop materially different ways to reach the goal.",
+      "instruction": "Develop materially different ways to achieve the selected story's goal or frame its problem; options that differ only in layout or wording do not count. Include a simpler or existing solution when plausible. Compare credible options against the same goal and genuine constraints, then recommend a direction with reasons. Treat invented alternatives as proposals and uncertain premises as hypotheses; check a decisive one before relying on it. Treat a developer-supplied constraint as fixed: if exploration reveals a possible different outcome, expose it for the developer's decision and continue supported work without silently changing the story's goal or scope."
+    },
+    {
+      "flag": "--borrow",
+      "label": "Borrow",
+      "summary": "Find a mechanism in another domain that could help.",
+      "instruction": "Find a mechanism in another domain that could help achieve the selected story's goal, choosing it from the story's own problem rather than from a supplied example. Map the roles and relationships in that mechanism to this story's, adapt the mechanism to the story, and state a consequential limit where the analogy breaks. A shared label or visual resemblance alone is not a correspondence. Treat the adapted mechanism as a candidate; an analogy is not evidence that it works. If no transfer is defensible, report that limit and continue supported refinement without inventing an analogy or asking the developer to pick an unsuitable one."
+    },
+    {
+      "flag": "--challenge",
+      "label": "Challenge",
+      "summary": "Test whether the proposal achieves its purpose.",
+      "instruction": "Test whether the proposed capability achieves the selected story's stated purpose. Name the assumptions the purpose rests on, whether the proposal is the capability or only one way to reach it, and how it could meet its own wording yet miss the purpose. Report the strongest consequential doubt with its reason; do not report an objection that changes nothing about the promised outcome, and do not invent doubt when the purpose holds: say so briefly and continue refinement. A challenge is a proposal, not a decision: discuss any change to goal or scope with the developer, and do not rewrite or split the story on your own."
+    },
+    {
+      "flag": "--clarify",
+      "label": "Clarify",
+      "summary": "Settle the smallest scope that still delivers the purpose.",
+      "instruction": "Settle the smallest scope that still delivers the selected story's purpose. State behavior in concrete pre-condition → trigger → result examples chosen to distinguish competing interpretations of the story; the developer decides which interpretation the story owns, and the others become deferred promises, not rejections. Separate required behavior, deferred promises, and rejection constraints: justify a rejection by an independent requirement, or leave the behavior naturally supported and record the decision as open when the developer's intent matters. Do not trim value the purpose needs, and do not turn an unlisted case that the rule already handles into a rejection. If the story is already unambiguous and minimal, report that and change nothing."
+    },
+    {
+      "flag": "--investigate",
+      "label": "Investigate",
+      "summary": "Separate facts from hypotheses and settle what you can observe.",
+      "instruction": "Separate what the selected story's goal and scope rest on into facts, each with its source, and hypotheses. For each hypothesis that could change the outcome, name the cheapest way to settle it and make a safe, local, unpaid observation yourself when one exists instead of asking the developer. Report what you observed, what remains a hypothesis, and what the result changes; never supply a result you did not obtain or answer a premise by plausibility. Leave a premise no available observation can settle as an open decision for the developer, naming the observation that would settle it. Discuss any change to goal or scope with the developer rather than rewriting the story. If the story rests on verified facts, say so briefly and continue refinement without inventing doubt."
+    },
+    {
+      "flag": "--stress-test",
+      "label": "Stress-test",
+      "summary": "Examine failures that would change what the story promises.",
+      "instruction": "Examine the selected story's behavior when an input or dependency is unavailable, stale, or malformed, an operation is interrupted or repeated, actors or expectations conflict, and a user must recover. Report only scenarios that would change what the story promises, each as a concrete pre-condition → trigger → result with the recovery it implies; do not report a catalogue or a case the story's natural rule already handles. Expose conflicting expectations with the consequence of each for the developer's decision, recording neither as settled. Add a failure behavior to scope only with the developer's agreement or when the purpose cannot be met without it; otherwise record it as a proposal, deferred, or open. If no failure changes the promise, say so briefly and continue refinement without manufacturing scenarios."
+    }
+  ],
+  "focusSelection": "A focus selects what the selected actions, or default refinement when none are selected, examine; it adds no pass or output of its own. It composes with any action or none. When both focuses are selected, do not report the user's side and the system's side separately: list every interaction choice that has architectural consequences once, with its effect on the user beside its consequence for the system, as one trade-off for the developer's decision that favors neither, and fold the rest of both examinations into the ordinary Goal, Scope, and Key examples. A choice whose side conflicts with an Accepted decision still stops that side. When a focus needs input only the developer can supply and it was not given, ask for it rather than assuming it, and do not carry out that examination until it is supplied; other refinement continues. A finding from a focus is a proposal: discuss any change to goal or scope with the developer.",
+  "focuses": [
+    {
+      "flag": "--ux-ui",
+      "label": "UX/UI",
+      "summary": "Examine the story from the user's side.",
+      "instruction": "Examine the selected story from the user's side: who the user is (ask the developer when the story does not identify the user) and their task and context, what they see and decide at each step, the feedback and recovery available, and where the interaction could confuse, block, or exclude them. Report the interaction choices that would change what the story promises, with what each means for the user. Fold these into the refinement's ordinary Goal, Scope, and Key examples rather than a separate report. Describe the interaction in words, and sketch it only where agreement needs it; choose no layout, component, or technology. If the story has no user-facing interaction or no interaction choice matters, say so briefly and continue refinement without inventing one."
+    },
+    {
+      "flag": "--architecture",
+      "label": "Architecture",
+      "summary": "Examine the system consequences and applicable decisions.",
+      "instruction": "Examine the selected story for its system consequences: the responsibilities it adds or moves, the qualities it depends on, and the Accepted decisions that apply, found and cited through dough-adr-awareness. A Proposed decision informs the discussion and binds nothing. Report the consequences that would change what the story can promise or how choices compare. Record an Architecture section in the seed only for a consequential concern, as design and not as an ADR proposal. When the story or a choice conflicts with an Accepted decision, name the decision and the conflicting element, stop that path, and leave the decision to the developer; a conflict never authorizes an exception, and supported work continues. When the ADR context needed is unavailable, name what is missing, stop only this examination, and claim no check completed. If nothing consequential is found, say so briefly and continue refinement without inventing a section."
+    }
+  ]
+}

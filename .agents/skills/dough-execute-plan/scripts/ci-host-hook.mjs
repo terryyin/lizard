@@ -76,7 +76,22 @@ export function selectCiEvents(
       return emptySelection();
   }
   const context = [];
-  const acknowledgements = [];
+  // Delivery-progress updates recorded only after the host accepts the output.
+  const progressUpdates = [];
+  // A lost worker is news once: after that report is acknowledged, or after
+  // the coordinator's own stop returned the lost terminal result, it is quiet.
+  const reportLoss = (directory) => {
+    const lost = mailboxWorkerLoss(directory);
+    if (
+      lost &&
+      !readDeliveryProgress(directory).lossReported &&
+      !existsSync(join(directory, "stop"))
+    ) {
+      context.push(lostWorkerMessage(directory, lost));
+      progressUpdates.push([directory, { lossReported: true }]);
+    }
+    return lost;
+  };
   const attachedThisCall = new Set();
   const mailboxDeliveries = [];
 
@@ -112,10 +127,7 @@ export function selectCiEvents(
       if (ended && ended.coverage?.state !== "lost" && !request.probe) {
         context.push(endedObserverMessage(directory, ended));
       } else {
-        const lostAtAttachment = mailboxWorkerLoss(directory);
-        if (lostAtAttachment)
-          context.push(lostWorkerMessage(directory, lostAtAttachment));
-        else if (!request.probe)
+        if (!reportLoss(directory) && !request.probe)
           context.push(
             `CI observer attached to this coordinator: ${directory}`,
           );
@@ -126,12 +138,9 @@ export function selectCiEvents(
   if (existsSync(bindings))
     for (const binding of readdirSync(bindings)) {
       const directory = readFileSync(join(bindings, binding), "utf8");
-      if (!attachedThisCall.has(directory)) {
-        const lost = mailboxWorkerLoss(directory);
-        if (lost) context.push(lostWorkerMessage(directory, lost));
-      }
-      const progress = readDeliveryProgress(directory);
-      const records = readMailboxEvents(directory, progress.deliveredThrough);
+      if (!attachedThisCall.has(directory)) reportLoss(directory);
+      const { deliveredThrough } = readDeliveryProgress(directory);
+      const records = readMailboxEvents(directory, deliveredThrough);
       if (records.length) mailboxDeliveries.push({ directory, records });
     }
 
@@ -143,10 +152,10 @@ export function selectCiEvents(
 
   if (!skipAdvisoriesOnStop) {
     for (const { directory, records } of mailboxDeliveries) {
-      acknowledgements.push({
+      progressUpdates.push([
         directory,
-        deliveredThrough: records.at(-1).sequence,
-      });
+        { deliveredThrough: records.at(-1).sequence },
+      ]);
       for (const { event } of records) context.push(JSON.stringify(event));
     }
   }
@@ -169,8 +178,8 @@ export function selectCiEvents(
   return {
     output,
     acknowledge() {
-      for (const { directory, deliveredThrough } of acknowledgements)
-        recordDeliveryProgress(directory, deliveredThrough);
+      for (const [directory, update] of progressUpdates)
+        recordDeliveryProgress(directory, update);
     },
   };
 }

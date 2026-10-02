@@ -83,13 +83,13 @@ premise that was not observed is a blocking reason — record `not-ready` with
 slices are defined under
 [slice planning](../../dough-slice-planning/SKILL.md#write-the-plan).
 
-An observation or replay settles a premise only when it covers the slice's
-promised journey through the next operation that consumes its result, not only
-the seam a concern named: a replay proving pull alone does not settle a slice
-that promises pull then publish. Clear a premise-based reason only with a fresh
-observation of that premise; citing earlier evidence again does not clear it.
-After the blocking concern is gone, re-read the current basis and record
-`ready` without reasons.
+An observation settles a premise only as
+[slice planning](../../dough-slice-planning/SKILL.md#write-the-plan) describes:
+through the operation that consumes its result. An observation or replay that
+records part of the promised journey as not covered blocks `ready`. Clear a
+premise-based reason only with a fresh observation of that premise; citing
+earlier evidence again does not clear it. After the blocking concern is gone,
+re-read the current basis and record `ready` without reasons.
 
 ### Planless authority
 
@@ -196,12 +196,12 @@ authority, with no assessment not actually made. Implementation later
 authorized for it attaches its plan and assessment to that same story through
 the procedures above; admission and Taken never renew or imply ready.
 
-[One-shot work](../../dough-execute-plan/references/one-shot.md), which
-starts on fetched remote trunk without a claim, and a supporting step of an
-active story create no canonical home, plan file, story-state block, or queue
+[One-shot execution](../../dough-execute-plan/references/one-shot.md), which
+starts on fetched remote trunk or in the selected default checkout without a
+claim, and a supporting step of an active story create no canonical home,
+plan file, story-state block, or queue
 entry. They keep scope, decisions, progress, and proof in the conversation or
-the active story. Do not fabricate a seed, plan, or
-`record-state` write to satisfy this procedure.
+the active story. Do not fabricate a seed, plan, or `record-state` write.
 
 ### Wrap-up cleanup
 

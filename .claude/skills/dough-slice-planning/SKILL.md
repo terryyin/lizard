@@ -85,6 +85,17 @@ numeric limit alone is not missing context: apply the linked sizing guidance
 without inventing a timing policy. Do not create a new plan under a deprecated
 or merely inferred location.
 
+Treat a verification gate as a local requirement only when the user's
+instructions or this project's guidance require it for local work, and cite
+that requirement in the plan. Hosted CI configuration shows which checks exist
+and how to run them. Hosted CI still runs them after publication, where their
+failures stay owned, but its configuration does not by itself make each check a
+local gate for every change. Choose local proof for the affected behavior under
+[own executable proof](../dough-story-refinement/references/executable-proof.md),
+and state in the plan the reason for any broader local check, such as a changed
+fixture that distributed consumers load. Execution applies the same distinction
+when it [accepts proof](../dough-execute-plan/references/wrap-up.md#accept-proof).
+
 ## Write the plan
 
 Before writing to the plan, establish or reuse the required workspace under
@@ -111,18 +122,40 @@ A decisive premise is a factual claim about this project's current state that a
 slice's approach, sizing, or proof depends on: existing code and tests, host or
 environment state, fixture content, workload data, or a named proof or
 measurement command. Premises inherited from the story, such as "works as
-today", count the same as those you write. Before recording `ready`, establish
-each with the smallest safe observation: reading, searching, listing, a
-read-only host query, or one unpaid, side-effect-free local run of the named
-command. Observe the thing the claim is about, not only where you expect it: a
+today", count the same as those you write.
+
+Derive premises from the key examples: trace each one from trigger to
+observable result through existing code, and every step the plan relies on as
+already behaving is a decisive premise, written down or not. That includes
+anything that can collide with an example (an overlay, a competing rule) and
+every transformation between a fixture's inputs and the operation that
+evaluates them. A helper, step, hook or test that exists, or a grep hit, is
+presence, not settling. A claim that a change fixes a reported symptom is a
+premise: reproduce the symptom before dependent work, and a remedy spec that
+already passes leaves the symptom unexplained instead of counting as the fix.
+When an existing fixture can run the journey cheaply and safely, run it instead
+of reading call sites.
+
+Before recording `ready`, establish each decisive premise with the smallest
+safe observation: reading, searching, listing, a read-only host query, or one
+unpaid, side-effect-free local run of the named command. Observe the thing the claim is about, not only where you expect it: a
 claim that something has no test, or that a named proof exercises a behavior,
 is observed by searching for the existing tests and callers of what changes,
-wherever they live. For uncertain infrastructure or storage behavior, the
-observation is one isolated representative proof against the relevant engine
-and version, unless matching evidence exists. Record each premise, the literal
-observation, and its result in the plan. A false premise changes the plan
-before broad implementation. Do not inspect claims the approach does not depend
-on, and keep experiments off shared and production systems.
+wherever they live. When the plan moves or relocates a function, that search
+includes every caller, including scripts and step definitions, not only tests
+that import it. If a script, command, or route reaches the moved function,
+keep searching for a feature whose steps run that script. When such a feature
+exists, name the feature and record the observation that its steps run the
+script and the script calls the function. Naming only the script does not
+settle the claim while a feature runs it, and a test that imports or calls
+the moved unit does not settle it either. Naming an entry that does not reach
+the function does not settle it. For uncertain infrastructure or storage
+behavior, the observation is one isolated representative proof against the
+relevant engine and version, unless matching evidence exists. Record each
+premise, the operation that consumes its result, the literal observation that
+reaches it, and its result in the plan. A false premise changes the plan before
+broad implementation. Do not inspect claims the approach does not depend on, and
+keep experiments off shared and production systems.
 
 When only a paid, credentialed, owner-held, or state-changing observation can
 settle a premise, observe its cheap parts now and make the remainder an early

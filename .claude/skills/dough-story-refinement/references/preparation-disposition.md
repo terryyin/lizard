@@ -120,7 +120,8 @@ Reuse the local checkout role and the target
 selection recorded in
 [Select or reuse the workspace](preparation-workspace.md#select-or-reuse-the-workspace).
 The owned workspace is the worktree to land.
-The integration checkout path is the default checkout Dough Land refreshes.
+The recorded integration checkout, when there is one, is the default checkout
+Dough Land may refresh; with none recorded, its refresh is not applicable.
 The authorized remote target is the publication destination.
 The checkout is not a stage the candidate must pass through.
 Dough Land owns committing, publishing, refreshing the default checkout,
@@ -191,9 +192,9 @@ owned workspace. It does not remove:
   that must survive a discard aimed only at this session's draft. Whether the
   workspace later becomes safe to remove is a separate, independent decision
   governed by [Close or retain the
-  workspace](preparation-workspace.md#close-or-retain-the-workspace) (its
-  session-created, clean, unambiguous test); discard here is about removing
-  the identified draft content, not necessarily the workspace that held it;
+  workspace](preparation-workspace.md#close-or-retain-the-workspace); discard
+  here is about removing the identified draft content, not necessarily the
+  workspace that held it;
 - **unrelated edits** already present in that workspace before or alongside
   this session's write; or
 - **another session's work**, even one sharing the same workspace.

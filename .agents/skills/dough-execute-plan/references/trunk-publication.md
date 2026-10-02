@@ -3,7 +3,9 @@
 Startup uses this rule to publish a claim. Slice delivery uses it to
 publish a validated increment or an owned CI repair. Story wrap-up uses the
 same Git steps for each owned closure commit, including before-cleanup and
-final-closure commits. Do not invent a second publication sequence.
+final-closure commits, under
+[wrap-up closure publication](wrap-up-closure-publication.md). Do not invent a
+second publication sequence.
 
 This rule does not create execution authority or wait for CI. Observation is
 armed from the execution checkout against the authorized target branch.
@@ -48,7 +50,11 @@ current-branch work and host-owned execution enter this
 sequence only from the recorded checkout, and only when that caller already
 supplied publication authority. Without it, do not push; report the commit
 as pending publication. A local commit or local merge does not enter this
-sequence.
+sequence. Their previously published base is the recorded checkout's `HEAD`
+from before the operation's first commit. An `unpublished-base` stop means
+the remote does not hold that base, such as when the developer has their own
+unpublished commits in the default checkout: report that work for the
+developer to resolve, and never choose a different base to get past it.
 
 ## Preconditions
 
@@ -62,8 +68,8 @@ worktree. For a claim, the supplied validation confirms the selected entry is
 **Taken** on the candidate and that no empty commit was invented. For an increment or
 repair, it reuses accepted proof whose promise, boundary, implementation,
 setup, and observations still match.
-[Default-checkout access and preservation](maintain-default-checkout.md)
-apply only when this publication mutates that checkout. A maintenance stop
+[Default-checkout preservation](maintain-default-checkout.md#preserve-pending-local-work)
+applies only when this publication mutates that checkout. A maintenance stop
 follows
 [human judgment](execution-decisions.md#stop-for-human-judgment),
 [delivery staging](wrap-up.md#deliver-the-change), and
@@ -98,74 +104,11 @@ publication whose target is remote trunk, attempt a refresh under
 [Refresh eligibility](maintain-default-checkout.md#refresh-eligibility).
 A publication whose target is the remote execution branch does not refresh
 the default checkout. Report the publication acceptance, observation result,
-and any maintenance result separately. A deferred or stopped refresh does not
-erase the accepted publication and does not authorize another push. An
+and any
+[maintenance result](maintain-default-checkout.md#independent-maintenance-outcome)
+separately. An
 unavailable bridge is a coverage gap on the delivery receipt, not a reason to
 undo acceptance.
-
-## Publish wrap-up closure
-
-Story wrap-up treats each owned wrap-up commit on the execution checkout as a
-verified increment whose target remains remote trunk. Publish it immediately
-through [the common sequence](#publish-the-candidate) before the next wrap-up
-mutation that depends on its recovery from shared trunk. That closure target
-is not the Story Branch increment destination above. Do not merge the
-execution branch.
-
-Resolve observation ownership before the first wrap-up publication: recover
-the matching execution observer when it still exists; if observation already
-ended, use the existing setup to arm one observer from the same execution
-checkout against the authorized target using [CI observation](ci-monitor.md).
-Do not start an observer automatically or retarget another mailbox. Register
-each confirmed published SHA with that observer. After the last wrap-up
-publication this invocation will perform, invoke
-[the shared completion operation](ci-monitor.md#await-the-applicable-revision-at-completion)
-once for that final accepted SHA on the matching observer. Handle its combined
-CI and shutdown receipt, then report the exact published closure SHAs, that
-receipt, and remaining coverage. An unavailable bridge or registration failure
-is lost coverage: report it truthfully and continue without inventing
-successful observation.
-
-A publication stop leaves the commit recoverable on the execution branch.
-Do not delete spent history, remove resources, or claim closure. Invoke
-completion only after the final applicable wrap-up publication, never between
-intermediate recovery-record publications. After a success or bounded
-unresolved receipt with confirmed shutdown, wrap-up retires only this
-execution's worktree under Dough Land's
-[Retire the worktree](../../dough-land/SKILL.md#retire-the-worktree), with that
-receipt as its gate. Unconfirmed shutdown or retained observation preserves the
-worktree and branch.
-
-## Observe Story Branch integration
-
-Story Branch wrap-up changes publication targets. Before integrating its saved,
-published final-closure tip, close the observer bound to the remote execution
-branch with
-[the shared completion operation](ci-monitor.md#await-the-applicable-revision-at-completion)
-for that tip when it is the last accepted registered revision. A green
-execution-branch receipt covers only that branch and never releases later trunk
-observation.
-
-From the retained execution workspace, recover one matching observer already
-bound to the authorized trunk target or use the existing setup to start one
-there. Establish it before integration publication. Do not retarget the old
-mailbox, register a revision against a differently targeted observer, or create
-a duplicate observer for the same repository, target, and coordinator. When the
-branch observer cannot complete, or the trunk bridge cannot be established,
-retain explicit unavailable coverage; do not invent success or silently discard
-an observer that may still own the checkout.
-
-Publish the history-preserving integration through the common candidate
-sequence. After remote confirmation, register only the accepted integrated SHA
-with the trunk observer. A saved branch tip or superseded merge candidate is
-not that receipt. Invoke
-[the shared completion operation](ci-monitor.md#await-the-applicable-revision-at-completion)
-once for the accepted integrated SHA on that trunk observer and handle its
-combined receipt. With confirmed shutdown as its gate, wrap-up then retires
-the execution resources under the same
-[Retire the worktree](../../dough-land/SKILL.md#retire-the-worktree);
-publication recovery retains the same observer and repeats neither target
-setup nor an already accepted push.
 
 ## Recover a rejected push
 

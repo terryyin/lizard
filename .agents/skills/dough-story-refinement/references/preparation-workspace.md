@@ -26,17 +26,30 @@ or confirm the workspace immediately before making it.
 
 ## Select or reuse the workspace
 
+When your instruction carries an established preparation, use its workspace and
+skip this selection, as [established preparation](established-preparation.md)
+says.
+
 Apply [own a temporary exploration workspace](../../dough-manual-testing/references/exploration-workspace.md)
 "Select the checkout", "Record local checkout role and target selection",
 and "Use and resume it" as this preparation's Git lifecycle; do not duplicate
 its recipe here. First check whether the current story, active plan, session,
 or a host-supplied workspace already owns a suitable checkout for this
 preparation. Use it, and do not create a nested or per-invocation workspace
-merely because a different skill named above is now writing. When
-no suitable owned workspace exists, start one using that reference's create
-step, from a suitable existing host workspace when one is available, otherwise
-from the verified current revision of the checkout this preparation was
-invoked from.
+merely because a different skill named above is now writing.
+
+When no suitable owned workspace exists, start one using that reference's
+create step, in the repository of a suitable existing host workspace when one
+is available, otherwise of the checkout this preparation was invoked from. Its
+verified base is the authorized remote target, freshly fetched (for example,
+`git fetch <remote>`, then `<remote>/<trunk branch>`), so the draft starts from
+published history however stale, divergent, or dirty the invoking checkout is.
+That checkout's commits, staged content, and edits stay where they are and
+enter the draft only when the developer explicitly supplies them as
+preparation input. For an existing queued story, the announcement command in
+[Announce the preparation assignment](#announce-the-preparation-assignment)
+makes this selection: give it the new workspace path and branch instead of
+creating the workspace yourself.
 
 Verify a candidate against that reference before writing into it. The suitable
 owner is the current story, plan, session, or host. An unverifiable or
@@ -52,8 +65,9 @@ the actual established paths. The owned workspace path is the preparation
 workspace. The integration checkout path is the checkout this preparation was
 invoked from, or a reused host workspace's already-recorded integration
 checkout — the project's established checkout for ordinary work, never the
-owned preparation workspace itself. Target selection is the authorized remote
-target, recorded separately from that path. A later keep decision publishes
+owned preparation workspace itself. When no such checkout exists, record none.
+Target selection is the authorized remote target, recorded separately from that
+path. A later keep decision publishes
 onto this recorded target; see
 [Decide what happens to the written result](preparation-disposition.md#decide-what-happens-to-the-written-result).
 Preparation's continuation after this selection is the record write and that
@@ -61,11 +75,13 @@ disposition. It does not apply execution mode or project-command readiness.
 
 ## Announce the preparation assignment
 
-For an existing queued story, announce it as **Preparing** after selecting the
-workspace and before its first record write, and keep that assignment through
-pauses, under
+For an existing queued story, announce it as **Preparing** before its first
+record write, either after selecting the workspace or as the step that creates
+a new one, and keep that assignment through pauses, under
 [Publish the preparation assignment](preparation-assignment.md). An explicit
-instruction not to publish or commit means announcing nothing.
+instruction not to publish or commit means announcing nothing. An explicitly
+selected [one-shot refinement](one-shot-refinement.md) establishes the
+workspace with its own start instead and announces nothing.
 
 ## Continue related preparation
 
@@ -142,16 +158,17 @@ below.
 
 ## Close or retain the workspace
 
-Cleanup runs only after one of these decisions for this session's draft under [Decide
-what happens to the written result](preparation-disposition.md#decide-what-happens-to-the-written-result)
+Cleanup runs only after one of these decisions for this preparation's draft
+under [Decide what happens to the written result](preparation-disposition.md#decide-what-happens-to-the-written-result)
 is actually **confirmed**, never merely attempted or merely because the
 session is ending:
 
 - a **keep** whose landed SHA the fetched authorized remote target contains,
   per
   [Keep and publish the retained result](preparation-disposition.md#keep-and-publish-the-retained-result).
-  The default checkout need not match that SHA. A deferred refresh does not
-  withhold this confirmation;
+  The default checkout need not match that SHA. No refresh
+  [result](../../dough-execute-plan/references/maintain-default-checkout.md#independent-maintenance-outcome)
+  withholds this confirmation;
 - an explicit **discard** that actually removed the identified draft under
   [Discard an identified draft](preparation-disposition.md#discard-an-identified-draft),
   not one that stopped because the content could not be unambiguously
@@ -185,11 +202,11 @@ describes.
 Once a confirmed disposition applies, retire the workspace under Dough Land's
 [Retire the worktree](../../dough-land/SKILL.md#retire-the-worktree): a keep
 already did so as part of its landing, and a confirmed discard or finished
-no-publish applies the same rule. Removal depends on the session-created
-versus reused or host-owned identity recorded in [Select or reuse the
-workspace](#select-or-reuse-the-workspace), never on a clean directory alone:
-a reused or host-owned workspace may still hold another story's, plan's, or
-session's in-progress work, and stays with its owner. State any retained
+no-publish applies the same rule. Which workspace this preparation removes
+follows the shared lifecycle's
+[Close or retain it](../../dough-manual-testing/references/exploration-workspace.md#close-or-retain-it),
+applied to the identity recorded in [Select or reuse the
+workspace](#select-or-reuse-the-workspace). State any retained
 workspace's path, branch, and reason alongside, not instead of, any
 disposition report already owed to the developer.
 

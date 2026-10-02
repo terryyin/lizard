@@ -25,11 +25,11 @@ import {
   assignmentFields,
   errorText,
   noAssignment,
-  requestOf,
   stop,
   storyListAt,
   workspaceAssignment,
 } from "./preparation-assignment-ownership.mjs";
+import { requestOf } from "./preparation-assignment-request.mjs";
 
 // The developer's choices when the prepared story has left the queue; the
 // command makes none of them.

@@ -44,7 +44,10 @@ operation: approach `unselected` while the approach is undecided, `planless`
 only under explicit planless authority, or `planned` with its plan. Record no
 assessment you have not made. Then add
 `--admit --link <seed path>#<anchor> --title <entry title>` to the start
-command's flags, with the link relative to the backlog directory.
+command's flags, with the link relative to the backlog directory, and supply
+the checkout holding those drafts as its `--integration`. Drafts are read only
+from that supplied checkout; without it, the command admits the story as
+published on remote trunk.
 
 ## Act on the result
 
@@ -85,9 +88,7 @@ backlog change with the plan and story. Then run the start command without
 refuses, starting nothing, while the published approach is unselected, the
 published preparation is not ready, the published Taken entry lacks the plan
 link its preparation declares (record the planned approach again with
-`record-state` and publish it), the originating checkout holds an unpublished
-edit of the story or plan (the draft your admission published is not one), or
-another agent holds the claim.
+`record-state` and publish it), or another agent holds the claim.
 
 ## Finish the mission
 

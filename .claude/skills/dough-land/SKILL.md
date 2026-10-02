@@ -1,21 +1,25 @@
 ---
 name: dough-land
 description: >-
-  Dough Land lands everything in one reviewed, owned worktree on the authorized
-  remote trunk: commits all of its changes, reconciles and publishes them without
-  force, refreshes the default checkout when safe, and retires the clean worktree
-  and its branch once trunk contains them. Use only on explicit invocation, such
-  as "/dough-land", "use Dough Land", or "land this worktree", or when another
-  skill's validated keep instruction links here. A casual "keep", "looks good",
-  or approval does not invoke it. Hosted merges and pull requests are out of scope.
+  Dough Land lands everything in one reviewed checkout on the authorized remote
+  trunk: commits all of its changes, reconciles and publishes them without
+  force, and refreshes a supplied default checkout when safe. An owned worktree
+  is retired with its branch once trunk contains its work; the default checkout
+  stays in place.
+  Use only on explicit invocation, such as "/dough-land", "use Dough Land",
+  "land this worktree", or "land" for changes made on the default checkout, or
+  when another skill's validated keep instruction links here. A casual
+  "keep", "looks good", or approval does not invoke it.
+  Hosted merges and pull requests are out of scope.
 ---
 
 # Dough Land
 
-Land one reviewed worktree: commit everything in it, publish that onto the
-authorized remote trunk, refresh the default checkout when safe, and retire the
-worktree. Publication, refresh, and cleanup are separate results. A later step
-that stops or is deferred never undoes an earlier one.
+Land one reviewed checkout, an owned worktree or the default checkout on the
+target branch: commit everything in it, publish that onto the authorized remote
+trunk, refresh a supplied default checkout when safe, and retire the worktree
+when it is one. Publication, refresh, and cleanup are separate results.
+A later step that stops or is deferred never undoes an earlier one.
 
 Run only when the developer explicitly invokes Dough Land, or when a calling
 skill's own validated keep instruction links here. Reviewing, approving,
@@ -23,17 +27,24 @@ pausing, or saying "keep" in passing does not start a landing. Do not open a
 pull request, request a hosted merge, or discard anything; when the developer
 wants one of those, stop and say that Dough Land does not do it.
 
-## Resolve the worktree and target
+## Resolve the checkout and target
 
 Resolve both before any commit:
 
-- **Worktree.** The worktree named by the invocation or its context: normally
-  the current one, or the owned workspace a calling skill recorded. Record its
-  path and branch, whether this work created it or reused one another
-  workflow owns, and its starting revision when known. Ownership comes from
-  that context; do not infer it from a clean directory.
+- **Landing checkout.** The checkout named by the invocation or its context:
+  normally the current one, or the owned workspace a calling skill recorded.
+  When the context says the change sits on the default checkout, that checkout
+  is the one to land. Record its path and branch, whether this work created it
+  or reused one another workflow owns, and its starting revision when known.
+  Ownership comes from
+  that context or the worktree's
+  [creation record](../dough-manual-testing/references/exploration-workspace.md#close-or-retain-it);
+  do not infer it from a clean directory.
 - **Default checkout.** The project's established checkout for ordinary work,
-  which the refresh step inspects. It is never the worktree being landed.
+  when the context supplies one; the refresh step inspects it. Landing needs no
+  default checkout. When the landing checkout is a worktree, the default
+  checkout is a different one; when the change sits on the default checkout,
+  it is the landing checkout and needs no separate refresh source.
 - **Target.** The authorized remote target as `refs/heads/<branch>` on a named
   remote: the target selection already recorded for this worktree, or the one
   the project or developer authorizes. Default the branch to `main` only when
@@ -41,29 +52,31 @@ Resolve both before any commit:
 
 Stop before committing, and name the gap, when:
 
-- no worktree is in context, or more than one candidate fits;
-- the named worktree is the default checkout itself — landing never commits
-  or pushes from it;
+- no checkout is in context, or more than one candidate fits;
+- the named default checkout is on another branch than the target; name both
+  branches;
 - the target is missing, contradictory, or not a branch on an authorized
   remote; or
-- the worktree has an unfinished merge, rebase, cherry-pick, or revert. Name
-  it; the developer resolves it, then reruns.
+- the checkout has an `index.lock` or an unfinished merge, rebase,
+  cherry-pick, or revert. Name it; the developer resolves it, then reruns.
 
-## Commit everything in the worktree
+## Commit everything in the checkout
 
-Everything in the worktree is the reviewed change. Stage all tracked,
-untracked, and deleted paths (`git -C <worktree> add -A`) and commit them in
-the worktree with a message describing the reviewed change, as an
+Everything in the checkout is the reviewed change, including unrelated files
+and local commits the fetched target lacks. Stage all tracked, untracked, and
+deleted paths (`git -C <checkout> add -A`) and commit them there with a
+message describing the reviewed change, as an
 [agent commit](../dough-execute-plan/references/agent-commits.md) when that
-reference applies to the worktree; its refusal stops the landing before
-publication. When there is nothing to commit, create no commit; that is the
+reference applies to the checkout, otherwise with plain `git commit`; its
+refusal stops the landing before publication. When there is nothing to commit, create no commit; that is the
 normal rerun case.
 
-The owned unpublished suffix is every commit on the worktree branch that the
-fetched target does not contain. Its previously published base is the last
-SHA this landing recorded as accepted, otherwise the worktree's recorded
+The owned unpublished suffix is every commit on the checkout's branch that
+the fetched target does not contain. Its previously published base is the last
+SHA this landing recorded as accepted, otherwise the checkout's recorded
 starting revision, otherwise the merge base of the branch and the fetched
-target.
+target (for the default checkout, its local HEAD before the commit when that
+is contained in the fetched target).
 
 A calling skill that must land only its own record checks, before linking
 here, that the worktree holds nothing else. Dough Land does not pick paths out
@@ -74,68 +87,126 @@ never adds or removes an assignment profile.
 ## Publish
 
 Apply [publish the candidate](../dough-execute-plan/references/publish-the-candidate.md)
-from the worktree, for that suffix and target; do not invent a second
+from the checkout, for that suffix and target; the default checkout is the
+owned workspace when it is the one landing; do not invent a second
 sequence. The check this caller supplies is that the candidate's own changes
-are the reviewed worktree content. A rewrite onto a newer target rechecks only
+are the reviewed checkout content. A rewrite onto a newer target rechecks only
 proof the combined change affects. Nothing is registered with a CI observer.
 
 A conflict, refusal, failed recheck, or second rejection stops here. Preserve
-the worktree, branch, index, and whatever state Git left. Name the conflict or
+the checkout, branch, index, and whatever state Git left. Name the conflict or
 contention, and report publication, refresh, and cleanup as not done. Do not
 loop.
 
 ## Refresh the default checkout
 
-After acceptance, attempt
+After acceptance, when the landing checkout is the default checkout, it is
+already at the accepted SHA: report the refresh as already current, or as a
+fast-forward to the published trunk when the publication moved it. Otherwise
+attempt
 [Refresh eligibility](../dough-execute-plan/references/maintain-default-checkout.md#refresh-eligibility)
-on the default checkout, without acquiring exclusive access to it. Report its
-result and reason separately from publication. A deferred or stopped refresh,
-such as a pending human edit in that checkout, is not a failed landing and
-does not block retirement.
+on the supplied default checkout for the landed remote and branch.
+Report its
+[maintenance result](../dough-execute-plan/references/maintain-default-checkout.md#independent-maintenance-outcome)
+and reason separately from publication. No refresh result is a failed landing
+or blocks retirement.
 
 Another skill may apply this section on its own after its own accepted
 publication.
 
 ## Retire the worktree
 
-Retirement follows
+Retirement is not applicable when the landing checkout is the default
+checkout: nothing is removed, and cleanup is reported as not applicable.
+Otherwise retire the worktree only when both gates hold, and let the command
+below check them: the fetched target contains its work, and this work created the
+worktree, which
 [own a temporary exploration workspace](../dough-manual-testing/references/exploration-workspace.md)
-"Close or retain it", with containment as the safety test:
+"Close or retain it" establishes from the work's records. Containment alone
+does not make a worktree this work's to remove.
 
-1. Fetch the target. Continue only when the fetched target contains the
-   worktree branch tip (`git merge-base --is-ancestor <tip> <remote>/<branch>`).
-   Remote acceptance is what makes retirement safe. The default checkout
-   being behind the target does not make the branch unmerged.
-2. Remove the worktree (`git worktree remove <worktree>`) only as that
-   section allows: clean and created by this work. Otherwise retain it and
-   report its path, branch, and reason.
-3. Delete the local branch with a safe, non-force delete once the target
-   contains its tip (for example, point its upstream at the fetched target,
-   then `git branch -d`).
-4. Delete a separately published remote branch for the worktree only after
-   the target contains its tip, and never the target branch itself.
+Before removing anything, record the worktree's repository management
+context, its shared Git directory
+(`git -C <worktree> rev-parse --path-format=absolute --git-common-dir`). Give
+it to the command below, and run any other Git command here from it
+(`git -C <management context> ...`), not from the worktree or a default
+checkout, so removing the worktree, even the repository's last one, leaves
+them usable.
 
-Accept already-absent resources on a rerun. Never force-remove, force-delete,
-or reset to make cleanup possible. A calling skill may add its own gate, such
-as a completion receipt that must arrive first; retirement then waits for that
-gate as well as containment, and keeps every resource while either is missing.
+Run the installed retirement command, where `<installed>` is this project's
+installed skills directory that holds `dough-land` (normally `.agents/skills/`
+or `.claude/skills/`). It names every checkout it acts on, so run it as
+written:
+
+```text
+node <installed>/dough-land/scripts/worktree-retirement.mjs retire \
+  --repository <management context> --worktree <worktree> \
+  --branch <worktree branch> --remote <remote> --target-ref refs/heads/<branch> \
+  [--identity <work identity>] [--created-for-work] \
+  [--remote-branch <remote branch> --contained <sha>]
+```
+
+- `--identity` is the identity of the work the worktree serves, such as its
+  story identity (`SEED-NNN#slug`), when the context names one. A worktree
+  whose creation record names that work is retired whichever session created
+  it.
+- Pass `--created-for-work` only when the work recorded that its workspace
+  selection reported `created: true`, in the plan or the conversation, or the
+  caller or developer states the worktree was created for this work. Do not
+  infer it from a clean directory, a claim, or a preparation assignment.
+- `--remote-branch` names a branch the worktree's work published separately on
+  the same remote, such as a Story Branch execution branch; never the target
+  branch itself. Pass `--contained` with each revision the target must hold
+  before anything is removed, such as the integrated SHA the caller's receipt
+  covers; repeat it for more than one.
+
+The command fetches the target's remote, requires the fetched target to
+contain the branch tip, any remote branch tip, and each `--contained`
+revision, checks the worktree's ownership and state, removes the worktree,
+safely deletes the local branch, and then deletes the remote branch. Remote
+acceptance is what makes retirement safe; a default checkout being behind the
+target, or absent, does not make the branch unmerged. It prints one JSON line:
+
+| Result | Act on it |
+| --- | --- |
+| `ok: true` | Report the worktree, branch, and any `remoteBranch` as `removed` or `already-absent` |
+| `reason: "unique unpublished work"` | The fetched target lacks the branch tip or a `--contained` revision. Retain everything and report it; the target lacks that work |
+| `reason: "remote execution tip is not integrated"` | The fetched target lacks the remote branch tip. Retain the worktree and both branches and report the remote tip; it holds work the target does not |
+| `reason: "remote branch is the target"` | Nothing ran. Name the separately published branch, never the target |
+| `reason: "dirty checkout"`, `"ambiguous checkout"`, or `"another workspace"` | Retain and report path, branch, and reason; the developer decides |
+| `reason: "created for other work: <work>"` | The worktree belongs to the named work. Retain it, even when you believed this work created it |
+| `reason` naming a reused, host-owned, or unrecorded workspace | It stays with its owning workflow. Retain and report it; rerun with `--created-for-work` only from a record named above |
+| `partial: true` | A removal was not verified. Report which of `worktree`, `branch`, and `remoteBranch` was done, then rerun |
+| `reason: "git error"` | Report its `error` and the step as unfinished; retain what remains |
+| Exit 2 | A usage error; nothing ran. Supply the missing input |
+
+Every result other than `ok: true` exits 1; nothing beyond what it reports
+was removed.
+
+Accept already-absent resources on a rerun: once the worktree is gone, rerun
+the command with the management context recorded before its removal; it
+reports `already-absent` and needs no ownership fact. Never force-remove,
+force-delete, or reset to make cleanup possible. A calling skill may add its
+own gate, such as a completion receipt that must arrive first; retirement then
+waits for that gate as well as containment and ownership, runs the command only
+once the gate holds, and keeps every resource while any of them is missing.
 
 Another skill may apply this section on its own after its own accepted
 publication, with its own gate.
 
 ## Stop, rerun, and report
 
-A stop keeps every resource recoverable (worktree, branch, commits, index, the
+A stop keeps every resource recoverable (worktree, branch, commits, index, any
 default checkout, and the remote as it is) and names the exact unfinished
 step. A rerun reads real Git and remote state and continues from the first
 unfinished step:
 
 | State found | Continue with |
 | --- | --- |
-| Unfinished Git operation in the worktree | Stop and name it |
-| Uncommitted changes | [Commit everything](#commit-everything-in-the-worktree) |
+| Unfinished Git operation in the checkout | Stop and name it |
+| Uncommitted changes | [Commit everything](#commit-everything-in-the-checkout) |
 | Branch tip not contained in the fetched target | [Publish](#publish), through the publisher's [resume](../dough-execute-plan/references/publish-the-candidate.md#resume-an-interrupted-publication) |
-| Tip already contained | Record it as accepted; push nothing. Then refresh and retire |
+| Tip already contained | Record it as accepted; push nothing. Then refresh, and retire a worktree |
 | Worktree or branch already absent | Report it as already retired |
 
 Never commit the same change twice, push an already accepted candidate again,
@@ -144,6 +215,8 @@ or create a replacement worktree.
 Report, as separate results:
 
 - **Publication:** accepted SHA and target, or the step that stopped and why.
-- **Refresh:** the refresh result and reason, or not attempted.
-- **Cleanup:** worktree and local branch removed, already absent, or retained
-  with path and reason; a remote branch deleted only when verified absent.
+- **Refresh:** the refresh result and reason (including not applicable), or
+  not attempted.
+- **Cleanup:** not applicable for the default checkout; otherwise worktree and
+  local branch removed, already absent, or retained with path and reason; a
+  remote branch deleted only when verified absent.

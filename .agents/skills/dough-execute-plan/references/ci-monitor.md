@@ -70,7 +70,7 @@ delivered failures before claiming completion. Never kill by a broad process-nam
 pattern. Retain installed hook registration; shutdown does not unregister or
 rewrite host settings. Story wrap-up may still need coverage after that
 shutdown; follow
-[wrap-up closure publication](trunk-publication.md#publish-wrap-up-closure)
+[wrap-up closure publication](wrap-up-closure-publication.md)
 rather than treating execution shutdown as the end of Trunk Mode observation.
 
 ## Await the applicable revision at completion

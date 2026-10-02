@@ -1,8 +1,9 @@
 // Admission source: an accepted mission that neither backlog list holds yet,
 // or a queued story whose one-shot attempt grew and carries its edits into
 // admission. Its canonical story, and a plan that story declares, may still be
-// drafts in the originating checkout; admission carries only that owned
-// content, reconciled with fetched trunk (execution-admission-reconcile.mjs).
+// drafts in the originating checkout supplied as the integration checkout;
+// admission carries only that owned content, reconciled with fetched trunk
+// (execution-admission-reconcile.mjs).
 // Preparation is read as recorded; admission never records readiness or
 // approach of its own.
 import {
@@ -58,12 +59,12 @@ const changedFiles = (...pairs) =>
 // story section and declared plan. Another holder, such as a preparation
 // profile, still refuses it.
 async function readQueuedAdmission(request, remoteRef, candidateSha, entry) {
-  const { integration, identity, link } = request;
+  const { repository, identity, link } = request;
   if (link !== entry.href)
     throw refused(`selected identity is queued at ${entry.href}, not ${link}`);
-  await requireUnheld(integration, remoteRef, identity, backlogPath);
-  const selection = selectedPreparation(integration, entry.href);
-  const drafts = await draftsOf(integration, remoteRef, candidateSha);
+  await requireUnheld(repository, remoteRef, identity, backlogPath);
+  const selection = selectedPreparation(repository, entry.href);
+  const drafts = await draftsOf(request, remoteRef, candidateSha);
   const home = await versionsOf(request, remoteRef, drafts, selection.homePath);
   if (home.trunk === null)
     throw refused(`selected canonical home ${selection.homePath} is absent`);
@@ -96,8 +97,8 @@ async function readQueuedAdmission(request, remoteRef, candidateSha, entry) {
 // Once the work is listed, only the listing and its plan, whose owner the
 // claim's provenance decides.
 export async function readAdmissionSource(request, remoteRef, candidateSha) {
-  const { integration, identity, link } = request;
-  const backlog = await show(integration, remoteRef, backlogPath);
+  const { repository, identity, link } = request;
+  const backlog = await show(repository, remoteRef, backlogPath);
   if (backlog === null) throw refused("fetched trunk has no product backlog");
   const document = parseBacklog(backlog);
   const entry = document.entries.find((item) => item.identity === identity);
@@ -117,9 +118,9 @@ export async function readAdmissionSource(request, remoteRef, candidateSha) {
     if (error instanceof BacklogError) throw refused(error.message);
     throw error;
   }
-  const selection = selectedPreparation(integration, link);
+  const selection = selectedPreparation(repository, link);
   const { homePath } = selection;
-  const drafts = await draftsOf(integration, remoteRef, candidateSha);
+  const drafts = await draftsOf(request, remoteRef, candidateSha);
   const home = await versionsOf(request, remoteRef, drafts, homePath);
   if (home.draft === null)
     throw refused(`selected canonical home ${homePath} is absent`);

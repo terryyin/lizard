@@ -5,6 +5,8 @@
 import { basename, dirname, join } from "node:path";
 import {
   agentIdentity,
+  agentRotationFor,
+  agentSettingsPath,
   agentProfileDirectory,
   parseAgentProfile,
   parseAgentProfileFile,
@@ -57,14 +59,33 @@ async function mostRecentAgentName(cwd, rev, backlogPath) {
   return added[0];
 }
 
-// The rotation's next name at `rev`, or undefined when every name is held.
-// Every profile file occupies its name, whatever activity it records.
+// The project's setting file text at `rev`, or undefined when absent there.
+async function settingsAt(cwd, rev) {
+  const listed = await git(
+    cwd,
+    "ls-tree",
+    "--name-only",
+    rev,
+    "--",
+    agentSettingsPath,
+  );
+  if (!listed.stdout.trim()) return undefined;
+  return (await git(cwd, "cat-file", "-p", `${rev}:${agentSettingsPath}`))
+    .stdout;
+}
+
+// The rotation's next name at `rev` under the project's setting there, or
+// undefined when every name is held; `error` instead when the setting is
+// unreadable, which refuses the assignment. Every profile file occupies its
+// name, whatever activity it records or collection it belongs to.
 export async function nextAgentName(cwd, rev, backlogPath) {
+  const rotation = agentRotationFor(await settingsAt(cwd, rev));
+  if (!rotation.ok) return { error: rotation.error, held: [] };
   const [mostRecent, held] = await Promise.all([
     mostRecentAgentName(cwd, rev, backlogPath),
     heldAgentNames(cwd, rev, backlogPath),
   ]);
-  return { name: selectAgentName(mostRecent, held), held };
+  return { name: selectAgentName(mostRecent, held, rotation.names), held };
 }
 
 // The allocation a published profile records: the commit that most recently
@@ -129,7 +150,8 @@ export async function selectAgent(
   backlogPath,
   stopFields,
 ) {
-  const { name } = await nextAgentName(cwd, rev, backlogPath);
+  const { name, error } = await nextAgentName(cwd, rev, backlogPath);
+  if (error) return stopped("agent-setting-invalid", { ...stopFields, error });
   if (!name) return agentUnavailable(cwd, rev, backlogPath, stopFields);
   return {
     ok: true,

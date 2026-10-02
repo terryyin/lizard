@@ -1,6 +1,5 @@
-// Authoritative startup orchestration for queued work, for admission of
-// accepted work (carrying a grown one-shot attempt's edits when asked), and
-// for one-shot work. The CLI adapter stays in execution-start.mjs.
+// Startup for queued, admitted (with carried edits when requested), or one-shot
+// work. The CLI adapter stays in execution-start.mjs.
 import { git, lsRemoteSha, revParse } from "./publication-git.mjs";
 import {
   maintenance,
@@ -21,7 +20,10 @@ import {
   reselectClaimAgent,
 } from "./execution-start-agent.mjs";
 import { commitWorkspaceClaim } from "./workspace-publication-claim.mjs";
-import { selectOwnedWorkspace } from "./workspace-publication-select.mjs";
+import {
+  mainWorktreeError,
+  selectOwnedWorkspace,
+} from "./workspace-publication-select.mjs";
 import {
   claimMembership,
   publishClaimSha,
@@ -43,18 +45,21 @@ export async function startExecution(requestInput) {
   const result = await startRequested(started.request);
   return started.request.carry ? finishCarry(started.request, result) : result;
 }
-
 async function startRequested(request) {
+  if (!request.retained && !request.defaultMain) {
+    const error = await mainWorktreeError(request.workspace);
+    if (error) return stopped("invalid-request", { error });
+  }
   const remote = remoteOf(request);
   const ref = remoteRef(request);
   const source = startSource(request);
   let selectedSource, fetched, origin;
   try {
     origin = (
-      await git(request.integration, "remote", "get-url", remote)
+      await git(request.repository, "remote", "get-url", remote)
     ).stdout.trim();
-    await git(request.integration, "fetch", remote);
-    fetched = await revParse(request.integration, ref);
+    await git(request.repository, "fetch", remote);
+    fetched = await revParse(request.repository, ref);
     selectedSource = await source.read(request, ref);
     if (request.retained) await source.retainedBasis?.(request, selectedSource);
   } catch (error) {
@@ -63,8 +68,8 @@ async function startRequested(request) {
   if (source.oneShot) return prepareOneShot(request, origin, fetched);
   if (selectedSource.existing && !request.retained)
     return existingClaim(request, ref, selectedSource);
-  // The rotation is read in the integration checkout, which fetched trunk.
-  const selection = { ...request, cwd: request.integration };
+  // The rotation is read in the repository, which fetched trunk.
+  const selection = { ...request, cwd: request.repository };
   let agent;
   if (!request.retained) {
     const chosen = await selectAgent(selection, ref, backlogPath, { fetched });
@@ -163,7 +168,7 @@ async function startRequested(request) {
     ...claimRequest,
     candidateSha: committed.candidateSha,
     async recheckSource({ candidateSha }) {
-      await git(request.integration, "fetch", remote);
+      await git(request.repository, "fetch", remote);
       const refreshed = await source.read(request, ref, candidateSha);
       if (source.changed(refreshed, selectedSource)) {
         throw new Error(
@@ -197,7 +202,6 @@ async function startRequested(request) {
         ...published.recovery,
       },
     };
-  // Independent remote acceptance: containment plus current provenance.
   try {
     await git(selected.workspace, "fetch", remote);
     const remoteTip = await lsRemoteSha(origin, `refs/heads/${request.target}`);

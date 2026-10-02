@@ -34,8 +34,13 @@ export function readDeliveryProgress(directory) {
     : { deliveredThrough: 0 };
 }
 
-export function recordDeliveryProgress(directory, deliveredThrough) {
-  publishJson(directory, "delivery.json", { deliveredThrough });
+// Merges an acknowledged update (`deliveredThrough`, `lossReported`) into the
+// coordinator's durable delivery progress for this mailbox.
+export function recordDeliveryProgress(directory, update) {
+  publishJson(directory, "delivery.json", {
+    ...readDeliveryProgress(directory),
+    ...update,
+  });
 }
 
 export function recordWorkerIdentity(directory, identity) {

@@ -7,9 +7,16 @@ import {
 } from "./execution-start-maintenance.mjs";
 import { readPublishedExecutionSource } from "./execution-source.mjs";
 import { requireOneShotStart } from "./one-shot-ownership.mjs";
-import { preparedReceipt } from "./execution-start-receipt.mjs";
+import {
+  defaultCheckoutReceipt,
+  preparedReceipt,
+} from "./execution-start-receipt.mjs";
 import { sameSelectedSource } from "./execution-start-recovery.mjs";
-import { selectOwnedWorkspace } from "./workspace-publication-select.mjs";
+import { sessionPolicy, withSelectedLanding } from "./session-policy.mjs";
+import {
+  selectDefaultCheckout,
+  selectOwnedWorkspace,
+} from "./workspace-publication-select.mjs";
 import {
   backlogPath,
   claimProvenance,
@@ -19,20 +26,35 @@ import {
 // A one-shot start claims nothing: it only checks how fetched trunk holds a
 // supplied identity. An unlisted request, with no identity or one no backlog
 // list holds, has nothing to check.
-async function readOneShotSource({ integration, identity }, ref) {
+async function readOneShotSource({ repository, identity }, ref) {
   if (identity)
-    await requireOneShotStart(integration, ref, identity, backlogPath);
+    await requireOneShotStart(repository, ref, identity, backlogPath);
   return {};
 }
 
-// The one-shot start: the owned workspace at fetched trunk, with nothing
-// published. Its result goes through managed delivery.
+// The one-shot start: the owned workspace at fetched trunk, or the default
+// checkout as it is, with nothing published. Its result goes through managed
+// delivery. The default checkout is the workspace itself, so it gets no
+// separate local refresh. A prepared receipt carries `landing: "auto-land"`
+// when that landing was selected; without it the result waits for review.
 export async function prepareOneShot(request, origin, fetched) {
+  const policy = sessionPolicy(request);
+  if (policy.workspace === "default-checkout") {
+    const selected = await selectDefaultCheckout(request);
+    if (!selected.ok) return { ...selected, fetched };
+    return withSelectedLanding(
+      defaultCheckoutReceipt(request, selected, fetched),
+      policy,
+    );
+  }
   const maintained = await maintenance(request);
   const selected = await selectOwnedWorkspace({ ...request, origin });
   if (!selected.ok)
     return { ...selected, fetched, ...reportedMaintenance(maintained) };
-  return preparedReceipt(request, selected, maintained);
+  return withSelectedLanding(
+    preparedReceipt(request, selected, maintained),
+    policy,
+  );
 }
 
 // `read(request, ref, candidateSha)` reads it on fetched trunk; `changed`
@@ -42,7 +64,7 @@ export async function prepareOneShot(request, origin, fetched) {
 // trunk it reads rather than drafted anew, so it only changes when the work
 // has meanwhile been listed. A one-shot source publishes no claim to recheck.
 export function startSource(request) {
-  if (request.oneShot === true)
+  if (sessionPolicy(request).tracking === "one-shot")
     return { oneShot: true, read: readOneShotSource };
   if (request.admit === true)
     return {
@@ -78,7 +100,7 @@ export async function existingClaim(request, ref, source = {}) {
     "claim" in source
       ? source.claim
       : await claimProvenance(
-          request.integration,
+          request.repository,
           ref,
           request.identity,
           backlogPath,

@@ -29,7 +29,15 @@ function hasReceipt(observer, sha, targetRef) {
   );
 }
 
+// A repository management context without a checked-out commit (a Git
+// directory whose owned worktree is already retired) holds no owned commits.
 async function ownedCommitIdentity(workspace) {
+  try {
+    await git(workspace, "rev-parse", "-q", "--verify", "HEAD");
+  } catch (error) {
+    if (error.code !== 1) throw error;
+    return { head: null, count: 0 };
+  }
   return {
     head: await revParse(workspace, "HEAD"),
     count: Number(

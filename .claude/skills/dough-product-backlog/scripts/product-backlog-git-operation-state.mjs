@@ -6,7 +6,7 @@
 // `product-backlog-git-repository.mjs` locate those files and resolve the
 // revisions they name.
 import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { gitLine, gitPath } from "./product-backlog-git-repository.mjs";
 
 // Reads one small state file Git itself maintains for an in-progress
@@ -41,6 +41,15 @@ function rebaseStateDirectory(repoRoot) {
     return { directory: apply, replayedFile: "original-commit" };
   }
   return undefined;
+}
+
+// Which rebase state directory ("rebase-merge" or "rebase-apply") is on disk,
+// or `undefined` when no rebase is in progress. The directory, not
+// `REBASE_HEAD`, marks a rebase in progress: Git can leave `REBASE_HEAD`
+// behind after a conflicted rebase completes.
+export function rebaseInProgress(repoRoot) {
+  const state = rebaseStateDirectory(repoRoot);
+  return state ? basename(state.directory) : undefined;
 }
 
 // The real revisions a stopped rebase is actually replaying, read from Git's

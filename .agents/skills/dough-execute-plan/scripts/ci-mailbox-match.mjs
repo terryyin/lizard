@@ -67,7 +67,8 @@ export function findLiveMatchingMailbox({
   );
 }
 
-function matchingDirectories({ repo, branch, root, storage }) {
+// Matching execution observers in any state: live, ended, or lost.
+export function listMatchingMailboxes({ repo, branch, root, storage }) {
   return listMailboxDirectories(storage).filter((directory) =>
     matchesExecutionContext(directory, { repo, branch, root, storage }),
   );
@@ -81,7 +82,7 @@ export function classifyMatchingObservationOwnership({
   root = checkoutRoot,
   storage = mailboxRoot,
 } = {}) {
-  const matches = matchingDirectories({ repo, branch, root, storage });
+  const matches = listMatchingMailboxes({ repo, branch, root, storage });
   if (matches.length === 0) {
     return {
       kind: "missing",

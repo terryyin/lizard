@@ -4,17 +4,14 @@
 // and a whole declared plan. Sibling sections on trunk survive, other local
 // edits stay local, and an edit trunk also made differently stops with both
 // versions intact for a human decision.
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import {
   joinSource,
   splitSource,
 } from "../../dough-product-backlog/scripts/product-backlog-source.mjs";
-import {
-  mergeBase,
-  sectionOf,
-  show,
-  worktreeSource,
-} from "./execution-source.mjs";
-import { revParse } from "./publication-git.mjs";
+import { sectionOf, show } from "./execution-source.mjs";
+import { git, revParse } from "./publication-git.mjs";
 
 // A refusal that names its stop status, such as a reconciliation conflict.
 export class AdmissionRefusal extends Error {
@@ -28,18 +25,33 @@ export class AdmissionRefusal extends Error {
 export const refused = (message, fields) =>
   new AdmissionRefusal("source-refused", message, fields);
 
+// The originating checkout's working-tree copy, or null when it has none.
+function worktreeSource(root, path) {
+  try {
+    return readFileSync(join(root, path), "utf8");
+  } catch {
+    return null;
+  }
+}
+
 // Where admitted content is drafted, and the revision it was drafted from:
-// the originating worktree against its merge base with trunk, or a preserved
-// claim candidate against its own parent. Recovery reconciles that candidate
-// again, so later local drafting never changes an accepted admission.
-export async function draftsOf(integration, remoteRef, candidateSha) {
+// the supplied originating (integration) checkout's worktree against its
+// merge base with trunk, or a preserved claim candidate against its own
+// parent. Recovery reconciles that candidate again, so later local drafting
+// never changes an accepted admission. Without a supplied checkout nothing is
+// drafted locally: the owned workspace is never read as drafts.
+export async function draftsOf(request, remoteRef, candidateSha) {
+  const { repository, integration } = request;
   if (candidateSha)
     return {
-      base: await revParse(integration, `${candidateSha}^`),
-      read: (path) => show(integration, candidateSha, path),
+      base: await revParse(repository, `${candidateSha}^`),
+      read: (path) => show(repository, candidateSha, path),
     };
+  if (!integration) return { base: remoteRef, read: async () => null };
   return {
-    base: await mergeBase(integration, remoteRef),
+    base: (
+      await git(integration, "merge-base", "HEAD", remoteRef)
+    ).stdout.trim(),
     read: async (path) => worktreeSource(integration, path),
   };
 }
@@ -47,10 +59,10 @@ export async function draftsOf(integration, remoteRef, candidateSha) {
 // The file at the drafts' base, on fetched trunk, and as drafted. A file the
 // drafts lack is drafted as trunk has it: there is nothing to carry.
 export async function versionsOf(request, remoteRef, drafts, path) {
-  const trunk = await show(request.integration, remoteRef, path);
+  const trunk = await show(request.repository, remoteRef, path);
   return {
     path,
-    base: await show(request.integration, drafts.base, path),
+    base: await show(request.repository, drafts.base, path),
     trunk,
     draft: (await drafts.read(path)) ?? trunk,
   };

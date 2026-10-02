@@ -1,31 +1,12 @@
 // Git mechanics for maintain-default-checkout.md "Refresh eligibility".
-// Fast-forwards only a clean checkout that is strictly behind fetched trunk
-// and has no declared competing writer. Installed guidance is the agent's contract.
+// Fast-forwards only a clean checkout that is strictly behind fetched trunk.
+// Installed guidance is the agent's contract.
 import { existsSync } from "node:fs";
 import { isAbsolute, join } from "node:path";
+import { rebaseInProgress } from "../../dough-product-backlog/scripts/product-backlog-git-operation-state.mjs";
 import { git, inspectCheckout, revParse } from "./publication-git.mjs";
 
-const IN_PROGRESS_REFS = [
-  "MERGE_HEAD",
-  "REBASE_HEAD",
-  "CHERRY_PICK_HEAD",
-  "REVERT_HEAD",
-];
-
-function singleOwner(owner) {
-  return typeof owner === "string" && owner.trim() !== "";
-}
-
-// Direct edits and publication from this checkout still require declared access.
-export function declaredOwnerRefusal(declaredOwner, requester) {
-  if (!singleOwner(declaredOwner) || !singleOwner(requester)) {
-    return "unclear-ownership";
-  }
-  if (declaredOwner !== requester) {
-    return "another-writer";
-  }
-  return null;
-}
+const IN_PROGRESS_REFS = ["MERGE_HEAD", "CHERRY_PICK_HEAD", "REVERT_HEAD"];
 
 function decision(result, reason, state, remoteSha) {
   return { result, reason, remoteSha, ...state };
@@ -99,8 +80,10 @@ async function lockAndFirstRef(checkout, ref) {
   }
 }
 
-// An index lock takes precedence over any in-progress ref.
-async function ongoingOperation(checkout) {
+// The Git operation in progress in a checkout, or null: an index lock (which
+// takes precedence), an in-progress merge, cherry-pick, or revert ref, or a
+// rebase state directory.
+export async function ongoingOperation(checkout) {
   const [first, ...rest] = IN_PROGRESS_REFS;
   const { lock, verified } = await lockAndFirstRef(checkout, first);
   if (existsSync(lock)) return "index.lock";
@@ -108,7 +91,7 @@ async function ongoingOperation(checkout) {
   for (const ref of rest) {
     if (await present(checkout, ref)) return ref;
   }
-  return null;
+  return rebaseInProgress(checkout) ?? null;
 }
 
 // HEAD, the fetched trunk, and the current branch after the refresh's fetch.
@@ -155,45 +138,68 @@ async function fetchedState(checkout, remoteRef) {
   return { current, remoteSha, branch };
 }
 
-// Ownership declarations are optional for refresh. A declared owner must match
-// the requester; this module does not acquire exclusive access or create a lock.
-// A missing snapshot argument is intentional: callers cannot supply a stale one.
-export async function refreshDefaultCheckout({
+// A missing snapshot argument is intentional: callers cannot supply a stale
+// one. With no default checkout supplied there is nothing to refresh. A
+// supplied checkout that cannot be read or refreshed (a missing path, or Git
+// failing there) reports `refresh-failed`; the caller's accepted publication
+// stands.
+export async function refreshDefaultCheckout(request) {
+  if (!request.checkout) return { result: "not applicable" };
+  try {
+    return await attemptRefresh(request);
+  } catch (error) {
+    return {
+      result: "deferred",
+      reason: "refresh-failed",
+      error: existsSync(request.checkout)
+        ? error.stderr || error.message
+        : `default checkout not found: ${request.checkout}`,
+    };
+  }
+}
+
+async function attemptRefresh({
   checkout,
-  declaredOwner,
-  requester,
   integrationBranch = "main",
   remote = "origin",
 }) {
-  const ongoing = await ongoingOperation(checkout);
-  const ownerRefusal = singleOwner(declaredOwner)
-    ? declaredOwnerRefusal(declaredOwner, requester)
-    : null;
-  // The pre-fetch state is read only for a refresh that stops here.
-  if (ownerRefusal || ongoing) {
-    const state = ongoing
-      ? { head: await revParse(checkout, "HEAD"), status: null }
-      : await inspectCheckout(checkout);
-    return ownerRefusal
-      ? decision("deferred", ownerRefusal, state, null)
-      : decision("deferred", "ongoing-operation", state, null);
+  // An ongoing operation stops refresh before the fetch.
+  if (await ongoingOperation(checkout)) {
+    const state = { head: await revParse(checkout, "HEAD"), status: null };
+    return decision("deferred", "ongoing-operation", state, null);
   }
 
   await git(checkout, "fetch", remote);
-  const remoteRef = `${remote}/${integrationBranch}`;
+  return fastForwardToFetchedTrunk(
+    checkout,
+    `${remote}/${integrationBranch}`,
+    integrationBranch,
+  );
+}
+
+// Refresh eligibility after a fetch, shared by refresh and by callers that
+// reuse an existing workspace: a checkout on `expectedBranch` (when one is
+// required) with no ongoing Git operation, no edits, and no commits of its
+// own that is strictly behind `fetchedRef` is fast-forwarded to it. Anything
+// else is left unchanged and reported with the reason it stopped.
+export async function fastForwardToFetchedTrunk(
+  checkout,
+  fetchedRef,
+  expectedBranch,
+) {
   const { current, remoteSha, branch } = await fetchedState(
     checkout,
-    remoteRef,
+    fetchedRef,
   );
 
-  if (branch !== integrationBranch) {
-    return decision("stopped", "unexpected-branch", current, remoteSha);
-  }
   if (await ongoingOperation(checkout)) {
     return decision("deferred", "ongoing-operation", current, remoteSha);
   }
-  const behind = await isAncestor(checkout, current.head, remoteRef);
-  const ahead = await isAncestor(checkout, remoteRef, current.head);
+  if (expectedBranch !== undefined && branch !== expectedBranch) {
+    return decision("stopped", "unexpected-branch", current, remoteSha);
+  }
+  const behind = await isAncestor(checkout, current.head, fetchedRef);
+  const ahead = await isAncestor(checkout, fetchedRef, current.head);
   if (!behind && !ahead) {
     return decision("stopped", "diverged", current, remoteSha);
   }
@@ -204,7 +210,7 @@ export async function refreshDefaultCheckout({
     return decision("already current", null, current, remoteSha);
   }
   if (behind) {
-    await git(checkout, "merge", "--ff-only", remoteRef);
+    await git(checkout, "merge", "--ff-only", fetchedRef);
     const advanced = await inspectCheckout(checkout);
     if (advanced.head !== remoteSha || advanced.status !== "") {
       throw new Error(

@@ -98,10 +98,13 @@ function shutdownConfirmed(directory, terminal) {
       readWorkerIdentity(directory),
       directory,
     );
-    if (liveness === "alive")
+    if (liveness !== "dead")
       return {
         status: "unconfirmed",
-        limitation: "observer_still_running",
+        limitation:
+          liveness === "alive"
+            ? "observer_still_running"
+            : "observer_liveness_unknown",
         terminal,
       };
   } catch (error) {

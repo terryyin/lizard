@@ -4,8 +4,11 @@ description: >-
   Clarifies selected stories before execution planning by establishing goal,
   scope, and key examples in each story's seed, distinguishing promises from
   rejection constraints. Adds UI or architectural
-  detail only when needed. Use for selected-story refinement, not broad problem
-  decomposition, candidate selection, or slice sizing.
+  detail only when needed. `--one-shot` refines a queued story without
+  publishing an assignment and keeps the result for review, or lands it with
+  `--auto-land`. Use for
+  selected-story refinement, not broad problem decomposition, candidate
+  selection, or slice sizing.
 ---
 
 # Story refinement
@@ -43,14 +46,27 @@ missing and stop the affected activity. Do not invent project paths or decisions
 
 Read and follow [planning scope and lifecycle](references/planning.md) for the
 conversation, scope decisions, optional UI and architecture detail, seed updates,
-and cleanup after implementation. Before writing to a story's seed, establish
-or reuse the required workspace under
+and cleanup after implementation. When your instruction
+carries an established preparation, follow
+[established preparation](references/established-preparation.md) instead of the
+workspace and announcement steps below. When the request explicitly selects
+one-shot (`--one-shot`) for a queued story, follow
+[one-shot refinement](references/one-shot-refinement.md) instead of the
+announcement step and the default disposition. Before writing to a story's seed,
+establish or reuse the required workspace under
 [preparation workspace](references/preparation-workspace.md), then, for a
 queued story, [announce the preparation assignment](references/preparation-assignment.md#announce-the-preparation-assignment);
 refinement discussion and clarifying questions need neither on their own. After the
 seed or correction-home write records goal, scope, and key examples for a work
 item with a known identity, apply
 [record preparation facts](../dough-product-backlog/references/record-preparation.md).
+
+When the request includes options such as `--explore`, read
+[refinement options](references/refinement-options.json) and apply the selected
+options' instructions within this workflow. Options in the same group, an entry
+of that file's `groups` list, are exclusive; if a request names more than one of
+them, stop and report the conflict, naming the group's `label` and the flags the
+request named from it. Without options, refine straightforwardly.
 
 Report the story links, material constraints and deferred promises, and
 unresolved decisions. Apply that reference's keep or discard decision, then

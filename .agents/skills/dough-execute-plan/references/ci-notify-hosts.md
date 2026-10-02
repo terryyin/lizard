@@ -56,8 +56,8 @@ delegation and execution immediately.
 
 If the detached worker behind this directory has died without recording a
 normal terminal result, the hook adds `CI observer lost its worker for this
-coordinator` instead — at the next ordinary interaction, not only when a new
-receipt arrives, and a repeated receipt for the same directory does not
+coordinator` instead — once, at the next ordinary interaction, not only when a
+new receipt arrives, and a repeated receipt for the same directory does not
 restore the attached message. Treat this exactly like other unavailable
 coverage: report it once and continue execution without promising monitoring.
 Do not restart the observer, guess another mailbox directory, or re-run the

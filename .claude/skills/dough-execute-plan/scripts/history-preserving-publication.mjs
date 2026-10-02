@@ -17,7 +17,7 @@ import {
   originTrackingRef,
   pushExactRef,
   revParse,
-} from "./publication-test-fixtures.mjs";
+} from "./publication-git.mjs";
 
 const mergeCli = fileURLToPath(
   new URL(
@@ -124,9 +124,9 @@ async function constructCandidate(workspace, trunkRef, publishedTip, file) {
   };
 }
 
-async function pushRejected(workspace, sha, targetRef) {
+async function pushRejected(workspace, sha, remote, targetRef) {
   try {
-    await pushExactRef(workspace, sha, targetRef);
+    await pushExactRef(workspace, sha, remote, targetRef);
     return false;
   } catch (error) {
     const text = `${error.message}\n${error.stderr ?? ""}`;
@@ -153,13 +153,14 @@ export async function publishHistoryPreservingCandidate({
   publishedTip,
   branch,
   targetRef = trunkTarget,
+  remote = "origin",
   backlogPath = defaultBacklogPath,
   affectedCheck,
   beforePush,
   register,
 }) {
-  await git(ownedWorkspace, "fetch", "origin");
-  const tracking = originTrackingRef(targetRef);
+  await git(ownedWorkspace, "fetch", remote);
+  const tracking = originTrackingRef(targetRef, remote);
   if (await isAncestor(ownedWorkspace, publishedTip, tracking)) {
     return {
       classification: "already-accepted",
@@ -207,17 +208,14 @@ export async function publishHistoryPreservingCandidate({
     if (attempt === 0 && beforePush) {
       await beforePush();
     }
-    if (await pushRejected(ownedWorkspace, prepared.sha, targetRef)) {
+    if (await pushRejected(ownedWorkspace, prepared.sha, remote, targetRef)) {
       rejectedPushCount += 1;
       supersededSha = prepared.sha;
-      await git(ownedWorkspace, "fetch", "origin");
+      await git(ownedWorkspace, "fetch", remote);
       continue;
     }
-    await git(ownedWorkspace, "fetch", "origin");
-    const origin = (
-      await git(ownedWorkspace, "remote", "get-url", "origin")
-    ).stdout.trim();
-    const acceptedTip = await lsRemoteSha(origin, targetRef);
+    await git(ownedWorkspace, "fetch", remote);
+    const acceptedTip = await lsRemoteSha(remote, targetRef, ownedWorkspace);
     if (acceptedTip !== prepared.sha) {
       throw new Error("remote did not accept the candidate");
     }
