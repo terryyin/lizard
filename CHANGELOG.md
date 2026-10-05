@@ -2,8 +2,22 @@
 
 ## Unreleased
 
+## 1.24.1
+
 ### New Features
 - **Cognitive Complexity** (`-Ecognitive`) — per-function Cognitive Complexity following SonarSource's specification (structural, hybrid, fundamental and nesting increments; `switch` and logical operator sequences count once; lambdas nest; direct recursion counts), with a `CogC` column, a `--CogC` threshold and a `cognitive_complexity` field for `-s`/`-T`. Implemented as an extension that leaves the language readers and all existing metrics untouched (issue #432)
+
+### Bug Fixes
+- Python: preserve function names and signatures for PEP 695 generic functions, including nested type parameter bounds (PR #492)
+- Kotlin: correctly finish expression-bodied functions and accessors, including bodies containing `when` expressions (issue #493)
+- Rust: count `match` arms toward cyclomatic complexity and handle nested match expressions (issue #494)
+- PHP: end trait methods at their closing brace instead of extending them to the end of the trait (issue #498)
+- TypeScript and TSX: preserve function boundaries after regex arguments and template interpolations containing quoted backticks (issue #497)
+- JavaScript, TypeScript, and TSX: tokenize regex literals containing quotes, escapes, and character classes without swallowing following code (PR #505)
+
+### Documentation
+- Document Cognitive Complexity usage, thresholds, and language coverage
+- Update contributor guidance and adopt the Open Dough agent workflow skills
 
 ## 1.24.0
 
