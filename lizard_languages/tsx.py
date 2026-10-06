@@ -6,7 +6,7 @@ Only overrides tokenization to handle JSX-specific syntax (<Component>, {express
 '''
 
 from .code_reader import CodeReader
-from .js_style_regex_expression import js_style_regex_expression
+from .js_style_regex_expression import js_style_regex_tokens
 from .typescript import TypeScriptReader, TEMPLATE_LITERAL
 from .typescript import JSTokenizer, Tokenizer
 
@@ -18,7 +18,6 @@ class TSXReader(TypeScriptReader):
     language_names = ['tsx', 'jsx']
 
     @staticmethod
-    @js_style_regex_expression
     def generate_tokens(source_code, addition='', token_class=None):
         # Add support for TypeScript type annotations in JSX
         addition = addition + \
@@ -30,8 +29,8 @@ class TSXReader(TypeScriptReader):
             r"|(?:=>)" + \
             r"|" + TEMPLATE_LITERAL
         js_tokenizer = TSXTokenizer()
-        for token in CodeReader.generate_tokens(
-                source_code, addition, token_class):
+        for token in js_style_regex_tokens(
+                CodeReader.generate_tokens, source_code, addition, token_class):
             for tok in js_tokenizer(token):
                 yield tok
 
