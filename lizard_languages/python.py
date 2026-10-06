@@ -66,6 +66,7 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
         self._last_meaningful_token = None  # Track the last meaningful token
         self._keyword_case = False   # set by _soft_keyword_lookahead: True when 'case' is a soft keyword
         self._keyword_match = False  # set by _soft_keyword_lookahead: True when 'match' is a soft keyword
+        self.one_line_function = None  # set by PythonStates: body on the line of the def
 
     # str/bytes f-string prefixes (any case). Excludes bare b/rb (not f-strings).
     _FSTRING_PREFIXES = frozenset(('f', 'rf', 'fr', 'bf', 'fb'))
@@ -329,8 +330,13 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
         indents = PythonIndents(self.context)
         current_leading_spaces = 0
         reading_leading_space = True
+        brackets = 0
         for token in self._soft_keyword_lookahead(tokens):
             if token != '\n':
+                if token in ('(', '[', '{'):
+                    brackets += 1
+                elif token in (')', ']', '}'):
+                    brackets -= 1
                 if reading_leading_space:
                     if token.isspace():
                         current_leading_spaces += count_spaces(token)
@@ -342,11 +348,27 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
                                 indents.set_nesting(current_leading_spaces, token)
                         reading_leading_space = False
             else:
+                if brackets <= 0:
+                    brackets = 0
+                    self._end_one_line_function()
                 reading_leading_space = True
                 current_leading_spaces = 0
             if not token.isspace() or token == '\n':
                 yield token
+        self._end_one_line_function()
         indents.reset()
+
+    def _end_one_line_function(self):
+        """End a function whose body is on the line of its def, such as
+        'def f(a): return a'. With no indented block after it, the function
+        would otherwise never end."""
+        function, self.one_line_function = self.one_line_function, None
+        if function is None or self.context.current_function is not function:
+            return
+        self.context.start_new_function_nesting(None)
+        self.context.end_of_function()
+        self.context.current_function = (
+            self.context.last_function or self.context.global_pseudo_function)
 
 
 class PythonStates(CodeStateMachine):  # pylint: disable=R0903
@@ -397,12 +419,23 @@ class PythonStates(CodeStateMachine):  # pylint: disable=R0903
 
     def _state_colon(self, token):
         if token == ':':
+            self.colon_line = self.context.current_line
             self.next(self._state_first_line)
+        elif token == '->':
+            self.next(self._state_return_type)
         else:
             self.next(self._state_global)
 
+    def _state_return_type(self, token):
+        if token == ':':
+            self._state_colon(token)
+        elif token in ('def', 'class'):
+            self.next(self._state_global, token)
+
     def _state_first_line(self, token):
         self._state = self._state_global
+        if self.context.current_line == self.colon_line:
+            self.reader.one_line_function = self.context.current_function
         if token.startswith('"""') or token.startswith("'''"):
             self.context.add_nloc(-token.count('\n') - 1)
         self._state_global(token)
