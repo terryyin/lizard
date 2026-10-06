@@ -34,11 +34,19 @@ export function reportTake(outcome, file) {
 export function reportComplete(outcome, file) {
   const { identity, list, href } = outcome.entry;
   const released = outcome.released.map(
-    (path) => ` Released agent profile ${path} beside the backlog.`,
+    ({ path }) => ` Released agent profile ${path} beside the backlog.`,
+  );
+  const expired = outcome.expired.map(
+    (path) => ` Removed expired done record ${path} beside the backlog.`,
   );
   return (
     `Removed "${identity}" from "## ${list}" in ${file}. ` +
-    `Its canonical home ${href} was not changed.${released.join("")}`
+    `Its canonical home ${href} was not changed.${released.join("")}` +
+    `${
+      outcome.record === undefined
+        ? " Removed it as dropped work; done records hold finished work only."
+        : ` Wrote done record ${outcome.record} beside the backlog.`
+    }${expired.join("")}`
   );
 }
 

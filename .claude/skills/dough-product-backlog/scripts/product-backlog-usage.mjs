@@ -5,6 +5,10 @@
 
 import { directionHeading } from "./product-backlog-direction.mjs";
 import { queueHeading, takenHeading } from "./product-backlog-document.mjs";
+import {
+  doneRecordDirectory,
+  doneRecordWindowDays,
+} from "./product-backlog-done-record.mjs";
 import { defaultBacklogPath } from "./product-backlog-store.mjs";
 
 export const usage = `Usage: product-backlog.mjs add --identity <id> --title <title> --link <href>
@@ -15,7 +19,7 @@ export const usage = `Usage: product-backlog.mjs add --identity <id> --title <ti
                              [--return] [--file <path>]
        product-backlog.mjs take --identity <id> (--plan <path> | --no-plan)
                              [--file <path>]
-       product-backlog.mjs complete --identity <id> [--file <path>]
+       product-backlog.mjs complete --identity <id> [--dropped] [--file <path>]
        product-backlog.mjs refresh --identity <id>
                              [--title <title>] [--link <href>] [--plan <path>]
                              [--file <path>]
@@ -34,6 +38,10 @@ export const usage = `Usage: product-backlog.mjs add --identity <id> --title <ti
                               [--reason <text>...]]
                              [--file <path>]
        product-backlog.mjs read-state --link <href> [--file <path>]
+       product-backlog.mjs read-dependencies --link <href> [--file <path>]
+       product-backlog.mjs update-dependency --identity <id> --link <href>
+                             --dependency-file <json-path>
+                             --expect-dependencies <sha256> [--file <path>]
 
 add adds one already identified entry to "## ${queueHeading}" at the requested
 relative position. Identities are supplied, never allocated there.
@@ -56,7 +64,13 @@ work is complete, and it never deletes a story or plan file: closing those
 canonical homes stays with the caller's wrap-up. Removal happens only on this
 explicit request naming the identity. It also removes the execution agent
 profile under agents/ beside the backlog that names the same identity,
-releasing that agent name; include that removal in the same commit as the
+releasing that agent name, and writes the work's done record under ${doneRecordDirectory}/
+beside the backlog: its identity, title, completion time, the developer Git is
+configured with, and the released profile's agent, host, and model. Completing
+the same identity again replaces its record. --dropped removes work that was
+dropped rather than finished: the entry and profile go as above and the done
+record is left out. Either way it removes done records completed
+more than ${doneRecordWindowDays} days before. Include those files in the same commit as the
 backlog change. A preparation profile is left for its own release.
 
 refresh updates what one listed entry says about itself — its title, the
@@ -111,6 +125,30 @@ outside other stories' sections, and a distinct plan. Legacy absence is
 stored assessment retains ready/not-ready and its reasons. changedSinceReview
 is true when its reviewed basis no longer matches; it informs, never writes,
 and does not independently block authorized startup.
+
+read-dependencies prints the consumer's separate, versioned dependency record,
+blocking entries, and dependency agreement basis. Absence means no blockers;
+a malformed present record is refused. Dependencies stay in the review basis.
+
+update-dependency upserts one supplier agreement from --dependency-file, using
+the basis returned by read-dependencies. The JSON object names supplier
+{identity, href}, implementation, rationale explaining why normal shared design
+and reconciliation are insufficient, condition, and state (waiting, satisfied,
+or decision-needed). Satisfied requires resolution {revision, path, summary};
+decision-needed requires decision text. Both canonical identities must resolve.
+A stale basis or ambiguous endpoint writes nothing. Other dependencies, sibling
+stories, and preparation judgments remain intact. This applies an explicitly
+decided necessary prerequisite; it never infers one from shared code or order.
+
+discover-consumers --supplier-identity <identity> reads current canonical homes
+and reports reverse agreements plus discovery problems without writing.
+resolve-dependency records an evidenced consumer judgment with --dependency-file
+and --expect-dependencies, including waiting or decision-needed after cleanup;
+--accepted-revision <sha> --remote <remote> --target <branch> establish accepted
+supplier integration. Recoverable supplier outcome must show all planned slices
+done (optional --plan), or --planless-complete --completion-file <proof path>.
+The consumer agreement must remain unchanged. Repeats preserve existing evidence.
+Condition satisfaction is the caller's evidenced judgment, never text matching.
 
 Paths are resolved against the current directory; --file defaults to
 ${defaultBacklogPath}. Canonical home links and planned paths are resolved

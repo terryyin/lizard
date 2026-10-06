@@ -12,6 +12,7 @@ import {
 } from "../../dough-product-backlog/scripts/product-backlog-document.mjs";
 import { occupiedAssignments } from "./agent-assignments.mjs";
 import { selectedPreparation, show } from "./execution-source.mjs";
+import { requireResolvedStoryDependencies } from "../../dough-product-backlog/scripts/product-backlog-story-dependencies.mjs";
 import {
   backlogPath as trunkBacklogPath,
   isAncestor,
@@ -54,7 +55,9 @@ function heldBy({ entry, profiles }) {
 async function notReadyReasons(cwd, rev, entry) {
   const selection = selectedPreparation(cwd, entry.href);
   const home = await show(cwd, rev, selection.homePath);
-  if (home === null) return undefined;
+  if (home === null)
+    throw new Error("selected canonical home is absent on fetched trunk");
+  requireResolvedStoryDependencies(home, entry.href);
   const { assessment } = selection.read(home);
   const notReady =
     assessment.status === "not-ready" || assessment.recorded === "not-ready";

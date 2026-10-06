@@ -100,6 +100,15 @@ export function gitOutcome(args, cwd, env) {
   }
 }
 
+// The developer name Git is configured with for work in `cwd`, as a commit
+// made there would record it, or undefined when Git names none (or cannot be
+// run). Nothing in `cwd` needs to be a repository.
+export function configuredUserName(cwd) {
+  const outcome = gitOutcome(["config", "user.name"], cwd);
+  const name = outcome.code === 0 ? outcome.stdout.trim() : "";
+  return name === "" ? undefined : name;
+}
+
 export function repositoryRoot(cwd) {
   try {
     return gitLine(["rev-parse", "--show-toplevel"], cwd);

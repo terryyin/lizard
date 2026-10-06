@@ -84,7 +84,13 @@ export function startSource(request) {
         reader,
         reader.retained.startingRevision,
       );
-      if (!sameSelectedSource(original, selected))
+      const comparison = selected.publishedClaimOwned
+        ? [original, selected].map((source) => ({
+            ...source,
+            selectedSource: source.selectedSourceWithoutDependencies,
+          }))
+        : [original, selected];
+      if (!sameSelectedSource(...comparison))
         throw new Error(
           "selected published source changed since retained claim basis",
         );

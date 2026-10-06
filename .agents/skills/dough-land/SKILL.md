@@ -10,7 +10,9 @@ description: >-
   "land this worktree", or "land" for changes made on the default checkout, or
   when another skill's validated keep instruction links here. A casual
   "keep", "looks good", or approval does not invoke it.
-  Hosted merges and pull requests are out of scope.
+  Hosted merges and pull requests are out of scope. With
+  `--process-retrospective`, it also reviews the landing's own process and
+  records supported findings in `DearDough.md`.
 ---
 
 # Dough Land
@@ -18,8 +20,11 @@ description: >-
 Land one reviewed checkout, an owned worktree or the default checkout on the
 target branch: commit everything in it, publish that onto the authorized remote
 trunk, refresh a supplied default checkout when safe, and retire the worktree
-when it is one. Publication, refresh, and cleanup are separate results.
+when it is one. Apply [completion attention](#completion-attention) to the final
+response. Publication, refresh, and cleanup are separate results.
 A later step that stops or is deferred never undoes an earlier one.
+With `--process-retrospective`, also
+[review this landing's process](#review-this-landings-process).
 
 Run only when the developer explicitly invokes Dough Land, or when a calling
 skill's own validated keep instruction links here. Reviewing, approving,
@@ -117,17 +122,37 @@ the checkout, branch, index, and whatever state Git left. Name the conflict or
 contention, and report publication, refresh, and cleanup as not done. Do not
 loop.
 
+## Visit consumers of completed selected work
+
+After accepted publication and before retirement, apply the shared
+[supplier dependency procedure](../dough-product-backlog/references/supplier-dependencies.md)
+when retained context establishes a selected completed supplier. Preserve its
+recoverable outcome before cleanup, publish directly justified consumer updates
+through this authorized landing workflow, and report unresolved work. A generic
+landing or an unfinished increment establishes no supplier completion.
+
+## Review this landing's process
+
+Only with `--process-retrospective`, after accepted publication and any
+consumer visit, apply the shared
+[process review of a run](../dough-execution-retrospective/references/process-review-of-a-run.md)
+once per landing, with the landing checkout as the write location. Recorded
+findings are uncommitted changes: continue through
+[Commit everything](#commit-everything-in-the-checkout) and [Publish](#publish)
+before refresh and retirement.
+
 ## Refresh the default checkout
 
 After acceptance, when the landing checkout is the default checkout, it is
-already at the accepted SHA: report the refresh as already current, or as a
+already at the accepted SHA: record the refresh as already current, or as a
 fast-forward to the published trunk when the publication moved it. Otherwise
 attempt
 [Refresh eligibility](../dough-execute-plan/references/maintain-default-checkout.md#refresh-eligibility)
 on the supplied default checkout for the landed remote and branch.
-Report its
+Record its
 [maintenance result](../dough-execute-plan/references/maintain-default-checkout.md#independent-maintenance-outcome)
-and reason separately from publication. No refresh result is a failed landing
+and reason separately from publication; apply [completion attention](#completion-attention)
+when responding. No refresh result is a failed landing
 or blocks retirement.
 
 Another skill may apply this section on its own after its own accepted
@@ -135,8 +160,12 @@ publication.
 
 ## Retire the worktree
 
+With supplied dashboard context, read [dashboard completion](references/dashboard-completion.md)
+and retain its reporting command, instructions, and surviving working directory before removal.
+Prepare attention files outside the checkout; reporting remains the final operation.
+
 Retirement is not applicable when the landing checkout is the default
-checkout: nothing is removed, and cleanup is reported as not applicable.
+checkout: nothing is removed, and cleanup is recorded as not applicable.
 Otherwise retire the worktree only when both gates hold, and let the command
 below check them: the fetched target contains its work, and this work created the
 worktree, which
@@ -188,7 +217,7 @@ target, or absent, does not make the branch unmerged. It prints one JSON line:
 
 | Result | Act on it |
 | --- | --- |
-| `ok: true` | Report the worktree, branch, and any `remoteBranch` as `removed` or `already-absent` |
+| `ok: true` | Record the worktree, branch, and any `remoteBranch` as `removed` or `already-absent`; apply [completion attention](#completion-attention) |
 | `reason: "unique unpublished work"` | The fetched target lacks the branch tip or a `--contained` revision. Retain everything and report it; the target lacks that work |
 | `reason: "remote execution tip is not integrated"` | The fetched target lacks the remote branch tip. Retain the worktree and both branches and report the remote tip; it holds work the target does not |
 | `reason: "remote branch is the target"` | Nothing ran. Name the separately published branch, never the target |
@@ -226,16 +255,19 @@ unfinished step:
 | Uncommitted changes | [Commit everything](#commit-everything-in-the-checkout) |
 | Branch tip not contained in the fetched target | [Publish](#publish), through the publisher's [resume](../dough-execute-plan/references/publish-the-candidate.md#resume-an-interrupted-publication) |
 | Tip already contained | Record it as accepted; push nothing. Then refresh, and retire a worktree |
-| Worktree or branch already absent | Report it as already retired |
+| Worktree or branch already absent | Record it as already retired |
 
 Never commit the same change twice, push an already accepted candidate again,
 or create a replacement worktree.
 
-Report, as separate results:
+Keep publication acceptance, refresh outcome, and verified resource disposition
+as separate operational facts in the command results and available execution
+context. Preserve the accepted SHA and target, refresh result and reason, and
+cleanup paths and verified disposition for recovery; no new recap or record is
+required solely to repeat them.
 
-- **Publication:** accepted SHA and target, or the step that stopped and why.
-- **Refresh:** the refresh result and reason (including not applicable), or
-  not attempted.
-- **Cleanup:** not applicable for the default checkout; otherwise worktree and
-  local branch removed, already absent, or retained with path and reason; a
-  remote branch deleted only when verified absent.
+## Completion attention
+
+After operations settle, read and apply the shared
+[completion attention rule](references/completion-attention.md), including its
+[final dashboard operation](references/dashboard-completion.md) with supplied reporting context.

@@ -1,6 +1,8 @@
 // Establish or reuse matching CI observation for managed delivery: live
 // mailbox match, host-bridge readiness, start, and coordinator binding.
-// Resume recovers only an unambiguous live owner; it never starts a replacement.
+// Codex is observed only by the yielded stream its coordinator armed at
+// execution start. Resume recovers only an unambiguous live owner; it never
+// starts a replacement.
 import {
   bindHostObserver,
   resolveHostSession,
@@ -62,6 +64,12 @@ export function recoverObservationForResume({
   };
 }
 
+// Managed delivery never starts a Codex observer: the coordinator's own
+// yielded stream is the one it reuses.
+function codexStreamMissingReason({ repo, branch }) {
+  return `no live Codex yielded stream observes ${repo} ${branch}; arm \`ci-mailbox.mjs stream --execution ${repo} ${branch}\` in a yielded cell as references/ci-notify-codex.md describes, and later deliveries reuse it`;
+}
+
 export async function establishObservation({
   repo,
   branch,
@@ -73,7 +81,6 @@ export async function establishObservation({
   env,
   root,
   storage,
-  codexBridgeAvailable,
 }) {
   const existing = findLiveMatchingMailbox({
     repo,
@@ -88,6 +95,13 @@ export async function establishObservation({
     };
   }
 
+  if (host === "codex") {
+    return {
+      observation: coverageGap(codexStreamMissingReason({ repo, branch })),
+      startReceipt: null,
+    };
+  }
+
   // One resolved owner for both readiness and binding.
   const owner = resolveHostSession({ host, session, env });
   const bridge = await verifyHostBridge({
@@ -98,7 +112,6 @@ export async function establishObservation({
     env,
     root,
     storage,
-    codexBridgeAvailable,
   });
   if (!bridge.ready) {
     return {

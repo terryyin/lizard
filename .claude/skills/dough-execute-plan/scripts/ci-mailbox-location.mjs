@@ -17,6 +17,9 @@ export const mailboxRoot =
   process.env.DOUGH_CI_MAILBOX_ROOT ??
   join("/tmp", `dough-ci-${process.getuid?.() ?? "user"}`);
 export const receiptPrefix = "CI_OBSERVER ";
+// The Cursor generation managed delivery reports when the coordinator's own
+// generation is not supplied; the owner's next real hook replaces it.
+export const managedDeliveryGeneration = "managed-delivery";
 
 function gitCommonDir(root) {
   try {

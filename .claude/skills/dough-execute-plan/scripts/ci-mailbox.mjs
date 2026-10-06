@@ -9,6 +9,7 @@ import {
 } from "./ci-mailbox-location.mjs";
 import { isDirectCliEntry } from "./ci-direct-entry.mjs";
 import {
+  acknowledgeDelivery,
   publishMailboxEvent,
   recordTerminalResult,
   recordWorkerIdentity,
@@ -215,6 +216,13 @@ if (isDirectCliEntry(import.meta.url, process.argv[1])) {
     process.stdout.write(
       `${receiptPrefix}${JSON.stringify({ directory, revision })}\n`,
     );
+  } else if (command === "acknowledge") {
+    const [directory, sequence] = args;
+    readMailbox(directory);
+    const deliveredThrough = acknowledgeDelivery(directory, Number(sequence));
+    process.stdout.write(
+      `${receiptPrefix}${JSON.stringify({ directory, deliveredThrough })}\n`,
+    );
   } else if (command === "await-revision") {
     const [directory, sha] = args;
     await writeRevisionReceipt(awaitRevision, directory, sha);
@@ -229,7 +237,7 @@ if (isDirectCliEntry(import.meta.url, process.argv[1])) {
     );
   } else {
     throw new Error(
-      "Usage: ci-mailbox.mjs probe | start --execution OWNER/REPO BRANCH [BUDGET_MS] | stream --execution OWNER/REPO BRANCH [BUDGET_MS] | register-push DIRECTORY SHA | await-revision DIRECTORY SHA | complete-revision DIRECTORY SHA | stop DIRECTORY",
+      "Usage: ci-mailbox.mjs probe | start --execution OWNER/REPO BRANCH [BUDGET_MS] | stream --execution OWNER/REPO BRANCH [BUDGET_MS] | register-push DIRECTORY SHA | acknowledge DIRECTORY SEQUENCE | await-revision DIRECTORY SHA | complete-revision DIRECTORY SHA | stop DIRECTORY",
     );
   }
 }

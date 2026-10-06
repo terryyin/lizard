@@ -88,7 +88,9 @@ Ordinary Open Dough release updates remain available from the recorded source.
       If apply reports that HEAD is not the pinned latest, stop. Do not fetch
       or check out replacement files after inspection. Proceed only if the
       inspected files write solely to the release-declared payload paths
-      under both native skill roots, each updater's `SOURCE` and `VERSION`
+      under both native skill roots, removal there of files at paths an
+      earlier release declared and this release does not, each updater's
+      `SOURCE` and `VERSION`
       records, and the managed host-hook settings they register
       (`.codex/hooks.json`, `.cursor/hooks.json`, and `.claude/settings.json`) in the captured
       target project, preserving distributable source, unrelated project
@@ -105,14 +107,17 @@ Ordinary Open Dough release updates remain available from the recorded source.
    untagged source changes alone do not require writes. Changed or missing
    managed files, or an unavailable recorded tag, refuse without writing even
    when the recorded version equals latest. An older recorded installation is
-   replaced with latest only when those files are unchanged. If ordinary
+   replaced with latest only when those files are unchanged. Edited files at
+   paths an earlier release declared and latest does not also refuse without
+   writes; unedited ones are removed. If ordinary
    update cannot establish that baseline — missing or unusable SOURCE or
    VERSION, an unavailable recorded tag or source, baseline metadata mismatch,
    or changed or missing managed files — refuse without writing, forcing, or
    treating the destination as a first install. Explicit `--force` skips that
    comparison and replaces the selected installation with latest, including
    edited, incomplete, equal, or newer files, writing the payload then SOURCE
-   then VERSION. A supplied-URL missing selected record advances directly to
+   then VERSION, and removes files at paths latest no longer declares, edited
+   or not. A supplied-URL missing selected record advances directly to
    latest. A verified newer selected record is preserved with no downgrade; an
    unverifiable newer record is unsupported without writes. A malformed
    selected `VERSION` is an error, not unknown. Fetch, tag, and invalid-highest
@@ -121,8 +126,8 @@ Ordinary Open Dough release updates remain available from the recorded source.
    may be incomplete, that the last successful record was left unchanged, and
    that explicit `--force` reinstall is the recovery path.
 7. Report the helper's source URL, release tag and commit, running tool and
-   native skill root, all installed payload paths, previous version or
-   unknown, and actual outcome. After a replacement,
+   native skill root, all installed payload paths, the files it removed from
+   each root, previous version or unknown, and actual outcome. After a replacement,
    tell the user to start a fresh session in the same tool, then invoke
    `/dough-update` in Cursor or Claude Code, or `$dough-update` in Codex, to
    use the updated guidance. Do not claim an update succeeded if fetching,

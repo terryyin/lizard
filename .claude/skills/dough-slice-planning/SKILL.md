@@ -183,28 +183,32 @@ honor an explicit instruction to leave refinement to a later step. A plan
 without such concerns needs no refinement pass.
 
 Keep unresolved source questions and human-owned decisions outside this
-handoff. If refinement returns a missing input, disputed constraint, or a
-remaining concern it cannot resolve within scope, report it under the next
-section; do not repeat refinement without new evidence or widen the outcome.
+handoff. Report a missing input, disputed constraint, or concern that refinement
+cannot resolve within scope under the next section; do not repeat refinement
+without new evidence or widen the outcome.
 Refinement keeps the same plan, preparation workspace, and assignment. It
 grants neither execution nor publication authority.
 
 ## Report concern evidence and assess readiness
 
-After constructing the plan, report remaining concerns, then record readiness
-through the shared procedure:
+After constructing the plan, report, then record readiness through the shared
+procedure:
 
-- Name each remaining slice-specific concern with the affected slice, the
-  reason (for example an integration assumption or repeated special-case
-  design), and its consequence (for example uncertain sizing or duplicated
-  domain rules). Include concerns spanning successive slices.
-- When no concerns were identified in this review, say so narrowly.
+- In one line, whether refinement ran, was not needed (with the reason), or
+  was left to a later step as instructed.
+- Each remaining slice-specific concern with the affected slice, the reason
+  (for example an integration assumption or repeated special-case design), and
+  its consequence (for example uncertain sizing or duplicated domain rules),
+  including concerns spanning successive slices. When this review identified
+  none, say so narrowly.
+- Interim behavior that slice decomposition permits is an accepted trade-off,
+  not a remaining concern, once the plan names it and its replacing slice.
+  Relabeling a blocking concern, such as a proof gap, does not settle it.
 - Then apply
   [assess readiness at preparation completion](../dough-product-backlog/references/record-preparation.md#assess-readiness-at-preparation-completion):
-  remaining concerns become `not-ready` reasons; when none remain and the plan
-  has bounded slices with mapped proof and observed or probe-bounded decisive
-  premises, record `ready`. Do not prescribe the next workflow action, Take
-  the item, or start execution from this finding.
+  every remaining concern becomes a `not-ready` reason, and neither refinement
+  nor an accepted trade-off establishes readiness alone. Do not prescribe the
+  next workflow action, Take the item, or start execution from this finding.
 
 The recipient chooses the next action under the triggering instruction's
 authority and project policy. The recorded assessment is agent judgment bound to
@@ -217,12 +221,12 @@ After writing and reporting the plan, the next action remains within the
 triggering human or parent-agent instruction:
 
 - Planning-only request: report the plan path, ordered slices,
-  considered-but-excluded additions, remaining concerns or the limited
-  no-concerns finding, and the recorded readiness assessment, then stop. Do
+  considered-but-excluded additions, the refinement decision and concern
+  report, and the recorded readiness assessment, then stop. Do
   not implement and do not invoke execution.
 - Parent-agent delegation that asks only for slice planning: return the plan,
-  remaining concerns or the limited no-concerns finding, and the recorded
-  readiness assessment to the parent. The parent's broader implementation task
+  the refinement decision and concern report, and the recorded readiness
+  assessment to the parent. The parent's broader implementation task
   is not an explicit execution request to this planner.
 - Explicit plan-and-execute request: after reporting, the authorized workflow
   may continue into execution without asking again for the same authorization,

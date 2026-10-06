@@ -22,6 +22,14 @@ export const options = {
   reason: { type: "string", multiple: true },
   "expect-document": { type: "string" },
   "expect-plan": { type: "string" },
+  "dependency-file": { type: "string" },
+  "expect-dependencies": { type: "string" },
+  "supplier-identity": { type: "string" },
+  "accepted-revision": { type: "string" },
+  remote: { type: "string" },
+  target: { type: "string" },
+  "planless-complete": { type: "boolean", default: false },
+  "completion-file": { type: "string" },
   text: { type: "string" },
   clear: { type: "boolean", default: false },
   expect: { type: "string" },
@@ -30,6 +38,7 @@ export const options = {
   branch: { type: "string", multiple: true },
   return: { type: "boolean", default: false },
   all: { type: "boolean", default: false },
+  dropped: { type: "boolean", default: false },
   file: { type: "string", default: defaultBacklogPath },
   help: { type: "boolean", default: false },
 };
@@ -74,6 +83,20 @@ export function readPlan(values) {
     );
   }
   return values.plan;
+}
+
+// When a `complete` request runs. DOUGH_BACKLOG_COMPLETION_TIME, an ISO time,
+// stands in for the clock so a check can place completions in time.
+export function readCompletionTime() {
+  const supplied = process.env.DOUGH_BACKLOG_COMPLETION_TIME;
+  if (supplied === undefined || supplied === "") return new Date();
+  const time = new Date(supplied);
+  if (Number.isNaN(time.getTime())) {
+    throw new BacklogError(
+      `DOUGH_BACKLOG_COMPLETION_TIME must be an ISO time: ${supplied}`,
+    );
+  }
+  return time;
 }
 
 // The basis a preparation record was read from, when the caller states one.

@@ -95,11 +95,13 @@ workspace: the start named no agent.
 
 Unless automatic landing was selected, stop here; with it, continue under
 [Land automatically when selected](#land-automatically-when-selected).
-Report the workspace path and branch, the retained `startingRevision`, the
-result commit, the recorded refinement, approach, and assessment, and any
-unresolved decisions. Say that remote trunk still lists the story in the
-**Backlog list** with no Preparing assignment, so others cannot see this
-refinement until it lands. Leave the workspace and its branch in place:
+Report the outcome under
+[report the refinement outcome](../SKILL.md#report-the-refinement-outcome)
+with the workspace path and branch, the retained `startingRevision`, the
+result commit for review, and the recorded refinement, approach, and
+assessment. Say that remote trunk still lists the story in the **Backlog
+list** with no Preparing assignment, so others cannot see this refinement
+until it lands. Leave the workspace and its branch in place:
 nothing is pushed or retired, and the story is neither Taken nor completed.
 
 A later session that names the retained workspace continues there without
@@ -117,17 +119,22 @@ with it; it never selects automatic landing. Add `--auto-land
 `landing: "auto-land"`, and `authority-required` names missing publication
 authority before any workspace is selected.
 
-Land only once the seed records the story's goal, scope, and key examples, its
-recorded facts and assessment are true, and no decision you need from the
+Land only on a ready outcome under
+[report the refinement outcome](../SKILL.md#report-the-refinement-outcome):
+the seed records the story's goal, scope, and key examples, its recorded
+facts and assessment are true, and no decision you need from the
 developer remains open. Then land the committed result as
 [Land or discard on request](#land-or-discard-on-request) describes for a keep,
 ownership recheck included. The story stays queued with the recorded facts:
-landing neither Takes nor completes it, and starts no CI observer.
+landing neither Takes nor completes it, and starts no CI observer. Report that
+ready outcome as landed, with its next step.
 
-Stop instead, keeping the committed result and its workspace as they are, and
-report what stopped it, when a decision remains open (it goes to the
-developer), the recheck reports `ownership-changed`, or the landing stops on a
-conflict or a second rejection. Push nothing more after such a stop.
+Stop instead, keeping the committed result and its workspace as they are, when
+a decision remains open (it goes to the developer), the recheck reports
+`ownership-changed`, or the landing stops on a conflict or a second rejection.
+Push nothing more after such a stop. Report it as Needs human engagement,
+listing the open decision or what stopped the landing, with the result
+committed and unlanded.
 
 ## Land or discard on request
 

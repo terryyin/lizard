@@ -1,6 +1,6 @@
 ---
 name: dough-product-backlog
-description: Maintains and reprioritizes a product backlog list of canonical story or bounded-correction references. Use to add, take, reorder, or complete backlog items, or resolve product backlog merge conflicts. Excludes classroom and workshop exercise backlogs.
+description: Maintains and reprioritizes a product backlog list of canonical story or bounded-correction references, and records necessary blocking story dependencies in canonical homes. Use to add, take, reorder, or complete backlog items, record or inspect a justified prerequisite, or resolve product backlog merge conflicts. Excludes classroom and workshop exercise backlogs.
 ---
 
 # Product backlog
@@ -116,6 +116,41 @@ reorder it. Refuse an absent or ambiguous entry instead of fabricating one.
 Leave started work in **Taken** across pauses, failures, resume, completion, and
 retrospective; returning cancelled work requires an explicit backlog decision.
 
+## Record a necessary blocking dependency
+
+Keep each story externally valuable. Shared internal code or modest convenience
+alone creates no wait: use common architectural direction, PFE, and ordinary
+reconciliation first. Record a block only when the consumer genuinely cannot
+start before the supplier finishes, and state why those normal approaches are
+insufficient. Do not infer dependencies from prose, queue order, or shared files.
+
+Use the installed `scripts/product-backlog.mjs read-dependencies --link <home>`
+to read the consumer's canonical section and its dependency agreement `basis`.
+Then use `update-dependency --identity <consumer-id> --link <home>
+--dependency-file <json-path> --expect-dependencies <basis>`. Both endpoints
+must name existing canonical homes; the supplier's `href` is relative to the
+backlog directory, as the consumer's `--link` is. Missing or ambiguous homes,
+incomplete fields, and stale agreements refuse with nothing written.
+
+The input JSON object supplies `supplier: {identity, href}`, `implementation`,
+`rationale`, `condition`, and `state`. Start with `waiting`; for example, name
+the supplier's shared endpoint contract and the external consumer behavior
+that cannot be validated before that contract is completed and integrated.
+`satisfied` additionally requires recoverable `resolution: {revision, path,
+summary}` evidence explaining how the condition was met. `decision-needed`
+requires `decision` containing the actual unresolved question. Recording a
+state applies an evidenced decision; absence from Taken or an increment landing
+alone never proves completion.
+
+The command updates one supplier agreement in a separate versioned
+`json dough-story-dependencies` block, preserving other dependencies, readiness
+reasons, and sibling stories. Dependency changes report changed content since
+review without renewing the recorded judgment. Every unresolved relationship
+blocks new execution through the actual start command, including queued
+one-shot starts and canonical admission. Refinement and planning remain
+possible. A blocker found during an existing execution requires a developer
+decision; this gate does not interrupt that execution automatically.
+
 ## Remove completed items
 
 - Route completed story or correction closure through
@@ -124,12 +159,20 @@ retrospective; returning cancelled work requires an explicit backlog decision.
 - Standalone maintenance may remove a completed item from either active list
   when the human asks only for backlog maintenance. The applicable seed, plan,
   and proof remain available for later story wrap-up.
+- Work a human drops rather than finishes is removed with `complete --dropped`,
+  which removes the entry and releases its profile as below and leaves the done
+  records to finished work.
 
 Either path removes the entry with the installed `scripts/product-backlog.mjs
 complete` operation. It also deletes the execution agent profile under
 `agents/` beside the backlog that names the same identity, releasing that agent
-name; commit that deletion with the backlog change. A preparation assignment
-profile stays until its own release.
+name, and writes the work's done record under `done/` beside the backlog: its
+identity, title, completion time, the developer configured in this workspace's
+Git, and that profile's agent, host, and model when one existed. The same run
+removes done records completed more than 30 days before, and its report names
+each file it wrote or removed. Commit those files with the backlog change; the
+done record stays in the project as the published fact that the work was done.
+A preparation assignment profile stays until its own release.
 
 ## Direct edits may be denied in Claude Code, Codex, or Cursor
 
@@ -165,3 +208,6 @@ conflict and report the missing guidance.
 - Summarize changes and reasons briefly.
 - Follow commit conventions when authorized. Backlog maintenance alone does not
   authorize a commit or push.
+
+Supplier landing/wrap-up uses the shared [completion and consumer-resolution procedure](references/supplier-dependencies.md).
+The generic `complete` command changes queue membership only.

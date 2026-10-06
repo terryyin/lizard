@@ -38,8 +38,11 @@ Give the agent:
 - [Execution decisions](execution-decisions.md), the resolved
   [replanning permission](execution-decisions.md#choose-replanning-permission), this
   project's slice budget and exceptions, workflow precedence, and literal
-  focused commands with the runtime wrapper. Require relevant proof; broaden
-  testing only when the slice, project workflow, or human requires it.
+  focused commands with the runtime wrapper. Proof the plan or coordinator
+  names is a minimum: require the agent still to run the consumers the change
+  reaches under [own executable proof](../../dough-story-refinement/references/planning.md#own-executable-proof),
+  including the changed surface's suite when it runs within the slice's
+  focused-check time, even when the plan says wider suites belong to CI.
   When replanning is disabled, an oversized stop returns the incomplete attempt in
   place; do not plan, retry, invent backlog work, or clean up. The coordinator
   applies the overrun branch.
@@ -123,9 +126,10 @@ targeted return that gives the coordinator:
 - for each behavior presented as verified or covered, the observing assertion
   or signal that exercises it — or an explicit untested / uncovered listing
   instead of verified prose;
-- when a shared contract or shared operation changed, which current consumers
-  were considered (including relevant test-support callers) versus any suite or
-  caller still excluded as unaffected;
+- when the change altered an operation or contract, a message or value, a
+  default, or rendered output: which of these kinds it made, the searches
+  (including retired literals searched for) or suites used to find consumers,
+  the consumers run, and any found consumer left unrun with its reason;
 - required observations still missing or explicitly untested, named as gaps —
   a learning note alone is not acceptance evidence for those promises;
 - uncovered promises, contradictions, and other evidence gaps; and

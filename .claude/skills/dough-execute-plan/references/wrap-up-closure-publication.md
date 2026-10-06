@@ -57,7 +57,7 @@ one JSON line, exits 1 when `ok` is not true and 2 on a usage error:
 
 | Result | Act on it |
 | --- | --- |
-| `ok: true` | Report `acceptedSha`, the `completion` receipt, `refresh`, and `cleanup` |
+| `ok: true` | Keep `acceptedSha`, the `completion` receipt, `refresh`, and `cleanup` as operational facts; apply [completion attention](../../dough-land/SKILL.md#completion-attention) |
 | `step: "before-cleanup"` | Nothing was published. Publish the before-cleanup commit through `deliver` first |
 | `step: "context"` | The worktree is gone. Follow its `recovery`: rerun with `--repository`, rerun with an earlier result's `acceptedSha` as `--final`, or report the unpublished final closure |
 | `step: "conflict"` or `"publish"` | The final closure is unpublished; the worktree, branch, and both commits remain. Follow its `recovery` |
@@ -75,16 +75,23 @@ that covers it, and cleanup already done is reported as `already-absent`. A
 final closure the target has moved past without conflict is rebased and
 published once.
 
-Report the exact published closure SHAs, the receipt, remaining coverage, and
-`repository`, the management context a later rerun uses.
+Retain the exact published closure SHAs, the receipt, remaining coverage, and
+`repository`, the management context a later rerun uses, in available execution
+context. Apply [completion attention](../../dough-land/SKILL.md#completion-attention)
+to the final response, then use the supplied launch context for the
+[final dashboard operation](../../dough-land/references/dashboard-completion.md)
+after all closure/retirement work and final wording settle.
 
 ## Complete current-branch closure
 
 After the last wrap-up publication this invocation will perform, invoke
 [the shared completion operation](ci-monitor.md#await-the-applicable-revision-at-completion)
 once for that final accepted SHA on the matching observer. Handle its combined
-CI and shutdown receipt, then report the exact published closure SHAs, that
-receipt, and remaining coverage. Invoke completion only after the final
+CI and shutdown receipt, retaining the exact published closure SHAs, that
+receipt, and remaining coverage. Apply [completion attention](../../dough-land/SKILL.md#completion-attention)
+to the final response, then use the supplied launch context for the
+[final dashboard operation](../../dough-land/references/dashboard-completion.md)
+after all closure/retirement work and final wording settle. Invoke completion only after the final
 applicable wrap-up publication, never between intermediate
 recovery-record publications.
 
@@ -115,6 +122,9 @@ not that receipt. Invoke
 once for the accepted integrated SHA on that trunk observer and handle its
 combined receipt. With confirmed shutdown as its gate, wrap-up then retires
 the execution resources under the same
-[Retire the worktree](../../dough-land/SKILL.md#retire-the-worktree);
-publication recovery retains the same observer and repeats neither target
+[Retire the worktree](../../dough-land/SKILL.md#retire-the-worktree).
+After retirement and final wording settle, apply the
+[final dashboard operation](../../dough-land/references/dashboard-completion.md)
+with supplied launch context. It does not replace the CI receipt or shutdown gate.
+Publication recovery retains the same observer and repeats neither target
 setup nor an already accepted push.

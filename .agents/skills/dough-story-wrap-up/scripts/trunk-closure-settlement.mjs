@@ -164,6 +164,7 @@ async function rebasedFinalClosure({
 async function publishFinalClosure(request) {
   const delivered = await deliverManagedExecutionIncrement({
     ...request,
+    mode: "trunk",
     validatedCandidate: request.final,
     validate: async () => ({ ok: true }),
   });

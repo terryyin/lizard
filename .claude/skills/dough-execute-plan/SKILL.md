@@ -91,10 +91,10 @@ Before accepting a return, read [proof acceptance](references/wrap-up.md#accept-
 before delivery, read [delivery](references/wrap-up.md#deliver-the-change). Before
 arming observation, read [CI observation](references/ci-monitor.md) and only the
 current host's notification adapter. Arm from the execution checkout against the
-authorized target branch; do not wait for CI. Before creating the execution workspace, read
-[execution location](references/execution-location.md). Before a claim,
-validated increment, or owned repair publication, read
-[trunk publication](references/trunk-publication.md).
+authorized target branch; do not wait for CI. On Codex, arm the yielded stream at
+execution start. Before creating the execution workspace, read [execution
+location](references/execution-location.md). Before a claim, validated increment,
+or owned repair publication, read [trunk publication](references/trunk-publication.md).
 Use [targeted retrieval and disposable research](references/disposable-research.md)
 for omitted/truncated passages or bounded investigations; another step alone needs no reload.
 

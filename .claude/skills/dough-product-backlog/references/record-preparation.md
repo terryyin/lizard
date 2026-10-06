@@ -214,7 +214,7 @@ progress and proof in the conversation or active story. Do not fabricate a seed,
 Closure under [dough-story-wrap-up](../../dough-story-wrap-up/SKILL.md) deletes
 spent source and plan history. Removing a canonical home removes its story-state
 block; there is no catalog tombstone. Preserve source/plan cleanup and Git
-history recovery; create no substitute readiness or progress record.
+history recovery. The done record `complete` writes outlives that history.
 
 ## Canonical homes
 

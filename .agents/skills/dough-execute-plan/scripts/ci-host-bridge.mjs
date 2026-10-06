@@ -1,8 +1,9 @@
-// Invoke the installed host notification bridge. Cursor and Claude use the
-// hook script; Codex readiness is supplied by the caller when tools exist.
+// Invoke the installed host notification bridge: the hook script Cursor and
+// Claude Code coordinators share.
 import { spawn } from "node:child_process";
 import { once } from "node:events";
 import { fileURLToPath } from "node:url";
+import { managedDeliveryGeneration } from "./ci-mailbox-location.mjs";
 import { probeMailbox, receiptPrefix } from "./ci-mailbox.mjs";
 
 const defaultHook = fileURLToPath(
@@ -10,24 +11,42 @@ const defaultHook = fileURLToPath(
 );
 
 // Explicit session input is authoritative, metadata included. Without it, a
-// Claude Code coordinator is identified by its documented session variable
-// from the supplied environment; other hosts never use that variable.
+// Claude Code or Cursor coordinator is identified by its own host's session
+// variable from the supplied environment; no host uses another host's variable.
+const hostIdentity = {
+  claude: {
+    name: "Claude Code session",
+    variable: "CLAUDE_CODE_SESSION_ID",
+    field: "session_id",
+    tool: "Bash",
+  },
+  cursor: {
+    name: "Cursor conversation",
+    variable: "CURSOR_CONVERSATION_ID",
+    field: "conversation_id",
+    tool: "Shell",
+  },
+};
+
 export function resolveHostSession({ host, session, env = process.env }) {
   if (session !== undefined && session !== null) return session;
-  const claudeSession = host === "claude" && env?.CLAUDE_CODE_SESSION_ID;
-  return claudeSession ? { session_id: claudeSession } : session;
+  const identity = hostIdentity[host];
+  const ambient = identity && env?.[identity.variable];
+  return ambient ? { [identity.field]: ambient } : session;
 }
 
-const missingIdentityReason = {
-  claude:
-    "Claude Code session identity is unavailable: CLAUDE_CODE_SESSION_ID is unset and no --session-json was supplied; run deliver from the coordinator's own Bash tool or pass --session-json with its session_id",
-};
+function missingIdentityReason(host) {
+  const identity = hostIdentity[host];
+  if (!identity)
+    return "host session identity is required to verify the notification bridge";
+  return `${identity.name} identity is unavailable: ${identity.variable} is unset and no --session-json was supplied; run deliver from the coordinator's own ${identity.tool} tool or pass --session-json with its ${identity.field}`;
+}
 
 function hookInput(host, session, receipt = "") {
   return {
     session_id: session.session_id ?? session.conversation_id,
     conversation_id: session.conversation_id ?? session.session_id,
-    generation_id: session.generation_id ?? "managed-delivery",
+    generation_id: session.generation_id ?? managedDeliveryGeneration,
     agent_id: session.agent_id,
     subagent_id: session.subagent_id,
     transcript_path:
@@ -92,23 +111,11 @@ export async function verifyHostBridge({
   env,
   root,
   storage,
-  codexBridgeAvailable,
 }) {
-  if (host === "codex") {
-    return {
-      ready: codexBridgeAvailable === true,
-      reason:
-        codexBridgeAvailable === true
-          ? undefined
-          : "Codex yielded-cell bridge is unavailable",
-    };
-  }
   if (!session?.conversation_id && !session?.session_id) {
     return {
       ready: false,
-      reason:
-        missingIdentityReason[host] ??
-        "host session identity is required to verify the notification bridge",
+      reason: missingIdentityReason(host),
     };
   }
   const directory = probeMailbox({ root, storage });
@@ -137,12 +144,6 @@ export async function bindHostObserver({
   hookPath = defaultHook,
   env,
 }) {
-  if (host === "codex") {
-    return {
-      attached: true,
-      context: "codex stream binding retained by caller",
-    };
-  }
   const output = await invokeHostHook(host, hookInput(host, session, receipt), {
     hookPath,
     cwd: workspace,

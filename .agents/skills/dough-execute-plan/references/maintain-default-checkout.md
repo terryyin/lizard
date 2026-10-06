@@ -16,8 +16,10 @@ publication that never reached remote acceptance leaves any outstanding
 maintenance obligation unchanged and does not authorize treating the remote
 as updated.
 
-When reporting, name the maintenance result separately from publication
-acceptance:
+Keep the maintenance result separate from publication acceptance. A caller
+controls its final response; Land and Wrap Up apply
+[completion attention](../../dough-land/SKILL.md#completion-attention) rather than
+recapping routine results. The maintenance outcomes are:
 
 - **advanced** — this attempt fast-forwarded an eligible clean checkout to fetched trunk.
 - **already current** — the checkout is clean and its `HEAD` is that fetched revision.

@@ -114,8 +114,10 @@ or a later one that names its workspace, deliver it from that workspace through
 [increment publication](trunk-publication.md#publish-an-execution-increment-or-repair)
 with `previouslyPublishedBase` set to the retained `startingRevision` (otherwise
 the merge base of the workspace branch and fetched trunk) and the target set to
-remote trunk, even in Story Branch Mode: one-shot work has no execution branch
-or claim to deliver to. That request is the authority to publish it. After
+remote trunk (`--target-ref refs/heads/<trunk>`), even in Story Branch Mode:
+one-shot work has no execution branch or claim to deliver to. In Story Branch
+Mode, declare that landing with `--mode story-branch --tracking one-shot`; in
+Trunk Mode, pass `--mode trunk`. That request is the authority to publish it. After
 acceptance, refresh the default checkout and complete CI observation as for any
 trunk publication. A default-checkout result is delivered from that checkout,
 with `previouslyPublishedBase` set to the merge base of its HEAD and fetched
@@ -166,7 +168,11 @@ requires, apply its
 [spent-history deletion](../../dough-story-wrap-up/SKILL.md#delete-spent-history-including-shared-records)
 to this story: remove its entry with the product-backlog `complete` command,
 its story section (its seed only when every remaining section is spent), and
-its plan. Sibling stories and other entries stay as they are.
+its plan. Sibling stories and other entries stay as they are. `complete` also
+deletes the story's agent profile, writes its done record under `done/` beside
+the backlog, and removes expired done records; its report names each file. The
+new done record is untracked, so commit it, with the profile and expired
+records it removed, in the same result commit.
 
 When landing it, add `--one-shot-identity <identity>` to `deliver`, and to
 `resume` when resuming, so each fetched remote trunk is checked for the story

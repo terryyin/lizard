@@ -8,8 +8,8 @@ import { parseArgs } from "node:util";
 import { addQueueEntry } from "./product-backlog-add.mjs";
 import { adoptIdentities } from "./product-backlog-adopt.mjs";
 import {
+  closeBesideBacklog,
   completeEntry,
-  releaseAgentProfiles,
 } from "./product-backlog-complete.mjs";
 import { setDirection } from "./product-backlog-direction.mjs";
 import { mergeBacklogs } from "./product-backlog-merge.mjs";
@@ -18,6 +18,7 @@ import { refreshEntry } from "./product-backlog-refresh.mjs";
 import { BacklogError } from "./product-backlog-refusal.mjs";
 import {
   options,
+  readCompletionTime,
   readPlacement,
   readPlan,
   resolvePath,
@@ -38,6 +39,12 @@ import {
   recordState,
 } from "./product-backlog-story-state-command.mjs";
 import { preparationRefusal } from "./product-backlog-story-state-home.mjs";
+import {
+  readDependencies,
+  updateDependency,
+} from "./product-backlog-story-dependencies-command.mjs";
+import { readConsumers } from "./product-backlog-dependency-consumers.mjs";
+import { resolveDependency } from "./product-backlog-dependency-resolution.mjs";
 import { takeEntry } from "./product-backlog-take.mjs";
 import { usage } from "./product-backlog-usage.mjs";
 
@@ -93,11 +100,16 @@ async function take(file, values) {
 }
 
 async function complete(file, values) {
+  const now = readCompletionTime();
   const outcome = await applyReportedChange(file, (source) =>
     completeEntry(source, { identity: values.identity }),
   );
-  const released = releaseAgentProfiles(dirname(file), outcome.entry.identity);
-  console.log(reportComplete({ ...outcome, released }, values.file));
+  const closed = closeBesideBacklog(dirname(file), {
+    entry: outcome.entry,
+    dropped: values.dropped,
+    now,
+  });
+  console.log(reportComplete({ ...outcome, ...closed }, values.file));
 }
 
 // Dropping a reference is not on offer, so a caller who asks for it is told
@@ -182,6 +194,10 @@ const operations = {
   merge,
   "record-state": recordState,
   "read-state": readState,
+  "discover-consumers": readConsumers,
+  "resolve-dependency": resolveDependency,
+  "read-dependencies": readDependencies,
+  "update-dependency": updateDependency,
 };
 
 async function main(argv) {
@@ -211,10 +227,16 @@ try {
 } catch (error) {
   if (error instanceof BacklogError) {
     const named = process.argv[2];
-    const refusal =
-      named === "record-state" || named === "read-state"
-        ? preparationRefusal(error)
-        : error.refusal;
+    const refusal = [
+      "record-state",
+      "read-state",
+      "discover-consumers",
+      "resolve-dependency",
+      "read-dependencies",
+      "update-dependency",
+    ].includes(named)
+      ? preparationRefusal(error)
+      : error.refusal;
     console.error(refusal);
     process.exit(1);
   }

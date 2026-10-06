@@ -4,7 +4,9 @@ An existing retrospective follow-up must be queued by default, or dropped on
 explicit human instruction, before wrap-up can complete. Do not silently retain
 an unlisted follow-up or infer permission to drop it from absent, empty, or
 skipped retrospective advice. Handle it by its presence even when advice is
-absent. Report which disposition was applied.
+absent. Record which disposition was applied; use
+[completion attention](../../dough-land/SKILL.md#completion-attention) for a useful
+follow-up reminder or an unresolved disposition.
 
 Without an explicit drop instruction, validate the follow-up against the
 correction-input contract in
@@ -31,7 +33,7 @@ When explicitly instructed to drop the follow-up, identify its owned plan,
 canonical story section when applicable, associated records, and any queue
 entry. Preserve them in the
 [before-cleanup commit](../SKILL.md#commit-closure-inputs-and-preserve-git-recovery),
-then remove that entry through the backlog `complete` operation and delete only those owned follow-up
+then remove that entry through the backlog `complete --dropped` operation and delete only those owned follow-up
 records during cleanup. Dropping does not claim that the follow-up was
 implemented. Preserve sibling stories and unrelated work. Unresolved ownership
 stops the affected deletion and blocks closure; do not leave an unlisted plan

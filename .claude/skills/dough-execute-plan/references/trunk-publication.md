@@ -43,8 +43,9 @@ by hand. An unavailable host bridge returns `pendingCi: unobserved` (or an
 equivalent coverage-gap receipt) while leaving remote acceptance intact.
 
 Trunk Mode builds the candidate from the local execution branch and pushes
-that candidate to remote trunk. It does not push the execution branch. Story
-Branch Mode pushes that candidate to the recorded remote execution branch and
+that candidate to remote trunk (`refs/heads/<trunk>`).
+It does not push the execution branch. Story Branch Mode pushes that candidate
+to the recorded remote execution branch (`refs/heads/<execution branch>`) and
 does not push it to remote trunk. Keep the same execution worktree. Caller-selected
 current-branch work and host-owned execution enter this
 sequence only from the recorded checkout, and only when that caller already
@@ -78,11 +79,27 @@ It does not erase a remote acceptance the publisher has already recorded.
 
 ## Publish the candidate
 
-Apply [Preconditions](#preconditions), then run managed delivery from the owned
-workspace through the installed
-`dough-execute-plan/scripts/execution-increment-delivery.mjs` entry point
-(`deliver` with the owned workspace, branch, previously published base,
-authorized target ref, repository, host, and publication authority). That
+Apply [Preconditions](#preconditions), then run managed delivery once from the
+owned workspace, where `<installed>` is this project's installed skills
+directory that holds `dough-execute-plan` (normally `.agents/skills/` or
+`.claude/skills/`):
+
+```text
+node <installed>/dough-execute-plan/scripts/execution-increment-delivery.mjs deliver \
+  --mode <mode from the established start> \
+  --workspace <owned workspace> --branch <execution branch> \
+  --previously-published-base <previously published base SHA> \
+  --target-ref <authorized target ref> --repo <owner/repo> --host <host> \
+  --authority <publish|local-only> [--tracking one-shot] \
+  [--session-json <json>] [--default-checkout <path>] [--one-shot-identity <identity>]
+```
+
+Story Branch Mode passes `--mode story-branch` with
+`--target-ref refs/heads/<execution branch>`. Trunk Mode passes `--mode trunk`
+with `--target-ref refs/heads/<trunk>`. Caller-selected current-branch work
+and host-owned execution have no established start; they pass `--mode trunk`
+with their caller's authorized target. A one-shot landing follows
+[Land the retained result](one-shot.md#land-the-retained-result). That
 operation owns runtime resolution, observer establish/reuse, the
 [publish the candidate](publish-the-candidate.md#publish-the-candidate) Git
 sequence, and exact-revision registration. A claim uses the execution workspace
@@ -93,12 +110,19 @@ Run `deliver` through the coordinator's own Bash or Shell tool so the observer
 belongs to the session that will receive CI events. On Claude Code,
 `--host claude` takes that coordinator's identity from its
 `CLAUDE_CODE_SESSION_ID`; do not probe, start, or build session JSON for it.
+On Cursor, `--host cursor` takes that coordinator's identity from its
+`CURSOR_CONVERSATION_ID` in the same way.
 An explicit `--session-json` stays authoritative when a caller must name a
 different owner, and malformed session JSON stops delivery instead of falling
 back to another identity. If no identity is available, the receipt reports an
 unobserved coverage gap naming the missing source while publication acceptance
 stands; the next `deliver` from the coordinator's own tool, or with its
 `--session-json`, attaches observation without a manual observer start.
+On Codex, the yielded stream armed at execution start under
+[ci-notify-codex.md](ci-notify-codex.md) is the observer `--host codex`
+reuses for every increment and repair. Without a live stream, the receipt
+reports an unobserved gap naming that arming step; once the stream is armed,
+the next `deliver` reuses it.
 A pre-rebase unpublished SHA is not the receipt. After confirmation of a
 publication whose target is remote trunk, attempt a refresh under
 [Refresh eligibility](maintain-default-checkout.md#refresh-eligibility).

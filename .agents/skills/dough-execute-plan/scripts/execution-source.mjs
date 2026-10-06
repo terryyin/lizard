@@ -14,10 +14,16 @@ import {
 } from "../../dough-product-backlog/scripts/product-backlog-plan.mjs";
 import { readStoryState } from "../../dough-product-backlog/scripts/product-backlog-story-state.mjs";
 import { BacklogError } from "../../dough-product-backlog/scripts/product-backlog-refusal.mjs";
+import {
+  requireResolvedStoryDependencies,
+  withoutStoryDependencies,
+} from "../../dough-product-backlog/scripts/product-backlog-story-dependencies.mjs";
 import { git } from "./publication-git.mjs";
 import {
   backlogPath,
   claimProvenance,
+  classifyOwnership,
+  isAncestor,
 } from "./workspace-publication-ownership.mjs";
 
 export async function show(cwd, rev, path) {
@@ -101,14 +107,17 @@ export async function readPublishedExecutionSource(request, remoteRef) {
   // Outside claim recovery, Taken work is a continuation: only the claim's
   // own publisher continues it, and only from ready published preparation.
   let claim;
-  if (entry.list === takenHeading && !request.retained) {
+  if (entry.list === takenHeading) {
     claim = await claimProvenance(
       request.repository,
       remoteRef,
       request.identity,
       backlogPath,
     );
-    if (!claim?.publisher || claim.publisher !== request.publisherId)
+    if (
+      !request.retained &&
+      (!claim?.publisher || claim.publisher !== request.publisherId)
+    )
       return { existing: entry, claim };
   }
   const selection = selectedPreparation(request.repository, entry.href);
@@ -116,6 +125,22 @@ export async function readPublishedExecutionSource(request, remoteRef) {
   const home = await show(request.repository, remoteRef, homePath);
   if (home === null)
     throw new Error("selected canonical home is absent on fetched trunk");
+  const publishedClaimOwned =
+    request.retained &&
+    classifyOwnership({
+      publisherId: request.publisherId,
+      candidateSha: request.retained.candidateSha,
+      candidateIsAncestor: await isAncestor(
+        request.repository,
+        request.retained.candidateSha,
+        remoteRef,
+      ),
+      provenance: claim,
+    }) === "owned";
+  // A new Take (including publication retries) must use the fetched dependency
+  // agreement. Already-owned Taken continuation does not interrupt execution.
+  if (!publishedClaimOwned && (entry.list === queueHeading || request.retained))
+    requireResolvedStoryDependencies(home, entry.href);
   const preview = selection.read(home);
   if (preview.identity !== request.identity || preview.status !== "recorded")
     throw new Error("selected canonical preparation or identity is unresolved");
@@ -168,6 +193,11 @@ export async function readPublishedExecutionSource(request, remoteRef) {
     planTarget,
     preparation,
     selectedSource: sectionOf(home, entry.href).text,
+    selectedSourceWithoutDependencies: sectionOf(
+      withoutStoryDependencies(home, entry.href),
+      entry.href,
+    ).text,
+    publishedClaimOwned: Boolean(publishedClaimOwned),
     planSource: plan,
   };
 }

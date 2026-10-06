@@ -17,7 +17,10 @@ import {
   recordDeliveryProgress,
   receiptPrefix,
 } from "./ci-mailbox.mjs";
-import { checkoutIdentity } from "./ci-mailbox-location.mjs";
+import {
+  checkoutIdentity,
+  managedDeliveryGeneration,
+} from "./ci-mailbox-location.mjs";
 import { readMailboxTerminal } from "./ci-mailbox-match.mjs";
 import { isDirectCliEntry } from "./ci-direct-entry.mjs";
 
@@ -62,16 +65,29 @@ export function selectCiEvents(
   );
   const bindings = join(storage, `owner-${owner}`);
   const generation = join(storage, `generation-${owner}`);
+  const managed = input.generation_id === managedDeliveryGeneration;
+  // A managed generation never replaces a recorded one.
+  const recordGeneration = () => {
+    if (!managed || !existsSync(generation))
+      writeFileSync(generation, input.generation_id, { mode: 0o600 });
+  };
   if (host === "cursor") {
     if (!input.generation_id) return emptySelection();
     if (input.hook_event_name === "beforeSubmitPrompt") {
-      if (existsSync(bindings))
-        writeFileSync(generation, input.generation_id, { mode: 0o600 });
+      if (existsSync(bindings)) recordGeneration();
       return emptySelection();
     }
-    if (
-      existsSync(generation) &&
-      readFileSync(generation, "utf8") !== input.generation_id
+    // Managed delivery runs inside the coordinator's Shell call without its
+    // generation, so it passes the gate; the owner's next real hook adopts its
+    // own generation in place of the managed one.
+    const recorded = existsSync(generation)
+      ? readFileSync(generation, "utf8")
+      : undefined;
+    if (recorded === managedDeliveryGeneration) recordGeneration();
+    else if (
+      !managed &&
+      recorded !== undefined &&
+      recorded !== input.generation_id
     )
       return emptySelection();
   }
@@ -120,8 +136,7 @@ export function selectCiEvents(
       writeFileSync(join(bindings, hash(directory)), directory, {
         mode: 0o600,
       });
-      if (host === "cursor")
-        writeFileSync(generation, input.generation_id, { mode: 0o600 });
+      if (host === "cursor") recordGeneration();
       attachedThisCall.add(directory);
       const ended = readMailboxTerminal(directory);
       if (ended && ended.coverage?.state !== "lost" && !request.probe) {

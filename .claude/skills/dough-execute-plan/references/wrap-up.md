@@ -33,15 +33,16 @@ A selected test count supports that check; it is never the full promise mapping.
 Reuse a trustworthy recorded selection and result when they still match the
 claimed command, filter, and candidate; do not rerun solely for process.
 
-When the return covers a changed shared operation or contract, check that
-contract's current consumers — including relevant test-support callers — against
-the claimed proof. Do not accept on a prior unaffected-suite or unused-consumer
-exclusion when the changed contract still reaches that caller: align the affected
-consumer and obtain matching proof, or leave the promise incomplete. Unrelated
-consumers and unchanged boundaries keep their accepted evidence. Reuse sufficient
-equivalent-purpose proof; do not require every suite or all callers. Apply the
-shared-operation caller analysis in
-[own executable proof](../../dough-story-refinement/references/planning.md#own-executable-proof).
+When the change has consumers, as
+[own executable proof](../../dough-story-refinement/references/planning.md#own-executable-proof)
+defines them, check its current consumers against the return's selection and the
+claimed proof. Do not accept on a prior unaffected-suite or unused-consumer
+exclusion when the change still reaches that consumer. Do not accept or publish
+the slice while a known consumer — one the return's selection found, or one you
+can name — is unrun, including one left for CI: run it, or return the slice for
+it. Unrelated consumers and unchanged boundaries keep their accepted evidence.
+Reuse sufficient equivalent-purpose proof; require the changed surface's suite
+when it runs within the slice's focused-check time, not every suite.
 
 When a required observation is explicitly missing from the return — including
 required readiness or requeue behavior named as untested while delivery is still
@@ -197,8 +198,10 @@ and continue that unfinished obligation only.
    The receipt is the accepted SHA, the authorized target,
    and the observation result (attached, reused, or an explicit coverage gap).
    Do not run a separate observer probe, start, or `register-push` for this
-   managed path, and do not copy mailbox directories by hand. A pending human
-   edit on that checkout stays out of the published commit.
+   managed path, and do not copy mailbox directories by hand. A Codex
+   coordinator's yielded stream armed at execution start is the observer this
+   delivery reuses. A pending human edit on that checkout stays out of the
+   published commit.
    When the selected checkout is the default checkout, follow its
    [direct edit](maintain-default-checkout.md#direct-edit) checks before
    mutating it. A local commit or a local merge stays a local

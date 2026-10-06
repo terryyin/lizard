@@ -59,7 +59,10 @@ Quick inputs follow the recovery rules below.
 
 Make every allowed write in one owned checkout. When an invoking execution supplies its execution
 checkout as the write location, write there; that execution commits those records in its
-completion commit. Otherwise, immediately before the first write, select or reuse an owned workspace under
+completion commit. A landing or wrap-up running the
+[process review of its run](references/process-review-of-a-run.md) supplies its own checkout as
+that execution checkout and commits the records itself. Otherwise, immediately before the first
+write, select or reuse an owned workspace under
 [prepare records in an owned workspace](../dough-story-refinement/references/preparation-workspace.md),
 write there, and report the written result's pending disposition. Do not write in the checkout the review
 started from unless it is that supplied execution checkout. A review that writes nothing creates no

@@ -3,10 +3,13 @@
 Follow [ci-monitor.md](ci-monitor.md) for CI selection and failure recovery.
 
 With `functions.exec`, `yield_control`, `notify`, `tools.exec_command`, and
-`tools.write_stdin`, start one yielded observer before the first publication it
-must cover, using the authorized target as `BRANCH`. Reuse the
-observer note in the active plan (planned) or conversation (quick) and terminal
-`finished` entries; recover that note before replacement when handles are lost.
+`tools.write_stdin`, start one yielded observer at execution start, before the
+first publication, using the authorized target as `BRANCH`. Managed delivery
+(`deliver --host codex`) reuses this stream for every increment and repair;
+without a live stream, its receipt reports an unobserved gap naming this step.
+Reuse the observer note in the active plan (planned) or conversation (quick) and
+terminal `finished` entries; recover that note before replacement when handles
+are lost.
 Resolve `/ABSOLUTE/RESOLVED/SKILL` inside `/ABSOLUTE/VERIFIED/CHECKOUT_ROOT` with
 [runtime setup](runtime-setup.md). Do not arm when setup stops.
 
@@ -19,7 +22,7 @@ const key = 'ci-watch-execution:OWNER/REPO:BRANCH:COORDINATOR'
 if (load(key)?.status === 'finished') exit()
 const io = { yield_time_ms: 1000, max_output_tokens: 2000 }
 let tail = '', directory, pid, terminal
-const events = []
+const records = []
 const consume = (chunk) => {
   const lines = `${tail}${chunk}`.split('\n')
   tail = lines.pop()
@@ -27,12 +30,22 @@ const consume = (chunk) => {
     if (line.startsWith('CI_OBSERVER_RESULT ')) terminal = JSON.parse(line.slice('CI_OBSERVER_RESULT '.length)).terminal
     else if (line.startsWith('CI_OBSERVER ')) ({ directory, pid } = JSON.parse(line.slice('CI_OBSERVER '.length)))
     else if (line.startsWith('{')) {
-      const event = JSON.parse(line).event
-      if (event?.type?.startsWith('CI_')) events.push(event)
+      const record = JSON.parse(line)
+      if (record.event?.type?.startsWith('CI_')) records.push(record)
     }
   }
 }
-const deliver = () => { for (const event of events.splice(0)) notify(event) }
+const deliver = async () => {
+  const notified = records.splice(0)
+  for (const { event } of notified) notify(event)
+  if (!notified.length || !directory) return
+  await tools.exec_command({
+    cmd: `node /ABSOLUTE/RESOLVED/SKILL/scripts/ci-mailbox.mjs acknowledge ${directory} ${notified.at(-1).sequence}`,
+    workdir: '/ABSOLUTE/VERIFIED/CHECKOUT_ROOT',
+    yield_time_ms: 10000,
+    max_output_tokens: 2000,
+  }).catch(() => {})
+}
 try {
   let result = await tools.exec_command({
     cmd: 'node /ABSOLUTE/RESOLVED/SKILL/scripts/ci-mailbox.mjs stream --execution OWNER/REPO BRANCH',
@@ -43,11 +56,11 @@ try {
   consume(result.output)
   text({ key, status: result.session_id ? 'watching' : 'finished', sessionId: result.session_id, directory, pid, tail, terminal })
   await yield_control()
-  deliver()
+  await deliver()
   while (result.session_id) {
     result = await tools.write_stdin({ session_id: result.session_id, chars: '', ...io })
     consume(result.output)
-    deliver()
+    await deliver()
   }
   if (!terminal) {
     store(key, { status: 'lost', sessionId: undefined, directory, pid, tail })
@@ -60,6 +73,11 @@ try {
   notify({ type: 'CI_MONITOR_UNAVAILABLE', key, reason: String(error).slice(-1000) })
 }
 ```
+
+After notifying records, the binding acknowledges them through `acknowledge`,
+so completion treats them as received. A record it never notified, or whose
+acknowledgment did not land, stays unread: completion keeps the observer and
+reports it.
 
 The first yielded output exposes session, directory, and PID. Save them with the
 cell ID, coordinator, and checkout in the observer note before the first push.

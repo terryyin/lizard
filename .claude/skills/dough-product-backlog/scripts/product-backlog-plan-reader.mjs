@@ -12,12 +12,13 @@ import { splitSource } from "./product-backlog-source.mjs";
 
 const slicesSection = /^## +(?:Ordered slices|Slices) *$/i;
 const sliceHeading = /^### +(?<index>\d+)\. +(?<name>\S.*?)\s*$/;
-const typeLine = /^Type: +(?<type>\S.*?)\s*$/;
-const statusLine = /^Status: +(?<status>planned|done)\b/;
-const proofLine = /^Proof: *(?<proof>.*?)\s*$/;
-const acceptedLine = /^Accepted: *(?<accepted>.*?)\s*$/;
+const typeLine = /^(?:Type:|\*\*Type:\*\*) +(?<type>\S.*?)\s*$/;
+const statusLine = /^(?:Status:|\*\*Status:\*\*) +(?<status>planned|done)\b/;
+const proofLine = /^(?:Proof:|\*\*Proof:\*\*) *(?<proof>.*?)\s*$/;
+const acceptedLine =
+  /^(?:Accepted:|\*\*Accepted proof:\*\*|\*\*Accepted:\*\*) *(?<accepted>.*?)\s*$/;
 const fieldStart =
-  /^(?:Type:|Status:|Proof:|Accepted:|Behavior:|Structure:|### |## )/;
+  /^(?:Type:|Status:|Proof:|Accepted:|\*\*(?:Type|Status|Proof|Accepted proof|Accepted):\*\*|Behavior:|Structure:|### |## )/;
 
 const completionSection = /^## +Execution complete *$/i;
 const adviceLine = /^Product advice: *(?<advice>.*?)\s*$/;
@@ -162,7 +163,7 @@ function readSlice(lines, unfenced, headingIndex, until) {
       accepted = [first, rest].filter((part) => part !== "").join("\n");
       continue;
     }
-    if (/^Status:/.test(line)) {
+    if (/^(?:Status:|\*\*Status:\*\*)/.test(line)) {
       sawUnsupportedField = true;
     }
   }

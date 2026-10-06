@@ -17,17 +17,28 @@ the product promises to establish. A fixture or seam supplying that behavior
 leaves it unproved; keep the evidence for what it actually observes. An inner
 operation finishing does not prove completion for its caller.
 
-Before changing a shared operation or choosing its proof, inspect affected production
-and relevant test-support call sites — fixtures, stand-ins, and harness helpers that
-invoke the contract — reusing available product-wide search. Derive obligations from
-each caller's actual use, not method name or dominant use; exclude unrelated consumers.
-A prior unaffected-suite or unused-consumer exclusion is invalid when this change still
-reaches that caller: reassess current consumers before relying on it. Incompatible
-purposes each need an observation; equivalent purposes may share sufficient proof. Do
-not require every suite or an exhaustive caller inventory when sufficient
-equivalent-purpose proof already exists. For unresolved domain purpose, ask precisely
-about that caller's requirement and stop its dependent obligation until answered rather
-than guessing policy.
+Before changing an operation, contract, message, value, default, or rendered
+output, or choosing proof for that change, find its consumers: anything in
+production or test support that observes what the change alters, reusing available
+product-wide search. They include callers of a changed operation and the
+continuation and recovery paths that reach it; tests and specs asserting a retired
+literal or value (message text, status code, label, output form), where a search
+for that literal is the selection; callers relying on a changed default by not
+overriding it; every fixture, stand-in, and harness helper that invokes or
+imitates a changed contract, not only those the edit touched; and specs asserting
+a property of a whole page or surface the change renders into (element counts,
+roles, keyboard order, forbidden words). Derive obligations from each consumer's
+actual use, not method name or dominant use; exclude unrelated consumers. A prior
+unaffected-suite or unused-consumer exclusion is invalid when this change still
+reaches that consumer: reassess current consumers before relying on it.
+Incompatible purposes each need an observation; equivalent purposes may share
+sufficient proof. When the change has such consumers and the suite covering the
+changed surface runs within the slice's focused-check time, run that suite instead
+of hand-picking the consumers it contains; run consumers outside it as well. A
+change nothing else observes, such as renaming a private helper with no shared
+contract, text, value, default, or rendered output, keeps focused proof. For
+unresolved domain purpose, ask precisely about that consumer's requirement and
+stop its dependent obligation until answered rather than guessing policy.
 
 For artifact-preservation promises, identify installation, physical store, and
 predecessor using project-supplied identities/scope. Same-store continuity proves no
@@ -58,9 +69,9 @@ it. Limit success claims to the observed cases.
 | Structure slice | Existing external behavior remains green |
 | Interim behavior | Name the later slice that removes or replaces it |
 
-Run focused relevant checks at slice boundaries. Require broader suites only when
-this project's workflow or user requires them. When asynchronous ownership
-changes, prove that the named lifecycle owner observes background failure in
-time and performs applicable cleanup after failure or shutdown; an awaited
-exception alone proves neither. Derive timing from the selected lifecycle
-contract rather than an arbitrary timeout.
+Run focused relevant checks, including the consumers above, at slice boundaries.
+Run every suite only when this project's workflow or user requires it. When
+asynchronous ownership changes, prove that the named lifecycle owner observes
+background failure in time and performs applicable cleanup after failure or
+shutdown; an awaited exception alone proves neither. Derive timing from the
+selected lifecycle contract rather than an arbitrary timeout.
