@@ -225,7 +225,7 @@ Analyze a folder recursively: lizard mahjong\_game/src
    --------------------------------------------------------------------------------
           554        20     4.07      71.15       27            1      0.04    0.12
 
-Warnings only (in clang/gcc formation):lizard -w mahjong\_game
+Warnings only (in clang/gcc formation): lizard -w mahjong\_game
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
@@ -234,7 +234,7 @@ Warnings only (in clang/gcc formation):lizard -w mahjong\_game
    ./src/mahjong_game/mj_table.c:109: warning: mj_table_update_state has 20 CCN and 1 params (72 NLOC, 255 tokens)
 
 
-Set warning threshold for any field:lizard -T nloc=25
+Set warning threshold for any field: lizard -T nloc=25
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The option `-Tcyclomatic_complexity=10` is equal to `-C10`.
