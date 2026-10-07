@@ -383,7 +383,7 @@ No new feature. Just switch to new pypi server.
 - 2015.10.22 TTCN-3 added by @gustafj
 - 2015.10.06 Add C++11 uniform constructor initialization. Thanks to @rakhimov
 - 2015.01.09 Add C preprocessor back by -Ecpre. it will ignore all the #else branch in the C/C++ code.
-- 2015.01.07 pass test for linux kernal and other popular open source C/C++ code.
+- 2015.01.07 pass test for linux kernel and other popular open source C/C++ code.
 - 2014.04.07 Remove option -e (display function end line), and make it default
 - 2014.04.06 Remove option -d (ignore duplicated content), and make it default
 - 2014.04.06 Remove option -p (no preprocessor count), and a '#if' will always be counted in cyclomatic complexity

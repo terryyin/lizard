@@ -1,5 +1,5 @@
 '''
-DefaultOrderedDict is a combinated OrderedDict and
+DefaultOrderedDict is a combined OrderedDict and
 defaultdict.
 '''
 from collections import OrderedDict

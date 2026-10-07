@@ -1,5 +1,5 @@
 '''
-Language parser for Ruby-like langauges
+Language parser for Ruby-like languages
 '''
 
 from .code_reader import CodeReader, CodeStateMachine
