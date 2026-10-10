@@ -53,11 +53,20 @@ class SwiftReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
 
 
 class SwiftStates(GoLikeStates):  # pylint: disable=R0903
+
+    # Failable initializers stay one token so `?` is not counted as a ternary.
+    _FAILABLE_INITIALIZERS = {'init?': 'init', 'init!': 'init'}
+
+    def __init__(self, context):
+        super(SwiftStates, self).__init__(context)
+        self._previous_token = None
+
     def _state_global(self, token):
-        if token in ('init', 'subscript'):
+        name = self._introduced_function(token)
+        if name is not None:
             self.context.push_new_function('')
-            self.next(self._function_name, token)
-        elif token in ('get', 'set', 'willSet', 'didSet', 'deinit'):
+            self.next(self._function_name, name)
+        elif self._starts_accessor(token):
             self.context.push_new_function(token)
             self._state = self._expect_function_impl
         elif token == 'protocol':
@@ -66,6 +75,22 @@ class SwiftStates(GoLikeStates):  # pylint: disable=R0903
             self._state = self._expect_declaration_name
         else:
             super(SwiftStates, self)._state_global(token)
+        if token != '\n':
+            self._previous_token = token
+
+    def _introduced_function(self, token):
+        if token in self._FAILABLE_INITIALIZERS:
+            return self._FAILABLE_INITIALIZERS[token]
+        if token in ('init', 'subscript'):
+            return token
+        return None
+
+    def _starts_accessor(self, token):
+        if token in ('willSet', 'didSet', 'deinit'):
+            return True
+        # Parentheses mark a setter access modifier, as in private(set).
+        # An accessor is `set {` or `set(newValue)`.
+        return token in ('get', 'set') and self._previous_token != '('
 
     def _expect_declaration_name(self, token):
         self._state = self._state_global
