@@ -207,7 +207,7 @@ class SwiftStates(GoLikeStates):  # pylint: disable=R0903
         else:
             self._accessor_step = step
 
-    def _next_accessor_step(self, token):
+    def _next_accessor_step(self, token):  # pylint: disable=R0911
         name = self._accessor[0]
         step = self._accessor_step
         if step == 'name' and token == '(' \
