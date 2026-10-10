@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Bug Fixes
+- Swift: stop `.init(`, `self.init(`, `.get()`, `.set(`, variables named `set`, and argument labels such as `init:` from starting phantom functions that swallowed the following functions
+- Swift: tokenize `#Preview`, `#expect`, `#available` and other macros so their braces count; compiler directives stay whole lines
+- Swift: scan raw, multi-line, and interpolated string literals and nested block comments as single tokens, so braces inside them no longer shift function boundaries
+- Swift: do not treat `type` (`.type`, `type(of:)`) as a Go-style type declaration
+
 ## 1.24.1
 
 ### New Features

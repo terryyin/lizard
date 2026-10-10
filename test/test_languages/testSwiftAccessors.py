@@ -1,5 +1,5 @@
 import unittest
-from .swift_helpers import get_swift_function_list
+from .swift_helpers import get_swift_function_list, swift_function_spans
 
 
 class TestSwiftAccessors(unittest.TestCase):
@@ -106,6 +106,108 @@ struct T {
             [("init", 6, 6, 1), ("f", 7, 10, 2)],
             [(function.name, function.start_line, function.end_line,
               function.cyclomatic_complexity) for function in result])
+
+    def assert_functions(self, source, expected):
+        self.assertEqual(expected, swift_function_spans(source))
+
+    def test_member_get_call_is_not_an_accessor(self):
+        self.assert_functions("""\
+struct A {
+    func one(_ r: Result<Int, Error>) -> Int? {
+        return try? r.get()
+    }
+    func two() -> Int {
+        return 2
+    }
+}
+""", [("one", 2, 4, 1), ("two", 5, 7, 1)])
+
+    def test_init_expressions_are_not_initializers(self):
+        self.assert_functions("""\
+struct A {
+    init(x: Int) {
+        self.init(y: x)
+    }
+    func make() -> A {
+        return .init(x: 1)
+    }
+    func other() -> A {
+        return A.init(x: 2)
+    }
+}
+""", [("init", 2, 4, 1), ("make", 5, 7, 1), ("other", 8, 10, 1)])
+
+    def test_init_expressions_after_comma_are_not_initializers(self):
+        self.assert_functions("""\
+struct A {
+    func make() -> [A] {
+        return [.init(x: 1), .init(x: 2)]
+    }
+    func two() -> Int {
+        return 2
+    }
+}
+""", [("make", 2, 4, 1), ("two", 5, 7, 1)])
+
+    def test_declaration_words_as_argument_labels_are_not_functions(self):
+        self.assert_functions("""\
+func boot() {
+    run(init: "/sbin/agent", deinit: 1)
+    run(a: 1, init: "/sbin/agent")
+}
+func after() {
+    return
+}
+""", [("boot", 1, 4, 1), ("after", 5, 7, 1)])
+
+    def test_set_as_method_or_variable_is_not_an_accessor(self):
+        self.assert_functions("""\
+func store() {
+    UserDefaults.standard.set(1, forKey: "k")
+}
+func fill() -> Set<Int> {
+    var set = Set<Int>()
+    set.insert(1)
+    return set
+}
+func after() {
+    if a { }
+}
+""", [("store", 1, 3, 1), ("fill", 4, 8, 1), ("after", 9, 11, 2)])
+
+    def test_accessor_words_as_labels_and_cases_are_not_accessors(self):
+        self.assert_functions("""\
+func view() -> some View {
+    Toggle(isOn: Binding(get: { flag }, set: { flag = $0 }))
+}
+func kind(_ m: Mode) -> Int {
+    switch m {
+    case .get: return 1
+    case .set: return 2
+    }
+}
+""", [("view", 1, 3, 1), ("kind", 4, 9, 3)])
+
+    def test_getter_effects_and_setter_parameter(self):
+        self.assert_functions("""\
+var value: Int {
+    get async throws {
+        return 1
+    }
+}
+var typed: Int {
+    get throws(MyError) {
+        return 1
+    }
+}
+var named: Int {
+    get { 1 }
+    nonmutating set(newValue) {
+        if newValue > 0 { }
+    }
+}
+""", [("get", 2, 4, 1), ("get", 7, 9, 1), ("get", 12, 12, 1),
+      ("set", 13, 15, 2)])
 
     def test_setter_access_modifier_may_span_lines(self):
         result = get_swift_function_list("""\

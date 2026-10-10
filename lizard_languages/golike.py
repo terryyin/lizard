@@ -8,12 +8,13 @@ from .code_reader import CodeStateMachine
 class GoLikeStates(CodeStateMachine):  # pylint: disable=R0903
 
     FUNC_KEYWORD = 'func'
+    TYPE_KEYWORD = 'type'
 
     def _state_global(self, token):
         if token == self.FUNC_KEYWORD:
             self._state = self._function_name
             self.context.push_new_function('')
-        elif token == 'type':
+        elif token == self.TYPE_KEYWORD:
             self._state = self._type_definition
         elif token in '{':
             self.sub_state(self.statemachine_clone())
