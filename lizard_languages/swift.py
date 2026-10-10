@@ -2,114 +2,59 @@
 Language parser for Apple Swift
 '''
 
-import re
-
 from .code_reader import CodeReader, CodeStateMachine
 from .clike import CCppCommentsMixin
 from .golike import GoLikeStates
+from .swift_literals import literal_spans
+from .token_pattern import compiled_token_pattern, tokens_in_span
 
-_LITERAL_START = re.compile(r'//|/\*|#*"')
-_COMMENT_DELIMITER = re.compile(r'/\*|\*/')
-_STRING_SPECIAL = re.compile(r'[\\"\n]')
-_INTERPOLATION_SPECIAL = re.compile(r'[()\n]|#*"')
-
-
-def _split_literals(source):
-    """Yield (is_literal, text) pieces; literals are whole strings and
-    block comments, which a regular expression cannot delimit because
-    both nest."""
-    start = pos = 0
-    while True:
-        match = _LITERAL_START.search(source, pos)
-        if match is None:
-            break
-        if match.group() == '//':
-            newline = source.find('\n', match.end())
-            pos = len(source) if newline < 0 else newline
-            continue
-        if match.group() == '/*':
-            end = _block_comment_end(source, match.start())
-        else:
-            end = _string_end(source, match.start(), len(match.group()) - 1)
-        yield False, source[start:match.start()]
-        yield True, source[match.start():end]
-        start = pos = end
-    yield False, source[start:]
+# Backtick names, failable markers, and macros. Compiler directives stay a
+# bare "#" so the shared tokenizer still keeps each directive on one line.
+_SWIFT_TOKEN_ADDITION = (
+    r"|`\w+`"
+    r"|\w+\?"
+    r"|\w+\!"
+    r"|\?\?"
+    r"|\#(?!(?:if|elseif|else|endif|sourceLocation|warning|error)\b)\w+"
+)
 
 
-def _block_comment_end(source, start):
-    depth = 0
-    for match in _COMMENT_DELIMITER.finditer(source, start):
-        depth += 1 if match.group() == '/*' else -1
-        if depth == 0:
-            return match.end()
-    return len(source)
+def _separates_label(token):
+    return token == '\n' or token.startswith('//') or token.startswith('/*')
 
 
-def _string_end(source, start, hashes):
-    quote = start + hashes
-    multiline = source.startswith('"""', quote)
-    close = ('"""' if multiline else '"') + '#' * hashes
-    escape = '\\' + '#' * hashes
-    pos = quote + (3 if multiline else 1)
-    while True:
-        match = _STRING_SPECIAL.search(source, pos)
-        if match is None:
-            return len(source)
-        pos = match.start()
-        if source.startswith(close, pos):
-            return pos + len(close)
-        if source.startswith(escape, pos):
-            pos += len(escape)
-            if source.startswith('(', pos):
-                pos = _interpolation_end(source, pos, multiline)
-            else:
-                pos += 1
-        elif source[pos] == '\n' and not multiline:
-            return pos
-        else:
-            pos += 1
-
-
-def _interpolation_end(source, start, multiline):
-    depth = 0
-    pos = start
-    while True:
-        match = _INTERPOLATION_SPECIAL.search(source, pos)
-        if match is None:
-            return len(source)
-        token = match.group()
-        pos = match.end()
-        if token == '(':
-            depth += 1
-        elif token == ')':
-            depth -= 1
-            if depth == 0:
-                return pos
-        elif token == '\n':
-            if not multiline:
-                return match.start()
-        else:
-            pos = _string_end(source, match.start(), len(token) - 1)
+def _next_significant(tokens, index):
+    count = len(tokens)
+    while index < count and _separates_label(tokens[index]):
+        index += 1
+    if index < count:
+        return index
+    return None
 
 
 class SwiftReplaceLabel:
     _DECLARATION_LABELS = []
 
     def preprocess(self, tokens):
-        tokens = list(t for t in tokens if not t.isspace() or t == '\n')
-
-        def replace_label(tokens, target, replace):
-            for i in range(0, len(tokens) - len(target)):
-                if tokens[i:i + len(target)] == target:
-                    for j, repl in enumerate(replace):
-                        tokens[i + j] = repl
-            return tokens
-
-        labels = [k for k in self.conditions if k.isalpha()]
-        for k in labels + self._DECLARATION_LABELS:
-            tokens = replace_label(tokens, ["(", k, ":"], ["(", "_" + k, ":"])
-            tokens = replace_label(tokens, [",", k, ":"], [",", "_" + k, ":"])
+        tokens = [t for t in tokens if not t.isspace() or t == '\n']
+        labels = {k for k in self.conditions if k.isalpha()}
+        labels.update(self._DECLARATION_LABELS)
+        index = 0
+        count = len(tokens)
+        while index < count:
+            if tokens[index] not in ('(', ','):
+                index += 1
+                continue
+            label = _next_significant(tokens, index + 1)
+            if label is None or tokens[label] not in labels:
+                index += 1
+                continue
+            colon = _next_significant(tokens, label + 1)
+            if colon is not None and tokens[colon] == ':':
+                tokens[label] = '_' + tokens[label]
+                index = colon + 1
+            else:
+                index += 1
         return tokens
 
 
@@ -133,18 +78,13 @@ class SwiftReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
-        addition = (
-            r"|`\w+`" +
-            r"|\w+\?" +
-            r"|\w+\!" +
-            r"|\?\?" +
-            r"|\#(?!(?:if|elseif|else|endif|sourceLocation|warning|error)\b)\w+" +
-            addition)
-        for is_literal, text in _split_literals(source_code):
+        pattern = compiled_token_pattern(_SWIFT_TOKEN_ADDITION + addition)
+        for is_literal, start, end in literal_spans(source_code):
             if is_literal:
-                yield text
+                yield source_code[start:end]
             else:
-                yield from CodeReader.generate_tokens(text, addition)
+                yield from tokens_in_span(
+                    pattern, source_code, start, end, token_class)
 
 
 class SwiftStates(GoLikeStates):  # pylint: disable=R0903

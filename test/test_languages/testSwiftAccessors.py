@@ -160,6 +160,20 @@ func after() {
 }
 """, [("boot", 1, 4, 1), ("after", 5, 7, 1)])
 
+    def test_wrapped_argument_labels_are_not_functions(self):
+        self.assert_functions("""\
+func boot() {
+    run(
+        init: "/sbin/agent"
+    )
+    something(
+        for: .something
+    )
+    run(/* note */ deinit: 1)
+}
+func after() { return }
+""", [("boot", 1, 9, 1), ("after", 10, 10, 1)])
+
     def test_set_as_method_or_variable_is_not_an_accessor(self):
         self.assert_functions("""\
 func store() {
@@ -206,8 +220,12 @@ var named: Int {
         if newValue > 0 { }
     }
 }
-""", [("get", 2, 4, 1), ("get", 7, 9, 1), ("get", 12, 12, 1),
-      ("set", 13, 15, 2)])
+""", [
+            ("get", 2, 4, 1),
+            ("get", 7, 9, 1),
+            ("get", 12, 12, 1),
+            ("set", 13, 15, 2),
+        ])
 
     def test_setter_access_modifier_may_span_lines(self):
         result = get_swift_function_list("""\
