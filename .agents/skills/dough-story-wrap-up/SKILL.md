@@ -155,8 +155,9 @@ Mode before-cleanup publication — delete the selected work's spent history und
   remaining section is spent;
 - its **Taken** or **Backlog list** entry when one exists, through the
   [dough-product-backlog](../dough-product-backlog/SKILL.md) `complete` command,
-  which also deletes that work's agent profile, writes its done record, and
-  removes expired done records, all owned closure changes; and
+  which also deletes that work's agent profile, writes its done record,
+  removes expired done records, and rebuilds the done catalog beside them, all
+  owned closure changes; and
 - links whose sole purpose is preserving that history.
 
 Also remove the owned follow-up records selected for explicit drop above, after
@@ -220,8 +221,8 @@ integrated SHA. Its publication uses [Preserve published history](../dough-execu
 from the owned execution workspace, excluding any default checkout's
 unrelated commits and pending human edit.
 
-When the merge touches the product backlog, use the owned workspace's installed
-merge adapter as that procedure requires, preserving
+When the merge touches the product backlog or its done records, use the owned
+workspace's installed merge adapter as that procedure requires, preserving
 [follow-up priority](references/follow-up-disposition.md#preserve-follow-up-priority-during-reconciliation).
 A stopped result stays as Git left it.
 Resolve it through [a real conflict](../dough-product-backlog/references/merge-conflicts.md#a-real-conflict-resolve-by-hand-then-continue-through-the-same-adapter).

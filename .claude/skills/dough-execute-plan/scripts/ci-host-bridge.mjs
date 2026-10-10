@@ -5,6 +5,7 @@ import { once } from "node:events";
 import { fileURLToPath } from "node:url";
 import { managedDeliveryGeneration } from "./ci-mailbox-location.mjs";
 import { probeMailbox, receiptPrefix } from "./ci-mailbox.mjs";
+import { hostInputOwner } from "./ci-observer-owner.mjs";
 
 const defaultHook = fileURLToPath(
   new URL("./ci-host-hook.mjs", import.meta.url),
@@ -35,11 +36,11 @@ export function resolveHostSession({ host, session, env = process.env }) {
   return ambient ? { [identity.field]: ambient } : session;
 }
 
-function missingIdentityReason(host) {
+export function missingIdentityReason(host, command = "deliver") {
   const identity = hostIdentity[host];
   if (!identity)
     return "host session identity is required to verify the notification bridge";
-  return `${identity.name} identity is unavailable: ${identity.variable} is unset and no --session-json was supplied; run deliver from the coordinator's own ${identity.tool} tool or pass --session-json with its ${identity.field}`;
+  return `${identity.name} identity is unavailable: ${identity.variable} is unset and no --session-json was supplied; run ${command} from the coordinator's own ${identity.tool} tool or pass --session-json with its ${identity.field}`;
 }
 
 function hookInput(host, session, receipt = "") {
@@ -63,6 +64,14 @@ function hookInput(host, session, receipt = "") {
       ? { cursor_version: session.cursor_version ?? "0.0.0" }
       : {}),
   };
+}
+
+// The owner the installed hook claims for this session's managed hook input,
+// so selection and binding name the same coordinator. Undefined without the
+// host's session identity.
+export function hostSessionOwner({ host, session, root }) {
+  if (!session) return undefined;
+  return hostInputOwner(hookInput(host, session), host, root);
 }
 
 function bridgeContext(output) {

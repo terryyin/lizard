@@ -57,6 +57,16 @@ export function isDoneRecordFileName(fileName) {
 
 const nonEmptyText = (value) => typeof value === "string" && value !== "";
 
+// Whether `value` is a completion time as records spell it: a UTC ISO time
+// in exactly the form Date#toISOString writes.
+export function isCompletionTime(value) {
+  return (
+    nonEmptyText(value) &&
+    !Number.isNaN(Date.parse(value)) &&
+    new Date(value).toISOString() === value
+  );
+}
+
 function recordFactsError({
   identity,
   title,
@@ -68,11 +78,7 @@ function recordFactsError({
 }) {
   if (!nonEmptyText(identity)) return "done record requires an identity";
   if (!nonEmptyText(title)) return "done record requires a title";
-  if (
-    !nonEmptyText(completedAt) ||
-    Number.isNaN(Date.parse(completedAt)) ||
-    new Date(completedAt).toISOString() !== completedAt
-  )
+  if (!isCompletionTime(completedAt))
     return "done record requires a UTC ISO completion time";
   if (developer !== undefined && !nonEmptyText(developer))
     return "developer must be non-empty text when recorded";

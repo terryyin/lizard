@@ -118,44 +118,51 @@ Inspect only the code and tests needed to find the stable outside-in proof entry
 point, behavior to extend or preserve, genuine dependencies, decisive premises,
 and any Structure justified under the linked slice decomposition rules.
 
-A decisive premise is a factual claim about this project's current state that a
-slice's approach, sizing, or proof depends on: existing code and tests, host or
-environment state, fixture content, workload data, or a named proof or
-measurement command. Premises inherited from the story, such as "works as
-today", count the same as those you write.
+A decisive premise is a factual claim about this project's current state on which a
+slice's approach, sizing, or proof depends: code and tests, host or environment state,
+fixture content, workload data, or a named proof or measurement command. Inherited
+premises such as "works as today" count the same as those you write.
 
-Derive premises from the key examples: trace each one from trigger to
-observable result through existing code, and every step the plan relies on as
-already behaving is a decisive premise, written down or not. That includes
-anything that can collide with an example (an overlay, a competing rule) and
-every transformation between a fixture's inputs and the operation that
-evaluates them. A helper, step, hook or test that exists, or a grep hit, is
-presence, not settling. A claim that a change fixes a reported symptom is a
-premise: reproduce the symptom before dependent work, and a remedy spec that
-already passes leaves the symptom unexplained instead of counting as the fix.
-When an existing fixture can run the journey cheaply and safely, run it instead
-of reading call sites.
+Derive premises from key examples: trace each from trigger to observable result through
+existing code. Every step assumed to behave is decisive, written down or not, including
+colliding overlays or rules and transformations from fixture inputs to their evaluation.
+A premise is settled only when its recorded observation reaches the consuming operation
+in the checkout the plan names and records the promised outcome: the example's result,
+or a proof's failure without the behavior it claims to prove. "Exists", "found", "callers
+listed", "step defined", "server answered", and "no commit to the spec since" are
+presence, not settling; leave the premise open and name the unreached operation.
+A claimed fix is a premise: reproduce the symptom before dependent work. A remedy spec
+that already passes leaves the symptom unexplained. Run an existing fixture when it can
+observe the journey cheaply and safely, instead of reading call sites.
 
-Before recording `ready`, establish each decisive premise with the smallest
-safe observation: reading, searching, listing, a read-only host query, or one
-unpaid, side-effect-free local run of the named command. Observe the thing the claim is about, not only where you expect it: a
-claim that something has no test, or that a named proof exercises a behavior,
-is observed by searching for the existing tests and callers of what changes,
-wherever they live. When the plan moves or relocates a function, that search
-includes every caller, including scripts and step definitions, not only tests
-that import it. If a script, command, or route reaches the moved function,
-keep searching for a feature whose steps run that script. When such a feature
-exists, name the feature and record the observation that its steps run the
-script and the script calls the function. Naming only the script does not
-settle the claim while a feature runs it, and a test that imports or calls
-the moved unit does not settle it either. Naming an entry that does not reach
-the function does not settle it. For uncertain infrastructure or storage
-behavior, the observation is one isolated representative proof against the
-relevant engine and version, unless matching evidence exists. Record each
-premise, the operation that consumes its result, the literal observation that
-reaches it, and its result in the plan. A false premise changes the plan before
-broad implementation. Do not inspect claims the approach does not depend on, and
-keep experiments off shared and production systems.
+Before `ready`, use the smallest safe observation reaching the claim's outcome, wherever it lives.
+Reading, searching, listing, and read-only host queries locate it; presence cannot settle it:
+
+- For a behavior-consumer premise (dependents, paths, or effects of a change), follow the
+  effect from its state write or server response through every transformation to what
+  asserts or relies on it. Search tests and all callers, including scripts, step definitions,
+  and specs that drive HTTP sequences, rather than only names or direct imports.
+  With a cheap local suite, the smallest complete observation is one scratch application
+  of the planned change, one relevant test run, and a revert; failures identify consumers.
+  For a moved function reached through a script, run the feature's script steps with a
+  scratch failure in the function; record that step's failure. Caller traces or unit imports do not settle it.
+- For a proof premise (a named test proves a behavior), observe discrimination: it fails
+  with the behavior disabled in a scratch edit and passes with it enabled. If it stays
+  green without the behavior, record the premise false and give the slice a discriminating proof.
+- For a proof-route premise (an example runs through a route in a named checkout), execute
+  its unpaid, side-effect-free prefix there (runner spec selection, tools, token route, or log source),
+  stopping at the first paid, credentialed, owner-held, or state-changing step. A refusal or
+  missing step makes the route unavailable. Name an available route (CI or the primary checkout
+  under this project's rules), or record the missing step and decision owner as an early probe slice or
+  pre-Take decision. Reachability without the example's real shape (authenticated write or attached file) is presence.
+
+Scratch observations run only in the preparation's owned workspace, never a default or shared
+checkout; revert scratch edits before any record write or commit. For uncertain infrastructure
+or storage behavior, use one isolated representative proof against the relevant engine and
+version, unless matching evidence exists. Record each premise, its consuming operation, the
+literal observation reaching it, and its result in the plan. A false premise changes the plan
+before broad implementation. Do not inspect claims the approach does not depend on, and keep
+experiments off shared and production systems.
 
 When only a paid, credentialed, owner-held, or state-changing observation can
 settle a premise, observe its cheap parts now and make the remainder an early

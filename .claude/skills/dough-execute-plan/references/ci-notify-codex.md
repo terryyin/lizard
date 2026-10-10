@@ -4,9 +4,14 @@ Follow [ci-monitor.md](ci-monitor.md) for CI selection and failure recovery.
 
 With `functions.exec`, `yield_control`, `notify`, `tools.exec_command`, and
 `tools.write_stdin`, start one yielded observer at execution start, before the
-first publication, using the authorized target as `BRANCH`. Managed delivery
-(`deliver --host codex`) reuses this stream for every increment and repair;
-without a live stream, its receipt reports an unobserved gap naming this step.
+first publication, using the authorized target as `BRANCH`. `COORDINATOR` is
+one word of letters, digits, and hyphens that names this coordinator for the
+whole execution; arming claims the stream for it. Managed delivery
+(`deliver --host codex`) registers every increment and repair on this stream
+when it receives the observer note's coordinator and directory as
+`--coordinator` and `--observer-directory`. Without both, or when that
+directory is not this coordinator's live stream of the target, its receipt
+reports an unobserved gap naming the input to supply.
 Reuse the observer note in the active plan (planned) or conversation (quick) and
 terminal `finished` entries; recover that note before replacement when handles
 are lost.
@@ -48,7 +53,7 @@ const deliver = async () => {
 }
 try {
   let result = await tools.exec_command({
-    cmd: 'node /ABSOLUTE/RESOLVED/SKILL/scripts/ci-mailbox.mjs stream --execution OWNER/REPO BRANCH',
+    cmd: 'node /ABSOLUTE/RESOLVED/SKILL/scripts/ci-mailbox.mjs stream --execution OWNER/REPO BRANCH --coordinator COORDINATOR',
     workdir: '/ABSOLUTE/VERIFIED/CHECKOUT_ROOT',
     tty: true,
     ...io,
@@ -81,6 +86,9 @@ reports it.
 
 The first yielded output exposes session, directory, and PID. Save them with the
 cell ID, coordinator, and checkout in the observer note before the first push.
+Every `deliver --host codex` takes that note's coordinator and exact directory,
+from any worktree of the repository; another coordinator's stream of the same
+repository and target stays theirs.
 Cell `store` may stay invisible until the cell finishes; do not coordinate
 shutdown through cross-cell `load`/`store`. Continue delegation after yielding.
 `notify` arrives at the next coordinator boundary. Do not `wait`, assign a
@@ -132,10 +140,11 @@ Without handles, recover the observer note. Match coordinator/checkout and
 `request.json` root, repository, branch, and execution mode, then evaluate the
 stop binding. Read the terminal receipt and `result.json`. Missing/mismatched
 identity means no guessed stop, newest-mailbox lookup, or replacement launch.
-Older unidentified observers cannot be recovered. Stop errors, missing terminal
+Older unidentified observers, including a stream armed without
+`--coordinator`, cannot be recovered. Stop errors, missing terminal
 evidence, or unconfirmed exit mean unresolved shutdown; never force termination
 or claim closure. Keep acknowledgment and repair unchanged. On resume, rearm
 only absent, `stopped`, or `lost` observers after the old process ended; never
 restart terminal `finished` observers. Normal and repair pushes retain the key,
-session, directory, process, and cell. Changed HEAD/SHA never requires setup
+coordinator, session, directory, process, and cell. Changed HEAD/SHA never requires setup
 again.

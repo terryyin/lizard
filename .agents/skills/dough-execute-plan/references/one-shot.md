@@ -5,11 +5,9 @@ with no Taken entry or agent profile, and no story or plan left behind. It runs
 in an owned isolated workspace, or in the default checkout when that is
 selected, and stops with its verified result retained there for review; only
 an explicit request to land it, or automatic landing selected with it,
-publishes that result to remote trunk. It tracks work without a separate
-execution path: planless execution,
-verification, refactoring, delivery, and closure stay as they are. It grants
-no permission beyond the current instruction: implementing findings,
-publishing drafts, and widening scope still need their own authority.
+publishes that result to remote trunk. It uses ordinary planless execution,
+verification, refactoring, delivery and closure. Implementing findings,
+publishing drafts and widening scope still need their own authority.
 
 ## Decide whether one-shot applies
 
@@ -109,23 +107,23 @@ until the developer asks to land the result. The default checkout always stays i
 
 ## Land the retained result
 
-When the developer explicitly asks to land the retained result, in this session
-or a later one that names its workspace, deliver it from that workspace through
-[increment publication](trunk-publication.md#publish-an-execution-increment-or-repair)
-with `previouslyPublishedBase` set to the retained `startingRevision` (otherwise
-the merge base of the workspace branch and fetched trunk) and the target set to
-remote trunk (`--target-ref refs/heads/<trunk>`), even in Story Branch Mode:
-one-shot work has no execution branch or claim to deliver to. In Story Branch
-Mode, declare that landing with `--mode story-branch --tracking one-shot`; in
-Trunk Mode, pass `--mode trunk`. That request is the authority to publish it. After
-acceptance, refresh the default checkout and complete CI observation as for any
-trunk publication. A default-checkout result is delivered from that checkout,
-with `previouslyPublishedBase` set to the merge base of its HEAD and fetched
-trunk, because its earlier local commits are part of the result; it is the
-default checkout itself, so supply no separate one to refresh. If the delivery
-result is lost or interrupted,
-[resume the interrupted publication](trunk-publication.md#resume-an-interrupted-publication)
-with the candidate you retained, never by committing or pushing again.
+For automatic or later explicit landing with supplied dashboard context, apply
+[the original launch's landing handoff](../../dough-land/references/dashboard-completion.md#retain-the-one-shot-landing).
+
+An explicit landing request in this session, or a later one naming the workspace,
+authorizes [increment publication](trunk-publication.md#publish-an-execution-increment-or-repair)
+from that workspace to remote trunk (`--target-ref refs/heads/<trunk>`).
+In Story Branch Mode use `--mode story-branch --tracking one-shot`; in Trunk
+Mode use `--mode trunk`. One-shot work has no claim or execution-branch target.
+Set `previouslyPublishedBase` to retained `startingRevision`, otherwise the
+merge base of the workspace branch and fetched trunk. For a default-checkout
+result, use the merge base of its HEAD and fetched trunk so earlier local commits
+are included; supply no separate default checkout to refresh.
+Retain the candidate and actual `suffixBase` together before every push under
+[candidate step 5](publish-the-candidate.md#publish-the-candidate); its receipt
+and base are the delivered comparison. After acceptance, finish default-checkout
+refresh and CI observation. If interrupted, [resume](trunk-publication.md#resume-an-interrupted-publication)
+with the retained candidate and `--suffix-base`, which preserves that comparison.
 
 ## Land automatically when selected
 
@@ -144,8 +142,7 @@ Land only once the focused verification passes, the post-change refactor pass
 is done, and no product, scope, or architecture decision remains open. Then
 deliver the committed result as [Land the retained result](#land-the-retained-result)
 describes, without waiting for a landing request: a queued story's closure
-lands in the same commit, with `--one-shot-identity`. In the default checkout,
-all checkout content is committed together and delivered from that checkout.
+lands in the same commit, with `--one-shot-identity`.
 Report the accepted SHA and target, and the default checkout's refresh and CI
 observation as their own results: remote acceptance alone completes neither.
 
@@ -155,8 +152,7 @@ goes to the developer), or delivery stops: `ownership-changed`, a
 reconciliation `conflict`, a failed recheck of a reconciled candidate, or a
 second rejection. Push nothing more after such a stop. A lost or interrupted
 delivery result resumes the retained candidate as described above. After the
-landing, [retire the workspace](#retire-the-workspace); the default checkout
-stays.
+landing, follow [workspace retirement](#retire-the-workspace).
 
 ## Complete a queued story in the same commit
 
@@ -170,9 +166,10 @@ to this story: remove its entry with the product-backlog `complete` command,
 its story section (its seed only when every remaining section is spent), and
 its plan. Sibling stories and other entries stay as they are. `complete` also
 deletes the story's agent profile, writes its done record under `done/` beside
-the backlog, and removes expired done records; its report names each file. The
-new done record is untracked, so commit it, with the profile and expired
-records it removed, in the same result commit.
+the backlog, removes expired done records, and rebuilds the done catalog
+`done/.catalog.json`; its report names each file. The new done record and
+catalog may be untracked, so commit them, with the profile and expired records
+it removed, in the same result commit.
 
 When landing it, add `--one-shot-identity <identity>` to `deliver`, and to
 `resume` when resuming, so each fetched remote trunk is checked for the story
@@ -205,52 +202,6 @@ delivered commit already closed any queued story.
 
 ## Escalate when the work grows
 
-When the attempt proves larger than one-shot allows, through newly discovered
-complexity, a separate outcome, or failure to converge, stop substantive work
-and escalate it into tracked work before going further, also when replanning
-is disabled (`--no-replan`). If the developer stopped the work, do not
-escalate: report the attempt and its evidence and leave its workspace to them.
-
-Escalation carries edits only out of an owned workspace. An attempt in the
-default checkout stops instead: report the attempt, its evidence, and its
-edits left in the default checkout for the developer.
-
-Keep the attempt's edits uncommitted in the workspace: only uncommitted edits
-are carried, so undo a result commit you already made while keeping its
-changes. For a queued story, first revert any completion or spent-record
-removal you composed for it; the story stays in the backlog. An unlisted
-request needs its story: draft it in a suitable seed in the originating
-checkout as [Prepare the story](admit-accepted-work.md#prepare-the-story)
-describes. A queued story keeps its identity, link and title.
-
-Admission publishes a claim, so it needs the
-[publication preconditions](trunk-publication.md#preconditions) and authority
-to push it. Without that authority, stop there: report the attempt, its
-evidence, and the edits kept uncommitted in its workspace. Otherwise run the
-start command with the same workspace and branch, `--identity`,
-`--publisher-id`, `--push-authorized --workspace-authorized`, and
-`--admit --link <link> --title <title> --carry`. The
-command parks your edits under `refs/dough/carried/<branch>`, returns the
-workspace to clean fetched trunk, and publishes the ordinary
-[admission](admit-accepted-work.md#act-on-the-result) there; a queued story's
-existing entry moves to Taken without a readiness assessment. It then restores
-your edits, uncommitted, over the claim and reports `carried: {restored:
-true}`. A queued story that another owner now holds stops with
-`source-refused` or `conflict` and leaves your edits untouched.
-
-Any other stop that names `carried.ref` keeps your edits under that ref:
-
-- an interrupted publication resumes as the start command describes, with the
-  same flags; if the start ended without a result, run it again unchanged,
-  and if that refuses a workspace commit fetched trunk lacks, resume with
-  `--starting-revision` set to your one-shot `startingRevision` and
-  `--candidate-sha` set to the workspace's `HEAD`;
-- `carry-conflict` means the claim was accepted but your edits conflict with
-  it in the listed `paths`: report it and leave the merge to a human.
-
-Once restored, the workspace is the claimed story's checkout. Continue through
-[Continue into implementation](admit-accepted-work.md#continue-into-implementation)
-within the original instruction's authority, reusing your proof while its
-boundary is unchanged. Under `--no-replan`, or without authority to plan, stop
-there before planning: report the Taken story, the evidence, and the edits
-restored uncommitted in its workspace.
+Follow [one-shot escalation](one-shot-escalation.md) when the attempt exceeds
+one-shot scope. Keep the attempt recoverable and enter tracked work within the
+original instruction's authority before continuing.

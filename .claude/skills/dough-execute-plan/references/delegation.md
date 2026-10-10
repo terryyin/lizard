@@ -6,6 +6,14 @@ agent. Use a general-purpose agent, or `gsd-executor` when this project uses
 The coordinator retains
 [wrap-up](wrap-up.md); an execution tool does not take over that responsibility.
 
+Before planned delegation, run the installed
+[story-obligations script](../scripts/story-obligations.mjs):
+`node '<installed-execute-plan>/scripts/story-obligations.mjs' list --plan '<PLAN.md>' --slice N`.
+Resolve these inputs under [story obligations](story-obligations.md#use-the-record-at-execution-boundaries).
+A refusal blocks delegation until resolved. Carry the full listing as slice
+promises with their required observations, including returns, receiving
+obligations, and open interims. Do not substitute a learning summary.
+
 Give the agent:
 
 - The selected execution checkout and branch. Pass the complete retained

@@ -52,3 +52,42 @@ down its sender or a newer turn. Existing terminal-attachment lifecycle owns its
 attachments; reporting schedules no delayed disposal. Native Working may remain
 visible, and no cosmetic rename or native shutdown is claimed by a receipt. Existing
 CI-observer shutdown/retirement gates remain independent and required.
+
+## Retain the one-shot landing
+
+For a dashboard-established one-shot refinement or execution, retain the original
+launch's supplied `landing-context.json` outside the checkout.
+Without that capability, explain that no landing comparison can be retained;
+completion reporting stays available. Never guess a launch, base, target or repository.
+
+Pass `--landing-context <supplied absolute file>` to the installed
+`execution-increment-delivery.mjs deliver` command; its shared
+`publishExecutionIncrement` API takes the same path as `landingContext`, including
+when Dough Land uses that API without an execution observer. The installed
+`publication-resume.mjs` API and `execution-increment-resume.mjs resume` accept it
+as well. Supply the retained `--suffix-base` with the candidate when resuming.
+The handoff writes the exact launch and candidate/base pair before every push,
+updates it after reconciliation, and prepares that pair against this launch's
+established workspace. The receiver resolves the repository from the established
+launch, validates commit types and ancestry, and pins both ends before metadata.
+No caller-supplied repository path is accepted.
+
+After remote acceptance, the same handoff records the accepted pair before refresh,
+CI finish duties or retirement. Inspect the returned `landing` result independently
+of publication and observation. `landing.state: "unacknowledged"` keeps Git acceptance
+accepted and names the exact reporting-only retry command. Retain and run that
+command from a surviving working directory; it needs no checkout and never republishes.
+A prepared pair alone is not a landing receipt. A matching recorded receipt or
+`pending-native-session` receipt confirms only this launch's accepted comparison,
+without completing the story, setting Done or stopping a native session.
+
+For a later explicit landing, reuse the original retained context, not a new
+session's completion channel. A different accepted comparison cannot overwrite
+this launch's fixed landing fact. A deleted/expired launch refuses capture and
+retry without recreating its record. Its bound launch keeps the original capture
+authority and prepared pair for that record's existing lifetime, even after its
+startup attempt expires; this extends no retention period. Receipt recovery keeps
+the original delivery and comparison, including after native binding or a newer
+completion report. If deletion reports failed pin cleanup, retry that deletion;
+capture stays refused while cleanup is pending. The final completion report above remains
+the final operation after all required duties and wording settle.

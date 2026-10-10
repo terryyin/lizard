@@ -1,6 +1,8 @@
 // Replay only the owned unpublished suffix onto a newer authorized tip.
-// Backlog-touching suffixes go through the product-backlog rebase adapter;
-// other suffixes use a raw rebase. Callers own proof, push, and observation.
+// Suffixes touching the backlog or the done records beside it go through the
+// product-backlog rebase adapter; other suffixes use a raw rebase. Callers
+// own proof, push, and observation.
+import { posix } from "node:path";
 import { fileURLToPath } from "node:url";
 import { exec, git } from "./publication-git.mjs";
 
@@ -16,7 +18,17 @@ const rebaseCli = fileURLToPath(
   ),
 );
 
-async function suffixTouchesBacklog(workspace, base, branch, backlogPath) {
+// The done directory beside the backlog, spelled as dough-product-backlog's
+// `doneDirectoryBeside` spells it, for the same load-time reason as above.
+const doneDirectoryBeside = (backlogPath) =>
+  posix.join(posix.dirname(backlogPath), "done");
+
+async function suffixTouchesBacklogRecords(
+  workspace,
+  base,
+  branch,
+  backlogPath,
+) {
   const names = (
     await git(
       workspace,
@@ -25,6 +37,7 @@ async function suffixTouchesBacklog(workspace, base, branch, backlogPath) {
       `${base}..${branch}`,
       "--",
       backlogPath,
+      doneDirectoryBeside(backlogPath),
     )
   ).stdout.trim();
   return names !== "";
@@ -85,7 +98,7 @@ export async function reconcileOwnedSuffix({
   branch,
   backlogPath = defaultBacklogPath,
 }) {
-  const touches = await suffixTouchesBacklog(
+  const touches = await suffixTouchesBacklogRecords(
     workspace,
     upstream,
     branch,

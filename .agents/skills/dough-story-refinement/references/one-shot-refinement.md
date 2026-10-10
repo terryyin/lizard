@@ -138,6 +138,9 @@ committed and unlanded.
 
 ## Land or discard on request
 
+For automatic or later explicit landing with supplied dashboard context, apply
+[the original launch's landing handoff](../../dough-land/references/dashboard-completion.md#retain-the-one-shot-landing).
+
 The retained result follows
 [Decide what happens to the written result](preparation-disposition.md#decide-what-happens-to-the-written-result).
 An explicit keep lands it under

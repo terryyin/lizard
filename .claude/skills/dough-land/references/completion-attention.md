@@ -16,6 +16,15 @@ Dough Land and Story Wrap Up use this rule after their operations settle:
   responsible owner when known. Distinguish accepted publication from an
   unfinished later step so recovery repeats only unfinished work. Report a
   follow-up when it is a useful reminder, without recapping settled work.
+- When retirement removed the checkout this session ran in, the session can no
+  longer act. State that the work is finished and where it landed, then list any
+  reminders. Write each reminder as its fact, consequence, and next action with
+  its owner, for the developer to take up in a new session or by hand. Ask no
+  question, request no decision from this session, and give no command for it to
+  run next. Report a record removed so Git can recover it as a fact, such as
+  "… stays recoverable at `<sha>`". While the checkout survives, because
+  retirement was held, a step remains unfinished, or the work is local-only, the
+  response may still ask for the input needed to continue.
 - When the developer explicitly requests details, provide the requested facts.
   Keep operational evidence in command results, available conversation context,
   and its existing lasting homes; silence and a marker never prove completion

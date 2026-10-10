@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 // Story wrap-up's Trunk Mode closure after the before-cleanup commit was
 // accepted: confirm the target holds that commit, publish the committed final
-// closure through managed delivery on the recovered or armed observer, run
-// completion once for the accepted SHA, attempt the optional default-checkout
-// refresh, and only after a receipt with confirmed shutdown retire the worktree
-// and branch through Dough Land's retirement core. Any stop preserves the
-// worktree, branch, and both closure commits and names the unfinished step.
+// closure through managed delivery on this execution's own observer, run
+// completion once for the accepted SHA there, attempt the optional
+// default-checkout refresh, and only after a receipt with confirmed shutdown
+// retire the worktree and branch through Dough Land's retirement core. Any
+// stop preserves the worktree, branch, and both closure commits and names the
+// unfinished step.
 // A rerun continues from the first unfinished step: an accepted final closure
 // is not pushed again, and once the worktree is gone the recorded management
 // context (`--repository`) carries completion and cleanup.
@@ -34,7 +35,7 @@ const recoveries = {
   context:
     "rerun finish with --repository set to the management context an earlier finish result reported",
   observation:
-    "report the lost coverage; the worktree and branch stay until a completion receipt confirms shutdown",
+    "rerun finish with the owner input observation.reason names, or report the lost coverage; the worktree and branch stay until a completion receipt confirms shutdown",
   completion:
     "report the completion receipt; the worktree and branch stay for diagnosis or a later completion",
 };
@@ -72,6 +73,8 @@ export async function finishTrunkClosure({
   identity,
   createdForWork = false,
   session,
+  coordinator,
+  observerDirectory,
   preferredAlias,
   defaultCheckout,
   storage = mailboxRoot,
@@ -109,6 +112,8 @@ export async function finishTrunkClosure({
     host,
     remote,
     session,
+    coordinator,
+    observerDirectory,
     preferredAlias,
     root,
     storage,
@@ -180,7 +185,7 @@ const required = [
   "host",
 ];
 const usage =
-  "usage: trunk-closure.mjs finish --workspace PATH --branch NAME --before-cleanup SHA --final SHA --previously-published-base SHA --target-ref REF --repo OWNER/REPO --host cursor|claude|codex [--remote NAME] [--repository PATH] [--identity WORK] [--created-for-work] [--session-json JSON] [--preferred-alias .agents|.claude] [--default-checkout PATH]";
+  "usage: trunk-closure.mjs finish --workspace PATH --branch NAME --before-cleanup SHA --final SHA --previously-published-base SHA --target-ref REF --repo OWNER/REPO --host cursor|claude|codex [--remote NAME] [--repository PATH] [--identity WORK] [--created-for-work] [--session-json JSON] [--coordinator VALUE --observer-directory PATH] [--preferred-alias .agents|.claude] [--default-checkout PATH]";
 
 function argumentsOf(argv) {
   if (argv[0] !== "finish") {

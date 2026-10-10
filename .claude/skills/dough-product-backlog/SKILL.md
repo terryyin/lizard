@@ -1,6 +1,6 @@
 ---
 name: dough-product-backlog
-description: Maintains and reprioritizes a product backlog list of canonical story or bounded-correction references, and records necessary blocking story dependencies in canonical homes. Use to add, take, reorder, or complete backlog items, record or inspect a justified prerequisite, or resolve product backlog merge conflicts. Excludes classroom and workshop exercise backlogs.
+description: Maintains and reprioritizes a product backlog list of canonical story or bounded-correction references, and records necessary blocking story dependencies in canonical homes. Use to add, take, reorder, or complete backlog items, adopt or repair the done catalog beside them, record or inspect a justified prerequisite, or resolve product backlog merge conflicts. Excludes classroom and workshop exercise backlogs.
 ---
 
 # Product backlog
@@ -169,10 +169,38 @@ complete` operation. It also deletes the execution agent profile under
 name, and writes the work's done record under `done/` beside the backlog: its
 identity, title, completion time, the developer configured in this workspace's
 Git, and that profile's agent, host, and model when one existed. The same run
-removes done records completed more than 30 days before, and its report names
+removes done records completed more than 30 days before, then rebuilds the done
+catalog `done/.catalog.json` from the records that remain, and its report names
 each file it wrote or removed. Commit those files with the backlog change; the
 done record stays in the project as the published fact that the work was done.
 A preparation assignment profile stays until its own release.
+
+### Adopt or repair the done catalog
+
+The done catalog lists each done record's file name, identity, completion time,
+and Git blob hash, newest first, and names each unreadable record file with its
+hash and no completion time, so a reader can order the records and read only
+the ones it needs. Titles, developers, agents, hosts, and models stay in the
+records. The catalog is derived from the record files: never edit or merge it
+by hand. `complete` and the installed merge, rebase, and cherry-pick adapters
+in [merge conflicts](references/merge-conflicts.md) keep it current: an
+operation through an adapter that changes records also leaves a catalog
+rebuilt from the resulting record files. Rebuild it with the installed
+`scripts/product-backlog.mjs catalog-done [--file <backlog>]` and commit the
+result when:
+
+- done records exist beside the backlog with no catalog, because they were
+  written before catalogs existed;
+- record files were added, removed, or changed outside `complete` and those
+  adapters, such as by raw Git, a hand edit, or an older installed copy of
+  these scripts; or
+- raw Git reports a conflict in `done/.catalog.json`: settle the record files
+  first, then rebuild and stage the catalog.
+
+`catalog-done` changes no record and no backlog entry, prunes nothing, and
+writes no completion; with no record left it removes the catalog. Its report
+names any unreadable record file, which stays for a person to read; the catalog
+never makes up a completion time for it.
 
 ## Direct edits may be denied in Claude Code, Codex, or Cursor
 

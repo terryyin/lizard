@@ -39,6 +39,12 @@
 // accepted, the same as `product-backlog-git-rebase-aggregate.mjs`'s
 // clean-rebase gate, and carrying the same documented exclusion and accepted
 // gap for `continueOperation`'s own finish (see that module's header).
+//
+// An accepted pick whose picked commits changed the done directory beside
+// the backlog ends with that directory's catalog current at the tip
+// (`commitRebuiltDoneCatalog`); the catalog's own driver keeps a change to
+// the catalog alone from stopping any pick.
+import { existsSync, readFileSync } from "node:fs";
 import {
   acceptStaged,
   validateCandidate,
@@ -46,11 +52,16 @@ import {
 import { acceptCleanPick } from "./product-backlog-git-cherry-pick-aggregate.mjs";
 import { interpretStop } from "./product-backlog-git-cherry-pick-stop.mjs";
 import { runGitOperationCli } from "./product-backlog-git-cli.mjs";
+import {
+  commitRebuiltDoneCatalog,
+  ensureDoneCatalogDriverRegistered,
+} from "./product-backlog-git-done-catalog.mjs";
 import { cherryPickState } from "./product-backlog-git-operation-state.mjs";
 import {
   ensureDriverRegistered,
   gitLine,
   gitOutcome,
+  gitPath,
   repositoryRoot,
 } from "./product-backlog-git-repository.mjs";
 import { BacklogError } from "./product-backlog-refusal.mjs";
@@ -73,6 +84,23 @@ export {
 // invents commit content of its own.
 const noEditor = { GIT_EDITOR: "true", EDITOR: "true" };
 
+// An accepted pick's done catalog is made current at the tip, against the
+// branch as it stood before the first pick; any other result commits nothing
+// further.
+function concludePick(repoRoot, file, destinationAtStart, result) {
+  if (result.status !== "picked") return result;
+  return commitRebuiltDoneCatalog(repoRoot, file, destinationAtStart, result);
+}
+
+// The branch as it stood before a stopped cherry-pick began: Git's own
+// sequencer records it for a sequence, and a single stopped pick has not
+// moved the branch yet.
+function stoppedPickStart(repoRoot) {
+  const recorded = gitPath(repoRoot, "sequencer/head");
+  const start = existsSync(recorded) ? readFileSync(recorded, "utf8") : "HEAD";
+  return gitLine(["rev-parse", start.trim()], repoRoot);
+}
+
 // One authorized cherry-pick of one or more commits: every commit Git
 // applies that touches the backlog path is gated by the shared resolver
 // (through the driver registered above). `ref` is one revision, or several
@@ -88,8 +116,9 @@ const noEditor = { GIT_EDITOR: "true", EDITOR: "true" };
 // — the same shape a multi-commit rebase of that same line onto this same
 // destination would have. A single revision has no such gap (see this file's
 // own header) and is reported accepted as soon as its own result validates.
-export function pickOperation({ repoRoot, file, ref, mainline }) {
+export async function pickOperation({ repoRoot, file, ref, mainline }) {
   ensureDriverRegistered(repoRoot, file);
+  ensureDoneCatalogDriverRegistered(repoRoot, file);
   const revisions = ref.trim().split(/\s+/).filter(Boolean);
   if (revisions.length === 0) {
     throw new BacklogError("Supply at least one revision to --ref.");
@@ -121,14 +150,17 @@ export function pickOperation({ repoRoot, file, ref, mainline }) {
     };
   }
 
-  if (revisions.length === 1) {
-    return {
-      status: "picked",
-      message: `${revisions[0]} applied cleanly onto ${destinationAtStart}.`,
-    };
-  }
-
-  return acceptCleanPick(repoRoot, file, revisions, destinationAtStart);
+  return concludePick(
+    repoRoot,
+    file,
+    destinationAtStart,
+    revisions.length === 1
+      ? {
+          status: "picked",
+          message: `${revisions[0]} applied cleanly onto ${destinationAtStart}.`,
+        }
+      : acceptCleanPick(repoRoot, file, revisions, destinationAtStart),
+  );
 }
 
 // Resumes a cherry-pick this tool already stopped, once a human has supplied
@@ -139,10 +171,11 @@ export function pickOperation({ repoRoot, file, ref, mainline }) {
 // any remaining picks. Deliberately never re-gated by the whole-operation
 // aggregate on finish, the same documented boundary and accepted gap
 // `product-backlog-git-rebase.mjs`'s own `continueOperation` carries.
-export function continueOperation({ repoRoot, file }) {
+export async function continueOperation({ repoRoot, file }) {
   if (!cherryPickState(repoRoot)) {
     throw new BacklogError(`No cherry-pick is in progress in ${repoRoot}.`);
   }
+  const destinationAtStart = stoppedPickStart(repoRoot);
   const unresolved = gitLine(["ls-files", "-u", "--", file], repoRoot);
   if (unresolved !== "") {
     throw new BacklogError(
@@ -160,12 +193,12 @@ export function continueOperation({ repoRoot, file }) {
     noEditor,
   );
   if (continued.code === 0) {
-    return {
+    return concludePick(repoRoot, file, destinationAtStart, {
       status: "picked",
       message:
         `The cherry-pick completed; every picked commit is present and ` +
         `unpublished.`,
-    };
+    });
   }
   return interpretStop(repoRoot, file, undefined, continued);
 }
@@ -191,6 +224,7 @@ await runGitOperationCli({
     "refused-after-commit",
     "refused",
     "disputed",
+    "catalog-uncommitted",
   ],
   extraOptions: {
     mainline: { type: "string" },

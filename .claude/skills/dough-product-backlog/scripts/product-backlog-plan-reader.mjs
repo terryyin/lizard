@@ -31,7 +31,7 @@ const fenceCloser = /^ {0,3}(?<marker>`{3,}|~{3,})\s*$/;
 // (so a line starting with an inline code span stays prose), and a fence
 // closes only at a bare run of the opener's character at least as long as the
 // opener.
-function unfencedLines(lines) {
+export function unfencedPlanLines(lines) {
   const unfenced = [];
   let fence;
   for (const line of lines) {
@@ -198,7 +198,7 @@ export function readPlanSlices(source) {
     };
   }
   const { lines } = splitSource(source);
-  const unfenced = unfencedLines(lines);
+  const unfenced = unfencedPlanLines(lines);
   const completion = readCompletion(lines, unfenced);
   const withCompletion = (answer) =>
     completion === undefined ? answer : { ...answer, completion };

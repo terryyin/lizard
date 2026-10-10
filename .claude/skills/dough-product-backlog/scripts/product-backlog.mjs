@@ -10,6 +10,7 @@ import { adoptIdentities } from "./product-backlog-adopt.mjs";
 import {
   closeBesideBacklog,
   completeEntry,
+  rebuildDoneCatalog,
 } from "./product-backlog-complete.mjs";
 import { setDirection } from "./product-backlog-direction.mjs";
 import { mergeBacklogs } from "./product-backlog-merge.mjs";
@@ -26,6 +27,7 @@ import {
 import {
   reportAdd,
   reportAdopt,
+  reportCatalogDone,
   reportComplete,
   reportDirection,
   reportMerge,
@@ -33,7 +35,11 @@ import {
   reportRefresh,
   reportTake,
 } from "./product-backlog-report.mjs";
-import { applyToBacklog } from "./product-backlog-store.mjs";
+import {
+  applyReportedChange,
+  applyToBacklog,
+  holdingBacklog,
+} from "./product-backlog-store.mjs";
 import {
   readState,
   recordState,
@@ -58,19 +64,6 @@ async function add(file, values) {
   };
   await applyToBacklog(file, (source) => addQueueEntry(source, request));
   console.log(reportAdd(request.identity, values.file));
-}
-
-// Applies one change whose report needs more than the published bytes. The
-// operation returns the backlog to publish alongside what it did; only the
-// bytes reach the write boundary, and the outcome comes back here so that the
-// report is written from a change already on disk.
-async function applyReportedChange(file, operate) {
-  let outcome;
-  await applyToBacklog(file, (source) => {
-    outcome = operate(source);
-    return outcome.source;
-  });
-  return outcome;
 }
 
 async function place(file, values) {
@@ -99,17 +92,29 @@ async function take(file, values) {
   console.log(reportTake(outcome, values.file));
 }
 
+// Closing the files beside the backlog inside its hold keeps a cooperating
+// completion from rebuilding the done catalog from unfinished records.
 async function complete(file, values) {
   const now = readCompletionTime();
-  const outcome = await applyReportedChange(file, (source) =>
-    completeEntry(source, { identity: values.identity }),
+  const outcome = await applyReportedChange(
+    file,
+    (source) => completeEntry(source, { identity: values.identity }),
+    ({ entry }) =>
+      closeBesideBacklog(dirname(file), {
+        entry,
+        dropped: values.dropped,
+        now,
+      }),
   );
-  const closed = closeBesideBacklog(dirname(file), {
-    entry: outcome.entry,
-    dropped: values.dropped,
-    now,
-  });
-  console.log(reportComplete({ ...outcome, ...closed }, values.file));
+  console.log(reportComplete(outcome, values.file));
+}
+
+// Rebuilds the done catalog under the backlog's lock, changing nothing else.
+async function catalogDone(file, values) {
+  const catalog = await holdingBacklog(file, () =>
+    rebuildDoneCatalog(dirname(file)),
+  );
+  console.log(reportCatalogDone(catalog, values.file));
 }
 
 // Dropping a reference is not on offer, so a caller who asks for it is told
@@ -188,6 +193,7 @@ const operations = {
   place,
   take,
   complete,
+  "catalog-done": catalogDone,
   refresh,
   direction,
   adopt,

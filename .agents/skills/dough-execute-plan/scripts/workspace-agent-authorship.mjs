@@ -148,6 +148,14 @@ export async function creditDeveloper(checkout, message, identity) {
   );
 }
 
+// `message` credited like any other agent commit when `workspace` is an
+// agent's owned workspace, or as it is in a checkout that names no agent.
+// Throws DeveloperIdentityRefused when that developer is unusable.
+export async function creditInWorkspace(workspace, message) {
+  const identity = await workspaceAgent(workspace);
+  return identity ? creditDeveloper(workspace, message, identity) : message;
+}
+
 // Credits the developer on the merge in progress in `workspace` when it is an
 // agent's owned workspace: Git's prepared merge message gains the developer
 // credit, so the ordinary `git commit` that concludes the merge is credited
@@ -155,8 +163,6 @@ export async function creditDeveloper(checkout, message, identity) {
 // message as it is. Throws DeveloperIdentityRefused, leaving the merge
 // uncommitted, when that developer is unusable.
 export async function creditMergeInProgress(workspace) {
-  const identity = await workspaceAgent(workspace);
-  if (!identity) return;
   const path = (
     await git(
       workspace,
@@ -167,5 +173,5 @@ export async function creditMergeInProgress(workspace) {
     )
   ).stdout.trim();
   const message = await readFile(path, "utf8");
-  await writeFile(path, await creditDeveloper(workspace, message, identity));
+  await writeFile(path, await creditInWorkspace(workspace, message));
 }

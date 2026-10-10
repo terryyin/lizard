@@ -56,7 +56,7 @@ merge commit is one: for example, run
 `git merge --no-ff --no-commit <published-tip>`, then commit the in-progress
 merge through `agent-commit.mjs`; `-F "$(git rev-parse --git-path MERGE_MSG)"`
 keeps Git's prepared message. When the merge
-touches the product backlog, run
+touches the product backlog or the done records beside it, run
 `product-backlog-git-merge.mjs merge --ref <published-tip> --cwd <owned-workspace>`
 rather than a raw `git merge`, following
 [reconcile product backlog Git operations](../../dough-product-backlog/references/merge-conflicts.md);
@@ -69,7 +69,12 @@ or push again.
 
 ## Publish the candidate
 
-Apply [Preconditions](#preconditions) before this sequence.
+Apply [Preconditions](#preconditions) before this sequence. For an established
+one-shot launch with supplied dashboard landing context, wire that context into
+the installed publisher before step 5 under the shared
+[landing handoff](../../dough-land/references/dashboard-completion.md#retain-the-one-shot-landing).
+It retains each final pair before push and captures accepted evidence at step 6;
+a later explicit landing uses the original launch's context.
 
 1. Fetch the authorized remote for the target branch from the owned workspace.
 2. Reconcile in that workspace from the fetched remote target, not from the
@@ -88,15 +93,17 @@ Apply [Preconditions](#preconditions) before this sequence.
    in the owned workspace. The range is commits after the previously published
    base on the owned branch:
    `git -C <owned-workspace> rebase --onto <fetched-remote-target> <previously-published-base> <owned-branch>`.
-   When that replay touches the product backlog, run the same range through
+   When that replay touches the product backlog or the done records beside
+   it, run the same range through
    the installed rebase adapter instead of that raw `git rebase`:
    `product-backlog-git-rebase.mjs rebase --onto <fetched-remote-target> --ref <previously-published-base> --branch <owned-branch> --cwd <owned-workspace>`,
    following
    [publication rebase conflicts](publication-rebase-conflict.md). After a
-   rewrite, the pre-rebase SHA is not the candidate. A conflict, refusal, or
-   disputed adapter result stops before the push and preserves the state Git
-   left. Do not rebase the default checkout's branch unless it is the owned
-   branch.
+   rewrite, the pre-rebase SHA is not the candidate. Every adapter result
+   that exits non-zero, including `catalog-uncommitted`, stops before the
+   push and preserves the state Git left; resume it as
+   [publication rebase conflicts](publication-rebase-conflict.md) describes.
+   Do not rebase the default checkout's branch unless it is the owned branch.
 4. Validate the candidate using the check the caller supplied for this
    suffix. An unchanged base does not invalidate accepted proof. A rebase
    onto a newer target invalidates only proof the combined changes affect;
@@ -106,8 +113,13 @@ Apply [Preconditions](#preconditions) before this sequence.
    the owned suffix extends. When this candidate has not been rewritten,
    that base is the previously published base. When step 3 replayed the
    suffix, that base is the fetched target it was replayed onto, not the
-   older revision and not the candidate tip. Push that exact candidate
-   from the owned workspace:
+   older revision and not the candidate tip. The execution publisher's
+   `beforePush` callback exposes `candidate` and `suffixBase` for each
+   attempted push, including after a retry rewrites the candidate and its base.
+   Retain the pair together
+   before allowing that push. The accepted result carries the same base and
+   its receipt's SHA; a multi-commit suffix is not based at the tip's parent.
+   Push that exact candidate from the owned workspace:
    `git -C <owned-workspace> push <remote> <candidate>:refs/heads/<target-branch>`.
    Do not fast-forward the default checkout, force-push, or move that
    checkout's branch with `merge`, `update-ref`, or `branch -f`.
@@ -149,14 +161,16 @@ retry one ordinary push:
    [candidate step 3](#publish-the-candidate), using the base retained in
    step 5 as the cutoff: only commits after that base, onto that fetched target.
    A history-preserving merge recomputes that merge onto the fetched target
-   instead of rebasing, through the merge adapter when the backlog is touched.
-   When an unpublished suffix touches the product backlog, that replay is the
-   rebase adapter, not a raw `git rebase`. Do not rebase from the rejected
+   instead of rebasing, through the merge adapter when the backlog or its done
+   records are touched. When an unpublished suffix touches the product backlog
+   or its done records, that replay is the rebase adapter, not a raw
+   `git rebase`. Do not rebase from the rejected
    candidate, and do not rebase the default checkout unless it is the owned
    branch. Either mistake can drop the suffix or rewrite another writer's
-   commits. A conflict, refusal, or disputed adapter result stops here.
-   Preserve the refs, worktree, and index Git left, report that result, and
-   do not push.
+   commits. Every adapter result that exits non-zero, including
+   `catalog-uncommitted`, stops here. Preserve the refs, worktree, and index
+   Git left, report that result, and do not push; resume it as
+   [publication rebase conflicts](publication-rebase-conflict.md) describes.
 3. The rewritten owned-branch tip is the candidate. The rejected SHA is not.
    Do not move the default checkout onto it.
 4. Revalidate as in candidate step 4. The rebase invalidates only proof the
@@ -185,6 +199,15 @@ writer has since added commits on top of it. Do not rebase that candidate,
 push it again, or push a superseded pre-rebase SHA. A lost or unknown push
 response is this published case whenever the retained candidate is an
 ancestor. It is not a rejected push.
+
+When the caller retained the delivery comparison before push, supply its
+`suffixBase` with that candidate. Resume validates both full commit IDs and
+base ancestry before any fetch, push, or registration, and returns that base
+unchanged even after the target advances. Equal ends are a valid empty
+comparison. Without an explicitly retained base, ordinary publication recovery
+still applies, but the result has no historical comparison. Do not substitute
+the candidate's parent, today's target, or an earlier starting revision after
+a rewrite.
 
 Continue only the first unfinished obligation below. Do not duplicate the
 commit or replace the caller's workspace. A pending human edit on the default

@@ -55,7 +55,10 @@ instruction. Replanning permission grants neither missing scope nor execution
 authority. Transfer the source, relevant chat evidence, completed work and
 proof, incomplete-change disposition, elapsed time, failed sizing assumption,
 and retained identity into the ordinary plan as source, decisions, or
-learnings needed for resume. Plan only the remaining work. Do not fabricate a
+learnings needed for resume. Carry every reported gap, loss, limitation, and
+interim behavior into the new plan's structured
+[story obligations](story-obligations.md), with remaining-slice ownership;
+a learning alone cannot carry it. Plan only the remaining work. Do not fabricate a
 story, completed planned slices, already satisfied promises, a substitute
 quick-execution record, or a second execution. Restart execute-plan from that
 plan in the preserved checkout and mode; ordinary plan refinement remains

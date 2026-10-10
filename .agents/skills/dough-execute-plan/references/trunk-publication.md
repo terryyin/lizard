@@ -34,9 +34,9 @@ stash, and restore stay in
 [CI observation](ci-monitor.md#handle-a-notification); do not add a second
 repair push.
 
-Managed delivery resolves this checkout's CI runtime, establishes or reuses the
-matching live observer for the authorized target, publishes the candidate, and
-attaches the accepted SHA. Do not run a separate probe, start, or `register-push`
+Managed delivery resolves this checkout's CI runtime, establishes or reuses
+this coordinator's own live observer of the authorized target, publishes the
+candidate, and attaches the accepted SHA. Do not run a separate probe, start, or `register-push`
 for ordinary increments or already-authorized repairs. Retain the delivery
 receipt's observation directory when present; do not transcribe mailbox handles
 by hand. An unavailable host bridge returns `pendingCi: unobserved` (or an
@@ -56,6 +56,12 @@ from before the operation's first commit. An `unpublished-base` stop means
 the remote does not hold that base, such as when the developer has their own
 unpublished commits in the default checkout: report that work for the
 developer to resolve, and never choose a different base to get past it.
+
+A `transport-timeout` stop means a fetch, push, or remote-tip read did not
+answer within the transport bound and was ended; its `stage` names which. The
+stop rewrites nothing, so the committed candidate it names is preserved. Run
+the same `deliver` or `resume` again to retry. When `pushIssued` is true, whether the
+remote accepted the candidate stays unknown until the retry's fetch settles it.
 
 ## Preconditions
 
@@ -91,7 +97,8 @@ node <installed>/dough-execute-plan/scripts/execution-increment-delivery.mjs del
   --previously-published-base <previously published base SHA> \
   --target-ref <authorized target ref> --repo <owner/repo> --host <host> \
   --authority <publish|local-only> [--tracking one-shot] \
-  [--session-json <json>] [--default-checkout <path>] [--one-shot-identity <identity>]
+  [--session-json <json>] [--coordinator <value> --observer-directory <directory>] \
+  [--default-checkout <path>] [--one-shot-identity <identity>]
 ```
 
 Story Branch Mode passes `--mode story-branch` with
@@ -114,15 +121,28 @@ On Cursor, `--host cursor` takes that coordinator's identity from its
 `CURSOR_CONVERSATION_ID` in the same way.
 An explicit `--session-json` stays authoritative when a caller must name a
 different owner, and malformed session JSON stops delivery instead of falling
-back to another identity. If no identity is available, the receipt reports an
+back to another identity. That identity selects the observer: every increment
+and repair reuses the live observer this coordinator claimed, from any
+worktree of the repository, and a coordinator without one establishes its
+own. Observers other coordinators hold for the same repository and target
+stay theirs. If no identity is available, the receipt reports an
 unobserved coverage gap naming the missing source while publication acceptance
 stands; the next `deliver` from the coordinator's own tool, or with its
-`--session-json`, attaches observation without a manual observer start.
+`--session-json`, attaches observation without a manual observer start. If
+this coordinator holds more than one live observer of the target, the receipt
+reports an `ambiguous` gap naming their directories: keep the one this
+execution retained, [stop](ci-notify-hosts.md#stop-for-cancellation) the
+others, and the next `deliver` reuses it.
 On Codex, the yielded stream armed at execution start under
-[ci-notify-codex.md](ci-notify-codex.md) is the observer `--host codex`
-reuses for every increment and repair. Without a live stream, the receipt
-reports an unobserved gap naming that arming step; once the stream is armed,
-the next `deliver` reuses it.
+[ci-notify-codex.md](ci-notify-codex.md) is the observer of every increment
+and repair: pass `--host codex` with the observer note's coordinator as
+`--coordinator` and its exact stream directory as `--observer-directory`.
+Only that stream receives the registration, from any worktree of the
+repository. Without both inputs, or when the directory is not this
+coordinator's live stream of the target, the receipt reports an unobserved gap
+naming the input to supply while publication acceptance stands; the next
+`deliver` with the retained inputs, after arming when no stream is retained,
+registers on it.
 A pre-rebase unpublished SHA is not the receipt. After confirmation of a
 publication whose target is remote trunk, attempt a refresh under
 [Refresh eligibility](maintain-default-checkout.md#refresh-eligibility).
@@ -133,6 +153,11 @@ and any
 separately. An
 unavailable bridge is a coverage gap on the delivery receipt, not a reason to
 undo acceptance.
+
+Retain each pre-push candidate with its actual `suffixBase`, as
+[candidate step 5](publish-the-candidate.md#publish-the-candidate) requires.
+The managed publisher passes both to `beforePush` and returns `suffixBase`
+alongside the accepted receipt; reconcile the pair together after a rewrite.
 
 ## Recover a rejected push
 
@@ -170,11 +195,44 @@ After that publication obligation is accepted, apply the refresh rule in
 [Publish the candidate](#publish-the-candidate). The resume classification
 itself still only inspects the checkout.
 
+For managed increment recovery, run the installed resume command from the
+owned workspace with the candidate and base retained together before push and
+the owner input `deliver` takes:
+
+```text
+node <installed>/dough-execute-plan/scripts/execution-increment-resume.mjs resume \
+  --workspace <owned workspace> --candidate-sha <retained candidate SHA> \
+  --suffix-base <retained suffix base SHA> \
+  --target-ref <authorized target ref> --repo <owner/repo> --host <host> \
+  [--session-json <json>] [--coordinator <value> --observer-directory <directory>] \
+  [--default-checkout <path>] [--superseded-sha <pre-rebase SHA>]... \
+  [--one-shot-identity <identity>]
+```
+
+Use the returned receipt and `suffixBase` for that delivery comparison. A
+legacy recovery without retained base context omits `--suffix-base`; it can
+recover publication but cannot establish a historical comparison by guessing
+its base. Missing coverage still follows the observer recovery contract.
+
 In that shared table, "Missing registration" is this project's CI
 registration: a published SHA absent from the existing observer's coverage or
 `register-push` receipt — except a Story Branch claim published to trunk
 before any observer is armed there is unobserved coverage, not a missing
 registration; see [Own one observer](ci-monitor.md#own-one-observer).
+
+Resume verifies remote acceptance, pushes only a candidate the remote lacks, and
+registers the accepted SHA once on this coordinator's live observer. Keep
+that owner input for the whole execution. On Claude Code and Cursor, run it
+through the coordinator's own Bash or Shell tool, or pass the `--session-json`
+that names the session whose observer this execution retained; malformed
+session JSON stops resume. On Codex, pass the observer note's coordinator and
+exact stream directory. Resume starts no observer and registers on no other
+coordinator's observer. When this coordinator's observer is absent, ended,
+lost, or one of several, or its owner input is missing, the receipt keeps
+`publication: "accepted"` beside an unobserved `observation` whose `ownership`
+and `reason` name that state and the input or step that recovers it: report
+the coverage gap with the publication, follow that step, and rerun the same
+resume to register the SHA.
 
 Workspace or environment-preparation failure after a confirmed claim
 publication keeps that published SHA and reuses the claim and any verified
