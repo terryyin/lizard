@@ -3,13 +3,23 @@
 #
 import unittest
 import sys
+import os
+import shutil
+import tempfile
+import multiprocessing
 from unittest.mock import patch, Mock
 from lizard_languages import CLikeReader
-from lizard import map_files_to_analyzer, FunctionInfo, analyze_file, FileInfoBuilder
+from lizard import (map_files_to_analyzer, FunctionInfo, analyze_file,
+                    analyze_files, FileInfoBuilder, get_extensions)
 
 
 def analyzer_mock(filename):
     return filename
+
+
+def failing_analyzer(filename):
+    raise ValueError("cannot analyze " + filename)
+
 
 class Test_analyze_files(unittest.TestCase):
     def test_NoFiles(self):
@@ -45,6 +55,49 @@ class Test_analyze_files(unittest.TestCase):
         analyzer = analyzer_mock
         r = map_files_to_analyzer(["f1", "f2"], analyzer, 2)
         self.assertSetEqual(set(["f1", "f2"]), set(x for x in r))
+
+
+class Test_analyze_files_releases_workers(unittest.TestCase):
+
+    def setUp(self):
+        self.children_before = set(multiprocessing.active_children())
+        self.tmpdir = tempfile.mkdtemp()
+        self.files = []
+        for i in range(4):
+            path = os.path.join(self.tmpdir, "f%d.c" % i)
+            with open(path, "w") as f:
+                f.write("int foo%d(){haha();\n}" % i)
+            self.files.append(path)
+
+    def tearDown(self):
+        shutil.rmtree(self.tmpdir)
+
+    def assertNoNewWorkers(self):
+        leftover = set(multiprocessing.active_children()) - self.children_before
+        self.assertEqual(set(), leftover)
+
+    def test_workers_exit_after_results_are_consumed(self):
+        # Guards the normal shutdown path; CPython already released
+        # the pool here before the fix, so this is not a regression test.
+        result = analyze_files(self.files, threads=2)
+        self.assertEqual(4, len(list(result)))
+        self.assertNoNewWorkers()
+
+    def test_workers_exit_when_iteration_is_abandoned(self):
+        for extension_names in ([], ["duplicate"]):
+            with self.subTest(extensions=extension_names):
+                result = analyze_files(
+                    self.files, threads=2,
+                    exts=get_extensions(extension_names))
+                next(iter(result))
+                result.close()
+                self.assertNoNewWorkers()
+
+    def test_worker_error_reaches_caller_and_workers_exit(self):
+        result = map_files_to_analyzer(self.files, failing_analyzer, 2)
+        with self.assertRaisesRegex(ValueError, "cannot analyze"):
+            list(result)
+        self.assertNoNewWorkers()
 
 
 @patch('lizard.auto_read', create=True)
