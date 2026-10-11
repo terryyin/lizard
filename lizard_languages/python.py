@@ -74,9 +74,10 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
     def generate_tokens(source_code, addition='', token_class=None):
         # Python comments end at the physical newline; a trailing '\' does not
         # extend the comment to the next line (issue #317).
+        # '//' is the floor division operator, not the start of a comment.
         tokens = CodeReader.generate_tokens(
             source_code,
-            r"|\#[^\n]*" + _PY_TRIPLE_QUOTE + addition,
+            r"|\#[^\n]*" + r"|\/\/=?" + _PY_TRIPLE_QUOTE + addition,
             token_class)
         return PythonReader._expand_fstring_interpolations(tokens, token_class)
 
