@@ -232,7 +232,7 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
             if current_state != current_state.__self__._state_first_line:
                 # Check if the immediate previous meaningful token suggests this is part of an expression
                 assignment_tokens = ['=', '+=', '-=', '*=', '/=', '%=', '//=', '**=', '&=', '|=', '^=',
-                                     '<<=', '>>=', '(', 'return', ',', '[', '+', '-', '*', '/', '%']
+                                     '<<=', '>>=', '(', 'return', ',', '[', '+', '-', '*', '/', '//', '%']
 
                 is_part_of_expression = self._last_meaningful_token in assignment_tokens
 

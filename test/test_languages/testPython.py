@@ -461,6 +461,17 @@ class Test_parser_for_Python(unittest.TestCase):
         functions = get_python_function_list(code)
         self.assertEqual(4, functions[0].nloc)  # def, x=1, comment=..., return x
 
+    def test_floor_division_triple_quoted_operand_counted_in_nloc(self):
+        for quote in ('"""', "'''"):
+            for operand in ('operand', 'first line\nsecond line'):
+                with self.subTest(quote=quote, operand=operand):
+                    code = ('def f(a):\n'
+                            '    return a // ' + quote + operand + quote + '\n')
+                    result = analyze_file.analyze_source_code('test.py', code)
+                    expected_nloc = 2 + operand.count('\n')
+                    self.assertEqual(expected_nloc, result.nloc)
+                    self.assertEqual(expected_nloc, result.function_list[0].nloc)
+
     def test_odd_blank_line(self):
         code =  "class c:\n" + \
                 "    def f():\n" +\
@@ -926,6 +937,16 @@ class Test_Python_fstring_complexity(unittest.TestCase):
         functions = get_python_function_list(
             'def f(a, b):\n    return f"{a and b or a}"\n')
         self.assertEqual(3, functions[0].cyclomatic_complexity)
+
+    def test_fstring_floor_division_keeps_following_condition(self):
+        functions = get_python_function_list(
+            'def f(a, b, c):\n    return f"{a // b or c}"\n')
+        self.assertEqual(2, functions[0].cyclomatic_complexity)
+
+    def test_floor_division_in_fstring_literal_does_not_add_complexity(self):
+        functions = get_python_function_list(
+            'def f(value):\n    return f"a // b or c {value}"\n')
+        self.assertEqual(1, functions[0].cyclomatic_complexity)
 
     def test_fstring_matches_non_fstring_equivalent(self):
         with_fs = get_python_function_list(
