@@ -503,6 +503,10 @@ class TypeScriptStates(CodeStateMachine):
             self._dec(token)
 
     def _field(self, token):
+        if token in ('(', '['):
+            # Optional call or index: `f?.(x)`, `a?.[i]`.
+            self.next(self._state_global, token)
+            return
         self.last_tokens += token
         self._state = self._state_global
 

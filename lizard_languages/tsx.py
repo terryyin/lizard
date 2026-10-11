@@ -61,6 +61,7 @@ class XMLTagWithAttrTokenizer(Tokenizer):
         self.state = self._global_state
         self.cache = ['<']
         self._attr_expr_active = False
+        self._has_valued_attribute = False
 
     def __call__(self, token):
         if self.sub_tokenizer:
@@ -81,6 +82,13 @@ class XMLTagWithAttrTokenizer(Tokenizer):
             yield tok
 
     def process_token(self, token):
+        if token.isspace() and '\n' in token:
+            # Attribute expressions pass through before the cached tag text,
+            # so newlines go out now to keep their lines counted in order.
+            for _ in range(token.count('\n')):
+                yield '\n'
+            self.cache.append(' ')
+            return
         self.cache.append(token)
         if not token.isspace():
             result = self.state(token)
@@ -113,6 +121,9 @@ class XMLTagWithAttrTokenizer(Tokenizer):
             self.state = self._expecting_self_closing
         elif isidentifier(token):
             self.state = self._expecting_equal_sign
+        elif token == "{":
+            # Spread attribute: <Collapse {...props}>
+            self.sub_tokenizer = TSXTokenizer()
         else:
             return self.abort()
 
@@ -124,9 +135,23 @@ class XMLTagWithAttrTokenizer(Tokenizer):
 
     def _expecting_equal_sign(self, token):
         if token == '=':
+            self._has_valued_attribute = True
             self.state = self._expecting_value
+        elif token in ('-', ':'):
+            # Hyphenated or namespaced name: data-action, xlink:href
+            self.state = self._attribute_name_part
+        elif token == '/' or self._has_valued_attribute:
+            # Attribute without a value: <Icon fixedWidth />. Without a
+            # `name=` attribute before it, `<T extends U>` and `a<b and c>`
+            # look the same and stay a comparison or type parameter list.
+            return self._after_tag(token)
         else:
             return self.abort()
+
+    def _attribute_name_part(self, token):
+        if not isidentifier(token):
+            return self.abort()
+        self.state = self._expecting_equal_sign
 
     def _expecting_value(self, token):
         if token[0] in "'\"":

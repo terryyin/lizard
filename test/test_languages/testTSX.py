@@ -737,3 +737,56 @@ class Test_TSX_class_with_static_fields(unittest.TestCase):
         # static field names should NOT appear as functions
         self.assertNotIn("propTypes", names)
         self.assertNotIn("defaultProps", names)
+
+
+class Test_TSX_attribute_names(unittest.TestCase):
+    """Attribute forms the tag reader must accept without aborting the tag."""
+
+    TEMPLATE = (
+        "const C = (p) => {\n"
+        "  return (\n"
+        "    <G className={cx('a', { b: p.b })} %s>\n"
+        "      <B onClick={() => p.f()}>x</B>\n"
+        "    </G>\n"
+        "  );\n"
+        "};\n"
+        "const N = (p) => {\n"
+        "  return <C />;\n"
+        "};\n"
+    )
+
+    def spans(self, attribute):
+        return [(f.name, f.start_line, f.end_line)
+                for f in get_tsx_function_list(self.TEMPLATE % attribute)]
+
+    def test_hyphenated_attribute(self):
+        self.assertEqual(self.spans('title={p.d}'), self.spans('data-action={p.d}'))
+
+    def test_attribute_without_value(self):
+        self.assertEqual(self.spans('title={p.d}'), self.spans('title={p.d} hidden'))
+
+    def test_spread_attribute(self):
+        self.assertEqual(self.spans('title={p.d}'), self.spans('title={p.d} {...p.rest}'))
+
+
+class Test_TSX_lines_in_multiline_tags(unittest.TestCase):
+
+    def test_functions_after_a_multiline_tag_keep_their_lines(self):
+        code = (
+            "const C = (p) => {\n"
+            "  return (\n"
+            "    <G\n"
+            "      title={p.t}\n"
+            "      onClick={() => p.f()}\n"
+            "    >\n"
+            "      x\n"
+            "    </G>\n"
+            "  );\n"
+            "};\n"
+            "const N = (p) => {\n"
+            "  return <C />;\n"
+            "};\n"
+        )
+        self.assertEqual([('(anonymous)', 5, 5), ('C', 1, 10), ('N', 11, 13)],
+                         [(f.name, f.start_line, f.end_line)
+                          for f in get_tsx_function_list(code)])

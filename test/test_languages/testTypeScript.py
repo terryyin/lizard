@@ -1282,3 +1282,44 @@ class Test_ts_function_end_after_literals(unittest.TestCase):
         )
         self.assertEqual([('a', 1, 3), ('b', 4, 4), ('c', 5, 5)],
                          self.spans(code))
+
+
+class Test_ts_function_end_after_return_type(unittest.TestCase):
+
+    def test_simple_return_type_ends_at_closing_brace(self):
+        code = (
+            "function a(f: F): void {\n"
+            "  if (f) {\n"
+            "    return;\n"
+            "  }\n"
+            "}\n"
+            "\n"
+            "function b(): string {\n"
+            "  return '';\n"
+            "}\n"
+            "\n"
+            "const c = 1;\n"
+        )
+        self.assertEqual([('a', 1, 5), ('b', 7, 9)],
+                         [(f.name, f.start_line, f.end_line)
+                          for f in get_ts_function_list(code)])
+
+
+class Test_ts_function_end_after_optional_call(unittest.TestCase):
+
+    def spans(self, code):
+        return [(f.name, f.start_line, f.end_line)
+                for f in get_ts_function_list(code)]
+
+    def test_optional_call_and_index_keep_function_end(self):
+        code = (
+            "function h(a, g) {\n"
+            "  if (a) {\n"
+            "    g(1)?.(2);\n"
+            "  }\n"
+            "  const x = a.f?.(3) + a?.[0];\n"
+            "  return x;\n"
+            "}\n"
+            "function m() {}\n"
+        )
+        self.assertEqual([('h', 1, 7), ('m', 8, 8)], self.spans(code))

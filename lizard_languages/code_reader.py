@@ -48,9 +48,10 @@ class CodeStateMachine:
     def __call__(self, token, reader=None):
         if self._state(token):
             self.next(self.saved_state)
-            if self.callback:
-                self.callback()
-                self.callback = None
+            # A callback may start the next sub state with a callback of its own.
+            callback, self.callback = self.callback, None
+            if callback:
+                callback()
         self.last_token = token
         if self.to_exit:
             return True
