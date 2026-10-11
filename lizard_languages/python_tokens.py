@@ -3,6 +3,10 @@
 from .code_reader import CodeReader
 
 
+class FStringExpressionToken(str):
+    '''An f-string token whose delimiters belong to the interpolation.'''
+
+
 # Triple-quoted string patterns for the common tokenizer, so a whole
 # triple-quoted string is matched as a single token.
 _PY_TRIPLE_QUOTE = (
@@ -130,8 +134,10 @@ def _tokenize_fstring_body(token, token_class):
             # The interpolation is Python code: tokenize it as such, which
             # also expands any nested f-string (recursion terminates on the
             # ever-shorter interpolation body).
-            produced.extend(generate_tokens(
-                body[i + 1:j - 1], '', token_class))
+            produced.extend(
+                FStringExpressionToken(tok)
+                for tok in generate_tokens(
+                    body[i + 1:j - 1], '', token_class))
             i = j
             continue
         literal.append(body[i])

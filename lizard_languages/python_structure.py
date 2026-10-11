@@ -1,6 +1,7 @@
 """Python indentation and function declaration states."""
 
 from .code_reader import CodeStateMachine
+from .python_tokens import FStringExpressionToken
 
 
 def count_spaces(token):
@@ -61,14 +62,52 @@ class PythonStates(CodeStateMachine):  # pylint: disable=R0903
             self._state = self._function
 
     def _dec(self, token):
+        if isinstance(token, FStringExpressionToken):
+            self._token_in_a_parameter(token)
+            return
         if token == ')':
             self._state = self._state_colon
         elif token == '[':
+            self.br_count = 1
             self._state = self._state_parameterized_type_annotation
+        elif token in ('(', '{', 'lambda'):
+            # A default value in brackets, or a lambda: its commas do not
+            # separate the parameters of the function.
+            self.br_count = 0
+            self.lambda_heads = 0
+            self.next(self._state_default_value, token)
+            return
         else:
             self.context.parameter(token)
             return
         self.context.add_to_long_function_name(" " + token)
+
+    def _token_in_a_parameter(self, token):
+        function = self.context.current_function
+        function.add_to_long_name(" " + token)
+        function.full_parameters[-1] += " " + token
+
+    def _state_default_value(self, token):
+        if isinstance(token, FStringExpressionToken):
+            # Its brackets and colons cannot close the surrounding default
+            # expression or lambda argument head.
+            self._token_in_a_parameter(token)
+            return
+        if token == ',':
+            self._token_in_a_parameter(token)
+        else:
+            self.context.parameter(token)
+        if token in ('(', '[', '{'):
+            self.br_count += 1
+        elif token in (')', ']', '}'):
+            self.br_count -= 1
+        elif token == 'lambda' and self.br_count == 0:
+            self.lambda_heads += 1
+        elif token == ':' and self.br_count == 0 and self.lambda_heads:
+            self.lambda_heads -= 1
+        if self.br_count < 0 or (
+                self.br_count == 0 and self.lambda_heads == 0):
+            self._state = self._dec
 
     def _state_colon(self, token):
         if token == ':':
@@ -83,6 +122,10 @@ class PythonStates(CodeStateMachine):  # pylint: disable=R0903
         self._state_global(token)
 
     def _state_parameterized_type_annotation(self, token):
+        # Up to the "]" that closes the first "[": Callable[[int, str], int]
         self.context.add_to_long_function_name(" " + token)
-        if token == ']':
+        if isinstance(token, FStringExpressionToken):
+            return
+        self.br_count += {'[': 1, ']': -1}.get(token, 0)
+        if self.br_count == 0:
             self._state = self._dec
