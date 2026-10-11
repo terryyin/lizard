@@ -9,6 +9,7 @@ import {
 } from "./ci-mailbox-location.mjs";
 import { isDirectCliEntry } from "./ci-direct-entry.mjs";
 import {
+  acknowledgeDelivery,
   publishMailboxEvent,
   recordTerminalResult,
   recordWorkerIdentity,
@@ -25,7 +26,8 @@ import {
   withStreamWorkerIdentity,
 } from "./ci-mailbox-worker-process.mjs";
 import { executionBudgetMs, watchCiExecution } from "./watch-ci-execution.mjs";
-import { awaitRevision } from "./ci-mailbox-await.mjs";
+import { awaitRevision, writeRevisionReceipt } from "./ci-mailbox-await.mjs";
+import { claimMailbox, codexStreamOwner } from "./ci-observer-owner.mjs";
 import {
   completeRevision,
   requestMailboxStop,
@@ -101,8 +103,15 @@ export async function runMailboxWorker(
   }
   recordTerminalResult(directory, request, status);
 }
+// `options.coordinator` names the coordinator arming this stream; its claim is
+// on the mailbox before the receipt exposes the directory.
 export async function streamMailboxWorker(request, options = {}) {
   const directory = createMailbox(request, options);
+  const owner = codexStreamOwner({
+    root: options.root ?? checkoutRoot,
+    coordinator: options.coordinator,
+  });
+  if (owner) claimMailbox(directory, owner);
   return withStreamWorkerIdentity(directory, async () => {
     const stopOnSignal = () => requestMailboxStop(directory, options);
     try {
@@ -161,24 +170,20 @@ export function probeMailbox(options = {}) {
   return directory;
 }
 
-async function writeRevisionReceipt(run, directory, sha) {
-  const cancellation = new AbortController();
-  const cancel = () => cancellation.abort();
-  process.once("SIGINT", cancel);
-  process.once("SIGTERM", cancel);
-  try {
-    const result = await run(directory, sha, {
-      cancellation: cancellation.signal,
-    });
-    process.stdout.write(`${receiptPrefix}${JSON.stringify(result)}\n`);
-  } finally {
-    process.removeListener("SIGINT", cancel);
-    process.removeListener("SIGTERM", cancel);
-  }
+// Removes `--coordinator VALUE` from a stream command's arguments and returns
+// the value.
+function takeCoordinator(args) {
+  const index = args.indexOf("--coordinator");
+  if (index === -1) return undefined;
+  const [, value] = args.splice(index, 2);
+  if (!value || value.startsWith("--"))
+    throw new Error("Expected --coordinator VALUE");
+  return value;
 }
 
 if (isDirectCliEntry(import.meta.url, process.argv[1])) {
   const [command, ...args] = process.argv.slice(2);
+  const coordinator = command === "stream" ? takeCoordinator(args) : undefined;
   if (command === "worker") {
     await runMailboxWorker(args[0]);
   } else if (["start", "stream"].includes(command)) {
@@ -193,6 +198,7 @@ if (isDirectCliEntry(import.meta.url, process.argv[1])) {
       const directory = await streamMailboxWorker(request, {
         write: (output) => process.stdout.write(output),
         stopOnSignal: true,
+        coordinator,
       });
       const terminal = await waitForTerminalResult(directory);
       process.stdout.write(
@@ -215,6 +221,13 @@ if (isDirectCliEntry(import.meta.url, process.argv[1])) {
     process.stdout.write(
       `${receiptPrefix}${JSON.stringify({ directory, revision })}\n`,
     );
+  } else if (command === "acknowledge") {
+    const [directory, sequence] = args;
+    readMailbox(directory);
+    const deliveredThrough = acknowledgeDelivery(directory, Number(sequence));
+    process.stdout.write(
+      `${receiptPrefix}${JSON.stringify({ directory, deliveredThrough })}\n`,
+    );
   } else if (command === "await-revision") {
     const [directory, sha] = args;
     await writeRevisionReceipt(awaitRevision, directory, sha);
@@ -229,7 +242,7 @@ if (isDirectCliEntry(import.meta.url, process.argv[1])) {
     );
   } else {
     throw new Error(
-      "Usage: ci-mailbox.mjs probe | start --execution OWNER/REPO BRANCH [BUDGET_MS] | stream --execution OWNER/REPO BRANCH [BUDGET_MS] | register-push DIRECTORY SHA | await-revision DIRECTORY SHA | complete-revision DIRECTORY SHA | stop DIRECTORY",
+      "Usage: ci-mailbox.mjs probe | start --execution OWNER/REPO BRANCH [BUDGET_MS] | stream --execution OWNER/REPO BRANCH [BUDGET_MS] [--coordinator VALUE] | register-push DIRECTORY SHA | acknowledge DIRECTORY SEQUENCE | await-revision DIRECTORY SHA | complete-revision DIRECTORY SHA | stop DIRECTORY",
     );
   }
 }

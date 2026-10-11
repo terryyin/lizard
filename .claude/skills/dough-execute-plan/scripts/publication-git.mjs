@@ -1,13 +1,100 @@
 // Git operations shared by the installed publication commands. Test fixtures
 // import these mechanics, but production never imports fixture setup.
-import { execFile } from "node:child_process";
+import { execFile, spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { promisify } from "node:util";
 
 export const exec = promisify(execFile);
 
+// Remote transport commands answer within a bound; local commands do not need
+// one. The default suits ordinary networks; the setting raises or lowers it.
+const transportSubcommands = new Set(["fetch", "push", "ls-remote"]);
+export const transportBoundSetting = "OPEN_DOUGH_GIT_TRANSPORT_BOUND_MS";
+const defaultTransportBoundMs = 120_000;
+const terminationGraceMs = 1_000;
+
+// The bound in force now: the setting when it is a positive integer.
+export function transportBoundMs(env = process.env) {
+  const value = env[transportBoundSetting] ?? "";
+  return /^[1-9]\d*$/.test(value) ? Number(value) : defaultTransportBoundMs;
+}
+
+// A remote transport command's subcommand and remote (its first operand);
+// null for local commands. Managed callers name the subcommand first.
+function transportOf([subcommand, ...operands]) {
+  if (!transportSubcommands.has(subcommand)) return null;
+  const remote = operands.find((arg) => !arg.startsWith("-")) ?? null;
+  return { subcommand, remote };
+}
+
 export async function git(cwd, ...args) {
+  const transport = transportOf(args);
+  if (transport) return boundedTransport(cwd, args, transport);
   return exec("git", args, { cwd });
+}
+
+function signalProcessGroup(pid, signal) {
+  try {
+    process.kill(-pid, signal);
+  } catch {
+    // The group already ended.
+  }
+}
+
+// Runs one remote transport command in its own process group and resolves as
+// `exec` does. When the bound expires, the whole group (Git and the transport
+// it started, such as ssh) receives SIGTERM, then SIGKILL once it closes or a
+// short grace passes, and the call rejects with `code: "transport-timeout"`.
+// Other failures reject with the shape `exec` gives a failed command.
+/** @returns {Promise<{ stdout: string, stderr: string }>} */
+function boundedTransport(cwd, args, { subcommand, remote }) {
+  const boundMs = transportBoundMs();
+  const cmd = `git ${args.join(" ")}`;
+  return new Promise((resolve, reject) => {
+    const child = spawn("git", args, {
+      cwd,
+      detached: true,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    const output = { stdout: "", stderr: "" };
+    for (const stream of ["stdout", "stderr"]) {
+      child[stream].setEncoding("utf8").on("data", (chunk) => {
+        output[stream] += chunk;
+      });
+    }
+    const fail = (error, fields) =>
+      reject(Object.assign(error, fields, { cmd, ...output }));
+    let expired = false;
+    const timer = setTimeout(() => {
+      expired = true;
+      signalProcessGroup(child.pid, "SIGTERM");
+      const stop = () => {
+        clearTimeout(grace);
+        child.off("close", stop);
+        signalProcessGroup(child.pid, "SIGKILL");
+        const error = new Error(
+          `${cmd} did not answer within ${boundMs} ms; its process tree was stopped`,
+        );
+        const facts = { subcommand, remote, boundMs, killed: true };
+        fail(error, { code: "transport-timeout", ...facts });
+      };
+      const grace = setTimeout(stop, terminationGraceMs);
+      child.once("close", stop);
+    }, boundMs);
+    child.on("error", (error) => {
+      clearTimeout(timer);
+      fail(error, {});
+    });
+    child.on("close", (code, signal) => {
+      if (expired) return;
+      clearTimeout(timer);
+      if (code === 0) resolve(output);
+      else {
+        const error = new Error(`Command failed: ${cmd}\n${output.stderr}`);
+        fail(error, { code, killed: false, signal });
+      }
+    });
+  });
 }
 
 export async function revParse(cwd, ref) {
@@ -16,7 +103,7 @@ export async function revParse(cwd, ref) {
 
 // The SHA `remote` holds at `ref`, read live; a remote name resolves in `cwd`.
 export async function lsRemoteSha(remote, ref, cwd) {
-  const { stdout } = await exec("git", ["ls-remote", remote, ref], { cwd });
+  const { stdout } = await git(cwd, "ls-remote", remote, ref);
   return stdout.trim().split(/\s+/)[0];
 }
 

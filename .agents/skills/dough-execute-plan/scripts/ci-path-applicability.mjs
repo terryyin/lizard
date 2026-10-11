@@ -11,14 +11,10 @@
 // this classifier into them).
 
 import { execFileSync } from "node:child_process";
-import { readCiPathIgnorePolicy } from "./ci-workflow-path-policy.mjs";
-
-function isPathIgnored(path, pathsIgnore) {
-  return pathsIgnore.some((pattern) => {
-    const prefix = pattern.slice(0, -"/**".length);
-    return path === prefix || path.startsWith(`${prefix}/`);
-  });
-}
+import {
+  isPathIgnored,
+  readCiPathIgnorePolicy,
+} from "./ci-workflow-path-policy.mjs";
 
 function gitOutput(repoDir, args) {
   return execFileSync("git", ["-C", repoDir, ...args], {

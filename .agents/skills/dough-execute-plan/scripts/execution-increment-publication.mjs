@@ -1,24 +1,26 @@
-// Git mechanics for one validated execution increment or owned repair.
-// The caller supplies the owned workspace, the owned unpublished suffix,
-// the authorized remote target, and how the accepted result is registered.
+// Git mechanics for a validated execution increment or owned repair, with its
+// owned workspace/suffix, authorized target and acceptance registration.
 // A previously published base that no fetched remote ref holds stops at once.
 // `onFetchedTarget` may stop on each fetched target tip before anything is
-// rewritten. When another writer advances the target, only that owned suffix
-// is reconciled; a changed candidate requires applicable proof before any
-// push. One reconciliation retry recovers a racing push; conflict or a second
-// rejection preserves recoverable Git state. Stash, checkout refresh, and
-// observer startup stay with their own owners, managed observation with
-// execution-increment-delivery.mjs. Installed guidance is the agent's contract.
+// rewritten. A candidate the fetched target already contains, as after a push
+// whose answer was lost, is accepted without reconciliation or push. When
+// another writer advances the target, only that owned suffix is reconciled; a
+// changed candidate requires applicable proof before any push. One
+// reconciliation retry recovers a racing push; conflict or a second
+// rejection preserves recoverable Git state. A fetch, push, or remote-tip read
+// that outlasts the transport bound stops with the attempt's facts and
+// rewrites nothing. Stash, checkout refresh, and observer startup stay with
+// their own owners, managed observation with execution-increment-delivery.mjs.
+// The owned suffix's reconciliation and proof gate live in
+// execution-increment-reconciliation.mjs. Installed guidance is the agent's
+// contract.
+import { fetchedTargetStop, stopped } from "./applicable-candidate-proof.mjs";
+import { reconcileAndRequireProof } from "./execution-increment-reconciliation.mjs";
 import {
-  ensureApplicableProof,
-  fetchedTargetStop,
-  proofGateResult,
-  stopped,
-} from "./applicable-candidate-proof.mjs";
-import {
-  defaultBacklogPath,
-  reconcileOwnedSuffix,
-} from "./owned-suffix-reconciliation.mjs";
+  retainLandingComparison,
+  captureAcceptedLanding,
+} from "./dashboard-landing.mjs";
+import { defaultBacklogPath } from "./owned-suffix-reconciliation.mjs";
 import {
   fetchedTarget,
   git,
@@ -28,87 +30,7 @@ import {
   revParse,
   tryPushExactRef,
 } from "./publication-git.mjs";
-
-// Reconcile the owned suffix onto onto, then require applicable proof before
-// any push. Shared by the initial remote-advance path and the one retry.
-async function reconcileAndRequireProof({
-  workspace,
-  onto,
-  upstream,
-  branch,
-  backlogPath,
-  candidateFallback,
-  preRebaseSha,
-  previouslyPublishedBase,
-  priorSuffixBase,
-  validate,
-  validatedCandidate,
-  reconciliations,
-  retry = false,
-}) {
-  const replay = await reconcileOwnedSuffix({
-    workspace,
-    onto,
-    upstream,
-    branch,
-    backlogPath,
-  });
-  const nextReconciliations = reconciliations + 1;
-  if (!replay.ok) {
-    return {
-      ok: false,
-      result: stopped("conflict", {
-        candidate: await revParse(workspace, branch).catch(
-          () => candidateFallback,
-        ),
-        preRebaseSha,
-        remoteTip: onto,
-        previouslyPublishedBase,
-        ...(retry ? { suffixBase: priorSuffixBase } : {}),
-        reconciliations: nextReconciliations,
-        replay,
-      }),
-    };
-  }
-  const candidate = await revParse(workspace, branch);
-  if (!retry && candidate === preRebaseSha && !validatedCandidate) {
-    throw new Error("rebase left the pre-rebase SHA as the candidate");
-  }
-  // Held proof is judged only after rewrite; a further remote advance needs
-  // renewed applicable proof even when a prior validatedCandidate was supplied.
-  const gate = await ensureApplicableProof({
-    validate,
-    candidate,
-    context: {
-      preRebaseSha,
-      remoteTip: onto,
-      previouslyPublishedBase,
-      suffixBase: onto,
-      ...(retry ? { retry: true } : {}),
-    },
-    proofAlreadyHeld:
-      !retry && Boolean(validatedCandidate) && candidate === validatedCandidate,
-  });
-  if (!gate.ok) {
-    return {
-      ok: false,
-      result: proofGateResult(gate, {
-        candidate,
-        preRebaseSha,
-        remoteTip: onto,
-        previouslyPublishedBase,
-        suffixBase: onto,
-        reconciliations: nextReconciliations,
-      }),
-    };
-  }
-  return {
-    ok: true,
-    candidate,
-    suffixBase: onto,
-    reconciliations: nextReconciliations,
-  };
-}
+import { isAncestor } from "./workspace-publication-ownership.mjs";
 
 export async function publishExecutionIncrement({
   workspace,
@@ -123,11 +45,92 @@ export async function publishExecutionIncrement({
   backlogPath = defaultBacklogPath,
   beforeRetryPush,
   beforePush,
+  landingContext,
   onFetchedTarget,
 }) {
-  await git(workspace, "fetch", remote);
-  let remoteTip = await fetchedTarget(workspace, targetRef, remote);
   const preRebaseSha = await revParse(workspace, branch);
+  let candidate = preRebaseSha;
+  let suffixBase = previouslyPublishedBase;
+  let reconciliations = 0;
+  let remoteTip = null;
+  let pushIssued = false;
+  // Runs one remote transport step. A step that outlasts the bound becomes a
+  // `transport-timeout` stop naming that stage with this attempt's facts;
+  // other failures throw as before.
+  const transport = async (stage, operation) => {
+    try {
+      return { value: await operation() };
+    } catch (error) {
+      if (error?.code !== "transport-timeout") throw error;
+      return {
+        stop: stopped("transport-timeout", {
+          stage,
+          pushIssued,
+          boundMs: error.boundMs,
+          remote,
+          target: targetRef,
+          candidate,
+          preRebaseSha,
+          previouslyPublishedBase,
+          suffixBase,
+          remoteTip,
+          reconciliations,
+        }),
+      };
+    }
+  };
+  const fetchTarget = async (stage) => {
+    const fetched = await transport(stage, () =>
+      git(workspace, "fetch", remote),
+    );
+    if (!fetched.stop) {
+      remoteTip = await fetchedTarget(workspace, targetRef, remote);
+    }
+    return fetched;
+  };
+  const push = async (stage) => {
+    pushIssued = true;
+    return transport(stage, () =>
+      tryPushExactRef(workspace, candidate, remote, targetRef),
+    );
+  };
+  const readTip = (stage) =>
+    transport(stage, () => lsRemoteSha(remote, targetRef, workspace));
+
+  // Registers the accepted candidate and inspects the default checkout.
+  const accept = async (acceptedTip, classification) => {
+    const receipt = { sha: candidate, target: targetRef };
+    const landing = landingContext
+      ? await captureAcceptedLanding(landingContext, {
+          base: suffixBase,
+          revision: candidate,
+          remote,
+          target: targetRef,
+        })
+      : undefined;
+    register?.(receipt);
+    const maintenance = await inspectDefaultCheckoutMaintenance(
+      workspace,
+      defaultCheckout,
+      remote,
+      targetRef,
+    );
+    return {
+      ok: true,
+      publication: "accepted",
+      ...(landing === undefined ? {} : { landing }),
+      ...(classification && { classification }),
+      receipt,
+      preRebaseSha,
+      remoteTip: acceptedTip,
+      suffixBase,
+      reconciliations,
+      maintenance,
+    };
+  };
+
+  const fetched = await fetchTarget("fetch");
+  if (fetched.stop) return fetched.stop;
   // Commits under a base the remote does not hold are not this suffix: pushing
   // would publish them and reconciling would rebase them off the branch.
   if (!(await remoteHolds(workspace, previouslyPublishedBase, remote))) {
@@ -138,9 +141,6 @@ export async function publishExecutionIncrement({
       previouslyPublishedBase,
     });
   }
-  let candidate = preRebaseSha;
-  let suffixBase = previouslyPublishedBase;
-  let reconciliations = 0;
   const held = (attempt) =>
     fetchedTargetStop(onFetchedTarget, attempt, {
       candidate,
@@ -184,6 +184,17 @@ export async function publishExecutionIncrement({
     candidate = validatedCandidate;
   }
 
+  // As resume classifies it: the remote already holds this candidate, so this
+  // delivery only reports and registers that acceptance. An empty suffix has
+  // nothing to deliver and still moves onto the fetched tip below.
+  if (
+    remoteTip &&
+    candidate !== previouslyPublishedBase &&
+    (await isAncestor(workspace, candidate, remoteTip))
+  ) {
+    return accept(remoteTip, "already-published");
+  }
+
   const heldFirst = await held(0);
   if (heldFirst) return heldFirst;
   // Validated resume supplies previouslyPublishedBase as the tip the candidate
@@ -193,13 +204,21 @@ export async function publishExecutionIncrement({
     if (stop) return stop;
   }
 
-  if (beforePush) {
-    await beforePush({ attempt: 0, candidate });
-  }
-  let push = await tryPushExactRef(workspace, candidate, remote, targetRef);
-  if (push.rejected) {
-    await git(workspace, "fetch", remote);
-    remoteTip = await fetchedTarget(workspace, targetRef, remote);
+  const preparePush = async (attempt) => {
+    const comparison = { candidate, suffixBase };
+    if (landingContext)
+      await retainLandingComparison(landingContext, comparison, {
+        remote,
+        targetRef,
+      });
+    await beforePush?.({ attempt, ...comparison });
+  };
+  await preparePush(0);
+  let pushed = await push("push");
+  if (pushed.stop) return pushed.stop;
+  if (pushed.value.rejected) {
+    const refetched = await fetchTarget("fetch-after-rejection");
+    if (refetched.stop) return refetched.stop;
     const heldRetry = await held(1);
     if (heldRetry) return heldRetry;
     const stop = await reconcileOnto(remoteTip, suffixBase, true);
@@ -208,15 +227,16 @@ export async function publishExecutionIncrement({
     if (beforeRetryPush) {
       await beforeRetryPush();
     }
-    if (beforePush) {
-      await beforePush({ attempt: 1, candidate });
-    }
-    push = await tryPushExactRef(workspace, candidate, remote, targetRef);
-    if (push.rejected) {
+    await preparePush(1);
+    pushed = await push("retry-push");
+    if (pushed.stop) return pushed.stop;
+    if (pushed.value.rejected) {
+      const contended = await readTip("contention-tip");
+      if (contended.stop) return contended.stop;
       return stopped("persistent-contention", {
         candidate,
         preRebaseSha,
-        remoteTip: await lsRemoteSha(remote, targetRef, workspace),
+        remoteTip: contended.value,
         previouslyPublishedBase,
         suffixBase,
         reconciliations,
@@ -224,27 +244,12 @@ export async function publishExecutionIncrement({
     }
   }
 
-  await git(workspace, "fetch", remote);
-  const acceptedTip = await lsRemoteSha(remote, targetRef, workspace);
-  if (acceptedTip !== candidate) {
+  const confirming = await fetchTarget("confirmation-fetch");
+  if (confirming.stop) return confirming.stop;
+  const confirmed = await readTip("confirmation-tip");
+  if (confirmed.stop) return confirmed.stop;
+  if (confirmed.value !== candidate) {
     throw new Error("remote did not accept the candidate");
   }
-  const receipt = { sha: candidate, target: targetRef };
-  register?.(receipt);
-  const maintenance = await inspectDefaultCheckoutMaintenance(
-    workspace,
-    defaultCheckout,
-    remote,
-    targetRef,
-  );
-  return {
-    ok: true,
-    publication: "accepted",
-    receipt,
-    preRebaseSha,
-    remoteTip: acceptedTip,
-    suffixBase,
-    reconciliations,
-    maintenance,
-  };
+  return accept(confirmed.value);
 }

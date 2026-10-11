@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { setTimeout as pause } from "node:timers/promises";
-import { readMailbox } from "./ci-mailbox-location.mjs";
+import { readMailbox, receiptPrefix } from "./ci-mailbox-location.mjs";
 import { readRevisionCoverage } from "./ci-mailbox-revision-coverage.mjs";
 import { readMailboxEvents, readWorkerIdentity } from "./ci-mailbox-store.mjs";
 import { checkMailboxWorkerLiveness } from "./ci-mailbox-worker-process.mjs";
@@ -192,5 +192,23 @@ export async function awaitRevision(
         unresolvedReason: "wait_cancelled",
       });
     }
+  }
+}
+
+// Runs the revision command `run` (`awaitRevision` or `completeRevision`) so
+// that SIGINT or SIGTERM cancels it, and writes its receipt.
+export async function writeRevisionReceipt(run, directory, sha) {
+  const cancellation = new AbortController();
+  const cancel = () => cancellation.abort();
+  process.once("SIGINT", cancel);
+  process.once("SIGTERM", cancel);
+  try {
+    const result = await run(directory, sha, {
+      cancellation: cancellation.signal,
+    });
+    process.stdout.write(`${receiptPrefix}${JSON.stringify(result)}\n`);
+  } finally {
+    process.removeListener("SIGINT", cancel);
+    process.removeListener("SIGTERM", cancel);
   }
 }

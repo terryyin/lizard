@@ -43,6 +43,23 @@ export function recordDeliveryProgress(directory, update) {
   });
 }
 
+// Records that the coordinator received this mailbox's records through
+// `sequence`. Only published records can be acknowledged, and progress never
+// moves backward.
+export function acknowledgeDelivery(directory, sequence) {
+  const recordedThrough = readMailboxEvents(directory).at(-1)?.sequence ?? 0;
+  if (!Number.isInteger(sequence) || sequence < 1 || sequence > recordedThrough)
+    throw new Error(
+      `Cannot acknowledge record ${sequence}; records end at ${recordedThrough}`,
+    );
+  const deliveredThrough = Math.max(
+    readDeliveryProgress(directory).deliveredThrough,
+    sequence,
+  );
+  recordDeliveryProgress(directory, { deliveredThrough });
+  return deliveredThrough;
+}
+
 export function recordWorkerIdentity(directory, identity) {
   publishJson(directory, "worker.json", identity);
 }

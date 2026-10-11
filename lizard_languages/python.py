@@ -1,40 +1,9 @@
 ''' Language parser for Python '''
 
-from .code_reader import CodeReader, CodeStateMachine
+from .code_reader import CodeReader
 from .script_language import ScriptLanguageMixIn
-
-
-# Triple-quoted string patterns for the common tokenizer, so a whole
-# triple-quoted string is matched as a single token.
-_PY_TRIPLE_QUOTE = (
-    r"|(?:\"\"\"(?:\\.|[^\"]|\"(?!\"\")|\"\"(?!\"))*\"\"\")"
-    r"|(?:\'\'\'(?:\\.|[^\']|\'(?!\'\')|\'\'(?!\'))*\'\'\')"
-)
-
-
-def count_spaces(token):
-    return len(token.replace('\t', ' ' * 8))
-
-
-class FStringComma(str):
-    '''A comma in the {} of an f-string: it does not separate parameters.'''
-
-
-class PythonIndents:  # pylint: disable=R0902
-    def __init__(self, context):
-        self.indents = [0]
-        self.context = context
-
-    def set_nesting(self, spaces, token=""):
-        while self.indents[-1] > spaces and (not token.startswith(")")):
-            self.indents.pop()
-            self.context.pop_nesting()
-        if self.indents[-1] < spaces:
-            self.indents.append(spaces)
-            self.context.add_bare_nesting()
-
-    def reset(self):
-        self.set_nesting(0)
+from .python_structure import PythonIndents, PythonStates, count_spaces
+from .python_tokens import generate_tokens as generate_python_tokens
 
 
 class PythonReader(CodeReader, ScriptLanguageMixIn):
@@ -64,6 +33,12 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
         '//=', '**=', '&=', '|=', '^=', '<<=', '>>=', ':=',
     ))
 
+    # Tokens preceding a triple-quoted operand rather than a standalone string.
+    _EXPRESSION_PRECEDING_TOKENS = frozenset((
+        '=', '+=', '-=', '*=', '/=', '%=', '//=', '**=', '&=', '|=', '^=',
+        '<<=', '>>=', '(', 'return', ',', '[', '+', '-', '*', '/', '//', '%',
+    ))
+
     def __init__(self, context):
         super(PythonReader, self).__init__(context)
         self.parallel_states = [PythonStates(context, self)]
@@ -71,139 +46,9 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
         self._keyword_case = False   # set by _soft_keyword_lookahead: True when 'case' is a soft keyword
         self._keyword_match = False  # set by _soft_keyword_lookahead: True when 'match' is a soft keyword
 
-    # str/bytes f-string prefixes (any case). Excludes bare b/rb (not f-strings).
-    _FSTRING_PREFIXES = frozenset(('f', 'rf', 'fr', 'bf', 'fb'))
-
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
-        # Python comments end at the physical newline; a trailing '\' does not
-        # extend the comment to the next line (issue #317).
-        tokens = CodeReader.generate_tokens(
-            source_code,
-            r"|\#[^\n]*" + _PY_TRIPLE_QUOTE + addition,
-            token_class)
-        return PythonReader._expand_fstring_interpolations(tokens, token_class)
-
-    @staticmethod
-    def _expand_fstring_interpolations(tokens, token_class):
-        """Re-tokenize the {...} interpolations of f-strings so control-flow
-        keywords inside them reach the condition counter.
-
-        Addresses GitHub issue #317: control flow inside interpolations was
-        invisible to the tokenizer when the f-string was one opaque string token.
-
-        The tokenizer emits the f-string prefix ('f', 'rf', ...) as its own
-        token right before the string body, so an f-string is a prefix token
-        immediately followed by a string token.
-        """
-        prefix = None
-        for token in tokens:
-            if prefix is not None:
-                held, prefix = prefix, None
-                if isinstance(token, str) and token[:1] in ('"', "'"):
-                    yield held
-                    for inner in PythonReader._tokenize_fstring_body(
-                            token, token_class):
-                        yield inner
-                    continue
-                yield held
-                # not a string after all; fall through to classify this token
-            if isinstance(token, str) and \
-                    token.lower() in PythonReader._FSTRING_PREFIXES:
-                prefix = token
-                continue
-            yield token
-        if prefix is not None:
-            yield prefix
-
-    @staticmethod
-    def _skip_quoted_literal(body, pos):
-        """Advance past a Python string literal in body; return new position."""
-        n = len(body)
-        if pos + 2 < n and body[pos:pos + 3] in ('"""', "'''"):
-            quote = body[pos:pos + 3]
-            pos += 3
-            while pos < n:
-                if body[pos:pos + 3] == quote:
-                    return pos + 3
-                if body[pos] == '\\':
-                    pos += 2
-                    continue
-                pos += 1
-            return n
-        if pos < n and body[pos] in '"\'':
-            quote = body[pos]
-            pos += 1
-            while pos < n:
-                if body[pos] == '\\':
-                    pos += 2
-                    continue
-                if body[pos] == quote:
-                    return pos + 1
-                pos += 1
-            return n
-        return pos
-
-    @staticmethod
-    def _find_interpolation_end(body, start):
-        """Return index after the closing '}' of an interpolation opened at start."""
-        depth = 1
-        j = start + 1
-        n = len(body)
-        while j < n and depth:
-            if body[j] in '"\'':
-                j = PythonReader._skip_quoted_literal(body, j)
-                continue
-            if body[j] == '{':
-                depth += 1
-            elif body[j] == '}':
-                depth -= 1
-            j += 1
-        return j
-
-    @staticmethod
-    def _tokenize_fstring_body(token, token_class):
-        """Split an f-string body into literal chunks (kept as string tokens)
-        and interpolation expressions (re-tokenized so inner keywords count).
-
-        '{{' and '}}' are literal braces, not interpolations. Brace matching
-        inside an interpolation skips string literals so a '}' nested in quotes
-        does not end the expression early. If the body has no interpolation,
-        the original token is yielded unchanged.
-        """
-        quote = token[:3] if token[:3] in ('"""', "'''") else token[:1]
-        body = token[len(quote):len(token) - len(quote)]
-        literal = []
-        produced = []
-        i, n = 0, len(body)
-        while i < n:
-            if body[i:i + 2] in ('{{', '}}'):
-                literal.append(body[i])
-                i += 2
-                continue
-            if body[i] == '{':
-                j = PythonReader._find_interpolation_end(body, i)
-                if literal:
-                    produced.append(quote + ''.join(literal) + quote)
-                    literal = []
-                # The interpolation is Python code: tokenize it as such, which
-                # also expands any nested f-string (recursion terminates on the
-                # ever-shorter interpolation body).
-                produced.extend(
-                    FStringComma(tok) if tok == ',' else tok
-                    for tok in PythonReader.generate_tokens(
-                        body[i + 1:j - 1], '', token_class))
-                i = j
-                continue
-            literal.append(body[i])
-            i += 1
-        if not produced:
-            yield token  # no interpolation; leave the string token untouched
-            return
-        if literal:
-            produced.append(quote + ''.join(literal) + quote)
-        for tok in produced:
-            yield tok
+        return generate_python_tokens(source_code, addition, token_class)
 
     def process_token(self, token):
         """Process triple-quoted strings used as comments, and Python soft keywords.
@@ -236,10 +81,7 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
             # If we're not in the first line state, check if this is a standalone string
             if current_state != current_state.__self__._state_first_line:
                 # Check if the immediate previous meaningful token suggests this is part of an expression
-                assignment_tokens = ['=', '+=', '-=', '*=', '/=', '%=', '//=', '**=', '&=', '|=', '^=',
-                                     '<<=', '>>=', '(', 'return', ',', '[', '+', '-', '*', '/', '%']
-
-                is_part_of_expression = self._last_meaningful_token in assignment_tokens
+                is_part_of_expression = self._last_meaningful_token in self._EXPRESSION_PRECEDING_TOKENS
 
                 # Only treat as comment if it's NOT part of an expression
                 if not is_part_of_expression:
@@ -353,104 +195,3 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
             if not token.isspace() or token == '\n':
                 yield token
         indents.reset()
-
-
-class PythonStates(CodeStateMachine):  # pylint: disable=R0903
-    def __init__(self, context, reader):
-        super(PythonStates, self).__init__(context)
-        self.reader = reader
-
-    def _state_global(self, token):
-        if token == 'def':
-            self._state = self._function
-
-    def _function(self, token):
-        if token == '[':
-            # PEP 695 `def f[T](...)`. Do not restart on each token, or ']'
-            # becomes the name. Defer '(' so [T] appears in long_name.
-            self.br_count = 0
-            self.next(self._state_type_parameters, token)
-        elif token != '(':
-            self.context.restart_new_function(token)
-        else:
-            self.context.add_to_long_function_name("(")
-            self._state = self._dec
-
-    def _state_type_parameters(self, token):
-        # Consume a type param list, tracking nesting so bounds like
-        # `def f[T: list[int]](x)` work.
-        if token in ('def', 'class'):
-            # Unbalanced '[': truncated or invalid source. Neither keyword can
-            # appear inside a type param list, so treat this as the next
-            # definition instead of swallowing the rest of the file.
-            self.br_count = 0
-            self.next(self._state_global, token)
-            return
-        self.context.add_to_long_function_name(" " + token)
-        self.br_count += {'[': 1, ']': -1}.get(token, 0)
-        if self.br_count == 0:
-            self._state = self._function
-
-    def _dec(self, token):
-        if token == ')':
-            self._state = self._state_colon
-        elif token == '[':
-            self.br_count = 1
-            self._state = self._state_parameterized_type_annotation
-        elif token in ('(', '{', 'lambda'):
-            # A default value in brackets, or a lambda: its commas do not
-            # separate the parameters of the function.
-            self.br_count = 0
-            self.lambda_heads = 0
-            self.next(self._state_default_value, token)
-            return
-        elif isinstance(token, FStringComma):
-            # A comma in the {} of an f-string, x=f"{a, b}", does not
-            # separate the parameters.
-            self._comma_in_a_parameter(token)
-            return
-        else:
-            self.context.parameter(token)
-            return
-        self.context.add_to_long_function_name(" " + token)
-
-    def _comma_in_a_parameter(self, token):
-        function = self.context.current_function
-        function.add_to_long_name(" " + token)
-        function.full_parameters[-1] += " " + token
-
-    def _state_default_value(self, token):
-        if token == ',':
-            self._comma_in_a_parameter(token)
-        else:
-            self.context.parameter(token)
-        if token in ('(', '[', '{'):
-            self.br_count += 1
-        elif token in (')', ']', '}'):
-            self.br_count -= 1
-        elif token == 'lambda' and self.br_count == 0:
-            self.lambda_heads += 1
-        elif token == ':' and self.br_count == 0 and self.lambda_heads:
-            self.lambda_heads -= 1
-        if self.br_count < 0 or (
-                self.br_count == 0 and self.lambda_heads == 0):
-            self._state = self._dec
-
-    def _state_colon(self, token):
-        if token == ':':
-            self.next(self._state_first_line)
-        else:
-            self.next(self._state_global)
-
-    def _state_first_line(self, token):
-        self._state = self._state_global
-        if token.startswith('"""') or token.startswith("'''"):
-            self.context.add_nloc(-token.count('\n') - 1)
-        self._state_global(token)
-
-    def _state_parameterized_type_annotation(self, token):
-        # Up to the "]" that closes the first "[": Callable[[int, str], int]
-        self.context.add_to_long_function_name(" " + token)
-        self.br_count += {'[': 1, ']': -1}.get(token, 0)
-        if self.br_count == 0:
-            self._state = self._dec

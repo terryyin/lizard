@@ -17,8 +17,9 @@ import {
   recordDeliveryProgress,
   receiptPrefix,
 } from "./ci-mailbox.mjs";
-import { checkoutIdentity } from "./ci-mailbox-location.mjs";
+import { managedDeliveryGeneration } from "./ci-mailbox-location.mjs";
 import { readMailboxTerminal } from "./ci-mailbox-match.mjs";
+import { claimMailbox, hostInputOwner } from "./ci-observer-owner.mjs";
 import { isDirectCliEntry } from "./ci-direct-entry.mjs";
 
 const hash = (value) => createHash("sha256").update(value).digest("hex");
@@ -50,28 +51,33 @@ export function selectCiEvents(
     input.status !== "completed"
   )
     return emptySelection();
-  const session = host === "cursor" ? input.conversation_id : input.session_id;
-  if (!session) return emptySelection();
-  const owner = hash(
-    JSON.stringify([
-      checkoutIdentity(root),
-      host,
-      session,
-      input.agent_id ?? input.subagent_id ?? "",
-    ]),
-  );
+  const owner = hostInputOwner(input, host, root);
+  if (!owner) return emptySelection();
   const bindings = join(storage, `owner-${owner}`);
   const generation = join(storage, `generation-${owner}`);
+  const managed = input.generation_id === managedDeliveryGeneration;
+  // A managed generation never replaces a recorded one.
+  const recordGeneration = () => {
+    if (!managed || !existsSync(generation))
+      writeFileSync(generation, input.generation_id, { mode: 0o600 });
+  };
   if (host === "cursor") {
     if (!input.generation_id) return emptySelection();
     if (input.hook_event_name === "beforeSubmitPrompt") {
-      if (existsSync(bindings))
-        writeFileSync(generation, input.generation_id, { mode: 0o600 });
+      if (existsSync(bindings)) recordGeneration();
       return emptySelection();
     }
-    if (
-      existsSync(generation) &&
-      readFileSync(generation, "utf8") !== input.generation_id
+    // Managed delivery runs inside the coordinator's Shell call without its
+    // generation, so it passes the gate; the owner's next real hook adopts its
+    // own generation in place of the managed one.
+    const recorded = existsSync(generation)
+      ? readFileSync(generation, "utf8")
+      : undefined;
+    if (recorded === managedDeliveryGeneration) recordGeneration();
+    else if (
+      !managed &&
+      recorded !== undefined &&
+      recorded !== input.generation_id
     )
       return emptySelection();
   }
@@ -110,18 +116,11 @@ export function selectCiEvents(
       const request = readMailbox(directory, root, storage);
       if (existsSync(join(directory, "delivered"))) continue;
       mkdirSync(bindings, { recursive: true, mode: 0o700 });
-      const claim = join(directory, "owner");
-      try {
-        writeFileSync(claim, owner, { flag: "wx", mode: 0o600 });
-      } catch (error) {
-        if (error.code !== "EEXIST") throw error;
-        if (readFileSync(claim, "utf8") !== owner) continue;
-      }
+      if (!claimMailbox(directory, owner)) continue;
       writeFileSync(join(bindings, hash(directory)), directory, {
         mode: 0o600,
       });
-      if (host === "cursor")
-        writeFileSync(generation, input.generation_id, { mode: 0o600 });
+      if (host === "cursor") recordGeneration();
       attachedThisCall.add(directory);
       const ended = readMailboxTerminal(directory);
       if (ended && ended.coverage?.state !== "lost" && !request.probe) {

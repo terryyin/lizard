@@ -1,6 +1,8 @@
 // Resume an accepted managed delivery without duplicate push or guessed
-// observation. Verifies remote acceptance, recovers only a matching live
-// owner, and reports an actionable gap when coverage cannot be restored.
+// observation. Verifies remote acceptance, recovers only the live observer
+// its retained owner evidence names, and reports an actionable gap when
+// coverage cannot be restored. A fetch or push that outlasts the transport
+// bound stops as held stops do.
 import { resolve } from "node:path";
 import { resolveCheckoutRuntime } from "./ci-checkout-runtime.mjs";
 import {
@@ -9,7 +11,7 @@ import {
   registerPushedRevision,
 } from "./ci-mailbox.mjs";
 import { isDirectCliEntry } from "./ci-direct-entry.mjs";
-import { recoverObservationForResume } from "./execution-increment-observation.mjs";
+import { recoverObservationForResume } from "./execution-increment-observation-recovery.mjs";
 import { stopped } from "./applicable-candidate-proof.mjs";
 import { resumeInterruptedPublication } from "./publication-resume.mjs";
 import { targetBranchName } from "./publication-git.mjs";
@@ -40,16 +42,23 @@ export async function resumeManagedExecutionIncrement(request) {
   const {
     workspace,
     candidateSha,
+    suffixBase,
     targetRef,
     repo,
+    remote = "origin",
     supersededShas = [],
     publishedRevisions = [],
     defaultCheckout,
     host = "cursor",
     preferredAlias,
+    session,
+    coordinator,
+    observerDirectory,
+    env = process.env,
     root,
     storage,
     oneShotIdentity,
+    landingContext,
   } = request;
 
   for (const field of ["workspace", "candidateSha", "targetRef", "repo"]) {
@@ -68,15 +77,20 @@ export async function resumeManagedExecutionIncrement(request) {
   const observerRoot = root ?? runtime.checkout;
   const observerStorage = storage ?? mailboxRoot;
   const targetBranch = targetBranchName(targetRef);
-  const recovered = recoverObservationForResume({
+  const observation = recoverObservationForResume({
     repo,
     branch: targetBranch,
+    host,
+    session,
+    coordinator,
+    observerDirectory,
+    env,
     root: observerRoot,
     storage: observerStorage,
   });
 
   const liveDirectory =
-    recovered.ownership.kind === "live" ? recovered.ownership.directory : null;
+    observation.state === "recovered" ? observation.directory : null;
   const observer = liveDirectory
     ? observerAdapter(liveDirectory, targetRef)
     : null;
@@ -88,23 +102,50 @@ export async function resumeManagedExecutionIncrement(request) {
         identity: oneShotIdentity,
       })
     : undefined;
-  const published = await resumeInterruptedPublication({
-    ownedWorkspace: workspace,
-    defaultCheckout,
-    candidateSha,
-    supersededShas,
-    publishedRevisions,
-    observer,
-    targetRef,
-    onFetchedTarget,
-  });
+  let published;
+  try {
+    published = await resumeInterruptedPublication({
+      ownedWorkspace: workspace,
+      defaultCheckout,
+      candidateSha,
+      suffixBase,
+      remote,
+      landingContext,
+      supersededShas,
+      publishedRevisions,
+      observer,
+      targetRef,
+      onFetchedTarget,
+    });
+  } catch (error) {
+    if (error?.code !== "transport-timeout") throw error;
+    // A stalled fetch or push stops with the candidate preserved; the same
+    // resume run again settles acceptance from the remote.
+    return stopped("transport-timeout", {
+      stage: error.stage,
+      pushCount: error.pushCount,
+      pushIssued: error.pushIssued,
+      classification: error.classification,
+      boundMs: error.boundMs,
+      remote: error.remote,
+      target: targetRef,
+      candidate: candidateSha,
+      remoteTip: error.remoteTip,
+      observation,
+    });
+  }
+  const comparison =
+    published.suffixBase === undefined
+      ? {}
+      : { suffixBase: published.suffixBase };
   if (published.held)
     return stopped(published.held.status, {
       candidate: candidateSha,
       pushCount: 0,
       classification: published.classification,
+      ...comparison,
       ...published.held.fields,
-      observation: recovered.observation,
+      observation,
     });
 
   // Ensure the accepted SHA is on the recovered live owner when resume's
@@ -120,11 +161,13 @@ export async function resumeManagedExecutionIncrement(request) {
     pushCount: published.pushCount,
     completedObligation: published.completedObligation,
     classification: published.classification,
+    ...(published.landing === undefined ? {} : { landing: published.landing }),
     receipt: {
       sha: published.acceptedSha,
       target: targetRef,
     },
-    observation: recovered.observation,
+    ...comparison,
+    observation,
     runtime: {
       alias: runtime.alias,
       skillRoot: runtime.skillRoot,
@@ -138,7 +181,7 @@ export async function resumeManagedExecutionIncrement(request) {
 function argumentsOf(argv) {
   if (argv[0] !== "resume") {
     throw new Error(
-      "usage: execution-increment-resume.mjs resume --workspace PATH --candidate-sha SHA --target-ref REF --repo OWNER/REPO [--host cursor|claude|codex] [--preferred-alias .agents|.claude] [--default-checkout PATH] [--superseded-sha SHA]... [--one-shot-identity ID]",
+      "usage: execution-increment-resume.mjs resume --workspace PATH --candidate-sha SHA --target-ref REF --repo OWNER/REPO [--suffix-base SHA] [--remote NAME] [--host cursor|claude|codex] [--preferred-alias .agents|.claude] [--session-json JSON] [--coordinator VALUE --observer-directory PATH] [--default-checkout PATH] [--superseded-sha SHA]... [--one-shot-identity ID] [--landing-context PATH]",
     );
   }
   const result = { supersededShas: [], publishedRevisions: [] };
@@ -155,6 +198,11 @@ function argumentsOf(argv) {
       .slice(2)
       .replace(/-[a-z]/g, (match) => match[1].toUpperCase());
     result[key] = argv[++index];
+  }
+  // Malformed session JSON stops resume; no other identity stands in for it.
+  if (result.sessionJson) {
+    result.session = JSON.parse(result.sessionJson);
+    delete result.sessionJson;
   }
   return result;
 }

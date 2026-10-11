@@ -53,9 +53,9 @@ Select the **non-model notification bridge for the current host**:
 - **Cursor or Claude Code:** read [ci-notify-hosts.md](ci-notify-hosts.md), run
   its readiness probe, and use its mailbox launcher. Skip the Codex adapter;
   notification handling and repair stay shared.
-- **Codex:** read [ci-notify-codex.md](ci-notify-codex.md) and use its
-  yielded-cell adapter when those tools are exposed; otherwise report the
-  bridge unavailable as described there.
+- **Codex:** read [ci-notify-codex.md](ci-notify-codex.md) and, with its tools,
+  arm its yielded stream at execution start, before the first publication, for
+  managed delivery to reuse; otherwise report the bridge unavailable as it says.
 
 Notifications arrive at the current host's next safe boundary. Act after a
 foreground agent or command returns; do not assume interruption.

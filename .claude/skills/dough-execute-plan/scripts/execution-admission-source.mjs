@@ -14,6 +14,7 @@ import {
 import { sameDocument } from "../../dough-product-backlog/scripts/product-backlog-plan.mjs";
 import { BacklogError } from "../../dough-product-backlog/scripts/product-backlog-refusal.mjs";
 import { readStoryPurpose } from "../../dough-product-backlog/scripts/product-backlog-story-purpose.mjs";
+import { requireResolvedStoryDependencies } from "../../dough-product-backlog/scripts/product-backlog-story-dependencies.mjs";
 import {
   draftsOf,
   reconcilePlan,
@@ -68,7 +69,9 @@ async function readQueuedAdmission(request, remoteRef, candidateSha, entry) {
   const home = await versionsOf(request, remoteRef, drafts, selection.homePath);
   if (home.trunk === null)
     throw refused(`selected canonical home ${selection.homePath} is absent`);
+  requireResolvedStoryDependencies(home.trunk, link);
   const homeSource = reconcileStory(home, link);
+  requireResolvedStoryDependencies(homeSource, link);
   const state = selection.read(homeSource);
   requireIdentity(state, identity);
   const declared = selection.declaredPlan(state.approach ?? {});
@@ -124,6 +127,10 @@ export async function readAdmissionSource(request, remoteRef, candidateSha) {
   const home = await versionsOf(request, remoteRef, drafts, homePath);
   if (home.draft === null)
     throw refused(`selected canonical home ${homePath} is absent`);
+  // Neither a carried draft nor an old retained candidate may hide a newly
+  // published prerequisite on this unlisted canonical story.
+  if (sectionOf(home.trunk, link))
+    requireResolvedStoryDependencies(home.trunk, link);
   const drafted = requireAdmissibleStory(
     selection.read(home.draft),
     home.draft,
@@ -146,6 +153,7 @@ export async function readAdmissionSource(request, remoteRef, candidateSha) {
     throw refused(`a ${drafted.approach.kind} story links no plan`);
   }
   const homeSource = reconcileStory(home, link);
+  requireResolvedStoryDependencies(homeSource, link);
   const planSource = plan && reconcilePlan(plan);
   const preparation = requireAdmissibleStory(
     selection.read(homeSource, declaredPlan, planSource),

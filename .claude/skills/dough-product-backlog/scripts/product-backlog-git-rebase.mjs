@@ -29,12 +29,20 @@
 // (`acceptCleanRebase`) before being reported as accepted — see that module
 // for the mechanism, the empirical cases that motivate it, and why
 // `continueOperation`'s own clean finish, below, is deliberately excluded.
+// An accepted rebase whose replayed commits changed the done directory beside
+// the backlog ends with that directory's catalog current at the tip
+// (`commitRebuiltDoneCatalog`); the catalog's own driver keeps a change to
+// the catalog alone from stopping any replayed step.
 import {
   acceptCleanRebase,
   validateOperation,
 } from "./product-backlog-git-rebase-aggregate.mjs";
 import { acceptStaged } from "./product-backlog-git-candidate.mjs";
 import { runGitOperationCli } from "./product-backlog-git-cli.mjs";
+import {
+  commitRebuiltDoneCatalog,
+  ensureDoneCatalogDriverRegistered,
+} from "./product-backlog-git-done-catalog.mjs";
 import { rebaseState } from "./product-backlog-git-operation-state.mjs";
 import {
   blockedStopMessage,
@@ -120,7 +128,7 @@ function interpretStop(repoRoot, file, outcome) {
 // With `--onto`, `--ref` is the upstream cutoff and Git replays only the
 // commits after that cutoff:
 // `git rebase --onto <onto> <ref> [<branch>]`.
-export function rebaseOperation({
+export async function rebaseOperation({
   repoRoot,
   file,
   ref,
@@ -130,10 +138,11 @@ export function rebaseOperation({
   "destination-at-start": explicitDestinationAtStart,
 }) {
   ensureDriverRegistered(repoRoot, file);
+  ensureDoneCatalogDriverRegistered(repoRoot, file);
   const preRebaseTip =
     explicitPreRebaseTip ?? gitLine(["rev-parse", branch ?? "HEAD"], repoRoot);
-  const destinationAtStart =
-    explicitDestinationAtStart ?? gitLine(["rev-parse", onto ?? ref], repoRoot);
+  const replayBase = gitLine(["rev-parse", onto ?? ref], repoRoot);
+  const destinationAtStart = explicitDestinationAtStart ?? replayBase;
 
   const args = ["rebase"];
   if (onto) {
@@ -147,15 +156,27 @@ export function rebaseOperation({
 
   const outcome = gitOutcome(args, repoRoot, noEditor);
   if (outcome.code === 0) {
-    return acceptCleanRebase(
+    return concludeRebase(
       repoRoot,
       file,
-      onto ?? ref,
-      preRebaseTip,
-      destinationAtStart,
+      replayBase,
+      acceptCleanRebase(
+        repoRoot,
+        file,
+        onto ?? ref,
+        preRebaseTip,
+        destinationAtStart,
+      ),
     );
   }
   return interpretStop(repoRoot, file, outcome);
+}
+
+// An accepted rebase's done catalog is made current at the tip; any other
+// result commits nothing further.
+function concludeRebase(repoRoot, file, replayBase, result) {
+  if (result.status !== "rebased") return result;
+  return commitRebuiltDoneCatalog(repoRoot, file, replayBase, result);
 }
 
 // Resumes a rebase this tool already stopped, once a human has supplied a
@@ -168,8 +189,9 @@ export function rebaseOperation({
 // continuing surfaces a fresh conflict on this same path for the next
 // commit, that is reported the same way the first stop was, not conflated
 // with an invalid supplied resolution.
-export function continueOperation({ repoRoot, file }) {
-  if (!rebaseState(repoRoot)) {
+export async function continueOperation({ repoRoot, file }) {
+  const state = rebaseState(repoRoot);
+  if (!state) {
     throw new BacklogError(`No rebase is in progress in ${repoRoot}.`);
   }
   const unresolved = gitLine(["ls-files", "-u", "--", file], repoRoot);
@@ -185,12 +207,12 @@ export function continueOperation({ repoRoot, file }) {
   }
   const continued = gitOutcome(["rebase", "--continue"], repoRoot, noEditor);
   if (continued.code === 0) {
-    return {
+    return concludeRebase(repoRoot, file, state.onto, {
       status: "rebased",
       message:
         `The rebase completed; every replayed commit is present and ` +
         `unpublished.`,
-    };
+    });
   }
   return interpretStop(repoRoot, file, continued);
 }
@@ -211,7 +233,13 @@ await runGitOperationCli({
   primaryOperation: rebaseOperation,
   continueOperation,
   validateOperation,
-  failingStatuses: ["conflict", "refused", "blocked", "disputed"],
+  failingStatuses: [
+    "conflict",
+    "refused",
+    "blocked",
+    "disputed",
+    "catalog-uncommitted",
+  ],
   extraOptions: {
     onto: { type: "string" },
     branch: { type: "string" },

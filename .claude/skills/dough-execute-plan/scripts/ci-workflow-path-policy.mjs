@@ -1,7 +1,7 @@
 // Narrow, dependency-free reader for a GitHub Actions workflow's
-// `paths-ignore` triggers. Used by `ci-path-applicability.mjs` to decide
-// whether a registered revision's CI coverage can be answered without an
-// exact-SHA run.
+// `paths-ignore` triggers, and the one rule for which paths they ignore. Used
+// by `ci-path-applicability.mjs` to decide whether a registered revision's CI
+// coverage can be answered without an exact-SHA run.
 //
 // Deliberately narrow: only the literal-list `paths-ignore` form under
 // `push`/`pull_request` is supported, and only patterns of the exact shape
@@ -18,6 +18,15 @@ const sequenceItemPattern = /^-\s+(.+)$/;
 const disallowedIndicatorPattern = /^[&*!|>%@`]/;
 const disallowedBlockPattern = /[#[\]{}]|\$\{\{|<<:/;
 export const supportedIgnoreGlobPattern = /^[^*]+\/\*\*$/;
+
+// True when a repository-relative path lies under one of a supported policy's
+// `<prefix>/**` patterns (or names the prefix itself).
+export function isPathIgnored(path, pathsIgnore) {
+  return pathsIgnore.some((pattern) => {
+    const prefix = pattern.slice(0, -"/**".length);
+    return path === prefix || path.startsWith(`${prefix}/`);
+  });
+}
 
 function parseScalar(raw) {
   const trimmed = raw.trim();

@@ -5,6 +5,7 @@
 import { existsSync } from "node:fs";
 import { isAbsolute, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { doneDirectoryBeside } from "../../dough-product-backlog/scripts/product-backlog-git-done-catalog.mjs";
 import { defaultBacklogPath } from "../../dough-product-backlog/scripts/product-backlog-store.mjs";
 import {
   creditMergeInProgress,
@@ -48,13 +49,15 @@ async function pathExists(workspace, name) {
   return existsSync(path);
 }
 
+// Whether either side changed the backlog or the done directory beside it.
 async function backlogTouched(workspace, ref, file) {
   const base = (await git(workspace, "merge-base", "HEAD", ref)).stdout.trim();
+  const paths = ["--", file, doneDirectoryBeside(file)];
   const onTrunk = (
-    await git(workspace, "diff", "--name-only", base, "HEAD", "--", file)
+    await git(workspace, "diff", "--name-only", base, "HEAD", ...paths)
   ).stdout.trim();
   const onStory = (
-    await git(workspace, "diff", "--name-only", base, ref, "--", file)
+    await git(workspace, "diff", "--name-only", base, ref, ...paths)
   ).stdout.trim();
   return onTrunk !== "" || onStory !== "";
 }

@@ -1,12 +1,6 @@
 import unittest
-import inspect
-from lizard import analyze_file, FileAnalyzer, get_extensions
 from lizard_languages import SwiftReader
-
-
-def get_swift_function_list(source_code):
-    return analyze_file.analyze_source_code(
-        "a.swift", source_code).function_list
+from .swift_helpers import get_swift_function_list
 
 
 class Test_tokenizing_Swift(unittest.TestCase):
@@ -136,90 +130,6 @@ class Test_parser_for_Swift(unittest.TestCase):
                 ''')
         self.assertEqual("subscript", result[0].name)
 
-    def test_getter_setter(self):
-        result = get_swift_function_list('''
-            class Time
-            {
-                var minutes: Double
-                {
-                    get
-                    {
-                        return (seconds / 60)
-                    }
-                    set
-                    {
-                        self.seconds = (newValue * 60)
-                    }
-                }
-            }
-                ''')
-        self.assertEqual("get", result[0].name)
-        self.assertEqual("set", result[1].name)
-
-#https://docs.swift.org/swift-book/LanguageGuide/Properties.html#ID259
-    def test_explicit_getter_setter(self):
-        result = get_swift_function_list('''
-            var center: Point {
-                get {
-                    let centerX = origin.x + (size.width / 2)
-                    let centerY = origin.y + (size.height / 2)
-                    return Point(x: centerX, y: centerY)
-                }
-                set(newCenter) {
-                    origin.x = newCenter.x - (size.width / 2)
-                    origin.y = newCenter.y - (size.height / 2)
-                }
-            }
-                ''')
-        self.assertEqual("get", result[0].name)
-        self.assertEqual("set", result[1].name)
-
-    def test_willset_didset(self):
-        result = get_swift_function_list('''
-            var cue = -1 {
-                willSet {
-                    if newValue != cue {
-                        tableView.reloadData()
-                    }
-                }
-                didSet {
-                    tableView.scrollToRow(at: IndexPath(row: cue, section: 0), at: .bottom, animated: true)
-                }
-            }
-                ''')
-        self.assertEqual("willSet", result[0].name)
-        self.assertEqual("didSet", result[1].name)
-
-#https://docs.swift.org/swift-book/LanguageGuide/Properties.html#ID262
-    def test_explicit_willset_didset(self):
-        result = get_swift_function_list('''
-            class StepCounter {
-                var totalSteps: Int = 0 {
-                    willSet(newTotalSteps) {
-                        print("About to set totalSteps to \\(newTotalSteps)")
-                    }
-                    didSet {
-                        if totalSteps > oldValue  {
-                            print("Added \\(totalSteps - oldValue) steps")
-                        }
-                    }
-                }
-            }
-                ''')
-        self.assertEqual("willSet", result[0].name)
-        self.assertEqual("didSet", result[1].name)
-
-    def test_keyword_declarations(self):
-        result = get_swift_function_list('''
-            enum Func {
-                static var `init`: Bool?, willSet: Bool?
-                static let `deinit` = 0, didSet = 0
-                case `func`; case get, set
-                func `default`() {}
-            }
-                ''')
-        self.assertEqual("`default`", result[0].name)
-
     def test_generic_function(self):
         result = get_swift_function_list('''
             func f<T>() {}
@@ -275,3 +185,19 @@ class Test_parser_for_Swift(unittest.TestCase):
         ''')
         self.assertEqual(2, len(result))
 
+    def test_failable_initializer(self):
+        body = """\
+struct S {{
+    init{mark}(text: String) {{
+        if text.isEmpty {{ return nil }}
+        if text == "a" {{ return nil }}
+    }}
+}}
+"""
+        for mark in ('?', '!'):
+            with self.subTest(mark=mark):
+                result = get_swift_function_list(body.format(mark=mark))
+                self.assertEqual(
+                    [("init", 3)],
+                    [(function.name, function.cyclomatic_complexity)
+                     for function in result])
