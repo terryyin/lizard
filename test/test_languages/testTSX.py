@@ -737,3 +737,14 @@ class Test_TSX_class_with_static_fields(unittest.TestCase):
         # static field names should NOT appear as functions
         self.assertNotIn("propTypes", names)
         self.assertNotIn("defaultProps", names)
+
+
+class Test_TSX_optional_operators(unittest.TestCase):
+
+    def test_only_ternary_and_nullish_count(self):
+        functions = get_tsx_function_list(
+            "const C = (p) => {\n"
+            "  const n = p.a?.b ?? 0;\n"
+            "  return n > 1 ? <A/> : <B x={p.f()?.g}/>;\n"
+            "};\n")
+        self.assertEqual([3], [f.cyclomatic_complexity for f in functions])

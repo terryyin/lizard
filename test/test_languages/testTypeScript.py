@@ -1282,3 +1282,25 @@ class Test_ts_function_end_after_literals(unittest.TestCase):
         )
         self.assertEqual([('a', 1, 3), ('b', 4, 4), ('c', 5, 5)],
                          self.spans(code))
+
+
+class Test_ts_optional_operators(unittest.TestCase):
+
+    def test_optional_chaining_and_nullish_tokens(self):
+        self.assertEqual(
+            ['a', '(', ')', '?.', 'b', '??', 'c', '[', '0', ']', '?.', '(',
+             '1', ')', '?', 'x', ':', '(', 'd', ')', '?', '.', '5', ':', 'e'],
+            [t for t in TypeScriptReader.generate_tokens(
+                'a()?.b ?? c[0]?.(1) ? x : (d)?.5:e') if not t.isspace()])
+
+    def test_only_ternary_and_nullish_count(self):
+        functions = get_ts_function_list(
+            "function chain(a, d) {\n"
+            "  const x = a.f()?.b;\n"
+            "  const y = d['x']?.count ?? 0;\n"
+            "  const z = a.g()?.[1];\n"
+            "  return y === 1 ? x : z;\n"
+            "}\n")
+        self.assertEqual([('chain', 1, 6, 3)],
+                         [(f.name, f.start_line, f.end_line,
+                           f.cyclomatic_complexity) for f in functions])

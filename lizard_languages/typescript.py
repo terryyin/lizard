@@ -13,6 +13,11 @@ TEMPLATE_LITERAL = (
     r"|[^{}\"'`])*\}|[^`\\])*`"
 )
 
+# `?.` and `??` stay whole so neither counts as a ternary `?`; `?.` before a
+# digit is a ternary followed by a number (`a?.5:1`).
+OPTIONAL_OPERATORS = r"|\?\?|\?\.(?!\d)"
+_OPTIONAL_OPERATOR_PARTS = {'??': ('?', '?'), '?.': ('?', '.')}
+
 
 class Tokenizer(object):
     def __init__(self):
@@ -62,7 +67,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
     _control_flow_keywords = {'if', 'elseif', 'for', 'while', 'catch'}
     _logical_operators = {'&&', '||'}
     _case_keywords = {'case'}
-    _ternary_operators = {'?'}
+    _ternary_operators = {'?', '??'}
 
     def __init__(self, context):
         super().__init__(context)
@@ -119,7 +124,8 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
             yield quote
 
         # Private method (#), dollar ($), optional chaining (?), template literals
-        addition = addition + r"|(?:#\w+)" + r"|(?:\$\w+)" + r"|(?:\w+\?)" + r"|" + TEMPLATE_LITERAL
+        addition = (addition + r"|(?:#\w+)" + r"|(?:\$\w+)" + OPTIONAL_OPERATORS +
+                    r"|(?:\w+\?)" + r"|" + TEMPLATE_LITERAL)
         for token in CodeReader.generate_tokens(source_code, addition, token_class):
             if (
                 isinstance(token, str)
@@ -155,6 +161,15 @@ class TypeScriptStates(CodeStateMachine):
         self._prev_token = ''  # Track previous token to detect method calls
         self._in_prop_value = False  # Track if inside property value (after ':')
         self._in_abstract_context = False  # Track abstract method declarations
+
+    def __call__(self, token, reader=None):
+        # `?.` and `??` are whole only for the condition counter; function
+        # boundaries are still found from their single characters.
+        if token in _OPTIONAL_OPERATOR_PARTS:
+            for part in _OPTIONAL_OPERATOR_PARTS[token]:
+                result = super().__call__(part, reader)
+            return result
+        return super().__call__(token, reader)
 
     def statemachine_before_return(self):
         # Ensure the main function is closed at the end

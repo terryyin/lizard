@@ -17,6 +17,7 @@ _SWIFT_TOKEN_ADDITION = (
     r"|\?\?"
     r"|\#(?!(?:if|elseif|else|endif|sourceLocation|warning|error)\b)\w+"
 )
+_POSTFIX_OPTIONAL = 'postfix?'
 
 
 def _separates_label(token):
@@ -76,6 +77,19 @@ class SwiftReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
         super(SwiftReader, self).__init__(context)
         self.parallel_states = [SwiftStates(context)]
 
+    def preprocess(self, tokens):
+        # Swift requires whitespace before a ternary `?`; a `?` attached to
+        # the previous token is optional chaining or an optional type.
+        def postfix_optionals():
+            previous = ' '
+            for token in tokens:
+                if token == '?' and not previous.isspace():
+                    yield _POSTFIX_OPTIONAL
+                else:
+                    yield token
+                previous = token
+        return super(SwiftReader, self).preprocess(postfix_optionals())
+
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
         pattern = compiled_token_pattern(_SWIFT_TOKEN_ADDITION + addition)
@@ -103,6 +117,12 @@ class SwiftStates(GoLikeStates):  # pylint: disable=R0903
         self._accessor = None
         self._accessor_step = None
         self._accessor_tokens = []
+
+    def __call__(self, token, reader=None):
+        # The marker only keeps the condition counter away; signatures keep `?`.
+        if token == _POSTFIX_OPTIONAL:
+            token = '?'
+        return super(SwiftStates, self).__call__(token, reader)
 
     def _state_global(self, token):
         name = self._introduced_function(token)
