@@ -5,6 +5,7 @@
 // bound stops as held stops do.
 import { resolve } from "node:path";
 import { resolveCheckoutRuntime } from "./ci-checkout-runtime.mjs";
+import { withExplicitSession } from "./ci-host-bridge.mjs";
 import {
   mailboxRoot,
   readRevisionCoverage,
@@ -199,12 +200,7 @@ function argumentsOf(argv) {
       .replace(/-[a-z]/g, (match) => match[1].toUpperCase());
     result[key] = argv[++index];
   }
-  // Malformed session JSON stops resume; no other identity stands in for it.
-  if (result.sessionJson) {
-    result.session = JSON.parse(result.sessionJson);
-    delete result.sessionJson;
-  }
-  return result;
+  return withExplicitSession(result);
 }
 
 if (isDirectCliEntry(import.meta.url, process.argv[1])) {

@@ -9,6 +9,7 @@
 // registration recovers through execution-increment-observation-recovery.mjs.
 import {
   bindHostObserver,
+  eventRecipient,
   hostSessionOwner,
   resolveHostSession,
   verifyHostBridge,
@@ -19,6 +20,7 @@ import {
   classifyRetainedStream,
 } from "./ci-mailbox-match.mjs";
 import { codexStreamOwner } from "./ci-observer-owner.mjs";
+import { ownerGapReason } from "./execution-increment-observation-gaps.mjs";
 
 export function coverageGap(reason, extras = {}) {
   return {
@@ -29,11 +31,13 @@ export function coverageGap(reason, extras = {}) {
   };
 }
 
-function observationAttached(directory, { reused = false } = {}) {
+// `notifies` is the host session that receives this observer's events.
+function observationAttached(directory, { reused = false, notifies } = {}) {
   return {
     state: reused ? "reused" : "attached",
     directory,
     reused,
+    ...(notifies && { notifies }),
   };
 }
 
@@ -67,15 +71,13 @@ const retainedStreamGaps = {
 };
 
 // Classifies the stream a Codex coordinator retained, with the `gap` to
-// report when `command` cannot use it. The owner is computed from
-// `ownerRoot`, which may outlive the checkout `root` the stream was armed in.
+// report when `command` cannot use it.
 export function retainedStream({
   repo,
   branch,
   coordinator,
   observerDirectory,
   root,
-  ownerRoot = root,
   storage,
   command = "deliver",
 }) {
@@ -98,7 +100,7 @@ export function retainedStream({
   }
   const stream = classifyRetainedStream({
     directory: observerDirectory,
-    owner: codexStreamOwner({ root: ownerRoot, coordinator }),
+    owner: codexStreamOwner({ root, coordinator }),
     ...target,
     root,
     storage,
@@ -119,16 +121,6 @@ export function retainedStreamObservation(request) {
   return stream.kind === "live"
     ? observationAttached(stream.directory, { reused: true })
     : stream.gap();
-}
-
-// One coordinator holding several live observers of a target cannot say which
-// one a registration belongs on; none is chosen for it.
-export function ambiguousOwnerReason(
-  { repo, branch },
-  directories,
-  command = "deliver",
-) {
-  return `this coordinator owns ${directories.length} live observers of ${repo} ${branch} (${directories.join(", ")}); keep the one whose directory it retained, stop the others with \`ci-mailbox.mjs stop <directory>\`, and the next ${command} reuses it`;
 }
 
 export async function establishObservation({
@@ -169,16 +161,20 @@ export async function establishObservation({
     root,
     storage,
   });
+  const notifies = eventRecipient({ host, session, env });
   if (owned.kind === "live") {
     return {
-      observation: observationAttached(owned.directory, { reused: true }),
+      observation: observationAttached(owned.directory, {
+        reused: true,
+        notifies,
+      }),
       startReceipt: null,
     };
   }
   if (owned.kind === "ambiguous") {
     return {
       observation: coverageGap(
-        ambiguousOwnerReason({ repo, branch }, owned.directories),
+        ownerGapReason("deliver", { repo, branch, host, owned }),
         { ownership: owned.kind, directories: owned.directories },
       ),
       startReceipt: null,
@@ -232,7 +228,7 @@ export async function establishObservation({
     };
   }
   return {
-    observation: observationAttached(directory),
+    observation: observationAttached(directory, { notifies }),
     startReceipt,
   };
 }

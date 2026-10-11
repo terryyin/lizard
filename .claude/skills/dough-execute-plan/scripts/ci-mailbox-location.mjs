@@ -44,6 +44,16 @@ export function checkoutIdentity(root) {
   return gitCommonDir(root) ?? resolve(root);
 }
 
+// The identity of the checkout that armed a mailbox: the one recorded when it
+// was armed, whatever its path has become since, so the repository's other
+// worktrees still reach the observer after that worktree is removed and
+// another repository created at its path does not. A mailbox that recorded
+// none is identified by the checkout now at its path.
+function armingIdentity(request) {
+  return request.identity ?? checkoutIdentity(request.root);
+}
+
+// `root` is the checkout reading the mailbox.
 export function readMailbox(
   directory,
   root = checkoutRoot,
@@ -58,7 +68,7 @@ export function readMailbox(
   const request = JSON.parse(
     readFileSync(join(directory, "request.json"), "utf8"),
   );
-  if (checkoutIdentity(request.root) !== checkoutIdentity(root))
+  if (checkoutIdentity(root) !== armingIdentity(request))
     throw new Error("CI mailbox belongs to another checkout");
   return request;
 }
@@ -71,7 +81,7 @@ export function createMailbox(
   const directory = mkdtempSync(join(storage, "watch-"));
   writeFileSync(
     join(directory, "request.json"),
-    JSON.stringify({ ...request, root }),
+    JSON.stringify({ ...request, root, identity: checkoutIdentity(root) }),
     { mode: 0o600 },
   );
   mkdirSync(join(directory, "events"), { mode: 0o700 });

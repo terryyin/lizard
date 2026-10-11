@@ -36,7 +36,9 @@ These are not one-shot, even when selected:
 ## Start in an owned workspace
 
 A carried [established one-shot start](established-start.md#continue-an-established-one-shot-start)
-continues there instead of running the start command below.
+continues there instead of running the start command below. In an
+[established session](established-session.md), the start below is given that
+session's workspace and branch, and its `landing` is the landing selection.
 
 Resolve the same execution context as any Story Branch or Trunk Mode start:
 mode, the owned workspace, and the actual remote and trunk branch it starts
@@ -108,7 +110,7 @@ until the developer asks to land the result. The default checkout always stays i
 ## Land the retained result
 
 For automatic or later explicit landing with supplied dashboard context, apply
-[the original launch's landing handoff](../../dough-land/references/dashboard-completion.md#retain-the-one-shot-landing).
+[the original launch's landing handoff](../../dough-land/references/dashboard-completion.md#retain-the-launch-landing).
 
 An explicit landing request in this session, or a later one naming the workspace,
 authorizes [increment publication](trunk-publication.md#publish-an-execution-increment-or-repair)

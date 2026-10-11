@@ -214,40 +214,18 @@ Story Branch Mode continues with integration and resource cleanup below.
 
 ## Integrate committed Story Branch Mode closure
 
-Save the final-closure tip already published on the remote execution branch.
-Follow [Story Branch integration observation](../dough-execute-plan/references/wrap-up-closure-publication.md#observe-story-branch-integration)
-for the target transition, publication, and shared completion on the accepted
-integrated SHA. Its publication uses [Preserve published history](../dough-execute-plan/references/publish-the-candidate.md#preserve-published-history)
-from the owned execution workspace, excluding any default checkout's
-unrelated commits and pending human edit.
-
-When the merge touches the product backlog or its done records, use the owned
-workspace's installed merge adapter as that procedure requires, preserving
-[follow-up priority](references/follow-up-disposition.md#preserve-follow-up-priority-during-reconciliation).
-A stopped result stays as Git left it.
-Resolve it through [a real conflict](../dough-product-backlog/references/merge-conflicts.md#a-real-conflict-resolve-by-hand-then-continue-through-the-same-adapter).
-If the adapter and that reference are unavailable, report the gap and leave the
-conflict. Stop when no coherent resolution is justified. Selected-work cleanup
-alone does not prove a sibling backlog change survived.
-
-Require that procedure's accepted receipt before resource cleanup. The receipt
-is the accepted candidate SHA and the remote trunk ref. A superseded candidate
-is not the receipt. Unresolved integration preserves the execution resources
-and blocks completion. Do not force-push.
-
-After accepted Story Branch supplier integration, [resolve and publish consumers](../dough-product-backlog/references/supplier-dependencies.md#apply-and-publish-a-direct-resolution)
-through the same closure publication/completion procedure before retirement, using
-the resulting accepted SHA and shutdown receipt. Finish or explicitly retain
-unresolved dependency work and evidence in existing active context; report gaps.
+Read and apply [Story Branch integration](references/story-branch-integration.md)
+to the final-closure tip, passing a dashboard landing context supplied to this
+launch, and require its accepted receipt before resource cleanup.
 
 ## Remove execution resources safely
 
 Retirement removes the worktree only when its [creation record](../dough-manual-testing/references/exploration-workspace.md#close-or-retain-it)
 or another record there shows this work created it; pass Dough Land's [Retire the worktree](../dough-land/SKILL.md#retire-the-worktree) ownership facts.
-In Trunk Mode, `finish` retires the worktree and branch, never a remote execution branch, once its completion receipt confirms shutdown;
+In Trunk Mode, `finish` retires the worktree and branch, never a remote execution branch, once its completion receipt holds `success` with confirmed shutdown;
 act on its `cleanup` result there, and after an interruption rerun it as [Finish Trunk Mode closure](../dough-execute-plan/references/wrap-up-closure-publication.md#finish-trunk-mode-closure)
 says. In Story Branch Mode, retire them under that section with `--remote-branch <execution branch>` and `--contained <integrated SHA>`,
-with wrap-up's gate: a completion receipt for the integrated SHA whose shutdown is confirmed, and no
+with wrap-up's gate: a `success` completion receipt for the integrated SHA whose shutdown is confirmed, and no
 active checkout-bound observer still hosting the worktree under [preserve pending local work](../dough-execute-plan/references/maintain-default-checkout.md#preserve-pending-local-work).
 Dough Land's [refresh](../dough-land/SKILL.md#refresh-the-default-checkout) never blocks retirement. Report blocked or
 partial cleanup without repeating already-completed closure. Skip cleanup in direct-current-branch mode.

@@ -1,15 +1,13 @@
 // Settles the final closure for Trunk Mode `finish`. A final closure the
 // target already holds is recognized through resumeInterruptedPublication
-// without a second push, on this execution's own observer that covers it,
-// live or already ended, so completion can be reused or repeated. An
+// without a second push, on the one of this execution's own observers that
+// `closureObservers` selects, so completion can be reused or repeated. An
 // unpublished one is published once through managed delivery with the same
 // owner evidence, rebased when the target moved. A rerun with the original
 // `--final` after `finish` rebased and published it recognizes the rebased
 // closure the target holds and resumes it the same way. Once the execution
 // worktree is gone, only an accepted closure is settled, from the recorded
-// management context and the observer's checkout path.
-import { existsSync, realpathSync } from "node:fs";
-import { basename, dirname, join } from "node:path";
+// management context.
 import { listRegisteredRevisions } from "../../dough-execute-plan/scripts/ci-mailbox-revision-coverage.mjs";
 import { deliverManagedExecutionIncrement } from "../../dough-execute-plan/scripts/execution-increment-delivery.mjs";
 import { observerAdapter } from "../../dough-execute-plan/scripts/execution-increment-resume.mjs";
@@ -27,14 +25,6 @@ const publicationRecoveries = {
   "candidate-mismatch":
     "the branch tip is not --final; commit the final closure or name the branch tip as --final, then rerun finish",
 };
-
-// The canonical checkout path an observer was started for, also after that
-// worktree was removed: its parent still resolves as it did then.
-export function observerRoot(workspace) {
-  return existsSync(workspace)
-    ? realpathSync(workspace)
-    : join(realpathSync(dirname(workspace)), basename(workspace));
-}
 
 // Recognizes the accepted final closure without pushing, registers it on
 // this execution's live observer when that lacks it, and reports that
@@ -63,7 +53,7 @@ async function resumeAcceptedClosure({
     acceptedSha: accepted,
     pushCount: resumed.pushCount,
     observation: found.directory
-      ? { state: "recovered", directory: found.directory, reused: true }
+      ? { state: "recovered", ...found, reused: true }
       : found.gap,
     startReceipt: null,
   };
@@ -157,7 +147,7 @@ async function publishFinalClosure(request) {
 // the unfinished step with nothing pushed or retired.
 export async function settleFinalClosure(request) {
   const { workspace, inspection, tracking, final } = request;
-  const observers = await closureObservers({
+  const observers = closureObservers({
     ...request,
     branch: targetBranchName(request.targetRef),
   });

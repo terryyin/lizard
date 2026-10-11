@@ -26,6 +26,14 @@ export function readCiAdapter(root = process.cwd()) {
   return command;
 }
 
+// The project's CI command as the observer reads it: runs and failures.
+export function createCommandAcquisition(options) {
+  return {
+    acquireRuns: createCommandRunAcquisition(options),
+    acquireFailure: createCommandFailureAcquisition(options),
+  };
+}
+
 export function createCommandRunAcquisition({
   command,
   repo,
@@ -48,7 +56,7 @@ export function createCommandRunAcquisition({
   };
 }
 
-export function createCommandFailureAcquisition({
+function createCommandFailureAcquisition({
   command,
   repo,
   branch,

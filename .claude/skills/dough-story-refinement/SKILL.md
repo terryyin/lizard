@@ -4,9 +4,10 @@ description: >-
   Clarifies selected stories before execution planning by establishing goal,
   scope, and key examples in each story's seed, distinguishing promises from
   rejection constraints. Adds UI or architectural
-  detail only when needed. `--one-shot` refines a queued story without
-  publishing an assignment and keeps the result for review, or lands it with
-  `--auto-land`. Use for
+  detail only when needed. Continues a ready story into slice planning in the
+  same workspace; `--refine-only` stops at the refined story. `--one-shot`
+  refines a queued story without publishing an assignment and keeps the result
+  for review, or lands it with `--auto-land`. Use for
   selected-story refinement, not broad problem decomposition, candidate
   selection, or slice sizing.
 ---
@@ -25,9 +26,10 @@ reconsideration, use
 For smaller or clearer slices, use the project's execution-plan
 refinement workflow on the existing plan.
 
-Refinement alone does not authorize planning or implementation. When the user
-explicitly requests execution planning, hand off one understood story to the
-project's planning workflow and continue without repeating answered questions.
+A refinement invocation authorizes slice planning of its story and landing the
+completed preparation under
+[preparation journey](references/preparation-journey.md); it authorizes no
+execution. Continue into planning without repeating answered questions.
 
 ## Resolve required context
 
@@ -37,7 +39,7 @@ seed directory, ID and filename conventions, required metadata, and stable
 story-anchor convention. Resolve project paths from that repository, not this
 skill's location.
 
-Resolve the execution-planning workflow only for a requested handoff, and ADR
+Resolve the project's slice-planning workflow for the continuation, and ADR
 context only when the architectural concern requires it under the reference
 below. If required context or a linked dependency is unavailable, name what is
 missing and stop the affected activity. Do not invent project paths or decisions.
@@ -69,10 +71,16 @@ them, stop and report the conflict, naming the group's `label` and the flags the
 request named from it. Without options, refine straightforwardly.
 
 Report each selected story under
-[report the refinement outcome](#report-the-refinement-outcome) below.
-Apply the [preparation disposition](references/preparation-disposition.md)
-keep or discard decision, then close or retain the workspace, when this
-session ends.
+[report the refinement outcome](#report-the-refinement-outcome) below, then
+continue a ready story into slice planning under
+[preparation journey](references/preparation-journey.md) unless an open
+coordinator question or an explicit refine-only instruction (`--refine-only`)
+stops it. When this session ends, follow
+[land at the end of preparation](references/preparation-journey.md#land-at-the-end-of-preparation),
+then close or retain the workspace. An execution instruction for this story
+that arrives while its preparation is unlanded follows
+[hand off to execution in the same session](references/preparation-journey.md#hand-off-to-execution-in-the-same-session)
+instead.
 
 ## Report the refinement outcome
 
@@ -90,14 +98,21 @@ another story's open decision stays with that story.
   it, left unobserved and no probe needed.
 - **Needs human engagement** — at least one response from a person is required.
 
-A ready outcome states the outcome, the story link, where the draft is (its
-workspace, and its result commit once committed), and one concrete next step:
-slice planning in that workspace, or, for Flawless, execution with an
-explicit instruction to skip slice planning. When the story already has an
-associated plan, the next step uses that plan instead of creating another.
-Name the pending draft and any
-Preparing assignment as information, not as a request to keep them. Do not
-recap what the seed records, and end without a question or approval request.
+A ready outcome states the outcome, the story link, and where the draft is (its
+workspace, and its result commit once committed). Do not recap what the seed
+records. Then continue into slice planning under
+[preparation journey](references/preparation-journey.md) without a question or
+approval request.
+
+When the invocation ends at the refinement result, on an explicit refine-only
+instruction (`--refine-only`) or under
+[one-shot refinement](references/one-shot-refinement.md), the ready outcome
+also gives one concrete next step: slice planning in that workspace, or, for
+Flawless, execution with an explicit instruction to skip slice planning. When
+the story already has an associated plan, the next step uses that plan instead
+of creating another. Name the pending draft and any Preparing assignment as
+information, not as a request to keep them, and end without a question or
+approval request.
 
 Needs human engagement lists each expected response separately: what must be
 answered or decided, who decides, your recommended answer when you have one,

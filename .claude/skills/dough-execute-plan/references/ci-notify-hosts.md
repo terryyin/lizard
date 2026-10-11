@@ -76,15 +76,24 @@ The mailbox is claimed by checkout, host, conversation, and worker identity.
 A Git worktree of the same repository counts as the same checkout for that
 claim when each path is its Git toplevel and both share
 `git rev-parse --git-common-dir`; an unrelated repository remains another
-checkout. Probe and start still use the execution checkout's own installed
+checkout. An observer keeps the identity of the worktree that armed it after
+that worktree is removed, so the repository's other worktrees still reach it
+with the mailbox commands. Probe and start still use the execution checkout's own installed
 runtime. Cursor additionally binds to the coordinator's `generation_id` because its
 children can share the conversation ID, and `beforeSubmitPrompt` updates that
 binding on a new user message; arbitrary child tool calls cannot rebind it, and
 missing generation identity fails the readiness probe. Claude Code isolates
 instead by `session_id` plus `agent_id`/`subagent_id`, so a sub-agent sharing
-the coordinator's session cannot consume its notification. Keep the same
-coordinator session when resuming; if replacing it, stop the old observers
-using their recorded directories and start new observers in the new session.
+the coordinator's session cannot consume its notification. An observer
+claimed with an `agent_id` belongs to that session and agent:
+`CLAUDE_CODE_SESSION_ID` names the session alone, so `deliver`, `resume`, and
+`finish` reach it only with `--session-json` carrying both.
+
+An observer's events reach only the session that claimed it. Keep the same
+coordinator session when resuming. A session that replaces a coordinator
+stops the old observers using their recorded directories and starts new
+observers in the new session; under managed delivery its next `deliver`
+establishes its own.
 
 Use the same shared mailbox directory for launcher and hooks as specified in
 runtime setup. Mailboxes survive stashing. Use the host's agent message and

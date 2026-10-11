@@ -28,7 +28,8 @@ or confirm the workspace immediately before making it.
 
 When your instruction carries an established preparation, use its workspace and
 skip this selection, as [established preparation](established-preparation.md)
-says.
+says. In an [established session](../../dough-execute-plan/references/established-session.md),
+that reference decides which workspace the announcement or one-shot start is given.
 
 Apply [own a temporary exploration workspace](../../dough-manual-testing/references/exploration-workspace.md)
 "Select the checkout", "Record local checkout role and target selection",
@@ -106,7 +107,7 @@ interruption before a keep or discard decision leaves the draft exactly as it
 is in its owned workspace: nothing is committed, published, or discarded
 merely by pausing. See
 [Decide what happens to the written result](preparation-disposition.md#decide-what-happens-to-the-written-result)
-for what only an explicit instruction can trigger.
+for the decisions that keep or discard it.
 
 On resume, before continuing to write into the workspace, apply [own a
 temporary exploration workspace](../../dough-manual-testing/references/exploration-workspace.md)

@@ -3,10 +3,10 @@
 // accepted: confirm the target holds that commit, publish the committed final
 // closure through managed delivery on this execution's own observer, run
 // completion once for the accepted SHA there, attempt the optional
-// default-checkout refresh, and only after a receipt with confirmed shutdown
-// retire the worktree and branch through Dough Land's retirement core. Any
-// stop preserves the worktree, branch, and both closure commits and names the
-// unfinished step.
+// default-checkout refresh, and only after a `success` receipt with confirmed
+// shutdown retire the worktree and branch through Dough Land's retirement
+// core. Any stop preserves the worktree, branch, and both closure commits and
+// names the unfinished step.
 // A rerun continues from the first unfinished step: an accepted final closure
 // is not pushed again, and once the worktree is gone the recorded management
 // context (`--repository`) carries completion and cleanup.
@@ -15,6 +15,7 @@ import { resolve } from "node:path";
 import { completeRevision } from "../../dough-execute-plan/scripts/ci-mailbox-complete.mjs";
 import { mailboxRoot } from "../../dough-execute-plan/scripts/ci-mailbox-location.mjs";
 import { isDirectCliEntry } from "../../dough-execute-plan/scripts/ci-direct-entry.mjs";
+import { withExplicitSession } from "../../dough-execute-plan/scripts/ci-host-bridge.mjs";
 import { refreshDefaultCheckout } from "../../dough-execute-plan/scripts/maintain-default-checkout.mjs";
 import {
   git,
@@ -24,20 +25,18 @@ import {
 } from "../../dough-execute-plan/scripts/publication-git.mjs";
 import { retireWorktree } from "../../dough-land/scripts/worktree-retirement.mjs";
 import { isAncestor } from "../../dough-execute-plan/scripts/workspace-publication-ownership.mjs";
-import {
-  observerRoot,
-  settleFinalClosure,
-} from "./trunk-closure-settlement.mjs";
+import { observerAccess } from "./trunk-closure-observer.mjs";
+import { settleFinalClosure } from "./trunk-closure-settlement.mjs";
 
+const resourcesStay =
+  "the worktree and branch stay until a success receipt confirms shutdown";
 const recoveries = {
   "before-cleanup":
     "publish the before-cleanup commit through deliver until it is accepted, then rerun finish",
   context:
     "rerun finish with --repository set to the management context an earlier finish result reported",
-  observation:
-    "rerun finish with the owner input observation.reason names, or report the lost coverage; the worktree and branch stay until a completion receipt confirms shutdown",
-  completion:
-    "report the completion receipt; the worktree and branch stay for diagnosis or a later completion",
+  observation: `follow observation.reason and rerun finish, or report the lost coverage; ${resourcesStay}`,
+  completion: `report the completion receipt; ${resourcesStay}. For a receipt with no verdict, rerun finish to repeat completion on this coordinator's observer, or report the closure's coverage as lost`,
 };
 
 function stop(step, detail) {
@@ -50,11 +49,12 @@ function stop(step, detail) {
   };
 }
 
-// A receipt permits retirement only when it is not a CI failure and its
-// observer shutdown is confirmed; failure and retained observation keep all.
+// A receipt permits retirement only when it holds a `success` verdict and its
+// observer shutdown is confirmed; a failure, an unresolved receipt, and
+// retained or unconfirmed shutdown keep all.
 function receiptPermitsRetirement(completion) {
   return (
-    completion?.verdict !== "failure" &&
+    completion?.verdict === "success" &&
     completion?.shutdown?.status === "confirmed"
   );
 }
@@ -99,7 +99,7 @@ export async function finishTrunkClosure({
       reason: `${tracking} does not contain the before-cleanup commit`,
     });
   }
-  const root = observerRoot(workspace);
+  const root = await observerAccess(workspace, repository);
   const published = await settleFinalClosure({
     workspace,
     inspection,
@@ -212,11 +212,7 @@ function argumentsOf(argv) {
     }
   }
   targetBranchName(result.targetRef);
-  if (result.sessionJson) {
-    result.session = JSON.parse(result.sessionJson);
-    delete result.sessionJson;
-  }
-  return result;
+  return withExplicitSession(result);
 }
 
 if (isDirectCliEntry(import.meta.url, process.argv[1])) {

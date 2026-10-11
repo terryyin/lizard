@@ -103,56 +103,57 @@ node <installed>/dough-execute-plan/scripts/execution-increment-delivery.mjs del
 
 Story Branch Mode passes `--mode story-branch` with
 `--target-ref refs/heads/<execution branch>`. Trunk Mode passes `--mode trunk`
-with `--target-ref refs/heads/<trunk>`. Caller-selected current-branch work
-and host-owned execution have no established start; they pass `--mode trunk`
-with their caller's authorized target. A one-shot landing follows
+with `--target-ref refs/heads/<trunk>`. Caller-selected current-branch work and
+host-owned execution have no established start; they pass `--mode trunk` with
+their caller's authorized target. A one-shot landing follows
 [Land the retained result](one-shot.md#land-the-retained-result). That
 operation owns runtime resolution, observer establish/reuse, the
 [publish the candidate](publish-the-candidate.md#publish-the-candidate) Git
 sequence, and exact-revision registration. A claim uses the execution workspace
-selected before its commit; other publications retain theirs. Do not invent a
-second publication sequence or a manual `register-push` after managed delivery.
+selected before its commit; other publications retain theirs.
 
 Run `deliver` through the coordinator's own Bash or Shell tool so the observer
-belongs to the session that will receive CI events. On Claude Code,
-`--host claude` takes that coordinator's identity from its
-`CLAUDE_CODE_SESSION_ID`; do not probe, start, or build session JSON for it.
-On Cursor, `--host cursor` takes that coordinator's identity from its
-`CURSOR_CONVERSATION_ID` in the same way.
-An explicit `--session-json` stays authoritative when a caller must name a
-different owner, and malformed session JSON stops delivery instead of falling
-back to another identity. That identity selects the observer: every increment
-and repair reuses the live observer this coordinator claimed, from any
-worktree of the repository, and a coordinator without one establishes its
-own. Observers other coordinators hold for the same repository and target
-stay theirs. If no identity is available, the receipt reports an
-unobserved coverage gap naming the missing source while publication acceptance
-stands; the next `deliver` from the coordinator's own tool, or with its
-`--session-json`, attaches observation without a manual observer start. If
-this coordinator holds more than one live observer of the target, the receipt
-reports an `ambiguous` gap naming their directories: keep the one this
-execution retained, [stop](ci-notify-hosts.md#stop-for-cancellation) the
-others, and the next `deliver` reuses it.
-On Codex, the yielded stream armed at execution start under
-[ci-notify-codex.md](ci-notify-codex.md) is the observer of every increment
-and repair: pass `--host codex` with the observer note's coordinator as
-`--coordinator` and its exact stream directory as `--observer-directory`.
+belongs to the session that will receive CI events. `--host claude` takes that
+coordinator's identity from its `CLAUDE_CODE_SESSION_ID` and `--host cursor`
+from its `CURSOR_CONVERSATION_ID`; do not probe, start, or build session JSON
+for it. `--session-json` names that same coordinator from a call that lacks its
+identity, with its `session_id` on Claude Code or its `conversation_id` on
+Cursor. On Claude Code that variable names the session alone; an observer
+claimed with an `agent_id` belongs to that session and agent, and only
+`--session-json` with both names its owner to `deliver`, `resume`, and
+`finish`. Explicit session JSON is authoritative, and malformed session JSON
+stops delivery instead of falling back to another identity. That identity
+selects the observer: every increment and repair reuses the live observer this
+coordinator claimed, from any worktree of the repository, and a coordinator
+without one establishes its own. Observers other coordinators hold for the same
+repository and target stay theirs. The receipt's `observation.notifies` names
+the owning session, the only session whose tool calls receive that observer's
+events, and the input that named it. A session that replaces a coordinator
+[stops](ci-notify-hosts.md#stop-for-cancellation) the earlier observer by its
+recorded directory, and its next `deliver` establishes its own. If no identity
+is available, the receipt reports an unobserved coverage gap naming the missing
+source while publication acceptance stands; the next `deliver` from the
+coordinator's own tool, or with its `--session-json`, attaches observation
+without a manual observer start. If this coordinator holds more than one live
+observer of the target, the receipt reports an `ambiguous` gap naming their
+directories: keep the one this execution retained,
+[stop](ci-notify-hosts.md#stop-for-cancellation) the others, and the next
+`deliver` reuses it. On Codex, the yielded stream armed at execution start
+under [ci-notify-codex.md](ci-notify-codex.md) is the observer of every
+increment and repair: pass `--host codex` with the observer note's coordinator
+as `--coordinator` and its exact stream directory as `--observer-directory`.
 Only that stream receives the registration, from any worktree of the
 repository. Without both inputs, or when the directory is not this
 coordinator's live stream of the target, the receipt reports an unobserved gap
 naming the input to supply while publication acceptance stands; the next
 `deliver` with the retained inputs, after arming when no stream is retained,
-registers on it.
-A pre-rebase unpublished SHA is not the receipt. After confirmation of a
-publication whose target is remote trunk, attempt a refresh under
-[Refresh eligibility](maintain-default-checkout.md#refresh-eligibility).
-A publication whose target is the remote execution branch does not refresh
-the default checkout. Report the publication acceptance, observation result,
-and any
-[maintenance result](maintain-default-checkout.md#independent-maintenance-outcome)
-separately. An
-unavailable bridge is a coverage gap on the delivery receipt, not a reason to
-undo acceptance.
+registers on it. A pre-rebase unpublished SHA is not the receipt. After
+confirmation of a publication whose target is remote trunk, attempt a refresh
+under [Refresh eligibility](maintain-default-checkout.md#refresh-eligibility).
+A publication whose target is the remote execution branch does not refresh the
+default checkout. Report separately the publication acceptance, observation
+result, and any
+[maintenance result](maintain-default-checkout.md#independent-maintenance-outcome).
 
 Retain each pre-push candidate with its actual `suffixBase`, as
 [candidate step 5](publish-the-candidate.md#publish-the-candidate) requires.
@@ -181,19 +182,16 @@ domain knowledge applies only when that adapter is unavailable.
 
 ## Resume an interrupted publication
 
-After interruption during a claim's publication or an increment or
-repair publication, apply
+After interruption during a claim's publication or an increment or repair
+publication, apply
 [publish the candidate's resume](publish-the-candidate.md#resume-an-interrupted-publication)
-against that publication's authorized remote target.
-The owned suffix is a claim or an increment, using whichever execution
-resources actually exist for this publication. Continue only the first
-unfinished obligation that resume names. Do not duplicate the commit, push
-an already-published candidate, or replace the execution worktree. The claim
-uses the workspace selected before its commit, as
-[Publish the candidate](#publish-the-candidate) already states for that case.
-After that publication obligation is accepted, apply the refresh rule in
-[Publish the candidate](#publish-the-candidate). The resume classification
-itself still only inspects the checkout.
+against that publication's authorized remote target. The owned suffix is a
+claim or an increment, using whichever execution resources actually exist for
+this publication. Continue only the first unfinished obligation that resume
+names. Do not duplicate the commit, push an already-published candidate, or
+replace the execution worktree. After that publication obligation is accepted,
+apply the refresh rule in [Publish the candidate](#publish-the-candidate). The
+resume classification itself still only inspects the checkout.
 
 For managed increment recovery, run the installed resume command from the
 owned workspace with the candidate and base retained together before push and
@@ -220,19 +218,21 @@ registration: a published SHA absent from the existing observer's coverage or
 before any observer is armed there is unobserved coverage, not a missing
 registration; see [Own one observer](ci-monitor.md#own-one-observer).
 
-Resume verifies remote acceptance, pushes only a candidate the remote lacks, and
-registers the accepted SHA once on this coordinator's live observer. Keep
-that owner input for the whole execution. On Claude Code and Cursor, run it
-through the coordinator's own Bash or Shell tool, or pass the `--session-json`
-that names the session whose observer this execution retained; malformed
-session JSON stops resume. On Codex, pass the observer note's coordinator and
-exact stream directory. Resume starts no observer and registers on no other
-coordinator's observer. When this coordinator's observer is absent, ended,
-lost, or one of several, or its owner input is missing, the receipt keeps
-`publication: "accepted"` beside an unobserved `observation` whose `ownership`
-and `reason` name that state and the input or step that recovers it: report
-the coverage gap with the publication, follow that step, and rerun the same
-resume to register the SHA.
+Resume verifies remote acceptance, pushes only a candidate the remote lacks,
+and registers the accepted SHA once on this coordinator's live observer. Keep
+that owner input for the whole execution: on Claude Code and Cursor the
+coordinator's own Bash or Shell tool, or from a call that lacks its identity
+the `--session-json` `deliver` takes for this same coordinator, with the
+`agent_id` its observer was claimed with; on Codex the note's coordinator and
+exact stream directory. Malformed session JSON stops resume. Resume starts no
+observer and registers on no other coordinator's observer. When this
+coordinator's observer is absent, ended, lost, or one of several, or its owner
+input is missing, the receipt keeps `publication: "accepted"` beside an
+unobserved `observation` whose `ownership` and `reason` name that state and the
+input or step that recovers it: report the coverage gap with the publication,
+follow that step, and rerun the same resume. A session that replaces the
+coordinator [stops](ci-notify-hosts.md#stop-for-cancellation) the recorded
+observer, its `deliver` establishes its own, and it reruns the same resume.
 
 Workspace or environment-preparation failure after a confirmed claim
 publication keeps that published SHA and reuses the claim and any verified

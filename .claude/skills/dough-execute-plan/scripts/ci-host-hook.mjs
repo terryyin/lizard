@@ -29,7 +29,9 @@ const emptySelection = () => ({ output: {}, acknowledge: () => undefined });
 const isHostStop = (input) =>
   input.hook_event_name === "Stop" || input.hook_event_name === "stop";
 
-const isDiscoveryAdvisory = (event) => event.type === "CI_DISCOVERY_DELAYED";
+// Informational records: neither alone holds a stopping host for a turn.
+const isAdvisory = (event) =>
+  ["CI_DISCOVERY_DELAYED", "CI_MONITOR_THROTTLED"].includes(event.type);
 
 const lostWorkerMessage = (directory, lost) =>
   `CI observer lost its worker for this coordinator: ${directory} (${lost.coverage.reason})`;
@@ -147,7 +149,7 @@ export function selectCiEvents(
   const skipAdvisoriesOnStop =
     isHostStop(input) &&
     undelivered.length > 0 &&
-    undelivered.every(({ event }) => isDiscoveryAdvisory(event));
+    undelivered.every(({ event }) => isAdvisory(event));
 
   if (!skipAdvisoriesOnStop) {
     for (const { directory, records } of mailboxDeliveries) {

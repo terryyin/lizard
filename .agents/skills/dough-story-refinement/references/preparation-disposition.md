@@ -21,14 +21,33 @@ workspace for the developer's review by default. Do not commit it to a
 shared or host checkout or publish it merely because the write finished.
 Treat a "quick" or already-decided edit the same way — it is not
 authorization to skip this step.
-These explicit developer decisions change that default:
+These decisions change that default:
 
-- **An explicit instruction to keep this preparation's retained result**
-  authorizes landing it from the owned workspace onto the authorized remote
-  target through
+- **A keep of this preparation's retained result** authorizes landing it from
+  the owned workspace onto the authorized remote target through
   [Keep and publish the retained result](#keep-and-publish-the-retained-result)
-  below. Only an explicit instruction counts as keep: continuing discussion,
-  pausing for more review, or silence is never a keep decision.
+  below. Four sources supply a keep instruction, each with the candidate
+  check its landing runs:
+  - an explicit instruction to keep the result. Candidate check: `release`
+    staging when this session announced an assignment, or `recheck` for a
+    one-shot result;
+  - the preparation journey's default,
+    [land at the end of preparation](preparation-journey.md#land-at-the-end-of-preparation),
+    for a queued story's announced preparation that ends with no open
+    coordinator question and no opt-out. Candidate check: `release` staging;
+  - one-shot refinement's selected
+    [automatic landing](one-shot-refinement.md#land-automatically-when-selected)
+    (`--auto-land`). Candidate check: `recheck`, with no assignment to
+    release;
+  - the execution handoff,
+    [hand off to execution in the same session](preparation-journey.md#hand-off-to-execution-in-the-same-session),
+    for an execution instruction in the session that holds the story's
+    Preparing workspace with unlanded preparation. Candidate check: `release`
+    staging. The workspace is not retired and the landing has no final
+    operation of its own: execution continues there.
+
+  Continuing discussion, pausing for more review, or silence is never a keep
+  decision.
 - **An explicit instruction to leave the result unpublished** is preserved and
   overrides any default publication. The record stays in the owned workspace
   exactly as the developer left it; this reference performs no additional
@@ -37,10 +56,10 @@ These explicit developer decisions change that default:
   it. Say so when reporting.
 - **An explicit instruction to discard an identified draft** removes that
   specific session-owned content, under
-  [Discard an identified draft](#discard-an-identified-draft) below. The same
-  rule that governs keep governs discard: only an explicit instruction that
-  identifies what to discard counts. Continuing discussion, pausing, going
-  quiet, or the session simply ending is never a discard decision, exactly as
+  [Discard an identified draft](#discard-an-identified-draft) below. Only an
+  explicit instruction that identifies what to discard counts. Continuing
+  discussion, pausing, going quiet, or the session simply ending is never a
+  discard decision, exactly as
   none of those is ever a keep decision. Discarding a draft does not by itself
   end a published preparation assignment.
 - **An explicit instruction to abandon preparing the story** (stop preparing
@@ -50,7 +69,7 @@ These explicit developer decisions change that default:
   It keeps the story queued and the draft recoverable; discarding the draft
   too needs its own identification, as above.
 
-Absent an explicit instruction, continue leaving the draft isolated: no
+Absent one of these decisions, continue leaving the draft isolated: no
 commit, integration, publication, or removal happens under this reference.
 The draft stays recoverable in the owned workspace, and the result states
 that pending disposition.
@@ -64,7 +83,9 @@ target in
 workspace](preparation-workspace.md#select-or-reuse-the-workspace) — to see
 what changed while paused, or to inform a discussion with the developer —
 without that inspection itself becoming an integration or a keep decision.
-Looking is not deciding: only an explicit keep instruction, validated under
+Looking is not deciding: only a keep from one of the sources in
+[Decide what happens to the written result](#decide-what-happens-to-the-written-result),
+validated under
 [Validate a keep instruction before acting](#validate-a-keep-instruction-before-acting)
 immediately below, enters
 [Keep and publish the retained result](#keep-and-publish-the-retained-result).
@@ -105,7 +126,7 @@ guess a destination or assume "the usual place."
 
 ## Keep and publish the retained result
 
-After a validated explicit keep instruction, when this session announced a
+After a validated keep instruction, when this session announced a
 preparation assignment, first stage its release in the owned workspace under
 [Release it with the kept result](preparation-assignment.md#release-it-with-the-kept-result).
 A stop there leaves the result and the assignment unchanged: report it and do

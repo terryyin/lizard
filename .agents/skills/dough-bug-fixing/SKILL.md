@@ -33,15 +33,15 @@ because the instruction contains the word "fix".
 ## Admit the accepted mission
 
 Asking questions to understand the report is not a mission. Once the
-instruction accepts diagnosing a report that is not known larger work (see
-[Route remaining work](#route-remaining-work)),
+instruction accepts diagnosing a report that is not known larger work (see [Route remaining work](#route-remaining-work)),
 [admit it](../dough-execute-plan/references/admit-accepted-work.md) before
 investigation, unless it explicitly selects [one-shot work](../dough-execute-plan/references/one-shot.md);
 a discrepancy found inside an active story returns its evidence to that story's
 owner instead. Its story's Goal is resolving the reported discrepancy, its
 expectations are the gathered report below, and its approach is `planless` when
 the instruction also authorizes the bounded repair, otherwise `unselected`. That
-reference owns its checkout, refusals, continuation, and closure.
+reference owns its checkout, refusals, continuation, and closure; an
+[established session](../dough-execute-plan/references/established-session.md) decides the workspace of that admission or one-shot start.
 
 ## Gather the report
 

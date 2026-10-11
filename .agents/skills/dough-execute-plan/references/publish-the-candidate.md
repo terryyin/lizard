@@ -17,6 +17,10 @@ semantics, or CI-observer policy. [Trunk publication](trunk-publication.md) is
 names the suffix, workspace, and authorized remote target, then uses the
 sequence below.
 
+A caller integrating an already-published tip keeps both published histories
+through [Preserve published history](preserve-published-history.md) instead of
+rebasing that tip.
+
 ## Preconditions
 
 Resolve the owned workspace, the authorized remote target, and the owned
@@ -44,35 +48,12 @@ Those checks do not gate a remote push from a separate owned workspace. A
 maintenance stop does not register a publication the remote has not accepted,
 and does not undo one it has.
 
-## Preserve published history
-
-The sequence below rebases an unpublished suffix. A caller integrating an
-already-published tip supplies that tip instead of a suffix. In the owned
-workspace, merge it onto the fetched authorized target. Fast-forward when
-that tip already contains the fetched target; otherwise create a merge
-commit so both published histories remain. Do not rebase those published
-commits. When [agent commits](agent-commits.md) apply to that workspace, the
-merge commit is one: for example, run
-`git merge --no-ff --no-commit <published-tip>`, then commit the in-progress
-merge through `agent-commit.mjs`; `-F "$(git rev-parse --git-path MERGE_MSG)"`
-keeps Git's prepared message. When the merge
-touches the product backlog or the done records beside it, run
-`product-backlog-git-merge.mjs merge --ref <published-tip> --cwd <owned-workspace>`
-rather than a raw `git merge`, following
-[reconcile product backlog Git operations](../../dough-product-backlog/references/merge-conflicts.md);
-it credits its merge commit the same way.
-Push, confirmation, and the receipt stay the candidate SHA and its target.
-A rejected push recomputes this merge once onto the newly fetched target
-and pushes once. A superseded candidate is not the receipt. Resume treats
-an ancestor of the fetched target as already accepted and does not merge
-or push again.
-
 ## Publish the candidate
 
-Apply [Preconditions](#preconditions) before this sequence. For an established
-one-shot launch with supplied dashboard landing context, wire that context into
-the installed publisher before step 5 under the shared
-[landing handoff](../../dough-land/references/dashboard-completion.md#retain-the-one-shot-landing).
+Apply [Preconditions](#preconditions) before this sequence. When it first lands
+a launch's work on trunk and that launch supplied a dashboard landing context,
+wire that context into the installed publisher before step 5 under the shared
+[landing handoff](../../dough-land/references/dashboard-completion.md#retain-the-launch-landing).
 It retains each final pair before push and captures accepted evidence at step 6;
 a later explicit landing uses the original launch's context.
 
@@ -86,7 +67,7 @@ a later explicit landing uses the original launch's context.
    [preserve pending local work](maintain-default-checkout.md#preserve-pending-local-work)
    instead of guessing which commit to publish.
 3. An unpublished suffix follows this step. An already-published tip follows
-   [Preserve published history](#preserve-published-history) instead of this
+   [Preserve published history](preserve-published-history.md) instead of this
    rebase. When the fetched authorized remote target is still the previously published
    base, or that target ref does not exist yet, leave the suffix unchanged.
    When that target advanced, rebase only that suffix onto the fetched target

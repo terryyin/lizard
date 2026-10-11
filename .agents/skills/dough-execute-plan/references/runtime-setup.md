@@ -58,15 +58,16 @@ them in any project tooling wrapper):
 
 | Variable | Meaning |
 | --- | --- |
-| `DOUGH_CI_WORKFLOW` | GitHub default only: workflow filename or ID accepted by `gh run list --workflow`; it alone selects the observed workflow, whatever its display name; default `ci.yml` must be verified |
+| `DOUGH_CI_WORKFLOW` | GitHub default only: workflow filename or numeric ID; it alone selects the observed workflow, whatever its display name; default `ci.yml` must be verified |
 | `DOUGH_CI_WORKFLOW_NAME` | GitHub default only, optional, no default: the selected workflow's exact display name, as a consistency check; a selected run reporting another name ends observation with `CI_MONITOR_UNAVAILABLE` |
 | `DOUGH_CI_MAILBOX_ROOT` | Optional private shared mailbox directory; default `/tmp/dough-ci-$UID` |
+| `DOUGH_GITHUB_REQUEST_OWNER_ROOT` | GitHub default only, optional: private directory, writable by the observer, through which this user's observers and dashboards asking with one `gh` host and login share one GitHub request owner and its rate-limit wait; default `/tmp/dough-github-requests-$UID`. Where it cannot be written, each request fails as `gh failed` without asking GitHub |
 
 The branch is a required positional argument for the authorized target, never
 an inferred `main` or the execution branch name.
 Verify the GitHub selector with
-`gh run list --repo OWNER/REPO --workflow SELECTOR --branch BRANCH --event push --limit 1 --json workflowName`:
-an unknown selector fails, and a returned run shows the display name to use if
+`DOUGH_CI_WORKFLOW=SELECTOR node '/ABSOLUTE/RESOLVED/SKILL/scripts/ci-github-diagnostic.mjs' workflow OWNER/REPO`:
+an unknown selector fails, and the printed `name` is the display name to use if
 you set `DOUGH_CI_WORKFLOW_NAME`. Record the selected source and, for GitHub,
 the verified workflow selector (and display name, when set) with the
 observer identity in the active plan for planned execution or in the
@@ -93,7 +94,9 @@ node '/ABSOLUTE/RESOLVED/SKILL/scripts/ci-mailbox.mjs' \
 
 The optional final budget argument is milliseconds; default is eight hours.
 Requests time out after 20 seconds, and three consecutive observation errors
-end coverage. Registering a pushed revision makes the observer check at once;
+end coverage. A wait GitHub directs for a rate limit, met by this observer or
+by another process sharing its request owner, is not an observation error: the observer emits one `CI_MONITOR_THROTTLED` record, asks GitHub
+nothing until the directed time, and resumes within the same budget. Registering a pushed revision makes the observer check at once;
 otherwise polls are 30 seconds apart. Discovery is bounded to 100 startup
 runs and 20 per later poll, retaining already seen unfinished runs. Report this
 limit when a busy repository requires coverage beyond those bounds.

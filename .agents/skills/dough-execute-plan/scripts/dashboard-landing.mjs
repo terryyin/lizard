@@ -8,6 +8,10 @@ import {
   loopbackReportingOrigin,
 } from "./dashboard-completion.mjs";
 const commit = /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/;
+// A launch with no story supplies a context naming no identity; its landing
+// is kept by its launch reference alone. A caller reads this before handing
+// such a context to this installation.
+export const acceptsLandingWithoutIdentity = true;
 function validate(submission) {
   const allowed = new Set([
     "origin",
@@ -24,7 +28,10 @@ function validate(submission) {
   if (Object.keys(submission).some((key) => !allowed.has(key)))
     throw new Error("The retained landing is malformed.");
   for (const key of allowed)
-    if (typeof submission[key] !== "string" || !submission[key])
+    if (
+      (key !== "identity" || submission[key] !== undefined) &&
+      (typeof submission[key] !== "string" || !submission[key])
+    )
       throw new Error(`Missing landing ${key}.`);
   if (
     !["claude", "codex", "cursor"].includes(submission.host) ||

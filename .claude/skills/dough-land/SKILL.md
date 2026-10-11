@@ -44,7 +44,9 @@ Resolve both before any commit:
   Ownership comes from
   that context or the worktree's
   [creation record](../dough-manual-testing/references/exploration-workspace.md#close-or-retain-it);
-  do not infer it from a clean directory.
+  do not infer it from a clean directory. In an
+  [established session](../dough-execute-plan/references/established-session.md),
+  the session's block names this checkout, its role, starting revision, and target.
 - **Default checkout.** The project's established checkout for ordinary work,
   when the context supplies one; the refresh step inspects it. Landing needs no
   default checkout. When the landing checkout is a worktree, the default
@@ -91,8 +93,8 @@ never adds or removes an assignment profile.
 
 ## Publish
 
-With the original one-shot launch's supplied dashboard landing context, use the
-[launch-bound handoff](references/dashboard-completion.md#retain-the-one-shot-landing)
+With the original launch's supplied dashboard landing context, use the
+[launch-bound handoff](references/dashboard-completion.md#retain-the-launch-landing)
 for publication and resume. Record its accepted comparison before refresh or
 retirement; reporting failure leaves Git acceptance accepted and retries only evidence.
 

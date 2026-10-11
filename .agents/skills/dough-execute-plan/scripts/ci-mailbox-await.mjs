@@ -46,6 +46,21 @@ function effectiveCoverage(coverage) {
   return { evidence };
 }
 
+// The CI verdict `directory`'s own record already holds for `sha`, which
+// awaiting it there returns whether or not its observer still runs. Undefined
+// while the record holds none: nothing yet, or an attempt that was cancelled.
+export function recordedVerdict(directory, sha) {
+  let coverage;
+  try {
+    coverage = readRevisionCoverage(directory).find(
+      (revision) => revision.sha === sha.toLowerCase(),
+    );
+  } catch {
+    return undefined;
+  }
+  return coverage && effectiveCoverage(coverage).outcome?.verdict;
+}
+
 function terminalObservation(directory) {
   const path = join(directory, "result.json");
   if (!existsSync(path)) return;

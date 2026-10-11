@@ -7,7 +7,9 @@ Work already queued starts as queued work; work already Taken continues under
 its existing claim. A mission explicitly selected as
 [one-shot work](one-shot.md) is not admitted unless it
 [grows](one-shot.md#escalate-when-the-work-grows): `--carry` then admits it
-with its edits, a queued story included.
+with its edits, a queued story included. In an
+[established session](established-session.md), that command is given the
+workspace and branch that reference decides.
 
 ## Decide whether a mission was accepted
 
