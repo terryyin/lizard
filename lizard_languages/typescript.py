@@ -15,6 +15,9 @@ TEMPLATE_LITERAL = (
     r"|[^{}\"'`])*\}|[^`\\])*`"
 )
 
+# One token, so each ? in ?? is not its own ternary decision.
+NULLISH_COALESCING = r"|(?:\?\?)"
+
 
 class Tokenizer(object):
     def __init__(self):
@@ -62,7 +65,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
 
     # Separated condition categories
     _control_flow_keywords = {'if', 'elseif', 'for', 'while', 'catch'}
-    _logical_operators = {'&&', '||'}
+    _logical_operators = {'&&', '||', '??'}
     _case_keywords = {'case'}
     _ternary_operators = {'?'}
 
@@ -120,8 +123,10 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
             # Always yield closing quote
             yield quote
 
-        # Private method (#), dollar ($), optional chaining (?), template literals
-        addition = addition + r"|(?:#\w+)" + r"|(?:\$\w+)" + r"|(?:\w+\?)" + r"|" + TEMPLATE_LITERAL
+        # Private method (#), dollar ($), optional name (?), nullish (??),
+        # template literals.
+        addition = (addition + r"|(?:#\w+)" + r"|(?:\$\w+)" + r"|(?:\w+\?)"
+                    + NULLISH_COALESCING + r"|" + TEMPLATE_LITERAL)
         for token in CodeReader.generate_tokens(source_code, addition, token_class):
             if (
                 isinstance(token, str)

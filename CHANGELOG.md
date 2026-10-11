@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Bug Fixes
+- JavaScript, TypeScript, JSX, and TSX: count each `??` and `??=` as +1 CCN; existing scores may decrease (issue #507)
 - JavaScript, TypeScript, JSX, and TSX: count each default parameter and destructuring initializer as +1 CCN, including nested defaults; existing scores and threshold warnings may increase (issue #509)
 - Swift: stop `.init(`, `self.init(`, `.get()`, `.set(`, variables named `set`, and argument labels such as `init:` from starting phantom functions that swallowed the following functions
 - Swift: recognize argument labels such as `init:` and `for:` when a newline or comment separates them from `(` or `,`

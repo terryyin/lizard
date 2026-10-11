@@ -148,6 +148,21 @@ class Test_JavaScript_default_initializers(unittest.TestCase):
                                   for f in functions])
 
 
+class Test_JavaScript_nullish_coalescing(unittest.TestCase):
+    def test_nullish_operators_count_once(self):
+        code = (
+            'function h(a, b, c) { return (a && b) ?? c ?? 0; }\n'
+            'function g(o) { o.c ??= 3; return o; }\n'
+            'function t(a, b, c) { return a ?? b ? c : 0; }\n'
+        )
+        expected = [('h', 4), ('g', 2), ('t', 3)]
+        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+            with self.subTest(filename=filename):
+                functions = analyze_file.analyze_source_code(
+                    filename, code).function_list
+                self.assertEqual(expected, [(f.name, f.cyclomatic_complexity)
+                                            for f in functions])
+
 
 class Test_tokenizing_JavaScript(unittest.TestCase):
 
