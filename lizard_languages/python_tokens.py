@@ -21,7 +21,7 @@ def generate_tokens(source_code, addition='', token_class=None):
     # '//' is the floor division operator, not the start of a comment.
     tokens = CodeReader.generate_tokens(
         source_code,
-        r"|#[^\n]*|//=?" + _PY_TRIPLE_QUOTE + addition,
+        r"|\#[^\n]*|//=?" + _PY_TRIPLE_QUOTE + addition,
         token_class)
     return _expand_fstring_interpolations(tokens, token_class)
 

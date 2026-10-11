@@ -6,8 +6,10 @@ from .testPython import get_python_function_list
 
 class Test_tokenizer_for_Python(unittest.TestCase):
     def test_comment_with_quote(self):
-        tokens = PythonReader.generate_tokens("#'\n''")
-        self.assertEqual(["#'", "\n", "''"], list(tokens))
+        for addition in ('', '(?x)'):
+            with self.subTest(addition=addition):
+                tokens = PythonReader.generate_tokens("#'\n''", addition)
+                self.assertEqual(["#'", "\n", "''"], list(tokens))
 
     def test_multiline_string_tokens(self):
         code = '''"""First line
