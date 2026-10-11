@@ -155,6 +155,8 @@ class TypeScriptStates(CodeStateMachine):
         self._prev_token = ''  # Track previous token to detect method calls
         self._in_prop_value = False  # Track if inside property value (after ':')
         self._in_abstract_context = False  # Track abstract method declarations
+        self._expression_body = False  # Inside `=> expression`
+        self._arrow_line = None
 
     def statemachine_before_return(self):
         # Ensure the main function is closed at the end
@@ -353,6 +355,7 @@ class TypeScriptStates(CodeStateMachine):
         elif token in ('else', 'do', 'try', 'final'):
             self.next(self._expecting_statement_or_block)
         elif token in ('=>',):
+            self._arrow_line = self.context.current_line
             self._state = self._arrow_function
         elif token == '=':
             # Only set function_name for valid identifiers
@@ -408,8 +411,13 @@ class TypeScriptStates(CodeStateMachine):
                 self._consume_type_annotation()
                 self._prev_token = token
                 return
-        if self.as_object and token == ',':
-            self._in_prop_value = False
+        if token == ',':
+            if self._expression_body:
+                # An expression-bodied arrow ends with its property or
+                # argument: `{a: () => f(), b}`, `g(() => f(), b)`.
+                self._pop_function_from_stack()
+            if self.as_object:
+                self._in_prop_value = False
         self.last_tokens = token
         # Don't overwrite _prev_token if it's 'new' or '.' (preserve for next token)
         if self._prev_token not in ('new', '.'):
@@ -462,11 +470,16 @@ class TypeScriptStates(CodeStateMachine):
         if self.started_function:
             self.context.end_of_function()
         self.started_function = None
+        self._expression_body = False
         self._in_prop_value = False
 
     def _arrow_function(self, token):
         if not self.started_function:
             self._push_function_to_stack()
+            if self.started_function:
+                # The body may start on the next line: `(e) =>\n  f(e)`.
+                self.context.current_function.start_line = self._arrow_line
+        self._expression_body = self.started_function and token != '{'
         # Clear function_name so expression-body ( doesn't re-enter _function
         self.function_name = ''
         # Clear modifiers so the body's opening { isn't captured by the
@@ -514,6 +527,9 @@ class TypeScriptStates(CodeStateMachine):
         if token == ')':
             self._state = self._expecting_func_opening_bracket
         elif token != '(':
+            if self.last_token == '(' and self._starts_an_expression(token):
+                self._abandon_parameters(token)
+                return
             # Filter out TypeScript type keywords and operators from parameter count
             if token == ',':
                 # Ignore commas inside generic type brackets: Map<K, V>
@@ -537,6 +553,20 @@ class TypeScriptStates(CodeStateMachine):
                     self.context.parameter(token.replace('?', ''))
             return
         self.context.add_to_long_function_name(" " + token)
+
+    @staticmethod
+    def _starts_an_expression(token):
+        # `x = (function () {...})()`, `c = (<div>...</div>)`: what looked
+        # like a parameter list is a parenthesized expression.
+        return token == 'function' or (token.startswith('<') and len(token) > 1)
+
+    def _abandon_parameters(self, token):
+        if self.started_function:
+            self.context.forgive = True
+            self.context.end_of_function()
+        self.started_function = None
+        self._state = self._state_global
+        self.sub_state(self.__class__(self.context), None, token)
 
     def _expecting_func_opening_bracket(self, token):
         # Do not reset started_function for arrow functions (=>)

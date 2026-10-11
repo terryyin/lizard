@@ -34,9 +34,9 @@ class Test_tokenizing_TSX(unittest.TestCase):
         self.check_tokens(['<abc x="x">a</abc>'], '<abc x="x">a</abc>')
 
     def test_with_embeded_attributes(self):
-        # After Fix 1, attribute expressions handled by TSXTokenizer sub-tokenizer;
-        # ';' injected on close, residual tag tokens emitted
-        self.check_tokens(['y', ';', '<abc x={>a</abc>', '<a>', '</a>'],
+        # The tag text read so far precedes the attribute expression, which
+        # ends with an injected ';'; the rest of the tag follows
+        self.check_tokens(['<abc x={', 'y', ';', '>a</abc>', '<a>', '</a>'],
                          '<abc x={y}>a</abc><a></a>')
 
     def test_less_than(self):
@@ -46,8 +46,8 @@ class Test_tokenizing_TSX(unittest.TestCase):
         self.check_tokens(['a', '<', 'b', ' ', 'and', ' ', 'c', '>', ' ', 'd'], 'a<b and c> d')
 
     def test_complicated_properties(self):
-        # After Fix 1, ';' injected when attribute expression ends
-        self.check_tokens(['data', ' ', '=>', '(', ')', ';', '<StaticQuery render={ />'],
+        # ';' injected when attribute expression ends
+        self.check_tokens(['<StaticQuery render={', 'data', ' ', '=>', '(', ')', ';', ' ', '/>'],
                          '<StaticQuery render={data =>()} />')
 
 
@@ -768,6 +768,9 @@ class Test_TSX_attribute_names(unittest.TestCase):
     def test_spread_attribute(self):
         self.assertEqual(self.spans('title={p.d}'), self.spans('title={p.d} {...p.rest}'))
 
+    def test_attribute_without_value_before_another_attribute(self):
+        self.assertEqual(self.spans('title={p.d}'), self.spans('hidden title={p.d}'))
+
 
 class Test_TSX_lines_in_multiline_tags(unittest.TestCase):
 
@@ -790,3 +793,60 @@ class Test_TSX_lines_in_multiline_tags(unittest.TestCase):
         self.assertEqual([('(anonymous)', 5, 5), ('C', 1, 10), ('N', 11, 13)],
                          [(f.name, f.start_line, f.end_line)
                           for f in get_tsx_function_list(code)])
+
+
+class Test_TSX_tag_structure(unittest.TestCase):
+    """Tag forms whose misreading moved braces and ended components early."""
+
+    def spans(self, code):
+        return [(f.name, f.start_line, f.end_line)
+                for f in get_tsx_function_list(code)]
+
+    def component(self, jsx):
+        return (
+            "const C = (p) => {\n"
+            "  return (\n"
+            "    %s\n"
+            "  );\n"
+            "};\n"
+            "const N = (p) => {\n"
+            "  return <C />;\n"
+            "};\n" % jsx)
+
+    def test_member_tag_name_with_attributes_and_a_child(self):
+        code = self.component(
+            "<M.Footer className={p.c} title={p.t}><B onClick={() => p.f()} /></M.Footer>")
+        self.assertEqual([('(anonymous)', 3, 3), ('C', 1, 5), ('N', 6, 8)],
+                         self.spans(code))
+
+    def test_type_arguments_on_an_element_with_a_child(self):
+        code = self.component(
+            "<S<number> value={p.v}><B onClick={() => p.f()} /></S>")
+        self.assertEqual([('(anonymous)', 3, 3), ('C', 1, 5), ('N', 6, 8)],
+                         self.spans(code))
+
+    def test_type_parameter_with_object_constraint(self):
+        code = (
+            "export const L = <T extends {}>(props: P<T>) => {\n"
+            "  return 1;\n"
+            "};\n"
+            "export const C = (p) => {\n"
+            "  return 2;\n"
+            "};\n"
+        )
+        self.assertEqual([('L', 1, 3), ('C', 4, 6)], self.spans(code))
+
+    def test_parenthesized_jsx_assigned_to_a_variable(self):
+        code = (
+            "const T = () => {\n"
+            "  let c = null;\n"
+            "  if (a) {\n"
+            "    c = (\n"
+            "      <D f={(v) => g(v)} />\n"
+            "    );\n"
+            "  }\n"
+            "  return c;\n"
+            "};\n"
+        )
+        self.assertEqual([('(anonymous)', 5, 5), ('T', 1, 9)], self.spans(code))
+

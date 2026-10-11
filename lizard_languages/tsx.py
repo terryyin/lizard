@@ -40,6 +40,15 @@ class TSXTokenizer(JSTokenizer):
     def __init__(self):
         super().__init__()
 
+    def __call__(self, token):
+        tag = self.sub_tokenizer
+        for tok in super().__call__(token):
+            if isinstance(tag, XMLTagWithAttrTokenizer) and tag.aborted:
+                # A tag that turned out to be a comparison or type parameter
+                # list hands its tokens back; their braces are this level's.
+                self.depth += {'{': 1, '}': -1}.get(tok, 0)
+            yield tok
+
     def process_token(self, token):
         if token == "<":
             self.sub_tokenizer = XMLTagWithAttrTokenizer()
@@ -62,6 +71,7 @@ class XMLTagWithAttrTokenizer(Tokenizer):
         self.cache = ['<']
         self._attr_expr_active = False
         self._has_valued_attribute = False
+        self.aborted = False
 
     def __call__(self, token):
         if self.sub_tokenizer:
@@ -102,6 +112,7 @@ class XMLTagWithAttrTokenizer(Tokenizer):
 
     def abort(self):
         self.stop()
+        self.aborted = True
         return self.cache
 
     def flush(self):
@@ -112,7 +123,30 @@ class XMLTagWithAttrTokenizer(Tokenizer):
         if not isidentifier(token):
             return self.abort()
         self.tag = token
-        self.state = self._after_tag
+        self.state = self._after_tag_name
+
+    def _after_tag_name(self, token):
+        if token == '.':
+            # Member tag name with attributes: <Modal.Footer className="x">
+            self.state = self._tag_name_part
+            return None
+        if token.startswith('<') and token.endswith('>') and len(token) > 2:
+            self.state = self._after_type_arguments
+            return None
+        return self._after_tag(token)
+
+    def _after_type_arguments(self, token):
+        # <ModalSetting<number> value={v} /> is an element; a generic call
+        # such as useState<Result<T>>(x) has no attribute after them.
+        if isidentifier(token) or token == '/':
+            return self._after_tag(token)
+        return self.abort()
+
+    def _tag_name_part(self, token):
+        if not isidentifier(token):
+            return self.abort()
+        self.state = self._after_tag_name
+        return None
 
     def _after_tag(self, token):
         if token == '>':
@@ -123,9 +157,10 @@ class XMLTagWithAttrTokenizer(Tokenizer):
             self.state = self._expecting_equal_sign
         elif token == "{":
             # Spread attribute: <Collapse {...props}>
-            self.sub_tokenizer = TSXTokenizer()
+            return self._start_expression()
         else:
             return self.abort()
+        return None
 
     def _expecting_self_closing(self, token):
         if token == ">":
@@ -141,12 +176,20 @@ class XMLTagWithAttrTokenizer(Tokenizer):
             # Hyphenated or namespaced name: data-action, xlink:href
             self.state = self._attribute_name_part
         elif token == '/' or self._has_valued_attribute:
-            # Attribute without a value: <Icon fixedWidth />. Without a
-            # `name=` attribute before it, `<T extends U>` and `a<b and c>`
-            # look the same and stay a comparison or type parameter list.
+            # Attribute without a value: <Icon fixedWidth />
             return self._after_tag(token)
+        elif isidentifier(token):
+            # <Modal show onHide={f}> or <T extends U>: only an `=` after the
+            # second word shows the first was an attribute without a value.
+            self.state = self._expecting_equal_sign_after_word
         else:
             return self.abort()
+        return None
+
+    def _expecting_equal_sign_after_word(self, token):
+        if token == '=':
+            return self._expecting_equal_sign(token)
+        return self.abort()
 
     def _attribute_name_part(self, token):
         if not isidentifier(token):
@@ -162,8 +205,20 @@ class XMLTagWithAttrTokenizer(Tokenizer):
             # attribute (or '>') is processed correctly once the sub-
             # tokenizer finishes.
             self.state = self._after_tag
-            self.sub_tokenizer = TSXTokenizer()
             self._attr_expr_active = True
+            return self._start_expression()
+        else:
+            # `<T extends A = B>`: a type default, not an attribute value.
+            return self.abort()
+        return None
+
+    def _start_expression(self):
+        # The tag text read so far goes out before the expression, so the
+        # state machine meets `<D f={` before the expression's tokens, and
+        # an abort cannot hand back an opening '{' whose '}' the
+        # expression's tokenizer consumes.
+        self.sub_tokenizer = TSXTokenizer()
+        return self.flush()
 
     def _body(self, token):
         # Abort if token can't be JSX body content — likely a type

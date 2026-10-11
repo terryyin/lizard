@@ -1323,3 +1323,43 @@ class Test_ts_function_end_after_optional_call(unittest.TestCase):
             "function m() {}\n"
         )
         self.assertEqual([('h', 1, 7), ('m', 8, 8)], self.spans(code))
+
+
+class Test_ts_expression_bodied_arrows(unittest.TestCase):
+
+    def spans(self, code):
+        return [(f.name, f.start_line, f.end_line)
+                for f in get_ts_function_list(code)]
+
+    def test_arrow_starts_at_its_arrow_when_the_body_is_on_the_next_line(self):
+        code = (
+            "function h(xs) {\n"
+            "  return xs.map((x) =>\n"
+            "    x + 1);\n"
+            "}\n"
+        )
+        self.assertEqual([('(anonymous)', 2, 3), ('h', 1, 4)], self.spans(code))
+
+    def test_arrow_ends_at_the_comma_after_its_property_or_argument(self):
+        code = (
+            "const o = {\n"
+            "  a: () => f(1),\n"
+            "  b: 2,\n"
+            "};\n"
+            "g(\n"
+            "  () => f(2),\n"
+            "  3,\n"
+            ");\n"
+        )
+        self.assertEqual([('a', 2, 2), ('(anonymous)', 6, 6)], self.spans(code))
+
+    def test_parenthesized_function_expression_is_not_a_parameter_list(self):
+        code = (
+            "const m = (function () {\n"
+            "  function inner() { return 1; }\n"
+            "  return inner;\n"
+            "})();\n"
+            "function after() {}\n"
+        )
+        self.assertEqual(['inner', '(anonymous)', 'after'],
+                         [name for name, _, _ in self.spans(code)])
