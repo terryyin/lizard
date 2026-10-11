@@ -1363,3 +1363,14 @@ class Test_ts_expression_bodied_arrows(unittest.TestCase):
         )
         self.assertEqual(['inner', '(anonymous)', 'after'],
                          [name for name, _, _ in self.spans(code)])
+
+    def test_object_type_in_type_arguments_keeps_the_class_body(self):
+        code = (
+            "class P {\n"
+            "  exited: Promise<{ code: number; signal: string }>;\n"
+            "  send(f: F): void {\n"
+            "    w(f);\n"
+            "  }\n"
+            "}\n"
+        )
+        self.assertEqual([('send', 3, 5)], self.spans(code))

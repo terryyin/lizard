@@ -825,6 +825,12 @@ class Test_TSX_tag_structure(unittest.TestCase):
         self.assertEqual([('(anonymous)', 3, 3), ('C', 1, 5), ('N', 6, 8)],
                          self.spans(code))
 
+    def test_comparison_inside_an_expression_container(self):
+        code = self.component(
+            "<div>{p.i < p.n}{p.label}<B onClick={() => p.f()} /></div>")
+        self.assertEqual([('(anonymous)', 3, 3), ('C', 1, 5), ('N', 6, 8)],
+                         self.spans(code))
+
     def test_type_parameter_with_object_constraint(self):
         code = (
             "export const L = <T extends {}>(props: P<T>) => {\n"
