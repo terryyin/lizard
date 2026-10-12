@@ -3,6 +3,9 @@ from lizard import analyze_file
 import os
 app = Flask(__name__)
 app.config['DEBUG'] = os.environ.get('FLASK_DEBUG', '').lower() in ('1', 'true', 'yes')
+# Limit request body size to mitigate resource-exhaustion (CWE-400) via
+# oversized or deeply nested source files submitted to /analyse.
+app.config['MAX_CONTENT_LENGTH'] = 1 * 1024 * 1024
 
 
 @app.route('/')
