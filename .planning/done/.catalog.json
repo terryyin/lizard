@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-001_warning-limits-wording.json",
+      "identity": "SEED-001#warning-limits-wording",
+      "completedAt": "2026-10-13T22:46:55.543Z",
+      "blob": "73e40a6abc106839c653a81541cbef964dd98b54"
+    },
+    {
       "fileName": "SEED-001_standalone-script-wording.json",
       "identity": "SEED-001#standalone-script-wording",
       "completedAt": "2026-10-13T22:34:04.412Z",

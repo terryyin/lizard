@@ -53,8 +53,8 @@ It counts
 -  token count of functions.
 -  parameter count of functions.
 
-You can set limitation for CCN (-C), the number of parameters (-a).
-Functions that exceed these limitations will generate warnings. The exit
+You can set limits for CCN (-C) and the number of parameters (-a).
+Functions that exceed these limits will generate warnings. The exit
 code of lizard will be non-zero if there are warnings.
 
 This tool actually calculates how complex the code 'looks' rather than

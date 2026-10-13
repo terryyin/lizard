@@ -14,31 +14,6 @@ and on PyPI. Several statements there are outdated or awkward. Each story
 below corrects one of them and is independent of the others. None changes
 analyzer behavior.
 
-<a id="warning-limits-wording"></a>
-
-### Read the warning limits in plain wording
-
-**Identity:** SEED-001#warning-limits-wording
-```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planless"}
-```
-
-**Goal:** A developer setting thresholds reads, in plain wording, that limits
-on CCN and parameter count produce warnings.
-
-#### Scope
-
-- In `README.rst`, the two sentences before the exit-code sentence say
-  “limits” in place of “limitation” and “limitations”, joined with “and”.
-- The options named (`-C`, `-a`) and the exit-code sentence stay as they are.
-
-#### Key examples
-
-- “You can set limitation for CCN (-C), the number of parameters (-a).
-  Functions that exceed these limitations will generate warnings.” → “You can
-  set limits for CCN (-C) and the number of parameters (-a). Functions that
-  exceed these limits will generate warnings.”
-
 <a id="metric-list-punctuation"></a>
 
 ### Read the list of counted metrics with consistent punctuation
