@@ -214,10 +214,10 @@ Lizard may choose not to deal with some advanced or complicated language feature
   inside of template arguments.
 
 
-Literatures Referring to Lizard
--------------------------------
+Literature Referring to Lizard
+------------------------------
 
-Lizard is often used in software related researches. If you used it to support your work, you may contact the lizard author to add your work in the following list.
+Lizard is often used in software-related research. If you used it to support your work, you may contact the lizard author to add your work in the following list.
 
 - Software Quality in the ATLAS experiment at CERN, which refers to Lizard as one of the tools, has been published in the Journal of Physics: http://iopscience.iop.org/article/10.1088/1742-6596/898/7/072011
 

@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-001_research-section-wording.json",
+      "identity": "SEED-001#research-section-wording",
+      "completedAt": "2026-10-13T12:32:27.587Z",
+      "blob": "b8f2c81425f50c114005f680fa53b791e7bc5358"
+    },
+    {
       "fileName": "SEED-001_dead-travis-badge.json",
       "identity": "SEED-001#dead-travis-badge",
       "completedAt": "2026-10-13T12:29:42.784Z",

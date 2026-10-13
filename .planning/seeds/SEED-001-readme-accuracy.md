@@ -14,32 +14,6 @@ and on PyPI. Several statements there are outdated or awkward. Each story
 below corrects one of them and is independent of the others. None changes
 analyzer behavior.
 
-<a id="research-section-wording"></a>
-
-### Read the research section in idiomatic English
-
-**Identity:** SEED-001#research-section-wording
-```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planless"}
-```
-
-**Goal:** A researcher looking for prior work that used Lizard finds the
-section under a heading and introduction in idiomatic English.
-
-#### Scope
-
-- In `README.rst`, the heading “Literatures Referring to Lizard” becomes
-  “Literature Referring to Lizard”, with its underline adjusted to the new
-  length.
-- In the sentence below it, “software related researches” becomes
-  “software-related research”.
-- The listed references stay as they are.
-
-#### Key examples
-
-- “Lizard is often used in software related researches.” → “Lizard is often
-  used in software-related research.”
-
 <a id="verified-python-versions"></a>
 
 ### Know which Python versions Lizard is verified on
