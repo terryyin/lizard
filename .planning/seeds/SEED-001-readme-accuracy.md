@@ -14,30 +14,6 @@ and on PyPI. Several statements there are outdated or awkward. Each story
 below corrects one of them and is independent of the others. None changes
 analyzer behavior.
 
-<a id="dead-travis-badge"></a>
-
-### See no build badge for a retired service
-
-**Identity:** SEED-001#dead-travis-badge
-```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planless"}
-```
-
-**Goal:** A developer judging the project's health from the README header is
-not shown a build badge for travis-ci.org, a service that no longer runs this
-project's builds.
-
-#### Scope
-
-- In `README.rst`, remove the Travis CI image and its target from the header.
-- The PyPI badge and the web-site logo stay.
-- Adding a replacement badge is outside this story.
-
-#### Key examples
-
-- The header shows the PyPI version badge and the logo, and no
-  `travis-ci.org` reference remains in `README.rst`.
-
 <a id="research-section-wording"></a>
 
 ### Read the research section in idiomatic English

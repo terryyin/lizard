@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-001_dead-travis-badge.json",
+      "identity": "SEED-001#dead-travis-badge",
+      "completedAt": "2026-10-13T12:29:42.784Z",
+      "blob": "6616e020471dedbf71c7b511333faf84ab7653a8"
+    },
+    {
       "fileName": "SEED-001_python3-module-example.json",
       "identity": "SEED-001#python3-module-example",
       "completedAt": "2026-10-13T12:11:42.379Z",

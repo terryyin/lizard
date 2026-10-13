@@ -1,8 +1,6 @@
 |Web Site| Lizard
 =================
 
-.. image:: https://travis-ci.org/terryyin/lizard.png?branch=master
-    :target: https://travis-ci.org/terryyin/lizard
 .. image:: https://badge.fury.io/py/lizard.svg
     :target: https://badge.fury.io/py/lizard
 .. |Web Site| image:: http://www.lizard.ws/website/static/img/logo-small.png
