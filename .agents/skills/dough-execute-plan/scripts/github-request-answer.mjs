@@ -3,12 +3,11 @@
 // first, so a caller can decide from GitHub's own status and headers -- a
 // `304`, or a rate limit's directed wait -- before treating `gh`'s exit as a
 // failure, and otherwise the failure is classified from what `gh` printed.
-// Only fixed categories -- and, for an HTTP answer, its three-digit status --
-// ever leave here; raw stderr may name local paths or echo configuration and
-// is never forwarded.
+// Failures expose fixed categories and HTTP statuses, never raw stderr.
 
 import { ReadBoundReached } from "./github-request-outstanding.mjs";
 import { longestDirectedWaitSeconds } from "./github-request-rules.mjs";
+/** @import { OwnerUnavailableFailure } from "./github-request-owner-failure.mjs" */
 
 // Why a `gh` call did not answer, as far as can be said without repeating
 // anything `gh` printed. A `rate-limited` wait is how long the asking process
@@ -31,6 +30,8 @@ import { longestDirectedWaitSeconds } from "./github-request-rules.mjs";
  *   | { readonly kind: "unreachable" }
  *   | { readonly kind: "timed-out" }
  *   | { readonly kind: "not-installed" }
+ *   | { readonly kind: "output-bound" }
+ *   | OwnerUnavailableFailure
  *   | { readonly kind: "failed" }} GhRequestFailure
  */
 
@@ -199,6 +200,9 @@ function limitedAsDirected(answer, nowMs) {
 // Timing out is never inferred from `gh`'s output: it is a requester's own
 // bound or the shared call's (`./github-requests.mjs`).
 function classify(error, stderr) {
+  if (error.code === "ERR_CHILD_PROCESS_STDIO_MAXBUFFER") {
+    return { kind: "output-bound" };
+  }
   if (error.code === "ENOENT") {
     return { kind: "not-installed" };
   }
@@ -233,7 +237,10 @@ export function readAnswer(error, stdout, stderr, askedAt, nowMs = Date.now()) {
   return {
     status: included?.status,
     headers: included?.headers ?? new Map(),
-    body: included?.body ?? stdout,
+    body:
+      error?.code === "ERR_CHILD_PROCESS_STDIO_MAXBUFFER"
+        ? ""
+        : (included?.body ?? stdout),
     failure: error
       ? (limitedAsDirected(included, nowMs) ?? classify(error, stderr))
       : undefined,

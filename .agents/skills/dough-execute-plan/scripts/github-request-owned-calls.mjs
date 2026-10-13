@@ -9,7 +9,6 @@
 // that process is gone. A recorded process ID alone proves nothing: only a
 // process that runs those arguments and started when the record says is
 // signalled, and it is looked at again before it is killed outright.
-import { execFile } from "node:child_process";
 import {
   readdirSync,
   readFileSync,
@@ -19,6 +18,9 @@ import {
 } from "node:fs";
 import { join } from "node:path";
 import { setTimeout as pause } from "node:timers/promises";
+import { processShowsExit, shownProcess } from "./process-table.mjs";
+
+export { shownProcess };
 
 // A record, or the draft of one its owner was ended while writing.
 const callName = /^call\.(\d+)\.\d+\.json(\.draft)?$/;
@@ -62,57 +64,6 @@ export class OwnedCalls {
   }
 }
 
-function seconds(elapsed) {
-  const [, days = 0, hours = 0, minutes, rest] =
-    /^(?:(\d+)-)?(?:(\d+):)?(\d+):(\d+)$/.exec(elapsed) ?? [];
-  return (
-    ((Number(days) * 24 + Number(hours)) * 60 + Number(minutes)) * 60 +
-    Number(rest)
-  );
-}
-
-// What the process table shows of `pid`: its state, the earliest and latest
-// time it can have started -- the table tells elapsed time as a difference of
-// whole seconds, a second off either way -- and its command line; undefined
-// when no such process runs. Rejects when the table cannot be read.
-/**
- * @param {number} pid
- * @returns {Promise<{ readonly state: string; readonly startedFromMs: number; readonly startedByMs: number; readonly command: string } | undefined>}
- */
-export function shownProcess(pid) {
-  return new Promise((resolve, reject) => {
-    const fromMs = Date.now();
-    execFile(
-      "ps",
-      [
-        "-ww",
-        "-p",
-        String(pid),
-        "-o",
-        "stat=",
-        "-o",
-        "etime=",
-        "-o",
-        "command=",
-      ],
-      { encoding: "utf8" },
-      (error, stdout) => {
-        const [, state, elapsed, command] =
-          /^\s*(\S+)\s+(\S+)\s+(.*\S)\s*$/.exec(stdout) ?? [];
-        if (state !== undefined && !Number.isNaN(seconds(elapsed)))
-          resolve({
-            state,
-            startedFromMs: fromMs - (seconds(elapsed) + 1) * 1000,
-            startedByMs: Date.now() - (seconds(elapsed) - 1) * 1000,
-            command,
-          });
-        else if (error === null || error.code === 1) resolve(undefined);
-        else reject(error);
-      },
-    );
-  });
-}
-
 function exists(pid) {
   try {
     process.kill(pid, 0);
@@ -135,14 +86,7 @@ async function recognized({ pid, args, startedAtMs }, shown) {
   } catch {
     return "unknown";
   }
-  // An exited process stays as a zombie until reaped, or, on macOS, by its
-  // bare name in parentheses while it exits.
-  if (
-    seen === undefined ||
-    seen.state.startsWith("Z") ||
-    /^\(.+\)$/.test(seen.command)
-  )
-    return "gone";
+  if (processShowsExit(seen)) return "gone";
   const asked = `gh ${args.join(" ")}`;
   const { command, startedFromMs, startedByMs } = seen;
   return (command === asked || command.endsWith(`/${asked}`)) &&

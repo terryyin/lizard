@@ -18,17 +18,33 @@ leaves it unproved; keep the evidence for what it actually observes. An inner
 operation finishing does not prove completion for its caller.
 
 Before changing an operation, contract, message, value, default, or rendered
-output, or choosing proof for that change, find its consumers: anything in
-production or test support that observes what the change alters, reusing available
-product-wide search. They include callers of a changed operation and the
-continuation and recovery paths that reach it; tests and specs asserting a retired
-literal or value (message text, status code, label, output form), where a search
-for that literal is the selection; callers relying on a changed default by not
-overriding it; every fixture, stand-in, and harness helper that invokes or
-imitates a changed contract, not only those the edit touched; and specs asserting
-a property of a whole page or surface the change renders into (element counts,
-roles, keyboard order, forbidden words). Derive obligations from each consumer's
-actual use, not method name or dominant use; exclude unrelated consumers. A prior
+output, or choosing proof for that change, identify its effect: what can now be
+observed differently, where it appears, or which operation preconditions now
+apply. Trace that effect to its consumers in production and test support. Changed
+files, selectors, helper references, literals, and the plan's named proof locate
+starting points; they do not bound what observes or relies on the effect.
+
+For output, follow it into enclosing surfaces and inspect how they are observed,
+including aggregate text, counts, roles, and keyboard order. A whole-container
+assertion may include hidden content and text boundaries without naming the
+changed component. For an operation or default, follow the entry points,
+continuations, and recovery paths that reach it, then inspect their scenarios
+and setup. Moving an operation out of a conditional path can make its resources
+necessary for callers that previously bypassed it; include scenarios that omit
+those resources. A helper check or setup supplying the newly required resource
+does not prove those callers still work.
+
+Reuse available product-wide search, extending it from changed names to the
+enclosing observation or entry-point scenario and its support. Inspect actual
+assertions and setup before selecting proof; a list of matches alone does not
+establish the affected boundary. Include retired literals and values (message
+text, status code, label, output form), callers relying on a changed default by
+not overriding it, and every fixture, stand-in, or harness helper that invokes
+or imitates a changed contract, including untouched ones. Account for the trace
+and the observing proof in the existing proof location or implementation return.
+Derive obligations from each consumer's actual purpose, not its method name or
+dominant use. Exclude a consumer only when the effect does not reach its boundary;
+retain sufficient current proof for unchanged boundaries. A prior
 unaffected-suite or unused-consumer exclusion is invalid when this change still
 reaches that consumer: reassess current consumers before relying on it.
 Incompatible purposes each need an observation; equivalent purposes may share
@@ -39,6 +55,8 @@ change nothing else observes, such as renaming a private helper with no shared
 contract, text, value, default, or rendered output, keeps focused proof. For
 unresolved domain purpose, ask precisely about that consumer's requirement and
 stop its dependent obligation until answered rather than guessing policy.
+Discovering a failing assertion does not authorize weakening its promise; align
+behavior and proof under the project's existing failure policy.
 
 For artifact-preservation promises, identify installation, physical store, and
 predecessor using project-supplied identities/scope. Same-store continuity proves no

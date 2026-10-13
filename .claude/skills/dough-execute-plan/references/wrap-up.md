@@ -35,14 +35,21 @@ claimed command, filter, and candidate; do not rerun solely for process.
 
 When the change has consumers, as
 [own executable proof](../../dough-story-refinement/references/planning.md#own-executable-proof)
-defines them, check its current consumers against the return's selection and the
-claimed proof. Do not accept on a prior unaffected-suite or unused-consumer
-exclusion when the change still reaches that consumer. Do not accept or publish
-the slice while a known consumer — one the return's selection found, or one you
-can name — is unrun, including one left for CI: run it, or return the slice for
-it. Unrelated consumers and unchanged boundaries keep their accepted evidence.
-Reuse sufficient equivalent-purpose proof; require the changed surface's suite
-when it runs within the slice's focused-check time, not every suite.
+defines them, follow the changed effect through the reported surface or entry
+points and compare the reached consumers with the return's selection and proof.
+A return that stops at file, selector, or helper matches leaves that trace
+incomplete: inspect the enclosing observations or caller scenarios and their
+setup before accepting it. Confirm sufficient current observations for the
+affected purposes, including newly reached consumers. Do not accept on a prior
+unaffected-suite or unused-consumer exclusion when the change reaches that
+boundary. Do not accept or publish while proof for a known affected consumer is
+missing, including one left unrun for CI: obtain the missing observation or
+return the slice for it. Preserve sufficient reused or equivalent-purpose proof
+and accepted evidence for unrelated consumers and unchanged boundaries. Require
+the changed surface's suite when it runs within the slice's focused-check time,
+not every suite. A discovered failure keeps the project's failure policy and
+the consumer's legitimate promise; passing by supplying the outcome in setup or
+weakening the assertion is not sufficient proof.
 
 When a required observation is explicitly missing from the return — including
 required readiness or requeue behavior named as untested while delivery is still
@@ -57,7 +64,9 @@ For planned execution, record every named gap, loss, limitation, or interim
 behavior as a structured [story obligation](story-obligations.md), including
 reported text, the story clause, and exactly one disposition. Read the selected
 story's goal, key examples, and exclusions before choosing that disposition;
-the script checks structure and quotes, not that judgment. Re-read every open
+the script checks structure and quotes, not that judgment. Apply
+[the relevant-path check](story-obligations.md#check-the-paths-before-closing-a-gap)
+before closing a gap as `no user cost` or `proved`. Re-read every open
 interim the current slice depends on; a newly wrong result becomes a return
 owned by this slice, preserving the original text and provenance. For quick
 execution, apply that reference's same-slice rule without creating a plan.

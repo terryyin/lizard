@@ -199,6 +199,8 @@ request has nothing to retain: retire an owned workspace.
 After a landed result's delivery and CI completion gates pass, or after an
 unlisted no-change conclusion, retire the clean workspace and its branch under
 Dough Land's [Retire the worktree](../../dough-land/SKILL.md#retire-the-worktree).
+Apply the [established session's retirement rule](established-session.md#retire-the-isolated-workspace)
+when this session carries that block.
 The default checkout is never retired. Nothing remains to wrap up: the
 delivered commit already closed any queued story.
 

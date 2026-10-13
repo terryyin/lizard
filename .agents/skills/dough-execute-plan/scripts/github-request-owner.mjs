@@ -1,11 +1,7 @@
-// The one owner of this user's requests to GitHub under one API host and
-// login, for every Open Dough consumer whose `gh` asks with them: started by
-// the first consumer that finds none (`./github-request-owner-link.mjs`), in
-// its own process group, with that consumer's environment for every `gh` it
-// runs. It holds the one record of a rate limit, the eight turns at GitHub
-// and every outstanding call (`./github-request-calls.mjs`), so consumers in
-// separate processes share them, and consumers under another host or login
-// share none of them. It stands while its record is the highest in its
+// One owner of this user's GitHub requests per API host/login, started by
+// the consumer that finds none, with shared allowance and outstanding calls.
+// It runs in its own process group using that consumer's gh environment.
+// Separate scopes share no requests. Its highest-generation record is in the
 // endpoint directory (`./github-request-owner-endpoint.mjs`), asking nothing
 // once it is not, and ends once no consumer is connected and no rate limit's
 // wait stands for `DOUGH_GITHUB_REQUEST_OWNER_IDLE_MS` (five seconds), or
@@ -37,12 +33,14 @@ import {
   standingRecord,
 } from "./github-request-owner-endpoint.mjs";
 import {
-  fixedRequest,
+  greeted,
   greetingLimitMs,
-  protocol,
-  reachable,
-  receive,
   scopeOf,
+} from "./github-request-owner-endpoint-connection.mjs";
+import {
+  fixedRequest,
+  protocol,
+  receive,
   send,
   wireAnswer,
 } from "./github-request-owner-wire.mjs";
@@ -60,8 +58,13 @@ if (
   process.exit(1);
 
 const earlier = standingRecord(directory);
-if (earlier?.socket !== undefined && (await reachable(earlier.socket)))
-  process.exit(0);
+if (earlier?.socket !== undefined) {
+  const connection = await greeted(earlier, () => undefined, lstatSync, {
+    unansweredIsAbsent: true,
+  });
+  connection?.destroy();
+  if (connection !== undefined) process.exit(0);
+}
 
 // The endpoint of the API host and login this process's own `gh` asks with
 // now; undefined while it cannot be established.

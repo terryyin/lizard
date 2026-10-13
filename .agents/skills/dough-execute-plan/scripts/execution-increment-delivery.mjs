@@ -4,7 +4,11 @@
 import { resolve } from "node:path";
 import { resolveCheckoutRuntime } from "./ci-checkout-runtime.mjs";
 import { withExplicitSession } from "./ci-host-bridge.mjs";
-import { registerPushedRevision, mailboxRoot } from "./ci-mailbox.mjs";
+import {
+  registerPushedRevision,
+  recordDeliveryProgress,
+  mailboxRoot,
+} from "./ci-mailbox.mjs";
 import { flagValues, isDirectCliEntry } from "./ci-direct-entry.mjs";
 import { publishExecutionIncrement } from "./execution-increment-publication.mjs";
 import { establishObservation } from "./execution-increment-observation.mjs";
@@ -153,6 +157,14 @@ export async function deliverManagedExecutionIncrement(request) {
 
   if (observation.directory && observation.state !== "unobserved") {
     registerPushedRevision(observation.directory, published.receipt.sha);
+    if (host === "claude" && request.mode === "story-branch")
+      recordDeliveryProgress(observation.directory, {
+        acceptedPublication: {
+          sha: published.receipt.sha,
+          mode: request.mode,
+          targetRef,
+        },
+      });
   }
 
   return {

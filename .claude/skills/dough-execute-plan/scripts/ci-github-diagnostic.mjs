@@ -9,6 +9,7 @@ import { isFailedJob } from "./ci-failures.mjs";
 import {
   ciWorkflowFile,
   createGitHubActions,
+  GitHubAcquisitionFailed,
   GitHubAcquisitionHeld,
 } from "./ci-github-actions.mjs";
 
@@ -99,7 +100,14 @@ export async function diagnoseFailedAttempt({
       } catch (error) {
         return {
           ...evidence,
-          logUnavailable: String(error.message).slice(0, 300),
+          logUnavailable:
+            error instanceof GitHubAcquisitionHeld ||
+            error instanceof GitHubAcquisitionFailed
+              ? error.message.slice(0, 300)
+              : "GitHub job log request failed without a usable cause",
+          ...(error instanceof GitHubAcquisitionHeld
+            ? { logWaitSeconds: error.waitSeconds }
+            : {}),
         };
       }
     }),
@@ -157,6 +165,8 @@ if (isDirectCliEntry(import.meta.url, process.argv[1])) {
       });
     else throw new Error(usage);
     process.stdout.write(`${JSON.stringify(answer, null, 2)}\n`);
+    if (answer.failedJobs?.some((job) => job.logWaitSeconds !== undefined))
+      process.exitCode = 75;
   } catch (error) {
     process.stderr.write(`${String(error.message).slice(0, 600)}\n`);
     process.exitCode = error instanceof GitHubAcquisitionHeld ? 75 : 1;

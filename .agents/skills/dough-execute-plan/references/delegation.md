@@ -47,8 +47,9 @@ Give the agent:
   [replanning permission](execution-decisions.md#choose-replanning-permission), this
   project's slice budget and exceptions, workflow precedence, and literal
   focused commands with the runtime wrapper. Proof the plan or coordinator
-  names is a minimum: require the agent still to run the consumers the change
-  reaches under [own executable proof](../../dough-story-refinement/references/planning.md#own-executable-proof),
+  names is a minimum: require the agent to trace the changed effect into its
+  consumers and select sufficient proof under
+  [own executable proof](../../dough-story-refinement/references/planning.md#own-executable-proof),
   including the changed surface's suite when it runs within the slice's
   focused-check time, even when the plan says wider suites belong to CI.
   When replanning is disabled, an oversized stop returns the incomplete attempt in
@@ -135,9 +136,11 @@ targeted return that gives the coordinator:
   or signal that exercises it — or an explicit untested / uncovered listing
   instead of verified prose;
 - when the change altered an operation or contract, a message or value, a
-  default, or rendered output: which of these kinds it made, the searches
-  (including retired literals searched for) or suites used to find consumers,
-  the consumers run, and any found consumer left unrun with its reason;
+  default, or rendered output: the changed effect, its trace to consumers under
+  [proof ownership](../../dough-story-refinement/references/planning.md#own-executable-proof),
+  the searches (including retired literals searched for) or suites used,
+  observing assertions and setup, proof run or sufficiently reused, and any
+  affected consumer still lacking proof with its reason;
 - required observations still missing or explicitly untested, named as gaps —
   a learning note alone is not acceptance evidence for those promises;
 - uncovered promises, contradictions, and other evidence gaps; and

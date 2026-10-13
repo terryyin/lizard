@@ -21,6 +21,7 @@ import { managedDeliveryGeneration } from "./ci-mailbox-location.mjs";
 import { readMailboxTerminal } from "./ci-mailbox-match.mjs";
 import { claimMailbox, hostInputOwner } from "./ci-observer-owner.mjs";
 import { isDirectCliEntry } from "./ci-direct-entry.mjs";
+import { readBackgroundHandoff } from "./ci-background-state.mjs";
 
 const hash = (value) => createHash("sha256").update(value).digest("hex");
 
@@ -139,6 +140,7 @@ export function selectCiEvents(
   if (existsSync(bindings))
     for (const binding of readdirSync(bindings)) {
       const directory = readFileSync(join(bindings, binding), "utf8");
+      if (host === "claude" && readBackgroundHandoff(directory)) continue;
       if (!attachedThisCall.has(directory)) reportLoss(directory);
       const { deliveredThrough } = readDeliveryProgress(directory);
       const records = readMailboxEvents(directory, deliveredThrough);

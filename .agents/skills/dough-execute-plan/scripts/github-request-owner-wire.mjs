@@ -7,19 +7,13 @@
 // host and login it is asked under as its endpoint directory is named. No
 // credential, command or path is ever said.
 
-import { lstatSync } from "node:fs";
-import { connect } from "node:net";
-import { basename } from "node:path";
+import { safeOwnerCause } from "./github-request-owner-failure.mjs";
 
 /** @import { Socket } from "node:net" */
 /** @import { GhAnswer } from "./github-request-answer.mjs" */
 
 // What an owner and its consumers must agree on to be spoken to at all.
 export const protocol = 2;
-
-// How long a greeting may take, for the owner awaiting it and for the
-// consumer awaiting its welcome, before either ends the connection.
-export const greetingLimitMs = 5_000;
 
 // The most one answer may print, and the longest one call may run.
 const answerBytesLimit = 64 * 1024 * 1024;
@@ -65,59 +59,6 @@ export function receive(socket, onMessage, limitBytes = Infinity) {
   });
 }
 
-// Whether anything accepts a connection at `path`.
-/** @param {string} path */
-export const reachable = (path) =>
-  new Promise((resolve) => {
-    const socket = connect(path);
-    socket.once("connect", () => {
-      socket.destroy();
-      resolve(true);
-    });
-    socket.once("error", () => resolve(false));
-  });
-
-// The owner `record` names, greeted: its connection, or undefined when
-// nothing answers there. Throws when it is another user's or refuses this
-// caller. `onMessage` hears what it says after its welcome.
-export function greeted({ socket: path, token }, onMessage) {
-  return new Promise((resolve, reject) => {
-    try {
-      if (lstatSync(path).uid !== process.getuid?.())
-        throw new Error("The GitHub request owner is another user's.");
-    } catch (error) {
-      if (error.code === "ENOENT") resolve(undefined);
-      else reject(error);
-      return;
-    }
-    const socket = connect(path);
-    const gone = () => {
-      clearTimeout(limit);
-      resolve(undefined);
-    };
-    const limit = setTimeout(() => socket.destroy(), greetingLimitMs);
-    let welcomed = false;
-    socket.on("error", () => undefined);
-    socket.once("close", gone);
-    socket.once("connect", () => send(socket, { hello: protocol, token }));
-    receive(socket, (message) => {
-      if (welcomed) {
-        onMessage(message);
-        return;
-      }
-      clearTimeout(limit);
-      socket.off("close", gone);
-      if (message.welcome === protocol) {
-        welcomed = true;
-        resolve(socket);
-        return;
-      }
-      socket.destroy();
-      reject(new Error("The GitHub request owner refused this caller."));
-    });
-  });
-}
-
 /** @param {GhAnswer} answer */
 export const wireAnswer = (answer) => ({
   ...answer,
@@ -135,13 +76,12 @@ export const answerFromWire = ({
   status,
   headers: new Map(headers),
   body,
-  failure,
+  failure:
+    failure?.kind === "owner-unavailable"
+      ? { kind: "owner-unavailable", cause: safeOwnerCause(failure.cause) }
+      : failure,
   askedAt,
 });
-
-// How a read names the API host and login whose endpoint `directory` is.
-/** @param {string} directory */
-export const scopeOf = (directory) => basename(directory);
 
 const flagsWithValue = new Set(["-H", "--header", "-q", "--jq"]);
 const bounded = (value, limit) =>

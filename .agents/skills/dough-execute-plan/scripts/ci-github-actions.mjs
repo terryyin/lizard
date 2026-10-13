@@ -3,6 +3,8 @@
 // request source (`./github-requests.mjs`), whose owner this process shares
 // with every dashboard and CI observer of this user.
 import { GitHubRequests } from "./github-requests.mjs";
+import { GhFailure } from "./github-request-answer.mjs";
+import { ownerFailureText } from "./github-request-owner-failure.mjs";
 
 // Workflow identity is the selector every listing requests; the display name
 // is not a second, independent filter (`./ci-runs.mjs` checks a supplied one).
@@ -28,24 +30,43 @@ export class GitHubAcquisitionHeld extends Error {
 }
 
 function failureText(failure) {
+  if (failure.kind === "owner-unavailable")
+    return ownerFailureText(failure.cause);
   if (failure.kind === "http") return `HTTP ${failure.status}`;
   return (
     {
       "not-logged-in": "gh is not logged in",
       "not-installed": "gh is not installed",
       unreachable: "GitHub is unreachable",
+      "output-bound": "gh output exceeded the request's size limit",
+      "timed-out": "gh did not answer within the request's time limit",
     }[failure.kind] ?? "gh failed"
   );
+}
+
+// A failed acquisition whose message contains only its route and safe cause.
+export class GitHubAcquisitionFailed extends Error {
+  constructor(route, failure) {
+    super(`GitHub request ${route} failed: ${failureText(failure)}`);
+  }
 }
 
 // The body of one `gh api` answer, for a fixed argument array starting with
 // `api`. A wait GitHub directed is a `GitHubAcquisitionHeld`.
 export async function askGitHub(args, signal = new AbortController().signal) {
-  const { failure, body } = await requests.request(args, signal);
+  let answer;
+  try {
+    answer = await requests.request(args, signal);
+  } catch (error) {
+    if (error instanceof GhFailure)
+      throw new GitHubAcquisitionFailed(args[1], error.reason);
+    throw error;
+  }
+  const { failure, body } = answer;
   if (failure === undefined) return body;
   if (failure.kind === "rate-limited" || failure.kind === "held-back")
     throw new GitHubAcquisitionHeld(failure.waitSeconds);
-  throw new Error(`GitHub request ${args[1]} failed: ${failureText(failure)}`);
+  throw new GitHubAcquisitionFailed(args[1], failure);
 }
 
 export async function readGitHubActions(args, signal) {

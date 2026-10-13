@@ -6,6 +6,12 @@ execution/review handoff and wrap-up closure or trunk integration — and how it
 outcome affects those procedures. This reference supplies only the local
 command and receipt mechanics.
 
+At a final managed Story Branch execution/review handoff, the same live
+interactive Claude coordinator may explicitly choose the bounded
+[background handoff](ci-background-handoff.md) and end its coding turn with CI
+pending. Its command verifies that route. All other completion paths below
+retain this operation.
+
 Invoke the completion action with the exact retained mailbox and accepted
 revision:
 
@@ -45,7 +51,7 @@ distinct from shutdown facts:
 
 The low-level `await-revision` reader remains available for its existing
 read-only purpose and does not shut down observation. Ordinary completion uses
-only `complete-revision`. Explicit cancellation and human-judgment stops still
+`complete-revision`. Explicit cancellation and human-judgment stops still
 use the host adapter's stop command.
 
 Return that complete receipt to the owning procedure. Do not interpret a

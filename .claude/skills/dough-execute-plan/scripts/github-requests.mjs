@@ -14,6 +14,7 @@ import { endedAtBound, GhFailure, unasked } from "./github-request-answer.mjs";
 import { OutstandingReads } from "./github-request-outstanding.mjs";
 import { OwnerLink } from "./github-request-owner-link.mjs";
 import { answerFromWire } from "./github-request-owner-wire.mjs";
+import { ownerFailure } from "./github-request-owner-failure.mjs";
 
 /** @import { GhAnswer, GhRequestFailure } from "./github-request-answer.mjs" */
 
@@ -78,7 +79,7 @@ export class GitHubRequests {
   // only this requester's wait, which then rejects with its reason and gets
   // no answer; a call that reached its own bound is a timed-out `GhFailure`
   // for every requester waiting on it. A request the owner cannot be asked
-  // is answered as `failed`, never asked of GitHub.
+  // settles with a safe owner-unavailable cause, never asked through a fallback.
   /**
    * @param {readonly string[]} args
    * @param {AbortSignal} signal
@@ -109,8 +110,11 @@ export class GitHubRequests {
       throw new GhFailure({ kind: "timed-out" });
     }
     if (reply.answer === undefined) {
-      const answer = unasked({ kind: "failed" });
-      this.#failed({ cause: "failed", startedAtMs, answer });
+      const answer = unasked(
+        reply.failure ??
+          (reply.refused ? { kind: "failed" } : ownerFailure(undefined)),
+      );
+      this.#failed({ cause: answer.failure.kind, startedAtMs, answer });
       return answer;
     }
     const answer = answerFromWire(reply.answer);

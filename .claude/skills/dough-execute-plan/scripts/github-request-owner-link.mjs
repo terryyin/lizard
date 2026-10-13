@@ -15,7 +15,15 @@ import {
   EndpointBinding,
   standingRecord,
 } from "./github-request-owner-endpoint.mjs";
-import { greeted, scopeOf, send } from "./github-request-owner-wire.mjs";
+import {
+  greeted,
+  scopeOf,
+} from "./github-request-owner-endpoint-connection.mjs";
+import { send } from "./github-request-owner-wire.mjs";
+import {
+  OwnerUnavailable,
+  ownerFailure,
+} from "./github-request-owner-failure.mjs";
 
 /** @import { Socket } from "node:net" */
 
@@ -45,6 +53,8 @@ function readable(read) {
  *   readonly timedOut?: true;
  *   readonly answer?: any;
  *   readonly told?: boolean;
+ *   readonly refused?: string;
+ *   readonly failure?: import("./github-request-owner-failure.mjs").OwnerUnavailableFailure;
  * }} OwnerReply
  */
 
@@ -72,19 +82,15 @@ export class OwnerLink {
   // established.
   /** @returns {Promise<string | undefined>} */
   async scope() {
-    const directory = await this.#endpoint();
+    const directory = await this.#binding.directory().catch(() => undefined);
     return directory && scopeOf(directory);
-  }
-
-  #endpoint() {
-    return this.#binding.directory().catch(() => undefined);
   }
 
   // The owner's reply to one request: its `answer`, and whether the call
   // failed (`told`); `timedOut` when the call reached its own bound; `left`
   // once `signal` ended this wait, which tells the owner so, at this
-  // requester's own bound when `leavingAtBound` says so; and nothing when
-  // the owner refused the request or cannot be asked. A reply to what was
+  // requester's own bound when `leavingAtBound` says so; a safe `failure`
+  // when the owner cannot be asked. A reply to what was
   // asked under a login this process has no more is dropped, and the
   // request asked again under the one it has.
   /**
@@ -94,18 +100,21 @@ export class OwnerLink {
    * @returns {Promise<OwnerReply>}
    */
   async ask(request, signal, leavingAtBound) {
-    for (;;) {
-      const directory = await this.#endpoint();
-      if (directory === undefined) return {};
-      const asked = { ...request, scope: scopeOf(directory) };
-      const reply = await this.#askedUnder(
-        directory,
-        asked,
-        signal,
-        leavingAtBound,
-      );
-      if (reply.left || reply.timedOut) return reply;
-      if (directory === (await this.#endpoint())) return reply;
+    try {
+      for (;;) {
+        const directory = await this.#binding.directory();
+        const asked = { ...request, scope: scopeOf(directory) };
+        const reply = await this.#askedUnder(
+          directory,
+          asked,
+          signal,
+          leavingAtBound,
+        );
+        if (reply.left || reply.timedOut) return reply;
+        if (directory === (await this.#binding.directory())) return reply;
+      }
+    } catch (error) {
+      return { failure: ownerFailure(error) };
     }
   }
 
@@ -143,7 +152,7 @@ export class OwnerLink {
           socket.ref();
           send(socket, { id: sent.id, request });
         },
-        () => settle({}),
+        (error) => settle({ failure: ownerFailure(error) }),
       );
     });
   }
@@ -171,7 +180,13 @@ export class OwnerLink {
         socket.unref();
         socket.once("close", () => {
           link.connecting = undefined;
-          for (const settle of [...link.waiting.values()]) settle({});
+          for (const settle of [...link.waiting.values()])
+            settle({
+              failure: {
+                kind: "owner-unavailable",
+                cause: "connection-failed",
+              },
+            });
         });
         return socket;
       },
@@ -195,9 +210,11 @@ export class OwnerLink {
               waiting.get(id)?.(reply),
             );
       if (socket !== undefined) return socket;
-      if (Date.now() > deadline)
-        throw new Error("The GitHub request owner did not start.");
-      if (starting === undefined || starting.exitCode !== null)
+      if (starting?.failure) throw starting.failure;
+      if (starting?.process.signalCode || starting?.process.exitCode)
+        throw new OwnerUnavailable("start-failed");
+      if (Date.now() > deadline) throw new OwnerUnavailable("unknown");
+      if (starting === undefined || starting.process.exitCode !== null)
         starting = this.#started(directory);
       await pause(20);
     }
@@ -214,8 +231,11 @@ export class OwnerLink {
       [ownerEntry, directory, String(this.#backoffBaseMs)],
       { cwd: directory, env, detached: true, stdio: "ignore" },
     );
-    owner.on("error", () => undefined);
+    const started = { process: owner, failure: undefined };
+    owner.on("error", () => {
+      started.failure = new OwnerUnavailable("start-failed");
+    });
     owner.unref();
-    return owner;
+    return started;
   }
 }

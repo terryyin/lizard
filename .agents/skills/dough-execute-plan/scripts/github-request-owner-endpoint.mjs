@@ -1,17 +1,14 @@
-// The private endpoint of one GitHub request owner
-// (`./github-request-owner.mjs`): where it stands and who may reach it; what
-// is said there is `./github-request-owner-wire.mjs`'s. It stands in a
-// directory only this user can enter, under `/tmp/dough-github-requests-UID/`
-// unless `DOUGH_GITHUB_REQUEST_OWNER_ROOT` names another -- beside the CI
-// mailboxes (`./ci-mailbox-location.mjs`), where every host that can run an
-// observer can write, and short enough for a socket path -- one directory
-// for each API host and login `gh` asks with, however a process comes by
-// that login, so each has one owner and no consumer is answered with
-// another's login. The owner standing there is the one its highest-numbered
-// record names; a record is claimed once and never reused.
+// The private endpoint of one GitHub request owner: where it stands and who
+// may reach it. Wire encoding owns what is said there. Only this user can
+// enter its directory, under `/tmp/dough-github-requests-UID/` unless
+// `DOUGH_GITHUB_REQUEST_OWNER_ROOT` overrides it, with a short socket path.
+// One directory per API host and gh login keeps each login's answers apart.
+// The highest-numbered record names the standing owner; records are claimed
+// once and never reused.
 import { execFile } from "node:child_process";
 import { createHmac, randomBytes } from "node:crypto";
 import {
+  existsSync,
   linkSync,
   lstatSync,
   mkdirSync,
@@ -23,6 +20,10 @@ import {
 } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
+import {
+  OwnerUnavailable,
+  refusedPrivacy,
+} from "./github-request-owner-failure.mjs";
 
 function endpointRoot(env) {
   return (
@@ -44,11 +45,10 @@ export function privacyRefusal(entry, uid) {
   return undefined;
 }
 
-function privateDirectory(path) {
-  mkdirSync(path, { recursive: true, mode: 0o700 });
-  const refusal = privacyRefusal(lstatSync(path), process.getuid?.());
-  if (refusal !== undefined)
-    throw new Error(`GitHub request endpoint is ${refusal}`);
+export function privateDirectory(path, inspect = lstatSync) {
+  if (!existsSync(path)) mkdirSync(path, { recursive: true, mode: 0o700 });
+  const refusal = privacyRefusal(inspect(path), process.getuid?.());
+  if (refusal !== undefined) throw refusedPrivacy(refusal);
   return path;
 }
 
@@ -144,7 +144,7 @@ async function endpointDirectory(env) {
     .slice(0, 12);
   const directory = privateDirectory(join(root, name));
   if (Buffer.byteLength(join(directory, newSocketName())) > socketPathBytes)
-    throw new Error("GitHub request endpoint is too deep for a socket path");
+    throw new OwnerUnavailable("path-too-long");
   return directory;
 }
 

@@ -114,8 +114,7 @@ workspace role.
 
 Dough Land invoked in the session lands the established checkout: the block's
 `workspace` and `branch` on its `remote` and `target`, with `startingRevision`
-as its starting revision. An `isolated` workspace is an owned worktree, retired
-once trunk contains its work; the default checkout stays in place.
+as its starting revision.
 
 Tracked work publishes through its own lifecycle as it always does, with the
 authority its own invocation carries, and ignores the block's `landing`.
@@ -124,3 +123,17 @@ A landing made in the session supplies the landing context that the session's
 reporting context names, when it names one, as that reporting context and
 [the original launch's landing handoff](../../dough-land/references/dashboard-completion.md#retain-the-launch-landing)
 instruct.
+
+## Retire the isolated workspace
+
+An Established session block with `workspace role: isolated` is the caller's
+statement that the worktree was created for this session's work. A later
+workflow's start may report `created: false` because it reused that worktree;
+that receipt does not negate the block's creation fact.
+
+After landing, when the retiring workflow's own delivery and completion gates
+pass, apply [Retire the worktree](../../dough-land/references/worktree-retirement.md)
+with `--created-for-work` and the landed revision as `--contained`. The command
+still checks containment and creation records, including its refusal when the
+worktree was created for other work. A `default-checkout` session retires
+nothing.
