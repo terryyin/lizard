@@ -57,7 +57,7 @@ It counts
 
 You can set limitation for CCN (-C), the number of parameters (-a).
 Functions that exceed these limitations will generate warnings. The exit
-code of lizard will be none-Zero if there are warnings.
+code of lizard will be non-zero if there are warnings.
 
 This tool actually calculates how complex the code 'looks' rather than
 how complex the code really 'is'. People will need this tool because it's

@@ -14,29 +14,6 @@ and on PyPI. Several statements there are outdated or awkward. Each story
 below corrects one of them and is independent of the others. None changes
 analyzer behavior.
 
-<a id="exit-code-wording"></a>
-
-### Read the exit-code rule in plain wording
-
-**Identity:** SEED-001#exit-code-wording
-```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planless"}
-```
-
-**Goal:** A developer wiring Lizard into a build reads, without stumbling,
-that warnings make the exit code non-zero.
-
-#### Scope
-
-- In `README.rst`, the sentence about the exit code says “non-zero” in place
-  of “none-Zero”.
-- No other wording changes.
-
-#### Key examples
-
-- “The exit code of lizard will be none-Zero if there are warnings.” → “The
-  exit code of lizard will be non-zero if there are warnings.”
-
 <a id="python3-module-example"></a>
 
 ### Copy the Python module example into Python 3

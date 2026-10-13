@@ -7,7 +7,6 @@ Maintenance, bug fixing, and PR reviews.
 ## Taken
 
 ## Backlog list
-- [Read the exit-code rule in plain wording](seeds/SEED-001-readme-accuracy.md#exit-code-wording) — SEED-001#exit-code-wording
 - [Copy the Python module example into Python 3](seeds/SEED-001-readme-accuracy.md#python3-module-example) — SEED-001#python3-module-example
 - [See no build badge for a retired service](seeds/SEED-001-readme-accuracy.md#dead-travis-badge) — SEED-001#dead-travis-badge
 - [Read the research section in idiomatic English](seeds/SEED-001-readme-accuracy.md#research-section-wording) — SEED-001#research-section-wording
