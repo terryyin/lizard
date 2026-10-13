@@ -14,29 +14,6 @@ and on PyPI. Several statements there are outdated or awkward. Each story
 below corrects one of them and is independent of the others. None changes
 analyzer behavior.
 
-<a id="standalone-script-wording"></a>
-
-### Read that lizard.py runs as a standalone script
-
-**Identity:** SEED-001#standalone-script-wording
-```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planless"}
-```
-
-**Goal:** A developer reading the installation section sees the ordinary
-spelling “standalone” for running `lizard.py` without installing it.
-
-#### Scope
-
-- In `README.rst`, Installation, “stand alone Python script” becomes
-  “standalone Python script”.
-- No other wording changes.
-
-#### Key examples
-
-- “lizard.py can be used as a stand alone Python script” → “lizard.py can be
-  used as a standalone Python script”
-
 <a id="warning-limits-wording"></a>
 
 ### Read the warning limits in plain wording

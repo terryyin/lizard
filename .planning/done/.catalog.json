@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-001_standalone-script-wording.json",
+      "identity": "SEED-001#standalone-script-wording",
+      "completedAt": "2026-10-13T22:34:04.412Z",
+      "blob": "c6ab9f4e463238f301548a5386035a0b969317c1"
+    },
+    {
       "fileName": "SEED-001_research-section-wording.json",
       "identity": "SEED-001#research-section-wording",
       "completedAt": "2026-10-13T12:32:27.587Z",

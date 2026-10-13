@@ -82,7 +82,7 @@ that use defaults, which may cause them to exceed a configured CCN threshold.
 Installation
 ------------
 
-lizard.py can be used as a stand alone Python script, most
+lizard.py can be used as a standalone Python script, most
 functionalities are there. You can always use it without any
 installation. To acquire all the functionalities of lizard, you will
 need a proper install.
