@@ -14,6 +14,76 @@ and on PyPI. Several statements there are outdated or awkward. Each story
 below corrects one of them and is independent of the others. None changes
 analyzer behavior.
 
+<a id="standalone-script-wording"></a>
+
+### Read that lizard.py runs as a standalone script
+
+**Identity:** SEED-001#standalone-script-wording
+```json dough-story-state
+{"schemaVersion":1,"refinement":"refined","approach":"planless"}
+```
+
+**Goal:** A developer reading the installation section sees the ordinary
+spelling “standalone” for running `lizard.py` without installing it.
+
+#### Scope
+
+- In `README.rst`, Installation, “stand alone Python script” becomes
+  “standalone Python script”.
+- No other wording changes.
+
+#### Key examples
+
+- “lizard.py can be used as a stand alone Python script” → “lizard.py can be
+  used as a standalone Python script”
+
+<a id="warning-limits-wording"></a>
+
+### Read the warning limits in plain wording
+
+**Identity:** SEED-001#warning-limits-wording
+```json dough-story-state
+{"schemaVersion":1,"refinement":"refined","approach":"planless"}
+```
+
+**Goal:** A developer setting thresholds reads, in plain wording, that limits
+on CCN and parameter count produce warnings.
+
+#### Scope
+
+- In `README.rst`, the two sentences before the exit-code sentence say
+  “limits” in place of “limitation” and “limitations”, joined with “and”.
+- The options named (`-C`, `-a`) and the exit-code sentence stay as they are.
+
+#### Key examples
+
+- “You can set limitation for CCN (-C), the number of parameters (-a).
+  Functions that exceed these limitations will generate warnings.” → “You can
+  set limits for CCN (-C) and the number of parameters (-a). Functions that
+  exceed these limits will generate warnings.”
+
+<a id="metric-list-punctuation"></a>
+
+### Read the list of counted metrics with consistent punctuation
+
+**Identity:** SEED-001#metric-list-punctuation
+```json dough-story-state
+{"schemaVersion":1,"refinement":"refined","approach":"planless"}
+```
+
+**Goal:** A developer scanning what Lizard counts reads one list punctuated
+the same way on every line.
+
+#### Scope
+
+- In `README.rst`, the “It counts” list: the third item ends with a comma
+  like the first two, and only the last item ends with a full stop.
+- The items and their wording stay as they are.
+
+#### Key examples
+
+- “-  token count of functions.” → “-  token count of functions,”
+
 <a id="verified-python-versions"></a>
 
 ### Know which Python versions Lizard is verified on
