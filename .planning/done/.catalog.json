@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-001_python3-module-example.json",
+      "identity": "SEED-001#python3-module-example",
+      "completedAt": "2026-10-13T12:11:42.379Z",
+      "blob": "93aaa3076aa1db041e5cb6866a3e68c9308d8911"
+    },
+    {
       "fileName": "SEED-001_exit-code-wording.json",
       "identity": "SEED-001#exit-code-wording",
       "completedAt": "2026-10-13T11:47:15.042Z",

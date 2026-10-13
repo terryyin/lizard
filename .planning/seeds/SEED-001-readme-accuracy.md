@@ -14,30 +14,6 @@ and on PyPI. Several statements there are outdated or awkward. Each story
 below corrects one of them and is independent of the others. None changes
 analyzer behavior.
 
-<a id="python3-module-example"></a>
-
-### Copy the Python module example into Python 3
-
-**Identity:** SEED-001#python3-module-example
-```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planless"}
-```
-
-**Goal:** A developer using Lizard as a Python module can paste the README
-example into a supported Python 3 interpreter without a syntax error.
-
-#### Scope
-
-- In `README.rst`, “Using lizard as Python module”, the two `print`
-  statements become `print(...)` calls.
-- The sample output lines and the surrounding prose stay as they are.
-
-#### Key examples
-
-- `>>> print i.__dict__` → `>>> print(i.__dict__)`
-- `>>> print i.function_list[0].__dict__` →
-  `>>> print(i.function_list[0].__dict__)`
-
 <a id="dead-travis-badge"></a>
 
 ### See no build badge for a retired service
