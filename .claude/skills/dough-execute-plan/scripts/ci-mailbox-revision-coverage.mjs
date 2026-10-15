@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { isFullGitRevision } from "./ci-revisions.mjs";
 import { publishJson } from "./ci-mailbox-json-file.mjs";
@@ -9,6 +9,14 @@ import {
   observedRevision,
   preferredAttempt,
 } from "./ci-revision-applicability-classification.mjs";
+import {
+  candidateLookupUnavailable,
+  integratedStateJudge,
+} from "./ci-integrated-state.mjs";
+import {
+  publishRevisionRecord,
+  readRevisionCoverage,
+} from "./ci-mailbox-revision-records.mjs";
 
 // States that, once recorded, are not reclassified on a later poll unless an
 // exact attempt for that revision's own SHA appears (checked first, always).
@@ -25,52 +33,6 @@ const terminalRevisionStates = [
 export const discoveryDelayBoundMs = 10 * 60 * 1000;
 export const discoveryAdvisoryMarkerName = "discovery-advisory.json";
 
-const revisionDirectory = (directory) => join(directory, "coverage");
-
-function revisionPath(directory, sha) {
-  if (!isFullGitRevision(sha))
-    throw new Error("Expected a full Git revision SHA");
-  return join(revisionDirectory(directory), `${sha.toLowerCase()}.json`);
-}
-
-export function registerPushedRevision(directory, sha) {
-  const path = revisionPath(directory, sha);
-  const normalized = sha.toLowerCase();
-  mkdirSync(revisionDirectory(directory), { recursive: true, mode: 0o700 });
-  if (!existsSync(path))
-    publishJson(revisionDirectory(directory), `${normalized}.json`, {
-      sha: normalized,
-      state: "undiscovered",
-    });
-  return readRevisionCoverage(directory).find(
-    (revision) => revision.sha === normalized,
-  );
-}
-
-function revisionRecordNames(directory) {
-  const coverage = revisionDirectory(directory);
-  if (!existsSync(coverage)) return [];
-  return readdirSync(coverage)
-    .filter(
-      (name) =>
-        name.toLowerCase().endsWith(".json") &&
-        isFullGitRevision(name.slice(0, -5)),
-    )
-    .sort();
-}
-
-// Registered SHAs from record names alone, cheap enough to check often.
-export function listRegisteredRevisions(directory) {
-  return revisionRecordNames(directory).map((name) => name.slice(0, -5));
-}
-
-export function readRevisionCoverage(directory) {
-  const coverage = revisionDirectory(directory);
-  return revisionRecordNames(directory).map((name) =>
-    JSON.parse(readFileSync(join(coverage, name), "utf8")),
-  );
-}
-
 function discoveryAdvisoryMarkerPath(directory) {
   return join(directory, discoveryAdvisoryMarkerName);
 }
@@ -85,6 +47,12 @@ export function discoveryAdvisoryEmitted(directory) {
 // the run-shaped list itself so a `not_required` basis can be resolved to its
 // actual attempt for failure inspection below — the ancestor A is frequently
 // not registered in this mailbox at all (see resolveAncestorRun).
+//
+// Under a declared `integratedPolicy`, each eligible revision also records
+// `integrated`: its descendant-candidate judgement (ci-integrated-state.mjs)
+// from this poll's runs, the same bounded history lookup and
+// `readCurrentAttempt` under the observation's `signal`. It is replaced every
+// poll, never retained.
 export async function observeRevisionCoverage(
   directory,
   runs,
@@ -95,6 +63,9 @@ export async function observeRevisionCoverage(
     event = "push",
     workflowPath,
     discoverAncestorCandidates,
+    readCurrentAttempt,
+    integratedPolicy,
+    signal,
   } = {},
 ) {
   const events = [];
@@ -152,6 +123,18 @@ export async function observeRevisionCoverage(
     if (found) ancestorRunsBySha.set(sha, found);
     return found;
   }
+  const judgeIntegratedState = integratedStateJudge(integratedPolicy, {
+    repo: request.repo,
+    remote: request.remote,
+    branch: request.branch,
+    repoDir,
+    listCandidates: async () => [
+      ...runs,
+      ...((await getBroadenedCandidateRuns?.()) ?? []),
+    ],
+    readCurrentAttempt,
+    signal,
+  });
 
   for (const revision of readRevisionCoverage(directory)) {
     const matches = runs.filter(
@@ -202,7 +185,8 @@ export async function observeRevisionCoverage(
           basis: { sha: next.basis.sha, state: attemptState(ancestorRun) },
         };
     }
-    publishJson(revisionDirectory(directory), `${revision.sha}.json`, next);
+    next = await judgeIntegratedState(next);
+    publishRevisionRecord(directory, next);
   }
 
   if (!discoveryAdvisoryEmitted(directory)) {
@@ -225,4 +209,18 @@ export async function observeRevisionCoverage(
     }
   }
   return { events, ancestorRuns: [...ancestorRunsBySha.values()] };
+}
+
+// A poll that could not list runs leaves no current integrated-state evidence:
+// each recorded judgement stays unresolved until a later poll judges afresh.
+export function withdrawIntegratedState(directory, error) {
+  for (const revision of readRevisionCoverage(directory))
+    if (revision.integrated)
+      publishRevisionRecord(directory, {
+        ...revision,
+        integrated: candidateLookupUnavailable(
+          revision.integrated.policy,
+          error,
+        ),
+      });
 }

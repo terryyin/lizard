@@ -1,7 +1,11 @@
 import { existsSync, readFileSync, readdirSync, rmSync, watch } from "node:fs";
 import { join } from "node:path";
 import { publishJson } from "./ci-mailbox-json-file.mjs";
-import { readRevisionCoverage } from "./ci-mailbox-revision-coverage.mjs";
+import {
+  effectiveRevisionState,
+  readRevisionCoverage,
+  revisionVerdicts,
+} from "./ci-mailbox-revision-records.mjs";
 
 const eventFilePattern = /^(\d{12})\.json$/;
 const defaultTerminalResultDeadlineMs = 5_000;
@@ -78,25 +82,17 @@ function mailboxEvidence(directory) {
   return { recordedThrough, deliveredThrough, unread };
 }
 
-const unresolvedRevisionStates = ["undiscovered", "pending", "incomplete"];
-// A `not_required` revision's own state is never itself "pending" or
-// "incomplete" (see ci-mailbox-revision-coverage.mjs); whether it is proved
-// terminal is decided by its applicable ancestor's resolved `basis.state`.
-// A proved success or failure ancestor makes it a proved terminal case, same
-// as an ordinary registered revision, so it is fully omitted here. A still
-// pending/incomplete (or not yet resolved) ancestor must not be reported as
-// success, and must not silently vanish either: it stays visible with its
-// applicable source (`basis`) so a reader can see why no run exists for this
-// revision and what its effective attempt's real state is.
-const provedApplicableAncestorStates = ["success", "failure"];
-
+// A revision is proved by a verdict of its effective state (its own, or an
+// ignored-only revision's applicable ancestor's `basis.state`), or by its
+// declared integrated-state evidence (see ci-integrated-state.mjs). An
+// unproved `not_required` revision stays visible with its `basis` so a reader
+// can see why no run exists for it and what its effective attempt's state is.
 function unresolvedRevisions(directory) {
   return readRevisionCoverage(directory)
     .filter(
-      ({ state, basis }) =>
-        unresolvedRevisionStates.includes(state) ||
-        (state === "not_required" &&
-          !provedApplicableAncestorStates.includes(basis?.state)),
+      (revision) =>
+        revision.integrated?.state !== "success" &&
+        !revisionVerdicts.has(effectiveRevisionState(revision)),
     )
     .map(({ sha, state, basis }) =>
       state === "not_required" ? { sha, state, basis } : { sha, state },

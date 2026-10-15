@@ -37,7 +37,9 @@ input. When review returns, publish the
 [execution-complete record](#record-execution-completion), invoke the
 completion operation, handle its receipt, then report completion, judged proof,
 the recorded product advice, CI verdict or limitation, shutdown evidence, and
-`## PLAN EXECUTION COMPLETE` as the final execution/review handoff.
+`## PLAN EXECUTION COMPLETE` as the final execution/review handoff. Report an
+`integrated_state` success as [completion mechanics](ci-completion-wait.md)
+describe.
 
 Continue in the recorded execution project/checkout. Supply available references/context:
 source contract, original plan and approved changes, attributable commits, decisions, proof,

@@ -129,7 +129,9 @@ function createGitHubRunAcquisition({ branch, startedAt, github }) {
 // Its candidates are deliberately left run-shaped (not flattened to bare
 // SHAs): coverage selection reuses them to resolve a `not_required`
 // revision's basis ancestor to its actual attempt, so that ancestor's
-// eventual failure stays actionable for every revision that reuses it.
+// eventual failure stays actionable for every revision that reuses it. The
+// same bounded lookup supplies integrated-state candidates, whose current
+// attempt `readCurrentAttempt` reads afresh.
 export function createGitHubAcquisition({
   repo,
   branch,
@@ -143,5 +145,35 @@ export function createGitHubAcquisition({
     acquireFailure: createGitHubFailureAcquisition({ repo, github }),
     discoverAncestorCandidates: async () =>
       discoverApplicabilityCandidateRuns({ branch, github, signal }),
+    readCurrentAttempt: async (run, { jobs } = {}) =>
+      readCurrentGitHubAttempt({ github, run, jobs, signal }),
   };
+}
+
+// One listed candidate run's current facts for integrated-state evidence:
+// its check is the selected workflow and its context the triggering event.
+// Required jobs come from that current attempt; a rerun starting while they
+// are read marks the facts contradicted.
+async function readCurrentGitHubAttempt({ github, run, jobs, signal }) {
+  const workflow = await github.workflow(signal);
+  const current = await github.viewCurrentRun(run.databaseId, signal);
+  const facts = {
+    ...current,
+    check: current.workflowId === workflow.id ? ciWorkflowFile : undefined,
+    context: current.event,
+  };
+  if (!jobs?.length) return facts;
+  facts.jobs = await github.attemptJobs(
+    run.databaseId,
+    current.attempt,
+    signal,
+  );
+  const after = await github.viewRun(run.databaseId, signal);
+  if (
+    after.attempt !== current.attempt ||
+    after.status !== current.status ||
+    after.conclusion !== current.conclusion
+  )
+    facts.contradicted = true;
+  return facts;
 }

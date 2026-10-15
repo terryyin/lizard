@@ -6,6 +6,7 @@ import {
 import { ciAttemptKey } from "./ci-failures.mjs";
 import { ciWorkflowFile, GitHubAcquisitionHeld } from "./ci-github-actions.mjs";
 import { createGitHubAcquisition } from "./ci-runs.mjs";
+import { readIntegratedStatePolicy } from "./ci-integrated-state-policy.mjs";
 
 export const executionBudgetMs = 8 * 60 * 60 * 1000;
 
@@ -22,6 +23,9 @@ export async function watchCiExecution({
   now = Date.now,
   root = process.cwd(),
   observeCoverage = () => [],
+  // Called with the reason when a poll cannot list runs under a declared
+  // integrated-state policy.
+  withdrawIntegratedState = () => undefined,
   registeredRevisions = async () => [],
   // Returns a signal that aborts once a revision is registered after this
   // call; a pending recheck pause then ends at once.
@@ -43,17 +47,16 @@ export async function watchCiExecution({
   const startedAt = now();
   const reportedIncomplete = new Set();
   const adapter = readCiAdapter(root);
-  // A custom adapter does not own GitHub workflow-path applicability, so it
-  // gets no ancestor candidate discovery; ci-mailbox-revision-coverage.mjs
-  // then has nothing to broaden with and an ignored-only revision simply
-  // stays undiscovered.
-  const { acquireRuns, acquireFailure, discoverAncestorCandidates } = adapter
+  const integratedPolicy = readIntegratedStatePolicy(root);
+  // The acquisition's history and current-attempt reads, for coverage.
+  const { acquireRuns, acquireFailure, ...coverageLookups } = adapter
     ? createCommandAcquisition({
         command: adapter,
         repo,
         branch,
         root,
         timeoutMs: adapterTimeoutMs,
+        registeredRevisions,
       })
     : createGitHubAcquisition({
         repo,
@@ -131,6 +134,9 @@ export async function watchCiExecution({
           await suspendAcquisition(error);
           continue;
         }
+        // Ending observation lists nothing: it withdraws no recorded evidence.
+        if (observationSignal.aborted) return;
+        if (integratedPolicy) await withdrawIntegratedState(error);
         consecutiveErrors += 1;
         if (consecutiveErrors === 3) throw error;
         await sleep(pollMs, undefined, { signal: observationSignal });
@@ -156,11 +162,11 @@ export async function watchCiExecution({
       // still emitted after the failure event, preserving prior ordering.
       let coverageResult;
       try {
-        coverageResult = await observeCoverage(
-          matching,
-          now(),
-          discoverAncestorCandidates,
-        );
+        coverageResult = await observeCoverage(matching, now(), {
+          ...coverageLookups,
+          integratedPolicy,
+          signal: observationSignal,
+        });
       } catch (error) {
         if (!held(error)) throw error;
         await suspendAcquisition(error);
@@ -189,9 +195,7 @@ export async function watchCiExecution({
       try {
         const { event, observationError, deferredFailureEvent } =
           await acquireFailure(actionableWithAncestors, observationSignal);
-        if (event) {
-          await emit(event);
-        }
+        if (event) await emit(event);
         knownFailureEvent = deferredFailureEvent;
         if (observationError) {
           consecutiveErrors += 1;

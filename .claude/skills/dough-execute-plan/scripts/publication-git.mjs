@@ -27,9 +27,11 @@ function transportOf([subcommand, ...operands]) {
   return { subcommand, remote };
 }
 
+// A trailing `{ signal }` lets a transport command end with its caller.
 export async function git(cwd, ...args) {
+  const { signal } = typeof args.at(-1) === "object" ? args.pop() : {};
   const transport = transportOf(args);
-  if (transport) return boundedTransport(cwd, args, transport);
+  if (transport) return boundedTransport(cwd, args, transport, signal);
   return exec("git", args, { cwd });
 }
 
@@ -42,20 +44,24 @@ function signalProcessGroup(pid, signal) {
 }
 
 // Runs one remote transport command in its own process group and resolves as
-// `exec` does. When the bound expires, the whole group (Git and the transport
-// it started, such as ssh) receives SIGTERM, then SIGKILL once it closes or a
-// short grace passes, and the call rejects with `code: "transport-timeout"`.
-// Other failures reject with the shape `exec` gives a failed command.
+// `exec` does. When the bound expires or `signal` aborts, the whole group (Git
+// and the transport it started, such as ssh) receives SIGTERM, then SIGKILL
+// once it closes or a short grace passes. Expiry rejects with
+// `code: "transport-timeout"`, an abort with the signal's reason, and other
+// failures with the shape `exec` gives a failed command.
 /** @returns {Promise<{ stdout: string, stderr: string }>} */
-function boundedTransport(cwd, args, { subcommand, remote }) {
+function boundedTransport(cwd, args, { subcommand, remote }, signal) {
   const boundMs = transportBoundMs();
   const cmd = `git ${args.join(" ")}`;
   return new Promise((resolve, reject) => {
+    if (signal?.aborted) return reject(signal.reason);
     const child = spawn("git", args, {
       cwd,
       detached: true,
       stdio: ["ignore", "pipe", "pipe"],
     });
+    const bound = AbortSignal.timeout(boundMs);
+    const ending = signal ? AbortSignal.any([signal, bound]) : bound;
     const output = { stdout: "", stderr: "" };
     for (const stream of ["stdout", "stderr"]) {
       child[stream].setEncoding("utf8").on("data", (chunk) => {
@@ -64,14 +70,13 @@ function boundedTransport(cwd, args, { subcommand, remote }) {
     }
     const fail = (error, fields) =>
       reject(Object.assign(error, fields, { cmd, ...output }));
-    let expired = false;
-    const timer = setTimeout(() => {
-      expired = true;
+    const end = () => {
       signalProcessGroup(child.pid, "SIGTERM");
       const stop = () => {
         clearTimeout(grace);
         child.off("close", stop);
         signalProcessGroup(child.pid, "SIGKILL");
+        if (ending.reason !== bound.reason) return reject(ending.reason);
         const error = new Error(
           `${cmd} did not answer within ${boundMs} ms; its process tree was stopped`,
         );
@@ -80,18 +85,19 @@ function boundedTransport(cwd, args, { subcommand, remote }) {
       };
       const grace = setTimeout(stop, terminationGraceMs);
       child.once("close", stop);
-    }, boundMs);
+    };
+    ending.addEventListener("abort", end, { once: true });
     child.on("error", (error) => {
-      clearTimeout(timer);
+      ending.removeEventListener("abort", end);
       fail(error, {});
     });
-    child.on("close", (code, signal) => {
-      if (expired) return;
-      clearTimeout(timer);
+    child.on("close", (code, exitSignal) => {
+      if (ending.aborted) return;
+      ending.removeEventListener("abort", end);
       if (code === 0) resolve(output);
       else {
         const error = new Error(`Command failed: ${cmd}\n${output.stderr}`);
-        fail(error, { code, killed: false, signal });
+        fail(error, { code, killed: false, signal: exitSignal });
       }
     });
   });
@@ -125,14 +131,8 @@ export function originTrackingRef(targetRef, remote = "origin") {
 // repository's last worktree leaves fetch, containment, and branch deletion
 // usable without a default checkout.
 export async function managementContext(worktree) {
-  return (
-    await git(
-      worktree,
-      "rev-parse",
-      "--path-format=absolute",
-      "--git-common-dir",
-    )
-  ).stdout.trim();
+  const args = ["rev-parse", "--path-format=absolute", "--git-common-dir"];
+  return (await git(worktree, ...args)).stdout.trim();
 }
 
 // The retained management context when supplied, otherwise the one recorded

@@ -19,7 +19,7 @@ import {
   classifyOwnedObservation,
   listOwnedMailboxes,
 } from "../../dough-execute-plan/scripts/ci-mailbox-match.mjs";
-import { listRegisteredRevisions } from "../../dough-execute-plan/scripts/ci-mailbox-revision-coverage.mjs";
+import { listRegisteredRevisions } from "../../dough-execute-plan/scripts/ci-mailbox-revision-records.mjs";
 import {
   coverageGap,
   retainedStream,

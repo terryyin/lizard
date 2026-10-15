@@ -45,7 +45,8 @@ Discovery requests have this shape:
 }
 ```
 
-Return every relevant attempt visible within the service query's bounded result:
+Return every relevant attempt visible within the service query's bounded result,
+newest first:
 
 ```json
 {
@@ -56,7 +57,10 @@ Return every relevant attempt visible within the service query's bounded result:
       "sha": "FULL_PUSHED_COMMIT_SHA",
       "outcome": "pending",
       "url": "https://ci.example/runs/opaque-id",
-      "time": "2026-09-15T10:00:00Z"
+      "time": "2026-09-15T10:00:00Z",
+      "branch": "BRANCH",
+      "check": "project-checks",
+      "context": "push"
     }
   ]
 }
@@ -67,12 +71,22 @@ identities; do not combine them or assume attempts are sequential. `sha` is the
 exact checked commit. `outcome` is one of `pending`, `success`, `failure`, or
 `incomplete`; use `incomplete` when a finished check supplies neither success nor
 failure proof, such as a cancelled check. `url` and `time` are optional.
+`branch`, `check` and `context` are optional nonempty strings: the branch the
+service validated for that attempt, the check's stable name, and its triggering
+context. The observer drops an attempt naming another branch, including for its
+exact SHA. Without `branch`, an attempt keeps counting for its exact SHA but
+never attests the target. When the service checks a SHA once for every branch
+that carries it, omit `branch` on an attempt it admitted for another branch so
+that the attempt still covers its exact SHA on the requested target.
 
 The first discovery after the observer starts is its startup snapshot. From it
 the observer keeps unfinished attempts and only the newest completed attempt by
-`time`; older completed attempts are history and are never reported, even when
-they reappear later. A new attempt, including a new `attemptId` for a known
-`runId`, is still observed. Without `time` on completed attempts, the observer
+`time`; older completed attempts stay outside ordinary notifications. They
+remain evidence for explicitly registered revisions and applicable ancestors.
+For attempts sharing a SHA (and any named check and context), a later `time`
+supersedes an older one for both exact and ancestor coverage. Equal or missing timestamps preserve the existing
+selection behavior; opaque identities never imply an order. A new attempt,
+including a new `attemptId` for a known `runId`, is still observed. Without `time` on completed attempts, the observer
 cannot tell history from current results and treats every returned attempt as
 current, so supply `time` when the query returns retained older attempts.
 
@@ -190,13 +204,36 @@ it through `node` as in the configuration example. A fixture for the example is:
 }
 ```
 
+## Integrated-state completion
+
+When `.planning/open-dough.json` also declares `integratedStateCompletion`
+(see the runtime setup reference), a successful later snapshot on the target
+may complete an earlier accepted revision it contains. Its `check` and
+`context` must equal the attempt's own `check` and `context`; `jobs` is not
+available here, so name each separately validated check in its own attempts.
+Only an attempt naming the target `branch` counts. The current attempt of a
+snapshot's check is the first listed. When another attempt of that check has an
+equal or later `time`, or has a `time` while the first has none, the evidence
+stays unresolved. Each poll judges it afresh from that poll's discovery, so a
+failed discovery withdraws it. Without the declaration or these fields,
+completion stays exact.
+
+## Runnable provider with optional reuse
+
+Follow [custom CI with validation reuse](custom-reuse-ci.md) when this project
+opts into provider-side reuse. Its runnable provider uses the shared gate and
+returns target aggregates through the adapter contract above.
+
 ## Outcomes, coverage, and failures
 
 Delivery registers each successfully pushed SHA independently of discovery.
 Only an attempt with that exact SHA can move a revision from undiscovered to
 pending, success, failure, or incomplete. A green result for another SHA does
-not cover it. A revision stays undiscovered until that attempt is found; there
-is no three-poll coverage-unavailable report. Pending and success remain quiet
+not cover it by itself. When the candidate checkout's workflow trigger filter
+proves that only ignored paths changed since an applicable ancestor, coverage
+records `not_required` with that ancestor's actual attempt state as its basis.
+Otherwise a revision stays undiscovered until its exact attempt is found;
+there is no three-poll coverage-unavailable report. Pending and success remain quiet
 coverage state; failure and incomplete can require attention. Shutdown lists
 unproved revisions as pending, undiscovered, or incomplete, not as verdicts.
 

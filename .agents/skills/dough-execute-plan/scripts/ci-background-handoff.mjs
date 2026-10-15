@@ -11,7 +11,7 @@ import {
   readMailboxEvents,
   readWorkerIdentity,
 } from "./ci-mailbox-store.mjs";
-import { readRevisionCoverage } from "./ci-mailbox-revision-coverage.mjs";
+import { readRevisionCoverage } from "./ci-mailbox-revision-records.mjs";
 import { checkMailboxWorkerLiveness } from "./ci-mailbox-worker-process.mjs";
 import { hostInputOwner, readOwnerClaim } from "./ci-observer-owner.mjs";
 import { recordedVerdict } from "./ci-mailbox-await.mjs";

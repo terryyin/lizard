@@ -241,10 +241,10 @@ existing operational evidence and lasting homes. Do not produce a success recap
 solely to repeat them.
 
 When attention is needed, report the affected facts and next action. Distinguish
-accepted trunk publication from a superseded candidate, integration from refused
-cleanup, committed pending publication from an accepted receipt, and completed
-wrap-up from a refusal that left files intact. End successful closure with
-`## STORY WRAP-UP COMPLETE`. Missing context, unfinished work, unresolved
-recovery/integration, required push, unpublished Trunk Mode closure, retained
-or unconfirmed observation, or resource cleanup blocks that marker. Local-only
-current-branch pending publication is not a required push.
+accepted trunk publication from a superseded candidate, an [`integrated_state` success](../dough-execute-plan/references/ci-completion-wait.md)
+from the closure's own, integration from refused cleanup, committed pending
+publication from an accepted receipt, and completed wrap-up from a refusal that
+left files intact. End successful closure with `## STORY WRAP-UP COMPLETE`.
+Missing context, unfinished work, unresolved recovery/integration, required
+push, unpublished Trunk Mode closure, retained or unconfirmed observation, or
+resource cleanup blocks that marker. Local-only current-branch pending publication is not a required push.

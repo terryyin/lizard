@@ -1,6 +1,6 @@
 import { existsSync, watch } from "node:fs";
 import { join } from "node:path";
-import { listRegisteredRevisions } from "./ci-mailbox-revision-coverage.mjs";
+import { listRegisteredRevisions } from "./ci-mailbox-revision-records.mjs";
 
 // Watches one mailbox for a stop request and for newly registered revisions.
 // `stopSignal` aborts once stop is requested. Each `armRegistrationWake()`

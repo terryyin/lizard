@@ -108,6 +108,11 @@ export function createGitHubActions({ repo, gh = readGitHubActions }) {
     );
     return workflow;
   };
+  // The run as its latest attempt reports it, with the workflow that ran it.
+  const currentRun = async (runId, signal) => {
+    const run = await gh(api(`runs/${runId}`), signal);
+    return defined({ ...observedRun(run), workflowId: run.workflow_id });
+  };
 
   return {
     // The selected workflow as GitHub names it.
@@ -131,11 +136,15 @@ export function createGitHubActions({ repo, gh = readGitHubActions }) {
 
     // The run's latest attempt.
     async viewRun(runId, signal) {
-      const { attempt, status, conclusion, url } = observedRun(
-        await gh(api(`runs/${runId}`), signal),
+      const { attempt, status, conclusion, url } = await currentRun(
+        runId,
+        signal,
       );
       return defined({ attempt, status, conclusion, url });
     },
+
+    // For judging one candidate's current evidence.
+    viewCurrentRun: currentRun,
 
     async viewAttempt(runId, attempt, signal) {
       const { status, conclusion } = await gh(

@@ -35,10 +35,32 @@ distinct from shutdown facts:
 
 - `verdict: "success"` with `shutdown.status: "confirmed"` satisfies completion
   observation and ends local observation.
+- `effectiveEvidence.source: "integrated_state"` is that success under this
+  project's declared [integrated-state policy](runtime-setup.md#select-ci): the
+  accepted revision had no successful run of its own (`accepted` keeps its own
+  state; an ignored-only `not_required` revision also keeps its basis, whose
+  applicable attempt was replaced or is still pending), and a successful
+  current attempt at a later same-target snapshot
+  that contains it (`validated`: SHA, run, attempt, URL, check, context and
+  any required jobs; `ancestry`) validated the integrated state. Report
+  "<accepted SHA> published; integrated state validated at <validated SHA>",
+  never that the accepted revision passed, and keep the accepted SHA as the
+  publication receipt for any closure, rebase or merge.
 - `verdict: "failure"` with `shutdown.status: "retained"` ends the wait without
   waiving the failure and keeps the observer available for diagnosis and
   authorized repair. Return to failure handling; do not claim completion or run
   a separate stop.
+- `effectiveEvidence.integrated` on an unresolved receipt names why no later
+  snapshot qualified yet (`reason`, and each considered SHA's reason). The
+  observer judges candidates afresh on every poll from the provider's current
+  attempt and the local checkout's Git ancestry. When this checkout lacks a
+  snapshot whose listed attempts all succeeded, it fetches only that
+  snapshot's objects, from the target's remote and without changing any ref;
+  `ancestry_unknown` remains only when that remote cannot serve it or no remote
+  for the target is identified. A snapshot with a pending or failed listed
+  attempt is never fetched and is reported as `not_current_success`. A
+  pending, failed, cancelled, rerun, unreadable, other-target or
+  context-incompatible attempt supplies no success.
 - `unresolvedReason` is one of `timeout`, `observation_unavailable`,
   `wait_cancelled`, `incomplete`, `evidence_unreadable`, or
   `missing_registration`. Except `wait_cancelled`, a bounded unresolved result

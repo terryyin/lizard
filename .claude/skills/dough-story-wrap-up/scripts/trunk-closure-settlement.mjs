@@ -8,7 +8,7 @@
 // closure the target holds and resumes it the same way. Once the execution
 // worktree is gone, only an accepted closure is settled, from the recorded
 // management context.
-import { listRegisteredRevisions } from "../../dough-execute-plan/scripts/ci-mailbox-revision-coverage.mjs";
+import { listRegisteredRevisions } from "../../dough-execute-plan/scripts/ci-mailbox-revision-records.mjs";
 import { deliverManagedExecutionIncrement } from "../../dough-execute-plan/scripts/execution-increment-delivery.mjs";
 import { observerAdapter } from "../../dough-execute-plan/scripts/execution-increment-resume.mjs";
 import {

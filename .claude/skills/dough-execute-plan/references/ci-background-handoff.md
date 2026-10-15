@@ -46,7 +46,10 @@ node '/ABSOLUTE/RESOLVED/SKILL/scripts/ci-background-handoff.mjs' status '/EXACT
 ```
 
 Status records success, cancellation, expired budget, closed session, lost
-waiter or unavailable observation. A native feedback attempt remains
+waiter or unavailable observation. A success keeps its `evidence`, reported as
+a [completion receipt](ci-completion-wait.md)'s is. Success grants no stop or
+cleanup; complete through the existing completion command before retiring
+resources. A native feedback attempt remains
 `delivery_uncertain` because the hook has no delivery acknowledgment, even when
 `feedbackEmitted` is true. Inspect this session and the retained attempted event
 before deciding on manual recovery; do not blindly retry. These limitations
