@@ -629,8 +629,24 @@ class FileAnalyzer(object):  # pylint: disable=R0903
 
 
 def map_files_to_analyzer(files, analyzer, working_threads):
-    mapmethod = get_map_method(working_threads)
-    return mapmethod(analyzer, files)
+    if working_threads == 1:
+        return map(analyzer, files)
+    return _map_in_pool(analyzer, files, working_threads)
+
+
+def _map_in_pool(analyzer, files, working_threads):
+    import multiprocessing
+    pool = multiprocessing.Pool(processes=working_threads)
+    try:
+        for result in pool.imap_unordered(analyzer, files):
+            yield result
+    except BaseException:
+        pool.terminate()
+        raise
+    else:
+        pool.close()
+    finally:
+        pool.join()
 
 
 def warning_filter(option, module_infos):
@@ -921,17 +937,6 @@ def print_msvs_style_warning(code_infos, option, scheme, _):
         print(scheme.msvs_warning_format().format(f=warning))
         count += 1
     return count
-
-
-def get_map_method(working_threads):
-    try:
-        if working_threads == 1:
-            raise ImportError
-        import multiprocessing
-        pool = multiprocessing.Pool(processes=working_threads)
-        return pool.imap_unordered
-    except ImportError:
-        return map
 
 
 def md5_hash_file(full_path_name):
