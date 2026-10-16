@@ -431,7 +431,7 @@ class TestCppNestedStructures(unittest.TestCase):
         self.assertEqual(2, result[0].max_nested_structures)
 
 
-class X: #TestPythonNestedStructures(unittest.TestCase):
+class TestPythonNestedStructures(unittest.TestCase):
 
     def test_no_structures(self):
         result = process_python("def fun():\n pass")
@@ -540,6 +540,60 @@ class X: #TestPythonNestedStructures(unittest.TestCase):
         """)
         self.assertEqual(3, result[0].max_nested_structures)
         self.assertEqual(2, result[1].max_nested_structures)
+
+    def test_ternary_and_comprehension_are_not_structures(self):
+        result = process_python("""
+        def c(items):
+            chosen = [x for x in items if x]
+            return chosen if chosen else None
+        """)
+        self.assertEqual(0, result[0].max_nested_structures)
+
+    def test_structures_do_not_pile_up_from_one_function_to_the_next(self):
+        result = process_python("""
+        def a(x):
+            if x:
+                return 1
+            return 0
+
+        def b(x):
+            if x:
+                return 1
+            return 0
+        """)
+        self.assertEqual([1, 1], [f.max_nested_structures for f in result])
+
+    def test_match_is_a_structure_and_its_cases_are_not(self):
+        result = process_python("""
+        def c(code):
+            match code:
+                case 1:
+                    return "one"
+                case _:
+                    if code:
+                        return "other"
+        """)
+        self.assertEqual(2, result[0].max_nested_structures)
+
+    def test_async_for_and_async_with(self):
+        result = process_python("""
+        async def c(source):
+            async with source:
+                async for item in source:
+                    if item:
+                        return item
+        """)
+        self.assertEqual(3, result[0].max_nested_structures)
+
+    def test_structure_on_a_continuation_line_is_not_nested(self):
+        result = process_python("""
+        def c(items):
+            total = sum(x
+                        for x in items)
+            if total:
+                return total
+        """)
+        self.assertEqual(1, result[0].max_nested_structures)
 
     def test_with_structure(self):
         result = process_python("""
