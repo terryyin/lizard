@@ -4,7 +4,10 @@ One-shot refinement refines one story queued in the **Backlog list** without
 publishing a Preparing assignment. It works in an owned workspace at fetched
 trunk, or in the default checkout when that is selected, records the story's
 preparation facts there, and stops with the committed result retained for
-review, or lands it when automatic landing is also selected. Use it only when the developer or parent
+review, or lands it when automatic landing is also selected. It ends at that
+review or landing and no plan follows it; the
+[preparation journey](preparation-journey.md) covers refinement that continues
+into slice planning. Use it only when the developer or parent
 instruction explicitly selects one-shot (`--one-shot` or a clear equivalent)
 for refining that story; never infer it from apparent smallness. Without that
 selection, refine under
@@ -12,7 +15,10 @@ selection, refine under
 
 An instruction that carries an established preparation continues it under
 [established preparation](established-preparation.md), even when it also
-names one-shot.
+names one-shot. In an
+[established session](../../dough-execute-plan/references/established-session.md),
+the start below is given that session's workspace and branch, and its
+`landing` is the landing selection.
 
 ## Start without an assignment
 
@@ -112,7 +118,10 @@ running `start` again. The default checkout always stays in place.
 When the developer or parent instruction also selects automatic landing
 (`--auto-land` or a clear equivalent), that selection is the developer's
 advance keep instruction for this refinement's result, so it does not wait for
-review. It is independent of the workspace choice. A confirmation that
+review. This section is the one-shot entry into
+[Keep and publish the retained result](preparation-disposition.md#keep-and-publish-the-retained-result),
+with `recheck` as its candidate check and no assignment to release. The
+selection is independent of the workspace choice. A confirmation that
 existing default-checkout changes may join the result lets them be committed
 with it; it never selects automatic landing. Add `--auto-land
 --push-authorized` to the start: its `prepared` receipt then also carries
@@ -139,7 +148,7 @@ committed and unlanded.
 ## Land or discard on request
 
 For automatic or later explicit landing with supplied dashboard context, apply
-[the original launch's landing handoff](../../dough-land/references/dashboard-completion.md#retain-the-one-shot-landing).
+[the original launch's landing handoff](../../dough-land/references/dashboard-completion.md#retain-the-launch-landing).
 
 The retained result follows
 [Decide what happens to the written result](preparation-disposition.md#decide-what-happens-to-the-written-result).

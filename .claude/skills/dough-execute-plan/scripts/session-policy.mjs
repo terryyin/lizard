@@ -29,6 +29,37 @@ export const sessionPolicyChoices = Object.freeze({
   }),
 });
 
+// The choices of a session started with no workflow to track, each with its
+// default first: it runs in the default checkout unless an isolated workspace
+// is chosen, and its landing waits for review unless automatic landing is.
+// It has no tracking; a workflow invoked in it later carries its own.
+export const unattachedSessionChoices = Object.freeze({
+  workspace: Object.freeze({
+    values: Object.freeze(
+      /** @type {const} */ (["default-checkout", "isolated"]),
+    ),
+  }),
+  landing: Object.freeze({
+    values: sessionPolicyChoices.landing.values,
+  }),
+});
+
+// An unattached session's policy: each choice `selected` names, and the
+// default of every choice it does not.
+/** @typedef {{workspace: "default-checkout" | "isolated", landing: "review" | "auto-land"}} UnattachedSessionPolicy */
+/** @param {Partial<UnattachedSessionPolicy>} [selected]
+ * @returns {UnattachedSessionPolicy} */
+export function unattachedSessionPolicy(selected = {}) {
+  return /** @type {UnattachedSessionPolicy} */ (
+    Object.fromEntries(
+      Object.entries(unattachedSessionChoices).map(([choice, { values }]) => [
+        choice,
+        selected[choice] ?? values[0],
+      ]),
+    )
+  );
+}
+
 // Each invocation flag and the request option it sets to true.
 export const sessionPolicyToggles = Object.freeze(
   Object.fromEntries(
@@ -62,6 +93,17 @@ export function sessionPolicyFlags(policy = {}) {
   return Object.entries(sessionPolicyChoices)
     .filter(([choice, { values }]) => policy[choice] === values[1])
     .map(([, { flag }]) => flag);
+}
+
+// The policy the shared start runs with to establish an unattached session's
+// place: the one-shot start, which takes no identity and publishes nothing,
+// with the session's own workspace and landing. Its flags and publication
+// authority are that policy's (`sessionPolicyFlags`,
+// `needsPublicationAuthority`); the session itself stays untracked.
+/** @param {Partial<UnattachedSessionPolicy>} [selected]
+ * @returns {SessionPolicy} */
+export function unattachedStartPolicy(selected = {}) {
+  return { tracking: "one-shot", ...unattachedSessionPolicy(selected) };
 }
 
 // Whether a session's start needs trunk publication authority: tracked work

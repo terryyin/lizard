@@ -1,31 +1,32 @@
-// Git mechanics for publish-the-candidate.md "Preserve published history".
+#!/usr/bin/env node
+// Git mechanics for references/preserve-published-history.md.
 // One owned workspace merges an already-published tip onto fetched trunk,
 // pushes that candidate SHA through pushExactRef, and recomputes the merge
-// once after a rejected push. Installed guidance is the agent's contract.
-import { existsSync } from "node:fs";
-import { isAbsolute, join } from "node:path";
-import { fileURLToPath } from "node:url";
-import { doneDirectoryBeside } from "../../dough-product-backlog/scripts/product-backlog-git-done-catalog.mjs";
+// once after a rejected push. A conflicted or uncommitted merge is preserved
+// for the agent to resolve and commit; the next run publishes that commit as
+// the candidate.
+// With a launch's landing context, each attempt's candidate and the fetched
+// tip it was built on are retained before its push, and the accepted pair is
+// recorded as that launch's landing. Installed guidance is the agent's
+// contract.
+import { resolve } from "node:path";
 import { defaultBacklogPath } from "../../dough-product-backlog/scripts/product-backlog-store.mjs";
+import { flagValues, isDirectCliEntry } from "./ci-direct-entry.mjs";
 import {
-  creditMergeInProgress,
-  DeveloperIdentityRefused,
-} from "./workspace-agent-authorship.mjs";
+  captureAcceptedLanding,
+  retainLandingComparison,
+} from "./dashboard-landing.mjs";
 import {
-  exec,
+  constructCandidate,
+  mergeInProgress,
+} from "./history-preserving-candidate.mjs";
+import {
   git,
   lsRemoteSha,
   originTrackingRef,
   pushExactRef,
   revParse,
 } from "./publication-git.mjs";
-
-const mergeCli = fileURLToPath(
-  new URL(
-    "../../dough-product-backlog/scripts/product-backlog-git-merge.mjs",
-    import.meta.url,
-  ),
-);
 
 const trunkTarget = "refs/heads/main";
 
@@ -39,92 +40,6 @@ async function isAncestor(workspace, ancestor, descendant) {
     }
     throw error;
   }
-}
-
-async function pathExists(workspace, name) {
-  const printed = (
-    await git(workspace, "rev-parse", "--git-path", name)
-  ).stdout.trim();
-  const path = isAbsolute(printed) ? printed : join(workspace, printed);
-  return existsSync(path);
-}
-
-// Whether either side changed the backlog or the done directory beside it.
-async function backlogTouched(workspace, ref, file) {
-  const base = (await git(workspace, "merge-base", "HEAD", ref)).stdout.trim();
-  const paths = ["--", file, doneDirectoryBeside(file)];
-  const onTrunk = (
-    await git(workspace, "diff", "--name-only", base, "HEAD", ...paths)
-  ).stdout.trim();
-  const onStory = (
-    await git(workspace, "diff", "--name-only", base, ref, ...paths)
-  ).stdout.trim();
-  return onTrunk !== "" || onStory !== "";
-}
-
-async function mergeThroughAdapter(workspace, ref, file) {
-  try {
-    const { stdout, stderr } = await exec(process.execPath, [
-      mergeCli,
-      "merge",
-      "--ref",
-      ref,
-      "--file",
-      file,
-      "--cwd",
-      workspace,
-    ]);
-    return { code: 0, status: stdout.trim(), stdout, stderr };
-  } catch (error) {
-    return {
-      code: error.code ?? 1,
-      status: `${error.stdout ?? ""}${error.stderr ?? ""}`.trim(),
-      stdout: error.stdout ?? "",
-      stderr: error.stderr ?? "",
-    };
-  }
-}
-
-async function historyPreservingMerge(workspace, ref) {
-  const head = await revParse(workspace, "HEAD");
-  const base = (await git(workspace, "merge-base", "HEAD", ref)).stdout.trim();
-  if (base === head) {
-    await git(workspace, "merge", "--ff-only", ref);
-    return;
-  }
-  await git(workspace, "merge", "--no-ff", "--no-commit", ref);
-  await creditMergeInProgress(workspace);
-  await git(workspace, "commit", "--no-edit");
-}
-
-async function constructCandidate(workspace, trunkRef, publishedTip, file) {
-  await git(workspace, "checkout", "--detach", trunkRef);
-  if (await backlogTouched(workspace, publishedTip, file)) {
-    const merged = await mergeThroughAdapter(workspace, publishedTip, file);
-    if (merged.code !== 0) {
-      return { ok: false, adapterStatus: merged.status, merged };
-    }
-    return {
-      ok: true,
-      sha: await revParse(workspace, "HEAD"),
-      adapterStatus: merged.status,
-    };
-  }
-  try {
-    await historyPreservingMerge(workspace, publishedTip);
-  } catch (error) {
-    if (!(error instanceof DeveloperIdentityRefused)) throw error;
-    return {
-      ok: false,
-      reason: "developer-identity-refused",
-      error: error.message,
-    };
-  }
-  return {
-    ok: true,
-    sha: await revParse(workspace, "HEAD"),
-    adapterStatus: null,
-  };
 }
 
 async function pushRejected(workspace, sha, remote, targetRef) {
@@ -141,7 +56,7 @@ async function pushRejected(workspace, sha, remote, targetRef) {
 }
 
 async function returnToBranch(workspace, branch) {
-  if (!branch || (await pathExists(workspace, "MERGE_HEAD"))) {
+  if (!branch || (await mergeInProgress(workspace))) {
     return;
   }
   const status = (await git(workspace, "status", "--porcelain")).stdout;
@@ -160,13 +75,28 @@ export async function publishHistoryPreservingCandidate({
   backlogPath = defaultBacklogPath,
   affectedCheck,
   beforePush,
+  landingContext,
   register,
 }) {
   await git(ownedWorkspace, "fetch", remote);
   const tracking = originTrackingRef(targetRef, remote);
+  // Records the pair retained before the accepted push; `expected` names what
+  // this run knows of it.
+  const captured = async (expected) =>
+    landingContext
+      ? {
+          landing: await captureAcceptedLanding(landingContext, {
+            ...expected,
+            remote,
+            target: targetRef,
+          }),
+        }
+      : {};
   if (await isAncestor(ownedWorkspace, publishedTip, tracking)) {
     return {
       classification: "already-accepted",
+      // A rerun after a push whose answer was lost still records its pair.
+      ...(await captured({})),
       mergeCount: 0,
       pushCount: 0,
       rejectedPushCount: 0,
@@ -182,13 +112,14 @@ export async function publishHistoryPreservingCandidate({
   let mergeCount = 0;
   let rejectedPushCount = 0;
   for (let attempt = 0; attempt < 2; attempt += 1) {
+    const suffixBase = await revParse(ownedWorkspace, tracking);
     const prepared = await constructCandidate(
       ownedWorkspace,
       tracking,
       publishedTip,
       backlogPath,
     );
-    mergeCount += 1;
+    if (prepared.mergeRan) mergeCount += 1;
     if (prepared.adapterStatus) {
       adapterStatuses.push(prepared.adapterStatus);
     }
@@ -197,6 +128,9 @@ export async function publishHistoryPreservingCandidate({
         classification: "preserved",
         reason: prepared.reason ?? "conflict",
         ...(prepared.error && { error: prepared.error }),
+        ...(prepared.conflictedPaths && {
+          conflictedPaths: prepared.conflictedPaths,
+        }),
         mergeCount,
         pushCount: 0,
         rejectedPushCount,
@@ -208,9 +142,21 @@ export async function publishHistoryPreservingCandidate({
     if (affectedCheck) {
       await affectedCheck(prepared.sha);
     }
-    if (attempt === 0 && beforePush) {
-      await beforePush();
+    const comparison = { candidate: prepared.sha, suffixBase };
+    if (landingContext) {
+      try {
+        await retainLandingComparison(landingContext, comparison, {
+          remote,
+          targetRef,
+        });
+      } catch (error) {
+        // A resolved merge taken from the workspace is on no ref: the
+        // workspace stays on it so the next run takes it again.
+        if (prepared.mergeRan) await returnToBranch(ownedWorkspace, branch);
+        throw error;
+      }
     }
+    await beforePush?.({ attempt, ...comparison });
     if (await pushRejected(ownedWorkspace, prepared.sha, remote, targetRef)) {
       rejectedPushCount += 1;
       supersededSha = prepared.sha;
@@ -223,10 +169,15 @@ export async function publishHistoryPreservingCandidate({
       throw new Error("remote did not accept the candidate");
     }
     const receipt = { sha: prepared.sha, target: targetRef };
+    const landing = await captured({
+      base: suffixBase,
+      revision: prepared.sha,
+    });
     register?.(receipt);
     await returnToBranch(ownedWorkspace, branch);
     return {
       classification: "published",
+      ...landing,
       mergeCount,
       pushCount: 1,
       rejectedPushCount,
@@ -247,4 +198,36 @@ export async function publishHistoryPreservingCandidate({
     adapterStatuses,
     receipt: null,
   };
+}
+
+const usage =
+  "usage: history-preserving-publication.mjs integrate --workspace PATH --published-tip SHA --branch NAME [--target-ref refs/heads/<branch>] [--remote NAME] [--backlog-path PATH] [--landing-context PATH]";
+
+function argumentsOf(argv) {
+  if (argv[0] !== "integrate") throw new Error(usage);
+  const result = flagValues(argv.slice(1));
+  const { workspace, publishedTip, branch, ...rest } = result;
+  const known = ["targetRef", "remote", "backlogPath", "landingContext"];
+  if (
+    !workspace ||
+    !publishedTip ||
+    !branch ||
+    Object.keys(rest).some((key) => !known.includes(key))
+  ) {
+    throw new Error(usage);
+  }
+  return { ownedWorkspace: resolve(workspace), publishedTip, branch, ...rest };
+}
+
+if (isDirectCliEntry(import.meta.url, process.argv[1])) {
+  try {
+    const result = await publishHistoryPreservingCandidate(
+      argumentsOf(process.argv.slice(2)),
+    );
+    process.stdout.write(`${JSON.stringify(result)}\n`);
+    if (result.classification === "preserved") process.exitCode = 1;
+  } catch (error) {
+    process.stderr.write(`${error.message}\n`);
+    process.exitCode = 2;
+  }
 }

@@ -20,6 +20,16 @@
             "timeout": 5
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/skills/dough-execute-plan/scripts/ci-background-hook.mjs\"",
+            "timeout": 610,
+            "asyncRewake": true
+          }
+        ]
       }
     ],
     "PreToolUse": [

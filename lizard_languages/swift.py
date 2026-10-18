@@ -17,7 +17,26 @@ _SWIFT_TOKEN_ADDITION = (
     r"|\?\?"
     r"|\#(?!(?:if|elseif|else|endif|sourceLocation|warning|error)\b)\w+"
 )
-_POSTFIX_OPTIONAL = 'postfix?'
+
+
+class _OptionalQuestionMark(str):
+    """Source punctuation whose Swift lexical role is postfix, not ternary."""
+
+    is_optional = True
+
+
+_POSTFIX_OPTIONAL = _OptionalQuestionMark('?')
+
+
+def _swift_token(match):
+    token = match.group(0)
+    if token == '?':
+        source, start = match.string, match.start()
+        # Comments have the same lexical role as whitespace in Swift.
+        if start and not source[start - 1].isspace() and not source.endswith(
+                '*/', 0, start):
+            return _POSTFIX_OPTIONAL
+    return token
 
 
 def _separates_label(token):
@@ -77,22 +96,15 @@ class SwiftReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
         super(SwiftReader, self).__init__(context)
         self.parallel_states = [SwiftStates(context)]
 
-    def preprocess(self, tokens):
-        # Swift requires whitespace before a ternary `?`; a `?` attached to
-        # the previous token is optional chaining or an optional type.
-        def postfix_optionals():
-            previous = ' '
-            for token in tokens:
-                if token == '?' and not previous.isspace():
-                    yield _POSTFIX_OPTIONAL
-                else:
-                    yield token
-                previous = token
-        return super(SwiftReader, self).preprocess(postfix_optionals())
+    def process_token(self, token):
+        if token is _POSTFIX_OPTIONAL:
+            self.context.add_condition(-1)
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
         pattern = compiled_token_pattern(_SWIFT_TOKEN_ADDITION + addition)
+        if token_class is None and '?' in source_code:
+            token_class = _swift_token
         for is_literal, start, end in literal_spans(source_code):
             if is_literal:
                 yield source_code[start:end]
@@ -117,12 +129,6 @@ class SwiftStates(GoLikeStates):  # pylint: disable=R0903
         self._accessor = None
         self._accessor_step = None
         self._accessor_tokens = []
-
-    def __call__(self, token, reader=None):
-        # The marker only keeps the condition counter away; signatures keep `?`.
-        if token == _POSTFIX_OPTIONAL:
-            token = '?'
-        return super(SwiftStates, self).__call__(token, reader)
 
     def _state_global(self, token):
         name = self._introduced_function(token)

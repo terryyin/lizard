@@ -40,8 +40,9 @@ node <installed>/dough-land/scripts/worktree-retirement.mjs retire \
   it.
 - Pass `--created-for-work` only when the work recorded that its workspace
   selection reported `created: true`, in the plan or the conversation, or the
-  caller or developer states the worktree was created for this work. Do not
-  infer it from a clean directory, a claim, or a preparation assignment.
+  caller or developer states the worktree was created for this work. In an
+  established session, use [its creation fact](../../dough-execute-plan/references/established-session.md#retire-the-isolated-workspace).
+  Do not infer it from a clean directory, a claim, or a preparation assignment.
 - `--remote-branch` names a branch the worktree's work published separately on
   the same remote, such as a Story Branch execution branch; never the target
   branch itself. Pass `--contained` with each revision the target must hold

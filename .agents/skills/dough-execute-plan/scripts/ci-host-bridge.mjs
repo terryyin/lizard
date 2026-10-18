@@ -14,17 +14,25 @@ const defaultHook = fileURLToPath(
 // Explicit session input is authoritative, metadata included. Without it, a
 // Claude Code or Cursor coordinator is identified by its own host's session
 // variable from the supplied environment; no host uses another host's variable.
+// `fields` are what --session-json carries to name that same coordinator.
+// Claude Code's variable names the session alone, so only explicit input
+// names the owner of an observer claimed with an `agent_id`.
 const hostIdentity = {
   claude: {
     name: "Claude Code session",
     variable: "CLAUDE_CODE_SESSION_ID",
     field: "session_id",
+    fields:
+      "its session_id, and the agent_id its observer was claimed with, if any",
+    agentOwned:
+      "an observer claimed with an agent_id is named only by --session-json with that session_id and agent_id",
     tool: "Bash",
   },
   cursor: {
     name: "Cursor conversation",
     variable: "CURSOR_CONVERSATION_ID",
     field: "conversation_id",
+    fields: "its conversation_id",
     tool: "Shell",
   },
 };
@@ -36,11 +44,42 @@ export function resolveHostSession({ host, session, env = process.env }) {
   return ambient ? { [identity.field]: ambient } : session;
 }
 
+// The one reading of `--session-json` for `deliver`, `resume`, and `finish`.
+// The explicit session stays apart from the ambient identity, which
+// `eventRecipient` tells from it. Malformed JSON throws: the command stops,
+// and no other identity stands in for the one it named.
+export function withExplicitSession({ sessionJson, ...args }) {
+  return sessionJson ? { ...args, session: JSON.parse(sessionJson) } : args;
+}
+
 export function missingIdentityReason(host, command = "deliver") {
   const identity = hostIdentity[host];
   if (!identity)
     return "host session identity is required to verify the notification bridge";
-  return `${identity.name} identity is unavailable: ${identity.variable} is unset and no --session-json was supplied; run ${command} from the coordinator's own ${identity.tool} tool or pass --session-json with its ${identity.field}`;
+  return `${identity.name} identity is unavailable: ${identity.variable} is unset and no --session-json was supplied; run ${command} from the coordinator's own ${identity.tool} tool or pass --session-json with ${identity.fields}`;
+}
+
+// What recovers a host coordinator that holds no observer of its own, before
+// each command's own next step. The hook delivers an observer's events only
+// to the session that claimed it, so --session-json names this coordinator
+// and never an earlier session's observer.
+export function ownObserverRecovery(host) {
+  return `a call that lacks this coordinator's own identity passes --session-json with ${hostIdentity[host].fields}; a session that replaced the coordinator that armed an observer receives none of its events and stops it with \`ci-mailbox.mjs stop <recorded directory>\``;
+}
+
+// The session whose tool calls receive the events of the observer `session`
+// owns, and the input that named it; `session` is the explicit input, if any.
+// Undefined without the host's session identity.
+export function eventRecipient({ host, session, env }) {
+  const identity = hostIdentity[host];
+  const resolved = resolveHostSession({ host, session, env });
+  const id = resolved?.session_id ?? resolved?.conversation_id;
+  if (!identity || !id) return undefined;
+  const child = resolved.agent_id ?? resolved.subagent_id;
+  const named = `${identity.name} ${id}${child ? ` agent ${child}` : ""}`;
+  if (session !== undefined && session !== null)
+    return `${named}, named by --session-json; a caller that is not that coordinator receives none of this observer's events`;
+  return `${named}, named by ${identity.variable}${identity.agentOwned ? `; ${identity.agentOwned}` : ""}`;
 }
 
 function hookInput(host, session, receipt = "") {

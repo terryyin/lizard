@@ -10,6 +10,40 @@ judgment satisfies the goal. Quotes match word for word after whitespace and
 Markdown emphasis normalization. Read the actual story before choosing a
 disposition; script success alone does not accept the behavior.
 
+## Check the paths before closing a gap
+
+Before choosing `no user cost` or `proved`, connect the reported state to the
+selected story's actual promise. Inspect the relevant entry, continuation,
+failure/recovery, and handoff paths in this project's guidance and
+implementation: what can produce that state, what consumes it, and what result
+the developer receives. The return's stated cause and the current slice's
+command do not establish the only way to reach it. Follow a directed action
+through its continuation to the promised result; a passing initial guard does
+not establish what committing, rerunning, or handing work to another owner does.
+Inspect only paths relevant to this gap, without a routine path inventory.
+
+Reuse sufficient inspection and observations under
+[executable proof](../../dough-story-refinement/references/executable-proof.md).
+Check what the accepted evidence actually observes at the relevant boundary;
+do not extend a helper's passing result to an unobserved continuation. When
+reachability or the promised result remains uncertain, obtain the smallest safe
+missing observation within authority, or keep that dependent promise open and
+name its missing proof. Retain independently accepted evidence. A reachable
+contradiction returns to the current slice, unless a valid receiving or interim
+owner already owns its correction and proof under the dispositions below.
+Preserve the gap's id, original text and reporting provenance. A genuine story
+exclusion or developer-authorized changed promise retains its authority; path
+inspection does not authorize changing scope.
+
+Record the inspected path and result in the existing disposition reason or
+proof location, with ordinary acceptance evidence; add no field or entry per
+path. Close a harmless limitation as `no user cost` when its concrete reason
+holds through the relevant paths, and use `proved` when sufficient current
+evidence covers the promised result. Continue without another approval,
+unrelated obligations, or a blanket rerun of accepted observations. Reassess
+that reason or proof when a changed path invalidates it. A return naming no gap
+needs no new obligation from this check.
+
 ## Record format
 
 The plan's `**Source:**` link must name its selected story section. Use one

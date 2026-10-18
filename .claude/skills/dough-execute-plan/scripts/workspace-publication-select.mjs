@@ -127,7 +127,7 @@ export async function selectOwnedWorkspace(request) {
       // fast-forward eligibility; its own commits, edits, and any ongoing Git
       // operation stay as they are.
       const reused =
-        actual === request.workspace
+        realpathSync(actual) === realpathSync(request.workspace)
           ? await fastForwardToFetchedTrunk(
               request.workspace,
               base,

@@ -21,6 +21,7 @@ import { managedDeliveryGeneration } from "./ci-mailbox-location.mjs";
 import { readMailboxTerminal } from "./ci-mailbox-match.mjs";
 import { claimMailbox, hostInputOwner } from "./ci-observer-owner.mjs";
 import { isDirectCliEntry } from "./ci-direct-entry.mjs";
+import { readBackgroundHandoff } from "./ci-background-state.mjs";
 
 const hash = (value) => createHash("sha256").update(value).digest("hex");
 
@@ -29,7 +30,9 @@ const emptySelection = () => ({ output: {}, acknowledge: () => undefined });
 const isHostStop = (input) =>
   input.hook_event_name === "Stop" || input.hook_event_name === "stop";
 
-const isDiscoveryAdvisory = (event) => event.type === "CI_DISCOVERY_DELAYED";
+// Informational records: neither alone holds a stopping host for a turn.
+const isAdvisory = (event) =>
+  ["CI_DISCOVERY_DELAYED", "CI_MONITOR_THROTTLED"].includes(event.type);
 
 const lostWorkerMessage = (directory, lost) =>
   `CI observer lost its worker for this coordinator: ${directory} (${lost.coverage.reason})`;
@@ -137,6 +140,7 @@ export function selectCiEvents(
   if (existsSync(bindings))
     for (const binding of readdirSync(bindings)) {
       const directory = readFileSync(join(bindings, binding), "utf8");
+      if (host === "claude" && readBackgroundHandoff(directory)) continue;
       if (!attachedThisCall.has(directory)) reportLoss(directory);
       const { deliveredThrough } = readDeliveryProgress(directory);
       const records = readMailboxEvents(directory, deliveredThrough);
@@ -147,7 +151,7 @@ export function selectCiEvents(
   const skipAdvisoriesOnStop =
     isHostStop(input) &&
     undelivered.length > 0 &&
-    undelivered.every(({ event }) => isDiscoveryAdvisory(event));
+    undelivered.every(({ event }) => isAdvisory(event));
 
   if (!skipAdvisoriesOnStop) {
     for (const { directory, records } of mailboxDeliveries) {

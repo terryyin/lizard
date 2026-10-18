@@ -53,24 +53,37 @@ attachments; reporting schedules no delayed disposal. Native Working may remain
 visible, and no cosmetic rename or native shutdown is claimed by a receipt. Existing
 CI-observer shutdown/retirement gates remain independent and required.
 
-## Retain the one-shot landing
+## Retain the launch landing
 
-For a dashboard-established one-shot refinement or execution, retain the original
-launch's supplied `landing-context.json` outside the checkout.
+When a dashboard-started launch supplies a `landing-context.json`, retain that
+original launch's file outside the checkout and supply it to the publication
+that first lands this launch's work on the authorized trunk target, through its
+retries and resumes. A launch has one landing: after the target accepts that
+publication, this launch's later publications to it, such as a CI repair or a
+consumer resolution after integration, take no landing context. Publication to
+an execution branch takes none.
 Without that capability, explain that no landing comparison can be retained;
 completion reporting stays available. Never guess a launch, base, target or repository.
 
-Pass `--landing-context <supplied absolute file>` to the installed
+For an owned suffix, such as a one-shot result, pass
+`--landing-context <supplied absolute file>` to the installed
 `execution-increment-delivery.mjs deliver` command; its shared
 `publishExecutionIncrement` API takes the same path as `landingContext`, including
 when Dough Land uses that API without an execution observer. The installed
 `publication-resume.mjs` API and `execution-increment-resume.mjs resume` accept it
 as well. Supply the retained `--suffix-base` with the candidate when resuming.
+For a Story Branch integration, pass the same flag to the installed
+`history-preserving-publication.mjs integrate` command; its base is the fetched
+target tip the published branch tip was merged onto, so target changes merged
+into the branch earlier stay outside the comparison. Running that command again
+after acceptance pushes nothing and records the pair it retained.
+
 The handoff writes the exact launch and candidate/base pair before every push,
-updates it after reconciliation, and prepares that pair against this launch's
-established workspace. The receiver resolves the repository from the established
-launch, validates commit types and ancestry, and pins both ends before metadata.
-No caller-supplied repository path is accepted.
+updates it after reconciliation or a recomputed merge, and prepares that pair
+against this launch's established workspace: the candidate is that workspace's
+`HEAD` and contains its branch tip. The receiver resolves the repository from the
+established launch, validates commit types and ancestry, and pins both ends
+before metadata. No caller-supplied repository path is accepted.
 
 After remote acceptance, the same handoff records the accepted pair before refresh,
 CI finish duties or retirement. Inspect the returned `landing` result independently

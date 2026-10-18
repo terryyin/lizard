@@ -109,8 +109,10 @@ preconditions](references/trunk-publication.md#preconditions), including the
 authorized remote/trunk, before a Story Branch or Trunk Mode startup that publishes
 a claim. Existing current-branch and host-owned checkout restrictions still apply.
 
-When your instruction carries an established start, follow [established
-start](references/established-start.md) instead of the start command below.
+When your instruction carries an established start, follow [established start](references/established-start.md) instead of the start command below.
+When your session holds this story's Preparing workspace with unlanded preparation, first follow
+[hand off to execution in the same session](../dough-story-refinement/references/preparation-journey.md#hand-off-to-execution-in-the-same-session) before that command.
+When your session's first message carried an established session, give that command the workspace and branch [established session](references/established-session.md) decides.
 
 For authorized queued Story Branch or Trunk Mode work, invoke the installed
 `scripts/execution-start.mjs start` once with the originating integration
@@ -123,9 +125,8 @@ ID, mode (`trunk` or `story-branch`), actual remote and trunk branch, and the
 established `--push-authorized --workspace-authorized` flags. Supply your own `--host` (`claude`, `codex`, or
 `cursor`) and `--model`; omit either you cannot state rather than guess. Supply
 `--plan` as a path relative to the backlog directory when explicitly selected;
-the command also resolves the canonical published plan.
-The command fetches trunk, checks the published selected
-source and preparation, selects the workspace or reuses it under [refresh
+the command also resolves the canonical published plan. The command fetches trunk,
+checks the published selected source and preparation, selects the workspace or reuses it under [refresh
 eligibility](references/maintain-default-checkout.md#refresh-eligibility), names you as an agent,
 commits an isolated Take that publishes your agent profile, makes that agent the
 author of your workspace commits (`workspaceAuthorship: "not-configured"` means
@@ -227,8 +228,7 @@ Missing/contradictory execution identity requires the recovery decision above.
    [oversized-slice decisions](references/oversized-slice.md).
    A no-replan return stops without planning or retry. When replanning is allowed, use
    [ordinary slice planning](../dough-slice-planning/SKILL.md) for remaining work,
-   and restart as planned execution. Before
-   delegating a change that invalidates a required
+   and restart as planned execution. Before delegating a change that invalidates a required
    pre-change observation, apply [proof ownership](../dough-story-refinement/references/planning.md#own-executable-proof):
    reuse an adequate baseline with known matching revision/environment/selection conditions,
    or obtain it first. Missing/failed prerequisites stop only dependent work. Apply on entry

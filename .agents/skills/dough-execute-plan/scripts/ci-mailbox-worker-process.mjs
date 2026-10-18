@@ -1,5 +1,4 @@
 import { createHash } from "node:crypto";
-import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { setTimeout as pause } from "node:timers/promises";
@@ -10,6 +9,11 @@ import {
   recordLostTerminalResult,
   workerLossReason,
 } from "./ci-mailbox-store.mjs";
+import {
+  commandShowsExit,
+  processShowsExit,
+  shownProcessSync,
+} from "./process-table.mjs";
 
 export const mailboxWorkerPath = fileURLToPath(
   new URL("./ci-mailbox.mjs", import.meta.url),
@@ -29,14 +33,8 @@ function workerIsRunning(pid) {
     throw error;
   }
   try {
-    // Linux may leave an exited detached worker as a zombie until its parent
-    // reaps it. kill(pid, 0) still succeeds for that PID, but it cannot run.
-    const state = execFileSync("ps", ["-p", String(pid), "-o", "stat="], {
-      encoding: "utf8",
-    }).trim();
-    return state !== "" && !state.startsWith("Z");
+    return !processShowsExit(shownProcessSync(pid));
   } catch (error) {
-    if (error.status === 1) return false;
     // kill(pid, 0) found the PID; without its state it counts as running.
     if (inspectionDenied(error)) return true;
     throw error;
@@ -99,27 +97,7 @@ function commandMatchesMailboxWorker(command, directory, identity) {
 }
 
 function readProcessCommandSync(pid) {
-  try {
-    return execFileSync("ps", ["-ww", "-p", String(pid), "-o", "command="], {
-      encoding: "utf8",
-    }).trim();
-  } catch (error) {
-    if (error.status === 1) return undefined;
-    throw error;
-  }
-}
-
-// An exited process is gone whatever its state: `ps` shows it as gone or
-// `<defunct>`, including, on Linux, a node process whose main thread exited
-// while other threads unwind and whose state is not yet a zombie's. macOS
-// shows an exiting process, whose arguments are already gone, by its bare
-// name in parentheses, such as `(node)`, before it becomes a zombie.
-function commandShowsExit(command) {
-  return (
-    command === undefined ||
-    command.endsWith("<defunct>") ||
-    /^\(.+\)$/.test(command)
-  );
+  return shownProcessSync(pid)?.command;
 }
 
 // One classification of a live PID's command serves liveness and

@@ -1,4 +1,4 @@
-import { ciWorkflowFile } from "./ci-runs.mjs";
+import { ciWorkflowFile, GitHubAcquisitionHeld } from "./ci-github-actions.mjs";
 
 export const ciAttemptKey = (runId, attempt) =>
   JSON.stringify([runId, attempt]);
@@ -23,7 +23,7 @@ export async function inspectRunsForFailure({
   repo,
   runs,
   signal,
-  gh,
+  github,
   priorAttempts,
   reportedFailures = new Set(),
   completedAttempts = new Set(),
@@ -36,22 +36,14 @@ export async function inspectRunsForFailure({
       const key = ciAttemptKey(run.databaseId, attempt);
       if (!priorAttempts.has(key)) {
         try {
-          const prior = await gh(
-            [
-              "run",
-              "view",
-              String(run.databaseId),
-              "--repo",
-              repo,
-              "--attempt",
-              String(attempt),
-              "--json",
-              "status,conclusion",
-            ],
+          const prior = await github.viewAttempt(
+            run.databaseId,
+            attempt,
             signal,
           );
           priorAttempts.set(key, { ...run, ...prior, attempt });
         } catch (error) {
+          if (error instanceof GitHubAcquisitionHeld) throw error;
           historyError = `Could not inspect earlier CI attempts: ${String(error.message).slice(0, 600)}`;
           observationError = historyError;
           break history;
@@ -75,22 +67,14 @@ export async function inspectRunsForFailure({
   for (const [index, failed] of failures.entries()) {
     let jobs;
     try {
-      ({ jobs } = await gh(
-        [
-          "run",
-          "view",
-          String(failed.databaseId),
-          "--repo",
-          repo,
-          "--attempt",
-          String(failed.attempt),
-          "--json",
-          "jobs",
-        ],
+      jobs = await github.attemptJobs(
+        failed.databaseId,
+        failed.attempt,
         signal,
-      ));
+      );
       completedAttempts.add(ciAttemptKey(failed.databaseId, failed.attempt));
     } catch (error) {
+      if (error instanceof GitHubAcquisitionHeld) throw error;
       observationError = `Could not inspect CI jobs: ${String(error.message).slice(0, 600)}`;
       if (
         reportedFailures.has(
@@ -148,21 +132,9 @@ export async function inspectRunsForFailure({
   )) {
     let jobs;
     try {
-      ({ jobs } = await gh(
-        [
-          "run",
-          "view",
-          String(run.databaseId),
-          "--repo",
-          repo,
-          "--attempt",
-          String(run.attempt),
-          "--json",
-          "jobs",
-        ],
-        signal,
-      ));
+      jobs = await github.attemptJobs(run.databaseId, run.attempt, signal);
     } catch (error) {
+      if (error instanceof GitHubAcquisitionHeld) throw error;
       observationError ??= `Could not inspect CI jobs: ${String(error.message).slice(0, 600)}`;
       continue;
     }
@@ -188,7 +160,7 @@ export async function inspectRunsForFailure({
   return { historyError, observationError };
 }
 
-export function createGitHubFailureAcquisition({ repo, gh }) {
+export function createGitHubFailureAcquisition({ repo, github }) {
   const priorAttempts = new Map();
   const reportedFailures = new Set();
   const completedAttempts = new Set();
@@ -198,7 +170,7 @@ export function createGitHubFailureAcquisition({ repo, gh }) {
       repo,
       runs,
       signal,
-      gh,
+      github,
       priorAttempts,
       reportedFailures,
       completedAttempts,
@@ -235,7 +207,7 @@ function failureEvent({
   return event;
 }
 
-function isFailedJob(job) {
+export function isFailedJob(job) {
   return (
     job.conclusion &&
     !["success", "skipped", "neutral", "cancelled"].includes(job.conclusion)

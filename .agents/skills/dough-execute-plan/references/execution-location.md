@@ -13,6 +13,8 @@ An accepted independent mission, including contextual planless work, is
 [admitted](admit-accepted-work.md) through that same startup operation.
 Explicitly selected [one-shot work](one-shot.md), the only Story Branch or
 Trunk Mode start without a claim, prepares its workspace there too.
+In an [established session](established-session.md), that reference decides
+the workspace and branch in place of the selection below.
 
 Select or create that workspace through
 [own a temporary exploration workspace](../../dough-manual-testing/references/exploration-workspace.md)

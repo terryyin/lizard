@@ -8,6 +8,10 @@ import {
   loopbackReportingOrigin,
 } from "./dashboard-completion.mjs";
 const commit = /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/;
+// A launch with no story supplies a context naming no identity; its landing
+// is kept by its launch reference alone. A caller reads this before handing
+// such a context to this installation.
+export const acceptsLandingWithoutIdentity = true;
 function validate(submission) {
   const allowed = new Set([
     "origin",
@@ -24,7 +28,10 @@ function validate(submission) {
   if (Object.keys(submission).some((key) => !allowed.has(key)))
     throw new Error("The retained landing is malformed.");
   for (const key of allowed)
-    if (typeof submission[key] !== "string" || !submission[key])
+    if (
+      (key !== "identity" || submission[key] !== undefined) &&
+      (typeof submission[key] !== "string" || !submission[key])
+    )
       throw new Error(`Missing landing ${key}.`);
   if (
     !["claude", "codex", "cursor"].includes(submission.host) ||
@@ -141,7 +148,12 @@ export async function captureAcceptedLanding(
     return { state: "unacknowledged", error: error.message };
   }
 }
-export async function reportLanding(values) {
+// `retained` is where a new submission's input is kept: beside this script
+// unless a caller names another directory.
+export async function reportLanding(
+  values,
+  retained = path.dirname(fileURLToPath(import.meta.url)),
+) {
   if (values.outcome || values["message-file"] || values.session)
     throw new Error(
       "Landing capture is independent of completion and native session disposition.",
@@ -167,10 +179,7 @@ export async function reportLanding(values) {
   const submission = { ...values, delivery: randomUUID() };
   delete submission.operation;
   validate(submission);
-  const pending = path.join(
-    path.dirname(fileURLToPath(import.meta.url)),
-    `landing-${submission.delivery}.json`,
-  );
+  const pending = path.join(retained, `landing-${submission.delivery}.json`);
   await writeFile(pending, `${JSON.stringify(submission, null, 2)}\n`, {
     flag: "wx",
     mode: 0o600,

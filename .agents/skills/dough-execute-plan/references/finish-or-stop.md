@@ -6,6 +6,14 @@ pending CI as unobserved. On normal completion, use
 [the one bounded completion operation](ci-monitor.md#await-the-applicable-revision-at-completion)
 and handle its combined CI and shutdown receipt before the final handoff.
 
+At the final execution/review handoff, the supported live-Claude Story Branch
+coordinator may instead choose the explicit background alternative in
+[completion mechanics](ci-completion-wait.md), after any required review and
+execution-complete record publication below. That alternative satisfies the
+completion operation below: report its CI pending receipt and retained session,
+observer and resources instead of a successful shutdown. All other completion
+paths keep the bounded completion operation.
+
 After all planned slices satisfy proof/delivery, `--skip-retro` skips only this
 execution's automatic retrospective; it changes no preferences or
 proof/delivery/completion obligations. Explicit omit/defer instructions also
@@ -29,7 +37,9 @@ input. When review returns, publish the
 [execution-complete record](#record-execution-completion), invoke the
 completion operation, handle its receipt, then report completion, judged proof,
 the recorded product advice, CI verdict or limitation, shutdown evidence, and
-`## PLAN EXECUTION COMPLETE` as the final execution/review handoff.
+`## PLAN EXECUTION COMPLETE` as the final execution/review handoff. Report an
+`integrated_state` success as [completion mechanics](ci-completion-wait.md)
+describe.
 
 Continue in the recorded execution project/checkout. Supply available references/context:
 source contract, original plan and approved changes, attributable commits, decisions, proof,

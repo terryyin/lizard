@@ -11,7 +11,9 @@ not write host settings.
 
 The hooks inspect local mailbox files only, without network calls, AI calls,
 or waiting for CI. Stop hooks deliver only ready events; pending or successful
-CI does not extend the agent turn.
+CI does not extend the agent turn. The explicitly enrolled live-Claude
+[background handoff](ci-background-handoff.md) adds a bounded asynchronous
+local Stop waiter; the synchronous hook leaves its delivery to that waiter.
 
 Run this harmless probe from the checkout root using the normal Shell/Bash
 tool, not an implementation agent or a tool that hides its stdout:
@@ -76,15 +78,24 @@ The mailbox is claimed by checkout, host, conversation, and worker identity.
 A Git worktree of the same repository counts as the same checkout for that
 claim when each path is its Git toplevel and both share
 `git rev-parse --git-common-dir`; an unrelated repository remains another
-checkout. Probe and start still use the execution checkout's own installed
+checkout. An observer keeps the identity of the worktree that armed it after
+that worktree is removed, so the repository's other worktrees still reach it
+with the mailbox commands. Probe and start still use the execution checkout's own installed
 runtime. Cursor additionally binds to the coordinator's `generation_id` because its
 children can share the conversation ID, and `beforeSubmitPrompt` updates that
 binding on a new user message; arbitrary child tool calls cannot rebind it, and
 missing generation identity fails the readiness probe. Claude Code isolates
 instead by `session_id` plus `agent_id`/`subagent_id`, so a sub-agent sharing
-the coordinator's session cannot consume its notification. Keep the same
-coordinator session when resuming; if replacing it, stop the old observers
-using their recorded directories and start new observers in the new session.
+the coordinator's session cannot consume its notification. An observer
+claimed with an `agent_id` belongs to that session and agent:
+`CLAUDE_CODE_SESSION_ID` names the session alone, so `deliver`, `resume`, and
+`finish` reach it only with `--session-json` carrying both.
+
+An observer's events reach only the session that claimed it. Keep the same
+coordinator session when resuming. A session that replaces a coordinator
+stops the old observers using their recorded directories and starts new
+observers in the new session; under managed delivery its next `deliver`
+establishes its own.
 
 Use the same shared mailbox directory for launcher and hooks as specified in
 runtime setup. Mailboxes survive stashing. Use the host's agent message and
@@ -139,7 +150,8 @@ settings on shutdown.
   third-party compatibility, the Claude adapter ignores its `cursor_version`
   payload so only the native Cursor adapter can claim notifications.
 
-Neither bridge wakes an idle session for periodic polling. Delivery happens
-at a tool/stop boundary of the ongoing coordinator. Native hook support must
+The ordinary bridge delivers at a tool/stop boundary of the ongoing coordinator.
+The explicit live-Claude background handoff wakes only for actionable failure,
+never for periodic polling, pending or success. Native hook support must
 pass the readiness probe on the installed host; do not infer it from the
 product name or from merely running the script in a terminal.

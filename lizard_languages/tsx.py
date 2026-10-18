@@ -7,7 +7,8 @@ Only overrides tokenization to handle JSX-specific syntax (<Component>, {express
 
 from .code_reader import CodeReader
 from .js_style_regex_expression import js_style_regex_expression
-from .typescript import TypeScriptReader, TEMPLATE_LITERAL, OPTIONAL_OPERATORS
+from .typescript import (
+    NULLISH_COALESCING, OPTIONAL_ACCESS, TEMPLATE_LITERAL, TypeScriptReader)
 from .typescript import JSTokenizer, Tokenizer
 
 
@@ -26,9 +27,10 @@ class TSXReader(TypeScriptReader):
             r"|(?:<\/[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)*>)" + \
             r"|(?:#\w+)" + \
             r"|(?:\$\w+)" + \
+            NULLISH_COALESCING + \
+            OPTIONAL_ACCESS + \
             r"|(?:<\/\w+>)" + \
             r"|(?:=>)" + \
-            OPTIONAL_OPERATORS + \
             r"|" + TEMPLATE_LITERAL
         js_tokenizer = TSXTokenizer()
         for token in CodeReader.generate_tokens(
