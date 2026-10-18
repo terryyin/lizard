@@ -19,6 +19,26 @@ _SWIFT_TOKEN_ADDITION = (
 )
 
 
+class _OptionalQuestionMark(str):
+    """Source punctuation whose Swift lexical role is postfix, not ternary."""
+
+    is_optional = True
+
+
+_POSTFIX_OPTIONAL = _OptionalQuestionMark('?')
+
+
+def _swift_token(match):
+    token = match.group(0)
+    if token == '?':
+        source, start = match.string, match.start()
+        # Comments have the same lexical role as whitespace in Swift.
+        if start and not source[start - 1].isspace() and not source.endswith(
+                '*/', 0, start):
+            return _POSTFIX_OPTIONAL
+    return token
+
+
 def _separates_label(token):
     return token == '\n' or token.startswith('//') or token.startswith('/*')
 
@@ -76,9 +96,15 @@ class SwiftReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
         super(SwiftReader, self).__init__(context)
         self.parallel_states = [SwiftStates(context)]
 
+    def process_token(self, token):
+        if token is _POSTFIX_OPTIONAL:
+            self.context.add_condition(-1)
+
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
         pattern = compiled_token_pattern(_SWIFT_TOKEN_ADDITION + addition)
+        if token_class is None and '?' in source_code:
+            token_class = _swift_token
         for is_literal, start, end in literal_spans(source_code):
             if is_literal:
                 yield source_code[start:end]

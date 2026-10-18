@@ -84,7 +84,8 @@ class LizardExtension(object):  # pylint: disable=R0903
                         reader.context.loop_bracket_status()
 
             # Handle other loop keywords (if, for, while, etc.)
-            elif token in loops and token not in ('&&', '||'):
+            elif token in loops and token not in ('&&', '||') \
+                    and not getattr(token, 'is_optional', False):
                 l_depth = reader.context.add_nd_condition()
                 if not reader.context.get_loop_status():
                     reader.context.add_hidden_bracket_condition()

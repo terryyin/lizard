@@ -1,6 +1,6 @@
 import unittest
 
-from .swift_helpers import swift_function_spans
+from .swift_helpers import get_swift_function_list, swift_function_spans
 
 
 class TestSwiftTokens(unittest.TestCase):
@@ -95,3 +95,25 @@ func b() {
     let t = type(of: self)
 }
 """, [("a", 1, 3, 1), ("b", 4, 6, 1)])
+
+    def test_attached_question_mark_is_not_a_ternary(self):
+        self.assert_functions("""\
+func a(d: [String: [Int]]) -> [Int]? {
+    let x = f()?.b
+    let y = d["x"]?.count
+    let z = g(x)! ?? 0
+    return y == 1 ? nil : [z]
+}
+func b() -> Int {
+    return c
+        ? 1
+        : 2
+}
+""", [("a", 1, 6, 2), ("b", 7, 11, 2)])
+
+    def test_optional_types_keep_their_question_mark_in_the_signature(self):
+        function, = get_swift_function_list(
+            "func f(d: [Int]?, cb: (() -> Void)?) { }")
+        self.assertEqual(1, function.cyclomatic_complexity)
+        self.assertIn("[ Int ] ?", function.long_name)
+        self.assertNotIn("postfix", function.long_name)

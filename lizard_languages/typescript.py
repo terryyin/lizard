@@ -17,6 +17,7 @@ TEMPLATE_LITERAL = (
 
 # One token, so each ? in ?? is not its own ternary decision.
 NULLISH_COALESCING = r"|(?:\?\?)"
+OPTIONAL_ACCESS = r"|(?:\?\.(?!\d))"
 
 
 class Tokenizer(object):
@@ -125,8 +126,9 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
 
         # Private method (#), dollar ($), optional name (?), nullish (??),
         # template literals.
-        addition = (addition + r"|(?:#\w+)" + r"|(?:\$\w+)" + r"|(?:\w+\?)"
-                    + NULLISH_COALESCING + r"|" + TEMPLATE_LITERAL)
+        addition = (addition + r"|(?:#\w+)" + r"|(?:\$\w+)"
+                    + r"|(?:\w+\?(?![?.]))" + NULLISH_COALESCING
+                    + OPTIONAL_ACCESS + r"|" + TEMPLATE_LITERAL)
         for token in CodeReader.generate_tokens(source_code, addition, token_class):
             if (
                 isinstance(token, str)

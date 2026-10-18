@@ -8,7 +8,7 @@ Only overrides tokenization to handle JSX-specific syntax (<Component>, {express
 from .code_reader import CodeReader
 from .js_style_regex_expression import js_style_regex_expression
 from .typescript import (
-    NULLISH_COALESCING, TEMPLATE_LITERAL, TypeScriptReader)
+    NULLISH_COALESCING, OPTIONAL_ACCESS, TEMPLATE_LITERAL, TypeScriptReader)
 from .typescript import JSTokenizer, Tokenizer
 
 
@@ -28,6 +28,7 @@ class TSXReader(TypeScriptReader):
             r"|(?:#\w+)" + \
             r"|(?:\$\w+)" + \
             NULLISH_COALESCING + \
+            OPTIONAL_ACCESS + \
             r"|(?:<\/\w+>)" + \
             r"|(?:=>)" + \
             r"|" + TEMPLATE_LITERAL

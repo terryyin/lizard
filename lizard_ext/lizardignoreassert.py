@@ -10,6 +10,11 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
 
     def __init__(self):
         super(LizardExtension, self).__init__(None)
+        self.conditions = set()
+
+    def __call__(self, tokens, reader=None):
+        self.conditions = reader.conditions
+        return super(LizardExtension, self).__call__(tokens, reader)
 
     def _state_global(self, token):
         if token in ("assert", "static_assert"):
@@ -17,5 +22,6 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
 
     @CodeStateMachine.read_inside_brackets_then("()", "_state_global")
     def in_assertion(self, token):
-        if token in ("&&", "||", "?"):
+        if token in ("&&", "||", "?", "??") and token in self.conditions \
+                and not getattr(token, 'is_optional', False):
             self.context.add_condition(-1)

@@ -63,10 +63,10 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         if self._handle_object_member(token):
             return
 
-        if token == '.':
+        if token in ('.', '?.'):
             self._state = self._field
             self.last_tokens += token
-            self._prev_token = token
+            self._prev_token = '.'
             return
         if token == 'function':
             if self.started_function and not self.as_object:
@@ -183,6 +183,13 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             self.next(self._state_global, token)
 
     def _field(self, token):
+        if token in ('(', '['):
+            # Optional calls and subscripts retain ordinary bracket handling;
+            # arguments may contain arrow functions and nested expressions.
+            self.function_name = ''
+            self._prev_token = '.'
+            self.next(self._state_global, token)
+            return
         self.last_tokens += token
         self._state = self._state_global
 
