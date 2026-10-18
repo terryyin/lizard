@@ -118,6 +118,13 @@ status is `planned`. `check --completion` refuses every open return, receiving,
 or interim entry. Plans without this section have zero obligations; do not
 migrate them merely to use the script.
 
+For a caller that already resolved a planned execution, `check --planned-completion`
+also requires a readable, non-empty ordered slice list with every slice done,
+then applies the same completion obligation check. It names pending or ambiguous
+slices and missing evidence; it does not discover execution identity or establish
+accepted proof. An absent plan or a planless instruction still requires the
+caller's completion judgment. This option takes neither `--slice` nor `--completion`.
+
 When replanning removes or renumbers slices, move their receiving and interim
 obligations to the remaining slices that own their behavior and proof; update
 other slice references consistently. Never drop an obligation through a plan

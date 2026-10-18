@@ -14,8 +14,10 @@ import {
 } from "../../dough-product-backlog/scripts/product-backlog-plan.mjs";
 import { readStoryState } from "../../dough-product-backlog/scripts/product-backlog-story-state.mjs";
 import { BacklogError } from "../../dough-product-backlog/scripts/product-backlog-refusal.mjs";
+import { deriveStartEligibility } from "../../dough-product-backlog/scripts/product-backlog-start-eligibility.mjs";
 import {
-  requireResolvedStoryDependencies,
+  blockedByDependencies,
+  readStoryDependencies,
   withoutStoryDependencies,
 } from "../../dough-product-backlog/scripts/product-backlog-story-dependencies.mjs";
 import { git } from "./publication-git.mjs";
@@ -94,6 +96,37 @@ export function selectedPreparation(repository, href) {
   };
 }
 
+// A reader's refusal is a fact the derivation names as a gap.
+function readFact(read) {
+  try {
+    return read();
+  } catch (error) {
+    if (error instanceof BacklogError)
+      return { status: "unavailable", problem: error.message };
+    throw error;
+  }
+}
+
+// An investigation's unselected approach is why its assessment blocks.
+function describeBlocker(blocker, approach) {
+  if (blocker.kind === "assessment")
+    return `${approach?.kind === "unselected" ? "published approach is unselected; " : ""}published preparation is ${blocker.status}`;
+  return `published ${blocker.fact} ${blocker.fact === "dependencies" ? "are" : "is"} unavailable: ${blocker.problem}`;
+}
+
+// One refusal naming every blocker: the unsatisfied dependencies together,
+// then the assessment or a gap.
+function startRefusal({ blockers }, dependencies, approach) {
+  return [
+    ...(blockers.some((entry) => entry.kind === "dependency")
+      ? [blockedByDependencies(dependencies.blocking)]
+      : []),
+    ...blockers
+      .filter((entry) => entry.kind !== "dependency")
+      .map((entry) => describeBlocker(entry, approach)),
+  ].join("; and ");
+}
+
 export async function readPublishedExecutionSource(request, remoteRef) {
   const backlog = await show(request.repository, remoteRef, backlogPath);
   if (backlog === null) throw new Error("fetched trunk has no product backlog");
@@ -138,12 +171,22 @@ export async function readPublishedExecutionSource(request, remoteRef) {
       provenance: claim,
     }) === "owned";
   // A new Take (including publication retries) must use the fetched dependency
-  // agreement. Already-owned Taken continuation does not interrupt execution.
-  if (!publishedClaimOwned && (entry.list === queueHeading || request.retained))
-    requireResolvedStoryDependencies(home, entry.href);
-  const preview = selection.read(home);
-  if (preview.identity !== request.identity || preview.status !== "recorded")
+  // agreement. Already-owned Taken continuation does not interrupt execution,
+  // so its dependencies are not consulted.
+  const dependencyGated =
+    !publishedClaimOwned && (entry.list === queueHeading || request.retained);
+  const dependencies = dependencyGated
+    ? readFact(() => readStoryDependencies(home, entry.href))
+    : { status: "not-recorded", blocking: [] };
+  const preview = readFact(() => selection.read(home));
+  if (preview.status !== "unavailable" && preview.identity !== request.identity)
     throw new Error("selected canonical preparation or identity is unresolved");
+  const eligibility = deriveStartEligibility({
+    preparation: preview,
+    dependencies,
+  });
+  if (eligibility.status !== "eligible")
+    throw new Error(startRefusal(eligibility, dependencies, preview.approach));
   const declaredPlan = selection.declaredPlan(preview.approach);
   const { planPath, planHref, planTarget, planIsCanonical } = declaredPlan;
   let plan;
@@ -181,10 +224,6 @@ export async function readPublishedExecutionSource(request, remoteRef) {
     throw new Error("queued planless authority or plan link is inconsistent");
   }
   const preparation = selection.read(home, declaredPlan, plan);
-  if (preparation.assessment.status !== "ready")
-    throw new Error(
-      `published preparation is ${preparation.assessment.status}`,
-    );
   return {
     ...(claim ? { existing: entry, claim } : {}),
     entry,

@@ -61,7 +61,10 @@ change it incorporates:
 `check` names the observed check: for GitHub Actions, the selected workflow
 selector (the `DOUGH_CI_WORKFLOW` value, default `ci.yml`). `context` names the
 triggering event (`push`). Optional `jobs` lists jobs that must each appear
-once and succeed in that attempt. A malformed declaration ends observation
+once and succeed in that attempt. A GitHub run's `success` already requires
+every job and matrix shard it ran, so list only jobs that a run could skip;
+each entry must equal the displayed job name, such as `Unit (1/2)` for a
+matrix shard. A malformed declaration ends observation
 with `CI_MONITOR_UNAVAILABLE`. For a configured command, `check` and `context`
 must equal the optional `check` and `context` strings its discovered attempts
 name; `jobs` does not apply. Only an attempt naming the target in its own

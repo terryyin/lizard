@@ -15,7 +15,7 @@ export { readStoryObligations } from "./story-obligation-reader.mjs";
 // Checks recorded ownership, not whether the coordinator's story judgment is right.
 async function inspectStoryObligations(
   planPath,
-  { slice, completion, committingSlice } = {},
+  { slice, completion, committingSlice, plannedCompletion } = {},
 ) {
   const source = await readFile(planPath, "utf8");
   const record = readStoryObligations(source);
@@ -28,17 +28,36 @@ async function inspectStoryObligations(
     },
     entries: record.entries,
   });
-  if (!record.entries.length) return result();
+  // The caller resolves the execution plan. This checks recorded progress,
+  // never whether the checkout is an execution workspace or its proof is valid.
   const read = readPlanSlices(source);
-  if (read.status !== "interpreted")
-    problems.push({ reason: "unreadable-slices", message: read.problem });
+  if (plannedCompletion) {
+    if (read.status !== "interpreted")
+      problems.push({ reason: "unreadable-slices", message: read.problem });
+    else if (!read.slices.length) problems.push({ reason: "missing-slices" });
+    else {
+      for (const item of read.slices) {
+        if (item.status !== "done")
+          problems.push({
+            reason: "pending-slice",
+            slice: item.index,
+            name: item.name,
+          });
+      }
+    }
+  }
   const slices = new Map((read.slices ?? []).map((item) => [item.index, item]));
+  if (plannedCompletion || record.entries.length) {
+    for (const item of read.slices ?? []) {
+      if (slices.get(item.index) !== item)
+        problems.push({ reason: "ambiguous-slice", slice: item.index });
+    }
+  }
+  if (!record.entries.length) return result();
+  if (read.status !== "interpreted" && !plannedCompletion)
+    problems.push({ reason: "unreadable-slices", message: read.problem });
   const isDoneOrCommitting = (index) =>
     slices.get(index)?.status === "done" || committingSlice === index;
-  for (const item of read.slices ?? []) {
-    if (slices.get(item.index) !== item)
-      problems.push({ reason: "ambiguous-slice", slice: item.index });
-  }
   if (slice !== undefined && !slices.has(slice))
     problems.push({ reason: "unknown-slice", slice });
   let story;
@@ -120,11 +139,12 @@ async function inspectStoryObligations(
 
 export async function checkStoryObligations(
   planPath,
-  { slice, completion } = {},
+  { slice, completion, plannedCompletion } = {},
 ) {
   const { result } = await inspectStoryObligations(planPath, {
     slice,
-    completion,
+    completion: completion || plannedCompletion,
+    plannedCompletion,
     committingSlice: slice,
   });
   return result;
@@ -157,6 +177,7 @@ if (isDirectCliEntry(import.meta.url, process.argv[1])) {
         plan: { type: "string" },
         slice: { type: "string" },
         completion: { type: "boolean" },
+        "planned-completion": { type: "boolean" },
       },
       allowPositionals: true,
     });
@@ -165,10 +186,13 @@ if (isDirectCliEntry(import.meta.url, process.argv[1])) {
       !["check", "list"].includes(positionals[0]) ||
       !values.plan ||
       (values.slice !== undefined && !/^[1-9]\d*$/.test(values.slice)) ||
-      (positionals[0] === "list" && (!values.slice || values.completion))
+      (values["planned-completion"] &&
+        (values.slice !== undefined || values.completion)) ||
+      (positionals[0] === "list" &&
+        (!values.slice || values.completion || values["planned-completion"]))
     ) {
       throw new Error(
-        "usage: story-obligations.mjs check --plan <PLAN.md> [--slice <N>] [--completion]; or list --plan <PLAN.md> --slice <N>",
+        "usage: story-obligations.mjs check --plan <PLAN.md> [--slice <N>] [--completion] | --planned-completion; or list --plan <PLAN.md> --slice <N>",
       );
     }
     const slice = values.slice === undefined ? undefined : Number(values.slice);
@@ -178,6 +202,7 @@ if (isDirectCliEntry(import.meta.url, process.argv[1])) {
         : await checkStoryObligations(resolve(values.plan), {
             slice,
             completion: values.completion,
+            plannedCompletion: values["planned-completion"],
           });
   } catch (error) {
     result = {

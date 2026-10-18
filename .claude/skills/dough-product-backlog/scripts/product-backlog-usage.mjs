@@ -137,11 +137,17 @@ outside other stories' sections, and a distinct plan. Legacy absence is
 "not-recorded"; an unsupported schema version is "unsupported-version"; a
 stored assessment retains ready/not-ready and its reasons. changedSinceReview
 is true when its reviewed basis no longer matches; it informs, never writes,
-and does not independently block authorized startup.
+and does not independently block authorized startup. startEligibility is
+derived from the assessment and the dependency record: "eligible", or
+"blocked" with each unsatisfied dependency, then the assessment or an
+unreadable fact as a gap. A malformed dependency record reads as a gap, not a
+failure. Eligibility grants no permission and starts nothing.
 
 read-dependencies prints the consumer's separate, versioned dependency record,
 blocking entries, and dependency agreement basis. Absence means no blockers;
-a malformed present record is refused. Dependencies stay in the review basis.
+a malformed present record is refused. The review basis keeps each
+dependency's agreement (supplier, implementation, rationale, condition); a
+supplier's state, resolution, or decision leaves it unchanged.
 
 update-dependency upserts one supplier agreement from --dependency-file, using
 the basis returned by read-dependencies. The JSON object names supplier

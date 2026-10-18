@@ -74,11 +74,19 @@ now. Then choose:
 | Assessment | Requires |
 | --- | --- |
 | `ready` | Refinement `refined`; approach is a selected `planned` path with bounded slices, mapped proof, and decisive premises settled by the consuming operation's recorded result in the named checkout or bounded by a permitted early probe slice, or an explicitly authorized `planless` path; no blocking concern remains |
-| `not-ready` | At least one blocking reason naming what still blocks readiness |
+| `not-ready` | At least one blocking reason naming what still blocks readiness; a recorded dependency is not such a reason |
 
 A remaining slice-specific concern, unresolved goal/scope/examples, missing or
 unmapped proof, an unselected approach, or a cheaply observable decisive
-premise left unobserved blocks `ready`. Judge decisive premises, result-bearing
+premise left unobserved blocks `ready`. A recorded
+[blocking dependency](../SKILL.md#record-a-necessary-blocking-dependency) is
+not a readiness concern: its agreement is the only record of that prerequisite,
+and it alone blocks the story's start until the supplier's outcome is published
+as satisfied. Record `ready` when goal, scope, examples, plan, proof, and
+premises are settled, even while the story waits on its suppliers. Record a
+dependency before the assessment: the agreement is part of the reviewed basis,
+so an agreement added after the assessment reports changed content since
+review. Judge decisive premises, result-bearing
 observations, and permitted early probe slices under
 [slice planning](../../dough-slice-planning/SKILL.md#write-the-plan).
 
@@ -114,9 +122,10 @@ node <installed>/scripts/product-backlog.mjs read-state --link <href>
 
 Use the returned `basis.document` and, when planned with a distinct plan file,
 `basis.plan` as the digests you actually reviewed. The basis covers the story's
-own section, the seed's shared context outside other stories' sections, and
-the distinct plan, so review those; other stories in the same seed do not
-affect it.
+own section, the seed's shared context outside other stories' sections, each
+dependency agreement (supplier, implementation, rationale, and condition), and
+the distinct plan, so review those; other stories in the same seed and a
+dependency's state, resolution, or decision do not affect it.
 
 2. Record the assessment on the same refinement and approach the review still
 supports:

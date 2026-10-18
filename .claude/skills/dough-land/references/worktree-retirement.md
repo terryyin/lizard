@@ -13,6 +13,12 @@ worktree, which
 "Close or retain it" establishes from the work's records. Containment alone
 does not make a worktree this work's to remove.
 
+When the worktree serves execution, its caller must first apply the
+[completion judgment](../SKILL.md#establish-completion-before-landing) and its
+owning workflow's retirement gates. This command checks Git safety and ownership,
+not execution completion. Neither containment nor a Taken entry supplies that
+evidence. Keep the resources while a caller's required gate is missing.
+
 Before removing anything, record the worktree's repository management
 context, its shared Git directory
 (`git -C <worktree> rev-parse --path-format=absolute --git-common-dir`). Give
@@ -53,8 +59,9 @@ The command fetches the target's remote, requires the fetched target to
 contain the branch tip, any remote branch tip, and each `--contained`
 revision, checks the worktree's ownership and state, removes the worktree,
 safely deletes the local branch, and then deletes the remote branch. Remote
-acceptance is what makes retirement safe; a default checkout being behind the
-target, or absent, does not make the branch unmerged. It prints one JSON line:
+acceptance establishes containment; completion and ownership remain separate
+gates. A default checkout being behind the target, or absent, does not make the
+branch unmerged. It prints one JSON line:
 
 | Result | Act on it |
 | --- | --- |

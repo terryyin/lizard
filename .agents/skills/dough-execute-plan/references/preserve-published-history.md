@@ -33,6 +33,15 @@ state Git left. With a supplied dashboard landing context, add
 `--landing-context <supplied absolute file>` under the shared
 [landing handoff](../../dough-land/references/dashboard-completion.md#retain-the-launch-landing).
 
+A caller with a fetched-target ownership guard uses the shared
+`publishHistoryPreservingCandidate` API in that installed module. Its
+`onFetchedTarget({ attempt, candidate, remoteTip })` runs before reconciliation
+on each fetched target, including the retry. Return `{ status, fields }` to
+preserve the state and report that reason and details without rewriting or
+pushing. Keep candidate proof in `affectedCheck(candidateSha)`, after the merge
+and before each push. Neither callback changes the caller's publication target
+or observer obligations.
+
 ## Resolve a conflicted integration
 
 A `preserved` result whose `reason` is `conflict` names its `conflictedPaths`

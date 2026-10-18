@@ -164,7 +164,9 @@ procedure:
 - Then apply
   [assess readiness at preparation completion](../dough-product-backlog/references/record-preparation.md#assess-readiness-at-preparation-completion):
   every remaining concern becomes a `not-ready` reason, and neither refinement
-  nor an accepted trade-off establishes readiness alone. Do not prescribe the
+  nor an accepted trade-off establishes readiness alone. A recorded blocking
+  dependency is not such a concern; its agreement alone blocks the start, so a
+  plan settled apart from waiting on its suppliers records `ready`. Do not prescribe the
   next workflow action, Take the item, or start execution from this finding.
 
 The recipient chooses the next action under the triggering instruction's

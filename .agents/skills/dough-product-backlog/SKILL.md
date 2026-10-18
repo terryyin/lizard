@@ -144,8 +144,17 @@ alone never proves completion.
 
 The command updates one supplier agreement in a separate versioned
 `json dough-story-dependencies` block, preserving other dependencies, readiness
-reasons, and sibling stories. Dependency changes report changed content since
-review without renewing the recorded judgment. Every unresolved relationship
+reasons, and sibling stories. An agreement edit (supplier, implementation,
+rationale, or condition) reports changed content since review without renewing
+the recorded judgment; a supplier's state, resolution, or decision leaves the
+review unchanged. A recorded dependency is not a
+[readiness reason](references/record-preparation.md#criteria). Start
+eligibility is derived from both records, never stored: a story is eligible
+when its recorded assessment is `ready` and no dependency is unsatisfied, and
+otherwise is blocked by the assessment, each unsatisfied dependency, or
+unreadable facts. `read-state` reports it as `startEligibility`, and the
+dashboard and the start command show the same blockers. Reporting eligibility
+grants no permission and launches nothing. Every unresolved relationship
 blocks new execution through the actual start command, including queued
 one-shot starts and canonical admission. Refinement and planning remain
 possible. A blocker found during an existing execution requires a developer

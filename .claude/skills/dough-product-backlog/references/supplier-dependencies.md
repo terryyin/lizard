@@ -115,11 +115,41 @@ live endpoint checks for authoring new relationships.
 
 Each consumer retains the readable evidence locator, exact condition summary,
 and separate accepted integration SHA/remote/target. Other suppliers and
-preparation judgments are preserved. Edits produce the existing changed-review
-indication; never rerecord Ready automatically or erase unrelated Not ready
-reasons. A stale refusal requires rereading and rejudging. A repeat visit
+preparation judgments are preserved. A resolution leaves the consumer's
+readiness review unchanged; a bounded reconciliation's story or plan edits
+report changed content since review. A stale refusal requires rereading and
+rejudging. A repeat visit
 preserves the first satisfied record and its evidence; reuse unchanged unresolved
 questions/evidence rather than rewriting them as fulfilled or duplicating receipts.
+
+## Reassess a consumer's reasons after satisfaction
+
+A dependency is not a
+[readiness reason](record-preparation.md#assess-readiness-at-preparation-completion),
+but a consumer assessed earlier may
+carry a `not-ready` reason that only restates the condition just satisfied.
+After `resolve-dependency` records `satisfied`, read the consumer's assessment
+with `read-state --link <consumer home>` and reread each `not-ready` reason
+against the story, its plan, and the satisfied condition. Judge each reason:
+
+- A reason that states only the now-satisfied condition, such as "Waiting for
+  the supplier's retry endpoint", is spent; leave it out.
+- Every other reason stays, including one that mentions the supplier alongside
+  another unresolved concern.
+
+Decide by reading what each reason asks for, never by matching its text. When
+any reason was spent, record a fresh assessment through the ordinary recorder
+in [assessment commands](record-preparation.md#assessment-commands), keeping
+the recorded refinement, approach, and plan: `ready` without reasons when none
+remains, otherwise `not-ready` with exactly the remaining reasons. Use the
+`basis.document` and `basis.plan` digests from `read-state`; a read taken
+before resolving still matches. After a bounded
+reconciliation, read after its edits and include the edited story and plan in
+this judgment. A stale-basis refusal
+means the consumer changed: read it again, rejudge, and record only that new
+judgment. Leave an assessment with no spent reason, and a `ready` assessment,
+as recorded. This reassessment changes no goal, scope, plan, or dependency,
+grants no execution, and is part of the owned consumer changes below.
 
 Publish owned consumer changes using the caller's authorized publication
 workflow after accepted supplier integration. Until that publication, published
@@ -128,5 +158,5 @@ explicitly retain unresolved dependency work with its consumer agreements,
 evidence and next action in the existing active context before retiring resources
 or deleting needed material. Do not create a reverse registry, a substitute
 completion artifact, or claim unresolved relationships were satisfied. Report
-per-consumer outcomes, discovery gaps and retained context separately from
+per-consumer outcomes and reassessments, discovery gaps and retained context separately from
 supplier publication and cleanup.

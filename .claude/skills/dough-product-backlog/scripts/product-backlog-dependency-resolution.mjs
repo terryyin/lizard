@@ -6,6 +6,7 @@ import { supplierCompletion } from "./product-backlog-dependency-completion.mjs"
 import { BacklogError, requireField } from "./product-backlog-refusal.mjs";
 import { applyToFile, readFile } from "./product-backlog-store.mjs";
 import { pathFor } from "./product-backlog-story-dependencies-command.mjs";
+import { dependencyAgreement } from "./product-backlog-story-state-basis.mjs";
 import {
   normalizeStoryDependency,
   readStoryDependencies,
@@ -13,8 +14,7 @@ import {
 } from "./product-backlog-story-dependencies.mjs";
 
 function agreement(entry) {
-  const { supplier, implementation, rationale, condition } = entry;
-  return JSON.stringify({ supplier, implementation, rationale, condition });
+  return JSON.stringify(dependencyAgreement(entry));
 }
 
 export async function resolveDependency(file, values) {

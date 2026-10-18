@@ -27,20 +27,9 @@ import {
   pushExactRef,
   revParse,
 } from "./publication-git.mjs";
+import { isAncestor } from "./workspace-publication-ownership.mjs";
 
 const trunkTarget = "refs/heads/main";
-
-async function isAncestor(workspace, ancestor, descendant) {
-  try {
-    await git(workspace, "merge-base", "--is-ancestor", ancestor, descendant);
-    return true;
-  } catch (error) {
-    if (error.code === 1) {
-      return false;
-    }
-    throw error;
-  }
-}
 
 async function pushRejected(workspace, sha, remote, targetRef) {
   try {
@@ -74,6 +63,7 @@ export async function publishHistoryPreservingCandidate({
   remote = "origin",
   backlogPath = defaultBacklogPath,
   affectedCheck,
+  onFetchedTarget,
   beforePush,
   landingContext,
   register,
@@ -93,10 +83,12 @@ export async function publishHistoryPreservingCandidate({
         }
       : {};
   if (await isAncestor(ownedWorkspace, publishedTip, tracking)) {
+    const landing = await captured({});
+    await returnToBranch(ownedWorkspace, branch);
     return {
       classification: "already-accepted",
       // A rerun after a push whose answer was lost still records its pair.
-      ...(await captured({})),
+      ...landing,
       mergeCount: 0,
       pushCount: 0,
       rejectedPushCount: 0,
@@ -113,6 +105,24 @@ export async function publishHistoryPreservingCandidate({
   let rejectedPushCount = 0;
   for (let attempt = 0; attempt < 2; attempt += 1) {
     const suffixBase = await revParse(ownedWorkspace, tracking);
+    const held = await onFetchedTarget?.({
+      attempt,
+      candidate: publishedTip,
+      remoteTip: suffixBase,
+    });
+    if (held) {
+      return {
+        classification: "preserved",
+        reason: held.status,
+        ...held.fields,
+        mergeCount,
+        pushCount: 0,
+        rejectedPushCount,
+        supersededSha,
+        adapterStatuses,
+        receipt: null,
+      };
+    }
     const prepared = await constructCandidate(
       ownedWorkspace,
       tracking,

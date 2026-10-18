@@ -94,8 +94,9 @@ A prepared pair alone is not a landing receipt. A matching recorded receipt or
 `pending-native-session` receipt confirms only this launch's accepted comparison,
 without completing the story, setting Done or stopping a native session.
 
-For a later explicit landing, reuse the original retained context, not a new
-session's completion channel. A different accepted comparison cannot overwrite
+For a rerun of that first landing, reuse its original retained context, not a new
+session's completion channel. After acceptance, a later explicit publication
+uses no landing context, as above. A different accepted comparison cannot overwrite
 this launch's fixed landing fact. A deleted/expired launch refuses capture and
 retry without recreating its record. Its bound launch keeps the original capture
 authority and prepared pair for that record's existing lifetime, even after its

@@ -7,10 +7,11 @@ import { dirname } from "node:path";
 import { requireField } from "./product-backlog-refusal.mjs";
 import { reportRecordState } from "./product-backlog-report.mjs";
 import { readExpectedBasis } from "./product-backlog-request.mjs";
+import { deriveStartEligibility } from "./product-backlog-start-eligibility.mjs";
 import { applyToBacklog, readFile } from "./product-backlog-store.mjs";
 import {
   declaredPlanTarget,
-  readPreparation,
+  readStartFacts,
   recordPreparation,
 } from "./product-backlog-story-state-home.mjs";
 import { linkTakenPlan } from "./product-backlog-take.mjs";
@@ -63,8 +64,18 @@ export async function recordState(file, values) {
   console.log(reportRecordState({ ...outcome, linked, target }, values.file));
 }
 
+// Prints the recorded preparation with the start eligibility derived from it
+// and the dependency agreement. Eligibility grants no permission and starts
+// nothing.
 export async function readState(file, values) {
   requireField(values.link, "link");
-  const state = readPreparation(dirname(file), values.link);
-  console.log(JSON.stringify(state, null, 2));
+  const { preparation, dependencies } = readStartFacts(
+    dirname(file),
+    values.link,
+  );
+  const startEligibility = deriveStartEligibility({
+    preparation,
+    dependencies,
+  });
+  console.log(JSON.stringify({ ...preparation, startEligibility }, null, 2));
 }
