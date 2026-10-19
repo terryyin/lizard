@@ -124,6 +124,14 @@ reconciliation first. Record a block only when the consumer genuinely cannot
 start before the supplier finishes, and state why those normal approaches are
 insufficient. Do not infer dependencies from prose, queue order, or shared files.
 
+Write the completion condition as the supplier outcome that must be available
+before the consumer can start. Consuming or integrating that outcome belongs to
+the consumer's scope and acceptance examples, not its prerequisite. A condition
+must not require the consumer's own implementation to unblock that same story.
+For an existing mixed condition, use the
+[consumer-resolution procedure](references/supplier-dependencies.md#discover-and-judge-each-current-consumer)
+to separate those responsibilities before judging fulfillment.
+
 Use the installed `scripts/product-backlog.mjs read-dependencies --link <home>`
 to read the consumer's canonical section and its dependency agreement `basis`.
 Then use `update-dependency --identity <consumer-id> --link <home>

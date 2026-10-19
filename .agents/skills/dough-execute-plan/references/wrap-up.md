@@ -35,8 +35,12 @@ claimed command, filter, and candidate; do not rerun solely for process.
 
 When the change has consumers, as
 [own executable proof](../../dough-story-refinement/references/planning.md#own-executable-proof)
-defines them, follow the changed effect through the reported surface or entry
-points and compare the reached consumers with the return's selection and proof.
+defines them, verify the handoff's applicable old-reference search terms and
+scope against the diff's removals, renames, or relocations of symbols or modules,
+and changes to callable contracts. Inspect discovered consumers, including
+unchanged tests and fixtures, then follow the changed effect through the reported
+surface or entry points and compare the reached consumers with the return's
+selection and proof.
 A return that stops at file, selector, or helper matches leaves that trace
 incomplete: inspect the enclosing observations or caller scenarios and their
 setup before accepting it. Confirm sufficient current observations for the
@@ -80,11 +84,11 @@ work for that consequence; guidance for a neighbouring case does not authorize
 it.
 
 During this slice, accept only observations supported by inspected locations and
-results. Retain the promise, accepted boundary, inspected locations, and literal
-command in the slice wrap-up for refactoring. Expand inspection to the smallest
-relevant underlying callers, setup, assertions, or implementation
-when a location is missing, the boundary is unclear, or evidence contradicts the
-change. Return incomplete or contradictory evidence to implementation, naming
+results. Retain the promise, accepted boundary, consumer trace, inspected
+locations, and literal command in the slice wrap-up for refactoring. Expand
+inspection to the smallest relevant underlying callers, setup, assertions, or
+implementation when a location is missing, the boundary is unclear, or evidence
+contradicts the change. Return incomplete or contradictory evidence to implementation, naming
 the promise, inspected locations, and gap; refactoring cannot supply missing
 behavior.
 
@@ -135,9 +139,9 @@ and continue that unfinished obligation only.
 1. Spawn a fresh agent to run
    [dough-post-change-refactor](../../dough-post-change-refactor/SKILL.md).
    Supply the execution source, execution checkout and branch, slice,
-   accepted proof with its inspected setup and observation locations, changed
-   paths and boundaries, project context, and ownership boundaries; supply the
-   plan path only when one exists. Keep
+   accepted proof and consumer trace with inspected setup and observation
+   locations, changed paths and boundaries, project context, and ownership
+   boundaries; supply the plan path only when one exists. Keep
    formatting and hook-owned lint with the coordinator. Do not
    add instructions contradicting that skill's decide-before-testing contract;
    explicit human verification requests remain authoritative.

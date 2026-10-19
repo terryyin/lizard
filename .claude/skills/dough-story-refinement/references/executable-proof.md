@@ -34,13 +34,20 @@ necessary for callers that previously bypassed it; include scenarios that omit
 those resources. A helper check or setup supplying the newly required resource
 does not prove those callers still work.
 
-Reuse available product-wide search, extending it from changed names to the
-enclosing observation or entry-point scenario and its support. Inspect actual
-assertions and setup before selecting proof; a list of matches alone does not
-establish the affected boundary. Include retired literals and values (message
-text, status code, label, output form), callers relying on a changed default by
-not overriding it, and every fixture, stand-in, or harness helper that invokes
-or imitates a changed contract, including untouched ones. Account for the trace
+For removals, renames, or relocations of symbols or modules, or changes to callable
+contracts, search production code, tests, and fixtures for old symbol names,
+module paths, and call forms, including in unchanged files. Include private
+symbols used across files. Keep this targeted to meaningful cross-file changes,
+not every local variable.
+
+Reuse applicable searches, extending matches to the enclosing observation or
+entry-point scenario and its support. Inspect actual assertions and setup before
+selecting focused proof for affected consumers' behavior; a list of matches alone
+does not establish the affected boundary. Filename patterns and passing test
+counts alone do not establish coverage. Include retired literals and values
+(message text, status code, label, output form), callers relying on a changed
+default by not overriding it, and every fixture, stand-in, or harness helper that
+invokes or imitates a changed contract, including untouched ones. Account for the trace
 and the observing proof in the existing proof location or implementation return.
 Derive obligations from each consumer's actual purpose, not its method name or
 dominant use. Exclude a consumer only when the effect does not reach its boundary;
@@ -51,10 +58,11 @@ Incompatible purposes each need an observation; equivalent purposes may share
 sufficient proof. When the change has such consumers and the suite covering the
 changed surface runs within the slice's focused-check time, run that suite instead
 of hand-picking the consumers it contains; run consumers outside it as well. A
-change nothing else observes, such as renaming a private helper with no shared
-contract, text, value, default, or rendered output, keeps focused proof. For
-unresolved domain purpose, ask precisely about that consumer's requirement and
-stop its dependent obligation until answered rather than guessing policy.
+change nothing else observes, such as renaming a helper used only within one
+file with no shared contract, text, value, default, or rendered output, keeps
+focused proof. For unresolved domain purpose, ask precisely about that consumer's
+requirement and stop its dependent obligation until answered rather than guessing
+policy.
 Discovering a failing assertion does not authorize weakening its promise; align
 behavior and proof under the project's existing failure policy.
 

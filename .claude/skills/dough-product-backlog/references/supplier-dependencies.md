@@ -46,6 +46,20 @@ story/plan content used for judgment. Condition satisfaction is agent judgment
 with evidence, not text matching. Handle independently justified consumers
 separately; one unresolved choice does not prevent another resolution.
 
+Check the agreement against the
+[supplier prerequisite boundary](../SKILL.md#record-a-necessary-blocking-dependency).
+If it mixes a supplier prerequisite with the consumer's own implementation,
+correct that agreement when the consumer's existing goal, scope and examples
+settle the boundary, or the developer explicitly authorizes the correction.
+Keep consuming the supplier outcome in the consumer's scope or acceptance
+examples. Preserve the supplier identity, required outcome and recoverable
+evidence; document why the removed clause is consumer work. A cleaned-up
+supplier is recovered from that evidence, not recreated as a live story.
+Reread the corrected agreement and its basis before resolving it. This is an
+agreement correction, not a claim that consumer implementation has happened.
+If separating the responsibilities requires an unspecified product or
+architectural choice, retain the actual decision for the developer.
+
 Choose and verify the per-consumer outcome:
 
 - **Directly satisfied:** the supplier outcome proves the condition without
@@ -62,19 +76,22 @@ Choose and verify the per-consumer outcome:
   actual question in `decision`; retain the competing behaviors, relevant goal/
   plan paths, supplier evidence and next developer action in the evidence summary.
   Cite any Accepted ADR conflict and stop that conflicting path for a human.
-- **Still waiting:** failed verification, unavailable context, or a condition
-  requiring consumer implementation stays blocked. Record the remaining gap
-  and next action in the evidence summary. Implementation of an unstarted
-  consumer requires its own execution authorization; request that separate
-  authorization as the next action and retain the block during this visit.
-  Assumption edits alone never prove implemented behavior.
+- **Still waiting:** the required supplier outcome is not delivered or its
+  fulfillment cannot be verified. Record the missing supplier behavior or
+  evidence and next action in the evidence summary. Consumer implementation
+  still requires its own execution authorization; its absence does not keep a
+  fulfilled supplier prerequisite blocked. Assumption edits alone never prove
+  implemented supplier behavior.
 
 For example, a completed endpoint returns retry intervals in seconds and rejects
 legacy requests. A consumer already promising seconds can reconcile a stale
 milliseconds plan assumption and verify the documented contract. A consumer
 whose compatibility promise is unspecified needs “Which endpoint compatibility
-behavior does the consumer promise?” A condition requiring the consumer's retry
-UI to be implemented still waits for that consumer's authorized execution.
+behavior does the consumer promise?” If the condition also requires the
+consumer's retry UI to be implemented, separate that UI work into the consumer's
+scope and judge the corrected supplier condition against the endpoint proof.
+A consumer requiring fractional-second intervals still waits if the supplier
+only supports whole seconds.
 
 Before writing, reread the consumer's goal, scope and plan and compare with the
 context used above. Changed intent or failed verification requires a new

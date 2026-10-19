@@ -44,7 +44,9 @@ through them. For each candidate, identify:
 
 Trace the concept through its representations and orchestration, including
 untouched code that repeats its knowledge or must change for coherence. Apply
-[delivery scope versus implementation reach](../dough-story-refinement/references/planning.md#examples-and-constraints):
+[consumer and old-reference tracing](../dough-story-refinement/references/executable-proof.md)
+to meaningful cross-file changes in both the incoming change and your refactor
+edits. Apply [delivery scope versus implementation reach](../dough-story-refinement/references/planning.md#examples-and-constraints):
 story membership cannot exclude a necessary edit. Dependency adjacency alone
 does not establish scope. Do not initiate unrelated cleanup discovered during
 tracing.
@@ -104,10 +106,13 @@ the caller; do not claim success.
 
 On completion, return a targeted report with the refactor outcome, every path
 and conceptual or product boundary changed by refactoring, and checks that
-changed code. For each relevant accepted proof, name whether its boundary and
-inspected locations stayed unchanged or which edit invalidated them. For
-invalidated or replacement proof, report the literal command, result, and
-concrete setup and assertion or signal locations. Also report files renamed,
+changed code. Include old-reference search terms and scope, inspected consumers,
+and the focused proof selected or reused for their affected behavior in this
+handoff; name any uncovered consumers as gaps. For each relevant accepted proof,
+name whether its boundary and inspected locations stayed unchanged or which
+edit invalidated them. For invalidated or replacement proof, report the literal
+command, result, and concrete setup and assertion or signal locations. Also
+report files renamed,
 extracted, split, or deleted; unresolved gaps or contradictions; consequential
 learnings; passing test commands or `skipped — no refactor edits`; and
 approximate active elapsed time. Do not attach routine raw traces, full command
