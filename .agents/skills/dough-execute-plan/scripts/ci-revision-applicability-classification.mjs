@@ -38,12 +38,9 @@ export function observedRevision(revision, attempt) {
   };
 }
 
-// Classifies one still-undiscovered revision's CI-path applicability against
-// already-known candidate SHAs, and only pays for the broader (`gh`-backed)
-// ancestor search when the narrow local candidates could not prove any
-// ancestor at all. Never called for a revision that already has an exact
-// attempt or an existing terminal verdict — see the call site in
-// ci-mailbox-revision-coverage.mjs.
+// Classifies a revision without an exact verdict against all available
+// candidate SHAs. Retained history can supply a nearer ancestor even when
+// the current run list already supplies an older one.
 export async function classifyUndiscoveredRevision({
   repoDir,
   event,
@@ -52,30 +49,28 @@ export async function classifyUndiscoveredRevision({
   localCandidateShas,
   getBroadenedCandidateShas,
 }) {
-  let classification = classifyRevisionApplicability({
+  // Establish whether this revision's workflow permits inheritance before
+  // asking the provider for history. No candidate can repair an unreadable
+  // revision or unsupported policy, or change an unfiltered workflow.
+  const eligibility = classifyRevisionApplicability({
     repoDir,
     event,
     workflowPath,
     registeredSha,
-    candidateShas: localCandidateShas,
   });
   if (
-    classification.result === "indeterminate" &&
-    classification.reason === "no-ancestor-basis" &&
-    getBroadenedCandidateShas
-  ) {
-    const broadened = await getBroadenedCandidateShas();
-    if (broadened.length) {
-      classification = classifyRevisionApplicability({
-        repoDir,
-        event,
-        workflowPath,
-        registeredSha,
-        candidateShas: [...new Set([...localCandidateShas, ...broadened])],
-      });
-    }
-  }
-  return classification;
+    eligibility.result !== "indeterminate" ||
+    eligibility.reason !== "no-ancestor-basis"
+  )
+    return eligibility;
+  const broadened = (await getBroadenedCandidateShas?.()) ?? [];
+  return classifyRevisionApplicability({
+    repoDir,
+    event,
+    workflowPath,
+    registeredSha,
+    candidateShas: [...new Set([...localCandidateShas, ...broadened])],
+  });
 }
 
 // Resolves a `not_required` revision's basis SHA to its actual GitHub run

@@ -20,15 +20,9 @@ import {
 
 // States that, once recorded, are not reclassified on a later poll unless an
 // exact attempt for that revision's own SHA appears (checked first, always).
-// `not_required` joins the existing terminal verdicts here: its basis is a
-// proved fact about the registered revision's own tree, not something a
-// later poll needs to keep re-deriving.
-const terminalRevisionStates = [
-  "success",
-  "failure",
-  "incomplete",
-  "not_required",
-];
+// Inherited coverage is reclassified: a nearer ancestor may appear, or its
+// retained attempt may disappear. Only exact verdicts remain terminal.
+const terminalRevisionStates = ["success", "failure", "incomplete"];
 
 export const discoveryDelayBoundMs = 10 * 60 * 1000;
 export const discoveryAdvisoryMarkerName = "discovery-advisory.json";
@@ -174,16 +168,14 @@ export async function observeRevisionCoverage(
     }
     if (next.state === "not_required") {
       const ancestorRun = await resolveAncestorRun(next.basis?.sha);
-      // Refresh the basis's resolved state every poll (never sticky): an
-      // ancestor found pending on an earlier poll and now terminal must not
-      // keep reporting stale evidence. When the ancestor cannot currently be
-      // resolved at all, leave any previously recorded basis.state alone
-      // rather than erasing known evidence.
-      if (ancestorRun)
-        next = {
-          ...next,
-          basis: { sha: next.basis.sha, state: attemptState(ancestorRun) },
-        };
+      // Only this poll's resolved attempt can support a completion verdict.
+      next = {
+        ...next,
+        basis: {
+          sha: next.basis.sha,
+          ...(ancestorRun ? { state: attemptState(ancestorRun) } : {}),
+        },
+      };
     }
     next = await judgeIntegratedState(next);
     publishRevisionRecord(directory, next);
