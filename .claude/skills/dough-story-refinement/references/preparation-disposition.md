@@ -147,8 +147,9 @@ The authorized remote target is the publication destination.
 The checkout is not a stage the candidate must pass through.
 Dough Land owns committing, publishing, refreshing the default checkout,
 retiring the workspace, and continuing an interrupted landing from its first
-unfinished step. Report its publication,
-refresh, and cleanup results as the keep's results.
+unfinished step. Its publication, refresh, and cleanup results are the keep's
+results, reported under its
+[completion attention](../../dough-land/references/completion-attention.md).
 
 A keep is **confirmed** once the fetched authorized remote target contains the
 landed SHA, whatever the refresh result. A landing that stopped before that

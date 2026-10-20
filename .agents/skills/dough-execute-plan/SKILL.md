@@ -4,8 +4,9 @@ description: >-
   Executes one selected story or bounded retrospective correction through an
   executable plan, or one authorized planless slice from a selected simple story or
   a contextual instruction, with independent refactoring, delivery, and asynchronous
-  CI repair. Use to execute a plan, run slices, execute a canonical story when the
-  caller explicitly skips slice planning, or execute a small instruction from
+  CI repair. Continues settled planned work into Story Wrap Up. Use to execute a
+  plan, run slices, execute a canonical story when the caller explicitly skips
+  slice planning, or execute a small instruction from
   context without a story or plan. Also admits an accepted mission that no backlog
   list holds, such as a standalone review, investigation, or maintenance request,
   into Taken before its work starts. Does not decide story scope or quick-path
@@ -17,10 +18,9 @@ description: >-
 
 # Execute planned or planless work
 
-Execute the selected work through its existing plan. An explicit current instruction
-may instead authorize one planless quick slice: an understood canonical feature story,
-or a contextual instruction with no story or plan. The coordinator owns delivery;
-implementation agents return uncommitted changes.
+Execute the selected plan or one explicitly authorized planless quick slice from an
+understood canonical feature story or contextual instruction. The coordinator owns
+delivery; implementation agents return uncommitted changes.
 
 ## Establish execution context
 
@@ -245,6 +245,6 @@ Missing/contradictory execution identity requires the recovery decision above.
 
 ## Finish or stop
 
-Follow [finish or stop](references/finish-or-stop.md) for the execution-complete
-record, the completion operation, reporting and its markers, automatic
-retrospective invocation, and incomplete-work reporting.
+Follow [finish or stop](references/finish-or-stop.md) for the execution-complete record,
+completion operation, automatic retrospective, conditional planned continuation into
+Story Wrap Up, attention-only handoff reporting, and incomplete-work reporting.

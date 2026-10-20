@@ -1,20 +1,31 @@
 #!/usr/bin/env node
 // Resolve runtime and observation, publish an authorized increment, and attach
 // acceptance. Held proof stops before push; local-only authority never pushes.
-import { resolve } from "node:path";
+import { prepareAndDeliverFreshIncrement } from "./execution-increment-fresh.mjs";
 import { resolveCheckoutRuntime } from "./ci-checkout-runtime.mjs";
-import { withExplicitSession } from "./ci-host-bridge.mjs";
 import {
   registerPushedRevision,
   recordDeliveryProgress,
   mailboxRoot,
 } from "./ci-mailbox.mjs";
-import { flagValues, isDirectCliEntry } from "./ci-direct-entry.mjs";
+import { isDirectCliEntry } from "./ci-direct-entry.mjs";
 import { publishExecutionIncrement } from "./execution-increment-publication.mjs";
 import { establishObservation } from "./execution-increment-observation.mjs";
 export { resumeManagedExecutionIncrement } from "./execution-increment-resume.mjs";
 import { targetBranchName } from "./publication-git.mjs";
 import { executionBudgetMs } from "./watch-ci-execution.mjs";
+import {
+  managedIncrementRequestRefusal,
+  readIncrementCliRequest,
+} from "./execution-increment-request.mjs";
+
+// Existing-candidate delivery and recovery intentionally require no fresh commit.
+export function deliverFreshExecutionIncrement(request) {
+  return prepareAndDeliverFreshIncrement(
+    request,
+    deliverManagedExecutionIncrement,
+  );
+}
 
 export async function deliverManagedExecutionIncrement(request) {
   const {
@@ -55,7 +66,7 @@ export async function deliverManagedExecutionIncrement(request) {
     };
   }
 
-  const refusal = requestRefusal(request);
+  const refusal = managedIncrementRequestRefusal(request);
   if (refusal) {
     return {
       ok: false,
@@ -189,54 +200,15 @@ export async function deliverManagedExecutionIncrement(request) {
   };
 }
 
-// Why a delivery request is refused before anything is fetched, pushed, or
-// observed: a missing field, or a Story Branch increment aimed anywhere but its
-// execution branch without declaring a one-shot landing on trunk.
-function requestRefusal(request) {
-  for (const field of [
-    "workspace",
-    "branch",
-    "previouslyPublishedBase",
-    "targetRef",
-    "repo",
-  ]) {
-    if (!request[field]) return `missing ${field}`;
-  }
-  const { mode, tracking, branch, targetRef } = request;
-  const executionTarget = `refs/heads/${branch}`;
-  if (
-    mode === "story-branch" &&
-    tracking !== "one-shot" &&
-    targetRef !== executionTarget
-  ) {
-    return `Story Branch Mode delivers only to its execution branch: use --target-ref ${executionTarget}, not ${targetRef}; a one-shot landing declares --tracking one-shot`;
-  }
-  return null;
-}
-
-const usage =
-  "usage: execution-increment-delivery.mjs deliver --mode trunk|story-branch --workspace PATH --branch NAME --previously-published-base SHA --target-ref refs/heads/<branch> --repo OWNER/REPO [--tracking one-shot] [--host cursor|claude|codex] [--preferred-alias .agents|.claude] [--authority publish|local-only] [--session-json JSON] [--coordinator VALUE --observer-directory PATH] [--max-duration-ms MS] [--validated-candidate SHA] [--default-checkout PATH] [--one-shot-identity ID] [--landing-context PATH]";
-
-function argumentsOf(argv) {
-  if (argv[0] !== "deliver") throw new Error(usage);
-  const result = flagValues(argv.slice(1), { authority: "publish" });
-  if (!["trunk", "story-branch"].includes(result.mode)) throw new Error(usage);
-  if (result.maxDurationMs !== undefined) {
-    result.maxDurationMs = Number(result.maxDurationMs);
-  }
-  return withExplicitSession(result);
-}
-
 if (isDirectCliEntry(import.meta.url, process.argv[1])) {
   try {
-    const args = argumentsOf(process.argv.slice(2));
-    const result = await deliverManagedExecutionIncrement({
-      ...args,
-      workspace: resolve(args.workspace),
-      defaultCheckout: args.defaultCheckout
-        ? resolve(args.defaultCheckout)
-        : undefined,
-    });
+    const { fresh, request } = await readIncrementCliRequest(
+      process.argv.slice(2),
+    );
+    const operation = fresh
+      ? deliverFreshExecutionIncrement
+      : deliverManagedExecutionIncrement;
+    const result = await operation(request);
     if (result.startReceipt) process.stdout.write(result.startReceipt);
     process.stdout.write(`${JSON.stringify(result)}\n`);
     if (!result.ok) process.exitCode = 1;

@@ -1,26 +1,26 @@
 ---
 name: dough-story-wrap-up
 description: >-
-  Closes one completed feature story, bounded retrospective correction, or
+  Closes one completed feature story, bounded retrospective correction or
   context-only planless execution using available execution context. Assimilates
-  lasting product knowledge, handles existing follow-ups and authorized product
-  decisions, removes that work's spent plan and history so Git can recover it,
-  and reports truthfully when required inputs are missing or unfinished. Use to
-  wrap up a story, correction, or completed contextual instruction, close
-  completed work, or delete spent plan and execution history. With
-  `--process-retrospective`, it also reviews the wrap-up's own process and
-  records supported findings in `DearDough.md`.
+  lasting product knowledge, settles existing follow-ups and authorized product
+  decisions, and removes spent plan and history with Git recovery. Reports missing
+  or unfinished inputs truthfully. Use to close completed work, delete spent
+  records, or continue settled planned execution under Execute Plan's continuation
+  rule. With `--process-retrospective`, it also reviews the wrap-up's own process
+  and records supported findings in `DearDough.md`.
 ---
 
 # Story wrap-up
 
 Close one selected feature story, bounded retrospective correction, or contextual
-instruction when the coordinator invokes wrap-up. Use available execution context
-and optional retrospective advice. Leave this project with maintained product knowledge
-and no spent source or plan history in the current snapshot. Do not invent findings,
-records, or a requirement for another conversation. With
-`--process-retrospective`, also
-[review this wrap-up's process](#review-this-wrap-ups-process).
+instruction when the coordinator invokes wrap-up explicitly or through Execute
+Plan's authorized [planned continuation](../dough-execute-plan/references/finish-or-stop.md#continue-settled-planned-work-into-wrap-up).
+That continuation retains the same execution context and publication authority,
+including local-only/no-push instructions. Use available execution context and
+optional retrospective advice. Leave maintained product knowledge without spent
+source or plan history in the current snapshot. Do not invent findings, records,
+or another-conversation requirements. With `--process-retrospective`, also [review this wrap-up's process](#review-this-wrap-ups-process).
 
 ## Resolve this project's context
 
@@ -244,7 +244,7 @@ When attention is needed, report the affected facts and next action. Distinguish
 accepted trunk publication from a superseded candidate, an [`integrated_state` success](../dough-execute-plan/references/ci-completion-wait.md)
 from the closure's own, integration from refused cleanup, committed pending
 publication from an accepted receipt, and completed wrap-up from a refusal that
-left files intact. End successful closure with `## STORY WRAP-UP COMPLETE`.
+left files intact.
 Missing context, unfinished work, unresolved recovery/integration, required
 push, unpublished Trunk Mode closure, retained or unconfirmed observation, or
-resource cleanup blocks that marker. Local-only current-branch pending publication is not a required push.
+resource cleanup prevents successful closure. Local-only current-branch pending publication is not a required push.

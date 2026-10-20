@@ -43,7 +43,7 @@ boundary. Before revising boundaries, apply the shared
   below and remains human-owned.
 - If the parent problem, candidate selection, or sibling ordering must change,
   use [dough-story-decomposition](../dough-story-decomposition/SKILL.md).
-- Report `ready for direct execution` only when cumulative design is supported,
+- Treat the plan as `ready for direct execution` only when cumulative design is supported,
   every boundary preserves useful progress or learning, and all slices are
   cohesive, single-proof-loop, meet supplied targets, and have no unexplained
   path beyond a hard limit. Record that outcome through
@@ -103,23 +103,28 @@ obsolete replaced slices. If the count is greater than 15, report
 not an automatic invocation or a new execution-readiness gate. Do not resplit
 the story or change its backlog placement during slice-plan refinement.
 
-Report the plan path, replaced slices, resulting slice count, sizing exceptions,
-any resplit recommendation, whether execution can resume, and — when the work
-item has a recorded identity — the readiness reassessment through
+When the work item has a recorded identity, record the readiness reassessment
+through
 [assess readiness at preparation completion](../dough-product-backlog/references/record-preparation.md#assess-readiness-at-preparation-completion):
 remaining Refine or Escalate findings, or any other blocking concern, become
 `not-ready` reasons; when the cumulative design is supported and remaining
 slices are ready under the table above, record `ready`. Do not Take, move the
 queue, or start execution from this reassessment.
 
+Return the plan path, replaced slices, resulting slice count, sizing
+exceptions, any resplit recommendation, whether execution can resume, and the
+reassessment to an invoking workflow, such as slice planning or execution, that
+continues from them. A resplit recommendation, an Escalate finding, or another
+decision a person must make needs a response: report it with the expected
+response, who can give it when known, and what waits for it.
+
 When this session ends, follow
 [land at the end of preparation](../dough-story-refinement/references/preparation-journey.md#land-at-the-end-of-preparation),
 then close or retain the workspace under
 [preparation workspace](../dough-story-refinement/references/preparation-workspace.md#close-or-retain-the-workspace).
+A session that invoked this skill directly finishes under
+[finish with only what needs a response](../dough-story-refinement/references/preparation-journey.md#finish-with-only-what-needs-a-response).
 An execution instruction for this story that arrives while its preparation is
 unlanded follows
 [hand off to execution in the same session](../dough-story-refinement/references/preparation-journey.md#hand-off-to-execution-in-the-same-session)
 instead.
-End with:
-
-`## SLICE PLAN REFINED`

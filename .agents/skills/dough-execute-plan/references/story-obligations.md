@@ -1,14 +1,17 @@
-# Keep reported gaps owned
+# Keep story gaps owned
 
 In planned execution, record every gap, loss, limitation, or interim behavior
-named in an implementation return under `## Story obligations` in the active
-plan. Read it against the selected story's goal, key examples, and exclusions;
+named in an implementation return or independently discovered during
+[acceptance](wrap-up.md#accept-proof) under `## Story obligations` in the active
+plan. Read it against the selected story's original Goal, Scope, key examples and exclusions;
 quote the clause it touches. The plan's narrower scope cannot exclude it.
 The [script](../scripts/story-obligations.mjs) checks the record's structure,
 slice ownership, and quotes in the selected story section, not whether your
 judgment satisfies the goal. Quotes match word for word after whitespace and
 Markdown emphasis normalization. Read the actual story before choosing a
-disposition; script success alone does not accept the behavior.
+disposition; script success alone does not accept the behavior. For an independently
+discovered gap, retain its discovery observation in the existing `Reported` text
+or title; do not invent an implementation report or a second record format.
 
 ## Check the paths before closing a gap
 
@@ -41,8 +44,8 @@ path. Close a harmless limitation as `no user cost` when its concrete reason
 holds through the relevant paths, and use `proved` when sufficient current
 evidence covers the promised result. Continue without another approval,
 unrelated obligations, or a blanket rerun of accepted observations. Reassess
-that reason or proof when a changed path invalidates it. A return naming no gap
-needs no new obligation from this check.
+that reason or proof when a changed path invalidates it. Create no obligation
+when neither the return nor acceptance identifies a gap.
 
 ## Record format
 
@@ -94,7 +97,7 @@ A learning or an out-of-scope remark is no disposition. Keep learnings only
 for discoveries changing remaining work. Single-slice quick execution creates
 no plan: return goal-contradicting gaps to the same slice, obtain required
 observations before accepting dependent promises, and retain independently
-valid proof. If it continues as planned work, carry every reported gap into
+valid proof. If it continues as planned work, carry every reported or discovered gap into
 the new plan's entries.
 
 ## Use the record at execution boundaries

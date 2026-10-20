@@ -102,13 +102,15 @@ workspace: the start named no agent.
 Unless automatic landing was selected, stop here; with it, continue under
 [Land automatically when selected](#land-automatically-when-selected).
 Report the outcome under
-[report the refinement outcome](../SKILL.md#report-the-refinement-outcome)
+[judge the refinement outcome](../SKILL.md#judge-the-refinement-outcome)
 with the workspace path and branch, the retained `startingRevision`, the
 result commit for review, and the recorded refinement, approach, and
 assessment. Say that remote trunk still lists the story in the **Backlog
 list** with no Preparing assignment, so others cannot see this refinement
 until it lands. Leave the workspace and its branch in place:
 nothing is pushed or retired, and the story is neither Taken nor completed.
+This is a result held for review under
+[finish with only what needs a response](preparation-journey.md#finish-with-only-what-needs-a-response).
 
 A later session that names the retained workspace continues there without
 running `start` again. The default checkout always stays in place.
@@ -129,14 +131,16 @@ with it; it never selects automatic landing. Add `--auto-land
 authority before any workspace is selected.
 
 Land only on a ready outcome under
-[report the refinement outcome](../SKILL.md#report-the-refinement-outcome):
+[judge the refinement outcome](../SKILL.md#judge-the-refinement-outcome):
 the seed records the story's goal, scope, and key examples, its recorded
 facts and assessment are true, and no decision you need from the
 developer remains open. Then land the committed result as
 [Land or discard on request](#land-or-discard-on-request) describes for a keep,
 ownership recheck included. The story stays queued with the recorded facts:
-landing neither Takes nor completes it, and starts no CI observer. Report that
-ready outcome as landed, with its next step.
+landing neither Takes nor completes it, and starts no CI observer. Once the
+landing settles, finish under the preparation journey's
+[finish with only what needs a response](preparation-journey.md#finish-with-only-what-needs-a-response):
+a landed result with nothing requiring attention ends there.
 
 Stop instead, keeping the committed result and its workspace as they are, when
 a decision remains open (it goes to the developer), the recheck reports

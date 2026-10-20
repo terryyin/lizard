@@ -146,9 +146,9 @@ Supply `--plan` and `--expect-plan` for planned work whose plan is a distinct
 file. Omit both for planless. Supply one or more `--reason` values for
 `not-ready`; omit `--reason` for `ready`.
 
-Report the recorder's result and evidence. A refusal leaves the home unchanged;
-report it and do not hand-edit a substitute assessment. Completing this step
-still does not Take the item, move the queue, or start execution.
+The caller reports the recorder's result only as needed. A refusal leaves the
+home unchanged; report it and do not hand-edit a substitute assessment. This
+step still does not Take the item, move the queue, or start execution.
 
 ## Execution and resume
 

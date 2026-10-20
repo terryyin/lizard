@@ -42,10 +42,12 @@ distinct from shutdown facts:
   applicable attempt was replaced or is still pending), and a successful
   current attempt at a later same-target snapshot
   that contains it (`validated`: SHA, run, attempt, URL, check, context and
-  any required jobs; `ancestry`) validated the integrated state. Report
+  any required jobs; `ancestry`) validated the integrated state. Retain both
+  revisions as evidence. When details are requested or needed for an action, say
   "<accepted SHA> published; integrated state validated at <validated SHA>",
-  never that the accepted revision passed, and keep the accepted SHA as the
-  publication receipt for any closure, rebase or merge.
+  never that the accepted revision passed. This evidence requires no routine
+  success recap. Keep the accepted SHA as the publication receipt for any
+  closure, rebase or merge.
 - `verdict: "failure"` with `shutdown.status: "retained"` ends the wait without
   waiving the failure and keeps the observer available for diagnosis and
   authorized repair. Return to failure handling; do not claim completion or run

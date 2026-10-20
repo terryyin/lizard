@@ -5,8 +5,8 @@ explicit human instruction, before wrap-up can complete. Do not silently retain
 an unlisted follow-up or infer permission to drop it from absent, empty, or
 skipped retrospective advice. Handle it by its presence even when advice is
 absent. Record which disposition was applied; use
-[completion attention](../../dough-land/SKILL.md#completion-attention) for a useful
-follow-up reminder or an unresolved disposition.
+[completion attention](../../dough-land/SKILL.md#completion-attention) after
+settling it or when a disposition remains unresolved.
 
 Without an explicit drop instruction, validate the follow-up against the
 correction-input contract in

@@ -8,8 +8,8 @@ description: >-
   agent history. Use for execution retrospective, product review, or backlog
   recommendations from current/supplied history. Supports `--skip-process` and `--skip-product`.
   May plan corrections, record process findings in `DearDough.md` (500-line warning, 1,000-line
-  ceiling, recoverable lower-priority replacement on overflow), and recommend product work; never
-  implements findings.
+  ceiling, recoverable lower-priority replacement on overflow), and recommend product work.
+  Finishes quietly when settled, surfaces unresolved attention, and never implements findings.
 ---
 
 # Review an execution
@@ -205,27 +205,36 @@ Leave disputed goals/scope, conflicting priorities, and unknown beneficiaries/ou
 
 ## Report
 
-Report work identity/completion, provenance, manifest/boundary, impact-ordered findings or `none`,
-and evidence limits. Classify planning as amended, new, read-only, unchanged, or unavailable pending
-execution-boundary evidence, with a new follow-up's story and plan links. Report enabled
-process proposals and product advice/reasoned no-change; unresolved process selection reports
-its error only. Distinguish evidence from hypotheses and
-recommendations from proposals/unresolved choices. When CI is pending, report its retained target
-and revision as pending and make no success claim. End with
-`## EXECUTION RETROSPECTIVE COMPLETE`; this marker completes review, not the
-execution's final CI handoff. When this review was invoked automatically by an
-active `dough-execute-plan` execution, do not end the turn at this marker:
-return immediately to that execution's completion operation,
-without asking for confirmation. If an authorized CI repair later changes
-reviewed code, resume only the affected conclusions using the retained review
-state.
+Retain work identity/completion, provenance, manifest/boundary, judged proof,
+impact-ordered findings and evidence limits in available review context and their
+existing record homes. Classify planning as amended, new, read-only, unchanged,
+or unavailable pending execution-boundary evidence, with any correction story
+and plan links. Retain enabled process proposals, recording results, and product
+advice/reasoned no-change; unresolved process selection contributes its error only.
+Distinguish evidence from hypotheses and recommendations from unresolved choices.
+Preserve a pending CI target/revision as pending, without a success claim. These
+facts support continuation, recovery and requested details; they require no
+separate report artifact or persistent attention ledger.
 
-Only with the evidenced attention need above, append this at the absolute end
-of a standalone retrospective report. For an automatic execute-plan review,
-return the attention need to the invoking execution for its final handoff:
+Apply shared [completion attention](../dough-land/references/completion-attention.md)
+to the current unresolved needs. A standalone review owns its response: finish
+quietly when settled, without a routine success/no-findings recap or completion
+banner. When attention remains, put the shared prominent attention phrase before
+the actionable issue, consequence, next action or decision, owner when known, and
+relevant evidence/record links. A standalone written draft awaiting keep or
+disposition requires attention; an already settled record does not. Requested
+details or an explicit review/retain stop still receive the needed review evidence.
+Name missing attribution, proof, requested process history or failed recording
+and limit completion claims to the supported review; preserve partial conclusions
+and the input/action needed to continue.
 
-```text
-!!!!!!!!!! DEVELOPER ATTENTION REQUIRED !!!!!!!!!!
-<the overlooked item, its impact, and the response needed>
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-```
+When invoked automatically by an active `dough-execute-plan` execution, return
+immediately to that execution's completion operation, without a separate visible
+final report or confirmation. Return the review's completion or partial state,
+the retained evidence and record links, product advice/skip reasons, and current
+unresolved attention. A successful return completes review, not the execution's final CI
+handoff; the invoking execution owns its combined final response. Repeated or
+overlapping reviews contribute each currently unresolved item once under its
+current disposition and designated writer; a later successful check cannot
+settle a finding. If an authorized CI repair later changes reviewed code, resume
+only the affected conclusions using the retained review state.

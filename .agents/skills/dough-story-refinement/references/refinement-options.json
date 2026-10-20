@@ -43,7 +43,7 @@
       "flag": "--refine-only",
       "label": "Refine only",
       "summary": "Stop after recording the story; leave slice planning for a later step.",
-      "instruction": "End this invocation at the refinement result instead of continuing into slice planning. Complete the refinement as usual, applying every other selected option and focus, and retain the recorded story in its workspace at that boundary. Report the refinement outcome with slice planning in that workspace as the next step, or, for a Flawless story, execution with an explicit instruction to skip slice planning. An open decision for the developer is still reported as Needs human engagement."
+      "instruction": "End this invocation at the refinement result instead of continuing into slice planning. Complete the refinement as usual, applying every other selected option and focus, and retain the recorded story in its workspace at that boundary. End with where the refined story waits and slice planning in that workspace as the next step, or, for a Flawless story, execution with an explicit instruction to skip slice planning. An open decision for the developer is still reported as Needs human engagement."
     },
     {
       "flag": "--retain",

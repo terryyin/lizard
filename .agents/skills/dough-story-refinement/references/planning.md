@@ -48,7 +48,8 @@ For each story, establish:
   ambiguity; do not enumerate a complete test suite.
 
 Prefer the smallest useful outcome. Clarify uncertain additions when possible;
-otherwise exclude them and report what was considered. If exclusion prevents
+otherwise exclude them and record what was considered with the story's
+deferred promises or the plan's exclusions. If exclusion prevents
 the stated goal or examples from working, resolve the question before dependent
 planning or implementation. Necessary implementation details are not extra
 product scope. Naturally general behavior need not add delivery or verification

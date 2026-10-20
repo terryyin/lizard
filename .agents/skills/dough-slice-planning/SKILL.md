@@ -7,12 +7,12 @@ description: >-
   when a selected story is ready for implementation planning, an execution
   retrospective has one bounded correction to plan, or authorized remaining
   work from a sufficient instruction needs an ordinary plan. Stays within the
-  triggering instruction's execution authority: finish after writing and
-  reporting the plan unless that instruction explicitly also requests execution.
-  Invokes slice-plan refinement when remaining plan concerns can be resolved
-  within the understood outcome, then reports remaining concerns or a limited
-  no-concerns finding and records readiness through the shared preparation
-  procedure without granting Take or execution.
+  triggering instruction's execution authority: finish after writing the plan
+  and recording its readiness unless that instruction explicitly also requests
+  execution. Invokes slice-plan refinement when remaining plan concerns can be
+  resolved within the understood outcome, then records remaining concerns in
+  the plan and readiness through the shared preparation procedure without
+  granting Take or execution.
 ---
 
 # Slice planning
@@ -121,7 +121,7 @@ premise is a factual claim about this project's current state on which a slice's
 sizing, or proof depends; [settle each one](references/settle-decisive-premises.md) before `ready`.
 
 During construction, apply those decomposition, cumulative design, and sizing checks: correct
-obvious defects such as an independent second outcome before reporting, and
+obvious defects such as an independent second outcome before assessing readiness, and
 preserve proof ownership and any supplied sizing constraints on every resulting
 slice.
 
@@ -134,22 +134,22 @@ for the planned approach (omit assessment on that write).
 When remaining concerns about slice boundaries, cumulative design, proof
 ownership, or sizing can be resolved within the understood outcome and scope,
 invoke [dough-slice-plan-refinement](../dough-slice-plan-refinement/SKILL.md)
-on the written plan before the final report and readiness assessment. This
+on the written plan before the readiness assessment. This
 refinement is part of slice planning and needs no additional instruction;
 honor an explicit instruction to leave refinement to a later step. A plan
 without such concerns needs no refinement pass.
 
 Keep unresolved source questions and human-owned decisions outside this
-handoff. Report a missing input, disputed constraint, or concern that refinement
+handoff. Handle a missing input, disputed constraint, or concern that refinement
 cannot resolve within scope under the next section; do not repeat refinement
 without new evidence or widen the outcome.
 Refinement keeps the same plan, preparation workspace, and assignment. It
 grants no execution authority.
 
-## Report concern evidence and assess readiness
+## Record concern evidence and assess readiness
 
-After constructing the plan, report, then record readiness through the shared
-procedure:
+After constructing the plan, record its concern evidence in the plan, then
+record readiness through the shared procedure:
 
 - In one line, whether refinement ran, was not needed (with the reason), or
   was left to a later step as instructed.
@@ -157,7 +157,7 @@ procedure:
   (for example an integration assumption or repeated special-case design), and
   its consequence (for example uncertain sizing or duplicated domain rules),
   including concerns spanning successive slices. When this review identified
-  none, say so narrowly.
+  none, the plan says so narrowly.
 - Interim behavior that slice decomposition permits is an accepted trade-off,
   not a remaining concern, once the plan names it and its replacing slice.
   Relabeling a blocking concern, such as a proof gap, does not settle it.
@@ -168,6 +168,11 @@ procedure:
   dependency is not such a concern; its agreement alone blocks the start, so a
   plan settled apart from waiting on its suppliers records `ready`. Do not prescribe the
   next workflow action, Take the item, or start execution from this finding.
+- A missing input, disputed constraint, or human-owned decision that refinement
+  cannot resolve needs a response: report the expected response, who can give
+  it when known, and what waits for it. A concern the plan bounds with an
+  authorized early probe slice needs none; the plan and the recorded reasons
+  carry it.
 
 The recipient chooses the next action under the triggering instruction's
 authority and project policy. The recorded assessment is agent judgment bound to
@@ -176,18 +181,18 @@ replace the triggering instruction's execution authority.
 
 ## Stay within the triggering instruction
 
-After writing and reporting the plan, the next action remains within the
-triggering human or parent-agent instruction:
+After writing the plan and recording its assessment, the next action remains
+within the triggering human or parent-agent instruction:
 
 - Planning-only request, or a continuation from story refinement: do not implement and do not invoke execution.
-  The report carries the plan path, ordered slices, considered-but-excluded additions, the refinement decision
-  and concern report, and the recorded readiness assessment, given under the preparation journey's
-  [report once at the end](../dough-story-refinement/references/preparation-journey.md#report-once-at-the-end).
-- Parent-agent delegation that asks only for slice planning: return the plan,
-  the refinement decision and concern report, and the recorded readiness
+  The plan and the story's record hold the slices, exclusions, refinement decision, concerns, and assessment;
+  the session finishes under the preparation journey's
+  [finish with only what needs a response](../dough-story-refinement/references/preparation-journey.md#finish-with-only-what-needs-a-response).
+- Parent-agent delegation that asks only for slice planning: return the plan
+  path, the refinement decision and concerns, and the recorded readiness
   assessment to the parent. The parent's broader implementation task
   is not an explicit execution request to this planner.
-- Explicit plan-and-execute request: after reporting, the authorized workflow
+- Explicit plan-and-execute request: once the assessment is recorded, the authorized workflow
   may continue into execution without asking again for the same authorization,
   subject to this project's gates and any unresolved concerns that still block
   progress. Prefer the project's established execution path (for example
@@ -201,7 +206,3 @@ An execution instruction for this story that arrives while its preparation is
 unlanded follows
 [hand off to execution in the same session](../dough-story-refinement/references/preparation-journey.md#hand-off-to-execution-in-the-same-session)
 instead.
-
-After the matching case above, end with:
-
-`## SLICE PLAN WRITTEN`

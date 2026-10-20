@@ -18,6 +18,14 @@ entry point also credits the developer whose Git identity is configured there,
 once, as a `Co-authored-by` trailer beside any co-authors your message already
 names, such as your host's model trailer.
 
+For [guarded fresh execution preparation](fresh-increment.md), resolve this
+contract as `commit: "agent"`; that entry calls this helper only after its
+required preparation succeeds. Its successful SHA is passed directly to managed
+delivery before observation; a refused commit withholds both publication and
+that attempt's observer. Existing staged-commit and recovery callers retain
+their own entry points. Other callers retain this helper's direct
+staged-commit interface and ordinary Git callers retain `commit: "git"`.
+
 Stage only the content you own first; the entry point commits what is staged.
 Run it from the workspace, or pass `-C <workspace>`, with your message as
 `-F <file>`, `-F -` on standard input, or one or more `-m <paragraph>`. Add

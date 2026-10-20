@@ -9,11 +9,11 @@ recorded readiness assessment, published on the remote target as one commit.
 ## Continue into slice planning
 
 Once the seed records the story's goal, scope, and key examples, `refined` is
-recorded, and no question to the coordinator remains, report the story's
-refinement outcome under
-[report the refinement outcome](../SKILL.md#report-the-refinement-outcome)
-and, in the same session, invoke
-[dough-slice-planning](../../dough-slice-planning/SKILL.md) for that story.
+recorded, and no question to the coordinator remains, invoke
+[dough-slice-planning](../../dough-slice-planning/SKILL.md) for that story in
+the same session. The seed and its recorded facts carry the ready outcome
+under [judge the refinement outcome](../SKILL.md#judge-the-refinement-outcome)
+into planning.
 
 Both ready outcomes continue: Ready for slice planning and Flawless. A Flawless
 story gets its one-slice plan and recorded assessment, and executing it with an
@@ -22,8 +22,8 @@ execution starts.
 
 When several stories are refined together, continue for the story the
 invocation names, which is the established identity when the instruction
-carries one. Each sibling refined for its boundaries ends with its own
-refinement outcome. A story that already has an associated plan continues with
+carries one. Each sibling refined for its boundaries ends at its own
+refinement result. A story that already has an associated plan continues with
 that plan instead of a new one.
 
 ## Carry the same preparation
@@ -46,9 +46,9 @@ Two conditions end the invocation at the refinement result:
 - **An explicit refine-only instruction.** The invocation carries
   `--refine-only` from [refinement options](refinement-options.json), or an
   ordinary-language instruction to leave planning for later. It composes with
-  every option and focus: apply the others within the refinement, then report
-  the refinement outcome with slice planning in that workspace as the next
-  step.
+  every option and focus: apply the others within the refinement, then end
+  with where the refined story waits and slice planning in that workspace as
+  the next step.
 
 [One-shot refinement](one-shot-refinement.md) is a separate journey that ends
 at its review or landing. Missing context and failures stop each skill as that
@@ -61,7 +61,7 @@ slice planning records its readiness assessment, with any slice-plan
 refinement it invoked, whether planning followed refinement in this session or
 began it, or when a slice-plan refinement invoked directly on that story's
 plan records its reassessment. A plan that needs no refinement adds nothing
-before landing: no approval step and no second report.
+before landing: no approval step or report of its own.
 
 At that end, with no open coordinator question and no opt-out, land the result.
 The instruction that started this preparation is the advance keep instruction
@@ -77,9 +77,10 @@ authority (`--push-authorized`) covers landing to the same remote target.
 The recorded assessment does not gate landing. A `ready` or `not-ready` plan
 whose reasons, early probe slices, or pre-Take decisions the plan already
 names is a complete result, and it lands so the coordinator sees it on the
-remote target. The story stays queued with the recorder's facts: landing
-neither Takes it, starts execution, nor completes it, and grants no execution
-authority.
+remote target. Reasons bounded by the plan's authorized early probe slices
+need no response now: they stay in the plan and the story's record. The story
+stays queued with the recorder's facts: landing neither Takes it, starts
+execution, nor completes it, and grants no execution authority.
 
 An open coordinator question is a response the preparation needs before its
 result is complete:
@@ -111,6 +112,9 @@ the decision or rerun that continues.
 Other written results, such as a decomposition seed, a session that ends at
 the refinement result, or a record with no announced assignment, follow
 [Decide what happens to the written result](preparation-disposition.md#decide-what-happens-to-the-written-result).
+
+Whatever the disposition, the session then ends under
+[finish with only what needs a response](#finish-with-only-what-needs-a-response).
 
 ## Hand off to execution in the same session
 
@@ -188,18 +192,49 @@ which retires the worktree and branch through the creation record this
 preparation's start wrote; nothing rewrites that record. Reporting belongs to
 execution's [finish or stop](../../dough-execute-plan/references/finish-or-stop.md).
 
-## Report once at the end
+## Finish with only what needs a response
 
-The session's final report is slice planning's report, or the plan
-refinement's when that skill was invoked directly, given once after the
-landing settles. It carries the story's refinement outcome, the plan path, the
-recorded readiness assessment, and the landing result: the landed commit, the
-story's next step, and Dough Land's publication, refresh, and retirement
-results. For a retained or stopped result it carries the draft's workspace,
-the Preparing assignment others still see, and the expected response, which
-for a result the opt-out retained is an explicit keep.
+One attention judgment covers the whole preparation, whichever of the three
+skills began it: refinement, slice planning, any slice-plan refinement, and the
+landing are one journey. Each settled step hands on to the next without a
+message of its own. After the landing or other disposition settles, apply
+[completion attention](../../dough-land/references/completion-attention.md) to
+the preparation as a whole, including what Dough Land's landing settled.
+
+A preparation that landed with nothing requiring attention ends there. Its
+refinement outcome, plan, concerns, readiness assessment, and landing live in
+the seed, the plan, the story's record, and the remote target; the response
+adds no summary of them or the story's next step. Where the host requires a
+response, give its minimal native one.
+
+These need a response, each with its expected response, its consequence, what
+continues once it is given, and who can give it when known, without recapping
+settled work:
+
+- an [open coordinator question](#land-at-the-end-of-preparation) or a landing
+  stop, with the draft and its Preparing assignment kept as described above;
+- a result held at a selected boundary: the refine-only result, the opt-out's
+  retained result, an unpublished result, or a one-shot result kept for review.
+  Give the draft's workspace and branch, whether others still see the story as
+  Preparing, and the concrete next action, such as slice planning in that
+  workspace or an explicit keep;
+- a landed plan that names a decision a person must make before the story is
+  Taken: name the decision and its owner, and that execution waits for it; and
+- a concern, reminder, or unfinished step that completion attention reports for
+  the landing, such as a stopped refresh or held retirement.
+
+When the developer explicitly asks for details, such as the plan, its slices,
+or architecture findings, or selected an option or focus whose instruction
+reports its findings, give them. A parent agent or invoking workflow that
+delegated a step of this preparation receives what it needs to continue, such
+as the plan path, the recorded assessment and its evidence, the result's
+location, or the decision it must make, as that step's return.
 
 With supplied dashboard reporting context, the completion report under
 [dashboard completion](../../dough-land/references/dashboard-completion.md) is
-the session's final operation, after the landing settles. A retained or stopped
-result reports `unfinished` with the expected response.
+the session's final operation, after the landing or other disposition settles.
+A landed preparation with nothing requiring attention reports `completed` with
+no message and waits for its receipt. A landed preparation that needs a
+response reports `completed` with that exact response. A retained or stopped
+result reports `unfinished` with the exact response above. Without that
+context, make no dashboard contact.

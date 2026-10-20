@@ -1,11 +1,9 @@
 # Publish execution results
 
-Startup uses this rule to publish a claim. Slice delivery uses it to
-publish a validated increment or an owned CI repair. Story wrap-up uses the
-same Git steps for each owned closure commit, including before-cleanup and
-final-closure commits, under
-[wrap-up closure publication](wrap-up-closure-publication.md). Do not invent a
-second publication sequence.
+Claims, validated increments, owned CI repairs and story closure use this
+publication sequence. For before-cleanup and final-closure commits, follow
+[wrap-up closure publication](wrap-up-closure-publication.md).
+Do not invent a second Git sequence.
 
 This rule does not create execution authority or wait for CI. Observation is
 armed from the execution checkout against the authorized target branch.
@@ -13,34 +11,34 @@ armed from the execution checkout against the authorized target branch.
 ## Publish a claim
 
 For Story Branch and Trunk Mode, [Take or admit work](../SKILL.md#take-or-admit-work),
-including [admission](admit-accepted-work.md) of accepted unlisted work, uses the installed startup operation to publish and confirm the claim on remote
-trunk before implementation. Retain the published SHA and recovery
-coordinates from its compact result and register that SHA after the observer
-is armed. Later environment preparation does
-not unpublish that SHA. An unavailable destination or failed publication
-preserves the reported state and does not authorize starting unclaimed
-work. CI coverage for this claim, including a Story Branch claim's unobserved
-trunk target, follows
-[Own one observer](ci-monitor.md#own-one-observer).
+including [admission](admit-accepted-work.md) of accepted unlisted work,
+uses the installed startup operation to publish and confirm the claim on remote
+trunk before implementation. Retain its published SHA and recovery coordinates;
+register that SHA after the observer is armed. Later environment preparation does
+not unpublish that SHA. An unavailable destination or failed publication preserves
+the reported state and does not authorize unclaimed work. Claim coverage, including
+a Story Branch claim's unobserved trunk target, follows [Own one observer](ci-monitor.md#own-one-observer).
 
 ## Publish an execution increment or repair
 
-After wrap-up proof, refactor, format, and commit succeed, publish the owned
-unpublished suffix through managed delivery
-([Publish an execution increment or repair](#publish-an-execution-increment-or-repair)).
+After wrap-up proof and refactor, fresh increments and owned repairs use
+[guarded fresh preparation and delivery](fresh-increment.md): required local
+operations and commit precede managed delivery, with the successful receipt as
+`validatedCandidate`. Failed preparation or commit withholds publication and
+observation, even when an older HEAD is deliverable. Existing-candidate delivery
+and interrupted-publication recovery require no new commit.
 Planned slices, planless and contextual work, bug repair, and a retrospective
 correction all use this delivery. An owned CI repair uses it too. Pause,
 stash, and restore stay in
 [CI observation](ci-monitor.md#handle-a-notification); do not add a second
 repair push.
 
-Managed delivery resolves this checkout's CI runtime, establishes or reuses
-this coordinator's own live observer of the authorized target, publishes the
-candidate, and attaches the accepted SHA. Do not run a separate probe, start, or `register-push`
-for ordinary increments or already-authorized repairs. Retain the delivery
-receipt's observation directory when present; do not transcribe mailbox handles
-by hand. An unavailable host bridge returns `pendingCi: unobserved` (or an
-equivalent coverage-gap receipt) while leaving remote acceptance intact.
+Managed delivery resolves this checkout's CI runtime and establishes or reuses
+this coordinator's live observer of the authorized target before publication,
+then attaches the accepted SHA. Do not separately probe, start, `register-push`,
+or transcribe mailbox handles. Retain the receipt's observation directory.
+An unavailable bridge returns `pendingCi: unobserved` (or an equivalent coverage
+gap) while leaving remote acceptance intact.
 
 Trunk Mode builds the candidate from the local execution branch and pushes
 that candidate to remote trunk (`refs/heads/<trunk>`).
@@ -76,17 +74,15 @@ worktree. For a claim, the supplied validation confirms the selected entry is
 repair, it reuses accepted proof whose promise, boundary, implementation,
 setup, and observations still match.
 [Default-checkout preservation](maintain-default-checkout.md#preserve-pending-local-work)
-applies only when this publication mutates that checkout. A maintenance stop
-follows
-[human judgment](execution-decisions.md#stop-for-human-judgment),
-[delivery staging](wrap-up.md#deliver-the-change), and
-[resume](../SKILL.md#continue-or-recover-at-an-execution-boundary).
-It does not erase a remote acceptance the publisher has already recorded.
+applies only when publication mutates that checkout. For a maintenance stop, follow
+[human judgment](execution-decisions.md#stop-for-human-judgment), [delivery staging](wrap-up.md#deliver-the-change)
+and [resume](../SKILL.md#continue-or-recover-at-an-execution-boundary).
+Recorded remote acceptance stands.
 
 ## Publish the candidate
 
 Apply [Preconditions](#preconditions), then run managed delivery once from the
-owned workspace, where `<installed>` is this project's installed skills
+owned workspace for an existing committed candidate, where `<installed>` is this project's installed skills
 directory that holds `dough-execute-plan` (normally `.agents/skills/` or
 `.claude/skills/`):
 
@@ -96,7 +92,7 @@ node <installed>/dough-execute-plan/scripts/execution-increment-delivery.mjs del
   --workspace <owned workspace> --branch <execution branch> \
   --previously-published-base <previously published base SHA> \
   --target-ref <authorized target ref> --repo <owner/repo> --host <host> \
-  --authority <publish|local-only> [--tracking one-shot] \
+  --authority <publish|local-only> [--tracking one-shot] [--validated-candidate <accepted proof SHA>] \
   [--session-json <json>] [--coordinator <value> --observer-directory <directory>] \
   [--default-checkout <path>] [--one-shot-identity <identity>]
 ```
@@ -193,6 +189,11 @@ replace the execution worktree. After that publication obligation is accepted,
 apply the refresh rule in [Publish the candidate](#publish-the-candidate). The
 resume classification itself still only inspects the checkout.
 
+After fresh commit success, use its `recovery.candidateSha` and
+`recovery.suffixBase` with retained owner context; see [fresh recovery](fresh-increment.md)
+for proof stops and mismatches. Stopped or thrown delivery needs no fresh attempt.
+HEAD existence, an empty suffix or a failed fresh commit cannot establish recovery eligibility.
+
 For managed increment recovery, run the installed resume command from the
 owned workspace with the candidate and base retained together before push and
 the owner input `deliver` takes:
@@ -245,6 +246,5 @@ allocate a replacement claim or a nested worktree.
 Apply [publish the candidate's preserved state](publish-the-candidate.md#preserve-remaining-state),
 which defers local preservation to
 [maintain the default checkout](maintain-default-checkout.md#preserve-pending-local-work).
-For this caller, that state is not permission to start unclaimed work,
-start implementation from an unpublished claim, or substitute a different
-destination than the one recorded for this publication.
+Preserved state authorizes neither unclaimed implementation, implementation from
+an unpublished claim, nor a destination different from the recorded target.

@@ -95,7 +95,18 @@ sits on the checkout's local trunk branch, after any earlier local commits.
 
 Work only in that workspace. Run the focused verification the outcome needs
 and the [post-change refactor](../../dough-post-change-refactor/SKILL.md) pass,
-then commit the result with plain `git commit`: the start named no agent.
+then use [guarded fresh preparation](fresh-increment.md) with `commit: "git"`:
+the start named no agent, so ordinary Git authorship and project hooks apply.
+Resolve its project requirements and exact owned paths under this one-shot
+scope, including all checkout content when default-checkout execution was
+selected. Queued closure mutations below must finish before this fresh commit;
+retain their already-made changes in its owned staging boundary. Do not invent
+a plan for quick work. Use local-only for this fresh commit and retain its
+receipt pending publication, including when automatic landing was selected.
+The existing landing path below owns publication, closure and retirement.
+A failed preparation or commit withholds dependent remote operations and
+observation. An already-committed retained result uses the landing and recovery
+paths below without another fresh commit.
 
 Then stop for review, unless automatic landing was selected: then continue
 under [Land automatically when selected](#land-automatically-when-selected).

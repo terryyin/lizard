@@ -99,13 +99,16 @@ issues. Never lower it.
 
 ## Recording result
 
-For an accepted ordinary write, report the canonical path, created or updated
+Return these facts to the calling review as evidence; its
+[response contract](../SKILL.md#report) selects visible attention or quiet completion.
+
+For an accepted ordinary write, return the canonical path, created or updated
 issue IDs with occurrence rows, the measured final size, and the 500-line
 warning when step 5 applies.
 
-For an accepted bounded write, report the same, plus the removals, priority
+For an accepted bounded write, return the same, plus the removals, priority
 rationale, and recovery reference.
 
 For a refused ceiling, existing-violation, failed validation, failed write, or
-refused retention, report `not recorded` or `unchanged` with the reason.
+refused retention, return `not recorded` or `unchanged` with the reason.
 Never describe those cases as successful writes.
