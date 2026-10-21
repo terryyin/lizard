@@ -44,7 +44,7 @@ class GoReader(CodeReader, CCppCommentsMixin):
 # Tokens after which `func` starts a literal (an expression), not a declaration.
 _LITERAL_PRECEDERS = frozenset(("=", ",", "(", ":", "{", "[", "return"))
 # Tokens after which `func` starts a func type inside a larger type.
-_FUNC_TYPE_PRECEDERS = frozenset(("]", "chan", "*"))
+_FUNC_TYPE_PRECEDERS = frozenset(("]", "chan", "*", "...", "<-"))
 # Tokens that start a package-level declaration.
 _DECLARATION_KEYWORDS = frozenset(("const", "func", "import", "type", "var"))
 
@@ -77,6 +77,8 @@ class GoStates(GoLikeStates):  # pylint: disable=R0903
         # such as a bare `= func` does not swallow the functions after it.
         if token == "(":
             self.context.push_new_function(self._literal_name)
+            if not self._literal_name:
+                self._name_anonymous_function()
             self.next(self._function_dec, token)
         else:
             self.next(self._state_global, token)
@@ -125,3 +127,10 @@ class GoStates(GoLikeStates):  # pylint: disable=R0903
             pass
         else:
             super(GoStates, self)._state_global(token)
+
+    def _name_anonymous_function(self):
+        # The counter lives on the per-file context because nested
+        # state machines are fresh clones.
+        count = getattr(self.context, 'go_anonymous_count', 0)
+        self.context.go_anonymous_count = count + 1
+        self.context.add_to_function_name(f'anonymous__{count}')

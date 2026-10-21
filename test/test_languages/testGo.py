@@ -90,21 +90,62 @@ class Test_parser_for_Go(unittest.TestCase):
                 ''')
         self.assertEqual(4, len(result))
 
-        self.assertEqual("", result[0].name)
-        self.assertEqual("", result[0].long_name)
+        self.assertEqual("anonymous__0", result[0].name)
+        self.assertEqual("anonymous__0", result[0].long_name)
         self.assertEqual(1, result[0].length)
 
-        self.assertEqual("", result[1].name)
-        self.assertEqual(" n int", result[1].long_name)
+        self.assertEqual("anonymous__1", result[1].name)
+        self.assertEqual("anonymous__1 n int", result[1].long_name)
         self.assertEqual(1, result[1].length)
         self.assertEqual(['n int'], result[1].full_parameters)
 
-        self.assertEqual("", result[2].name)
-        self.assertEqual("", result[2].long_name)
+        self.assertEqual("anonymous__2", result[2].name)
+        self.assertEqual("anonymous__2", result[2].long_name)
         self.assertEqual(3, result[2].length)
 
         self.assertEqual("sayGoodbye", result[3].name)
         self.assertEqual(7, result[3].length)
+
+    def test_anonymous_function_as_argument(self):
+        result = get_go_function_list('''
+            func main() {
+                fx.Invoke(
+                    func(log *zap.Logger) error {
+                        if err != nil {
+                            return err
+                        }
+                        return nil
+                    },
+                )
+            }
+                ''')
+        self.assertEqual(["anonymous__0", "main"], [f.name for f in result])
+        self.assertEqual(2, result[0].cyclomatic_complexity)
+
+    def test_package_level_function_literals(self):
+        result = get_go_function_list('''
+            var handler = func(n int) int {
+                return n
+            }
+            var table = map[string]Handler{
+                "a": func() {},
+            }
+            func (m *T) method() {}
+                ''')
+        self.assertEqual(["handler", "anonymous__0", "method"],
+                         [f.name for f in result])
+        self.assertEqual(["n int"], result[0].full_parameters)
+
+    def test_function_types_are_not_functions(self):
+        result = get_go_function_list('''
+            var table = map[string]func(){
+                "a": func() {},
+            }
+            var list = []func(int) error{nil}
+            var ch = make(chan func())
+            func run(fs ...func()) {}
+                ''')
+        self.assertEqual(["anonymous__0", "run"], [f.name for f in result])
 
     def test_interface(self):
         result = get_go_function_list('''
@@ -227,7 +268,7 @@ class Test_parser_for_Go(unittest.TestCase):
             var table = []Handler{ func() { }, }
             func after() { }
                 ''')
-        self.assertEqual(["", "after"], [f.name for f in result])
+        self.assertEqual(["anonymous__0", "after"], [f.name for f in result])
 
     def test_bare_func_literal_does_not_swallow_following_functions(self):
         result = get_go_function_list('''
@@ -260,6 +301,7 @@ class Test_parser_for_Go(unittest.TestCase):
                 if true { }
             }
                 ''')
-        self.assertEqual(["", "", "after"], [f.name for f in result])
+        self.assertEqual(["anonymous__0", "anonymous__1", "after"],
+                         [f.name for f in result])
         self.assertEqual(2, result[0].cyclomatic_complexity)
         self.assertEqual(2, result[2].cyclomatic_complexity)

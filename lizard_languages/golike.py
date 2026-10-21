@@ -45,6 +45,7 @@ class GoLikeStates(CodeStateMachine):  # pylint: disable=R0903
             if token == '(':
                 if len(self.context.stacked_functions) > 0\
                         and self.context.stacked_functions[-1].name != '*global*':
+                    self._name_anonymous_function()
                     return self.next(self._function_dec, token)
                 else:
                     return self.next(self._member_function, token)
@@ -73,6 +74,9 @@ class GoLikeStates(CodeStateMachine):  # pylint: disable=R0903
         }.get(token, 0)
         if self.br_count == 0:
             self.next(self._expect_function_dec)
+
+    def _name_anonymous_function(self):
+        pass
 
     @CodeStateMachine.read_inside_brackets_then("()", '_function_name')
     def _member_function(self, tokens):
