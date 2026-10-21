@@ -112,6 +112,8 @@ Reuse accepted inspection only while its promise, boundary, implementation, setu
 and observations match. Recover literal commands from the original handoff; rerun
 only missing, ambiguous, changed-boundary or omitted required integration proof.
 Preserve failures under [execution decisions](execution-decisions.md#diagnose-failed-proof).
+For expensive proof, inspect the handoff's retained [pre-launch decision](../../dough-story-refinement/references/executable-proof.md#choose-expensive-proof-before-launch).
+Reconsider changed host/workload conditions before launch; deferred proof stays incomplete with its owner and next condition.
 
 Require CI-safe work: no deliberate failing tests or unfinished end-to-end proof
 represented as complete. Mark unfinished proof by this project's convention;
@@ -144,13 +146,11 @@ and retain its receipt. Existing candidates use retained candidate/base recovery
 
 1. Spawn a fresh agent to run
    [dough-post-change-refactor](../../dough-post-change-refactor/SKILL.md).
-   Supply the execution source, execution checkout and branch, slice,
-   accepted proof and consumer trace with inspected setup and observation
-   locations, changed paths and boundaries, project context, and ownership
-   boundaries; supply the plan path only when one exists. Keep
-   formatting and hook-owned lint with the coordinator. Do not
-   add instructions contradicting that skill's decide-before-testing contract;
-   explicit human verification requests remain authoritative.
+   Supply source, execution checkout/branch, slice, project context, changed paths and
+   boundaries, ownership boundaries, and accepted proof/consumer trace with inspected
+   setup/observation locations; include an existing plan's path. Carry the retained
+   expensive-proof decision and same-machine competing owned work. Keep formatting and
+   hook-owned lint with the coordinator; uphold decide-before-testing and explicit human verification authority.
 2. Inspect its report, require `## REFACTOR COMPLETE`, and recheck
    [execution decisions](execution-decisions.md). Use the reported changed paths,
    boundaries, and proof effects to inspect only newly affected implementation

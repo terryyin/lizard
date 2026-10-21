@@ -44,6 +44,14 @@ export const usage = `Usage: product-backlog.mjs add --identity <id> --title <ti
        product-backlog.mjs update-dependency --identity <id> --link <href>
                              --dependency-file <json-path>
                              --expect-dependencies <sha256> [--file <path>]
+       product-backlog.mjs resolve-dependency --identity <id> --link <href>
+                             --dependency-file <json-path>
+                             --expect-dependencies <sha256>
+                             --accepted-revision <sha> --remote <remote>
+                             --target <branch> [--correct-agreement]
+                             [--plan <backlog-relative-path>]
+                             [--planless-complete --completion-file <proof-path>]
+                             [--file <path>]
 
 add adds one already identified entry to "## ${queueHeading}" at the requested
 relative position. Identities are supplied, never allocated there.
@@ -166,8 +174,14 @@ and --expect-dependencies, including waiting or decision-needed after cleanup;
 --accepted-revision <sha> --remote <remote> --target <branch> establish accepted
 supplier integration. Recoverable supplier outcome must show all planned slices
 done (optional --plan), or --planless-complete --completion-file <proof path>.
-The consumer agreement must remain unchanged. Repeats preserve existing evidence.
+The consumer agreement must remain unchanged unless --correct-agreement
+explicitly records a proved revised condition as satisfied on the same existing
+supplier identity and home. Its resolution summary must explain the proof and
+why removed obligations remain consumer work. Correction retains prior evidence,
+flags changed content since readiness review, and never completes or starts the
+consumer or renews its judgment. Repeats with the current basis preserve evidence.
 Condition satisfaction is the caller's evidenced judgment, never text matching.
+Follow the shared supplier-dependencies.md procedure for review and human choices.
 
 Paths are resolved against the current directory; --file defaults to
 ${defaultBacklogPath}. Canonical home links and planned paths are resolved

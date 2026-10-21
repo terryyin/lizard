@@ -232,8 +232,8 @@ Missing/contradictory execution identity requires the recovery decision above.
    pre-change observation, apply [proof ownership](../dough-story-refinement/references/planning.md#own-executable-proof):
    reuse an adequate baseline with known matching revision/environment/selection conditions,
    or obtain it first. Missing/failed prerequisites stop only dependent work. Apply on entry
-   and resume without a new startup audit or repeated recovery read. Otherwise delegate
-   under [delegation](references/delegation.md).
+   and resume without a new startup audit or repeated recovery read. Before expensive proof, apply
+   [choose expensive proof before launch](../dough-story-refinement/references/executable-proof.md#choose-expensive-proof-before-launch). Then delegate under [delegation](references/delegation.md).
 4. On return, recheck execution decisions; handle incomplete/oversized work there before
    delivery, including a no-replan overrun. Otherwise [accept proof](references/wrap-up.md#accept-proof) and confirm
    uncommitted work or an explained empty change.

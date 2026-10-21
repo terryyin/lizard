@@ -200,19 +200,21 @@ until that missing history is accounted for.
    Never stash, pop, reset, or clean by hand, or use `--all`: ignored local
    services, credentials, and dependencies stay in place.
 4. **Delegate analysis and repair to a fresh implementation agent.** Pass run URL/ID,
-   attempt, failed SHA, bounded failure evidence, current HEAD, and the paused
-   workers' ownership boundaries. Assign only the diagnosed CI failure; the
-   agent is not alone in the repository and must preserve other work. It reads
-   relevant project rules, investigates at current HEAD in the execution
-   checkout, proves the defect with a minimal observable test failing for the
-   right reason, then applies the smallest fix and confirms focused green proof.
-   It returns the fix with [implementation proof](delegation.md) and uncommitted
-   changes. Repair edits stay in that worktree; do not use the shared
-   integration checkout as the repair workspace. If deeper analysis proves all
-   failures were CI infrastructure, record the evidence and ignore the attempt
-   without a repair commit. If HEAD already contains a demonstrated repair,
-   accept the focused proof without manufacturing another commit. For a new
-   repair, the coordinator runs [wrap-up](wrap-up.md), which publishes through
+   attempt, failed SHA, bounded failure evidence, current HEAD and paused workers'
+   ownership boundaries. Assign only the diagnosed CI failure; preserve other work.
+   The agent reads project rules, investigates at current HEAD in the execution
+   checkout, proves the defect with a minimal observable test failing for the right
+   reason, applies the smallest fix and confirms focused green proof. Return
+   uncommitted changes with [implementation proof](delegation.md).
+   For expensive reproduction or proof, carry the [pre-launch decision](../../dough-story-refinement/references/executable-proof.md#choose-expensive-proof-before-launch).
+   Include known competing owners on the actual host, across worktrees; the repair
+   owner confirms or reconsiders before launch or repeat and coordinates owned heavy
+   work through existing handoffs. Return deferred proof's owner and next condition.
+   Repair edits stay in that worktree, never the shared integration checkout.
+   If deeper analysis proves all failures were CI infrastructure, record evidence
+   and ignore the attempt without a repair commit. If HEAD contains a demonstrated
+   repair, accept focused proof without manufacturing another commit. For a new
+   repair, the coordinator runs [wrap-up](wrap-up.md), publishing through
    [increment and repair publication](trunk-publication.md#publish-an-execution-increment-or-repair).
    Do not use a second repair push. Preserve the same observer through it.
 5. **Restore unfinished owned work and resume the same execution.** Publish a
@@ -239,12 +241,10 @@ sets of work preserved. Never silently resume with missing changes or pretend
 the failure was repaired. Ordinary CI defects, flaky tests included, use this
 flow; only unresolved value, design, or credential decisions need the developer.
 ## Pause and resume writers
-When the coordinator requests a CI pause, stop editing and finish or terminate
-write-capable commands. Return `## PAUSED FOR CI` with the current slice,
-changed and untracked paths, exact completed proof, incomplete commands, and
-next action. Remain idle until explicitly resumed. If the host cannot pause an
-agent until its command returns, the coordinator waits for that safe handoff.
-On resume, reread files affected by the repair or conflict resolution and rerun
-only invalidated proof. Continue the same slice with its elapsed budget
-excluding the repair pause. Unowned work, from humans or other sessions, may
-be present in this execution checkout and must be preserved.
+On a CI pause, stop editing; finish or terminate write-capable commands. Return
+`## PAUSED FOR CI` with the slice, changed/untracked paths, exact completed proof,
+incomplete commands, next action and retained expensive-proof decision. Stay idle
+until explicitly resumed; the coordinator waits for commands to permit safe handoff.
+On resume, reread repair/conflict-affected files and rerun only invalidated proof.
+Before heavy verification, confirm or reconsider the retained decision. Resume the
+same slice, excluding repair pause from its elapsed budget; unowned work from humans or other sessions is preserved.

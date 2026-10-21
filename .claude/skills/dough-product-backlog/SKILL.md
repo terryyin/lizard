@@ -1,6 +1,6 @@
 ---
 name: dough-product-backlog
-description: Maintains and reprioritizes a product backlog list of canonical story or bounded-correction references, and records necessary blocking story dependencies in canonical homes. Use to add, take, reorder, or complete backlog items, adopt or repair the done catalog beside them, record or inspect a justified prerequisite, or resolve product backlog merge conflicts. Excludes classroom and workshop exercise backlogs.
+description: Maintains and reprioritizes a product backlog list of canonical story or bounded-correction references, and records necessary blocking story dependencies in canonical homes. Use to add, take, reorder, or complete backlog items, adopt or repair the done catalog beside them, record or inspect a justified prerequisite, correct an evidenced supplier agreement after cleanup, or resolve product backlog merge conflicts. Excludes classroom and workshop exercise backlogs.
 ---
 
 # Product backlog
@@ -118,17 +118,16 @@ retrospective; returning cancelled work requires an explicit backlog decision.
 
 ## Record a necessary blocking dependency
 
-Keep each story externally valuable. Shared internal code or modest convenience
-alone creates no wait: use common architectural direction, PFE, and ordinary
-reconciliation first. Record a block only when the consumer genuinely cannot
-start before the supplier finishes, and state why those normal approaches are
-insufficient. Do not infer dependencies from prose, queue order, or shared files.
+Keep stories externally valuable: shared code or convenience creates no wait.
+Use common architectural direction, PFE, and reconciliation first; block only
+when the consumer cannot start before supplier completion and explain why those
+approaches are insufficient. Do not infer dependencies from prose, queue order,
+or shared files.
 
-Write the completion condition as the supplier outcome that must be available
-before the consumer can start. Consuming or integrating that outcome belongs to
-the consumer's scope and acceptance examples, not its prerequisite. A condition
-must not require the consumer's own implementation to unblock that same story.
-For an existing mixed condition, use the
+Write the condition as the supplier outcome needed before the consumer can
+start. Consuming or integrating it belongs in consumer scope and acceptance
+examples; never require consumer implementation to unblock itself. For a mixed
+condition, use the
 [consumer-resolution procedure](references/supplier-dependencies.md#discover-and-judge-each-current-consumer)
 to separate those responsibilities before judging fulfillment.
 
@@ -140,33 +139,26 @@ must name existing canonical homes; the supplier's `href` is relative to the
 backlog directory, as the consumer's `--link` is. Missing or ambiguous homes,
 incomplete fields, and stale agreements refuse with nothing written.
 
-The input JSON object supplies `supplier: {identity, href}`, `implementation`,
-`rationale`, `condition`, and `state`. Start with `waiting`; for example, name
-the supplier's shared endpoint contract and the external consumer behavior
-that cannot be validated before that contract is completed and integrated.
-`satisfied` additionally requires recoverable `resolution: {revision, path,
-summary}` evidence explaining how the condition was met. `decision-needed`
-requires `decision` containing the actual unresolved question. Recording a
-state applies an evidenced decision; absence from Taken or an increment landing
-alone never proves completion.
+The input JSON supplies `supplier: {identity, href}`, `implementation`, `rationale`,
+`condition`, and `state`; start with `waiting`. `satisfied` requires recoverable
+`resolution: {revision, path, summary}` explaining fulfillment; `decision-needed`
+requires the actual unresolved question in `decision`. Judge completion or correct
+mixed agreements after cleanup through the [consumer-resolution procedure](references/supplier-dependencies.md).
 
-The command updates one supplier agreement in a separate versioned
-`json dough-story-dependencies` block, preserving other dependencies, readiness
-reasons, and sibling stories. An agreement edit (supplier, implementation,
-rationale, or condition) reports changed content since review without renewing
-the recorded judgment; a supplier's state, resolution, or decision leaves the
-review unchanged. A recorded dependency is not a
-[readiness reason](references/record-preparation.md#criteria). Start
-eligibility is derived from both records, never stored: a story is eligible
-when its recorded assessment is `ready` and no dependency is unsatisfied, and
-otherwise is blocked by the assessment, each unsatisfied dependency, or
-unreadable facts. `read-state` reports it as `startEligibility`, and the
-dashboard and the start command show the same blockers. Reporting eligibility
-grants no permission and launches nothing. Every unresolved relationship
-blocks new execution through the actual start command, including queued
-one-shot starts and canonical admission. Refinement and planning remain
-possible. A blocker found during an existing execution requires a developer
-decision; this gate does not interrupt that execution automatically.
+The command updates one agreement in a versioned `json dough-story-dependencies`
+block, preserving other dependencies, readiness reasons, and sibling stories.
+An agreement edit (supplier, implementation, rationale, or condition) reports
+changed content since review without renewing the judgment; state, resolution,
+or decision changes leave the review unchanged. A dependency is not a
+[readiness reason](references/record-preparation.md#criteria).
+
+Start eligibility is derived, never stored: the assessment must be `ready` and
+every dependency satisfied. `read-state` reports `startEligibility`; the dashboard
+and start command show the same assessment, dependency, or unreadable-fact blockers.
+Eligibility grants no permission and launches nothing. Unresolved relationships
+block new execution, including queued one-shot starts and canonical admission;
+refinement and planning remain possible. A blocker during existing execution
+requires a developer decision; it does not interrupt that execution automatically.
 
 ## Remove completed items
 
