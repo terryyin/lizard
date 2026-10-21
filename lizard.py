@@ -91,11 +91,16 @@ def analyze(paths, exclude_pattern=None, threads=1, exts=None,
 def analyze_files(files, threads=1, exts=None):
     extensions = exts or get_extensions([])
     file_analyzer = FileAnalyzer(extensions)
-    result = map_files_to_analyzer(files, file_analyzer, threads)
-    for extension in extensions:
-        if hasattr(extension, 'cross_file_process'):
-            result = extension.cross_file_process(result)
-    return result
+    source = result = map_files_to_analyzer(files, file_analyzer, threads)
+    try:
+        for extension in extensions:
+            if hasattr(extension, 'cross_file_process'):
+                result = extension.cross_file_process(result)
+        yield from result
+    finally:
+        close = getattr(source, 'close', None)
+        if close is not None:
+            close()
 
 
 def _extension_arg(parser):
@@ -629,8 +634,28 @@ class FileAnalyzer(object):  # pylint: disable=R0903
 
 
 def map_files_to_analyzer(files, analyzer, working_threads):
-    mapmethod = get_map_method(working_threads)
-    return mapmethod(analyzer, files)
+    if working_threads == 1:
+        return map(analyzer, files)
+    return _map_in_pool(analyzer, files, working_threads)
+
+
+def _map_in_pool(analyzer, files, working_threads):
+    try:
+        import multiprocessing
+        pool = multiprocessing.Pool(processes=working_threads)
+    except ImportError:
+        yield from map(analyzer, files)
+        return
+    try:
+        for result in pool.imap_unordered(analyzer, files):
+            yield result
+    except BaseException:
+        pool.terminate()
+        raise
+    else:
+        pool.close()
+    finally:
+        pool.join()
 
 
 def warning_filter(option, module_infos):
@@ -921,17 +946,6 @@ def print_msvs_style_warning(code_infos, option, scheme, _):
         print(scheme.msvs_warning_format().format(f=warning))
         count += 1
     return count
-
-
-def get_map_method(working_threads):
-    try:
-        if working_threads == 1:
-            raise ImportError
-        import multiprocessing
-        pool = multiprocessing.Pool(processes=working_threads)
-        return pool.imap_unordered
-    except ImportError:
-        return map
 
 
 def md5_hash_file(full_path_name):
