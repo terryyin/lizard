@@ -52,6 +52,9 @@ class CLikeStates(CodeStateMachine):
     def _state_operator_next(self, token):
         if token == '(':
             self._state_function(token)
+        elif token in (';', '{', '}'):
+            # Keep '=' for split compound operators such as '%='.
+            self.next(self._state_global, token)
         else:
             self.context.add_to_function_name(' ' + token)
 
