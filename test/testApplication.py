@@ -1,5 +1,7 @@
 import unittest
 import subprocess
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from unittest.mock import patch
 import lizard
 import os
@@ -110,3 +112,24 @@ class IntegrationTests(unittest.TestCase):
             cwd=lizard_dir,
         )
         self.assertEqual(result.returncode, 0, msg=result.stderr or result.stdout)
+
+
+class TestHeaderDiscovery(unittest.TestCase):
+
+    def test_directory_analysis_includes_hh_header_functions(self):
+        with TemporaryDirectory() as directory:
+            header = Path(directory) / 'sample.hh'
+            header.write_text('''
+inline int clamp(int value) {
+    if (value < 0) return 0;
+    return value;
+}
+''')
+
+            results = list(lizard.analyze([directory]))
+
+            self.assertEqual([str(header)], [info.filename for info in results])
+            self.assertEqual(
+                [('clamp', 2)],
+                [(function.name, function.cyclomatic_complexity)
+                 for function in results[0].function_list])
