@@ -101,3 +101,44 @@ asynchronous ownership changes, prove that the named lifecycle owner observes
 background failure in time and performs applicable cleanup after failure or
 shutdown; an awaited exception alone proves neither. Derive timing from the
 selected lifecycle contract rather than an arbitrary timeout.
+
+## Choose expensive proof before launch
+
+Before long, repeated, or resource-intensive verification, make a proportionate
+decision about the machine that will actually run the command. Identify the
+planned scope and concurrency, available duration or cost evidence, current
+load and memory evidence, and known competing work on that machine. Attribute
+observations to their host and relevant conditions; qualify missing, stale or
+inaccessible evidence. Your local machine's measurements say nothing about an
+unobserved remote runner's headroom. Evidence obtained only after a failure
+informs the next decision; do not backdate it to the launch.
+
+Apply the project's proof policy when supplied. Otherwise make an explicit,
+bounded choice within existing authority: run, reduce concurrency while
+preserving required coverage, sequence owned heavy work, or defer the expensive
+proof while useful independent work continues. A healthy target host with a
+credible workload can proceed after a brief inspection; no universal load or
+duration cutoff or routine human approval is required. Coordinate only owned
+work through existing handoffs and pause/resume rules. Separate worktrees can
+share the same machine; leave unrelated processes with their owners.
+
+Retain the host, workload, evidence and unknowns, choice, command/proof owner,
+and reconsideration condition in the existing plan, handoff or execution
+conversation. Keep this concise enough for the decision; create no host registry.
+A deferral leaves the exact required observation outstanding with its owner and
+next condition. The command owner remains responsible through its terminal
+result under the existing workflow.
+
+Reconsider before another expensive attempt when failures, contention, changed
+workloads or stale observations remove the previous basis. Do not repeat an
+unchanged overloaded attempt without changed conditions or another supported
+basis. A bounded diagnostic retry tests a stated explanation; repeated runs
+until green do not establish it.
+
+Preserve strict verdicts and sufficient accepted unchanged proof. A focused pass
+observes its own boundary and cannot erase a failed required broad verdict.
+Host pressure does not dispose of an independent fixture or behavior defect;
+diagnose and repair it through the existing failure policy. A headroom decision
+does not itself authorize relaxed timeouts, reduced proof obligations or changed
+scope. Leave changes to coverage, scope or authority with their existing human
+owner, and report missing proof instead of declaring success.

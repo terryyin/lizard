@@ -17,6 +17,16 @@ function agreement(entry) {
   return JSON.stringify(dependencyAgreement(entry));
 }
 
+function correctedResolution(held, resolution) {
+  if (!held.resolution) return resolution;
+  // Keep the original recoverable locator and accepted history. The new
+  // judgment and its separately validated evidence stay in this same record.
+  return {
+    ...held.resolution,
+    summary: `${held.resolution.summary}\nAgreement correction using ${resolution.revision}:${resolution.path}:\n${resolution.summary}`,
+  };
+}
+
 export async function resolveDependency(file, values) {
   for (const field of [
     "identity",
@@ -39,6 +49,11 @@ export async function resolveDependency(file, values) {
     );
   }
   const dependency = normalizeStoryDependency(payload, values.identity);
+  const correcting = values["correct-agreement"] === true;
+  if (correcting && dependency.state !== "satisfied")
+    throw new BacklogError(
+      "Agreement correction requires an evidenced satisfied condition judgment. Retain the agreement until its revised condition is proved. Nothing was written.",
+    );
   if (!dependency.resolution)
     throw new BacklogError(
       "resolve-dependency requires recoverable supplier outcome evidence, including for an unresolved consumer.",
@@ -60,16 +75,21 @@ export async function resolveDependency(file, values) {
       const held = current.dependencies.find(
         (entry) => entry.supplier.identity === dependency.supplier.identity,
       );
+      const changed = held && agreement(held) !== agreement(dependency);
       if (
         current.basis !== values["expect-dependencies"] ||
         !held ||
-        agreement(held) !== agreement(dependency)
+        (!correcting && changed)
       )
         throw new BacklogError(
           "Consumer agreement changed since it was read. Reread its condition before resolving. Nothing was written.",
         );
+      if (held.supplier.href !== dependency.supplier.href)
+        throw new BacklogError(
+          "Agreement correction cannot retarget the existing supplier canonical home. Nothing was written.",
+        );
       // A repeat visit preserves the first resolution byte for byte.
-      if (held.state === "satisfied") {
+      if (held.state === "satisfied" && !changed) {
         outcome = current;
         return source;
       }
@@ -77,7 +97,12 @@ export async function resolveDependency(file, values) {
         identity: values.identity,
         href: values.link,
         expectedBasis: current.basis,
-        dependency: { ...dependency, resolution },
+        dependency: {
+          ...dependency,
+          resolution: changed
+            ? correctedResolution(held, resolution)
+            : resolution,
+        },
       });
       outcome = written.state;
       return written.source;

@@ -1,6 +1,7 @@
 # Resolve consumers of a completed supplier
 
-Use this shared procedure during a selected supplier's landing or wrap-up.
+Use this shared procedure during a selected supplier's landing or wrap-up, or
+to explicitly correct an existing consumer agreement after supplier cleanup.
 A generic checkout landing, an increment, a queue `complete`, disappearance from
 Taken, or missing history does not establish completion. Without a selected
 completed supplier, continue the ordinary caller without satisfying dependencies.
@@ -55,10 +56,17 @@ Keep consuming the supplier outcome in the consumer's scope or acceptance
 examples. Preserve the supplier identity, required outcome and recoverable
 evidence; document why the removed clause is consumer work. A cleaned-up
 supplier is recovered from that evidence, not recreated as a live story.
-Reread the corrected agreement and its basis before resolving it. This is an
-agreement correction, not a claim that consumer implementation has happened.
+For a live supplier home, ordinary agreement authoring remains available.
+After cleanup, use the explicit historical correction below only when the
+revised supplier condition is fully proved. Keep the observed basis until that
+guarded write; do not remove the wait by hand. Correction neither implements
+nor completes the consumer, renews its readiness judgment, nor authorizes
+execution.
 If separating the responsibilities requires an unspecified product or
-architectural choice, retain the actual decision for the developer.
+architectural choice, retain the agreement and name the actual decision for the
+developer. If the supplier did not deliver the proposed prerequisite, retain
+the agreement and name the missing behavior or evidence. Completion alone
+proves neither that condition nor a choice of consumer scope.
 
 Choose and verify the per-consumer outcome:
 
@@ -96,7 +104,8 @@ only supports whole seconds.
 Before writing, reread the consumer's goal, scope and plan and compare with the
 context used above. Changed intent or failed verification requires a new
 judgment; do not apply an old satisfaction. The command separately refuses a
-stale dependency basis or changed agreement without writing. Do not repeatedly
+stale dependency basis or a changed agreement without explicit correction intent.
+Do not repeatedly
 retry that refusal with a refreshed basis and the same unreviewed judgment.
 
 <a id="apply-and-publish-a-direct-resolution"></a>
@@ -127,16 +136,38 @@ agent's outcome judgment; a readable file alone does not prove the promise.
 The same guarded command records unresolved outcomes after supplier cleanup,
 using historical identity and accepted evidence instead of requiring a live
 supplier home. It cannot invent a new prerequisite: the current consumer must
-already hold the unchanged agreement. Ordinary `update-dependency` retains its
-live endpoint checks for authoring new relationships.
+already hold the relationship. Without correction intent, its agreement must
+remain unchanged. Ordinary `update-dependency` retains its live endpoint checks
+for authoring new relationships.
+
+For an evidenced agreement correction after cleanup, copy the observed record,
+replace only the reviewed `implementation`, `rationale` or `condition`, and
+append `--correct-agreement` to the command above. Keep the exact supplier
+identity and `href`; this mode cannot introduce or retarget a relationship.
+Require a `satisfied` judgment for the whole revised condition. In
+`resolution.summary`, cite the delivered behavior and proof and explain why
+each removed obligation belongs to the consumer's retained scope/examples or
+the developer's explicit decision. Supply the recoverable supplier evidence and
+accepted integration as above, including when the old record was already
+satisfied. A flag, completed plan or readable proof file never establishes the
+truth of the condition prose; the reviewing agent owns that judgment. If it
+cannot make that judgment, leave the agreement unchanged and report the missing
+evidence or human decision. Unresolved outcomes can still be recorded against
+the unchanged agreement without this flag.
 
 Each consumer retains the readable evidence locator, exact condition summary,
 and separate accepted integration SHA/remote/target. Other suppliers and
 preparation judgments are preserved. A resolution leaves the consumer's
-readiness review unchanged; a bounded reconciliation's story or plan edits
-report changed content since review. A stale refusal requires rereading and
-rejudging. A repeat visit
-preserves the first satisfied record and its evidence; reuse unchanged unresolved
+readiness review unchanged; an agreement correction or a bounded reconciliation's
+story or plan edits report changed content since review without renewing the
+judgment. An evidenced correction retains any original resolution's locator and
+summary, and appends the new judgment and validated evidence in that same
+canonical record. Reread the corrected agreement, evidence, current basis and
+`read-state` result. Consumer scope, plan status and queue membership remain
+pending as before. A stale refusal requires rereading and rejudging. A repeat
+visit with an unchanged agreement preserves the first satisfied record and its
+evidence byte for byte, including a correction replay with the current basis;
+reuse unchanged unresolved
 questions/evidence rather than rewriting them as fulfilled or duplicating receipts.
 
 ## Reassess a consumer's reasons after satisfaction
@@ -145,6 +176,9 @@ A dependency is not a
 [readiness reason](record-preparation.md#assess-readiness-at-preparation-completion),
 but a consumer assessed earlier may
 carry a `not-ready` reason that only restates the condition just satisfied.
+This is a separate assessment decision during the supplier's landing/wrap-up;
+an explicit agreement correction alone leaves every preparation judgment and
+reason as recorded and does not authorize this reassessment.
 After `resolve-dependency` records `satisfied`, read the consumer's assessment
 with `read-state --link <consumer home>` and reread each `not-ready` reason
 against the story, its plan, and the satisfied condition. Judge each reason:

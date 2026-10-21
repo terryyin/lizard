@@ -55,6 +55,13 @@ Give the agent:
   When replanning is disabled, an oversized stop returns the incomplete attempt in
   place; do not plan, retry, invent backlog work, or clean up. The coordinator
   applies the overrun branch.
+- For expensive verification, the retained decision under
+  [choose expensive proof before launch](../../dough-story-refinement/references/executable-proof.md#choose-expensive-proof-before-launch):
+  actual target host, workload, evidence and unknowns, bounded choice, command/proof
+  owner, and reconsideration condition. Include known competing owned proof,
+  including separate worktrees on that machine. Require the receiving owner to
+  confirm the basis still applies or reconsider it before launching or repeating
+  expensive proof; use existing handoffs to coordinate owned heavy work.
 - When the slice includes an authorized live action, the plan's named
   regression prerequisite and whether an accepted current observation of it
   already exists. Require the agent apply [require current regression proof
@@ -143,6 +150,8 @@ targeted return that gives the coordinator:
   affected consumer still lacking proof with its reason;
 - required observations still missing or explicitly untested, named as gaps —
   a learning note alone is not acceptance evidence for those promises;
+- for expensive proof, the retained or reconsidered decision and any deferred
+  required observation with its owner and next condition;
 - uncovered promises, contradictions, and other evidence gaps; and
 - only consequential learnings that affect acceptance or remaining work.
 

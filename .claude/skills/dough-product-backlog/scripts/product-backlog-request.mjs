@@ -24,6 +24,7 @@ export const options = {
   "expect-plan": { type: "string" },
   "dependency-file": { type: "string" },
   "expect-dependencies": { type: "string" },
+  "correct-agreement": { type: "boolean", default: false },
   "supplier-identity": { type: "string" },
   "accepted-revision": { type: "string" },
   remote: { type: "string" },

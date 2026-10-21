@@ -95,6 +95,11 @@ original command no longer applies and run a focused replacement. Without
 supplied proof, run focused tests related to the refactor edits. Use this
 project's literal commands and the shared
 [behavioral test guidance](references/refactor-checks.md#tests-as-behavioral-documentation).
+Before expensive verification, apply
+[choose expensive proof before launch](../dough-story-refinement/references/executable-proof.md#choose-expensive-proof-before-launch),
+confirming or reconsidering the caller's retained decision and known competing
+owned work on the actual target machine. A separate worktree shares that
+machine's capacity; coordinate owned heavy work through the existing handoffs.
 Do not run the full suite. Own any verification command that yields a running
 command identity through its terminal result under the shared
 [verification ownership](../dough-execute-plan/references/delegation.md#own-verification-to-its-terminal-result)
@@ -112,7 +117,8 @@ handoff; name any uncovered consumers as gaps. For each relevant accepted proof,
 name whether its boundary and inspected locations stayed unchanged or which
 edit invalidated them. For invalidated or replacement proof, report the literal
 command, result, and concrete setup and assertion or signal locations. Also
-report files renamed,
+retain the expensive-proof decision and any deferred required observation with
+its owner and next condition. Report files renamed,
 extracted, split, or deleted; unresolved gaps or contradictions; consequential
 learnings; passing test commands or `skipped — no refactor edits`; and
 approximate active elapsed time. Do not attach routine raw traces, full command
