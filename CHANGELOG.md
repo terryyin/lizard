@@ -1,15 +1,30 @@
 # Change Log
 
-## Unreleased
+## 1.24.2
 
 ### Bug Fixes
 - JavaScript, TypeScript, JSX, and TSX: count each `??` and `??=` as +1 CCN; existing scores may decrease (issue #507)
 - JavaScript, TypeScript, JSX, and TSX: count each default parameter and destructuring initializer as +1 CCN, including nested defaults; existing scores and threshold warnings may increase (issue #509)
+- TypeScript and Swift: stop counting optional chaining as a ternary operator; preserve JavaScript and TypeScript nullish coalescing and ternary metrics (PR #518)
 - Swift: stop `.init(`, `self.init(`, `.get()`, `.set(`, variables named `set`, and argument labels such as `init:` from starting phantom functions that swallowed the following functions
 - Swift: recognize argument labels such as `init:` and `for:` when a newline or comment separates them from `(` or `,`
 - Swift: tokenize `#Preview`, `#expect`, `#available` and other macros so their braces count; compiler directives stay whole lines
 - Swift: scan raw, multi-line, and interpolated string literals and nested block comments as single tokens, so braces inside them no longer shift function boundaries
 - Swift: do not treat `type` (`.type`, `type(of:)`) as a Go-style type declaration
+- Python: preserve parameter counts when defaults or annotations contain nested brackets, commas, lambdas, or f-strings (PR #501)
+- Python: parse floor division as an operator and preserve NLOC for triple-quoted string operands and expressions inside f-strings (PR #500)
+- Rust: count `let-else` toward cyclomatic complexity
+- Fortran: preserve procedure boundaries around modern language constructs
+- Go: distinguish function literals from function types, preserve following declarations, and retain declared variable names for typed function literals (PR #512)
+- C++: preserve operator names and whitelist matching, and stop `using` declarations from swallowing following functions (PR #511)
+- Parallel analysis: close worker pools after completion, failure, or cancellation, and preserve serial fallback when multiprocessing is unavailable (PR #513)
+- HTML reports: return a non-zero exit status when functions exceed warning thresholds
+
+### Improvements
+- Discover `.hh` files as C/C++ headers (PR #510)
+
+### Documentation
+- Clarify README installation, examples, and warning limits
 
 ## 1.24.1
 
