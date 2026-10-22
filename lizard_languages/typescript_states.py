@@ -25,6 +25,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         self._in_prop_value = False  # Track if inside property value (after ':')
         self._in_abstract_context = False  # Track abstract method declarations
         self._condition_kind = None
+        self._ternary_depth = 0
 
     def __call__(self, token, reader=None):
         if self._binding_candidate:
@@ -57,6 +58,15 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             return
         if token == 'new':
             # Track 'new' keyword to avoid treating constructors as functions
+            self._prev_token = token
+            return
+
+        if token == '?':
+            self._ternary_depth += 1
+        elif token == ':' and self._ternary_depth:
+            # A conditional branch separator is runtime syntax, not a type.
+            self._ternary_depth -= 1
+            self.last_tokens = token
             self._prev_token = token
             return
 
