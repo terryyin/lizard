@@ -78,6 +78,11 @@ class GoStates(GoLikeStates):  # pylint: disable=R0903
             if count:
                 self._state = self._function_type
         elif kind == 'literal':
+            if not name:
+                # Nested state machines share the per-file context.
+                anonymous_count = getattr(self.context, 'go_anonymous_count', 0)
+                self.context.go_anonymous_count = anonymous_count + 1
+                name = f'anonymous__{anonymous_count}'
             self.context.push_new_function(name)
             self._signature_tokens = count
             self._parameter_tokens = parameters

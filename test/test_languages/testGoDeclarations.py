@@ -32,7 +32,7 @@ class TestGoDeclarations(unittest.TestCase):
             var table = []Handler{ func() { }, }
             func after() { }
                 ''')
-        self.assertEqual(["", "after"], [f.name for f in result])
+        self.assertEqual(["anonymous__0", "after"], [f.name for f in result])
 
     def test_bare_func_literal_does_not_swallow_following_functions(self):
         result = get_go_function_list('''
@@ -65,6 +65,7 @@ class TestGoDeclarations(unittest.TestCase):
                 if true { }
             }
                 ''')
-        self.assertEqual(["", "", "after"], [f.name for f in result])
+        self.assertEqual(["anonymous__0", "anonymous__1", "after"],
+                         [f.name for f in result])
         self.assertEqual(2, result[0].cyclomatic_complexity)
         self.assertEqual(2, result[2].cyclomatic_complexity)

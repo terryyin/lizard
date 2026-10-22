@@ -27,7 +27,8 @@ func outer() {
 }
 func after() {}
 ''')
-    assert [f.name for f in result] == ['consume', '', 'outer', 'after']
+    assert [f.name for f in result] == [
+        'consume', 'anonymous__0', 'outer', 'after']
     assert result[1].cyclomatic_complexity == 2
     assert result[1].start_line == (5 if separator == '\n' else 4)
     assert result[1].nloc == 1
@@ -123,3 +124,13 @@ def test_newline_after_func_keyword_does_not_terminate_literal():
     assert [f.name for f in result] == ['handler']
     assert result[0].parameter_count == 1
     assert result[0].cyclomatic_complexity == 2
+
+
+def test_channel_and_variadic_function_types_do_not_use_anonymous_names():
+    result = get_go_function_list('''package p
+var callbacks <-chan func()
+func run(fs ...func()) {
+    consume(func() {})
+}
+''')
+    assert [f.name for f in result] == ['anonymous__0', 'run']
