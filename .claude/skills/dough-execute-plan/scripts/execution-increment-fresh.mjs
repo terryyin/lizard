@@ -113,7 +113,11 @@ export async function prepareAndDeliverFreshIncrement(request, deliver) {
             : (delivered.receipt?.sha ??
               delivered.candidate ??
               recovery.candidateSha),
-        suffixBase: delivered.suffixBase ?? recovery.suffixBase,
+        // A stop without a suffix base still names the resolved full base.
+        suffixBase:
+          delivered.suffixBase ??
+          delivered.previouslyPublishedBase ??
+          recovery.suffixBase,
         observerDirectory:
           delivered.observation?.directory ?? recovery.observerDirectory,
       },

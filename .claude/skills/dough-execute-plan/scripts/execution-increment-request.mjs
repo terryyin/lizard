@@ -32,7 +32,8 @@ export function managedIncrementRequestRefusal(request) {
 
 const usage =
   "usage: execution-increment-delivery.mjs fresh --mode trunk|story-branch|current-branch --workspace PATH --branch NAME --authority publish|local-only --preparation-file JSON --message-file FILE\n" +
-  "       execution-increment-delivery.mjs deliver --mode trunk|story-branch --workspace PATH --branch NAME --previously-published-base SHA --target-ref refs/heads/<branch> --repo OWNER/REPO [--tracking one-shot] [--host cursor|claude|codex] [--preferred-alias .agents|.claude] [--authority publish|local-only] [--session-json JSON] [--coordinator VALUE --observer-directory PATH] [--max-duration-ms MS] [--validated-candidate SHA] [--default-checkout PATH] [--one-shot-identity ID] [--landing-context PATH]";
+  "       execution-increment-delivery.mjs deliver --mode trunk|story-branch --workspace PATH --branch NAME --previously-published-base COMMIT_ID --target-ref refs/heads/<branch> --repo OWNER/REPO [--tracking one-shot] [--host cursor|claude|codex] [--preferred-alias .agents|.claude] [--authority publish|local-only] [--session-json JSON] [--coordinator VALUE --observer-directory PATH] [--max-duration-ms MS] [--validated-candidate SHA] [--default-checkout PATH] [--one-shot-identity ID] [--landing-context PATH]\n" +
+  "       COMMIT_ID is a full or unique abbreviated commit ID, not a ref name; input naming no single commit stops as unresolvable-base";
 
 function argumentsOf(argv) {
   if (!["deliver", "fresh"].includes(argv[0])) throw new Error(usage);

@@ -42,6 +42,11 @@ proportional split of preparation, breadth, selective depth, and
 surprise/confirmation reserve. Weight by importance and risk. Include each
 promised surface. Completing this plan is not acceptance.
 
+When a slice requires a developer-operated observation, take its question,
+rounds, and developer-performed steps from the slice and ask once for the set,
+not round by round; see
+[plan and reuse developer-operated observation](../dough-story-refinement/references/executable-proof.md#plan-and-reuse-developer-operated-observation).
+
 ## Prepare
 
 For a standalone session that needs a project checkout, first read and follow

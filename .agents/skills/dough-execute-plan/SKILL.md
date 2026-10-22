@@ -83,20 +83,31 @@ Missing context stops its affected boundary, including first-slice delegation wh
 needed there. Other invoking tools, including GSD, retain this slice delivery contract;
 a phase or task cannot replace a slice.
 
-Before first implementation delegation, read [delegation](references/delegation.md)
-and the common reassessment/human-judgment rules, [replanning
-permission](references/execution-decisions.md#choose-replanning-permission), plus
-currently triggered sections of [execution decisions](references/execution-decisions.md).
-Before accepting a return, read [proof acceptance](references/wrap-up.md#accept-proof);
-before delivery, read [delivery](references/wrap-up.md#deliver-the-change). Before
-arming observation, read [CI observation](references/ci-monitor.md) and only the
-current host's notification adapter. Arm from the execution checkout against the
-authorized target branch; do not wait for CI. On Codex, arm the yielded stream at
-execution start. Before creating the execution workspace, read [execution
-location](references/execution-location.md). Before a claim, validated increment,
-or owned repair publication, read [trunk publication](references/trunk-publication.md).
-Use [targeted retrieval and disposable research](references/disposable-research.md)
-for omitted/truncated passages or bounded investigations; another step alone needs no reload.
+## Read guidance at each boundary
+
+Read each row when its boundary is reached, never earlier, and as its own tool
+result, never combined with another row. On a host that reads this skill body as
+a tool result, the body is its own read. Each row fits one tool result; a row
+already read needs no reload while its sources stay unchanged. When a passage is
+truncated or absent, follow [targeted retrieval](references/disposable-research.md)
+for that passage alone.
+
+| Boundary | Reads |
+| --- | --- |
+| Skill body, on a host that reads it as a tool result | [this skill](SKILL.md) |
+| An established start your instruction carries | [established start](references/established-start.md) |
+| Before creating the execution workspace | [execution location](references/execution-location.md); when CI setup applies, [runtime setup](references/runtime-setup.md) |
+| On Codex, arming observation at execution start | [own one observer](references/ci-monitor.md#own-one-observer), [Codex adapter](references/ci-notify-codex.md), [runtime setup](references/runtime-setup.md) |
+| Before first implementation delegation | [delegation](references/delegation.md), [reassessment](references/execution-decisions.md#reassess-before-extending-work), [human judgment](references/execution-decisions.md#stop-for-human-judgment), [replanning permission](references/execution-decisions.md#choose-replanning-permission), [targeted retrieval](references/disposable-research.md), [story-obligation inputs](references/story-obligations.md#use-the-record-at-execution-boundaries) |
+| Before accepting a return | [proof acceptance](references/wrap-up.md#accept-proof) |
+| Before delivery, or a validated increment or owned repair publication | [delivery](references/wrap-up.md#deliver-the-change), [fresh increment](references/fresh-increment.md), [increment publication](references/trunk-publication.md#publish-an-execution-increment-or-repair), [publish the candidate](references/trunk-publication.md#publish-the-candidate), [story-obligation inputs](references/story-obligations.md#use-the-record-at-execution-boundaries) |
+| Arming observation on other hosts | [CI observation](references/ci-monitor.md), [Cursor and Claude Code adapters](references/ci-notify-hosts.md) |
+| Handling a CI notification | [handle a notification](references/ci-monitor.md#handle-a-notification), with only the current host's adapter: [Codex](references/ci-notify-codex.md) or [Cursor and Claude Code](references/ci-notify-hosts.md) |
+| Before finishing or stopping | [finish or stop](references/finish-or-stop.md), [await the applicable revision](references/ci-monitor.md#await-the-applicable-revision-at-completion), [completion mechanics](references/ci-completion-wait.md), [story-obligation inputs](references/story-obligations.md#use-the-record-at-execution-boundaries) |
+
+Read other [execution decisions](references/execution-decisions.md) sections when
+they trigger. Arm from the execution checkout against the authorized target
+branch; do not wait for CI.
 
 ## Take or admit work
 

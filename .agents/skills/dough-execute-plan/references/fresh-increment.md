@@ -49,7 +49,7 @@ the attempt before project commands or staging:
 | `generation` | Triggered generator operation, or an explicit `notRequired` reason when its trigger does not apply or compatible generation is already accepted. |
 | `formatting` | This project's selective formatter operation, or an explicit `notRequired` reason when the project requires no formatting. Do not substitute hook-owned lint. |
 | `summary` | Required project-summary mutation operation, or an explicit `notRequired` reason. Quick work must not invent an execution record. |
-| `plan` | Required only for planned work: workspace-relative `path`, positive integer `slice`, and an executable `update` operation that performs the required plan/status mutation. Quick work omits this field. |
+| `plan` | Required only for planned work: workspace-relative `path` and positive integer `slice`, nothing else. Delivery marks that slice `done` itself. Put the plan's other evidence (accepted proof, learnings, revised remaining slices) in the plan before invocation, as your owned edit staged with it. Quick work omits this field. |
 | `staging` | `ownedPaths`: exact workspace-relative files whose entire working contents you own and want staged; `stagedPaths`: exact files whose already-staged changes you own and want committed without restaging their unstaged bytes. Supply both arrays, even when one is empty. |
 
 An operation is an object such as
@@ -57,8 +57,8 @@ An operation is an object such as
 executable and each argument for the project. `timeoutMs` is an optional positive
 bound for that process. An inapplicable operation is
 `{"notRequired":"the concrete applicability reason"}`; it cannot also carry a
-command. A required plan mutation cannot use `notRequired`. File existence or
-an unconditional caller success flag cannot stand in for its execution.
+command. File existence or an unconditional caller success flag cannot stand
+in for a required operation's execution.
 
 Each command runs directly with its argument array in the selected checkout,
 without an implicit shell. If a compound project script is necessary, its own
@@ -77,10 +77,15 @@ semantic review or a sandbox for arbitrary scripts.
 
 The command runs generation and formatting, checks planned obligations before
 the plan/status mutation, runs that mutation and the applicable summary, and
-checks the changed obligation record again. It then stages owned whole files,
-runs real `git diff --cached --check`, and commits through `agentCommit` or
-ordinary Git as resolved above. Project hooks remain enabled. Refused agent
-identity never falls back to ordinary Git.
+checks the changed obligation record again. The mutation changes only the
+selected slice's real `Status:` line, leaving an already `done` slice as it is,
+so a repaired attempt repeats the same request. It refuses, naming the slice
+and changing nothing, when that slice is missing, duplicated or unreadable, or
+when another slice is `done` in the working plan but not at the checkout's
+`HEAD`. It then stages owned whole files, runs real `git diff --cached
+--check`, and commits through `agentCommit` or ordinary Git as resolved above.
+Project hooks remain enabled. Refused agent identity never falls back to
+ordinary Git.
 
 After successful preparation and commit, publish authority passes the actual
 `commit.sha` to managed delivery as `validatedCandidate` before that delivery
@@ -129,9 +134,10 @@ it does not need another fresh commit just to resume publication.
 For example, if this project's required formatter exits nonzero, the fresh
 operation reports `operation: formatting`, preserves any edits it already
 made, and invokes neither commit nor managed delivery. Repair the formatter
-or its mechanical findings and repeat the guarded attempt with still-valid
-proof. When it succeeds, the commit receipt becomes the exact publication
-candidate and the accepted SHA is registered on the authorized observer. A
+or its mechanical findings and repeat the same guarded request with
+still-valid proof; a slice the failed attempt already marked `done` stays so.
+When it succeeds, the commit receipt becomes the exact publication candidate
+and the accepted SHA is registered on the authorized observer. A
 refused hook follows the same stop; an already-accepted candidate instead
 resumes without another commit or push. A zero-exit output consumer around the
 fresh CLI cannot enable effects the operation has withheld.

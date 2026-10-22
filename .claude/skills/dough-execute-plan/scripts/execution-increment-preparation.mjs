@@ -5,6 +5,7 @@ import { lstat } from "node:fs/promises";
 import { isAbsolute, relative, resolve } from "node:path";
 import { agentCommit } from "./agent-commit.mjs";
 import { exec, git, revParse } from "./publication-git.mjs";
+import { markSelectedSliceDone } from "./selected-slice-status.mjs";
 import { checkStoryObligations } from "./story-obligations.mjs";
 
 function commandRefusal(operation) {
@@ -62,9 +63,11 @@ function inputRefusal({ workspace, branch, message, preparation: p }) {
       p.plan.slice < 1
     )
       return "planned work requires its workspace-relative plan and selected slice";
-    const error = commandRefusal(p.plan.update);
-    if (error || p.plan.update.notRequired !== undefined)
-      return `planned work requires its plan/status mutation: ${error ?? "cannot skip"}`;
+    const extra = Object.keys(p.plan).filter(
+      (key) => !["path", "slice"].includes(key),
+    );
+    if (extra.length)
+      return `plan accepts only path and slice, not ${extra.join(", ")}; delivery marks the selected slice done itself`;
   } else if (p.plan !== undefined) return "quick work must not invent a plan";
   const staging = p.staging;
   if (
@@ -81,7 +84,7 @@ function inputRefusal({ workspace, branch, message, preparation: p }) {
   )
     return "staging requires distinct exact workspace-relative file paths";
   if (p.kind === "planned" && !staging.ownedPaths.includes(p.plan.path))
-    return "the required plan mutation must be included in ownedPaths";
+    return "the plan must be included in ownedPaths";
   return null;
 }
 
@@ -159,12 +162,12 @@ export async function commitPreparedExecutionIncrement(request) {
     if (p.kind === "planned") {
       await obligations();
       operation = "plan/status mutation";
-      await runCommand(workspace, p.plan.update);
+      await markSelectedSliceDone(workspace, p.plan);
     }
     operation = "summary";
     await runCommand(workspace, p.summary);
-    // Also check the changed record: successful mutation cannot erase this
-    // dependent check or introduce an open obligation unnoticed.
+    // Also check the changed record: the done status and the summary cannot
+    // erase this dependent check or introduce an open obligation unnoticed.
     if (p.kind === "planned") await obligations();
     operation = "staged ownership";
     await assertOwnedIndex(workspace, p.staging);

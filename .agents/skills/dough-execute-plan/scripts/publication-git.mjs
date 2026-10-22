@@ -107,6 +107,23 @@ export async function revParse(cwd, ref) {
   return (await git(cwd, "rev-parse", ref)).stdout.trim();
 }
 
+// The full commit ID a hexadecimal object ID, full or uniquely abbreviated,
+// names in `cwd` as `{ commit }`, or `{ problem }` when it names none:
+// `not-an-object-id` (such as a ref name), `unknown`, `ambiguous` (more than
+// one object), or `not-a-commit`.
+export async function resolveCommitId(cwd, objectId) {
+  if (!/^[0-9a-f]{4,64}$/i.test(objectId ?? ""))
+    return { problem: "not-an-object-id" };
+  const listed = await git(cwd, "rev-parse", `--disambiguate=${objectId}`);
+  const matches = listed.stdout.split("\n").filter(Boolean);
+  if (matches.length === 0) return { problem: "unknown" };
+  if (matches.length > 1) return { problem: "ambiguous" };
+  const type = (await git(cwd, "cat-file", "-t", matches[0])).stdout.trim();
+  return type === "commit"
+    ? { commit: matches[0] }
+    : { problem: "not-a-commit" };
+}
+
 // The SHA `remote` holds at `ref`, read live; a remote name resolves in `cwd`.
 export async function lsRemoteSha(remote, ref, cwd) {
   const { stdout } = await git(cwd, "ls-remote", remote, ref);

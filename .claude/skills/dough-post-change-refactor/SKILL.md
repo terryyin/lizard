@@ -111,9 +111,12 @@ the caller; do not claim success.
 
 On completion, return a targeted report with the refactor outcome, every path
 and conceptual or product boundary changed by refactoring, and checks that
-changed code. Include old-reference search terms and scope, inspected consumers,
-and the focused proof selected or reused for their affected behavior in this
-handoff; name any uncovered consumers as gaps. For each relevant accepted proof,
+changed code. Include the
+[consumer-trace record](../dough-story-refinement/references/executable-proof.md#record-the-consumer-trace)
+for your refactor edits, produced by the installed
+[`consumer-trace.mjs`](../dough-execute-plan/scripts/consumer-trace.mjs) script, with
+each listed consumer's disposition and the focused proof selected or reused for
+their affected behavior; name any uncovered consumers as gaps. For each relevant accepted proof,
 name whether its boundary and inspected locations stayed unchanged or which
 edit invalidated them. For invalidated or replacement proof, report the literal
 command, result, and concrete setup and assertion or signal locations. Also

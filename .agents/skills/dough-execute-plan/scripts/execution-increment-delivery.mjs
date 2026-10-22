@@ -149,6 +149,8 @@ export async function deliverManagedExecutionIncrement(request) {
       previouslyPublishedBase: published.previouslyPublishedBase,
       suffixBase: published.suffixBase,
       reconciliations: published.reconciliations,
+      // An unresolvable-base stop names why the base names no single commit.
+      problem: published.problem,
       // A transport-timeout stop names the stalled stage and its bound.
       stage: published.stage,
       pushIssued: published.pushIssued,

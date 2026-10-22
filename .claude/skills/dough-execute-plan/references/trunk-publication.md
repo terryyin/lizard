@@ -50,10 +50,14 @@ sequence only from the recorded checkout, and only when that caller already
 supplied publication authority. Without it, do not push; report the commit
 as pending publication. A local commit or local merge does not enter this
 sequence. Their previously published base is the recorded checkout's `HEAD`
-from before the operation's first commit. An `unpublished-base` stop means
-the remote does not hold that base, such as when the developer has their own
-unpublished commits in the default checkout: report that work for the
-developer to resolve, and never choose a different base to get past it.
+from before the operation's first commit. Pass the base as a full or unique
+abbreviated commit ID, not a ref name such as `HEAD` or a branch. An
+`unresolvable-base` stop means the input names no single commit; its `problem`
+says why (`not-an-object-id`, `unknown`, `ambiguous`, or `not-a-commit`):
+rerun with the full commit ID from the delivery receipt. An `unpublished-base`
+stop means the remote does not hold that base, such as when the developer has
+their own unpublished commits in the default checkout: report that work for
+the developer to resolve, and never choose a different base to get past it.
 
 A `transport-timeout` stop means a fetch, push, or remote-tip read did not
 answer within the transport bound and was ended; its `stage` names which. The

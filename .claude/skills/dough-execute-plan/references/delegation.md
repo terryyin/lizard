@@ -48,7 +48,10 @@ Give the agent:
   project's slice budget and exceptions, workflow precedence, and literal
   focused commands with the runtime wrapper. Proof the plan or coordinator
   names is a minimum: require the agent to trace the changed effect into its
-  consumers and select sufficient proof under
+  consumers with the installed
+  [consumer-trace script](../scripts/consumer-trace.mjs),
+  `node '<installed-execute-plan>/scripts/consumer-trace.mjs' --checkout '<checkout>' --base <revision> [--term …]`,
+  and select sufficient proof under
   [own executable proof](../../dough-story-refinement/references/planning.md#own-executable-proof),
   including the changed surface's suite when it runs within the slice's
   focused-check time, even when the plan says wider suites belong to CI.
@@ -143,11 +146,11 @@ targeted return that gives the coordinator:
   or signal that exercises it — or an explicit untested / uncovered listing
   instead of verified prose;
 - when the change altered an operation or contract, a message or value, a
-  default, or rendered output: the changed effect, its trace to consumers under
-  [proof ownership](../../dough-story-refinement/references/planning.md#own-executable-proof),
-  the searches (including retired literals searched for) or suites used,
-  observing assertions and setup, proof run or sufficiently reused, and any
-  affected consumer still lacking proof with its reason;
+  default, rendered output, or shared text: the changed effect and its
+  [consumer-trace record](../../dough-story-refinement/references/executable-proof.md#record-the-consumer-trace)
+  with its supplied effect terms and every listed consumer's disposition, the
+  observing assertions and setup of proof run or reused, and any affected
+  consumer still lacking proof with its reason;
 - required observations still missing or explicitly untested, named as gaps —
   a learning note alone is not acceptance evidence for those promises;
 - for expensive proof, the retained or reconsidered decision and any deferred

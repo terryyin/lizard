@@ -50,4 +50,6 @@ When only a paid, credentialed, owner-held, or state-changing observation can
 settle a premise, observe its cheap parts now and make the remainder an early
 probe slice whose failure stops dependent slices and changes the plan. Such a
 plan can be `ready`; the probe's observation keeps its existing authority
-requirements.
+requirements. When the developer's hands are the instrument, write the probe
+slice by
+[plan and reuse developer-operated observation](../../dough-story-refinement/references/executable-proof.md#plan-and-reuse-developer-operated-observation).

@@ -48,7 +48,7 @@ counts alone do not establish coverage. Include retired literals and values
 (message text, status code, label, output form), callers relying on a changed
 default by not overriding it, and every fixture, stand-in, or harness helper that
 invokes or imitates a changed contract, including untouched ones. Account for the trace
-and the observing proof in the existing proof location or implementation return.
+and the observing proof in the [consumer-trace record](#record-the-consumer-trace).
 Derive obligations from each consumer's actual purpose, not its method name or
 dominant use. Exclude a consumer only when the effect does not reach its boundary;
 retain sufficient current proof for unchanged boundaries. A prior
@@ -101,6 +101,61 @@ asynchronous ownership changes, prove that the named lifecycle owner observes
 background failure in time and performs applicable cleanup after failure or
 shutdown; an awaited exception alone proves neither. Derive timing from the
 selected lifecycle contract rather than an arbitrary timeout.
+
+## Record the consumer trace
+
+The consumer-trace record is the evidence of the trace above, and the installed
+[consumer-trace script](../../dough-execute-plan/scripts/consumer-trace.mjs)
+produces it:
+`node '<installed-execute-plan>/scripts/consumer-trace.mjs' --checkout '<checkout>' --base <revision> [--term '<text>']…`,
+with `--base HEAD` for an uncommitted change. It searches the whole checkout
+for the changed files' paths and basenames, identifiers declared in changed
+hunks, changed modules' import paths, and removed literals, and lists the
+located consumers by kind, naming kinds with no match. Supply as `--term` the
+effect the diff cannot carry: retired behavior and altered preconditions, in
+the words their observers use. A derived term marked too broad lists no
+consumers; when it names the changed contract, resupply it as `--term`. When
+the record lists a step definition, page object, helper, or stand-in, add its
+step phrases or exported names that reach the effect as `--term` and rerun
+until the journeys and callers using it are listed. Give every listed consumer
+a disposition: `run`, `reused`, or `excluded: <reason the effect does not reach
+its boundary>`. A record with every kind empty keeps the slice's focused proof.
+
+## Plan and reuse developer-operated observation
+
+Some proof needs an observation only the developer can perform, such as a
+native dialog, notification, or click your tools cannot reach or operate.
+Request a developer round only for a question the plan or acceptance still
+holds open; an answered question is reused, not asked again.
+
+A probe slice for such an observation names the question each round answers,
+the rounds that answer it (for example, one refusal and one retry per supported
+browser), and the steps the developer performs themselves because your tools
+cannot, such as local authentication, opening a system panel a chat reply
+dismisses, or reading a native dialog the tool refuses. The first request to
+the developer carries all of them, rather than discovering them round by round.
+
+Whether a retained native baseline still covers the changed candidate follows
+the correspondence rule in
+[require current regression proof before a live action](../../dough-execute-plan/references/execution-decisions.md#require-current-regression-proof-before-a-live-action).
+A change to text or another detail the observed path renders unchanged keeps
+it: reuse the baseline and prove the changed detail with a regression at the
+emitted source. The acceptance record names the reused baseline and that
+regression, and no developer round is requested.
+
+A change to what the observed path consults or does, such as a permission row,
+the posting process or sender identity, or the click mechanism, reopens only
+that path's question: request one fresh observation bounded to it. The
+baseline stays reused for what it still covers. A promise the baseline never
+observed stays reported as the same unproved promise, not a reason to replay
+the baseline.
+
+Retain a native baseline in the plan's
+[retained-proof fields](planning.md#write-an-executable-plan): promise, covered
+boundary, inspected setup with the revision and settings it observed under,
+observation locations, literal command or the steps the developer performed,
+and result, so later reuse is judged from the plan. Use no other evidence
+format.
 
 ## Choose expensive proof before launch
 

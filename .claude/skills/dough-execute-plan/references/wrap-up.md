@@ -30,6 +30,8 @@ Include each qualification and journey example; a heading, count or plan list
 cannot stand for a compound promise. Return a concrete expected/actual mismatch
 unless a real human amendment changes it. Broad accuracy or compatibility claims
 cannot replace an explicit journey's expected result. Check source completeness before reuse.
+When a slice's proof includes a developer-operated observation, accept it under
+[developer-operated observation](../../dough-story-refinement/references/executable-proof.md#plan-and-reuse-developer-operated-observation).
 Establish applicability at the current trigger or output before allowing later
 ownership: a later slice cannot qualify an output that already owes the promise.
 The source and human amendments outrank plan/return; correct a contrary mapping,
@@ -53,11 +55,17 @@ another sufficient check) before accepting them, or return them as uncovered.
 Reuse a trustworthy recorded selection and result when they still match the
 claimed command, filter, and candidate; do not rerun solely for process.
 
-When the change has consumers, as
+When the change alters an operation or contract, a message or value, a
+default, rendered output, or shared text, return a slice without its
+[consumer-trace record](../../dough-story-refinement/references/executable-proof.md#record-the-consumer-trace)
+for the trace. When the change has consumers, as
 [own executable proof](../../dough-story-refinement/references/planning.md#own-executable-proof)
-defines them, verify the handoff's applicable old-reference search terms and
-scope against the diff's removals, renames, or relocations of symbols or modules,
-and changes to callable contracts. Inspect discovered consumers, including
+defines them, compare the record's terms with the diff's removals, renames, or
+relocations of symbols or modules, changes to callable contracts, and the changed
+behavior, including retired behavior, altered preconditions, and a too-broad
+derived term naming the changed contract that was not resupplied. Do not accept
+a record with a listed consumer lacking a disposition, or with an exclusion the
+effect reaches. Inspect discovered consumers, including
 unchanged tests and fixtures, then follow the changed effect through the reported
 surface or entry points and compare the reached consumers with the return's
 selection and proof.
@@ -66,8 +74,9 @@ incomplete: inspect the enclosing observations or caller scenarios and their
 setup before accepting it. Confirm sufficient current observations for the
 affected purposes, including newly reached consumers. Do not accept on a prior
 unaffected-suite or unused-consumer exclusion when the change reaches that
-boundary. Do not accept or publish while proof for a known affected consumer is
-missing, including one left unrun for CI: obtain the missing observation or
+boundary. Do not accept or publish until proof for the record's unexcluded
+consumers and any other known affected consumer ran or was reused, including
+one left unrun for CI: obtain the missing observation or
 return the slice for it. Preserve sufficient reused or equivalent-purpose proof
 and accepted evidence for unrelated consumers and unchanged boundaries. Require
 the changed surface's suite when it runs within the slice's focused-check time,
@@ -168,9 +177,10 @@ and retain its receipt. Existing candidates use retained candidate/base recovery
    staging. Repair mechanical failures and repeat only when the repair
    invalidates preparation. Stop for semantic or design judgment.
 5. For planned execution, update the active plan and any project-required
-   summary with learnings, slice status, accepted proof needed for reuse, and
-   revised remaining slices under
-   [plan refinement](../../dough-story-refinement/references/planning.md#refine-the-active-plan).
+   summary with learnings, accepted proof needed for reuse, and revised
+   remaining slices under
+   [plan refinement](../../dough-story-refinement/references/planning.md#refine-the-active-plan);
+   guarded fresh delivery marks the selected slice `done` itself.
    Before marking the slice done or committing, run the installed
    [story-obligations script](../scripts/story-obligations.mjs):
    `node '<installed-execute-plan>/scripts/story-obligations.mjs' check --plan '<PLAN.md>' --slice N`.
@@ -186,7 +196,8 @@ and retain its receipt. Existing candidates use retained candidate/base recovery
    a plan-homed correction's plan holds both. Stop at the safe delivery boundary
    without changing other stories or the correction outcome. This plan update
    alone does not trigger another formatting pass. Record a CI repair result
-   with the interrupted slice's existing status. For quick execution, do not
+   with the interrupted slice's existing status; its guarded delivery names
+   the already `done` slice it repairs. For quick execution, do not
    create or update a plan, completion note, project summary, or substitute
    execution record; retain learnings, decisions, delivery progress, and proof
    in the conversation. An admitted story keeps only its scope.
