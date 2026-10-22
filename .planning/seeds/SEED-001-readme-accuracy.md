@@ -20,7 +20,7 @@ analyzer behavior.
 
 **Identity:** SEED-001#metric-list-punctuation
 ```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planless"}
+{"schemaVersion":1,"refinement":"refined","approach":"planless","assessment":"ready","reasons":[],"basis":{"document":"16d88895ab6a269a2fd9af58c1a496841d7af1c20fda4be7c7233ac7cfcc1a67"}}
 ```
 
 **Goal:** A developer scanning what Lizard counts reads one list punctuated
@@ -35,6 +35,11 @@ the same way on every line.
 #### Key examples
 
 - “-  token count of functions.” → “-  token count of functions,”
+- “-  parameter count of functions.” stays as it is: the last item keeps its
+  full stop.
+- The first two items, “the nloc (lines of code without comments),” and
+  “CCN (cyclomatic complexity number),”, already end with a comma and stay as
+  they are.
 
 <a id="verified-python-versions"></a>
 
