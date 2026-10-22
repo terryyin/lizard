@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "agent": "Yui-chan",
-  "email": "yui-chan@example.org",
-  "identity": "SEED-002#analyze-conditional-style-arrays",
-  "mode": "story-branch",
-  "branch": "codex/issue-523-tsx-bindings",
-  "host": "codex"
-}

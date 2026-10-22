@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-002_analyze-conditional-style-arrays.json",
+      "identity": "SEED-002#analyze-conditional-style-arrays",
+      "completedAt": "2026-10-22T07:52:25.238Z",
+      "blob": "91986b6cf506046e678a49a23038b57d68ce21a3"
+    },
+    {
       "fileName": "SEED-001_warning-limits-wording.json",
       "identity": "SEED-001#warning-limits-wording",
       "completedAt": "2026-10-13T22:46:55.543Z",
