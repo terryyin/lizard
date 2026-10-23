@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-001_verified-python-versions.json",
+      "identity": "SEED-001#verified-python-versions",
+      "completedAt": "2026-10-23T01:15:50.694Z",
+      "blob": "8cd879fce84d310029d82e0cb5c6a4768bc2f597"
+    },
+    {
       "fileName": "SEED-004_open-dough-ci.json",
       "identity": "SEED-004#open-dough-ci",
       "completedAt": "2026-10-23T00:39:01.553Z",

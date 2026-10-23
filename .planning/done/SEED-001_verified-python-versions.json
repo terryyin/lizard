@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-001#verified-python-versions",
+  "title": "Know which Python versions Lizard is verified on",
+  "completedAt": "2026-10-23T01:15:50.694Z",
+  "developer": "Terry Yin",
+  "agent": "Kirara-chan",
+  "host": "claude"
+}
