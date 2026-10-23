@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "agent": "Tsubomi-chan",
+  "email": "tsubomi-chan@example.org",
+  "identity": "SEED-003#core-module-architecture",
+  "mode": "story-branch",
+  "branch": "claude/change-the-core-analyzer-through-modules-shaped",
+  "host": "claude"
+}
