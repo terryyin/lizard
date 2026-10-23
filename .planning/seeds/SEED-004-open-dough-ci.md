@@ -12,10 +12,12 @@
 **Goal:** Future Open Dough executions observe this repository's CI without a
 per-run environment override, and pushes to supported story branches run CI.
 
-**Scope:** Configure the project CI adapter for `python-app.yml` and include
-Open Dough story branch prefixes in that workflow's push triggers.
+**Scope:** Persist the `python-app.yml` workflow selector in the project's Nix
+development environment. Verify story branch push coverage; the existing
+workflow's `**` branch pattern already covers all story branch prefixes.
 
-**Expected:** A fresh observer selects `python-app.yml` from project settings;
+**Expected:** A fresh observer launched through the required Nix wrapper selects
+`python-app.yml` from project settings;
 pushes to `claude/*` and `codex/*` story branches receive the same checks as
 existing supported branches.
 
