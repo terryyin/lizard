@@ -1,9 +1,11 @@
 # Seed format
 
-Update the supplied seed or allocate a new seed ID and filename in the project's
-canonical seed directory. Keep one parent problem and its candidate stories in
-one seed, with one canonical section per story. A seed is non-executable
-planning input.
+Update the supplied seed or create a new seed file in the project's canonical seed
+directory. Allocate each new seed ID and each new story anchor under
+[allocate a new identity](../../dough-product-backlog/references/identity.md#allocate-a-new-identity),
+never from the remaining seed filenames alone. Keep one parent problem and its
+candidate stories in one seed, with one canonical section per story. A seed is
+non-executable planning input.
 Keep each story in one seed, even when its journey crosses concerns in other
 seeds, and link related seeds instead of duplicating story details. Preserve
 sibling stories, existing metadata, and anchors.

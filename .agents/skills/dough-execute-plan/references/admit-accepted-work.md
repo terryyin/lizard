@@ -37,9 +37,11 @@ admitting a duplicate.
 ## Prepare the story
 
 First reuse or draft its story in a suitable seed in the originating checkout:
-`**Identity:**`, `**Goal:**`, bounded scope, and known expectations. A new
-retrospective correction already has its minimal story linked to its plan;
-reuse that story and never list the plan separately. Record its
+`**Identity:**`, `**Goal:**`, bounded scope, and known expectations. Allocate a
+drafted story's identity, and any new seed's ID, under
+[allocate a new identity](../../dough-product-backlog/references/identity.md#allocate-a-new-identity).
+A new retrospective correction already has its minimal story linked to its
+plan; reuse that story and never list the plan separately. Record its
 actual preparation with the product backlog
 [record-state](../../dough-product-backlog/references/record-preparation.md)
 operation: approach `unselected` while the approach is undecided, `planless`
@@ -63,15 +65,17 @@ the draft remains in the originating checkout, a deferred local refresh is
 expected and leaves the accepted admission intact. `status: "existing"` means
 you already hold this claim; continue under it. A refusal starts no dependent
 work: `source-refused` names missing identity, preparation, or Goal, already
-queued work, or a home listed under another identity; `source-conflict` names
-the `path` that fetched trunk changed differently, with both versions kept for
-a human decision; `conflict` means another claim holds the work. If publication
-is interrupted, resume it as the startup command describes, keeping the same
-admission flags: the resumed start publishes or confirms the preserved
-candidate, reconciled onto current trunk, never later edits to your drafts. An
-accepted admission continues with the same checkout-bound setup as any
-accepted start. Its owned workspace is the story's checkout: investigation,
-observation, and any later implementation use it rather than a nested one.
+queued work, a home listed under another identity, or an identity a trunk done
+record names, which needs a newly allocated identity in the draft;
+`source-conflict` names the `path` that fetched trunk changed differently, with
+both versions kept for a human decision; `conflict` means another claim holds
+the work. If publication is interrupted, resume it as the startup command
+describes, keeping the same admission flags: the resumed start publishes or
+confirms the preserved candidate, reconciled onto current trunk, never later
+edits to your drafts. An accepted admission continues with the same
+checkout-bound setup as any accepted start. Its owned workspace is the story's
+checkout: investigation, observation, and any later implementation use it
+rather than a nested one.
 
 ## Continue into implementation
 

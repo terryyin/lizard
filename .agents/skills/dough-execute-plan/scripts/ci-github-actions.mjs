@@ -5,10 +5,7 @@
 import { GitHubRequests } from "./github-requests.mjs";
 import { GhFailure } from "./github-request-answer.mjs";
 import { ownerFailureText } from "./github-request-owner-failure.mjs";
-
-// Workflow identity is the selector every listing requests; the display name
-// is not a second, independent filter (`./ci-runs.mjs` checks a supplied one).
-export const ciWorkflowFile = process.env.DOUGH_CI_WORKFLOW ?? "ci.yml";
+import { readCiConfiguration } from "./ci-project-configuration.mjs";
 
 // Every request this process asks of GitHub for CI evidence: one `gh api`
 // call each, sharing the owner's turns at GitHub and any wait GitHub
@@ -98,12 +95,16 @@ const jobsPageSize = 100;
 // one `gh api` request, asked through `gh` when its answer is JSON: the
 // workflow is resolved once, a run listing is one page of at most 100 runs,
 // and an attempt's jobs are read a page at a time until GitHub has no more.
-export function createGitHubActions({ repo, gh = readGitHubActions }) {
+export function createGitHubActions({
+  repo,
+  gh = readGitHubActions,
+  workflow: selector = readCiConfiguration().workflow,
+}) {
   const api = (route) => ["api", `repos/${repo}/actions/${route}`];
   let workflow;
   const selectedWorkflow = async (signal) => {
     workflow ??= await gh(
-      api(`workflows/${encodeURIComponent(ciWorkflowFile)}`),
+      api(`workflows/${encodeURIComponent(selector)}`),
       signal,
     );
     return workflow;
@@ -115,6 +116,8 @@ export function createGitHubActions({ repo, gh = readGitHubActions }) {
   };
 
   return {
+    // The same identity used by requests, events and integrated-state facts.
+    selector,
     // The selected workflow as GitHub names it.
     workflow: selectedWorkflow,
 

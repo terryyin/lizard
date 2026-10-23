@@ -174,9 +174,12 @@ For each supported project-owned problem:
   create another response when active work already covers it.
 - Use the installed product-backlog writer to add only those new canonical
   stories first, in justified priority order. Preserve existing Taken entries,
-  unrelated queue order and direction text. Follow its identity and genuine
-  prerequisite rules; an unresolved priority/meaning conflict stops the affected
-  selection rather than authorizing a direction change.
+  unrelated queue order and direction text. Allocate each new story's identity
+  under
+  [allocate a new identity](../dough-product-backlog/references/identity.md#allocate-a-new-identity),
+  and follow the writer's identity and genuine prerequisite rules; an unresolved
+  priority/meaning conflict stops the affected selection rather than authorizing
+  a direction change.
 
 Fewer stories, including zero, is a complete selection result when everything
 is covered, already resolved, shared, unsupported or outside current priority. An unchanged repeat

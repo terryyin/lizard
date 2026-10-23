@@ -13,6 +13,7 @@ import {
   rebuildDoneCatalog,
 } from "./product-backlog-complete.mjs";
 import { setDirection } from "./product-backlog-direction.mjs";
+import { printIdentityEvidence } from "./product-backlog-identity-evidence.mjs";
 import { mergeBacklogs } from "./product-backlog-merge.mjs";
 import { placeEntry } from "./product-backlog-place.mjs";
 import { refreshEntry } from "./product-backlog-refresh.mjs";
@@ -75,7 +76,6 @@ async function place(file, values) {
   const outcome = await applyReportedChange(file, (source) =>
     placeEntry(source, request),
   );
-
   console.log(reportPlace(outcome, values.file));
 }
 
@@ -88,7 +88,6 @@ async function take(file, values) {
   const outcome = await applyReportedChange(file, (source) =>
     takeEntry(source, request),
   );
-
   console.log(reportTake(outcome, values.file));
 }
 
@@ -137,7 +136,6 @@ async function refresh(file, values) {
   const outcome = await applyReportedChange(file, (source) =>
     refreshEntry(source, request),
   );
-
   console.log(reportRefresh(outcome, values.file));
 }
 
@@ -154,7 +152,6 @@ async function direction(file, values) {
   const outcome = await applyReportedChange(file, (source) =>
     setDirection(source, request),
   );
-
   console.log(reportDirection(outcome, values.file));
 }
 
@@ -168,7 +165,6 @@ async function adopt(file, values) {
   const outcome = await applyReportedChange(file, (source) =>
     adoptIdentities(source, dirname(file)),
   );
-
   console.log(reportAdopt(outcome, values.file));
 }
 
@@ -184,7 +180,6 @@ async function merge(file, values) {
       branches: values.branch?.map(resolvePath),
     }),
   );
-
   console.log(reportMerge(outcome, values.file));
 }
 
@@ -200,6 +195,7 @@ const operations = {
   merge,
   "record-state": recordState,
   "read-state": readState,
+  "identity-evidence": printIdentityEvidence,
   "discover-consumers": readConsumers,
   "resolve-dependency": resolveDependency,
   "read-dependencies": readDependencies,

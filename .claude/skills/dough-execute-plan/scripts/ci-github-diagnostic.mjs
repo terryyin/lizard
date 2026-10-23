@@ -7,7 +7,6 @@
 import { isDirectCliEntry } from "./ci-direct-entry.mjs";
 import { isFailedJob } from "./ci-failures.mjs";
 import {
-  ciWorkflowFile,
   createGitHubActions,
   GitHubAcquisitionFailed,
   GitHubAcquisitionHeld,
@@ -133,7 +132,7 @@ export async function describeSelectedWorkflow({
   return {
     type: "CI_WORKFLOW",
     repo,
-    selector: ciWorkflowFile,
+    selector: github.selector,
     id,
     name,
     path,

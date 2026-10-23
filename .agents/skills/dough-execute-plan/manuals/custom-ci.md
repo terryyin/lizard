@@ -19,6 +19,9 @@ Create or update `.planning/open-dough.json` in this project's root:
 without a shell. The first item is the executable and the rest are its arguments.
 Use project-relative arguments when appropriate. An absent setting, an absent
 configuration file, or `"ciAdapter": []` selects the GitHub Actions default.
+For another GitHub Actions workflow, use a nonempty `ciWorkflow` string such as
+`{"ciWorkflow":"checks.yaml"}` in the same project file. `DOUGH_CI_WORKFLOW`
+overrides it; without either selector the workflow is `ci.yml`.
 The observer reads the file once at startup, so restart it after changing the
 setting. Keep endpoint URLs and credentials in this project's normal environment
 or credential store, not in this file.

@@ -1,12 +1,9 @@
 import { setTimeout as pause } from "node:timers/promises";
-import {
-  createCommandAcquisition,
-  readCiAdapter,
-} from "./ci-command-adapter.mjs";
+import { createCommandAcquisition } from "./ci-command-adapter.mjs";
 import { ciAttemptKey } from "./ci-failures.mjs";
-import { ciWorkflowFile, GitHubAcquisitionHeld } from "./ci-github-actions.mjs";
+import { GitHubAcquisitionHeld } from "./ci-github-actions.mjs";
 import { createGitHubAcquisition } from "./ci-runs.mjs";
-import { readIntegratedStatePolicy } from "./ci-integrated-state-policy.mjs";
+import { readCiConfiguration } from "./ci-project-configuration.mjs";
 
 export const executionBudgetMs = 8 * 60 * 60 * 1000;
 
@@ -39,6 +36,7 @@ export async function watchCiExecution({
       "Execution CI observation requires a finite positive budget",
     );
 
+  const { adapter, workflow, integratedPolicy } = readCiConfiguration(root);
   const observationAbort = new AbortController();
   const stopObservation = () => observationAbort.abort(signal?.reason);
   if (signal?.aborted) stopObservation();
@@ -46,8 +44,6 @@ export async function watchCiExecution({
   const observationSignal = observationAbort.signal;
   const startedAt = now();
   const reportedIncomplete = new Set();
-  const adapter = readCiAdapter(root);
-  const integratedPolicy = readIntegratedStatePolicy(root);
   // The acquisition's history and current-attempt reads, for coverage.
   const { acquireRuns, acquireFailure, ...coverageLookups } = adapter
     ? createCommandAcquisition({
@@ -62,6 +58,7 @@ export async function watchCiExecution({
         repo,
         branch,
         startedAt,
+        workflow,
         gh,
         signal: observationSignal,
       });
@@ -74,7 +71,7 @@ export async function watchCiExecution({
     type: "CI_MONITOR_UNAVAILABLE",
     repo,
     branch,
-    ...(adapter ? {} : { workflow: ciWorkflowFile }),
+    ...(adapter ? {} : { workflow }),
     reason: String(reason).slice(0, 600),
   });
   const reportObservationLoss = async (reason) => {
@@ -94,7 +91,7 @@ export async function watchCiExecution({
         type: "CI_MONITOR_THROTTLED",
         repo,
         branch,
-        workflow: ciWorkflowFile,
+        workflow,
         waitSeconds,
         resumesAt: new Date(now() + waitMs).toISOString(),
       });
@@ -220,7 +217,7 @@ export async function watchCiExecution({
           repo,
           sha: incomplete.headSha,
           branch: incomplete.headBranch,
-          ...(adapter ? {} : { workflow: ciWorkflowFile }),
+          ...(adapter ? {} : { workflow }),
           runId: incomplete.databaseId,
           attempt: incomplete.attempt,
           conclusion: incomplete.conclusion,

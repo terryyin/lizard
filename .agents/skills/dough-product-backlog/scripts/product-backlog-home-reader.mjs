@@ -119,6 +119,11 @@ function documentIdFor(lines) {
   return "";
 }
 
+// The seed ID a document's front matter carries, or "" when it carries none.
+export function documentIdIn(source) {
+  return documentIdFor(splitSource(source).lines);
+}
+
 function recordedIn(lines, region, relative) {
   const found = [];
   for (let index = region.start; index < region.end; index += 1) {

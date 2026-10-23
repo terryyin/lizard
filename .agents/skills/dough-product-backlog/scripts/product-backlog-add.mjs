@@ -2,14 +2,18 @@
 // explicit relative position. Identities are never allocated here, and nothing
 // else in the document changes.
 
-import { existsSync } from "node:fs";
-import { resolve } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { join, resolve } from "node:path";
 import {
   parseBacklog,
   renderBacklog,
   renderEntry,
   requireUnlistedHome,
 } from "./product-backlog-document.mjs";
+import {
+  doneRecordPath,
+  requireUncompletedIdentity,
+} from "./product-backlog-done-record.mjs";
 import { namedIdentity, openHome } from "./product-backlog-home.mjs";
 import {
   recordsIdentityInFull,
@@ -102,10 +106,21 @@ function requireWholeDocumentHome(backlogDirectory, request) {
   }
 }
 
+// The done record a completed `identity` left beside the backlog in
+// `backlogDirectory`, as text, or null when there is none.
+function doneRecordText(backlogDirectory, identity) {
+  const path = join(backlogDirectory, doneRecordPath(identity));
+  return existsSync(path) ? readFileSync(path, "utf8") : null;
+}
+
 export function addQueueEntry(source, request) {
   const document = parseBacklog(source);
   const line = renderEntry(request);
   requireUnlistedWork(document, request);
+  requireUncompletedIdentity(
+    request.identity,
+    doneRecordText(request.backlogDirectory, request.identity),
+  );
   requireNamedHome(request.backlogDirectory, request);
 
   insertEntryLine(document, queueIndexFor(document, request), line);

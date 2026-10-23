@@ -1,6 +1,4 @@
 import { execFile } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
 import {
   currentCommandAttempt,
   latestCommandAttempts,
@@ -9,26 +7,9 @@ import {
 import { ciAttemptKey } from "./ci-failures.mjs";
 import { createStartupRunFilter } from "./ci-runs.mjs";
 
-const configurationPath = ".planning/open-dough.json";
 const defaultAdapterTimeoutMs = 20_000;
 const adapterResponseBytes = 64 * 1024;
 export const diagnosticExcerptBytes = 16 * 1024;
-
-export function readCiAdapter(root = process.cwd()) {
-  const path = join(root, configurationPath);
-  if (!existsSync(path)) return;
-  const configuration = JSON.parse(readFileSync(path, "utf8"));
-  const command = configuration.ciAdapter;
-  if (command === undefined || (Array.isArray(command) && !command.length))
-    return;
-  if (
-    !Array.isArray(command) ||
-    !command.length ||
-    command.some((argument) => typeof argument !== "string" || !argument)
-  )
-    throw new Error("ciAdapter must be an empty or nonempty string array");
-  return command;
-}
 
 // Retained attempts remain evidence for registered revisions, and candidates
 // for applicable ancestors and integrated state, even when the ordinary

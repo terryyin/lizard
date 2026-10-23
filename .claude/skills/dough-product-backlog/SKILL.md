@@ -1,6 +1,6 @@
 ---
 name: dough-product-backlog
-description: Maintains and reprioritizes a product backlog list of canonical story or bounded-correction references, and records necessary blocking story dependencies in canonical homes. Use to add, take, reorder, or complete backlog items, adopt or repair the done catalog beside them, record or inspect a justified prerequisite, correct an evidenced supplier agreement after cleanup, or resolve product backlog merge conflicts. Excludes classroom and workshop exercise backlogs.
+description: Maintains and reprioritizes a product backlog list of canonical story or bounded-correction references, and records necessary blocking story dependencies in canonical homes. Use to add, take, reorder, or complete backlog items, adopt or repair the done catalog beside them, report which story identities are already used before allocating a new one, record or inspect a justified prerequisite, correct an evidenced supplier agreement after cleanup, or resolve product backlog merge conflicts. Excludes classroom and workshop exercise backlogs.
 ---
 
 # Product backlog
@@ -70,6 +70,26 @@ required workflow is unavailable, stop that activity and ask for its guidance.
   not also queue the plan. Treat references to either home as the same work
   when checking repetition and duplicates; `add` and `take` refuse a plan
   listed as separate work.
+
+## Choose a new identity
+
+Before writing or adding a new story or seed, read the installed
+`scripts/product-backlog.mjs identity-evidence [--identity <candidate>]
+[--seeds <path>] [--file <path>]` report and choose under
+[allocate a new identity](references/identity.md#allocate-a-new-identity). The
+read-only JSON names each source's highest seed number with the file, record,
+or adding commit behind it: the seed directory, both backlog lists, the done
+records, the done catalog, and Git history reachable from the checkout at its
+`revision`. It gives `highest` and `next` across them, the candidate's status
+(`active`, `completed`, `in-history`, or `unlisted`) with what history shows of
+it, and `gaps` naming each source or file it could not read. `--seeds` names a
+seed directory other than `seeds/` beside the backlog; `--file`, a backlog
+other than the default.
+
+`add` and startup admission (`--admit`, which reads the done records on fetched
+trunk) refuse an identity a done record names, or whose record cannot be read,
+and write nothing; the refusal cites the record's title and completion time.
+Handle it under the same rule.
 
 ## Maintain the backlog list
 

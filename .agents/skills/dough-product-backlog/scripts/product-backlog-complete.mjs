@@ -180,6 +180,26 @@ function gitBlobHash(bytes) {
     .digest("hex");
 }
 
+// Every file in the done directory beside the backlog in `backlogDirectory`
+// whose name a done record can take, in name order, with its text and Git
+// blob hash: what the catalog is built from and checked against. No
+// directory yields no files.
+export function readDoneRecordFiles(backlogDirectory) {
+  const directory = join(backlogDirectory, doneRecordDirectory);
+  if (!existsSync(directory)) return [];
+  return readdirSync(directory)
+    .filter(isDoneRecordFileName)
+    .sort()
+    .map((fileName) => {
+      const bytes = readFileSync(join(directory, fileName));
+      return {
+        fileName,
+        text: bytes.toString("utf8"),
+        blob: gitBlobHash(bytes),
+      };
+    });
+}
+
 // Rebuilds the done catalog beside the backlog in `backlogDirectory` from the
 // record files there, changing no record. Records the caller should already
 // have made final; the catalog is only ever derived from them. Returns the
@@ -187,21 +207,8 @@ function gitBlobHash(bytes) {
 // unreadable record files it names, and whether it was "written", already
 // "unchanged", "removed" because no record file remains, or stays "absent".
 export function rebuildDoneCatalog(backlogDirectory) {
-  const directory = join(backlogDirectory, doneRecordDirectory);
   const catalogFile = join(backlogDirectory, doneCatalogPath);
-  const files = existsSync(directory)
-    ? readdirSync(directory)
-        .filter(isDoneRecordFileName)
-        .sort()
-        .map((fileName) => {
-          const bytes = readFileSync(join(directory, fileName));
-          return {
-            fileName,
-            text: bytes.toString("utf8"),
-            blob: gitBlobHash(bytes),
-          };
-        })
-    : [];
+  const files = readDoneRecordFiles(backlogDirectory);
   const path = doneCatalogPath;
   if (files.length === 0) {
     if (!existsSync(catalogFile))

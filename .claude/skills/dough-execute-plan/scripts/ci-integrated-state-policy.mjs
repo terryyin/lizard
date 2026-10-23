@@ -1,21 +1,13 @@
 // The project's declared integrated-state completion policy
 // (ci-integrated-state.mjs judges evidence under it).
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
-
-const configurationPath = ".planning/open-dough.json";
 const integratedStatePolicyKey = "integratedStateCompletion";
 
 const nonemptyString = (value) => typeof value === "string" && value.length > 0;
 
 // The declared policy, or undefined when the project declares none (exact
-// completion). Read once when the observer starts.
-export function readIntegratedStatePolicy(root = process.cwd()) {
-  const path = join(root, configurationPath);
-  if (!existsSync(path)) return;
-  const policy = JSON.parse(readFileSync(path, "utf8"))[
-    integratedStatePolicyKey
-  ];
+// completion), from the observer's startup configuration snapshot.
+export function integratedStatePolicy(configuration) {
+  const policy = configuration[integratedStatePolicyKey];
   if (policy === undefined) return;
   const { check, context, jobs } = policy ?? {};
   if (

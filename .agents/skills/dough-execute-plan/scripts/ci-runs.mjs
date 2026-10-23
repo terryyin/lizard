@@ -1,18 +1,18 @@
 import { createGitHubFailureAcquisition } from "./ci-failures.mjs";
-import { ciWorkflowFile, createGitHubActions } from "./ci-github-actions.mjs";
+import { createGitHubActions } from "./ci-github-actions.mjs";
 
 // An explicitly supplied display name only confirms the workflow the selector
 // chose: a selected run reporting another name is inconsistent setup,
 // rejected loudly instead of silently dropped.
 const expectedWorkflowName = process.env.DOUGH_CI_WORKFLOW_NAME || undefined;
 
-export function matchingCiRuns(runs, { branch, sha }) {
+export function matchingCiRuns(runs, { branch, sha, workflow }) {
   const misnamed = expectedWorkflowName
     ? runs.find(({ workflowName }) => workflowName !== expectedWorkflowName)
     : undefined;
   if (misnamed)
     throw new Error(
-      `DOUGH_CI_WORKFLOW_NAME ${JSON.stringify(expectedWorkflowName)} does not match ${JSON.stringify(misnamed.workflowName)}, the display name GitHub reports for runs of the selected workflow ${ciWorkflowFile}; correct or unset DOUGH_CI_WORKFLOW_NAME.`,
+      `DOUGH_CI_WORKFLOW_NAME ${JSON.stringify(expectedWorkflowName)} does not match ${JSON.stringify(misnamed.workflowName)}, the display name GitHub reports for runs of the selected workflow ${workflow}; correct or unset DOUGH_CI_WORKFLOW_NAME.`,
     );
   return runs.filter(
     (run) =>
@@ -78,6 +78,7 @@ async function discoverApplicabilityCandidateRuns({
 }) {
   return matchingCiRuns(await github.listRuns({ branch, limit }, signal), {
     branch,
+    workflow: github.selector,
   });
 }
 
@@ -96,7 +97,9 @@ function createGitHubRunAcquisition({ branch, startedAt, github }) {
       },
       signal,
     );
-    const matching = currentRuns(matchingCiRuns(runs, { branch }));
+    const matching = currentRuns(
+      matchingCiRuns(runs, { branch, workflow: github.selector }),
+    );
     startupDiscovery = false;
 
     const visibleRunIds = new Set(matching.map((run) => run.databaseId));
@@ -136,10 +139,11 @@ export function createGitHubAcquisition({
   repo,
   branch,
   startedAt,
+  workflow,
   gh,
   signal,
 }) {
-  const github = createGitHubActions({ repo, gh });
+  const github = createGitHubActions({ repo, gh, workflow });
   return {
     acquireRuns: createGitHubRunAcquisition({ branch, startedAt, github }),
     acquireFailure: createGitHubFailureAcquisition({ repo, github }),
@@ -159,7 +163,7 @@ async function readCurrentGitHubAttempt({ github, run, jobs, signal }) {
   const current = await github.viewCurrentRun(run.databaseId, signal);
   const facts = {
     ...current,
-    check: current.workflowId === workflow.id ? ciWorkflowFile : undefined,
+    check: current.workflowId === workflow.id ? github.selector : undefined,
     context: current.event,
   };
   if (!jobs?.length) return facts;

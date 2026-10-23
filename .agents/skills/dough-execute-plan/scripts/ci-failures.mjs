@@ -1,4 +1,4 @@
-import { ciWorkflowFile, GitHubAcquisitionHeld } from "./ci-github-actions.mjs";
+import { GitHubAcquisitionHeld } from "./ci-github-actions.mjs";
 
 export const ciAttemptKey = (runId, attempt) =>
   JSON.stringify([runId, attempt]);
@@ -85,6 +85,7 @@ export async function inspectRunsForFailure({
       return {
         event: failureEvent({
           repo,
+          workflow: github.selector,
           run: failed,
           detailsUnavailable: true,
           historyUnavailable: historyError,
@@ -106,6 +107,7 @@ export async function inspectRunsForFailure({
 
     const event = failureEvent({
       repo,
+      workflow: github.selector,
       run: failed,
       failedJobs: newFailedJobs,
     });
@@ -149,6 +151,7 @@ export async function inspectRunsForFailure({
       return {
         event: failureEvent({
           repo,
+          workflow: github.selector,
           run,
           failedJobs,
           historyUnavailable: historyError,
@@ -185,6 +188,7 @@ export function createGitHubFailureAcquisition({ repo, github }) {
 
 function failureEvent({
   repo,
+  workflow,
   run,
   failedJobs,
   detailsUnavailable,
@@ -195,7 +199,7 @@ function failureEvent({
     repo,
     sha: run.headSha,
     branch: run.headBranch,
-    workflow: ciWorkflowFile,
+    workflow,
     runId: run.databaseId,
     attempt: run.attempt,
     conclusion: run.conclusion,

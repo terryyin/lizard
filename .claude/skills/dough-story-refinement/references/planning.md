@@ -11,11 +11,13 @@ input instead of a refined feature story. A new correction gets a minimal story
 in a suitable seed before its plan is written: reuse the reviewed story's seed
 or another seed whose problem hosts it, and create one under the
 [seed format](../../dough-story-decomposition/references/seed-format.md) only
-when none fits. That story records its `**Identity:**`, a **Goal** naming the
-beneficiary and bounded correction outcome, the bounded **Scope**, and a link
-to the plan; it adds no feature promise. The plan records the story's identity
-under [work item identity](../../dough-product-backlog/references/identity.md)
-and holds the rest of the correction input: source and provenance, current
+when none fits. That story records its `**Identity:**`, allocated under
+[allocate a new identity](../../dough-product-backlog/references/identity.md#allocate-a-new-identity),
+a **Goal** naming the beneficiary and bounded correction outcome, the bounded
+**Scope**, and a link to the plan; it adds no feature promise. The plan
+records the story's identity under
+[work item identity](../../dough-product-backlog/references/identity.md) and
+holds the rest of the correction input: source and provenance, current
 findings, preserved promises and genuine constraints, observable proof
 ownership, current decisions, and executable slices.
 

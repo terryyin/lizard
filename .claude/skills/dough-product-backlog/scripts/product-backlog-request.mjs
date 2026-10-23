@@ -40,6 +40,7 @@ export const options = {
   return: { type: "boolean", default: false },
   all: { type: "boolean", default: false },
   dropped: { type: "boolean", default: false },
+  seeds: { type: "string" },
   file: { type: "string", default: defaultBacklogPath },
   help: { type: "boolean", default: false },
 };
