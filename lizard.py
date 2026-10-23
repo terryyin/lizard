@@ -51,9 +51,6 @@ for _script_dir in _script_dirs():
         sys.path.insert(0, _script_dir)
 
 
-if sys.version[0] == '2':
-    from future_builtins import map, filter  # pylint: disable=W0622, F0401
-
 try:
     from lizard_languages import languages, get_reader_for, CLikeReader
 except ImportError:
@@ -75,36 +72,17 @@ from lizard_core.function_info import (  # noqa: E402
     AllResult)
 from lizard_core.file_info_builder import (  # noqa: E402
     NestingStack, FileInfoBuilder)
+from lizard_core.file_analyzer import (  # noqa: E402
+    preprocessing, comment_counter, line_counter, token_counter,
+    condition_counter, FileAnalyzer)
+from lizard_core.extensions import (  # noqa: E402
+    get_extensions, print_extension_results)
+from lizard_core.analysis import (  # noqa: E402
+    analyze, analyze_files, map_files_to_analyzer, _map_in_pool,
+    analyze_file)
 
 DEFAULT_CCN_THRESHOLD, DEFAULT_WHITELIST, \
     DEFAULT_MAX_FUNC_LENGTH = 15, "whitelizard.txt", 1000
-
-
-# pylint: disable-msg=too-many-arguments
-def analyze(paths, exclude_pattern=None, threads=1, exts=None,
-            lans=None, use_gitignore=True):
-    '''
-    returns an iterator of file information that contains function
-    statistics.
-    '''
-    exclude_pattern = exclude_pattern or []
-    files = get_all_source_files(paths, exclude_pattern, lans, use_gitignore)
-    return analyze_files(files, threads, exts)
-
-
-def analyze_files(files, threads=1, exts=None):
-    extensions = exts or get_extensions([])
-    file_analyzer = FileAnalyzer(extensions)
-    source = result = map_files_to_analyzer(files, file_analyzer, threads)
-    try:
-        for extension in extensions:
-            if hasattr(extension, 'cross_file_process'):
-                result = extension.cross_file_process(result)
-        yield from result
-    finally:
-        close = getattr(source, 'close', None)
-        if close is not None:
-            close()
 
 
 def _extension_arg(parser):
@@ -292,128 +270,6 @@ def arg_parser(prog=None):
     parser.usage = '''lizard [options] [PATH or FILE] [PATH] ...'''
     parser.description = __doc__
     return parser
-
-
-def preprocessing(tokens, reader):
-    if hasattr(reader, "preprocess"):
-        return reader.preprocess(tokens)
-    return (t for t in tokens if not t.isspace() or t == '\n')
-
-
-def comment_counter(tokens, reader):
-    for token in tokens:
-        comment = reader.get_comment_from_token(token)
-        if comment is not None:
-            for _ in comment.splitlines()[1:]:
-                yield '\n'
-            stripped = comment.strip()
-            if stripped.startswith("#lizard forgive global"):
-                reader.context.forgive_global = True
-            elif stripped.startswith("#lizard forgives("):
-                match = re.search(r'#lizard forgives?\(([^)]*)\)', stripped)
-                if match:
-                    metrics = {m.strip() for m in match.group(1).split(',') if m.strip()}
-                    reader.context.current_function.forgiven_metrics.update(metrics)
-            elif stripped.startswith("#lizard forgive"):
-                reader.context.forgive = True
-            if "GENERATED CODE" in comment:
-                return
-        else:
-            yield token
-
-
-def line_counter(tokens, reader):
-    context = reader.context
-    context.current_line = 1
-    newline = 1
-    for token in tokens:
-        if token != "\n":
-            count = token.count('\n')
-            context.current_line += count
-            context.add_nloc(count + newline)
-            newline = 0
-            yield token
-        else:
-            context.current_line += 1
-            newline = 1
-
-
-def token_counter(tokens, reader):
-    context = reader.context
-    for token in tokens:
-        context.fileinfo.token_count += 1
-        context.current_function.token_count += 1
-        yield token
-
-
-def condition_counter(tokens, reader):
-    conditions = reader.conditions
-    for token in tokens:
-        if token in conditions:
-            reader.context.add_condition()
-        yield token
-
-
-class FileAnalyzer(object):  # pylint: disable=R0903
-
-    def __init__(self, extensions):
-        self.processors = extensions
-
-    def __call__(self, filename):
-        try:
-            return self.analyze_source_code(
-                filename, auto_read(filename))
-        except UnicodeDecodeError:
-            sys.stderr.write("Error: doesn't support none utf encoding '%s'\n"
-                             % filename)
-        except IOError:
-            sys.stderr.write("Error: Fail to read source file '%s'\n"
-                             % filename)
-        except IndexError:
-            sys.stderr.write("Error: Fail to parse file '%s'\n"
-                             % filename)
-            raise
-        return FileInformation(filename, 0, [])
-
-    def analyze_source_code(self, filename, code):
-        context = FileInfoBuilder(filename)
-        reader = (get_reader_for(filename) or CLikeReader)(context)
-        tokens = reader.generate_tokens(code)
-        try:
-            for processor in self.processors:
-                tokens = processor(tokens, reader)
-            for _ in reader(tokens, reader):
-                pass
-        except RecursionError as e:
-            sys.stderr.write(
-                "[skip] fail to process '%s' with RecursionError - %s\n" %
-                (filename, e))
-        return context.fileinfo
-
-
-def map_files_to_analyzer(files, analyzer, working_threads):
-    if working_threads == 1:
-        return map(analyzer, files)
-    return _map_in_pool(analyzer, files, working_threads)
-
-
-def _map_in_pool(analyzer, files, working_threads):
-    try:
-        import multiprocessing
-        pool = multiprocessing.Pool(processes=working_threads)
-    except ImportError:
-        yield from map(analyzer, files)
-        return
-    try:
-        for result in pool.imap_unordered(analyzer, files):
-            yield result
-    except BaseException:
-        pool.terminate()
-        raise
-    else:
-        pool.close()
-    finally:
-        pool.join()
 
 
 def warning_filter(option, module_infos):
@@ -758,33 +614,6 @@ def open_output_file(path):
         sys.exit(2)
 
 
-def get_extensions(extension_names):
-    from importlib import import_module as im
-
-    def expand_extensions(existing):
-        for name in extension_names:
-            ext = (
-                    im('lizard_ext.lizard' + name.lower())
-                    .LizardExtension()
-                    if isinstance(name, str) else name)
-            existing.insert(
-                len(existing) if not hasattr(ext, "ordering_index") else
-                ext.ordering_index,
-                ext)
-        return existing
-
-    return expand_extensions([
-            preprocessing,
-            comment_counter,
-            line_counter,
-            token_counter,
-            condition_counter,
-        ])
-
-
-analyze_file = FileAnalyzer(get_extensions([]))  # pylint: disable=C0103
-
-
 def main(argv=None):
     """Command-line entrance to Lizard.
 
@@ -831,12 +660,6 @@ def main(argv=None):
     if 0 <= options.number < warning_count:
         return 1
     return 0
-
-
-def print_extension_results(extensions):
-    for extension in extensions:
-        if hasattr(extension, 'print_result'):
-            extension.print_result()
 
 
 if __name__ == "__main__":

@@ -106,7 +106,7 @@ are unchanged.
 
 ### 3. Per-file analysis, extension loading, and batch analysis live in `file_analyzer.py`, `extensions.py`, and `analysis.py`
 Type: Behavior
-Status: planned
+Status: done
 Proof: full suite green, including the threaded tests; `lizard -t 2 lizard_languages` exits 0 and prints the same `N file analyzed.` line as `-t 1`; `-END` comparison byte-identical; CLI comparison empty; `nix develop -c make` green.
 
 Behavior: `lizard.py` defines the token processors, `FileAnalyzer`,
@@ -221,6 +221,13 @@ the test-order dependency above if execution confirms it is worth a follow-up.
   `test/test_extensions/testCognitiveComplexity.py` also patched
   `lizard.md5_hash_file`. Trace each moved name across `test/` with the
   consumer-trace script rather than relying on the slice text.
+- Tests that run `lizard.main` patch each filesystem read where it is looked
+  up: `.gitignore` at `lizard_core.file_discovery.auto_read`, sources at
+  `lizard_core.file_analyzer.auto_read`, and the whitelist at
+  `lizard.auto_read` (slice 3). When slice 4 moves `whitelist_filter`, repoint
+  the whitelist patches in `test/testApplication.py` (class decorator and
+  `run_with_mocks`), `test/test_extensions/testCognitiveComplexity.py`
+  (`TestCommandLine`), and `test/testOutput.py` (`check_whitelist`).
 
 ## Story obligations
 

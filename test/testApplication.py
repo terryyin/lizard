@@ -8,14 +8,16 @@ import os
 import sys
 
 
+@patch('lizard.auto_read', return_value='')
 @patch('lizard_core.file_discovery.auto_read', return_value='')
 @patch('lizard_core.file_discovery.md5_hash_file')
-@patch('lizard.auto_read', create=True)
+@patch('lizard_core.file_analyzer.auto_read')
 @patch.object(os, 'walk')
 @patch.object(lizard, 'print_result')
 class TestApplication(unittest.TestCase):
 
-    def testEmptyResult(self, print_result, os_walk, mock_open, _, _gitignore):
+    def testEmptyResult(self, print_result, os_walk, mock_open, _, _gitignore,
+                        _whitelist):
 
         def check_empty_result(result, options, scheme, _):
             self.assertEqual([], list(result))
@@ -26,7 +28,7 @@ class TestApplication(unittest.TestCase):
         lizard.main(['lizard'])
 
     def testFilesWithFunction(self, print_result, os_walk, mock_open, _,
-                              _gitignore):
+                              _gitignore, _whitelist):
         def check_result(result, options, scheme, _):
             fileInfos = list(result)
             self.assertEqual(1, len(fileInfos))
@@ -59,10 +61,12 @@ class IntegrationTests(unittest.TestCase):
         '''
         self.returned_warning_count = 0
 
+    @patch('lizard.auto_read', return_value='')
     @patch('lizard_core.file_discovery.auto_read', return_value='')
-    @patch('lizard.auto_read', create=True)
+    @patch('lizard_core.file_analyzer.auto_read')
     @patch.object(lizard, 'print_result')
-    def run_with_mocks(self, argv, src, print_result, mock_open, _gitignore):
+    def run_with_mocks(self, argv, src, print_result, mock_open, _gitignore,
+                       _whitelist):
         def store_result(result, options, scheme, _):
             self.fileInfos = list(result)
             return self.returned_warning_count

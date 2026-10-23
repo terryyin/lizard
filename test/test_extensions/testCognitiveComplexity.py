@@ -800,13 +800,14 @@ class TestCommandLine(unittest.TestCase):
         options = parse_args(['lizard'])
         self.assertNotIn('cognitive_complexity', options.thresholds)
 
+    @patch('lizard.auto_read', return_value='')
     @patch('lizard_core.file_discovery.auto_read', return_value='')
-    @patch('lizard.auto_read', create=True)
+    @patch('lizard_core.file_analyzer.auto_read')
     @patch('lizard_core.file_discovery.md5_hash_file')
     @patch('os.walk')
     @patch('sys.stdout')
     def test_output_has_a_cogc_column(self, stdout, os_walk, _, auto_read,
-                                      _gitignore):
+                                      _gitignore, _whitelist):
         os_walk.return_value = [('.', [], ['a.cpp'])]
         auto_read.return_value = "void foo() { if (a) { if (b) {} } }"
         lizard.main(['lizard', '-Ecognitive'])
@@ -814,13 +815,14 @@ class TestCommandLine(unittest.TestCase):
         self.assertIn("CogC", output)
         self.assertRegex(output, r"\s1\s+3\s+")   # CCN column is followed by CogC
 
+    @patch('lizard.auto_read', return_value='')
     @patch('lizard_core.file_discovery.auto_read', return_value='')
-    @patch('lizard.auto_read', create=True)
+    @patch('lizard_core.file_analyzer.auto_read')
     @patch('lizard_core.file_discovery.md5_hash_file')
     @patch('os.walk')
     @patch('sys.stdout')
     def test_warning_when_threshold_exceeded(self, stdout, os_walk, _, auto_read,
-                                             _gitignore):
+                                             _gitignore, _whitelist):
         os_walk.return_value = [('.', [], ['a.cpp'])]
         auto_read.return_value = "void foo() { if (a) { if (b) {} } }"
         self.assertEqual(1, lizard.main(['lizard', '-Ecognitive', '--CogC', '2']))
