@@ -122,7 +122,7 @@ analyzer by module path, and results are unchanged.
 
 ### 4. Warning policy lives in `warning_filter.py`
 Type: Behavior
-Status: planned
+Status: done
 Proof: full suite green; `lizard -C 1 -W nonexist.txt lizard_ext/version.py` stdout (including the two `WARNING:` lines) and exit code identical before and after; CLI comparison empty; `nix develop -c make` green.
 
 Behavior: `lizard.py` defines `warning_filter`, `whitelist_filter`,
@@ -227,7 +227,12 @@ the test-order dependency above if execution confirms it is worth a follow-up.
   `lizard.auto_read` (slice 3). When slice 4 moves `whitelist_filter`, repoint
   the whitelist patches in `test/testApplication.py` (class decorator and
   `run_with_mocks`), `test/test_extensions/testCognitiveComplexity.py`
-  (`TestCommandLine`), and `test/testOutput.py` (`check_whitelist`).
+  (`TestCommandLine`), and `test/testOutput.py` (`check_whitelist`). Slice 4
+  did so. Follow-up candidate (pre-existing, not caused by this story):
+  `test/testOutput.py` `TestWarningOutput` tests `test_should_use_clang_format_for_warning`,
+  `test_warning_when_max_nesting_depth_missing`, and `test_sort_warning`
+  read a real `whitelizard.txt` from the working directory; patching
+  `lizard_core.warning_filter.auto_read` in its `setUp` would isolate them.
 
 ## Story obligations
 

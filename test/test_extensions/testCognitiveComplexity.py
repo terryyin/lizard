@@ -800,7 +800,7 @@ class TestCommandLine(unittest.TestCase):
         options = parse_args(['lizard'])
         self.assertNotIn('cognitive_complexity', options.thresholds)
 
-    @patch('lizard.auto_read', return_value='')
+    @patch('lizard_core.warning_filter.auto_read', return_value='')
     @patch('lizard_core.file_discovery.auto_read', return_value='')
     @patch('lizard_core.file_analyzer.auto_read')
     @patch('lizard_core.file_discovery.md5_hash_file')
@@ -815,7 +815,7 @@ class TestCommandLine(unittest.TestCase):
         self.assertIn("CogC", output)
         self.assertRegex(output, r"\s1\s+3\s+")   # CCN column is followed by CogC
 
-    @patch('lizard.auto_read', return_value='')
+    @patch('lizard_core.warning_filter.auto_read', return_value='')
     @patch('lizard_core.file_discovery.auto_read', return_value='')
     @patch('lizard_core.file_analyzer.auto_read')
     @patch('lizard_core.file_discovery.md5_hash_file')

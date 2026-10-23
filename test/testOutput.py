@@ -143,7 +143,7 @@ class TestAllOutput(StreamStdoutTestCase):
         self.assertEqual(0, print_result_with_scheme(file_infos, option))
 
     @patch.object(os.path, 'isfile')
-    @patch('lizard.auto_read')
+    @patch('lizard_core.warning_filter.auto_read')
     def check_whitelist(self, script, mock_auto_read, mock_isfile):
         mock_isfile.return_value = True
         mock_auto_read.return_value = script

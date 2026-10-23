@@ -8,7 +8,7 @@ import os
 import sys
 
 
-@patch('lizard.auto_read', return_value='')
+@patch('lizard_core.warning_filter.auto_read', return_value='')
 @patch('lizard_core.file_discovery.auto_read', return_value='')
 @patch('lizard_core.file_discovery.md5_hash_file')
 @patch('lizard_core.file_analyzer.auto_read')
@@ -61,7 +61,7 @@ class IntegrationTests(unittest.TestCase):
         '''
         self.returned_warning_count = 0
 
-    @patch('lizard.auto_read', return_value='')
+    @patch('lizard_core.warning_filter.auto_read', return_value='')
     @patch('lizard_core.file_discovery.auto_read', return_value='')
     @patch('lizard_core.file_analyzer.auto_read')
     @patch.object(lizard, 'print_result')
