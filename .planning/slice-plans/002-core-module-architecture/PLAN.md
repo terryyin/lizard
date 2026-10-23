@@ -92,7 +92,7 @@ names; CLI output, the wheel, and script mode behave as before.
 
 ### 2. The analysis data model and builder live in `function_info.py` and `file_info_builder.py`
 Type: Behavior
-Status: planned
+Status: done
 Proof: full suite green; key example 2 prints `foo 2 1`; `lizard -END lizard_languages/clike.py` byte-identical before and after; CLI comparison empty; `nix develop -c make` green.
 
 Behavior: `lizard.py` defines `Nesting`, `BARE_NESTING`, `Namespace`,
@@ -199,15 +199,24 @@ Record here any module left above 250 lines and why (the seed expects
 `options.py` to land near 250 because `arg_parser` is one option table), and
 the test-order dependency above if execution confirms it is worth a follow-up.
 
-- CLI comparison corrections (slice 1 baseline): `--msvs` is not an option;
-  the msvs style is `--warning-msvs`. `-END` raises
-  `AttributeError: 'NestingStack' object has no attribute 'set_in_condition'`
-  on every input at the starting commit (see G1), so it is compared by stdout,
-  exit code, and last stderr line only, and extension compatibility is also
-  observed through `-Ens`, `-Ecognitive`, and `-Ehalstead` on
-  `lizard_languages/clike.py`. `-t 2` output order is nondeterministic and is
-  compared sorted; the `-H` report's generation time is normalized. The
-  coordinator's capture also writes `.checkstyle.xml` through `-o`.
+- CLI comparison corrections: `--msvs` is not an option; the msvs style is
+  `--warning-msvs`. `-t 2` output order is nondeterministic and is compared
+  sorted; the `-H` report's generation time is normalized. The coordinator's
+  capture also writes `.checkstyle.xml` through `-o` and observes extension
+  compatibility through `-END`, `-Ens`, `-Ecognitive`, and `-Ehalstead` on
+  `lizard_languages/clike.py`.
+- The CLI comparison runs `lizard.main` through the module path, as the
+  installed `lizard` console script does, not `python lizard.py`. In script
+  mode the file runs as `__main__`, and an extension's `from lizard import`
+  loads a second copy whose classes the extension patches; at the slice 1 and
+  slice 2 starting commits `python lizard.py -END ...` therefore failed with
+  `AttributeError: 'NestingStack' object has no attribute
+  'set_in_condition'` while `lizard -END ...` printed ND values. Once a
+  patched class lives in `lizard_core`, both copies share it, so script mode
+  now matches the console script. From slice 2 on the comparison also checks
+  that script-mode `-END`, `-Ens`, `-Ecognitive`, and `-Ehalstead` output
+  and exit codes equal the module path's. Later slices that move a class or
+  function an extension patches converge script mode the same way.
 - Patch consumers are wider than the plan's named test files:
   `test/test_extensions/testCognitiveComplexity.py` also patched
   `lizard.md5_hash_file`. Trace each moved name across `test/` with the
@@ -218,7 +227,7 @@ the test-order dependency above if execution confirms it is worth a follow-up.
 ### G1. `-END` crashes on every input before and after the move
 Reported: slice 1 — "At the starting commit `lizard -END lizard_languages/clike.py` prints the header and exits 1 with AttributeError: 'NestingStack' object has no attribute 'set_in_condition' from lizard_ext/lizardnd.py; a small C file fails the same way."
 Story clause: "prints the ND column with the same values as before"
-Disposition: excluded "No behavior change, option, metric, or output format"
+Disposition: proved by slice 2: slice 1 ran script mode, not the `lizard` command the key example names; the module path `lizard.main(['lizard', '-END', 'lizard_languages/clike.py'])` exits 0 with ND values at the slice 2 starting commit `269bd9e` and is byte-identical after slice 2 (coordinator capture `before-s2m` vs `after-s2m`, `cli-compare.sh` identical), and script mode now prints the same output and exit code 0
 
 ## Concern evidence
 

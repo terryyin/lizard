@@ -23,7 +23,6 @@ For more information visit http://www.lizard.ws
 from __future__ import print_function, division
 import codecs
 import sys
-import itertools
 import re
 import os
 
@@ -71,6 +70,11 @@ except ImportError:
     sys.stderr.write("Cannot find the lizard_ext modules.")
 from lizard_core.file_discovery import (  # noqa: E402
     md5_hash_file, _build_gitignore_spec, get_all_source_files)
+from lizard_core.function_info import (  # noqa: E402
+    Nesting, BARE_NESTING, Namespace, FunctionInfo, FileInformation,
+    AllResult)
+from lizard_core.file_info_builder import (  # noqa: E402
+    NestingStack, FileInfoBuilder)
 
 DEFAULT_CCN_THRESHOLD, DEFAULT_WHITELIST, \
     DEFAULT_MAX_FUNC_LENGTH = 15, "whitelizard.txt", 1000
@@ -288,252 +292,6 @@ def arg_parser(prog=None):
     parser.usage = '''lizard [options] [PATH or FILE] [PATH] ...'''
     parser.description = __doc__
     return parser
-
-
-class Nesting(object):  # pylint: disable=R0903
-    '''
-    Nesting represent one level of nesting in any programming language.
-    '''
-    @property
-    def name_in_space(self):
-        return ''
-
-
-BARE_NESTING = Nesting()
-
-
-class Namespace(Nesting):  # pylint: disable=R0903
-
-    def __init__(self, name):
-        self.name = name
-
-    @property
-    def name_in_space(self):
-        return self.name + "::" if self.name else ''
-
-
-class FunctionInfo(Nesting):  # pylint: disable=R0902
-
-    def __init__(self, name, filename, start_line=0, ccn=1):
-        self.cyclomatic_complexity = ccn
-        self.nloc = 1
-        self.token_count = 1  # the first token
-        self.name = name
-        self.long_name = name
-        self.start_line = start_line
-        self.end_line = start_line
-        self.full_parameters = []
-        self.filename = filename
-        self.top_nesting_level = -1
-        self.fan_in = 0
-        self.fan_out = 0
-        self.general_fan_out = 0
-        self.max_nesting_depth = 0  # Initialize max_nesting_depth to 0
-        self.forgiven_metrics = set()
-
-    @property
-    def name_in_space(self):
-        return self.name + "."
-
-    @property
-    def unqualified_name(self):
-        '''
-        name without qualification like namespaces or classes.
-        Just the bare name without '::'.
-        '''
-        return self.name.split('::')[-1]
-
-    location = property(lambda self:
-                        f" {self.name}@{self.start_line}-{self.end_line}@{self.filename}")
-
-    parameter_count = property(lambda self: len(self.parameters))
-
-    @property
-    def parameters(self):
-        # Exclude empty tokens as parameters. These can occur in languages
-        # allowing a trailing comma on the last parameter in an function
-        # argument list.
-        # Regex matches the parameter name, then optionally:
-        # - a default value given after an '=' sign
-        # - a type annotation given after a ':'
-        matches = [re.search(r'(\w+)(\s=.*)?(\s:.*)?$', f)
-                   for f in self.full_parameters]
-        return [m.group(1) for m in matches if m]
-
-    @property
-    def length(self):
-        return self.end_line - self.start_line + 1
-
-    def add_to_function_name(self, app):
-        self.name += app
-        self.long_name += app
-
-    def add_to_long_name(self, app):
-        if self.long_name:
-            if self.long_name[-1].isalpha() and app[0].isalpha():
-                self.long_name += ' '
-        self.long_name += app
-
-    def add_parameter(self, token):
-        self.add_to_long_name(" " + token)
-
-        if not self.full_parameters:
-            self.full_parameters.append(token)
-        elif token == ",":
-            self.full_parameters.append('')
-        else:
-            self.full_parameters[-1] += " " + token
-
-
-class FileInformation(object):  # pylint: disable=R0903
-
-    def __init__(self, filename, nloc, function_list=None):
-        self.filename = filename
-        self.nloc = nloc
-        self.function_list = function_list or []
-        self.token_count = 0
-
-    average_nloc = property(lambda self: self.functions_average("nloc"))
-    average_token_count = property(
-        lambda self: self.functions_average("token_count"))
-    average_cyclomatic_complexity = property(
-        lambda self: self.functions_average("cyclomatic_complexity"))
-    CCN = property(
-        lambda self:
-        sum(fun.cyclomatic_complexity for fun in self.function_list))
-    ND = property(  # pylint: disable=C0103
-        lambda self:
-        sum(fun.max_nesting_depth for fun in self.function_list))
-
-    def functions_average(self, att):
-        summary = sum(getattr(fun, att) for fun in self.function_list)
-        return summary / len(self.function_list) if self.function_list else 0
-
-
-class NestingStack(object):
-
-    def __init__(self):
-        self.nesting_stack = []
-        self.pending_function = None
-
-    def with_namespace(self, name):
-        return ''.join([x.name_in_space for x in self.nesting_stack] + [name])
-
-    def add_bare_nesting(self):
-        self.nesting_stack.append(self._create_nesting())
-
-    def add_namespace(self, token):
-        self.pending_function = None
-        self.nesting_stack.append(Namespace(token))
-
-    def start_new_function_nesting(self, function):
-        self.pending_function = function
-
-    def _create_nesting(self):
-        tmp = self.pending_function
-        self.pending_function = None
-        if tmp:
-            return tmp
-        return BARE_NESTING
-
-    def pop_nesting(self):
-        self.pending_function = None
-        if self.nesting_stack:
-            return self.nesting_stack.pop()
-
-    @property
-    def current_nesting_level(self):
-        return len(self.nesting_stack)
-
-    @property
-    def last_function(self):
-        funs = [f for f in self.nesting_stack if isinstance(f, FunctionInfo)]
-        return funs[-1] if funs else None
-
-
-class FileInfoBuilder(object):
-    '''
-    The builder is also referred as "context" in the code,
-    because each language readers use this builder to build
-    source file and function information and the builder keep
-    the context information that's needed for the building.
-    '''
-
-    def __init__(self, filename):
-        self.fileinfo = FileInformation(filename, 0)
-        self.current_line = 0
-        self.forgive = False
-        self.forgive_global = False
-        self.newline = True
-        self.global_pseudo_function = FunctionInfo('*global*', filename, 0)
-        self.current_function = self.global_pseudo_function
-        self.stacked_functions = []
-        self._nesting_stack = NestingStack()
-
-    def __getattr__(self, attr):
-        # delegating to _nesting_stack
-        return getattr(self._nesting_stack, attr)
-
-    def decorate_nesting_stack(self, decorate_class):
-        self._nesting_stack = decorate_class(self._nesting_stack)
-        return self._nesting_stack
-
-    def pop_nesting(self):
-        nest = self._nesting_stack.pop_nesting()
-        if isinstance(nest, FunctionInfo):
-            endline = self.current_function.end_line
-            self.end_of_function()
-            self.current_function = (
-                    self._nesting_stack.last_function or
-                    self.global_pseudo_function)
-            self.current_function.end_line = endline
-
-    def add_nloc(self, count):
-        self.fileinfo.nloc += count
-        self.current_function.nloc += count
-        self.current_function.end_line = self.current_line
-        self.newline = count > 0
-
-    def try_new_function(self, name):
-        self.current_function = FunctionInfo(
-            self.with_namespace(name),
-            self.fileinfo.filename,
-            self.current_line)
-        self.current_function.top_nesting_level = self.current_nesting_level
-
-    def confirm_new_function(self):
-        self.start_new_function_nesting(self.current_function)
-        self.current_function.cyclomatic_complexity = 1
-
-    def restart_new_function(self, name):
-        self.try_new_function(name)
-        self.confirm_new_function()
-
-    def push_new_function(self, name):
-        self.stacked_functions.append(self.current_function)
-        self.restart_new_function(name)
-
-    def add_condition(self, inc=1):
-        self.current_function.cyclomatic_complexity += inc
-
-    def add_to_long_function_name(self, app):
-        self.current_function.add_to_long_name(app)
-
-    def add_to_function_name(self, app):
-        self.current_function.add_to_function_name(app)
-
-    def parameter(self, token):
-        self.current_function.add_parameter(token)
-
-    def end_of_function(self):
-        if not self.forgive:
-            if self.current_function.name != '*global*' or not self.forgive_global:
-                self.fileinfo.function_list.append(self.current_function)
-        self.forgive = False
-        if self.stacked_functions:
-            self.current_function = self.stacked_functions.pop()
-        else:
-            self.current_function = self.global_pseudo_function
 
 
 def preprocessing(tokens, reader):
@@ -842,25 +600,6 @@ def print_no_warnings(option):
         ' or '.join("{0} > {1}".format(
             k, val) for k, val in option.thresholds.items()))
     print("\n" + "=" * len(warn_str) + "\n" + warn_str)
-
-
-class AllResult(object):
-    def __init__(self, result):
-        self.result = list(file_info for file_info in result if file_info)
-        self.all_fun = list(itertools.chain(*(file_info.function_list
-                                            for file_info in self.result)))
-
-    def function_count(self):
-        return len(self.all_fun) or 1
-
-    def nloc_in_functions(self):
-        return sum([f.nloc for f in self.all_fun]) or 1
-
-    def as_fileinfo(self):
-        return FileInformation(
-                    "",
-                    sum([f.nloc for f in self.result]),
-                    self.all_fun)
 
 
 def print_total(warning_count, warning_nloc, all_result, scheme):
