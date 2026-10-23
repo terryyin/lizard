@@ -105,3 +105,11 @@ Slice 1 (`test/testOutput.py` only, +5 lines; base `a95ace8`):
 ## Learnings
 
 None.
+
+## Execution complete
+
+Product advice: no change. The correction stays within the near-future
+direction (maintenance); the sibling whitelist tests (`test/test_analyzer.py`,
+`test/testExtension.py`, `testCppOperatorDeclarations.py`) already pass from a
+working directory holding `whitelizard.txt` (31 passed), so no follow-up is
+needed. Process review skipped by project default.
