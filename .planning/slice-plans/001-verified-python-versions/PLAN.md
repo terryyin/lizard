@@ -50,6 +50,14 @@ are not verified).” → the sentence is replaced → it says “It requires Py
 3.8 or above. The test suite runs on Python 3.8 and 3.10, on Linux and
 Windows, in continuous integration; other versions are not verified.”
 
+## Execution complete
+
+Product advice: no correction needed. The README now matches the CI matrix.
+The `setup.py` classifiers (3.8–3.11) still claim more than CI verifies
+(3.8, 3.10). Widening the matrix and aligning the classifiers stays the
+separate story the seed deferred, a candidate for the maintenance direction
+if wanted.
+
 ## Current decisions
 
 - Existing solutions (PFE): the README introduction is the only place that
