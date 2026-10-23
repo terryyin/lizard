@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "agent": "Kirara-chan",
-  "email": "kirara-chan@example.org",
-  "identity": "SEED-001#verified-python-versions",
-  "mode": "story-branch",
-  "branch": "claude/know-which-python-versions-lizard-is-verified-on",
-  "host": "claude"
-}
