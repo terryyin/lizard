@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-005#project-ci-adapter",
+  "title": "Observe CI outside the Nix shell",
+  "completedAt": "2026-10-23T01:26:59.336Z",
+  "developer": "Terry Yin",
+  "agent": "Mana-chan",
+  "host": "codex",
+  "model": "GPT-6"
+}

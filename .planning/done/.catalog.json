@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-005_project-ci-adapter.json",
+      "identity": "SEED-005#project-ci-adapter",
+      "completedAt": "2026-10-23T01:26:59.336Z",
+      "blob": "badad98251e1d3271a82ad1e93c7ddf5faddff17"
+    },
+    {
       "fileName": "SEED-004_open-dough-ci.json",
       "identity": "SEED-004#open-dough-ci",
       "completedAt": "2026-10-23T00:39:01.553Z",
