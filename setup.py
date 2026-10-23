@@ -92,7 +92,7 @@ setup(
                     'Programming Language :: Python :: 3.10',
                     'Programming Language :: Python :: 3.11'],
     cmdclass={'version': VersionCommand},
-    packages=['lizard_ext', 'lizard_languages'],
+    packages=['lizard_ext', 'lizard_languages', 'lizard_core'],
     #data_files=[('lizard_ext', [])],
     py_modules=['lizard'],
     install_requires=['pygments', 'pathspec'],

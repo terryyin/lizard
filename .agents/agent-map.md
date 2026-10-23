@@ -4,8 +4,17 @@ Short navigation index for the Lizard repository.
 
 ## Work areas
 
-- **Core analyzer and CLI:** `lizard.py` — analysis entry points, option
-  parsing, file discovery, and output orchestration.
+- **Core analyzer and CLI:** `lizard_core/` is the core analyzer's home:
+  `file_discovery.py` (finding source files, `.gitignore`, duplicates),
+  `function_info.py` (function, file and result data model),
+  `file_info_builder.py` (building context readers drive),
+  `file_analyzer.py` (per-file analysis and built-in token processors),
+  `extensions.py` (extension loading), `analysis.py` (batch `analyze`),
+  `warning_filter.py` (thresholds and whitelist), `output_scheme.py` (column
+  schema), `text_output.py` (default and warning printers), `options.py`
+  (option table and resolution), `cli.py` (`main`). `lizard.py` is the public
+  facade: it re-exports those names and is the script and console entry point.
+  `lizard_core` modules never import `lizard`.
 - **Language readers:** `lizard_languages/` — one module per language, with
   shared bases in `code_reader.py`, `clike.py`, `golike.py`, and `rubylike.py`.
   Registration is in `lizard_languages/__init__.py`.
@@ -30,7 +39,7 @@ Run repository tooling through Nix. Git commands are the exception.
 |------|---------|
 | All checks | `nix develop -c make` |
 | Full pytest suite | `nix develop -c python -m pytest` |
-| Core analyzer | `nix develop -c python -m pytest test/test_analyzer.py test/testOutput.py` |
+| Core analyzer (`lizard_core/`) | `nix develop -c python -m pytest test/test_analyzer.py test/testOutput.py` |
 | Language reader | `nix develop -c python -m pytest test/test_languages/test<Lang>.py` |
 | Extension | `nix develop -c python -m pytest test/test_extensions/test<Name>.py` |
 | CLI and options | `nix develop -c python -m pytest test/testApplication.py test/test_options.py` |

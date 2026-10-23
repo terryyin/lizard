@@ -1,5 +1,13 @@
 # Change Log
 
+## Unreleased
+
+### Bug Fixes
+- Running `python lizard.py` with an extension that extends the core analyzer, such as `-END`, no longer fails with an `AttributeError`; it now matches the installed `lizard` command
+
+### Improvements
+- The core analyzer now lives in the internal `lizard_core` package, one module per responsibility; `lizard` still exposes every name it did before, and `lizard_core` module paths are not a supported import surface
+
 ## 1.24.2
 
 ### Bug Fixes

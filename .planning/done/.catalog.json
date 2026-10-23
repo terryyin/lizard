@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-003_core-module-architecture.json",
+      "identity": "SEED-003#core-module-architecture",
+      "completedAt": "2026-10-23T11:44:31.453Z",
+      "blob": "afcc0259311f9960b85976cf65780c35b17eb3ee"
+    },
+    {
       "fileName": "SEED-005_project-ci-adapter.json",
       "identity": "SEED-005#project-ci-adapter",
       "completedAt": "2026-10-23T01:26:59.336Z",
