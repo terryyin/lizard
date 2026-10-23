@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "agent": "Yumi-chan",
+  "email": "yumi-chan@example.org",
+  "activity": "preparation",
+  "identity": "SEED-006#ci-verified-python-support",
+  "host": "claude",
+  "model": "fable"
+}
