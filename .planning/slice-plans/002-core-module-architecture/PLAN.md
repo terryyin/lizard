@@ -134,7 +134,7 @@ threshold, forgiven-metric, and whitelist handling are unchanged.
 
 ### 5. The output schema and default printers live in `output_scheme.py` and `text_output.py`
 Type: Behavior
-Status: planned
+Status: done
 Proof: full suite green; CLI comparison empty for default, `-w`, `--msvs`, `--csv`, `-X`, `-H`; `nix develop -c make` green.
 
 Behavior: `lizard.py` defines `OutputScheme` and the eight print functions →
