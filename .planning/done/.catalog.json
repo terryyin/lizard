@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-001_metric-list-punctuation.json",
+      "identity": "SEED-001#metric-list-punctuation",
+      "completedAt": "2026-10-23T00:22:04.408Z",
+      "blob": "3d35001ca5028cc9006e2e0858202f58b0717602"
+    },
+    {
       "fileName": "SEED-002_analyze-conditional-style-arrays.json",
       "identity": "SEED-002#analyze-conditional-style-arrays",
       "completedAt": "2026-10-22T07:52:25.238Z",
