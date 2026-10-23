@@ -13,7 +13,7 @@ import sys
 @patch('lizard_core.file_discovery.md5_hash_file')
 @patch('lizard_core.file_analyzer.auto_read')
 @patch.object(os, 'walk')
-@patch.object(lizard, 'print_result')
+@patch('lizard_core.cli.print_result')
 class TestApplication(unittest.TestCase):
 
     def testEmptyResult(self, print_result, os_walk, mock_open, _, _gitignore,
@@ -64,7 +64,7 @@ class IntegrationTests(unittest.TestCase):
     @patch('lizard_core.warning_filter.auto_read', return_value='')
     @patch('lizard_core.file_discovery.auto_read', return_value='')
     @patch('lizard_core.file_analyzer.auto_read')
-    @patch.object(lizard, 'print_result')
+    @patch('lizard_core.cli.print_result')
     def run_with_mocks(self, argv, src, print_result, mock_open, _gitignore,
                        _whitelist):
         def store_result(result, options, scheme, _):

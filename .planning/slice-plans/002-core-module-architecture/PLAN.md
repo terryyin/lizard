@@ -146,7 +146,7 @@ takes effect → every output style prints as before.
 
 ### 6. Options and the command entrance live in `options.py` and `cli.py`; `lizard.py` is the public facade
 Type: Behavior
-Status: planned
+Status: done
 Proof: full suite green; the 56-name check prints `[]`; wheel lists `lizard_core/`; script mode from another directory prints the baseline total line; `wc -l` shows every file under 250 lines except any recorded in **Learnings**; `grep -n lizard_core .agents/agent-map.md` prints the entry; CLI comparison empty; `nix develop -c make` green.
 
 Behavior: `lizard.py` defines `arg_parser`, `_extension_arg`, `parse_args`,
@@ -233,6 +233,19 @@ the test-order dependency above if execution confirms it is worth a follow-up.
   `test_warning_when_max_nesting_depth_missing`, and `test_sort_warning`
   read a real `whitelizard.txt` from the working directory; patching
   `lizard_core.warning_filter.auto_read` in its `setUp` would isolate them.
+- Final sizes (slice 6): `lizard.py` 97 lines; every `lizard_core` module
+  under 250 lines except `options.py` (272), kept whole because
+  `arg_parser` is one option table of about 185 lines (key example 7).
+  Splitting the option table, for example by option group, is what remains
+  for a later story if one is wanted.
+- `arg_parser` used `lizard.py`'s `__doc__` as the `--help` description.
+  Because `lizard_core` never imports `lizard`, `options.DESCRIPTION` copies
+  that text, and `test/test_options.py`
+  `test_help_description_is_the_lizard_module_docstring` keeps the two equal.
+- ADR-0001 (`docs/adrs/0001-ubiquitous-language-accepted.md`), **Extension**
+  entry, says extensions are "Wired from `lizard.py`"; they are now wired from
+  `lizard_core/extensions.py` and `options.py`. ADRs are developer-owned, so
+  this is left for the developer, for example with the recommended ADR-0002.
 
 ## Story obligations
 
