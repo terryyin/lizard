@@ -42,7 +42,7 @@ it as the long description.
 
 ### 1. README states the verified Python versions
 Type: Behavior
-Status: planned
+Status: done
 Proof: `grep -n "The test suite runs on Python 3.8 and 3.10" README.rst` prints the sentence; `grep -n "python3.8 or above" README.rst` prints nothing; `git diff --stat` names only `README.rst`; `nix develop -c make` green.
 
 Behavior: `README.rst` says “It requires python3.8 or above (early versions
@@ -58,6 +58,31 @@ Windows, in continuous integration; other versions are not verified.”
 - This preparation established the executable-plan root for the project at
   `.planning/slice-plans/<NNN>-<slug>/PLAN.md`, recorded in
   `.agents/agent-map.md`.
+
+## Accepted proof
+
+Slice 1, candidate based on d6b4800 (story-branch
+`claude/know-which-python-versions-lizard-is-verified-on`):
+
+- Source-only review derived these promises: P1–P14, exclusions E1–E5 and
+  assumption A1. Each one was compared with the diff and holds:
+  - The README introduction (`README.rst:66-68`) states the 3.8 minimum,
+    names exactly 3.8 and 3.10, and names Linux and Windows.
+  - It says other versions are not verified.
+  - The wording is literal, matching K1, and is plain RST.
+  - The CI matrix, `setup.py` and `.travis.yml` are untouched.
+- `grep -n "The test suite runs on Python 3.8 and 3.10" README.rst` matches
+  line 66.
+- `grep -n "python3.8 or above" README.rst` prints nothing.
+- `git diff --stat` touches only `README.rst`.
+- `nix develop -c make` exited 0. pytest had 1651 passed and 7 skipped;
+  pycodestyle and pylint ran.
+- A docutils render of `README.rst` at `halt_level=2` is clean.
+- Consumer trace (`--term "python3.8 or above"`):
+  - `setup.py` `long_description` was run, through the render check.
+  - `docs/*.rst` links, `lizard.py` help text, lock files and planning
+    records were excluded. They match only "README", or they quote the old
+    sentence as before-state.
 
 ## Learnings
 

@@ -63,7 +63,9 @@ often very hard to get all the included folders and files right when
 they are complicated. But we don't really need that kind of accuracy for
 cyclomatic complexity.
 
-It requires python3.8 or above (early versions are not verified).
+It requires Python 3.8 or above. The test suite runs on Python 3.8 and 3.10,
+on Linux and Windows, in continuous integration; other versions are not
+verified.
 
 JavaScript and TypeScript defaults
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
