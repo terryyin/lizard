@@ -12,6 +12,9 @@ Short navigation index for the Lizard repository.
 - **Extensions:** `lizard_ext/` — output formatters, metric extensions, and
   `extension_base.py`.
 - **Tests:** `test/` — language, extension, CLI, option, and analyzer coverage.
+- **Planning records:** `.planning/` — the product backlog, seeds under
+  `seeds/`, and executable slice plans under
+  `slice-plans/<NNN>-<slug>/PLAN.md`, numbered from `001` in allocation order.
 
 ## Domain language
 
