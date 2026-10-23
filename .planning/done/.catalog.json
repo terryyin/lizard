@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-004_open-dough-ci.json",
+      "identity": "SEED-004#open-dough-ci",
+      "completedAt": "2026-10-23T00:39:01.553Z",
+      "blob": "45b2fe29b569a40c951b3c1fc8815be0f228eeff"
+    },
+    {
       "fileName": "SEED-001_metric-list-punctuation.json",
       "identity": "SEED-001#metric-list-punctuation",
       "completedAt": "2026-10-23T00:22:04.408Z",

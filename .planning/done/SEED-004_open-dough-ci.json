@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-004#open-dough-ci",
+  "title": "Observe CI for Open Dough story branches",
+  "completedAt": "2026-10-23T00:39:01.553Z",
+  "developer": "Terry Yin",
+  "agent": "Ai-chan",
+  "host": "codex",
+  "model": "GPT-6"
+}
