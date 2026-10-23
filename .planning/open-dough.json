@@ -1,0 +1,3 @@
+{
+  "ciAdapter": ["node", "scripts/dough-ci.mjs", "python-app.yml"]
+}
