@@ -75,7 +75,7 @@ that earlier slices created or that already exist.
 
 ### 1. File discovery lives in `lizard_core/file_discovery.py`, and the package is packaged and checked
 Type: Behavior
-Status: planned
+Status: done
 Proof: full suite green; `grep -c` on `lizard.py` prints 0 for the three definitions; `__module__` check prints `lizard_core.file_discovery`; wheel lists `lizard_core/`; script mode from another directory prints the baseline total line; CLI comparison empty; `nix develop -c make` green.
 
 Behavior: `lizard.py` defines `get_all_source_files`, `_build_gitignore_spec`,
@@ -195,10 +195,30 @@ in one module.
 
 ## Learnings
 
-None yet. Record here any module left above 250 lines and why (the seed
-expects `options.py` to land near 250 because `arg_parser` is one option
-table), and the test-order dependency above if execution confirms it is worth
-a follow-up.
+Record here any module left above 250 lines and why (the seed expects
+`options.py` to land near 250 because `arg_parser` is one option table), and
+the test-order dependency above if execution confirms it is worth a follow-up.
+
+- CLI comparison corrections (slice 1 baseline): `--msvs` is not an option;
+  the msvs style is `--warning-msvs`. `-END` raises
+  `AttributeError: 'NestingStack' object has no attribute 'set_in_condition'`
+  on every input at the starting commit (see G1), so it is compared by stdout,
+  exit code, and last stderr line only, and extension compatibility is also
+  observed through `-Ens`, `-Ecognitive`, and `-Ehalstead` on
+  `lizard_languages/clike.py`. `-t 2` output order is nondeterministic and is
+  compared sorted; the `-H` report's generation time is normalized. The
+  coordinator's capture also writes `.checkstyle.xml` through `-o`.
+- Patch consumers are wider than the plan's named test files:
+  `test/test_extensions/testCognitiveComplexity.py` also patched
+  `lizard.md5_hash_file`. Trace each moved name across `test/` with the
+  consumer-trace script rather than relying on the slice text.
+
+## Story obligations
+
+### G1. `-END` crashes on every input before and after the move
+Reported: slice 1 — "At the starting commit `lizard -END lizard_languages/clike.py` prints the header and exits 1 with AttributeError: 'NestingStack' object has no attribute 'set_in_condition' from lizard_ext/lizardnd.py; a small C file fails the same way."
+Story clause: "prints the ND column with the same values as before"
+Disposition: excluded "No behavior change, option, metric, or output format"
 
 ## Concern evidence
 
