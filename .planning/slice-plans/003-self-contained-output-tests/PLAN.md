@@ -60,7 +60,7 @@ command, which is the command that fails.
 
 ### 1. Output tests set up their own extension schema and whitelist
 Type: Behavior
-Status: planned
+Status: done
 Proof: the three proofs in **Outside-in proof**.
 
 Behavior: `test_print_and_save_detail_information_with_ext` depends on test
@@ -78,6 +78,30 @@ suite passes with the same count.
   prepares a scheme for extensions; it patches the shared `FileInformation`
   class the same way the order-dependent run already does.
 
+## Accepted proof
+
+Slice 1 (`test/testOutput.py` only, +5 lines; base `a95ace8`):
+
+- Source-only review of the correction story returned ten commitments
+  (order independence, cwd `whitelizard.txt` independence, ext test alone and
+  with only `test/test_analyzer.py`, no reliance on an earlier patch,
+  `TestWarningOutput` from a whitelist cwd via `auto_read`, test-only, CLI
+  output and full-suite results unchanged); each maps to an observation below.
+- `nix develop -c python -m pytest test/test_analyzer.py test/testOutput.py`
+  → 46 passed (was 1 failed, 45 passed).
+- `nix develop -c python -m pytest test/testOutput.py::TestFileInformationOutput`
+  → 3 passed; the ext test alone → 1 passed (`Avg.ND` header and row
+  assertions).
+- From a temp dir holding `whitelizard.txt` = `foo`:
+  `PYTHONPATH=<checkout> <checkout>/.venv/bin/python -m pytest -q -p no:cacheprovider --rootdir=<checkout> <checkout>/test/testOutput.py`
+  → 24 passed (was 3 failed, 21 passed); `TestWarningOutput.setUp` patches
+  `lizard_core.warning_filter.auto_read` to `''`.
+- `nix develop -c python -m pytest -q` → 1652 passed, 7 skipped (no tests
+  added or removed); `nix develop -c make` green.
+- Consumer trace: no production or test consumers; guidance readers
+  (`.agents/agent-map.md`, the seed, this plan) only name the path or command.
+- Independent refactor pass: no edits.
+
 ## Learnings
 
-None yet.
+None.

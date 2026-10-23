@@ -51,6 +51,10 @@ class TestWarningOutput(StreamStdoutTestCase):
 
     def setUp(self):
         StreamStdoutTestCase.setUp(self)
+        whitelist_reader = patch('lizard_core.warning_filter.auto_read',
+                                 return_value='')
+        whitelist_reader.start()
+        self.addCleanup(whitelist_reader.stop)
         self.option = parse_args("app")
         self.foo = FunctionInfo("foo", 'FILENAME', 100)
         fileSummary = FileInformation("FILENAME", 123, [self.foo])
@@ -107,6 +111,7 @@ class TestFileInformationOutput(StreamStdoutTestCase):
 
     def test_print_and_save_detail_information_with_ext(self):
         scheme = OutputScheme([Ext()])
+        scheme.patch_for_extensions()
         fileSummary = FileInformation("FILENAME", 123, [])
         print_and_save_modules([fileSummary], scheme)
         self.assertIn("Avg.ND", sys.stdout.stream)
