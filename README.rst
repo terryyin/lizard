@@ -50,7 +50,7 @@ It counts
 
 -  the nloc (lines of code without comments),
 -  CCN (cyclomatic complexity number),
--  token count of functions.
+-  token count of functions,
 -  parameter count of functions.
 
 You can set limits for CCN (-C) and the number of parameters (-a).
