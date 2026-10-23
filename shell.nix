@@ -4,6 +4,7 @@ let
   apple_sdk = darwin.apple_sdk.frameworks;
 in mkShell {
   name = "lizard";
+  DOUGH_CI_WORKFLOW = "python-app.yml";
   buildInputs = [
     python3Full
     python39Packages.pip
