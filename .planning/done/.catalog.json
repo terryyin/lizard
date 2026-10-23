@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-005_project-ci-adapter.json",
+      "identity": "SEED-005#project-ci-adapter",
+      "completedAt": "2026-10-23T01:26:59.336Z",
+      "blob": "badad98251e1d3271a82ad1e93c7ddf5faddff17"
+    },
+    {
       "fileName": "SEED-001_verified-python-versions.json",
       "identity": "SEED-001#verified-python-versions",
       "completedAt": "2026-10-23T01:15:50.694Z",
