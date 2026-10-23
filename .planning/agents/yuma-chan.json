@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "agent": "Yuma-chan",
+  "email": "yuma-chan@example.org",
+  "identity": "SEED-001#metric-list-punctuation",
+  "mode": "story-branch",
+  "branch": "claude/read-the-list-of-counted-metrics-with-consistent",
+  "host": "claude"
+}
