@@ -7,7 +7,8 @@
 ## Provenance
 
 Execution retrospective of SEED-003#core-module-architecture
-([plan](../002-core-module-architecture/PLAN.md)), reviewed commits
+(plan `.planning/slice-plans/002-core-module-architecture/PLAN.md` at commit
+`0d2eade`), reviewed commits
 `269bd9e`, `bfa74f1`, `1750e67`, `3dec892`, `ae400bd`, `18dc561` on
 `claude/change-the-core-analyzer-through-modules-shaped`. Both weaknesses
 predate that story (observed at its starting commit `f626c3f` and at every

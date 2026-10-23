@@ -6,8 +6,6 @@ Maintenance, bug fixing, and PR reviews.
 
 ## Taken
 
-- [Change the core analyzer through modules shaped by its architecture](seeds/SEED-003-core-module-structure.md#core-module-architecture) — SEED-003#core-module-architecture ([plan](slice-plans/002-core-module-architecture/PLAN.md))
-
 ## Backlog list
 
 - [Make the output tests independent of order and working directory](seeds/SEED-003-core-module-structure.md#self-contained-output-tests) — SEED-003#self-contained-output-tests
