@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "agent": "Julia-chan",
-  "email": "julia-chan@example.org",
-  "identity": "SEED-003#self-contained-output-tests",
-  "mode": "story-branch",
-  "branch": "claude/make-the-output-tests-independent-of-order-and-w",
-  "host": "claude"
-}

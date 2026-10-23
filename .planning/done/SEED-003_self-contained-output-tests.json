@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-003#self-contained-output-tests",
+  "title": "Make the output tests independent of order and working directory",
+  "completedAt": "2026-10-23T12:45:36.228Z",
+  "developer": "Terry Yin",
+  "agent": "Julia-chan",
+  "host": "claude"
+}

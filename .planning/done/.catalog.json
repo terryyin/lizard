@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-003_self-contained-output-tests.json",
+      "identity": "SEED-003#self-contained-output-tests",
+      "completedAt": "2026-10-23T12:45:36.228Z",
+      "blob": "60a3539215da4ba47fa72efbc05cbbd1bca90d69"
+    },
+    {
       "fileName": "SEED-003_core-module-architecture.json",
       "identity": "SEED-003#core-module-architecture",
       "completedAt": "2026-10-23T11:44:31.453Z",
