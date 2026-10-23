@@ -163,6 +163,23 @@ import guards with their messages and exit code, explicit re-exports of the
 `import lizard` behave exactly as before, and each responsibility is found
 in one module.
 
+## Execution complete
+
+Product advice:
+- Record the recommended ADR-0002 "Core analyzer package and public
+  facade" (the facade rule and the dependency direction), and update
+  ADR-0001's **Extension** entry, which still says extensions are "Wired
+  from `lizard.py`". Both are developer-owned.
+- `python lizard.py -E<ext>` with an extension that patches core classes
+  (for example `-END`) used to fail with an AttributeError and now matches
+  the `lizard` console script. This is a user-visible fix, worth a
+  CHANGELOG line.
+- Correction SEED-003#self-contained-output-tests
+  ([plan](../003-self-contained-output-tests/PLAN.md)) is ready. It makes
+  the agent map's "Core analyzer" focused command pass on its own and
+  isolates the output tests from a working-directory `whitelizard.txt`.
+- No change to the backlog's other priorities: SEED-006 is unaffected.
+
 ## Current decisions
 
 - Existing solutions (PFE): every moved responsibility already lives in

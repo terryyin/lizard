@@ -151,3 +151,32 @@ live, what is the supported import surface?"), so it meets the criteria in
 (ADR-0000, decision 3); this refinement recommends that the developer record
 it as ADR-0002 "Core analyzer package and public facade", stating the facade
 rule and the dependency direction above. Execution does not wait for it.
+
+<a id="self-contained-output-tests"></a>
+
+### Make the output tests independent of order and working directory
+
+**Identity:** SEED-003#self-contained-output-tests
+```json dough-story-state
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/003-self-contained-output-tests/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"dceda34bc956e185e93abe52f1437eb8b0f9bc9201eb692f6b9f74fcf1291fc9","plan":"c6c8cc81592e1c555e95d85be99e316daee0aa1e98352b0aea62375c49210789"}}
+```
+
+**Goal:** A maintainer running the core analyzer's focused tests, as
+`.agents/agent-map.md` names them, gets a result that does not depend on
+which other tests ran first or on a `whitelizard.txt` in the working
+directory. This is a bounded correction from the execution retrospective of
+[core-module-architecture](#core-module-architecture); it adds no product
+promise.
+
+**Scope:**
+
+- `test/testOutput.py` `TestFileInformationOutput::test_print_and_save_detail_information_with_ext`
+  passes when run alone or with only `test/test_analyzer.py`, without relying
+  on an earlier test having patched `FileInformation` for extensions.
+- `test/testOutput.py` `TestWarningOutput` tests pass from a working
+  directory that holds a `whitelizard.txt`, by patching the whitelist read at
+  `lizard_core.warning_filter.auto_read`.
+- Test-only. Product code, CLI output, and the full suite's results do not
+  change.
+
+Plan: [003-self-contained-output-tests](../slice-plans/003-self-contained-output-tests/PLAN.md)
