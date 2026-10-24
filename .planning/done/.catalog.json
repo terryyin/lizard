@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-007_js-ts-function-boundaries.json",
+      "identity": "SEED-007#js-ts-function-boundaries",
+      "completedAt": "2026-10-24T01:53:17.643Z",
+      "blob": "70312125f0f13d5aed9aa0a2e5e6fec411f566d6"
+    },
+    {
       "fileName": "SEED-003_self-contained-output-tests.json",
       "identity": "SEED-003#self-contained-output-tests",
       "completedAt": "2026-10-23T12:45:36.228Z",

@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "agent": "Tsukasa-chan",
-  "email": "tsukasa-chan@example.org",
-  "identity": "SEED-007#js-ts-function-boundaries",
-  "mode": "story-branch",
-  "branch": "codex/issue-521-js-ts-boundaries",
-  "host": "codex"
-}

@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-007#js-ts-function-boundaries",
+  "title": "Correct JS/TS function boundaries after annotations and nested templates",
+  "completedAt": "2026-10-24T01:53:17.643Z",
+  "developer": "Terry Yin",
+  "agent": "Tsukasa-chan",
+  "host": "codex"
+}
