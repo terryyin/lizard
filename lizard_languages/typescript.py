@@ -8,12 +8,7 @@ from .js_style_regex_expression import js_style_regex_expression
 from .javascript_bindings import JavaScriptBindings
 from .typescript_declarations import TypeScriptTypeAnnotationStates
 from .typescript_states import TypeScriptStates
-
-# Interpolations may contain quoted strings (#497) or nested templates (#521).
-TEMPLATE_LITERAL = (
-    r"`(?:\\.|\$\{(?:\"(?:\\.|[^\"\\])*\"|'(?:\\.|[^'\\])*'"
-    r"|`(?:\\.|[^`\\])*`|[^{}\"'`])*\}|[^`\\])*`"
-)
+from .javascript_templates import template_tokens
 
 # One token, so each ? in ?? is not its own ternary decision.
 NULLISH_COALESCING = r"|(?:\?\?)"
@@ -77,66 +72,8 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
     @staticmethod
     @js_style_regex_expression
     def generate_tokens(source_code, addition='', token_class=None):
-        def split_template_literal(token, quote):
-            content = token[1:-1]
-
-            # Always yield opening quote
-            yield quote
-
-            # If no expressions, yield content as-is with quotes and closing quote
-            if '${' not in content:
-                if content:
-                    yield quote + content + quote
-                yield quote
-                return
-
-            # Handle expressions
-            i = 0
-            while i < len(content):
-                idx = content.find('${', i)
-                if idx == -1:
-                    if i < len(content):
-                        yield quote + content[i:] + quote
-                    break
-                if idx > i:
-                    yield quote + content[i:idx] + quote
-                yield '${'
-                i = idx + 2
-                expr_start = i
-                brace_count = 1
-                while i < len(content) and brace_count > 0:
-                    if content[i] == '{':
-                        brace_count += 1
-                    elif content[i] == '}':
-                        brace_count -= 1
-                    i += 1
-
-                if brace_count > 0:
-                    yield token
-                    return
-
-                expr = content[expr_start:i - 1]
-                yield expr
-                yield '}'
-                content = content[i:]
-                i = 0
-
-            # Always yield closing quote
-            yield quote
-
-        # Private method (#), dollar ($), optional name (?), nullish (??),
-        # template literals.
+        # Private method (#), dollar ($), optional name (?), nullish (??).
         addition = (addition + r"|(?:#\w+)" + r"|(?:\$\w+)"
                     + r"|(?:\w+\?(?![?.]))" + NULLISH_COALESCING
-                    + OPTIONAL_ACCESS + r"|" + TEMPLATE_LITERAL)
-        for token in CodeReader.generate_tokens(source_code, addition, token_class):
-            if (
-                isinstance(token, str)
-                and token.startswith('`')
-                and token.endswith('`')
-                and len(token) > 1
-            ):
-                for t in split_template_literal(token, '`'):
-                    yield t
-                continue
-            yield token
+                    + OPTIONAL_ACCESS)
+        yield from template_tokens(source_code, addition, token_class)

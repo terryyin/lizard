@@ -54,9 +54,58 @@ class Test_function_boundaries(unittest.TestCase):
                     'const k = 2;\nfunction b() {\n  return 2;\n}\n',
                     [('a', 1, 3, 3), ('b', 5, 7, 3)])
 
+    def test_deeply_nested_template_preserves_following_function(self):
+        expression = '`${`${x ? `${`q`}` : ""}`}`'
+        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+            with self.subTest(filename=filename):
+                self.assert_spans(
+                    filename, 'function a(x) {\n  return ' + expression
+                    + ';\n}\nconst k = 2;\n'
+                    'function b() {\n  return 2;\n}\n',
+                    [('a', 1, 3, 3), ('b', 5, 7, 3)])
+
+    def test_template_nesting_has_no_fixed_or_recursive_depth_limit(self):
+        for depth in (1, 2, 5, 32, 1500):
+            expression = '`${' * depth + 'x' + '}`' * depth
+            for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+                with self.subTest(depth=depth, filename=filename):
+                    self.assert_spans(
+                        filename, 'function a(x) {\n  return ' + expression
+                        + ';\n}\nfunction b() {\n  return 2;\n}\n',
+                        [('a', 1, 3, 3), ('b', 4, 6, 3)])
+
+    def test_template_strings_comments_regex_and_escapes_preserve_ranges(self):
+        expressions = (
+            r'''`${"}" + '{' + "`" + `q`}`''',
+            r'''`${"a\\\"}" + 'b\\\'}' + `q`}`''',
+            r'''`escaped \` and \${fake} ${`q`}`''',
+            r'''`backslash \\${`q`}`''',
+            r'''`${({a: {b: "}"}}).a.b + `q`}`''',
+            r'''`${x /* } ` */ ? `yes` : `no`}`''',
+            r'''`${/[}`"']/.test(x) ? `yes` : `no`}`''',
+        )
+        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+            for expression in expressions:
+                with self.subTest(filename=filename, expression=expression):
+                    self.assert_spans(
+                        filename, 'function a(x) {\n  return ' + expression
+                        + ';\n}\nfunction b() {\n  return 2;\n}\n',
+                        [('a', 1, 3, 3), ('b', 4, 6, 3)])
+
+    def test_template_line_comment_and_multiline_text_preserve_ranges(self):
+        code = ('function a(x) {\n  return `text\n${x // } `\n'
+                ' ? `yes` : `no`}\nend`;\n}\n'
+                'function b() {\n  return 2;\n}\n')
+        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+            with self.subTest(filename=filename):
+                self.assert_spans(filename, code,
+                                  [('a', 1, 6, 6), ('b', 7, 9, 3)])
+
     def test_existing_literals_preserve_function_ranges(self):
         expressions = ('x', '`${x}`', 'x.replace(/x/g, "y")',
-                       r'x.split(/\s+/)', '/[<>"]/.test(x)', 'x.match(/`/)')
+                       r'x.split(/\s+/)', '/[<>"]/.test(x)', 'x.match(/`/)',
+                       '"`" + `${x}`', "'`' + `${x}`",
+                       'x /* ` */ + `${x}`')
         for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
             for expression in expressions:
                 with self.subTest(filename=filename, expression=expression):
@@ -109,3 +158,31 @@ class Test_tokenizing_TypeScript(unittest.TestCase):
             '`${n}: `.padStart(w)', '}', '${', 's', '}', '`', ')', ';'
         ]
         self.check_tokens(expected_tokens, source_code)
+
+    def test_quoted_braces_stay_inside_the_interpolation_token(self):
+        expression = r'''"}" + '{' + "a\\\"}" + 'b\\\'}' + `q`'''
+        self.check_tokens(['`', '${', expression, '}', '`'],
+                          '`${' + expression + '}`')
+
+    def test_escaped_interpolation_is_text_and_backslash_parity_matters(self):
+        self.check_tokens(['`', r'`\${x}`', '`'], r'`\${x}`')
+        self.check_tokens(['`', r'`\\`', '${', 'x', '}', '`'], r'`\\${x}`')
+        self.check_tokens(['`', r'`a\`b`', '${', 'x', '}', '`'], r'`a\`b${x}`')
+
+    def test_unterminated_nested_template_finishes_without_recursion(self):
+        source = '`${' * 1500 + 'x'
+        self.check_tokens([source], source)
+
+    def test_token_class_receives_original_source_offsets(self):
+        source = 'return `${x}`;'
+        positions = []
+
+        def token_class(match):
+            self.assertIs(source, match.string)
+            positions.append((match.start(), match.end()))
+            return match.group()
+
+        self.assertEqual(list(TypeScriptReader.generate_tokens(source)),
+                         list(TypeScriptReader.generate_tokens(
+                             source, token_class=token_class)))
+        self.assertIn((7, 13), positions)
