@@ -1,8 +1,12 @@
 # Change Log
 
-## Unreleased
+## 1.24.3
 
 ### Bug Fixes
+- TypeScript: preserve function boundaries and NLOC after return type annotations, including adjacent annotated functions (issue #521)
+- JavaScript, TypeScript, JSX, and TSX: use balanced scanning for nested template literals so deeper nesting, quoted delimiters, escapes, and comments do not swallow following functions (issue #521)
+- TypeScript and TSX: keep ternary colons in conditional expressions from being mistaken for type annotations, preventing crashes in conditional style arrays (issue #523)
+- Go: give anonymous function literals stable `anonymous__<n>` names while preserving names for literals assigned to variables; do not report variadic function types or receive-only channels of functions as function literals (PR #522)
 - Running `python lizard.py` with an extension that extends the core analyzer, such as `-END`, no longer fails with an `AttributeError`; it now matches the installed `lizard` command
 
 ### Improvements
