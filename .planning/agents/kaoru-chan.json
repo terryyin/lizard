@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "agent": "Kaoru-chan",
-  "email": "kaoru-chan@example.org",
-  "identity": "SEED-008#review-issue-521",
-  "mode": "story-branch",
-  "branch": "codex/review-521",
-  "host": "codex"
-}
