@@ -61,6 +61,32 @@ export const revisionVerdicts = new Set(["success", "failure"]);
 export const effectiveRevisionState = ({ state, basis }) =>
   state === "not_required" ? basis?.state : state;
 
+export const pendingFreshnessMs = 2 * 60 * 1000;
+
+// A read-only explanation of current progress, never a completion verdict.
+// Observation stamps these times locally; provider times do not renew them.
+export function freshPendingRevision(revision, now = Date.now()) {
+  if (!revision || revisionVerdicts.has(effectiveRevisionState(revision)))
+    return;
+  const fresh = (observedAt) =>
+    Number.isFinite(observedAt) &&
+    now >= observedAt &&
+    now - observedAt <= pendingFreshnessMs;
+  if (
+    effectiveRevisionState(revision) === "pending" &&
+    fresh(revision.observedAt)
+  )
+    return {
+      source: "attempt",
+      sha: revision.sha,
+      observedAt: revision.observedAt,
+      ...(revision.checkedBy ? { checkedBy: revision.checkedBy } : {}),
+      ...(revision.basis ? { basis: revision.basis } : {}),
+    };
+  if (revision.queue && fresh(revision.queue.observedAt))
+    return { source: "queue", ...revision.queue };
+}
+
 // Replaces `record`, keyed by its own normalized SHA.
 export function publishRevisionRecord(directory, record) {
   publishJson(revisionDirectory(directory), `${record.sha}.json`, record);

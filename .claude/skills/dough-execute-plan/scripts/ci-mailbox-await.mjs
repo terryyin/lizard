@@ -4,6 +4,7 @@ import { setTimeout as pause } from "node:timers/promises";
 import { readMailbox, receiptPrefix } from "./ci-mailbox-location.mjs";
 import {
   effectiveRevisionState,
+  freshPendingRevision,
   readRevisionCoverage,
   revisionVerdicts,
 } from "./ci-mailbox-revision-records.mjs";
@@ -19,16 +20,14 @@ function result(requestedSha, target, effectiveEvidence, outcome) {
   return { requestedSha, target, effectiveEvidence, ...outcome };
 }
 
-function effectiveCoverage(coverage) {
+function effectiveCoverage(coverage, now) {
   if (!coverage)
     return {
       evidence: { source: "none" },
       outcome: { unresolvedReason: "missing_registration" },
     };
   const { integrated, ...revision } = coverage;
-  // Under the declared policy, the integrated state validated at a
-  // descendant completes B while B keeps its own exact state, or its
-  // `not_required` state and basis.
+  // A validated descendant completes B while B retains its exact state or basis.
   if (integrated?.state === "success")
     return {
       evidence: {
@@ -53,24 +52,27 @@ function effectiveCoverage(coverage) {
   const outcome = effectiveRevisionState(coverage);
   if (revisionVerdicts.has(outcome))
     return { evidence, outcome: { verdict: outcome } };
-  // A cancelled attempt, B's own or its applicable ancestor's, ends the wait
-  // unless the policy still lets a descendant's current success complete it.
-  if (outcome === "incomplete" && !integrated)
+  // A cancelled attempt ends the wait unless fresh queue progress explains
+  // pending work or the policy still permits integrated-state completion.
+  if (
+    outcome === "incomplete" &&
+    !integrated &&
+    !freshPendingRevision(coverage, now)
+  )
     return { evidence, outcome: { unresolvedReason: "incomplete" } };
   return { evidence };
 }
 
-const recordedCoverage = (directory, requestedSha) =>
+const recordedCoverage = (directory, requestedSha, now = Date.now()) =>
   effectiveCoverage(
     readRevisionCoverage(directory).find(
       (revision) => revision.sha === requestedSha,
     ),
+    now,
   );
 
-// The CI verdict `directory`'s own record already holds for `sha`, with the
-// effective evidence awaiting it there returns, whether or not its observer
-// still runs. Undefined while the record holds none: nothing yet, or an
-// attempt that was cancelled.
+// The recorded verdict and its effective evidence, whether observation still
+// runs. Undefined while no verdict is proved, including a cancelled attempt.
 export function recordedCompletion(directory, sha) {
   let projection;
   try {
@@ -152,7 +154,7 @@ export async function awaitRevision(
   while (true) {
     let projection;
     try {
-      projection = recordedCoverage(directory, requestedSha);
+      projection = recordedCoverage(directory, requestedSha, now());
     } catch (error) {
       return result(
         requestedSha,

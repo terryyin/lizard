@@ -6,6 +6,7 @@ import {
 } from "./ci-command-attempts.mjs";
 import { ciAttemptKey } from "./ci-failures.mjs";
 import { createStartupRunFilter } from "./ci-runs.mjs";
+import { isFullGitRevision } from "./ci-revisions.mjs";
 
 const defaultAdapterTimeoutMs = 20_000;
 const adapterResponseBytes = 64 * 1024;
@@ -20,10 +21,14 @@ export function createCommandAcquisition(options) {
   const currentRuns = createStartupRunFilter();
   let retained = [];
   let polled;
+  let queue;
   return {
     acquireRuns: async (signal) => {
       polled = undefined;
-      const attempts = await discover(signal);
+      queue = undefined;
+      const snapshot = await discover(signal);
+      const { attempts } = snapshot;
+      queue = snapshot.queue;
       retained = latestCommandAttempts(attempts);
       polled = attempts;
       const current = currentRuns(retained);
@@ -41,6 +46,7 @@ export function createCommandAcquisition(options) {
     // Coverage owns workflow-path applicability; candidates retain their real
     // attempt state and never enter the ordinary failure stream by themselves.
     discoverAncestorCandidates: async () => retained,
+    discoverQueue: async () => queue,
     readCurrentAttempt: async (run) => {
       if (!polled) throw new Error("CI adapter discovery is unavailable");
       return currentCommandAttempt(polled, run);
@@ -63,8 +69,43 @@ function createCommandDiscovery({
     );
     if (!response || !Array.isArray(response.attempts))
       throw new Error("CI adapter discovery must return an attempts array");
-    return targetCommandAttempts(response.attempts, branch);
+    return {
+      attempts: targetCommandAttempts(response.attempts, branch),
+      queue: targetCommandQueue(response.queue, branch),
+    };
   };
+}
+
+// Queue progress has no attempt identity or verdict. An omitted queue means
+// unsupported; an empty array is an authoritative empty snapshot.
+function targetCommandQueue(queue, branch) {
+  if (queue === undefined) return;
+  if (!Array.isArray(queue))
+    throw new Error("CI adapter queue must be an array");
+  return queue
+    .map((entry) => {
+      if (
+        !entry ||
+        !isFullGitRevision(entry.sha) ||
+        typeof entry.branch !== "string" ||
+        !entry.branch ||
+        !["queued", "running", "retrying"].includes(entry.state) ||
+        ![entry.check, entry.context].every(
+          (value) =>
+            value === undefined ||
+            (typeof value === "string" && value.length > 0),
+        )
+      )
+        throw new Error("CI adapter returned an invalid queue entry");
+      return {
+        sha: entry.sha.toLowerCase(),
+        branch: entry.branch,
+        state: entry.state,
+        ...(entry.check === undefined ? {} : { check: entry.check }),
+        ...(entry.context === undefined ? {} : { context: entry.context }),
+      };
+    })
+    .filter((entry) => entry.branch === branch);
 }
 
 function createCommandFailureAcquisition({

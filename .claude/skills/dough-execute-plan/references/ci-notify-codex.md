@@ -148,3 +148,6 @@ only absent, `stopped`, or `lost` observers after the old process ended; never
 restart terminal `finished` observers. Normal and repair pushes retain the key,
 coordinator, session, directory, process, and cell. Changed HEAD/SHA never requires setup
 again.
+
+For shared completion `pending`, retain the stream PTY and yielded cell with
+the resources and recovery under [completion mechanics](ci-completion-wait.md).

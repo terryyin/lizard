@@ -19,8 +19,11 @@ revision:
 node '/ABSOLUTE/RESOLVED/SKILL/scripts/ci-mailbox.mjs' complete-revision '/EXACT/RECORDED/MAILBOX' FULL_ACCEPTED_SHA
 ```
 
-The command stays silent while pending and uses its fixed ten-minute bound from
-invocation. A discovery-delay advisory neither renews nor ends that bound. It
+The command stays silent while waiting and keeps its ten-minute foreground bound.
+Before waiting it exclusively records the first completion start and a sixty-minute
+overall deadline for this mailbox and accepted SHA. Resuming, caller interruption,
+concurrent calls and coalesced queue progress never renew that deadline. A
+discovery-delay advisory neither renews nor ends either bound. It
 reuses the local read-only applicable wait and then performs local observer
 shutdown when that wait's outcome permits ending observation. It does not
 contact the provider, acknowledge notifications, or cancel execution. Never
@@ -63,9 +66,28 @@ distinct from shutdown facts:
   attempt is never fetched and is reported as `not_current_success`. A
   pending, failed, cancelled, rerun, unreadable, other-target or
   context-incompatible attempt supplies no success.
-- `unresolvedReason` is one of `timeout`, `observation_unavailable`,
+- `unresolvedReason: "pending"` has no verdict. Fresh legitimate queued, running,
+  retrying or applicable pending-attempt evidence outlasted the foreground wait;
+  `pending` explains that evidence and `shutdown.status: "retained"` keeps the
+  observer. Retain `handoff.record`, its durable `pendingReceipt`, original
+  `startedAt` and `deadline`, target/SHA and exact `handoff.command`. Repeat that
+  command to resume the same owned observation, without a new owner, observer,
+  provider request or rearm. Caller SIGINT/SIGTERM returns `wait_cancelled` with
+  the same handoff; after SIGKILL its first record is already on disk. Pending
+  supplies no cleanup, wrap-up continuation or retirement authority.
+- `unresolvedReason: "completion_expired"` with detail
+  `overall_completion_deadline` closes the original handoff durably. Report the
+  unresolved cap and shutdown outcome; later green cannot reopen it. An exact
+  failure still remains a failure at expiry, and unread actionable failures keep
+  observation. `observation` preserves an unavailable, cancelled, unreadable or
+  missing-registration cause and its detail alongside the closed cap; worker
+  loss remains explicitly `observation_unavailable`, never replacement coverage. A successful receipt already recorded within budget can be
+  repeated while the same applicable successful evidence still holds.
+- Other `unresolvedReason` values are `timeout`, `observation_unavailable`,
   `wait_cancelled`, `incomplete`, `evidence_unreadable`, or
-  `missing_registration`. Except `wait_cancelled`, a bounded unresolved result
+  `missing_registration`. Stale, withdrawn, unsupported, foreign or unreadable
+  evidence cannot justify pending; worker loss stays explicitly unavailable.
+  Except `wait_cancelled` and `pending`, a bounded unresolved result
   ends the wait and includes shutdown evidence; it never establishes success.
 - `shutdown.status: "retained"` with `reason: "unread_actionable_failure"` keeps
   observation when unread `CI_FAILURE` evidence remains; that evidence is not

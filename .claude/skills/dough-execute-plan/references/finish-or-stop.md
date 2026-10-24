@@ -14,7 +14,9 @@ completion operation below: report its CI pending receipt and retained session,
 observer and resources instead of a successful shutdown. All other completion
 paths keep the bounded completion operation. While this explicit background
 handoff's required CI/shutdown remains pending, retain that handoff; do not
-automatically continue into wrap-up.
+automatically continue into wrap-up. Shared completion `pending` or
+`completion_expired` likewise stops dependent continuation and cleanup on every
+host; retain and recover it under [completion mechanics](ci-completion-wait.md).
 
 After all planned slices satisfy proof/delivery, `--skip-retro` skips only this
 execution's automatic retrospective; it changes no preferences or

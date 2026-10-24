@@ -28,15 +28,17 @@ import { isAncestor } from "../../dough-execute-plan/scripts/workspace-publicati
 import { observerAccess } from "./trunk-closure-observer.mjs";
 import { settleFinalClosure } from "./trunk-closure-settlement.mjs";
 
-const resourcesStay =
-  "the worktree and branch stay until a success receipt confirms shutdown";
+import {
+  completionRecovery,
+  receiptPermitsRetirement,
+  resourcesStay,
+} from "./trunk-closure-completion.mjs";
 const recoveries = {
   "before-cleanup":
     "publish the before-cleanup commit through deliver until it is accepted, then rerun finish",
   context:
     "rerun finish with --repository set to the management context an earlier finish result reported",
   observation: `follow observation.reason and rerun finish, or report the lost coverage; ${resourcesStay}`,
-  completion: `report the completion receipt; ${resourcesStay}. For a receipt with no verdict, rerun finish to repeat completion on this coordinator's observer, or report the closure's coverage as lost`,
 };
 
 function stop(step, detail) {
@@ -47,16 +49,6 @@ function stop(step, detail) {
     recovery: recoveries[step] ?? null,
     ...detail,
   };
-}
-
-// A receipt permits retirement only when it holds a `success` verdict and its
-// observer shutdown is confirmed; a failure, an unresolved receipt, and
-// retained or unconfirmed shutdown keep all.
-function receiptPermitsRetirement(completion) {
-  return (
-    completion?.verdict === "success" &&
-    completion?.shutdown?.status === "confirmed"
-  );
 }
 
 export async function finishTrunkClosure({
@@ -152,7 +144,8 @@ export async function finishTrunkClosure({
     return stop("observation", { ...accepted, completion, refresh });
   }
   if (!receiptPermitsRetirement(completion)) {
-    return stop("completion", { ...accepted, completion, refresh });
+    const recovery = completionRecovery(completion);
+    return stop("completion", { ...accepted, completion, refresh, recovery });
   }
   const cleanup = await retireWorktree({
     repository,

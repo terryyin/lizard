@@ -20,8 +20,8 @@ export async function watchCiExecution({
   now = Date.now,
   root = process.cwd(),
   observeCoverage = () => [],
-  // Called with the reason when a poll cannot list runs under a declared
-  // integrated-state policy.
+  // A failed discovery withdraws locally observed progress as well as any
+  // integrated-state evidence, including without a declared policy.
   withdrawIntegratedState = () => undefined,
   registeredRevisions = async () => [],
   // Returns a signal that aborts once a revision is registered after this
@@ -133,7 +133,7 @@ export async function watchCiExecution({
         }
         // Ending observation lists nothing: it withdraws no recorded evidence.
         if (observationSignal.aborted) return;
-        if (integratedPolicy) await withdrawIntegratedState(error);
+        await withdrawIntegratedState(error);
         consecutiveErrors += 1;
         if (consecutiveErrors === 3) throw error;
         await sleep(pollMs, undefined, { signal: observationSignal });

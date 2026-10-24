@@ -1,7 +1,15 @@
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { readMailbox } from "./ci-mailbox-location.mjs";
-import { awaitRevision } from "./ci-mailbox-await.mjs";
+import { awaitRevision, revisionWaitDeadlineMs } from "./ci-mailbox-await.mjs";
+import {
+  completionState,
+  completionExpired,
+} from "./ci-mailbox-completion-state.mjs";
+import {
+  freshPendingRevision,
+  readRevisionCoverage,
+} from "./ci-mailbox-revision-records.mjs";
 import {
   readDeliveryProgress,
   readMailboxEvents,
@@ -122,7 +130,40 @@ function shutdownConfirmed(directory, terminal) {
 // down only when that wait's outcome permits ending observation. Failure and
 // an interrupted wait retain the observer for diagnosis or an explicit stop.
 export async function completeRevision(directory, sha, options = {}) {
-  const awaited = await awaitRevision(directory, sha, options);
+  const state = completionState(directory, sha, options);
+  const now = options.now ?? Date.now;
+  const remaining = state.handoff.deadline - now();
+  const closed = state.expired() || remaining <= 0;
+  if (closed) state.expire();
+  const snapshot = new AbortController();
+  if (closed) snapshot.abort();
+  let awaited = await awaitRevision(directory, sha, {
+    ...options,
+    deadlineMs: closed
+      ? 1
+      : Math.min(options.deadlineMs ?? revisionWaitDeadlineMs, remaining),
+    ...(closed ? { cancellation: snapshot.signal } : {}),
+  });
+  const handoff = state.handoff;
+  if (now() >= handoff.deadline) state.expire();
+  if (awaited.verdict !== "failure") {
+    const sameSuccess =
+      awaited.verdict === "success" && state.success(awaited.effectiveEvidence);
+    if (state.expired() || now() >= handoff.deadline) {
+      state.expire();
+      if (!sameSuccess) awaited = completionExpired(awaited);
+    } else if (awaited.verdict === "success") state.succeed(awaited);
+  }
+  if (!awaited.verdict) awaited = { ...awaited, handoff };
+  if (awaited.unresolvedReason === "timeout") {
+    const revision = readRevisionCoverage(directory).find(
+      (record) => record.sha === awaited.requestedSha,
+    );
+    const pending = freshPendingRevision(revision, now());
+    if (pending) {
+      awaited = { ...awaited, unresolvedReason: "pending", pending };
+    }
+  }
   if (
     awaited.verdict === "failure" ||
     awaited.unresolvedReason === "wait_cancelled"
@@ -130,12 +171,24 @@ export async function completeRevision(directory, sha, options = {}) {
     return { ...awaited, shutdown: { status: "retained" } };
 
   const unreadFailures = unreadActionableFailures(directory);
-  if (unreadFailures.length > 0)
-    return {
+  if (unreadFailures.length > 0) {
+    const receipt = {
       ...awaited,
       shutdown: { status: "retained", reason: "unread_actionable_failure" },
       unreadActionableFailures: unreadFailures,
     };
+    if (awaited.unresolvedReason === "pending") state.pending(receipt);
+    return receipt;
+  }
+
+  if (awaited.unresolvedReason === "pending") {
+    const receipt = {
+      ...awaited,
+      shutdown: { status: "retained", reason: "pending_completion" },
+    };
+    state.pending(receipt);
+    return receipt;
+  }
 
   try {
     const terminal = await stopMailbox(directory, options);

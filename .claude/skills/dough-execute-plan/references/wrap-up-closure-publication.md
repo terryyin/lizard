@@ -83,6 +83,10 @@ does; report it as [completion mechanics](ci-completion-wait.md) describe.
 | `step: "retire"`                  | Act on `cleanup` as Dough Land's retirement result table says                                                                                                                                                                                                                                                                         |
 | `step: "git"`                     | Report `error` as the unfinished step; nothing after it ran                                                                                                                                                                                                                                                                           |
 
+For completion `pending`, use [completion mechanics](ci-completion-wait.md)'s
+retained recovery, then rerun `finish` to continue closure. `completion_expired`
+keeps closure unresolved; both outcomes retain the worktree and branch.
+
 After an interruption, rerun the same command with the same owner input. Once
 the worktree is gone, run it from an installed skills directory that still
 exists, such as the default checkout's, adding `--repository` with the

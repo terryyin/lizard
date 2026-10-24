@@ -13,7 +13,10 @@ import {
   candidateLookupUnavailable,
   integratedStateJudge,
 } from "./ci-integrated-state.mjs";
+import { queueProgressReader } from "./ci-mailbox-queue-progress.mjs";
 import {
+  effectiveRevisionState,
+  freshPendingRevision,
   publishRevisionRecord,
   readRevisionCoverage,
 } from "./ci-mailbox-revision-records.mjs";
@@ -57,12 +60,20 @@ export async function observeRevisionCoverage(
     event = "push",
     workflowPath,
     discoverAncestorCandidates,
+    discoverQueue,
     readCurrentAttempt,
     integratedPolicy,
     signal,
   } = {},
 ) {
   const events = [];
+  const queue = (await discoverQueue?.()) ?? [];
+  const queueProgress = queueProgressReader(queue, {
+    branch: request.branch,
+    integratedPolicy,
+    repoDir,
+    observedAt,
+  });
   const localCandidateShas = [
     ...new Set(
       runs
@@ -178,12 +189,22 @@ export async function observeRevisionCoverage(
       };
     }
     next = await judgeIntegratedState(next);
+    // Every successful poll replaces progress, including unsupported/empty
+    // queue snapshots, and renews only actual attempts observed this poll.
+    delete next.queue;
+    delete next.observedAt;
+    if (effectiveRevisionState(next) === "pending")
+      next.observedAt = observedAt;
+    const progress = await queueProgress(next);
+    if (progress) next.queue = progress;
     publishRevisionRecord(directory, next);
   }
 
   if (!discoveryAdvisoryEmitted(directory)) {
     const undiscovered = readRevisionCoverage(directory).filter(
-      ({ state }) => state === "undiscovered",
+      (revision) =>
+        revision.state === "undiscovered" &&
+        !freshPendingRevision(revision, observedAt),
     );
     const overdue = undiscovered.some(
       ({ registeredAt }) =>
@@ -203,16 +224,19 @@ export async function observeRevisionCoverage(
   return { events, ancestorRuns: [...ancestorRunsBySha.values()] };
 }
 
-// A poll that could not list runs leaves no current integrated-state evidence:
-// each recorded judgement stays unresolved until a later poll judges afresh.
+// A failed discovery withdraws pending progress and integrated-state evidence.
+// Actual attempt states remain recorded, but cannot explain fresh progress
+// until a later successful poll observes them again.
 export function withdrawIntegratedState(directory, error) {
-  for (const revision of readRevisionCoverage(directory))
+  for (const revision of readRevisionCoverage(directory)) {
+    const next = { ...revision };
+    delete next.queue;
+    delete next.observedAt;
     if (revision.integrated)
-      publishRevisionRecord(directory, {
-        ...revision,
-        integrated: candidateLookupUnavailable(
-          revision.integrated.policy,
-          error,
-        ),
-      });
+      next.integrated = candidateLookupUnavailable(
+        revision.integrated.policy,
+        error,
+      );
+    publishRevisionRecord(directory, next);
+  }
 }
