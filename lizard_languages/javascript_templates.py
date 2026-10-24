@@ -7,8 +7,9 @@ from .token_pattern import compiled_token_pattern, tokens_in_span
 
 
 # Skip lexical units before interpreting their quotes, backticks or braces.
+# JavaScript line comments end at any line terminator, even after a backslash.
 _OPAQUE_CODE = (
-    r'/\*.*?\*/|//(?:\\\n|[^\n])*'
+    r'/\*.*?\*/|//[^\r\n\u2028\u2029]*'
     r'|"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\''
     r'|' + REGEX_TOKEN
 )

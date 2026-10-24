@@ -101,6 +101,18 @@ class Test_function_boundaries(unittest.TestCase):
                 self.assert_spans(filename, code,
                                   [('a', 1, 6, 6), ('b', 7, 9, 3)])
 
+    def test_template_line_comment_backslash_does_not_continue_the_comment(self):
+        for newline in ('\n', '\r\n', '\r', '\u2028', '\u2029'):
+            code = ('function a(x) {\n  return `${x // \\' + newline
+                    + '} tail`;\n}\nfunction b() {\n  return 2;\n}\n')
+            # Existing line metrics count LF, including LF within CRLF.
+            extra_line = newline.count('\n')
+            expected = [('a', 1, 3 + extra_line, 3 + extra_line),
+                        ('b', 4 + extra_line, 6 + extra_line, 3)]
+            for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+                with self.subTest(newline=repr(newline), filename=filename):
+                    self.assert_spans(filename, code, expected)
+
     def test_existing_literals_preserve_function_ranges(self):
         expressions = ('x', '`${x}`', 'x.replace(/x/g, "y")',
                        r'x.split(/\s+/)', '/[<>"]/.test(x)', 'x.match(/`/)',
