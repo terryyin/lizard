@@ -110,7 +110,9 @@ class JavaScriptFunctionsMixin:
     def _expecting_func_opening_bracket(self, token):
         # Do not reset started_function for arrow functions (=>)
         if token == ':':
+            self.next(self._state_global)
             self._consume_type_annotation()
+            return
         elif token == ';' and self.as_object and self._in_abstract_context:
             # Abstract method declaration ends with ';' — no body
             if self.started_function:

@@ -27,6 +27,46 @@ class Test_TypeScript_default_initializers(unittest.TestCase):
 
 
 
+class Test_function_boundaries(unittest.TestCase):
+    def assert_spans(self, filename, code, expected):
+        functions = analyze_file.analyze_source_code(filename, code).function_list
+        self.assertEqual(expected, [(f.name, f.start_line, f.end_line, f.nloc)
+                                    for f in functions])
+
+    def test_return_annotation_ends_at_body_closing_brace(self):
+        self.assert_spans(
+            'a.ts', 'function a(): number {\n  return 1;\n}\n'
+            'const k = 2;\nfunction b() {\n  return 2;\n}\n',
+            [('a', 1, 3, 3), ('b', 5, 7, 3)])
+
+    def test_adjacent_annotated_functions_have_distinct_ranges(self):
+        self.assert_spans(
+            'a.ts', 'function a(): number {\n  return 1;\n}\n'
+            'function b(): number {\n  return 2;\n}\n',
+            [('a', 1, 3, 3), ('b', 4, 6, 3)])
+
+    def test_nested_template_preserves_following_function(self):
+        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+            with self.subTest(filename=filename):
+                self.assert_spans(
+                    filename, 'function a(x) {\n'
+                    '  return `p ${x ? `q` : ""} r`;\n}\n'
+                    'const k = 2;\nfunction b() {\n  return 2;\n}\n',
+                    [('a', 1, 3, 3), ('b', 5, 7, 3)])
+
+    def test_existing_literals_preserve_function_ranges(self):
+        expressions = ('x', '`${x}`', 'x.replace(/x/g, "y")',
+                       r'x.split(/\s+/)', '/[<>"]/.test(x)', 'x.match(/`/)')
+        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+            for expression in expressions:
+                with self.subTest(filename=filename, expression=expression):
+                    self.assert_spans(
+                        filename, 'function a(x) {\n  return ' + expression
+                        + ';\n}\nconst k = 2;\n'
+                        'function b() {\n  return 2;\n}\n',
+                        [('a', 1, 3, 3), ('b', 5, 7, 3)])
+
+
 class Test_TypeScript_conditional_style_arrays(unittest.TestCase):
     def test_conditional_style_array_with_object_and_following_child(self):
         code = ('const Alert = () => { return (<View style={[{ elevation: 0.4 }, '
@@ -66,7 +106,6 @@ class Test_tokenizing_TypeScript(unittest.TestCase):
         source_code = 'output.push(`${`${n}: `.padStart(w)}${s}`);'
         expected_tokens = [
             'output', '.', 'push', '(', '`', '${',
-            '`${`', '$', '{', 'n', '}', ':', ' ', '`',
-            '`.padStart(w)}`', '${', 's', '}', '`', ')', ';'
+            '`${n}: `.padStart(w)', '}', '${', 's', '}', '`', ')', ';'
         ]
         self.check_tokens(expected_tokens, source_code)

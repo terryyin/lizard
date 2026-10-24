@@ -9,10 +9,10 @@ from .javascript_bindings import JavaScriptBindings
 from .typescript_declarations import TypeScriptTypeAnnotationStates
 from .typescript_states import TypeScriptStates
 
-# A template literal; quoted strings inside ${...} may contain backticks (#497).
+# Interpolations may contain quoted strings (#497) or nested templates (#521).
 TEMPLATE_LITERAL = (
     r"`(?:\\.|\$\{(?:\"(?:\\.|[^\"\\])*\"|'(?:\\.|[^'\\])*'"
-    r"|[^{}\"'`])*\}|[^`\\])*`"
+    r"|`(?:\\.|[^`\\])*`|[^{}\"'`])*\}|[^`\\])*`"
 )
 
 # One token, so each ? in ?? is not its own ternary decision.
