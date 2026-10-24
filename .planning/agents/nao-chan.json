@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "agent": "Nao-chan",
-  "email": "nao-chan@example.org",
-  "identity": "SEED-009#balanced-template-scanning",
-  "mode": "story-branch",
-  "branch": "codex/balanced-templates",
-  "host": "codex"
-}

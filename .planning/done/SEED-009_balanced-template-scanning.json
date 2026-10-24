@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-009#balanced-template-scanning",
+  "title": "Restore function boundaries with balanced template scanning",
+  "completedAt": "2026-10-24T09:15:39.597Z",
+  "developer": "Terry Yin",
+  "agent": "Nao-chan",
+  "host": "codex"
+}

@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-009_balanced-template-scanning.json",
+      "identity": "SEED-009#balanced-template-scanning",
+      "completedAt": "2026-10-24T09:15:39.597Z",
+      "blob": "ac490381eae72d00bf095dba71487276ba5e91b7"
+    },
+    {
       "fileName": "SEED-008_review-issue-521.json",
       "identity": "SEED-008#review-issue-521",
       "completedAt": "2026-10-24T02:09:57.638Z",
