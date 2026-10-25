@@ -32,9 +32,15 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             self._binding_candidate(token)
         return super().__call__(token, reader)
 
+    def next(self, state, token=None):
+        self._state = state
+        if token is not None:
+            return self._replay_token(token)
+        return None
+
     def _replay_token(self, token):
-        """Process a token saved by a nested syntax reader through dispatch."""
-        return self(token)
+        """Dispatch a token the binding candidate has already read."""
+        return super().__call__(token)
 
     def statemachine_before_return(self):
         # Ensure the main function is closed at the end
@@ -134,9 +140,12 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             else:
                 self.read_object()
         elif token in ('}', ')') or (
-                token == ']' and self._binding_candidate):
+                token == ']' and self._binding_candidate
+                and self._binding_candidate.ended):
             self.statemachine_return()
-        elif self.context.newline or token == ';':
+        elif self.context.newline or token == ';' or (
+                token == ',' and self.started_function):
+            # An expression-bodied arrow ends at its enclosing separator.
             self.function_name = ''
             self._pop_function_from_stack()
             # Reset modifiers on newline/semicolon
