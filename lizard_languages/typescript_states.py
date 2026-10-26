@@ -27,6 +27,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         self._condition_kind = None
         self._ternary_depth = 0
         self._expression_body = False
+        self._ternaries_before_body = 0
 
     def __call__(self, token, reader=None):
         if self._binding_candidate:
@@ -66,6 +67,11 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             self._ternary_depth += 1
         elif token == ':' and self._ternary_depth:
             # A conditional branch separator is runtime syntax, not a type.
+            if (self._expression_body
+                    and self._ternary_depth <= self._ternaries_before_body):
+                # c ? (x) => x : y, the colon of a ternary opened before an
+                # arrow function without braces ends it.
+                self._pop_function_from_stack()
             self._ternary_depth -= 1
             self.last_tokens = token
             self._prev_token = token

@@ -40,6 +40,7 @@ class JavaScriptFunctionsMixin:
         self._static_seen = False
         # Without braces, a later "{" opens an object: x => c ? {a} : {b}
         self._expression_body = token != '{'
+        self._ternaries_before_body = self._ternary_depth
         self.next(self._state_global, token)
 
     def _function(self, token):
