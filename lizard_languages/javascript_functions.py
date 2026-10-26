@@ -73,6 +73,7 @@ class JavaScriptFunctionsMixin:
             self._abandon_function()
             self.next(self._state_global, token)
             return
+        first_token = self._parameter_bindings.previous in ('', ',')
         event = self._read_parameter_binding(token)
         if event.ended:
             self._state = self._expecting_func_opening_bracket
@@ -83,8 +84,9 @@ class JavaScriptFunctionsMixin:
                 if event.root_separator and not getattr(self, '_generic_depth_in_dec', 0):
                     self._in_parameter_type = False
                     self.context.parameter(',')
-            elif token == ':':
-                # The type of a parameter, as in "number: number", is no name.
+            elif token == ':' or (token == 'this' and first_token):
+                # The type of a parameter, as in "number: number", is no name;
+                # the "this" parameter of TypeScript only declares a type.
                 self._in_parameter_type = True
             elif token == '<':
                 self._generic_depth_in_dec = getattr(
