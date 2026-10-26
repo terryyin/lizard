@@ -10,10 +10,13 @@ class JavaScriptObjectsMixin:
             self._getter_setter_prefix = token
             return True
         if self._getter_setter_prefix:
-            # Next token is the property name
-            self.last_tokens = f"{self._getter_setter_prefix} {token}"
-            self._getter_setter_prefix = None
-            return True
+            prefix, self._getter_setter_prefix = self._getter_setter_prefix, None
+            if token not in ('(', ':', ',', '}', '=', ';', '<'):
+                # Next token is the property name
+                self.last_tokens = f"{prefix} {token}"
+                return True
+            # A member named "get" or "set": get(key) {}, {get: f}, {get, set}
+            self.last_tokens = prefix
         if token == '[':
             self._collect_computed_name()
             return True
