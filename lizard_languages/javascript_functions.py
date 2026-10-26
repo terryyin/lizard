@@ -3,6 +3,16 @@
 from .javascript_bindings import JavaScriptBindings
 
 
+# An expression goes on at the next line after one of these tokens, or at a
+# line that starts with one of the second ones.
+_CONTINUED_AFTER = frozenset((
+    '=>', '=', '+', '-', '*', '/', '%', '&&', '||', '??', '?', ':', '|', '&',
+    '^', '==', '===', '!=', '!==', '<', '>', '<=', '>='))
+_CONTINUED_BY = frozenset((
+    '.', '?.', '?', ':', '&&', '||', '??', '|', '&', '^', '%', '==', '===',
+    '!=', '!==', '<=', '>=', '+', '-', '/', 'instanceof', 'in'))
+
+
 # TypeScript type keywords that should not be counted as parameters
 _TS_TYPE_KEYWORDS = frozenset([
     'string', 'number', 'boolean', 'void', 'any',
@@ -23,6 +33,27 @@ class JavaScriptFunctionsMixin:
         self.started_function = None
         self._in_prop_value = False
         self._expression_body = False
+
+    def _continues_expression(self, token):
+        return token in _CONTINUED_BY or self.last_token in _CONTINUED_AFTER
+
+    def _end_expression_body(self):
+        """End an arrow function without braces before the first token of a
+        new line, which belongs to the code around it."""
+        arrow = self.context.current_function
+        counted, complexity = self._counted
+        self._pop_function_from_stack()
+        if counted is not arrow:
+            return
+        around = self.context.current_function
+        around.cyclomatic_complexity += arrow.cyclomatic_complexity - complexity
+        arrow.cyclomatic_complexity = complexity
+        arrow.nloc -= 1
+        around.nloc += 1
+        arrow.token_count -= 1
+        around.token_count += 1
+        arrow.end_line = self._last_line
+        around.end_line = self.context.current_line
 
     def _abandon_function(self):
         """Discard an optimistic signature that proved to be an expression."""

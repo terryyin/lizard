@@ -27,11 +27,17 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         self._condition_kind = None
         self._ternary_depth = 0
         self._expression_body = False
+        self._last_line = 0  # The line of the token before
+        self._counted = (None, 0)  # Its function and complexity
 
     def __call__(self, token, reader=None):
         if self._binding_candidate:
             self._binding_candidate(token)
-        return super().__call__(token, reader)
+        exiting = super().__call__(token, reader)
+        self._last_line = self.context.current_line
+        function = self.context.current_function
+        self._counted = (function, function.cyclomatic_complexity)
+        return exiting
 
     def _replay_token(self, token):
         """Process a token saved by a nested syntax reader through dispatch."""
@@ -43,6 +49,9 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             self._pop_function_from_stack()
 
     def _state_global(self, token):
+        if (self._expression_body and self.context.newline
+                and not self._continues_expression(token)):
+            self._end_expression_body()
         self._resolve_pending_bindings(token)
 
         if self._handle_type_declaration(token):
@@ -139,7 +148,10 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             self.statemachine_return()
         elif self.context.newline or token == ';':
             self.function_name = ''
-            self._pop_function_from_stack()
+            if token in (';', ',') or not self._expression_body:
+                # A new line that goes on with the expression of an arrow
+                # function without braces does not end it.
+                self._pop_function_from_stack()
             # Reset modifiers on newline/semicolon
             self._static_seen = False
             self._async_seen = False
