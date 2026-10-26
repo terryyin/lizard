@@ -8,7 +8,7 @@ from .js_style_regex_expression import js_style_regex_expression
 from .javascript_bindings import JavaScriptBindings
 from .typescript_declarations import TypeScriptTypeAnnotationStates
 from .typescript_states import TypeScriptStates
-from .javascript_templates import template_tokens
+from .javascript_templates import LINE_COMMENT, template_tokens
 
 # One token, so each ? in ?? is not its own ternary decision.
 NULLISH_COALESCING = r"|(?:\?\?)"
@@ -72,8 +72,10 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
     @staticmethod
     @js_style_regex_expression
     def generate_tokens(source_code, addition='', token_class=None):
-        # Private method (#), dollar ($), optional name (?), nullish (??).
-        addition = (addition + r"|(?:#\w+)" + r"|(?:\$\w+)"
+        # Line comment, private method (#), dollar ($), optional name (?),
+        # nullish (??).
+        addition = (addition + "|" + LINE_COMMENT
+                    + r"|(?:#\w+)" + r"|(?:\$\w+)"
                     + r"|(?:\w+\?(?![?.]))" + NULLISH_COALESCING
                     + OPTIONAL_ACCESS)
         yield from template_tokens(source_code, addition, token_class)

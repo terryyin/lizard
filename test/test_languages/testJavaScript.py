@@ -164,6 +164,27 @@ class Test_JavaScript_nullish_coalescing(unittest.TestCase):
                                             for f in functions])
 
 
+class Test_JavaScript_line_comment_ending_with_a_backslash(unittest.TestCase):
+    def test_line_comment_ends_at_its_line(self):
+        code = (
+            "function b(code) {\n"
+            "  return (\n"
+            "    code === 92 || // \\\n"
+            "    code === 45 || // -\n"
+            "    code === 32\n"
+            "  )\n"
+            "}\n"
+        )
+        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+            with self.subTest(filename=filename):
+                functions = analyze_file.analyze_source_code(
+                    filename, code).function_list
+                self.assertEqual([('b', 1, 7, 3, 7)],
+                                 [(f.name, f.start_line, f.end_line,
+                                   f.cyclomatic_complexity, f.nloc)
+                                  for f in functions])
+
+
 class Test_tokenizing_JavaScript(unittest.TestCase):
 
     def check_tokens(self, expect, source):
