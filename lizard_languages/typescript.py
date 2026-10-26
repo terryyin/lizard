@@ -8,7 +8,7 @@ from .js_style_regex_expression import js_style_regex_expression
 from .javascript_bindings import JavaScriptBindings
 from .typescript_declarations import TypeScriptTypeAnnotationStates
 from .typescript_states import TypeScriptStates
-from .javascript_templates import template_tokens
+from .javascript_templates import interpolation_code, template_tokens
 
 # One token, so each ? in ?? is not its own ternary decision.
 NULLISH_COALESCING = r"|(?:\?\?)"
@@ -68,6 +68,18 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
     def __init__(self, context):
         super().__init__(context)
         self.parallel_states = [TypeScriptStates(context)]
+        self._previous_token = None
+
+    def process_token(self, token):
+        # An interpolation is one token for the states, or a part of one in
+        # TSX; the conditions written in it are counted here.
+        for start, end in interpolation_code(
+                token, self._previous_token == '${'):
+            for inner in self.generate_tokens(token[start:end]):
+                if inner in self.conditions:
+                    self.context.add_condition()
+        self._previous_token = token
+        return False
 
     @staticmethod
     @js_style_regex_expression
