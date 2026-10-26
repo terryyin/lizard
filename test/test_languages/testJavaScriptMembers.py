@@ -192,3 +192,31 @@ class Test_JavaScript_class_inheritance(unittest.TestCase):
         self.assertIn("divide", names)
         div = next(f for f in functions if f.name == "divide")
         self.assertGreater(div.cyclomatic_complexity, 1)
+
+
+class Test_JavaScript_array_as_a_property_value(unittest.TestCase):
+
+    def check_end(self, value):
+        code = (
+            "function a() {\n"
+            "  const o = {\n"
+            "    q: 1,\n"
+            "    p: %s,\n"
+            "  };\n"
+            "  return o;\n"
+            "}\n"
+            "function b() { return 1; }\n" % value
+        )
+        self.assertEqual([('a', 1, 7), ('b', 8, 8)],
+                         [(f.name, f.start_line, f.end_line)
+                          for f in get_js_function_list(code)], value)
+
+    def test_arrays_with_brackets_inside_as_a_property_value(self):
+        self.check_end("['image/png', from([1, 2])]")
+        self.check_end("[[1], 2]")
+        self.check_end("[{ id: 1, tags: ['a', 'b'] }, { id: 2 }]")
+
+    def test_computed_key_is_still_a_name(self):
+        functions = get_js_function_list(
+            "const o = { [a[0]]: 1, ['b' + 'c']() { return 1; } };")
+        self.assertEqual(['bc'], [f.name for f in functions])
