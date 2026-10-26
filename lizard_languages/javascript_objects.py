@@ -6,6 +6,11 @@ class JavaScriptObjectsMixin:
         if not self.as_object:
             return False
         # Support for getter/setter: look for 'get' or 'set' before method name
+        if token == '...':
+            # What a spread takes is a value: ...(c && {f() {}}), ...g(x)
+            self._in_prop_value = True
+            self.last_tokens = token
+            return True
         if token in ('get', 'set'):
             self._getter_setter_prefix = token
             return True
