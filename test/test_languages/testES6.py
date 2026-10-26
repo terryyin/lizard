@@ -511,3 +511,44 @@ class Test_ES6_multiple_arrow_patterns(unittest.TestCase):
         functions = get_js_function_list(code)
         self.assertEqual(["validate"], [f.name for f in functions])
         self.assertGreater(functions[0].cyclomatic_complexity, 1)
+
+
+class Test_ES6_arrow_function_parameters(unittest.TestCase):
+
+    def parameter_counts(self, code, filename="a.js"):
+        return [(f.name, f.parameter_count) for f in
+                analyze_file.analyze_source_code(filename, code).function_list]
+
+    def test_anonymous_arrow_functions(self):
+        code = (
+            "list.map((x, i) => x + i);\n"
+            "list.filter((x) => { return x; });\n"
+            "list.forEach((_, key) => { selected.add(key); });\n"
+            "list.sort(({a}, [b, c] = [], ...rest) => { return a; });\n"
+            "run(() => { return 1; });\n"
+            "const eq = strict ? (a, b) => { return a === b; } : null;\n"
+        )
+        self.assertEqual([('(anonymous)', 2), ('(anonymous)', 1),
+                          ('(anonymous)', 2), ('(anonymous)', 3),
+                          ('(anonymous)', 0), ('(anonymous)', 2)],
+                         self.parameter_counts(code))
+
+    def test_arrow_functions_without_parentheses(self):
+        code = (
+            "const f = x => { return x; };\n"
+            "const g = async x => { return x; };\n"
+            "list.map(x => { return x * 2; });\n"
+        )
+        self.assertEqual([('f', 1), ('g', 1), ('(anonymous)', 1)],
+                         self.parameter_counts(code))
+
+    def test_anonymous_arrow_function_with_types(self):
+        code = (
+            "list.map((x: number, i: Map<K, V>) => { return x + i; });\n"
+            "list.map((x?: number): number => { return x; });\n"
+            "list.map((x, y): Map<K, V> => { return x; });\n"
+        )
+        for filename in ("a.ts", "a.tsx"):
+            self.assertEqual([('(anonymous)', 2), ('(anonymous)', 1),
+                              ('(anonymous)', 2)],
+                             self.parameter_counts(code, filename), filename)

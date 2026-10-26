@@ -88,6 +88,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         elif token in ('else', 'do', 'try', 'final'):
             self.next(self._expecting_statement_or_block)
         elif token in ('=>',):
+            self._read_arrow()
             self._state = self._arrow_function
         elif token == '=':
             # Only set function_name for valid identifiers
@@ -112,7 +113,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                 if (self.last_tokens != self.function_name
                         and self._prev_token not in ('=', 'async', '>')):
                     self.function_name = ''
-                    self.sub_state(self.__class__(self.context))
+                    self._read_binding_candidate(')')
                 else:
                     if not self.started_function:
                         self._function(self.function_name)
