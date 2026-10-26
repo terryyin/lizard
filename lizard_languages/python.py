@@ -3,7 +3,7 @@
 from .code_reader import CodeReader
 from .script_language import ScriptLanguageMixIn
 from .python_structure import PythonIndents, PythonStates, count_spaces
-from .python_tokens import generate_tokens as generate_python_tokens
+from .python_tokens import FStringExpressionToken, generate_tokens as generate_python_tokens
 
 
 class PythonReader(CodeReader, ScriptLanguageMixIn):
@@ -177,7 +177,19 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
         indents = PythonIndents(self.context)
         current_leading_spaces = 0
         reading_leading_space = True
+        bracket_depth = 0
+        continued = False
+        continuation_line = False
         for token in self._soft_keyword_lookahead(tokens):
+            if isinstance(token, FStringExpressionToken):
+                # Interpolation decisions count, but cannot end an outer suite.
+                if not token.isspace() or token == '\n':
+                    yield token
+                continue
+            if token in ('def', 'class'):
+                # Recover from an unterminated declaration at the next definition.
+                bracket_depth = 0
+                continuation_line = False
             if token != '\n':
                 if reading_leading_space:
                     if token.isspace():
@@ -185,13 +197,22 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
                     else:
                         if not token.startswith('#'):
                             current_function = self.context.current_function
-                            if (current_function.name == '*global*' or
-                                    current_function.long_name.endswith(')')):
+                            if (not bracket_depth and not continuation_line and
+                                    (current_function.name == '*global*' or
+                                     current_function.long_name.endswith(')'))):
                                 indents.set_nesting(current_leading_spaces, token)
                         reading_leading_space = False
             else:
                 reading_leading_space = True
+                continuation_line = continued
                 current_leading_spaces = 0
+                continued = False
+            if token in ('(', '[', '{'):
+                bracket_depth += 1
+            elif token in (')', ']', '}'):
+                bracket_depth = max(0, bracket_depth - 1)
+            if not token.isspace() and not token.startswith('#'):
+                continued = token == '\\'
             if not token.isspace() or token == '\n':
                 yield token
         indents.reset()

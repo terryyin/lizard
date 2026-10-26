@@ -14,6 +14,11 @@ class PythonIndents:  # pylint: disable=R0902
         self.context = context
 
     def set_nesting(self, spaces, token=""):
+        if self.context.pending_function and spaces <= self.indents[-1]:
+            # An inline suite has no indented body to activate its function.
+            # Finish it before dedenting, so an enclosing function survives.
+            self.context.add_bare_nesting()
+            self.context.pop_nesting()
         while self.indents[-1] > spaces and (not token.startswith(")")):
             self.indents.pop()
             self.context.pop_nesting()
