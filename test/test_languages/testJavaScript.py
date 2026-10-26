@@ -164,6 +164,56 @@ class Test_JavaScript_nullish_coalescing(unittest.TestCase):
                                             for f in functions])
 
 
+class Test_JavaScript_colon_of_a_case_label(unittest.TestCase):
+    def test_functions_after_a_case_label(self):
+        code = (
+            "function a(x, list) {\n"
+            "  switch (x) {\n"
+            "    case 1: return list.map((v) => { return v + 1; });\n"
+            "    case y ? 2 : 3: return 0;\n"
+            "    default: return list.filter(function (v) { return v; });\n"
+            "  }\n"
+            "}\n"
+            "function b() { return 1; }\n"
+        )
+        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+            with self.subTest(filename=filename):
+                functions = analyze_file.analyze_source_code(
+                    filename, code).function_list
+                self.assertEqual(
+                    [('(anonymous)', 3, 3, 1), ('(anonymous)', 5, 5, 1),
+                     ('a', 1, 7, 4), ('b', 8, 8, 1)],
+                    [(f.name, f.start_line, f.end_line,
+                      f.cyclomatic_complexity) for f in functions])
+
+    def test_block_after_a_case_label(self):
+        code = (
+            "function a(n, x) {\n"
+            "  switch (n) {\n"
+            "    case 1: {\n"
+            "      const label = x ? `<b title=\"${x.t}\">` : '';\n"
+            "      return label;\n"
+            "    }\n"
+            "    default: {\n"
+            "      const k = x\n"
+            "        ? [f(1), f(2)]\n"
+            "        : (x < 3);\n"
+            "      return k;\n"
+            "    }\n"
+            "  }\n"
+            "}\n"
+            "function after() { return 1; }\n"
+        )
+        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+            with self.subTest(filename=filename):
+                functions = analyze_file.analyze_source_code(
+                    filename, code).function_list
+                self.assertEqual(
+                    [('a', 1, 14, 4), ('after', 15, 15, 1)],
+                    [(f.name, f.start_line, f.end_line,
+                      f.cyclomatic_complexity) for f in functions])
+
+
 class Test_tokenizing_JavaScript(unittest.TestCase):
 
     def check_tokens(self, expect, source):

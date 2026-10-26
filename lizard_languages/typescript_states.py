@@ -26,6 +26,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         self._in_abstract_context = False  # Track abstract method declarations
         self._condition_kind = None
         self._ternary_depth = 0
+        self._case_labels = 0  # "case" and "default" waiting for their colon
 
     def __call__(self, token, reader=None):
         if self._binding_candidate:
@@ -63,9 +64,15 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
 
         if token == '?':
             self._ternary_depth += 1
-        elif token == ':' and self._ternary_depth:
-            # A conditional branch separator is runtime syntax, not a type.
-            self._ternary_depth -= 1
+        elif token in ('case', 'default') and not self.as_object:
+            self._case_labels += 1
+        elif token == ':' and (self._ternary_depth or self._case_labels):
+            # A conditional branch separator or the colon of a case label
+            # is runtime syntax, not a type.
+            if self._ternary_depth:
+                self._ternary_depth -= 1
+            else:
+                self._case_labels -= 1
             self.last_tokens = token
             self._prev_token = token
             return
@@ -140,6 +147,8 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             self.function_name = ''
             self._pop_function_from_stack()
             # Reset modifiers on newline/semicolon
+            if token == ';':
+                self._case_labels = 0
             self._static_seen = False
             self._async_seen = False
             self._in_abstract_context = False
