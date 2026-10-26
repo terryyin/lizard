@@ -68,6 +68,14 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
     def __init__(self, context):
         super().__init__(context)
         self.parallel_states = [TypeScriptStates(context)]
+        self._previous_token = None
+
+    def process_token(self, token):
+        if self._previous_token in ('.', '?.') and token in self.conditions:
+            # A member named as a keyword, as in p.catch(f), is no condition.
+            self.context.add_condition(-1)
+        self._previous_token = token
+        return False
 
     @staticmethod
     @js_style_regex_expression

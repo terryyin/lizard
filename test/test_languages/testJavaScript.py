@@ -164,6 +164,26 @@ class Test_JavaScript_nullish_coalescing(unittest.TestCase):
                                             for f in functions])
 
 
+class Test_JavaScript_keyword_as_the_name_of_a_member(unittest.TestCase):
+    def test_keyword_after_a_dot_is_not_a_condition(self):
+        code = (
+            'function a(p, q) {\n'
+            '  p.catch(() => null);\n'
+            '  q?.catch(() => null).finally(() => 1);\n'
+            '  return p.if + p.for + p.while + p.case;\n'
+            '}\n'
+            'function b(p) { return p.then(f).catch(g) || 0; }\n'
+        )
+        expected = [('(anonymous)', 1), ('(anonymous)', 1), ('(anonymous)', 1),
+                    ('a', 1), ('b', 2)]
+        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+            with self.subTest(filename=filename):
+                functions = analyze_file.analyze_source_code(
+                    filename, code).function_list
+                self.assertEqual(expected, [(f.name, f.cyclomatic_complexity)
+                                            for f in functions])
+
+
 class Test_tokenizing_JavaScript(unittest.TestCase):
 
     def check_tokens(self, expect, source):
