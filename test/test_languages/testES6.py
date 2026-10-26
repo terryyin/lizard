@@ -511,3 +511,42 @@ class Test_ES6_multiple_arrow_patterns(unittest.TestCase):
         functions = get_js_function_list(code)
         self.assertEqual(["validate"], [f.name for f in functions])
         self.assertGreater(functions[0].cyclomatic_complexity, 1)
+
+
+class Test_ES6_parenthesized_expression_after_an_assignment(unittest.TestCase):
+    """"name = (" may start an arrow function or a parenthesized expression."""
+
+    def test_conditions_tokens_and_lines_stay_with_the_function(self):
+        code = (
+            "function f(a, b) {\n"
+            "  const ok = (a &&\n"
+            "    b) || a;\n"
+            "  return ok;\n"
+            "}\n"
+        )
+        same_on_one_line = (
+            "function f(a, b) {\n"
+            "  const ok = a &&\n"
+            "    b || a;\n"
+            "  return ok;\n"
+            "}\n"
+        )
+        for filename in ("a.js", "a.ts"):
+            expected = analyze_file.analyze_source_code(
+                filename, same_on_one_line).function_list[0]
+            function = analyze_file.analyze_source_code(
+                filename, code).function_list[0]
+            self.assertEqual(
+                (3, 5, expected.token_count + 2),
+                (function.cyclomatic_complexity, function.nloc,
+                 function.token_count), filename)
+
+    def test_call_spread_in_an_object(self):
+        code = (
+            "function merge(m, i) {\n"
+            "  return { ...g(i ? 1 : 2), u: m || 0 };\n"
+            "}\n"
+        )
+        self.assertEqual([('merge', 3)],
+                         [(f.name, f.cyclomatic_complexity)
+                          for f in get_js_function_list(code)])

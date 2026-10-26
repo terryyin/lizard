@@ -25,9 +25,17 @@ class JavaScriptFunctionsMixin:
 
     def _abandon_function(self):
         """Discard an optimistic signature that proved to be an expression."""
+        expression = self.context.current_function
         self.context.forgive = True
         self.context.end_of_function()
         self.started_function = None
+        # The conditions, tokens and lines of the expression, as in
+        # "x = (a && b) || c", belong to the function around it; its first
+        # token and line are counted there already.
+        self.context.add_condition(expression.cyclomatic_complexity - 1
+                                   - self._parameter_bindings.defaults)
+        self.context.current_function.token_count += expression.token_count - 1
+        self.context.current_function.nloc += expression.nloc - 1
 
     def _arrow_function(self, token):
         self._push_arrow_function()
