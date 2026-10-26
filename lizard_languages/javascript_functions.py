@@ -71,12 +71,14 @@ class JavaScriptFunctionsMixin:
         if token == '(' and self._parameter_bindings.at_start:
             # Grouped expression, such as an arrow IIFE, rather than parameters.
             self._abandon_function()
+            self._open_groups += 1
             self.next(self._state_global)
             self._read_binding_candidate(')')
             return
         if token == 'function' and not self._parameter_bindings.defaults:
             # The optimistic named-arrow signature is an IIFE expression.
             self._abandon_function()
+            self._open_groups += 1
             self.next(self._state_global, token)
             return
         event = self._read_parameter_binding(token)

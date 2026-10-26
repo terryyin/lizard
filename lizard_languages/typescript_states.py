@@ -26,6 +26,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         self._in_abstract_context = False  # Track abstract method declarations
         self._condition_kind = None
         self._ternary_depth = 0
+        self._open_groups = 0  # "(" of a group read as parameters
 
     def __call__(self, token, reader=None):
         if self._binding_candidate:
@@ -133,6 +134,11 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                     self._pop_function_from_stack)
             else:
                 self.read_object()
+        elif token == ')' and self._open_groups:
+            # The end of "(() => 1)" or "(function () {})", which may end an
+            # arrow function without braces but not the block around it.
+            self._open_groups -= 1
+            self._pop_function_from_stack()
         elif token in ('}', ')') or (
                 token == ']' and self._binding_candidate):
             self.statemachine_return()
