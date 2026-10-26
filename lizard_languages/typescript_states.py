@@ -156,8 +156,8 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         if self.as_object and token == ',':
             self._in_prop_value = False
         self.last_tokens = token
-        # Don't overwrite _prev_token if it's 'new' or '.' (preserve for next token)
-        if self._prev_token not in ('new', '.'):
+        # Don't overwrite _prev_token if it's 'new' (preserve for next token)
+        if self._prev_token != 'new':
             self._prev_token = token
 
     def _expecting_condition_and_statement_block(self, token):
