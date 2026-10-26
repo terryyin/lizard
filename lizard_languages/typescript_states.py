@@ -26,6 +26,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         self._in_abstract_context = False  # Track abstract method declarations
         self._condition_kind = None
         self._ternary_depth = 0
+        self._expression_body = False
 
     def __call__(self, token, reader=None):
         if self._binding_candidate:
@@ -127,7 +128,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                     ('const', 'let', 'var', 'return', 'throw', 'yield', 'await')):
                 self._read_binding_candidate(']')
         elif token == '{':
-            if self.started_function:
+            if self.started_function and not self._opens_an_object():
                 self.sub_state(
                     self.__class__(self.context),
                     self._pop_function_from_stack)
@@ -159,6 +160,14 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         # Don't overwrite _prev_token if it's 'new' or '.' (preserve for next token)
         if self._prev_token not in ('new', '.'):
             self._prev_token = token
+
+    def _opens_an_object(self):
+        # In the body of an arrow function without braces, "{" after an
+        # operator opens an object: x => c ? {a} : {b}. After an operand it
+        # can only open a block, as after the type in "(): () => T {".
+        previous = self.last_token or ''
+        return self._expression_body and not (
+            previous[:1].isalnum() or previous[:1] in '_$)]>')
 
     def _expecting_condition_and_statement_block(self, token):
         def callback():

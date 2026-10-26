@@ -22,6 +22,7 @@ class JavaScriptFunctionsMixin:
             self.context.end_of_function()
         self.started_function = None
         self._in_prop_value = False
+        self._expression_body = False
 
     def _abandon_function(self):
         """Discard an optimistic signature that proved to be an expression."""
@@ -37,6 +38,8 @@ class JavaScriptFunctionsMixin:
         # async/static handler in the class body path.
         self._async_seen = False
         self._static_seen = False
+        # Without braces, a later "{" opens an object: x => c ? {a} : {b}
+        self._expression_body = token != '{'
         self.next(self._state_global, token)
 
     def _function(self, token):
