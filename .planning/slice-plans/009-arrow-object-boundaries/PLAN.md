@@ -207,7 +207,7 @@ loop may take longer than implementation; no invented timeout applies.
 
 ### 4. Deliver the qualified correction through PR531
 Type: Behavior
-Status: planned
+Status: done
 Proof: final contributor-head SHA and accepted push, green current required CI,
 exact-head guarded merge receipt, and one acknowledgement URL.
 
@@ -319,3 +319,27 @@ baseline checkout verified. Harness SHA `3064d8d7…7bf5`; manifest
 | CLI vs frozen | [-0.438%, 1.003%] | 1.003% | pass |
 
 Evidence (this delivery): `docs/reviews/fabio-malpezzi-20261027/pr531/corrected-vs-{master,frozen}-{api,cli}.json` (+ logs), `corrected-slice3-{summary.json,prelaunch.txt,timeline.log}`. Historical `531-api.json`/`531-cli.json` untouched. Raw proposal interval retained as diagnosis only. No product-code change; no optimization required. Semantic proof reconfirmed after timing.
+
+### Slice 4 accepted proof (PR531 delivery)
+
+Promise: final contributor-head SHA and accepted push; green current required CI;
+exact-head guarded merge; one acknowledgement URL.
+
+Local final candidate (execution): full `nix develop -c python -m pytest` →
+1802 passed, 7 skipped; `nix develop -c make` exit 0.
+
+Contributor route:
+- Append-only push to `FabioMalpezzi/lizard:pr/js-object-in-an-arrow-function-body`
+  at `7c7ecbebceed21315df08616b858dbe792fff129` (parent `47aa357…`; no force).
+- Tip carries the shared-reader correction on the contributor base APIs; cohesive
+  `testArrowObjectBoundaries.py`; inadequate `testES6.py` additions removed.
+- Focused proof on contributor worktree: 298 passed; reproduce.py 64/64 clean.
+- Hosted CI run `40500170056`: all 14 build jobs (ubuntu/windows × 3.8–3.14) +
+  `changes` SUCCESS; `web` SKIPPED (inapplicable).
+- Exact-head guarded merge at head `7c7ecbe…` → MERGED; merge commit
+  `ac2b454a5ada49e472c5d96635cbbba091c57bc8` (2026-10-27T12:00:44Z).
+- Acknowledgement (no prior receipt):
+  https://github.com/terryyin/lizard/pull/531#issuecomment-6441355594
+
+PR: https://github.com/terryyin/lizard/pull/531 — Hosted merge is not Dough Land;
+planning wrap-up retains ordinary story closure.
