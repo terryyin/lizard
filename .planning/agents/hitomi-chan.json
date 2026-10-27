@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "agent": "Hitomi-chan",
+  "email": "hitomi-chan@example.org",
+  "activity": "preparation",
+  "identity": "SEED-012#release-website-from-tags",
+  "host": "codex",
+  "model": "gpt-6-astra"
+}
