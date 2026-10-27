@@ -47,3 +47,6 @@ dist/
 website/frontend/node_modules/
 website/frontend/reports/
 website/static/dist/
+
+# Ephemeral credential files produced by google-github-actions/auth.
+gha-creds-*.json
