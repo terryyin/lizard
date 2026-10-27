@@ -7,7 +7,7 @@ and run those later. Every story owns full cycles, not horizontal QA phases.
 
 | Story | PRs | State and value |
 | --- | --- | --- |
-|SEED-010#review-fabio-malpezzi-prs|527,528,531,533,534,532,535,536|Eight dispositions delivered; lifecycle wrap-up pending. Three merged/thanked, five linked corrections.|
+|SEED-010#review-fabio-malpezzi-prs|527,528,531,533,534,532,535,536|Completed eight-disposition scope; recoverable source and proof below. Three merged/thanked, five linked corrections.|
 |[SEED-010#review-structural-js-prs](../../../.planning/seeds/SEED-010-fabio-malpezzi-pr-reviews.md#review-structural-js-prs)|537–543|Queued; mapped seven-slice plan awaits story refinement. Complete function/parameter/boundary review cycles.|
 |[SEED-010#review-lexical-js-prs](../../../.planning/seeds/SEED-010-fabio-malpezzi-pr-reviews.md#review-lexical-js-prs)|544–547|Queued; mapped four-slice plan awaits story refinement. Complete lexical/condition review cycles.|
 
@@ -49,3 +49,8 @@ New review batches are queued after existing known correction stories because
 the owner said they are not urgent; existing relative priority is preserved.
 Structural work precedes lexical work for broader function-metric impact, not
 because of an unproved dependency. Future refinement reuses the mapped plans.
+
+The first batch's completed source, plan, obligations and proof are recoverable
+at [625971ab](https://github.com/terryyin/lizard/tree/625971ab2c2d61249d1038f63e3dde25da166d84/.planning/slice-plans/004-fabio-malpezzi-pr-reviews).
+Three merged contributions retain their acknowledgements; the five technical
+corrections and both later review batches remain queued and unstarted.

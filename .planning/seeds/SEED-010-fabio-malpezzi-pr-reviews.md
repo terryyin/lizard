@@ -28,48 +28,10 @@ No PR is dropped, and later batches remain useful if siblings are deferred.
 
 Full policy: [complete-cycle contract](../../docs/reviews/fabio-malpezzi-20261027/REVIEW-CONTRACT.md).
 The [frozen set and mapping](../../docs/reviews/fabio-malpezzi-20261027/story-map.md)
-preserve original heads/slices. Original source is recoverable at dbb4af6c in Git.
+preserve original heads/slices. The completed first batch is recoverable at 625971ab in Git.
 Scope removal and QA handoff were rejected. No S/M/L band definitions are recorded
 in this project; completed work uses actual outcomes, while later effort hypotheses
 remain unestimated until refinement. No numeric sizing policy is invented.
-
-<a id="review-fabio-malpezzi-prs"></a>
-
-### Conclude the first eight FabioMalpezzi PR reviews
-
-**Identity:** SEED-010#review-fabio-malpezzi-prs
-```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/004-fabio-malpezzi-pr-reviews/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"960f225afdc9b9449cf02164c8f42572b44862b405d4702ba133101f59ed02fb","plan":"79a41b79f441a9f6a729ce770560e80805e929eb91d249f6052e4552701e89b5"}}
-```
-
-**Beneficiaries:** Analyzer users receiving correct metrics; maintainers closing
-the current contribution-review focus with durable evidence.
-
-**Goal:** Complete and close the eight already-reviewed contributions as verified
-merges with thanks or justified unmerged conclusions, preserving useful value if
-the later stories never run.
-
-**Scope:** Only PRs 527, 528, 531, 533, 534, 532, 535 and 536 from the frozen set. Each owns
-the full contract above, current-target reproduction, worthiness, complete code/
-shared-consumer review, correction/refactor, performance and final disposition.
-Correct defects and refactor the overall affected changes into a coherent, minimal solution.
-Also check the cumulative effect of the accepted set against the starting baseline.
-Measure runtime before and after the change using the same environment, input corpus and options.
-Corrections estimated above fifteen minutes belong to the linked follow-up stories, not to this review's implementation scope.
-
-**Key examples and evaluation:** PRs 527, 532 and 535 merged with corrected final heads,
-required CI, passing strict performance and thank-you messages. PRs 528, 531, 533, 534
-and 536 have real problems and inadequate proposals; canonical SEED-012 through SEED-016
-own their corrections above 15 minutes. No unfinished correction or QA is transferred to
-the later review batches. All eight disposition records and compatible cumulative
-proof are retained. Proper retrospective, execution completion and wrap-up/landing
-remain lifecycle work before this story is closed.
-
-**Effort:** Actual eight completed review loops; no future implementation estimate.
-**Dependencies:** None. **Safe stop:** Three accepted fixes and five linked
-correction stories remain useful independently of later review batches.
-**Plan:** [retained first plan](../slice-plans/004-fabio-malpezzi-pr-reviews/PLAN.md).
-
 
 <a id="review-structural-js-prs"></a>
 
