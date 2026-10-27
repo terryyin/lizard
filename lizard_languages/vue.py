@@ -23,17 +23,15 @@ class VueReader(TypeScriptReader):
 
     @staticmethod
     def code_tokens(tokens):
-        """Only the tokens inside <script> blocks, without their tags."""
-        tokens = iter(tokens)
-        _skip_to_script(tokens)
+        """Script tokens only; keep newline count of every filtered token."""
+        in_script = False
         for token in tokens:
-            if not token.startswith(('<script', '</script')):
-                yield token
+            if token.startswith('<script'):
+                in_script = True
             elif token.startswith('</script'):
-                _skip_to_script(tokens)
-
-
-def _skip_to_script(tokens):
-    for token in tokens:
-        if token.startswith('<script'):
-            return
+                in_script = False
+            elif in_script:
+                yield token
+                continue
+            for _ in range(token.count('\n')):
+                yield '\n'
