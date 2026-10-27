@@ -16,6 +16,13 @@ class Test_JavaScript_functions(unittest.TestCase):
         functions = get_js_function_list("function foo(a, b){}")
         self.assertEqual(2, functions[0].parameter_count)
 
+    def test_parameters_starting_with_underscore_or_dollar(self):
+        functions = get_js_function_list(
+            "function r(text, _a, $b, _) { return text; }\n"
+            "const s = (_x, $y) => { return 1; };")
+        self.assertEqual([('r', 4), ('s', 2)],
+                         [(f.name, f.parameter_count) for f in functions])
+
     def test_function_assigning_to_a_name(self):
         functions = get_js_function_list("a = function (a, b){}")
         self.assertEqual('a', functions[0].name)
