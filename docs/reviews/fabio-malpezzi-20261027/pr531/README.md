@@ -1,9 +1,10 @@
 # PR531 retained review inputs
 
-Disposition: defer the real defect to
-[SEED-013#arrow-object-boundaries](../../../../.planning/seeds/SEED-013-arrow-object-boundaries.md#arrow-object-boundaries)
-and leave authored head `47aa35735cccba962e507edb179eae1154ab6ad2` unmerged.
-[review-findings.md](review-findings.md) owns observations, commands and limits.
+Disposition: the deferred defect was corrected and merged through
+[PR531](https://github.com/terryyin/lizard/pull/531); see
+[review-findings.md](review-findings.md) for observations, commands, limits,
+and the delivered head. Authored head `47aa35735cccba962e507edb179eae1154ab6ad2`
+was the review baseline before correction.
 
 The original measured performance harness has SHA256
 `3064d8d77047db2f084ce9fd6ae09d98acf34453316b7df20fb184cbb3217bf5`.
