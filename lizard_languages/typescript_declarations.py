@@ -166,11 +166,19 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
         self.statemachine_return()
 
     @CodeStateMachine.read_inside_brackets_then("()", "_after_function_type_params")
-    def _function_type_annotation(self, _):
-        pass
+    def _function_type_annotation(self, token):
+        if self.br_count == 1 and token == '(':
+            self._grouped_type = None
+        elif self._grouped_type is None and not token.isspace():
+            # "((n: number) => number)" groups a complete return type.
+            # Its following arrow belongs to the runtime signature.
+            self._grouped_type = token == '('
 
     def _after_function_type_params(self, token):
         if token.isspace():
+            return
+        if self._grouped_type:
+            self.next(self._state_simple_type, token)
             return
         if token == '=>':
             # Consume "(...) => ReturnType" inside the annotation so the

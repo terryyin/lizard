@@ -1,7 +1,7 @@
 """Shared JavaScript and TypeScript runtime state dispatch."""
 
 from .code_reader import CodeStateMachine
-from .javascript_bindings import JavaScriptBindingsMixin
+from .javascript_bindings import BindingSummary, JavaScriptBindingsMixin
 from .javascript_functions import JavaScriptFunctionsMixin
 from .javascript_objects import JavaScriptObjectsMixin
 from .typescript_declarations import (
@@ -36,7 +36,9 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
 
     def __call__(self, token, reader=None):
         if self._binding_candidate:
-            self._binding_candidate(token)
+            # Candidates retain their state; only named-formal readers need
+            # an event to dispatch initializer expressions separately.
+            self._binding_candidate.read_token(token, report=False)
         # Called directly rather than through super(): no mixin defines
         # __call__, and this runs once per token.
         return CodeStateMachine.__call__(self, token, reader)
@@ -114,6 +116,10 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         elif token in ('else', 'do', 'try', 'final'):
             self.next(self._expecting_statement_or_block)
         elif token in ('=>',):
+            if not self._pending_bindings:
+                name = self.last_tokens
+                if name.replace('$', '_').isidentifier():
+                    self._pending_bindings = BindingSummary(0, 0, 0, [name])
             self._state = self._arrow_function
         elif token == '=':
             # Only set function_name for valid identifiers
@@ -138,7 +144,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                 if (self.last_tokens != self.function_name
                         and self._prev_token not in ('=', 'async', '>')):
                     self.function_name = ''
-                    self.sub_state(self.__class__(self.context))
+                    self._read_binding_candidate(')')
                 else:
                     if not self.started_function:
                         self._function(self.function_name)
