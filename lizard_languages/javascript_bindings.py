@@ -31,7 +31,12 @@ class JavaScriptBindings:
 
     @property
     def in_expression(self):
-        return self._frames[-1].initializing or bool(self._expression_brackets)
+        return not self.ended and (
+            self._frames[-1].initializing or bool(self._expression_brackets))
+
+    @property
+    def ended(self):
+        return not self._frames
 
     @property
     def at_start(self):
@@ -41,7 +46,7 @@ class JavaScriptBindings:
         return self.read_token(token).ended
 
     def read_token(self, token):
-        if not self._frames:
+        if self.ended:
             return BindingEvent(True, False, False, False, False)
         frame = self._frames[-1]
         initializing = self.in_expression
@@ -59,10 +64,11 @@ class JavaScriptBindings:
             self._frames.pop()
         elif token == ',':
             frame.initializing = False
-        elif frame.initializing or token == '(' or (
+        elif frame.initializing or token in ('(', '${') or (
                 token == '[' and frame.closing == '}'
                 and self.previous in ('', '{', ',')):
-            # Computed object keys and parentheses contain expressions.
+            # Computed object keys, parentheses, and template substitutions
+            # contain expressions.
             if token in self.BRACKETS:
                 self._expression_brackets.append(self.BRACKETS[token])
         elif token in ('[', '{'):
@@ -70,7 +76,7 @@ class JavaScriptBindings:
         elif token == '=':
             self.defaults += 1
             frame.initializing = True
-        ended = not self._frames
+        ended = self.ended
         if not ended:
             self.previous = token
         return BindingEvent(ended, initializing, self.defaults != defaults,

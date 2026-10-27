@@ -148,6 +148,46 @@ class Test_JavaScript_default_initializers(unittest.TestCase):
                                   for f in functions])
 
 
+class Test_JavaScript_expression_arrow_before_object_literal(unittest.TestCase):
+    def test_comma_ends_expression_arrow_inside_brackets(self):
+        anonymous = ('(anonymous)', 1, 1, 1)
+        cases = [
+            ("it('t', () => {\n  const m = new Map([\n"
+             "    ['a', () => f(), { id: 1 }],\n  ]);\n  g(r);\n});\n",
+             [('(anonymous)', 1, 3, 3), ('(anonymous)', 1, 1, 6)]),
+            ('h(() => f(), { id: 1 });\ng(r);\n', [anonymous]),
+            ('h([[() => f(), { id: 1 }]]);\ng(r);\n', [anonymous]),
+            ('const a = [() => f(), { id: 1 }];\ng(r);\n', [anonymous]),
+            ('const a = [() => f(), x];\ng(r);\n', [anonymous]),
+            ('const a = [() => { f(); }, { id: 1 }];\ng(r);\n', [anonymous]),
+            ('h((a = 1) => f(), { id: 1 });\ng(r);\n',
+             [('(anonymous)', 2, 1, 1)]),
+            ('h(() => f(), { id: () => g() });\ng(r);\n',
+             [anonymous, ('id', 1, 1, 1)]),
+        ]
+        self.check_functions(cases)
+
+    def test_subscript_in_call_arguments_keeps_function_open(self):
+        self.check_functions([
+            ("it('t', () => {\n  e(r[0]);\n  g(x);\n});\n",
+             [('(anonymous)', 1, 1, 4)]),
+            ("it('t', () => {\n  e(r[0]).t([{}]);\n});\n",
+             [('(anonymous)', 1, 1, 3)]),
+            ('function f() {\n  return { w: [m[n - 1]] };\n}\nfunction g() {}\n',
+             [('f', 1, 1, 3), ('g', 1, 4, 4)]),
+        ])
+
+    def check_functions(self, cases):
+        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+            for code, expected in cases:
+                with self.subTest(filename=filename, code=code):
+                    functions = analyze_file.analyze_source_code(
+                        filename, code).function_list
+                    self.assertEqual(expected, [
+                        (f.name, f.cyclomatic_complexity,
+                         f.start_line, f.end_line) for f in functions])
+
+
 class Test_JavaScript_nullish_coalescing(unittest.TestCase):
     def test_nullish_operators_count_once(self):
         code = (

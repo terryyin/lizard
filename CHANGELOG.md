@@ -1,5 +1,11 @@
 # Change Log
 
+## Unreleased
+
+### Bug Fixes
+- JavaScript, TypeScript, JSX, and TSX: no longer crash with `IndexError` when an expression-bodied arrow is followed by an object literal inside brackets, such as `h(() => f(), { id: 1 })`; an expression-bodied arrow now ends at the enclosing `,`, so the following object literal and its members are no longer folded into it (issue #524)
+- JavaScript, TypeScript, JSX, and TSX: a subscript inside call arguments or an array, such as `e(r[0])`, no longer ends the enclosing function early (regression in 1.24.2, issue #524)
+
 ## 1.24.3
 
 ### Bug Fixes
