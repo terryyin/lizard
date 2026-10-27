@@ -120,6 +120,14 @@ shellHook, printing pip output to stdout and upgrading `platformdirs` past
   - Observed effect: overlapping shellHook entry recreated the shared environment during read-only work. Sequential recovery passed; accepted final qualification used one serial outer runner.
   - Inference: reinforces the existing project issue: serialize Nix entry across agents, including read-only probes and observer acknowledgements.
 
+- Execution: SEED-015#ternary-arrow-boundaries
+  - Timestamp: unknown (2026-10-27 UTC / 2026-10-28 Singapore execution)
+  - Tool: Codex
+  - Open Dough release: unknown; installed guidance retained from established claim6f506711
+  - Evidence: root-performance.md and delivery-local-proof.md at PR534 qualified head0bfc798; sequential Nix setup/read/test/publication tool results repeatedly print the platformdirs4.4.0/virtualenv20.13.2 warning despite PIP_QUIET=1.
+  - Observed effect: shellHook initialization and dependency noise accompany read-only commands and proof. Every owned Nix entry was serialized; no SEED015 parallel-Nix race is claimed. Interpreter/import hashes and accepted proof held.
+  - Inference: recurrence of the project environment issue; no total latency or causal timing allocation is asserted.
+
 ## DD-004 — PR merge preceded a missing affected-workload performance gate
 
 Complete the source's relevant workload selection before the exact-head merge.
@@ -250,6 +258,55 @@ implementer's passing tests and the reproducer did not cover.
   - Observed effect: two return rounds before delivery instead of a later regression; both became discriminating tests.
   - Inference: a practice worth keeping for grammar heuristics where examples are not exhaustive.
 
+## DD-011 — Integrity checks must separate measured inputs from acceptance records
+
+A post-measurement integrity checker asserted an entirely clean tracked tree,
+although the coordinator still needed to write accepted PLAN evidence. It also
+included its own previous generated manifest among hashed inputs. Keep measured
+product/corpus/harness invariants separate from owned acceptance records and
+exclude an output manifest from its own input map.
+
+### Occurrences
+- Execution: SEED-015#ternary-arrow-boundaries
+  - Timestamp: unknown (2026-10-27T19:07–19:12 UTC observation window)
+  - Tool: Codex
+  - Open Dough release: unknown; installed guidance retained from established claim6f506711
+  - Evidence: qualification9_refactor return; root-performance.md and root-qualification-integrity.py at e3956fa; cache seed015-root-737aeaf7/refactor-pre-integrity.json preserves the previous manifest.
+  - Observed effect: independent refactor found the zero-tracked-diff/self-output mismatch before evidence delivery. It permitted only the owned PLAN path, kept product/tests unchanged, excluded its own output and regenerated integrity successfully. Four frozen drivers,120 timing pairs and public observations were unchanged; no tests or timing repeated.
+  - Inference: distinguish evolving proof records from immutable measured inputs rather than weakening either check. This records the observed seam, not a measurement failure or new benchmark framework.
+
+## DD-012 — Absolute CLI corpus paths bind historical output hashes
+
+The broad CLI includes source paths in its output. A hash from an earlier
+absolute corpus directory cannot directly validate the same immutable inputs
+copied to a new directory. Freeze literal new arguments and compare all actual
+new outputs; use exact prefix correspondence only to explain historical bytes.
+
+### Occurrences
+- Execution: SEED-015#ternary-arrow-boundaries
+  - Timestamp: unknown (2026-10-27 UTC / 2026-10-28 Singapore execution)
+  - Tool: Codex
+  - Open Dough release: unknown; installed guidance retained from established claim6f506711
+  - Evidence: final-setup-failure.json and final-performance.md at737aeaf; G8; root-freeze.json/root-performance.md retain the later prospective protocol and actual outputs.
+  - Observed effect: the first ec2 freeze exited1 before any timing because a historical CLI hash embedded seed015-optimized-8dac7b80/corpus. Exact old/new prefix substitution explained the discrepancy; setup2 retained all three actual new byte-identical outputs. Failed setup/source hashes remained held; source/corpus/expected metrics were not normalized or weakened.
+  - Inference: output fixtures that include paths need explicit argument correspondence before a timing launch. A path-only mismatch proves neither a product regression nor a performance result.
+
+## DD-013 — Unbounded discovery and CI payloads waste coordinator context
+
+Narrow source searches and project public CI responses to needed fields before
+emitting them. Check-run objects repeat app permissions and endpoints for each
+job; retaining raw data need not print it into coordinator context.
+
+### Occurrences
+- Execution: SEED-015#ternary-arrow-boundaries
+  - Timestamp: unknown (after Q0bfc publication and before PR534 merge48de7f2)
+  - Tool: Codex
+  - Open Dough release: unknown; installed guidance retained from established claim6f506711
+  - Evidence: continuation_coordinator functions.exec q_gate_initial_1 output reports original token count23070 and truncation; later q_ci_final_groups/final merge guard project job ID/name/status/conclusion/head/URL and validate all32 checks.
+  - Observed effect: one initial result printed repeated nested GitHub app metadata and was truncated. The full value was retained in a tool store; subsequent complete per_page100 collection and compact projection preserved both14-job matrices and final gate facts without that metadata. No CI verdict was inferred from truncation.
+  - Additional evidence: root retained a20,788-token GitHub ALL_TOOLS discovery matching shared description boilerplate, and a125,371-token broad installation rg output; exact-name projection and exact API/receiver files replaced those searches before conclusions. No unrelated launch-record contents or truncated output established acceptance.
+  - Inference: avoidable output/context cost, not a provider or CI failure. No aggregate token saving or elapsed-time reduction is claimed.
+
 ## Retention
 
-- Highest allocated local number: 10
+- Highest allocated local number: 13

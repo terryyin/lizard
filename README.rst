@@ -84,8 +84,9 @@ also count, including nested defaults and destructuring inside a function body.
 Explicit decisions within an initializer, such as a ternary expression or
 ``&&`` / ``||``, contribute separately.
 
-This also applies to JSX and TSX. Existing CCN scores can increase for functions
-that use defaults, which may cause them to exceed a configured CCN threshold.
+This also applies to JSX and TSX. Defaults may increase CCN above a configured
+threshold. See `arrow boundaries <docs/javascript-arrow-boundaries.md>`_ for
+ternary branches, type annotations and the existing curried-arrow convention.
 
 Installation
 ------------

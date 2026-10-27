@@ -6,8 +6,6 @@ Maintenance, bug fixing, and PR reviews.
 
 ## Taken
 
-- [Preserve arrow boundaries across ternary and type colons](seeds/SEED-015-ternary-arrow-boundaries.md#ternary-arrow-boundaries) — SEED-015#ternary-arrow-boundaries ([plan](slice-plans/011-ternary-arrow-boundaries/PLAN.md))
-
 ## Backlog list
 
 - [Preserve original Vue line numbers when template precedes script](seeds/SEED-017-vue-source-line-numbers.md#vue-source-line-numbers) — SEED-017#vue-source-line-numbers
