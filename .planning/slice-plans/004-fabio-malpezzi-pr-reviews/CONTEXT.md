@@ -1,5 +1,14 @@
 # Review context
 
+The preparation observations below describe the original nineteen-PR mission.
+The current plan owns only the first eight completed dispositions; the durable
+story-map and successor plans preserve the other eleven. Their execution is
+deferred by the owner. This historical context grants no further batch execution.
+
+Slice 8's accepted execution increment is dbb4af6c4d18505ce231bea7c444d0d14b805120
+(previous base f25aeca2e4cbf149ab90073e97d4fee43dabbf32). Its publication was
+accepted but unobserved after the original bounded CI observer ended.
+
 ## Existing solutions and architectural constraints
 
 PFE inspection located the following owners; change these concepts where the
@@ -41,7 +50,7 @@ at `62b6d76dd2c02cdd084f1b6f9fefff449eced3e8` on 2026-10-27:
   evidence about a future PR head.
 - The following consuming operation reached FunctionInfo through the public
   analyzer (and the actual NS extension for Python). All 19 examples showed
-  the discrepancies recorded in [their owning slices](SLICE-PROOF.md). They establish
+  the discrepancies recorded in the [original owning slices](https://github.com/terryyin/lizard/blob/dbb4af6c4d18505ce231bea7c444d0d14b805120/.planning/slice-plans/004-fabio-malpezzi-pr-reviews/SLICE-PROOF.md). They establish
   symptoms, not complete correctness requirements or proof that a PR fixes them.
 - `nix develop -c python -m pytest` passed: 1665 passed, 7 skipped.
   Existing tests passing while the examples fail means new regression proof

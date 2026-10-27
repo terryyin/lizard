@@ -1,4 +1,9 @@
-# Shared review contract
+# Historical original review contract
+
+This is the original nineteen-PR planning snapshot, retained with its proof.
+The current eight-PR plan and the two successor stories use the
+[complete-cycle contract](../../../docs/reviews/fabio-malpezzi-20261027/REVIEW-CONTRACT.md).
+The original whole-cohort slice ownership below grants no later-batch execution.
 
 ## Review contract shared by every slice
 

@@ -1,32 +1,31 @@
-# Review and dispose of FabioMalpezzi's open PRs
+# Conclude the first eight FabioMalpezzi PR reviews
 
 **Identity:** SEED-010#review-fabio-malpezzi-prs
-**Source:** [Refined story](../../seeds/SEED-010-fabio-malpezzi-pr-reviews.md#review-fabio-malpezzi-prs)
+**Source:** [first batch](../../seeds/SEED-010-fabio-malpezzi-pr-reviews.md#review-fabio-malpezzi-prs)
 
 ## Goal and scope
 
-Give each PR in the execution-start open queue an evidence-backed disposition:
-merge a worthwhile, fully verified revision and thank its author; explain an
-unnecessary change; or defer a real problem to a linked correction story.
-The source owns the strict slowdown limit below 3% and correction estimate
-cutoff above fifteen minutes. Review and measurement time are not that cutoff.
-Execution is authorized by the established start dated 2026-10-27.
+The owner resplit the19-PR mission at the completed eight-disposition boundary.
+This plan now owns only527,528,531,533,534,532,535,536, preserving every completed
+slice and its proof. Later seven structural/four lexical reviews are separately
+queued, complete-cycle stories; they do not inherit execution readiness.
+No product implementation remains here. Retrospective, completion and proper
+wrap-up/landing must still settle before closure. No later batch starts now.
 
-Retain the source's exclusions. Do not promise all PRs will merge or assume
-their proposed implementation is correct. Keep publication of planning records
-separate from hosted PR merges; Dough Land does not merge PRs.
+## Shared inputs and mapping
 
-## Shared execution inputs
+- [Complete-cycle contract](../../../docs/reviews/fabio-malpezzi-20261027/REVIEW-CONTRACT.md)
+- [Original-to-new mapping](../../../docs/reviews/fabio-malpezzi-20261027/story-map.md)
+- [Existing design/execution evidence](CONTEXT.md)
+- [Retained focused proof](SLICE-PROOF.md)
+- [Original frozen queue](execution-queue.json)
 
-- [Review contract, performance protocol, promise ownership](REVIEW-CONTRACT.md)
-- [Design constraints, preparation evidence, execution context](CONTEXT.md)
-- [Slice baselines, expectations, focused commands](SLICE-PROOF.md)
-- [Frozen execution-start queue](execution-queue.json)
-
-Each slice is one Behavior disposition loop. Read its source PR's whole change,
-discussion and checks; reproduce on current target; apply the shared contract.
-Preserve the source's strict slowdown limit below 3% and correction cutoff above
-fifteen minutes, excluding review and measurement. No partial candidate may merge.
+Each retained slice is one complete Behavior disposition, including its applicable
+correction/performance/refactor/full/CI/merge/acknowledgement gates. Three PRs
+merged with thanks; five inadequate proposals have linked correction stories.
+The eight-slice plan is proportionate and coherent; no remaining independent
+outcome or hidden product work needs a further slice. Accepted gaps below are
+proved or excluded by the explicit >15min source qualification, never waived.
 
 ## Ordered slices
 
@@ -78,72 +77,6 @@ Status: done
 Source: https://github.com/terryyin/lizard/pull/536
 Proof and expected result: [slice 8](SLICE-PROOF.md).
 
-### 9. Arrow parameters after member access — PR #537
-Type: Behavior
-Status: planned
-Source: https://github.com/terryyin/lizard/pull/537
-Proof and expected result: [slice 9](SLICE-PROOF.md).
-
-### 10. Immediately invoked function boundaries — PR #538
-Type: Behavior
-Status: planned
-Source: https://github.com/terryyin/lizard/pull/538
-Proof and expected result: [slice 10](SLICE-PROOF.md).
-
-### 11. Parenthesized expression metrics — PR #539
-Type: Behavior
-Status: planned
-Source: https://github.com/terryyin/lizard/pull/539
-Proof and expected result: [slice 11](SLICE-PROOF.md).
-
-### 12. Switch label boundaries — PR #540
-Type: Behavior
-Status: planned
-Source: https://github.com/terryyin/lizard/pull/540
-Proof and expected result: [slice 12](SLICE-PROOF.md).
-
-### 13. Get and set member names — PR #541
-Type: Behavior
-Status: planned
-Source: https://github.com/terryyin/lizard/pull/541
-Proof and expected result: [slice 13](SLICE-PROOF.md).
-
-### 14. Array values and computed names — PR #542
-Type: Behavior
-Status: planned
-Source: https://github.com/terryyin/lizard/pull/542
-Proof and expected result: [slice 14](SLICE-PROOF.md).
-
-### 15. Object spread expressions — PR #543
-Type: Behavior
-Status: planned
-Source: https://github.com/terryyin/lizard/pull/543
-Proof and expected result: [slice 15](SLICE-PROOF.md).
-
-### 16. JavaScript line-comment termination — PR #544
-Type: Behavior
-Status: planned
-Source: https://github.com/terryyin/lizard/pull/544
-Proof and expected result: [slice 16](SLICE-PROOF.md).
-
-### 17. Conditions in template interpolations — PR #545
-Type: Behavior
-Status: planned
-Source: https://github.com/terryyin/lizard/pull/545
-Proof and expected result: [slice 17](SLICE-PROOF.md).
-
-### 18. Keyword member names — PR #546
-Type: Behavior
-Status: planned
-Source: https://github.com/terryyin/lizard/pull/546
-Proof and expected result: [slice 18](SLICE-PROOF.md).
-
-### 19. Ternary and optional markers — PR #547
-Type: Behavior
-Status: planned
-Source: https://github.com/terryyin/lizard/pull/547
-Proof and expected result: [slice 19](SLICE-PROOF.md).
-
 ## Current execution evidence
 
 Slice1's disposition and regression/performance proof are accepted and delivered.
@@ -152,7 +85,8 @@ conversation. Its separate commitments match the source: reproduce/value/review,
 shared consumers, conditional correction or >15m follow-up, repeated comparable
 performance including cumulative effects, final tests/CI, exact-head merge and
 thank-you. Each disposition keeps its own proof and remaining owners in the
-linked per-PR record; unfinished PRs remain with their ordered slices.
+linked per-PR record. The other eleven PRs belong to the two successor plans;
+all eight dispositions in this narrowed plan are done.
 PR527 merged as e871ae4. Expanded control performance also passes; its evidence
 and the corrected acceptance ordering are in [527-review.md](527-review.md).
 PR528 is deferred to SEED-012#regex-literal-context; [528-review.md](528-review.md)
@@ -214,3 +148,30 @@ Disposition: proved by slice 7: the three-line at_start guard preserves receiver
 Reported: slice 8 — "PR536 fixes reported counts but changes alias names, misses empty binding slots and leaves callback-type phantom functions; affected API/name workloads exceed3%, and coherent correction is estimated30–45minutes, queued as SEED-016#arrow-parameter-bindings."
 Story clause: "Correct defects and refactor the overall affected changes into a coherent, minimal solution."
 Disposition: excluded "Corrections estimated above fifteen minutes belong to the linked follow-up stories, not to this review's implementation scope."
+
+## Execution complete
+
+Product advice: Preserve the five queued technical corrections in their current
+order, then the two owner-requested complete-cycle review batches. No additional
+product story or architectural change is recommended. The user explicitly
+deferred those batches; their mapped plans await story refinement.
+
+Retrospective: the eight completed dispositions satisfy the amended scope.
+Attributable accepted increments are af27c910, 16eed224, c56a2fe2, 7186fdbe,
+33807306, c3ca2c73, f25aeca2 and dbb4af6c. Their per-PR evidence owns the
+three corrected merges and five justified >15-minute deferrals. Python support,
+website revival and React modernization are separate upstream work, excluded
+from attribution. Current React/JSON consumers preserve the parameter-count
+contract. No new product correction beyond the existing five was established.
+The public analyzer, CLI, formatter, threshold and duplicate-list observations
+exercise real parsing; shared-consumer and cumulative proof remain compatible.
+No test consolidation is justified by duplicate coverage or measured cost.
+ADR-0000/0001 ownership and vocabulary hold. DD-003 through DD-005 retain the
+supported environment/acceptance/adapter process findings in DearDough.md.
+
+The original execution-branch observer ended after its bounded lifetime.
+The last two accepted increments were unobserved; no green receipt is inferred.
+Completion will consume that observer's actual receipt, then the explicitly
+requested wrap-up will establish separate authorized-trunk observation.
+Final merged-target full tests/make and the real current workflow remain
+closure gates. This records completed review, not successful closure.

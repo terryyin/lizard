@@ -8,7 +8,7 @@ Maintenance, bug fixing, and PR reviews.
 
 - [Claim support only for the Python versions CI verifies](seeds/SEED-006-python-version-support.md#ci-verified-python-support) — SEED-006#ci-verified-python-support ([plan](slice-plans/003-ci-verified-python-support/PLAN.md))
 - [Revive the Lizard homepage and online demo](seeds/SEED-011-lizard-website-revival.md#revive-lizard-website) — SEED-011#revive-lizard-website ([plan](slice-plans/004-lizard-website-revival/PLAN.md))
-- [Review, correct and merge FabioMalpezzi's open PRs](seeds/SEED-010-fabio-malpezzi-pr-reviews.md#review-fabio-malpezzi-prs) — SEED-010#review-fabio-malpezzi-prs ([plan](slice-plans/004-fabio-malpezzi-pr-reviews/PLAN.md))
+- [Conclude the first eight FabioMalpezzi PR reviews](seeds/SEED-010-fabio-malpezzi-pr-reviews.md#review-fabio-malpezzi-prs) — SEED-010#review-fabio-malpezzi-prs ([plan](slice-plans/004-fabio-malpezzi-pr-reviews/PLAN.md))
 
 ## Backlog list
 
@@ -17,3 +17,5 @@ Maintenance, bug fixing, and PR reviews.
 - [Preserve multiline arrow expressions and surrounding statement metrics](seeds/SEED-014-multiline-arrow-boundaries.md#multiline-arrow-boundaries) — SEED-014#multiline-arrow-boundaries
 - [Preserve arrow boundaries across ternary and type colons](seeds/SEED-015-ternary-arrow-boundaries.md#ternary-arrow-boundaries) — SEED-015#ternary-arrow-boundaries
 - [Report consistent JavaScript and TypeScript arrow parameters](seeds/SEED-016-arrow-parameter-bindings.md#arrow-parameter-bindings) — SEED-016#arrow-parameter-bindings
+- [Conclude the JavaScript and TypeScript structural PR reviews](seeds/SEED-010-fabio-malpezzi-pr-reviews.md#review-structural-js-prs) — SEED-010#review-structural-js-prs
+- [Conclude the JavaScript and TypeScript lexical and condition PR reviews](seeds/SEED-010-fabio-malpezzi-pr-reviews.md#review-lexical-js-prs) — SEED-010#review-lexical-js-prs

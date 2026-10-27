@@ -2,142 +2,157 @@
 id: SEED-010
 status: active
 planted: 2026-10-27
-planted_during: Maintainer request to review, correct and merge FabioMalpezzi's open PRs
-trigger_when: A maintainer processes the open contributions from FabioMalpezzi
+planted_during: Maintainer request to review FabioMalpezzi contributions
+trigger_when: Complete a bounded set of contribution dispositions
 scope: large
 ---
 
-# SEED-010: FabioMalpezzi PR reviews
+# SEED-010: FabioMalpezzi contribution review batches
+
+## Parent problem and human decisions
+
+For analyzer users and maintainers, 19 unreviewed contributions should become
+worthwhile verified fixes or evidence-backed conclusions. The owner requested
+on 2026-10-27 that the completed focus be wrapped/landed and the remaining work
+be split into a small number of later stories. Each story owns complete cycles;
+correction, performance, refactor, CI and disposition are never horizontal phases
+passed to another story. The later work is not urgent and must not start now.
+
+Three stories preserve all original scope: eight completed dispositions, seven
+structural reviews and four lexical/condition reviews. Structural errors can lose whole functions
+or their metrics, so that batch precedes lexical policy review. This ordering is
+not a technical prerequisite. The first completed batch retains its stable identity.
+The strongest smaller alternative (one later 11-PR story) leaves a broad mixed
+review; collapsing independent PR loops into fewer slices would hide gates.
+No PR is dropped, and later batches remain useful if siblings are deferred.
+
+Full policy: [complete-cycle contract](../../docs/reviews/fabio-malpezzi-20261027/REVIEW-CONTRACT.md).
+The [frozen set and mapping](../../docs/reviews/fabio-malpezzi-20261027/story-map.md)
+preserve original heads/slices. Original source is recoverable at dbb4af6c in Git.
+Scope removal and QA handoff were rejected. No S/M/L band definitions are recorded
+in this project; completed work uses actual outcomes, while later effort hypotheses
+remain unestimated until refinement. No numeric sizing policy is invented.
 
 <a id="review-fabio-malpezzi-prs"></a>
 
-### Review, correct and merge FabioMalpezzi's open PRs
+### Conclude the first eight FabioMalpezzi PR reviews
 
 **Identity:** SEED-010#review-fabio-malpezzi-prs
 ```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/004-fabio-malpezzi-pr-reviews/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"0274d82cd71a46f37b151b5fbb3d926166f0fb2956c47d3facf8211c4686f71c","plan":"7d222a18cebb37c32428f8f2426b25d9239853013e74acfabc09a6f38f559670"}}
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/004-fabio-malpezzi-pr-reviews/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"960f225afdc9b9449cf02164c8f42572b44862b405d4702ba133101f59ed02fb","plan":"79a41b79f441a9f6a729ce770560e80805e929eb91d249f6052e4552701e89b5"}}
 ```
 
-**Goal:** Lizard users receive worthwhile fixes with correct metrics and
-acceptable performance, and maintainers can account for the disposition of
-every open PR from FabioMalpezzi.
+**Beneficiaries:** Analyzer users receiving correct metrics; maintainers closing
+the current contribution-review focus with durable evidence.
 
-**Scope:** Review every open PR in the
-[author's PR queue](https://github.com/terryyin/lizard/pulls?q=is%3Apr+state%3Aopen+author%3AFabioMalpezzi).
-Refresh the queue when execution starts and record that review set. The
-snapshot below was fetched on 2026-10-27; its problem descriptions and
-dependencies remain claims to verify during review.
+**Goal:** Complete and close the eight already-reviewed contributions as verified
+merges with thanks or justified unmerged conclusions, preserving useful value if
+the later stories never run.
 
-For each PR:
+**Scope:** Only PRs 527, 528, 531, 533, 534, 532, 535 and 536 from the frozen set. Each owns
+the full contract above, current-target reproduction, worthiness, complete code/
+shared-consumer review, correction/refactor, performance and final disposition.
+Correct defects and refactor the overall affected changes into a coherent, minimal solution.
+Also check the cumulative effect of the accepted set against the starting baseline.
+Measure runtime before and after the change using the same environment, input corpus and options.
+Corrections estimated above fifteen minutes belong to the linked follow-up stories, not to this review's implementation scope.
 
-- Reproduce the reported problem on the current target branch through an
-  observable analyzer or CLI result. Establish the expected result, whether
-  the problem remains real, and whether fixing it benefits users enough to
-  justify the change. Record evidence and a disposition when a report is
-  invalid, already fixed, duplicated, or not worth pursuing.
-- Review whether the proposed fix solves the actual problem completely.
-  Check code correctness, regressions, tests, readability, duplication,
-  complexity and other code smells. Examine the overall affected design and
-  shared behavior across languages, rather than judging only added lines.
-  Verify PR dependencies and interactions against earlier merges.
-- Measure runtime before and after the change using the same environment,
-  input corpus and options, with repeated runs on representative affected
-  inputs and a broader analysis workload. Record revisions, commands,
-  corpus, timings, variability and percentage change. Profile when needed to
-  explain a slowdown or locate a correction. A slowdown **strictly below
-  3%** is acceptable; a result at or above 3%, or noise that prevents judging
-  that threshold, does not satisfy the merge gate. Also check the cumulative
-  effect of the accepted set against the starting baseline.
-- Correct defects and refactor the overall affected changes into a coherent,
-  minimal solution. Cover observable behavior and relevant edge cases with
-  regression tests, following the project's language-reader and architecture
-  guidance when applicable. Verify the resulting changes together with
-  earlier accepted PRs.
-- If the problem is real but the necessary correction is estimated to take
-  **more than 15 minutes**, add a separate product backlog story with the
-  beneficiary, reproducer, expected result, remaining work, and source PR
-  link. Link that story from this review's disposition and leave the PR
-  unmerged pending a satisfactory fix. The limit applies to correction work,
-  not to the time needed for review or measurement; record a revised estimate
-  if the correction proves larger during work. Reuse an existing story if it
-  already covers the same problem.
-- Merge a PR only when it is worthwhile and its final corrected revision
-  passes correctness, code quality and performance review, the full
-  `nix develop -c python -m pytest` suite, applicable format checks and
-  required CI. Recheck the final revision after any correction or upstream
-  change. After a successful merge, post a thank-you message to FabioMalpezzi
-  on that PR, acknowledging the contribution and any material correction.
+**Key examples and evaluation:** PRs 527, 532 and 535 merged with corrected final heads,
+required CI, passing strict performance and thank-you messages. PRs 528, 531, 533, 534
+and 536 have real problems and inadequate proposals; canonical SEED-012 through SEED-016
+own their corrections above 15 minutes. No unfinished correction or QA is transferred to
+the later review batches. All eight disposition records and compatible cumulative
+proof are retained. Proper retrospective, execution completion and wrap-up/landing
+remain lifecycle work before this story is closed.
 
-**Review boundary:** The execution-start queue snapshot defines the review
-set for this delivery; record each PR number and head revision then. Later
-PRs are outside this delivery's commitment. Refresh a selected PR's state
-and revision before acting on it, and retain a disposition if it closes or
-is superseded during the review. A dependency claim does not establish that
-the dependency is needed or correct: verify it against the current target.
-An earlier merge invalidates evidence where it changes the behavior or
-measurement baseline of a remaining candidate.
+**Effort:** Actual eight completed review loops; no future implementation estimate.
+**Dependencies:** None. **Safe stop:** Three accepted fixes and five linked
+correction stories remain useful independently of later review batches.
+**Plan:** [retained first plan](../slice-plans/004-fabio-malpezzi-pr-reviews/PLAN.md).
 
-**Deferred promises:** Corrections estimated above fifteen minutes belong
-to the linked follow-up stories, not to this review's implementation scope.
-This story does not commit to unrelated parser redesign, other authors'
-queues, or a permanent benchmark service. The performance evidence must
-still be reproducible and retained with each disposition.
 
-**Key examples:**
+<a id="review-structural-js-prs"></a>
 
-1. A reproducible defect has a sound fix, needs ten minutes of cleanup, and
-   shows a measured 2% slowdown with sufficient measurement confidence →
-   correct and refactor it, verify the final revision, merge, and thank the
-   contributor.
-2. A proposed fix passes its tests but slows an affected workload by 3% →
-   profile and correct it before merging; passing tests alone is insufficient.
-3. A real defect needs thirty minutes of correction → queue a linked story
-   and record the deferral instead of merging the inadequate fix.
-4. The current target branch already produces the expected result → record
-   that evidence and why the proposed change is unnecessary.
-5. Two PRs pass separately but their combined changes miscount a function or
-   exceed the performance limit → resolve the interaction and revalidate, or
-   queue the correction under the same fifteen-minute rule.
-6. A correction is estimated at exactly fifteen minutes → it remains eligible
-   for this review; if new evidence raises the estimate above fifteen minutes,
-   retain the reproducer and queue the remaining correction. The threshold
-   does not waive any correctness or performance gate.
-7. Repeated timings cannot distinguish a slowdown below 3% from one at or
-   above 3% → retain the inconclusive evidence and withhold the merge until
-   the performance gate can be judged; do not label the candidate passed.
+### Conclude the JavaScript and TypeScript structural PR reviews
 
-**Preparation decision:** Terry confirmed ADR-0001 as Accepted on 2026-10-27;
-its in-file status is aligned with the index. Its metric meanings and naming
-guidance govern the reviews.
+**Identity:** SEED-010#review-structural-js-prs
+```json dough-story-state
+{"schemaVersion":1,"refinement":"not-refined","approach":"unselected"}
+```
 
-**Initial PR set (19 open PRs):**
+**Beneficiaries:** JS-family users relying on detected functions, parameter counts,
+boundaries and CCN; maintainers evaluating the remaining structural contributions.
+**Goal:** Give each of PR537–543 a complete, independently useful disposition,
+landing worthwhile fully verified changes and acknowledging the contributor.
+**Scope:** Exactly PR537,538,539,540,541,542,543 from the frozen set; later arrivals
+and other authors are excluded. Refresh current heads/target and verify the claims.
+Use the full complete-cycle contract: reproduction/value; whole-concept correctness
+and consumers; eligible correction; fresh independent refactor; affected/broad
+incremental/cumulative <3% performance; full/format/required CI; guarded merge and
+thanks, or an evidence-backed unnecessary/inadequate conclusion with follow-up
+under the existing >15min policy. No acceptance phase is left to another story.
 
-| PR | Reported problem |
+**Key examples to re-establish:**
+
+| PR | Reported observable result to verify |
 | --- | --- |
-| [#527](https://github.com/terryyin/lizard/pull/527) | Python nested structures counted without indentation boundaries |
-| [#528](https://github.com/terryyin/lizard/pull/528) | JavaScript/TypeScript regex literals after arrows and keywords |
-| [#531](https://github.com/terryyin/lizard/pull/531) | Objects in expression bodies of JavaScript arrow functions |
-| [#532](https://github.com/terryyin/lizard/pull/532) | Parameters named with `_`, `$` or a TypeScript type keyword |
-| [#533](https://github.com/terryyin/lizard/pull/533) | End lines of JavaScript arrow functions without braces |
-| [#534](https://github.com/terryyin/lizard/pull/534) | Arrow function boundaries at the colon of an enclosing ternary |
-| [#535](https://github.com/terryyin/lizard/pull/535) | TypeScript `this` declarations counted as parameters |
-| [#536](https://github.com/terryyin/lizard/pull/536) | JavaScript/TypeScript arrow function parameter counts |
-| [#537](https://github.com/terryyin/lizard/pull/537) | Arrow function parameter counts after member access |
-| [#538](https://github.com/terryyin/lizard/pull/538) | Function boundaries after immediately invoked functions |
-| [#539](https://github.com/terryyin/lizard/pull/539) | Lost conditions in parenthesized expressions after assignment |
-| [#540](https://github.com/terryyin/lizard/pull/540) | Case-label colons mistaken for type annotations |
-| [#541](https://github.com/terryyin/lizard/pull/541) | Members named `get` or `set` mistaken for accessor prefixes |
-| [#542](https://github.com/terryyin/lizard/pull/542) | Array property values mistaken for computed names |
-| [#543](https://github.com/terryyin/lizard/pull/543) | Object spreads mistaken for methods |
-| [#544](https://github.com/terryyin/lizard/pull/544) | JavaScript line comments continued after a backslash |
-| [#545](https://github.com/terryyin/lizard/pull/545) | Missing conditions in template interpolations |
-| [#546](https://github.com/terryyin/lizard/pull/546) | Keyword member names counted as conditions |
-| [#547](https://github.com/terryyin/lizard/pull/547) | Ternaries without spaces and optional parameter markers |
+|537|Member-assignment arrows expose two actual parameters, while real calls remain calls.|
+|538|An IIFE keeps setup's following statements and method boundaries/CCN.|
+|539|Abandoned provisional signatures retain enclosing expression tokens and CCN.|
+|540|Switch labels allow callbacks without treating label colons as types.|
+|541|Members named get/set coexist with genuine accessor prefixes and following functions.|
+|542|Array property values and computed names preserve function end boundaries.|
+|543|Spreads of calls/grouped expressions retain callbacks without fictitious methods.|
 
-**Completion:** Every PR in the refreshed review set has a recorded,
-evidence-backed disposition: merged with a thank-you message, unnecessary
-with a reason, or deferred to a linked backlog story for a real problem.
-Merged revisions have correctness, quality, test and performance evidence;
-the accepted set has also been checked for combined regressions. PR reviews,
-corrections, measurements, messages and merges occur when this queued story
-is executed.
+Examples are claims, not automatic acceptance. Already-correct or unworthy changes
+receive reasons; coherent corrections above 15 minutes receive linked canonical stories
+and stay unmerged. Accepted PRs 527/532/535 and later current-target changes are controls.
+**Effort hypothesis:** Seven complete review loops, unestimated pending refinement;
+the correction limit excludes review/measurement. **Depends on:** No assumed sibling.
+**Safe stop:** Its seven conclusions/fixes stand independently if lexical work waits.
+**Mapped plan:** [006 structural review](../slice-plans/006-structural-js-pr-reviews/PLAN.md).
+**Resume:** Run dough-story-refinement, reusing and realigning that mapped plan;
+it is awaiting story refinement, not ready for slice-plan refinement or execution.
+
+
+<a id="review-lexical-js-prs"></a>
+
+### Conclude the JavaScript and TypeScript lexical and condition PR reviews
+
+**Identity:** SEED-010#review-lexical-js-prs
+```json dough-story-state
+{"schemaVersion":1,"refinement":"not-refined","approach":"unselected"}
+```
+
+**Beneficiaries:** JS-family users relying on comment/template interpretation and
+condition counts; maintainers evaluating these remaining contributions.
+**Goal:** Give each of PR544–547 a complete disposition with worthwhile verified
+changes landed and acknowledged, or a recorded reason for leaving it unmerged.
+**Scope:** Exactly PR544,545,546,547 from the frozen set. Refresh head/target;
+later arrivals and other authors are excluded. Every PR owns its entire cycle:
+reproduction/value, whole-concept/shared-language review, eligible correction,
+fresh independent refactor, affected/broad incremental/cumulative <3% performance,
+full/format/required CI, exact-head merge and thanks, or an evidenced unnecessary/
+inadequate conclusion and linked >15min follow-up. Do not defer QA to a sibling.
+
+**Key examples to re-establish:**
+
+| PR | Reported observable result to verify |
+| --- | --- |
+|544|A JS line-comment backslash does not hide the next line; preserve C/C++ continuation rules.|
+|545|Template interpolation conditions count while literals/nesting/regex and boundaries remain correct.|
+|546|Keyword member names add no conditions; genuine control flow still does.|
+|547|Unspaced ternaries count; TypeScript optional markers do not, with chaining/nullish controls preserved.|
+
+Claims may prove invalid/already fixed or need >15min corrections; retain a final
+reason/follow-up instead of merging an inadequate candidate. No pending correction,
+performance, refactor, CI or acknowledgement is passed to another review story.
+**Effort hypothesis:** Four complete review loops, unestimated pending refinement.
+**Depends on:** No assumed structural-story prerequisite; verify genuine dependency.
+**Safe stop:** These conclusions/fixes retain value even if structural work waits.
+Whichever remaining batch actually finishes last also reconciles the full 19-PR
+cohort and final combined evidence; each individual merge validates combinations
+beforehand, never postponing its own performance gate to that final summary.
+**Mapped plan:** [007 lexical review](../slice-plans/007-lexical-js-pr-reviews/PLAN.md).
+**Resume:** Run dough-story-refinement, reusing/realigning the mapped plan; it is
+awaiting story refinement, not ready for slice-plan refinement or execution.
