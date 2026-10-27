@@ -22,6 +22,7 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       source_sha: ${{ steps.identity.outputs.source_sha }}
+      source_artifact: ${{ steps.identity.outputs.artifact }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -32,12 +33,14 @@ jobs:
           python-version: '3.13'
       - name: Validate tag and immutable event source
         id: identity
-        run: python scripts/website_release.py validate
+        run: |
+          printf 'artifact=website-source-attempt-%s\n' "$GITHUB_RUN_ATTEMPT" >> "$GITHUB_OUTPUT"
+          python scripts/website_release.py validate
       - name: Keep source identity
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: website-source
+          name: ${{ steps.identity.outputs.artifact }}
           path: release-evidence/
       - name: Summarize validation
         if: always()
@@ -45,7 +48,7 @@ jobs:
           RELEASE_JOB_RESULT: ${{ job.status }}
         run: python scripts/website_release.py summary
 
-  preview:
+  release:
     needs: validate
     runs-on: ubuntu-24.04
     timeout-minutes: 30
@@ -58,7 +61,7 @@ jobs:
           ref: ${{ needs.validate.outputs.source_sha }}
       - uses: actions/download-artifact@v4
         with:
-          name: website-source
+          name: ${{ needs.validate.outputs.source_artifact }}
           path: release-evidence/
       - uses: actions/setup-python@v5
         with:
@@ -66,6 +69,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: website/frontend/package.json
+      - name: Record tooling phase
+        run: python scripts/website_release.py phase --phase tooling
       - name: Install declared tooling
         run: |
           python -m pip install -r dev_requirements.txt
@@ -74,16 +79,22 @@ jobs:
           npm --prefix website/frontend exec -- playwright install --with-deps chromium
       - name: Validate and build the exact source
         run: |
+          python scripts/website_release.py phase --phase checks
           python -m pytest
           make
           npm --prefix website/frontend run build
           npm --prefix website/frontend run test:e2e
+          python scripts/website_release.py phase --phase authentication
       - uses: google-github-actions/auth@v3
+        id: auth
         with:
           project_id: lizardanalyzer
           workload_identity_provider: ${{ vars.WEBSITE_WIF_PROVIDER }}
           service_account: ${{ vars.WEBSITE_DEPLOY_SERVICE_ACCOUNT }}
+      - name: Record cloud setup phase
+        run: python scripts/website_release.py phase --phase cloud-setup
       - uses: google-github-actions/setup-gcloud@v3
+        id: cloud
       - name: Inspect identity and traffic before any redeploy
         run: |
           python scripts/website_release.py inspect
@@ -92,15 +103,22 @@ jobs:
         run: |
           python scripts/website_release.py deploy
           python scripts/website_release.py verify
+      - name: Promote the verified preview
+        run: python scripts/website_release.py promote
+      - name: Verify public HTTPS and target identity
+        run: python scripts/website_release.py public
+      - name: Observe current traffic even after failure
+        if: always() && steps.cloud.outcome == 'success'
+        run: python scripts/website_release.py observe
       - name: Keep release evidence and browser reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: website-release
+          name: website-release-attempt-${{ github.run_attempt }}
           path: |
             release-evidence/
             website/frontend/reports/
-      - name: Summarize the preview-only release
+      - name: Summarize the release and saved-split recovery
         if: always()
         env:
           RELEASE_JOB_RESULT: ${{ job.status }}

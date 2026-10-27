@@ -36,17 +36,7 @@ Preparation made no tag, IAM, deployment or traffic change; execution is authori
 
 ## Preparation premises
 
-Observed 2026-10-27 in this worktree at `ca7f5ac105d0f3655bf3c5ccf8aa855a52688a42`,
-using `nix develop -c` sequentially (parallel shell hooks recreate the same venv).
-
-| Premise | Actual observation |
-| --- | --- |
-| Lockfile produces deployable upload | npm ci/build passed; `gcloud meta list-files-for-upload` included manifest and named JS/CSS, excluded frontend/node_modules |
-| Browser proof exercises analysis | 16 scenarios / 134 steps passed; `E2E_BLOCK_ANALYSIS=1` produced 11 failed scenarios, including Python metrics, and exit 1; diagnostic environment removed |
-| Existing recovery state readable | Service read showed `revive-20261027-f818daf` at 100% |
-| Actions credential route absent | Repository variables and project Workload Identity pools both empty; real route remained slice 1 proof |
-
-Local upload selection did not prove deployment. Nix's known platformdirs warning did not prevent checks. Source/platform references remain in the story and identity guide; the target's 63-character combined bound leaves 32 for the mapped version.
+Preparation at `ca7f5ac` observed lockfile build/upload selection, real browser pass and broken-analysis diagnostic failure, old traffic100%, and absent WIF/Actions variables. Full original premises/commands remain inspectable at `6825db6:.planning/slice-plans/005-release-website-from-tags/PLAN.md`; current consuming observations below supersede availability assumptions. Source/platform references remain in the story/identity guide. Run Nix shell initialization sequentially: its hooks recreate the same venv.
 
 ## Execution context
 
@@ -59,6 +49,7 @@ Local upload selection did not prove deployment. Nix's known platformdirs warnin
   or replan override supplied; retain planning authority and bounded proof loops.
 - Slice 1 publication accepted as `0fb43372a348795b6d4eb34fbd6df9c6f3c38a1e`,
   suffix base `96e5aa4d77906e46f20f80a4bf1593c095314528`; same branch observer reused.
+- Latest accepted increment: slice 2 `19f934a4e5f0e14b2cafd66fd1378000738392d7`, suffix base `0fb43372a348795b6d4eb34fbd6df9c6f3c38a1e`, same target/observer.
 - Exact-checkout Nix setup succeeded; `nix develop -c python lizard.py --version`
   returned `1.24.3`. Dependency/product inputs remain unchanged by preparation/Take.
 - Codex observer: `hibiki-seed012`, repo `terryyin/lizard`, target execution branch,
@@ -66,6 +57,8 @@ Local upload selection did not prove deployment. Nix's known platformdirs warnin
   directory `/tmp/dough-ci-501/watch-2aL4vZ`, PID `14608`; official owner classifier
   confirmed one live matching stream. Earlier `/tmp/dough-ci-501/watch-qKRFyu`
   stopped with zero unread events. The Take's trunk CI is unobserved.
+- That observer later ended after repeated gh discovery failures; sole event acknowledged through sequence1. Retained green receipts:0fb43372/run40483984794 and19f934a4/run40490552736, attempt1. A bounded direct gh request subsequently succeeded; retain ended observer, establish fresh coverage before the next increment.
+- Replacement for future publications (old observer remains ended): same coordinator/checkout/target, cell108/session39442, `/tmp/dough-ci-501/watch-f5xYFC`, PID69039. Native stream receipt captured through plain pipes; this is the observer for subsequent managed delivery.
 - Proof decision: sequence one local regression/build/browser run and one hosted
   probe. Mac load 8.99/6.52/7.60, ~10 GiB inactive memory, no competing owned heavy
   work known. Remote runner/build headroom unknown; one Ubuntu 24.04 probe,
@@ -75,6 +68,7 @@ Local upload selection did not prove deployment. Nix's known platformdirs warnin
   in conversation. Compare its individual commitments and journeys below.
   Slice 2's fresh `/root/tag_source_review` independently returned the same full
   source promises and qualified journeys (67 separated commitments), retained in conversation.
+  Slice 3's fresh `/root/publication_source_review` returned 58 commitments plus qualifications/journeys/exclusions from only original source; launch/input/return retained in conversation.
 
 ## Slice 1 accepted proof
 
@@ -126,25 +120,36 @@ Annotated `web-0.0.3` [run40488849369](https://github.com/terryyin/lizard/action
 Literal hosted commands: `PIP_QUIET=1 nix develop -c gh run watch 40488146510 --repo terryyin/lizard --exit-status --interval 20` and same command with40488849369, both exit0. Artifacts `/tmp/lizard-tags-{lightweight-40488146510,annotated-40488849369}/release-evidence/`; actual preview/upload assertions via `PIP_QUIET=1 nix develop -c python /tmp/lizard-check-tag-evidence.py FOLDER 5d320dd497c0eb96d3f57cf5521ec05a8bfdb510 TAG` (each folder/tag above, exit0). Final trace `/tmp/lizard-tag-final-consumer-trace.md`, every consumer disposition inspected; unchanged branch/PyPI/selector/app boundaries reuse sufficient proof.
 Independent `/root/tag_refactor` returned `## REFACTOR COMPLETE`: one registry now owns CLI choices/dispatch, same order/persistence/operations. Focused36 passed via `PIP_QUIET=1 nix develop -c sh -c 'python -m pytest test/test_website_smoke.py test/test_website_release.py -q; test_result=$?; test "$test_result" -eq 0'`; whitespace passed, trace `/tmp/lizard-tag-refactor-trace.md`. Coordinator inspected dispatch; cloud/HTTP/workflow boundaries unchanged, hosted/full/browser proof reused.
 
+## Slice 3 accepted proof
+
+Current prerequisite:58 focused,1854 full passed/7skipped, make, npm ci/build, browser16scenarios134steps. Literal command and observing test names are retained in `/root/publish_releases` handoff; logs `/tmp/lizard-publication-{pytest,make,browser}.log`; static/upload/link checks `/tmp/lizard-check-publication.py` passed. Attempt-specific artifacts preserve earlier evidence and validation outputs for release-job reruns; subsequent publication15/static checks passed.
+Isolated diagnostic source `c034140af69020f9bc5bda8bbeca872a19933411`, parent19f934a4, [guard run40499338525](https://github.com/terryyin/lizard/actions/runs/40499338525) succeeded. Real retained preview HTTPS missing path returned404; explicit promote invocation rejected unverified preview before cloud mutation; full before/after/current/fresh splits oldrevive1.0. Root inspected rejection/state artifacts and GitHub job/step conclusions. Literal watch: `PIP_QUIET=1 nix develop -c gh run watch 40499338525 --repo terryyin/lizard --exit-status --interval 20` exit0; evidence `/tmp/lizard-promotion-guard-40499338525/` and sibling log/fresh-traffic file.
+Cleanup accepted: local temporary workflow removed, exact diagnostic tag deleted remotely/locally, provider ACTIVE permanent-only (`/tmp/lizard-provider-after-promotion-probe.json`). Routing grant remained absent during probe. Subsequently added only custom-role `websiteTrafficRouter` permission `appengine.services.update`; root compared policy snapshots: one SA binding added, none removed.
+Real `web-0.0.4` source `f3d9ec340d12d1b3e0c605672589283a269e399d`: [run40500872799](https://github.com/terryyin/lizard/actions/runs/40500872799) attempt1 deployed/preview-verified/promoted/public-verified `web-0-0-4`/python313, realHTTPS/assets/original logos/favicon/redirect/metrics3/6/1; prior A1→B1. Literal watch for both successful attempts: `PIP_QUIET=1 nix develop -c gh run watch 40500872799 --repo terryyin/lizard --exit-status --interval 20` exit0. Root inspected actual state/version/analysis and GitHub job/step conclusions.
+Live restore commands succeeded: `gcloud app services set-traffic default --project=lizardanalyzer --splits=revive-20261027-f818daf=1.0 --split-by=ip --quiet`, then analogous `--splits=web-0-0-4=1.0`; readbacks/public results in `/tmp/lizard-publication-restoration-40500872799/`. A's f818daf legacy template has site.css/demo.js and no Vite manifest; actual five assets/HTTPS/real3/6/1/redirect passed. Initial manifest404 resolved against that recorded oracle; B verifier remained strict. B's full public CLI passed after restoration: `PIP_QUIET=1 nix develop -c python /tmp/lizard-observe-traffic-restoration.py desired`.
+Serving retry via `github_rerun_workflow_job(repo_full_name="terryyin/lizard",job_id=122178017923)`: attempt2 action=verify, promotion_attempted=false, no deployment.json, unchanged createTime2026-10-27T12:16:34Z/deployment/source metadata, B1/public passed. Source artifact12733055790 reused; release artifact12733616798 preserved, new attempt2 artifact12733104905. Evidence `/tmp/lizard-publication-40500872799/attempt-{1,2}/release-evidence/`, logs/artifact maps/version-live-after-rerun.json; root inspected all signals. Trace `/tmp/lizard-publication-consumer-trace.md` dispositions read; its historical outstanding-hosted wording is now closed.
+Independent `/root/publication_refactor` returned `## REFACTOR COMPLETE`: only local CLI error-key selection consolidated; passive original stage/error preserved. `PIP_QUIET=1 nix develop -c python -m pytest test/test_website_release.py test/test_website_publication.py test/test_website_smoke.py -q` passed58; whitespace passed. Trace `/tmp/lizard-publication-refactor-trace.md`; cloud/HTTP/workflow/metadata unchanged, live/browser proof reused.
+Coordinator closing gate ran full `python -m pytest`, `make`, `/tmp/lizard-check-publication.py` and story-obligation slice3 check in one `PIP_QUIET=1 nix develop -c sh -c` invocation:1854 passed/7skipped, make/static/links/upload/obligations passed; logs `/tmp/lizard-final-{pytest,make}.log`. No code edits followed; refactor dispatch/error bookkeeping was inspected against unchanged cloud/HTTP boundaries.
+
 ## Source comparison and remaining ownership
 
 | Original trigger/setup → expected result | Actual observation / legitimate owner |
 | --- | --- |
-| Website tag → exact source to existing target; nonnegative decimal/no leading zero except 0; dot mapping, 32-character bound (C01–07) | CLI contract/event tests and real lightweight/annotated tag previews proved; slice 3 public publication. |
+| Website tag → exact source to existing target; nonnegative decimal/no leading zero except 0; dot mapping, 32-character bound (C01–07) | CLI contract/event tests, lightweight/annotated previews and final real tagged public release proved exact source/runtime/target. |
 | Malformed tags may validate, never auth/mutate; unrelated tags/branches/PRs never release; PyPI independent (C08–12) | CLI rejection and hosted invalid validation+skipped preview proved; trigger/permission gates inspected; branch/PyPI unchanged. |
 | Tagged source → Python checks, existing browser scenarios, lockfile build, deploy that tested bundle; unconditional validation, reuse commands/sequence (C13–21) | Both successful tag runs independently ran all existing commands, built and deployed their generated upload; event/source/runtime match. |
 | Actions → WIF plus separate deploy account scoped to repository/workflow/tags; setup/permissions documented (C22–25) | Real auth succeeded; permanent trust/grants/ownership documented and read back. |
-| Deploy → no promotion/previous stop; verify homepage/assets/real analysis before traffic/public HTTPS (C26–31) | Real preview and unchanged split proved; slice 3 owns promotion/public check. |
-| Actions result → tag, source, version, both URLs, prior split, result (C32–38) | Tag/source/version/URLs/prior split/preview-only result recorded in real artifacts/summary; slice 3 public result/recovery. |
-| Validation/auth/deploy/preview failure → visibly failed, unchanged traffic; promotion/public failure → observed state/exact recovery command, maintainer restores saved split (C39–43) | Probe never promotes; slices 2/3 own final failure matrix. No broken production release for testing. |
-| Retain versions; serialize without running cancellation; document pending replacement/retry (C44–48) | Versions retained; probe shared group/cancel=false; final workflow/docs in slices 2/3. |
-| Immutable tags/same-source retry/traffic restore; ID reuse only known source+non-serving; serving success verifies without redeploy; ambiguity fails with guidance (C49–56) | Real-Git/JSON CLI tests prove safe decisions, mismatch/unknown rejection and guidance; immutable tags retained/documented. Slice 3 restoration/live-serving verification (G4). |
-| No numeric ordering; maintainer chooses tag (C57–58) | No ordering added; preserve in final workflow. |
+| Deploy → no promotion/previous stop; verify homepage/assets/real analysis before traffic/public HTTPS (C26–31) | Real preview gate→promotion→public target/source/HTTPS passed; old version retained and served successfully during restoration. |
+| Actions result → tag, source, version, both URLs, prior split, result (C32–38) | Actual final artifacts/summary contain all identity/URLs/traffic/result/recovery fields; source reused and attempt history preserved on retry. |
+| Validation/auth/deploy/preview failure → visibly failed, unchanged traffic; promotion/public failure → observed state/exact recovery command, maintainer restores saved split (C39–43) | CLI phase/guard/unknown-traffic/recovery tests, real HTTP failures and real nonpromoting404 probe passed; exact saved restore exercised live. No broken production release created. |
+| Retain versions; serialize without running cancellation; document pending replacement/retry (C44–48) | Versions retained; final workflow shared group/cancel=false; inspection/pending/retry/manual-restore documented, live operations sequenced. |
+| Immutable tags/same-source retry/traffic restore; ID reuse only known source+non-serving; serving success verifies without redeploy; ambiguity fails with guidance (C49–56) | CLI source/traffic guard tests plus actual source-identical serving rerun and full restore cycle passed; immutable tags and attempt-specific recovery guidance recorded. |
+| No numeric ordering; maintainer chooses tag (C57–58) | Final workflow imposes no numeric ordering. |
 | Early real credential/deploy probe, no assumed integration (C59–60) | Hosted route and temporary cleanup proved. |
-| A serving → tag B → tested mapped preview → public B, source/both URLs reported | Preview path proved; final tag/public journey slices 2/3. |
+| A serving → tag B → tested mapped preview → public B, source/both URLs reported | Actual web-0.0.4 lifecycle passed with retained source/URLs/prior/current state. |
 | Zero valid; malformed/overlong and package/branch/PR examples do not deploy | CLI boundary tests + hosted zero-component valid tags and malformed rejection; workflow trigger and independent PyPI inspected. |
-| A survives build/credential/preview failure; failed public B restores A without rebuild/delete | Slices 2/3 failure/recovery, including live restoration proof. |
-| Retry never overwrites serving version or silently deploys moved tag | CLI real-Git/JSON source and serving decisions proved; live matching-serving continuation remains G4 in slice 3. |
+| A survives build/credential/preview failure; failed public B restores A without rebuild/delete | Strict failure-flow/HTTP tests and real preview failure preserve old split; actual recorded A restored/verified without rebuilding/deletion, then B restored/verified. |
+| Retry never overwrites serving version or silently deploys moved tag | Real-Git/JSON rejection decisions and actual source-identical serving retry with no deploy/promotion passed. |
 | Automatic rollback/cleanup, prereleases/build suffixes, PR previews, DNS/billing, hosting/package changes deferred | None introduced; bounded diagnostic removed, versions retained. |
 
 ## Story obligations
@@ -157,7 +162,7 @@ Disposition: proved by slice 1: run 40482567466/artifact, independently inspecte
 ### G2. Preview-only behavior must become automatic public publication
 Reported: slice 2 — "Valid tags currently produce verified preview-only candidates and never promote public traffic."
 Story clause: "then move traffic and verify the public HTTPS endpoint."
-Disposition: interim until slices 3
+Disposition: proved by slice 3: run40500872799 attempt1 promoted verified preview and passed public source/traffic/HTTPS/assets/analysis; real guard probe and saved-split restoration passed.
 
 ### G3. Observe the new tag-to-preview integration
 Reported: slice 2 — "Outstanding observations remain owned by slice 2: actual tag-triggered event/checkout identity, new CLI's authenticated inspect/deploy/verify integration, preview metadata/assets/metrics, and unchanged traffic."
@@ -167,7 +172,7 @@ Disposition: proved by slice 2: runs40488146510/40488849369 and retained artifac
 ### G4. Verify the real already-serving retry path
 Reported: slice 2 — "A live already-serving retry has not been exercised; its guard decision has CLI proof, while a real serving rerun can be observed after slice 3 promotes a candidate."
 Story clause: "a successful already-serving release can be verified without redeploy."
-Disposition: receiving slice 3
+Disposition: proved by slice 3: run40500872799 attempt2 reused original source artifact, selected verify/no deployment/no promotion; version creation/source/deployment metadata unchanged, public B1 verified and earlier artifacts preserved.
 
 ## Ordered slices
 
@@ -207,7 +212,7 @@ preview-only; slice 3 must replace this before story completion.
 
 ### 3. Promote verified candidates and make failed releases recoverable
 Type: Behavior
-Status: planned
+Status: done
 Proof: Real tag run reaches public HTTPS/assets/sample analysis with matching
 source/version. Nonpromoting failure probe blocks promotion. Exercise documented
 saved-split restore against retained known-good versions; read final split/public

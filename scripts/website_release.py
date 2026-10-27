@@ -8,31 +8,10 @@ import subprocess
 import sys
 from pathlib import Path
 
-from website_smoke import verify
-
-PROJECT = "lizardanalyzer"
-SERVICE = "default"
-PUBLIC_URL = "https://www.lizard.ws/"
-SOURCE_KEY = "LIZARD_WEBSITE_SOURCE_SHA"
-TAG_KEY = "LIZARD_WEBSITE_TAG"
+from website_deployment import (PROJECT, PUBLIC_URL, SERVICE, check_preview,
+                                check_public, command, deploy, inspect, observe,
+                                prepare, promote, read, write)
 TAG = re.compile(r"web-(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)")
-
-
-def command(*args):
-    return subprocess.run(args, check=True, stdout=subprocess.PIPE,
-                          stderr=subprocess.PIPE, universal_newlines=True).stdout.strip()
-
-
-def cloud(*args):
-    return command("gcloud", *args, "--project=" + PROJECT)
-
-
-def read(path):
-    return json.loads(path.read_text())
-
-
-def write(path, value):
-    path.write_text(json.dumps(value, indent=2) + "\n")
 
 
 def validate(state, args):
@@ -58,82 +37,27 @@ def validate(state, args):
             output.write("source_sha=" + source + "\n")
 
 
-def inspect(state, args):
-    if command("git", "rev-parse", "HEAD") != state["source_sha"]:
-        raise ValueError("Tested checkout does not match the validated source")
-    write(args.evidence / "service-before.json", json.loads(cloud(
-        "app", "services", "describe", SERVICE, "--format=json")))
-    ids = cloud("app", "versions", "list", "--service=" + SERVICE,
-                "--format=value(id)").splitlines()
-    existing = json.loads(cloud("app", "versions", "describe", state["version"],
-                               "--service=" + SERVICE, "--format=json")) if state["version"] in ids else None
-    write(args.evidence / "existing-version.json", existing)
-
-
-def prepare(state, args):
-    state.pop("action", None)
-    split = read(args.evidence / "service-before.json").get("split")
-    allocations = split.get("allocations") if isinstance(split, dict) else None
-    if not isinstance(allocations, dict) or any(
-            isinstance(value, bool) or not isinstance(value, (int, float))
-            or not 0 <= value <= 1 for value in allocations.values()):
-        raise ValueError("Cannot establish the current traffic split; inspect the service before retrying")
-    state["prior_split"] = split
-    existing = read(args.evidence / "existing-version.json")
-    action = "deploy"
-    if existing is not None:
-        env = existing.get("envVariables", {}) if isinstance(existing, dict) else {}
-        if (not isinstance(existing, dict) or existing.get("id") != state["version"]
-                or not isinstance(env, dict) or env.get(SOURCE_KEY) != state["source_sha"]):
-            raise ValueError("Existing version identity is unknown or different; never move the tag or overwrite it. Inspect version metadata and publish a new immutable tag")
-        if allocations.get(state["version"], 0) > 0:
-            action = "verify"
-    state["action"] = action
-    print("Candidate action:", state["action"])
-
-
-def deploy(state, args):
-    if state.get("action") not in ("deploy", "verify"):
-        raise ValueError("No prepared deployment action")
-    if state["action"] == "deploy":
-        import yaml
-        config = yaml.safe_load(Path("app.yaml").read_text())
-        config.setdefault("env_variables", {}).update(
-            {SOURCE_KEY: state["source_sha"], TAG_KEY: state["tag"]})
-        Path("app.yaml").write_text(yaml.safe_dump(config, sort_keys=False))
-    (args.evidence / "upload.txt").write_text(cloud("meta", "list-files-for-upload") + "\n")
-    if state["action"] == "deploy":
-        output = cloud("app", "deploy", "app.yaml", "--version=" + state["version"],
-                       "--no-promote", "--no-stop-previous-version", "--quiet", "--format=json")
-        (args.evidence / "deployment.json").write_text(output + "\n")
-    version = json.loads(cloud("app", "versions", "describe", state["version"],
-                               "--service=" + SERVICE, "--format=json"))
-    write(args.evidence / "deployed-version.json", version)
-    if version.get("runtime") != "python313" or version.get("envVariables", {}).get(SOURCE_KEY) != state["source_sha"]:
-        raise ValueError("Deployed runtime/source identity does not match this release")
-    state["preview_url"] = cloud("app", "browse", "--service=" + SERVICE,
-                                  "--version=" + state["version"], "--no-launch-browser")
-
-
-def check_preview(state, args):
-    service = json.loads(cloud("app", "services", "describe", SERVICE, "--format=json"))
-    write(args.evidence / "service-after.json", service)
-    if service["split"] != state["prior_split"]:
-        raise ValueError("Traffic changed during a preview-only release; inspect retained service state")
-    state["traffic_unchanged"] = True
-    write(args.evidence / "analysis.json", verify(state["preview_url"]))
-    state["result"] = "preview-only; not promoted"
+def phase(state, args):
+    if args.phase is None:
+        raise ValueError("A workflow phase must be supplied")
+    state["stage"] = args.phase
 
 
 def summary(state, args):
     result = os.environ.get("RELEASE_JOB_RESULT", "unknown")
     text = ("## Website release\n\nResult: %s\n\n" % (
         state.get("result", "incomplete") if result == "success" else result))
+    text += "Target: `%s / %s`\n\n" % (PROJECT, SERVICE)
     for key in ("tag", "event_sha", "source_sha", "checkout_sha", "version",
-                "stage", "action", "preview_url", "public_url", "prior_split", "error"):
+                "stage", "action", "preview_url", "public_url", "prior_split", "error",
+                "promotion_attempted", "traffic_error"):
         if key in state:
             text += "- %s: `%s`\n" % (key, json.dumps(state[key]) if isinstance(state[key], dict) else state[key])
-    text += "\nThis workflow currently creates verified previews only; public traffic is not promoted.\n"
+    text += "- current_split: `%s`\n" % json.dumps(state.get("current_split", "unknown"))
+    if state.get("recovery_command"):
+        text += "\nTo restore the saved split after the workflow stops:\n\n```sh\n%s\n```\n" % state["recovery_command"]
+    else:
+        text += "\nNo prior split was captured; no traffic change was attempted.\n"
     if os.environ.get("GITHUB_STEP_SUMMARY"):
         with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as output:
             output.write(text)
@@ -141,13 +65,15 @@ def summary(state, args):
 
 
 def main(argv=None):
-    commands = {"validate": validate, "inspect": inspect, "prepare": prepare,
-                "deploy": deploy, "verify": check_preview, "summary": summary}
+    commands = {"validate": validate, "phase": phase, "inspect": inspect, "prepare": prepare,
+                "deploy": deploy, "verify": check_preview, "promote": promote,
+                "public": check_public, "observe": observe, "summary": summary}
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("command", choices=commands)
     parser.add_argument("--tag", default=os.environ.get("RELEASE_TAG", ""))
     parser.add_argument("--event-sha", default=os.environ.get("EVENT_SHA", ""))
     parser.add_argument("--evidence", type=Path, default=Path("release-evidence"))
+    parser.add_argument("--phase", choices=("tooling", "checks", "authentication", "cloud-setup"))
     args = parser.parse_args(argv)
     args.evidence.mkdir(parents=True, exist_ok=True)
     path = args.evidence / "release.json"
@@ -156,15 +82,19 @@ def main(argv=None):
     if args.command == "summary":
         operation(state, args)
         return 0
-    state["stage"] = args.command
+    observing = args.command == "observe"
+    error_key = "traffic_error" if observing else "error"
+    if not observing:
+        state["stage"] = args.command
     write(path, state)
     try:
         operation(state, args)
-        state.pop("error", None)
+        state.pop(error_key, None)
     except Exception as error:
-        state["error"] = str(error) + (": " + error.stderr[-2000:] if isinstance(error, subprocess.CalledProcessError) else "")
+        detail = str(error) + (": " + error.stderr[-2000:] if isinstance(error, subprocess.CalledProcessError) else "")
+        state[error_key] = detail
         write(path, state)
-        print("website_release:", state["error"], file=sys.stderr)
+        print("website_release:", detail, file=sys.stderr)
         return 2
     write(path, state)
     return 0
