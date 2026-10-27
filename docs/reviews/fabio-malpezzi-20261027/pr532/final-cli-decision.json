@@ -1,0 +1,32 @@
+{
+  "owner": "root",
+  "command": [
+    "/Users/terryyin/git/lizard/.worktrees/review-correct-and-merge-fabiomalpezzi-s-open-pr/.venv/bin/python",
+    "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr532/affected/paired.py",
+    "--baseline",
+    "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr532/target",
+    "--candidate",
+    "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr532/corrected",
+    "--workload",
+    "cli",
+    "--pairs",
+    "40",
+    "--seconds",
+    "8",
+    "--out",
+    "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr532/corrected-cli-quiet.json"
+  ],
+  "host": "Territory.local",
+  "cpus": 16,
+  "launch_load": [
+    11.30078125,
+    10.80712890625,
+    12.94091796875
+  ],
+  "harness_sha256": "ec1c9c5eac0ad6a29294ecbd987b2a55d4cf31db145486d065bf13c096b76520",
+  "prior_result": "corrected-cli-long.json: upper 5.67037%; inconclusive",
+  "new_evidence": "Later ENS run log-ratio SD 2.04247% versus ordinary 10.99303%; fresh load 10.99/10.82/13.17 on 16 CPUs versus prior 23.84/24.77/19.58.",
+  "choice": "40 alternating pairs, calibrated to 8 seconds; retain every pair and judge only the terminal interval. No owned heavy work competes.",
+  "gate": "Upper paired 95% slowdown bound strictly below 3%. The fixed t(19) critical value is conservative for 40 pairs.",
+  "earlier_runs": "Preserved without relabeling; improved host conditions justify this run."
+}

@@ -1,0 +1,69 @@
+lizard_core/file_analyzer.py:105:16: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+[7;33m************* Module lizard_core.text_output[0m
+lizard_core/text_output.py:46:0: C0325: [1mUnnecessary parens after '=' keyword[0m ([1msuperfluous-parens[0m)
+lizard_core/text_output.py:10:15: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+lizard_core/text_output.py:11:20: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+lizard_core/text_output.py:26:15: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+lizard_core/text_output.py:27:20: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+lizard_core/text_output.py:60:10: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+[7;33m************* Module lizard_core.file_info_builder[0m
+lizard_core/file_info_builder.py:9:0: R0205: [1;3;35mClass 'NestingStack' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_core/file_info_builder.py:50:0: R0205: [1;3;35mClass 'FileInfoBuilder' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_core/file_info_builder.py:50:0: R0902: [1;3;35mToo many instance attributes (9/7)[0m ([1;3;35mtoo-many-instance-attributes[0m)
+lizard_core/file_info_builder.py:1:0: R0801: [1;3;35mSimilar lines in 2 files
+==lizard_languages.java:[138:148]
+==lizard_languages.java_body_states:[21:31]
+        if self._consume_java_expression_tokens(token):
+            return
+        use_after_annotation = self._java_after_unqualified_annotation
+        if token != "record":
+            self._java_after_unqualified_annotation = False
+        if token == '@':
+            self._state = self._state_decorator
+            return
+        if self._try_start_a_class(token, use_after_annotation):
+            return[0m ([1;3;35mduplicate-code[0m)
+lizard_core/file_info_builder.py:1:0: R0801: [1;3;35mSimilar lines in 2 files
+==lizard_languages.fortran_states:[36:46]
+==lizard_languages.st:[113:124]
+        if self._state(token):
+            self.next(self.saved_state)
+            if self.callback:
+                self.callback()
+        self.last_token = token
+        if self.to_exit:
+            return True
+
+    def _state_global(self, token):
+        token_upper = token.upper()
+[0m ([1;3;35mduplicate-code[0m)
+lizard_core/file_info_builder.py:1:0: R0801: [1;3;35mSimilar lines in 2 files
+==lizard_ext.cognitive_actions:[152:159]
+==lizard_ext.cognitive_brace:[50:57]
+            self._logical_operator(token)
+        elif token in _EXPRESSION_BREAKERS:
+            state.logical.pop(state.pdepth, None)
+        if token in ('(', '['):
+            self._open_bracket()
+        elif token in (')', ']'):
+            self._close_bracket()[0m ([1;3;35mduplicate-code[0m)
+lizard_core/file_info_builder.py:1:0: R0801: [1;3;35mSimilar lines in 2 files
+==lizard_ext.cognitive_actions:[147:153]
+==lizard_ext.cognitive_indent:[21:27]
+        if state.pending:
+            self._resolve_pending(token)
+        if _is_word(token):
+            self._arm_word(token)
+        if token in self.logical_ops:
+            self._logical_operator(token)[0m ([1;3;35mduplicate-code[0m)
+lizard_core/file_info_builder.py:1:0: R0801: [1;3;35mSimilar lines in 2 files
+==lizard_languages.tsx:[67:72]
+==lizard_languages.typescript:[25:30]
+        if self.sub_tokenizer:
+            for tok in self.sub_tokenizer(token):
+                yield tok
+            if self.sub_tokenizer._ended:
+                self.sub_tokenizer = None[0m ([1;3;35mduplicate-code[0m)
+
+------------------------------------------------------------------
+Your code has been rated at 9.12/10 (previous run: 9.12/10, +0.00)

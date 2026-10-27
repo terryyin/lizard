@@ -169,6 +169,7 @@ class Test_JavaScript_line_comment_ending_with_a_backslash(unittest.TestCase):
         code = (
             "function b(code) {\n"
             "  return (\n"
+            "    code === 47 || // /\n"
             "    code === 92 || // \\\n"
             "    code === 45 || // -\n"
             "    code === 32\n"
@@ -179,7 +180,7 @@ class Test_JavaScript_line_comment_ending_with_a_backslash(unittest.TestCase):
             with self.subTest(filename=filename):
                 functions = analyze_file.analyze_source_code(
                     filename, code).function_list
-                self.assertEqual([('b', 1, 7, 3, 7)],
+                self.assertEqual([('b', 1, 8, 4, 8)],
                                  [(f.name, f.start_line, f.end_line,
                                    f.cyclomatic_complexity, f.nloc)
                                   for f in functions])

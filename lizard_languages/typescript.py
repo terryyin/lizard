@@ -2,17 +2,22 @@
 Language parser for TypeScript
 '''
 
-from .code_reader import CodeReader
+from itertools import tee
+
+from .code_reader import CodeReader, CodeStateMachine
 from .clike import CCppCommentsMixin
 from .js_style_regex_expression import js_style_regex_expression
 from .javascript_bindings import JavaScriptBindings
 from .typescript_declarations import TypeScriptTypeAnnotationStates
 from .typescript_states import TypeScriptStates
+from .typescript_signatures import ReturnTypeColon, return_type_colon
 from .javascript_templates import LINE_COMMENT, template_tokens
 
 # One token, so each ? in ?? is not its own ternary decision.
 NULLISH_COALESCING = r"|(?:\?\?)"
 OPTIONAL_ACCESS = r"|(?:\?\.(?!\d))"
+# JavaScript identifiers can contain dollar signs as well as word characters.
+JS_IDENTIFIER = r"|(?:[\w$]+)"
 
 
 class Tokenizer(object):
@@ -69,13 +74,76 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         super().__init__(context)
         self.parallel_states = [TypeScriptStates(context)]
 
+    def __call__(self, tokens, reader):
+        # Custom hooks and state configurations retain the generic protocol.
+        states = self.parallel_states
+        if (type(states) not in (list, tuple) or len(states) != 1
+                or type(states[0]) is not TypeScriptStates
+                or getattr(states[0], '_binding_candidate', False) is not None
+                or type(self).process_token is not CodeReader.process_token
+                or getattr(self.process_token, '__func__', None) is not CodeReader.process_token):
+            yield from CodeReader.__call__(self, tokens, reader)
+            return
+        self.context = reader.context
+        state = states[0]
+        # Binding candidates are children and retain their own wrapper.
+        consume = CodeStateMachine.__call__.__get__(state)
+        for token in tokens:
+            consume(token)
+            yield token
+        state.statemachine_before_return()
+        self.eof()
+
+    def preprocess(self, tokens):
+        """Drop spaces, and offer each line's first code token to the
+        innermost open expression arrow before any counter charges it.
+
+        A '\n' is consumed by line_counter, and comments by comment_counter,
+        before the state machine sees them, so expression_arrows cannot
+        change between a newline and the next code token."""
+        arrows = self.context.expression_arrows = []
+        line_start = False
+        state = self.parallel_states[0]
+        tokens = iter(self.code_tokens(tokens))
+        while True:
+            for token in tokens:
+                if not token.isspace():
+                    if line_start and not token.startswith(('//', '/*')):
+                        line_start = False
+                        arrows[-1].end_expression_before(token)
+                    if token == ':' and state.last_token == ')':
+                        annotation = state.return_annotation_context()
+                        if annotation is not None:
+                            depth, unambiguous_signature = annotation
+                            if unambiguous_signature:
+                                token = ReturnTypeColon(token)
+                            else:
+                                tokens, lookahead = tee(tokens)
+                                if return_type_colon(lookahead, depth):
+                                    token = ReturnTypeColon(token)
+                                del lookahead
+                                yield token
+                                # Resume on the main iterator, including buffered tokens.
+                                break
+                    yield token
+                elif token == '\n':
+                    if arrows:
+                        line_start = True
+                    yield token
+            else:
+                return
+
+    @staticmethod
+    def code_tokens(tokens):
+        """The tokens that are code; embedding readers (Vue) narrow them."""
+        return tokens
+
     @staticmethod
     @js_style_regex_expression
     def generate_tokens(source_code, addition='', token_class=None):
-        # Line comment, private method (#), dollar ($), optional name (?),
-        # nullish (??).
-        addition = (addition + "|" + LINE_COMMENT
-                    + r"|(?:#\w+)" + r"|(?:\$\w+)"
-                    + r"|(?:\w+\?(?![?.]))" + NULLISH_COALESCING
+        # Line comment, private method (#), optional name (?), dollar
+        # identifiers, nullish (??).
+        addition = (addition + "|" + LINE_COMMENT + r"|(?:#\w+)"
+                    + r"|(?:\w+\?(?![?.]))" + JS_IDENTIFIER + NULLISH_COALESCING
                     + OPTIONAL_ACCESS)
         yield from template_tokens(source_code, addition, token_class)
