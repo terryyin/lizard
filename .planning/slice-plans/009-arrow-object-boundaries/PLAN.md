@@ -176,7 +176,7 @@ unmerged pending performance and final delivery gates.
 
 ### 3. Meet the strict performance budget without weakening semantics
 Type: Behavior
-Status: planned
+Status: done
 Proof: retained raw warmed timing pairs, immutable harness/corpus hashes,
 candidate/base revisions and intervals for every required workload.
 
@@ -301,3 +301,21 @@ ternary object arrows wrong; always set from body token instead.
 
 Story obligations: none opened. Performance (slice 3) and PR531 delivery
 (slice 4) remain.
+
+### Slice 3 accepted proof (performance budget)
+
+Promise: each upper paired 95% slowdown bound strictly below 3% versus current
+target and frozen baseline `2e21e404…`.
+
+Candidate `4714fc25…`. Current target refreshed to `901068b8…`. Frozen
+baseline checkout verified. Harness SHA `3064d8d7…7bf5`; manifest
+`a224a3af…2411` (164 hashes unchanged); no corpus addition.
+
+| Comparison | Paired 95% CI | Upper | Gate |
+| --- | --- | --- | --- |
+| API vs master | [-0.685%, 0.491%] | 0.491% | pass |
+| CLI vs master | [-1.153%, 0.652%] | 0.652% | pass |
+| API vs frozen | [-0.238%, 1.578%] | 1.578% | pass |
+| CLI vs frozen | [-0.438%, 1.003%] | 1.003% | pass |
+
+Evidence (this delivery): `docs/reviews/fabio-malpezzi-20261027/pr531/corrected-vs-{master,frozen}-{api,cli}.json` (+ logs), `corrected-slice3-{summary.json,prelaunch.txt,timeline.log}`. Historical `531-api.json`/`531-cli.json` untouched. Raw proposal interval retained as diagnosis only. No product-code change; no optimization required. Semantic proof reconfirmed after timing.
