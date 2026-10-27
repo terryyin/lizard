@@ -74,6 +74,24 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         super().__init__(context)
         self.parallel_states = [TypeScriptStates(context)]
 
+    def __call__(self, tokens, reader):
+        # Custom hooks and state configurations retain the generic protocol.
+        states = self.parallel_states
+        if (type(states) not in (list, tuple) or len(states) != 1
+                or type(states[0]) is not TypeScriptStates
+                or type(self).process_token is not CodeReader.process_token
+                or getattr(self.process_token, '__func__', None) is not CodeReader.process_token):
+            yield from CodeReader.__call__(self, tokens, reader)
+            return
+        self.context = reader.context
+        state = states[0]
+        consume = TypeScriptStates.__call__.__get__(state)
+        for token in tokens:
+            consume(token)
+            yield token
+        state.statemachine_before_return()
+        self.eof()
+
     def preprocess(self, tokens):
         """Drop spaces, and offer each line's first code token to the
         innermost open expression arrow before any counter charges it.

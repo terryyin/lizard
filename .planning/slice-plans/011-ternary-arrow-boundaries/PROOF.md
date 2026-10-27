@@ -247,4 +247,4 @@ individual commitments with the diff, source setup and assertions in
 spans and CCN. Inspected the canonical type evidence, demand-buffer lifecycle,
 explicit tuples and verifier assertions; 285 trace dispositions are populated.
 Independent refactor clarified names/comments; 162 regressions and 128 replays
-pass. Diagnostics grant no timing acceptance; G4/G6 remain with 7, G5 with 8.
+pass. Later obligation owners remain in the active plan; diagnostics grant no timing acceptance.

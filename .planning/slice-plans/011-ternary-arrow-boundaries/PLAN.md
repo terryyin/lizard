@@ -10,19 +10,15 @@ ternary branch arrow separately with its own CCN. Internal, genuine annotation
 and property/computed-key colons retain their syntax; enclosing/following
 names, spans and CCN and the outer-only curried-arrow contract are preserved.
 
-Acceptance uses the source's key examples and
-[PR534 evidence](../../../docs/reviews/fabio-malpezzi-20261027/pr534/review-findings.md). The frozen
-[reproduce.py](../../../docs/reviews/fabio-malpezzi-20261027/pr534/reproduce.py)
-checks names, start/end lines and CCN for the promised rows of
-`inputs.json` and all of `supplemental-inputs.json`.
+Acceptance uses source examples and [PR534 evidence](../../../docs/reviews/fabio-malpezzi-20261027/pr534/review-findings.md).
+The frozen reproducer checks all promised input/supplemental names/spans/CCN; literal proof remains in PROOF.md.
 
 Excluded commitments: the existing object-comma sibling absorption (the
 `next` rows of `object_property`/`computed_key`), object-literal ternary
 bodies (`inherited_*`, `object_inside_ternary`; SEED-013), multiline
 continuations (SEED-014), arrow parameter bindings (SEED-016), naming
 changes, nested-arrow detection, ENS-only performance, a full JS/TS grammar.
-No sibling is a formal blocking supplier. The original review's 15-minute
-correction cutoff does not limit this selected follow-up. No numeric slice limit applies.
+No sibling blocks this story; review's 15-minute cutoff does not limit selected work. No numeric slice limit applies.
 
 The 2026-10-27 `dough-execute-plan` instruction and established start authorize execution.
 
@@ -52,27 +48,22 @@ The 2026-10-27 `dough-execute-plan` instruction and established start authorize 
 
 ## Existing owners and architectural direction
 
-PFE: use TypeScriptStates' canonical ternary dispatch, JavaScriptFunctionsMixin's
-signature/expression lifecycle and the composed binding/object/declaration owners.
-PR536 now centralizes formal capture in JavaScriptBindings; reuse that accepted
-owner. TypeScriptReader composes these paths for JS/TS/JSX/TSX/Vue and CJS/MJS.
+PFE: canonical ternary, signature, binding/object/declaration owners remain.
+Reuse PR536's JavaScriptBindings formal capture and TypeScriptReader's shared
+JS/TS/JSX/TSX/Vue/CJS/MJS composition.
 Keep one ternary-depth rule and annotation recognizer; no parallel parser,
 metric counter or PR-specific colon switch, and preserve the public facade.
 
-Rejected shapes from the review: raw #534 overwrites the enclosing arrow's
-ternary snapshot when a nested arrow creates no function (internal-colon
-regression), and changing one unconditional colon check cannot fix both the
-runtime-separator and the typed-annotation paths. Prefer one coherent rule:
-an arrow started inside a ternary records the depth it belongs to; only that
-depth's colon ends it; inner `?`/`:` pairs and genuine annotations are
-consumed by their own owners first.
+Reject raw #534's overwritten enclosing snapshot and a lone colon heuristic.
+Each expression arrow retains its owning depth; only that separator ends it.
+Internal pairs and genuine annotations reach their own owners first. Local
+single-state reader delivery reuses Go's pattern, preserving generic hooks.
 
 Follow [ADR-0001, Ubiquitous language](../../../docs/adrs/0001-ubiquitous-language-accepted.md)
 for CCN, language reader and function terminology, and
 [ADR-0000, Use ADRs](../../../docs/adrs/0000-use-adrs-accepted.md)
-for human-owned architectural decisions. Both are Accepted and unsuperseded.
-Established ownership supports this local correction; no North Star topic or
-ADR is warranted. No architectural exception is proposed.
+for human-owned architectural decisions. Both remain Accepted/unsuperseded;
+local reader ownership needs no North Star topic, new ADR or exception.
 
 SEED-013/014 corrections are already in the execution baseline. Refreshed public
 observations preserve them; do not reintroduce their previous state heuristics.
@@ -89,11 +80,9 @@ Accepted source comparisons are retained in [PROOF.md](PROOF.md).
 | Untyped branch arrows end at their ternary colon; internal colons and curried contract preserved | Slice 2: new public API regressions red→green in JS/TS/JSX/TSX and Vue; promised untyped frozen rows and supplemental controls pass |
 | Typed branch signatures split; genuine function-type bodies preserved | Slice 3: red→green typed regressions in TS/TSX/Vue; typed frozen rows and literal function-type controls pass |
 | Controls and shared consumers | Slices 2–3: focused consumer suites, retained reproducer showing only deferred rows failing |
-| Preserve semantics while removing overhead and reconciling current owners | Slices 4–6: public regressions/replays; preserve accepted parameter behavior after PR536 integration |
-| Strict affected and broad throughput | Slice 7: four original gates plus two augmented-API gates; all upper 95% slowdown bounds strictly below 3% versus current/frozen `2e21e404c1ab9f4e0b49acc80816e816629d0670` |
-| Final corrected revision accepted and acknowledged | Slice 8: full pytest/make, exact-head hosted checks and merge, contributor publication/merge/acknowledgement receipts |
-
-Reusable proof commands and conventions: [PROOF.md](PROOF.md#proof-commands-and-conventions).
+| Preserve semantics while removing overhead and reconciling current owners | Slices 4–7: public regressions/replays; retain accepted parameters and reader hooks/finalization |
+| Strict affected and broad throughput | Slice 8: four original gates plus two augmented-API gates; all upper 95% slowdown bounds strictly below 3% versus current/frozen `2e21e404c1ab9f4e0b49acc80816e816629d0670` |
+| Final corrected revision accepted and acknowledged | Slice 9: full pytest/make, exact-head hosted checks and merge, contributor publication/merge/acknowledgement receipts |
 
 ## Ordered slices
 
@@ -103,24 +92,18 @@ Status: done
 Proof: refreshed PR/head/base, contributor-edit permission and authenticated
 publication-route observations; preserve exact refusal if unavailable.
 
-Behavior: given an explicit execution instruction, refresh PR534's patch,
-discussion, checks and current target, verify the head still names the
-intended contribution, and establish the authorized contributor-head delivery
-route (non-mutating authenticated push preview where available) before
-dependent implementation. A preview is not accepted publication; slice 8 owns
-the real update. If the PR is closed, superseded, changed incompatibly or
-cannot receive corrections, stop and return the disposition/destination
-decision to Terry. Do not substitute an unrelated trunk patch.
+Behavior: refresh PR534's complete patch/discussion/checks/current target and
+intended head; verify contributor publication permission before implementation.
+Preview is not publication (owned by 9). Closed/superseded/incompatibly changed
+or uneditable contribution returns its disposition/destination decision to
+Terry; no unrelated trunk substitute.
 
 ### 2. End untyped branch arrows at their own ternary colon
 Type: Behavior
 Status: done
-Proof: red→green public regressions for the reported, nested-ternary,
-nested-arrow-internal, grouped and parenthesized-object branch cases plus a
-JSX attribute and a Vue script block; the curried internal-colon control,
-`internal_ternary`, `block_branches` and `plain_ternary` stay green; the
-object-property case reports `f` 2–2 CCN 1; the reproducer's remaining
-failures are only typed and deferred rows.
+Proof: red→green reported/nested/internal/grouped/object/JSX/Vue regressions;
+curried/internal/block/plain controls stay green, property `f` is 2–2 CCN 1.
+Only typed and deferred reproducer rows remain; detailed proof in PROOF.md.
 
 Behavior: a ternary branch arrow ends at its own separator, retaining branch
 and enclosing CCN. Internal `?`/`:`, nested arrows creating no function and
@@ -131,10 +114,9 @@ JS/TS/JSX/TSX/Vue consumers.
 ### 3. Consume typed branch signatures before branch separators
 Type: Behavior
 Status: done
-Proof: red→green TS/TSX/Vue regressions for typed return, object return type
-and type-assertion branches; function-type alias, function-type return
-(`inherited_function_type_*` rows) and following-function controls stay green;
-the reproducer then fails only deferred rows.
+Proof: red→green TS/TSX/Vue return/object/assertion branches; aliases,
+function-type real bodies and following controls stay green. Only deferred
+reproducer rows remain; original expectations and detail stay in PROOF.md.
 
 Behavior: typed branch parameter/return colons are consumed as types without
 decrementing runtime depth; the actual separator ends the first arrow and the
@@ -150,13 +132,10 @@ Status: done
 Proof: slices 2–3 public regressions and all 128 retained rows stay green;
 new owner-context cases and full-metric comparisons preserve existing behavior.
 
-Structure: move group eligibility/emptiness bookkeeping into the existing
-binding/signature lifecycle and query it only at the annotation decision.
-The initial immutable comparison found +8.480%–9.567% incremental API cost;
-an unchanged-output profile implicates preprocessing overhead without allocating
-the full slowdown. Simplify the shared rule; add no raw-source fast path.
-An independently refactored, semantically qualified commit enables slice 5's
-exact-revision measurement. G4 remains open; this slice grants no timing waiver.
+Structure: group context moved into the binding/signature lifecycle. Initial
+API interval +8.480%–9.567% and unchanged-output attribution justified removing
+whole-stream bookkeeping. No raw-source shortcut or timing waiver; semantic
+qualification/refactoring/delivery are retained in PROOF.md.
 
 ### 5. Avoid unnecessary annotation-context traversal
 Type: Structure
@@ -164,11 +143,9 @@ Status: done
 Proof: bounded unchanged-output profile; all 128 public/FileAnalyzer rows and
 seven public fields match 8dac7b8; focused shared-consumer regressions pass.
 
-Structure: the committed optimization still has current/API upper +7.623%.
-Profile the remaining preprocessing cost, then use existing canonical token/
-signature ownership to avoid unnecessary annotation queries. Add no parallel
-tracker or raw-source fast path. Preserve runtime groups, trivia and genuine
-return annotations. Independent refactoring and semantic delivery precede measurement.
+Structure: after upper +7.623%, canonical token/signature evidence and demand
+buffering reduced unnecessary work. Runtime/trivia/type behavior and no parallel
+tracker/raw-source shortcut remain proved; refactored semantic delivery retained.
 
 ### 6. Reconcile accepted current signature owners
 Type: Structure
@@ -179,7 +156,17 @@ Structure: integrate current `1bc7cbd` without rewriting published history.
 Reuse PR536's canonical binding/formal/type owners; preserve this correction's
 ternary/trivia behavior. Independent refactor and delivery freeze code for 7.
 
-### 7. Qualify original and supplemented timing workloads
+### 7. Deliver sole-state tokens without unused dispatch
+Type: Structure
+Status: done
+Proof: all 166 seven-field rows/CLI match ec2; shared-reader and hook/multiple-
+state/finalization contracts hold; bounded actual-workload profile retained.
+Structure: local TypeScriptReader delivery uses its sole state directly when
+the generic token hook is unchanged; preserve generic fallback and eof/state
+finalization. Reuse Go's delivery pattern, no grammar receipt/counter replay.
+Refactor and semantic delivery precede 8; no throughput waiver.
+
+### 8. Qualify original and supplemented timing workloads
 Type: Behavior
 Status: planned
 Proof: raw warmed pairs, immutable implementation/corpus/harness hashes,
@@ -194,21 +181,19 @@ Preserve prior results. Every upper bound must be strictly below 3%; no broad
 averaging, noise waiver or repeat without prospective justification. Further
 optimization repeats semantic proof. Literal protocol remains in PROOF.md.
 
-### 8. Deliver the qualified correction through PR534
+### 9. Deliver the qualified correction through PR534
 Type: Behavior
 Status: planned
 Proof: final contributor-head SHA and accepted push, green current required CI,
 exact-head guarded merge receipt, and one acknowledgement URL.
 
-Behavior: given semantic/performance-qualified code, publish contributor
-corrections without force or lost history. Run full pytest/make, verify final
-head/base/tree and all required checks, then perform an exact-head hosted merge.
-Follow the
-[complete-cycle contract](../../../docs/reviews/fabio-malpezzi-20261027/REVIEW-CONTRACT.md);
-its 15-minute triage rule does not re-defer this selected correction. Hosted
-merge is not a Dough Land operation. After confirmed merge, with explicit
-acknowledgement authority, post one thank-you noting material corrections
-(check for a prior receipt). Retain evidence in the review record, then wrap up.
+Behavior: publish qualified contributor corrections without force/lost history.
+Run full pytest/make; verify final head/base/tree and required checks before
+exact-head hosted merge. Follow the [contract](../../../docs/reviews/fabio-malpezzi-20261027/REVIEW-CONTRACT.md);
+its 15-minute triage cutoff does not re-defer selected work. Hosted merge is
+not Dough Land. After confirmed merge, use explicit acknowledgement authority
+for one thank-you noting material corrections; check prior receipt, retain URL
+and review evidence, then wrap up.
 
 Pending CI, merge or acknowledgement leaves this slice unfinished.
 
@@ -229,10 +214,10 @@ Reported: slice 3 — "All six TS/TSX/Vue nested call/group cases fail on the fi
 Story clause: "Colons inside the arrow's own body, genuine TypeScript annotations, and property or computed-key colons keep their own syntax, and the enclosing and following functions keep their correct names, spans and CCN."
 Disposition: proved by slice 3: test_nested_runtime_separator_keeps_following_type_annotation and six baseline/candidate full-metric comparisons preserve runtime groups and named cb.
 
-### G4. Incremental affected API exceeds the strict budget
-Reported: slice 5 — "Current/API upper +9.567% initially in slice 4 and +7.623% at committed 8dac7b8; both material failures."
+### G4. Incremental affected API exceeds budget (first reported in slice 4)
+Reported: slice 7 — "Current/API upper +9.567% initially in slice 4 and +7.623% at 8dac; ec2 original upper +6.891% and augmented upper +7.259%, all material failures."
 Story clause: "with a paired 95% upper slowdown bound strictly below 3% for both incremental and cumulative affected and broader workloads."
-Disposition: receiving slice 7
+Disposition: receiving slice 8
 
 ### G7. Current-owner integration changes a nested runtime-group control
 Reported: slice 6 — "Eight new runtime-group controls report an additional anonymous CCN-1 arrow after PR536 integration; 828 other tests pass."
@@ -242,9 +227,24 @@ Disposition: proved by slice 6: current-owner-integration.md exact three-version
 ### G5. Native CI observation ended after acquisition failed
 Reported: slice 4 — "CI_MONITOR_UNAVAILABLE: GitHub workflow-runs acquisition failed; original observer finished and its process ended."
 Story clause: "satisfactory performance/CI."
-Disposition: receiving slice 8
+Disposition: receiving slice 9
 
 ### G6. Earlier qualification driver terminal receipt unavailable
 Reported: slice 5 — "No original numeric exit code is retained; four complete result/log pairs match, and independent postcheck terminated successfully."
 Story clause: "with coherent ownership, discriminating regression proof and satisfactory performance/CI."
-Disposition: receiving slice 7
+Disposition: proved by slice 7: final-performance.md and final-postcheck.json retain all six child/driver numeric exits; historical receipt loss remains explicit.
+
+### G8. Qualification setup reused a path-dependent historical CLI hash
+Reported: slice 7 — "First freeze exited 1 before timing; historical CLI hash embeds the prior absolute corpus prefix."
+Story clause: "satisfactory performance/CI."
+Disposition: proved by slice 7: final-setup-failure.json and final-performance.md preserve failed setup, exact prefix-only cause and setup2 byte-identical three-version outputs.
+
+### G9. Diagnostic baseline imported a candidate-only helper
+Reported: slice 7 — "Control setup exited 1 before profiling because current target has no parameter_group helper."
+Story clause: "satisfactory performance/CI."
+Disposition: proved by slice 7: api-attribution.md preserves setup1 source/exit, conditional-import control2 correction and exact seven-field equality; no product or statistical change.
+
+### G10. Reader protocol fixture omitted existing indexing capability
+Reported: slice 7 — "Eight protocol tests passed; the alternate iterable fixture failed at unchanged preprocess's parallel_states[0] before delivery."
+Story clause: "satisfactory performance/CI."
+Disposition: proved by slice 7: reader-dispatch.md retains failed fixture/receipt and corrected indexed-without-len container; actual grammar/metrics and all eleven protocol observations pass.
