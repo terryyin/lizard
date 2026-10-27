@@ -134,7 +134,7 @@ required checks.
 
 ### 1. Establish the contributor correction route
 Type: Behavior
-Status: planned
+Status: done
 Proof: refreshed PR/head/base, contributor-edit permission and authenticated
 publication-route observations; preserve exact refusal if unavailable.
 
@@ -248,6 +248,70 @@ existing review evidence/discussion, then complete the story's ordinary wrap-up.
 Boundedness: one qualified contribution reaching its intended users and author,
 with separate hosted wait time. Pending CI, merge or acknowledgement leaves
 this slice unfinished, not delegated to object/ternary/parameter siblings.
+
+## Execution evidence
+
+Execution: story-branch `claude/preserve-multiline-arrow-expressions-and-surroun`
+in this worktree; claim published at `428bb5932c912e6913deac2585de392dcd1d36ce`
+(origin). Agent: Rina-chan.
+
+**Slice 1 (2026-10-27, no product change):** `gh pr view 533` → OPEN, head
+`pr/js-arrow-function-ends-with-its-line` @ `15423852c04aed302f684395fe9522251d88a2f2`
+(FabioMalpezzi/lizard, cross-repository), `maintainerCanModify: true`; `gh`
+authenticated as `terryyin` (repository owner). Fetching the contributor ref
+returned the same SHA; `git push --dry-run` to it reported up to date. Route is
+viable. Head still contains PR531's head `47aa357` (SEED-013's source): merging
+PR533 unchanged would make GitHub mark PR531 merged. Slice 4 must settle that
+ordering with SEED-013's concurrent execution before the hosted merge.
+
+**Slice 2 acceptance:** independent source-only reviewer (fresh agent, input
+only the story section) returned commitments C1–C63/D1–D4/X1–X5. Mapping:
+C12–C15 → `test_case_returned_arrows_and_multiline_ternary_body` (JS/TS/JSX/TSX)
+and `TestVueScriptArrowBoundaries.test_reported_example_keeps_script_offsets`;
+C17–C19 → `test_class_field_arrow_beside_following_method` (+Vue);
+C20–C23 → `test_asi_matches_semicolon_except_the_semicolon_token` (4 vs 3 tokens);
+C27 → postfix `++` test; C6 → `test_next_statement_condition_belongs_to_enclosing_function`;
+C24–C26, C28 → `TestExpressionArrowContinuation` (`* < > ** - instanceof in`,
+call, subscript, template, `.`, `?.`, `?:`, operator-ending line, generic split);
+C29–C32 → parenthesized, blank/comment, closing-brace and block-body tests;
+C40 → four extensions + Vue, CLI `.mjs` observed by the implementer;
+C45/C46 → new `test/test_languages/testJavaScriptArrowBoundaries.py` (22 tests,
+<250 lines), no existing test file changed. Red before: 16/22 fail on a
+`428bb59` export (6 continuation guards pass). C47–C53 belong to slices 3–4.
+Coordinator probes (base vs candidate) found and returned a generic-split comma
+regression and a missing same-line object member; both corrected and tested.
+Curried `(a) => (b) => a\n + b` now owns 11 tokens (baseline 10 was wrong).
+Reproducer `nix develop -c python docs/reviews/fabio-malpezzi-20261027/pr533/reproduce.py --checkout <worktree>`:
+70 → 44 failures, all `inherited_*` object-literal bodies (SEED-013), output
+byte-identical to baseline. Focused command: 379 passed, 5 skipped. Full
+`nix develop -c python -m pytest`: 1818 passed, 7 skipped.
+Design: `TypeScriptReader.preprocess` offers each line's first code token to the
+innermost open expression arrow (`context.expression_arrows`) before any counter
+charges it; `end_expression_before` applies an ASI rule (`ends_expression` /
+`starts_statement`) without a continuation allowlist; `,` ends object-member
+arrows. Implementer's informal timing ≈ +3% median (noisy, not the harness):
+slice 3 must treat it as a real risk.
+Independent refactor (`## REFACTOR COMPLETE`): moved the ASI predicates and
+`end_expression_before` into `JavaScriptFunctionsMixin` beside the arrow
+registration (behavior unchanged; focused 379 passed, reproducer 44 inherited).
+Coordinator final: full pytest 1818 passed, 7 skipped; `nix develop -c make` exit 0.
+
+## Story obligations
+
+### G1. Comma before a line break outside objects keeps baseline ownership
+Reported: slice 2 — "Outside objects, an arrow followed by a trailing comma still gives the next line's first token to the arrow."
+Story clause: "Public analysis ends each expression-bodied arrow on its expression's last line"
+Disposition: excluded "no full JavaScript/TypeScript grammar"
+
+### G2. Bare-parameter arrow start line follows its body
+Reported: slice 2 — "For `x =>` the start line comes from the first body token"
+Story clause: "names, lines, CCN, NLOC and token counts"
+Disposition: excluded "arrow parameter-binding work remains with"
+
+### G3. Vue template before script shifts reported lines (discovered in slice 2 acceptance)
+Reported: slice 2 — "Newlines outside `<script>` are dropped, so a `<template>` placed before the script shifts reported lines."
+Story clause: "Users measuring JavaScript, TypeScript, JSX/TSX and Vue code"
+Disposition: no user cost "Public analysis ends each expression-bodied arrow on its expression's last line": coordinator probe gave `a` 2–4 instead of 5–7 identically on base `428bb59` and candidate for a plain function; it is independent of arrows and unchanged by this work, so the arrow goal adds no cost (separate Vue follow-up recommended at wrap-up)
 
 ## Plan review
 
