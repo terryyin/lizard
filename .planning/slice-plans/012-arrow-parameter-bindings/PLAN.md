@@ -33,124 +33,26 @@ this plan. No project-specific numeric slice limit was supplied.
 Execution authorized by Terry's `dough-execute-plan` invocation on 2026-10-27.
 The established start owns the published Take; no second start was made.
 
-## Execution state and accepted proof
+## Execution context and existing owners
 
-- Identity: `SEED-016#arrow-parameter-bindings`; publisher
-  `dashboard-territory.local-lizard`; assigned agent `Sola-chan`.
-- Execution and originating checkout:
-  `/Users/terryyin/git/lizard/.worktrees/report-consistent-javascript-and-typescript-arro`;
-  branch `codex/report-consistent-javascript-and-typescript-arro`, Story Branch
-  Mode. This is the established owned linked worktree; no integration checkout
-  is selected for mutation. Authorized remote/trunk: `origin` / `master`.
-- Starting revision: `65c1a10c5a2509188957af6abbc16353442a2dfc`; accepted claim,
-  previously published branch base and initial candidate:
-  `7f479101728b5fec8becaf7c784b752ed736719e`.
-- Checkout setup: checked-in `shell.nix` creates the local venv and installs
-  `dev_requirements.txt`; `nix develop -c python -m pytest
-  test/test_languages/testJavaScriptParameterNames.py` passed 34 tests here.
-  Nix commands remain serial. No selective formatter or commit hook is installed;
-  `make` owns the required style checks. Workspace author is `Sola-chan`.
-- CI: GitHub Actions `python-app.yml`, verified active ID `38306292`, display
-  name `Python application`; push trigger covers the execution branch.
-  Codex observer coordinator `sola-seed016`, directory
-  `/tmp/dough-ci-501/watch-TEDK9c`, PID `99850`, PTY session `74466`, yielded
-  continuation cell `32`. Request root/repository/branch and owner hash were
-  checked against this checkout and coordinator after recovering the header.
-  It covers ordinary branch increments; the initial trunk claim is unobserved.
-- No numeric slice hard limit is configured. Replanning retains the plan's
-  existing authority within this story; product promises remain unchanged.
-- Source-only acceptance review: fresh non-inheriting `source_commitments`
-  agent received the source Goal, Scope, examples, representation, completion
-  and explicit execution amendment, no plan/product/return or project-file
-  access. Its launch and 72 returned commitments are retained in the execution
-  conversation. Compared with the actual source: counts/names, all four-arrow,
-  alias, empty-pattern and typed examples, reader/consumer coverage, controls,
-  representation/ownership, performance, checks and exclusions remain intact.
-  They are future obligations of slices 2–5, not results of this route probe.
-- Slice 1 expected route: the intended open contribution can receive a qualified
-  correction without losing contributor history. Actual observation: unchanged
-  open head, maintainer editing enabled, matching fork ref and authenticated
-  receive-pack dry-run exit 0. Commands, observed refs/checks/discussion and
-  preview limitations: [contributor-route.md](../../../docs/reviews/fabio-malpezzi-20261027/pr536/contributor-route.md).
-  This accepts feasibility only; changed-candidate push acceptance and final
-  head/CI/merge/acknowledgement remain slice 5's obligations. No product tests
-  are claimed for this evidence-only slice.
+Detailed setup, observer identity, accepted proof, preparation premises and PFE
+rationale are retained in [slice2-execution-context.md](../../../docs/reviews/fabio-malpezzi-20261027/pr536/slice2-execution-context.md).
 
-## Existing owners and architectural direction
+Execution: established owned checkout
+`/Users/terryyin/git/lizard/.worktrees/report-consistent-javascript-and-typescript-arro`,
+branch `codex/report-consistent-javascript-and-typescript-arro`, Story Branch
+Mode, publisher `dashboard-territory.local-lizard`, agent `Sola-chan`.
+Authorized remote/trunk: `origin` / `master`. Slice 1 accepted branch base:
+`33610866db00d28ba9e2dafe5a3fd1942347fb2f`; claim/suffix base:
+`7f479101728b5fec8becaf7c784b752ed736719e`. Slice 2 semantic proof is accepted;
+its independent refactor preserved product/tests and reorganized evidence only
+([refactor proof](../../../docs/reviews/fabio-malpezzi-20261027/pr536/slice2-refactor-consumers.md)).
 
-PFE: change the existing anonymous-arrow path in
-`lizard_languages/javascript_bindings.py` (`JavaScriptBindingsMixin` pending
-binding summaries and `_push_arrow_function`) and
-`lizard_languages/typescript_states.py` / `javascript_functions.py`
-(`_dec` parameter extraction, `_arrow_function`, binding-candidate
-parentheses), together with `lizard_core/function_info.py` (`FunctionInfo`
-`parameters` / `parameter_count` / `full_parameters`). TypeScriptReader
-composes those owners; JavaScript, JSX/TSX and Vue script reuse them;
-`.cjs`/`.mjs` alias the same reader. Do not add a parallel pending-name
-collector; keep the public facade.
-
-Rejected shapes from the review: raw/adapted #536 keep a second
-`_read_name` collector beside `_dec`, so anonymous aliases expose property
-keys instead of the named convention; empty patterns under-count; typed
-callback annotations emit phantoms; and paired affected API / names-counts
-gates fail. Prefer one coherent rule: when a binding candidate or bare
-identifier becomes an arrow, formal slots and binding names enter
-`FunctionInfo` through the same representation named signatures already use.
-
-Settled public representation (from the refined story): `parameter_count` is
-formal slot count; `parameters` lists established binding names only; empty
-patterns add a slot and no name, so count may exceed `len(parameters)`;
-trailing-comma empty tokens stay excluded.
-
-Follow [ADR-0001, Ubiquitous language](../../../docs/adrs/0001-ubiquitous-language-accepted.md)
-for parameter count / language reader / function terminology, and
-[ADR-0000, Use ADRs](../../../docs/adrs/0000-use-adrs-accepted.md)
-for human-owned architectural decisions. Both are Accepted and unsuperseded.
-Established ownership supports this local correction; no North Star topic or
-ADR is warranted. No architectural exception is proposed.
-
-SEED-014 and SEED-015 are Taken and change related expression-body state. At
-Take, refresh trunk and rerun the premise observations below on the execution
-checkout; reconcile with whichever landed rather than reintroducing their
-deferred outcomes. No formal blocking dependency is asserted.
-
-## Premises observed during preparation
-
-Checkout: `/Users/terryyin/git/lizard/.worktrees/report-consistent-javascript-and-typescript-arro`,
-revision `0ef95abbe278bfd22bbe4de48b9fa4b71f7b2181`, observed 2026-10-27.
-
-- Through `analyze_file.analyze_source_code`, the four reported anonymous
-  arrows expose counts `0,0,0,0`. Named `({key: renamed}, tail) =>` reports
-  `['renamed','tail']` count 2 while the anonymous twin reports `[]` count 0.
-  Named `({}, [], tail) =>` reports count 1 / `['tail']` with
-  `full_parameters` `[',', ' tail']`; the anonymous empty form reports
-  count 0. Typed callback input on this revision reports one anonymous
-  count 0 (review target `d7be8b9` had a phantom zero-parameter sibling as
-  well); correction must still yield one function count 4 with names
-  `['number','$','cb','tail']` and no phantom. Member assignment remains
-  count 0; wrapper-call anonymous also count 0 on target.
-- Inspected `JavaScriptBindingsMixin._push_arrow_function` (transfers only
-  CCN/defaults from pending summaries, not names) and
-  `JavaScriptFunctionsMixin._dec` (named signatures call
-  `context.parameter`). Confirms the owners named above. Adapted #536's
-  parallel `names` / `_read_name` collector is the rejected shape.
-- `FunctionInfo.parameter_count` is `len(self.parameters)`, and `parameters`
-  drops tokens that yield no identifier match — so empty formal slots cannot
-  be represented without extending that shared model.
-- `gh pr view 536 --repo terryyin/lizard` returned `OPEN`, head
-  `92fff8a1621ab82b1ce296d25ac4eb2cdd892c8f` on FabioMalpezzi's fork, base
-  `master`, `maintainerCanModify: true`. Readable metadata is not accepted
-  publication; slice 1's early probe owns permission and route.
-- Frozen evidence tree exists under
-  `/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr536` and baseline under
-  `/Users/terryyin/.cache/lizard-pr-reviews-20261027/baseline`. Cache
-  `paired.py` SHA256 is
-  `3064d8d77047db2f084ce9fd6ae09d98acf34453316b7df20fb184cbb3217bf5`; the
-  review record's central `paired.py` hash is
-  `ec1c9c5eac0ad6a29294ecbd987b2a55d4cf31db145486d065bf13c096b76520`. Before
-  timing, confirm the harness bytes used match the review's intended
-  measurement script (restore or pin if the cache copy has drifted). This
-  settles replay reachability, not any candidate's timing.
+Keep parameter extraction in the existing JavaScriptBindings / JavaScriptFunctions
+and TypeScriptStates owners, with shared FunctionInfo representation; no parallel
+pending-name collector. Formal slots and established binding names are distinct.
+Follow Accepted, unsuperseded ADR-0000/0001 linked in the context. No architectural
+exception is proposed. No numeric slice limit is configured; preserve this scope.
 
 ## Proof ownership and gates
 
@@ -207,7 +109,7 @@ stops slices 2–5 and revises the plan before edits.
 
 ### 2. Capture anonymous arrow formals through existing parameter owners
 Type: Behavior
-Status: planned
+Status: done
 Proof: red→green public regressions for `arrow-reported`, `arrow-authored*`,
 `arrow-named`, `arrow-defaults`, `arrow-binding-*`, `arrow-alias-*`,
 nested/quoted/computed bindings, `arrow-sigils*`, `arrow-calls`,
@@ -296,12 +198,39 @@ Boundedness: one qualified contribution reaching users and author, with
 separate hosted wait time. Pending CI, merge or acknowledgement leaves this
 slice unfinished.
 
-## Plan review
+## Story obligations
 
-Slice-plan refinement was not needed: slices separate a permitted early
-external probe, unified anonymous capture through existing owners, the
-slot/phantom extension with its own regression loop, the independent
-performance loop and hosted delivery. The cumulative design keeps one
-FunctionInfo parameter representation and rejects the parallel collector.
-No remaining slice-specific concern was found; contributor publication is
-bounded by the early probe. No human decision is currently pending.
+### G1. Empty formal slots
+Reported: slice 2 — "Named and anonymous ({}, [], tail) report count 1 rather than 3, with names ['tail']."
+Story clause: "empty binding patterns still occupy formal slots without inventing public names"
+Disposition: receiving slice 3
+
+### G2. Function-return annotation continuation
+Reported: slice 2 — "arrow-return-function.ts exposes only inner n; the outer anonymous arrow with x,y and count 2 is missing."
+Story clause: "Generic parameters, typed returns, rest/defaults, nested default CCN, ternary-default CCN ownership and following functions stay correct."
+Disposition: receiving slice 3
+
+### G3. Empty-slot output consumers
+Reported: slice 2 — "CSV/checkstyle derive counts from len(parameters), and HTML from len(full_parameters); they must follow formal counts when empty slots are represented, while duplicate lists retain identifier-only names."
+Story clause: "across CLI, formatters, warnings, duplicate-parameter lists and the current website JSON/`parameter_count` consumer path."
+Disposition: receiving slice 3
+
+### G4. Deferred member assignment
+Reported: slice 2 — "arrow-member.js member-assignment count remains 0; its promised wrapper callback now has count 2."
+Story clause: "member-assignment parameter loss"
+Disposition: excluded "member-assignment parameter loss (`module.exports.add = (a, b) => …` remaining count 0) stays with later review slice #537"
+
+### G5. Deferred enclosing CCN
+Reported: slice 2 — "arrow-abandoned.js outer CCN remains 2 instead of 3."
+Story clause: "Abandoned-expression enclosing CCN"
+Disposition: excluded "Abandoned-expression enclosing CCN (`arrow-abandoned.js` expecting outer CCN 3) stays with #539."
+
+### G6. Strict performance proof remains outstanding
+Reported: slice 2 — "No performance experiment has been launched; affected and broad incremental/cumulative bounds remain unproved."
+Story clause: "paired 95% upper slowdown bounds strictly below 3% for incremental and cumulative affected and broader workloads."
+Disposition: receiving slice 4
+
+### G7. Final qualification and delivery remain outstanding
+Reported: slice 2 — "Full pytest, make and final hosted CI on the corrected revision remain unrun; PR536 remains unchanged and unmerged."
+Story clause: "Run the full pytest suite, `make` and final hosted CI before any exact-head guarded merge."
+Disposition: receiving slice 5
