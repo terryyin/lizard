@@ -62,6 +62,15 @@ shellHook, printing pip output to stdout and upgrading `platformdirs` past
   - Observed effect: two overlapping read-only Nix commands re-entered the mutating shellHook and produced an ensurepip diagnostic. A subsequent sequential Python/pytest import check passed. Accepted proof predated the race or ran in the separate validation checkout.
   - Inference: read-only command intent does not make shellHook entry safe to parallelize. Serialize Nix entries across agents in the same checkout.
 
+### Additional occurrence
+- Execution: SEED-012#regex-literal-context
+  - Timestamp: 2026-10-27T20:25:00+08:00
+  - Tool: Cursor
+  - Open Dough release: 0.3.71 (installed by commit 01afe9c)
+  - Evidence: slice-3 post-change refactor agent d49cf4a4-9eaa-4044-96fb-f7e6a0bc649f; coordinator 946f4d3a-43e2-470f-8722-fc7bcd78fef5; `shell.nix` shellHook; filter stripping `platformdirs`/`Requirement already`/`Successfully` from `nix develop -c` stdout before a line-count check.
+  - Observed effect: every Nix-prefixed command re-entered pip install; agents filtered shellHook/platformdirs noise from parsed results. Semantic and performance proof still passed.
+  - Inference: same project-environment shellHook cost as prior DD-003 rows; serial Nix use avoided the parallel race, but stdout noise and platformdirs pin churn remained on each entry.
+
 ## DD-004 — PR merge preceded a missing affected-workload performance gate
 
 Complete the source's relevant workload selection before the exact-head merge.
@@ -89,3 +98,71 @@ backlog or done records, including clean fast-forwards and contributor branches.
   - Evidence: PR535 dependency merge into contributor head 1a44c0cad59ea3f3dcabe3c1ac601d905437a7c7; execution-branch revision f25aeca2, .planning/slice-plans/004-fabio-malpezzi-pr-reviews/535-review.md and CONTEXT.md. Later validation-checkout advance to 53e4850 used its installed product-backlog-git-merge.mjs adapter.
   - Observed effect: the coordinator used native Git for the dependency merge and an earlier private validation fast-forward before rereading the adapter rule. Complete candidate/landed trees matched the validated result, and the subsequent done-catalog audit found 18 records already current; no incorrect merged backlog was observed.
   - Inference: clean Git output does not validate domain reconciliation. The resulting product proof remains supported, while the process bypass should not recur.
+
+## DD-006 — `python -c` import probes contaminate via argv0
+
+Do not use `python -c` to verify checkout-isolated imports for Lizard performance
+or multi-checkout work. Prefer a script whose `sys.argv[0]` matches the real
+harness worker (or another real file path under the intended checkout).
+
+### Occurrences
+- Execution: SEED-013#arrow-object-boundaries
+  - Timestamp: unknown
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.71
+  - Evidence: slice 3 performance agent
+    `89783fe2-57ff-41aa-b641-0cef9d98622b`; diagnosis that
+    `lizard.py` uses `abspath(sys.argv[0])` so `python -c` becomes
+    `abspath('-c')` and contaminates toward cwd; corrected harness-shaped
+    `/tmp/probe-paired-imports.py`;
+    `docs/reviews/fabio-malpezzi-20261027/pr531/corrected-slice3-prelaunch.txt`
+    (2026-10-27T11:47:50Z) and gaps/learnings in that agent's return.
+  - Observed effect: false import-path failures during pre-measurement probes;
+    real `paired.py` workers were fine. Extra diagnosis before timing.
+  - Inference: probe argv0 must match the harness, not `-c`; this is a
+    project-local import bootstrap trap rather than a failing harness.
+
+## DD-007 — Expression-body flag gated on “newly created” missed paren-param arrows
+
+When setting runtime-arrow expression-body context, derive it from the body
+token for every path that reaches `_arrow_function`, including arrows already
+pushed from `(...)` parameters. Do not gate the flag on “newly created.”
+
+### Occurrences
+- Execution: SEED-013#arrow-object-boundaries
+  - Timestamp: unknown
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.71
+  - Evidence: independent refactor agent
+    `c1df6a2a-bff5-455b-a7a1-638d227d1f52` (“Confirmed an incomplete rule:
+    `if created:` skips `_expression_body` when params already pushed”);
+    plan slice 2 learning in
+    `.planning/slice-plans/009-arrow-object-boundaries/PLAN.md`; fixture in
+    `test/test_languages/testArrowObjectBoundaries.py` uses paren-param
+    ternary objects.
+  - Observed effect: first slice-2 implementation left paren-param ternary
+    object arrows wrong until the refactor pass cohered ownership and reran
+    proof (6 / 363 / reproduce 64).
+  - Inference: multiple push paths for the same runtime arrow make
+    creation-gated flags incomplete; body-token ownership is the coherent rule.
+
+## DD-008 — Fork `push:false` alone is not a contributor-route refusal
+
+When probing a fork PR for maintainer correction, treat API `push: false` as
+incomplete. Combine `maintainer_can_modify` with a non-mutating divergent-SHA
+dry-run push preview before refusing the route.
+
+### Occurrences
+- Execution: SEED-012#regex-literal-context
+  - Timestamp: 2026-10-27T18:40:00+08:00
+  - Tool: Cursor
+  - Open Dough release: 0.3.71 (installed by commit 01afe9c)
+  - Evidence: slice 1 agent 7093d051-eac5-4592-b08e-cdb07e4ea249; plan accepted proof under `.planning/slice-plans/008-regex-literal-context/PLAN.md` slice 1; PR528 `maintainer_can_modify: true`, fork `push: false`, divergent dry-run accepted.
+  - Observed effect: same-SHA dry-run looked up-to-date; only the divergent preview proved the MCM write path. Route stayed viable without a false human disposition stop.
+  - Inference: collaborator-permission and no-op dry-run signals understate MCM delivery; divergent preview is the discriminating probe.
+
+## Retention
+
+- Highest allocated local number: 8

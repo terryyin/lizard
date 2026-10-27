@@ -21,7 +21,7 @@ the actual last cohort finisher reconciles all 19 and combined evidence.
 | Original slice | PR | Frozen head | Owner / mapped slice | Current disposition |
 | --- | --- | --- | --- | --- |
 |1|[#527](https://github.com/terryyin/lizard/pull/527)|`a529750edc95d44bc71fbcd88d567bbbef865ae5`|SEED-010#review-fabio-malpezzi-prs / 1|Merged e871ae4; thanked|
-|2|[#528](https://github.com/terryyin/lizard/pull/528)|`b66ec3a7f3ca1b3f59d8a76891ce556406231566`|SEED-010#review-fabio-malpezzi-prs / 2|Deferred SEED-012#regex-literal-context|
+|2|[#528](https://github.com/terryyin/lizard/pull/528)|`317d5c83647b849f8b683c150a6039e47ce5ba2a`|SEED-010#review-fabio-malpezzi-prs / 2|Merged `6408864eeab300296617902c0c8980a3f11f2a39` with acknowledgement|
 |3|[#531](https://github.com/terryyin/lizard/pull/531)|`47aa35735cccba962e507edb179eae1154ab6ad2`|SEED-010#review-fabio-malpezzi-prs / 3|Deferred SEED-013#arrow-object-boundaries|
 |4|[#533](https://github.com/terryyin/lizard/pull/533)|`15423852c04aed302f684395fe9522251d88a2f2`|SEED-010#review-fabio-malpezzi-prs / 4|Deferred SEED-014#multiline-arrow-boundaries|
 |5|[#534](https://github.com/terryyin/lizard/pull/534)|`f4074ae860c7999cc37dd081a6f7ebfa777adc83`|SEED-010#review-fabio-malpezzi-prs / 5|Deferred SEED-015#ternary-arrow-boundaries|
