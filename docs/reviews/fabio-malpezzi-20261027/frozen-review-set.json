@@ -1,0 +1,178 @@
+{
+  "frozenOn": "2026-10-27",
+  "target": "origin/master",
+  "startingTarget": "2e21e404c1ab9f4e0b49acc80816e816629d0670",
+  "pullRequests": [
+    {
+      "number": 527,
+      "state": "open",
+      "head": "a529750edc95d44bc71fbcd88d567bbbef865ae5",
+      "headBranch": "pr/python-nested-structures-2",
+      "headRepo": "FabioMalpezzi/lizard",
+      "base": "master",
+      "baseSha": "01afe9c228ba2a3dc5253259d8415d2ef47f0b71"
+    },
+    {
+      "number": 528,
+      "state": "open",
+      "head": "b66ec3a7f3ca1b3f59d8a76891ce556406231566",
+      "headBranch": "pr/js-regex-after-keywords",
+      "headRepo": "FabioMalpezzi/lizard",
+      "base": "master",
+      "baseSha": "01afe9c228ba2a3dc5253259d8415d2ef47f0b71"
+    },
+    {
+      "number": 531,
+      "state": "open",
+      "head": "47aa35735cccba962e507edb179eae1154ab6ad2",
+      "headBranch": "pr/js-object-in-an-arrow-function-body",
+      "headRepo": "FabioMalpezzi/lizard",
+      "base": "master",
+      "baseSha": "01afe9c228ba2a3dc5253259d8415d2ef47f0b71"
+    },
+    {
+      "number": 532,
+      "state": "open",
+      "head": "d0713bf5b4dcf4bf24453156a3756688627abbc0",
+      "headBranch": "pr/js-parameter-names",
+      "headRepo": "FabioMalpezzi/lizard",
+      "base": "master",
+      "baseSha": "01afe9c228ba2a3dc5253259d8415d2ef47f0b71"
+    },
+    {
+      "number": 533,
+      "state": "open",
+      "head": "15423852c04aed302f684395fe9522251d88a2f2",
+      "headBranch": "pr/js-arrow-function-ends-with-its-line",
+      "headRepo": "FabioMalpezzi/lizard",
+      "base": "master",
+      "baseSha": "01afe9c228ba2a3dc5253259d8415d2ef47f0b71"
+    },
+    {
+      "number": 534,
+      "state": "open",
+      "head": "f4074ae860c7999cc37dd081a6f7ebfa777adc83",
+      "headBranch": "pr/js-arrow-function-in-a-ternary-branch",
+      "headRepo": "FabioMalpezzi/lizard",
+      "base": "master",
+      "baseSha": "01afe9c228ba2a3dc5253259d8415d2ef47f0b71"
+    },
+    {
+      "number": 535,
+      "state": "open",
+      "head": "171079e625966ac9c17aee29a5d74256befd85ae",
+      "headBranch": "pr/ts-this-parameter",
+      "headRepo": "FabioMalpezzi/lizard",
+      "base": "master",
+      "baseSha": "01afe9c228ba2a3dc5253259d8415d2ef47f0b71"
+    },
+    {
+      "number": 536,
+      "state": "open",
+      "head": "92fff8a1621ab82b1ce296d25ac4eb2cdd892c8f",
+      "headBranch": "pr/js-arrow-parameters",
+      "headRepo": "FabioMalpezzi/lizard",
+      "base": "master",
+      "baseSha": "01afe9c228ba2a3dc5253259d8415d2ef47f0b71"
+    },
+    {
+      "number": 537,
+      "state": "open",
+      "head": "c89470c442d28195bebba45597910c7a481a5043",
+      "headBranch": "pr/js-arrow-after-a-member-access",
+      "headRepo": "FabioMalpezzi/lizard",
+      "base": "master",
+      "baseSha": "01afe9c228ba2a3dc5253259d8415d2ef47f0b71"
+    },
+    {
+      "number": 538,
+      "state": "open",
+      "head": "c869db90cf2ab6ba93b5c368b71f66e3eaaa6014",
+      "headBranch": "pr/js-group-around-a-function-expression",
+      "headRepo": "FabioMalpezzi/lizard",
+      "base": "master",
+      "baseSha": "01afe9c228ba2a3dc5253259d8415d2ef47f0b71"
+    },
+    {
+      "number": 539,
+      "state": "open",
+      "head": "daa7d2068ad1bbaaa201b9685aa5d21582ec0015",
+      "headBranch": "pr/js-parenthesized-expression-after-an-assignment",
+      "headRepo": "FabioMalpezzi/lizard",
+      "base": "master",
+      "baseSha": "01afe9c228ba2a3dc5253259d8415d2ef47f0b71"
+    },
+    {
+      "number": 540,
+      "state": "open",
+      "head": "d225a6d60af856ac155b882d1a3770b7d66457ef",
+      "headBranch": "pr/js-colon-of-a-case-label",
+      "headRepo": "FabioMalpezzi/lizard",
+      "base": "master",
+      "baseSha": "01afe9c228ba2a3dc5253259d8415d2ef47f0b71"
+    },
+    {
+      "number": 541,
+      "state": "open",
+      "head": "644480ce9f46892fae258696583a6c18649c05dc",
+      "headBranch": "pr/js-members-named-get-or-set",
+      "headRepo": "FabioMalpezzi/lizard",
+      "base": "master",
+      "baseSha": "01afe9c228ba2a3dc5253259d8415d2ef47f0b71"
+    },
+    {
+      "number": 542,
+      "state": "open",
+      "head": "ddf075a0cdee4079e584919d818c28b6468a84b0",
+      "headBranch": "pr/js-array-as-a-property-value",
+      "headRepo": "FabioMalpezzi/lizard",
+      "base": "master",
+      "baseSha": "01afe9c228ba2a3dc5253259d8415d2ef47f0b71"
+    },
+    {
+      "number": 543,
+      "state": "open",
+      "head": "f6a329b488bb1a6e5aa9af43f0cf3e5e761d8353",
+      "headBranch": "pr/js-spread-in-an-object",
+      "headRepo": "FabioMalpezzi/lizard",
+      "base": "master",
+      "baseSha": "01afe9c228ba2a3dc5253259d8415d2ef47f0b71"
+    },
+    {
+      "number": 544,
+      "state": "open",
+      "head": "3ac7e4eaf61e898836fded88ab715b37f9fedbbf",
+      "headBranch": "pr/js-line-comment-ending-with-a-backslash",
+      "headRepo": "FabioMalpezzi/lizard",
+      "base": "master",
+      "baseSha": "01afe9c228ba2a3dc5253259d8415d2ef47f0b71"
+    },
+    {
+      "number": 545,
+      "state": "open",
+      "head": "baa95a4df8278421bb3d3a6487516030cc03a979",
+      "headBranch": "pr/js-conditions-in-template-interpolations",
+      "headRepo": "FabioMalpezzi/lizard",
+      "base": "master",
+      "baseSha": "01afe9c228ba2a3dc5253259d8415d2ef47f0b71"
+    },
+    {
+      "number": 546,
+      "state": "open",
+      "head": "a671632141127fca9b2785fdbb0c675d45ae9042",
+      "headBranch": "pr/js-keyword-as-a-member-name",
+      "headRepo": "FabioMalpezzi/lizard",
+      "base": "master",
+      "baseSha": "01afe9c228ba2a3dc5253259d8415d2ef47f0b71"
+    },
+    {
+      "number": 547,
+      "state": "open",
+      "head": "2766557096daac3f8e55657e9c48ba685157635d",
+      "headBranch": "pr/ts-question-mark-after-a-name",
+      "headRepo": "FabioMalpezzi/lizard",
+      "base": "master",
+      "baseSha": "01afe9c228ba2a3dc5253259d8415d2ef47f0b71"
+    }
+  ]
+}

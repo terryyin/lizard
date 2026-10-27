@@ -1,0 +1,5 @@
+{"imports": {"facade": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr533/target/lizard.py", "registry": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr533/target/lizard_languages/__init__.py", "functions": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr533/target/lizard_languages/javascript_functions.py", "states": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr533/target/lizard_languages/typescript_states.py", "helper": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr533/target/test/test_languages/testES6.py"}}
+Traceback (most recent call last):
+  File "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr533/reproduce.py", line 36, in <module>
+    get_extensions()).analyze_source_code(
+TypeError: get_extensions() missing 1 required positional argument: 'extension_names'

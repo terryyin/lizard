@@ -52,3 +52,40 @@ shellHook, printing pip output to stdout and upgrading `platformdirs` past
   - Evidence: `shell.nix` shellHook; slice 2 implementation report (upload list contained non-path pip lines); slice 2 refactor report (platformdirs 4.4.0 conflicts with virtualenv 20.13.2).
   - Observed effect: extra latency and stdout noise on each Nix-prefixed command; no proof result changed.
   - Inference: a project-environment issue rather than shared guidance; a stamp-guarded or quiet install would remove it.
+
+### Additional occurrence
+- Execution: SEED-010#review-fabio-malpezzi-prs
+  - Timestamp: unknown
+  - Tool: Codex
+  - Open Dough release: unknown; installed guidance at execution baseline 2e21e404
+  - Evidence: PR535 independent refactor return and sequential environment recovery session 90108; execution-branch revision f25aeca2, docs/reviews/fabio-malpezzi-20261027/pr535/.
+  - Observed effect: two overlapping read-only Nix commands re-entered the mutating shellHook and produced an ensurepip diagnostic. A subsequent sequential Python/pytest import check passed. Accepted proof predated the race or ran in the separate validation checkout.
+  - Inference: read-only command intent does not make shellHook entry safe to parallelize. Serialize Nix entries across agents in the same checkout.
+
+## DD-004 — PR merge preceded a missing affected-workload performance gate
+
+Complete the source's relevant workload selection before the exact-head merge.
+A later passing measurement repairs confidence but cannot repair the ordering.
+
+### Occurrences
+- Execution: SEED-010#review-fabio-malpezzi-prs
+  - Timestamp: unknown
+  - Tool: Codex
+  - Open Dough release: unknown; installed guidance at execution baseline 2e21e404
+  - Evidence: PR527 merge e871ae448d16893301856b41124aba34496e9536; execution-branch revision af27c910, .planning/slice-plans/004-fabio-malpezzi-pr-reviews/527-review.md and PLAN.md obligation G1; docs/reviews/fabio-malpezzi-20261027/controls/.
+  - Observed effect: the coordinator merged before resolving the independent refactor's omitted nested-function, async, match, continuation and class timing controls. The later expanded 22-control corpus passed with upper 95% slowdown bound -0.6803%; the temporal deviation remains.
+  - Inference: a passing broad benchmark and original reported example did not establish that the affected corpus covered the accepted contract.
+
+## DD-005 — Native Git bypassed the installed backlog merge adapter
+
+Resolve the actual checkout's installed adapter before every merge touching the
+backlog or done records, including clean fast-forwards and contributor branches.
+
+### Occurrences
+- Execution: SEED-010#review-fabio-malpezzi-prs
+  - Timestamp: unknown
+  - Tool: Codex
+  - Open Dough release: unknown; installed guidance at execution baseline 2e21e404
+  - Evidence: PR535 dependency merge into contributor head 1a44c0cad59ea3f3dcabe3c1ac601d905437a7c7; execution-branch revision f25aeca2, .planning/slice-plans/004-fabio-malpezzi-pr-reviews/535-review.md and CONTEXT.md. Later validation-checkout advance to 53e4850 used its installed product-backlog-git-merge.mjs adapter.
+  - Observed effect: the coordinator used native Git for the dependency merge and an earlier private validation fast-forward before rereading the adapter rule. Complete candidate/landed trees matched the validated result, and the subsequent done-catalog audit found 18 records already current; no incorrect merged backlog was observed.
+  - Inference: clean Git output does not validate domain reconciliation. The resulting product proof remains supported, while the process bypass should not recur.
