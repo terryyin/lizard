@@ -11,7 +11,7 @@ Lizard claims to support, on PyPI and in the README, is one the test suite
 runs on in continuous integration.
 
 Included: the `python-app.yml` matrix widened to CPython 3.8, 3.9, 3.10,
-3.11, 3.12, 3.13 and 3.14 on `ubuntu-latest` and `windows-latest`, installing
+3.11, 3.12, 3.13 and 3.14 on `ubuntu-24.04` and `windows-latest`, installing
 Lizard with `python -m pip install .`; the `setup.py` Python classifiers and
 the README's verified-versions sentence naming exactly the versions the matrix
 runs; one test in `test/` that fails naming the difference when the three
@@ -56,7 +56,7 @@ as its own story.
 | The three claim locations can be read without a new dependency | Slice 2's test | `python-app.yml` lists versions as `- "3.x"` lines under `python-version:`; `setup.py` classifiers are `'Programming Language :: Python :: 3.x'` literals; the README sentence starts `The test suite runs on Python` and ends at `in continuous integration` | Each is matched by a regular expression on the file text; PyYAML is not in `dev_requirements.txt` and is not needed; settled |
 
 The one premise not fully observed, that 3.9 and 3.11 to 3.14 pass on
-`ubuntu-latest` and `windows-latest`, can only be observed by running the
+`ubuntu-24.04` and `windows-latest`, can only be observed by running the
 workflow. Slice 1 is that probe: its cheap part is settled above, and its CI
 result decides the set slice 2 claims. The story's boundary rule bounds a
 failure, so no dependent slice is stopped by it.
@@ -118,6 +118,11 @@ by the suite to edit the others.
   The established trunk claim has `pendingCi: unobserved`; the stream covers
   story-branch increments. Owner-based recovery verified the exact live stream
   after Nix setup delayed its initial directory output.
+  After the approved runner amendment, setup was reconfirmed (22 analyzer
+  tests passed) and observation rearmed: `/tmp/dough-ci-501/watch-CCTnrZ`,
+  PID 2750, Codex session 68762 / yielded cell 4, same coordinator and target.
+  Its repeated startup notification for run 40445234939 is the already
+  diagnosed setup failure, whose authorized repair is in progress.
 
 - Existing solutions (PFE): no module or test in the repository compares
   package metadata with CI configuration; the three claims are maintained by
@@ -140,6 +145,31 @@ by the suite to edit the others.
 
 ## Learnings
 
+- Slice 1 published as `6a17f1d507e3ee9b9ed40ee48c14c2c79a948c3e` on
+  the execution branch, suffix base `346481c69a9278b163fc6b38b78722745b04d476`;
+  managed delivery reused the retained observer. Run 40445234939 attempt 1
+  failed `build (ubuntu-latest, 3.8)` in `Set up Python`: setup-python@v3
+  reported `Version 3.8 with arch x64 not found`, before installation/tests.
+  This activates the story's setup-action upgrade exception, not an analyzer
+  repair or an interpreter-removal decision. Slice 2 waits for repaired proof.
+  Diagnostic: `/tmp/lizard-seed006-ci-failure-40445234939.json`.
+  CI pause save returned `clean` (no stash); recovery record
+  `/tmp/nix-shell.CV3gL5/dough-ci-repair-stash-zBfAHm/record.json`.
+- Resolved story review: the failed runner identifies itself as Ubuntu 26.04,
+  now selected by `ubuntu-latest`. The current official Python manifest has
+  26.04 artifacts for 3.10–3.14 but none for 3.8 or 3.9; current setup-python
+  still matches Ubuntu versions exactly, so an action bump cannot provide
+  those binaries. The original run ended with one failure and 13 fail-fast
+  cancellations, with no failed test step. A developer decision is requested
+  for the story's required `ubuntu-latest` field versus its 3.8 floor:
+  pin Linux to ubuntu-24.04, add old-interpreter source builds, or raise the
+  floor. The developer accepted the recommended `ubuntu-24.04` amendment
+  ("as recommended", 2026-10-27), retaining every version and Windows.
+  The source and future plan now name the pinned runner. The exact observer was
+  stopped for this human-judgment boundary; PID 12071 was confirmed absent.
+  Failure event sequence 1 was diagnosed and acknowledged (`deliveredThrough:
+  1`). The developer has settled the affected story requirement; rearm now,
+  retain the old observer directory and failed accepted SHA as evidence.
 - A fresh 3.14 venv invoked inside `nix develop` inherits Python 3.9's
   `PYTHONPATH`; clear `PYTHONPATH` and `PYTHONHOME` for the installation probe.
   The initial import check located setuptools in Nix's Python 3.9 store;
@@ -185,12 +215,18 @@ by the suite to edit the others.
 - Interpreter-choice example, disagreement diagnostics, CI discovery and
   conditional removal/queueing retain their legitimate owners in slice 2;
   the latter applies only if the hosted matrix exposes a failure.
+- Runner repair: fresh source-only reviewer `/root/source_review_runner_amendment`
+  preserved every original commitment with the approved Ubuntu 24.04 substitution.
+  Actual matrix/runs-on and retained install/test steps match that source;
+  the 23-consumer trace in `/tmp/lizard-seed006-repair-consumer-trace.md`
+  is fully disposed. `/root/refactor_runner_repair` returned
+  `## REFACTOR COMPLETE`, no edits; unchanged local proof is reused.
 
 ## Story obligations
 
 ### G1. Hosted matrix proof before support claims
 Reported: slice 1 — "Hosted CI at the pushed candidate showing all 14 successful version/OS jobs remains pending."
-Story clause: "The `python-app.yml` matrix runs the test suite on CPython 3.8, 3.9, 3.10, 3.11, 3.12, 3.13 and 3.14, each on `ubuntu-latest` and `windows-latest`."
+Story clause: "The `python-app.yml` matrix runs the test suite on CPython 3.8, 3.9, 3.10, 3.11, 3.12, 3.13 and 3.14, each on `ubuntu-24.04` and `windows-latest`."
 Disposition: interim until slices 2
 
 ## Concern evidence

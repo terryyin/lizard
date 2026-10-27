@@ -35,11 +35,16 @@ and the claims name exactly that set.
 Required behavior:
 
 - The `python-app.yml` matrix runs the test suite on CPython 3.8, 3.9, 3.10,
-  3.11, 3.12, 3.13 and 3.14, each on `ubuntu-latest` and `windows-latest`.
+  3.11, 3.12, 3.13 and 3.14, each on `ubuntu-24.04` and `windows-latest`.
   3.8 stays the floor: raising it would remove support, a decision this story
   does not make. 3.14 is the newest released minor at refinement
   (2026-10-23). 3.9 is also the `nix develop` interpreter, so the developer's
   own environment becomes a verified one.
+
+  Developer amendment (2026-10-27): pin Linux to `ubuntu-24.04` to preserve
+  Python 3.8–3.14. `ubuntu-latest` selected Ubuntu 26.04, whose interpreter
+  downloads do not include 3.8 or 3.9; a setup-action upgrade cannot supply them.
+
 - The `setup.py` `Programming Language :: Python :: 3.x` classifiers name
   exactly the versions the matrix runs.
 - The README's verified-versions sentence names exactly those versions, on
