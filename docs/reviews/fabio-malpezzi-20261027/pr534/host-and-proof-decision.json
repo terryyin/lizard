@@ -1,0 +1,17 @@
+{
+  "host": "Territory.local",
+  "architecture": "arm64",
+  "cpus": 16,
+  "memory_gib": 48,
+  "prelaunch_load": [7.33, 6.49, 6.91],
+  "vm_page_bytes": 16384,
+  "vm_pages_free": 3879,
+  "vm_pages_inactive": 776992,
+  "vm_pages_speculative": 66056,
+  "competing_work": "Coordinator avoids Nix/heavy proof; unrelated worktree load is unknown.",
+  "choice": "One sequential 20-pair API comparison and one sequential 20-pair CLI comparison, warmed and calibrated to 1.5-second batches; one 5000-iteration profile per snapshot on identical unchanged-output input.",
+  "owner": "review_534 under Rio-chan execution",
+  "reconsider_when": "New contention, changed candidate or failed proof. Invalid raw code will not be repeated until its timing passes.",
+  "estimated_duration": "About three minutes, sequential single-core work plus two short profiles.",
+  "ens_measured": false
+}

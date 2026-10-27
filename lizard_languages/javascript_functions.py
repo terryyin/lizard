@@ -3,13 +3,6 @@
 from .javascript_bindings import JavaScriptBindings
 
 
-# TypeScript type keywords that should not be counted as parameters
-_TS_TYPE_KEYWORDS = frozenset([
-    'string', 'number', 'boolean', 'void', 'any',
-    'object', 'unknown', 'never',
-])
-
-
 class JavaScriptFunctionsMixin:
     def _push_function_to_stack(self):
         if self._in_abstract_context:
@@ -22,12 +15,14 @@ class JavaScriptFunctionsMixin:
             self.context.end_of_function()
         self.started_function = None
         self._in_prop_value = False
+        self._expression_body = False
 
     def _abandon_function(self):
         """Discard an optimistic signature that proved to be an expression."""
         self.context.forgive = True
         self.context.end_of_function()
         self.started_function = None
+        self._expression_body = False
 
     def _arrow_function(self, token):
         self._push_arrow_function()
@@ -37,6 +32,11 @@ class JavaScriptFunctionsMixin:
         # async/static handler in the class body path.
         self._async_seen = False
         self._static_seen = False
+        # Runtime arrows (including those already pushed from "(...)") keep
+        # expression-body context when the body is not "{" so a later "{" is
+        # an object operand, not a nested body. Function-type "=>" must not
+        # reach here (see type annotation states).
+        self._expression_body = token != '{'
         self.next(self._state_global, token)
 
     def _function(self, token):
@@ -63,6 +63,7 @@ class JavaScriptFunctionsMixin:
             if not self.started_function:
                 self._push_function_to_stack()
             self._generic_depth_in_dec = 0
+            self._in_parameter_type = False
             self._parameter_bindings = JavaScriptBindings(')')
             self._state = self._dec
             self.context.add_to_long_function_name(" " + token)
@@ -79,15 +80,20 @@ class JavaScriptFunctionsMixin:
             self._abandon_function()
             self.next(self._state_global, token)
             return
+        if token == 'this' and self._parameter_bindings.at_start:
+            # TypeScript's leading receiver declaration is not an argument.
+            self._in_parameter_type = True
         event = self._read_parameter_binding(token)
         if event.ended:
             self._state = self._expecting_func_opening_bracket
         elif (not event.in_expression or event.root_separator) and token != '(':
-            # Filter out TypeScript type keywords and operators from parameter count
             if token == ',':
                 # Ignore commas inside generic type brackets: Map<K, V>
                 if event.root_separator and not getattr(self, '_generic_depth_in_dec', 0):
+                    self._in_parameter_type = False
                     self.context.parameter(',')
+            elif token == ':' and self._parameter_bindings.at_root:
+                self._in_parameter_type = True
             elif token == '<':
                 self._generic_depth_in_dec = getattr(
                     self, '_generic_depth_in_dec', 0) + 1
@@ -95,15 +101,13 @@ class JavaScriptFunctionsMixin:
                 depth = getattr(self, '_generic_depth_in_dec', 0)
                 if depth > 0:
                     self._generic_depth_in_dec = depth - 1
-            elif token in _TS_TYPE_KEYWORDS:
-                pass
             elif token in ('*', '+', '-', '/', '%', '=', '.'):
                 pass
-            elif not getattr(self, '_generic_depth_in_dec', 0):
-                if (token.replace('_', '').replace('?', '').isalnum() and
-                        token.replace('?', '') and
-                        token.replace('?', '')[0].isalpha()):
-                    self.context.parameter(token.replace('?', ''))
+            elif not (getattr(self, '_generic_depth_in_dec', 0)
+                      or self._in_parameter_type):
+                name = token.replace('?', '')
+                if name.replace('$', '_').isidentifier():
+                    self.context.parameter(name)
             return
         self.context.add_to_long_function_name(" " + token)
 

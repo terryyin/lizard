@@ -1,0 +1,15 @@
+[
+  {"filename":"this-reported.ts","source":"function onClick(this: HTMLElement, event: Event) {\n  return event;\n}\n","expected":[["onClick",1]],"parameters":[["event"]]},
+  {"filename":"this-authored.ts","source":"function a(this: Window, x: number) { return x; }\nconst b = async function* (this: Reader) { yield 1; }\nfunction c(this: Map<string, number>, x: number) { return x; }\n","expected":[["a",1],["b",0],["c",1]],"parameters":[["x"],[],["x"]]},
+  {"filename":"this-only.ts","source":"function receiver(this: Reader) { return this.value; }\nfunction after(value) { return value; }","expected":[["receiver",0],["after",1]],"parameters":[[],["value"]]},
+  {"filename":"this-typed-defaults.ts","source":"function defaults(this: Reader, number: number = flag ? 1 : 2, $y: Map<string, number> = new Map(), tail: string = 'x') { return this.value; }","expected":[["defaults",3]],"parameters":[["number","$y","tail"]]},
+  {"filename":"this-method.ts","source":"class Reader { read(this: Reader, value: string) { return this.value + value; } }","expected":[["read",1]],"parameters":[["value"]]},
+  {"filename":"this-object.ts","source":"const reader = { read(this: Reader, value: string) { return this.value + value; } };","expected":[["read",1]],"parameters":[["value"]]},
+  {"filename":"this-render.tsx","source":"function render(this: Reader, value: string) { return <div>{this.value}{value}</div>; }","expected":[["render",1]],"parameters":[["value"]]},
+  {"filename":"this-binding.ts","source":"function unpack({first, this: receiver}, tail) { return this.value; }","expected":[["unpack",2]],"parameters":[["receiver","tail"]]},
+  {"filename":"this-binding.js","source":"function unpack({first, this: receiver}, tail) { return this.value; }","expected":[["unpack",2]],"parameters":[["receiver","tail"]]},
+  {"filename":"this-binding.jsx","source":"function unpack({first, this: receiver}, tail) { return <div>{this.value}</div>; }","expected":[["unpack",2]],"parameters":[["receiver","tail"]]},
+  {"filename":"this-binding.tsx","source":"function unpack({first, this: receiver}, tail) { return <div>{this.value}</div>; }","expected":[["unpack",2]],"parameters":[["receiver","tail"]]},
+  {"filename":"this-initializer.js","source":"function defaults(value = this.fallback, tail = this.make(1, 2)) { return this.value; }","expected":[["defaults",2]],"parameters":[["value","tail"]]},
+  {"filename":"this-nested-default.ts","source":"function unpack({this: receiver = this.fallback}, tail = this.value) { return receiver; }","expected":[["unpack",2]],"parameters":[["receiver","tail"]]}
+]

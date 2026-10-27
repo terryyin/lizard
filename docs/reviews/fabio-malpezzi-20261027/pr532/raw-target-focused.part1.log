@@ -1,0 +1,230 @@
+........................................................................ [  4%]
+........................................................................ [  9%]
+........................................................................ [ 14%]
+........................................................................ [ 19%]
+........................................................................ [ 24%]
+..................................................FFFFF..FFF..FFF..FFF.. [ 29%]
+FFF..F...FF......s.s.s.................................................. [ 34%]
+........................................................................ [ 39%]
+........................................................................ [ 44%]
+........................................................................ [ 48%]
+........................................................................ [ 53%]
+........................................................................ [ 58%]
+........................................................................ [ 63%]
+........................................................................ [ 68%]
+........................................................................ [ 73%]
+..................................................s..................... [ 78%]
+s....................................................................... [ 83%]
+........................................................................ [ 88%]
+........................................................................ [ 92%]
+........................................................................ [ 97%]
+................................                                         [100%]
+=================================== FAILURES ===================================
+________________________ test_identifier_boundaries[js] ________________________
+
+extension = 'js'
+
+    @pytest.mark.parametrize('extension', ['js', 'ts', 'jsx', 'tsx', 'vue'])
+    def test_identifier_boundaries(extension):
+        source = 'function names($, $$, a$, a$b, _, _x, $x, x1, café) {}'
+        if extension == 'vue':
+            source = '<script>\n' + source + '\n</script>'
+        function, = functions(source, extension)
+>       assert function.parameters == ['$', '$$', 'a$', 'a$b', '_', '_x',
+                                       '$x', 'x1', 'café']
+E       AssertionError: assert ['b', '_', '_... 'x1', 'café'] == ['$', '$$', '..._', '_x', ...]
+E
+E         At index 0 diff: 'b' != '$'
+E         Right contains 3 more items, first extra item: '$x'
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptParameterNames.py:19: AssertionError
+________________________ test_identifier_boundaries[ts] ________________________
+
+extension = 'ts'
+
+    @pytest.mark.parametrize('extension', ['js', 'ts', 'jsx', 'tsx', 'vue'])
+    def test_identifier_boundaries(extension):
+        source = 'function names($, $$, a$, a$b, _, _x, $x, x1, café) {}'
+        if extension == 'vue':
+            source = '<script>\n' + source + '\n</script>'
+        function, = functions(source, extension)
+>       assert function.parameters == ['$', '$$', 'a$', 'a$b', '_', '_x',
+                                       '$x', 'x1', 'café']
+E       AssertionError: assert ['b', '_', '_... 'x1', 'café'] == ['$', '$$', '..._', '_x', ...]
+E
+E         At index 0 diff: 'b' != '$'
+E         Right contains 3 more items, first extra item: '$x'
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptParameterNames.py:19: AssertionError
+_______________________ test_identifier_boundaries[jsx] ________________________
+
+extension = 'jsx'
+
+    @pytest.mark.parametrize('extension', ['js', 'ts', 'jsx', 'tsx', 'vue'])
+    def test_identifier_boundaries(extension):
+        source = 'function names($, $$, a$, a$b, _, _x, $x, x1, café) {}'
+        if extension == 'vue':
+            source = '<script>\n' + source + '\n</script>'
+        function, = functions(source, extension)
+>       assert function.parameters == ['$', '$$', 'a$', 'a$b', '_', '_x',
+                                       '$x', 'x1', 'café']
+E       AssertionError: assert ['b', '_', '_... 'x1', 'café'] == ['$', '$$', '..._', '_x', ...]
+E
+E         At index 0 diff: 'b' != '$'
+E         Right contains 3 more items, first extra item: '$x'
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptParameterNames.py:19: AssertionError
+_______________________ test_identifier_boundaries[tsx] ________________________
+
+extension = 'tsx'
+
+    @pytest.mark.parametrize('extension', ['js', 'ts', 'jsx', 'tsx', 'vue'])
+    def test_identifier_boundaries(extension):
+        source = 'function names($, $$, a$, a$b, _, _x, $x, x1, café) {}'
+        if extension == 'vue':
+            source = '<script>\n' + source + '\n</script>'
+        function, = functions(source, extension)
+>       assert function.parameters == ['$', '$$', 'a$', 'a$b', '_', '_x',
+                                       '$x', 'x1', 'café']
+E       AssertionError: assert ['b', '_', '_... 'x1', 'café'] == ['$', '$$', '..._', '_x', ...]
+E
+E         At index 0 diff: 'b' != '$'
+E         Right contains 3 more items, first extra item: '$x'
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptParameterNames.py:19: AssertionError
+_______________________ test_identifier_boundaries[vue] ________________________
+
+extension = 'vue'
+
+    @pytest.mark.parametrize('extension', ['js', 'ts', 'jsx', 'tsx', 'vue'])
+    def test_identifier_boundaries(extension):
+        source = 'function names($, $$, a$, a$b, _, _x, $x, x1, café) {}'
+        if extension == 'vue':
+            source = '<script>\n' + source + '\n</script>'
+        function, = functions(source, extension)
+>       assert function.parameters == ['$', '$$', 'a$', 'a$b', '_', '_x',
+                                       '$x', 'x1', 'café']
+E       AssertionError: assert ['b', '_', '_... 'x1', 'café'] == ['$', '$$', '..._', '_x', ...]
+E
+E         At index 0 diff: 'b' != '$'
+E         Right contains 3 more items, first extra item: '$x'
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptParameterNames.py:19: AssertionError
+_________ test_binding_colons_are_not_annotations[js-{'key': renamed}] _________
+
+binding = "{'key': renamed}", extension = 'js'
+
+    @pytest.mark.parametrize('binding', ["{'key': renamed}", '{1: renamed}',
+                                         '{[key]: renamed}',
+                                         '{key: renamed, other}',
+                                         '[head, ...rest]'])
+    @pytest.mark.parametrize('extension', ['js', 'ts', 'jsx', 'tsx'])
+    def test_binding_colons_are_not_annotations(binding, extension):
+        function, = functions('function unpack(' + binding + ', tail) {}',
+                              extension)
+>       assert function.parameter_count == 2
+E       assert 1 == 2
+E        +  where 1 = <lizard_core.function_info.FunctionInfo object at 0x105aa0130>.parameter_count
+
+test/test_languages/testJavaScriptParameterNames.py:49: AssertionError
+___________ test_binding_colons_are_not_annotations[js-{1: renamed}] ___________
+
+binding = '{1: renamed}', extension = 'js'
+
+    @pytest.mark.parametrize('binding', ["{'key': renamed}", '{1: renamed}',
+                                         '{[key]: renamed}',
+                                         '{key: renamed, other}',
+                                         '[head, ...rest]'])
+    @pytest.mark.parametrize('extension', ['js', 'ts', 'jsx', 'tsx'])
+    def test_binding_colons_are_not_annotations(binding, extension):
+        function, = functions('function unpack(' + binding + ', tail) {}',
+                              extension)
+>       assert function.parameter_count == 2
+E       assert 1 == 2
+E        +  where 1 = <lizard_core.function_info.FunctionInfo object at 0x1071801f0>.parameter_count
+
+test/test_languages/testJavaScriptParameterNames.py:49: AssertionError
+_________ test_binding_colons_are_not_annotations[js-{[key]: renamed}] _________
+
+binding = '{[key]: renamed}', extension = 'js'
+
+    @pytest.mark.parametrize('binding', ["{'key': renamed}", '{1: renamed}',
+                                         '{[key]: renamed}',
+                                         '{key: renamed, other}',
+                                         '[head, ...rest]'])
+    @pytest.mark.parametrize('extension', ['js', 'ts', 'jsx', 'tsx'])
+    def test_binding_colons_are_not_annotations(binding, extension):
+        function, = functions('function unpack(' + binding + ', tail) {}',
+                              extension)
+>       assert function.parameter_count == 2
+E       assert 1 == 2
+E        +  where 1 = <lizard_core.function_info.FunctionInfo object at 0x106fd7070>.parameter_count
+
+test/test_languages/testJavaScriptParameterNames.py:49: AssertionError
+_________ test_binding_colons_are_not_annotations[ts-{'key': renamed}] _________
+
+binding = "{'key': renamed}", extension = 'ts'
+
+    @pytest.mark.parametrize('binding', ["{'key': renamed}", '{1: renamed}',
+                                         '{[key]: renamed}',
+                                         '{key: renamed, other}',
+                                         '[head, ...rest]'])
+    @pytest.mark.parametrize('extension', ['js', 'ts', 'jsx', 'tsx'])
+    def test_binding_colons_are_not_annotations(binding, extension):
+        function, = functions('function unpack(' + binding + ', tail) {}',
+                              extension)
+>       assert function.parameter_count == 2
+E       assert 1 == 2
+E        +  where 1 = <lizard_core.function_info.FunctionInfo object at 0x107171580>.parameter_count
+
+test/test_languages/testJavaScriptParameterNames.py:49: AssertionError
+___________ test_binding_colons_are_not_annotations[ts-{1: renamed}] ___________
+
+binding = '{1: renamed}', extension = 'ts'
+
+    @pytest.mark.parametrize('binding', ["{'key': renamed}", '{1: renamed}',
+                                         '{[key]: renamed}',
+                                         '{key: renamed, other}',
+                                         '[head, ...rest]'])
+    @pytest.mark.parametrize('extension', ['js', 'ts', 'jsx', 'tsx'])
+    def test_binding_colons_are_not_annotations(binding, extension):
+        function, = functions('function unpack(' + binding + ', tail) {}',
+                              extension)
+>       assert function.parameter_count == 2
+E       assert 1 == 2
+E        +  where 1 = <lizard_core.function_info.FunctionInfo object at 0x107171820>.parameter_count
+
+test/test_languages/testJavaScriptParameterNames.py:49: AssertionError
+_________ test_binding_colons_are_not_annotations[ts-{[key]: renamed}] _________
+
+binding = '{[key]: renamed}', extension = 'ts'
+
+    @pytest.mark.parametrize('binding', ["{'key': renamed}", '{1: renamed}',
+                                         '{[key]: renamed}',
+                                         '{key: renamed, other}',
+                                         '[head, ...rest]'])
+    @pytest.mark.parametrize('extension', ['js', 'ts', 'jsx', 'tsx'])
+    def test_binding_colons_are_not_annotations(binding, extension):
+        function, = functions('function unpack(' + binding + ', tail) {}',
+                              extension)
+>       assert function.parameter_count == 2
+E       assert 1 == 2
+E        +  where 1 = <lizard_core.function_info.FunctionInfo object at 0x107180d60>.parameter_count
+
+test/test_languages/testJavaScriptParameterNames.py:49: AssertionError
+________ test_binding_colons_are_not_annotations[jsx-{'key': renamed}] _________
+
+binding = "{'key': renamed}", extension = 'jsx'
+
+    @pytest.mark.parametrize('binding', ["{'key': renamed}", '{1: renamed}',
+                                         '{[key]: renamed}',
+                                         '{key: renamed, other}',
+                                         '[head, ...rest]'])
+    @pytest.mark.parametrize('extension', ['js', 'ts', 'jsx', 'tsx'])
+    def test_binding_colons_are_not_annotations(binding, extension):
+        function, = functions('function unpack(' + binding + ', tail) {}',
