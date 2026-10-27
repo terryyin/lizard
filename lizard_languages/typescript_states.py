@@ -8,9 +8,8 @@ from .typescript_signatures import ReturnTypeColon
 from .typescript_declarations import (
     DECLARATION_WORDS, TypeScriptDeclarationsMixin)
 
-# Modifiers, and tokens that open (`?`, `case`) or separate (`:`) a
-# conditional branch or switch label: one set test lets every other token
-# skip their checks.
+# Modifiers and conditional/switch markers share a set test so ordinary
+# tokens skip their checks.
 _MARKER_TOKENS = frozenset(('static', 'async', 'new', '?', 'case', ':'))
 
 
@@ -37,11 +36,9 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
 
     def __call__(self, token, reader=None):
         if self._binding_candidate:
-            # Candidates retain their state; only named-formal readers need
-            # an event to dispatch initializer expressions separately.
+            # Only named-formal readers need events for initializer dispatch.
             self._binding_candidate.read_token(token, report=False)
-        # Called directly rather than through super(): no mixin defines
-        # __call__, and this runs once per token.
+        # No mixin defines __call__; avoid super() once per token.
         return CodeStateMachine.__call__(self, token, reader)
 
     def _replay_token(self, token):
@@ -64,7 +61,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             self._pop_function_from_stack()
 
     def _state_global(self, token):
-        if self._pending_bindings and not isinstance(token, ReturnTypeColon):
+        if self._pending_bindings:
             self._resolve_pending_bindings(token)
 
         if ((self._ts_declare or token in DECLARATION_WORDS)
@@ -93,9 +90,8 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                     self._ternary_depth += 1
             elif self._ternary_depth or (
                     self.last_tokens == 'default' and not self.as_object):
-                # Conditional branch and switch label separators are runtime
-                # syntax, not a type annotation that could swallow a next-line
-                # `return () => ...` as a function type.
+                # Runtime separators must not swallow next-line `return () =>`
+                # as a function type annotation.
                 if self.last_tokens != 'default':
                     if (self._expression_body and self._ternary_depth
                             == self._expression_ternary_depth):
@@ -166,8 +162,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                     ('const', 'let', 'var', 'return', 'throw', 'yield', 'await')):
                 self._read_binding_candidate(']')
         elif token == '{':
-            # Expression-bodied arrows treat "{" as an object (ternary,
-            # nullish/logical, operator operands). Block bodies and typed
+            # Expression arrows read object operands; block bodies and typed
             # signatures awaiting a real body still open a nested function.
             if self.started_function and not self._expression_body:
                 self.sub_state(
@@ -184,9 +179,8 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                 # like a semicolon; members read `<...>` as generics.
                 token == ',' and self._expression_body and self.as_object
         ) or (
-                # Line starts already ended expression arrows that are done;
-                # after another comma (argument, declarator or generic `A,`
-                # split) keep ending them here, at the next line's first token.
+                # After an argument/declarator/generic comma, keep ending
+                # expression arrows here, at the next line's first token.
                 self.context.newline and (
                     not self._expression_body or self.last_token == ',')):
             self._end_statement()

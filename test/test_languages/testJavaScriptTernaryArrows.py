@@ -134,13 +134,15 @@ def test_typed_branch_annotations_are_not_runtime_colons(extension, expression,
 
 @pytest.mark.parametrize('extension', ['js', 'ts', 'jsx', 'tsx'])
 @pytest.mark.parametrize('alternate', ['y => y || d', '(y) => y || d'])
-@pytest.mark.parametrize('value,outer_ccn', [
-    ('d', 2), ('x = d ? a : b', 3), ('x = {a: d}', 2),
-    ('x = call({a: d})', 2), ('x = (z => ({a: z}))(d)', 2),
+@pytest.mark.parametrize('value,outer_ccn,initializers', [
+    ('d', 2, []), ('x = d ? a : b', 3, []), ('x = {a: d}', 2, []),
+    ('x = call({a: d})', 2, []),
+    ('x = (z => ({a: z}))(d)', 2, [('(anonymous)', 2, 2, 1)]),
 ])
 def test_parenthesized_runtime_value_keeps_its_branch_separator(extension,
                                                                alternate, value,
-                                                               outer_ccn):
+                                                               outer_ccn,
+                                                               initializers):
     code = (
         'function outer(c, d) {\n'
         f'  const f = c ? ({value}) : {alternate};\n'
@@ -148,7 +150,7 @@ def test_parenthesized_runtime_value_keeps_its_branch_separator(extension,
         '}\n'
         'function after() { return 1; }\n'
     )
-    assert summaries('a.' + extension, code) == [
+    assert summaries('a.' + extension, code) == initializers + [
         ('(anonymous)', 2, 2, 2), ('outer', 1, 4, outer_ccn), ('after', 5, 5, 1),
     ]
 

@@ -38,10 +38,9 @@ The 2026-10-27 `dough-execute-plan` instruction and established start authorize 
   claim/published base `6f506711595e0ad832ab5a75f5a4750a2b362415`, confirmed
   on both remote refs at startup. Claim trunk CI is unobserved.
 - Default checkout `/Users/terryyin/git/lizard` is not an execution location.
-- Setup: project Nix shell prepared this exact checkout; public JS/TS suites
-  passed (43 tests). Tooling uses sequential `PIP_QUIET=1 nix develop -c`.
-  No configured formatter, generator or commit hook applies to route evidence;
-  commits use the assigned workspace agent helper. No new replanning restriction.
+- Setup: checkout-bound Nix and initial public suites passed (43 tests).
+  Use sequential `PIP_QUIET=1 nix develop -c`; no formatter/generator/hook
+  applies. Commits credit the assigned agent; no new replanning restriction.
 - CI observation: the original stream ended after GitHub acquisition failed;
   its exact identity and terminal evidence are in [PROOF.md](PROOF.md#ci-observation).
   Workflow `python-app.yml` (ID `38306292`) remains push-triggered for all branches.
@@ -53,16 +52,12 @@ The 2026-10-27 `dough-execute-plan` instruction and established start authorize 
 
 ## Existing owners and architectural direction
 
-PFE: change the existing ternary and expression-body colon ownership in
-`lizard_languages/typescript_states.py` (`TypeScriptStates._state_global`,
-whose scalar `_ternary_depth` today consumes any branch colon without ending a
-started arrow) and `lizard_languages/javascript_functions.py`
-(`JavaScriptFunctionsMixin._dec` / `_expecting_func_opening_bracket`, which
-consume parameter and return-type annotation colons), together with the
-binding, object and declaration mixins they compose. TypeScriptReader composes
-those owners; JavaScript, JSX/TSX and Vue script reuse them; `.cjs`/`.mjs`
-alias the same reader. Do not add a parallel parser, metric counter or
-PR-specific colon switch; keep the public facade.
+PFE: use TypeScriptStates' canonical ternary dispatch, JavaScriptFunctionsMixin's
+signature/expression lifecycle and the composed binding/object/declaration owners.
+PR536 now centralizes formal capture in JavaScriptBindings; reuse that accepted
+owner. TypeScriptReader composes these paths for JS/TS/JSX/TSX/Vue and CJS/MJS.
+Keep one ternary-depth rule and annotation recognizer; no parallel parser,
+metric counter or PR-specific colon switch, and preserve the public facade.
 
 Rejected shapes from the review: raw #534 overwrites the enclosing arrow's
 ternary snapshot when a nested arrow creates no function (internal-colon
@@ -94,9 +89,9 @@ Accepted source comparisons are retained in [PROOF.md](PROOF.md).
 | Untyped branch arrows end at their ternary colon; internal colons and curried contract preserved | Slice 2: new public API regressions red→green in JS/TS/JSX/TSX and Vue; promised untyped frozen rows and supplemental controls pass |
 | Typed branch signatures split; genuine function-type bodies preserved | Slice 3: red→green typed regressions in TS/TSX/Vue; typed frozen rows and literal function-type controls pass |
 | Controls and shared consumers | Slices 2–3: focused consumer suites, retained reproducer showing only deferred rows failing |
-| Preserve semantics while removing annotation overhead | Slices 4–5: public regressions/replays and seven-field comparisons after coherent owner simplification |
-| Strict affected and broad throughput | Slice 6: four warmed paired gates, each upper 95% slowdown bound strictly below 3% versus current target and frozen baseline `2e21e404c1ab9f4e0b49acc80816e816629d0670` |
-| Final corrected revision accepted and acknowledged | Slice 7: full pytest/make, exact-head hosted checks and merge, contributor publication/merge/acknowledgement receipts |
+| Preserve semantics while removing overhead and reconciling current owners | Slices 4–6: public regressions/replays; preserve accepted parameter behavior after PR536 integration |
+| Strict affected and broad throughput | Slice 7: four original gates plus two augmented-API gates; all upper 95% slowdown bounds strictly below 3% versus current/frozen `2e21e404c1ab9f4e0b49acc80816e816629d0670` |
+| Final corrected revision accepted and acknowledged | Slice 8: full pytest/make, exact-head hosted checks and merge, contributor publication/merge/acknowledgement receipts |
 
 Reusable proof commands and conventions: [PROOF.md](PROOF.md#proof-commands-and-conventions).
 
@@ -112,7 +107,7 @@ Behavior: given an explicit execution instruction, refresh PR534's patch,
 discussion, checks and current target, verify the head still names the
 intended contribution, and establish the authorized contributor-head delivery
 route (non-mutating authenticated push preview where available) before
-dependent implementation. A preview is not accepted publication; slice 7 owns
+dependent implementation. A preview is not accepted publication; slice 8 owns
 the real update. If the PR is closed, superseded, changed incompatibly or
 cannot receive corrections, stop and return the disposition/destination
 decision to Terry. Do not substitute an unrelated trunk patch.
@@ -127,14 +122,11 @@ JSX attribute and a Vue script block; the curried internal-colon control,
 object-property case reports `f` 2–2 CCN 1; the reproducer's remaining
 failures are only typed and deferred rows.
 
-Behavior: given an expression-bodied arrow that is a ternary branch, analysis
-ends it at the colon of the ternary it belongs to, so each branch reports its
-own CCN and the enclosing function keeps its CCN. A `?`/`:` pair inside the
-arrow's body, a nested arrow that creates no function, and a property or
-computed-key colon do not end it. Implement the depth-ownership rule in the
-shared state/mixin owners; adopt the raw proposal's useful split without its
-snapshot overwrite or #531's object heuristic. Trace JS, TS, JSX/TSX and Vue
-consumers.
+Behavior: a ternary branch arrow ends at its own separator, retaining branch
+and enclosing CCN. Internal `?`/`:`, nested arrows creating no function and
+property/computed-key colons retain ownership. Use shared depth owners without
+raw #534's snapshot overwrite or #531's object heuristic; trace all shared
+JS/TS/JSX/TSX/Vue consumers.
 
 ### 3. Consume typed branch signatures before branch separators
 Type: Behavior
@@ -144,13 +136,10 @@ and type-assertion branches; function-type alias, function-type return
 (`inherited_function_type_*` rows) and following-function controls stay green;
 the reproducer then fails only deferred rows.
 
-Behavior: given typed branch arrows (`c ? (x: number): number => x : …`),
-the parameter and return-type annotation colons are consumed as types and do
-not decrement the runtime ternary depth, so the later branch colon ends the
-first arrow and the alternate is reported separately with its CCN. Genuine
-function-type bodies keep their real bodies. Extend slice 2's rule in the
-TypeScript declaration/annotation owner rather than adding a second colon
-recognizer.
+Behavior: typed branch parameter/return colons are consumed as types without
+decrementing runtime depth; the actual separator ends the first arrow and the
+alternate has its own CCN. Genuine function types retain their real bodies.
+Extend the existing declaration/annotation owner, without another recognizer.
 
 Learning G2 requires metric-safe annotation lookahead with canonical runtime
 context; the bounded approach is retained in [PROOF.md](PROOF.md#slice-3-investigation).
@@ -179,25 +168,33 @@ Structure: the committed optimization still has current/API upper +7.623%.
 Profile the remaining preprocessing cost, then use existing canonical token/
 signature ownership to avoid unnecessary annotation queries. Add no parallel
 tracker or raw-source fast path. Preserve runtime groups, trivia and genuine
-return annotations. Independent refactoring and semantic delivery precede 6.
+return annotations. Independent refactoring and semantic delivery precede measurement.
 
-### 6. Qualify the optimized revision against all four timing gates
+### 6. Reconcile accepted current signature owners
+Type: Structure
+Status: done
+Proof: original 128 names/spans/CCN, current parameter/output regressions and
+shared-consumer proof pass; see current-owner-integration.md for PR536 changes.
+Structure: integrate current `1bc7cbd` without rewriting published history.
+Reuse PR536's canonical binding/formal/type owners; preserve this correction's
+ternary/trivia behavior. Independent refactor and delivery freeze code for 7.
+
+### 7. Qualify original and supplemented timing workloads
 Type: Behavior
 Status: planned
 Proof: raw warmed pairs, immutable implementation/corpus/harness hashes,
-exact revisions and four upper 95% slowdown bounds strictly below 3%.
+exact revisions and all six upper 95% slowdown bounds strictly below 3%.
 
-Behavior: affected API (original 92 + 4 supplemental + 32 labelled signature
-controls) and unchanged broad CLI each pass versus current target and frozen
-`2e21e404`, using the same Nix interpreter, 20 alternating pairs and 1.5-second
-calibration with every batch over one second. Preserve the original manifest;
-freeze additions and imports/public tuples before timing. Record every duration,
-medians, variability and intervals. Retain initial results; a broad pass cannot
-hide affected failure. Noise or upper bounds of 3% or more fail. Any further
-optimization repeats semantic proof; a quiet/longer retry needs prospective
-justification. The literal harness protocol is retained in PROOF.md.
+Behavior: 128 affected API inputs and unchanged broad CLI each pass versus
+current and frozen `2e21e404`: same Nix, 20 alternating warmed pairs, 1.5-second
+calibration, batches over one second. Freeze revisions/harness/corpus/imports/
+public tuples; retain every duration, median, variability and interval.
+Also freeze all 38 added controls; augmented 166-input API passes both targets.
+Preserve prior results. Every upper bound must be strictly below 3%; no broad
+averaging, noise waiver or repeat without prospective justification. Further
+optimization repeats semantic proof. Literal protocol remains in PROOF.md.
 
-### 7. Deliver the qualified correction through PR534
+### 8. Deliver the qualified correction through PR534
 Type: Behavior
 Status: planned
 Proof: final contributor-head SHA and accepted push, green current required CI,
@@ -213,9 +210,7 @@ merge is not a Dough Land operation. After confirmed merge, with explicit
 acknowledgement authority, post one thank-you noting material corrections
 (check for a prior receipt). Retain evidence in the review record, then wrap up.
 
-Boundedness: one qualified contribution reaching users and author, with
-separate hosted wait time. Pending CI, merge or acknowledgement leaves this
-slice unfinished.
+Pending CI, merge or acknowledgement leaves this slice unfinished.
 
 ## Story obligations
 
@@ -237,14 +232,19 @@ Disposition: proved by slice 3: test_nested_runtime_separator_keeps_following_ty
 ### G4. Incremental affected API exceeds the strict budget
 Reported: slice 5 — "Current/API upper +9.567% initially in slice 4 and +7.623% at committed 8dac7b8; both material failures."
 Story clause: "with a paired 95% upper slowdown bound strictly below 3% for both incremental and cumulative affected and broader workloads."
-Disposition: receiving slice 6
+Disposition: receiving slice 7
+
+### G7. Current-owner integration changes a nested runtime-group control
+Reported: slice 6 — "Eight new runtime-group controls report an additional anonymous CCN-1 arrow after PR536 integration; 828 other tests pass."
+Story clause: "the enclosing and following functions keep their correct names, spans and CCN."
+Disposition: proved by slice 6: current-owner-integration.md exact three-version probes and explicit initializer assertions match accepted current1bc; original 128 rows and curried controls pass, surrounding metrics preserved.
 
 ### G5. Native CI observation ended after acquisition failed
 Reported: slice 4 — "CI_MONITOR_UNAVAILABLE: GitHub workflow-runs acquisition failed; original observer finished and its process ended."
 Story clause: "satisfactory performance/CI."
-Disposition: receiving slice 7
+Disposition: receiving slice 8
 
 ### G6. Earlier qualification driver terminal receipt unavailable
 Reported: slice 5 — "No original numeric exit code is retained; four complete result/log pairs match, and independent postcheck terminated successfully."
 Story clause: "with coherent ownership, discriminating regression proof and satisfactory performance/CI."
-Disposition: receiving slice 6
+Disposition: receiving slice 7
