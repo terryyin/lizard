@@ -10,3 +10,4 @@ Maintenance, bug fixing, and PR reviews.
 
 ## Backlog list
 
+- [Review, correct and merge FabioMalpezzi's open PRs](seeds/SEED-010-fabio-malpezzi-pr-reviews.md#review-fabio-malpezzi-prs) — SEED-010#review-fabio-malpezzi-prs
