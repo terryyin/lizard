@@ -1,0 +1,767 @@
+[
+  {
+    "filename": "b-story.js",
+    "source": "function b(code) {\n  return (\n    code === 47 || // /\n    code === 92 || // \\\n    code === 45 || // -\n    code === 32\n  )\n}\n",
+    "expected": [
+      [
+        "b",
+        4,
+        8
+      ]
+    ]
+  },
+  {
+    "filename": "b-story.ts",
+    "source": "function b(code) {\n  return (\n    code === 47 || // /\n    code === 92 || // \\\n    code === 45 || // -\n    code === 32\n  )\n}\n",
+    "expected": [
+      [
+        "b",
+        4,
+        8
+      ]
+    ]
+  },
+  {
+    "filename": "b-story.jsx",
+    "source": "function b(code) {\n  return (\n    code === 47 || // /\n    code === 92 || // \\\n    code === 45 || // -\n    code === 32\n  )\n}\n",
+    "expected": [
+      [
+        "b",
+        4,
+        8
+      ]
+    ]
+  },
+  {
+    "filename": "b-story.tsx",
+    "source": "function b(code) {\n  return (\n    code === 47 || // /\n    code === 92 || // \\\n    code === 45 || // -\n    code === 32\n  )\n}\n",
+    "expected": [
+      [
+        "b",
+        4,
+        8
+      ]
+    ]
+  },
+  {
+    "filename": "b-short.js",
+    "source": "function b(code) {\n  return (\n    code === 92 || // \\\n    code === 45 || // -\n    code === 32\n  )\n}\n",
+    "expected": [
+      [
+        "b",
+        3,
+        7
+      ]
+    ]
+  },
+  {
+    "filename": "line-comment-plain.js",
+    "source": "function a(x) {\n  return x === 1 || // one\n    x === 2 || // two\n    x === 3;\n}\n",
+    "expected": [
+      [
+        "a",
+        3,
+        5
+      ]
+    ]
+  },
+  {
+    "filename": "block-comment.js",
+    "source": "function a(x) {\n  return x === 1 || /* / */\n    x === 2 || /* \\ */\n    x === 3;\n}\n",
+    "expected": [
+      [
+        "a",
+        3,
+        5
+      ]
+    ]
+  },
+  {
+    "filename": "template-comment.js",
+    "source": "function a(x) {\n  return `${x // \\\n} tail`;\n}\nfunction b() {\n  return 2;\n}\n",
+    "expected": [
+      [
+        "a",
+        1,
+        4
+      ],
+      [
+        "b",
+        1,
+        3
+      ]
+    ]
+  },
+  {
+    "filename": "dollar-id.js",
+    "source": "function render($el, text) {\n  return $el && text || 0;\n}\n",
+    "expected": [
+      [
+        "render",
+        3,
+        3
+      ]
+    ]
+  },
+  {
+    "filename": "optional-access.ts",
+    "source": "function pick(o) {\n  return o?.a ?? o?.b ?? 0;\n}\n",
+    "expected": [
+      [
+        "pick",
+        3,
+        3
+      ]
+    ]
+  },
+  {
+    "filename": "c-continuation.c",
+    "source": "int b(int code) {\n  return code == 92 || // \\\n    code == 45 || // -\n    code == 32;\n}\n",
+    "expected": [
+      [
+        "b",
+        2,
+        4
+      ]
+    ]
+  },
+  {
+    "filename": "c-continuation.cpp",
+    "source": "int b(int code) {\n  return code == 92 || // \\\n    code == 45 || // -\n    code == 32;\n}\n",
+    "expected": [
+      [
+        "b",
+        2,
+        4
+      ]
+    ]
+  },
+  {
+    "filename": "this-reported.ts",
+    "source": "function onClick(this: HTMLElement, event: Event) {\n  return event;\n}\n",
+    "expected": [
+      [
+        "onClick",
+        1
+      ]
+    ]
+  },
+  {
+    "filename": "this-authored.ts",
+    "source": "function a(this: Window, x: number) { return x; }\nconst b = async function* (this: Reader) { yield 1; }\nfunction c(this: Map<string, number>, x: number) { return x; }\n",
+    "expected": [
+      [
+        "a",
+        1
+      ],
+      [
+        "b",
+        0
+      ],
+      [
+        "c",
+        1
+      ]
+    ]
+  },
+  {
+    "filename": "this-only.ts",
+    "source": "function receiver(this: Reader) { return this.value; }\nfunction after(value) { return value; }",
+    "expected": [
+      [
+        "receiver",
+        0
+      ],
+      [
+        "after",
+        1
+      ]
+    ]
+  },
+  {
+    "filename": "this-typed-defaults.ts",
+    "source": "function defaults(this: Reader, number: number = flag ? 1 : 2, $y: Map<string, number> = new Map(), tail: string = 'x') { return this.value; }",
+    "expected": [
+      [
+        "defaults",
+        3
+      ]
+    ]
+  },
+  {
+    "filename": "this-method.ts",
+    "source": "class Reader { read(this: Reader, value: string) { return this.value + value; } }",
+    "expected": [
+      [
+        "read",
+        1
+      ]
+    ]
+  },
+  {
+    "filename": "this-object.ts",
+    "source": "const reader = { read(this: Reader, value: string) { return this.value + value; } };",
+    "expected": [
+      [
+        "read",
+        1
+      ]
+    ]
+  },
+  {
+    "filename": "this-render.tsx",
+    "source": "function render(this: Reader, value: string) { return <div>{this.value}{value}</div>; }",
+    "expected": [
+      [
+        "render",
+        1
+      ]
+    ]
+  },
+  {
+    "filename": "this-binding.ts",
+    "source": "function unpack({first, this: receiver}, tail) { return this.value; }",
+    "expected": [
+      [
+        "unpack",
+        2
+      ]
+    ]
+  },
+  {
+    "filename": "this-binding.js",
+    "source": "function unpack({first, this: receiver}, tail) { return this.value; }",
+    "expected": [
+      [
+        "unpack",
+        2
+      ]
+    ]
+  },
+  {
+    "filename": "this-binding.jsx",
+    "source": "function unpack({first, this: receiver}, tail) { return <div>{this.value}</div>; }",
+    "expected": [
+      [
+        "unpack",
+        2
+      ]
+    ]
+  },
+  {
+    "filename": "this-binding.tsx",
+    "source": "function unpack({first, this: receiver}, tail) { return <div>{this.value}</div>; }",
+    "expected": [
+      [
+        "unpack",
+        2
+      ]
+    ]
+  },
+  {
+    "filename": "this-initializer.js",
+    "source": "function defaults(value = this.fallback, tail = this.make(1, 2)) { return this.value; }",
+    "expected": [
+      [
+        "defaults",
+        2
+      ]
+    ]
+  },
+  {
+    "filename": "this-nested-default.ts",
+    "source": "function unpack({this: receiver = this.fallback}, tail = this.value) { return receiver; }",
+    "expected": [
+      [
+        "unpack",
+        2
+      ]
+    ]
+  },
+  {
+    "filename": "arrow-reported.ts",
+    "source": "const total = list.reduce((sum, item) => sum + item.price, 0);\nconst names = list.map(item => item.name);\nconst pick = flag ? (a, b) => a : null;\nconst sizes = list.map((x: Item, i: number): number => x.size * i);",
+    "expected": [
+      [
+        "(anonymous)",
+        2
+      ],
+      [
+        "(anonymous)",
+        1
+      ],
+      [
+        "(anonymous)",
+        2
+      ],
+      [
+        "(anonymous)",
+        2
+      ]
+    ]
+  },
+  {
+    "filename": "arrow-authored.js",
+    "source": "list.map((x, i) => x + i);\nlist.filter((x) => { return x; });\nlist.forEach((_, key) => { selected.add(key); });\nlist.sort(({a}, [b, c] = [], ...rest) => { return a; });\nrun(() => { return 1; });\nconst eq = strict ? (a, b) => { return a === b; } : null;",
+    "expected": [
+      [
+        "(anonymous)",
+        2
+      ],
+      [
+        "(anonymous)",
+        1
+      ],
+      [
+        "(anonymous)",
+        2
+      ],
+      [
+        "(anonymous)",
+        3
+      ],
+      [
+        "(anonymous)",
+        0
+      ],
+      [
+        "(anonymous)",
+        2
+      ]
+    ]
+  },
+  {
+    "filename": "arrow-authored-single.js",
+    "source": "const f = x => { return x; };\nconst g = async x => { return x; };\nlist.map(x => { return x * 2; });",
+    "expected": [
+      [
+        "f",
+        1
+      ],
+      [
+        "g",
+        1
+      ],
+      [
+        "(anonymous)",
+        1
+      ]
+    ]
+  },
+  {
+    "filename": "arrow-authored-types.ts",
+    "source": "list.map((x: number, i: Map<K, V>) => { return x + i; });\nlist.map((x?: number): number => { return x; });\nlist.map((x, y): Map<K, V> => { return x; });",
+    "expected": [
+      [
+        "(anonymous)",
+        2
+      ],
+      [
+        "(anonymous)",
+        1
+      ],
+      [
+        "(anonymous)",
+        2
+      ]
+    ]
+  },
+  {
+    "filename": "arrow-authored-types.tsx",
+    "source": "list.map((x: number, i: Map<K, V>) => { return x + i; });\nlist.map((x?: number): number => { return x; });\nlist.map((x, y): Map<K, V> => { return x; });",
+    "expected": [
+      [
+        "(anonymous)",
+        2
+      ],
+      [
+        "(anonymous)",
+        1
+      ],
+      [
+        "(anonymous)",
+        2
+      ]
+    ]
+  },
+  {
+    "filename": "arrow-named.js",
+    "source": "const f = (a, b = flag ? 1 : 2, ...rest) => { return a || b; };",
+    "expected": [
+      [
+        "f",
+        3
+      ]
+    ]
+  },
+  {
+    "filename": "arrow-defaults.js",
+    "source": "list.map((a = flag ? 1 : 2, b = make(1, 2), ...rest) => { return a || b; });",
+    "expected": [
+      [
+        "(anonymous)",
+        3
+      ]
+    ]
+  },
+  {
+    "filename": "arrow-binding-named.js",
+    "source": "const f = ({key: renamed, other}, [head, ...tail], last) => { return last; };",
+    "expected": [
+      [
+        "f",
+        3
+      ]
+    ]
+  },
+  {
+    "filename": "arrow-binding-anonymous.js",
+    "source": "run(({key: renamed, other}, [head, ...tail], last) => { return last; });",
+    "expected": [
+      [
+        "(anonymous)",
+        3
+      ]
+    ]
+  },
+  {
+    "filename": "arrow-alias-named.js",
+    "source": "const f = ({key: renamed}, tail) => { return tail; };",
+    "expected": [
+      [
+        "f",
+        2
+      ]
+    ]
+  },
+  {
+    "filename": "arrow-alias-anonymous.js",
+    "source": "run(({key: renamed}, tail) => { return tail; });",
+    "expected": [
+      [
+        "(anonymous)",
+        2
+      ]
+    ]
+  },
+  {
+    "filename": "arrow-nested-binding.js",
+    "source": "run(({outer: {key: renamed}}, tail) => { return tail; });",
+    "expected": [
+      [
+        "(anonymous)",
+        2
+      ]
+    ]
+  },
+  {
+    "filename": "arrow-quoted-binding.js",
+    "source": "run(({'key': renamed}, tail) => { return tail; });",
+    "expected": [
+      [
+        "(anonymous)",
+        2
+      ]
+    ]
+  },
+  {
+    "filename": "arrow-computed-binding.js",
+    "source": "run(({[key]: renamed}, tail) => { return tail; });",
+    "expected": [
+      [
+        "(anonymous)",
+        2
+      ]
+    ]
+  },
+  {
+    "filename": "arrow-empty-binding.js",
+    "source": "run(({}, [], tail) => { return tail; });",
+    "expected": [
+      [
+        "(anonymous)",
+        3
+      ]
+    ]
+  },
+  {
+    "filename": "arrow-empty-binding-named.js",
+    "source": "const f = ({}, [], tail) => { return tail; };",
+    "expected": [
+      [
+        "f",
+        3
+      ]
+    ]
+  },
+  {
+    "filename": "arrow-nested-default.js",
+    "source": "run(({key: renamed = flag ? 1 : 2}, tail = fallback || 0) => { return tail; });",
+    "expected": [
+      [
+        "(anonymous)",
+        2
+      ]
+    ]
+  },
+  {
+    "filename": "arrow-typed.ts",
+    "source": "run((number: number, $: Map<string, number>, cb: (value: number, index: number) => boolean, tail?: string): number => { return number; });",
+    "expected": [
+      [
+        "(anonymous)",
+        4
+      ]
+    ]
+  },
+  {
+    "filename": "arrow-generic.ts",
+    "source": "run(<T,>(x: T, tail: T): T => { return x; });",
+    "expected": [
+      [
+        "(anonymous)",
+        2
+      ]
+    ]
+  },
+  {
+    "filename": "arrow-generic-named.ts",
+    "source": "const f = <T,>(x: T, tail: T): T => { return x; };",
+    "expected": [
+      [
+        "f",
+        2
+      ]
+    ]
+  },
+  {
+    "filename": "arrow-return-object.ts",
+    "source": "run((x: number, y: number): {value: number} => { return {value: x + y}; });",
+    "expected": [
+      [
+        "(anonymous)",
+        2
+      ]
+    ]
+  },
+  {
+    "filename": "arrow-return-function.ts",
+    "source": "run((x: number, y: number): ((n: number) => number) => { return n => n + x + y; });",
+    "expected": [
+      [
+        "(anonymous)",
+        1
+      ],
+      [
+        "(anonymous)",
+        2
+      ]
+    ]
+  },
+  {
+    "filename": "arrow-sigils.js",
+    "source": "run(($, $$, a$, a$b, _, _x, $x, x1, caf\u00e9) => { return 1; });",
+    "expected": [
+      [
+        "(anonymous)",
+        9
+      ]
+    ]
+  },
+  {
+    "filename": "arrow-single-sigils.js",
+    "source": "run($ => { return $; });\nrun(a$b => { return a$b; });",
+    "expected": [
+      [
+        "(anonymous)",
+        1
+      ],
+      [
+        "(anonymous)",
+        1
+      ]
+    ]
+  },
+  {
+    "filename": "arrow-member.js",
+    "source": "module.exports.add = (a, b) => { return a + b; };\nconst load = api.wrap((x, y) => { return x + y; });",
+    "expected": [
+      [
+        "module.exports.add",
+        2
+      ],
+      [
+        "(anonymous)",
+        2
+      ]
+    ]
+  },
+  {
+    "filename": "arrow-calls.js",
+    "source": "function outer(value) { const a = fn(value, other); api.fn(value, other); return a && value; }",
+    "expected": [
+      [
+        "outer",
+        1
+      ]
+    ]
+  },
+  {
+    "filename": "arrow-abandoned.js",
+    "source": "function outer(value) { const a = (value && other); return a || value; }",
+    "expected": [
+      [
+        "outer",
+        1
+      ]
+    ]
+  },
+  {
+    "filename": "arrow-ternary-default.js",
+    "source": "function outer(flag) { const a = flag ? (x = fallback || 0, y) => { return x && y; } : null; return a; }",
+    "expected": [
+      [
+        "(anonymous)",
+        2
+      ],
+      [
+        "outer",
+        1
+      ]
+    ]
+  },
+  {
+    "filename": "arrow-jsx.jsx",
+    "source": "run(({key: renamed}, tail) => { return <div>{tail}</div>; });",
+    "expected": [
+      [
+        "(anonymous)",
+        2
+      ]
+    ]
+  },
+  {
+    "filename": "arrow-tsx.tsx",
+    "source": "run(({key: renamed}, tail: string): string => { return tail; });",
+    "expected": [
+      [
+        "(anonymous)",
+        2
+      ]
+    ]
+  },
+  {
+    "filename": "arrow-control.js",
+    "source": "function after(a, b) { if (a) return b; return a; }\nconst named = (a, b) => { return a && b; };",
+    "expected": [
+      [
+        "after",
+        2
+      ],
+      [
+        "named",
+        2
+      ]
+    ]
+  },
+  {
+    "filename": "bulk-control-00.js",
+    "source": "function keep(x) {\n  return x === 1 || x === 2 || x === 3 || x === 4;\n}\nfunction note(s) {\n  return s // ordinary comment\n}\n",
+    "expected": null
+  },
+  {
+    "filename": "bulk-control-01.js",
+    "source": "function keep(x) {\n  return x === 1 || x === 2 || x === 3 || x === 4;\n}\nfunction note(s) {\n  return s // ordinary comment\n}\n",
+    "expected": null
+  },
+  {
+    "filename": "bulk-control-02.js",
+    "source": "function keep(x) {\n  return x === 1 || x === 2 || x === 3 || x === 4;\n}\nfunction note(s) {\n  return s // ordinary comment\n}\n",
+    "expected": null
+  },
+  {
+    "filename": "bulk-control-03.js",
+    "source": "function keep(x) {\n  return x === 1 || x === 2 || x === 3 || x === 4;\n}\nfunction note(s) {\n  return s // ordinary comment\n}\n",
+    "expected": null
+  },
+  {
+    "filename": "bulk-control-04.js",
+    "source": "function keep(x) {\n  return x === 1 || x === 2 || x === 3 || x === 4;\n}\nfunction note(s) {\n  return s // ordinary comment\n}\n",
+    "expected": null
+  },
+  {
+    "filename": "bulk-control-05.js",
+    "source": "function keep(x) {\n  return x === 1 || x === 2 || x === 3 || x === 4;\n}\nfunction note(s) {\n  return s // ordinary comment\n}\n",
+    "expected": null
+  },
+  {
+    "filename": "bulk-control-06.js",
+    "source": "function keep(x) {\n  return x === 1 || x === 2 || x === 3 || x === 4;\n}\nfunction note(s) {\n  return s // ordinary comment\n}\n",
+    "expected": null
+  },
+  {
+    "filename": "bulk-control-07.js",
+    "source": "function keep(x) {\n  return x === 1 || x === 2 || x === 3 || x === 4;\n}\nfunction note(s) {\n  return s // ordinary comment\n}\n",
+    "expected": null
+  },
+  {
+    "filename": "bulk-control-08.js",
+    "source": "function keep(x) {\n  return x === 1 || x === 2 || x === 3 || x === 4;\n}\nfunction note(s) {\n  return s // ordinary comment\n}\n",
+    "expected": null
+  },
+  {
+    "filename": "bulk-control-09.js",
+    "source": "function keep(x) {\n  return x === 1 || x === 2 || x === 3 || x === 4;\n}\nfunction note(s) {\n  return s // ordinary comment\n}\n",
+    "expected": null
+  },
+  {
+    "filename": "bulk-control-10.js",
+    "source": "function keep(x) {\n  return x === 1 || x === 2 || x === 3 || x === 4;\n}\nfunction note(s) {\n  return s // ordinary comment\n}\n",
+    "expected": null
+  },
+  {
+    "filename": "bulk-control-11.js",
+    "source": "function keep(x) {\n  return x === 1 || x === 2 || x === 3 || x === 4;\n}\nfunction note(s) {\n  return s // ordinary comment\n}\n",
+    "expected": null
+  },
+  {
+    "filename": "bulk-control-12.js",
+    "source": "function keep(x) {\n  return x === 1 || x === 2 || x === 3 || x === 4;\n}\nfunction note(s) {\n  return s // ordinary comment\n}\n",
+    "expected": null
+  },
+  {
+    "filename": "bulk-control-13.js",
+    "source": "function keep(x) {\n  return x === 1 || x === 2 || x === 3 || x === 4;\n}\nfunction note(s) {\n  return s // ordinary comment\n}\n",
+    "expected": null
+  },
+  {
+    "filename": "bulk-control-14.js",
+    "source": "function keep(x) {\n  return x === 1 || x === 2 || x === 3 || x === 4;\n}\nfunction note(s) {\n  return s // ordinary comment\n}\n",
+    "expected": null
+  },
+  {
+    "filename": "bulk-control-15.js",
+    "source": "function keep(x) {\n  return x === 1 || x === 2 || x === 3 || x === 4;\n}\nfunction note(s) {\n  return s // ordinary comment\n}\n",
+    "expected": null
+  },
+  {
+    "filename": "bulk-control-16.js",
+    "source": "function keep(x) {\n  return x === 1 || x === 2 || x === 3 || x === 4;\n}\nfunction note(s) {\n  return s // ordinary comment\n}\n",
+    "expected": null
+  },
+  {
+    "filename": "bulk-control-17.js",
+    "source": "function keep(x) {\n  return x === 1 || x === 2 || x === 3 || x === 4;\n}\nfunction note(s) {\n  return s // ordinary comment\n}\n",
+    "expected": null
+  },
+  {
+    "filename": "bulk-control-18.js",
+    "source": "function keep(x) {\n  return x === 1 || x === 2 || x === 3 || x === 4;\n}\nfunction note(s) {\n  return s // ordinary comment\n}\n",
+    "expected": null
+  },
+  {
+    "filename": "bulk-control-19.js",
+    "source": "function keep(x) {\n  return x === 1 || x === 2 || x === 3 || x === 4;\n}\nfunction note(s) {\n  return s // ordinary comment\n}\n",
+    "expected": null
+  }
+]
