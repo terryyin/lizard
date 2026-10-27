@@ -126,7 +126,7 @@ required checks.
 
 ### 1. Establish the contributor correction route
 Type: Behavior
-Status: planned
+Status: done
 Proof: refreshed PR/head/base, contributor-edit permission and authenticated
 publication-route observations; preserve exact refusal if unavailable.
 
@@ -242,3 +242,29 @@ pair and rejects the raw first-character heuristic. No remaining slice-specific
 concern was found; contributor publication availability is bounded by the early
 probe rather than assumed from readable metadata. No human decision is currently
 pending.
+
+## Execution progress
+
+### Slice 1 accepted proof (contributor route)
+
+Promise: authorized contributor delivery route remains viable.
+
+Observed (2026-10-27 execution):
+- PR531 OPEN, not draft, MERGEABLE/clean; author FabioMalpezzi; title still
+  object-in-arrow theme.
+- Head `FabioMalpezzi/lizard:pr/js-object-in-an-arrow-function-body` at
+  `47aa35735cccba962e507edb179eae1154ab6ad2` (matches seed); `maintainerCanModify`
+  true; patch still `_expression_body` / `_opens_an_object` in
+  `javascript_functions.py`, `typescript_states.py`, `testES6.py`.
+- Base ref OID still recorded `01afe9c…`; live `origin/master` tip
+  `db53a9a…` (ahead). Slice 4 must refresh against current target when publishing.
+- Authenticated as `terryyin`; non-mutating dry-run write probes to the
+  contributor head accepted (same-SHA up-to-date; different-SHA non-FF reject;
+  throwaway-ref dry-run new branch). Head tip unchanged after probes.
+- Authorized route for slice 4: push corrections onto that contributor head
+  under `maintainerCanModify`. Preview is not accepted publication.
+- Product unchanged. Story obligations: none opened.
+
+Learnings: fork API `push:false` alone is not a refusal when
+`maintainerCanModify` is true — dry-run write probes decide. Sibling OPEN PRs
+#533/#534 claim to build on #531 (context only).
