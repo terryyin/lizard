@@ -6,71 +6,13 @@
   <meta name="description" content="Understand your code with Lizard, the open source complexity analyzer. Try function metrics online or install the command-line tool.">
   <link rel="canonical" href="https://www.lizard.ws/">
   <link rel="icon" href="/website/static/favicon.ico">
-  <link rel="stylesheet" href="/website/static/site.css">
-  <script src="/website/static/demo.js" defer></script>
+  {% for href in styles %}<link rel="stylesheet" href="{{ href }}">
+  {% endfor %}<script type="module" src="{{ script }}"></script>
   <title>Lizard — understand your code</title>
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to content</a>
-  <header class="site-header wrap">
-    <a class="brand" href="/" aria-label="Lizard home"><img src="/website/static/img/logo.png" width="34" height="34" alt=""><span>Lizard<span class="brand-dot">.</span></span></a>
-    <nav aria-label="Main navigation">
-      <a href="#playground">Try it online</a>
-      <a href="https://github.com/terryyin/lizard/blob/master/docs/cli.rst">Documentation</a>
-      <a class="github-link" href="https://github.com/terryyin/lizard">GitHub <span aria-hidden="true">↗</span></a>
-    </nav>
-  </header>
-  <main id="main">
-    <section class="hero wrap" aria-labelledby="hero-title">
-      <div class="hero-copy">
-        <p class="eyebrow"><span class="status-dot" aria-hidden="true"></span> Open source. Built for clarity.</p>
-        <h1 id="hero-title">Understand<br>your code.<br><span>One function<br>at a time.</span></h1>
-        <p class="hero-description">Find complexity before it becomes complicated. Lizard measures the shape of your source code, across the languages you use.</p>
-        <div class="hero-actions"><a class="button primary" href="#playground">Try Lizard <span aria-hidden="true">↓</span></a><a class="text-link" href="#get-started">Install the CLI <span aria-hidden="true">↗</span></a></div>
-      </div>
-      <div class="hero-report" aria-label="Example complexity report">
-        <div class="window-bar"><span class="window-dots" aria-hidden="true">● ● ●</span><span>small functions. clear decisions.</span><span aria-hidden="true">↗</span></div>
-        <div class="report-code"><p class="code-caption">checkout.py</p><pre><code><span class="code-keyword">def</span> <span class="code-name">shipping_cost</span>(order):
-    <span class="code-keyword">if</span> order.is_pickup:
-        <span class="code-keyword">return</span> <span class="code-number">0</span>
-    <span class="code-keyword">if</span> order.total &gt;= <span class="code-number">50</span>:
-        <span class="code-keyword">return</span> <span class="code-number">0</span>
-    <span class="code-keyword">return</span> <span class="code-number">5</span></code></pre></div>
-        <div class="example-metrics"><div><strong>3</strong><span>complexity</span></div><div><strong>6</strong><span>lines of code</span></div><div><strong>1</strong><span>parameter</span></div></div>
-        <p class="report-note"><span aria-hidden="true">↳</span> A clearer view of what’s worth a closer look.</p>
-      </div>
-    </section>
-    <section class="language-strip" aria-label="Supported languages"><div class="wrap"><span>Many languages.<br><strong>One clear report.</strong></span><p>C / C++ <b>·</b> Python <b>·</b> JavaScript <b>·</b> TypeScript <b>·</b> Java <b>·</b> Go <b>·</b> Rust <b>·</b> and more</p></div></section>
-    <section id="playground" class="playground wrap" aria-labelledby="playground-title">
-      <div class="section-heading"><div><p class="eyebrow">A little less guesswork</p><h2 id="playground-title">Meet your code.</h2></div><p>Paste a function. Pick a language.<br>See what Lizard sees.</p></div>
-      <div class="demo-grid">
-        <form id="analysis-form" class="editor-panel" data-max-source-bytes="{{ max_source_bytes }}" data-source-limit-message="{{ source_limit_message }}">
-          <div class="panel-heading"><label for="language">Source code</label><select id="language" name="lang" aria-label="Source language">{% for name, extension in languages %}<option value="{{ extension }}"{% if extension == '.py' %} selected{% endif %}>{{ name }}</option>{% endfor %}</select></div>
-          <label class="visually-hidden" for="source-code">Code to analyze</label>
-          <textarea id="source-code" name="code" spellcheck="false" autocapitalize="off" autocomplete="off" aria-describedby="source-note" wrap="off">def shipping_cost(order):
-    if order.is_pickup:
-        return 0
-    if order.total &gt;= 50:
-        return 0
-    return 5</textarea>
-          <div class="editor-actions"><button class="text-button" id="load-example" type="button">Load example <span aria-hidden="true">↻</span></button><button class="button primary" id="analyze-button" type="submit">Analyze code <span aria-hidden="true">→</span></button></div>
-          <p id="source-note" class="source-note">Up to {{ max_source_bytes // 1024 }} KiB. Code is sent to this server for analysis and is not saved. For private source, <a href="#get-started">run Lizard locally</a>.</p>
-          <noscript><p class="source-note">The online demo needs JavaScript. You can also use the local CLI below.</p></noscript>
-        </form>
-        <section class="results-panel" aria-labelledby="results-title" aria-busy="false">
-          <div class="panel-heading"><h3 id="results-title">Your report</h3><span class="report-badge" id="report-badge">Ready when you are</span></div>
-          <p id="analysis-status" role="status" aria-live="polite">Run the example to explore its function metrics.</p>
-          <div id="report-output" hidden>
-            <div class="result-totals"><div><strong id="function-total">0</strong><span>functions</span></div><div><strong id="line-total">0</strong><span>lines of code</span></div><div><strong id="token-total">0</strong><span>tokens</span></div></div>
-            <div class="table-scroll" tabindex="0" role="region" aria-label="Function metrics"><table><thead><tr><th scope="col">Function</th><th scope="col"><abbr title="Cyclomatic complexity number">CCN</abbr></th><th scope="col"><abbr title="Non-comment lines of code">NLOC</abbr></th><th scope="col">Tokens</th><th scope="col">Params</th></tr></thead><tbody id="function-results"></tbody></table></div>
-          </div>
-          <div class="empty-report" id="empty-report" aria-hidden="true"><span>ƒ</span><p>Every function has a story.<br>Start with a few lines of code.</p></div>
-        </section>
-      </div>
-      <dl class="metric-guide"><div><dt>Complexity, explained.</dt><dd>CCN counts a function’s independent paths. More decisions usually mean more paths to test.</dd></div><div><dt>Count what matters.</dt><dd>NLOC excludes comments and blank lines. Tokens and parameter counts add context to the report.</dd></div><div><dt>A signal to investigate.</dt><dd>Metrics guide a closer look. They work best alongside tests, reviews, and your knowledge of the code.</dd></div></dl>
-    </section>
-    <section id="get-started" class="get-started"><div class="wrap install-grid"><div><p class="eyebrow">Your code. Your machine.</p><h2>Take the whole<br>codebase for a walk.</h2><p>Use Lizard in your terminal or CI. Analyze files and folders, set complexity limits, and get a report you can act on.</p><a class="text-link" href="https://github.com/terryyin/lizard/blob/master/docs/cli.rst">Explore the documentation <span aria-hidden="true">↗</span></a></div><div class="install-terminal"><div class="terminal-title">GET STARTED</div><p><span class="terminal-comment"># Install Lizard</span><br><code>pip install lizard</code></p><p><span class="terminal-comment"># Analyze your source directory</span><br><code>lizard src/</code></p><p><span class="terminal-comment"># Flag functions above your CCN limit</span><br><code>lizard src/ -C 15</code></p><a href="https://pypi.org/project/lizard/">View on PyPI <span aria-hidden="true">↗</span></a></div></div></section>
-  </main>
-  <footer class="wrap site-footer"><a class="brand" href="/"><img src="/website/static/img/logo-small.png" width="25" height="25" alt=""><span>Lizard<span class="brand-dot">.</span></span></a><p>Complex is better than complicated.</p><a href="https://github.com/terryyin/lizard">Made in the open <span aria-hidden="true">↗</span></a></footer>
+  <div id="root"></div>
+  <noscript><p class="source-note wrap">The Lizard website needs JavaScript. You can still <a href="https://github.com/terryyin/lizard/blob/master/docs/cli.rst">use the command-line tool</a>: <code>pip install lizard</code>.</p></noscript>
+  <script type="application/json" id="lizard-config">{{ config | tojson }}</script>
 </body>
 </html>

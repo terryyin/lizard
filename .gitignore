@@ -44,3 +44,6 @@ dist/
 .DS_Store
 .venv/
 .worktrees/
+website/frontend/node_modules/
+website/frontend/reports/
+website/static/dist/
