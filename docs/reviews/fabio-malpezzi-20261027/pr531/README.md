@@ -5,10 +5,11 @@ Disposition: defer the real defect to
 and leave authored head `47aa35735cccba962e507edb179eae1154ab6ad2` unmerged.
 [review-findings.md](review-findings.md) owns observations, commands and limits.
 
-The one checked-in performance harness is [../paired.py](../paired.py), SHA256
+The original measured performance harness has SHA256
 `3064d8d77047db2f084ce9fd6ae09d98acf34453316b7df20fb184cbb3217bf5`.
-The executed external copy has identical bytes. Copy that harness beside this
-README for replay; no second implementation is maintained in this directory.
+The executed external copy has those bytes. Recover that immutable version
+with the parent README's historical-harness recipe beside the reconstructed
+corpus; the current central harness has since changed. No duplicate is checked in.
 
 Reconstruct the 100 source inputs from manifest.revision using the parent
 README's git-show/hash recipe, skipping affected/ entries in that first loop.

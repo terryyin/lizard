@@ -27,7 +27,11 @@ def worker(checkout, loops, workload):
         start = time.perf_counter()
         for _ in range(count):
             for name, source in cases:
-                analyzer.analyze_source_code(name, source)
+                result = analyzer.analyze_source_code(name, source)
+                if workload == 'api-parameters':
+                    for function in result.function_list:
+                        function.parameters
+                        function.parameter_count
         return time.perf_counter() - start
     batch(3)
     for line in sys.stdin:
@@ -38,14 +42,14 @@ def run():
     p = argparse.ArgumentParser()
     p.add_argument('--baseline', required=True)
     p.add_argument('--candidate', required=True)
-    p.add_argument('--workload', choices=['python-ns', 'api', 'cli-ns', 'cli'], required=True)
+    p.add_argument('--workload', choices=['python-ns', 'api', 'api-parameters', 'cli-ns', 'cli'], required=True)
     p.add_argument('--pairs', type=int, default=20)
     p.add_argument('--seconds', type=float, default=1.2)
     p.add_argument('--out', required=True)
     args = p.parse_args()
     paths = [str(Path(args.baseline).resolve()), str(Path(args.candidate).resolve())]
     workers = []
-    if args.workload in ('api', 'python-ns'):
+    if args.workload in ('api', 'api-parameters', 'python-ns'):
         for path in paths:
             workers.append(subprocess.Popen([sys.executable, __file__, 'worker', path, '0', args.workload], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True))
         def measure(which, loops):

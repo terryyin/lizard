@@ -4,9 +4,10 @@ Disposition: defer to [SEED-014#multiline-arrow-boundaries](../../../../.plannin
 and leave authored head `15423852c04aed302f684395fe9522251d88a2f2` unmerged.
 [review-findings.md](review-findings.md) owns the observations and limits.
 
-The single checked-in performance harness is [../paired.py](../paired.py),
+The original measured performance harness has
 SHA256 `3064d8d77047db2f084ce9fd6ae09d98acf34453316b7df20fb184cbb3217bf5`.
-Copy its identical bytes beside the reconstructed corpus for execution.
+Recover its immutable bytes with the parent README's historical-harness recipe
+beside the reconstructed corpus; the current central harness has since changed.
 No changing checkout is used as timed input.
 
 Reconstruct the 100 original source inputs with the parent README's

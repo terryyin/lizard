@@ -110,7 +110,7 @@ observe the newly found internal-colon failure; explicit reproducers do.
 
 The immutable corpus was frozen before measurement: 92 affected input files and
 100 fixed initial source files, no PR533 workload. Hashes are in `manifest.json`.
-The unchanged central harness hash is
+The original measured harness hash (parent README's immutable replay recipe) is
 `3064d8d77047db2f084ce9fd6ae09d98acf34453316b7df20fb184cbb3217bf5`.
 Both comparisons use Python 3.9.11 from the same prepared Nix environment,
 default extensions/options, warmups, calibrated 1.5-second batches and 20

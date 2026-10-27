@@ -49,7 +49,8 @@ The diagnostic is not an accepted product fix and changes no execution sources.
 ## Performance and retained proof
 
 Frozen manifest:150 affected inputs plus100 original source files,250 hashes.
-The literal central paired.py harness is unchanged; API analyzes only related
+The original paired.py is recovered from immutable af27c910 for replay (see the
+central review README); API analyzes only related
 cases and CLI the original four source targets. Twenty alternating warmed pairs
 per workload, calibrated above1s, retain all raw durations/medians/SD and95%
 paired intervals in [533-api.json](../../../docs/reviews/fabio-malpezzi-20261027/pr533/533-api.json)

@@ -37,6 +37,10 @@ class JavaScriptBindings:
     def at_start(self):
         return not self.previous
 
+    @property
+    def at_root(self):
+        return len(self._frames) == 1 and not self._expression_brackets
+
     def __call__(self, token):
         return self.read_token(token).ended
 

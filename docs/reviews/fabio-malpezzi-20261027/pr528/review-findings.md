@@ -77,7 +77,7 @@ contextual identifiers, Ruby controls and balanced-template boundary controls.
 No unrelated PR examples enter the affected API workload. inputs.json and
 manifest.json identify every byte; the original100source hashes are unchanged.
 ManifestSHA256:2b4d99de48defbca46ef3b55568e45edd3f19d7f8366ded49b51e136cbf5d7cc.
-Literal unchanged harness: paired.py, SHA256
+Original measured harness (recover from the parent README's immutable recipe), SHA256
 3064d8d77047db2f084ce9fd6ae09d98acf34453316b7df20fb184cbb3217bf5.
 
 Territory.local arm64,16CPU/48GiB; load14.48/13.09/9.98 before launch, memory48%free.

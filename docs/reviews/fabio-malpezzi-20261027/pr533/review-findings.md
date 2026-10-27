@@ -111,7 +111,7 @@ future correction must run the installed consumer-trace and fresh proof gates.
 
 ## Fixed performance and profile
 
-The central paired.py harness has SHA256
+The originally measured paired.py, recoverable with the parent README's immutable recipe, has SHA256
 3064d8d77047db2f084ce9fd6ae09d98acf34453316b7df20fb184cbb3217bf5.
 The external executed copy is byte-identical. manifest.json freezes150 related
 inputs and100 original source files before analyzer runs or timing; all250

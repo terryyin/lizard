@@ -62,7 +62,7 @@ Proof and expected result: [slice 5](SLICE-PROOF.md).
 
 ### 6. Identifier parameters — PR #532
 Type: Behavior
-Status: planned
+Status: done
 Source: https://github.com/terryyin/lizard/pull/532
 Proof and expected result: [slice 6](SLICE-PROOF.md).
 
@@ -163,6 +163,9 @@ PR533 is deferred to SEED-014#multiline-arrow-boundaries; [533-review.md](533-re
 retains its continuation regressions, failed performance gate and independent child proof.
 PR534 is deferred to SEED-015#ternary-arrow-boundaries; [534-review.md](534-review.md)
 retains typed-colon loss, the curried-state regression and both unproved timing gates.
+PR532 merged as9bc4456 and was thanked; [532-review.md](532-review.md) retains
+the corrected identifier/binding behavior, independent refactor, four passing
+performance gates, current-base full/HTTP proof and exact-tree fourteen-job CI.
 
 ## Story obligations
 
@@ -190,3 +193,8 @@ Disposition: excluded "Corrections estimated above fifteen minutes belong to the
 Reported: slice 5 — "Raw PR534 leaves typed branches merged and overwrites the outer ternary snapshot when a curried inner arrow is intentionally ignored; both timing gates remain unproved, and coherent correction is estimated 30–45 minutes, queued as SEED-015#ternary-arrow-boundaries."
 Story clause: "Correct defects and refactor the overall affected changes into a coherent, minimal solution."
 Disposition: excluded "Corrections estimated above fifteen minutes belong to the linked follow-up stories, not to this review's implementation scope."
+
+### G6. Shared parameter extraction reaches accepted NS output
+Reported: slice 6 — "The corrected PR532 changes shared FunctionInfo.parameters, so the prior PR527 CLI -ENS timing does not prove the final combined revision; a cumulative starting-baseline versus corrected CLI -ENS comparison is still required before merge."
+Story clause: "Also check the cumulative effect of the accepted set against the starting baseline."
+Disposition: proved by slice 6: cumulative-cli-ns.json compares starting 2e21e404 with the immutable corrected combined snapshot on the fixed 100-source corpus; 20 alternating pairs, median -0.1271%, paired 95% interval [-1.43994%, +0.46245%]. Current full pytest (1721 passed, 7 skipped) covers the accepted Python NS controls. Ordinary CLI timing remains a separate open merge gate.

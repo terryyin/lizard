@@ -163,6 +163,23 @@ branch, suffix base c56a2fe; observer reused, no rebase. It publishes SEED-014
 and the PR533 deferral, including the independent-child diagnostic. The fresh
 staging and whitespace checks passed. Slice5's previously published base is 7186fdb.
 
+Slice5 delivered `33807306953535ebda5c0fa42797b1e5e7ef73d1` on the execution
+branch, suffix base 7186fdbe; observer reused, no rebase. It publishes SEED-015
+and the PR534 deferral while preserving the existing curried-arrow convention.
+Supplemental colon controls are explicitly outside its raw timing claim and
+owned by the corrected-code gate. Slice6's published base is 33807306.
+
+Slice6's corrected PR532 merged as9bc44563aad42b780ff0264aa5a3a972a583b423,
+contributor head2a8af8acea20c53a0c57c75ff5d179d2db8a2eff. All4 performance
+gates pass, including core parameter consumers and cumulative CLI -ENS.
+Independent refactor made no edits. Current-base full1751/7, make and real HTTP
+proof match the exact proposed/landed tree; all14 CI jobs succeeded and the
+contributor was thanked (comment6436143243). Contributor temporary worktree
+retired. Owned /private/tmp/lizard-pr532-validation is clean at9bc4456 with a
+Flask-capable Nix environment; retain it through story closure, then retire it.
+Trunk also holds SEED-012 website stories with distinct full anchors from this
+branch's published regex identity; preserve every identity during integration.
+
 
 Preparation reproduced all first examples on the current checkout, while the
 existing suite passed. Some earlier PRs have already been superseded (the

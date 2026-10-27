@@ -7,6 +7,18 @@ Starting target: `2e21e404c1ab9f4e0b49acc80816e816629d0670`.
 The manifest identifies exact input bytes independently of changing checkouts.
 `affected-inputs.json` supplies the nineteen original example inputs.
 
+## Historical harness replay
+
+Results for PR527/528/531/533/534 used harness SHA256
+`3064d8d77047db2f084ce9fd6ae09d98acf34453316b7df20fb184cbb3217bf5`.
+PR532 adds an explicit parameter-consumer workload to the central harness.
+Recover the original immutable version beside each reconstructed historical
+corpus instead of copying the current file:
+
+```sh
+git show af27c910a6a0bff51d8358fde0c37fa9cb059d1a:docs/reviews/fabio-malpezzi-20261027/paired.py > /absolute/historical-root/paired.py
+```
+
 Reconstruct the input corpus beside `paired.py`:
 
 ```python
@@ -15,8 +27,9 @@ import json
 from pathlib import Path
 import subprocess
 
-root = Path('docs/reviews/fabio-malpezzi-20261027').resolve()
-manifest = json.loads((root / 'manifest.json').read_text())
+source = Path('docs/reviews/fabio-malpezzi-20261027').resolve()
+root = Path('/absolute/historical-root')
+manifest = json.loads((source / 'manifest.json').read_text())
 for name, expected in manifest['files'].items():
     if name.startswith('affected/'):
         continue
@@ -25,7 +38,7 @@ for name, expected in manifest['files'].items():
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_bytes(data)
     assert hashlib.sha256(data).hexdigest() == expected
-for case in json.loads((root / 'affected-inputs.json').read_text()):
+for case in json.loads((source / 'affected-inputs.json').read_text()):
     name = 'affected/pr' + str(case['pr']) + '-' + case['filename']
     data = case['source'].encode()
     target = root / 'corpus' / name
@@ -38,7 +51,7 @@ Create independent baseline/candidate checkouts at the recorded revisions.
 Use the same Nix interpreter for both. From the execution checkout run:
 
 ```sh
-nix develop -c python docs/reviews/fabio-malpezzi-20261027/paired.py \
+nix develop -c python /absolute/historical-root/paired.py \
   --baseline /absolute/baseline --candidate /absolute/candidate \
   --workload python-ns --out /absolute/result.json
 ```
@@ -62,7 +75,7 @@ load the NS extension and its execution path is unchanged.
 Python NS measurement with all22 nearby regression/control sources. To replay,
 reconstruct the original corpus in that directory too, add the UTF-8 sources
 from controls.json as `affected/control-<filename>`, and check every hash against
-controls/manifest.json. Copy the identical root paired.py into that directory
+controls/manifest.json. Recover the original harness above into that directory
 before invocation, so its fixed corpus root is controls/corpus. The broader
 CLI workload is unchanged (only the four original source-tree targets are
 analyzed), so its original complete measurement remains applicable.

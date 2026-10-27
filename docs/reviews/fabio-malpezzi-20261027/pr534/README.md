@@ -17,8 +17,9 @@ The external root is
 `freeze.py` archives the target into independent `target`, `raw`, and `child`
 snapshots, applies the full patch to raw/child, removes only #531's object
 heuristic from child, copies the original fixed source corpus from the parent
-cache, writes affected source bytes and copies the single checked-in central
-`../paired.py` unchanged beside that corpus. To rebuild the parent fixed corpus
+cache, writes affected source bytes and recovers the original harness from
+immutable commit `af27c910a6a0bff51d8358fde0c37fa9cb059d1a` beside that corpus.
+The current central harness has since changed. To rebuild the parent fixed corpus
 on another machine, use the central review README's `git show`/hash recipe at
 initial revision `2e21e404c1ab9f4e0b49acc80816e816629d0670` and archive that
 revision into the parent cache's `baseline` directory. The scripts' absolute

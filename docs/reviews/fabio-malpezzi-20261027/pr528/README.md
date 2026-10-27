@@ -4,11 +4,11 @@ Disposition: defer to SEED-012#regex-literal-context; leave authored head
 b66ec3a7f3ca1b3f59d8a76891ce556406231566 unmerged. See review-findings.md for
 commands, expected/actual observations, shared consumers and performance verdicts.
 
-The unchanged literal harness is ../paired.py (SHA256
-3064d8d77047db2f084ce9fd6ae09d98acf34453316b7df20fb184cbb3217bf5).
-The executed external copy had that exact content. To replay its fixed root,
-copy that harness into this directory before invoking it; no second checked-in
-implementation is maintained.
+The original measured harness has SHA256
+3064d8d77047db2f084ce9fd6ae09d98acf34453316b7df20fb184cbb3217bf5.
+The executed external copy had those exact bytes. Use the parent README's
+immutable historical-harness recipe beside the reconstructed corpus; the
+current central harness has since changed. No duplicate is checked in.
 
 Reconstruct100source inputs from manifest.revision using the parent README's
 git-show/hash recipe. Reconstruct the49affected inputs from inputs.json, writing

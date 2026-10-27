@@ -109,7 +109,12 @@ shutil.copytree(CACHE / 'corpus', corpus, ignore=shutil.ignore_patterns('affecte
 (corpus / 'affected').mkdir(exist_ok=True)
 for case in cases:
     (corpus / 'affected' / case['filename']).write_text(case['source'])
-shutil.copy2(HERE.parent / 'paired.py', DEST / 'paired.py')
+historical_harness = subprocess.check_output([
+    'git', 'show', 'af27c910a6a0bff51d8358fde0c37fa9cb059d1a:'
+    'docs/reviews/fabio-malpezzi-20261027/paired.py'], cwd=HERE)
+assert hashlib.sha256(historical_harness).hexdigest() == (
+    '3064d8d77047db2f084ce9fd6ae09d98acf34453316b7df20fb184cbb3217bf5')
+(DEST / 'paired.py').write_bytes(historical_harness)
 shutil.copy2(HERE / 'inputs.json', DEST / 'inputs.json')
 manifest = {str(p.relative_to(corpus)): hashlib.sha256(p.read_bytes()).hexdigest()
             for p in sorted(corpus.rglob('*')) if p.is_file()}
