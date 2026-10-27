@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "agent": "Yuma-chan",
+  "email": "yuma-chan@example.org",
+  "activity": "preparation",
+  "identity": "SEED-016#arrow-parameter-bindings",
+  "host": "cursor",
+  "model": "auto"
+}
