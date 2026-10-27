@@ -122,38 +122,77 @@ batch waits. **Mapped plan:**
 
 **Identity:** SEED-010#review-lexical-js-prs
 ```json dough-story-state
-{"schemaVersion":1,"refinement":"not-refined","approach":"unselected"}
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/007-lexical-js-pr-reviews/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"666f1903382f7f56e736fb6e226e60af04eb0428f73a3f443b8a664b1476e616","plan":"da03a879282b5dc28eedc87d0d8213b0429d33cd36f523d87c81b7490694c831"}}
 ```
 
-**Beneficiaries:** JS-family users relying on comment/template interpretation and
-condition counts; maintainers evaluating these remaining contributions.
-**Goal:** Give each of PR544–547 a complete disposition with worthwhile verified
-changes landed and acknowledged, or a recorded reason for leaving it unmerged.
-**Scope:** Exactly PR544,545,546,547 from the frozen set. Refresh head/target;
-later arrivals and other authors are excluded. Every PR owns its entire cycle:
-reproduction/value, whole-concept/shared-language review, eligible correction,
-fresh independent refactor, affected/broad incremental/cumulative <3% performance,
-full/format/required CI, exact-head merge and thanks, or an evidenced unnecessary/
-inadequate conclusion and linked >15min follow-up. Do not defer QA to a sibling.
+**Beneficiaries:** JavaScript/TypeScript/JSX/TSX users who rely on accurate
+comment termination and condition counts; maintainers disposing the remaining
+FabioMalpezzi lexical/condition contributions.
 
-**Key examples to re-establish:**
+**Goal:** Give each of frozen PRs #544–#547 a complete, independently useful
+disposition — merge a worthwhile, fully verified correction with acknowledgement,
+or leave the PR unmerged with an evidence-backed unnecessary/inadequate reason
+and any >15-minute follow-up linked — so comment and condition metrics match
+the language rules those PRs claim.
 
-| PR | Reported observable result to verify |
-| --- | --- |
-|544|A JS line-comment backslash does not hide the next line; preserve C/C++ continuation rules.|
-|545|Template interpolation conditions count while literals/nesting/regex and boundaries remain correct.|
-|546|Keyword member names add no conditions; genuine control flow still does.|
-|547|Unspaced ternaries count; TypeScript optional markers do not, with chaining/nullish controls preserved.|
+**Current target evidence (preparation, this checkout):** On current `master`,
+public analysis still matches the contributor baselines for the four claims:
+`b` CCN 3 / NLOC 7 after a `// \` line; `label` CCN 1 for conditions inside a
+template interpolation; `load` CCN 2 for `p.catch(...)`; `pick` CCN 1 for
+`x?y:0`; and TSX method `m` CCN 3 when optional parameters/fields are present.
+Frozen heads still match the open PR heads. Claims remain to verify against
+each refreshed head and the complete-cycle contract; they are not automatic
+acceptance.
 
-Claims may prove invalid/already fixed or need >15min corrections; retain a final
-reason/follow-up instead of merging an inadequate candidate. No pending correction,
-performance, refactor, CI or acknowledgement is passed to another review story.
-**Effort hypothesis:** Four complete review loops, unestimated pending refinement.
-**Depends on:** No assumed structural-story prerequisite; verify genuine dependency.
-**Safe stop:** These conclusions/fixes retain value even if structural work waits.
-Whichever remaining batch actually finishes last also reconciles the full 19-PR
-cohort and final combined evidence; each individual merge validates combinations
-beforehand, never postponing its own performance gate to that final summary.
+**Scope:** Exactly PRs #544, #545, #546, and #547 from
+[frozen-review-set.json](../../docs/reviews/fabio-malpezzi-20261027/frozen-review-set.json)
+and [story-map.md](../../docs/reviews/fabio-malpezzi-20261027/story-map.md).
+Refresh each selected PR's state/head and the current target before acting.
+Later arrivals and other authors are out of scope. Each PR owns its entire
+[complete-cycle contract](../../docs/reviews/fabio-malpezzi-20261027/REVIEW-CONTRACT.md):
+reproduction and value; whole-concept and shared-language consumer review;
+eligible ≤15-minute correction (review/measurement time excluded); fresh
+independent refactor; affected and broad incremental/cumulative performance
+strictly below 3%; full suite, format/hooks, and required CI; exact-head merge
+and thanks — or an evidenced unnecessary/inadequate conclusion with a linked
+canonical follow-up when correction exceeds 15 minutes. No correction,
+performance, refactor, CI, merge, or acknowledgement phase is deferred to a
+sibling story.
+
+Deferred promises: structural PRs #537–#543; nesting-extension (-ENS) counting
+of keyword member names; a residual where a keyword member name inside a
+template interpolation may still count after both #545 and #546 land (the
+contributor named a separate follow-up); C/C++ line-comment backslash
+continuation; optional chaining and nullish coalescing token shapes beyond the
+#547 discrimination; new languages or analyzer options. No supplier agreement
+with the structural sibling is justified: lexical dispositions remain useful if
+structural work waits. Whichever remaining batch finishes last also reconciles
+the full 19-PR cohort and combined evidence; each merge still owns its own
+pre-merge combined performance validation.
+
+**Key examples:**
+
+- Given `function b` whose `return` chains `||` comparisons with a `// \` line
+  comment between them, analyzing `.js` / `.ts` / `.jsx` / `.tsx` reports
+  CCN 4 and NLOC 8 for `b` (the next line is not swallowed). Equivalent C/C++
+  line-comment continuation after `\` remains unchanged when shared comment
+  machinery is touched.
+- Given `function label` returning a template whose interpolations contain
+  `x ? 1 : 2` and `x && y`, analyzing the four extensions reports CCN 3 while
+  function boundaries, token counts to the states, nested templates, literal
+  text, strings, comments, and regex inside the template stay correct.
+- Given `function load` returning `p.then(parse).catch(() => null)`, analyzing
+  the four extensions reports CCN 1 for `load`; genuine `catch` / `if` / `for` /
+  `while` / `case` control-flow constructs still increment CCN.
+- Given `function pick` returning the unspaced ternary `x?y:0`, analyzing `.js`
+  and `.ts` reports CCN 2. Given a `.tsx`/`.jsx` class with optional field
+  `name?: string` and method parameters `a?: number, b?: string`, analyzing
+  reports CCN 1 for `m` (optional markers are not ternaries). Optional chaining
+  `?.` and nullish coalescing `??` keep their existing non-ternary behavior.
+
+**Effort hypothesis:** Four complete review loops; no project S/M/L band is
+invented — size during planning from the contract gates.
+**Depends on:** none (structural sibling is not a prerequisite).
+**Safe stop:** Any finished subset of these four dispositions retains value if
+later PRs in this story or the structural sibling wait.
 **Mapped plan:** [007 lexical review](../slice-plans/007-lexical-js-pr-reviews/PLAN.md).
-**Resume:** Run dough-story-refinement, reusing/realigning the mapped plan; it is
-awaiting story refinement, not ready for slice-plan refinement or execution.
