@@ -2,14 +2,14 @@
 id: SEED-012
 status: active
 planted: 2026-10-27
-planted_during: Owner request for three website backlog items
-trigger_when: Modernize, renovate and automate releases of lizard.ws
+planted_during: Owner request for website backlog items
+trigger_when: Modernize and automate releases of lizard.ws
 scope: bounded
 ---
 
 # SEED-012: Website evolution
 
-These are three queued stories in the owner's requested order. Adding them
+These are the owner's queued website stories in requested order. Adding them
 does not start implementation or make them ready for execution.
 
 <a id="modernize-website-react"></a>
@@ -18,7 +18,7 @@ does not start implementation or make them ready for execution.
 
 **Identity:** SEED-012#modernize-website-react
 ```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/005-modernize-website-react/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"b3b7e04acb18127db7380e42447488bde190d5c12201da3729443ba8cc7c6aff","plan":"930c12b70e7dce45f849e3d79d4f19160e57b0981cb0d3d808255bdac0beba31"}}
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/005-modernize-website-react/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"fe85d0aea28dadf96d3ccf8c7123bd3fb5fa1992a9e0830aab830009256fb76b","plan":"930c12b70e7dce45f849e3d79d4f19160e57b0981cb0d3d808255bdac0beba31"}}
 ```
 
 **Beneficiaries:** Website visitors trying Lizard and contributors maintaining
@@ -61,8 +61,9 @@ reproducibly, with browser CI limited to changes in the web surface.
   Python checks running independently. The exact change boundary and event
   comparison below own the web decision; prove both run and skip behavior.
 
-**Deferred promises:** The next story owns the selected visual renovation and
-its missing design reference. This story does not select a replacement design.
+**Deferred promises:** No visual renovation is queued: the owner confirmed
+the current presentation is the selected design. This story selects no
+replacement design.
 Tag-triggered deployment, live GCP publication, DNS and traffic changes belong
 to the release story. SSR, an additional Node service, additional browser
 engines, a router, accounts, saved reports and editor libraries are not delivery
@@ -149,7 +150,7 @@ Python tests own API/HTTP compatibility and filesystem-bound asset-loader
 contracts; browser scenarios own rendered React behavior. Ordinary Python
 checks require neither npm nor a prebuilt bundle. A missing build gets a clear
 local build diagnostic while the API stays available; it never falls back to
-the old frontend. This also gives the later design story one place to edit and
+the old frontend. This also gives later design changes one place to edit and
 the release story one build artifact to deploy, without implementing either.
 
 Applicable Accepted decisions are [ADR-0000 — Use ADRs for architectural
@@ -169,34 +170,6 @@ feature-local design, not an ADR proposal or approval.
 [GitHub path comparisons](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#git-diff-comparisons).
 Exact package versions above came from the npm registry and the local probe;
 recheck React stable when execution begins.
-
-<a id="renovate-website-first-design"></a>
-
-### Renovate the website using the first approved design
-
-**Identity:** SEED-012#renovate-website-first-design
-
-**Beneficiaries:** Developers discovering Lizard and using its online demo.
-
-**Goal:** The website presents the first of the previously proposed frontend
-designs, selected by the owner, across the homepage and online demo.
-
-**Scope:** Apply that selected design to the website, including responsive
-layout and the existing installation, documentation and analysis journeys.
-Retain keyboard usability, clear metric results and recoverable error states
-through the renovation.
-
-**Key examples:**
-
-- A visitor sees the selected first design on desktop and phone layouts.
-- A visitor can still find installation/documentation links and complete a
-  real analysis from the renovated interface.
-
-**Design reference:** The owner explicitly chose “the first one” from the
-previously proposed designs. The exact mockup/reference was not identifiable
-in the retained artifacts when this story was queued. Attach that reference
-and evaluable visual examples during refinement before implementation;
-do not substitute a newly invented design or mark the story ready.
 
 <a id="release-website-from-tags"></a>
 

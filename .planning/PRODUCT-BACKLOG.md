@@ -11,5 +11,4 @@ Maintenance, bug fixing, and PR reviews.
 
 ## Backlog list
 
-- [Renovate the website using the first approved design](seeds/SEED-012-website-evolution.md#renovate-website-first-design) — SEED-012#renovate-website-first-design
 - [Deploy website releases from version tags](seeds/SEED-012-website-evolution.md#release-website-from-tags) — SEED-012#release-website-from-tags
