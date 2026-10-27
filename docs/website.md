@@ -11,6 +11,16 @@ no-JavaScript notice linking the CLI documentation, and the server-owned
 language choices and source limit as escaped JSON. React renders everything
 else. Node is a build/test dependency only; the deployed service is Python.
 
+Keep these responsibilities in one place each. Flask owns HTTP, the API,
+response headers and the runtime configuration (language choices from
+Lizard's readers, source limits); `lizard.analyze_file` owns the metrics;
+React owns all page content and interaction and reads that configuration
+instead of copying it. A missing build is a diagnostic, never a fallback to
+an older frontend. Python tests own API/HTTP compatibility and the manifest
+contract, using a temporary manifest rather than a real build, so they need
+neither npm nor build output. Browser scenarios own rendered behaviour
+against the real analyzer and never fake metric results.
+
 ## Local development
 
 Build the frontend before serving; without a build `/` answers 503 with the
@@ -111,6 +121,8 @@ the workflow consumes only its Boolean output. Shared analyzer code
 outside the boundary on purpose: a docs-only or analyzer-only change runs the
 detector and the Python checks and skips the web job without installing npm
 packages or browsers.
+The root `requirements.lock` and `requirements-dev.lock` are not website build
+inputs; add them to `WEB_PATHS` if the website or web job starts using them.
 
 The selector lists changed paths with `git diff --name-only --no-renames -z`,
 so additions, edits, deletions and both sides of a rename count, without

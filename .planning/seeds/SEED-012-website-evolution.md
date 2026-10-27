@@ -198,6 +198,11 @@ in the retained artifacts when this story was queued. Attach that reference
 and evaluable visual examples during refinement before implementation;
 do not substitute a newly invented design or mark the story ready.
 
+**Current frontend:** the page is the React app in `website/frontend/src/`
+with its single stylesheet; the Cucumber/Playwright scenarios in
+`website/frontend/features/` are the regression suite for the journeys
+above (`docs/website.md`).
+
 <a id="release-website-from-tags"></a>
 
 ### Deploy website releases from version tags
@@ -230,3 +235,7 @@ release verification, and recovery to the previous deployed version.
 **Refinement needed:** Define tag validation, version-to-App-Engine mapping,
 validation reuse, deployment credentials and failure/recovery behavior.
 Keep website tags distinct from the analyzer package's release mechanism.
+The deployable page bundle is generated: run `npm --prefix website/frontend
+ci` and `run build` before `gcloud app deploy`, since `website/static/dist/`
+is ignored by Git and allowlisted by `.gcloudignore`. Reuse the CI `web`
+job's install and build commands (`docs/website.md`).
