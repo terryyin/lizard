@@ -164,7 +164,7 @@ artifact; automated conditional CI remains the only undelivered outcome.
 
 ### 3. CI runs browser coverage exactly for the web change boundary
 Type: Behavior
-Status: planned
+Status: done
 Proof: The actual change-selector entry point emits run/skip for repository
 history fixtures, and hosted workflow evidence demonstrates web run and skip
 while Python checks continue.
@@ -358,9 +358,12 @@ Disposition: excluded "Tag-triggered deployment, live GCP publication, DNS and t
   `Compared f32439f..f6af787` / `web=true`; `web` succeeded (16 scenarios
   passed); all 14 `build` matrix jobs succeeded, including Windows runs of
   the Git-fixture tests.
-- Hosted skip receipt: the next push carries only `docs/website.md` (CI
-  documentation) and this plan; its run must show `web=false`, `web`
-  skipped and `build` running; slice 3 becomes done once that is observed.
+- Hosted skip receipt: https://github.com/terryyin/lizard/actions/runs/40472929184,
+  push of `390e69d` (changed: `docs/website.md` CI documentation and this
+  plan): `changes` printed `Compared f6af787..390e69d` / `web=false`; `web`
+  skipped; all 14 `build` matrix jobs ran and the run succeeded. Slice 3
+  accepted. Full `nix develop -c python -m pytest` 1767 passed and
+  `nix develop -c make` exited 0 on `390e69d`.
 
 ## Learnings
 
