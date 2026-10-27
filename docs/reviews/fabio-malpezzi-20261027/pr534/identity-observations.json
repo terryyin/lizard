@@ -1,0 +1,150 @@
+{
+  "branch": {
+    "highest": {
+      "source": "seed-directory",
+      "seed": "SEED-014",
+      "number": 14,
+      "identity": "SEED-014",
+      "evidence": "seeds/SEED-014-multiline-arrow-boundaries.md"
+    },
+    "next": "SEED-015",
+    "sources": [
+      {
+        "source": "seed-directory",
+        "path": "seeds",
+        "read": true,
+        "highest": {
+          "seed": "SEED-014",
+          "number": 14,
+          "identity": "SEED-014",
+          "evidence": "seeds/SEED-014-multiline-arrow-boundaries.md"
+        }
+      },
+      {
+        "source": "backlog",
+        "path": "PRODUCT-BACKLOG.md",
+        "read": true,
+        "highest": {
+          "seed": "SEED-014",
+          "number": 14,
+          "identity": "SEED-014#multiline-arrow-boundaries",
+          "evidence": "PRODUCT-BACKLOG.md \"## Backlog list\""
+        }
+      },
+      {
+        "source": "done-records",
+        "path": "done",
+        "read": true,
+        "highest": {
+          "seed": "SEED-009",
+          "number": 9,
+          "identity": "SEED-009#balanced-template-scanning",
+          "evidence": "done/SEED-009_balanced-template-scanning.json"
+        }
+      },
+      {
+        "source": "done-catalog",
+        "path": "done/.catalog.json",
+        "read": true,
+        "highest": {
+          "seed": "SEED-009",
+          "number": 9,
+          "identity": "SEED-009#balanced-template-scanning",
+          "evidence": "done/SEED-009_balanced-template-scanning.json"
+        }
+      },
+      {
+        "source": "history",
+        "path": "..",
+        "revision": "7186fdbe826bf32b399165cc3d36897a128d4d0d",
+        "read": true,
+        "highest": {
+          "seed": "SEED-014",
+          "number": 14,
+          "identity": "SEED-014",
+          "evidence": "seeds/SEED-014-multiline-arrow-boundaries.md",
+          "commit": "7186fdbe826bf32b399165cc3d36897a128d4d0d"
+        }
+      }
+    ],
+    "gaps": [],
+    "candidate": {
+      "identity": "SEED-015#ternary-arrow-boundaries",
+      "status": "unlisted"
+    }
+  },
+  "trunk": {
+    "highest": {
+      "source": "seed-directory",
+      "seed": "SEED-011",
+      "number": 11,
+      "identity": "SEED-011",
+      "evidence": "seeds/SEED-011-lizard-website-revival.md"
+    },
+    "next": "SEED-012",
+    "sources": [
+      {
+        "source": "seed-directory",
+        "path": "seeds",
+        "read": true,
+        "highest": {
+          "seed": "SEED-011",
+          "number": 11,
+          "identity": "SEED-011",
+          "evidence": "seeds/SEED-011-lizard-website-revival.md"
+        }
+      },
+      {
+        "source": "backlog",
+        "path": "PRODUCT-BACKLOG.md",
+        "read": true,
+        "highest": {
+          "seed": "SEED-011",
+          "number": 11,
+          "identity": "SEED-011#revive-lizard-website",
+          "evidence": "PRODUCT-BACKLOG.md \"## Taken\""
+        }
+      },
+      {
+        "source": "done-records",
+        "path": "done",
+        "read": true,
+        "highest": {
+          "seed": "SEED-009",
+          "number": 9,
+          "identity": "SEED-009#balanced-template-scanning",
+          "evidence": "done/SEED-009_balanced-template-scanning.json"
+        }
+      },
+      {
+        "source": "done-catalog",
+        "path": "done/.catalog.json",
+        "read": true,
+        "highest": {
+          "seed": "SEED-009",
+          "number": 9,
+          "identity": "SEED-009#balanced-template-scanning",
+          "evidence": "done/SEED-009_balanced-template-scanning.json"
+        }
+      },
+      {
+        "source": "history",
+        "path": "..",
+        "revision": "7ac449f59b3f155fd159ce9aad6794a422045632",
+        "read": true,
+        "highest": {
+          "seed": "SEED-011",
+          "number": 11,
+          "identity": "SEED-011",
+          "evidence": "seeds/SEED-011-lizard-website-revival.md",
+          "commit": "e8d62aeaf00d2d0bcb19cc3d11b7ba1843c2f372"
+        }
+      }
+    ],
+    "gaps": [],
+    "candidate": {
+      "identity": "SEED-015#ternary-arrow-boundaries",
+      "status": "unlisted"
+    }
+  }
+}

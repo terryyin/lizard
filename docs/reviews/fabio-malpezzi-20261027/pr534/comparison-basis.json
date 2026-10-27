@@ -1,0 +1,8 @@
+{
+  "default_api_cases": 92,
+  "target_initial_actual_equal": true,
+  "broad_cli_target_initial_equal": true,
+  "broad_cli_target_raw_equal": true,
+  "cli_sha256": "6219411e57cbe334295be6e241402120b61750b29cffc103163cc007bbafd984",
+  "ens_measured": false
+}

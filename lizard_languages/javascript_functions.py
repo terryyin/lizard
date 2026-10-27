@@ -1,23 +1,33 @@
-"""JavaScript function signatures, bodies, and optimistic arrow recognition."""
+"""JavaScript function signatures, bodies, optimistic arrow recognition,
+and where an expression-bodied arrow ends."""
 
 from .javascript_bindings import JavaScriptBindings
 
-
-# An expression goes on at the next line after one of these tokens, or at a
-# line that starts with one of the second ones.
-_CONTINUED_AFTER = frozenset((
-    '=>', '=', '+', '-', '*', '/', '%', '&&', '||', '??', '?', ':', '|', '&',
-    '^', '==', '===', '!=', '!==', '<', '>', '<=', '>='))
-_CONTINUED_BY = frozenset((
-    '.', '?.', '?', ':', '&&', '||', '??', '|', '&', '^', '%', '==', '===',
-    '!=', '!==', '<=', '>=', '+', '-', '/', 'instanceof', 'in'))
+# Words that still need an operand, so a line break after them continues.
+OPERAND_WORDS = frozenset((
+    'in', 'instanceof', 'typeof', 'new', 'await', 'void', 'delete', 'yield',
+    'of', 'as', 'satisfies', 'keyof'))
 
 
-# TypeScript type keywords that should not be counted as parameters
-_TS_TYPE_KEYWORDS = frozenset([
-    'string', 'number', 'boolean', 'void', 'any',
-    'object', 'unknown', 'never',
-])
+def ends_expression(token):
+    """Whether an expression may end with this token (JavaScript ASI)."""
+    first = token[:1]
+    if first.isalnum() or first in ('_', '$', '#', "'", '"', '`'):
+        return token not in OPERAND_WORDS
+    return (token in (')', ']', '}', '++', '--')
+            or (first == '/' and len(token) > 2)  # regular expression literal
+            or (first == '<' and (token.startswith('</')  # JSX element end
+                                  or token.endswith('/>'))))
+
+
+def starts_statement(token):
+    """Whether this line-start token cannot continue the previous line."""
+    first = token[0]
+    if first.isalnum() or first in ('_', '$', '#', "'", '"'):
+        # TypeScript reads `as`/`satisfies` after a line break as a statement.
+        return token not in ('in', 'instanceof')
+    # Restricted ++/--, prefix-only operators, blocks, decorators and closers.
+    return token in ('++', '--', '!', '~', '{', '@', '}', ')', ']')
 
 
 class JavaScriptFunctionsMixin:
@@ -30,47 +40,50 @@ class JavaScriptFunctionsMixin:
     def _pop_function_from_stack(self):
         if self.started_function:
             self.context.end_of_function()
+        if self._expression_body:
+            self._close_expression_body()
         self.started_function = None
         self._in_prop_value = False
-        self._expression_body = False
 
-    def _continues_expression(self, token):
-        return token in _CONTINUED_BY or self.last_token in _CONTINUED_AFTER
-
-    def _end_expression_body(self):
-        """End an arrow function without braces before the first token of a
-        new line, which belongs to the code around it."""
-        arrow = self.context.current_function
-        counted, complexity = self._counted
-        self._pop_function_from_stack()
-        if counted is not arrow:
-            return
-        around = self.context.current_function
-        around.cyclomatic_complexity += arrow.cyclomatic_complexity - complexity
-        arrow.cyclomatic_complexity = complexity
-        arrow.nloc -= 1
-        around.nloc += 1
-        arrow.token_count -= 1
-        around.token_count += 1
-        arrow.end_line = self._last_line
-        around.end_line = self.context.current_line
+    def end_expression_before(self, token):
+        """Called by the reader with a line's first token before it is
+        counted, so an ended arrow keeps none of the next statement."""
+        if (self._state == self._state_global
+                and ends_expression(self.last_token)
+                and starts_statement(token)):
+            self._end_statement()
 
     def _abandon_function(self):
         """Discard an optimistic signature that proved to be an expression."""
         self.context.forgive = True
         self.context.end_of_function()
         self.started_function = None
+        if self._expression_body:
+            self._close_expression_body()
+
+    def _close_expression_body(self):
+        self._expression_body = False
+        self.context.expression_arrows.remove(self)
 
     def _arrow_function(self, token):
         self._push_arrow_function()
+        if token == '{':
+            # A block body closes any expression body (`a => b => {}`).
+            if self._expression_body:
+                self._close_expression_body()
+        elif self.started_function and not self._expression_body:
+            # An expression body has no closing token, so a later "{" is an
+            # object operand; the reader asks the innermost open one at each
+            # line start (end_expression_before). Function-type "=>" must not
+            # reach here (see type annotation states).
+            self._expression_body = True
+            self.context.expression_arrows.append(self)
         # Clear function_name so expression-body ( doesn't re-enter _function
         self.function_name = ''
         # Clear modifiers so the body's opening { isn't captured by the
         # async/static handler in the class body path.
         self._async_seen = False
         self._static_seen = False
-        # Without braces, a later "{" opens an object: x => c ? {a} : {b}
-        self._expression_body = token != '{'
         self.next(self._state_global, token)
 
     def _function(self, token):
@@ -97,6 +110,7 @@ class JavaScriptFunctionsMixin:
             if not self.started_function:
                 self._push_function_to_stack()
             self._generic_depth_in_dec = 0
+            self._in_parameter_type = False
             self._parameter_bindings = JavaScriptBindings(')')
             self._state = self._dec
             self.context.add_to_long_function_name(" " + token)
@@ -113,15 +127,20 @@ class JavaScriptFunctionsMixin:
             self._abandon_function()
             self.next(self._state_global, token)
             return
+        if token == 'this' and self._parameter_bindings.at_start:
+            # TypeScript's leading receiver declaration is not an argument.
+            self._in_parameter_type = True
         event = self._read_parameter_binding(token)
         if event.ended:
             self._state = self._expecting_func_opening_bracket
         elif (not event.in_expression or event.root_separator) and token != '(':
-            # Filter out TypeScript type keywords and operators from parameter count
             if token == ',':
                 # Ignore commas inside generic type brackets: Map<K, V>
                 if event.root_separator and not getattr(self, '_generic_depth_in_dec', 0):
+                    self._in_parameter_type = False
                     self.context.parameter(',')
+            elif token == ':' and self._parameter_bindings.at_root:
+                self._in_parameter_type = True
             elif token == '<':
                 self._generic_depth_in_dec = getattr(
                     self, '_generic_depth_in_dec', 0) + 1
@@ -129,15 +148,13 @@ class JavaScriptFunctionsMixin:
                 depth = getattr(self, '_generic_depth_in_dec', 0)
                 if depth > 0:
                     self._generic_depth_in_dec = depth - 1
-            elif token in _TS_TYPE_KEYWORDS:
-                pass
             elif token in ('*', '+', '-', '/', '%', '=', '.'):
                 pass
-            elif not getattr(self, '_generic_depth_in_dec', 0):
-                if (token.replace('_', '').replace('?', '').isalnum() and
-                        token.replace('?', '') and
-                        token.replace('?', '')[0].isalpha()):
-                    self.context.parameter(token.replace('?', ''))
+            elif not (getattr(self, '_generic_depth_in_dec', 0)
+                      or self._in_parameter_type):
+                name = token.replace('?', '')
+                if name.replace('$', '_').isidentifier():
+                    self.context.parameter(name)
             return
         self.context.add_to_long_function_name(" " + token)
 

@@ -2,6 +2,42 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-012_regex-literal-context.json",
+      "identity": "SEED-012#regex-literal-context",
+      "completedAt": "2026-10-27T12:45:16.453Z",
+      "blob": "981b5ed805ce2d1beaf2f465871d233e5865499a"
+    },
+    {
+      "fileName": "SEED-013_arrow-object-boundaries.json",
+      "identity": "SEED-013#arrow-object-boundaries",
+      "completedAt": "2026-10-27T12:10:15.609Z",
+      "blob": "d930a04441a77c598e012cf2cae0dece7f0f3766"
+    },
+    {
+      "fileName": "SEED-010_review-fabio-malpezzi-prs.json",
+      "identity": "SEED-010#review-fabio-malpezzi-prs",
+      "completedAt": "2026-10-27T09:58:45.282Z",
+      "blob": "c644564b0ce516939c8c361f9b1932f232708728"
+    },
+    {
+      "fileName": "SEED-012_modernize-website-react.json",
+      "identity": "SEED-012#modernize-website-react",
+      "completedAt": "2026-10-27T08:33:55.764Z",
+      "blob": "fa60c57f762708cc6043f96c3d5b7e1cdaa1c835"
+    },
+    {
+      "fileName": "SEED-011_revive-lizard-website.json",
+      "identity": "SEED-011#revive-lizard-website",
+      "completedAt": "2026-10-27T06:27:36.268Z",
+      "blob": "b76816df303aa19fad41561447e6c433e53d079d"
+    },
+    {
+      "fileName": "SEED-006_ci-verified-python-support.json",
+      "identity": "SEED-006#ci-verified-python-support",
+      "completedAt": "2026-10-27T04:14:39.002Z",
+      "blob": "1fa7f46c1c13e680a5dc8b94c05604d3a720ed23"
+    },
+    {
       "fileName": "SEED-009_balanced-template-scanning.json",
       "identity": "SEED-009#balanced-template-scanning",
       "completedAt": "2026-10-24T09:15:39.597Z",
