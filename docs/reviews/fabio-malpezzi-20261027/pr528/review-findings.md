@@ -1,8 +1,18 @@
 # PR528 review and deferral input
 
-Recommendation: defer this real problem to a linked correction story; leave PR528
-unmerged. No product, test, planning, or repository evidence file was changed by
-this implementation agent. Only external read-only snapshots and evidence exist.
+Disposition (2026-10-27): **merged with acknowledgement** via
+SEED-012#regex-literal-context. Final contributor head
+`317d5c83647b849f8b683c150a6039e47ce5ba2a`; merge commit
+`6408864eeab300296617902c0c8980a3f11f2a39`; thank-you
+https://github.com/terryyin/lizard/pull/528#issuecomment-6442012279.
+Hosted CI run 40504615718 green on that exact head (14 matrix builds + changes).
+Performance evidence retained under `/private/tmp/lizard-regex-perf-seed012/`
+(SLICE3-SUMMARY.json; harness SHA256 3064d8d7…3217bf5).
+
+Original review recommendation below is historical: defer this real problem to a
+linked correction story; leave PR528 unmerged. No product, test, planning, or
+repository evidence file was changed by that implementation agent. Only external
+read-only snapshots and evidence exist.
 
 Reviewed head: b66ec3a7f3ca1b3f59d8a76891ce556406231566.
 Source: https://github.com/terryyin/lizard/pull/528

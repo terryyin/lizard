@@ -270,7 +270,7 @@ Accepted proof (2026-10-27, Nana-chan): P10 performance gate met; semantics inta
 
 ### 4. Deliver the qualified correction through PR528
 Type: Behavior
-Status: planned
+Status: done
 Proof: final contributor-head SHA and accepted push, green current required CI,
 exact-head guarded merge receipt, and one acknowledgement URL.
 
@@ -295,6 +295,21 @@ existing review evidence/discussion, then complete the story's ordinary wrap-up.
 Boundedness: one qualified contribution reaching its intended users and author,
 with separate hosted wait time. Pending CI, merge or acknowledgement leaves
 this slice unfinished, not delegated to the lexical-review sibling.
+
+Accepted proof (2026-10-27, Nana-chan): contributor delivery complete.
+- Local: `nix develop -c python -m pytest` → 1810 passed, 7 skipped;
+  `nix develop -c make` → exit 0 (pep8/pylint) on execution HEAD `64e720a`.
+- Contributor head update (SSH, non-force): merge `origin/master` (`0a61bf3`)
+  into FabioMalpezzi:pr/js-regex-after-keywords, overlay corrected product/tests,
+  push `317d5c83647b849f8b683c150a6039e47ce5ba2a` (HTTPS rejected for workflow
+  scope; SSH accepted). Pre-push reproducer 42/42 on PR worktree.
+- Hosted CI run `40504615718`: all 14 ubuntu/windows × 3.8–3.14 builds SUCCESS;
+  `changes` SUCCESS; `web` SKIPPED. Head unchanged at merge time.
+- Exact-head merge: `gh pr merge 528 --merge --match-head-commit 317d5c8…`
+  → MERGED; merge commit `6408864eeab300296617902c0c8980a3f11f2a39`.
+- Acknowledgement (no prior comments):
+  https://github.com/terryyin/lizard/pull/528#issuecomment-6442012279
+- PR: https://github.com/terryyin/lizard/pull/528
 
 ## Plan review
 
