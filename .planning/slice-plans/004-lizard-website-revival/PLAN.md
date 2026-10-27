@@ -119,7 +119,7 @@ reviewable while closed billing prevents a cloud preview.
 
 ### 2. The verified site is served securely on lizard.ws
 Type: Behavior
-Status: planned
+Status: done
 Proof: explicit-project cloud inspection, no-promotion preview deployment,
 HTTP/browser sample analysis, observed production traffic/domain/HTTPS
 behavior, and documented prior-version recovery.
@@ -174,6 +174,38 @@ the public journey unobserved.
   pytest and combined checks after implementation; the implementation agent
   owns focused HTTP tests and the isolated production-runtime probe.
 
+### Deployment resume
+
+The owner reopened billing and explicitly requested deployment. Read-only
+cloud inspection confirmed `billingEnabled: true`, App Engine `SERVING`,
+location `us-central`, default hostname `lizardanalyzer.appspot.com`, existing
+application service account `lizardanalyzer@appspot.gserviceaccount.com`, and
+default-service traffic `20180602t165847=1.0` before release. Existing versions
+and their traffic are preserved until the preview passes.
+
+Slice 1 was accepted on the execution branch at
+`f818daf65e5981e4d58589d503b4016644206c62`, suffix base
+`e8d62aeaf00d2d0bcb19cc3d11b7ba1843c2f372`. Its runtime code, dependencies and
+configuration were unchanged at resume, so the previously accepted full
+pytest/make and isolated Python 3.13 proof remain the live-action regression
+prerequisite for that candidate. Documentation/planning-only edits do not
+alter the deployed upload allowlist or that correspondence.
+
+The previous observer stopped cleanly at the billing handoff, with zero unread
+events and the recorded PID exited. The resumed observer uses coordinator
+`aino-website-20261027`, yielded cell `93`, terminal session `95319`, directory
+`/tmp/dough-ci-501/watch-2xSR4I`, stream PID `43566`. Managed existing-candidate
+delivery confirmed `f818daf` was already published and registered it on this
+owned stream without a new commit or push. New increments use that accepted
+SHA as their previously published base.
+
+Agent `/root/deploy_website` owns slice 2 cloud actions and the operator
+release record; root retains plan evidence, independent public-browser
+observation, proof acceptance, refactoring, delivery and closure. The complete
+G2 receiving obligation was included in its delegation. It must preserve all
+old versions, verify a no-promotion preview before switching traffic, and
+apply the retained regression prerequisite before live actions.
+
 ## Learnings
 
 - Existing GCP project is active, but billing is disabled and the only linked
@@ -191,7 +223,221 @@ Disposition: proved by slice 1: after reloading the corrected `website/static/de
 ### G2. Public release still needs cloud observations
 Reported: slice 1 — "Public-host verification remains owned by slice 2. Billing is still closed; no cloud write or public preview has been performed."
 Story clause: "Publish a verified preview before switching production traffic"
-Disposition: receiving slice 2
+Disposition: proved by slice 2: version `revive-20261027-f818daf` was deployed with no promotion, its HTTPS HTTP/API smoke passed at `2026-10-27T04:51:10Z`, and root independently observed the browser demo complete with actual metrics. Default production traffic remains `20180602t165847=1.0`; promotion is held for the separate HTTPS obligation G3.
+
+### G3. Custom-domain HTTPS must work before promotion
+Reported: slice 2 — "Google-managed certificate provisioning returned INTERNAL (13): Error provisioning managed certificate; no certificate is present, and lizard.ws is absent from this account's verified domains. The HTTPS preview works, but production promotion is held because secure: always would redirect visitors to an unavailable custom-domain TLS endpoint."
+Story clause: "establish HTTPS and a canonical domain where existing access permits"
+Disposition: proved by slice 2: domain ownership was verified, managed certificate `47191116` became active, normal HTTPS succeeded before promotion, and the tested version now receives all production traffic. The public HTTPS page/assets/API smoke and independent browser demo passed. HTTP `www` redirects to matching HTTPS, and the existing apex 301 reaches the chosen `https://www.lizard.ws/` endpoint with final 200 and normal TLS validation. No bare-domain HTTPS endpoint is claimed.
+
+## Slice 2 deployment checkpoint
+
+Fresh source-only reviewer `/root/release_source_commitments` received only
+the original source and explicit human amendments, including reopened billing
+and renewed deployment authorization. Its independent commitments preserve
+the preview-before-traffic sequence, working public HTTPS/page/demo, recovery,
+and the access qualification for domain work. No source outcome changed.
+
+| Source trigger and expected result | Actual observation and remaining owner |
+| --- | --- |
+| Billing/service access is restored and the accepted app is deployed on supported Python 3 | Billing read true; required App Engine, Cloud Build and Artifact Registry APIs enabled. Candidate `f818daf` runtime/configuration/dependencies stayed unchanged, preserving the accepted full regression prerequisite. New version is `SERVING`, `python313`, F1, max instances 2 and max concurrent requests 1. |
+| A new version passes preview checks before traffic moves | `gcloud app deploy app.yaml --project=lizardanalyzer --version=revive-20261027-f818daf --no-promote --no-stop-previous-version --quiet` completed after a bucket-scoped source-read IAM repair. All old versions remain. Service routing was observed as `20180602t165847=1.0` after preview proof, closing G2. |
+| The deployed page, original assets and real demo work over trusted HTTPS; malformed/oversized input rejects safely and retry works | The explicit HTTPS smoke below exited 0 with homepage, six assets, real `shipping_cost` metrics, 400 invalid JSON, 413 source limit and a matching successful retry. Default certificate/hostname verification was enabled. Root separately observed the deployed page and browser's Working → Analysis complete transition, CCN 3, NLOC 6, 23 function tokens and one parameter. |
+| Public HTTP redirects to the chosen HTTPS domain, whose page/demo work | Current `http://www.lizard.ws/` still serves the old site with status 200; custom HTTPS fails its TLS handshake. The mapping has no certificate, and managed provisioning failed. Root prepared Google Search Console DNS ownership verification for the same Google account and asked the owner to add its TXT value at GoDaddy. DNS currently has a different verification value; existing records are preserved. G3 stays open until actual ownership, certificate, redirect and public demo observations pass. |
+| Deployment, verification and recovery are documented with actual versions | `docs/website.md` records the real new/old versions, preview URLs, commands, source-read IAM repair, preview observations, empty bounded error log, pending domain gate and rollback to `20180602t165847=1`. Documentation remains an uncommitted in-progress slice 2 result while the public release is unfinished. |
+
+Accepted deployed HTTP proof, from the named execution checkout:
+
+```sh
+nix develop -c python .local/release-smoke.py https://revive-20261027-f818daf-dot-lizardanalyzer.appspot.com
+```
+
+Terminal result: exit 0 at `2026-10-27T04:51:10.028294+00:00`. Setup is the
+already deployed no-promotion version, an explicit HTTPS base, urllib's
+default trust/hostname checks, no-cache requests and a harmless built-in
+Python example. `main()` asserts homepage content/CSP and six asset status,
+MIME and nonempty-body checks; `analyze()` asserts real returned function
+fields and `no-store`; the later main assertions observe malformed JSON,
+source rejection and a successful equal-result retry. Root inspected these
+actual assertions and the deployed browser continuation. The bounded command
+`gcloud app logs read --project=lizardanalyzer --service=default
+--version=revive-20261027-f818daf --level=error --limit=30` exited 0 with no
+entries. Consumer dispositions are in `.local/deployment-consumer-trace.md`;
+the changed operational effects reach the deployment/runbook, existing site
+links, actual web app/assets and HTTP observations; unrelated workflow text
+and parser fixtures do not consume those effects.
+
+Independent browser evidence:
+`https://revive-20261027-f818daf-dot-lizardanalyzer.appspot.com/#playground`
+and screenshot
+`/Users/terryyin/.codex/visualizations/2026/10/27/01a17b69-f903-7980-b23c-385e5333f7b1/lizard-deployed-preview.jpg`.
+
+Resume G3 by observing the new ownership TXT record, completing Google's
+ownership verification, enabling managed security on the existing `www`
+mapping and checking normal HTTPS trust/hostname acceptance. Only after the
+accepted preview and that certificate check may traffic switch to
+`revive-20261027-f818daf=1`; then verify the public HTTP redirect and actual
+HTTPS homepage/demo. Reuse regression proof while the deployed candidate and
+relevant conditions still match; a code/config/dependency change requires the
+plan's current regression prerequisite again. Do not weaken HTTPS enforcement
+or promote while the custom endpoint is unverified. The bare-domain
+DNS/forwarding remains separately owned at GoDaddy and must use observed
+records/access rather than inferred changes.
+
+At the ownership-record handoff, the resumed CI observer
+`/tmp/dough-ci-501/watch-2xSR4I` stopped with zero unread events; its recorded
+PID `43566` exited and yielded cell `93` completed. The stop receipt reports
+CI coverage as unobserved, not a completion verdict. The temporary localhost
+preview server was stopped because the deployed HTTPS preview is now the
+user-facing review surface. The cloud version, old production traffic,
+execution worktree/branch, pending Google verification tab, active story and
+unfinished release records are preserved. No execution-complete record,
+automatic retrospective or story cleanup is appropriate while G3 is open.
+
+### Ownership verification resumed in Safari
+
+The previous stream was already confirmed stopped and its process exited.
+The new owned CI stream retains coordinator `aino-website-20261027`, yielded
+cell `118`, terminal session `4896`, directory
+`/tmp/dough-ci-501/watch-6o0aMO`, and PID `50375`, launched from this execution
+checkout for `terryyin/lizard`, branch `codex/revive-lizard-website`.
+Managed delivery again confirmed candidate `f818daf` as already published
+and reused this stream for observation, with suffix base `e8d62ae`; no new
+commit or push occurred. `git diff --check` passed for the pending records.
+
+The owner explicitly requested operation of the logged-in GoDaddy Safari
+session. Root added one additional apex TXT record with Google's prepared
+verification token, preserving the existing verification TXT and all other
+records. GoDaddy showed a successful save and the new row; an authoritative
+`dig +short TXT lizard.ws @ns29.domaincontrol.com` returned both tokens.
+Google Search Console then showed `Ownership auto verified` for the same
+`terry.yinzhe@gmail.com` account, and `gcloud domains list-user-verified
+--project=lizardanalyzer --format=json` included `lizard.ws`.
+
+The deployment owner resumed the existing mapping's managed SSL request.
+Certificate `47191116` was created with status `PENDING`; mapping security is
+`AUTOMATIC`. A normal TLS probe still failed, so production traffic remains
+on the previous version. G3 remains open until certificate acceptance and
+the public release checks pass.
+
+The certificate subsequently changed to `OK`, with renewal time
+`2026-10-27T05:45:41.666467148Z`, and the mapping selected it as active
+`certificateId: 47191116`. The first immediate normal TLS probe still
+failed; certificate status alone does not establish public HTTPS readiness.
+Allow bounded edge propagation and retain the normal TLS gate before traffic
+or the prepared apex HTTPS redirect changes.
+
+GoDaddy's existing apex forwarding rule is a permanent 301 to
+`http://www.lizard.ws`; its two apex A records are managed by that service.
+The forwarding UI says editing a rule also provisions an apex certificate.
+Root prepared the same destination with HTTPS, preserving permanent 301,
+but has not saved it while the `www` HTTPS endpoint is unavailable.
+Do not replace the service-managed A records or unrelated email records.
+
+Ownership evidence screenshots are retained under the conversation's
+visualization directory as `lizard-dns-record.jpg` and
+`lizard-google-verified.jpg`.
+
+At the bounded `2026-10-27T05:52:00Z` checkpoint, normal curl still failed
+with exit 35 (`SSL_ERROR_SYSCALL`); Python's default-verified urllib had
+also failed with `SSLEOFError`, and root's independent IAB navigation returned
+`ERR_CONNECTION_CLOSED`. The certificate remains issued/attached (`OK`),
+but the public TLS handshake remains unobserved. The deployment owner
+confirmed service traffic still `20180602t165847=1.0`, updated the maintained
+release record, and returned with no command running. No promotion occurred.
+
+Root cancelled the unsaved GoDaddy forwarding form and read back the existing
+permanent 301 destination `http://www.lizard.ws`. The saved verification TXT
+remains in DNS. A future resume must reopen the edit rather than assume a
+pending form. After actual normal `www` HTTPS succeeds, apply the HTTPS
+destination, promote the tested version, verify canonical HTTP/HTTPS journeys
+and the actual public demo, and inspect bounded version error logs. Keep the
+rollback version. Public checks, slice 2 refactoring/delivery, completion CI,
+retrospective and wrap-up remain unfinished.
+
+At this external-dependency handoff the exact observer
+`/tmp/dough-ci-501/watch-6o0aMO` stopped cleanly with zero unread events.
+PID `50375` exited and yielded cell `118` completed. Its stop receipt reports
+coverage ended with `pendingCi: unobserved`; this is not a CI completion
+verdict. Candidate `f818daf`, the branch/worktree, unfinished plan and release
+record, deployed preview and verified Search Console property are preserved.
+No code/configuration/dependency changed, no new commit or push occurred,
+and slice 2 remains planned with G3 returned.
+
+### Public release acceptance
+
+On resume, normal HTTPS returned 200. The deployment owner rechecked the
+active certificate, unchanged candidate `f818daf` and previous traffic before
+executing:
+
+```sh
+gcloud app services set-traffic default --project=lizardanalyzer --splits=revive-20261027-f818daf=1 --quiet
+nix develop -c python .local/release-smoke.py https://www.lizard.ws
+gcloud app logs read --project=lizardanalyzer --service=default --version=revive-20261027-f818daf --level=error --limit=30
+```
+
+Promotion exited 0 and the service reports `revive-20261027-f818daf=1.0`.
+All four previous versions remain `SERVING` with zero traffic. An immediate
+post-switch content assertion saw the old homepage during propagation;
+subsequent plain/cache-busted observations saw the new page, and the full
+public smoke exited 0 at `2026-10-27T06:07:09.320231Z`. The already inspected
+smoke assertions now reached the public domain: trusted HTTPS, homepage/CSP,
+six nonempty assets, actual `shipping_cost` metrics (CCN 3, NLOC 6, one
+parameter, 23 function tokens), malformed JSON 400, source-limit 413,
+successful equal-result retry and POST `no-store`. The bounded error log
+exited 0 with no entries. Accepted local/runtime regression proof still
+applies because code, configuration and dependencies did not change.
+
+At `2026-10-27T06:07:41.992855Z`, urllib observations saw HTTP `www` page
+and original small-logo paths redirect 302 to corresponding HTTPS paths,
+preserving path/query and finishing 200. Root independently ran:
+
+```sh
+curl --silent --show-error --max-time 20 --location --output /dev/null --write-out 'status=%{http_code} final=%{url_effective} tls_verify=%{ssl_verify_result}\n' http://lizard.ws/
+```
+
+It exited 0 with `status=200 final=https://www.lizard.ws/ tls_verify=0`.
+The observed existing GoDaddy 301 to HTTP `www`, followed by App Engine's
+302 to HTTPS, therefore supplies the canonical HTTP journey. No optional
+one-hop GoDaddy edit was saved; Safari's reopened page went blank after
+hydration. The chosen HTTPS endpoint is `www`; bare-domain HTTPS is not
+claimed. This does not change the source's chosen-canonical-domain promise.
+
+Root's independent public-browser observation at
+`https://www.lizard.ws/#playground` saw `Working` then `Analysis complete`,
+one real `shipping_cost` function, CCN 3, NLOC 6, 23 function tokens and one
+parameter. Evidence is `lizard-public-release.jpg` in the conversation's
+visualization directory. Preview proof and the retained full source-only
+review still apply; this closes G3 and the public release promises in the
+acceptance table. `docs/website.md` now carries actual release, verification
+and rollback facts. The deployment consumer trace remains applicable, with
+its public-host follow-up satisfied by these observations.
+
+The previous observer was confirmed stopped and exited. The current stream
+uses coordinator `aino-website-20261027`, yielded cell `152`, terminal session
+`34850`, directory `/tmp/dough-ci-501/watch-CBP4PC`, PID `62446`, for this
+checkout and execution branch. Keep it for slice delivery and completion.
+
+The owner's later request separately queues three future website stories
+(React/package management/conditional Cucumber-Playwright CI, the selected
+first design, and `web-MAJOR.MINOR.PATCH` Actions deployment). Those backlog
+changes do not authorize implementing them in this release or alter this
+completed release's source contract. They remain queued and unrefined.
+
+Fresh independent agent `/root/refactor_release_records` returned
+`## REFACTOR COMPLETE`. It changed only `docs/website.md` so the reusable
+runbook explicitly verifies normal public HTTPS before traffic promotion;
+public page/demo/redirect checks remain after promotion. Root inspected that
+ordering and the maintained actual release/rollback facts. Whitespace check
+passed; the operator document is 248 lines. The scoped generated trace
+`.local/website-release-refactor-consumer-trace.md` identifies this plan as
+the guidance consumer, with reused proof, and no runtime/test consumers.
+No source, configuration, dependency, cloud or browser change invalidated the
+accepted regression or public proof, so no test/probe repetition was needed.
+The longer temporary plan stays intact for retrospective/recovery and is
+owned by ordinary wrap-up cleanup. No generation, selective formatting or
+separate project summary operation applies to the directly maintained
+Markdown release records.
 
 ## Slice 1 acceptance evidence
 
