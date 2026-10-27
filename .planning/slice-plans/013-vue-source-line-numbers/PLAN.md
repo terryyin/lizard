@@ -109,7 +109,7 @@ under its normal workflow. No project-specific numeric slice limit was supplied.
 
 ### 1. Keep original locations while filtering Vue content
 Type: Behavior
-Status: planned
+Status: done
 Proof: red→green public source-range and real CLI regressions, unchanged metrics
 and script-first/no-script controls, focused suites and required completion gates.
 
@@ -132,6 +132,28 @@ one outside-in regression loop. Tests and CLI observation verify the same
 outcome, so splitting them would leave that outcome partially unproved. No
 preparatory Structure slice or interim behavior is needed. A safe stopping
 point is the fully verified correction, independent of the arrow stories.
+
+#### Accepted proof (slice 1)
+
+```
+proof:
+  command: nix develop -c python -m pytest test/test_languages/testVue.py test/test_languages/testVueSourceLineNumbers.py test/test_languages/testTypeScript.py test/test_languages/testJavaScript.py test/test_analyzer.py test/testOutput.py test/testApplication.py
+  covers: original Vue ranges, prefix shift, metrics, JS/TS/script-first/no-script/multiline/multi-script, default CLI and -w -C1 warning line, shared analyzer/output consumers
+  boundary: VueReader.code_tokens newline preservation through TypeScript preprocess and FunctionInfo locations
+  observations:
+    - test/test_languages/testVueSourceLineNumbers.py::TestVueSourceLineNumbers: original ranges 8–11/13–15, shift 12–15/17–19, TS, multiline, multiple scripts third 21–23, metrics, script-first, no-script
+    - test/testApplication.py::TestVueSourceLineNumbersCli: first@8-11 / second@13-15; warning path:8:; exit 1
+  setup: none (fixtures are inline Vue sources)
+  result: pass (111)
+```
+
+Product paths: `lizard_languages/vue.py` (`code_tokens` emits one `\n` per discarded-token newline; `_skip_to_script` removed). Tests: `testVueSourceLineNumbers.py` (extracted), `testApplication.py` CLI class. Post-change refactor collapsed duplicate newline yields and split the oversized Vue test module.
+
+#### Learnings
+
+- `-C1` warns only when CCN > 1; named-function fixtures need a decision for the CLI warning journey.
+- Discarded tokens must emit one `\n` per embedded newline (including tags), matching shared comment/macro line preservation — no second offset.
+- Line-number fixtures belong in `testVueSourceLineNumbers.py` once they push `testVue.py` over the 250-line limit.
 
 ## Plan review
 
