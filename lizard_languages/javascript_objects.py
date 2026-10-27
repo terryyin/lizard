@@ -3,8 +3,7 @@
 
 class JavaScriptObjectsMixin:
     def _handle_object_member(self, token):
-        if not self.as_object:
-            return False
+        """Called for tokens in an object literal or class body (as_object)."""
         # Support for getter/setter: look for 'get' or 'set' before method name
         if token in ('get', 'set'):
             self._getter_setter_prefix = token

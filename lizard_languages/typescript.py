@@ -71,6 +71,31 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         super().__init__(context)
         self.parallel_states = [TypeScriptStates(context)]
 
+    def preprocess(self, tokens):
+        """Drop spaces, and offer each line's first code token to the
+        innermost open expression arrow before any counter charges it.
+
+        A '\n' is consumed by line_counter, and comments by comment_counter,
+        before the state machine sees them, so expression_arrows cannot
+        change between a newline and the next code token."""
+        arrows = self.context.expression_arrows = []
+        line_start = False
+        for token in self.code_tokens(tokens):
+            if not token.isspace():
+                if line_start and not token.startswith(('//', '/*')):
+                    line_start = False
+                    arrows[-1].end_expression_before(token)
+                yield token
+            elif token == '\n':
+                if arrows:
+                    line_start = True
+                yield token
+
+    @staticmethod
+    def code_tokens(tokens):
+        """The tokens that are code; embedding readers (Vue) narrow them."""
+        return tokens
+
     @staticmethod
     @js_style_regex_expression
     def generate_tokens(source_code, addition='', token_class=None):

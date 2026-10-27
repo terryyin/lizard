@@ -1,6 +1,33 @@
-"""JavaScript function signatures, bodies, and optimistic arrow recognition."""
+"""JavaScript function signatures, bodies, optimistic arrow recognition,
+and where an expression-bodied arrow ends."""
 
 from .javascript_bindings import JavaScriptBindings
+
+# Words that still need an operand, so a line break after them continues.
+OPERAND_WORDS = frozenset((
+    'in', 'instanceof', 'typeof', 'new', 'await', 'void', 'delete', 'yield',
+    'of', 'as', 'satisfies', 'keyof'))
+
+
+def ends_expression(token):
+    """Whether an expression may end with this token (JavaScript ASI)."""
+    first = token[:1]
+    if first.isalnum() or first in ('_', '$', '#', "'", '"', '`'):
+        return token not in OPERAND_WORDS
+    return (token in (')', ']', '}', '++', '--')
+            or (first == '/' and len(token) > 2)  # regular expression literal
+            or (first == '<' and (token.startswith('</')  # JSX element end
+                                  or token.endswith('/>'))))
+
+
+def starts_statement(token):
+    """Whether this line-start token cannot continue the previous line."""
+    first = token[0]
+    if first.isalnum() or first in ('_', '$', '#', "'", '"'):
+        # TypeScript reads `as`/`satisfies` after a line break as a statement.
+        return token not in ('in', 'instanceof')
+    # Restricted ++/--, prefix-only operators, blocks, decorators and closers.
+    return token in ('++', '--', '!', '~', '{', '@', '}', ')', ']')
 
 
 class JavaScriptFunctionsMixin:
@@ -13,30 +40,50 @@ class JavaScriptFunctionsMixin:
     def _pop_function_from_stack(self):
         if self.started_function:
             self.context.end_of_function()
+        if self._expression_body:
+            self._close_expression_body()
         self.started_function = None
         self._in_prop_value = False
-        self._expression_body = False
+
+    def end_expression_before(self, token):
+        """Called by the reader with a line's first token before it is
+        counted, so an ended arrow keeps none of the next statement."""
+        if (self._state == self._state_global
+                and ends_expression(self.last_token)
+                and starts_statement(token)):
+            self._end_statement()
 
     def _abandon_function(self):
         """Discard an optimistic signature that proved to be an expression."""
         self.context.forgive = True
         self.context.end_of_function()
         self.started_function = None
+        if self._expression_body:
+            self._close_expression_body()
+
+    def _close_expression_body(self):
         self._expression_body = False
+        self.context.expression_arrows.remove(self)
 
     def _arrow_function(self, token):
         self._push_arrow_function()
+        if token == '{':
+            # A block body closes any expression body (`a => b => {}`).
+            if self._expression_body:
+                self._close_expression_body()
+        elif self.started_function and not self._expression_body:
+            # An expression body has no closing token, so a later "{" is an
+            # object operand; the reader asks the innermost open one at each
+            # line start (end_expression_before). Function-type "=>" must not
+            # reach here (see type annotation states).
+            self._expression_body = True
+            self.context.expression_arrows.append(self)
         # Clear function_name so expression-body ( doesn't re-enter _function
         self.function_name = ''
         # Clear modifiers so the body's opening { isn't captured by the
         # async/static handler in the class body path.
         self._async_seen = False
         self._static_seen = False
-        # Runtime arrows (including those already pushed from "(...)") keep
-        # expression-body context when the body is not "{" so a later "{" is
-        # an object operand, not a nested body. Function-type "=>" must not
-        # reach here (see type annotation states).
-        self._expression_body = token != '{'
         self.next(self._state_global, token)
 
     def _function(self, token):
