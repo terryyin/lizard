@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "agent": "Anri-chan",
+  "email": "anri-chan@example.org",
+  "identity": "SEED-013#arrow-object-boundaries",
+  "mode": "story-branch",
+  "branch": "cursor/preserve-arrow-object-expressions-and-typed-func",
+  "host": "cursor",
+  "model": "auto"
+}
