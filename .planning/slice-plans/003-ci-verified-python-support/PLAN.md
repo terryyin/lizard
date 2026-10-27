@@ -65,7 +65,7 @@ failure, so no dependent slice is stopped by it.
 
 ### 1. CI verifies Python 3.8 through 3.14 on Linux and Windows
 Type: Behavior
-Status: planned
+Status: done
 Proof: local 3.14 venv `pip install .` runs Lizard with the baseline total line; full suite and `nix develop -c make` green; after the push, the `Python application` run for the pushed SHA is `completed success` with 14 `success` jobs. The CI result is an external wait that decomposition cannot reduce; the slice is complete only when it is observed.
 
 Behavior: the matrix lists `"3.8"` and `"3.10"` and the `build and Install`
@@ -98,6 +98,27 @@ by the suite to edit the others.
 
 ## Current decisions
 
+- Execution: established Story Branch Mode in
+  `/Users/terryyin/git/lizard/.worktrees/claim-support-only-for-the-python-versions-ci-ve`,
+  branch `codex/claim-support-only-for-the-python-versions-ci-ve`; publisher
+  `dashboard-territory.local-lizard`, agent Maria-chan. Origin target is
+  `master`; the established claim and first published base are
+  `346481c69a9278b163fc6b38b78722745b04d476`, starting revision
+  `a797a4c6e82cf76dc585f8edee6f758f80d09136`. The default checkout is
+  `/Users/terryyin/git/lizard`; execution edits stay in this linked worktree.
+- Checkout setup: `nix develop -c python -m pytest test/test_analyzer.py -q`
+  passed (22 tests) against the current flake and requirements. No pre-commit
+  hook or selective formatter is installed; `make` supplies the project checks.
+  No numeric slice budget is configured. Existing planning authority is retained.
+- CI observer: GitHub Actions `python-app.yml` (verified ID 38306292,
+  `Python application`), repository `terryyin/lizard`, target
+  `codex/claim-support-only-for-the-python-versions-ci-ve`, coordinator
+  `maria-chan-seed006`, directory `/tmp/dough-ci-501/watch-lnDcTR`, PID 12071,
+  Codex stream session 63044 / yielded cell 8, bound to this execution checkout.
+  The established trunk claim has `pendingCi: unobserved`; the stream covers
+  story-branch increments. Owner-based recovery verified the exact live stream
+  after Nix setup delayed its initial directory output.
+
 - Existing solutions (PFE): no module or test in the repository compares
   package metadata with CI configuration; the three claims are maintained by
   hand today. The agreement test is the only new concept, placed in `test/`
@@ -119,8 +140,58 @@ by the suite to edit the others.
 
 ## Learnings
 
-None yet. Record here any interpreter that failed in CI with the job name and
-the first failing test, and the reduced set carried into slice 2.
+- A fresh 3.14 venv invoked inside `nix develop` inherits Python 3.9's
+  `PYTHONPATH`; clear `PYTHONPATH` and `PYTHONHOME` for the installation probe.
+  The initial import check located setuptools in Nix's Python 3.9 store;
+  the isolated check observed `setuptools: None`, so this was a probe setup
+  issue rather than a product defect.
+
+## Accepted proof
+
+### Slice 1 local delivery
+
+- Independent source-only review: fresh agent `/root/source_review1`, launched
+  with only the original story Goal, Scope, qualifications and key examples,
+  returned individual commitments before acceptance. Compared with the source,
+  it preserves every version and OS, pip installation, the conditional failure
+  boundary and all exclusions. No human amendments.
+- Existing two-version workflow + pushed commit → seven versions on each OS
+  installing through pip → inspected `.github/workflows/python-app.yml` matrix,
+  `runs-on`, install and test steps; local implementation matches. Hosted
+  result remains the explicit post-publication obligation below.
+- Fresh newer interpreter without setuptools → usable pip-installed Lizard →
+  Python 3.14.8 venv `/tmp/lizard-seed006-python314-20261027` observed no
+  setuptools, installed this checkout and printed the expected total
+  `17 7.0 2.0 67.5 2 0 0.00 0.00` on `lizard_ext/auto_open.py`.
+  Commands: `nix develop -c nix shell nixpkgs#python314 -c python -m venv
+  /tmp/lizard-seed006-python314-20261027`; then `nix develop -c env -u
+  PYTHONPATH -u PYTHONHOME /tmp/lizard-seed006-python314-20261027/bin/python
+  -m pip install .` and the corresponding `bin/lizard lizard_ext/auto_open.py`.
+- Analyzer boundary: `env PIP_QUIET=1 nix develop -c python -m pytest`
+  completed with 1665 passed, 7 skipped. No analyzer edits. Generated build
+  and egg-info directories created by the smoke install were removed.
+  `env PIP_QUIET=1 nix develop -c make` also passed (1665 passed, 7 skipped,
+  style check passed; pylint's configured advisory run rated 9.11/10).
+  Independent refactor agent `/root/refactor_slice1` returned
+  `## REFACTOR COMPLETE`, no refactor edits; accepted proof stayed valid.
+- Consumer trace: implementation's installed `consumer-trace.mjs --base
+  346481c` with terms `python-version`, `setup.py build install`, `pip install`,
+  `ubuntu-24.04`, `Programming Language :: Python`, `The test suite runs on
+  Python` found setup.py (pip/CLI proof), unchanged workflow selection
+  (verified observer), README/classifiers/Travis (slice 2), and independent
+  release/local-install commands, historical identities and installed manual
+  examples (effect does not reach them). Inspected packaging in setup.py and
+  the real CLI smoke input; no undisposed affected consumer.
+- Interpreter-choice example, disagreement diagnostics, CI discovery and
+  conditional removal/queueing retain their legitimate owners in slice 2;
+  the latter applies only if the hosted matrix exposes a failure.
+
+## Story obligations
+
+### G1. Hosted matrix proof before support claims
+Reported: slice 1 — "Hosted CI at the pushed candidate showing all 14 successful version/OS jobs remains pending."
+Story clause: "The `python-app.yml` matrix runs the test suite on CPython 3.8, 3.9, 3.10, 3.11, 3.12, 3.13 and 3.14, each on `ubuntu-latest` and `windows-latest`."
+Disposition: interim until slices 2
 
 ## Concern evidence
 
