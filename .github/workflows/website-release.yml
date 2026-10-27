@@ -1,0 +1,107 @@
+name: Website release
+
+on:
+  push:
+    tags:
+      - 'web-*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: website-release
+  cancel-in-progress: false
+
+env:
+  RELEASE_TAG: ${{ github.ref_name }}
+  EVENT_SHA: ${{ github.event.after }}
+
+jobs:
+  validate:
+    if: github.repository == 'terryyin/lizard' && !github.event.deleted
+    runs-on: ubuntu-24.04
+    outputs:
+      source_sha: ${{ steps.identity.outputs.source_sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Validate tag and immutable event source
+        id: identity
+        run: python scripts/website_release.py validate
+      - name: Keep source identity
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: website-source
+          path: release-evidence/
+      - name: Summarize validation
+        if: always()
+        env:
+          RELEASE_JOB_RESULT: ${{ job.status }}
+        run: python scripts/website_release.py summary
+
+  preview:
+    needs: validate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate.outputs.source_sha }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: website-source
+          path: release-evidence/
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: website/frontend/package.json
+      - name: Install declared tooling
+        run: |
+          python -m pip install -r dev_requirements.txt
+          npm install -g "$(node -p "require('./website/frontend/package.json').packageManager")"
+          npm --prefix website/frontend ci
+          npm --prefix website/frontend exec -- playwright install --with-deps chromium
+      - name: Validate and build the exact source
+        run: |
+          python -m pytest
+          make
+          npm --prefix website/frontend run build
+          npm --prefix website/frontend run test:e2e
+      - uses: google-github-actions/auth@v3
+        with:
+          project_id: lizardanalyzer
+          workload_identity_provider: ${{ vars.WEBSITE_WIF_PROVIDER }}
+          service_account: ${{ vars.WEBSITE_DEPLOY_SERVICE_ACCOUNT }}
+      - uses: google-github-actions/setup-gcloud@v3
+      - name: Inspect identity and traffic before any redeploy
+        run: |
+          python scripts/website_release.py inspect
+          python scripts/website_release.py prepare
+      - name: Deploy or verify the existing matching serving version
+        run: |
+          python scripts/website_release.py deploy
+          python scripts/website_release.py verify
+      - name: Keep release evidence and browser reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: website-release
+          path: |
+            release-evidence/
+            website/frontend/reports/
+      - name: Summarize the preview-only release
+        if: always()
+        env:
+          RELEASE_JOB_RESULT: ${{ job.status }}
+        run: python scripts/website_release.py summary
