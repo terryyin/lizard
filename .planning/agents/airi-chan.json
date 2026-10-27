@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "agent": "Airi-chan",
-  "email": "airi-chan@example.org",
-  "activity": "preparation",
-  "identity": "SEED-012#modernize-website-react",
-  "host": "codex",
-  "model": "gpt-6-astra"
-}
