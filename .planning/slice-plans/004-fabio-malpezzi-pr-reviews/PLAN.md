@@ -56,7 +56,7 @@ Proof and expected result: [slice 4](SLICE-PROOF.md).
 
 ### 5. Arrows in ternary branches — PR #534
 Type: Behavior
-Status: planned
+Status: done
 Source: https://github.com/terryyin/lizard/pull/534
 Proof and expected result: [slice 5](SLICE-PROOF.md).
 
@@ -161,6 +161,8 @@ PR531 is deferred to SEED-013#arrow-object-boundaries; [531-review.md](531-revie
 retains its original improvement, introduced type regressions and unproved timing gate.
 PR533 is deferred to SEED-014#multiline-arrow-boundaries; [533-review.md](533-review.md)
 retains its continuation regressions, failed performance gate and independent child proof.
+PR534 is deferred to SEED-015#ternary-arrow-boundaries; [534-review.md](534-review.md)
+retains typed-colon loss, the curried-state regression and both unproved timing gates.
 
 ## Story obligations
 
@@ -181,5 +183,10 @@ Disposition: excluded "Corrections estimated above fifteen minutes belong to the
 
 ### G4. Multiline arrow proposal breaks valid continuations and slows analysis
 Reported: slice 4 — "Raw PR533 ends seven valid continuations early and slows affected analysis 9.7519%; a child without PR531's invalid heuristic still has these errors, and coherent correction is estimated 30–45 minutes, queued as SEED-014#multiline-arrow-boundaries."
+Story clause: "Correct defects and refactor the overall affected changes into a coherent, minimal solution."
+Disposition: excluded "Corrections estimated above fifteen minutes belong to the linked follow-up stories, not to this review's implementation scope."
+
+### G5. Ternary arrow proposal loses typed branches and outer curried context
+Reported: slice 5 — "Raw PR534 leaves typed branches merged and overwrites the outer ternary snapshot when a curried inner arrow is intentionally ignored; both timing gates remain unproved, and coherent correction is estimated 30–45 minutes, queued as SEED-015#ternary-arrow-boundaries."
 Story clause: "Correct defects and refactor the overall affected changes into a coherent, minimal solution."
 Disposition: excluded "Corrections estimated above fifteen minutes belong to the linked follow-up stories, not to this review's implementation scope."

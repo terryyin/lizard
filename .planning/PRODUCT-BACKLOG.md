@@ -15,3 +15,4 @@ Maintenance, bug fixing, and PR reviews.
 - [Recognize regex literals without consuming division expressions](seeds/SEED-012-regex-literal-context.md#regex-literal-context) — SEED-012#regex-literal-context
 - [Preserve arrow object expressions and typed function bodies](seeds/SEED-013-arrow-object-boundaries.md#arrow-object-boundaries) — SEED-013#arrow-object-boundaries
 - [Preserve multiline arrow expressions and surrounding statement metrics](seeds/SEED-014-multiline-arrow-boundaries.md#multiline-arrow-boundaries) — SEED-014#multiline-arrow-boundaries
+- [Preserve arrow boundaries across ternary and type colons](seeds/SEED-015-ternary-arrow-boundaries.md#ternary-arrow-boundaries) — SEED-015#ternary-arrow-boundaries

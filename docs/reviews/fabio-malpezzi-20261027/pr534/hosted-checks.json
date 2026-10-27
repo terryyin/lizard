@@ -1,0 +1,20 @@
+{
+  "head": "f4074ae860c7999cc37dd081a6f7ebfa777adc83",
+  "discussion": [],
+  "combined_statuses": [],
+  "run": 40418655900,
+  "url": "https://github.com/terryyin/lizard/actions/runs/40418655900",
+  "workflow": "Python application",
+  "status": "completed",
+  "conclusion": "success",
+  "jobs": [
+    {"id": 121907208144, "name": "build (ubuntu-24.04, 3.8)", "conclusion": "success"},
+    {"id": 121907208399, "name": "build (ubuntu-24.04, 3.10)", "conclusion": "success"},
+    {"id": 121907208435, "name": "build (windows-latest, 3.10)", "conclusion": "success"},
+    {"id": 121907208662, "name": "build (windows-latest, 3.8)", "conclusion": "success"}
+  ],
+  "all_job_steps_success": true,
+  "current_trunk_gate": "Ubuntu/Windows x Python 3.8 through 3.14; 14 jobs; pip install .",
+  "current_gate_proved": false,
+  "reason": "Historical four-job success does not qualify an unbuilt corrected child under the current matrix. PR is deferred."
+}

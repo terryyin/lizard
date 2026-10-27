@@ -158,6 +158,11 @@ and the PR531 deferral. The staged whitespace guard first refused trailing space
 in new terminal-log copies before commit; normalization and the same fresh retry
 completed publication. Only evidence whitespace changed. Slice4's base is c56a2fe.
 
+Slice4 delivered `7186fdbe826bf32b399165cc3d36897a128d4d0d` on the execution
+branch, suffix base c56a2fe; observer reused, no rebase. It publishes SEED-014
+and the PR533 deferral, including the independent-child diagnostic. The fresh
+staging and whitespace checks passed. Slice5's previously published base is 7186fdb.
+
 
 Preparation reproduced all first examples on the current checkout, while the
 existing suite passed. Some earlier PRs have already been superseded (the
