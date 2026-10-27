@@ -35,7 +35,7 @@ the actual last cohort finisher reconciles all 19 and combined evidence.
 |13|[#541](https://github.com/terryyin/lizard/pull/541)|`644480ce9f46892fae258696583a6c18649c05dc`|SEED-010#review-structural-js-prs / 5|Pending full review cycle|
 |14|[#542](https://github.com/terryyin/lizard/pull/542)|`ddf075a0cdee4079e584919d818c28b6468a84b0`|SEED-010#review-structural-js-prs / 6|Pending full review cycle|
 |15|[#543](https://github.com/terryyin/lizard/pull/543)|`f6a329b488bb1a6e5aa9af43f0cf3e5e761d8353`|SEED-010#review-structural-js-prs / 7|Pending full review cycle|
-|16|[#544](https://github.com/terryyin/lizard/pull/544)|`3ac7e4eaf61e898836fded88ab715b37f9fedbbf`|SEED-010#review-lexical-js-prs / 1|Pending full review cycle|
+|16|[#544](https://github.com/terryyin/lizard/pull/544)|`3ac7e4eaf61e898836fded88ab715b37f9fedbbf`|SEED-010#review-lexical-js-prs / 1|Merged `35b454b` at corrected head `77902f7`; [acknowledged](https://github.com/terryyin/lizard/pull/544#issuecomment-6456484491); [review record](pr544/README.md)|
 |17|[#545](https://github.com/terryyin/lizard/pull/545)|`baa95a4df8278421bb3d3a6487516030cc03a979`|SEED-010#review-lexical-js-prs / 2|Pending full review cycle|
 |18|[#546](https://github.com/terryyin/lizard/pull/546)|`a671632141127fca9b2785fdbb0c675d45ae9042`|SEED-010#review-lexical-js-prs / 3|Pending full review cycle|
 |19|[#547](https://github.com/terryyin/lizard/pull/547)|`2766557096daac3f8e55657e9c48ba685157635d`|SEED-010#review-lexical-js-prs / 4|Pending full review cycle|

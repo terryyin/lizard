@@ -1,9 +1,10 @@
 # PR544 JavaScript line-comment termination review
 
-Disposition recommendation: **merge-ready** after coordinator delivery
-(independent refactor, exact-head publication/merge, thanks). Implementation
-leaves product + tests + evidence uncommitted; no merge or PR comment from this
-slice.
+Disposition: **merged** as `35b454b778239846de4b467715717f67ac4bc6c3` at
+corrected head `77902f74186212f02abadca5d97f9699ba70e980` after independent
+refactor (`none — already clean`), full suite/`make`, fourteen-job CI, and
+exact-head merge. Thank-you:
+https://github.com/terryyin/lizard/pull/544#issuecomment-6456484491.
 
 Frozen contributor head: `3ac7e4eaf61e898836fded88ab715b37f9fedbbf` (OPEN;
 hosted checks SUCCESS on the historical 4-job matrix). Reported base

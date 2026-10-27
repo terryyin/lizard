@@ -99,8 +99,9 @@ C/C++ same shape stays CCN 3 / NLOC 7; focused JS/TS suite + tokenizer/C++
 controls; full pytest/make; six performance gates under
 [pr544](../../../docs/reviews/fabio-malpezzi-20261027/pr544/); consumer
 dispositions in `consumer-trace-dispositions.md`. Independent refactor:
-none — already clean. Remaining cycle: required CI on published candidate,
-exact-head merge, thanks.
+none — already clean. Merged `35b454b` at exact head `77902f7` after
+fourteen-job CI; thanks
+https://github.com/terryyin/lizard/pull/544#issuecomment-6456484491.
 
 Behavior: given JS-family source whose line comment ends with `\`, analyzing it
 does not hide the next line's tokens from CCN/NLOC; C/C++ continuation after
