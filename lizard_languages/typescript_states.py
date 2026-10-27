@@ -6,6 +6,11 @@ from .javascript_functions import JavaScriptFunctionsMixin
 from .javascript_objects import JavaScriptObjectsMixin
 from .typescript_declarations import TypeScriptDeclarationsMixin
 
+# Modifiers, and tokens that open (`?`, `case`) or separate (`:`) a
+# conditional branch or switch label: one set test lets every other token
+# skip their checks.
+_MARKER_TOKENS = frozenset(('static', 'async', 'new', '?', 'case', ':'))
+
 
 class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                        JavaScriptObjectsMixin, TypeScriptDeclarationsMixin,
@@ -38,6 +43,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         return self(token)
 
     def _end_statement(self):
+        # _state_global inlines this on its per-line branch; keep in step.
         self.function_name = ''
         self._pop_function_from_stack()
         # Reset modifiers on newline/semicolon
@@ -58,32 +64,33 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         if self._handle_type_declaration(token):
             return
 
-        # Track static and async modifiers
-        if token == 'static':
-            self._static_seen = True
-            self._prev_token = token
-            return
-        if token == 'async':
-            self._async_seen = True
-            self._prev_token = token
-            return
-        if token == 'new':
-            # Track 'new' keyword to avoid treating constructors as functions
-            self._prev_token = token
-            return
-
-        if token == '?' or token == 'case' and not self.as_object:
-            self._ternary_depth += 1
-        elif token == ':' and (self._ternary_depth or (
-                self.last_tokens == 'default' and not self.as_object)):
-            # Conditional branch and switch label separators are runtime
-            # syntax, not a type annotation that could swallow a next-line
-            # `return () => ...` as a function type.
-            if self.last_tokens != 'default':
-                self._ternary_depth -= 1
-            self.last_tokens = token
-            self._prev_token = token
-            return
+        if token in _MARKER_TOKENS:
+            # Track static and async modifiers
+            if token == 'static':
+                self._static_seen = True
+                self._prev_token = token
+                return
+            if token == 'async':
+                self._async_seen = True
+                self._prev_token = token
+                return
+            if token == 'new':
+                # Track 'new' to avoid treating constructors as functions
+                self._prev_token = token
+                return
+            if token != ':':
+                if token == '?' or not self.as_object:
+                    self._ternary_depth += 1
+            elif self._ternary_depth or (
+                    self.last_tokens == 'default' and not self.as_object):
+                # Conditional branch and switch label separators are runtime
+                # syntax, not a type annotation that could swallow a next-line
+                # `return () => ...` as a function type.
+                if self.last_tokens != 'default':
+                    self._ternary_depth -= 1
+                self.last_tokens = token
+                self._prev_token = token
+                return
 
         if self._handle_object_member(token):
             return
@@ -164,7 +171,14 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                 # split) keep ending them here, at the next line's first token.
                 self.context.newline and (
                     not self._expression_body or self.last_token == ',')):
-            self._end_statement()
+            # _end_statement, inlined: this branch runs on every line.
+            self.function_name = ''
+            self._pop_function_from_stack()
+            self._static_seen = False
+            self._async_seen = False
+            self._in_abstract_context = False
+            self._in_prop_value = False
+            self._prev_token = ''
 
         if token == '`':
             self.next(self._state_template_literal)

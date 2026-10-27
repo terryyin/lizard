@@ -11,6 +11,7 @@ class VueReader(TypeScriptReader):
 
     ext = ['vue']
     language_names = ['vue', 'vuejs']
+    code_block_open, code_block_close = '<script', '</script'
 
     def __init__(self, context):
         super(VueReader, self).__init__(context)
@@ -20,18 +21,3 @@ class VueReader(TypeScriptReader):
         # Use the base token generator but ensure we capture Vue block tags
         addition = addition + r"|(?:\<\/?\w+.*?\>)"
         return TypeScriptReader.generate_tokens(source_code, addition, token_class)
-
-    def preprocess(self, tokens):
-        return super().preprocess(self._script_tokens(tokens))
-
-    @staticmethod
-    def _script_tokens(tokens):
-        current_block = None
-
-        for token in tokens:
-            if token.startswith('<script'):
-                current_block = 'script'
-            elif token.startswith('</script'):
-                current_block = None
-            elif current_block == 'script':
-                yield token
