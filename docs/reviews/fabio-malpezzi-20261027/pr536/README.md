@@ -1,11 +1,21 @@
 # PR536 arrow parameter review
 
-Disposition: deferred to [SEED-016#arrow-parameter-bindings](../../../../.planning/seeds/SEED-016-arrow-parameter-bindings.md#arrow-parameter-bindings).
-PR536 stays open/unmerged; no product change lands. Identity evidence from local
-f25aeca and current trunk53e4850 is complete and retained in identity-evidence.json.
+Disposition: corrected under SEED-016#arrow-parameter-bindings and
+[merged as 1bc7cbd](https://github.com/terryyin/lizard/commit/1bc7cbd64bef352300195c66888139bdf8d8d8e0),
+with [one acknowledgement](https://github.com/terryyin/lizard/pull/536#issuecomment-6447350182).
+Qualified contributor head: `1b8b56e77dce1cb2642db9f3cc957ee6af1d8c94`.
+[Final qualification](slice5-proof.md) retains full pytest/make, exact-head CI,
+history-preserving publication and merge receipts; [slice4 proof](slice4-proof.md)
+retains all eight passing strict performance gates and corrected semantics.
+
+## Historical initial review and deferral
+
+The original review below deferred the inadequate raw proposal without product
+edits; SEED-016 subsequently completed its technical correction. Identity
+evidence from local f25aeca and then-current trunk53e4850 is retained in identity-evidence.json.
 Installed add queued the story after15 without Take or an executable plan.
 execution-summary.json is the original implementation-return receipt; its pending
-allocation field describes that earlier handoff, not the final disposition above.
+allocation field describes that earlier handoff, not the merged disposition above.
 Before product edits, the complete correction and cleanup was estimated at
 30–45 minutes, above the source's fifteen-minute limit. Implementation elapsed:
 zero. Review and measurement are excluded. No partial correction was started.

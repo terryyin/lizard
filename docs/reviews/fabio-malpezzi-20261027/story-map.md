@@ -7,7 +7,7 @@ and run those later. Every story owns full cycles, not horizontal QA phases.
 
 | Story | PRs | State and value |
 | --- | --- | --- |
-|SEED-010#review-fabio-malpezzi-prs|527,528,531,533,534,532,535,536|Completed eight-disposition scope; recoverable source and proof below. Three merged/thanked, five linked corrections.|
+|SEED-010#review-fabio-malpezzi-prs|527,528,531,533,534,532,535,536|Completed eight-disposition review scope; original proof retained. PR536's later SEED-016 correction is merged and acknowledged below.|
 |[SEED-010#review-structural-js-prs](../../../.planning/seeds/SEED-010-fabio-malpezzi-pr-reviews.md#review-structural-js-prs)|537–543|Queued; mapped seven-slice plan awaits story refinement. Complete function/parameter/boundary review cycles.|
 |[SEED-010#review-lexical-js-prs](../../../.planning/seeds/SEED-010-fabio-malpezzi-pr-reviews.md#review-lexical-js-prs)|544–547|Queued; mapped four-slice plan awaits story refinement. Complete lexical/condition review cycles.|
 
@@ -27,7 +27,7 @@ the actual last cohort finisher reconciles all 19 and combined evidence.
 |5|[#534](https://github.com/terryyin/lizard/pull/534)|`f4074ae860c7999cc37dd081a6f7ebfa777adc83`|SEED-010#review-fabio-malpezzi-prs / 5|Deferred SEED-015#ternary-arrow-boundaries|
 |6|[#532](https://github.com/terryyin/lizard/pull/532)|`d0713bf5b4dcf4bf24453156a3756688627abbc0`|SEED-010#review-fabio-malpezzi-prs / 6|Merged 9bc4456; thanked|
 |7|[#535](https://github.com/terryyin/lizard/pull/535)|`171079e625966ac9c17aee29a5d74256befd85ae`|SEED-010#review-fabio-malpezzi-prs / 7|Merged d7be8b9; thanked|
-|8|[#536](https://github.com/terryyin/lizard/pull/536)|`92fff8a1621ab82b1ce296d25ac4eb2cdd892c8f`|SEED-010#review-fabio-malpezzi-prs / 8|Deferred SEED-016#arrow-parameter-bindings|
+|8|[#536](https://github.com/terryyin/lizard/pull/536)|`92fff8a1621ab82b1ce296d25ac4eb2cdd892c8f`|SEED-010#review-fabio-malpezzi-prs / 8|Corrected under SEED-016#arrow-parameter-bindings; merged `1bc7cbd` and [acknowledged](https://github.com/terryyin/lizard/pull/536#issuecomment-6447350182); [qualified proof](pr536/slice5-proof.md)|
 |9|[#537](https://github.com/terryyin/lizard/pull/537)|`c89470c442d28195bebba45597910c7a481a5043`|SEED-010#review-structural-js-prs / 1|Pending full review cycle|
 |10|[#538](https://github.com/terryyin/lizard/pull/538)|`c869db90cf2ab6ba93b5c368b71f66e3eaaa6014`|SEED-010#review-structural-js-prs / 2|Pending full review cycle|
 |11|[#539](https://github.com/terryyin/lizard/pull/539)|`daa7d2068ad1bbaaa201b9685aa5d21582ec0015`|SEED-010#review-structural-js-prs / 3|Pending full review cycle|
@@ -52,5 +52,6 @@ because of an unproved dependency. Future refinement reuses the mapped plans.
 
 The first batch's completed source, plan, obligations and proof are recoverable
 at [625971ab](https://github.com/terryyin/lizard/tree/625971ab2c2d61249d1038f63e3dde25da166d84/.planning/slice-plans/004-fabio-malpezzi-pr-reviews).
-Three merged contributions retain their acknowledgements; the five technical
-corrections and both later review batches remain queued and unstarted.
+PR536's original deferral is retained in its historical review; its technical
+correction now has a qualified merge and acknowledgement. The structural and
+lexical review batches remain queued, with the other PR dispositions above.

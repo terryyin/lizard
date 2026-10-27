@@ -52,6 +52,7 @@ base `33610866db00d28ba9e2dafe5a3fd1942347fb2f`. Slice 3 source-only reviewer
 `slice3_source_review` read only the original seed; comparison accepts the empty,
 typed/return/default and consumer journeys in [slice3 proof](../../../docs/reviews/fabio-malpezzi-20261027/pr536/slice3-proof.md):
 1944 tests passed, 7 skipped; frozen 63 promised/control rows and actual CLI pass.
+Current observer: `sola-seed016`, `/tmp/dough-ci-501/watch-Tz93Df`, PID73990, PTY63716, yielded cell113; old TEDK9c finished unavailable and shut down. Before slice5 record delivery, branch head `1b8b56e77dce1cb2642db9f3cc957ee6af1d8c94` is accepted on origin (suffix `3ba2eb69b228b5103570122c4660b7666d1b797e`); hosted merge `1bc7cbd` and acknowledgement6447350182 are confirmed. The original launch landing comparison is recorded; later trunk publications take no landing context.
 
 Keep parameter extraction in the existing JavaScriptBindings / JavaScriptFunctions
 and TypeScriptStates owners, with shared FunctionInfo representation; no parallel
@@ -184,7 +185,7 @@ pass.
 
 ### 5. Deliver the qualified correction through PR536
 Type: Behavior
-Status: planned
+Status: done
 Proof: final contributor-head SHA and accepted push, green current required CI,
 exact-head guarded merge receipt, and one acknowledgement URL.
 
@@ -238,4 +239,4 @@ Disposition: proved by slice 4: slice4-proof.md and corrected-proof/summary.json
 ### G7. Final qualification and delivery remain outstanding
 Reported: slice 2 — "Full pytest, make and final hosted CI on the corrected revision remain unrun; PR536 remains unchanged and unmerged."
 Story clause: "Run the full pytest suite, `make` and final hosted CI before any exact-head guarded merge."
-Disposition: receiving slice 5
+Disposition: proved by slice 5: slice5-proof.md — exact head 1b8b56e/tree 1317dac0 passed full pytest (1944/7 skipped), make and both applicable 14-build hosted matrices plus change detection; web=false skips justified. Non-force contributor update preserved both histories, guarded merge 1bc7cbd retained the qualified tree, and verified single acknowledgement is issuecomment-6447350182.
