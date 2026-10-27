@@ -113,8 +113,7 @@ Behavior: annotation owners consume typed parameter/return colons without runtim
 depth changes; real separators split branch CCN, genuine function types retain
 their real bodies. Extend the existing owner without another recognizer.
 
-Learning G2 requires metric-safe annotation lookahead with canonical runtime
-context; the bounded approach is retained in [PROOF.md](PROOF.md#slice-3-investigation).
+Learning G2: metric-safe canonical annotation lookahead remains in [PROOF.md](PROOF.md#slice-3-investigation).
 
 ### 4. Remove whole-stream annotation bookkeeping
 Type: Structure
@@ -182,14 +181,16 @@ Proof: final contributor-head SHA and accepted push, green current required CI,
 exact-head guarded merge receipt, and one acknowledgement URL.
 
 Behavior: publish qualified contributor corrections without force/lost history.
-Run full pytest/make; verify final head/base/tree and required checks before
-exact-head hosted merge. Follow the [contract](../../../docs/reviews/fabio-malpezzi-20261027/REVIEW-CONTRACT.md);
-its 15-minute triage cutoff does not re-defer selected work. Hosted merge is
-not Dough Land. After confirmed merge, use explicit acknowledgement authority
-for one thank-you noting material corrections; check prior receipt, retain URL
-and review evidence, then wrap up.
+Run full pytest/make; verify final head/base/tree/checks and exact-head merge.
+Follow the [contract](../../../docs/reviews/fabio-malpezzi-20261027/REVIEW-CONTRACT.md); its15-minute cutoff does not defer this correction.
+Hosted merge is not Dough Land. After confirmed merge, post one authorized
+thank-you noting material corrections; check duplicates, retain URL/proof, wrap up.
 
 Pending CI, merge or acknowledgement leaves this slice unfinished.
+
+## Execution complete
+
+Product advice: no change; preserve queued Vue, structural and lexical review priorities.
 
 ## Story obligations
 
