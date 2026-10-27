@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-012_release-website-from-tags.json",
+      "identity": "SEED-012#release-website-from-tags",
+      "completedAt": "2026-10-27T13:14:44.962Z",
+      "blob": "a5e2314d41da531b21d8f1a8b48dbda0af4fa6b2"
+    },
+    {
       "fileName": "SEED-012_modernize-website-react.json",
       "identity": "SEED-012#modernize-website-react",
       "completedAt": "2026-10-27T08:33:55.764Z",
