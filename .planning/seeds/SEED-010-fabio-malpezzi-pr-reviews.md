@@ -14,6 +14,9 @@ scope: large
 ### Review, correct and merge FabioMalpezzi's open PRs
 
 **Identity:** SEED-010#review-fabio-malpezzi-prs
+```json dough-story-state
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/004-fabio-malpezzi-pr-reviews/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"0274d82cd71a46f37b151b5fbb3d926166f0fb2956c47d3facf8211c4686f71c","plan":"7d222a18cebb37c32428f8f2426b25d9239853013e74acfabc09a6f38f559670"}}
+```
 
 **Goal:** Lizard users receive worthwhile fixes with correct metrics and
 acceptable performance, and maintainers can account for the disposition of
@@ -65,6 +68,21 @@ For each PR:
   change. After a successful merge, post a thank-you message to FabioMalpezzi
   on that PR, acknowledging the contribution and any material correction.
 
+**Review boundary:** The execution-start queue snapshot defines the review
+set for this delivery; record each PR number and head revision then. Later
+PRs are outside this delivery's commitment. Refresh a selected PR's state
+and revision before acting on it, and retain a disposition if it closes or
+is superseded during the review. A dependency claim does not establish that
+the dependency is needed or correct: verify it against the current target.
+An earlier merge invalidates evidence where it changes the behavior or
+measurement baseline of a remaining candidate.
+
+**Deferred promises:** Corrections estimated above fifteen minutes belong
+to the linked follow-up stories, not to this review's implementation scope.
+This story does not commit to unrelated parser redesign, other authors'
+queues, or a permanent benchmark service. The performance evidence must
+still be reproducible and retained with each disposition.
+
 **Key examples:**
 
 1. A reproducible defect has a sound fix, needs ten minutes of cleanup, and
@@ -80,6 +98,17 @@ For each PR:
 5. Two PRs pass separately but their combined changes miscount a function or
    exceed the performance limit → resolve the interaction and revalidate, or
    queue the correction under the same fifteen-minute rule.
+6. A correction is estimated at exactly fifteen minutes → it remains eligible
+   for this review; if new evidence raises the estimate above fifteen minutes,
+   retain the reproducer and queue the remaining correction. The threshold
+   does not waive any correctness or performance gate.
+7. Repeated timings cannot distinguish a slowdown below 3% from one at or
+   above 3% → retain the inconclusive evidence and withhold the merge until
+   the performance gate can be judged; do not label the candidate passed.
+
+**Preparation decision:** Terry confirmed ADR-0001 as Accepted on 2026-10-27;
+its in-file status is aligned with the index. Its metric meanings and naming
+guidance govern the reviews.
 
 **Initial PR set (19 open PRs):**
 
