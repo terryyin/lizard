@@ -164,7 +164,7 @@ not part of this promise.
   multiline continuations with SEED-014 (delivered through PR533, merge
   `a2d2ab7`);
   arrow parameter bindings with
-  [SEED-016](SEED-016-arrow-parameter-bindings.md#arrow-parameter-bindings).
+  [SEED-016](https://github.com/terryyin/lizard/blob/4bfd49bc7eb7cd136f6adb3bfad3ab93f9a1631b/.planning/seeds/SEED-016-arrow-parameter-bindings.md#arrow-parameter-bindings).
   Reconcile with whichever of SEED-013/SEED-014 lands first on the shared
   expression-body state. The
   [isolated child](../../docs/reviews/fabio-malpezzi-20261027/pr534/independent-child-patch.json)

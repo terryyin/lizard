@@ -1,7 +1,7 @@
 # FabioMalpezzi PR review evidence
 
-Shared evidence for the active contribution-review cohort and its five queued
-technical corrections. This directory retains the fixed inputs, accepted
+Shared evidence for the active contribution-review cohort and its technical
+corrections. This directory retains the fixed inputs, accepted
 controls, measurements and literal harness used by those remaining stories.
 The [story mapping](story-map.md) and [complete-cycle contract](REVIEW-CONTRACT.md)
 identify the remaining owners. Keep this input until their final reconciliation;
