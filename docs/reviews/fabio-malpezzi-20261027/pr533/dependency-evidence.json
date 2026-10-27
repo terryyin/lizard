@@ -1,0 +1,27 @@
+{
+  "commits": [
+    "15423852c04aed302f684395fe9522251d88a2f2 End a JavaScript arrow function without braces with its last line",
+    "47aa35735cccba962e507edb179eae1154ab6ad2 Read an object in the body of a JavaScript arrow function as an object"
+  ],
+  "shared_expression_state": [
+    "JavaScriptFunctionsMixin._arrow_function",
+    "JavaScriptFunctionsMixin._pop_function_from_stack",
+    "TypeScriptStates._expression_body"
+  ],
+  "child_change": "Remove object-opening helper and its brace predicate only; retain arrow state and child commit",
+  "product_edits": false,
+  "snapshot_hashes": {
+    "target": {
+      "lizard_languages/javascript_functions.py": "19c8a0c978bd374a7e5c622013110d3ef7e874411dfeb36c95eef3af9dd6abe7",
+      "lizard_languages/typescript_states.py": "63a6c103cbe5a4a8e9168a9f239d97b6a1c3c86276776fb7476b2a45f2bda19f"
+    },
+    "raw": {
+      "lizard_languages/javascript_functions.py": "11bb7b241b3e76c7b450dae56e9dd6e1751d3d0c2f1c8d4c129e2d1aacb5370a",
+      "lizard_languages/typescript_states.py": "8361e1324f5d15ab08744eeb72291ec9b8b0c8ef94a4423ae1928f7809a77030"
+    },
+    "independent-child": {
+      "lizard_languages/javascript_functions.py": "11bb7b241b3e76c7b450dae56e9dd6e1751d3d0c2f1c8d4c129e2d1aacb5370a",
+      "lizard_languages/typescript_states.py": "a93dc26f091c9faf3f35c7f7cf258f3b70635ad57754437081ddf4a6a54d1d26"
+    }
+  }
+}

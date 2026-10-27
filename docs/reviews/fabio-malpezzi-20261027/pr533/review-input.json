@@ -1,0 +1,64 @@
+{
+  "pr": {
+    "url": "https://github.com/terryyin/lizard/pull/533",
+    "number": 533,
+    "state": "open",
+    "merged": false,
+    "mergeable": true,
+    "draft": false,
+    "body": "Depends on #531.\n\n### The problem\n\nAn arrow function without braces ends at the end of its line, but only when\nthe first token of the next line reaches the rule that ends a statement, and\nthat token is counted as part of the function. Keywords, modifiers and\nbrackets are read before that rule, and a line that goes on with the\nexpression ends it all the same:\n\n```js\nfunction m(key, cursor) {\n  switch (true) {\n    case key.left:\n      return () => cursor.prevWord()\n    case key.right:\n      return () => cursor.nextWord()\n  }\n}\nconst pick = (a, b) => a && b\n  ? a\n  : b || 0\n```\n\n```\n$ lizard a.js          # master, 01afe9c\n       2      2      6      0       2 (anonymous)@4-5@a.js\n       2      1      6      0       2 (anonymous)@6-7@a.js\n       6      2     31      2       8 m@1-8@a.js\n       2      3     10      2       2 pick@9-10@a.js\n```\n\nThe two arrow functions in `m` end one line late, and the first one takes the\n`case` of the next line: `m` has a cyclomatic complexity of 2 instead of 3.\n`pick` ends at line 10 and loses the `||` of line 11. A modifier does not end\nthe function either:\n\n```js\nclass A {\n  handler = () => 1\n  async load() {\n    return 1\n  }\n}\nfunction after() { return 1 }\n```\n\n```\n$ lizard b.js          # master, 01afe9c\n       6      1     21      0       6 handler@2-7@b.js\n```\n\n`handler` takes the rest of the class and the function after it, so `load`\nand `after` are not reported. Also, `const inc = x => x + 1` followed by a line\nwithout a semicolon has NLOC 2 and one token more than with it.\n\n### What changes\n\n`lizard_languages/javascript_functions.py` and\n`lizard_languages/typescript_states.py`. The first token of a new line now\nends an arrow function without braces in every state, unless the line starts\nwith an operator such as `?`, `&&`, `+` or `.`, or the line before ends with\none; the end line, the NLOC, the token and the conditions of that first token\ngo to the function around it. With the fix:\n\n```\n       1      1      5      0       1 (anonymous)@4-4@a.js\n       1      1      5      0       1 (anonymous)@6-6@a.js\n       8      3     33      2       8 m@1-8@a.js\n       3      4     15      2       3 pick@9-11@a.js\n\n       1      1      4      0       1 handler@2-2@b.js\n       3      1      6      0       3 load@3-5@b.js\n       1      1      6      0       1 after@7-7@b.js\n```\n\n### How it is tested\n\n`Test_ES6_arrow_function_without_braces_on_many_lines` in\n`test/test_languages/testES6.py`: 5 tests, all failing without the change. The\nfull suite passes on the branch: `python -m pytest test` gives 1672 passed,\n7 skipped. pycodestyle reports no new warnings in the changed files.\n\n### What does not change\n\nA `;` or a `,` still ends the function as before. #525 makes an arrow function\nwithout braces end at the enclosing `,`: this branch keeps that rule, and a\nmerge of the two passes the full suite, the tests of #525 included.\n\nThanks for maintaining lizard and for taking the time to look at this.\n",
+    "title": "End a JavaScript arrow function without braces with its last line",
+    "base": "master",
+    "base_sha": "01afe9c228ba2a3dc5253259d8415d2ef47f0b71",
+    "head": "pr/js-arrow-function-ends-with-its-line",
+    "head_sha": "15423852c04aed302f684395fe9522251d88a2f2",
+    "head_repo_id": 1401695752,
+    "head_repo_full_name": "FabioMalpezzi/lizard",
+    "merge_commit_sha": "3e63aef968079cc6aa3098403863517e13025616",
+    "user": {
+      "login": "FabioMalpezzi",
+      "name": "FabioMalpezzi",
+      "email": null,
+      "avatar_url": "https://avatars.githubusercontent.com/u/102038548?v=4",
+      "id": 102038548
+    },
+    "requested_reviewers": null,
+    "requested_team_reviewers": null,
+    "comments": [],
+    "created_at": "2026-10-26T23:16:48Z",
+    "updated_at": "2026-10-26T23:16:48Z",
+    "closed_at": null,
+    "merged_at": null,
+    "commits": 2,
+    "changed_files": 3,
+    "additions": 181,
+    "deletions": 3,
+    "display_url": "https://github.com/terryyin/lizard/pull/533",
+    "display_title": "End a JavaScript arrow function without braces with its last line"
+  },
+  "status": {
+    "statuses": []
+  },
+  "runs": {
+    "workflow_runs": [
+      {
+        "id": 40418652237,
+        "name": "Python application",
+        "status": "completed",
+        "conclusion": "success",
+        "run_number": 480,
+        "jobs_url": "https://api.github.com/repos/terryyin/lizard/actions/runs/40418652237/jobs",
+        "logs_url": "https://api.github.com/repos/terryyin/lizard/actions/runs/40418652237/logs",
+        "workflow_id": 38306292
+      }
+    ]
+  },
+  "reviews": {
+    "reviews": []
+  },
+  "threads": {
+    "review_threads": []
+  },
+  "comments": [],
+  "target": "7ac449f59b3f155fd159ce9aad6794a422045632"
+}

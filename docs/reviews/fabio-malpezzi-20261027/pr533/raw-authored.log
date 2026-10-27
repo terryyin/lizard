@@ -1,0 +1,3 @@
+{"imports": {"facade": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr533/raw/lizard.py", "registry": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr533/raw/lizard_languages/__init__.py", "functions": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr533/raw/lizard_languages/javascript_functions.py", "states": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr533/raw/lizard_languages/typescript_states.py", "helper": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr533/raw/test/test_languages/testES6.py"}}
+.....                                                                    [100%]
+5 passed in 0.01s

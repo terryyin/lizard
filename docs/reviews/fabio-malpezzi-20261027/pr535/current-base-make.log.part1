@@ -1,0 +1,230 @@
+coverage run --source=lizard.py,lizard_ext,lizard_languages,lizard_core -m pytest test
+============================= test session starts ==============================
+platform darwin -- Python 3.9.11, pytest-8.4.2, pluggy-1.6.0
+rootdir: /private/tmp/lizard-pr532-validation
+configfile: setup.cfg
+plugins: cov-7.1.0
+collected 1787 items
+
+test/testApplication.py .........                                        [  0%]
+test/testAssertionExtension.py ....                                      [  0%]
+test/testBasicFunctionInfo.py .......................                    [  2%]
+test/testCOutsideComplexity.py ...                                       [  2%]
+test/testCPreprocessorExtension.py ..........                            [  2%]
+test/testCommentOptions.py .......                                       [  3%]
+test/testCyclomaticComplexity.py ...............                         [  3%]
+test/testExtension.py .....                                              [  4%]
+test/testFilesFilter.py ...............                                  [  5%]
+test/testFunctionDependencyCount.py ...                                  [  5%]
+test/testFunctionExitCount.py ....                                       [  5%]
+test/testFunctionGotoCount.py ...                                        [  5%]
+test/testFunctionStatementCount.py .......                               [  6%]
+test/testLanguages.py ............                                       [  6%]
+test/testMcCabe.py ...                                                   [  6%]
+test/testNestedStructureScopes.py ..........ss                           [  7%]
+test/testNestedStructures.py ....................                        [  8%]
+test/testNestingDepth.py ....................                            [  9%]
+test/testOutput.py ........................                              [ 11%]
+test/testOutputCSV.py .......                                            [ 11%]
+test/testOutputFile.py ...............                                   [ 12%]
+test/testOutputHTML.py ...                                               [ 12%]
+test/testPythonNestedStructures.py ......................                [ 13%]
+test/testPythonVersionClaims.py .                                        [ 13%]
+test/testTokenizer.py ........................                           [ 15%]
+test/test_analyzer.py ......................                             [ 16%]
+test/test_auto_open.py .....                                             [ 16%]
+test/test_extensions/testBoolCount.py .........                          [ 17%]
+test/test_extensions/testCognitiveComplexity.py ........................ [ 18%]
+.........................................................                [ 21%]
+test/test_extensions/testComplexityTags.py ...                           [ 21%]
+test/test_extensions/testDefaultOrderedDict.py ......                    [ 22%]
+test/test_extensions/testDumpComments.py .......                         [ 22%]
+test/test_extensions/testDuplicate.py .........................          [ 24%]
+test/test_extensions/testDuplicateFinder.py ...........                  [ 24%]
+test/test_extensions/testDuplicatedParamList.py ......                   [ 24%]
+test/test_extensions/testFanInFanOut.py ..................               [ 25%]
+test/test_extensions/testHalstead.py ..............................      [ 27%]
+test/test_extensions/testHalsteadClassifier.py ..............            [ 28%]
+test/test_extensions/testHalsteadMetrics.py ..                           [ 28%]
+test/test_extensions/testNonStrict.py ..                                 [ 28%]
+test/test_extensions/testWordCountPlugin.py .........                    [ 29%]
+test/test_languages/testCAndCPP.py ..................................... [ 31%]
+........................................................................ [ 35%]
+..                                                                       [ 35%]
+test/test_languages/testCppOperatorDeclarations.py ....                  [ 35%]
+test/test_languages/testCsharp.py .......                                [ 35%]
+test/test_languages/testES6.py ......................................... [ 38%]
+.....                                                                    [ 38%]
+test/test_languages/testErlang.py ........                               [ 39%]
+test/test_languages/testFortran.py ...............................       [ 40%]
+test/test_languages/testFortranProcedureBoundaries.py .........          [ 41%]
+test/test_languages/testGDScript.py ...                                  [ 41%]
+test/test_languages/testGo.py ...................                        [ 42%]
+test/test_languages/testGoDeclarations.py .......                        [ 42%]
+test/test_languages/testGoFunctionLiterals.py .......                    [ 43%]
+test/test_languages/testGoFunctionTypes.py ...........................   [ 44%]
+test/test_languages/testJSX.py .....................                     [ 45%]
+test/test_languages/testJava.py ...................                      [ 47%]
+test/test_languages/testJavaClassBody.py .........                       [ 47%]
+test/test_languages/testJavaComplexSamples.py .....                      [ 47%]
+test/test_languages/testJavaModernFeatures.py ............               [ 48%]
+test/test_languages/testJavaScript.py ........................           [ 49%]
+test/test_languages/testJavaScriptFalsePositives.py ....                 [ 50%]
+test/test_languages/testJavaScriptFunctions.py ........................  [ 51%]
+test/test_languages/testJavaScriptMembers.py .............               [ 52%]
+test/test_languages/testJavaScriptParameterNames.py .................... [ 53%]
+..............                                                           [ 54%]
+test/test_languages/testJavaScriptRegex.py ......                        [ 54%]
+test/test_languages/testJavaScriptWidgets.py s.s.s                       [ 54%]
+test/test_languages/testKotlin.py .....................                  [ 55%]
+test/test_languages/testKotlinExpressionBody.py ....                     [ 56%]
+test/test_languages/testLua.py ..................                        [ 57%]
+test/test_languages/testObjC.py ...............                          [ 57%]
+test/test_languages/testOptionalOperators.py ........................... [ 59%]
+.....                                                                    [ 59%]
+test/test_languages/testPHP.py .............................             [ 61%]
+test/test_languages/testPHPFunctionRecognition.py ............           [ 61%]
+test/test_languages/testPHPModernFeatures.py ...                         [ 62%]
+test/test_languages/testPLSQL.py ....................................... [ 64%]
+.....                                                                    [ 64%]
+test/test_languages/testPerl.py .......................................  [ 66%]
+test/test_languages/testPython.py .............                          [ 67%]
+test/test_languages/testPythonForgive.py ...                             [ 67%]
+test/test_languages/testPythonFstrings.py ...............                [ 68%]
+test/test_languages/testPythonMatchCase.py ............                  [ 69%]
+test/test_languages/testPythonNloc.py .........                          [ 69%]
+test/test_languages/testPythonParameters.py ...........                  [ 70%]
+test/test_languages/testPythonSoftKeywords.py ..............             [ 71%]
+test/test_languages/testPythonStructure.py ................              [ 71%]
+test/test_languages/testPythonTokenizer.py ........                      [ 72%]
+test/test_languages/testPythonTypeParameters.py ..............           [ 73%]
+test/test_languages/testR.py .............................               [ 74%]
+test/test_languages/testRuby.py ........................................ [ 77%]
+..........                                                               [ 77%]
+test/test_languages/testRust.py .............                            [ 78%]
+test/test_languages/testRustLetElse.py ........                          [ 78%]
+test/test_languages/testScala.py ..............                          [ 79%]
+test/test_languages/testSolidity.py ..                                   [ 79%]
+test/test_languages/testSt.py ......................                     [ 80%]
+test/test_languages/testSwift.py .....................                   [ 82%]
+test/test_languages/testSwiftAccessors.py ...............                [ 82%]
+test/test_languages/testSwiftTokens.py .........                         [ 83%]
+test/test_languages/testTSX.py ......................................... [ 85%]
+...                                                                      [ 85%]
+test/test_languages/testTTCN.py ................................         [ 87%]
+test/test_languages/testTypeScript.py ...................                [ 88%]
+test/test_languages/testTypeScriptArrowFields.py ..........              [ 89%]
+test/test_languages/testTypeScriptDeclarations.py .................      [ 90%]
+test/test_languages/testTypeScriptFalsePositives.py .............        [ 90%]
+test/test_languages/testTypeScriptFields.py ......                       [ 91%]
+test/test_languages/testTypeScriptFunctions.py ....................      [ 92%]
+test/test_languages/testTypeScriptMembers.py s............               [ 93%]
+test/test_languages/testTypeScriptMetrics.py .........                   [ 93%]
+test/test_languages/testTypeScriptThisParameters.py .................... [ 94%]
+........                                                                 [ 95%]
+test/test_languages/testTypeScriptWidgets.py .s                          [ 95%]
+test/test_languages/testVue.py ....                                      [ 95%]
+test/test_languages/testZig.py ...................                       [ 96%]
+test/test_languages/test_perl_func_names.py .                            [ 96%]
+test/test_options.py .................                                   [ 97%]
+test/test_parallel_analysis.py ...............                           [ 98%]
+test/test_website.py ...........................                         [100%]
+
+=============================== warnings summary ===============================
+test/testFilesFilter.py: 12 warnings
+  /private/tmp/lizard-pr532-validation/.venv/lib/python3.9/site-packages/pathspec/pathspec.py:326: DeprecationWarning: GitWildMatchPattern ('gitwildmatch') is deprecated. Use 'gitignore' for GitIgnoreBasicPattern or GitIgnoreSpecPattern instead.
+    patterns = [use_factory(__line) for __line in lines if __line]  # type: ignore[arg-type]
+
+test/testFilesFilter.py: 12 warnings
+  /private/tmp/lizard-pr532-validation/.venv/lib/python3.9/site-packages/pathspec/pattern.py:125: DeprecationWarning: GitWildMatchPattern ('gitwildmatch') is deprecated. Use 'gitignore' for GitIgnoreBasicPattern or GitIgnoreSpecPattern instead.
+    raw_regex, include = self.pattern_to_regex(pattern)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================= 1780 passed, 7 skipped, 24 warnings in 3.74s =================
+/private/tmp/lizard-pr532-validation/.venv/lib/python3.9/site-packages/coverage/inorout.py:521: CoverageWarning: Module lizard.py was never imported. (module-not-imported); see https://coverage.readthedocs.io/en/7.10.7/messages.html#warning-module-not-imported
+  self.warn(f"Module {pkg} was never imported.", slug="module-not-imported")
+coverage report -m
+Name                                            Stmts   Miss  Cover   Missing
+-----------------------------------------------------------------------------
+lizard_core/__init__.py                             0      0   100%
+lizard_core/analysis.py                            39      0   100%
+lizard_core/cli.py                                 46      7    85%   19-22, 35, 38, 60
+lizard_core/extensions.py                          13      0   100%
+lizard_core/file_analyzer.py                       80      6    92%   83, 88-91, 103-104
+lizard_core/file_discovery.py                      72      5    93%   22-23, 35-36, 45
+lizard_core/file_info_builder.py                   87      0   100%
+lizard_core/function_info.py                       84      0   100%
+lizard_core/options.py                            107      2    98%   51, 239
+lizard_core/output_scheme.py                       39      1    97%   107
+lizard_core/text_output.py                         63     10    84%   58-59, 87-89, 101-105
+lizard_core/warning_filter.py                      45      0   100%
+lizard_ext/__init__.py                             23      2    91%   26, 29
+lizard_ext/auto_open.py                            17      0   100%
+lizard_ext/checkstyleoutput.py                     13      0   100%
+lizard_ext/cognitive_actions.py                   133     11    92%   41, 84, 124-125, 137, 149, 161-163, 172, 174
+lizard_ext/cognitive_brace.py                     189      2    99%   97, 132
+lizard_ext/cognitive_counter.py                   115      2    98%   86, 101
+lizard_ext/cognitive_indent.py                     84      2    98%   67, 92
+lizard_ext/cognitive_profile.py                    43      1    98%   65
+lizard_ext/csvoutput.py                            26      2    92%   46, 49
+lizard_ext/default_ordered_dict.py                 20      0   100%
+lizard_ext/extension_base.py                        7      0   100%
+lizard_ext/halstead_classifier.py                  50      0   100%
+lizard_ext/halstead_metrics.py                     48      0   100%
+lizard_ext/htmloutput.py                           29      3    90%   15-18
+lizard_ext/keywords.py                              1      0   100%
+lizard_ext/lizardboolcount.py                      22      0   100%
+lizard_ext/lizardcognitive.py                      25      1    96%   93
+lizard_ext/lizardcomplextags.py                    10      0   100%
+lizard_ext/lizardcpre.py                           26      0   100%
+lizard_ext/lizarddependencycount.py                40      3    92%   28, 32-33
+lizard_ext/lizarddumpcomments.py                   17      0   100%
+lizard_ext/lizardduplicate.py                     237     22    91%   19, 22, 25, 28, 41, 44, 63, 143, 172-173, 285, 304-314
+lizard_ext/lizardduplicated_param_list.py          29      0   100%
+lizard_ext/lizardexitcount.py                      13      0   100%
+lizard_ext/lizardgotocount.py                       9      0   100%
+lizard_ext/lizardhalstead.py                       59      4    93%   147-150
+lizard_ext/lizardignoreassert.py                   16      0   100%
+lizard_ext/lizardio.py                             48      0   100%
+lizard_ext/lizardmccabe.py                         17      0   100%
+lizard_ext/lizardmodified.py                       22      0   100%
+lizard_ext/lizardnd.py                            140      7    95%   40, 44, 76-77, 83-84, 185
+lizard_ext/lizardnonstrict.py                       4      0   100%
+lizard_ext/lizardns.py                             99      7    93%   59, 98, 136, 142-143, 154, 161
+lizard_ext/lizardoutside.py                         5      0   100%
+lizard_ext/lizardstatementcount.py                 19      0   100%
+lizard_ext/lizardwordcount.py                      33      0   100%
+lizard_ext/version.py                               1      0   100%
+lizard_ext/xmloutput.py                           108      1    99%   123
+lizard_languages/__init__.py                       33      0   100%
+lizard_languages/clike.py                          86      0   100%
+lizard_languages/clike_states.py                  186     14    92%   74, 141-143, 203-204, 209, 217, 219, 221, 229-232, 237
+lizard_languages/code_reader.py                   109      7    94%   35-37, 146-149
+lizard_languages/csharp.py                         50      0   100%
+lizard_languages/erlang.py                         85      7    92%   61, 107-113, 122
+lizard_languages/fortran.py                        47      0   100%
+lizard_languages/fortran_states.py                177     13    93%   38-40, 43, 153, 159-166, 179, 212, 230
+lizard_languages/gdscript.py                       15      0   100%
+lizard_languages/go.py                             90      0   100%
+lizard_languages/go_function.py                   107      5    95%   47, 68-70, 75-76
+lizard_languages/golike.py                         66      4    94%   18, 33, 48, 52
+lizard_languages/java.py                          165     12    93%   29, 33, 35, 37, 40, 43-45, 91-92, 191-192
+lizard_languages/java_body_states.py               76      6    92%   28-29, 33-34, 48, 74
+lizard_languages/javascript.py                      6      0   100%
+lizard_languages/javascript_bindings.py           108      0   100%
+lizard_languages/javascript_functions.py           93      7    92%   41-42, 45, 115-118
+lizard_languages/javascript_objects.py             75      1    99%   112
+lizard_languages/javascript_templates.py           83      1    99%   93
+lizard_languages/js_style_regex_expression.py      14      0   100%
+lizard_languages/kotlin.py                         96      0   100%
+lizard_languages/lua.py                            35      2    94%   54-55
+lizard_languages/objc.py                           60      4    93%   19, 22, 53, 61
+lizard_languages/perl.py                          262     16    94%   12-14, 38-43, 45, 49, 52-55, 223, 324
+lizard_languages/php.py                            30      0   100%
+lizard_languages/php_states.py                    182      3    98%   140, 142, 159
+lizard_languages/plsql.py                         216     25    88%   176-177, 179-180, 207, 217-218, 220, 222-223, 227-228, 245-246, 252, 321, 343-348, 377-378, 380-381
+lizard_languages/python.py                        100      0   100%
+lizard_languages/python_structure.py               95      1    99%   128
+lizard_languages/python_tokens.py                  91     17    81%   62, 69-78, 84-85, 89-90, 103, 149
+lizard_languages/r.py                             154     10    94%   97, 128, 139-140, 153-154, 214, 284-286
+lizard_languages/ruby.py                           41      0   100%

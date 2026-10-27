@@ -1,6 +1,7 @@
 # 0001 — Ubiquitous language for Lizard domain concepts
 
-**Status:** Proposed  
+**Status:** Accepted
+
 **Date:** 2026-08-18  
 **Decision makers:** Terry  
 **Consulted:** (existing product language in README, CLI, and code)

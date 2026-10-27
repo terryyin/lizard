@@ -1,0 +1,23 @@
+# DISPLAY ONLY: normalized whitespace; exact bytes in literal-git-patches.json
+diff --git a/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr535/target/lizard_languages/javascript_functions.py b/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr535/raw-child/lizard_languages/javascript_functions.py
+index 2a1af64..3522ae6 100644
+--- a/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr535/target/lizard_languages/javascript_functions.py
++++ b/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr535/raw-child/lizard_languages/javascript_functions.py
+@@ -73,6 +73,7 @@ class JavaScriptFunctionsMixin:
+             self._abandon_function()
+             self.next(self._state_global, token)
+             return
++        first_token = self._parameter_bindings.previous in ('', ',')
+         event = self._read_parameter_binding(token)
+         if event.ended:
+             self._state = self._expecting_func_opening_bracket
+@@ -82,7 +83,8 @@ class JavaScriptFunctionsMixin:
+                 if event.root_separator and not getattr(self, '_generic_depth_in_dec', 0):
+                     self._in_parameter_type = False
+                     self.context.parameter(',')
+-            elif token == ':' and self._parameter_bindings.at_root:
++            elif (token == ':' and self._parameter_bindings.at_root) or (
++                    token == 'this' and first_token):
+                 self._in_parameter_type = True
+             elif token == '<':
+                 self._generic_depth_in_dec = getattr(
