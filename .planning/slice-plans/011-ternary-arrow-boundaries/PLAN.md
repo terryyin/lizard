@@ -177,7 +177,7 @@ optimization repeats semantic proof. Literal protocol remains in PROOF.md.
 
 ### 10. Deliver the qualified correction through PR534
 Type: Behavior
-Status: planned
+Status: done
 Proof: final contributor-head SHA and accepted push, green current required CI,
 exact-head guarded merge receipt, and one acknowledgement URL.
 
@@ -221,7 +221,7 @@ Disposition: proved by slice 6: current-owner-integration.md exact three-version
 ### G5. Native CI observation ended after acquisition failed
 Reported: slice 4 — "CI_MONITOR_UNAVAILABLE: GitHub workflow-runs acquisition failed; original observer finished and its process ended."
 Story clause: "satisfactory performance/CI."
-Disposition: receiving slice 10
+Disposition: proved by slice 10: delivery-acceptance.md exactQ native CI success and both14-job matrices green; old observer loss remains historical, final completion/shutdown still required.
 
 ### G6. Earlier qualification driver terminal receipt unavailable
 Reported: slice 5 — "No original numeric exit code is retained; four complete result/log pairs match, and independent postcheck terminated successfully."

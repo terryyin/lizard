@@ -1,5 +1,15 @@
 # PR #534 review evidence
 
+The selected SEED-015 technical correction is merged as
+[48de7f2](https://github.com/terryyin/lizard/commit/48de7f294831b0b098c9ab2753c831346c645fd8)
+and [acknowledged](https://github.com/terryyin/lizard/pull/534#issuecomment-6451652906).
+Qualified contributor head0bfc798 retains the originalf407 history. All six
+performance gates, full pytest/make and final hosted matrices passed; see
+[delivery acceptance](delivery-acceptance.md). Earlier review/timing failures
+below are historical, not the corrected candidate's result.
+
+## Original preparation record
+
 Source: https://github.com/terryyin/lizard/pull/534, frozen and refreshed head
 `f4074ae860c7999cc37dd081a6f7ebfa777adc83`, base `01afe9c228ba2a3dc5253259d8415d2ef47f0b71`.
 Target snapshot: `7186fdbe826bf32b399165cc3d36897a128d4d0d`; fetched trunk
