@@ -48,22 +48,50 @@ Grant `roles/iam.workloadIdentityUser` on the deployment account to this member:
 principalSet://iam.googleapis.com/projects/54408718577/locations/global/workloadIdentityPools/github-actions/attribute.repository_id/4738329
 ```
 
-The deployment account has these grants; existing unrelated bindings are
+The deployment account has these grants; unrelated bindings are
 preserved:
 
 | Scope | Role | Purpose |
 | --- | --- | --- |
 | Project `lizardanalyzer` | `roles/appengine.deployer` | Read App Engine state and deploy versions |
 | Project `lizardanalyzer` | `roles/cloudbuild.builds.editor` | Submit and observe the App Engine source build |
+| Project `lizardanalyzer` | `projects/lizardanalyzer/roles/websiteTrafficRouter` | Custom role containing only `appengine.services.update` for verified promotion/recovery |
 | Bucket `gs://staging.lizardanalyzer.appspot.com` | `roles/storage.objectAdmin` | Upload source objects in the deployment staging bucket |
 | Runtime account only | `roles/iam.serviceAccountUser` | Deploy using the existing runtime identity |
 
 The runtime account retains its existing bucket-level
 `roles/storage.objectViewer` grant. The deployment account has no Owner,
-Editor, service-account-key, IAM-administration or traffic-routing grant.
-The preview probe therefore cannot promote or stop versions. Its commands
+Editor, service-account-key or IAM-administration role. The initial preview
+probe had no traffic-routing grant, so it could not promote. Its commands
 also use `--no-promote --no-stop-previous-version`; use a unique version ID
 because App Engine Deployer can overwrite an existing serving version.
+
+## Traffic routing permission
+
+Automatic promotion additionally requires `appengine.services.update`; the
+existing Deployer grant already supplies service and operation reads. Use a
+project custom role containing that single missing permission rather than
+App Engine Service Admin (which also permits service deletion):
+
+```sh
+gcloud iam roles create websiteTrafficRouter --project=lizardanalyzer --title='Website traffic router' --permissions=appengine.services.update --stage=GA
+gcloud projects add-iam-policy-binding lizardanalyzer --member=serviceAccount:website-deployer@lizardanalyzer.iam.gserviceaccount.com --role=projects/lizardanalyzer/roles/websiteTrafficRouter
+```
+
+Configured and read back on 2026-10-27 after the
+[non-promoting guard probe](https://github.com/terryyin/lizard/actions/runs/40499338525).
+That probe observed a real preview HTTPS 404, explicit promotion rejection and
+unchanged complete traffic. Its temporary workflow, diagnostic tag and trust
+exception were removed before the routing grant. The role readback contains
+only `appengine.services.update`; existing policy bindings were preserved.
+
+Inspect existing role/policy state before adding or restoring a grant; keep
+unrelated bindings. The release CLI addresses only the `default` service and
+requires successful preview verification before calling traffic mutation.
+See the [service patch permission](https://docs.cloud.google.com/appengine/docs/admin-api/reference/rest/v1/apps.services/patch)
+and [traffic command](https://docs.cloud.google.com/sdk/gcloud/reference/app/services/set-traffic).
+
+## Retained federation proof
 
 The initial hosted probe used a temporary workflow/ref with an exact provider
 exception, then removed that workflow and exception after observing success.

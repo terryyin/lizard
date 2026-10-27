@@ -35,6 +35,8 @@ class Checkout:
         return self.git("rev-parse", "HEAD")
 
     def run(self, stage, *args, env=None):
+        if env is None and stage in ("prepare", "promote", "phase", "summary"):
+            env = dict(os.environ, PATH=str(self.path / "no-cloud-tools"))
         return subprocess.run((sys.executable, str(SCRIPT), stage, "--evidence",
                                str(self.evidence)) + args, cwd=self.path,
                               env=env, stdout=subprocess.PIPE,
@@ -125,7 +127,8 @@ def test_new_version_can_deploy_and_preserves_entire_saved_split(checkout):
 @pytest.mark.parametrize("share,action", [(0, "deploy"), (0.2, "verify"), (1, "verify")])
 def test_matching_identity_selects_safe_retry_alternative(checkout, share, action):
     assert checkout.validate().returncode == 0
-    checkout.cloud_state(existing(checkout), {"allocations": {"web-1-2-3": share}})
+    checkout.cloud_state(existing(checkout), {"allocations": {
+        "web-1-2-3": share, "previous": 1 - share}})
     assert checkout.run("prepare").returncode == 0
     assert checkout.state()["action"] == action
 
@@ -137,12 +140,13 @@ def test_matching_identity_selects_safe_retry_alternative(checkout, share, actio
 ])
 def test_ambiguous_or_moved_source_cannot_be_redeployed(checkout, share, version):
     assert checkout.validate().returncode == 0
-    checkout.cloud_state(version, {"allocations": {"web-1-2-3": share}})
+    checkout.cloud_state(version, {"allocations": {"web-1-2-3": share,
+                                                  "previous": 1 - share}})
     result = checkout.run("prepare")
     assert result.returncode == 2
     assert "never move the tag or overwrite it" in result.stderr
     assert "action" not in checkout.state()
-    assert checkout.run("deploy").returncode == 2
+    assert checkout.run("deploy", env=dict(os.environ, PATH=str(checkout.path / "no-cloud-tools"))).returncode == 2
 
 
 @pytest.mark.parametrize("service", [
@@ -166,4 +170,5 @@ def test_summary_retains_identity_when_authentication_never_happened(checkout):
     assert result.returncode == 0
     assert "Result: failure" in result.stdout
     assert checkout.sha in result.stdout
-    assert "preview" in result.stdout
+    assert 'current_split: `"unknown"`' in result.stdout
+    assert "No prior split was captured" in result.stdout
