@@ -55,12 +55,6 @@ class JSTokenizer(Tokenizer):
         yield token
 
 
-def _skip_to_tag(tokens, tag):
-    for token in tokens:
-        if token.startswith(tag):
-            return
-
-
 class TypeScriptReader(CodeReader, CCppCommentsMixin):
     # pylint: disable=R0903
 
@@ -73,36 +67,21 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
     _case_keywords = {'case'}
     _ternary_operators = {'?'}
 
-    # Embedding readers (Vue) read only the code between tokens starting
-    # with these opening and closing tag prefixes, and drop the rest.
-    code_block_open = code_block_close = None
-
     def __init__(self, context):
         super().__init__(context)
         self.parallel_states = [TypeScriptStates(context)]
 
     def preprocess(self, tokens):
-        """Drop spaces (and anything outside the code blocks), and offer each
-        line's first code token to the innermost open expression arrow before
-        any counter charges it.
+        """Drop spaces, and offer each line's first code token to the
+        innermost open expression arrow before any counter charges it.
 
         A '\n' is consumed by line_counter, and comments by comment_counter,
         before the state machine sees them, so expression_arrows cannot
         change between a newline and the next code token."""
         arrows = self.context.expression_arrows = []
         line_start = False
-        opening, closing = self.code_block_open, self.code_block_close
-        tokens = iter(tokens)
-        if opening:
-            _skip_to_tag(tokens, opening)
-        for token in tokens:
+        for token in self.code_tokens(tokens):
             if not token.isspace():
-                if opening:
-                    if token.startswith(closing):
-                        _skip_to_tag(tokens, opening)
-                        continue
-                    if token.startswith(opening):
-                        continue
                 if line_start and not token.startswith(('//', '/*')):
                     line_start = False
                     arrows[-1].end_expression_before(token)
@@ -111,6 +90,11 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                 if arrows:
                     line_start = True
                 yield token
+
+    @staticmethod
+    def code_tokens(tokens):
+        """The tokens that are code; embedding readers (Vue) narrow them."""
+        return tokens
 
     @staticmethod
     @js_style_regex_expression

@@ -4,7 +4,8 @@ from .code_reader import CodeStateMachine
 from .javascript_bindings import JavaScriptBindingsMixin
 from .javascript_functions import JavaScriptFunctionsMixin
 from .javascript_objects import JavaScriptObjectsMixin
-from .typescript_declarations import TypeScriptDeclarationsMixin
+from .typescript_declarations import (
+    DECLARATION_WORDS, TypeScriptDeclarationsMixin)
 
 # Modifiers, and tokens that open (`?`, `case`) or separate (`:`) a
 # conditional branch or switch label: one set test lets every other token
@@ -36,14 +37,13 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
     def __call__(self, token, reader=None):
         if self._binding_candidate:
             self._binding_candidate(token)
-        return super().__call__(token, reader)
+        return CodeStateMachine.__call__(self, token, reader)
 
     def _replay_token(self, token):
         """Process a token saved by a nested syntax reader through dispatch."""
         return self(token)
 
     def _end_statement(self):
-        # _state_global inlines this on its per-line branch; keep in step.
         self.function_name = ''
         self._pop_function_from_stack()
         # Reset modifiers on newline/semicolon
@@ -59,9 +59,11 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             self._pop_function_from_stack()
 
     def _state_global(self, token):
-        self._resolve_pending_bindings(token)
+        if self._pending_bindings:
+            self._resolve_pending_bindings(token)
 
-        if self._handle_type_declaration(token):
+        if ((self._ts_declare or token in DECLARATION_WORDS)
+                and self._handle_type_declaration(token)):
             return
 
         if token in _MARKER_TOKENS:
@@ -92,7 +94,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                 self._prev_token = token
                 return
 
-        if self._handle_object_member(token):
+        if self.as_object and self._handle_object_member(token):
             return
 
         if token in ('.', '?.'):
@@ -171,14 +173,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                 # split) keep ending them here, at the next line's first token.
                 self.context.newline and (
                     not self._expression_body or self.last_token == ',')):
-            # _end_statement, inlined: this branch runs on every line.
-            self.function_name = ''
-            self._pop_function_from_stack()
-            self._static_seen = False
-            self._async_seen = False
-            self._in_abstract_context = False
-            self._in_prop_value = False
-            self._prev_token = ''
+            self._end_statement()
 
         if token == '`':
             self.next(self._state_template_literal)

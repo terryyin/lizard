@@ -3,6 +3,11 @@
 from .code_reader import CodeStateMachine
 
 
+# Words that start what _handle_type_declaration handles; after `declare`
+# it also handles the next token.
+DECLARATION_WORDS = frozenset(('declare', 'type', 'interface', 'abstract'))
+
+
 class TypeScriptDeclarationsMixin:
     def _handle_type_declaration(self, token):
         if token == 'declare':
