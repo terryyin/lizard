@@ -152,6 +152,12 @@ branch, suffix base af27c910; observer reused, no rebase. It publishes the
 SEED-012 regex correction story and complete PR528 deferral evidence. This is
 slice3's previously published base. PR528 remains open at frozen b66ec3a7.
 
+Slice3 delivered `c56a2fe20b4aac1ed2c9595f5384cfa125f32333` on the execution
+branch, suffix base16eed224; observer reused, no rebase. It publishes SEED-013
+and the PR531 deferral. The staged whitespace guard first refused trailing spaces
+in new terminal-log copies before commit; normalization and the same fresh retry
+completed publication. Only evidence whitespace changed. Slice4's base is c56a2fe.
+
 
 Preparation reproduced all first examples on the current checkout, while the
 existing suite passed. Some earlier PRs have already been superseded (the

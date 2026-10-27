@@ -50,7 +50,7 @@ Proof and expected result: [slice 3](SLICE-PROOF.md).
 
 ### 4. Multiline arrow boundaries — PR #533
 Type: Behavior
-Status: planned
+Status: done
 Source: https://github.com/terryyin/lizard/pull/533
 Proof and expected result: [slice 4](SLICE-PROOF.md).
 
@@ -159,6 +159,8 @@ PR528 is deferred to SEED-012#regex-literal-context; [528-review.md](528-review.
 owns its correctness/performance rejection and linked queued outcome.
 PR531 is deferred to SEED-013#arrow-object-boundaries; [531-review.md](531-review.md)
 retains its original improvement, introduced type regressions and unproved timing gate.
+PR533 is deferred to SEED-014#multiline-arrow-boundaries; [533-review.md](533-review.md)
+retains its continuation regressions, failed performance gate and independent child proof.
 
 ## Story obligations
 
@@ -174,5 +176,10 @@ Disposition: excluded "Corrections estimated above fifteen minutes belong to the
 
 ### G3. Arrow object proposal breaks typed bodies and leaves operators unresolved
 Reported: slice 3 — "Raw PR531 introduces five literal function-type return regressions, leaves related object operands broken, and has an unproved3% performance gate; coherent correction is estimated30–45minutes and queued as SEED-013#arrow-object-boundaries."
+Story clause: "Correct defects and refactor the overall affected changes into a coherent, minimal solution."
+Disposition: excluded "Corrections estimated above fifteen minutes belong to the linked follow-up stories, not to this review's implementation scope."
+
+### G4. Multiline arrow proposal breaks valid continuations and slows analysis
+Reported: slice 4 — "Raw PR533 ends seven valid continuations early and slows affected analysis 9.7519%; a child without PR531's invalid heuristic still has these errors, and coherent correction is estimated 30–45 minutes, queued as SEED-014#multiline-arrow-boundaries."
 Story clause: "Correct defects and refactor the overall affected changes into a coherent, minimal solution."
 Disposition: excluded "Corrections estimated above fifteen minutes belong to the linked follow-up stories, not to this review's implementation scope."

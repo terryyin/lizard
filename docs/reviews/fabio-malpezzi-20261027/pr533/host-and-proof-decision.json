@@ -1,0 +1,16 @@
+{
+  "host": "Territory.local",
+  "architecture": "arm64",
+  "cpus": 16,
+  "memory_gib": 48,
+  "prelaunch_load": [3.615234375, 2.3720703125, 4.09375],
+  "vm_page_bytes": 16384,
+  "vm_pages_free": 10814,
+  "vm_pages_inactive": 796523,
+  "vm_pages_speculative": 6933,
+  "competing_work": "Coordinator avoided Nix; other story-worktree load unknown.",
+  "choice": "Sequential reproduction, one20-pair API benchmark, one20-pair CLI benchmark, one5000-iteration unchanged-output profile per snapshot.",
+  "owner": "review_533, under Rio-chan execution",
+  "reconsider_when": "Contention, changed candidate or failed proof. Do not repeat already-invalid raw code until pass.",
+  "command_state": "Every owned verification reached a terminal result; no owned watch was created."
+}
