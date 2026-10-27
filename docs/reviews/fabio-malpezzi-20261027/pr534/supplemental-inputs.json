@@ -1,6 +1,0 @@
-[
-{"label":"curried_internal_control","filename":"curried_internal_control.js","source":"function outer(c, d) {\n  const f = x => d ? y => y : z => z || x;\n  return 1;\n}\nfunction after() { return 1; }\n","expected":[["f",2,2,3],["outer",1,4,1],["after",5,5,1]]},
-{"label":"curried_internal_control","filename":"curried_internal_control.ts","source":"function outer(c, d) {\n  const f = x => d ? y => y : z => z || x;\n  return 1;\n}\nfunction after() { return 1; }\n","expected":[["f",2,2,3],["outer",1,4,1],["after",5,5,1]]},
-{"label":"curried_internal_control","filename":"curried_internal_control.jsx","source":"function outer(c, d) {\n  const f = x => d ? y => y : z => z || x;\n  return 1;\n}\nfunction after() { return 1; }\n","expected":[["f",2,2,3],["outer",1,4,1],["after",5,5,1]]},
-{"label":"curried_internal_control","filename":"curried_internal_control.tsx","source":"function outer(c, d) {\n  const f = x => d ? y => y : z => z || x;\n  return 1;\n}\nfunction after() { return 1; }\n","expected":[["f",2,2,3],["outer",1,4,1],["after",5,5,1]]}
-]

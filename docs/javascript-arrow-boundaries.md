@@ -4,8 +4,9 @@ An expression-bodied arrow in a ternary branch ends at that ternary's separator.
 Each branch reports its own function and CCN. Colons inside the arrow's own
 expression, object properties or computed keys keep their syntax ownership.
 TypeScript parameter and return annotations are consumed as types before a
-runtime separator is interpreted. Genuine function-type aliases and return
-types preserve their runtime bodies and following functions.
+runtime separator is interpreted. Function-type aliases create no runtime
+functions; functions returning a function type retain their real bodies and
+following functions.
 
 For example:
 
@@ -47,8 +48,8 @@ and declarations retain their existing owners.
 
 The default sole canonical root can use direct state-machine dispatch because
 binding candidates belong to child states. Children retain their binding-aware
-calls, callbacks and parser-only replay. Custom hooks, configured roots, state
-subclasses and alternate state containers keep the generic reader protocol;
+calls, callbacks and parser-only replay. Custom hooks, roots with binding owners,
+state subclasses and alternate state containers keep the generic reader protocol;
 state finalization precedes `eof` in either path.
 
 Public regression examples live in
