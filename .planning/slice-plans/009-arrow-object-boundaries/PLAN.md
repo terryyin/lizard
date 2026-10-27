@@ -146,7 +146,7 @@ product unchanged. A failure stops slices 2–4 and revises the plan before edit
 
 ### 2. Preserve object-arrow and typed-body boundaries through shared readers
 Type: Behavior
-Status: planned
+Status: done
 Proof: red/green public regressions for the source examples and controls, plus
 the focused consumer command and retained 64-case reproducer exiting clean.
 
@@ -268,3 +268,36 @@ Observed (2026-10-27 execution):
 Learnings: fork API `push:false` alone is not a refusal when
 `maintainerCanModify` is true — dry-run write probes decide. Sibling OPEN PRs
 #533/#534 claim to build on #531 (context only).
+
+### Slice 2 accepted proof (object-arrow / typed-body)
+
+Promises: object expression bodies and operator object operands; function-type
+return annotations keep real bodies; controls and shared consumers.
+
+Implementation (uncommitted until this delivery):
+- `javascript_functions.py`: set `_expression_body = token != '{'` on runtime
+  arrows (including already-pushed paren-param forms); clear on pop/abandon.
+- `typescript_states.py`: `{` opens a nested body only when
+  `started_function and not _expression_body`; otherwise `read_object()`.
+- `typescript_declarations.py`: `_after_function_type_params` keeps
+  `(...) => ReturnType` inside the annotation so the signature's real `{` is a
+  function body. Simple-type `=>` still returns for runtime arrows
+  (`(): void => {}`).
+- New `test/test_languages/testArrowObjectBoundaries.py` cohesive public API
+  module. Large `testES6.py` left untouched. No `_opens_an_object` heuristic.
+
+Proof (coordinator + refactor reconfirmation):
+- `nix develop -c python -m pytest test/test_languages/testArrowObjectBoundaries.py`
+  → 6 passed (JS/TS/JSX/TSX/Vue object arrows; operators; string/template/
+  boolean typed returns; block/paren/JSX controls).
+- Focused consumer suite (JS/TS/ES6/JSX/TSX/Vue + new module) → 363 passed,
+  5 skipped.
+- `reproduce.py --checkout <execution>` → 64 cases, failures: [], exit 0.
+- Consumer-trace: TypeScriptReader/JavaScriptReader/TSX/Vue run; `.cjs`/`.mjs`
+  reused; other-language expression-body names excluded.
+
+Refactor learning: gating `_expression_body` on "newly created" left paren-param
+ternary object arrows wrong; always set from body token instead.
+
+Story obligations: none opened. Performance (slice 3) and PR531 delivery
+(slice 4) remain.

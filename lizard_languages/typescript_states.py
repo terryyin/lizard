@@ -26,6 +26,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         self._in_abstract_context = False  # Track abstract method declarations
         self._condition_kind = None
         self._ternary_depth = 0
+        self._expression_body = False
 
     def __call__(self, token, reader=None):
         if self._binding_candidate:
@@ -127,7 +128,10 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                     ('const', 'let', 'var', 'return', 'throw', 'yield', 'await')):
                 self._read_binding_candidate(']')
         elif token == '{':
-            if self.started_function:
+            # Expression-bodied arrows treat "{" as an object (ternary,
+            # nullish/logical, operator operands). Block bodies and typed
+            # signatures awaiting a real body still open a nested function.
+            if self.started_function and not self._expression_body:
                 self.sub_state(
                     self.__class__(self.context),
                     self._pop_function_from_stack)
