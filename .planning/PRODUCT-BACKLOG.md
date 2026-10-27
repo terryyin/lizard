@@ -8,7 +8,6 @@ Maintenance, bug fixing, and PR reviews.
 
 - [Deploy website releases from version tags](seeds/SEED-012-website-evolution.md#release-website-from-tags) — SEED-012#release-website-from-tags ([plan](slice-plans/005-release-website-from-tags/PLAN.md))
 - [Recognize regex literals without consuming division expressions](seeds/SEED-012-regex-literal-context.md#regex-literal-context) — SEED-012#regex-literal-context ([plan](slice-plans/008-regex-literal-context/PLAN.md))
-- [Preserve arrow object expressions and typed function bodies](seeds/SEED-013-arrow-object-boundaries.md#arrow-object-boundaries) — SEED-013#arrow-object-boundaries ([plan](slice-plans/009-arrow-object-boundaries/PLAN.md))
 - [Preserve multiline arrow expressions and surrounding statement metrics](seeds/SEED-014-multiline-arrow-boundaries.md#multiline-arrow-boundaries) — SEED-014#multiline-arrow-boundaries ([plan](slice-plans/010-multiline-arrow-boundaries/PLAN.md))
 
 ## Backlog list
