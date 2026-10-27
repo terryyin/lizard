@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "agent": "Sola-chan",
+  "email": "sola-chan@example.org",
+  "identity": "SEED-016#arrow-parameter-bindings",
+  "mode": "story-branch",
+  "branch": "codex/report-consistent-javascript-and-typescript-arro",
+  "host": "codex",
+  "model": "gpt-6.1-sol"
+}
