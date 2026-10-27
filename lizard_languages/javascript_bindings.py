@@ -1,6 +1,7 @@
 """JavaScript binding patterns and ownership of initializer complexity."""
 
 from collections import namedtuple
+from functools import partial
 
 from lizard_core.function_info import FunctionInfo
 
@@ -25,12 +26,19 @@ class JavaScriptBindings:
 
     BRACKETS = {'(': ')', '[': ']', '{': '}', '${': '}'}
 
-    def __init__(self, closing, function=None):
+    def __init__(self, closing, function=None, parameters=None):
         self._frames = [BindingFrame(closing)]
         self._expression_brackets = []
         self.previous = ''
         self.defaults = 0
-        self.function = function
+        if function:
+            self._parameters = function.full_parameters
+            self._add_parameter = function.add_parameter
+        else:
+            self._parameters = parameters
+            self._add_parameter = (
+                partial(FunctionInfo._append_parameter, parameters)
+                if parameters is not None else None)
         self._in_parameter_type = False
         self._generic_depth = 0
 
@@ -46,31 +54,31 @@ class JavaScriptBindings:
     def at_root(self):
         return len(self._frames) == 1 and not self._expression_brackets
 
-    def __call__(self, token):
-        return self.read_token(token).ended
-
-    def read_token(self, token):
+    def read_token(self, token, report=True):
         if not self._frames:
-            return BindingEvent(True, False, False, False, False)
+            return (BindingEvent(True, False, False, False, False)
+                    if report else None)
+        frame = self._frames[-1]
+        expression_brackets = self._expression_brackets
+        initializing = frame.initializing or bool(expression_brackets)
         if token == 'this' and self.at_start:
             # A TypeScript receiver declaration is not a formal argument.
             self._in_parameter_type = True
-        if (self.function and token in ('{', '[') and self.at_root
-                and not self.in_expression and not self._in_parameter_type):
+        if (self._add_parameter and token in ('{', '[') and self.at_root
+                and not initializing and not self._in_parameter_type):
             # Keep the formal pattern even if it contributes no binding name.
-            self.function.add_parameter('{}' if token == '{' else '[]')
-        frame = self._frames[-1]
-        initializing = self.in_expression
-        initializer_ended = (initializing and not self._expression_brackets
+            self._add_parameter('{}' if token == '{' else '[]')
+        initializer_ended = (report and initializing
+                             and not expression_brackets
                              and token in (',', frame.closing))
         root_separator = (token == ',' and len(self._frames) == 1
-                          and not self._expression_brackets)
+                          and not expression_brackets)
         defaults = self.defaults
-        if self._expression_brackets:
+        if expression_brackets:
             if token in self.BRACKETS:
-                self._expression_brackets.append(self.BRACKETS[token])
-            elif token == self._expression_brackets[-1]:
-                self._expression_brackets.pop()
+                expression_brackets.append(self.BRACKETS[token])
+            elif token == expression_brackets[-1]:
+                expression_brackets.pop()
         elif token == frame.closing:
             self._frames.pop()
         elif token == ',':
@@ -89,21 +97,22 @@ class JavaScriptBindings:
         ended = not self._frames
         if not ended:
             self.previous = token
-        event = BindingEvent(ended, initializing, self.defaults != defaults,
-                             initializer_ended, root_separator)
-        if self.function and not ended:
-            self._read_parameter(token, event)
-        return event
+        if self._add_parameter and not ended:
+            self._read_parameter(token, initializing, root_separator)
+        if report:
+            return BindingEvent(ended, initializing, self.defaults != defaults,
+                                initializer_ended, root_separator)
+        return None
 
-    def _read_parameter(self, token, event):
+    def _read_parameter(self, token, in_expression, root_separator):
         """Named and provisional signatures use the same FunctionInfo path."""
-        if (event.in_expression and not event.root_separator) or token == '(':
+        if (in_expression and not root_separator) or token == '(':
             return
         if token == ',':
-            if event.root_separator and not self._generic_depth:
+            if root_separator and not self._generic_depth:
                 self._in_parameter_type = False
-                if self.function.full_parameters:
-                    self.function.add_parameter(',')
+                if self._parameters:
+                    self._add_parameter(',')
         elif token == ':' and self.at_root:
             self._in_parameter_type = True
         elif token == '<':
@@ -114,8 +123,9 @@ class JavaScriptBindings:
         elif token not in ('*', '+', '-', '/', '%', '=', '.') and not (
                 self._generic_depth or self._in_parameter_type):
             name = token.replace('?', '')
-            if name.replace('$', '_').isidentifier():
-                self.function.add_parameter(name)
+            if name.isidentifier() or (
+                    '$' in name and name.replace('$', '_').isidentifier()):
+                self._add_parameter(name)
 
 
 class JavaScriptBindingsMixin:
@@ -147,9 +157,9 @@ class JavaScriptBindingsMixin:
                                 as_object=False, track_complexity=True):
         candidate = self.__class__(self.context)
         candidate.as_object = as_object
-        parameters = (FunctionInfo('', self.context.fileinfo.filename)
-                      if closing == ')' else None)
-        candidate._binding_candidate = JavaScriptBindings(closing, parameters)
+        parameters = [] if closing == ')' else None
+        candidate._binding_candidate = JavaScriptBindings(
+            closing, parameters=parameters)
         function = self.context.current_function
         complexity = function.cyclomatic_complexity
 
@@ -158,7 +168,7 @@ class JavaScriptBindingsMixin:
                 candidate._binding_candidate.defaults,
                 function.cyclomatic_complexity - complexity if track_complexity else 0,
                 candidate._confirmed_binding_defaults if track_complexity else 0,
-                parameters.full_parameters if parameters else [])
+                parameters if parameters is not None else [])
             if callback:
                 callback(summary)
             else:

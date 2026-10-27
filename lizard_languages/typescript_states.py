@@ -36,7 +36,9 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
 
     def __call__(self, token, reader=None):
         if self._binding_candidate:
-            self._binding_candidate(token)
+            # Candidates retain their state; only named-formal readers need
+            # an event to dispatch initializer expressions separately.
+            self._binding_candidate.read_token(token, report=False)
         # Called directly rather than through super(): no mixin defines
         # __call__, and this runs once per token.
         return CodeStateMachine.__call__(self, token, reader)

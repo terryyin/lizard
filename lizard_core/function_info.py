@@ -6,6 +6,9 @@ import re
 import itertools
 
 
+_PARAMETER_NAME = re.compile(r'([\w$]+)(\s=.*)?(\s:.*)?$')
+
+
 class Nesting(object):  # pylint: disable=R0903
     '''
     Nesting represent one level of nesting in any programming language.
@@ -65,8 +68,9 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
     @property
     def parameter_count(self):
         # Binding patterns can occupy formal slots without introducing names.
-        return len(self.parameters) + sum(
-            parameter.strip() in ('{}', '[]')
+        return sum(
+            bool(_PARAMETER_NAME.search(parameter))
+            or parameter.strip() in ('{}', '[]')
             for parameter in self.full_parameters)
 
     @property
@@ -77,8 +81,7 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
         # Regex matches the parameter name, then optionally:
         # - a default value given after an '=' sign
         # - a type annotation given after a ':'
-        matches = [re.search(r'([\w$]+)(\s=.*)?(\s:.*)?$', f)
-                   for f in self.full_parameters]
+        matches = map(_PARAMETER_NAME.search, self.full_parameters)
         return [m.group(1) for m in matches if m]
 
     @property
@@ -97,13 +100,16 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
 
     def add_parameter(self, token):
         self.add_to_long_name(" " + token)
+        self._append_parameter(self.full_parameters, token)
 
-        if not self.full_parameters:
-            self.full_parameters.append(token)
+    @staticmethod
+    def _append_parameter(parameters, token):
+        if not parameters:
+            parameters.append(token)
         elif token == ",":
-            self.full_parameters.append('')
+            parameters.append('')
         else:
-            self.full_parameters[-1] += " " + token
+            parameters[-1] += " " + token
 
 
 class FileInformation(object):  # pylint: disable=R0903

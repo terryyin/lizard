@@ -161,12 +161,12 @@ stopping point, unmerged.
 
 ### 4. Meet the strict performance budget without weakening semantics
 Type: Behavior
-Status: planned
+Status: done
 Proof: retained raw warmed timing pairs, immutable harness/corpus hashes,
 candidate/base revisions and intervals for every required workload.
 
-Behavior: given the semantically correct candidate, affected API (frozen 65
-fixed inputs including all relevant corrected cases, hashed before timing) /
+Behavior: given the semantically correct candidate, affected API (all 65 frozen
+inputs plus relevant corrected-case supplements, hashed before timing) /
 names-counts and broader CLI workloads each show an upper paired 95% slowdown
 bound strictly below 3% versus current target (incremental) and the frozen
 review baseline (cumulative). A broad pass cannot hide an affected failure.
@@ -233,7 +233,7 @@ Disposition: excluded "Abandoned-expression enclosing CCN (`arrow-abandoned.js` 
 ### G6. Strict performance proof remains outstanding
 Reported: slice 2 — "No performance experiment has been launched; affected and broad incremental/cumulative bounds remain unproved."
 Story clause: "paired 95% upper slowdown bounds strictly below 3% for incremental and cumulative affected and broader workloads."
-Disposition: receiving slice 4
+Disposition: proved by slice 4: slice4-proof.md and corrected-proof/summary.json — all eight warmed paired API/names-counts/default CLI/ENS incremental and cumulative upper bounds are below 3% (maximum 1.51932%); all batches exceed 1s, original 65 plus 36 corrected-case supplements and frozen 100 broad sources are hashed, and public semantics match accepted candidate0.
 
 ### G7. Final qualification and delivery remain outstanding
 Reported: slice 2 — "Full pytest, make and final hosted CI on the corrected revision remain unrun; PR536 remains unchanged and unmerged."
