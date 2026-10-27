@@ -24,6 +24,14 @@ Consider emitting identity when it becomes available, within the existing bindin
   - Observed effect: coordinator recovered observer ownership manually before delivery; the later request-error notification required explicit acknowledgment because the binding lacked its parsed directory. Both delivered increments retained green receipts.
   - Inference: plain pipes avoided this occurrence; whether setup latency or PTY formatting prevented initial receipt capture was not established.
 
+- Execution: SEED-016#arrow-parameter-bindings
+  - Timestamp: unknown (2026-10-27 execution)
+  - Tool: Codex
+  - Open Dough release: unknown; installed guidance at established start 7f479101
+  - Evidence: coordinator yielded cells 13/32 and replacement 110/113; exact-owner recovery selected watch-Tz93Df after watch-TEDK9c ended unavailable; [slice5 proof](https://github.com/terryyin/lizard/blob/4bfd49bc7eb7cd136f6adb3bfad3ab93f9a1631b/docs/reviews/fabio-malpezzi-20261027/pr536/slice5-proof.md) records the retained observer.
+  - Observed effect: both stream launches required owner-based identity recovery after the initial result omitted directory/PID. Replacement observation retained coverage through ab076107.
+  - Inference: same initial-result assumption as earlier occurrences; provider unavailability was a separate recovered failure.
+
 ## DD-002 — Hosted-proof slices have no guarded increment that stays unfinished
 
 A slice whose own proof needs a hosted CI receipt of its publication must be
@@ -103,6 +111,14 @@ shellHook, printing pip output to stdout and upgrading `platformdirs` past
   - Evidence: slice-3 post-change refactor agent d49cf4a4-9eaa-4044-96fb-f7e6a0bc649f; coordinator 946f4d3a-43e2-470f-8722-fc7bcd78fef5; `shell.nix` shellHook; filter stripping `platformdirs`/`Requirement already`/`Successfully` from `nix develop -c` stdout before a line-count check.
   - Observed effect: every Nix-prefixed command re-entered pip install; agents filtered shellHook/platformdirs noise from parsed results. Semantic and performance proof still passed.
   - Inference: same project-environment shellHook cost as prior DD-003 rows; serial Nix use avoided the parallel race, but stdout noise and platformdirs pin churn remained on each entry.
+
+- Execution: SEED-016#arrow-parameter-bindings
+  - Timestamp: unknown (2026-10-27 execution)
+  - Tool: Codex
+  - Open Dough release: unknown; installed guidance at established start 7f479101
+  - Evidence: slice-3 independent refactor return launched three Nix-prefixed reads concurrently and reported ensurepip failure; coordinator recovery session ran the affected 21 tests serially; [slice4 proof](https://github.com/terryyin/lizard/blob/4bfd49bc7eb7cd136f6adb3bfad3ab93f9a1631b/docs/reviews/fabio-malpezzi-20261027/pr536/slice4-proof.md) records serial final qualification.
+  - Observed effect: overlapping shellHook entry recreated the shared environment during read-only work. Sequential recovery passed; accepted final qualification used one serial outer runner.
+  - Inference: reinforces the existing project issue: serialize Nix entry across agents, including read-only probes and observer acknowledgements.
 
 ## DD-004 — PR merge preceded a missing affected-workload performance gate
 
