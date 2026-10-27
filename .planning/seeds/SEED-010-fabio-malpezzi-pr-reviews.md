@@ -39,42 +39,81 @@ remain unestimated until refinement. No numeric sizing policy is invented.
 
 **Identity:** SEED-010#review-structural-js-prs
 ```json dough-story-state
-{"schemaVersion":1,"refinement":"not-refined","approach":"unselected"}
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/006-structural-js-pr-reviews/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"d1447236708b4abec06acbed6f9ca002adef5e36a51faee372857b694e54a7b1","plan":"e11499a78823db7e64a6bfacc5bf2a8a9d3ddcc56cf981709a962906a0e08fe1"}}
 ```
 
-**Beneficiaries:** JS-family users relying on detected functions, parameter counts,
-boundaries and CCN; maintainers evaluating the remaining structural contributions.
-**Goal:** Give each of PR537–543 a complete, independently useful disposition,
-landing worthwhile fully verified changes and acknowledging the contributor.
-**Scope:** Exactly PR537,538,539,540,541,542,543 from the frozen set; later arrivals
-and other authors are excluded. Refresh current heads/target and verify the claims.
-Use the full complete-cycle contract: reproduction/value; whole-concept correctness
-and consumers; eligible correction; fresh independent refactor; affected/broad
-incremental/cumulative <3% performance; full/format/required CI; guarded merge and
-thanks, or an evidence-backed unnecessary/inadequate conclusion with follow-up
-under the existing >15min policy. No acceptance phase is left to another story.
+**Goal:** For JS-family analyzer users who depend on function detection, parameter
+counts, boundaries and CCN, and for maintainers disposing contributor structural
+fixes, each of frozen PRs #537–#543 receives one complete, independently useful
+disposition: a worthwhile change verified and landed with acknowledgement, or an
+evidence-backed unnecessary / inadequate conclusion with any required >15‑minute
+follow-up linked and left unmerged.
 
-**Key examples to re-establish:**
+**Scope:** Exactly PRs #537, #538, #539, #540, #541, #542, #543 from the
+[frozen set](../../docs/reviews/fabio-malpezzi-20261027/frozen-review-set.json)
+and [story map](../../docs/reviews/fabio-malpezzi-20261027/story-map.md). At
+refinement (2026-10-28) those heads remain open and match the frozen OIDs; refresh
+each selected PR's state/head and the current target again before acting.
+Later arrivals and other authors are out of scope.
 
-| PR | Reported observable result to verify |
-| --- | --- |
-|537|Member-assignment arrows expose two actual parameters, while real calls remain calls.|
-|538|An IIFE keeps setup's following statements and method boundaries/CCN.|
-|539|Abandoned provisional signatures retain enclosing expression tokens and CCN.|
-|540|Switch labels allow callbacks without treating label colons as types.|
-|541|Members named get/set coexist with genuine accessor prefixes and following functions.|
-|542|Array property values and computed names preserve function end boundaries.|
-|543|Spreads of calls/grouped expressions retain callbacks without fictitious methods.|
+Every selected PR owns the full
+[complete-cycle contract](../../docs/reviews/fabio-malpezzi-20261027/REVIEW-CONTRACT.md):
+reproduce and judge value on the current target; review the whole affected concept
+and shared-language consumers; correct only when eligible within the 15‑minute
+policy (review/measurement excluded from the limit); prove discriminating public
+API/CLI regressions; run fresh independent post-change refactor; pass affected and
+broad incremental/cumulative performance strictly below 3%; pass full/format/
+required CI; merge guarded by exact head with post-merge thanks — or record an
+unnecessary / inadequate conclusion with linked follow-up. No correction,
+performance, refactor, CI, merge or acknowledgement phase is deferred to another
+story.
 
-Examples are claims, not automatic acceptance. Already-correct or unworthy changes
-receive reasons; coherent corrections above 15 minutes receive linked canonical stories
-and stay unmerged. Accepted PRs 527/532/535 and later current-target changes are controls.
-**Effort hypothesis:** Seven complete review loops, unestimated pending refinement;
-the correction limit excludes review/measurement. **Depends on:** No assumed sibling.
-**Safe stop:** Its seven conclusions/fixes stand independently if lexical work waits.
-**Mapped plan:** [006 structural review](../slice-plans/006-structural-js-pr-reviews/PLAN.md).
-**Resume:** Run dough-story-refinement, reusing and realigning that mapped plan;
-it is awaiting story refinement, not ready for slice-plan refinement or execution.
+Deferred promises: PRs #544–#547 (lexical/condition batch), new PR arrivals, and
+unrelated language readers. Rejection constraints: do not invent an S/M/L sizing
+policy; do not merge an inadequate candidate to “finish” a cycle; do not treat
+sibling queue order as a supplier dependency without a justified agreement.
+Assumptions: structural-before-lexical ordering is impact priority, not a
+technical prerequisite; completed first-batch merges (#527/#532/#535 and later
+current-target fixes including #534/#536 corrections) are controls, not this
+story's remaining work.
+
+**Key examples:**
+
+- Given a member assignment whose right-hand side is an arrow with two parameters
+  (PR #537 claim), public analysis reports those two parameters on the arrow
+  function while ordinary member calls remain calls, not parameter lists.
+- Given a function whose body starts with an IIFE then continues with statements
+  and methods (PR #538 claim), analysis keeps the outer function's end line and
+  CCN together with the following method, instead of ending the outer function at
+  the IIFE.
+- Given an enclosing expression that abandons a provisional arrow or method
+  signature (PR #539 claim), tokens and CCN stay on the enclosing expression;
+  real arrows still own their defaults and body conditions.
+- Given `switch` `case`/`default` labels that contain callbacks (PR #540 claim),
+  those callbacks are reported as functions; label colons are not consumed as
+  TypeScript type annotations, while genuine annotations and ternaries stay
+  distinct.
+- Given object members literally named `get`/`set` alongside real accessors
+  (PR #541 claim), the named members and a following function are all present
+  with correct boundaries.
+- Given object properties whose values are nested arrays, and bracketed computed
+  keys (PR #542 claim), each function keeps its own end boundary and following
+  functions remain visible.
+- Given object spreads of calls or grouped expressions that carry callbacks
+  (PR #543 claim), nested callbacks are retained and no fictitious object method
+  is invented from the spread.
+
+Examples are claims to verify, not automatic acceptance. Already-correct trunk,
+unworthy changes, or corrections estimated above 15 minutes receive a recorded
+reason or linked follow-up instead of a merge.
+
+**Effort hypothesis:** Seven complete review loops; unestimated — this project
+records no S/M/L band policy; the correction time limit excludes review and
+measurement. **Depends on:** none assumed; verify any genuine technical
+dependency during planning/execution and record only a justified supplier
+agreement. **Safe stop:** Its seven dispositions retain value if the lexical
+batch waits. **Mapped plan:**
+[006 structural review](../slice-plans/006-structural-js-pr-reviews/PLAN.md).
 
 
 <a id="review-lexical-js-prs"></a>
