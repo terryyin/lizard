@@ -57,7 +57,7 @@ Observed in this preparation workspace at `b263e6d` (2026-10-28) via
 
 ### 1. Arrow parameters after member access — PR #537
 Type: Behavior
-Status: planned
+Status: done
 Source: https://github.com/terryyin/lizard/pull/537 — frozen head `c89470c442d28195bebba45597910c7a481a5043`
 Proof: [slice 1](SLICE-PROOF.md).
 Behavior: Given a member-assignment arrow with two parameters on current target → complete review cycle for #537 → public analysis reports those two parameters while ordinary member calls remain calls, or an evidence-backed non-merge disposition is recorded.
@@ -119,11 +119,24 @@ All complete-cycle gates belong to this slice. Original slice: 15.
   behavior and recording disposition, not assuming a merge is still required.
 - No project S/M/L band or numeric slice timing policy; the contract's 15‑minute
   correction limit (excluding review/measurement) bounds eligible product edits.
+- #537: contributor approach remains valid; stop sticky `_prev_token` for `.`
+  after the next token while `_field` still remakes immediate `a.b(` calls.
+  Eligible ≪15‑minute product edit; full-cycle gates completed and merged.
 
 ## Learnings
 
-- On current trunk, #537's `load` reports one parameter rather than the original
-  zero-parameter baseline; the claim still fails the expected two-parameter result.
+- On current trunk before correction, #537's `load` reports one parameter rather
+  than the original zero-parameter baseline; expected two still failed until the
+  adapted PR fix.
+- After adapting frozen #537 onto current target: claim fixture
+  `module.exports.add` and `load` each report parameter_count 2; controls
+  `a.b(x,y)` and `new Foo(a,b)` stay non-definitions. Contributor tests
+  `Test_ES6_arrow_function_after_a_member_access` pass; focused JS/TS suite
+  611 passed / 5 skipped. Post-change refactor: none — already clean.
+  Full pytest 2129 passed / 7 skipped; `make` ok; six performance workloads
+  pass (cumulative-cli after prospective 4.0s retry). Merged as `6a2b8ea` with
+  [thanks](https://github.com/terryyin/lizard/pull/537#issuecomment-6456123781);
+  evidence under `docs/reviews/fabio-malpezzi-20261027/pr537/`.
 - #540's claim fixture already matches the PR's fixed expectation on trunk.
 
 ## Concern evidence
@@ -135,7 +148,3 @@ All complete-cycle gates belong to this slice. Original slice: 15.
 - Remaining slice-specific concerns: none identified.
 
 ## Story obligations
-
-None yet. During execution, every reported gap, loss, limitation, or interim
-behavior uses this section with
-**Source:** [canonical story](../../seeds/SEED-010-fabio-malpezzi-pr-reviews.md#review-structural-js-prs).
