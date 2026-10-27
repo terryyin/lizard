@@ -67,8 +67,14 @@ It requires Python 3.8 or above. The test suite runs on Python 3.8, 3.9, 3.10,
 3.11, 3.12, 3.13 and 3.14, on Linux and Windows, in continuous integration;
 other versions are not verified.
 
-JavaScript and TypeScript defaults
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+JavaScript and TypeScript parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Named and anonymous arrows report the same formal parameter counts and binding
+names. Empty object and array patterns each occupy a parameter slot without
+adding a name to the API's ``parameters`` list; ``({}, [], tail) => tail`` has
+``parameter_count`` 3 and ``parameters`` ``['tail']``. Trailing commas and
+TypeScript receiver declarations add no slots. Callback types add no functions.
 
 Each default parameter or destructuring initializer adds 1 to CCN, because
 the initializer runs only when the supplied value is ``undefined``. For example,
