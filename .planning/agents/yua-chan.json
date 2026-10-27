@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "agent": "Yua-chan",
-  "email": "yua-chan@example.org",
-  "activity": "preparation",
-  "identity": "SEED-017#vue-source-line-numbers",
-  "host": "codex",
-  "model": "gpt-6.1-sol"
-}
