@@ -77,6 +77,8 @@ class JavaScriptFunctionsMixin:
             # line start (end_expression_before). Function-type "=>" must not
             # reach here (see type annotation states).
             self._expression_body = True
+            # Nested curried arrows reuse this function and keep its owner.
+            self._expression_ternary_depth = self._ternary_depth
             self.context.expression_arrows.append(self)
         # Clear function_name so expression-body ( doesn't re-enter _function
         self.function_name = ''

@@ -92,71 +92,11 @@ At Take, refresh trunk and rerun the premise observations below on the
 execution checkout; reconcile with whichever landed rather than reintroducing
 their deferred outcomes.
 
-## Premises observed during preparation
-
-Checkout: `/Users/terryyin/git/lizard/.worktrees/preserve-arrow-boundaries-across-ternary-and-typ`,
-revision `1db5933b66e4602f607c6ae40998984dadd5bab5`, observed 2026-10-27.
-
-- Ran `PIP_QUIET=1 nix develop -c python docs/reviews/fabio-malpezzi-20261027/pr534/reproduce.py --checkout <checkout>`.
-  92 cases; failures include every promised row: `reported.*`, `authored.*`,
-  `nested_ternary.*`, `nested_arrows.*`, `nested_arrow_internal.*`,
-  `grouped_nested_arrow.*`, `branch_object.*`, `typed_arrows.ts/tsx`,
-  `type_assertion.ts/tsx`, `typed_object_return.ts/tsx`, `jsx_attribute.*`
-  and `vue_reported`/`vue_nested_ternary`/`vue_nested_arrows`/
-  `vue_branch_object`/`vue_typed_arrows`. `internal_ternary`,
-  `block_branches`, `plain_ternary` and the literal function-type controls
-  pass (preserve them). Deferred rows (`object_property`, `computed_key`,
-  `object_inside_ternary`, `inherited_*`) also fail and are not promised.
-- Ran the same with `--inputs .../supplemental-inputs.json`: 4 cases, no
-  failures. The curried internal-colon control is green on target and must stay
-  green; it discriminates the raw #534 regression.
-- A scratch script through `analyze_file.analyze_source_code` showed
-  `{f: x => x, next: z => z && c}` reports only `f` CCN 2: the comma-sibling
-  absorption is independent of ternaries, confirming its exclusion.
-- Inspected `TypeScriptStates._state_global` lines 64–70 (`?`/`:` depth) and
-  `JavaScriptFunctionsMixin._expecting_func_opening_bracket` (return-type `:`).
-  Confirms the owners named above.
-- Hash-checked `/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr534/paired.py`
-  as SHA256 `3064d8d77047db2f084ce9fd6ae09d98acf34453316b7df20fb184cbb3217bf5`
-  and the cache `manifest.json` as
-  `113ca1889836963fe6cfd7ba62c1aa90bd927eaedc4cd8cc7b46479ecb3bccd5`, equal to
-  the checked-in manifest. From the cache `corpus` directory, ran
-  `printf '1\n' | python ../paired.py worker <checkout> 0 api` through Nix →
-  `{"seconds": …, "files": 92}`; and the CLI workload's literal command
-  `python lizard.py <corpus>/lizard.py <corpus>/lizard_core <corpus>/lizard_languages <corpus>/lizard_ext`
-  from the checkout → exit 1 (expected threshold warning) with full output.
-  Frozen baseline tree exists at `/Users/terryyin/.cache/lizard-pr-reviews-20261027/baseline`
-  (archive of `2e21e404`, not a Git checkout). This settles replay
-  reachability, not any candidate's timing. Reconstruct via the PR534 README
-  recipe if cache files disappear.
-- `gh pr view 534 --repo terryyin/lizard` returned `OPEN`, head
-  `f4074ae860c7999cc37dd081a6f7ebfa777adc83` on
-  `FabioMalpezzi:pr/js-arrow-function-in-a-ternary-branch`, base `master`,
-  `maintainerCanModify: true`. Readable metadata is not accepted publication;
-  slice 1's early probe owns permission and route.
+Preparation observations are retained in [PROOF.md](PROOF.md#premises-observed-during-preparation).
 
 ## Proof ownership and gates
 
-Slice 1 acceptance: a fresh no-inheritance source-only reviewer was launched as
-`/root/source_review` with the story's Goal, all key examples, Scope and
-exclusions, completion and original delivery contract text; it read no files.
-Its launch/input and complete returned commitments are retained in this
-execution conversation. The return separates each public name/span/CCN,
-colon owner, consumer, curried control, typed control, performance comparison,
-delivery gate and exclusion; it introduced no narrower rejection rule.
-
-Comparison: given the intended contribution and contributor route, the source
-requires full patch/discussion/review/check inspection and eventual
-history-preserving contributor delivery. `correction-route.md` observes the
-unchanged contribution, empty discussion/reviews, historical checks, current
-permission and successful authenticated preview. This proves route feasibility;
-actual acceptance remains slice 5. All public behavior examples and their
-reader consumers remain slices 2–3, strict performance comparisons slice 4,
-and full tests/current CI/final head-base-tree/merge/acknowledgement slice 5.
-The source's named exclusions remain excluded. No missing slice-1 observation
-was identified. Independent `/root/slice1_refactor` returned
-`## REFACTOR COMPLETE`: no edits, 57-line evidence document, whitespace clean;
-accepted observation locations unchanged, no redundant tests.
+Accepted source comparisons are retained in [PROOF.md](PROOF.md).
 
 | Promise | Owner and observable proof |
 | --- | --- |
@@ -167,26 +107,7 @@ accepted observation locations unchanged, no redundant tests.
 | Strict affected and broad throughput | Slice 4: warmed paired measurements, each upper 95% slowdown bound strictly below 3% versus current target and frozen baseline `2e21e404c1ab9f4e0b49acc80816e816629d0670` |
 | Final corrected revision accepted and acknowledged | Slice 5: full pytest/make, exact-head hosted checks and merge, contributor publication/merge/acknowledgement receipts |
 
-Use `lizard-language-support` for reader/test changes. Public `analyze_file` /
-`analyze_source_code` results own semantic proof; mock only filesystem
-boundaries. Inspect every reached consumer and record run/reused/excluded with
-reasons. Independent post-change refactoring runs through the execution
-workflow before delivery; keep new tests (and any retained author test) in a
-cohesive small module below 250 lines while leaving unrelated large test files
-byte-identical.
-
-Focused command after relevant edits:
-
-```sh
-nix develop -c python -m pytest test/test_languages/testJavaScript*.py test/test_languages/testTypeScript*.py test/test_languages/testES6.py test/test_languages/testJSX.py test/test_languages/testTSX.py test/test_languages/testVue.py
-```
-
-Also rerun the retained reproducer (main and supplemental inputs) against the
-candidate checkout. `AGENTS.md` requires full `nix develop -c python -m pytest`
-before completion; the source contract additionally requires
-`nix develop -c make` and final hosted CI. Run Nix commands sequentially
-because the shell hook changes `.venv`; keep owned heavy measurement serial.
-Refresh current CI applicability in execution.
+Reusable proof commands and conventions: [PROOF.md](PROOF.md#proof-commands-and-conventions).
 
 ## Ordered slices
 
@@ -210,7 +131,7 @@ stops slices 2–5 and revises the plan before edits.
 
 ### 2. End untyped branch arrows at their own ternary colon
 Type: Behavior
-Status: planned
+Status: done
 Proof: red→green public regressions for the reported, nested-ternary,
 nested-arrow-internal, grouped and parenthesized-object branch cases plus a
 JSX attribute and a Vue script block; the curried internal-colon control,
@@ -305,3 +226,10 @@ one ternary-depth ownership model and rejects the raw snapshot overwrite and
 single-colon-check shapes. No remaining slice-specific concern was found;
 contributor publication is bounded by the early probe. No human decision is
 currently pending.
+
+## Story obligations
+
+### G1. Typed branch return signatures remain combined
+Reported: slice 2 — "Candidate main replay: 92 cases, only typed_arrows.ts, typed_arrows.tsx, typed_object_return.ts, typed_object_return.tsx, and vue_typed_arrows.vue still fail."
+Story clause: "a genuine signature annotation is consumed as a type before it can be taken as a runtime branch separator."
+Disposition: receiving slice 3

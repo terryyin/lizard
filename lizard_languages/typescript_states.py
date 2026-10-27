@@ -91,6 +91,9 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                 # syntax, not a type annotation that could swallow a next-line
                 # `return () => ...` as a function type.
                 if self.last_tokens != 'default':
+                    if (self._expression_body and self._ternary_depth
+                            == self._expression_ternary_depth):
+                        self._pop_function_from_stack()
                     self._ternary_depth -= 1
                 self.last_tokens = token
                 self._prev_token = token
