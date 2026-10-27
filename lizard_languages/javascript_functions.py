@@ -29,6 +29,7 @@ class JavaScriptFunctionsMixin:
         self.context.forgive = True
         self.context.end_of_function()
         self.started_function = None
+        self._expression_body = False
 
     def _arrow_function(self, token):
         self._push_arrow_function()
@@ -38,7 +39,10 @@ class JavaScriptFunctionsMixin:
         # async/static handler in the class body path.
         self._async_seen = False
         self._static_seen = False
-        # Without braces, a later "{" opens an object: x => c ? {a} : {b}
+        # Runtime arrows (including those already pushed from "(...)") keep
+        # expression-body context when the body is not "{" so a later "{" is
+        # an object operand, not a nested body. Function-type "=>" must not
+        # reach here (see type annotation states).
         self._expression_body = token != '{'
         self.next(self._state_global, token)
 

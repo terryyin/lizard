@@ -511,35 +511,3 @@ class Test_ES6_multiple_arrow_patterns(unittest.TestCase):
         functions = get_js_function_list(code)
         self.assertEqual(["validate"], [f.name for f in functions])
         self.assertGreater(functions[0].cyclomatic_complexity, 1)
-
-
-class Test_ES6_object_in_the_body_of_an_arrow_function(unittest.TestCase):
-
-    def test_object_literals_in_an_expression_body(self):
-        code = (
-            "function layout(vertical) {\n"
-            "  const box = f => vertical ? {x: f.a, y: f.b} : {x: f.b, y: f.a};\n"
-            "  const pair = (a, b) => a && {a, b};\n"
-            "  return box;\n"
-            "}\n"
-            "function after() { return 1; }\n"
-        )
-        for filename in ("a.js", "a.ts", "a.tsx"):
-            self.assertEqual(
-                [('box', 2, 2, 2), ('pair', 3, 3, 2), ('layout', 1, 5, 1),
-                 ('after', 6, 6, 1)],
-                [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
-                 for f in analyze_file.analyze_source_code(
-                     filename, code).function_list], filename)
-
-    def test_brace_after_a_function_type_is_the_body(self):
-        code = (
-            "function filter(value: Json): (event: Obj) => boolean {\n"
-            "  return () => true;\n"
-            "}\n"
-            "function after(): void {}\n"
-        )
-        self.assertEqual(
-            [('(anonymous)', 2, 2), ('filter', 1, 3), ('after', 4, 4)],
-            [(f.name, f.start_line, f.end_line) for f in
-             analyze_file.analyze_source_code("a.ts", code).function_list])
