@@ -72,7 +72,7 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
         # Regex matches the parameter name, then optionally:
         # - a default value given after an '=' sign
         # - a type annotation given after a ':'
-        matches = [re.search(r'(\w+)(\s=.*)?(\s:.*)?$', f)
+        matches = [re.search(r'([\w$]+)(\s=.*)?(\s:.*)?$', f)
                    for f in self.full_parameters]
         return [m.group(1) for m in matches if m]
 

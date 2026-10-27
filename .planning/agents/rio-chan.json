@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "agent": "Rio-chan",
+  "email": "rio-chan@example.org",
+  "identity": "SEED-010#review-fabio-malpezzi-prs",
+  "mode": "story-branch",
+  "branch": "codex/review-correct-and-merge-fabiomalpezzi-s-open-pr",
+  "host": "codex",
+  "model": "gpt-6.1-sol"
+}

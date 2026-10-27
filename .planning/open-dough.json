@@ -1,3 +1,4 @@
 {
-  "ciWorkflow": "python-app.yml"
+  "ciWorkflow": "python-app.yml",
+  "skipProcessRetrospective": false
 }

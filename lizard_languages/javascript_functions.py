@@ -73,20 +73,19 @@ class JavaScriptFunctionsMixin:
             self._abandon_function()
             self.next(self._state_global, token)
             return
-        first_token = self._parameter_bindings.previous in ('', ',')
+        if token == 'this' and self._parameter_bindings.at_start:
+            # TypeScript's leading receiver declaration is not an argument.
+            self._in_parameter_type = True
         event = self._read_parameter_binding(token)
         if event.ended:
             self._state = self._expecting_func_opening_bracket
         elif (not event.in_expression or event.root_separator) and token != '(':
-            # Filter out TypeScript type keywords and operators from parameter count
             if token == ',':
                 # Ignore commas inside generic type brackets: Map<K, V>
                 if event.root_separator and not getattr(self, '_generic_depth_in_dec', 0):
                     self._in_parameter_type = False
                     self.context.parameter(',')
-            elif token == ':' or (token == 'this' and first_token):
-                # The type of a parameter, as in "number: number", is no name;
-                # the "this" parameter of TypeScript only declares a type.
+            elif token == ':' and self._parameter_bindings.at_root:
                 self._in_parameter_type = True
             elif token == '<':
                 self._generic_depth_in_dec = getattr(
