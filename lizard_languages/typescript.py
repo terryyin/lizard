@@ -13,6 +13,8 @@ from .javascript_templates import template_tokens
 # One token, so each ? in ?? is not its own ternary decision.
 NULLISH_COALESCING = r"|(?:\?\?)"
 OPTIONAL_ACCESS = r"|(?:\?\.(?!\d))"
+# JavaScript identifiers can contain dollar signs as well as word characters.
+JS_IDENTIFIER = r"|(?:[\w$]+)"
 
 
 class Tokenizer(object):
@@ -73,7 +75,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
     @js_style_regex_expression
     def generate_tokens(source_code, addition='', token_class=None):
         # Private method (#), dollar ($), optional name (?), nullish (??).
-        addition = (addition + r"|(?:#\w+)" + r"|(?:\$\w+)"
-                    + r"|(?:\w+\?(?![?.]))" + NULLISH_COALESCING
+        addition = (addition + r"|(?:#\w+)"
+                    + r"|(?:\w+\?(?![?.]))" + JS_IDENTIFIER + NULLISH_COALESCING
                     + OPTIONAL_ACCESS)
         yield from template_tokens(source_code, addition, token_class)
