@@ -20,11 +20,17 @@ jobs:
     strategy:
       matrix:
         os:
+          # Pinned for Python 3.8/3.9 interpreter availability.
           - ubuntu-24.04
           - windows-latest
         python-version:
           - "3.8"
+          - "3.9"
           - "3.10"
+          - "3.11"
+          - "3.12"
+          - "3.13"
+          - "3.14"
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v3
@@ -39,7 +45,7 @@ jobs:
 
     - name: build and Install
       run: |
-        python setup.py build install
+        python -m pip install .
 
     - name: Run tests
       run: |
