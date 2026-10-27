@@ -4,12 +4,12 @@ from .code_reader import CodeStateMachine
 from .javascript_bindings import BindingSummary, JavaScriptBindingsMixin
 from .javascript_functions import JavaScriptFunctionsMixin
 from .javascript_objects import JavaScriptObjectsMixin
+from .typescript_signatures import ReturnTypeColon
 from .typescript_declarations import (
     DECLARATION_WORDS, TypeScriptDeclarationsMixin)
 
-# Modifiers, and tokens that open (`?`, `case`) or separate (`:`) a
-# conditional branch or switch label: one set test lets every other token
-# skip their checks.
+# Modifiers and conditional/switch markers share a set test so ordinary
+# tokens skip their checks.
 _MARKER_TOKENS = frozenset(('static', 'async', 'new', '?', 'case', ':'))
 
 
@@ -36,11 +36,9 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
 
     def __call__(self, token, reader=None):
         if self._binding_candidate:
-            # Candidates retain their state; only named-formal readers need
-            # an event to dispatch initializer expressions separately.
+            # Only named-formal readers need events for initializer dispatch.
             self._binding_candidate.read_token(token, report=False)
-        # Called directly rather than through super(): no mixin defines
-        # __call__, and this runs once per token.
+        # No mixin defines __call__; avoid super() once per token.
         return CodeStateMachine.__call__(self, token, reader)
 
     def _replay_token(self, token):
@@ -71,6 +69,9 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             return
 
         if token in _MARKER_TOKENS:
+            if isinstance(token, ReturnTypeColon):
+                self._consume_type_annotation()
+                return
             # Track the static, async and new modifiers
             if token == 'static':
                 self._static_seen = True
@@ -89,10 +90,12 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                     self._ternary_depth += 1
             elif self._ternary_depth or (
                     self.last_tokens == 'default' and not self.as_object):
-                # Conditional branch and switch label separators are runtime
-                # syntax, not a type annotation that could swallow a next-line
-                # `return () => ...` as a function type.
+                # Runtime separators must not swallow next-line `return () =>`
+                # as a function type annotation.
                 if self.last_tokens != 'default':
+                    if (self._expression_body and self._ternary_depth
+                            == self._expression_ternary_depth):
+                        self._pop_function_from_stack()
                     self._ternary_depth -= 1
                 self.last_tokens = token
                 self._prev_token = token
@@ -127,6 +130,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             if name and (name[0].isalpha() or name[0] in ('_', '$', '#')):
                 self.function_name = name
         elif token == "(":
+            self._parenthesis_prefix = self._prev_token
             # Check if this is a method call or constructor
             if self._prev_token == '.' or self._prev_token == 'new':
                 # This is a method call or constructor, not a function definition
@@ -136,11 +140,8 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                   and self._binding_candidate.in_expression):
                 self._read_binding_candidate(')')
             elif self.function_name:
-                # Distinguish arrow-function definition from function call:
-                #   const fn = (...) => {}   <- _prev_token is '=' or 'async'
-                #   const fn = someFunc(...)  <- _prev_token is an identifier
-                # In the second case, ( follows an identifier that differs
-                # from function_name, so it's a call — not a definition.
+                # A differing identifier before "(" makes this a call;
+                # '=' or 'async' instead introduces the arrow's parameters.
                 if (self.last_tokens != self.function_name
                         and self._prev_token not in ('=', 'async', '>')):
                     self.function_name = ''
@@ -151,6 +152,8 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                     self.next(self._function, token)
             else:
                 self._read_binding_candidate(')')
+            self._parenthesis_group = (
+                self._state if isinstance(self._state, self.__class__) else None)
         elif token == '[' and self._prev_token not in ('.', ')', ']', '}'):
             previous = self._prev_token
             operand = (previous and (previous[0].isalnum()
@@ -159,8 +162,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                     ('const', 'let', 'var', 'return', 'throw', 'yield', 'await')):
                 self._read_binding_candidate(']')
         elif token == '{':
-            # Expression-bodied arrows treat "{" as an object (ternary,
-            # nullish/logical, operator operands). Block bodies and typed
+            # Expression arrows read object operands; block bodies and typed
             # signatures awaiting a real body still open a nested function.
             if self.started_function and not self._expression_body:
                 self.sub_state(
@@ -170,15 +172,15 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                 self.read_object()
         elif token in ('}', ')') or (
                 token == ']' and self._binding_candidate):
+            self._empty_parenthesis = self.last_token is None
             self.statemachine_return()
         elif token == ';' or (
                 # An object member's arrow ends at its comma, which it owns
                 # like a semicolon; members read `<...>` as generics.
                 token == ',' and self._expression_body and self.as_object
         ) or (
-                # Line starts already ended expression arrows that are done;
-                # after another comma (argument, declarator or generic `A,`
-                # split) keep ending them here, at the next line's first token.
+                # After an argument/declarator/generic comma, keep ending
+                # expression arrows here, at the next line's first token.
                 self.context.newline and (
                     not self._expression_body or self.last_token == ',')):
             self._end_statement()
@@ -187,6 +189,9 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             self.next(self._state_template_literal)
         if not self.as_object:
             if token == ':':
+                binding = self._binding_candidate
+                if not binding or binding.at_root and not binding.in_expression:
+                    self._typed_parameters = True
                 self._consume_type_annotation()
                 self._prev_token = token
                 return

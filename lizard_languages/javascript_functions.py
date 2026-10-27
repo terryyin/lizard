@@ -30,7 +30,24 @@ def starts_statement(token):
     return token in ('++', '--', '!', '~', '{', '@', '}', ')', ']')
 
 
+def parameter_group(prefix):
+    return (prefix is None or prefix in ('return', 'yield', 'await', 'async')
+            or (not ends_expression(prefix) and prefix not in ('.', '?.', 'new')))
+
+
 class JavaScriptFunctionsMixin:
+    def return_annotation_context(self):
+        """Return ternary depth and whether the completed group proves a signature."""
+        state = self
+        while isinstance(state._state, self.__class__):
+            state = state._state
+        group = getattr(state, '_parenthesis_group', None)
+        if (state._state == state._state_global and state.last_token == ')'
+                and group is not None and parameter_group(state._parenthesis_prefix)):
+            return (state._ternary_depth,
+                    group._empty_parenthesis or getattr(group, '_typed_parameters', False))
+        return None
+
     def _push_function_to_stack(self):
         if self._in_abstract_context:
             return
@@ -77,6 +94,8 @@ class JavaScriptFunctionsMixin:
             # line start (end_expression_before). Function-type "=>" must not
             # reach here (see type annotation states).
             self._expression_body = True
+            # Nested curried arrows reuse this function and keep its owner.
+            self._expression_ternary_depth = self._ternary_depth
             self.context.expression_arrows.append(self)
         # Clear function_name so expression-body ( doesn't re-enter _function
         self.function_name = ''

@@ -1,0 +1,16 @@
+{
+  "base": "74bc899db957d27004f9fd58b095e7394fba93dd",
+  "candidate": "uncommitted optimization; not timed",
+  "cases": 128,
+  "fields": [
+    "name",
+    "start_line",
+    "end_line",
+    "cyclomatic_complexity",
+    "nloc",
+    "token_count",
+    "parameter_count"
+  ],
+  "patch_sha256": "b0c264731cf517bdfd0d022e810c6400f7dbebfcf8308a9bd2fb0cc6195c6397",
+  "profile_full_metrics_match": true
+}

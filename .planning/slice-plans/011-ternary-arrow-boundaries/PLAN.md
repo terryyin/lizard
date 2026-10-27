@@ -5,109 +5,67 @@
 
 ## Outcome and boundaries
 
-Users analyzing JavaScript, TypeScript, JSX/TSX and Vue script content get one
-reported function per expression-bodied ternary branch arrow, each with its
-own CCN, while colons inside an arrow's own body, genuine TypeScript
-annotations and property/computed-key colons keep their own syntax. The
-enclosing and following functions keep correct names, spans and CCN, and the
-existing outer-only curried-arrow contract is preserved.
+JavaScript, TypeScript, JSX/TSX and Vue analysis reports each expression-bodied
+ternary branch arrow separately with its own CCN. Internal, genuine annotation
+and property/computed-key colons retain their syntax; enclosing/following
+names, spans and CCN and the outer-only curried-arrow contract are preserved.
 
-The source's key examples and
-[PR534 evidence](../../../docs/reviews/fabio-malpezzi-20261027/pr534/review-findings.md)
-are the acceptance input. The frozen
-[reproduce.py](../../../docs/reviews/fabio-malpezzi-20261027/pr534/reproduce.py)
-checks names, start/end lines and CCN for the promised rows of
-`inputs.json` and all of `supplemental-inputs.json`.
+Acceptance uses source examples and [PR534 evidence](../../../docs/reviews/fabio-malpezzi-20261027/pr534/review-findings.md).
+The frozen reproducer checks all promised input/supplemental names/spans/CCN; literal proof remains in PROOF.md.
 
 Excluded commitments: the existing object-comma sibling absorption (the
 `next` rows of `object_property`/`computed_key`), object-literal ternary
 bodies (`inherited_*`, `object_inside_ternary`; SEED-013), multiline
 continuations (SEED-014), arrow parameter bindings (SEED-016), naming
 changes, nested-arrow detection, ENS-only performance, a full JS/TS grammar.
-No sibling is a formal blocking supplier. This is the technical follow-up after
-a review that exceeded its 15-minute correction cutoff; that cutoff is not a
-time limit for this plan. No project-specific numeric slice limit was supplied.
+No sibling blocks this story; review's 15-minute cutoff does not limit selected work. No numeric slice limit applies.
 
-Preparation only: all slices below are planned. This record neither Takes the
-story nor authorizes implementation, contributor writes, merge or comments.
+The 2026-10-27 `dough-execute-plan` instruction and established start authorize execution.
+
+## Execution context
+
+- Identity: `SEED-015#ternary-arrow-boundaries`; publisher
+  `dashboard-territory.local-lizard`; agent Akiho-chan.
+- Mode: story-branch; workspace `/Users/terryyin/git/lizard/.worktrees/preserve-arrow-boundaries-across-ternary-and-typ`; branch `codex/preserve-arrow-boundaries-across-ternary-and-typ`.
+- Remote `origin`, trunk `master`; ordinary increments target the execution branch.
+  Starting revision `a2d2ab778d03cbb9ea96d243ab7533105d304eb2`; claim `6f506711595e0ad832ab5a75f5a4750a2b362415` confirmed on both remote refs. Claim trunk CI is unobserved.
+- Default checkout `/Users/terryyin/git/lizard` is not an execution location.
+- Setup: checkout-bound Nix and initial public suites passed (43 tests).
+  Use sequential `PIP_QUIET=1 nix develop -c`; no formatter/generator/hook
+  applies. Commits credit the assigned agent; no new replanning restriction.
+- CI observation: original acquisition failed; exact identity/terminal evidence: [PROOF.md](PROOF.md#ci-observation).
+  Workflow `python-app.yml` (ID `38306292`) remains push-triggered for all branches.
+- Active observer: coordinator `akiho-seed015-continuation-a5bbe368`, cell 5,
+  session 21368, `/tmp/dough-ci-501/watch-LmZv82`, PID 80173; same checkout,
+  repository and execution-branch target. Original finished stream remains closed.
+- Slice1 route: [correction-route.md](../../../docs/reviews/fabio-malpezzi-20261027/pr534/correction-route.md); open/preview available; current target evidence in PROOF.md.
 
 ## Existing owners and architectural direction
 
-PFE: change the existing ternary and expression-body colon ownership in
-`lizard_languages/typescript_states.py` (`TypeScriptStates._state_global`,
-whose scalar `_ternary_depth` today consumes any branch colon without ending a
-started arrow) and `lizard_languages/javascript_functions.py`
-(`JavaScriptFunctionsMixin._dec` / `_expecting_func_opening_bracket`, which
-consume parameter and return-type annotation colons), together with the
-binding, object and declaration mixins they compose. TypeScriptReader composes
-those owners; JavaScript, JSX/TSX and Vue script reuse them; `.cjs`/`.mjs`
-alias the same reader. Do not add a parallel parser, metric counter or
-PR-specific colon switch; keep the public facade.
+PFE: canonical ternary, signature, binding/object/declaration owners remain.
+Reuse PR536's JavaScriptBindings formal capture and TypeScriptReader's shared
+JS/TS/JSX/TSX/Vue/CJS/MJS composition.
+Keep one ternary-depth rule and annotation recognizer; no parallel parser,
+metric counter or PR-specific colon switch, and preserve the public facade.
 
-Rejected shapes from the review: raw #534 overwrites the enclosing arrow's
-ternary snapshot when a nested arrow creates no function (internal-colon
-regression), and changing one unconditional colon check cannot fix both the
-runtime-separator and the typed-annotation paths. Prefer one coherent rule:
-an arrow started inside a ternary records the depth it belongs to; only that
-depth's colon ends it; inner `?`/`:` pairs and genuine annotations are
-consumed by their own owners first.
+Reject raw #534's overwritten enclosing snapshot and a lone colon heuristic.
+Each expression arrow retains its owning depth; only that separator ends it.
+Internal pairs and genuine annotations reach their own owners first. Local
+single-state reader delivery reuses Go's pattern, preserving generic hooks.
 
 Follow [ADR-0001, Ubiquitous language](../../../docs/adrs/0001-ubiquitous-language-accepted.md)
 for CCN, language reader and function terminology, and
 [ADR-0000, Use ADRs](../../../docs/adrs/0000-use-adrs-accepted.md)
-for human-owned architectural decisions. Both are Accepted and unsuperseded.
-Established ownership supports this local correction; no North Star topic or
-ADR is warranted. No architectural exception is proposed.
+for human-owned architectural decisions. Both remain Accepted/unsuperseded;
+local reader ownership needs no North Star topic, new ADR or exception.
 
-SEED-013 and SEED-014 are Taken and change the same expression-body state.
-At Take, refresh trunk and rerun the premise observations below on the
-execution checkout; reconcile with whichever landed rather than reintroducing
-their deferred outcomes.
+SEED-013/014 corrections are already in the execution baseline. Refreshed public
+observations preserve them; do not reintroduce their previous state heuristics.
 
-## Premises observed during preparation
-
-Checkout: `/Users/terryyin/git/lizard/.worktrees/preserve-arrow-boundaries-across-ternary-and-typ`,
-revision `1db5933b66e4602f607c6ae40998984dadd5bab5`, observed 2026-10-27.
-
-- Ran `PIP_QUIET=1 nix develop -c python docs/reviews/fabio-malpezzi-20261027/pr534/reproduce.py --checkout <checkout>`.
-  92 cases; failures include every promised row: `reported.*`, `authored.*`,
-  `nested_ternary.*`, `nested_arrows.*`, `nested_arrow_internal.*`,
-  `grouped_nested_arrow.*`, `branch_object.*`, `typed_arrows.ts/tsx`,
-  `type_assertion.ts/tsx`, `typed_object_return.ts/tsx`, `jsx_attribute.*`
-  and `vue_reported`/`vue_nested_ternary`/`vue_nested_arrows`/
-  `vue_branch_object`/`vue_typed_arrows`. `internal_ternary`,
-  `block_branches`, `plain_ternary` and the literal function-type controls
-  pass (preserve them). Deferred rows (`object_property`, `computed_key`,
-  `object_inside_ternary`, `inherited_*`) also fail and are not promised.
-- Ran the same with `--inputs .../supplemental-inputs.json`: 4 cases, no
-  failures. The curried internal-colon control is green on target and must stay
-  green; it discriminates the raw #534 regression.
-- A scratch script through `analyze_file.analyze_source_code` showed
-  `{f: x => x, next: z => z && c}` reports only `f` CCN 2: the comma-sibling
-  absorption is independent of ternaries, confirming its exclusion.
-- Inspected `TypeScriptStates._state_global` lines 64–70 (`?`/`:` depth) and
-  `JavaScriptFunctionsMixin._expecting_func_opening_bracket` (return-type `:`).
-  Confirms the owners named above.
-- Hash-checked `/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr534/paired.py`
-  as SHA256 `3064d8d77047db2f084ce9fd6ae09d98acf34453316b7df20fb184cbb3217bf5`
-  and the cache `manifest.json` as
-  `113ca1889836963fe6cfd7ba62c1aa90bd927eaedc4cd8cc7b46479ecb3bccd5`, equal to
-  the checked-in manifest. From the cache `corpus` directory, ran
-  `printf '1\n' | python ../paired.py worker <checkout> 0 api` through Nix →
-  `{"seconds": …, "files": 92}`; and the CLI workload's literal command
-  `python lizard.py <corpus>/lizard.py <corpus>/lizard_core <corpus>/lizard_languages <corpus>/lizard_ext`
-  from the checkout → exit 1 (expected threshold warning) with full output.
-  Frozen baseline tree exists at `/Users/terryyin/.cache/lizard-pr-reviews-20261027/baseline`
-  (archive of `2e21e404`, not a Git checkout). This settles replay
-  reachability, not any candidate's timing. Reconstruct via the PR534 README
-  recipe if cache files disappear.
-- `gh pr view 534 --repo terryyin/lizard` returned `OPEN`, head
-  `f4074ae860c7999cc37dd081a6f7ebfa777adc83` on
-  `FabioMalpezzi:pr/js-arrow-function-in-a-ternary-branch`, base `master`,
-  `maintainerCanModify: true`. Readable metadata is not accepted publication;
-  slice 1's early probe owns permission and route.
 
 ## Proof ownership and gates
+
+Accepted source comparisons are retained in [PROOF.md](PROOF.md).
 
 | Promise | Owner and observable proof |
 | --- | --- |
@@ -115,144 +73,177 @@ revision `1db5933b66e4602f607c6ae40998984dadd5bab5`, observed 2026-10-27.
 | Untyped branch arrows end at their ternary colon; internal colons and curried contract preserved | Slice 2: new public API regressions red→green in JS/TS/JSX/TSX and Vue; promised untyped frozen rows and supplemental controls pass |
 | Typed branch signatures split; genuine function-type bodies preserved | Slice 3: red→green typed regressions in TS/TSX/Vue; typed frozen rows and literal function-type controls pass |
 | Controls and shared consumers | Slices 2–3: focused consumer suites, retained reproducer showing only deferred rows failing |
-| Strict affected and broad throughput | Slice 4: warmed paired measurements, each upper 95% slowdown bound strictly below 3% versus current target and frozen baseline `2e21e404c1ab9f4e0b49acc80816e816629d0670` |
-| Final corrected revision accepted and acknowledged | Slice 5: full pytest/make, exact-head hosted checks and merge, contributor publication/merge/acknowledgement receipts |
-
-Use `lizard-language-support` for reader/test changes. Public `analyze_file` /
-`analyze_source_code` results own semantic proof; mock only filesystem
-boundaries. Inspect every reached consumer and record run/reused/excluded with
-reasons. Independent post-change refactoring runs through the execution
-workflow before delivery; keep new tests (and any retained author test) in a
-cohesive small module below 250 lines while leaving unrelated large test files
-byte-identical.
-
-Focused command after relevant edits:
-
-```sh
-nix develop -c python -m pytest test/test_languages/testJavaScript*.py test/test_languages/testTypeScript*.py test/test_languages/testES6.py test/test_languages/testJSX.py test/test_languages/testTSX.py test/test_languages/testVue.py
-```
-
-Also rerun the retained reproducer (main and supplemental inputs) against the
-candidate checkout. `AGENTS.md` requires full `nix develop -c python -m pytest`
-before completion; the source contract additionally requires
-`nix develop -c make` and final hosted CI. Run Nix commands sequentially
-because the shell hook changes `.venv`; keep owned heavy measurement serial.
-Refresh current CI applicability in execution.
+| Preserve semantics while removing overhead and reconciling current owners | Slices 4–8: public regressions/replays; retain accepted parameters, binding children and reader lifecycle/hooks |
+| Strict affected and broad throughput | Slice 9: four original gates plus two augmented-API gates; all upper 95% slowdown bounds strictly below 3% versus current/frozen `2e21e404c1ab9f4e0b49acc80816e816629d0670` |
+| Final corrected revision accepted and acknowledged | Slice 10: full pytest/make, exact-head hosted checks and merge, contributor publication/merge/acknowledgement receipts |
 
 ## Ordered slices
 
 ### 1. Establish the contributor correction route
 Type: Behavior
-Status: planned
+Status: done
 Proof: refreshed PR/head/base, contributor-edit permission and authenticated
 publication-route observations; preserve exact refusal if unavailable.
 
-Behavior: given an explicit execution instruction, refresh PR534's patch,
-discussion, checks and current target, verify the head still names the
-intended contribution, and establish the authorized contributor-head delivery
-route (non-mutating authenticated push preview where available) before
-dependent implementation. A preview is not accepted publication; slice 5 owns
-the real update. If the PR is closed, superseded, changed incompatibly or
-cannot receive corrections, stop and return the disposition/destination
-decision to Terry. Do not substitute an unrelated trunk patch.
-
-Boundedness: one external feasibility observation; product unchanged. Failure
-stops slices 2–5 and revises the plan before edits.
+Behavior: refresh PR534's complete patch/discussion/checks/current target and
+intended head; verify contributor publication permission before implementation.
+Preview is not publication (owned by 10). Closed/superseded/incompatibly changed
+or uneditable contribution returns its disposition/destination decision to
+Terry; no unrelated trunk substitute.
 
 ### 2. End untyped branch arrows at their own ternary colon
 Type: Behavior
-Status: planned
-Proof: red→green public regressions for the reported, nested-ternary,
-nested-arrow-internal, grouped and parenthesized-object branch cases plus a
-JSX attribute and a Vue script block; the curried internal-colon control,
-`internal_ternary`, `block_branches` and `plain_ternary` stay green; the
-object-property case reports `f` 2–2 CCN 1; the reproducer's remaining
-failures are only typed and deferred rows.
+Status: done
+Proof: red→green reported/nested/internal/grouped/object/JSX/Vue regressions;
+curried/internal/block/plain controls stay green, property `f` is 2–2 CCN 1.
+Only typed and deferred reproducer rows remain; detailed proof in PROOF.md.
 
-Behavior: given an expression-bodied arrow that is a ternary branch, analysis
-ends it at the colon of the ternary it belongs to, so each branch reports its
-own CCN and the enclosing function keeps its CCN. A `?`/`:` pair inside the
-arrow's body, a nested arrow that creates no function, and a property or
-computed-key colon do not end it. Implement the depth-ownership rule in the
-shared state/mixin owners; adopt the raw proposal's useful split without its
-snapshot overwrite or #531's object heuristic. Trace JS, TS, JSX/TSX and Vue
-consumers.
-
-Boundedness: one ownership rule and one semantic regression loop across the
-shared readers; splitting by extension would leave divergent rules. A correct
-local result is a safe stopping point, unmerged.
+Behavior: shared depth owners end branch arrows at their own separator, retaining
+branch/enclosing CCN and internal/nested-curried/property/computed-key ownership.
+No raw #534 snapshot overwrite or #531 object heuristic; trace all shared consumers.
 
 ### 3. Consume typed branch signatures before branch separators
 Type: Behavior
-Status: planned
-Proof: red→green TS/TSX/Vue regressions for typed return, object return type
-and type-assertion branches; function-type alias, function-type return
-(`inherited_function_type_*` rows) and following-function controls stay green;
-the reproducer then fails only deferred rows.
+Status: done
+Proof: red→green TS/TSX/Vue return/object/assertion branches; aliases,
+function-type real bodies and following controls stay green. Only deferred
+reproducer rows remain; original expectations and detail stay in PROOF.md.
 
-Behavior: given typed branch arrows (`c ? (x: number): number => x : …`),
-the parameter and return-type annotation colons are consumed as types and do
-not decrement the runtime ternary depth, so the later branch colon ends the
-first arrow and the alternate is reported separately with its CCN. Genuine
-function-type bodies keep their real bodies. Extend slice 2's rule in the
-TypeScript declaration/annotation owner rather than adding a second colon
-recognizer.
+Behavior: annotation owners consume typed parameter/return colons without runtime
+depth changes; real separators split branch CCN, genuine function types retain
+their real bodies. Extend the existing owner without another recognizer.
 
-Boundedness: one annotation-versus-separator decision on the TypeScript path
-with its own regression loop; it reuses slice 2's ownership model. Safe stopping
-point, unmerged.
+Learning G2 requires metric-safe annotation lookahead with canonical runtime
+context; the bounded approach is retained in [PROOF.md](PROOF.md#slice-3-investigation).
 
-### 4. Meet the strict performance budget without weakening semantics
+### 4. Remove whole-stream annotation bookkeeping
+Type: Structure
+Status: done
+Proof: all 128 rows, new owner-context and seven-field comparisons preserve behavior.
+
+Structure: initial +8.480%–9.567% interval/attribution justified moving group
+context into binding/signature lifecycle. No raw-source shortcut or waiver;
+semantic qualification/refactoring/delivery remain in PROOF.md.
+
+### 5. Avoid unnecessary annotation-context traversal
+Type: Structure
+Status: done
+Proof: bounded unchanged-output profile; all 128 public/FileAnalyzer rows and
+seven public fields match 8dac7b8; focused shared-consumer regressions pass.
+
+Structure: after upper +7.623%, canonical token/signature evidence and demand buffering
+reduced work, preserving runtime/trivia/types with no parallel tracker/raw shortcut.
+
+### 6. Reconcile accepted current signature owners
+Type: Structure
+Status: done
+Proof: 128 rows/current parameter/output consumers pass; see current-owner-integration.md.
+Structure: integrate current `1bc7cbd` without rewriting published history.
+Reuse canonical formal/type owners; preserve ternary/trivia behavior, refactor/deliver before 7.
+
+### 7. Deliver sole-state tokens without unused dispatch
+Type: Structure
+Status: done
+Proof: 166 seven-field rows/CLI match ec2; hook/state/finalization and diagnostic proof retained.
+Structure: local TypeScriptReader delivery uses its sole state directly when
+the generic token hook is unchanged; preserve generic fallback and eof/state
+finalization. Reuse Go's delivery pattern, no grammar receipt/counter replay.
+Refactor and semantic delivery precede 8; no throughput waiver.
+
+### 8. Dispatch the canonical root without unused binding work
+Type: Structure
+Status: done
+Proof: 166 seven-field rows/CLI match 13c; root/child binding, callback/replay,
+configured-root fallback and existing reader lifecycle/consumer contracts pass.
+Structure: an exact reader-created root confirmed without a binding candidate
+uses canonical CodeStateMachine dispatch. Child binding wrappers remain intact;
+retain custom-root/hook/state/container fallbacks and finalization. No new parser,
+counter or metadata receipt; refactor/deliver before 9, then measure exact code.
+
+### 9. Qualify original and supplemented timing workloads
 Type: Behavior
-Status: planned
-Proof: retained raw warmed timing pairs, immutable harness/corpus hashes,
-candidate/base revisions and intervals for every required workload.
+Status: done
+Proof: root-performance.md retains exact737/34cd/frozen six-gate qualification;
+all six paired95% upper bounds are strictly below3%, with before/after correspondence.
 
-Behavior: given the semantically correct candidate, affected API (frozen 92
-files plus the four supplemental controls, frozen and hashed as a labelled
-addition before timing, leaving the original manifest unchanged) and broader
-CLI workloads each show an upper paired 95% slowdown bound strictly below 3%
-versus current target (incremental) and the frozen `2e21e404` baseline
-(cumulative). A broad pass cannot hide an affected failure. The raw intervals
-remain diagnosis only.
+Behavior: 128 affected API inputs and unchanged broad CLI each pass versus
+current and frozen `2e21e404`: same Nix, 20 alternating warmed pairs, 1.5-second
+calibration, batches over one second. Freeze revisions/harness/corpus/imports/
+public tuples; retain every duration, median, variability and interval.
+Also freeze all 38 added controls; augmented 166-input API passes both targets.
+Preserve prior results. Every upper bound must be strictly below 3%; no broad
+averaging, noise waiver or repeat without prospective justification. Further
+optimization repeats semantic proof. Literal protocol remains in PROOF.md.
 
-Run literal `paired.py --baseline <checkout> --candidate <candidate> --workload api|cli --pairs 20 --seconds 1.5 --out <result>`
-through Nix from the cache `corpus` directory, same interpreter, warmed
-alternating pairs with batches over one second; record load, durations,
-medians, variability and intervals. Confirm imported paths and public metric
-tuples before timing. Profile only when needed and simplify the shared rule
-rather than adding fast paths; re-run slices 2–3 proof after optimization.
-Noise or an upper bound of 3% or more is failing; fix a prospective quiet
-retry protocol rather than repeating for a pass.
-
-### 5. Deliver the qualified correction through PR534
+### 10. Deliver the qualified correction through PR534
 Type: Behavior
 Status: planned
 Proof: final contributor-head SHA and accepted push, green current required CI,
 exact-head guarded merge receipt, and one acknowledgement URL.
 
-Behavior: given the corrected/refactored candidate with semantic and
-performance proof, publish corrections to the contributor branch without force
-or lost history, run full pytest and make on the final revision, verify final
-head/base/tree and all required checks, then perform an exact-head guarded
-hosted merge. Follow the
-[complete-cycle contract](../../../docs/reviews/fabio-malpezzi-20261027/REVIEW-CONTRACT.md);
-its 15-minute triage rule does not re-defer this selected correction. Hosted
-merge is not a Dough Land operation. After confirmed merge, with explicit
-acknowledgement authority, post one thank-you noting material corrections
-(check for a prior receipt). Retain evidence in the review record, then wrap up.
+Behavior: publish qualified contributor corrections without force/lost history.
+Run full pytest/make; verify final head/base/tree and required checks before
+exact-head hosted merge. Follow the [contract](../../../docs/reviews/fabio-malpezzi-20261027/REVIEW-CONTRACT.md);
+its 15-minute triage cutoff does not re-defer selected work. Hosted merge is
+not Dough Land. After confirmed merge, use explicit acknowledgement authority
+for one thank-you noting material corrections; check prior receipt, retain URL
+and review evidence, then wrap up.
 
-Boundedness: one qualified contribution reaching users and author, with
-separate hosted wait time. Pending CI, merge or acknowledgement leaves this
-slice unfinished.
+Pending CI, merge or acknowledgement leaves this slice unfinished.
 
-## Plan review
+## Story obligations
 
-Slice-plan refinement was not needed: slices separate a permitted early
-external probe, the untyped ownership rule, its typed-annotation extension
-(separate regression loop on the TypeScript path, reusing one model), the
-independent performance loop and hosted delivery. The cumulative design keeps
-one ternary-depth ownership model and rejects the raw snapshot overwrite and
-single-colon-check shapes. No remaining slice-specific concern was found;
-contributor publication is bounded by the early probe. No human decision is
-currently pending.
+### G1. Typed branch return signatures remain combined
+Reported: slice 2 — "Candidate main replay: 92 cases, only typed_arrows.ts, typed_arrows.tsx, typed_object_return.ts, typed_object_return.tsx, and vue_typed_arrows.vue still fail."
+Story clause: "a genuine signature annotation is consumed as a type before it can be taken as a runtime branch separator."
+Disposition: proved by slice 3: corrected-semantics.md typed signatures; all 92 frozen rows pass through public analysis/FileAnalyzer.
+
+### G2. Return annotations with untyped or empty parameters remain combined
+Reported: slice 3 — "Ordinary (x): number => x and (): number => 1 work outside a ternary; their ternary equivalents still report one anonymous CCN-2 arrow instead of separate CCN-1/2 arrows."
+Story clause: "a genuine signature annotation is consumed as a type before it can be taken as a runtime branch separator."
+Disposition: proved by slice 3: test_typed_branch_annotations_are_not_runtime_colons and labelled signature inputs preserve untyped/empty parameters, names/spans/CCN.
+
+### G3. Nested runtime groups steal an outer separator during lookahead
+Reported: slice 3 — "All six TS/TSX/Vue nested call/group cases fail on the first lookahead implementation, including the following typed cb initializer."
+Story clause: "Colons inside the arrow's own body, genuine TypeScript annotations, and property or computed-key colons keep their own syntax, and the enclosing and following functions keep their correct names, spans and CCN."
+Disposition: proved by slice 3: test_nested_runtime_separator_keeps_following_type_annotation and six baseline/candidate full-metric comparisons preserve runtime groups and named cb.
+
+### G4. Incremental affected API exceeds budget (first reported in slice 4)
+Reported: slice 8 — "Current/API upper +9.567% initially, +7.623% at 8dac, ec2 +6.891%/+7.259%; 13c original interval [3.102%,4.156%] fails materially and augmented upper3.556% remains unproved."
+Story clause: "with a paired 95% upper slowdown bound strictly below 3% for both incremental and cumulative affected and broader workloads."
+Disposition: proved by slice 9: root-performance.md exact737 all six upper bounds1.714/.311/−8.185/.633/2.528/−4.222% pass; complete numeric receipts and immutable inputs/imports/public correspondence retained.
+
+### G7. Current-owner integration changes a nested runtime-group control
+Reported: slice 6 — "Eight new runtime-group controls report an additional anonymous CCN-1 arrow after PR536 integration; 828 other tests pass."
+Story clause: "the enclosing and following functions keep their correct names, spans and CCN."
+Disposition: proved by slice 6: current-owner-integration.md exact three-version probes and explicit initializer assertions match accepted current1bc; original 128 rows and curried controls pass, surrounding metrics preserved.
+
+### G5. Native CI observation ended after acquisition failed
+Reported: slice 4 — "CI_MONITOR_UNAVAILABLE: GitHub workflow-runs acquisition failed; original observer finished and its process ended."
+Story clause: "satisfactory performance/CI."
+Disposition: receiving slice 10
+
+### G6. Earlier qualification driver terminal receipt unavailable
+Reported: slice 5 — "No original numeric exit code is retained; four complete result/log pairs match, and independent postcheck terminated successfully."
+Story clause: "with coherent ownership, discriminating regression proof and satisfactory performance/CI."
+Disposition: proved by slice 7: final-performance.md and final-postcheck.json retain all six child/driver numeric exits; historical receipt loss remains explicit.
+
+### G8. Qualification setup reused a path-dependent historical CLI hash
+Reported: slice 7 — "First freeze exited 1 before timing; historical CLI hash embeds the prior absolute corpus prefix."
+Story clause: "satisfactory performance/CI."
+Disposition: proved by slice 7: final-setup-failure.json and final-performance.md preserve failed setup, exact prefix-only cause and setup2 byte-identical three-version outputs.
+
+### G9. Diagnostic baseline imported a candidate-only helper
+Reported: slice 7 — "Control setup exited 1 before profiling because current target has no parameter_group helper."
+Story clause: "satisfactory performance/CI."
+Disposition: proved by slice 7: api-attribution.md preserves setup1 source/exit, conditional-import control2 correction and exact seven-field equality; no product or statistical change.
+
+### G10. Reader protocol fixture omitted existing indexing capability
+Reported: slice 7 — "Eight protocol tests passed; the alternate iterable fixture failed at unchanged preprocess's parallel_states[0] before delivery."
+Story clause: "satisfactory performance/CI."
+Disposition: proved by slice 7: reader-dispatch.md retains failed fixture/receipt and corrected indexed-without-len container; actual grammar/metrics and all eleven protocol observations pass.
+
+### G11. Auxiliary refactor audit counted only Python consumers
+Reported: slice 10 — "Audit wrongly counted only located consumer rows mentioning .py;492 covers every consumer kind"
+Story clause: "satisfactory performance/CI."
+Disposition: proved by slice 10: delivery-local-proof.md retains failed auxiliary filter and corrected audit exit0; all492 located consumers, original correct assertions and accepted product/proof remain unchanged.

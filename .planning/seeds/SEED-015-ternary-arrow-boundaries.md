@@ -15,7 +15,7 @@ scope: medium
 
 **Identity:** SEED-015#ternary-arrow-boundaries
 ```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/011-ternary-arrow-boundaries/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"cf80763caf2f743bff0fdc9bc962a15a8ba1faa908e059f9b750e1979d5f2951","plan":"03d81726707ede992d8f97ee6738af17936b3e31dbe4e0098d3ff070779448e3"}}
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/011-ternary-arrow-boundaries/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"e4aa075a9b5f8af7470b714e4c477fd13a57925dd8982045e9fda2cad5f42a94","plan":"c2181dfcb6e9850d638ccbf4e6f9104a0225546dda42414de02212c51d7b65dd"}}
 ```
 
 **Beneficiary:** JavaScript, TypeScript, JSX/TSX and Vue users relying on
