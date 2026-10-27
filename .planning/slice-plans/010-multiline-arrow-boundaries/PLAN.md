@@ -327,6 +327,25 @@ Each optimization kept analysis output byte-identical (150 corpus files and 727
 recorded test snippets) and the reproducer at 0 failures. No retry was used to
 seek a pass; each measured candidate is a different revision.
 
+**Slice 3 renewal after trunk `c3f7175` (SEED-012 regex context, PR528):**
+clean merge `3117601`; full pytest 1839 passed, reproducer 0/150, authored 5
+pass, probes unchanged (line-start `/` continues as division per ASI). Gate for
+`3117601` (load 3.4–6.7): API vs c3f7175 −5.98%, CI [−6.28, −5.13]; CLI vs
+c3f7175 +0.45%, CI [−0.37, 1.26]; API vs 2e21e40 −8.62%, CI [−8.69, −7.74];
+CLI vs 2e21e40 +1.37%, CI [0.47, 1.82] — all pass.
+
+**Slice 4 progress (unfinished):** contributor candidate `b6074d8` built in a
+temporary worktree (`/Users/terryyin/.claude/jobs/315328aa/tmp/pr533wt`):
+merge of `c3f7175` into PR head `15423852` (fast-forward descendant, no force
+needed); analyzer files byte-identical to `3117601`; `testES6.py`
+byte-identical to master; the author's five multiline tests moved verbatim
+into `test/test_languages/testJavaScriptArrowLines.py` (99 lines) beside
+`testJavaScriptArrowBoundaries.py` (214 lines). In that worktree: full pytest
+1844 passed, 7 skipped; `make` exit 0; reproducer 0/150. The push to
+`FabioMalpezzi/lizard` `pr/js-arrow-function-ends-with-its-line` was refused
+by this session's permission classifier (external publication); it awaits
+Terry's decision. Hosted CI, exact-head merge and acknowledgement remain.
+
 ## Story obligations
 
 ### G1. Comma before a line break outside objects keeps baseline ownership
