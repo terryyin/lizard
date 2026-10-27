@@ -89,3 +89,56 @@ backlog or done records, including clean fast-forwards and contributor branches.
   - Evidence: PR535 dependency merge into contributor head 1a44c0cad59ea3f3dcabe3c1ac601d905437a7c7; execution-branch revision f25aeca2, .planning/slice-plans/004-fabio-malpezzi-pr-reviews/535-review.md and CONTEXT.md. Later validation-checkout advance to 53e4850 used its installed product-backlog-git-merge.mjs adapter.
   - Observed effect: the coordinator used native Git for the dependency merge and an earlier private validation fast-forward before rereading the adapter rule. Complete candidate/landed trees matched the validated result, and the subsequent done-catalog audit found 18 records already current; no incorrect merged backlog was observed.
   - Inference: clean Git output does not validate domain reconciliation. The resulting product proof remains supported, while the process bypass should not recur.
+
+## DD-006 — `python -c` import probes contaminate via argv0
+
+Do not use `python -c` to verify checkout-isolated imports for Lizard performance
+or multi-checkout work. Prefer a script whose `sys.argv[0]` matches the real
+harness worker (or another real file path under the intended checkout).
+
+### Occurrences
+- Execution: SEED-013#arrow-object-boundaries
+  - Timestamp: unknown
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.71
+  - Evidence: slice 3 performance agent
+    `89783fe2-57ff-41aa-b641-0cef9d98622b`; diagnosis that
+    `lizard.py` uses `abspath(sys.argv[0])` so `python -c` becomes
+    `abspath('-c')` and contaminates toward cwd; corrected harness-shaped
+    `/tmp/probe-paired-imports.py`;
+    `docs/reviews/fabio-malpezzi-20261027/pr531/corrected-slice3-prelaunch.txt`
+    (2026-10-27T11:47:50Z) and gaps/learnings in that agent's return.
+  - Observed effect: false import-path failures during pre-measurement probes;
+    real `paired.py` workers were fine. Extra diagnosis before timing.
+  - Inference: probe argv0 must match the harness, not `-c`; this is a
+    project-local import bootstrap trap rather than a failing harness.
+
+## DD-007 — Expression-body flag gated on “newly created” missed paren-param arrows
+
+When setting runtime-arrow expression-body context, derive it from the body
+token for every path that reaches `_arrow_function`, including arrows already
+pushed from `(...)` parameters. Do not gate the flag on “newly created.”
+
+### Occurrences
+- Execution: SEED-013#arrow-object-boundaries
+  - Timestamp: unknown
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.71
+  - Evidence: independent refactor agent
+    `c1df6a2a-bff5-455b-a7a1-638d227d1f52` (“Confirmed an incomplete rule:
+    `if created:` skips `_expression_body` when params already pushed”);
+    plan slice 2 learning in
+    `.planning/slice-plans/009-arrow-object-boundaries/PLAN.md`; fixture in
+    `test/test_languages/testArrowObjectBoundaries.py` uses paren-param
+    ternary objects.
+  - Observed effect: first slice-2 implementation left paren-param ternary
+    object arrows wrong until the refactor pass cohered ownership and reran
+    proof (6 / 363 / reproduce 64).
+  - Inference: multiple push paths for the same runtime arrow make
+    creation-gated flags incomplete; body-token ownership is the coherent rule.
+
+## Retention
+
+- Highest allocated local number: 7
