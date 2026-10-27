@@ -30,8 +30,51 @@ blocking supplier. This is the technical follow-up after a review that
 exceeded its 15-minute correction cutoff; that cutoff is not a time limit for
 this plan. No project-specific numeric slice limit was supplied.
 
-Preparation only: all slices below are planned. This record neither Takes the
-story nor authorizes implementation, contributor writes, merge or comments.
+Execution authorized by Terry's `dough-execute-plan` invocation on 2026-10-27.
+The established start owns the published Take; no second start was made.
+
+## Execution state and accepted proof
+
+- Identity: `SEED-016#arrow-parameter-bindings`; publisher
+  `dashboard-territory.local-lizard`; assigned agent `Sola-chan`.
+- Execution and originating checkout:
+  `/Users/terryyin/git/lizard/.worktrees/report-consistent-javascript-and-typescript-arro`;
+  branch `codex/report-consistent-javascript-and-typescript-arro`, Story Branch
+  Mode. This is the established owned linked worktree; no integration checkout
+  is selected for mutation. Authorized remote/trunk: `origin` / `master`.
+- Starting revision: `65c1a10c5a2509188957af6abbc16353442a2dfc`; accepted claim,
+  previously published branch base and initial candidate:
+  `7f479101728b5fec8becaf7c784b752ed736719e`.
+- Checkout setup: checked-in `shell.nix` creates the local venv and installs
+  `dev_requirements.txt`; `nix develop -c python -m pytest
+  test/test_languages/testJavaScriptParameterNames.py` passed 34 tests here.
+  Nix commands remain serial. No selective formatter or commit hook is installed;
+  `make` owns the required style checks. Workspace author is `Sola-chan`.
+- CI: GitHub Actions `python-app.yml`, verified active ID `38306292`, display
+  name `Python application`; push trigger covers the execution branch.
+  Codex observer coordinator `sola-seed016`, directory
+  `/tmp/dough-ci-501/watch-TEDK9c`, PID `99850`, PTY session `74466`, yielded
+  continuation cell `32`. Request root/repository/branch and owner hash were
+  checked against this checkout and coordinator after recovering the header.
+  It covers ordinary branch increments; the initial trunk claim is unobserved.
+- No numeric slice hard limit is configured. Replanning retains the plan's
+  existing authority within this story; product promises remain unchanged.
+- Source-only acceptance review: fresh non-inheriting `source_commitments`
+  agent received the source Goal, Scope, examples, representation, completion
+  and explicit execution amendment, no plan/product/return or project-file
+  access. Its launch and 72 returned commitments are retained in the execution
+  conversation. Compared with the actual source: counts/names, all four-arrow,
+  alias, empty-pattern and typed examples, reader/consumer coverage, controls,
+  representation/ownership, performance, checks and exclusions remain intact.
+  They are future obligations of slices 2–5, not results of this route probe.
+- Slice 1 expected route: the intended open contribution can receive a qualified
+  correction without losing contributor history. Actual observation: unchanged
+  open head, maintainer editing enabled, matching fork ref and authenticated
+  receive-pack dry-run exit 0. Commands, observed refs/checks/discussion and
+  preview limitations: [contributor-route.md](../../../docs/reviews/fabio-malpezzi-20261027/pr536/contributor-route.md).
+  This accepts feasibility only; changed-candidate push acceptance and final
+  head/CI/merge/acknowledgement remain slice 5's obligations. No product tests
+  are claimed for this evidence-only slice.
 
 ## Existing owners and architectural direction
 
@@ -146,7 +189,7 @@ measurement serial. Refresh current CI applicability in execution.
 
 ### 1. Establish the contributor correction route
 Type: Behavior
-Status: planned
+Status: done
 Proof: refreshed PR/head/base, contributor-edit permission and authenticated
 publication-route observations; preserve exact refusal if unavailable.
 
