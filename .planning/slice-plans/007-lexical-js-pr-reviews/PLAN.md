@@ -90,15 +90,27 @@ Detail: [SLICE-PROOF.md](SLICE-PROOF.md).
 
 ### 1. JavaScript line-comment termination — PR #544
 Type: Behavior
-Status: planned
+Status: done
 Source: https://github.com/terryyin/lizard/pull/544
 Frozen head: `3ac7e4eaf61e898836fded88ab715b37f9fedbbf`
 Proof: [slice 1](SLICE-PROOF.md); complete-cycle gates owned here.
+Accepted proof: story fixture `b` is CCN 4 / NLOC 8 on `.js`/`.ts`/`.jsx`/`.tsx`;
+C/C++ same shape stays CCN 3 / NLOC 7; focused JS/TS suite + tokenizer/C++
+controls; full pytest/make; six performance gates under
+[pr544](../../../docs/reviews/fabio-malpezzi-20261027/pr544/); consumer
+dispositions in `consumer-trace-dispositions.md`. Independent refactor:
+none — already clean. Remaining cycle: required CI on published candidate,
+exact-head merge, thanks.
 
 Behavior: given JS-family source whose line comment ends with `\`, analyzing it
 does not hide the next line's tokens from CCN/NLOC; C/C++ continuation after
 `\` is preserved when shared comment machinery is touched; the PR receives a
 full contract disposition.
+
+Learnings: raw PR CONFLICTING vs current `JS_IDENTIFIER`; adapted extract of
+shared `LINE_COMMENT` onto current target. Story/body fixture (CCN 4 / NLOC 8)
+supersedes the PR's shorter sample. Tiny affected corpora inflate measured
+slowdown once hidden tokens are processed — expand controls before claiming.
 
 ### 2. Conditions in template interpolations — PR #545
 Type: Behavior

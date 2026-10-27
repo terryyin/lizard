@@ -17,6 +17,13 @@ line. Preserve C/C++ continuation when shared comment logic changes. Run the
 plus every shared consumer the actual change reaches; then full suite, `make`,
 required CI, and the rest of the complete cycle.
 
+Execution (candidate ready for publish): adapted `LINE_COMMENT` in
+`javascript_templates.py` wired into TypeScript/TSX `generate_tokens`.
+`testJavaScript.py::Test_JavaScript_line_comment_ending_with_a_backslash`
+observes CCN 4 / NLOC 8 across four extensions; C/C++ control remains CCN 3 /
+NLOC 7. Evidence root:
+[docs/reviews/fabio-malpezzi-20261027/pr544/](../../../docs/reviews/fabio-malpezzi-20261027/pr544/).
+
 ### 2. Conditions in template interpolations — PR #545
 
 Source: https://github.com/terryyin/lizard/pull/545  
