@@ -1,4 +1,4 @@
-{ pkgs ? import <nixpkgs> { } }:
+{ pkgs ? import <nixpkgs> { }, nodejs ? pkgs.nodejs }:
 with pkgs;
 let
   apple_sdk = darwin.apple_sdk.frameworks;
@@ -9,6 +9,7 @@ in mkShell {
     python39Packages.pip
     python39Packages.setuptools
     python39Packages.virtualenv
+    nodejs
     vim
     git less
   ];

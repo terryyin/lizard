@@ -87,7 +87,7 @@ proof must use the implementation candidate.
 
 ### 1. Contributors can verify the existing analysis journey in a browser
 Type: Behavior
-Status: planned
+Status: done
 Proof: A clean contributor install runs Gherkin scenarios with Playwright
 against the actual homepage, and a disabled analysis path makes the metric
 scenario fail instead of yielding a false green.
@@ -294,7 +294,49 @@ concern was identified in this review. Hosted run/skip receipts are future
 implementation acceptance proof, not a claim that CI was exercised during
 preparation. No pre-Take human decision is required by this plan.
 
+## Story obligations
+
+### G1. Visible focus is not asserted by browser scenarios
+Reported: slice 1 — "Visible focus styling is not asserted; keyboard reach and activation are."
+Story clause: "Preserve keyboard access, visible focus, narrow-screen usability"
+Disposition: receiving slice 2
+
+### G2. No-JavaScript notice and published image URLs are not observed against the new page
+Reported: slice 1 — "The no-JavaScript notice and the published logo/favicon URLs are not covered in the browser; they are HTTP-tested in pytest."
+Story clause: "Keep published logo and favicon URLs."
+Disposition: receiving slice 2
+
+### G3. Linux browser install and clean-commit checkout are not exercised
+Reported: slice 1 — "The Nix and Playwright path is proved on aarch64-darwin only. Linux `--with-deps` is documented but not run"
+Story clause: "Supply it through the repository's Nix entry point as well as CI"
+Disposition: receiving slice 3
+
+## Execution record
+
+- Mode: story-branch; branch `claude/modernize-the-website-with-react-and-conditional`
+  on `origin`, target `master`; claim published at `3a11bc6`.
+- Independent source-only review returned commitments P1–P50 (goal, scope,
+  journeys, boundary, deferrals) and is used for every slice's acceptance.
+- Slice 1 accepted: `nix develop -c npm --prefix website/frontend run test:e2e`
+  passed 12 scenarios/107 steps against the current Flask page (coordinator
+  rerun); `E2E_BLOCK_ANALYSIS=1 ... -- --name 'The Python sample reports'`
+  failed at the metric status step; no Flask child remained afterwards. Full
+  pytest 1751 passed. Stable React resolved at execution start: `react` and
+  `react-dom` 19.3.1. Post-change refactor simplified `hooks.js` shutdown
+  (exit hook kills the server; signals call `process.exit`); e2e and the
+  forced failure were rerun after it. The interrupt path after that edit
+  relies on Node's documented `process.exit` → `exit` behaviour and was not
+  re-observed; pass/fail cleanup, which the plan requires, was.
+
 ## Learnings
+
+- Stopping the owned Flask child with SIGSTOP/SIGCONT gives a real pending
+  state and genuine 20-second timeout without faking responses (POSIX only).
+- The Node nixpkgs input is locked at `718f670`, newer than the preparation
+  observation; it still supplies Node 24.21.0/npm 11.19.0.
+- `.gcloudignore` now excludes `website/frontend/` so a manual deploy before
+  slice 2 cannot upload `node_modules`; slice 2 still owns the bundle contract.
+
 
 The existing page already supplies the interaction and visual baseline. Its
 API tests are fast but its HTML assertions couple Python-only testing to the

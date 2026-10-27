@@ -12,6 +12,7 @@
 !lizard_ext/**
 !website/
 !website/**
+website/frontend/
 !templates/
 !templates/**
 **/__pycache__/

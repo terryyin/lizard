@@ -2,8 +2,8 @@
 
 The website is a Flask adapter around `lizard.analyze_file.analyze_source_code`.
 `index:app` is the application; `website.application` remains a compatibility
-import. The homepage, demo, styles and examples are local assets. No browser
-libraries or frontend build are required.
+import. The homepage, demo, styles and examples are local assets. Serving the site
+needs no browser libraries or frontend build.
 
 ## Local development
 
@@ -42,6 +42,33 @@ is configured with `max_instances: 2`. These controls bound work but are not a b
 cap or a distributed rate limiter. Source is processed in memory and is not
 saved or logged by the app. Do not enable debug mode or request-body logging
 on the public service. Use the local CLI for private source or larger files.
+
+## Browser tests
+
+Browser scenarios live in `website/frontend/features/` and run with Cucumber
+and Playwright (Chromium). The Nix shell supplies Node 24 from a separately
+pinned nixpkgs input; npm and the packages come from
+`website/frontend/package-lock.json`. Install once per clean checkout, then
+run the suite:
+
+```sh
+nix develop -c npm --prefix website/frontend ci
+nix develop -c npm --prefix website/frontend exec -- playwright install chromium
+nix develop -c npm --prefix website/frontend run test:e2e
+```
+
+On Linux CI, also install the browser's system libraries with
+`playwright install --with-deps chromium`. `run test:e2e:dry` lists the
+scenarios without starting anything.
+
+The suite starts the real Flask app (`python -m flask --app index run`) on a
+free local port, opens a fresh browser context per scenario, and stops the
+server when the run passes, fails or is interrupted. Scenarios use the actual
+analyzer; recovery scenarios stall or stop the owned server rather than faking
+responses. A failure saves a screenshot under `website/frontend/reports/` and
+prints the server log tail. To check that the suite catches a broken analysis
+path, set `E2E_BLOCK_ANALYSIS=1`; the browser then cannot reach `/analyze` and
+metric scenarios fail.
 
 ## Inspect the existing project
 
