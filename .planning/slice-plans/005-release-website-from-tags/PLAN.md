@@ -49,7 +49,9 @@ Preparation at `ca7f5ac` observed lockfile build/upload selection, real browser 
   or replan override supplied; retain planning authority and bounded proof loops.
 - Slice 1 publication accepted as `0fb43372a348795b6d4eb34fbd6df9c6f3c38a1e`,
   suffix base `96e5aa4d77906e46f20f80a4bf1593c095314528`; same branch observer reused.
-- Latest accepted increment: slice 2 `19f934a4e5f0e14b2cafd66fd1378000738392d7`, suffix base `0fb43372a348795b6d4eb34fbd6df9c6f3c38a1e`, same target/observer.
+- Latest accepted increment: slice 3 `f0e6f2b4aaab593ce77a1f3b4394fc54300a3994`, suffix base `19f934a4e5f0e14b2cafd66fd1378000738392d7`, same target; exact CI run40507224794/attempt1 succeeded.
+- Retrospective attribution: clean96e5aa4..f0e6f2b4 consists only of0fb43372(auth setup),19f934a4(tag previews),f0e6f2b4(publication/recovery). Preparation/Take and prior React work are provenance, not added implementation; diagnostic commits are supporting live proof.
+- Enabled process review recorded one current-execution recurrence each under existing DD-001/DD-002/DD-003 in DearDough.md (54→78 physical lines, no retention/warning). Product review/planning unchanged; no correction or unresolved attention.
 - Exact-checkout Nix setup succeeded; `nix develop -c python lizard.py --version`
   returned `1.24.3`. Dependency/product inputs remain unchanged by preparation/Take.
 - Codex observer: `hibiki-seed012`, repo `terryyin/lizard`, target execution branch,
@@ -228,6 +230,10 @@ split/URLs/stage/result/recovery, including credential failure without secrets.
 Complete documentation for WIF/checks/tags/inspection/failure phases/concurrency/
 pending replacement and manual restore. Retain old versions, no automatic cleanup
 or rollback. Unobserved hosted acceptance remains outstanding with its owner.
+
+## Execution complete
+
+Product advice: no change. Original tag/auth/build/preview/promotion/public/retry/recovery promises are observed, with no unsupported compatibility residue or ADR conflict. CLI/real-HTTP tests own release contracts; existing analyzer/API tests and 16 browser journeys retain distinct coverage. The 13.22-second full suite gives no supported consolidation need. This maintenance capability fits current direction; no correction or backlog adoption is recommended.
 
 ## Verification and delivery gates
 
