@@ -3,6 +3,82 @@
 See [local development and browser checks](website.md) for the application setup
 and [Actions deployment identity](website-deployment-identity.md) for credential setup.
 
+## Website tags and Actions previews
+
+The `Website release` workflow currently produces a **verified preview only**.
+It does not promote public traffic. Automatic promotion and public verification
+are the next implementation slice; inspect the reported result rather than
+treating a preview-only run as a completed public release.
+
+Publish an immutable website tag at the intended commit, using Git directly:
+
+```sh
+git tag -a web-1.2.3 -m 'Website 1.2.3' COMMIT
+git push origin refs/tags/web-1.2.3
+```
+
+Lightweight tags also work. Each version component is a nonnegative decimal
+integer without leading zeroes except `0`; `web-0.0.0` is valid. Dots map to
+hyphens (`web-1.2.3` → `web-1-2-3`), with at most 32 mapped characters for
+this existing project/service. Prerelease and build suffixes are unsupported.
+There is no numeric ordering requirement: the maintainer chooses the tag.
+Never move or reuse a published tag for a different source.
+
+Only `web-*` tag pushes select `.github/workflows/website-release.yml`.
+Malformed website tags fail the credential-free validation job; the dependent
+preview job cannot authenticate or deploy. Ordinary branches, pull requests and
+package tags do not select this workflow. The existing PyPI workflow is separate.
+Tag text is passed through environment data, never inserted into shell code.
+
+Validation peels the immutable event object and compares it with the checkout;
+the preview job checks out that validated commit. Annotated tags are supported.
+Reruns use the original event object, not the current branch head or a moved
+tag. If that object is no longer available, recover it before retrying; the
+workflow fails instead of guessing another source.
+
+Every valid tag runs Python tests and checks, the declared Node/npm tooling,
+`npm ci`, the build and all browser scenarios, even when branch CI would skip
+its browser job. Authentication follows validation. Deployment uploads that
+tested generated bundle without rebuilding, using `--no-promote` and
+`--no-stop-previous-version`. The preview checks normal HTTPS, generated assets
+and real sample analysis, and compares the complete traffic split before/after.
+App Engine can finish deployment before dispatching the first request. Initial
+homepage 5xx responses receive a bounded two-minute readiness wait, with normal
+TLS and at most ten seconds per request. Persistent failure still fails the run;
+homepage content, assets and analysis assertions are not retried into success.
+
+Inspect the run's summary and `website-source` / `website-release` artifacts.
+They retain the tag, event object, peeled/checked-out source, mapped version,
+upload list, preview/public URLs, previous split, stage and result. Browser
+reports are retained too; credential files are excluded. The source and tag
+are also written into the App Engine version's environment metadata.
+
+Retry a failed run for the same immutable source using Actions **Re-run jobs**.
+An existing version can be redeployed only when its source identity is
+established and it has zero public traffic. A matching already-serving version
+is verified without redeploying it. Missing/different metadata or unknown traffic
+state fails with guidance to inspect the version and use a new immutable tag;
+never overwrite a serving mismatch. Old versions remain available for recovery.
+
+### Observed tag runs
+
+Verified on 2026-10-27; all tags remain immutable:
+
+| Tag | Observed result |
+| --- | --- |
+| `web-01.0.0` | [Validation failed](https://github.com/terryyin/lizard/actions/runs/40486098691); preview job, authentication and deployment skipped |
+| `web-0.0.0` | [First preview failed](https://github.com/terryyin/lizard/actions/runs/40486246278) when App Engine aborted initial dispatch before assigning an instance; traffic stayed unchanged; bounded readiness was added |
+| `web-0.0.2` (lightweight) | [Verified preview](https://github.com/terryyin/lizard/actions/runs/40488146510), version `web-0-0-2` |
+| `web-0.0.3` (annotated) | [Verified preview](https://github.com/terryyin/lizard/actions/runs/40488849369), version `web-0-0-3` |
+
+Both successful runs deployed tested source
+`5d320dd497c0eb96d3f57cf5521ec05a8bfdb510`, runtime `python313`, with matching
+source/tag metadata, normal HTTPS, every generated asset and real sample metrics
+(CCN 3, NLOC 6, one parameter). The annotated event object
+`6daa7515aeb9930b5b826ff7e57a454835c1e7f1` peeled to that checked-out source.
+Complete before/after splits and subsequent readback all retained
+`revive-20261027-f818daf: 1.0`; neither run promoted public traffic.
+
 ## Inspect the existing project
 
 Use gcloud directly, with explicit project selection:
