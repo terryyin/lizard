@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "agent": "Eimi-chan",
+  "email": "eimi-chan@example.org",
+  "activity": "preparation",
+  "identity": "SEED-012#renovate-website-first-design",
+  "host": "claude"
+}
