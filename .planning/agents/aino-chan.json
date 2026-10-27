@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "agent": "Aino-chan",
-  "email": "aino-chan@example.org",
-  "identity": "SEED-011#revive-lizard-website",
-  "mode": "story-branch",
-  "branch": "codex/revive-lizard-website",
-  "host": "codex"
-}

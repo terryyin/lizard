@@ -1,0 +1,18 @@
+# Deploy only the application, analyzer, and public assets.
+**
+!app.yaml
+!requirements.txt
+!index.py
+!lizard.py
+!lizard_core/
+!lizard_core/**
+!lizard_languages/
+!lizard_languages/**
+!lizard_ext/
+!lizard_ext/**
+!website/
+!website/**
+!templates/
+!templates/**
+**/__pycache__/
+**/*.pyc
