@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "agent": "Ai-chan",
+  "email": "ai-chan@example.org",
+  "identity": "SEED-017#vue-source-line-numbers",
+  "mode": "story-branch",
+  "branch": "cursor/preserve-original-vue-line-numbers-when-template",
+  "host": "cursor"
+}
