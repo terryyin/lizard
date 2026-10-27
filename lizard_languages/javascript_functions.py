@@ -73,6 +73,9 @@ class JavaScriptFunctionsMixin:
             self._abandon_function()
             self.next(self._state_global, token)
             return
+        if token == 'this' and self._parameter_bindings.at_start:
+            # TypeScript's leading receiver declaration is not an argument.
+            self._in_parameter_type = True
         event = self._read_parameter_binding(token)
         if event.ended:
             self._state = self._expecting_func_opening_bracket
