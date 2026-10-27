@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "agent": "Rina-chan",
-  "email": "rina-chan@example.org",
-  "identity": "SEED-014#multiline-arrow-boundaries",
-  "mode": "story-branch",
-  "branch": "claude/preserve-multiline-arrow-expressions-and-surroun",
-  "host": "claude"
-}

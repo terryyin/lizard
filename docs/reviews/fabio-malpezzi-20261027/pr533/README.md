@@ -1,8 +1,8 @@
 # PR533 retained review evidence
 
-Disposition: defer to [SEED-014#multiline-arrow-boundaries](../../../../.planning/seeds/SEED-014-multiline-arrow-boundaries.md#multiline-arrow-boundaries)
-and leave authored head `15423852c04aed302f684395fe9522251d88a2f2` unmerged.
-[review-findings.md](review-findings.md) owns the observations and limits.
+Disposition: corrected and merged (merge commit `a2d2ab7`, head `b6074d8`);
+[review-findings.md](review-findings.md) records the delivered correction and
+the original review observations and limits.
 
 The original measured performance harness has
 SHA256 `3064d8d77047db2f084ce9fd6ae09d98acf34453316b7df20fb184cbb3217bf5`.

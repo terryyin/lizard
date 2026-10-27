@@ -6,7 +6,6 @@ Maintenance, bug fixing, and PR reviews.
 
 ## Taken
 
-- [Preserve multiline arrow expressions and surrounding statement metrics](seeds/SEED-014-multiline-arrow-boundaries.md#multiline-arrow-boundaries) — SEED-014#multiline-arrow-boundaries ([plan](slice-plans/010-multiline-arrow-boundaries/PLAN.md))
 - [Preserve arrow boundaries across ternary and type colons](seeds/SEED-015-ternary-arrow-boundaries.md#ternary-arrow-boundaries) — SEED-015#ternary-arrow-boundaries ([plan](slice-plans/011-ternary-arrow-boundaries/PLAN.md))
 
 ## Backlog list

@@ -1,11 +1,20 @@
-# PR533 review findings
+# PR533 review and correction
 
-The report is real and benefits users, but the complete proposal introduces
-valid continuation errors and fails the affected performance gate. Defer to
-[SEED-014#multiline-arrow-boundaries](../../../../.planning/seeds/SEED-014-multiline-arrow-boundaries.md#multiline-arrow-boundaries).
-Correction and coherent cleanup are estimated at 30–45 minutes, above the
-source review mission's fifteen-minute cutoff. No product correction was
-attempted, and no PR action, comment, push or merge was performed.
+The multiline arrow defect was real and worth correcting. During the original
+review the raw proposal broke valid next-line continuations and failed the
+affected performance gate, and correction exceeded the fifteen-minute cutoff,
+so it was deferred; the follow-up correction landed through this PR. The
+reader now ends an expression-bodied arrow at a line start, before the line is
+counted, using a JavaScript ASI rule instead of next-line continuation tables
+or per-token state snapshots. Public regressions live in
+`test/test_languages/testJavaScriptArrowBoundaries.py`; the author's tests moved
+unchanged to `test/test_languages/testJavaScriptArrowLines.py`. Merged head
+`b6074d83e197127b2ffdef61d3f6dd20134d0567` (merge commit
+`a2d2ab778d03cbb9ea96d243ab7533105d304eb2`); acknowledgement
+https://github.com/terryyin/lizard/pull/533#issuecomment-6443273326.
+Corrected-candidate performance evidence (`3117601` against master `c3f7175`
+and frozen `2e21e40`, all upper 95% bounds below 3%) is retained beside this
+file as `corrected-vs-*.json`. The sections below record the original review.
 
 ## Frozen sources and review
 
