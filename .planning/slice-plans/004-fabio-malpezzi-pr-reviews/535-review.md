@@ -124,3 +124,7 @@ the hosted and landed tree, with parents95d65b2 and1a44c0c. Final head/base
 refresh and all14 successful CI jobs preceded the exact-head guarded merge.
 Thank-you6436990416 succeeded afterward. hosted-publication.json/final-ci.json
 retain exact evidence. Contributor worktree retired; validation is clean atd7be8b9.
+The slice increment published f25aeca2e4cbf149ab90073e97d4fee43dabbf32 without
+rebase, suffix basec3ca2c73. Its execution-branch monitoring is explicitly
+unobserved because the prior observer is terminal finished; this does not replace
+the final PR's separately proved14-job CI. The thank-you now links immutable proof.

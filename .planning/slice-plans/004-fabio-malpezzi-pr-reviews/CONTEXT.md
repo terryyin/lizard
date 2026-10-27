@@ -194,6 +194,23 @@ match validated runtime bytes. Independent refactor made no edits. A read-only
 Nix race was repaired sequentially without invalidating earlier proof. Thanks
 comment6436990416 succeeded. Contributor worktree retired; owned validation is
 clean atd7be8b9. Current upstream planning edits were preserved.
+Slice7 delivered f25aeca2e4cbf149ab90073e97d4fee43dabbf32, suffix basec3ca2c73,
+no rebase. Publication accepted; observation is explicitly unobserved. The exact
+retained observer request matches this checkout/repo/branch/coordinator, but its
+result.json and yielded cell35 terminal are finished. Cell35 is now closed;
+the adapter key is finished. No replacement was started: Codex's adapter forbids
+restarting terminal finished observers. Keep this coverage gap for the completion/
+closure boundary; required hosted CI on merged PRs was separately verified.
+The thank-you links immutable f25aeca evidence. Slice8's published base is f25aeca2.
+Trunk53e4850 now includes React and Node24 setup, unchanged Python/analyzer
+sources, and CI change-detection plus conditional web jobs alongside14 Python
+jobs. The owned validation checkout advanced to53e4850 through the installed
+product-backlog merge adapter. Earlier native dependency/validation merges did
+not use that required adapter; exact-tree checks proved their backlog/catalog
+equal incoming trunk, and catalog-done audit confirmed18 records unchanged.
+Use the actual checkout's installed backlog Git adapter for all further merges
+touching backlog/done paths, including clean fast-forwards; preserve this process
+deviation for retrospective. Read-only identity evidence is also current at53e4850.
 
 
 Preparation reproduced all first examples on the current checkout, while the

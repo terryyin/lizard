@@ -74,7 +74,7 @@ Proof and expected result: [slice 7](SLICE-PROOF.md).
 
 ### 8. Arrow parameter forms — PR #536
 Type: Behavior
-Status: planned
+Status: done
 Source: https://github.com/terryyin/lizard/pull/536
 Proof and expected result: [slice 8](SLICE-PROOF.md).
 
@@ -169,6 +169,9 @@ performance gates, current-base full/HTTP proof and exact-tree fourteen-job CI.
 PR535 merged asd7be8b9 and was thanked; [535-review.md](535-review.md) retains
 the minimal receiver guard, corrected dependency ancestry, seven passing timing
 gates, full1780/7 plus make/HTTP, independent refactor and final fourteen-job CI.
+PR536 is deferred to SEED-016#arrow-parameter-bindings; [536-review.md](536-review.md)
+retains alias/empty-slot/type failures, affected slowdown and unchanged-output
+profile, with the accepted set unchanged and its cumulative proof reused.
 
 ## Story obligations
 
@@ -206,3 +209,8 @@ Disposition: proved by slice 6: cumulative-cli-ns.json compares starting 2e21e40
 Reported: slice 7 — "PR535's child-only patch on corrected PR532 changes the public names of a valid {first, this: receiver} binding from receiver to first across JS/TS/JSX/TSX; the receiver special case must be limited to the parameter list's first token."
 Story clause: "Correct defects and refactor the overall affected changes into a coherent, minimal solution."
 Disposition: proved by slice 7: the three-line at_start guard preserves receiver/tail names in all four affected readers; testTypeScriptThisParameters.py has28passing tests versus four raw-child binding-name failures. Consumer proof and current-base full1780/7 plus make pass; HTTP receiver count changes2→1 while accepted532 controls hold. Source-only reviewer7 comparison and exact fixtures/assertions are retained in535-review.md.
+
+### G8. Anonymous parameter proposal duplicates and loses binding semantics
+Reported: slice 8 — "PR536 fixes reported counts but changes alias names, misses empty binding slots and leaves callback-type phantom functions; affected API/name workloads exceed3%, and coherent correction is estimated30–45minutes, queued as SEED-016#arrow-parameter-bindings."
+Story clause: "Correct defects and refactor the overall affected changes into a coherent, minimal solution."
+Disposition: excluded "Corrections estimated above fifteen minutes belong to the linked follow-up stories, not to this review's implementation scope."
