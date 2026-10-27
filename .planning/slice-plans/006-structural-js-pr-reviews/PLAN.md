@@ -65,7 +65,7 @@ All complete-cycle gates belong to this slice. Original slice: 9.
 
 ### 2. Immediately invoked function boundaries — PR #538
 Type: Behavior
-Status: planned
+Status: done
 Source: https://github.com/terryyin/lizard/pull/538 — frozen head `c869db90cf2ab6ba93b5c368b71f66e3eaaa6014`
 Proof: [slice 2](SLICE-PROOF.md).
 Behavior: Given a function body that starts with an IIFE then continues → complete cycle for #538 → outer function end line/CCN and following methods are preserved, or a non-merge disposition is recorded.
@@ -137,6 +137,11 @@ All complete-cycle gates belong to this slice. Original slice: 15.
   pass (cumulative-cli after prospective 4.0s retry). Merged as `6a2b8ea` with
   [thanks](https://github.com/terryyin/lizard/pull/537#issuecomment-6456123781);
   evidence under `docs/reviews/fabio-malpezzi-20261027/pr537/`.
+- #538: abandoned optimistic parameter \`(\` / \`function\` must open \`_open_groups\`
+  so grouped IIFEs do not end the enclosing function; class method after field
+  IIFE restored. Refactor moved group lifecycle into \`JavaScriptFunctionsMixin\`.
+  Merged as \`a2f0a538\` with [thanks](https://github.com/terryyin/lizard/pull/538#issuecomment-6456461311);
+  evidence under \`docs/reviews/fabio-malpezzi-20261027/pr538/\`.
 - #540's claim fixture already matches the PR's fixed expectation on trunk.
 
 ## Concern evidence
