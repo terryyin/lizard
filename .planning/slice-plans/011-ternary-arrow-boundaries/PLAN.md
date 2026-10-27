@@ -168,9 +168,9 @@ counter or metadata receipt; refactor/deliver before 9, then measure exact code.
 
 ### 9. Qualify original and supplemented timing workloads
 Type: Behavior
-Status: planned
-Proof: raw warmed pairs, immutable implementation/corpus/harness hashes,
-exact revisions and all six upper 95% slowdown bounds strictly below 3%.
+Status: done
+Proof: root-performance.md retains exact737/34cd/frozen six-gate qualification;
+all six paired95% upper bounds are strictly below3%, with before/after correspondence.
 
 Behavior: 128 affected API inputs and unchanged broad CLI each pass versus
 current and frozen `2e21e404`: same Nix, 20 alternating warmed pairs, 1.5-second
@@ -217,7 +217,7 @@ Disposition: proved by slice 3: test_nested_runtime_separator_keeps_following_ty
 ### G4. Incremental affected API exceeds budget (first reported in slice 4)
 Reported: slice 8 — "Current/API upper +9.567% initially, +7.623% at 8dac, ec2 +6.891%/+7.259%; 13c original interval [3.102%,4.156%] fails materially and augmented upper3.556% remains unproved."
 Story clause: "with a paired 95% upper slowdown bound strictly below 3% for both incremental and cumulative affected and broader workloads."
-Disposition: receiving slice 9
+Disposition: proved by slice 9: root-performance.md exact737 all six upper bounds1.714/.311/−8.185/.633/2.528/−4.222% pass; complete numeric receipts and immutable inputs/imports/public correspondence retained.
 
 ### G7. Current-owner integration changes a nested runtime-group control
 Reported: slice 6 — "Eight new runtime-group controls report an additional anonymous CCN-1 arrow after PR536 integration; 828 other tests pass."
