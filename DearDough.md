@@ -62,6 +62,15 @@ shellHook, printing pip output to stdout and upgrading `platformdirs` past
   - Observed effect: two overlapping read-only Nix commands re-entered the mutating shellHook and produced an ensurepip diagnostic. A subsequent sequential Python/pytest import check passed. Accepted proof predated the race or ran in the separate validation checkout.
   - Inference: read-only command intent does not make shellHook entry safe to parallelize. Serialize Nix entries across agents in the same checkout.
 
+### Additional occurrence
+- Execution: SEED-012#regex-literal-context
+  - Timestamp: 2026-10-27T20:25:00+08:00
+  - Tool: Cursor
+  - Open Dough release: 0.3.71 (installed by commit 01afe9c)
+  - Evidence: slice-3 post-change refactor agent d49cf4a4-9eaa-4044-96fb-f7e6a0bc649f; coordinator 946f4d3a-43e2-470f-8722-fc7bcd78fef5; `shell.nix` shellHook; filter stripping `platformdirs`/`Requirement already`/`Successfully` from `nix develop -c` stdout before a line-count check.
+  - Observed effect: every Nix-prefixed command re-entered pip install; agents filtered shellHook/platformdirs noise from parsed results. Semantic and performance proof still passed.
+  - Inference: same project-environment shellHook cost as prior DD-003 rows; serial Nix use avoided the parallel race, but stdout noise and platformdirs pin churn remained on each entry.
+
 ## DD-004 — PR merge preceded a missing affected-workload performance gate
 
 Complete the source's relevant workload selection before the exact-head merge.
@@ -139,6 +148,21 @@ pushed from `(...)` parameters. Do not gate the flag on “newly created.”
   - Inference: multiple push paths for the same runtime arrow make
     creation-gated flags incomplete; body-token ownership is the coherent rule.
 
+## DD-008 — Fork `push:false` alone is not a contributor-route refusal
+
+When probing a fork PR for maintainer correction, treat API `push: false` as
+incomplete. Combine `maintainer_can_modify` with a non-mutating divergent-SHA
+dry-run push preview before refusing the route.
+
+### Occurrences
+- Execution: SEED-012#regex-literal-context
+  - Timestamp: 2026-10-27T18:40:00+08:00
+  - Tool: Cursor
+  - Open Dough release: 0.3.71 (installed by commit 01afe9c)
+  - Evidence: slice 1 agent 7093d051-eac5-4592-b08e-cdb07e4ea249; plan accepted proof under `.planning/slice-plans/008-regex-literal-context/PLAN.md` slice 1; PR528 `maintainer_can_modify: true`, fork `push: false`, divergent dry-run accepted.
+  - Observed effect: same-SHA dry-run looked up-to-date; only the divergent preview proved the MCM write path. Route stayed viable without a false human disposition stop.
+  - Inference: collaborator-permission and no-op dry-run signals understate MCM delivery; divergent preview is the discriminating probe.
+
 ## Retention
 
-- Highest allocated local number: 7
+- Highest allocated local number: 8
