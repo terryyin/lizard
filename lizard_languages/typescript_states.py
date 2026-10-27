@@ -26,7 +26,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         self._in_abstract_context = False  # Track abstract method declarations
         self._condition_kind = None
         self._ternary_depth = 0
-        self._expression_arrow = False
+        self._expression_body = False  # An open expression-bodied arrow
 
     def __call__(self, token, reader=None):
         if self._binding_candidate:
@@ -72,11 +72,15 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             self._prev_token = token
             return
 
-        if token == '?':
+        if token == '?' or token == 'case' and not self.as_object:
             self._ternary_depth += 1
-        elif token == ':' and self._ternary_depth:
-            # A conditional branch separator is runtime syntax, not a type.
-            self._ternary_depth -= 1
+        elif token == ':' and (self._ternary_depth or (
+                self.last_tokens == 'default' and not self.as_object)):
+            # Conditional branch and switch label separators are runtime
+            # syntax, not a type annotation that could swallow a next-line
+            # `return () => ...` as a function type.
+            if self.last_tokens != 'default':
+                self._ternary_depth -= 1
             self.last_tokens = token
             self._prev_token = token
             return
@@ -138,7 +142,10 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                     ('const', 'let', 'var', 'return', 'throw', 'yield', 'await')):
                 self._read_binding_candidate(']')
         elif token == '{':
-            if self.started_function:
+            # Expression-bodied arrows treat "{" as an object (ternary,
+            # nullish/logical, operator operands). Block bodies and typed
+            # signatures awaiting a real body still open a nested function.
+            if self.started_function and not self._expression_body:
                 self.sub_state(
                     self.__class__(self.context),
                     self._pop_function_from_stack)
@@ -150,13 +157,13 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         elif token == ';' or (
                 # An object member's arrow ends at its comma, which it owns
                 # like a semicolon; members read `<...>` as generics.
-                token == ',' and self._expression_arrow and self.as_object
+                token == ',' and self._expression_body and self.as_object
         ) or (
                 # Line starts already ended expression arrows that are done;
                 # after another comma (argument, declarator or generic `A,`
                 # split) keep ending them here, at the next line's first token.
                 self.context.newline and (
-                    not self._expression_arrow or self.last_token == ',')):
+                    not self._expression_body or self.last_token == ',')):
             self._end_statement()
 
         if token == '`':

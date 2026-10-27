@@ -53,6 +53,15 @@ class TestStatementAfterExpressionArrow(unittest.TestCase):
             ('m', 1, 8, 3, 8, 33),
             ('pick', 9, 11, 4, 3, 15)])
 
+    def test_default_label_arrow_and_label_named_object_keys(self):
+        code = ('function m(k) {\n  switch (k) {\n    default:\n'
+                '      return () => go()\n  }\n}\n'
+                'const o = { case: 1, default: () => 2 }\n')
+        self.assert_in_all_readers(code, [
+            ('(anonymous)', 4, 4, 1, 1, 3),
+            ('m', 1, 6, 1, 6, 18),
+            ('default', 7, 7, 1, 1, 5)])
+
     def test_class_field_arrow_beside_following_method(self):
         self.assert_in_all_readers(ASYNC_FIELD, [
             ('handler', 2, 2, 1, 1, 4),

@@ -40,9 +40,8 @@ class JavaScriptFunctionsMixin:
     def _pop_function_from_stack(self):
         if self.started_function:
             self.context.end_of_function()
-        if self._expression_arrow:
-            self._expression_arrow = False
-            self.context.expression_arrows.remove(self)
+        if self._expression_body:
+            self._close_expression_body()
         self.started_function = None
         self._in_prop_value = False
 
@@ -59,13 +58,25 @@ class JavaScriptFunctionsMixin:
         self.context.forgive = True
         self.context.end_of_function()
         self.started_function = None
+        if self._expression_body:
+            self._close_expression_body()
+
+    def _close_expression_body(self):
+        self._expression_body = False
+        self.context.expression_arrows.remove(self)
 
     def _arrow_function(self, token):
         self._push_arrow_function()
-        if token != '{' and self.started_function and not self._expression_arrow:
-            # An expression body has no closing token; the reader asks the
-            # innermost open one at each line start (end_expression_before).
-            self._expression_arrow = True
+        if token == '{':
+            # A block body closes any expression body (`a => b => {}`).
+            if self._expression_body:
+                self._close_expression_body()
+        elif self.started_function and not self._expression_body:
+            # An expression body has no closing token, so a later "{" is an
+            # object operand; the reader asks the innermost open one at each
+            # line start (end_expression_before). Function-type "=>" must not
+            # reach here (see type annotation states).
+            self._expression_body = True
             self.context.expression_arrows.append(self)
         # Clear function_name so expression-body ( doesn't re-enter _function
         self.function_name = ''

@@ -14,20 +14,43 @@ scope: medium
 ### Preserve arrow boundaries across ternary and type colons
 
 **Identity:** SEED-015#ternary-arrow-boundaries
+```json dough-story-state
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/011-ternary-arrow-boundaries/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"cf80763caf2f743bff0fdc9bc962a15a8ba1faa908e059f9b750e1979d5f2951","plan":"03d81726707ede992d8f97ee6738af17936b3e31dbe4e0098d3ff070779448e3"}}
+```
 
-**Beneficiary:** JavaScript and TypeScript users relying on Lizard's function
-locations and CCN when callbacks appear in conditional expressions.
+**Beneficiary:** JavaScript, TypeScript, JSX/TSX and Vue users relying on
+Lizard's function locations and CCN when expression-bodied arrows appear as
+branches of conditional expressions.
 
-**Goal:** An enclosing ternary colon ends its first expression-bodied arrow,
-while internal ternary colons and genuine TypeScript annotations preserve their
-own syntax and the correct function's CCN. Following functions remain distinct.
+**Goal:** Public analysis ends an expression-bodied arrow at the ternary colon
+that separates it from the next branch, so each branch arrow reports its own
+CCN. Colons inside the arrow's own body, genuine TypeScript annotations, and
+property or computed-key colons keep their own syntax, and the enclosing and
+following functions keep their correct names, spans and CCN.
 
-**Origin:** [PR #534](https://github.com/terryyin/lizard/pull/534), reviewed at
-`f4074ae860c7999cc37dd081a6f7ebfa777adc83` against execution target `7186fdbe`
-and trunk `7ac449f`. Necessary coherent correction is estimated **30–45 minutes**,
-above SEED-010's fifteen-minute limit. Review and measurement are excluded.
+**Source:** [PR #534](https://github.com/terryyin/lizard/pull/534), authored
+head `f4074ae860c7999cc37dd081a6f7ebfa777adc83`, reviewed against target
+`7186fdbe` and trunk `7ac449f`. The report is real and useful. The raw
+proposal fixes the reported case but loses internal-colon ownership when a
+nested arrow creates no function, leaves typed branch separators unresolved,
+and leaves both strict timing gates unproved. Coherent correction is
+estimated at 30–45 minutes, above SEED-010's fifteen-minute limit. No product
+correction was attempted; PR #534 remains unmerged. Naming and metric
+meanings follow
+[ADR-0001](../../docs/adrs/0001-ubiquitous-language-accepted.md); the facade
+and the existing reader owners stay unchanged.
 
-**Reproducible expected and actual behavior:**
+**Key examples:**
+
+These situations define required public behavior through `analyze_file` (and
+the equivalent CLI / FileAnalyzer), not an exhaustive grammar. The frozen
+[expected rows](../../docs/reviews/fabio-malpezzi-20261027/pr534/inputs.json)
+and [supplemental controls](../../docs/reviews/fabio-malpezzi-20261027/pr534/supplemental-inputs.json)
+give explicit names, start/end lines and CCN per consumer; the
+[reproducer](../../docs/reviews/fabio-malpezzi-20261027/pr534/reproduce.py)
+checks them. Function names follow the existing binding convention recorded
+in those rows (an unparenthesized first branch takes the binding name; a
+parenthesized one is anonymous); this story does not change naming.
 
 ```javascript
 function choose(strict, b) {
@@ -36,10 +59,14 @@ function choose(strict, b) {
 }
 ```
 
-Through `analyze_file.analyze_source_code("a.js", source)`, target reports one
-anonymous arrow at line 2 with CCN 2. Expected: two anonymous arrows at line 2,
-CCN 1 and 2, followed by `choose` spanning 1–4 with CCN 2. Raw #534 and the
-independent child provide this useful improvement in JS/TS/JSX/TSX/Vue.
+Pre-condition: a ternary whose branches are both expression-bodied arrows.
+Trigger: analyze the file. Result: two anonymous arrows at 2–2 with CCN 1 and
+2, then `choose` at 1–4 with CCN 2. Current target reports one anonymous
+arrow with CCN 2. The same holds in `.ts`, `.jsx`, `.tsx`, a JSX attribute
+(`<Panel f={c ? x => x : y => y || d}/>`) and a real Vue script block. Nested
+ternaries (`c ? d ? x => x : y => y && d : z => z || c`: `f` CCN 1, two
+anonymous CCN 2, `outer` CCN 3), grouped inner arrows, parenthesized object
+bodies and block-bodied branches follow the same rule.
 
 ```javascript
 function outer(c, d) {
@@ -49,13 +76,16 @@ function outer(c, d) {
 function after() { return 1; }
 ```
 
-Lizard's existing ungrouped curried-arrow convention detects only the outer
-arrow (`testES6.py::Test_ES6_multiple_arrow_patterns::test_nested_arrows`).
-Expected and target: `f` at 2–2, CCN 3; `outer` at 1–4, CCN 1; `after` at
-5–5, CCN 1. Raw #534 and its independent child instead report `f` CCN 2 and
-an extra anonymous arrow CCN 2. Internal colon ownership is lost because the
-ternary snapshot is overwritten even when a nested arrow creates no function.
-Preserve the existing curried-arrow detection contract.
+Pre-condition: the ternary and its colon lie inside an arrow's own body, and
+the nested arrows create no function under the existing curried-arrow
+convention (`testES6.py::Test_ES6_multiple_arrow_patterns::test_nested_arrows`).
+Trigger: analyze the file. Result: `f` at 2–2, CCN 3; `outer` at 1–4, CCN 1;
+`after` at 5–5, CCN 1. Target is already correct; raw #534 reports `f` CCN 2
+plus a spurious anonymous CCN-2 arrow in JS/TS/JSX/TSX. The same internal
+colon inside an enclosing ternary branch
+(`c ? x => d ? y => y : z => z || x : w => w`) gives `f` CCN 3 and an
+anonymous CCN-1 alternate. Preserve the outer-only curried contract; this
+story requests no nested-function detection.
 
 ```typescript
 function outer(c, d) {
@@ -65,51 +95,95 @@ function outer(c, d) {
 function after() { return 1; }
 ```
 
-Expected: two anonymous arrows at 2–2, CCN 1 and 2; `outer` at 1–4, CCN 2;
-`after` at 5–5, CCN 1. Target/raw/child report one CCN-2 arrow. A genuine
-return-type colon consumes the pending ternary depth before the arrow starts.
-Object return-type annotations show the same failure in TS/TSX; Vue reaches
-the shared TypeScript reader too.
+Pre-condition: typed branch arrows whose return-type annotation colon comes
+before `=>`. Trigger: analyze as TypeScript (and TSX / Vue script). Result:
+two anonymous arrows at 2–2 with CCN 1 and 2; `outer` at 1–4, CCN 2; `after`
+at 5–5, CCN 1. Target, raw and the independent child report one CCN-2 arrow.
+An object return type (`(x: number): {a: number} => ({a: x})`) and a type
+assertion inside the first branch give the same split. Function-type
+aliases and functions whose return type is a function type
+(`function filter(v: Json): (e: Obj) => "ok" { ... }`) keep their real
+bodies and following functions as on target.
 
-**Remaining work:**
+```javascript
+function outer(c, d) {
+  const o = {f: c ? x => x : y => y || d, next: z => z && c};
+  return 1;
+}
+```
 
-- Correct ternary/body state ownership and distinguish signature annotations
-  before consuming runtime branch separators, using the existing function,
-  binding, object and declaration owners. Do not replace the public facade.
-- Retain the useful reported correction and the existing curried-arrow contract;
-  add discriminating public analyzer/CLI proof for the reproductions, nested
-  ternaries, grouped arrows, typed returns, property/computed-key colons,
-  genuine function-type bodies and following functions across reached readers.
-- Integrate independently of #531's invalid object heuristic. The isolated child
-  proves #534's original report and authored test pass without it and restores
-  literal function-type bodies. #531 is not a prerequisite for starting this work.
-  Its lost object improvement and existing object-comma limitations remain
-  visible controls, not authorization for unrelated parser redesign.
-- Keep new tests in a small cohesive module and account for necessary cleanup.
-  Independently review the final change, run focused and full checks, and prove
-  final-candidate CI on the current Ubuntu/Windows × Python 3.8–3.14 matrix.
-- Measure the corrected candidate on the frozen affected and broader corpora
-  against current target and initial default path. The raw proposal's API
-  95% interval is 1.52%–3.27%; CLI is −4.73%–4.31%. Both strict below-3%
-  gates are unproved. Obtain sufficient precision after a correct candidate
-  exists; do not rerun the already-invalid raw proposal until it passes.
-  Include the four supplemental internal-colon controls in that corrected
-  candidate's fixed performance corpus before accepting its performance gate.
+Pre-condition: the ternary appears as an object property value. Trigger:
+analyze the file. Result: the property colon is not a ternary separator, and
+the first branch `f` is reported at 2–2 with CCN 1, separate from the
+alternate. A computed key containing a ternary
+(`{[c ? "a" : "b"]: x => x || d}`) keeps its target result. The alternate
+absorbing the comma sibling `next` is the existing comma limitation below,
+not part of this promise.
 
-**Evidence and replay:**
+**Scope:**
+
+- Required behavior: coherent ternary and expression-body colon ownership in
+  the existing `JavaScriptFunctionsMixin`, `TypeScriptStates`,
+  `JavaScriptBindingsMixin`, `JavaScriptObjectsMixin` and
+  `TypeScriptDeclarationsMixin` owners: an enclosing ternary colon ends the
+  branch arrow; a nested arrow that creates no function does not overwrite the
+  enclosing arrow's ternary context; a genuine signature annotation is
+  consumed as a type before it can be taken as a runtime branch separator.
+  No parallel parser, metric counter or PR-specific colon switch; the public
+  facade stays. Reach every consumer that shares the path: JavaScript,
+  TypeScript, JSX/TSX and Vue script blocks (`.cjs`/`.mjs` reuse the reader).
+- Proof: discriminating public-analysis tests for the promised frozen rows
+  (`reported`, `authored`, `internal_ternary`, `nested_ternary`,
+  `nested_arrows`, `nested_arrow_internal`, `grouped_nested_arrow`,
+  `branch_object`, `typed_arrows`, `type_assertion`, `typed_object_return`,
+  `block_branches`, `plain_ternary`, `jsx_attribute`, the matching `vue_*`
+  rows and the four supplemental curried controls) across their consumers,
+  plus genuine function-type body controls and following functions. Keep new
+  tests in a small cohesive module below 250 lines; leave unrelated large test
+  files byte-identical. Remeasure the corrected candidate on the frozen
+  92-case affected corpus plus the four supplemental controls and the
+  broader fixed-source corpus against its current target and the frozen
+  review baseline `2e21e404c1ab9f4e0b49acc80816e816629d0670`, with a paired
+  95% upper slowdown bound strictly below 3% for both incremental and
+  cumulative affected and broader workloads. Run the full pytest suite,
+  `make` and final hosted CI (Ubuntu/Windows × Python 3.8–3.14) before any
+  exact-head guarded merge.
+- Rejection constraints: the strict below-3% performance gate, the existing
+  curried-arrow contract and correct public names/lines/CCN are acceptance
+  constraints from the retained review, not optional polish. Examples do not
+  forbid other valid ternary, typed or object forms the shared readers
+  already support.
+- Deferred promises: the existing object-comma limitation, where a sibling
+  arrow after a comma in an object literal is absorbed into the preceding
+  arrow (it reproduces without any ternary: `{f: x => x, next: z => z && c}`
+  reports only `f`), so the frozen `next` rows of `object_property` and
+  `computed_key` are not promised here. Object-literal ternary bodies
+  (`inherited_*` and `object_inside_ternary` rows) and typed function-body
+  regressions stay with
+  [SEED-013](SEED-013-arrow-object-boundaries.md#arrow-object-boundaries);
+  multiline continuations with
+  [SEED-014](SEED-014-multiline-arrow-boundaries.md#multiline-arrow-boundaries);
+  arrow parameter bindings with
+  [SEED-016](SEED-016-arrow-parameter-bindings.md#arrow-parameter-bindings).
+  Reconcile with whichever of SEED-013/SEED-014 lands first on the shared
+  expression-body state. The
+  [isolated child](../../docs/reviews/fabio-malpezzi-20261027/pr534/independent-child-patch.json)
+  shows the reported improvement works without #531's object heuristic, so
+  no formal blocking dependency is asserted. No naming change, nested-arrow
+  detection, ENS performance claim or full JavaScript/TypeScript grammar; no
+  merge, contributor-head write or acknowledgement during preparation.
+
+**Retained evidence:** Raw paired timings: API median +2.0337%, paired 95%
+interval [1.5167%, 3.2720%]; broader CLI +1.2713%, interval [−4.7317%,
+4.3104%]. Both strict gates are unproved, not failed; the invalid raw
+proposal was measured once per workload and is not rerun. A bounded
+unchanged-output profile shows small added object-helper and arrow-state
+overhead without isolating the API interval. Durable metadata, patch, corpus,
+logs and commands live in the
 [PR534 evidence](../../docs/reviews/fabio-malpezzi-20261027/pr534/README.md)
-retains the full patch/metadata, 92-case frozen corpus, four supplemental
-internal-colon controls, expected/actual logs, isolated imports, paired raw
-timings, bounded unchanged-output profile, commands and unresolved limits.
-[Findings](../../docs/reviews/fabio-malpezzi-20261027/pr534/review-findings.md)
-distinguish inherited defects, new regression and existing limitations.
+and [findings](../../docs/reviews/fabio-malpezzi-20261027/pr534/review-findings.md).
 
-**Priority:** Maintenance work aligned with the near-future direction, queued
-after the three already-prioritized review corrections, preserving their order.
-No blocking supplier agreement, Take, execution plan or implementation is created.
-
-**Evaluation:** All three reproductions meet their explicit names/spans/CCN,
-internal colons and genuine typed bodies retain their ownership, relevant
-regressions pass, and each corrected affected/broader incremental/cumulative
-performance upper 95% bound is strictly below 3%. Keep PR #534 unmerged until
-a final corrected revision satisfies all source gates.
+**Completion:** The promised frozen rows and controls have correct public
+names, lines and CCN across the related readers, with coherent ownership,
+discriminating regression proof and satisfactory performance/CI. Keep PR #534
+unmerged until a final corrected revision satisfies all gates.
