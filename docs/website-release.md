@@ -94,36 +94,3 @@ Inspect cancelled pending runs and rerun the intended tag when the group is
 free. This is not semantic-version ordering. Manual rollback must not race a run.
 See [GitHub concurrency](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency)
 and [gcloud traffic splitting](https://docs.cloud.google.com/sdk/gcloud/reference/app/services/set-traffic).
-
-## Observed public release
-
-`web-0.0.4` [attempt 1](https://github.com/terryyin/lizard/actions/runs/40500872799/attempts/1)
-published source `f3d9ec340d12d1b3e0c605672589283a269e399d` on 2026-10-27 as
-`web-0-0-4`, with successful preview, target/source/traffic and public HTTPS,
-generated/original assets, redirect and real analysis checks. The prior split
-was `revive-20261027-f818daf: 1.0`; versions remain retained.
-
-[Attempt 2](https://github.com/terryyin/lizard/actions/runs/40500872799/attempts/2)
-reran the already-serving release job, reused `website-source-attempt-1`, selected
-verification without deployment or traffic reassignment, and passed public
-checks. Version creation time/deployment metadata remained unchanged. Both
-release-attempt artifacts and the original validation artifact were preserved.
-
-## Preview rollout evidence
-
-Verified on 2026-10-27; all tags remain immutable:
-
-| Tag | Observed result |
-| --- | --- |
-| `web-01.0.0` | [Validation failed](https://github.com/terryyin/lizard/actions/runs/40486098691); preview job, authentication and deployment skipped |
-| `web-0.0.0` | [First preview failed](https://github.com/terryyin/lizard/actions/runs/40486246278) when App Engine aborted initial dispatch before assigning an instance; traffic stayed unchanged; bounded readiness was added |
-| `web-0.0.2` (lightweight) | [Verified preview](https://github.com/terryyin/lizard/actions/runs/40488146510), version `web-0-0-2` |
-| `web-0.0.3` (annotated) | [Verified preview](https://github.com/terryyin/lizard/actions/runs/40488849369), version `web-0-0-3` |
-
-Both successful runs deployed tested source
-`5d320dd497c0eb96d3f57cf5521ec05a8bfdb510`, runtime `python313`, with matching
-source/tag metadata, normal HTTPS, every generated asset and real sample metrics
-(CCN 3, NLOC 6, one parameter). The annotated event object
-`6daa7515aeb9930b5b826ff7e57a454835c1e7f1` peeled to that checked-out source.
-Complete before/after splits and subsequent readback all retained
-`revive-20261027-f818daf: 1.0`; neither run promoted public traffic.

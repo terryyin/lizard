@@ -123,11 +123,10 @@ logos/favicon, actual `shipping_cost` metrics (CCN 3, NLOC 6, one parameter),
 and HTTP-to-HTTPS path/query preservation. Source/runtime metadata and actual
 service traffic were checked separately from page health.
 
-The documented saved-split command restored `revive-20261027-f818daf` and its
-own legacy homepage, five referenced local assets, real analysis and redirect
-were verified before returning to `web-0-0-4`. That older source uses
-`site.css`/`demo.js`, not a Vite manifest. When recovering, check the selected
-version's own assets and API rather than requiring the newest frontend layout.
+The rollback version `revive-20261027-f818daf` uses a legacy homepage with five
+referenced local assets, including `site.css`/`demo.js`, rather than a Vite
+manifest. When recovering, verify the selected version's own assets, real
+analysis and redirect against its recorded source.
 
 Deployment uses the existing App Engine service account
 `lizardanalyzer@appspot.gserviceaccount.com`. It needs read access to source

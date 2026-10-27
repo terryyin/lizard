@@ -3,8 +3,7 @@
 Website deployment uses GitHub OIDC and Workload Identity Federation through
 a dedicated deployment account. It does not use a stored service-account key.
 Terry owns the initial GCP IAM and repository-variable setup; the runtime
-account remains separate. The following resources were configured on
-2026-10-27 after inspecting the existing project, account and bucket policies:
+account remains separate. The deployment uses these resources:
 
 | Resource | Value |
 | --- | --- |
@@ -61,10 +60,9 @@ preserved:
 
 The runtime account retains its existing bucket-level
 `roles/storage.objectViewer` grant. The deployment account has no Owner,
-Editor, service-account-key or IAM-administration role. The initial preview
-probe had no traffic-routing grant, so it could not promote. Its commands
-also use `--no-promote --no-stop-previous-version`; use a unique version ID
-because App Engine Deployer can overwrite an existing serving version.
+Editor, service-account-key or IAM-administration role. Preview deployments
+use `--no-promote --no-stop-previous-version`; use a unique version ID because
+App Engine Deployer can overwrite an existing serving version.
 
 ## Traffic routing permission
 
@@ -78,42 +76,18 @@ gcloud iam roles create websiteTrafficRouter --project=lizardanalyzer --title='W
 gcloud projects add-iam-policy-binding lizardanalyzer --member=serviceAccount:website-deployer@lizardanalyzer.iam.gserviceaccount.com --role=projects/lizardanalyzer/roles/websiteTrafficRouter
 ```
 
-Configured and read back on 2026-10-27 after the
-[non-promoting guard probe](https://github.com/terryyin/lizard/actions/runs/40499338525).
-That probe observed a real preview HTTPS 404, explicit promotion rejection and
-unchanged complete traffic. Its temporary workflow, diagnostic tag and trust
-exception were removed before the routing grant. The role readback contains
-only `appengine.services.update`; existing policy bindings were preserved.
-
 Inspect existing role/policy state before adding or restoring a grant; keep
 unrelated bindings. The release CLI addresses only the `default` service and
 requires successful preview verification before calling traffic mutation.
 See the [service patch permission](https://docs.cloud.google.com/appengine/docs/admin-api/reference/rest/v1/apps.services/patch)
 and [traffic command](https://docs.cloud.google.com/sdk/gcloud/reference/app/services/set-traffic).
 
-## Retained federation proof
+## Authentication and permission recovery
 
-The initial hosted probe used a temporary workflow/ref with an exact provider
-exception, then removed that workflow and exception after observing success.
-The temporary remote ref was deleted; the Actions run and artifacts remain.
-The provider now accepts only the permanent condition above. Local gcloud
+The provider accepts only the permanent condition above. Local gcloud
 credentials do not prove the Actions route works. Allow up to five minutes
 for new federation and IAM settings to propagate; inspect an authentication
 failure before attempting another run.
-
-The [authenticated Actions probe](https://github.com/terryyin/lizard/actions/runs/40482567466)
-succeeded on 2026-10-27 after its own Python checks, lockfile build and 16
-browser scenarios. It deployed source
-`b34c4666b40322fb416822c5936d774eadab7f09` as
-`probe-40482567466-1`, running `python313`, using the dedicated identity above.
-The [preview](https://probe-40482567466-1-dot-lizardanalyzer.appspot.com)
-passed normal TLS, homepage, every generated manifest asset and real
-`shipping_cost` analysis (CCN 3, NLOC 6, one parameter). Both captured traffic
-splits were `revive-20261027-f818daf: 1.0`; no old version was stopped and no
-public traffic was moved. The run's `website-preview-probe` artifact retains
-source, upload, deployed metadata, preview URL, API result and before/after
-traffic. The probe version is retained for diagnosis; it receives no public
-traffic.
 
 For account/permission recovery, inspect the named provider and IAM policies
 before changing them. Restore only a missing grant at the scope listed above;
