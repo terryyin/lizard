@@ -28,8 +28,36 @@ No sibling is a formal blocking supplier. This is the technical follow-up after
 a review that exceeded its 15-minute correction cutoff; that cutoff is not a
 time limit for this plan. No project-specific numeric slice limit was supplied.
 
-Preparation only: all slices below are planned. This record neither Takes the
-story nor authorizes implementation, contributor writes, merge or comments.
+Execution authorized by the selected `dough-execute-plan` instruction on
+2026-10-27; the established start owns this work.
+
+## Execution context
+
+- Identity: `SEED-015#ternary-arrow-boundaries`; publisher
+  `dashboard-territory.local-lizard`; agent Akiho-chan.
+- Mode: story-branch; execution/originating checkout
+  `/Users/terryyin/git/lizard/.worktrees/preserve-arrow-boundaries-across-ternary-and-typ`;
+  branch `codex/preserve-arrow-boundaries-across-ternary-and-typ`.
+  Existing linked worktree, reused through the supplied established start.
+- Remote `origin`, trunk `master`; ordinary increments target the execution
+  branch. Starting revision `a2d2ab778d03cbb9ea96d243ab7533105d304eb2`;
+  claim/published base `6f506711595e0ad832ab5a75f5a4750a2b362415`, confirmed
+  on both remote refs at startup. Claim trunk CI is unobserved.
+- Default checkout `/Users/terryyin/git/lizard` is not an execution location.
+- Setup: project Nix shell prepared this exact checkout; public JS/TS suites
+  passed (43 tests). Tooling uses sequential `PIP_QUIET=1 nix develop -c`.
+  No configured formatter, generator or commit hook applies to route evidence;
+  commits use the assigned workspace agent helper. No new replanning restriction.
+- Observer: Codex coordinator `akiho-seed015-a5bbe368`, cell `14`, session
+  `75355`, directory `/tmp/dough-ci-501/watch-UAZZGU`, PID `85484`.
+  Recovered request/owner hash match the exact checkout, repository
+  `terryyin/lizard`, execution mode and execution branch. Selected GitHub
+  workflow `python-app.yml` (ID `38306292`, name `Python application`) is
+  active and push-triggered for all branches. Retain this observer for delivery.
+- Slice 1 route proof: [correction-route.md](../../../docs/reviews/fabio-malpezzi-20261027/pr534/correction-route.md).
+  Contributor head unchanged/open and authenticated dry-run route available.
+  Fresh target `0ef95abbe278bfd22bbe4de48b9fa4b71f7b2181` differs from claim
+  only by an agent profile; analyzer sources are unchanged.
 
 ## Existing owners and architectural direction
 
@@ -109,6 +137,27 @@ revision `1db5933b66e4602f607c6ae40998984dadd5bab5`, observed 2026-10-27.
 
 ## Proof ownership and gates
 
+Slice 1 acceptance: a fresh no-inheritance source-only reviewer was launched as
+`/root/source_review` with the story's Goal, all key examples, Scope and
+exclusions, completion and original delivery contract text; it read no files.
+Its launch/input and complete returned commitments are retained in this
+execution conversation. The return separates each public name/span/CCN,
+colon owner, consumer, curried control, typed control, performance comparison,
+delivery gate and exclusion; it introduced no narrower rejection rule.
+
+Comparison: given the intended contribution and contributor route, the source
+requires full patch/discussion/review/check inspection and eventual
+history-preserving contributor delivery. `correction-route.md` observes the
+unchanged contribution, empty discussion/reviews, historical checks, current
+permission and successful authenticated preview. This proves route feasibility;
+actual acceptance remains slice 5. All public behavior examples and their
+reader consumers remain slices 2–3, strict performance comparisons slice 4,
+and full tests/current CI/final head-base-tree/merge/acknowledgement slice 5.
+The source's named exclusions remain excluded. No missing slice-1 observation
+was identified. Independent `/root/slice1_refactor` returned
+`## REFACTOR COMPLETE`: no edits, 57-line evidence document, whitespace clean;
+accepted observation locations unchanged, no redundant tests.
+
 | Promise | Owner and observable proof |
 | --- | --- |
 | Authorized contributor delivery route remains viable | Slice 1: refreshed PR/ref/permission evidence; refusal stops dependent work |
@@ -143,7 +192,7 @@ Refresh current CI applicability in execution.
 
 ### 1. Establish the contributor correction route
 Type: Behavior
-Status: planned
+Status: done
 Proof: refreshed PR/head/base, contributor-edit permission and authenticated
 publication-route observations; preserve exact refusal if unavailable.
 
