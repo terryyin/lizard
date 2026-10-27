@@ -14,6 +14,9 @@ scope: medium
 ### Recognize regex literals without consuming division expressions
 
 **Identity:** SEED-012#regex-literal-context
+```json dough-story-state
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/008-regex-literal-context/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"8e20d2a8e82a2eaf8713266b37ec4337271a284a94b96b9c0558e00304f8d677","plan":"9f49df93f01cc476e31bb8bf7ee437e7b016049b7cd09d8a228bb5cb2963a54b"}}
+```
 
 **Beneficiary:** Users measuring JavaScript, TypeScript, JSX/TSX and Ruby whose
 regex literals or division expressions currently hide conditions or boundaries.
@@ -31,7 +34,12 @@ Target later advanced to7ac449f through CI/support-claim maintenance; inspection
 confirmed no analyzer/reader/extension changes, so these observations still apply.
 Future required CI uses Ubuntu/Windows with Python3.8–3.14 (14matrix jobs).
 
-**Reproducers and expected results:**
+**Key examples:**
+
+Given source in `.js`, `.ts`, `.jsx` or `.tsx`, public analysis must distinguish
+expression starts from completed operands. The same distinction applies to the
+shared Ruby reader and to script content in Vue. These examples define required
+behavior, not an exhaustive list of permitted contexts.
 
 ```js
 function a(s) { return /#/.test(s) || s === 1; }
@@ -81,6 +89,32 @@ terminal observations are retained beside the reproducer.
   Preserve representative controls and unrelated language behavior.
 - Require full pytest, make and final hosted CI before a guarded exact-head merge;
   publish necessary corrections to the contributor head and acknowledge them.
+
+**Scope clarification:** The delivery includes the original return/arrow report,
+genuine expression-start keyword contexts, preserved division after member names
+and identifiers, and coherent literal/template scanning for every reached reader.
+Comments and whitespace must not turn a member name into a keyword. Contextual
+words such as `of` and `await` must be interpreted in their surrounding language
+context rather than always treated as expression openers. Regex contents remain
+opaque to condition counting; conditions outside them remain observable.
+
+For a regex containing a quote, backtick or brace followed by another function,
+analysis must retain both function names and line spans. For a nested template
+containing such a literal or valid division, the following function must remain
+separate. An analyzer reused after a regex-containing file must report the next
+file's nesting depth independently. Ruby split/gsub and Vue script wrappers are
+preservation cases, not separate parsing systems.
+
+**Constraints and deferred promises:** Correct metrics, preserved source
+boundaries and the strict performance gate below are acceptance constraints from
+the retained review. The contextual examples do not require rejection of other
+valid expressions. Counting conditions inside template interpolation remains
+with PR545; unrelated arrow boundaries, parameter binding, new syntax families
+and a full JavaScript/Ruby grammar are not added by this story. The earlier
+15-minute review cutoff explains this follow-up; it is not a correction-slice
+time limit. The existing review's contributor-head, exact-head merge and
+acknowledgement requirements remain delivery obligations. Preparation performs
+none of those actions and grants no implementation or hosted-write authority.
 
 **Retained performance and diagnosis:** The raw proposal fails the affected-input
 gate:20warmed alternating pairs,49related cases, median+19.4428%, paired95%CI

@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "agent": "Maki-chan",
-  "email": "maki-chan@example.org",
-  "activity": "preparation",
-  "identity": "SEED-012#regex-literal-context",
-  "host": "codex",
-  "model": "gpt-6-astra"
-}
