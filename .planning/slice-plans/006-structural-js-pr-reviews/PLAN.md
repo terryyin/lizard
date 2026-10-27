@@ -1,6 +1,6 @@
 # Structural JS/TS PR reviews
 
-**Identity:** SEED-010#review-structural-js-prs
+**Mapped story identity:** SEED-010#review-structural-js-prs
 **Source:** [canonical story](../../seeds/SEED-010-fabio-malpezzi-pr-reviews.md#review-structural-js-prs)
 **Readiness:** awaiting story refinement — not ready for slice-plan refinement or execution.
 

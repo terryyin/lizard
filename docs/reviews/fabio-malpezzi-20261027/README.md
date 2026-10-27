@@ -1,7 +1,16 @@
 # FabioMalpezzi PR review evidence
 
-One-off evidence for the queue frozen on 2026-10-27. This directory retains
-measurements and their literal harness; it is not a benchmark service.
+Shared evidence for the active contribution-review cohort and its five queued
+technical corrections. This directory retains the fixed inputs, accepted
+controls, measurements and literal harness used by those remaining stories.
+The [story mapping](story-map.md) and [complete-cycle contract](REVIEW-CONTRACT.md)
+identify the remaining owners. Keep this input until their final reconciliation;
+it is not a benchmark service.
+
+The first eight dispositions' spent source and plan are recoverable at
+[fedef2f8](https://github.com/terryyin/lizard/tree/fedef2f8e8168a5190ac6ba189f7f16441e56bf9/.planning/slice-plans/004-fabio-malpezzi-pr-reviews).
+Their per-PR evidence remains input for the active correction stories and for
+incremental/cumulative comparisons in the remaining review batches.
 
 Starting target: `2e21e404c1ab9f4e0b49acc80816e816629d0670`.
 The manifest identifies exact input bytes independently of changing checkouts.
