@@ -223,7 +223,7 @@ than implementation; no invented timeout applies.
 
 ### 4. Deliver the qualified correction through PR533
 Type: Behavior
-Status: planned
+Status: done
 Proof: final contributor-head SHA and accepted push, green current required CI,
 exact-head guarded merge receipt, and one acknowledgement URL.
 
@@ -334,17 +334,22 @@ pass, probes unchanged (line-start `/` continues as division per ASI). Gate for
 c3f7175 +0.45%, CI [−0.37, 1.26]; API vs 2e21e40 −8.62%, CI [−8.69, −7.74];
 CLI vs 2e21e40 +1.37%, CI [0.47, 1.82] — all pass.
 
-**Slice 4 progress (unfinished):** contributor candidate `b6074d8` built in a
-temporary worktree (`/Users/terryyin/.claude/jobs/315328aa/tmp/pr533wt`):
-merge of `c3f7175` into PR head `15423852` (fast-forward descendant, no force
-needed); analyzer files byte-identical to `3117601`; `testES6.py`
-byte-identical to master; the author's five multiline tests moved verbatim
-into `test/test_languages/testJavaScriptArrowLines.py` (99 lines) beside
-`testJavaScriptArrowBoundaries.py` (214 lines). In that worktree: full pytest
-1844 passed, 7 skipped; `make` exit 0; reproducer 0/150. The push to
-`FabioMalpezzi/lizard` `pr/js-arrow-function-ends-with-its-line` was refused
-by this session's permission classifier (external publication); it awaits
-Terry's decision. Hosted CI, exact-head merge and acknowledgement remain.
+**Slice 4 delivery:** contributor candidate `b6074d8` (merge of master
+`c3f7175` into PR head `15423852`, analyzer files byte-identical to `3117601`,
+`testES6.py` identical to master, author's five tests moved verbatim to
+`test/test_languages/testJavaScriptArrowLines.py`). Local in that tree: full
+pytest 1844 passed, 7 skipped; `make` exit 0; reproducer 0/150. Pushed without
+force (`1542385..b6074d8`) after Terry authorized the external push (the
+session classifier had refused it first). Hosted run `40509297062` on exact
+head `b6074d8`: all 14 `build` jobs (ubuntu-24.04 and windows-latest × Python
+3.8–3.14) and `changes` passed; `web` skipped by its path filter. Master
+unchanged at `c3f7175`; PR `MERGEABLE`/`CLEAN`. Guarded merge
+`gh pr merge 533 --merge --match-head-commit b6074d83e197127b2ffdef61d3f6dd20134d0567`
+(run after Terry's explicit authorization) → merge commit
+`a2d2ab778d03cbb9ea96d243ab7533105d304eb2`. Single acknowledgement (no prior
+comments): https://github.com/terryyin/lizard/pull/533#issuecomment-6443273326.
+Story branch then merged trunk (`a2d2ab7`, plus unrelated website-release
+work); analyzer files unchanged by that merge; full pytest passed.
 
 ## Story obligations
 
