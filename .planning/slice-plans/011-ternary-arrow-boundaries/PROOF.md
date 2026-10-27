@@ -1,6 +1,6 @@
 # Ternary arrow boundaries: retained proof
 
-**Identity:** SEED-015#ternary-arrow-boundaries
+**Execution:** SEED-015#ternary-arrow-boundaries
 **Plan:** [Executable plan](PLAN.md)
 
 Retained preparation observations, accepted evidence and reusable proof
