@@ -4,35 +4,64 @@ generate token with javascript style regular expression.
 
 import re
 
+from .js_style_regex_context import (
+    REGEX_LITERAL,
+    REGEX_START_MARKER,
+    REGEX_TOKEN,
+    REGEX_TOKEN_PUNCT,
+    mark_regex_literal_starts,
+)
 
-# Shared with balanced template scanning: preserve the tokenizer's existing
-# expression-opening punctuation rule for distinguishing regex from division.
-REGEX_LITERAL = (r"/(?![/*])(?:\\[^\r\n]|\[(?:\\[^\r\n]|[^\\\]\r\n])*\]"
-                 r"|[^/\\[\r\n])+/[a-z]*")
-# A literal can also follow "=>" or a keyword after which an expression
-# starts, as in "return /#/.test(s)" or "s => /x/.test(s)": there the slash
-# cannot be a division.
-_KEYWORDS_BEFORE_REGEX = (
-    'return', 'typeof', 'instanceof', 'in', 'of', 'new', 'delete', 'void',
-    'throw', 'case', 'do', 'else', 'yield', 'await')
-REGEX_TOKEN = (r"(?:\A|(?<=[=,({[?:!&|;])|(?<==>)" +
-               "".join(r"|(?<=\b" + keyword + ")"
-                       for keyword in _KEYWORDS_BEFORE_REGEX) +
-               r")\s*" + REGEX_LITERAL)
+__all__ = (
+    'REGEX_LITERAL',
+    'REGEX_TOKEN',
+    'js_style_regex_expression',
+    'mark_regex_literal_starts',
+)
 
 
-def js_style_regex_expression(func):
-    def generate_tokens_with_regex(source_code, addition='', token_class=None):
-        # Recognize literals before strings or JSX can consume their contents.
-        # Expression-opening punctuation distinguishes them from division.
-        addition += r"|" + REGEX_TOKEN
-        for token in func(source_code, addition, token_class):
-            stripped = token.lstrip()
-            if stripped.startswith('/') and not token.startswith('/'):
-                # Keep whitespace/newlines observable to the metric counters.
-                prefix = token[:len(token) - len(stripped)]
-                yield from re.findall(r"\n|[^\S\n]+", prefix)
-                yield stripped
-            else:
-                yield token
-    return generate_tokens_with_regex
+def _unmark_regex_token(token):
+    if REGEX_START_MARKER not in token:
+        return token
+    cleaned = token.replace(REGEX_START_MARKER, '/')
+    if type(token) is str:
+        return cleaned
+    begin = getattr(token, 'begin', 0)
+    replacement = type(token)(cleaned)
+    replacement.begin = begin
+    return replacement
+
+
+def js_style_regex_expression(func=None, *, language='js'):
+    def decorator(generate_tokens):
+        def generate_tokens_with_regex(source_code, addition='', token_class=None):
+            # Recognize literals before strings or JSX can consume their contents.
+            marked = mark_regex_literal_starts(source_code, language=language)
+            if marked is source_code:
+                addition += r"|" + REGEX_TOKEN_PUNCT
+                return generate_tokens(marked, addition, token_class)
+            addition += r"|" + REGEX_TOKEN
+            return _yield_unmarked(generate_tokens(marked, addition, token_class))
+        return generate_tokens_with_regex
+
+    if func is not None:
+        return decorator(func)
+    return decorator
+
+
+def _yield_unmarked(tokens):
+    marker = REGEX_START_MARKER
+    findall = re.findall
+    for token in tokens:
+        if not isinstance(token, str):
+            yield _unmark_regex_token(token)
+            continue
+        if marker in token:
+            token = token.replace(marker, '/')
+        stripped = token.lstrip()
+        if stripped.startswith('/') and not token.startswith('/'):
+            prefix = token[:len(token) - len(stripped)]
+            yield from findall(r"\n|[^\S\n]+", prefix)
+            yield stripped
+        else:
+            yield token

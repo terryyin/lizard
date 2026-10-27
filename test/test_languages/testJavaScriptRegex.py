@@ -2,8 +2,6 @@ import unittest
 
 from lizard import analyze_file
 
-from .testJavaScript import get_js_function_list
-
 
 class TestJavaScriptRegex(unittest.TestCase):
     extensions = ('js', 'ts', 'jsx', 'tsx')
@@ -121,94 +119,106 @@ class TestJavaScriptRegex(unittest.TestCase):
             (f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
             for f in functions])
 
-
-class Test_js_function_end_after_regular_expressions(unittest.TestCase):
-
-    def spans(self, regex, filename="a.js"):
-        code = (
-            "function a(s) {\n"
-            "  if (" + regex + ".test(s)) {\n"
-            "    return 1;\n"
-            "  }\n"
-            "  return 0;\n"
-            "}\n"
-            "function b(s) {\n"
-            "  return s;\n"
-            "}\n"
+    def test_return_regex_exposes_following_condition(self):
+        source = (
+            'function a(s) { return /#/.test(s) || s === 1; }\n'
+            'function b(s) { return s; }\n'
         )
-        return [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
-                for f in analyze_file.analyze_source_code(filename, code).function_list]
+        self.assert_functions(source, [('a', 1, 1, 2), ('b', 2, 2, 1)])
 
-    def check_function_ends(self, regex):
-        for filename in ("a.js", "a.ts", "a.jsx", "a.tsx"):
-            self.assertEqual([('a', 1, 6, 2), ('b', 7, 9, 1)],
-                             self.spans(regex, filename),
-                             regex + " in " + filename)
-
-    def test_regex_with_a_hash(self):
-        self.check_function_ends("/#/")
-
-    def test_regex_with_a_hash_in_a_character_class(self):
-        self.check_function_ends("/[?#]/")
-
-    def test_regex_ending_with_an_escaped_slash(self):
-        self.check_function_ends(r"/\//")
-
-    def test_regex_with_a_double_quote(self):
-        self.check_function_ends('/"/')
-
-    def test_regex_with_a_single_quote(self):
-        self.check_function_ends("/'/")
-
-    def test_regex_with_a_backtick(self):
-        self.check_function_ends("/`/")
-
-    def test_regex_with_braces(self):
-        self.check_function_ends("/{/")
-        self.check_function_ends("/}/")
-
-    def test_regex_with_a_slash_in_a_character_class(self):
-        self.check_function_ends("/[/]/")
-
-    def test_regex_with_escaped_slashes(self):
-        self.check_function_ends(r"/a\/\/b/")
-        self.check_function_ends(r"/(\d+)\s*\/\/.*/")
-
-    def test_regex_with_a_flag(self):
-        self.check_function_ends("/x/g")
-
-    def test_regex_with_a_hash_after_return(self):
-        code = (
-            "function a(s) {\n"
-            "  return /#/.test(s) || s === 1;\n"
-            "}\n"
-            "function b(s) {\n"
-            "  return s;\n"
-            "}\n"
+    def test_arrow_regex_exposes_nested_condition(self):
+        source = (
+            'function b(xs) { return xs.filter(s => /"/.test(s) || s === "a"); }\n'
         )
-        functions = get_js_function_list(code)
-        self.assertEqual([('a', 1, 3, 2), ('b', 4, 6, 1)],
-                         [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
-                          for f in functions])
+        for extension in self.extensions:
+            with self.subTest(extension=extension):
+                functions = analyze_file.analyze_source_code(
+                    'a.' + extension, source).function_list
+                self.assertEqual([2, 1], [
+                    f.cyclomatic_complexity for f in functions])
+                self.assertEqual('(anonymous)', functions[0].name)
+                self.assertEqual('b', functions[1].name)
 
-    def test_regex_with_a_quote_in_an_arrow_function(self):
-        code = (
-            "function a(list) {\n"
-            "  return list.filter(s => /\"/.test(s) || s === \"a\");\n"
-            "}\n"
-            "function b(s) {\n"
-            "  return s;\n"
-            "}\n"
-        )
-        functions = get_js_function_list(code)
-        self.assertEqual([('(anonymous)', 2, 2, 2), ('a', 1, 3, 1), ('b', 4, 6, 1)],
-                         [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
-                          for f in functions])
+    def assert_ccn_and_tokens(self, source, expected_ccn, expected_tokens):
+        for extension in self.extensions:
+            with self.subTest(extension=extension):
+                functions = analyze_file.analyze_source_code(
+                    'a.' + extension, source).function_list
+                self.assertEqual(1, len(functions))
+                self.assertEqual(expected_ccn, functions[0].cyclomatic_complexity)
+                self.assertEqual(expected_tokens, functions[0].token_count)
 
-    def test_operators_in_a_regex_are_not_conditions(self):
-        code = (
-            "function a(s) {\n"
-            "  return s.replace(/a ?b||c&&d/, '');\n"
-            "}\n"
+    def test_member_division_keeps_condition_and_tokens(self):
+        cases = (
+            ('member',
+             'function divide(obj,a,b,c) { return obj.return / (a || b) / c; }'),
+            ('spaced',
+             'function divide(obj,a,b,c) { return obj . return / (a || b) / c; }'),
+            ('commented',
+             'function divide(obj,a,b,c) {'
+             ' return obj. /* member */ return / (a || b) / c; }'),
+            ('optional',
+             'function divide(obj,a,b,c) { return obj?.return / (a || b) / c; }'),
         )
-        self.assertEqual(1, get_js_function_list(code)[0].cyclomatic_complexity)
+        for label, source in cases:
+            with self.subTest(label=label):
+                self.assert_ccn_and_tokens(source, 2, 24)
+
+    def test_identifier_division_keeps_baseline_tokens(self):
+        cases = (
+            ('dollar',
+             'function divide($return,a,b,c) { return $return / (a || b) / c; }'),
+            ('contextual_of',
+             'function divide(of,a,b,c) { return of / (a || b) / c; }'),
+            ('non_module_await',
+             'function divide(await,a,b,c) { return await / (a || b) / c; }'),
+            ('ordinary',
+             'function divide(x,a,b,c) { return x / (a || b) / c; }'),
+        )
+        for label, source in cases:
+            with self.subTest(label=label):
+                self.assert_ccn_and_tokens(source, 2, 22)
+
+    def test_for_of_regex_exposes_following_condition(self):
+        source = (
+            'function a(s) {\n'
+            '  for (const x of /#/.test(s) ? [] : [s]) {\n'
+            '    if (x || s === 1) { return x; }\n'
+            '  }\n'
+            '}\n'
+        )
+        # for + ternary + if + ||
+        self.assert_functions(source, [('a', 1, 5, 5)])
+
+    def test_await_keyword_regex_exposes_following_condition(self):
+        source = (
+            'async function a(s) { return await /#/.test(s) || s === 1; }\n'
+        )
+        self.assert_functions(source, [('a', 1, 1, 2)])
+
+    def test_regex_with_quote_brace_flag_preserves_following_function(self):
+        patterns = ('/"/', '/{/', '/}/', '/`/', r'/\\//', '/[/]/', '/x/g', '/[?#]/')
+        for pattern in patterns:
+            with self.subTest(pattern=pattern):
+                source = (
+                    'function a(s) {\n'
+                    '  if (' + pattern + '.test(s) || s) { return 1; }\n'
+                    '  return 0;\n'
+                    '}\n'
+                    'function b(s) { return s; }\n'
+                )
+                self.assert_functions(
+                    source, [('a', 1, 4, 3), ('b', 5, 5, 1)])
+
+    def test_vue_return_regex_and_member_division(self):
+        source = (
+            '<script>\n'
+            'function a(s) { return /#/.test(s) || s === 1; }\n'
+            'function divide(obj,a,b,c) { return obj.return / (a || b) / c; }\n'
+            '</script>\n'
+        )
+        functions = analyze_file.analyze_source_code(
+            'a.vue', source).function_list
+        self.assertEqual([('a', 2), ('divide', 2)], [
+            (f.name, f.cyclomatic_complexity) for f in functions])
+        self.assertEqual(24, functions[1].token_count)
