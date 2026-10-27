@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "agent": "Koharu-chan",
+  "email": "koharu-chan@example.org",
+  "activity": "preparation",
+  "identity": "SEED-014#multiline-arrow-boundaries",
+  "host": "cursor",
+  "model": "auto"
+}
