@@ -69,6 +69,58 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
         super(LizardExtension, self).__init__(None)
         self.structure_piles = [0]  # Invariant: must always have at least one element
 
+    def __call__(self, tokens, reader=None):
+        if 'python' in getattr(reader, 'language_names', ()):
+            return self._indented_structures(tokens, reader)
+        return super(LizardExtension, self).__call__(tokens, reader)
+
+    def _indented_structures(self, tokens, reader):
+        """Python has no braces: a structure is a statement that starts a
+        line, and its depth comes from the indentation, which the Python
+        reader keeps as the nesting level of the context.
+
+        For each function, the levels of the structures still open are kept
+        in a list: a structure closes the open ones at its level or deeper.
+        Structures inside brackets (comprehensions) or after the start of a
+        statement (ternary 'x if c else y') are not structures here."""
+        self.context = reader.context
+        open_levels = {}
+        brackets = 0
+        last_line = None
+        statement_start = True
+        for token in tokens:
+            line = self.context.current_line
+            if line != last_line and brackets == 0:
+                statement_start = True
+            last_line = line
+            if not hasattr(self.context.current_function,
+                           "max_nested_structures"):
+                self.context.current_function.max_nested_structures = 0
+            if statement_start and token == 'async':
+                yield token
+                continue
+            if statement_start and (
+                    token in self.structures or
+                    (token == 'match' and
+                     getattr(reader, '_keyword_match', False))):
+                self._open_indented_structure(open_levels)
+            if token in ('(', '[', '{'):
+                brackets += 1
+            elif token in (')', ']', '}'):
+                brackets = max(brackets - 1, 0)
+            statement_start = False
+            yield token
+
+    def _open_indented_structure(self, open_levels):
+        function = self.context.current_function
+        level = self.context.current_nesting_level
+        levels = open_levels.setdefault(id(function), [])
+        while levels and levels[-1] >= level:
+            levels.pop()
+        levels.append(level)
+        if function.max_nested_structures < len(levels):
+            function.max_nested_structures = len(levels)
+
     def _push_scope(self):
         """Push a new scope level. Safe to call anytime."""
         self.structure_piles.append(0)
