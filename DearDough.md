@@ -52,6 +52,15 @@ status transition.
   - Observed effect: hosted auth/deploy/public proof needed published source while its slice was still unfinished. The coordinator used commit-tree with temporary refs or immutable tags, then guarded fresh delivery after accepted proof; execution HEAD/index and slice status stayed intact during probing.
   - Inference: a documented guarded provisional-candidate path could preserve credit/hook conventions without either marking a slice done before proof or inventing Git plumbing.
 
+- Execution: SEED-014#multiline-arrow-boundaries
+  - Timestamp: unknown (2026-10-27 evening, between slice 3 delivery c5cc309 and slice 4 merge a2d2ab7)
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.71 (installed by commit 01afe9c)
+  - Evidence: slice 4 progress commit `2764d8d` made by agent-commit plus `deliver --validated-candidate`, later plan-only fresh increment `25bff7f` marking slice 4 done; earlier `fresh` refusal "slice 1 is done … but not in its committed plan" forced a separate plan-only increment `4b8de7a` for the no-product-change slice 1.
+  - Observed effect: an externally blocked hosted-delivery slice and an evidence-only slice each needed an extra increment shape not described by the fresh-increment reference.
+  - Inference: same gap as above; also applies to slices whose proof is only an external observation.
+
 ## DD-003 — Nix shellHook reinstalls Python dependencies on every command
 
 Every `nix develop -c` runs `pip install -r dev_requirements.txt` in the
@@ -187,6 +196,44 @@ dry-run push preview before refusing the route.
   - Observed effect: same-SHA dry-run looked up-to-date; only the divergent preview proved the MCM write path. Route stayed viable without a false human disposition stop.
   - Inference: collaborator-permission and no-op dry-run signals understate MCM delivery; divergent preview is the discriminating probe.
 
+## DD-009 — Plan-authorized contributor writes refused by host permission classifier
+
+A plan slice (hosted contributor delivery) authorized pushing corrections to a
+fork PR head, a guarded hosted merge and one acknowledgement, but the host's
+auto-mode permission classifier refused the fork push ("Create Public Surface")
+and later the merge ("Merge Without Review") until the human re-authorized each
+in conversation. Consider obtaining explicit human authorization for every
+outward write a plan slice needs at execution start (or a project permission
+rule), so the slice does not stop twice mid-delivery.
+
+### Occurrences
+- Execution: SEED-014#multiline-arrow-boundaries
+  - Timestamp: unknown (2026-10-27, after slice 3 gate on 3117601 and before PR533 merge a2d2ab7)
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.71 (installed by commit 01afe9c)
+  - Evidence: plan `.planning/slice-plans/010-multiline-arrow-boundaries/PLAN.md` slice 4 delivery note; dashboard unfinished handoff receipt 48eaccfb-ca45-4cd5-a7aa-dfecbbf15443; push `1542385..b6074d8` and merge `a2d2ab7` only after user replies "I authorize you to do it" / "you are authorized to run it".
+  - Observed effect: two human round trips and a stopped CI observer during an otherwise ready delivery; no correctness impact.
+  - Inference: plan text and launch instruction are not treated as authorization by the host's classifier; an up-front confirmation would avoid the stops.
+
+## DD-010 — Coordinator base-versus-candidate ambiguity probes caught gaps green tests missed
+
+Before accepting a parser slice, the coordinator ran a small probe script over
+ambiguous forms (split generics, argument lists, one-line object members,
+curried arrows) against both a base export and the candidate. It exposed a
+valid-continuation regression and a missing same-line member that the
+implementer's passing tests and the reproducer did not cover.
+
+### Occurrences
+- Execution: SEED-014#multiline-arrow-boundaries
+  - Timestamp: unknown (2026-10-27, slice 2 acceptance before 822bd05)
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.71 (installed by commit 01afe9c)
+  - Evidence: plan slice 2 acceptance ("generic-split comma regression and a missing same-line object member; both corrected and tested"); tests `test_generic_arguments_split_after_comma_keep_their_line`, `test_same_line_object_members_stay_separate` in `test/test_languages/testJavaScriptArrowBoundaries.py`.
+  - Observed effect: two return rounds before delivery instead of a later regression; both became discriminating tests.
+  - Inference: a practice worth keeping for grammar heuristics where examples are not exhaustive.
+
 ## Retention
 
-- Highest allocated local number: 8
+- Highest allocated local number: 10

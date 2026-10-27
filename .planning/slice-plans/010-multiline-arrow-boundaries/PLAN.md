@@ -351,6 +351,18 @@ comments): https://github.com/terryyin/lizard/pull/533#issuecomment-6443273326.
 Story branch then merged trunk (`a2d2ab7`, plus unrelated website-release
 work); analyzer files unchanged by that merge; full pytest passed.
 
+## Execution complete
+
+Product advice: no correction plan needed. The aggregate change (`822bd05`,
+`b5a25db`, `658e7d5`, `8973153`, `3117601`, delivered via PR533 `a2d2ab7`)
+meets the story's reported cases, continuation controls, consumers, proof and
+strict performance gate; recorded gaps G1–G3 keep their dispositions.
+Recommend a separate Vue story: a `<template>` before `<script>` shifts every
+reported line (G3; independent of arrows). Keep `_ternary_depth` naming and
+statement-end reset with SEED-015, which already plans to rework it. The comma
+ambiguity outside objects (G1) stays a grammar-level limitation, not a queued
+correction. Process findings: DD-002 occurrence, DD-009, DD-010 in `DearDough.md`.
+
 ## Story obligations
 
 ### G1. Comma before a line break outside objects keeps baseline ownership
