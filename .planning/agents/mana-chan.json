@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "agent": "Mana-chan",
+  "email": "mana-chan@example.org",
+  "activity": "preparation",
+  "identity": "SEED-010#review-lexical-js-prs",
+  "host": "cursor"
+}
