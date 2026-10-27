@@ -38,7 +38,7 @@ Proof and expected result: [slice 1](SLICE-PROOF.md).
 
 ### 2. Regex literal context — PR #528
 Type: Behavior
-Status: planned
+Status: done
 Source: https://github.com/terryyin/lizard/pull/528
 Proof and expected result: [slice 2](SLICE-PROOF.md).
 
@@ -146,7 +146,7 @@ Proof and expected result: [slice 19](SLICE-PROOF.md).
 
 ## Current execution evidence
 
-Slice 1 implementation and regression proof are under coordinator acceptance.
+Slice1's disposition and regression/performance proof are accepted and delivered.
 Independent source-only review: source_review_1 launch and return in this execution's
 conversation. Its separate commitments match the source: reproduce/value/review,
 shared consumers, conditional correction or >15m follow-up, repeated comparable
@@ -154,6 +154,8 @@ performance including cumulative effects, final tests/CI, exact-head merge and
 thank-you. Current owner is slice 1; later PRs remain with their ordered slices.
 PR527 merged as e871ae4. Expanded control performance also passes; its evidence
 and the corrected acceptance ordering are in [527-review.md](527-review.md).
+PR528 is deferred to SEED-012#regex-literal-context; [528-review.md](528-review.md)
+owns its correctness/performance rejection and linked queued outcome.
 
 ## Story obligations
 
@@ -161,3 +163,8 @@ and the corrected acceptance ordering are in [527-review.md](527-review.md).
 Reported: slice 1 — "Independent refactor review found the Python NS API corpus contains the original PR example but omits nearby nested-function, async, match, continuation and class controls; the coordinator merged PR527 before this missing performance gate was resolved."
 Story clause: "Measure runtime before and after the change using the same environment, input corpus and options"
 Disposition: proved by slice 1: 527-review.md expanded control-corpus protocol and docs/reviews/fabio-malpezzi-20261027/controls/527-python-controls.json; all22controls plus originalexample measured, upper95%bound-.6803%<3%; broader CLI input unchanged and prior complete proof reused.
+
+### G2. Regex candidate breaks division and exceeds slowdown limit
+Reported: slice 2 — "The authored PR528 candidate misreads valid member/contextual-name division, loses CCN/tokens, and slows affected inputs19.4428%; coherent correction is estimated30–45minutes and queued as SEED-012#regex-literal-context."
+Story clause: "Correct defects and refactor the overall affected changes into a coherent, minimal solution."
+Disposition: excluded "Corrections estimated above fifteen minutes belong to the linked follow-up stories, not to this review's implementation scope."

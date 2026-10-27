@@ -12,3 +12,4 @@ Maintenance, bug fixing, and PR reviews.
 
 ## Backlog list
 
+- [Recognize regex literals without consuming division expressions](seeds/SEED-012-regex-literal-context.md#regex-literal-context) — SEED-012#regex-literal-context

@@ -125,7 +125,10 @@ CI selector: python-app.yml, verified active, workflow ID 38306292, Python appli
 
 CI observer: coordinator `rio-chan-pr-review`, directory
 `/tmp/dough-ci-501/watch-zjUjlZ`, PID 58494, stream session 38538,
-yielded cell 35. It observes this execution branch; no revisions registered yet.
+yielded cell 35. It observes this execution branch. Slice1 was accepted at
+`af27c910a6a0bff51d8358fde0c37fa9cb059d1a` on that branch, suffix base
+`2e21e404c1ab9f4e0b49acc80816e816629d0670`; managed delivery reused this stream.
+At slice2 startup, the previously published base is af27c910. No rebase occurred.
 The first two stream launches with login shells produced no observer/mailbox;
 their cells 10 and 27 were closed after confirming no matching process/request.
 Launch with `login:false` succeeded. Keep that setting for shell operations.
@@ -135,6 +138,14 @@ the selected execution branch. It has no development dependency installation;
 only already-validated tests were copied and committed through agent-commit.
 It is not a second execution workspace. Non-forced Git push advanced the fork
 head from a529750 to 5067a85; GitHub confirms that exact head and open state.
+PR527 then merged as e871ae448d16893301856b41124aba34496e9536; the contributor
+candidate checkout was clean and its commit is contained on origin/master.
+That temporary candidate checkout has been retired. A separate clean read-only
+trunk-evidence checkout at /private/tmp/lizard-review-trunk-evidence supports
+identity queries; it is now detached at7ac449f and has no runtime installation.
+Trunk advanced to7ac449f through the separate Python-support story. Its diff
+changes CI/claims/records and a metadata test; analyzer sources are unchanged.
+Refresh future merge gates to Ubuntu/Windows×Python3.8–3.14 (14jobs).
 
 
 Preparation reproduced all first examples on the current checkout, while the

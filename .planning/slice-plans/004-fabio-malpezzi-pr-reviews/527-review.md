@@ -1,6 +1,6 @@
 # PR #527 review evidence
 
-Status: merged e871ae448d16893301856b41124aba34496e9536; expanded control-corpus performance proof passed; delivery pending.
+Status: merged e871ae448d16893301856b41124aba34496e9536; all gates proved; slice delivered at af27c910a6a0bff51d8358fde0c37fa9cb059d1a.
 Source: https://github.com/terryyin/lizard/pull/527
 Frozen head: a529750edc95d44bc71fbcd88d567bbbef865ae5.
 Reviewed corrected head: 5067a85ee8d95870d1f55561b1d468cd5421169f.
@@ -124,3 +124,11 @@ controls/ directory. The full CLI fixed-input tree is unchanged and its prior
 complete measurement remains applicable. No production changes or required
 behavioral proof were invalidated. This closes the missing performance gate;
 it does not erase the incorrect merge-before-full-proof ordering.
+
+Final independent artifact refactor review accepted the expanded corpus/interval,
+reused prior behavioral and CLI proof, and returned ## REFACTOR COMPLETE.
+Guarded fresh delivery first refused a missing quoted Reported field in G1,
+before commit; correcting that record produced the accepted af27c910 increment.
+Publication target is the execution branch, observer reused/registered. The PR
+thank-you comment now links immutable af27c910 evidence and explicitly records
+both the control result and the earlier acceptance-ordering error.
