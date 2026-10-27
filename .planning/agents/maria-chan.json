@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "agent": "Maria-chan",
+  "email": "maria-chan@example.org",
+  "identity": "SEED-006#ci-verified-python-support",
+  "mode": "story-branch",
+  "branch": "codex/claim-support-only-for-the-python-versions-ci-ve",
+  "host": "codex",
+  "model": "gpt-6.1-sol"
+}
