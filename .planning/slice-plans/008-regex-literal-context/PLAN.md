@@ -218,7 +218,7 @@ performance (slice 3) and contributor delivery (slice 4).
 
 ### 3. Meet the strict performance budget without weakening semantics
 Type: Behavior
-Status: planned
+Status: done
 Proof: retained raw warmed timing pairs, immutable harness/corpus hashes,
 candidate/base revisions and intervals for every required workload.
 
@@ -247,6 +247,26 @@ Noise or an upper bound of 3% or more is unresolved/failing; fix a prospective
 quiet retry protocol rather than timing repeatedly for a pass. Refresh target
 changes and remeasure only invalidated comparisons. This independent performance
 loop may take longer than implementation; no invented timeout applies.
+
+Accepted proof (2026-10-27, Nana-chan): P10 performance gate met; semantics intact.
+- Candidate: execution workspace after shared-decision optimization atop `8291e5b`.
+  Master tip timed: `1db5933b66e4602f607c6ae40998984dadd5bab5`. Frozen:
+  `2e21e404c1ab9f4e0b49acc80816e816629d0670`.
+- Harness `paired.py` SHA256 `3064d8d7…3217bf5`; manifest `2b4d99de…bf5d7cc`.
+  Supplemental + NS companion under `/private/tmp/lizard-regex-perf-seed012/`.
+- Unoptimized api vs master upper +38.48% (diagnosis). Optimized accepted uppers
+  (all &lt;3%): api 1.26/1.70; cli 1.77/1.51; cli-ns 2.29/1.05; api-ns 1.85/1.83;
+  api-supplemental 1.89 (quiet-retry; prior 3.68% preserved) / 1.53
+  (master/frozen). Rollup `SLICE3-SUMMARY.json`; raw `opt-*.json`.
+- Optimization: trunk punct lookbehind + selective keyword mark (find-jump /
+  forward) + pure-function memo; `(?<![$\w])` so `$return` stays division.
+  Post-refactor modules: `js_style_regex_context.py` facade,
+  `js_style_regex_keyword_scan.py`, `js_style_regex_forward_scan.py`,
+  `js_style_regex_expression.py` — timings retained (layout-only split).
+- Semantic re-proof after opt+refactor: reproducer EXIT 0 42/42; focused
+  pytest 451 passed, 7 skipped.
+- Learnings: full forward scan every analyze ~+37%; selective mark+memo meets
+  budget without per-case fast paths.
 
 ### 4. Deliver the qualified correction through PR528
 Type: Behavior
