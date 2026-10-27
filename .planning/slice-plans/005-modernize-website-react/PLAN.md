@@ -309,7 +309,7 @@ Disposition: proved by slice 2: `website/frontend/features/published.feature` fe
 ### G3. Linux browser install and clean-commit checkout are not exercised
 Reported: slice 1 — "The Nix and Playwright path is proved on aarch64-darwin only. Linux `--with-deps` is documented but not run"
 Story clause: "Supply it through the repository's Nix entry point as well as CI"
-Disposition: receiving slice 3
+Disposition: proved by slice 3: hosted run https://github.com/terryyin/lizard/actions/runs/40472512874 (push, `f6af787`) job `web` on ubuntu-24.04 used Node v24.21.0, ran `npm ci`, `playwright install --with-deps chromium`, the build and 16/16 scenarios from a clean checkout; the Nix entry point was proved in slice 1
 
 ### G4. App Engine static serving of the built bundle is not observed live
 Reported: slice 2 — "No live deploy and no hosted CI; App Engine static serving of `dist/` is inferred from app.yaml, not observed."
@@ -352,6 +352,15 @@ Disposition: excluded "Tag-triggered deployment, live GCP publication, DNS and t
   Full pytest 1767 passed; actionlint reported nothing on the new jobs.
   Hosted run/skip receipts and G3 follow this publication: the web-changing
   slice 3 increment, then a docs-only CI documentation increment.
+- Hosted run receipt: https://github.com/terryyin/lizard/actions/runs/40472512874,
+  push of `f6af787` (changed: workflow, `scripts/web_changes.py`,
+  `test/test_web_changes.py`, plan): `changes` printed
+  `Compared f32439f..f6af787` / `web=true`; `web` succeeded (16 scenarios
+  passed); all 14 `build` matrix jobs succeeded, including Windows runs of
+  the Git-fixture tests.
+- Hosted skip receipt: the next push carries only `docs/website.md` (CI
+  documentation) and this plan; its run must show `web=false`, `web`
+  skipped and `build` running; slice 3 becomes done once that is observed.
 
 ## Learnings
 

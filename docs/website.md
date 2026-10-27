@@ -94,6 +94,61 @@ prints the server log tail. To check that the suite catches a broken analysis
 path, set `E2E_BLOCK_ANALYSIS=1`; the browser then cannot reach `/analyze` and
 metric scenarios fail.
 
+### Continuous integration
+
+`.github/workflows/python-app.yml` runs on every branch push and on pull
+requests to `master` and `feature/**`; there is no workflow path filter. Its
+cheap `changes` job runs `scripts/web_changes.py`, and the `web` job runs only
+when that job outputs `web=true`. The Python matrix (`build`) does not depend
+on either job, so it always runs and never waits for a browser build.
+
+`scripts/web_changes.py` is the only home of the web change boundary
+(`WEB_PATHS`): `website/`, `templates/`, the Flask/App Engine entry files, the
+Python requirement files, the Nix files, `.gitignore`, the website and
+selector tests, the selector itself and this workflow. Change the list there;
+the workflow consumes only its Boolean output. Shared analyzer code
+(`lizard_core/`, `lizard_languages/`, `lizard_ext/`) and documentation are
+outside the boundary on purpose: a docs-only or analyzer-only change runs the
+detector and the Python checks and skips the web job without installing npm
+packages or browsers.
+
+The selector lists changed paths with `git diff --name-only --no-renames -z`,
+so additions, edits, deletions and both sides of a rename count, without
+truncation. It compares:
+
+- a push to an existing branch: the event's `before` to `after`;
+- a pull request: the merge base of base and head to head, so web changes
+  that exist only on the base branch do not count;
+- a new branch (`before` is all zeros): the merge base of the head with
+  `origin/<default branch>` to the head, or the empty tree when there is no
+  such base (an initial repository).
+
+If the comparison cannot be resolved (a missing or unknown commit, for
+example after a force push that removed `before`), the `changes` job fails
+with `web_changes: cannot compare: ...` instead of reporting no web changes;
+rerun or push a new commit once the history is available.
+
+Run the selector locally from a checkout with full history:
+
+```sh
+python scripts/web_changes.py push BEFORE AFTER
+python scripts/web_changes.py pull_request BASE HEAD
+python scripts/web_changes.py push 0000000000000000000000000000000000000000 HEAD --default-branch master
+```
+
+It prints the compared range, `web=true` or `web=false` and the matching
+paths; under Actions it also writes `web=...` to `$GITHUB_OUTPUT`.
+`test/test_web_changes.py` drives the same script against temporary Git
+histories.
+
+The `web` job uses Node from `website/frontend/package.json` `engines`, the
+npm version from its `packageManager`, Python 3.13 with `requirements.txt`,
+then `npm ci`, `playwright install --with-deps chromium`, `run build` and
+`run test:e2e`, the same commands as above. When it fails, the
+`browser-reports` artifact holds `website/frontend/reports/` (the Cucumber
+HTML report and failure screenshots; they contain only test fixtures). The
+server log tail is in the job log.
+
 ## Inspect the existing project
 
 Use gcloud directly, with explicit project selection:
