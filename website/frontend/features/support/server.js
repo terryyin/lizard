@@ -43,17 +43,22 @@ export class LizardServer {
       if (this.#child === child) this.#child = null;
     });
     const deadline = Date.now() + READY_TIMEOUT_MS;
+    let problem = "did not become ready";
     while (Date.now() < deadline) {
       if (this.#child !== child) break;
+      let response;
       try {
-        if ((await fetch(this.url, { signal: AbortSignal.timeout(1000) })).ok) return;
+        response = await fetch(this.url, { signal: AbortSignal.timeout(1000) });
       } catch {
-        // not listening yet
+        await delay(100); // not listening yet
+        continue;
       }
-      await delay(100);
+      if (response.ok) return;
+      problem = `answered ${response.status}: ${await response.text()}`; // e.g. the missing-build diagnostic
+      break;
     }
     await this.stop();
-    throw new Error(`Lizard server did not become ready at ${this.url}\n${this.logTail()}`);
+    throw new Error(`Lizard server at ${this.url} ${problem}\n${this.logTail()}`);
   }
 
   async stop() {

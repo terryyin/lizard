@@ -2,13 +2,32 @@
 
 The website is a Flask adapter around `lizard.analyze_file.analyze_source_code`.
 `index:app` is the application; `website.application` remains a compatibility
-import. The homepage, demo, styles and examples are local assets. Serving the site
-needs no browser libraries or frontend build.
+import. The page itself is a React app in `website/frontend/src/` (one entry,
+`main.jsx`, and one stylesheet, `site.css`). Vite builds it into the ignored
+`website/static/dist/`, served at `/website/static/dist/`, with a
+`manifest.json`. Flask serves `/` as a small shell (`templates/index.html`):
+metadata, the favicon, the manifest-selected script and stylesheet, a
+no-JavaScript notice linking the CLI documentation, and the server-owned
+language choices and source limit as escaped JSON. React renders everything
+else. Node is a build/test dependency only; the deployed service is Python.
 
 ## Local development
 
+Build the frontend before serving; without a build `/` answers 503 with the
+build commands, while `/analyze` keeps working:
+
 ```sh
+nix develop -c npm --prefix website/frontend ci
+nix develop -c npm --prefix website/frontend run build
 nix develop -c python -m flask --app index run --port 8080
+```
+
+While editing the frontend, `run watch` rebuilds on change in another
+terminal; reload the Flask-served page. There is no separate dev server, so
+the production Content Security Policy applies locally too. Python tests need
+neither npm nor a build:
+
+```sh
 nix develop -c python -m pytest test/test_website.py
 ```
 
@@ -54,8 +73,12 @@ run the suite:
 ```sh
 nix develop -c npm --prefix website/frontend ci
 nix develop -c npm --prefix website/frontend exec -- playwright install chromium
+nix develop -c npm --prefix website/frontend run build
 nix develop -c npm --prefix website/frontend run test:e2e
 ```
+
+The suite tests the current build output; rebuild after frontend changes.
+Without a build it stops at startup and prints Flask's build diagnostic.
 
 On Linux CI, also install the browser's system libraries with
 `playwright install --with-deps chromium`. `run test:e2e:dry` lists the
@@ -63,7 +86,8 @@ scenarios without starting anything.
 
 The suite starts the real Flask app (`python -m flask --app index run`) on a
 free local port, opens a fresh browser context per scenario, and stops the
-server when the run passes, fails or is interrupted. Scenarios use the actual
+server when the run passes, fails or is interrupted. A scenario fails if the
+page throws or reports a Content Security Policy violation. Scenarios use the actual
 analyzer; recovery scenarios stall or stop the owned server rather than faking
 responses. A failure saves a screenshot under `website/frontend/reports/` and
 prints the server log tail. To check that the suite catches a broken analysis
@@ -90,17 +114,24 @@ services in every project linked to it; inspect those projects first.
 
 ## Preview before release
 
-Run the full suite and combined checks on the candidate before any deploy:
+Build the frontend from the lockfile, then run the full suite and combined
+checks on the candidate before any deploy:
 
 ```sh
+nix develop -c npm --prefix website/frontend ci
+nix develop -c npm --prefix website/frontend run build
+nix develop -c npm --prefix website/frontend run test:e2e
 nix develop -c python -m pytest
 nix develop -c make
 gcloud meta list-files-for-upload
 ```
 
 Review the upload list: it must contain only application/analyzer code,
-`requirements.txt`, `app.yaml`, templates and public assets. `.gcloudignore`
-excludes repository history, planning records, tests and local environments.
+`requirements.txt`, `app.yaml`, the shell template, the favicon and images,
+and `website/static/dist/` (the manifest and every asset it names).
+`.gcloudignore` excludes repository history, planning records, tests, local
+environments and all of `website/frontend/` (sources, scenarios,
+`node_modules`, reports). Deploying without a build serves the 503 diagnostic.
 Choose a unique version ID and keep the prior version running:
 
 ```sh

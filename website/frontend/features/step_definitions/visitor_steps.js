@@ -20,6 +20,11 @@ Given("a visitor opens the homepage", async function () {
   await this.page.goto(this.server.url);
 });
 
+Given("a visitor without JavaScript opens the homepage", async function () {
+  await this.openContext({ javaScriptEnabled: false });
+  await this.page.goto(this.server.url);
+});
+
 Given("a visitor opens the homepage on a {int} pixel wide screen", async function (width) {
   await this.page.setViewportSize({ width, height: 800 });
   await this.page.goto(this.server.url);
@@ -49,25 +54,25 @@ When("the visitor enters {int} copies of {string}", async function (count, text)
   await sourceField(this.page).fill(text.repeat(count));
 });
 
-When("the visitor tabs to the {string} field", async function (name) {
-  const target = this.page.getByRole("textbox", { name });
-  for (let presses = 0; presses < 40; presses += 1) {
+async function tabTo(page, target, presses) {
+  for (let pressed = 0; pressed < presses; pressed += 1) {
+    await page.keyboard.press("Tab");
     if (await isFocused(target)) return;
-    await this.page.keyboard.press("Tab");
   }
-  assert.fail(`"${name}" was not reached by keyboard within 40 Tab presses`);
+  assert.fail(`${target} was not reached within ${presses} Tab presses`);
+}
+
+When("the visitor tabs to the {string} field", async function (name) {
+  await tabTo(this.page, this.page.getByRole("textbox", { name }), 40);
+});
+
+When("the visitor tabs to the {string} button", async function (name) {
+  await tabTo(this.page, this.page.getByRole("button", { name }), 5);
 });
 
 When("the visitor tabs to the {string} button and presses Enter", async function (name) {
-  const target = this.page.getByRole("button", { name });
-  for (let presses = 0; presses < 5; presses += 1) {
-    await this.page.keyboard.press("Tab");
-    if (await isFocused(target)) {
-      await this.page.keyboard.press("Enter");
-      return;
-    }
-  }
-  assert.fail(`"${name}" did not follow by keyboard`);
+  await tabTo(this.page, this.page.getByRole("button", { name }), 5);
+  await this.page.keyboard.press("Enter");
 });
 
 When("the analyzer stops responding", function () {
@@ -167,4 +172,53 @@ Then("the code field and {string} button fit the screen", async function (name) 
     const box = await locator.boundingBox();
     assert.ok(box && box.x >= 0 && box.x + box.width <= width, `${JSON.stringify(box)} exceeds ${width}px`);
   }
+});
+
+Then("the focused control shows a visible focus indicator", async function () {
+  const focus = await this.page.evaluate(() => {
+    const style = getComputedStyle(document.activeElement);
+    return {
+      focusVisible: document.activeElement.matches(":focus-visible"),
+      outline: style.outlineStyle === "none" ? 0 : parseFloat(style.outlineWidth),
+      boxShadow: style.boxShadow,
+    };
+  });
+  assert.ok(focus.focusVisible, "the focused control does not match :focus-visible");
+  // At least 2 CSS px, thicker than the browser's default ring, so the site's own style is observed.
+  assert.ok(focus.outline >= 2 || focus.boxShadow !== "none", `no visible focus indicator: ${JSON.stringify(focus)}`);
+});
+
+async function assertImage(page, path) {
+  const response = await page.request.get(new URL(path, page.url()).href);
+  assert.equal(response.status(), 200, `${path} answered ${response.status()}`);
+  assert.match(response.headers()["content-type"], /^image\//, `${path} is not an image`);
+  assert.ok((await response.body()).length > 0, `${path} is empty`);
+}
+
+Then("the page uses the favicon {string}", async function (path) {
+  await expect(this.page.locator('link[rel="icon"]')).toHaveAttribute("href", path);
+  await assertImage(this.page, path);
+});
+
+Then("the page shows the logo {string}", async function (path) {
+  await expect(this.page.locator(`img[src="${path}"]`)).toBeVisible();
+  await assertImage(this.page, path);
+});
+
+Then("{string} is served as an image", async function (path) {
+  await assertImage(this.page, path);
+});
+
+Then("every script and stylesheet the page loads comes from {string}", async function (prefix) {
+  const assets = this.requests.filter((request) => ["script", "stylesheet"].includes(request.resourceType()));
+  assert.deepEqual([...new Set(assets.map((request) => request.resourceType()))].sort(), ["script", "stylesheet"]);
+  for (const request of assets) {
+    assert.ok(new URL(request.url()).pathname.startsWith(prefix), `${request.url()} is outside ${prefix}`);
+    assert.equal((await request.response())?.status(), 200, `${request.url()} did not load`);
+  }
+});
+
+Then("{string} is not served", async function (path) {
+  const response = await this.page.request.get(new URL(path, this.page.url()).href);
+  assert.equal(response.status(), 404, `${path} answered ${response.status()}`);
 });

@@ -122,7 +122,7 @@ this interim frontend is removed by slice 2. No framework-only scaffold slice.
 
 ### 2. Visitors use a complete React page served by the existing app
 Type: Behavior
-Status: planned
+Status: done
 Proof: The regression journeys pass against a clean production build served by
 Flask, existing API checks pass with and without build output, and the upload
 artifact contains all referenced assets and no Node dependencies/source tests.
@@ -299,17 +299,22 @@ preparation. No pre-Take human decision is required by this plan.
 ### G1. Visible focus is not asserted by browser scenarios
 Reported: slice 1 — "Visible focus styling is not asserted; keyboard reach and activation are."
 Story clause: "Preserve keyboard access, visible focus, narrow-screen usability"
-Disposition: receiving slice 2
+Disposition: proved by slice 2: `website/frontend/features/access.feature` "Keyboard focus on the demo controls is visible" asserts a site `:focus-visible` outline/box-shadow on the code field, Load example and Analyze code (Chromium's default `auto 1px` ring fails it)
 
 ### G2. No-JavaScript notice and published image URLs are not observed against the new page
 Reported: slice 1 — "The no-JavaScript notice and the published logo/favicon URLs are not covered in the browser; they are HTTP-tested in pytest."
 Story clause: "Keep published logo and favicon URLs."
-Disposition: receiving slice 2
+Disposition: proved by slice 2: `website/frontend/features/published.feature` fetches the page's icon/logo URLs and `/favicon.ico` as non-empty `image/*`, and with JavaScript disabled shows the `<noscript>` CLI docs link and `pip install lizard`; `test/test_website.py::test_published_logo_and_favicon_urls`
 
 ### G3. Linux browser install and clean-commit checkout are not exercised
 Reported: slice 1 — "The Nix and Playwright path is proved on aarch64-darwin only. Linux `--with-deps` is documented but not run"
 Story clause: "Supply it through the repository's Nix entry point as well as CI"
 Disposition: receiving slice 3
+
+### G4. App Engine static serving of the built bundle is not observed live
+Reported: slice 2 — "No live deploy and no hosted CI; App Engine static serving of `dist/` is inferred from app.yaml, not observed."
+Story clause: "Tag-triggered deployment, live GCP publication, DNS and traffic changes belong to the release story."
+Disposition: excluded "Tag-triggered deployment, live GCP publication, DNS and traffic changes belong to the release story."
 
 ## Execution record
 
@@ -327,6 +332,16 @@ Disposition: receiving slice 3
   forced failure were rerun after it. The interrupt path after that edit
   relies on Node's documented `process.exit` → `exit` behaviour and was not
   re-observed; pass/fail cleanup, which the plan requires, was.
+- Slice 1 published at `3adc9bc` on the execution branch; CI observer attached.
+- Slice 2 accepted (coordinator rerun): with `website/static/dist` removed,
+  `nix develop -c python -m pytest test/test_website.py` passed 30 (manifest
+  shell fixture, escaped bootstrap, unbuilt 503 diagnostic with working API);
+  `npm run build` then `run test:e2e` passed 16 scenarios/134 steps against
+  Flask-served React 19.3.1/Vite 8.3.5 assets with a CSP/page-error guard on
+  every scenario; the blocked-analysis run failed; no Flask child remained;
+  `gcloud meta list-files-for-upload` lists only the manifest, its two assets,
+  images, favicon and template from `website/` and `templates/`. Full pytest
+  1754 passed (implementer).
 
 ## Learnings
 

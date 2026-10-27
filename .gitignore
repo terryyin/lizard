@@ -46,3 +46,4 @@ dist/
 .worktrees/
 website/frontend/node_modules/
 website/frontend/reports/
+website/static/dist/

@@ -1,6 +1,9 @@
 """The Lizard website: a small HTTP adapter around the public analyzer."""
 
-from flask import Flask, jsonify, render_template, request
+import json
+from pathlib import Path
+
+from flask import Flask, Response, jsonify, render_template, request
 from werkzeug.exceptions import BadRequest, RequestEntityTooLarge
 
 from lizard import analyze_file
@@ -17,20 +20,44 @@ SOURCE_LIMIT_MESSAGE = (
 )
 
 
+# The Vite build (website/frontend) writes the page bundle and its manifest here.
+BUILD_DIR = Path(app.static_folder) / "dist"
+BUILD_URL = f"{app.static_url_path}/dist/"
+BUILD_MISSING_MESSAGE = (
+    "The website frontend has not been built. Run "
+    "`nix develop -c npm --prefix website/frontend ci` and "
+    "`nix develop -c npm --prefix website/frontend run build`, then reload.\n"
+)
+
+
 class InvalidSource(ValueError):
     """A safe, user-facing request validation error."""
 
 
+def built_entry():
+    """Return the page entry chunk of the Vite manifest, or None when unbuilt."""
+    try:
+        manifest = json.loads((BUILD_DIR / "manifest.json").read_text("utf-8"))
+    except (OSError, ValueError):
+        return None
+    return next((chunk for chunk in manifest.values() if chunk.get("isEntry")), None)
+
+
 @app.get("/")
 def homepage():
+    entry = built_entry()
+    if entry is None:
+        return Response(BUILD_MISSING_MESSAGE, 503, mimetype="text/plain")
     options = [(reader.__name__[:-6], "." + reader.ext[0])
                for reader in languages()]
     options = [("C / C++" if name == "CLike" else name, extension)
                for name, extension in options]
     return render_template(
-        "index.html", languages=sorted(options),
-        max_source_bytes=MAX_SOURCE_BYTES,
-        source_limit_message=SOURCE_LIMIT_MESSAGE,
+        "index.html", script=BUILD_URL + entry["file"],
+        styles=[BUILD_URL + css for css in entry.get("css", [])],
+        config={"languages": sorted(options),
+                "maxSourceBytes": MAX_SOURCE_BYTES,
+                "sourceLimitMessage": SOURCE_LIMIT_MESSAGE},
     )
 
 

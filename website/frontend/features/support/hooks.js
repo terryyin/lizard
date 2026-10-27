@@ -1,3 +1,4 @@
+import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import {
   After, AfterAll, Before, BeforeAll, setDefaultTimeout, setWorldConstructor, Status, World,
@@ -18,6 +19,25 @@ for (const signal of ["SIGINT", "SIGTERM"]) {
 class VisitorWorld extends World {
   server = server;
   analyzeRequests = 0;
+  requests = [];
+  browserProblems = [];
+
+  /** A fresh browser context and page; replaces any context the scenario already opened. */
+  async openContext(options = {}) {
+    await this.context?.close();
+    this.context = await browser.newContext(options);
+    // Test seam for proving the suite discriminates: no analysis request reaches the server.
+    if (process.env.E2E_BLOCK_ANALYSIS) await this.context.route("**/analyze", (route) => route.abort());
+    this.page = await this.context.newPage();
+    this.page.on("request", (request) => {
+      this.requests.push(request);
+      if (new URL(request.url()).pathname === "/analyze") this.analyzeRequests += 1;
+    });
+    this.page.on("pageerror", (error) => this.browserProblems.push(error.message));
+    this.page.on("console", (message) => {
+      if (/Content Security Policy/i.test(message.text())) this.browserProblems.push(message.text());
+    });
+  }
 }
 setWorldConstructor(VisitorWorld);
 
@@ -27,13 +47,7 @@ BeforeAll({ timeout: 30000 }, async function () {
 });
 
 Before(async function () {
-  this.context = await browser.newContext();
-  // Test seam for proving the suite discriminates: no analysis request reaches the server.
-  if (process.env.E2E_BLOCK_ANALYSIS) await this.context.route("**/analyze", (route) => route.abort());
-  this.page = await this.context.newPage();
-  this.page.on("request", (request) => {
-    if (new URL(request.url()).pathname === "/analyze") this.analyzeRequests += 1;
-  });
+  await this.openContext();
 });
 
 After({ timeout: 30000 }, async function ({ pickle, result }) {
@@ -51,6 +65,7 @@ After({ timeout: 30000 }, async function ({ pickle, result }) {
     server.resume();
     if (!server.running) await server.start(); // restore a server a scenario took offline
   }
+  assert.deepEqual(this.browserProblems, [], "page errors or Content Security Policy violations");
 });
 
 AfterAll({ timeout: 30000 }, async function () {

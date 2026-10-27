@@ -1,7 +1,11 @@
 """Observe the website through HTTP requests using the real analyzer."""
 
+import json
+import re
+
 import pytest
 
+import index
 from index import app
 from website import application
 
@@ -11,22 +15,69 @@ def client():
     return app.test_client()
 
 
-def test_homepage_and_existing_wsgi_import(client):
+@pytest.fixture
+def built(tmp_path, monkeypatch):
+    """A filesystem stand-in for the Vite build output that Flask reads."""
+    (tmp_path / "manifest.json").write_text(json.dumps({
+        "src/main.jsx": {"file": "assets/main-abc.js", "isEntry": True,
+                         "css": ["assets/main-def.css"]},
+        "src/other.js": {"file": "assets/other-ghi.js"},
+    }))
+    monkeypatch.setattr(index, "BUILD_DIR", tmp_path)
+    return tmp_path
+
+
+def bootstrap_data(page):
+    match = re.search(r'<script type="application/json" id="lizard-config">(.*?)</script>',
+                      page, re.DOTALL)
+    return json.loads(match.group(1))
+
+
+def test_homepage_is_a_shell_for_the_manifest_selected_bundle(client, built):
     response = client.get("/")
     assert response.status_code == 200
-    assert application is app
     page = response.get_data(as_text=True)
-    for content in ("Understand", "pip install lizard", "lizard src/",
-                    "https://pypi.org/project/lizard/",
-                    "https://github.com/terryyin/lizard/blob/master/docs/cli.rst",
-                    'id="analysis-form"', 'aria-live="polite"',
-                    'name="viewport"', 'data-max-source-bytes="65536"',
-                    'data-source-limit-message="The online demo accepts up to 64 KiB',
-                    "is not saved"):
-        assert content in page
-    assert '<option value=".py" selected>Python</option>' in page
-    assert "bower" not in page
+    assert '<script type="module" src="/website/static/dist/assets/main-abc.js"></script>' in page
+    assert '<link rel="stylesheet" href="/website/static/dist/assets/main-def.css">' in page
+    assert "other-ghi.js" not in page
+    assert '<div id="root"></div>' in page
+    assert '<link rel="icon" href="/website/static/favicon.ico">' in page
+    assert 'name="viewport"' in page and 'name="description"' in page
+    assert "<noscript>" in page and "docs/cli.rst" in page
     assert "script-src 'self'" in response.headers["Content-Security-Policy"]
+    assert application is app
+
+
+def test_homepage_bootstraps_server_owned_languages_and_limits(client, built):
+    config = bootstrap_data(client.get("/").get_data(as_text=True))
+    assert ["Python", ".py"] in config["languages"]
+    assert ["C / C++", ".c"] in config["languages"]
+    assert config["languages"] == sorted(config["languages"])
+    assert config["maxSourceBytes"] == 65536
+    assert config["sourceLimitMessage"].startswith("The online demo accepts up to 64 KiB")
+
+
+def test_bootstrap_data_cannot_break_out_of_its_script_element(client, built, monkeypatch):
+    hostile = "</script><script>alert(1)</script><!--"
+    monkeypatch.setattr(index, "SOURCE_LIMIT_MESSAGE", hostile)
+    page = client.get("/").get_data(as_text=True)
+    assert "<script>alert(1)" not in page
+    assert bootstrap_data(page)["sourceLimitMessage"] == hostile
+
+
+@pytest.mark.parametrize("manifest", [None, "{not json", '{"src/main.jsx": {"file": "a.js"}}'])
+def test_unbuilt_homepage_explains_the_build_while_the_api_works(
+        client, tmp_path, monkeypatch, manifest):
+    if manifest is not None:
+        (tmp_path / "manifest.json").write_text(manifest)
+    monkeypatch.setattr(index, "BUILD_DIR", tmp_path)
+    response = client.get("/")
+    assert response.status_code == 503
+    assert response.mimetype == "text/plain"
+    assert "npm --prefix website/frontend run build" in response.get_data(as_text=True)
+    analysis = client.post("/analyze", json={"lang": ".py", "code": "def ok():\n    return 1\n"})
+    assert analysis.status_code == 200
+    assert analysis.get_json()["function_list"][0]["name"] == "ok"
 
 
 @pytest.mark.parametrize("path,mimetype", [
@@ -34,10 +85,8 @@ def test_homepage_and_existing_wsgi_import(client):
     ("/website/static/img/logo-small.png", "image/png"),
     ("/website/static/favicon.ico", "image/"),
     ("/favicon.ico", "image/"),
-    ("/website/static/site.css", "text/css"),
-    ("/website/static/demo.js", "javascript"),
 ])
-def test_local_assets_and_published_logo_urls(client, path, mimetype):
+def test_published_logo_and_favicon_urls(client, path, mimetype):
     response = client.get(path)
     assert response.status_code == 200
     assert mimetype in response.mimetype
