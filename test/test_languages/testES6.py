@@ -511,3 +511,21 @@ class Test_ES6_multiple_arrow_patterns(unittest.TestCase):
         functions = get_js_function_list(code)
         self.assertEqual(["validate"], [f.name for f in functions])
         self.assertGreater(functions[0].cyclomatic_complexity, 1)
+
+
+class Test_ES6_arrow_function_after_a_member_access(unittest.TestCase):
+
+    def summary(self, code):
+        return [(f.name, f.parameter_count, f.cyclomatic_complexity)
+                for f in get_js_function_list(code)]
+
+    def test_arrow_function_assigned_to_a_member(self):
+        code = "a.b = (x, y) => { return x || y; };"
+        self.assertEqual([('a.b', 2, 2)], self.summary(code))
+
+    def test_arrow_function_after_a_member_access_on_the_same_line(self):
+        code = (
+            "const o = {status: r.status, add: (a, b) => { return a; }};\n"
+            "const v = r.status, f = (a, b, c) => { return a; };\n"
+        )
+        self.assertEqual([('add', 2, 1), ('f', 3, 1)], self.summary(code))
