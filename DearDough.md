@@ -28,7 +28,7 @@ Consider emitting identity when it becomes available, within the existing bindin
   - Timestamp: unknown (2026-10-27 execution)
   - Tool: Codex
   - Open Dough release: unknown; installed guidance at established start 7f479101
-  - Evidence: coordinator yielded cells 13/32 and replacement 110/113; exact-owner recovery selected watch-Tz93Df after watch-TEDK9c ended unavailable; slice5-proof.md records the retained observer.
+  - Evidence: coordinator yielded cells 13/32 and replacement 110/113; exact-owner recovery selected watch-Tz93Df after watch-TEDK9c ended unavailable; [slice5 proof](https://github.com/terryyin/lizard/blob/4bfd49bc7eb7cd136f6adb3bfad3ab93f9a1631b/docs/reviews/fabio-malpezzi-20261027/pr536/slice5-proof.md) records the retained observer.
   - Observed effect: both stream launches required owner-based identity recovery after the initial result omitted directory/PID. Replacement observation retained coverage through ab076107.
   - Inference: same initial-result assumption as earlier occurrences; provider unavailability was a separate recovered failure.
 
@@ -116,7 +116,7 @@ shellHook, printing pip output to stdout and upgrading `platformdirs` past
   - Timestamp: unknown (2026-10-27 execution)
   - Tool: Codex
   - Open Dough release: unknown; installed guidance at established start 7f479101
-  - Evidence: slice-3 independent refactor return launched three Nix-prefixed reads concurrently and reported ensurepip failure; coordinator recovery session ran the affected 21 tests serially; slice4-proof.md records serial final qualification.
+  - Evidence: slice-3 independent refactor return launched three Nix-prefixed reads concurrently and reported ensurepip failure; coordinator recovery session ran the affected 21 tests serially; [slice4 proof](https://github.com/terryyin/lizard/blob/4bfd49bc7eb7cd136f6adb3bfad3ab93f9a1631b/docs/reviews/fabio-malpezzi-20261027/pr536/slice4-proof.md) records serial final qualification.
   - Observed effect: overlapping shellHook entry recreated the shared environment during read-only work. Sequential recovery passed; accepted final qualification used one serial outer runner.
   - Inference: reinforces the existing project issue: serialize Nix entry across agents, including read-only probes and observer acknowledgements.
 

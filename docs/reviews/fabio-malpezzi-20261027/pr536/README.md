@@ -4,8 +4,8 @@ Disposition: corrected under SEED-016#arrow-parameter-bindings and
 [merged as 1bc7cbd](https://github.com/terryyin/lizard/commit/1bc7cbd64bef352300195c66888139bdf8d8d8e0),
 with [one acknowledgement](https://github.com/terryyin/lizard/pull/536#issuecomment-6447350182).
 Qualified contributor head: `1b8b56e77dce1cb2642db9f3cc957ee6af1d8c94`.
-[Final qualification](slice5-proof.md) retains full pytest/make, exact-head CI,
-history-preserving publication and merge receipts; [slice4 proof](slice4-proof.md)
+[Final qualification](https://github.com/terryyin/lizard/blob/4bfd49bc7eb7cd136f6adb3bfad3ab93f9a1631b/docs/reviews/fabio-malpezzi-20261027/pr536/slice5-proof.md) retains full pytest/make, exact-head CI,
+history-preserving publication and merge receipts; [performance proof](https://github.com/terryyin/lizard/blob/4bfd49bc7eb7cd136f6adb3bfad3ab93f9a1631b/docs/reviews/fabio-malpezzi-20261027/pr536/slice4-proof.md)
 retains all eight passing strict performance gates and corrected semantics.
 
 ## Historical initial review and deferral

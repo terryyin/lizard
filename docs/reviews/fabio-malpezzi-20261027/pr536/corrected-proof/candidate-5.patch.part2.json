@@ -1,1 +1,0 @@
-{"source": "candidate-5.patch", "source_sha256": "83578aae44003d5ebcf715f491c9509a045d2e12ace471f3ca2a17c83f9a9bf3", "start_line": 221, "chunk_sha256": "e27137d6255c05c4321d52068deb6e7b6e108bfde11ba9b454bb303d887da3a3", "text": "         # __call__, and this runs once per token.\n         return CodeStateMachine.__call__(self, token, reader)\n"}
