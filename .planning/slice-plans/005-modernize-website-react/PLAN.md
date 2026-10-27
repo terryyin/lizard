@@ -204,6 +204,17 @@ separate hosted PR need not be created solely for testing.
 Safe stopping point: the selected story's promises are fulfilled. Preserve
 later design and release stories and their order.
 
+## Execution complete
+
+Product advice: no backlog reordering. When refining
+SEED-012#release-website-from-tags, deployment must run `npm --prefix
+website/frontend ci` and `run build` before `gcloud app deploy`, because
+`website/static/dist/` is generated, ignored by Git and allowlisted by
+`.gcloudignore`; reuse the CI `web` job's install/build commands. The
+renovation story now edits only `website/frontend/src/` and keeps the
+browser scenarios as its regression suite; it still needs its design
+reference before refinement can finish.
+
 ## Preparation observations and consumer trace
 
 Checkout: `/Users/terryyin/git/lizard/.worktrees/modernize-the-website-with-react-and-conditional`,
