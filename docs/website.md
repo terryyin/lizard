@@ -126,122 +126,55 @@ Retain the tested new version for diagnosis; avoid deleting either version
 as part of a traffic rollback. Scaling limits reduce exposure; budget alerts
 can help monitoring but do not impose a hard spending limit.
 
-## Release record: 2026-10-27
+## Current public release
 
-The preview was verified before promotion. Production now serves the tested
-version, and the public HTTPS homepage and analyzer are verified.
+Verified on 2026-10-27. The public homepage, assets and real analysis demo are
+served at <https://www.lizard.ws/> with normal HTTPS trust and hostname checks.
 
-| Item | Observed value |
+| Item | Value |
 | --- | --- |
-| Source candidate | `f818daf65e5981e4d58589d503b4016644206c62` |
 | Project / service | `lizardanalyzer` / `default` |
-| New version | `revive-20261027-f818daf`, created `2026-10-27T04:49:48Z` |
-| Previous production version | `20180602t165847` |
-| Current production split | `revive-20261027-f818daf=1.0` |
-| Public URL | <https://www.lizard.ws/> |
+| Runtime source | `f818daf65e5981e4d58589d503b4016644206c62` |
+| Serving version / traffic | `revive-20261027-f818daf` / 100% |
+| Runtime / limits | `python313`, F1, maximum two instances, one concurrent request per instance |
+| Previous version for rollback | `20180602t165847` |
 | Preview URL | <https://revive-20261027-f818daf-dot-lizardanalyzer.appspot.com> |
-| Regional URL returned by the version resource | <https://revive-20261027-f818daf-dot-lizardanalyzer.uc.r.appspot.com> |
-| Deployed runtime and limits | `python313`, `F1`, `maxInstances: 2`, `maxConcurrentRequests: 1` |
+| Managed certificate | `47191116`, automatic management, status `OK` |
+| `www` DNS | CNAME `ghs.googlehosted.com.` |
 
-Billing was confirmed enabled. Before deployment, the unchanged candidate
-passed the full pytest suite (1,692 passed, seven skipped), the combined
-`make` checks, and 27 website HTTP tests under both Nix Python 3.9 and the
-isolated production Python 3.13 environment. The preview was deployed with:
+All previous versions remain available; release and rollback do not require
+stopping or deleting them. HTTP on `www` redirects to HTTPS, preserving path
+and query. The existing GoDaddy permanent 301 from `http://lizard.ws/` to
+`http://www.lizard.ws/` reaches the chosen HTTPS endpoint through that redirect.
+The forwarding-service A records and verification TXT records are retained.
+HTTPS on the bare hostname has not been verified; use the chosen `www` URL.
 
-```sh
-gcloud app deploy app.yaml --project=lizardanalyzer --version=revive-20261027-f818daf --no-promote --no-stop-previous-version --quiet
-```
+The public verification covered the homepage and six local asset URLs,
+actual `shipping_cost` metrics (CCN 3, NLOC 6, one parameter, 23 function
+tokens), malformed JSON rejection, oversized source rejection, and a successful
+retry. POST responses are `no-store`. Independent browser analysis completed,
+and the bounded version error-log check returned no entries.
 
-The first attempt failed because the existing App Engine service account
-could not read the staging bucket. The existing account already had its
-project Editor role; no additional broad project role was granted. The
-specific repair added source-object read access on the staging bucket:
+Deployment uses the existing App Engine service account
+`lizardanalyzer@appspot.gserviceaccount.com`. It needs read access to source
+objects in `gs://staging.lizardanalyzer.appspot.com`; the bucket grants it
+`roles/storage.objectViewer`. App Engine, Cloud Build and Artifact Registry
+APIs are enabled. Resolve a source-bucket access error at that bucket rather
+than adding another broad project role.
 
-```sh
-gcloud storage buckets add-iam-policy-binding gs://staging.lizardanalyzer.appspot.com --member=serviceAccount:lizardanalyzer@appspot.gserviceaccount.com --role=roles/storage.objectViewer --quiet
-```
-
-The required `appengine.googleapis.com`, `cloudbuild.googleapis.com` and
-`artifactregistry.googleapis.com` APIs were enabled. The next deployment
-completed successfully.
-
-HTTPS preview observations at `2026-10-27T04:51:10Z` used normal certificate
-and hostname verification. The homepage, CSS, JavaScript, both published
-logo URLs and both favicon URLs returned 200. The real Python example
-returned `shipping_cost`, CCN 3, NLOC 6, one parameter and 23 function tokens.
-Malformed JSON returned 400, 65,537 bytes of source returned 413, and the
-valid example succeeded again after those rejected requests.
-
-The bounded version-specific error-log checks after preview and public
-verification both completed successfully with no entries returned:
+Managed certificates require verified domain ownership for the deploying
+Google account. Retain the Google verification TXT record in GoDaddy. To
+restore automatic management on the existing mapping when needed:
 
 ```sh
-gcloud app logs read --project=lizardanalyzer --service=default --version=revive-20261027-f818daf --level=error --limit=30
+gcloud app domain-mappings update www.lizard.ws --certificate-management=automatic --project=lizardanalyzer
 ```
 
-The initial managed-certificate attempt returned
-`INTERNAL (13): Error provisioning managed certificate` while `lizard.ws`
-was absent from the current account's verified domains. After the
-verification TXT record was added in GoDaddy, Search Console verified ownership
-and `gcloud domains list-user-verified --project=lizardanalyzer --format=json`
-listed `lizard.ws`. Enabling automatic certificate management then succeeded:
+An issued certificate can precede serving-endpoint propagation. Check normal
+HTTPS acceptance as well as certificate status before moving traffic; do not
+bypass TLS validation or repeatedly replace a pending certificate.
 
-```sh
-gcloud app domain-mappings update www.lizard.ws --certificate-management=automatic --project=lizardanalyzer --quiet
-```
-
-The `www.lizard.ws` CNAME mapping still points to `ghs.googlehosted.com`.
-Managed certificate `47191116` progressed from `PENDING` to `OK`, with
-`lastRenewalTime: 2026-10-27T05:45:41.666467148Z`, and the mapping now has
-that active `certificateId`. Normal TLS initially remained unavailable
-while the certificate reached the serving endpoint, so production stayed
-on the old version during that wait. After propagation, normal curl GET
-returned `status=200 tls_verify=0`. Only then was traffic promoted:
-
-```sh
-gcloud app services set-traffic default --project=lizardanalyzer --splits=revive-20261027-f818daf=1 --quiet
-```
-
-The command exited 0, and the service's observed allocation became
-`revive-20261027-f818daf=1.0`. Versions `1`, `20180602t164047`,
-`20180602t165227` and the rollback version `20180602t165847` all remain
-`SERVING`, with zero traffic; none was stopped or deleted.
-
-The public smoke command completed with exit 0 at
-`2026-10-27T06:07:09.320231Z`:
-
-```sh
-nix develop -c python .local/release-smoke.py https://www.lizard.ws
-```
-
-Using default HTTPS trust and hostname checks, it verified the homepage,
-CSS, JavaScript, both logo URLs and both favicon URLs returned 200. The
-public `/analyze` request returned one `shipping_cost` function with CCN 3,
-NLOC 6, one parameter and 23 function tokens; the response was `no-store`.
-Malformed JSON returned 400 without a traceback, oversized source returned
-413, and the valid request succeeded again. A brief old-homepage response
-immediately after the traffic switch cleared before this passing check.
-
-At `2026-10-27T06:07:41.992855Z`, both the HTTP homepage and original small
-logo URL redirected with 302 to their matching HTTPS URLs and returned 200
-after following the redirect. The logo check also confirmed its query
-string was preserved.
-
-The chosen canonical endpoint is `https://www.lizard.ws/`. GoDaddy's
-existing bare-domain forwarding remains a permanent 301 from
-`http://lizard.ws/` to `http://www.lizard.ws/`, followed by the site's 302
-to `https://www.lizard.ws/`. An independent normal `curl -L` observation
-confirmed this chain finishes at the chosen HTTPS URL with status 200 and
-`tls_verify=0`. The forwarding-service A records and existing rule were
-preserved; changing the rule to a direct HTTPS destination is optional and
-was not saved. HTTPS on the bare `lizard.ws` hostname was not verified and
-is outside the chosen public endpoint.
-
-The independent public browser check also observed the demo progress from
-working to completed analysis and display `shipping_cost` with CCN 3,
-NLOC 6, 23 function tokens and one parameter.
-
-If this release needs recovery, restore the recorded prior version:
+To restore the recorded previous version:
 
 ```sh
 gcloud app services set-traffic default --project=lizardanalyzer --splits=20180602t165847=1
