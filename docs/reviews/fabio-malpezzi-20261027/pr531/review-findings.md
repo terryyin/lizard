@@ -1,10 +1,15 @@
-# PR531 review and deferral
+# PR531 review and correction
 
-Defer the real, worthwhile object-arrow defect to
-[SEED-013#arrow-object-boundaries](../../../../.planning/seeds/SEED-013-arrow-object-boundaries.md#arrow-object-boundaries).
-Correction and cohesive regression coverage are estimated at 30–45 minutes,
-above the source's fifteen-minute correction limit. No product correction was
-attempted. The raw author candidate remains unmerged; no thank-you is due.
+The object-arrow defect was real and worth correcting. During the original
+review it exceeded the fifteen-minute correction cutoff and was deferred; the
+follow-up correction landed through this PR. Coherent expression-body tracking
+and function-type annotation consumption replaced the raw first-character brace
+heuristic. Public regressions live in `test/test_languages/testArrowObjectBoundaries.py`.
+Merged head `7c7ecbebceed21315df08616b858dbe792fff129` (merge commit
+`ac2b454a5ada49e472c5d96635cbbba091c57bc8`); acknowledgement
+https://github.com/terryyin/lizard/pull/531#issuecomment-6441355594.
+Corrected-candidate performance evidence is retained beside this file as
+`corrected-vs-*.json`.
 
 ## Source and review basis
 
