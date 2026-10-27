@@ -161,8 +161,8 @@ not part of this promise.
   (`inherited_*` and `object_inside_ternary` rows) and typed function-body
   regressions stay with
   [SEED-013](SEED-013-arrow-object-boundaries.md#arrow-object-boundaries);
-  multiline continuations with
-  [SEED-014](SEED-014-multiline-arrow-boundaries.md#multiline-arrow-boundaries);
+  multiline continuations with SEED-014 (delivered through PR533, merge
+  `a2d2ab7`);
   arrow parameter bindings with
   [SEED-016](SEED-016-arrow-parameter-bindings.md#arrow-parameter-bindings).
   Reconcile with whichever of SEED-013/SEED-014 lands first on the shared

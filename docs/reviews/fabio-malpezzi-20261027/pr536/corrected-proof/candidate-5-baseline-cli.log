@@ -1,0 +1,21 @@
+{"pair": 1, "baseline": 4.026377292000001, "candidate": 4.019958750000001}
+{"pair": 2, "candidate": 4.057987082999997, "baseline": 4.053210625000002}
+{"pair": 3, "baseline": 4.032085125000002, "candidate": 4.036431541999999}
+{"pair": 4, "candidate": 4.098463000000002, "baseline": 4.159399792000002}
+{"pair": 5, "baseline": 4.030297624999996, "candidate": 4.022250124999999}
+{"pair": 6, "candidate": 4.112525916000003, "baseline": 4.046328125000002}
+{"pair": 7, "baseline": 4.041407124999999, "candidate": 4.098752666999999}
+{"pair": 8, "candidate": 4.060868958, "baseline": 4.0226589159999975}
+{"pair": 9, "baseline": 4.017368750000003, "candidate": 4.049882959000001}
+{"pair": 10, "candidate": 4.056677667000002, "baseline": 4.021217166999989}
+{"pair": 11, "baseline": 4.027162125000004, "candidate": 4.065232875000007}
+{"pair": 12, "candidate": 4.03519575, "baseline": 4.024204874999995}
+{"pair": 13, "baseline": 4.021028291999997, "candidate": 4.078598291000006}
+{"pair": 14, "candidate": 4.052188375, "baseline": 4.056429084000001}
+{"pair": 15, "baseline": 4.069519, "candidate": 4.056524415999988}
+{"pair": 16, "candidate": 4.009857332999985, "baseline": 4.022659000000004}
+{"pair": 17, "baseline": 4.053140417000009, "candidate": 4.036327582999974}
+{"pair": 18, "candidate": 4.018645958999997, "baseline": 4.011299790999999}
+{"pair": 19, "baseline": 4.075996583000006, "candidate": 4.030143457999998}
+{"pair": 20, "candidate": 4.042561625000019, "baseline": 4.161569125}
+{"command": ["/private/tmp/lizard-corrected-paired.py", "--baseline", "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr536-corrected/baseline", "--candidate", "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr536-corrected/candidate-5", "--workload", "cli", "--pairs", "20", "--seconds", "4", "--out", "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr536-corrected/candidate-5-baseline-cli.json"], "python": "3.9.11 (main, Apr 10 2022, 22:01:55) \n[Clang 11.1.0 ]", "executable": "/Users/terryyin/git/lizard/.worktrees/report-consistent-javascript-and-typescript-arro/.venv/bin/python", "host": "Territory.local", "workload": "cli", "paths": ["/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr536-corrected/baseline", "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr536-corrected/candidate-5"], "pilots": [0.161393, 0.162338167], "loops": 25, "medians": {"baseline": 4.031191374999999, "candidate": 4.051035667000001}, "stdev": {"baseline": 0.04215612004134423, "candidate": 0.028274299945147317}, "median_slowdown_pct": 0.4922686658606512, "paired_geometric_slowdown_pct": 0.08393804554451822, "paired_95pct_ci": [-0.42064933638136237, 0.5910822670591287], "passes": true, "manifest_sha256": "b0c8608fdcc852184628727ed6295ff850abb9c5c494a9783641a34ef52be9df"}

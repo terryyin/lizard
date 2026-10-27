@@ -1,0 +1,11 @@
+{
+  "lizard_core/function_info.py": "ecff70935fb06fbe242940a519c6255d3380ca9568b863556d81ab57439cf0ec",
+  "lizard_ext/checkstyleoutput.py": "343973e5ede2e996a6d99a8e526dfcffe489debd1cdf49bad7d308db7f76334d",
+  "lizard_ext/csvoutput.py": "a422eeea3e6c8ea9165d1049b68fba49b71e468426bb962b4123f6a542dff28d",
+  "lizard_ext/htmloutput.py": "480bb7f73b2e54b516cb5813a8f1476deb707319ce0a2191bb15b25b2a26c58b",
+  "lizard_languages/javascript_bindings.py": "4d28e8e1d8d70831fb0e1e93b64ee085a8063040002b820bedb3642b6e8ee7f7",
+  "lizard_languages/typescript_declarations.py": "59ad60f50eccdf89a9069207e28298763b1ef123174b2c25d84f7bdc3e14113d",
+  "test/test_languages/testJavaScriptFormalSlots.py": "5a66774e342103654f88a1719d2e407334cc6fa83c84f6ab40d4cc51a0f0e6dc",
+  "docs/reviews/fabio-malpezzi-20261027/pr536/inputs.json": "bba8e8c1a953f8fa1625ee164e8192d467a3f0d4ec7978d9e8f36c06c4dd0647",
+  "docs/reviews/fabio-malpezzi-20261027/pr536/all-inputs.json": "6ea7b81c31bebfea53d4a335203098001bc68cc30d73c13eb9227e49fa102d52"
+}

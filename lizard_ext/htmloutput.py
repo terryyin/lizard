@@ -40,8 +40,7 @@ def html_output(result, options, *_):
 
 
 def _create_dict(obj):
-
-    return obj.__dict__
+    return dict(obj.__dict__, parameter_count=obj.parameter_count)
 
 
 TEMPLATE = '''<!DOCTYPE HTML PUBLIC
@@ -185,10 +184,10 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
        <td class="value">{{ func.token_count }}</td>
     {% endif %}
 
-    {% if func.full_parameters|length > thresholds["parameter_count"] %}
-       <td class="greater-value">{{ func.full_parameters|length }}</td>
+    {% if func.parameter_count > thresholds["parameter_count"] %}
+       <td class="greater-value">{{ func.parameter_count }}</td>
     {% else %}
-       <td class="lesser-value">{{ func.full_parameters|length }}</td>
+       <td class="lesser-value">{{ func.parameter_count }}</td>
     {% endif %}
   </tr>
   {% endfor %}

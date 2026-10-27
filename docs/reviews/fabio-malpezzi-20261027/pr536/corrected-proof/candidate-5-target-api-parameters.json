@@ -1,0 +1,128 @@
+{
+  "command": [
+    "/private/tmp/lizard-corrected-paired.py",
+    "--baseline",
+    "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr536-corrected/target",
+    "--candidate",
+    "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr536-corrected/candidate-5",
+    "--workload",
+    "api-parameters",
+    "--pairs",
+    "20",
+    "--seconds",
+    "2",
+    "--out",
+    "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr536-corrected/candidate-5-target-api-parameters.json"
+  ],
+  "python": "3.9.11 (main, Apr 10 2022, 22:01:55) \n[Clang 11.1.0 ]",
+  "executable": "/Users/terryyin/git/lizard/.worktrees/report-consistent-javascript-and-typescript-arro/.venv/bin/python",
+  "host": "Territory.local",
+  "workload": "api-parameters",
+  "paths": [
+    "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr536-corrected/target",
+    "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr536-corrected/candidate-5"
+  ],
+  "pilots": [
+    0.016441374999999994,
+    0.017194708000000003
+  ],
+  "loops": 122,
+  "raw": [
+    {
+      "baseline": 1.9600222920000006,
+      "candidate": 1.9805388750000006
+    },
+    {
+      "candidate": 1.974575541,
+      "baseline": 1.9663133330000004
+    },
+    {
+      "baseline": 1.9759452500000005,
+      "candidate": 2.0033070409999993
+    },
+    {
+      "candidate": 1.998100959000002,
+      "baseline": 1.9714181659999994
+    },
+    {
+      "baseline": 1.9695059580000027,
+      "candidate": 1.975787583999999
+    },
+    {
+      "candidate": 1.9978310419999978,
+      "baseline": 1.9609671249999998
+    },
+    {
+      "baseline": 1.9786604160000003,
+      "candidate": 2.034494500000001
+    },
+    {
+      "candidate": 2.0315965000000027,
+      "baseline": 2.010585500000005
+    },
+    {
+      "baseline": 2.0017547090000036,
+      "candidate": 2.035096375000002
+    },
+    {
+      "candidate": 2.030291208999998,
+      "baseline": 1.9997542079999988
+    },
+    {
+      "baseline": 1.9899904999999976,
+      "candidate": 1.9974934999999974
+    },
+    {
+      "candidate": 1.9820541670000011,
+      "baseline": 1.966447875
+    },
+    {
+      "baseline": 1.9747399579999936,
+      "candidate": 1.985406625000003
+    },
+    {
+      "candidate": 1.9836910829999965,
+      "baseline": 1.9823682919999968
+    },
+    {
+      "baseline": 1.9797625839999995,
+      "candidate": 1.9851622919999983
+    },
+    {
+      "candidate": 1.9802861670000098,
+      "baseline": 1.9641328339999973
+    },
+    {
+      "baseline": 1.9564282500000019,
+      "candidate": 1.9880886250000032
+    },
+    {
+      "candidate": 1.987304041999991,
+      "baseline": 2.0443103329999985
+    },
+    {
+      "baseline": 2.0269252079999944,
+      "candidate": 2.0392539169999964
+    },
+    {
+      "candidate": 2.037571249999999,
+      "baseline": 2.0175039160000097
+    }
+  ],
+  "medians": {
+    "baseline": 1.9773028330000004,
+    "candidate": 1.9927910625000003
+  },
+  "stdev": {
+    "baseline": 0.024433073214698703,
+    "candidate": 0.023620635339018762
+  },
+  "median_slowdown_pct": 0.7833008298734345,
+  "paired_geometric_slowdown_pct": 0.8328411119824075,
+  "paired_95pct_ci": [
+    0.3223169545809812,
+    1.3459632448214132
+  ],
+  "passes": true,
+  "manifest_sha256": "b0c8608fdcc852184628727ed6295ff850abb9c5c494a9783641a34ef52be9df"
+}

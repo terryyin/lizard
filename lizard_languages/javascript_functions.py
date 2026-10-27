@@ -128,9 +128,8 @@ class JavaScriptFunctionsMixin:
         else:
             if not self.started_function:
                 self._push_function_to_stack()
-            self._generic_depth_in_dec = 0
-            self._in_parameter_type = False
-            self._parameter_bindings = JavaScriptBindings(')')
+            self._parameter_bindings = JavaScriptBindings(
+                ')', self.context.current_function)
             self._state = self._dec
             self.context.add_to_long_function_name(" " + token)
 
@@ -146,34 +145,10 @@ class JavaScriptFunctionsMixin:
             self._abandon_function()
             self.next(self._state_global, token)
             return
-        if token == 'this' and self._parameter_bindings.at_start:
-            # TypeScript's leading receiver declaration is not an argument.
-            self._in_parameter_type = True
         event = self._read_parameter_binding(token)
         if event.ended:
             self._state = self._expecting_func_opening_bracket
         elif (not event.in_expression or event.root_separator) and token != '(':
-            if token == ',':
-                # Ignore commas inside generic type brackets: Map<K, V>
-                if event.root_separator and not getattr(self, '_generic_depth_in_dec', 0):
-                    self._in_parameter_type = False
-                    self.context.parameter(',')
-            elif token == ':' and self._parameter_bindings.at_root:
-                self._in_parameter_type = True
-            elif token == '<':
-                self._generic_depth_in_dec = getattr(
-                    self, '_generic_depth_in_dec', 0) + 1
-            elif token == '>':
-                depth = getattr(self, '_generic_depth_in_dec', 0)
-                if depth > 0:
-                    self._generic_depth_in_dec = depth - 1
-            elif token in ('*', '+', '-', '/', '%', '=', '.'):
-                pass
-            elif not (getattr(self, '_generic_depth_in_dec', 0)
-                      or self._in_parameter_type):
-                name = token.replace('?', '')
-                if name.replace('$', '_').isidentifier():
-                    self.context.parameter(name)
             return
         self.context.add_to_long_function_name(" " + token)
 

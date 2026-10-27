@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-014#multiline-arrow-boundaries",
+  "title": "Preserve multiline arrow expressions and surrounding statement metrics",
+  "completedAt": "2026-10-27T13:44:23.150Z",
+  "developer": "Terry Yin",
+  "agent": "Rina-chan",
+  "host": "claude"
+}
