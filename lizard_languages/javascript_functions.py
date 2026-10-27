@@ -78,6 +78,16 @@ class JavaScriptFunctionsMixin:
         if self._expression_body:
             self._close_expression_body()
 
+    def _abandon_optimistic_parameter_group(self):
+        """Grouped expression (IIFE), not parameters; keep the open "("."""
+        self._abandon_function()
+        self._open_groups += 1
+
+    def _end_grouped_function_expression(self):
+        """")" closes "(() => …)" / "(function () {})", not the outer block."""
+        self._open_groups -= 1
+        self._pop_function_from_stack()
+
     def _close_expression_body(self):
         self._expression_body = False
         self.context.expression_arrows.remove(self)
@@ -136,13 +146,13 @@ class JavaScriptFunctionsMixin:
     def _dec(self, token):
         if token == '(' and self._parameter_bindings.at_start:
             # Grouped expression, such as an arrow IIFE, rather than parameters.
-            self._abandon_function()
+            self._abandon_optimistic_parameter_group()
             self.next(self._state_global)
             self._read_binding_candidate(')')
             return
         if token == 'function' and not self._parameter_bindings.defaults:
             # The optimistic named-arrow signature is an IIFE expression.
-            self._abandon_function()
+            self._abandon_optimistic_parameter_group()
             self.next(self._state_global, token)
             return
         event = self._read_parameter_binding(token)
@@ -168,3 +178,14 @@ class JavaScriptFunctionsMixin:
             if self.started_function:
                 self._abandon_function()
         self.next(self._state_global, token)
+
+    def _field(self, token):
+        if token in ('(', '['):
+            # Optional calls and subscripts retain ordinary bracket handling;
+            # arguments may contain arrow functions and nested expressions.
+            self.function_name = ''
+            self._prev_token = '.'
+            self.next(self._state_global, token)
+            return
+        self.last_tokens += token
+        self._state = self._state_global

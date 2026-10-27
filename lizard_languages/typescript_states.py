@@ -33,6 +33,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         self._condition_kind = None
         self._ternary_depth = 0
         self._expression_body = False  # An open expression-bodied arrow
+        self._open_groups = 0  # "(" of a group read as parameters
 
     def __call__(self, token, reader=None):
         if self._binding_candidate:
@@ -170,6 +171,8 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                     self._pop_function_from_stack)
             else:
                 self.read_object()
+        elif token == ')' and self._open_groups:
+            self._end_grouped_function_expression()
         elif token in ('}', ')') or (
                 token == ']' and self._binding_candidate):
             self._empty_parenthesis = self.last_token is None
@@ -233,17 +236,6 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                 self.__class__(self.context), callback)
         else:
             self.next(self._state_global, token)
-
-    def _field(self, token):
-        if token in ('(', '['):
-            # Optional calls and subscripts retain ordinary bracket handling;
-            # arguments may contain arrow functions and nested expressions.
-            self.function_name = ''
-            self._prev_token = '.'
-            self.next(self._state_global, token)
-            return
-        self.last_tokens += token
-        self._state = self._state_global
 
     def _state_template_literal(self, token):
         if token == '`':
