@@ -5,16 +5,13 @@
 
 ## Outcome and boundaries
 
-Users analyzing JavaScript, TypeScript, JSX/TSX and Vue script content get one
-reported function per expression-bodied ternary branch arrow, each with its
-own CCN, while colons inside an arrow's own body, genuine TypeScript
-annotations and property/computed-key colons keep their own syntax. The
-enclosing and following functions keep correct names, spans and CCN, and the
-existing outer-only curried-arrow contract is preserved.
+JavaScript, TypeScript, JSX/TSX and Vue analysis reports each expression-bodied
+ternary branch arrow separately with its own CCN. Internal, genuine annotation
+and property/computed-key colons retain their syntax; enclosing/following
+names, spans and CCN and the outer-only curried-arrow contract are preserved.
 
-The source's key examples and
-[PR534 evidence](../../../docs/reviews/fabio-malpezzi-20261027/pr534/review-findings.md)
-are the acceptance input. The frozen
+Acceptance uses the source's key examples and
+[PR534 evidence](../../../docs/reviews/fabio-malpezzi-20261027/pr534/review-findings.md). The frozen
 [reproduce.py](../../../docs/reviews/fabio-malpezzi-20261027/pr534/reproduce.py)
 checks names, start/end lines and CCN for the promised rows of
 `inputs.json` and all of `supplemental-inputs.json`.
@@ -24,12 +21,10 @@ Excluded commitments: the existing object-comma sibling absorption (the
 bodies (`inherited_*`, `object_inside_ternary`; SEED-013), multiline
 continuations (SEED-014), arrow parameter bindings (SEED-016), naming
 changes, nested-arrow detection, ENS-only performance, a full JS/TS grammar.
-No sibling is a formal blocking supplier. This is the technical follow-up after
-a review that exceeded its 15-minute correction cutoff; that cutoff is not a
-time limit for this plan. No project-specific numeric slice limit was supplied.
+No sibling is a formal blocking supplier. The original review's 15-minute
+correction cutoff does not limit this selected follow-up. No numeric slice limit applies.
 
-Execution authorized by the selected `dough-execute-plan` instruction on
-2026-10-27; the established start owns this work.
+The 2026-10-27 `dough-execute-plan` instruction and established start authorize execution.
 
 ## Execution context
 
@@ -38,7 +33,6 @@ Execution authorized by the selected `dough-execute-plan` instruction on
 - Mode: story-branch; execution/originating checkout
   `/Users/terryyin/git/lizard/.worktrees/preserve-arrow-boundaries-across-ternary-and-typ`;
   branch `codex/preserve-arrow-boundaries-across-ternary-and-typ`.
-  Existing linked worktree, reused through the supplied established start.
 - Remote `origin`, trunk `master`; ordinary increments target the execution
   branch. Starting revision `a2d2ab778d03cbb9ea96d243ab7533105d304eb2`;
   claim/published base `6f506711595e0ad832ab5a75f5a4750a2b362415`, confirmed
@@ -100,9 +94,9 @@ Accepted source comparisons are retained in [PROOF.md](PROOF.md).
 | Untyped branch arrows end at their ternary colon; internal colons and curried contract preserved | Slice 2: new public API regressions red→green in JS/TS/JSX/TSX and Vue; promised untyped frozen rows and supplemental controls pass |
 | Typed branch signatures split; genuine function-type bodies preserved | Slice 3: red→green typed regressions in TS/TSX/Vue; typed frozen rows and literal function-type controls pass |
 | Controls and shared consumers | Slices 2–3: focused consumer suites, retained reproducer showing only deferred rows failing |
-| Preserve semantics while removing annotation bookkeeping cost | Slice 4: public regression/replay proof after coherent owner simplification |
-| Strict affected and broad throughput | Slice 5: four warmed paired gates, each upper 95% slowdown bound strictly below 3% versus current target and frozen baseline `2e21e404c1ab9f4e0b49acc80816e816629d0670` |
-| Final corrected revision accepted and acknowledged | Slice 6: full pytest/make, exact-head hosted checks and merge, contributor publication/merge/acknowledgement receipts |
+| Preserve semantics while removing annotation overhead | Slices 4–5: public regressions/replays and seven-field comparisons after coherent owner simplification |
+| Strict affected and broad throughput | Slice 6: four warmed paired gates, each upper 95% slowdown bound strictly below 3% versus current target and frozen baseline `2e21e404c1ab9f4e0b49acc80816e816629d0670` |
+| Final corrected revision accepted and acknowledged | Slice 7: full pytest/make, exact-head hosted checks and merge, contributor publication/merge/acknowledgement receipts |
 
 Reusable proof commands and conventions: [PROOF.md](PROOF.md#proof-commands-and-conventions).
 
@@ -118,12 +112,10 @@ Behavior: given an explicit execution instruction, refresh PR534's patch,
 discussion, checks and current target, verify the head still names the
 intended contribution, and establish the authorized contributor-head delivery
 route (non-mutating authenticated push preview where available) before
-dependent implementation. A preview is not accepted publication; slice 6 owns
+dependent implementation. A preview is not accepted publication; slice 7 owns
 the real update. If the PR is closed, superseded, changed incompatibly or
 cannot receive corrections, stop and return the disposition/destination
 decision to Terry. Do not substitute an unrelated trunk patch.
-
-Boundedness: one external feasibility observation; refusal stops dependent work.
 
 ### 2. End untyped branch arrows at their own ternary colon
 Type: Behavior
@@ -144,10 +136,6 @@ shared state/mixin owners; adopt the raw proposal's useful split without its
 snapshot overwrite or #531's object heuristic. Trace JS, TS, JSX/TSX and Vue
 consumers.
 
-Boundedness: one ownership rule and one semantic regression loop across the
-shared readers; splitting by extension would leave divergent rules. A correct
-local result is a safe stopping point, unmerged.
-
 ### 3. Consume typed branch signatures before branch separators
 Type: Behavior
 Status: done
@@ -167,8 +155,6 @@ recognizer.
 Learning G2 requires metric-safe annotation lookahead with canonical runtime
 context; the bounded approach is retained in [PROOF.md](PROOF.md#slice-3-investigation).
 
-Boundedness: one annotation decision reusing slice 2's owner; safe unmerged stopping point.
-
 ### 4. Remove whole-stream annotation bookkeeping
 Type: Structure
 Status: done
@@ -183,7 +169,19 @@ the full slowdown. Simplify the shared rule; add no raw-source fast path.
 An independently refactored, semantically qualified commit enables slice 5's
 exact-revision measurement. G4 remains open; this slice grants no timing waiver.
 
-### 5. Qualify the optimized revision against all four timing gates
+### 5. Avoid unnecessary annotation-context traversal
+Type: Structure
+Status: done
+Proof: bounded unchanged-output profile; all 128 public/FileAnalyzer rows and
+seven public fields match 8dac7b8; focused shared-consumer regressions pass.
+
+Structure: the committed optimization still has current/API upper +7.623%.
+Profile the remaining preprocessing cost, then use existing canonical token/
+signature ownership to avoid unnecessary annotation queries. Add no parallel
+tracker or raw-source fast path. Preserve runtime groups, trivia and genuine
+return annotations. Independent refactoring and semantic delivery precede 6.
+
+### 6. Qualify the optimized revision against all four timing gates
 Type: Behavior
 Status: planned
 Proof: raw warmed pairs, immutable implementation/corpus/harness hashes,
@@ -199,17 +197,16 @@ hide affected failure. Noise or upper bounds of 3% or more fail. Any further
 optimization repeats semantic proof; a quiet/longer retry needs prospective
 justification. The literal harness protocol is retained in PROOF.md.
 
-### 6. Deliver the qualified correction through PR534
+### 7. Deliver the qualified correction through PR534
 Type: Behavior
 Status: planned
 Proof: final contributor-head SHA and accepted push, green current required CI,
 exact-head guarded merge receipt, and one acknowledgement URL.
 
-Behavior: given the corrected/refactored candidate with semantic and
-performance proof, publish corrections to the contributor branch without force
-or lost history, run full pytest and make on the final revision, verify final
-head/base/tree and all required checks, then perform an exact-head guarded
-hosted merge. Follow the
+Behavior: given semantic/performance-qualified code, publish contributor
+corrections without force or lost history. Run full pytest/make, verify final
+head/base/tree and all required checks, then perform an exact-head hosted merge.
+Follow the
 [complete-cycle contract](../../../docs/reviews/fabio-malpezzi-20261027/REVIEW-CONTRACT.md);
 its 15-minute triage rule does not re-defer this selected correction. Hosted
 merge is not a Dough Land operation. After confirmed merge, with explicit
@@ -238,11 +235,16 @@ Story clause: "Colons inside the arrow's own body, genuine TypeScript annotation
 Disposition: proved by slice 3: test_nested_runtime_separator_keeps_following_type_annotation and six baseline/candidate full-metric comparisons preserve runtime groups and named cb.
 
 ### G4. Incremental affected API exceeds the strict budget
-Reported: slice 4 — "Current-target affected API median +8.886%, paired 95% interval [8.480%, 9.567%]."
+Reported: slice 5 — "Current/API upper +9.567% initially in slice 4 and +7.623% at committed 8dac7b8; both material failures."
 Story clause: "with a paired 95% upper slowdown bound strictly below 3% for both incremental and cumulative affected and broader workloads."
-Disposition: receiving slice 5
+Disposition: receiving slice 6
 
 ### G5. Native CI observation ended after acquisition failed
 Reported: slice 4 — "CI_MONITOR_UNAVAILABLE: GitHub workflow-runs acquisition failed; original observer finished and its process ended."
 Story clause: "satisfactory performance/CI."
+Disposition: receiving slice 7
+
+### G6. Earlier qualification driver terminal receipt unavailable
+Reported: slice 5 — "No original numeric exit code is retained; four complete result/log pairs match, and independent postcheck terminated successfully."
+Story clause: "with coherent ownership, discriminating regression proof and satisfactory performance/CI."
 Disposition: receiving slice 6

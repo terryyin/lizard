@@ -233,14 +233,18 @@ native acquisition probe of the exact failed workflow-run route now succeeds
 and confirms all three published revisions' successful runs. The old terminal
 observer stays closed; the continuation coordinator owns a new lifecycle.
 
-Structure 4 semantic acceptance: source-only reviewer `/root/source_review4`
-derived the original commitments independently. Inspected the owner-boundary
-diff and qualified-performance.md assertions: all 715 selected tests pass/5
-skip, all 128 expected rows pass, and all seven public fields match 74bc899.
-The 296-consumer trace has no blank disposition. Original semantic promises
-are preserved; G4 remains with 5 and G5 with 6. Independent refactoring and
-delivery are the first unfinished obligations, not another implementation pass.
+Structure 4: original-only `/root/source_review4` supplied commitments. Inspected
+diff/assertions: 715 pass/5 skip, all 128 rows and seven fields match 74bc899;
+296 trace dispositions complete. `/root/continuation_coordinator/structure4_refactor`
+returned `## REFACTOR COMPLETE`, no edits, 26 files clean. Delivered 8dac7b8.
 
-Successor `/root/continuation_coordinator/structure4_refactor` returned
-`## REFACTOR COMPLETE`: no edits, all 26 files whitespace/EOF/size clean;
-715-test and 128-row/full-metric evidence remains unchanged and reusable.
+Structure 5: original-only `/root/source_review5` launch/full return are retained
+in the parent execution conversation; no plan/product/proof input. Compared its
+individual commitments with the diff, source setup and assertions in
+[context-optimization.md](../../../docs/reviews/fabio-malpezzi-20261027/pr534/context-optimization.md):
+753 pass/5 skip; 128 public/FileAnalyzer rows and seven fields match 8dac;
+100-file CLI is byte-identical. New runtime/trivia journeys retain source names,
+spans and CCN. Inspected the canonical type evidence, demand-buffer lifecycle,
+explicit tuples and verifier assertions; 285 trace dispositions are populated.
+Independent refactor clarified names/comments; 162 regressions and 128 replays
+pass. Diagnostics grant no timing acceptance; G4/G6 remain with 6, G5 with 7.

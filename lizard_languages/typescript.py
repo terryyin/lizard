@@ -2,7 +2,6 @@
 Language parser for TypeScript
 '''
 
-from copy import copy
 from itertools import tee
 
 from .code_reader import CodeReader
@@ -84,21 +83,35 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         change between a newline and the next code token."""
         arrows = self.context.expression_arrows = []
         line_start = False
-        tokens = tee(self.code_tokens(tokens), 1)[0]
-        for token in tokens:
-            if not token.isspace():
-                if token == ':':
-                    annotation = self.parallel_states[0].return_annotation_context()
-                    if annotation is not None and return_type_colon(copy(tokens), *annotation):
-                        token = ReturnTypeColon(token)
-                if line_start and not token.startswith(('//', '/*')):
-                    line_start = False
-                    arrows[-1].end_expression_before(token)
-                yield token
-            elif token == '\n':
-                if arrows:
-                    line_start = True
-                yield token
+        state = self.parallel_states[0]
+        tokens = iter(self.code_tokens(tokens))
+        while True:
+            for token in tokens:
+                if not token.isspace():
+                    if line_start and not token.startswith(('//', '/*')):
+                        line_start = False
+                        arrows[-1].end_expression_before(token)
+                    if token == ':' and state.last_token == ')':
+                        annotation = state.return_annotation_context()
+                        if annotation is not None:
+                            depth, unambiguous_signature = annotation
+                            if unambiguous_signature:
+                                token = ReturnTypeColon(token)
+                            else:
+                                tokens, lookahead = tee(tokens)
+                                if return_type_colon(lookahead, depth):
+                                    token = ReturnTypeColon(token)
+                                del lookahead
+                                yield token
+                                # Resume on the main iterator, including buffered tokens.
+                                break
+                    yield token
+                elif token == '\n':
+                    if arrows:
+                        line_start = True
+                    yield token
+            else:
+                return
 
     @staticmethod
     def code_tokens(tokens):

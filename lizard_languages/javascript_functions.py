@@ -37,14 +37,15 @@ def parameter_group(prefix):
 
 class JavaScriptFunctionsMixin:
     def return_annotation_context(self):
-        """Use the active state's completed group before counting a colon."""
+        """Return ternary depth and whether the completed group proves a signature."""
         state = self
         while isinstance(state._state, self.__class__):
             state = state._state
         group = getattr(state, '_parenthesis_group', None)
         if (state._state == state._state_global and state.last_token == ')'
                 and group is not None and parameter_group(state._parenthesis_prefix)):
-            return state._ternary_depth, group._empty_parenthesis
+            return (state._ternary_depth,
+                    group._empty_parenthesis or getattr(group, '_typed_parameters', False))
         return None
 
     def _push_function_to_stack(self):

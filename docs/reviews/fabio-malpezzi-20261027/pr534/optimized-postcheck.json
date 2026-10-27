@@ -1,0 +1,192 @@
+{
+  "revisions": {
+    "candidate": "8dac7b80c2478d65b54d8ec96d6aa36bf4530b91",
+    "current": "9979f106a955aef2460ed6fe7ebb5782b755bcad",
+    "frozen": "2e21e404c1ab9f4e0b49acc80816e816629d0670"
+  },
+  "cache": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr534/seed015-optimized-8dac7b80",
+  "postcheck": "passed",
+  "measurement_processes": [],
+  "measurement_stream": "Session 35802 is closed; its final streamed output exceeded the display budget. No original numeric exit code is retained. Four complete result/log pairs match, and this independent postcheck terminated successfully without repeating measurement.",
+  "source_and_corpus_hash_assertions": true,
+  "original_initial_records_unchanged": true,
+  "driver_sha256": "10a6ab0628f0c1448995565bf7adddda831b77f37e0eb8026a67caf861044dea",
+  "harness_sha256": "3064d8d77047db2f084ce9fd6ae09d98acf34453316b7df20fb184cbb3217bf5",
+  "original_manifest_sha256": "113ca1889836963fe6cfd7ba62c1aa90bd927eaedc4cd8cc7b46479ecb3bccd5",
+  "imports": {
+    "candidate": {
+      "lizard": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr534/seed015-optimized-8dac7b80/candidate/lizard.py",
+      "lizard_languages": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr534/seed015-optimized-8dac7b80/candidate/lizard_languages/__init__.py",
+      "lizard_core.file_analyzer": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr534/seed015-optimized-8dac7b80/candidate/lizard_core/file_analyzer.py",
+      "lizard_languages.typescript": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr534/seed015-optimized-8dac7b80/candidate/lizard_languages/typescript.py",
+      "lizard_languages.javascript_bindings": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr534/seed015-optimized-8dac7b80/candidate/lizard_languages/javascript_bindings.py",
+      "lizard_languages.typescript_signatures": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr534/seed015-optimized-8dac7b80/candidate/lizard_languages/typescript_signatures.py",
+      "functions": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr534/seed015-optimized-8dac7b80/candidate/lizard_languages/javascript_functions.py",
+      "states": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr534/seed015-optimized-8dac7b80/candidate/lizard_languages/typescript_states.py",
+      "helper": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr534/seed015-optimized-8dac7b80/candidate/test/test_languages/testES6.py"
+    },
+    "current": {
+      "lizard": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr534/seed015-optimized-8dac7b80/current/lizard.py",
+      "lizard_languages": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr534/seed015-optimized-8dac7b80/current/lizard_languages/__init__.py",
+      "lizard_core.file_analyzer": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr534/seed015-optimized-8dac7b80/current/lizard_core/file_analyzer.py",
+      "lizard_languages.typescript": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr534/seed015-optimized-8dac7b80/current/lizard_languages/typescript.py",
+      "lizard_languages.javascript_bindings": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr534/seed015-optimized-8dac7b80/current/lizard_languages/javascript_bindings.py",
+      "functions": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr534/seed015-optimized-8dac7b80/current/lizard_languages/javascript_functions.py",
+      "states": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr534/seed015-optimized-8dac7b80/current/lizard_languages/typescript_states.py",
+      "helper": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr534/seed015-optimized-8dac7b80/current/test/test_languages/testES6.py"
+    },
+    "frozen": {
+      "lizard": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr534/seed015-optimized-8dac7b80/frozen/lizard.py",
+      "lizard_languages": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr534/seed015-optimized-8dac7b80/frozen/lizard_languages/__init__.py",
+      "lizard_core.file_analyzer": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr534/seed015-optimized-8dac7b80/frozen/lizard_core/file_analyzer.py",
+      "lizard_languages.typescript": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr534/seed015-optimized-8dac7b80/frozen/lizard_languages/typescript.py",
+      "lizard_languages.javascript_bindings": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr534/seed015-optimized-8dac7b80/frozen/lizard_languages/javascript_bindings.py",
+      "functions": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr534/seed015-optimized-8dac7b80/frozen/lizard_languages/javascript_functions.py",
+      "states": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr534/seed015-optimized-8dac7b80/frozen/lizard_languages/typescript_states.py",
+      "helper": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr534/seed015-optimized-8dac7b80/frozen/test/test_languages/testES6.py"
+    }
+  },
+  "test_helper_sha256": {
+    "candidate": "553fe1697295ccb52c90fc20a1cec5c3b3f10c92dd4cbd37d29ca2c072f9596c",
+    "current": "553fe1697295ccb52c90fc20a1cec5c3b3f10c92dd4cbd37d29ca2c072f9596c",
+    "frozen": "553fe1697295ccb52c90fc20a1cec5c3b3f10c92dd4cbd37d29ca2c072f9596c"
+  },
+  "metric_summaries": {
+    "candidate": {
+      "snapshot": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr534/seed015-optimized-8dac7b80/candidate",
+      "cases": 128,
+      "failure_count": 0
+    },
+    "current": {
+      "snapshot": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr534/seed015-optimized-8dac7b80/current",
+      "cases": 128,
+      "failure_count": 73
+    },
+    "frozen": {
+      "snapshot": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr534/seed015-optimized-8dac7b80/frozen",
+      "cases": 128,
+      "failure_count": 89
+    }
+  },
+  "cli_exit_before_timing": 1,
+  "cli_sha256": {
+    "candidate": "49e9a7922e48f71ac1702f2da38939d93c24b4339d0d3618dfdfdebe1287150b",
+    "current": "49e9a7922e48f71ac1702f2da38939d93c24b4339d0d3618dfdfdebe1287150b",
+    "frozen": "49e9a7922e48f71ac1702f2da38939d93c24b4339d0d3618dfdfdebe1287150b"
+  },
+  "comparisons": {
+    "current-api": {
+      "medians": {
+        "baseline": 1.4639560624999994,
+        "candidate": 1.5679205835000012
+      },
+      "stdev": {
+        "baseline": 0.0259374402609661,
+        "candidate": 0.02941118352567318
+      },
+      "loops": 61,
+      "pilots": [
+        0.02499875,
+        0.027014041999999988
+      ],
+      "median_slowdown_pct": 7.101614840985149,
+      "paired_geometric_slowdown_pct": 7.025954661928768,
+      "paired_95pct_ci": [
+        6.4323418499496965,
+        7.622878273655553
+      ],
+      "passes": false,
+      "pairs": 20,
+      "minimum_batch_seconds": 1.4502931250000017
+    },
+    "current-cli": {
+      "medians": {
+        "baseline": 1.6202269375,
+        "candidate": 1.6280812499999975
+      },
+      "stdev": {
+        "baseline": 0.02303562865284399,
+        "candidate": 0.05355756499104759
+      },
+      "loops": 10,
+      "pilots": [
+        0.16394954099999998,
+        0.163534667
+      ],
+      "median_slowdown_pct": 0.4847661965253325,
+      "paired_geometric_slowdown_pct": 1.4518057293401387,
+      "paired_95pct_ci": [
+        0.07169271888365358,
+        2.850952213398239
+      ],
+      "passes": true,
+      "pairs": 20,
+      "minimum_batch_seconds": 1.6093833339999968
+    },
+    "frozen-api": {
+      "medians": {
+        "baseline": 1.5813154790000006,
+        "candidate": 1.5115645209999986
+      },
+      "stdev": {
+        "baseline": 0.014083077073735718,
+        "candidate": 0.015335472570772241
+      },
+      "loops": 59,
+      "pilots": [
+        0.027262125000000012,
+        0.025683708
+      ],
+      "median_slowdown_pct": -4.410945122987819,
+      "paired_geometric_slowdown_pct": -4.410608809429517,
+      "paired_95pct_ci": [
+        -4.994893349586738,
+        -3.8227309000745335
+      ],
+      "passes": true,
+      "pairs": 20,
+      "minimum_batch_seconds": 1.4981010419999947
+    },
+    "frozen-cli": {
+      "medians": {
+        "baseline": 1.6153840000000006,
+        "candidate": 1.6245929374999948
+      },
+      "stdev": {
+        "baseline": 0.012525447963657194,
+        "candidate": 0.01901744740436489
+      },
+      "loops": 10,
+      "pilots": [
+        0.161828791,
+        0.162374375
+      ],
+      "median_slowdown_pct": 0.5700773005052673,
+      "paired_geometric_slowdown_pct": 0.9978029312801562,
+      "paired_95pct_ci": [
+        0.5442396998211585,
+        1.453412223314543
+      ],
+      "passes": true,
+      "pairs": 20,
+      "minimum_batch_seconds": 1.6063892499999994
+    }
+  },
+  "evidence_sha256": {
+    "current-api-terminal.log": "7c88072e452783c4bbce87ad7a97dde589f2e0b6b037234ffc93b6dfec195df5",
+    "current-cli-terminal.log": "45f825b61383f994463d75774864610edf5a60ebc3e726e92ab53f92e4eb271c",
+    "frozen-api-terminal.log": "a5eb985abd33eff2e3c7df9cf9949af7b41f0fc6b56994795e5e1c790e12a8a8",
+    "frozen-cli-terminal.log": "a28927a08f13ea3287ccc63a2ac6ff8acd9702a839ddeadefc20af32e6eca182",
+    "optimized-freeze.json": "90eb7613df093f53c235714f77bdc6cb92cddb66233bc3f37347e2ee6dc90635",
+    "optimized-decision.json": "0c7652f77c4152c3a46ae586e6a1886fb266231f7c7b7e7d8f591cc5ebc6b95b",
+    "optimized-candidate-source-hashes.json": "fabe075b95a161ba452cfc6b6afda8d7067657bf7eef07c8349620556f7522c5",
+    "optimized-current-source-hashes.json": "e8bbbe2553a500eb82fe0417d2ae31ed55b8297e4e486a901ae91b9646a77c24",
+    "optimized-frozen-source-hashes.json": "bd221ea003325d2f75837c81cee48bd23b4096f060c9022a95ba2115462afe0e",
+    "optimized-current-api.json": "4068f21c1dfc68ec223a5170bc0374fde716730674fd68c34fded1086f44a1dd",
+    "optimized-current-cli.json": "41eb785e7947fa8aa614cc9e1e32d3760653a18aad0b67b004dcb96606947740",
+    "optimized-frozen-api.json": "6df96e9fcd5e5b50375e63219b6b2cb8c2e81a8bdb338093bf003b5d804cee7d",
+    "optimized-frozen-cli.json": "64f5814838ab551c8973a3d726f1e74b55f2e1679cef24a74375d95a98224143"
+  },
+  "overall_qualified": false,
+  "remaining": "G4: current-target affected API upper 95% bound is 7.622878273655553%, above strict 3% budget. No retry/profile/runtime edit."
+}

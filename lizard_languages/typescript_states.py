@@ -138,11 +138,8 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                   and self._binding_candidate.in_expression):
                 self._read_binding_candidate(')')
             elif self.function_name:
-                # Distinguish arrow-function definition from function call:
-                #   const fn = (...) => {}   <- _prev_token is '=' or 'async'
-                #   const fn = someFunc(...)  <- _prev_token is an identifier
-                # In the second case, ( follows an identifier that differs
-                # from function_name, so it's a call — not a definition.
+                # A differing identifier before "(" makes this a call;
+                # '=' or 'async' instead introduces the arrow's parameters.
                 if (self.last_tokens != self.function_name
                         and self._prev_token not in ('=', 'async', '>')):
                     self.function_name = ''
@@ -192,6 +189,9 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             self.next(self._state_template_literal)
         if not self.as_object:
             if token == ':':
+                binding = self._binding_candidate
+                if not binding or binding.at_root and not binding.in_expression:
+                    self._typed_parameters = True
                 self._consume_type_annotation()
                 self._prev_token = token
                 return

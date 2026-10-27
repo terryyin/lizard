@@ -9,7 +9,7 @@ class ReturnTypeColon(str):
     """A colon confirmed to belong to an arrow's return annotation."""
 
 
-def return_type_colon(tokens, depth, empty_parameters=False):
+def return_type_colon(tokens, depth):
     """Use the existing type reader; a conditional must keep its separator."""
     annotation = TypeScriptTypeAnnotationStates(None)
     for token in tokens:
@@ -27,8 +27,7 @@ def return_type_colon(tokens, depth, empty_parameters=False):
                 token = annotation.saved_token
             if token != '=>':
                 return False
-            return (empty_parameters or not depth
-                    or _has_branch_separators(tokens, depth))
+            return not depth or _has_branch_separators(tokens, depth)
     return False
 
 

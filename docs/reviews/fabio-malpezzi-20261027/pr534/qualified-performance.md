@@ -132,6 +132,11 @@ qualification must freeze its new committed revision and satisfy all four
 unchanged strict gates. Initial-only scripts refuse to overwrite the earlier
 freeze/results; retain those files on any later comparison.
 
+The subsequent committed `8dac7b80` experiment is recorded separately in
+[optimized-performance.md](optimized-performance.md). Its current-target API
+paired 95% upper slowdown bound is +7.623%, so the performance obligation
+remains open. The other three gates pass; no favorable-result retry was made.
+
 ## Optimization consumer trace
 
 The installed trace was run with the retired `return_annotation_depth`, new

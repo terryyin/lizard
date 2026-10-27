@@ -134,17 +134,22 @@ def test_typed_branch_annotations_are_not_runtime_colons(extension, expression,
 
 @pytest.mark.parametrize('extension', ['js', 'ts', 'jsx', 'tsx'])
 @pytest.mark.parametrize('alternate', ['y => y || d', '(y) => y || d'])
+@pytest.mark.parametrize('value,outer_ccn', [
+    ('d', 2), ('x = d ? a : b', 3), ('x = {a: d}', 2),
+    ('x = call({a: d})', 2), ('x = (z => ({a: z}))(d)', 2),
+])
 def test_parenthesized_runtime_value_keeps_its_branch_separator(extension,
-                                                               alternate):
+                                                               alternate, value,
+                                                               outer_ccn):
     code = (
         'function outer(c, d) {\n'
-        f'  const f = c ? (d) : {alternate};\n'
+        f'  const f = c ? ({value}) : {alternate};\n'
         '  return 1;\n'
         '}\n'
         'function after() { return 1; }\n'
     )
     assert summaries('a.' + extension, code) == [
-        ('(anonymous)', 2, 2, 2), ('outer', 1, 4, 2), ('after', 5, 5, 1),
+        ('(anonymous)', 2, 2, 2), ('outer', 1, 4, outer_ccn), ('after', 5, 5, 1),
     ]
 
 
@@ -210,4 +215,23 @@ def test_nested_runtime_separator_keeps_following_type_annotation(extension,
         ('cb', 3 + offset, 3 + offset, 2),
         ('outer', 1 + offset, 5 + offset, 3),
         ('after', 6 + offset, 6 + offset, 1),
+    ]
+
+
+@pytest.mark.parametrize('extension', ['ts', 'tsx', 'vue'])
+@pytest.mark.parametrize('parameters', ['(x: number)', '()'])
+def test_return_annotation_after_group_trivia(extension, parameters):
+    code = (
+        'function outer(c, d) {\n'
+        f'  const f = c ? {parameters} /* parameters */\n'
+        '    : number => 1 : (y) /* parameters */\n'
+        '    : number => y || d;\n'
+        '  return 1;\n}\nfunction after() { return 1; }\n'
+    )
+    code, offset = language_source(extension, code)
+    assert summaries('a.' + extension, code) == [
+        ('(anonymous)', 3 + offset, 3 + offset, 1),
+        ('(anonymous)', 4 + offset, 4 + offset, 2),
+        ('outer', 1 + offset, 6 + offset, 2),
+        ('after', 7 + offset, 7 + offset, 1),
     ]
