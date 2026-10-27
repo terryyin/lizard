@@ -11,6 +11,12 @@ def summaries(filename, source):
                 filename, source).function_list]
 
 
+def language_source(extension, code):
+    if extension == 'vue':
+        return '<script lang="ts">\n' + code + '</script>\n', 1
+    return code, 0
+
+
 BRANCHES = [
     ('nested_ternary', 'c ? d ? x => x : y => y && d : z => z || c',
      [('f', 1), ('(anonymous)', 2), ('(anonymous)', 2)], 3),
@@ -43,10 +49,7 @@ def test_branch_colons_and_internal_colons(extension, _label, expression,
         '}\n'
         'function after() { return 1; }\n'
     )
-    offset = 0
-    if extension == 'vue':
-        code = '<script lang="ts">\n' + code + '</script>\n'
-        offset = 1
+    code, offset = language_source(extension, code)
     expected = [(name, 2 + offset, 2 + offset, ccn) for name, ccn in arrows]
     expected += [('outer', 1 + offset, 4 + offset, outer_ccn),
                  ('after', 5 + offset, 5 + offset, 1)]
@@ -61,10 +64,7 @@ def test_reported_two_parenthesized_branches(extension):
         '  return eq;\n'
         '}\n'
     )
-    offset = 0
-    if extension == 'vue':
-        code = '<script lang="ts">\n' + code + '</script>\n'
-        offset = 1
+    code, offset = language_source(extension, code)
     assert summaries('a.' + extension, code) == [
         ('(anonymous)', 2 + offset, 2 + offset, 1),
         ('(anonymous)', 2 + offset, 2 + offset, 2),
@@ -102,4 +102,112 @@ def test_property_colon_and_computed_key_keep_their_ownership(extension):
     assert summaries('a.' + extension, computed) == [
         ('c?a:b', 2, 2, 2), ('next', 2, 2, 2),
         ('outer', 1, 4, 2), ('after', 5, 5, 1),
+    ]
+
+
+@pytest.mark.parametrize('extension', ['ts', 'tsx', 'vue'])
+@pytest.mark.parametrize('expression,ccns,outer_ccn', [
+    ('c ? (x: number): number => x : (y: number): number => y || d', [1, 2], 2),
+    ('c ? (x): number => x : (y): number => y || d', [1, 2], 2),
+    ('c ? (): number => 1 : (): number => 2 || d', [1, 2], 2),
+    ('c ? (x: number): {a: number} => ({a: x}) : y => y || d', [1, 2], 2),
+    ('c ? (x): {a: number} => ({a: x}) : y => y || d', [1, 2], 2),
+    ('c ? (x: number) => x as number : (y: number) => y || d', [1, 2], 2),
+    ('c ? d ? (x): number => x : (y): number => y : (z): number => z || c',
+     [1, 1, 2], 3),
+])
+def test_typed_branch_annotations_are_not_runtime_colons(extension, expression,
+                                                        ccns, outer_ccn):
+    code = (
+        'function outer(c, d) {\n'
+        f'  const f = {expression};\n'
+        '  return 1;\n'
+        '}\n'
+        'function after() { return 1; }\n'
+    )
+    code, offset = language_source(extension, code)
+    expected = [('(anonymous)', 2 + offset, 2 + offset, ccn) for ccn in ccns]
+    expected += [('outer', 1 + offset, 4 + offset, outer_ccn),
+                 ('after', 5 + offset, 5 + offset, 1)]
+    assert summaries('a.' + extension, code) == expected
+
+
+@pytest.mark.parametrize('extension', ['js', 'ts', 'jsx', 'tsx'])
+@pytest.mark.parametrize('alternate', ['y => y || d', '(y) => y || d'])
+def test_parenthesized_runtime_value_keeps_its_branch_separator(extension,
+                                                               alternate):
+    code = (
+        'function outer(c, d) {\n'
+        f'  const f = c ? (d) : {alternate};\n'
+        '  return 1;\n'
+        '}\n'
+        'function after() { return 1; }\n'
+    )
+    assert summaries('a.' + extension, code) == [
+        ('(anonymous)', 2, 2, 2), ('outer', 1, 4, 2), ('after', 5, 5, 1),
+    ]
+
+
+@pytest.mark.parametrize('extension', ['ts', 'tsx', 'vue'])
+@pytest.mark.parametrize('return_type', ['boolean', '"ok"', '`ok`'])
+def test_function_type_alias_and_return_keep_the_real_body(extension, return_type):
+    code = (
+        f'type Callback = (event: Obj) => {return_type};\n'
+        f'function filter(value: Json): (event: Obj) => {return_type} {{\n'
+        '  if (value) return () => true;\n'
+        '  return () => true;\n'
+        '}\n'
+        'function after(): void {}\n'
+    )
+    code, offset = language_source(extension, code)
+    assert summaries('a.' + extension, code) == [
+        ('(anonymous)', 3 + offset, 3 + offset, 1),
+        ('(anonymous)', 4 + offset, 4 + offset, 1),
+        ('filter', 2 + offset, 5 + offset, 2),
+        ('after', 6 + offset, 6 + offset, 1),
+    ]
+
+
+@pytest.mark.parametrize('extension', ['ts', 'tsx', 'vue'])
+@pytest.mark.parametrize('body,ccn', [
+    ('/[?:]/.test(x) ? true : false', 2),
+    ('`value?${x}:end`', 1),
+])
+def test_signature_lookahead_preserves_lexical_tokens_and_metrics(extension,
+                                                                 body, ccn):
+    code = (
+        'function outer(c, d) {\n'
+        f'  const f = c ? (x): unknown => {body} : y => y || d;\n'
+        '  return 1;\n'
+        '}\n'
+        'function after() { return 1; }\n'
+    )
+    code, offset = language_source(extension, code)
+    assert summaries('a.' + extension, code) == [
+        ('(anonymous)', 2 + offset, 2 + offset, ccn),
+        ('(anonymous)', 2 + offset, 2 + offset, 2),
+        ('outer', 1 + offset, 4 + offset, 2),
+        ('after', 5 + offset, 5 + offset, 1),
+    ]
+
+
+@pytest.mark.parametrize('extension', ['ts', 'tsx', 'vue'])
+@pytest.mark.parametrize('value', ['call()', '(d)'])
+def test_nested_runtime_separator_keeps_following_type_annotation(extension,
+                                                                  value):
+    code = (
+        'function outer(a, c, d) {\n'
+        f'  const f = a ? c ? {value} : y => y : z => z || a;\n'
+        '  const cb: (e: Obj) => number = e => e || a;\n'
+        '  return 1;\n'
+        '}\n'
+        'function after() { return 1; }\n'
+    )
+    code, offset = language_source(extension, code)
+    assert summaries('a.' + extension, code) == [
+        ('(anonymous)', 2 + offset, 2 + offset, 1),
+        ('(anonymous)', 2 + offset, 2 + offset, 2),
+        ('cb', 3 + offset, 3 + offset, 2),
+        ('outer', 1 + offset, 5 + offset, 3),
+        ('after', 6 + offset, 6 + offset, 1),
     ]

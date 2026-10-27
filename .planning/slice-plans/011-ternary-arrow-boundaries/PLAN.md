@@ -154,7 +154,7 @@ local result is a safe stopping point, unmerged.
 
 ### 3. Consume typed branch signatures before branch separators
 Type: Behavior
-Status: planned
+Status: done
 Proof: red→green TS/TSX/Vue regressions for typed return, object return type
 and type-assertion branches; function-type alias, function-type return
 (`inherited_function_type_*` rows) and following-function controls stay green;
@@ -167,6 +167,9 @@ first arrow and the alternate is reported separately with its CCN. Genuine
 function-type bodies keep their real bodies. Extend slice 2's rule in the
 TypeScript declaration/annotation owner rather than adding a second colon
 recognizer.
+
+Learning G2 requires metric-safe annotation lookahead with canonical runtime
+context; the bounded approach is retained in [PROOF.md](PROOF.md#slice-3-investigation).
 
 Boundedness: one annotation-versus-separator decision on the TypeScript path
 with its own regression loop; it reuses slice 2's ownership model. Safe stopping
@@ -232,4 +235,14 @@ currently pending.
 ### G1. Typed branch return signatures remain combined
 Reported: slice 2 — "Candidate main replay: 92 cases, only typed_arrows.ts, typed_arrows.tsx, typed_object_return.ts, typed_object_return.tsx, and vue_typed_arrows.vue still fail."
 Story clause: "a genuine signature annotation is consumed as a type before it can be taken as a runtime branch separator."
-Disposition: receiving slice 3
+Disposition: proved by slice 3: corrected-semantics.md typed signatures; all 92 frozen rows pass through public analysis/FileAnalyzer.
+
+### G2. Return annotations with untyped or empty parameters remain combined
+Reported: slice 3 — "Ordinary (x): number => x and (): number => 1 work outside a ternary; their ternary equivalents still report one anonymous CCN-2 arrow instead of separate CCN-1/2 arrows."
+Story clause: "a genuine signature annotation is consumed as a type before it can be taken as a runtime branch separator."
+Disposition: proved by slice 3: test_typed_branch_annotations_are_not_runtime_colons and labelled signature inputs preserve untyped/empty parameters, names/spans/CCN.
+
+### G3. Nested runtime groups steal an outer separator during lookahead
+Reported: slice 3 — "All six TS/TSX/Vue nested call/group cases fail on the first lookahead implementation, including the following typed cb initializer."
+Story clause: "Colons inside the arrow's own body, genuine TypeScript annotations, and property or computed-key colons keep their own syntax, and the enclosing and following functions keep their correct names, spans and CCN."
+Disposition: proved by slice 3: test_nested_runtime_separator_keeps_following_type_annotation and six baseline/candidate full-metric comparisons preserve runtime groups and named cb.

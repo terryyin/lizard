@@ -117,3 +117,70 @@ Independent `/root/slice2_refactor` returned `## REFACTOR COMPLETE`: no
 production or test edits; retained observations moved here along cohesive
 documentation seams. Plan guard and whitespace checks pass; the refactor
 consumer trace has all dispositions, and semantic proof remains reusable.
+
+## Slice 3 investigation
+
+`/root/source_review3` freshly derived individual commitments from only the
+original seed/contract and the explicit selected-correction authority. Its
+launch and complete return are retained in the conversation. Partial
+`/root/slice3_typed` correction makes the five frozen typed rows green and
+passes 96 new-module cases and 495 focused cases/5 skipped. Parameter-type
+evidence alone leaves G2, so no acceptance/completion is claimed. Runtime
+parenthesized-value and genuine function-type controls remain green.
+`/root/annotation_pfe` owns bounded existing-solution research before further
+machinery; preserve partial edits. No source promise has been narrowed.
+
+PFE finding: TypeScript annotation states already own type consumption and
+are effect-free; provisional grouped bindings already have an owner. Go's
+signature lookahead demonstrates preserving analysis tokens while carrying
+metadata. Header-only recognition cannot decide G2; state-only body replay
+would distort counters. The smallest supported next route is metric-safe
+lookahead using the existing annotation owner and conditional confirmation.
+The [official TypeScript 5.9.3 parser](https://raw.githubusercontent.com/microsoft/TypeScript/v5.9.3/src/compiler/parser.ts)
+explicitly accepts empty groups and confirms ambiguous return annotations by
+a following conditional separator. An isolated compiler probe observed no
+syntax diagnostics and two ArrowFunction branches for both G2 forms, and
+ParenthesizedExpression/ArrowFunction for the runtime-value controls. This
+validates G2 rather than narrowing it. Command: `PIP_QUIET=1 nix develop -c npm
+exec --yes --package typescript@5.9.3 -- node /tmp/lizard-seed015-typescript-syntax.cjs`.
+The initial probe had a wrong module path (bin rather than lib); corrected
+the probe path and obtained the stated terminal result, without repo changes.
+
+G3 discovery: coordinator inspection identified that one later root colon
+could belong to an outer conditional. Six TS/TSX/Vue nested call/group
+regressions with a following typed initializer fail on the first lookahead.
+The selected correction queries canonical active-state ternary depth and
+group eligibility; no parallel lexical ternary counter or metric replay.
+Keep the original token/line/CCN stream and one annotation recognizer, shared
+through preprocessing for JS/TS/JSX/TSX/Vue. Empty groups are unambiguous
+signatures. G1/G2/G3 all require current public proof before accepting slice 3.
+
+Fresh trunk fetch during slice 3: `9979f106a955aef2460ed6fe7ebb5782b755bcad`.
+Changes after `0ef95abb` are planning/review records only; analyzer sources
+remain identical. The source's only change replaces the spent SEED-014 link
+with its PR533 merge `a2d2ab7`; this confirms the reused neighboring behavior
+and changes no promise, so the source-only reviews remain applicable.
+
+## Slice 3 acceptance
+
+Given genuine return annotations (typed, untyped or empty parameters), expected
+separate branch arrows and surrounding/following names/spans/CCN are observed
+in the public tuple assertions and all 92 frozen + 4 supplemental + 32 labelled
+replays. Runtime grouped/call values preserve their separators and the following
+typed initializer; six baseline/candidate probes also match NLOC, tokens and
+parameters. Genuine function-type bodies, curried arrows, regex/templates,
+JSX attributes and Vue offsets remain observed. Inspected the source-only
+comparison, changed reader/helper and new test setup/assertions against the
+literal proof/trace in `corrected-semantics.md`: 523 shared-reader/object cases
+pass/5 skip, 160 core/CLI/CSV/cognitive cases pass, 32 optional cases pass.
+No counter replay or second persistent ternary counter; the same annotation
+state owns type recognition. G1/G2/G3 are proved. Original exclusions remain
+exclusions; performance and final hosted delivery remain slices 4–5.
+
+Independent `/root/slice3_refactor` returned `## REFACTOR COMPLETE`: reused
+`JavaScriptBindings.BRACKETS` and consolidated Vue setup only. Inspected both
+edits: sources and explicit expected tuples unchanged. After edits, 523 shared
+tests pass/5 skip and all 128 replays pass. Other accepted core/CLI/optional
+and full-metric observations remain applicable. Its retained refactor trace
+has 311 populated dispositions; all current files are at most 250 lines and
+whitespace checks are clean. No outstanding refactor gate remains.

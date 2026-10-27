@@ -31,6 +31,15 @@ def starts_statement(token):
 
 
 class JavaScriptFunctionsMixin:
+    def return_annotation_depth(self):
+        """Pending conditionals of the active runtime state, before counting."""
+        state = self
+        while isinstance(state._state, self.__class__):
+            state = state._state
+        if state._state == state._state_global:
+            return state._ternary_depth
+        return None
+
     def _push_function_to_stack(self):
         if self._in_abstract_context:
             return

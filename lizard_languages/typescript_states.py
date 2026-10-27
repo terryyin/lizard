@@ -4,6 +4,7 @@ from .code_reader import CodeStateMachine
 from .javascript_bindings import JavaScriptBindingsMixin
 from .javascript_functions import JavaScriptFunctionsMixin
 from .javascript_objects import JavaScriptObjectsMixin
+from .typescript_signatures import ReturnTypeColon
 from .typescript_declarations import (
     DECLARATION_WORDS, TypeScriptDeclarationsMixin)
 
@@ -61,6 +62,9 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             self._pop_function_from_stack()
 
     def _state_global(self, token):
+        if token == ':' and isinstance(token, ReturnTypeColon):
+            self._consume_type_annotation()
+            return
         if self._pending_bindings:
             self._resolve_pending_bindings(token)
 
