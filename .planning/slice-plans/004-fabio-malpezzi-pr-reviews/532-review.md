@@ -113,6 +113,9 @@ The fresh-delivery whitespace gate refused four new evidence copies with blank
 lines at EOF before any commit. Root trimmed only those copies and aligned both
 retention helpers' EOF normalization; original logs and accepted runtime proof
 are unchanged. The same fresh operation owns the mechanical retry.
+That retry delivered c3ca2c73d3c74b5caffe9b54929d0c14945cdb77, base33807306,
+with the observer reused and no reconciliation. The existing thank-you was
+updated with an immutable link to the published durable review evidence.
 No slice status, commit, push, merge or comment was made by this implementation.
 
 ## Independent source comparison

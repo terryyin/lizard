@@ -179,6 +179,21 @@ retired. Owned /private/tmp/lizard-pr532-validation is clean at9bc4456 with a
 Flask-capable Nix environment; retain it through story closure, then retire it.
 Trunk also holds SEED-012 website stories with distinct full anchors from this
 branch's published regex identity; preserve every identity during integration.
+Slice6 delivered c3ca2c73d3c74b5caffe9b54929d0c14945cdb77, suffix base33807306,
+without rebase; the existing observer was reused. The fresh gate caught blank
+EOF lines in four new evidence copies before commit; copy/helper normalization
+and the same fresh retry passed. The thank-you now links immutable published
+evidence. Slice7's previously published base is c3ca2c73.
+Slice7's PR535 merged asd7be8b90ac5872faf86e329e7d7249c98029f045, contributor
+head1a44c0cad59ea3f3dcabe3c1ac601d905437a7c7. A three-line receiver guard
+preserves nested aliases; its corrected532 dependency was merged without force.
+All7 timing gates pass, including cumulative from2e21 and CLI -ENS; the initial
+ordinary CLI interval stays inconclusive beside its passing40-pair retry.
+Current-base full1780/7, make and realHTTP pass; exact landed tree/14-job CI
+match validated runtime bytes. Independent refactor made no edits. A read-only
+Nix race was repaired sequentially without invalidating earlier proof. Thanks
+comment6436990416 succeeded. Contributor worktree retired; owned validation is
+clean atd7be8b9. Current upstream planning edits were preserved.
 
 
 Preparation reproduced all first examples on the current checkout, while the

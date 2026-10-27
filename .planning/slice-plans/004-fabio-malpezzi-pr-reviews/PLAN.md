@@ -68,7 +68,7 @@ Proof and expected result: [slice 6](SLICE-PROOF.md).
 
 ### 7. TypeScript this declarations — PR #535
 Type: Behavior
-Status: planned
+Status: done
 Source: https://github.com/terryyin/lizard/pull/535
 Proof and expected result: [slice 7](SLICE-PROOF.md).
 
@@ -166,6 +166,9 @@ retains typed-colon loss, the curried-state regression and both unproved timing 
 PR532 merged as9bc4456 and was thanked; [532-review.md](532-review.md) retains
 the corrected identifier/binding behavior, independent refactor, four passing
 performance gates, current-base full/HTTP proof and exact-tree fourteen-job CI.
+PR535 merged asd7be8b9 and was thanked; [535-review.md](535-review.md) retains
+the minimal receiver guard, corrected dependency ancestry, seven passing timing
+gates, full1780/7 plus make/HTTP, independent refactor and final fourteen-job CI.
 
 ## Story obligations
 
@@ -197,4 +200,9 @@ Disposition: excluded "Corrections estimated above fifteen minutes belong to the
 ### G6. Shared parameter extraction reaches accepted NS output
 Reported: slice 6 — "The corrected PR532 changes shared FunctionInfo.parameters, so the prior PR527 CLI -ENS timing does not prove the final combined revision; a cumulative starting-baseline versus corrected CLI -ENS comparison is still required before merge."
 Story clause: "Also check the cumulative effect of the accepted set against the starting baseline."
-Disposition: proved by slice 6: cumulative-cli-ns.json compares starting 2e21e404 with the immutable corrected combined snapshot on the fixed 100-source corpus; 20 alternating pairs, median -0.1271%, paired 95% interval [-1.43994%, +0.46245%]. Current full pytest (1721 passed, 7 skipped) covers the accepted Python NS controls. Ordinary CLI timing remains a separate open merge gate.
+Disposition: proved by slice 6: cumulative-cli-ns.json compares starting 2e21e404 with the immutable corrected combined snapshot on the fixed 100-source corpus; 20 alternating pairs, median -0.1271%, paired 95% interval [-1.43994%, +0.46245%]. Full pytest (1721 passed, 7 skipped) covers the accepted Python NS controls. The separate ordinary CLI gate subsequently passed40pairs with upper +2.36131% before merge, as retained in532-review.md.
+
+### G7. Receiver proposal changes a real destructured parameter name
+Reported: slice 7 — "PR535's child-only patch on corrected PR532 changes the public names of a valid {first, this: receiver} binding from receiver to first across JS/TS/JSX/TSX; the receiver special case must be limited to the parameter list's first token."
+Story clause: "Correct defects and refactor the overall affected changes into a coherent, minimal solution."
+Disposition: proved by slice 7: the three-line at_start guard preserves receiver/tail names in all four affected readers; testTypeScriptThisParameters.py has28passing tests versus four raw-child binding-name failures. Consumer proof and current-base full1780/7 plus make pass; HTTP receiver count changes2→1 while accepted532 controls hold. Source-only reviewer7 comparison and exact fixtures/assertions are retained in535-review.md.
