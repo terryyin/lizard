@@ -1,0 +1,82 @@
+command=['/Users/terryyin/git/lizard/.worktrees/review-correct-and-merge-fabiomalpezzi-s-open-pr/.venv/bin/python', '-c', "import sys,pathlib,pytest; root=pathlib.Path(sys.argv[1]); sys.path.insert(0,str(root)); import lizard; assert pathlib.Path(lizard.__file__).resolve()==root/'lizard.py',lizard.__file__; files=sorted({str(p) for pattern in ('testJavaScript*.py','testTypeScript*.py','testES6.py','testTSX.py','testVue.py') for p in (root/'test'/'test_languages').glob(pattern)}); print('candidate_source',lizard.__file__); raise SystemExit(pytest.main(files))", '/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr531-readonly']
+candidate_source /Users/terryyin/.cache/lizard-pr-reviews-20261027/pr531-readonly/lizard.py
+============================= test session starts ==============================
+platform darwin -- Python 3.9.11, pytest-8.4.2, pluggy-1.6.0
+rootdir: /Users/terryyin/.cache/lizard-pr-reviews-20261027/pr531-readonly
+configfile: setup.cfg
+plugins: cov-7.1.0
+collected 278 items
+
+../../../../.cache/lizard-pr-reviews-20261027/pr531-readonly/test/test_languages/testES6.py . [  0%]
+..............................................F                          [ 17%]
+../../../../.cache/lizard-pr-reviews-20261027/pr531-readonly/test/test_languages/testJavaScript.py . [ 17%]
+.......................                                                  [ 25%]
+../../../../.cache/lizard-pr-reviews-20261027/pr531-readonly/test/test_languages/testJavaScriptFalsePositives.py . [ 26%]
+...                                                                      [ 27%]
+../../../../.cache/lizard-pr-reviews-20261027/pr531-readonly/test/test_languages/testJavaScriptFunctions.py . [ 27%]
+......................                                                   [ 35%]
+../../../../.cache/lizard-pr-reviews-20261027/pr531-readonly/test/test_languages/testJavaScriptMembers.py . [ 35%]
+............                                                             [ 40%]
+../../../../.cache/lizard-pr-reviews-20261027/pr531-readonly/test/test_languages/testJavaScriptRegex.py . [ 40%]
+.....                                                                    [ 42%]
+../../../../.cache/lizard-pr-reviews-20261027/pr531-readonly/test/test_languages/testJavaScriptWidgets.py s [ 42%]
+.s.s                                                                     [ 44%]
+../../../../.cache/lizard-pr-reviews-20261027/pr531-readonly/test/test_languages/testTSX.py . [ 44%]
+...........................................                              [ 60%]
+../../../../.cache/lizard-pr-reviews-20261027/pr531-readonly/test/test_languages/testTypeScript.py . [ 60%]
+..................                                                       [ 66%]
+../../../../.cache/lizard-pr-reviews-20261027/pr531-readonly/test/test_languages/testTypeScriptArrowFields.py . [ 67%]
+.........                                                                [ 70%]
+../../../../.cache/lizard-pr-reviews-20261027/pr531-readonly/test/test_languages/testTypeScriptDeclarations.py . [ 70%]
+................                                                         [ 76%]
+../../../../.cache/lizard-pr-reviews-20261027/pr531-readonly/test/test_languages/testTypeScriptFalsePositives.py . [ 76%]
+............                                                             [ 81%]
+../../../../.cache/lizard-pr-reviews-20261027/pr531-readonly/test/test_languages/testTypeScriptFields.py . [ 81%]
+.....                                                                    [ 83%]
+../../../../.cache/lizard-pr-reviews-20261027/pr531-readonly/test/test_languages/testTypeScriptFunctions.py . [ 83%]
+...................                                                      [ 90%]
+../../../../.cache/lizard-pr-reviews-20261027/pr531-readonly/test/test_languages/testTypeScriptMembers.py s [ 91%]
+............                                                             [ 95%]
+../../../../.cache/lizard-pr-reviews-20261027/pr531-readonly/test/test_languages/testTypeScriptMetrics.py . [ 95%]
+......                                                                   [ 97%]
+../../../../.cache/lizard-pr-reviews-20261027/pr531-readonly/test/test_languages/testTypeScriptWidgets.py . [ 98%]
+s                                                                        [ 98%]
+../../../../.cache/lizard-pr-reviews-20261027/pr531-readonly/test/test_languages/testVue.py . [ 98%]
+...                                                                      [100%]
+
+=================================== FAILURES ===================================
+_ Test_ES6_object_in_the_body_of_an_arrow_function.test_object_literals_in_an_expression_body _
+
+self = <test.test_languages.testES6.Test_ES6_object_in_the_body_of_an_arrow_function testMethod=test_object_literals_in_an_expression_body>
+
+    def test_object_literals_in_an_expression_body(self):
+        code = (
+            "function layout(vertical) {\n"
+            "  const box = f => vertical ? {x: f.a, y: f.b} : {x: f.b, y: f.a};\n"
+            "  const pair = (a, b) => a && {a, b};\n"
+            "  return box;\n"
+            "}\n"
+            "function after() { return 1; }\n"
+        )
+        for filename in ("a.js", "a.ts", "a.tsx"):
+>           self.assertEqual(
+                [('box', 2, 2, 2), ('pair', 3, 3, 2), ('layout', 1, 5, 1),
+                 ('after', 6, 6, 1)],
+                [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                 for f in analyze_file.analyze_source_code(
+                     filename, code).function_list], filename)
+E           AssertionError: Lists differ: [('box', 2, 2, 2), ('pair', 3, 3, 2), ('layout', 1, 5, 1), ('after', 6, 6, 1)] != [('pair', 3, 3, 2), ('box', 2, 5, 2), ('after', 6, 6, 1), ('layout', 1, 6, 1)]
+E
+E           First differing element 0:
+E           ('box', 2, 2, 2)
+E           ('pair', 3, 3, 2)
+E
+E           - [('box', 2, 2, 2), ('pair', 3, 3, 2), ('layout', 1, 5, 1), ('after', 6, 6, 1)]
+E           + [('pair', 3, 3, 2), ('box', 2, 5, 2), ('after', 6, 6, 1), ('layout', 1, 6, 1)] : a.js
+
+../../../../.cache/lizard-pr-reviews-20261027/pr531-readonly/test/test_languages/testES6.py:528: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../../.cache/lizard-pr-reviews-20261027/pr531-readonly/test/test_languages/testES6.py::Test_ES6_object_in_the_body_of_an_arrow_function::test_object_literals_in_an_expression_body
+=================== 1 failed, 272 passed, 5 skipped in 0.30s ===================
+
+exit_code=1

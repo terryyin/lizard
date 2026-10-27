@@ -13,3 +13,4 @@ Maintenance, bug fixing, and PR reviews.
 ## Backlog list
 
 - [Recognize regex literals without consuming division expressions](seeds/SEED-012-regex-literal-context.md#regex-literal-context) — SEED-012#regex-literal-context
+- [Preserve arrow object expressions and typed function bodies](seeds/SEED-013-arrow-object-boundaries.md#arrow-object-boundaries) — SEED-013#arrow-object-boundaries

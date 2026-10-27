@@ -68,3 +68,5 @@ edits or uncovered consumers, ## REFACTOR COMPLETE. Current product's full
 `nix develop -c python -m pytest` remains green:1687passed,7skipped in3.06s
 (/tmp/lizard-slice2-pytest.log). Prior make proof is reused because no production
 source or product tests changed. Story-obligations check slice2 passed,2entries.
+Guarded fresh delivery accepted16eed2248cf873d4b7bec42792198378a4e73ad8 on the
+execution branch, suffix base af27c910; existing observer reused, no rebase.

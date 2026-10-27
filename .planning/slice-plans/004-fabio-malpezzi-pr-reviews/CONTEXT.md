@@ -147,6 +147,11 @@ Trunk advanced to7ac449f through the separate Python-support story. Its diff
 changes CI/claims/records and a metadata test; analyzer sources are unchanged.
 Refresh future merge gates to Ubuntu/Windows×Python3.8–3.14 (14jobs).
 
+Slice2 delivered `16eed2248cf873d4b7bec42792198378a4e73ad8` on the execution
+branch, suffix base af27c910; observer reused, no rebase. It publishes the
+SEED-012 regex correction story and complete PR528 deferral evidence. This is
+slice3's previously published base. PR528 remains open at frozen b66ec3a7.
+
 
 Preparation reproduced all first examples on the current checkout, while the
 existing suite passed. Some earlier PRs have already been superseded (the

@@ -44,7 +44,7 @@ Proof and expected result: [slice 2](SLICE-PROOF.md).
 
 ### 3. Objects inside arrow expressions — PR #531
 Type: Behavior
-Status: planned
+Status: done
 Source: https://github.com/terryyin/lizard/pull/531
 Proof and expected result: [slice 3](SLICE-PROOF.md).
 
@@ -151,11 +151,14 @@ Independent source-only review: source_review_1 launch and return in this execut
 conversation. Its separate commitments match the source: reproduce/value/review,
 shared consumers, conditional correction or >15m follow-up, repeated comparable
 performance including cumulative effects, final tests/CI, exact-head merge and
-thank-you. Current owner is slice 1; later PRs remain with their ordered slices.
+thank-you. Each disposition keeps its own proof and remaining owners in the
+linked per-PR record; unfinished PRs remain with their ordered slices.
 PR527 merged as e871ae4. Expanded control performance also passes; its evidence
 and the corrected acceptance ordering are in [527-review.md](527-review.md).
 PR528 is deferred to SEED-012#regex-literal-context; [528-review.md](528-review.md)
 owns its correctness/performance rejection and linked queued outcome.
+PR531 is deferred to SEED-013#arrow-object-boundaries; [531-review.md](531-review.md)
+retains its original improvement, introduced type regressions and unproved timing gate.
 
 ## Story obligations
 
@@ -166,5 +169,10 @@ Disposition: proved by slice 1: 527-review.md expanded control-corpus protocol a
 
 ### G2. Regex candidate breaks division and exceeds slowdown limit
 Reported: slice 2 — "The authored PR528 candidate misreads valid member/contextual-name division, loses CCN/tokens, and slows affected inputs19.4428%; coherent correction is estimated30–45minutes and queued as SEED-012#regex-literal-context."
+Story clause: "Correct defects and refactor the overall affected changes into a coherent, minimal solution."
+Disposition: excluded "Corrections estimated above fifteen minutes belong to the linked follow-up stories, not to this review's implementation scope."
+
+### G3. Arrow object proposal breaks typed bodies and leaves operators unresolved
+Reported: slice 3 — "Raw PR531 introduces five literal function-type return regressions, leaves related object operands broken, and has an unproved3% performance gate; coherent correction is estimated30–45minutes and queued as SEED-013#arrow-object-boundaries."
 Story clause: "Correct defects and refactor the overall affected changes into a coherent, minimal solution."
 Disposition: excluded "Corrections estimated above fifteen minutes belong to the linked follow-up stories, not to this review's implementation scope."
