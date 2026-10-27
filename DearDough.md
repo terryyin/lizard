@@ -212,7 +212,7 @@ rule), so the slice does not stop twice mid-delivery.
   - Tool: Claude Code
   - Model: claude-opus-5-5
   - Open Dough release: 0.3.71 (installed by commit 01afe9c)
-  - Evidence: plan `.planning/slice-plans/010-multiline-arrow-boundaries/PLAN.md` slice 4 delivery note; dashboard unfinished handoff receipt 48eaccfb-ca45-4cd5-a7aa-dfecbbf15443; push `1542385..b6074d8` and merge `a2d2ab7` only after user replies "I authorize you to do it" / "you are authorized to run it".
+  - Evidence: plan `.planning/slice-plans/010-multiline-arrow-boundaries/PLAN.md` at `3cdc283` (slice 4 delivery note); dashboard unfinished handoff receipt 48eaccfb-ca45-4cd5-a7aa-dfecbbf15443; push `1542385..b6074d8` and merge `a2d2ab7` only after user replies "I authorize you to do it" / "you are authorized to run it".
   - Observed effect: two human round trips and a stopped CI observer during an otherwise ready delivery; no correctness impact.
   - Inference: plan text and launch instruction are not treated as authorization by the host's classifier; an up-front confirmation would avoid the stops.
 
@@ -230,7 +230,7 @@ implementer's passing tests and the reproducer did not cover.
   - Tool: Claude Code
   - Model: claude-opus-5-5
   - Open Dough release: 0.3.71 (installed by commit 01afe9c)
-  - Evidence: plan slice 2 acceptance ("generic-split comma regression and a missing same-line object member; both corrected and tested"); tests `test_generic_arguments_split_after_comma_keep_their_line`, `test_same_line_object_members_stay_separate` in `test/test_languages/testJavaScriptArrowBoundaries.py`.
+  - Evidence: plan `.planning/slice-plans/010-multiline-arrow-boundaries/PLAN.md` at `3cdc283`, slice 2 acceptance ("generic-split comma regression and a missing same-line object member; both corrected and tested"); tests `test_generic_arguments_split_after_comma_keep_their_line`, `test_same_line_object_members_stay_separate` in `test/test_languages/testJavaScriptArrowBoundaries.py`.
   - Observed effect: two return rounds before delivery instead of a later regression; both became discriminating tests.
   - Inference: a practice worth keeping for grammar heuristics where examples are not exhaustive.
 
