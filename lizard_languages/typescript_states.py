@@ -37,6 +37,8 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
     def __call__(self, token, reader=None):
         if self._binding_candidate:
             self._binding_candidate(token)
+        # Called directly rather than through super(): no mixin defines
+        # __call__, and this runs once per token.
         return CodeStateMachine.__call__(self, token, reader)
 
     def _replay_token(self, token):
@@ -67,7 +69,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             return
 
         if token in _MARKER_TOKENS:
-            # Track static and async modifiers
+            # Track the static, async and new modifiers
             if token == 'static':
                 self._static_seen = True
                 self._prev_token = token

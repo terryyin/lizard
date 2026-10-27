@@ -191,7 +191,7 @@ gates.
 
 ### 3. Meet the strict performance budget without weakening semantics
 Type: Behavior
-Status: planned
+Status: done
 Proof: retained raw warmed timing pairs, immutable harness/corpus hashes,
 candidate/base revisions and intervals for every required workload.
 
@@ -295,6 +295,37 @@ Independent refactor (`## REFACTOR COMPLETE`): moved the ASI predicates and
 `end_expression_before` into `JavaScriptFunctionsMixin` beside the arrow
 registration (behavior unchanged; focused 379 passed, reproducer 44 inherited).
 Coordinator final: full pytest 1818 passed, 7 skipped; `nix develop -c make` exit 0.
+
+**Slice 3 (performance) evidence:** trunk advanced to `ac2b454` (SEED-013 /
+PR531 merged), so the candidate first merged it (`b5a25db`): trunk's
+`_expression_body` and this story's open-arrow registration became one flag
+closed through `_close_expression_body`; `case`/`default` label colons stay
+runtime syntax (trunk's function-type annotation reading otherwise swallowed a
+case-returned arrow; trunk alone fails that). Reproducer after merge: 0/150
+failures (trunk alone: 42, all SEED-014 cases). PR531 merging also settles
+slice 4's ordering concern: PR533's `47aa357` is already on trunk.
+Harness `pr533/paired.py` SHA256 `3064d8d7…bf5`, manifest `61d9152b…a8d`, all
+250 corpus hashes re-verified. Snapshots (`git archive`) under
+`/Users/terryyin/.cache/lizard-pr-reviews-20261027/seed014/`: `target-ac2b454`,
+`frozen-2e21e40`, `candidate-<sha>`; result JSONs `<sha>-vs-<base>-<workload>.json`
+keep every duration. Command per comparison (host Territory.local, Python 3.9.11,
+Nix `.venv`, run serially):
+`PIP_QUIET=1 nix develop -c python /Users/terryyin/.cache/lizard-pr-reviews-20261027/pr533/paired.py --baseline <base> --candidate <candidate> --workload {api,cli} --pairs 20 --seconds 1.3 --out <json>`.
+
+| Candidate | API vs ac2b454 | CLI vs ac2b454 | API vs 2e21e40 | CLI vs 2e21e40 |
+| --- | --- | --- | --- | --- |
+| b5a25db | +2.62%, CI [1.85, 3.03] fail | CI [-0.36, 1.17] | +2.86%, CI [2.61, 3.28] fail | CI [-0.46, 1.19] |
+| 658e7d5 | +2.35%, CI [1.71, 3.10] fail | CI [-3.08, 0.66] | +1.73%, CI [1.32, 2.95] | CI [-12.7, 5.36] unresolved (load 10.2) |
+| 8973153 | −5.45%, CI [−6.73, −4.06] pass | −1.04%, CI [−0.82, 2.44] pass | −4.18%, CI [−5.53, −4.10] pass | +1.95%, CI [0.70, 2.67] pass |
+
+Load during the 8973153 runs 3.7–5.5 (16 CPUs). Profile diagnosis: the
+remaining added cost (~32 more functions and ~45 more state machines per pass)
+is the more correct parse; it is more than offset by trunk-shared per-token
+savings (direct `CodeStateMachine.__call__`, guarded pending-binding,
+declaration and object-member handlers, Vue script filtering as a reader hook).
+Each optimization kept analysis output byte-identical (150 corpus files and 727
+recorded test snippets) and the reproducer at 0 failures. No retry was used to
+seek a pass; each measured candidate is a different revision.
 
 ## Story obligations
 
