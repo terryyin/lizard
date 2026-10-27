@@ -22,6 +22,10 @@ class VueReader(TypeScriptReader):
         return TypeScriptReader.generate_tokens(source_code, addition, token_class)
 
     def preprocess(self, tokens):
+        return super().preprocess(self._script_tokens(tokens))
+
+    @staticmethod
+    def _script_tokens(tokens):
         current_block = None
 
         for token in tokens:
@@ -30,5 +34,4 @@ class VueReader(TypeScriptReader):
             elif token.startswith('</script'):
                 current_block = None
             elif current_block == 'script':
-                if not token.isspace() or token == '\n':
-                    yield token
+                yield token

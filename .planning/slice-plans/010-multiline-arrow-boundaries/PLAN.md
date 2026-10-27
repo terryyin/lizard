@@ -154,7 +154,7 @@ product unchanged. A failure stops slices 2–4 and revises the plan before edit
 
 ### 2. Preserve multiline arrow and next-statement metrics through shared readers
 Type: Behavior
-Status: planned
+Status: done
 Proof: red/green public regressions for the source examples and controls, plus
 the focused consumer command and story-owned retained reproducer cases exiting
 clean.

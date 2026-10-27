@@ -26,6 +26,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         self._in_abstract_context = False  # Track abstract method declarations
         self._condition_kind = None
         self._ternary_depth = 0
+        self._expression_arrow = False
 
     def __call__(self, token, reader=None):
         if self._binding_candidate:
@@ -35,6 +36,16 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
     def _replay_token(self, token):
         """Process a token saved by a nested syntax reader through dispatch."""
         return self(token)
+
+    def _end_statement(self):
+        self.function_name = ''
+        self._pop_function_from_stack()
+        # Reset modifiers on newline/semicolon
+        self._static_seen = False
+        self._async_seen = False
+        self._in_abstract_context = False
+        self._in_prop_value = False
+        self._prev_token = ''
 
     def statemachine_before_return(self):
         # Ensure the main function is closed at the end
@@ -136,15 +147,17 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         elif token in ('}', ')') or (
                 token == ']' and self._binding_candidate):
             self.statemachine_return()
-        elif self.context.newline or token == ';':
-            self.function_name = ''
-            self._pop_function_from_stack()
-            # Reset modifiers on newline/semicolon
-            self._static_seen = False
-            self._async_seen = False
-            self._in_abstract_context = False
-            self._in_prop_value = False
-            self._prev_token = ''
+        elif token == ';' or (
+                # An object member's arrow ends at its comma, which it owns
+                # like a semicolon; members read `<...>` as generics.
+                token == ',' and self._expression_arrow and self.as_object
+        ) or (
+                # Line starts already ended expression arrows that are done;
+                # after another comma (argument, declarator or generic `A,`
+                # split) keep ending them here, at the next line's first token.
+                self.context.newline and (
+                    not self._expression_arrow or self.last_token == ',')):
+            self._end_statement()
 
         if token == '`':
             self.next(self._state_template_literal)
