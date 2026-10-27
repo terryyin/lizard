@@ -47,6 +47,11 @@ Authorized remote/trunk: `origin` / `master`. Slice 1 accepted branch base:
 `7f479101728b5fec8becaf7c784b752ed736719e`. Slice 2 semantic proof is accepted;
 its independent refactor preserved product/tests and reorganized evidence only
 ([refactor proof](../../../docs/reviews/fabio-malpezzi-20261027/pr536/slice2-refactor-consumers.md)).
+Slice 2 was accepted at `13c3403fc918209d1279018fd8cb5dad0405f144`, suffix
+base `33610866db00d28ba9e2dafe5a3fd1942347fb2f`. Slice 3 source-only reviewer
+`slice3_source_review` read only the original seed; comparison accepts the empty,
+typed/return/default and consumer journeys in [slice3 proof](../../../docs/reviews/fabio-malpezzi-20261027/pr536/slice3-proof.md):
+1944 tests passed, 7 skipped; frozen 63 promised/control rows and actual CLI pass.
 
 Keep parameter extraction in the existing JavaScriptBindings / JavaScriptFunctions
 and TypeScriptStates owners, with shared FunctionInfo representation; no parallel
@@ -133,7 +138,7 @@ phantoms remain slice 3.
 
 ### 3. Count empty formal slots and skip annotation phantoms
 Type: Behavior
-Status: planned
+Status: done
 Proof: red→green `arrow-empty-binding*`, `arrow-typed`, `arrow-generic*`,
 `arrow-return-*`, `arrow-nested-default`, `arrow-ternary-default`; named empty
 patterns also report count 3; typed case is one function with count 4 and names
@@ -203,17 +208,17 @@ slice unfinished.
 ### G1. Empty formal slots
 Reported: slice 2 — "Named and anonymous ({}, [], tail) report count 1 rather than 3, with names ['tail']."
 Story clause: "empty binding patterns still occupy formal slots without inventing public names"
-Disposition: receiving slice 3
+Disposition: proved by slice 3: slice3-proof.md — test_named_and_anonymous_empty_patterns_occupy_slots and test_receiver_and_trailing_commas_do_not_invent_slots; actual count 3/names tail across readers, receiver and trailing empties excluded.
 
 ### G2. Function-return annotation continuation
 Reported: slice 2 — "arrow-return-function.ts exposes only inner n; the outer anonymous arrow with x,y and count 2 is missing."
 Story clause: "Generic parameters, typed returns, rest/defaults, nested default CCN, ternary-default CCN ownership and following functions stay correct."
-Disposition: receiving slice 3
+Disposition: proved by slice 3: slice3-proof.md — test_function_return_annotation_keeps_outer_arrow and typed/generic/default regressions; inner n, outer x/y and following function present, callback annotations create no phantoms.
 
 ### G3. Empty-slot output consumers
 Reported: slice 2 — "CSV/checkstyle derive counts from len(parameters), and HTML from len(full_parameters); they must follow formal counts when empty slots are represented, while duplicate lists retain identifier-only names."
 Story clause: "across CLI, formatters, warnings, duplicate-parameter lists and the current website JSON/`parameter_count` consumer path."
-Disposition: receiving slice 3
+Disposition: proved by slice 3: slice3-proof.md — actual CSV/checkstyle/HTML, CLI warning and Flask JSON count 3; test_empty_slots_do_not_add_duplicate_parameter_keys observes count 7 and sole identifier key a,b,c,d,e; unchanged frontend directly renders fn[field].
 
 ### G4. Deferred member assignment
 Reported: slice 2 — "arrow-member.js member-assignment count remains 0; its promised wrapper callback now has count 2."

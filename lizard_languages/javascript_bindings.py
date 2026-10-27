@@ -55,6 +55,10 @@ class JavaScriptBindings:
         if token == 'this' and self.at_start:
             # A TypeScript receiver declaration is not a formal argument.
             self._in_parameter_type = True
+        if (self.function and token in ('{', '[') and self.at_root
+                and not self.in_expression and not self._in_parameter_type):
+            # Keep the formal pattern even if it contributes no binding name.
+            self.function.add_parameter('{}' if token == '{' else '[]')
         frame = self._frames[-1]
         initializing = self.in_expression
         initializer_ended = (initializing and not self._expression_brackets
@@ -98,7 +102,8 @@ class JavaScriptBindings:
         if token == ',':
             if event.root_separator and not self._generic_depth:
                 self._in_parameter_type = False
-                self.function.add_parameter(',')
+                if self.function.full_parameters:
+                    self.function.add_parameter(',')
         elif token == ':' and self.at_root:
             self._in_parameter_type = True
         elif token == '<':
