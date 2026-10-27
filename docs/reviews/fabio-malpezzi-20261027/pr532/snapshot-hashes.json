@@ -1,0 +1,23 @@
+{
+  "target": {
+    "lizard_core/function_info.py": "778a2612c2b41882695ab5f3eed4822bb35c54443ba124f11ad6908f6c0b6a84",
+    "lizard_languages/javascript_bindings.py": "6e20c8105590af78121f41e34c166de67709d9dd085969eb99b8d3002dd98bb8",
+    "lizard_languages/javascript_functions.py": "19c8a0c978bd374a7e5c622013110d3ef7e874411dfeb36c95eef3af9dd6abe7",
+    "lizard_languages/typescript.py": "e4d0b99eb9b88a1cddfd413c7cff2377e0bb66e3085ee8391f7a21ed1bbe08ab",
+    "lizard_languages/tsx.py": "2a021159330f0c28a2764893db70e4bb345acb4e3f1f253de5adc415dbe3c9b9"
+  },
+  "raw-target": {
+    "lizard_core/function_info.py": "778a2612c2b41882695ab5f3eed4822bb35c54443ba124f11ad6908f6c0b6a84",
+    "lizard_languages/javascript_bindings.py": "6e20c8105590af78121f41e34c166de67709d9dd085969eb99b8d3002dd98bb8",
+    "lizard_languages/javascript_functions.py": "433d071021fd63184e92293a7e5ca0f180fa53942ae54199f59617a8a18827a3",
+    "lizard_languages/typescript.py": "e4d0b99eb9b88a1cddfd413c7cff2377e0bb66e3085ee8391f7a21ed1bbe08ab",
+    "lizard_languages/tsx.py": "2a021159330f0c28a2764893db70e4bb345acb4e3f1f253de5adc415dbe3c9b9"
+  },
+  "corrected": {
+    "lizard_core/function_info.py": "067da87377da79303cd947e2078ed0ced8f206c0cd0fd600119b360f69482d90",
+    "lizard_languages/javascript_bindings.py": "45b7e6e395b122d3b410325dcc0a83f9f16bde6c462580c7ac75579222d26047",
+    "lizard_languages/javascript_functions.py": "0e539a410afc35b7d0a81bb458e691550924b2d1d90a5b985a54983e9efdffd9",
+    "lizard_languages/typescript.py": "74146767409186ca9cadcc0175f1e72ab58e089c10999553fee4d0fe11f9784f",
+    "lizard_languages/tsx.py": "8f9cc3b04b0e537a41ac1724ae3d6146e8d99e39617baf34ad17deca789074c4"
+  }
+}

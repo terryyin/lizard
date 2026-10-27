@@ -1,0 +1,64 @@
+{
+  "reviewedOn": "2026-10-27",
+  "target": "e871ae448d16893301856b41124aba34496e9536",
+  "cumulativeBaseline": "2e21e404c1ab9f4e0b49acc80816e816629d0670",
+  "pr": {
+    "url": "https://github.com/terryyin/lizard/pull/528",
+    "number": 528,
+    "state": "open",
+    "merged": false,
+    "mergeable": true,
+    "draft": false,
+    "body": "Supersedes #504. Since d90c086 (#505) a regex literal is recognized before\nstrings, which fixes most of what #504 addressed: of its 23 tests, 20 pass on\n`master`. This PR keeps only what is still missing, in the style of\nd90c086, rebased on `master` after 1.24.3 (01afe9c).\n\n### The problem\n\nA regex literal is recognized only after expression-opening punctuation\n(`=,({[?:!&|;`), not after `=>` or after a keyword such as `return`:\n\n```js\nfunction a(s) {\n  return /#/.test(s) || s === 1;\n}\n\nfunction b(list) {\n  return list.filter(s => /\"/.test(s) || s === \"a\");\n}\n\nfunction c(s) {\n  return s;\n}\n```\n\n```\n$ lizard r.js          # master, 01afe9c\n       3      1      8      1       3 a@1-3@r.js\n       1      1      5      0       1 (anonymous)@6-6@r.js\n       3      1     14      1       3 b@5-7@r.js\n       3      1      8      1       3 c@9-11@r.js\n```\n\nIn `a`, `#` starts a preprocessor line and the `||` is lost; in the arrow\nfunction of `b`, the quote opens a string. Both should have a cyclomatic\ncomplexity of 2.\n\n### What changes\n\n`REGEX_TOKEN` in `js_style_regex_expression.py` also accepts a literal after\n`=>` and after the keywords after which an expression starts (`return`,\n`typeof`, `instanceof`, `in`, `of`, `new`, `delete`, `void`, `throw`,\n`case`, `do`, `else`, `yield`, `await`). With the fix:\n\n```\n       3      2     17      1       3 a@1-3@r.js\n       1      2     11      0       1 (anonymous)@6-6@r.js\n       3      1     14      1       3 b@5-7@r.js\n       3      1      8      1       3 c@9-11@r.js\n```\n\n### How it is tested\n\nTokenizer tests in `test/test_languages/testJavaScript.py`, function-end\ntests in `test/test_languages/testJavaScriptRegex.py` (`#`, `[?#]`, `\\/`,\nquotes, backticks, braces, character classes and flags, in `.js`, `.ts`,\n`.jsx` and `.tsx`) and two tests in `test/testNestedStructures.py` (nesting\nafter a regex literal, in the same file and in the next file). The three\ntests on `return` and `=>` fail on `master`; the others pass there and are\nkept as guards. The full suite passes on the branch: `python -m pytest test`\ngives 1688 passed, 7 skipped (1665 passed on `master`).\n\n### What does not change\n\nDivision (`a / b / c`, `(a) / b / c`, `a[0]/b/c`) and the other tokens. The\nRuby reader uses the same decorator, so `return /#/ =~ s ? 1 : 0` now gives\na complexity of 2 there too, where `#` used to start a comment;\n`s.split(/,/)` and `s.gsub(/[\\/\"]/, \"\")` are unchanged.\n\nThank you warmly for the fix in d90c086: recognizing the literal before the\nstrings is a cleaner solution than the one I had proposed, and it made this\nPR much smaller. More generally, thank you for all the work you put into\nlizard and for the attention you give to every report.\n",
+    "title": "Recognize a JavaScript/TypeScript regex literal after \"=>\" and keywords",
+    "base": "master",
+    "base_sha": "01afe9c228ba2a3dc5253259d8415d2ef47f0b71",
+    "head": "pr/js-regex-after-keywords",
+    "head_sha": "b66ec3a7f3ca1b3f59d8a76891ce556406231566",
+    "head_repo_id": 1401695752,
+    "head_repo_full_name": "FabioMalpezzi/lizard",
+    "merge_commit_sha": "a9b950561e20118cbef257ac8a7b74128efdd214",
+    "user": {
+      "login": "FabioMalpezzi",
+      "name": "FabioMalpezzi",
+      "email": null,
+      "avatar_url": "https://avatars.githubusercontent.com/u/102038548?v=4",
+      "id": 102038548
+    },
+    "requested_reviewers": null,
+    "requested_team_reviewers": null,
+    "diff": null,
+    "comments": null,
+    "created_at": "2026-10-26T10:45:09Z",
+    "updated_at": "2026-10-26T10:45:09Z",
+    "closed_at": null,
+    "merged_at": null,
+    "commits": 1,
+    "changed_files": 4,
+    "additions": 177,
+    "deletions": 1,
+    "display_url": "https://github.com/terryyin/lizard/pull/528",
+    "display_title": "Recognize a JavaScript/TypeScript regex literal after \"=>\" and keywords"
+  },
+  "discussion": {
+    "comments": [],
+    "url": "https://github.com/terryyin/lizard/pull/528",
+    "title": "terryyin/lizard PR #528 comments",
+    "display_url": "https://github.com/terryyin/lizard/pull/528",
+    "display_title": "terryyin/lizard PR #528 comments"
+  },
+  "checks": {
+    "workflow_runs": [
+      {
+        "id": 40309848001,
+        "name": "Python application",
+        "status": "completed",
+        "conclusion": "success",
+        "run_number": 475,
+        "jobs_url": "https://api.github.com/repos/terryyin/lizard/actions/runs/40309848001/jobs",
+        "logs_url": "https://api.github.com/repos/terryyin/lizard/actions/runs/40309848001/logs",
+        "workflow_id": 38306292
+      }
+    ]
+  }
+}

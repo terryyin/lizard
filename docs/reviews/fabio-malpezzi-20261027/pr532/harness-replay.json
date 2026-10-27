@@ -1,0 +1,52 @@
+{
+  "recorded_consumers": {
+    "527-cli-ns.json": {
+      "path": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/paired.py",
+      "sha256": "3064d8d77047db2f084ce9fd6ae09d98acf34453316b7df20fb184cbb3217bf5"
+    },
+    "527-python-ns.json": {
+      "path": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/paired.py",
+      "sha256": "3064d8d77047db2f084ce9fd6ae09d98acf34453316b7df20fb184cbb3217bf5"
+    },
+    "controls/527-python-controls.json": {
+      "path": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/controls/paired.py",
+      "sha256": "3064d8d77047db2f084ce9fd6ae09d98acf34453316b7df20fb184cbb3217bf5"
+    },
+    "pr528/528-api.json": {
+      "path": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr528/paired.py",
+      "sha256": "3064d8d77047db2f084ce9fd6ae09d98acf34453316b7df20fb184cbb3217bf5"
+    },
+    "pr528/528-cli.json": {
+      "path": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr528/paired.py",
+      "sha256": "3064d8d77047db2f084ce9fd6ae09d98acf34453316b7df20fb184cbb3217bf5"
+    },
+    "pr531/531-api.json": {
+      "path": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr531/paired.py",
+      "sha256": "3064d8d77047db2f084ce9fd6ae09d98acf34453316b7df20fb184cbb3217bf5"
+    },
+    "pr531/531-cli.json": {
+      "path": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr531/paired.py",
+      "sha256": "3064d8d77047db2f084ce9fd6ae09d98acf34453316b7df20fb184cbb3217bf5"
+    },
+    "pr533/533-api.json": {
+      "path": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr533/paired.py",
+      "sha256": "3064d8d77047db2f084ce9fd6ae09d98acf34453316b7df20fb184cbb3217bf5"
+    },
+    "pr533/533-cli.json": {
+      "path": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr533/paired.py",
+      "sha256": "3064d8d77047db2f084ce9fd6ae09d98acf34453316b7df20fb184cbb3217bf5"
+    },
+    "pr534/534-api.json": {
+      "path": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr534/paired.py",
+      "sha256": "3064d8d77047db2f084ce9fd6ae09d98acf34453316b7df20fb184cbb3217bf5"
+    },
+    "pr534/534-cli.json": {
+      "path": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr534/paired.py",
+      "sha256": "3064d8d77047db2f084ce9fd6ae09d98acf34453316b7df20fb184cbb3217bf5"
+    }
+  },
+  "historical_freeze_fragment": "historical_harness = subprocess.check_output([\n    'git', 'show', 'af27c910a6a0bff51d8358fde0c37fa9cb059d1a:'\n    'docs/reviews/fabio-malpezzi-20261027/paired.py'], cwd=HERE)\nassert hashlib.sha256(historical_harness).hexdigest() == (\n    '3064d8d77047db2f084ce9fd6ae09d98acf34453316b7df20fb184cbb3217bf5')\n(DEST / 'paired.py').write_bytes(historical_harness)",
+  "recovered_hash": "3064d8d77047db2f084ce9fd6ae09d98acf34453316b7df20fb184cbb3217bf5",
+  "help_exit": 0,
+  "current_harness_hash": "ec1c9c5eac0ad6a29294ecbd987b2a55d4cf31db145486d065bf13c096b76520"
+}

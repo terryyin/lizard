@@ -1,0 +1,128 @@
+{
+  "command": [
+    "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr535/affected/paired.py",
+    "--baseline",
+    "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr535/target",
+    "--candidate",
+    "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr535/corrected",
+    "--workload",
+    "api",
+    "--pairs",
+    "20",
+    "--seconds",
+    "1.2",
+    "--out",
+    "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr535/incremental-api.json"
+  ],
+  "python": "3.9.11 (main, Apr 10 2022, 22:01:55) \n[Clang 11.1.0 ]",
+  "executable": "/Users/terryyin/git/lizard/.worktrees/review-correct-and-merge-fabiomalpezzi-s-open-pr/.venv/bin/python",
+  "host": "Territory.local",
+  "workload": "api",
+  "paths": [
+    "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr535/target",
+    "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr535/corrected"
+  ],
+  "pilots": [
+    0.0036901660000000017,
+    0.0037306659999999936
+  ],
+  "loops": 326,
+  "raw": [
+    {
+      "baseline": 1.2308088750000001,
+      "candidate": 1.2532460829999996
+    },
+    {
+      "candidate": 1.2545117499999998,
+      "baseline": 1.2143515419999993
+    },
+    {
+      "baseline": 1.2240428329999995,
+      "candidate": 1.2169623330000015
+    },
+    {
+      "candidate": 1.2233621670000012,
+      "baseline": 1.2482506250000007
+    },
+    {
+      "baseline": 1.305683041,
+      "candidate": 1.2875257080000004
+    },
+    {
+      "candidate": 1.281934458000002,
+      "baseline": 1.2858085420000016
+    },
+    {
+      "baseline": 1.2820535829999997,
+      "candidate": 1.292696333000002
+    },
+    {
+      "candidate": 1.3194341670000007,
+      "baseline": 1.2317638339999988
+    },
+    {
+      "baseline": 1.1909355409999982,
+      "candidate": 1.1967656659999975
+    },
+    {
+      "candidate": 1.208316,
+      "baseline": 1.2536437910000018
+    },
+    {
+      "baseline": 1.230193166000003,
+      "candidate": 1.2339023329999996
+    },
+    {
+      "candidate": 1.2347273749999985,
+      "baseline": 1.233036375000001
+    },
+    {
+      "baseline": 1.2482383749999997,
+      "candidate": 1.260386957999998
+    },
+    {
+      "candidate": 1.207636334,
+      "baseline": 1.215390541000005
+    },
+    {
+      "baseline": 1.2082309999999978,
+      "candidate": 1.2170177910000035
+    },
+    {
+      "candidate": 1.2973874999999992,
+      "baseline": 1.3042427919999966
+    },
+    {
+      "baseline": 1.2972218329999947,
+      "candidate": 1.2883280839999998
+    },
+    {
+      "candidate": 1.2869178340000005,
+      "baseline": 1.296670958
+    },
+    {
+      "baseline": 1.2996562499999982,
+      "candidate": 1.282320833
+    },
+    {
+      "candidate": 1.2162019579999992,
+      "baseline": 1.218015416
+    }
+  ],
+  "medians": {
+    "baseline": 1.2406373750000004,
+    "candidate": 1.2538789164999997
+  },
+  "stdev": {
+    "baseline": 0.03699843783727767,
+    "candidate": 0.03702434862201957
+  },
+  "median_slowdown_pct": 1.0673176358240388,
+  "paired_geometric_slowdown_pct": 0.16520026183171055,
+  "paired_95pct_ci": [
+    -0.8308361240297102,
+    1.1712406493725291
+  ],
+  "passes": true,
+  "manifest_sha256": "e842b09dee4bd8d760a890c165c4c3b36b6a005f6e0abb6108d282b73bf9805f"
+}
