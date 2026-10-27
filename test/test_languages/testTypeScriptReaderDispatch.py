@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from lizard import FileInfoBuilder, analyze_files, get_extensions
+from lizard_languages.javascript_bindings import JavaScriptBindings
 from lizard_languages.typescript import TypeScriptReader
 
 
@@ -106,6 +107,19 @@ def test_parallel_decision_state_and_finalization_are_preserved():
             for function in info.function_list] == [('selected', 3)]
     assert reader.parallel_states[1].finished == ['selected']
     assert reader.finished == [('selected', 3)]
+
+
+def test_configured_root_keeps_binding_owner_tracking():
+    binding = JavaScriptBindings(')')
+
+    def configure(reader):
+        reader.parallel_states[0]._binding_candidate = binding
+    info, reader, _ = read(configure=configure)
+    assert [(function.name, function.cyclomatic_complexity,
+             function.parameter_count) for function in info.function_list] == [('selected', 2, 1)]
+    assert binding.defaults == 1
+    assert binding.previous == 'fallback'
+    assert reader.finished == [('selected', 2)]
 
 
 class StateIterable:

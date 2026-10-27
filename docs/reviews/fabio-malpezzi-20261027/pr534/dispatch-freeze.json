@@ -1,0 +1,20 @@
+{
+"time": "2026-10-27T18:19:16.547141+00:00",
+"revisions": {"candidate": "13c633b8ed1ab5af4a30decfd87ceaeaf7044093", "current": "34cd43ddd1915438f3b440088672bfe4a08d96bf", "frozen": "2e21e404c1ab9f4e0b49acc80816e816629d0670"},
+"gates": [["original-current-api", "original", "current", "api"], ["original-current-cli", "original", "current", "cli"], ["original-frozen-api", "original", "frozen", "api"], ["original-frozen-cli", "original", "frozen", "cli"], ["augmented-current-api", "augmented", "current", "api"], ["augmented-frozen-api", "augmented", "frozen", "api"]],
+"harness_sha256": "3064d8d77047db2f084ce9fd6ae09d98acf34453316b7df20fb184cbb3217bf5",
+"original_manifest_sha256": "113ca1889836963fe6cfd7ba62c1aa90bd927eaedc4cd8cc7b46479ecb3bccd5",
+"drivers": {"dispatch_qualification_common.py": "56a27d6dffd63985e927fa1cca54ec2226650c1bec58b49a649074f7ea45a7e6", "dispatch-qualification-freeze.py": "4040f0a7bf8f0fe0620c0b84682324d375a2f85ab14f6d939845d967d081e835", "dispatch-qualification-measure.py": "a8acbd4ac5ffc6bbcc986faa9d0f693682303bb6df0bc6be21a8edfaa115092b", "dispatch-qualification-postcheck.py": "200854978d55233c612a917e0f0da03425ea4172e558b26a2d5e10ef5108777e"},
+"original_inputs": 128,
+"supplement_inputs": 38,
+"augmented_inputs": 166,
+"broad_files": 100,
+"python": "3.9.11 (main, Apr 10 2022, 22:01:55) \n[Clang 11.1.0 ]",
+"executable": "/Users/terryyin/git/lizard/.worktrees/preserve-arrow-boundaries-across-ternary-and-typ/.venv/bin/python",
+"original_inputs_sha256": "5cb3ff7cb7945b92641bf0dd3751b909ec71ee7f66637dc9200eba663f8877a1",
+"supplement_sha256": "bf9581ac82e7f38ca8307e7de49c38e0916283c705871113ddaeb103dfaf73fe",
+"augmented_inputs_sha256": "80d58ceaeb5786b8e20bd14d868d3d2a7ec2876b215f62f54e522e8fa1d7a91c",
+"cli_reference_sha256": "49e9a7922e48f71ac1702f2da38939d93c24b4339d0d3618dfdfdebe1287150b",
+"prior_freeze_sha256": "02dbca635a4eb640fe6924dadd861b6953c741a37ed5fe52528c46fecf02c2b7",
+"cli_expected_change": "Exact corpus prefix substitution; all three new raw outputs equal"
+}

@@ -68,7 +68,6 @@ local reader ownership needs no North Star topic, new ADR or exception.
 SEED-013/014 corrections are already in the execution baseline. Refreshed public
 observations preserve them; do not reintroduce their previous state heuristics.
 
-Preparation observations are retained in [PROOF.md](PROOF.md#premises-observed-during-preparation).
 
 ## Proof ownership and gates
 
@@ -80,9 +79,9 @@ Accepted source comparisons are retained in [PROOF.md](PROOF.md).
 | Untyped branch arrows end at their ternary colon; internal colons and curried contract preserved | Slice 2: new public API regressions red→green in JS/TS/JSX/TSX and Vue; promised untyped frozen rows and supplemental controls pass |
 | Typed branch signatures split; genuine function-type bodies preserved | Slice 3: red→green typed regressions in TS/TSX/Vue; typed frozen rows and literal function-type controls pass |
 | Controls and shared consumers | Slices 2–3: focused consumer suites, retained reproducer showing only deferred rows failing |
-| Preserve semantics while removing overhead and reconciling current owners | Slices 4–7: public regressions/replays; retain accepted parameters and reader hooks/finalization |
-| Strict affected and broad throughput | Slice 8: four original gates plus two augmented-API gates; all upper 95% slowdown bounds strictly below 3% versus current/frozen `2e21e404c1ab9f4e0b49acc80816e816629d0670` |
-| Final corrected revision accepted and acknowledged | Slice 9: full pytest/make, exact-head hosted checks and merge, contributor publication/merge/acknowledgement receipts |
+| Preserve semantics while removing overhead and reconciling current owners | Slices 4–8: public regressions/replays; retain accepted parameters, binding children and reader lifecycle/hooks |
+| Strict affected and broad throughput | Slice 9: four original gates plus two augmented-API gates; all upper 95% slowdown bounds strictly below 3% versus current/frozen `2e21e404c1ab9f4e0b49acc80816e816629d0670` |
+| Final corrected revision accepted and acknowledged | Slice 10: full pytest/make, exact-head hosted checks and merge, contributor publication/merge/acknowledgement receipts |
 
 ## Ordered slices
 
@@ -94,7 +93,7 @@ publication-route observations; preserve exact refusal if unavailable.
 
 Behavior: refresh PR534's complete patch/discussion/checks/current target and
 intended head; verify contributor publication permission before implementation.
-Preview is not publication (owned by 9). Closed/superseded/incompatibly changed
+Preview is not publication (owned by 10). Closed/superseded/incompatibly changed
 or uneditable contribution returns its disposition/destination decision to
 Terry; no unrelated trunk substitute.
 
@@ -105,11 +104,9 @@ Proof: red→green reported/nested/internal/grouped/object/JSX/Vue regressions;
 curried/internal/block/plain controls stay green, property `f` is 2–2 CCN 1.
 Only typed and deferred reproducer rows remain; detailed proof in PROOF.md.
 
-Behavior: a ternary branch arrow ends at its own separator, retaining branch
-and enclosing CCN. Internal `?`/`:`, nested arrows creating no function and
-property/computed-key colons retain ownership. Use shared depth owners without
-raw #534's snapshot overwrite or #531's object heuristic; trace all shared
-JS/TS/JSX/TSX/Vue consumers.
+Behavior: shared depth owners end branch arrows at their own separator, retaining
+branch/enclosing CCN and internal/nested-curried/property/computed-key ownership.
+No raw #534 snapshot overwrite or #531 object heuristic; trace all shared consumers.
 
 ### 3. Consume typed branch signatures before branch separators
 Type: Behavior
@@ -118,10 +115,9 @@ Proof: red→green TS/TSX/Vue return/object/assertion branches; aliases,
 function-type real bodies and following controls stay green. Only deferred
 reproducer rows remain; original expectations and detail stay in PROOF.md.
 
-Behavior: typed branch parameter/return colons are consumed as types without
-decrementing runtime depth; the actual separator ends the first arrow and the
-alternate has its own CCN. Genuine function types retain their real bodies.
-Extend the existing declaration/annotation owner, without another recognizer.
+Behavior: annotation owners consume typed parameter/return colons without runtime
+depth changes; real separators split branch CCN, genuine function types retain
+their real bodies. Extend the existing owner without another recognizer.
 
 Learning G2 requires metric-safe annotation lookahead with canonical runtime
 context; the bounded approach is retained in [PROOF.md](PROOF.md#slice-3-investigation).
@@ -129,13 +125,11 @@ context; the bounded approach is retained in [PROOF.md](PROOF.md#slice-3-investi
 ### 4. Remove whole-stream annotation bookkeeping
 Type: Structure
 Status: done
-Proof: slices 2–3 public regressions and all 128 retained rows stay green;
-new owner-context cases and full-metric comparisons preserve existing behavior.
+Proof: all 128 rows, new owner-context and seven-field comparisons preserve behavior.
 
-Structure: group context moved into the binding/signature lifecycle. Initial
-API interval +8.480%–9.567% and unchanged-output attribution justified removing
-whole-stream bookkeeping. No raw-source shortcut or timing waiver; semantic
-qualification/refactoring/delivery are retained in PROOF.md.
+Structure: initial +8.480%–9.567% interval/attribution justified moving group
+context into binding/signature lifecycle. No raw-source shortcut or waiver;
+semantic qualification/refactoring/delivery remain in PROOF.md.
 
 ### 5. Avoid unnecessary annotation-context traversal
 Type: Structure
@@ -143,30 +137,36 @@ Status: done
 Proof: bounded unchanged-output profile; all 128 public/FileAnalyzer rows and
 seven public fields match 8dac7b8; focused shared-consumer regressions pass.
 
-Structure: after upper +7.623%, canonical token/signature evidence and demand
-buffering reduced unnecessary work. Runtime/trivia/type behavior and no parallel
-tracker/raw-source shortcut remain proved; refactored semantic delivery retained.
+Structure: after upper +7.623%, canonical token/signature evidence and demand buffering
+reduced work, preserving runtime/trivia/types with no parallel tracker/raw shortcut.
 
 ### 6. Reconcile accepted current signature owners
 Type: Structure
 Status: done
-Proof: original 128 names/spans/CCN, current parameter/output regressions and
-shared-consumer proof pass; see current-owner-integration.md for PR536 changes.
+Proof: 128 rows/current parameter/output consumers pass; see current-owner-integration.md.
 Structure: integrate current `1bc7cbd` without rewriting published history.
-Reuse PR536's canonical binding/formal/type owners; preserve this correction's
-ternary/trivia behavior. Independent refactor and delivery freeze code for 7.
+Reuse canonical formal/type owners; preserve ternary/trivia behavior, refactor/deliver before 7.
 
 ### 7. Deliver sole-state tokens without unused dispatch
 Type: Structure
 Status: done
-Proof: all 166 seven-field rows/CLI match ec2; shared-reader and hook/multiple-
-state/finalization contracts hold; bounded actual-workload profile retained.
+Proof: 166 seven-field rows/CLI match ec2; hook/state/finalization and diagnostic proof retained.
 Structure: local TypeScriptReader delivery uses its sole state directly when
 the generic token hook is unchanged; preserve generic fallback and eof/state
 finalization. Reuse Go's delivery pattern, no grammar receipt/counter replay.
 Refactor and semantic delivery precede 8; no throughput waiver.
 
-### 8. Qualify original and supplemented timing workloads
+### 8. Dispatch the canonical root without unused binding work
+Type: Structure
+Status: done
+Proof: 166 seven-field rows/CLI match 13c; root/child binding, callback/replay,
+configured-root fallback and existing reader lifecycle/consumer contracts pass.
+Structure: an exact reader-created root confirmed without a binding candidate
+uses canonical CodeStateMachine dispatch. Child binding wrappers remain intact;
+retain custom-root/hook/state/container fallbacks and finalization. No new parser,
+counter or metadata receipt; refactor/deliver before 9, then measure exact code.
+
+### 9. Qualify original and supplemented timing workloads
 Type: Behavior
 Status: planned
 Proof: raw warmed pairs, immutable implementation/corpus/harness hashes,
@@ -181,7 +181,7 @@ Preserve prior results. Every upper bound must be strictly below 3%; no broad
 averaging, noise waiver or repeat without prospective justification. Further
 optimization repeats semantic proof. Literal protocol remains in PROOF.md.
 
-### 9. Deliver the qualified correction through PR534
+### 10. Deliver the qualified correction through PR534
 Type: Behavior
 Status: planned
 Proof: final contributor-head SHA and accepted push, green current required CI,
@@ -215,9 +215,9 @@ Story clause: "Colons inside the arrow's own body, genuine TypeScript annotation
 Disposition: proved by slice 3: test_nested_runtime_separator_keeps_following_type_annotation and six baseline/candidate full-metric comparisons preserve runtime groups and named cb.
 
 ### G4. Incremental affected API exceeds budget (first reported in slice 4)
-Reported: slice 7 — "Current/API upper +9.567% initially in slice 4 and +7.623% at 8dac; ec2 original upper +6.891% and augmented upper +7.259%, all material failures."
+Reported: slice 8 — "Current/API upper +9.567% initially, +7.623% at 8dac, ec2 +6.891%/+7.259%; 13c original interval [3.102%,4.156%] fails materially and augmented upper3.556% remains unproved."
 Story clause: "with a paired 95% upper slowdown bound strictly below 3% for both incremental and cumulative affected and broader workloads."
-Disposition: receiving slice 8
+Disposition: receiving slice 9
 
 ### G7. Current-owner integration changes a nested runtime-group control
 Reported: slice 6 — "Eight new runtime-group controls report an additional anonymous CCN-1 arrow after PR536 integration; 828 other tests pass."
@@ -227,7 +227,7 @@ Disposition: proved by slice 6: current-owner-integration.md exact three-version
 ### G5. Native CI observation ended after acquisition failed
 Reported: slice 4 — "CI_MONITOR_UNAVAILABLE: GitHub workflow-runs acquisition failed; original observer finished and its process ended."
 Story clause: "satisfactory performance/CI."
-Disposition: receiving slice 9
+Disposition: receiving slice 10
 
 ### G6. Earlier qualification driver terminal receipt unavailable
 Reported: slice 5 — "No original numeric exit code is retained; four complete result/log pairs match, and independent postcheck terminated successfully."

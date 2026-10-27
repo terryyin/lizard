@@ -4,7 +4,7 @@ Language parser for TypeScript
 
 from itertools import tee
 
-from .code_reader import CodeReader
+from .code_reader import CodeReader, CodeStateMachine
 from .clike import CCppCommentsMixin
 from .js_style_regex_expression import js_style_regex_expression
 from .javascript_bindings import JavaScriptBindings
@@ -79,13 +79,15 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         states = self.parallel_states
         if (type(states) not in (list, tuple) or len(states) != 1
                 or type(states[0]) is not TypeScriptStates
+                or getattr(states[0], '_binding_candidate', False) is not None
                 or type(self).process_token is not CodeReader.process_token
                 or getattr(self.process_token, '__func__', None) is not CodeReader.process_token):
             yield from CodeReader.__call__(self, tokens, reader)
             return
         self.context = reader.context
         state = states[0]
-        consume = TypeScriptStates.__call__.__get__(state)
+        # Binding candidates are children and retain their own wrapper.
+        consume = CodeStateMachine.__call__.__get__(state)
         for token in tokens:
             consume(token)
             yield token
