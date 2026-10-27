@@ -81,7 +81,7 @@ the failure becomes a separate story, not a fix here.
 
 ### 2. PyPI classifiers, the README and the matrix name the same verified versions, and a test keeps them agreeing
 Type: Behavior
-Status: planned
+Status: done
 Proof: `test/testPythonVersionClaims.py` passes; the scratch mismatch (ex. 3) fails naming `3.15`, and a removed classifier fails naming it; `grep -c` on the classifiers prints the matrix size; the README sentence lists the set; `test ! -e .travis.yml`; full suite and `nix develop -c make` green.
 
 Behavior: the classifiers list 3.8 to 3.11, the README says the suite runs
@@ -110,19 +110,14 @@ by the suite to edit the others.
   passed (22 tests) against the current flake and requirements. No pre-commit
   hook or selective formatter is installed; `make` supplies the project checks.
   No numeric slice budget is configured. Existing planning authority is retained.
-- CI observer: GitHub Actions `python-app.yml` (verified ID 38306292,
-  `Python application`), repository `terryyin/lizard`, target
-  `codex/claim-support-only-for-the-python-versions-ci-ve`, coordinator
-  `maria-chan-seed006`, directory `/tmp/dough-ci-501/watch-lnDcTR`, PID 12071,
-  Codex stream session 63044 / yielded cell 8, bound to this execution checkout.
-  The established trunk claim has `pendingCi: unobserved`; the stream covers
-  story-branch increments. Owner-based recovery verified the exact live stream
-  after Nix setup delayed its initial directory output.
-  After the approved runner amendment, setup was reconfirmed (22 analyzer
-  tests passed) and observation rearmed: `/tmp/dough-ci-501/watch-CCTnrZ`,
-  PID 2750, Codex session 68762 / yielded cell 4, same coordinator and target.
-  Its repeated startup notification for run 40445234939 is the already
-  diagnosed setup failure, whose authorized repair is in progress.
+- CI: GitHub Actions `python-app.yml` (ID 38306292, `Python application`),
+  `terryyin/lizard`, target execution branch, coordinator `maria-chan-seed006`.
+  Active stream: `/tmp/dough-ci-501/watch-CCTnrZ`, PID 2750, session 68762 /
+  cell 4, bound to this checkout after setup reconfirmation (22 analyzer tests).
+  Prior stream `/tmp/dough-ci-501/watch-lnDcTR`, PID 12071, session 63044 /
+  cell 8 stopped at the human-decision boundary. The repeated startup failure
+  notification is the same diagnosed run 40445234939, repaired below.
+  The established trunk claim has `pendingCi: unobserved`.
 
 - Existing solutions (PFE): no module or test in the repository compares
   package metadata with CI configuration; the three claims are maintained by
@@ -221,13 +216,29 @@ by the suite to edit the others.
   the 23-consumer trace in `/tmp/lizard-seed006-repair-consumer-trace.md`
   is fully disposed. `/root/refactor_runner_repair` returned
   `## REFACTOR COMPLETE`, no edits; unchanged local proof is reused.
+- Hosted proof: repair `1979d138ae1fedeebe299a9050cc091bccf79466`, suffix
+  base `6a17f1d507e3ee9b9ed40ee48c14c2c79a948c3e`, was accepted on the
+  execution branch. `ci-mailbox.mjs await-revision` returned exact success;
+  `gh run view 40446779025 --json headSha,status,conclusion,jobs` confirmed
+  all 14 `(ubuntu-24.04|windows-latest, 3.8–3.14)` jobs and each job's
+  `build and Install` and `Run tests` steps succeeded. No version removal
+  or separate interpreter-failure story is needed. CI pause restoration
+  returned `resumed`, `oid: null`, `applied: false`.
+
+## Slice 2 accepted proof
+
+Slice 2 acceptance: fresh source-only reviewer `/root/source_review2` returned all source commitments with the approved runner amendment. Actual README/setup classifiers show the seven verified versions and the README retains OS coverage and the unverified-version qualification. Real `setup.py egg_info` output was checked by `nix develop -c python /tmp/lizard-seed006-slice2-metadata-proof.py`, accepting the PyPI/README journey at PKG-INFO.
+
+Maintainer disagreement → source-specific failure: `nix develop -c python /tmp/lizard-seed006-slice2-mismatch-probes.py` ran real pytest against matrix-only 3.15, removed classifier 3.12 and empty matrix; each failed for the expected source/version reason, with finally-restoration and final focused pass. Inspected `TestPythonVersionClaims.test_support_claims_match_ci_versions` assertions and both proof scripts; setup changes only the inputs, never supplies the outcome.
+
+Travis discovery → `.travis.yml` absent, no active product references. Analyzer boundary → `nix develop -c python -m pytest`: 1666 passed, 7 skipped. `nix develop -c make` passed with 1666 passed, 7 skipped, style green and advisory pylint 9.11/10. All 33 consumer dispositions in `/tmp/lizard-seed006-slice2-consumer-trace.md` were inspected, including shared generated metadata for packaging consumers. `/root/refactor_slice2` returned `## REFACTOR COMPLETE`, no edits; all accepted proof remains valid. No remaining source promise or exclusion is unowned.
 
 ## Story obligations
 
 ### G1. Hosted matrix proof before support claims
 Reported: slice 1 — "Hosted CI at the pushed candidate showing all 14 successful version/OS jobs remains pending."
 Story clause: "The `python-app.yml` matrix runs the test suite on CPython 3.8, 3.9, 3.10, 3.11, 3.12, 3.13 and 3.14, each on `ubuntu-24.04` and `windows-latest`."
-Disposition: interim until slices 2
+Disposition: proved by slice 1: exact success at 1979d138ae1fedeebe299a9050cc091bccf79466, run 40446779025 attempt 1, with all 14 installation and test steps verified above.
 
 ## Concern evidence
 
