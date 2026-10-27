@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "agent": "Shunka-chan",
-  "email": "shunka-chan@example.org",
-  "identity": "SEED-012#modernize-website-react",
-  "mode": "story-branch",
-  "branch": "claude/modernize-the-website-with-react-and-conditional",
-  "host": "claude"
-}
