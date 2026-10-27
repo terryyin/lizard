@@ -30,14 +30,21 @@ def starts_statement(token):
     return token in ('++', '--', '!', '~', '{', '@', '}', ')', ']')
 
 
+def parameter_group(prefix):
+    return (prefix is None or prefix in ('return', 'yield', 'await', 'async')
+            or (not ends_expression(prefix) and prefix not in ('.', '?.', 'new')))
+
+
 class JavaScriptFunctionsMixin:
-    def return_annotation_depth(self):
-        """Pending conditionals of the active runtime state, before counting."""
+    def return_annotation_context(self):
+        """Use the active state's completed group before counting a colon."""
         state = self
         while isinstance(state._state, self.__class__):
             state = state._state
-        if state._state == state._state_global:
-            return state._ternary_depth
+        group = getattr(state, '_parenthesis_group', None)
+        if (state._state == state._state_global and state.last_token == ')'
+                and group is not None and parameter_group(state._parenthesis_prefix)):
+            return state._ternary_depth, group._empty_parenthesis
         return None
 
     def _push_function_to_stack(self):

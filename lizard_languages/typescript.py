@@ -11,8 +11,7 @@ from .js_style_regex_expression import js_style_regex_expression
 from .javascript_bindings import JavaScriptBindings
 from .typescript_declarations import TypeScriptTypeAnnotationStates
 from .typescript_states import TypeScriptStates
-from .typescript_signatures import (
-    ReturnTypeColon, parameter_group, return_type_colon)
+from .typescript_signatures import ReturnTypeColon, return_type_colon
 from .javascript_templates import template_tokens
 
 # One token, so each ? in ?? is not its own ternary decision.
@@ -85,24 +84,13 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         change between a newline and the next code token."""
         arrows = self.context.expression_arrows = []
         line_start = False
-        previous = group_prefix = None
-        parentheses = []
-        empty_parameters = False
         tokens = tee(self.code_tokens(tokens), 1)[0]
         for token in tokens:
             if not token.isspace():
-                if token == ':' and previous == ')' and parameter_group(group_prefix):
-                    depth = self.parallel_states[0].return_annotation_depth()
-                    if depth is not None and return_type_colon(
-                            copy(tokens), depth, empty_parameters):
+                if token == ':':
+                    annotation = self.parallel_states[0].return_annotation_context()
+                    if annotation is not None and return_type_colon(copy(tokens), *annotation):
                         token = ReturnTypeColon(token)
-                if not token.startswith(('//', '/*')):
-                    if token == ')':
-                        group_prefix = parentheses.pop() if parentheses else ')'
-                        empty_parameters = previous == '('
-                    elif token == '(':
-                        parentheses.append(previous)
-                    previous = token
                 if line_start and not token.startswith(('//', '/*')):
                     line_start = False
                     arrows[-1].end_expression_before(token)

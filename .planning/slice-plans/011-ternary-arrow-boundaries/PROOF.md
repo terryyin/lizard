@@ -64,9 +64,9 @@ requires full patch/discussion/review/check inspection and eventual
 history-preserving contributor delivery. `correction-route.md` observes the
 unchanged contribution, empty discussion/reviews, historical checks, current
 permission and successful authenticated preview. This proves route feasibility;
-actual acceptance remains slice 5. All public behavior examples and their
-reader consumers remain slices 2–3, strict performance comparisons slice 4,
-and full tests/current CI/final head-base-tree/merge/acknowledgement slice 5.
+actual acceptance remains slice 6. All public behavior examples and their
+reader consumers remain slices 2–3, strict performance comparisons slice 5,
+and full tests/current CI/final head-base-tree/merge/acknowledgement slice 6.
 The source's named exclusions remain excluded. No missing slice-1 observation
 was identified. Independent `/root/slice1_refactor` returned
 `## REFACTOR COMPLETE`: no edits, 57-line evidence document, whitespace clean;
@@ -110,8 +110,8 @@ colon ends the function. Frozen public/FileAnalyzer replay now has five typed
 failures (G1), all other 87 cases and four supplemental controls pass. The
 landed neighboring behavior remains covered; no excluded promise was expanded.
 Focused shared readers: 467 passed/5 skipped; reached object/core/CLI/options:
-78 passed, plus actual CLI CSV reported tuples. Performance is slice 4 and
-final full checks/contributor delivery are slice 5.
+78 passed, plus actual CLI CSV reported tuples. Performance is slice 5 and
+final full checks/contributor delivery are slice 6.
 
 Independent `/root/slice2_refactor` returned `## REFACTOR COMPLETE`: no
 production or test edits; retained observations moved here along cohesive
@@ -175,7 +175,7 @@ literal proof/trace in `corrected-semantics.md`: 523 shared-reader/object cases
 pass/5 skip, 160 core/CLI/CSV/cognitive cases pass, 32 optional cases pass.
 No counter replay or second persistent ternary counter; the same annotation
 state owns type recognition. G1/G2/G3 are proved. Original exclusions remain
-exclusions; performance and final hosted delivery remain slices 4–5.
+exclusions; performance and final hosted delivery remain slices 5–6.
 
 Independent `/root/slice3_refactor` returned `## REFACTOR COMPLETE`: reused
 `JavaScriptBindings.BRACKETS` and consolidated Vue setup only. Inspected both
@@ -184,3 +184,63 @@ tests pass/5 skip and all 128 replays pass. Other accepted core/CLI/optional
 and full-metric observations remain applicable. Its retained refactor trace
 has 311 populated dispositions; all current files are at most 250 lines and
 whitespace checks are clean. No outstanding refactor gate remains.
+
+## Remaining-plan refinement
+
+The initial plan separated route, untyped ownership, typed annotation,
+performance and hosted delivery; its cumulative direction remains valid.
+Initial current/API upper bound +9.567% invalidates the assumption that the
+semantically qualified revision already fits the budget. Other initial upper
+bounds pass: current/CLI +0.729%, frozen/API -2.699%, frozen/CLI +1.311%.
+An unchanged-output 5,000-analysis profile has preprocessing own time
+0.0631s versus 0.1017s; this implicates bookkeeping but does not allocate the
+whole measured difference. No noise retry is justified by this tight failure.
+
+Split the remaining performance loop into coherent owner simplification
+(Structure 4) and exact-committed-revision qualification (Behavior 5), then
+retain hosted delivery as 6. Completed 1–3 and their proof are unchanged.
+All source promises and strict gates remain; G4 receives its proof in 5.
+No numeric slice limit was supplied, no overrun erased, and six cohesive
+slices need no story resplit. Existing-owner PFE/ADRs still apply. Readiness
+reassessment through the shared recorder follows the rewrite before delivery.
+
+The shared recorder reassessed the unchanged refined story and six-slice plan
+as ready (document `cf80763c`, plan `6ac6e2cb`); Taken membership and execution
+authority were unchanged. Remaining gates stay explicitly owned by 5–6.
+
+Literal timing protocol: `paired.py --baseline <checkout> --candidate <candidate>
+--workload api|cli --pairs 20 --seconds 1.5 --out <result>`, from the isolated
+cache corpus under selected-checkout Nix. Freeze exact revisions, untouched
+original harness/manifest and labelled additions; verify imports/public metrics.
+Inspect headroom, serialize owned heavy work, retain all raw pairs and stats.
+
+## CI observation
+
+Original Codex coordinator `akiho-seed015-a5bbe368`, cell 14, session 75355,
+directory `/tmp/dough-ci-501/watch-UAZZGU`, PID 85484: terminal `finished`,
+process absent; its sole delivered event is `CI_MONITOR_UNAVAILABLE` after
+GitHub workflow-run acquisition failed (`gh failed`). Do not restart this
+finished observer. Its coverage is unavailable, not a failed test verdict.
+Direct GitHub check retrieval for 74bc899 shows all 14 Ubuntu/Windows ×
+Python 3.8–3.14 builds plus changes successful; web skipped as inapplicable:
+[run 40525520055](https://github.com/terryyin/lizard/actions/runs/40525520055).
+This does not repair native coverage. A genuine coordinator handoff may close
+the old lifecycle and establish its own observation for later publications;
+retain G5 until final exact-head CI/completion obligations are proved.
+
+The delivered unavailable event was acknowledged through sequence 1. A bounded
+native acquisition probe of the exact failed workflow-run route now succeeds
+and confirms all three published revisions' successful runs. The old terminal
+observer stays closed; the continuation coordinator owns a new lifecycle.
+
+Structure 4 semantic acceptance: source-only reviewer `/root/source_review4`
+derived the original commitments independently. Inspected the owner-boundary
+diff and qualified-performance.md assertions: all 715 selected tests pass/5
+skip, all 128 expected rows pass, and all seven public fields match 74bc899.
+The 296-consumer trace has no blank disposition. Original semantic promises
+are preserved; G4 remains with 5 and G5 with 6. Independent refactoring and
+delivery are the first unfinished obligations, not another implementation pass.
+
+Successor `/root/continuation_coordinator/structure4_refactor` returned
+`## REFACTOR COMPLETE`: no edits, all 26 files whitespace/EOF/size clean;
+715-test and 128-row/full-metric evidence remains unchanged and reusable.

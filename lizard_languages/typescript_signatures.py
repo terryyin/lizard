@@ -9,11 +9,6 @@ class ReturnTypeColon(str):
     """A colon confirmed to belong to an arrow's return annotation."""
 
 
-def parameter_group(prefix):
-    return (prefix is None or prefix in ('return', 'yield', 'await', 'async')
-            or (not ends_expression(prefix) and prefix not in ('.', '?.', 'new')))
-
-
 def return_type_colon(tokens, depth, empty_parameters=False):
     """Use the existing type reader; a conditional must keep its separator."""
     annotation = TypeScriptTypeAnnotationStates(None)

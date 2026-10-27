@@ -48,16 +48,14 @@ Execution authorized by the selected `dough-execute-plan` instruction on
   passed (43 tests). Tooling uses sequential `PIP_QUIET=1 nix develop -c`.
   No configured formatter, generator or commit hook applies to route evidence;
   commits use the assigned workspace agent helper. No new replanning restriction.
-- Observer: Codex coordinator `akiho-seed015-a5bbe368`, cell `14`, session
-  `75355`, directory `/tmp/dough-ci-501/watch-UAZZGU`, PID `85484`.
-  Recovered request/owner hash match the exact checkout, repository
-  `terryyin/lizard`, execution mode and execution branch. Selected GitHub
-  workflow `python-app.yml` (ID `38306292`, name `Python application`) is
-  active and push-triggered for all branches. Retain this observer for delivery.
-- Slice 1 route proof: [correction-route.md](../../../docs/reviews/fabio-malpezzi-20261027/pr534/correction-route.md).
-  Contributor head unchanged/open and authenticated dry-run route available.
-  Fresh target `0ef95abbe278bfd22bbe4de48b9fa4b71f7b2181` differs from claim
-  only by an agent profile; analyzer sources are unchanged.
+- CI observation: the original stream ended after GitHub acquisition failed;
+  its exact identity and terminal evidence are in [PROOF.md](PROOF.md#ci-observation).
+  Workflow `python-app.yml` (ID `38306292`) remains push-triggered for all branches.
+- Active observer: coordinator `akiho-seed015-continuation-a5bbe368`, cell 5,
+  session 21368, `/tmp/dough-ci-501/watch-LmZv82`, PID 80173; same checkout,
+  repository and execution-branch target. Original finished stream remains closed.
+- Slice 1 route: [correction-route.md](../../../docs/reviews/fabio-malpezzi-20261027/pr534/correction-route.md).
+  Head unchanged/open, authenticated preview available; current target evidence is in PROOF.md.
 
 ## Existing owners and architectural direction
 
@@ -87,10 +85,8 @@ for human-owned architectural decisions. Both are Accepted and unsuperseded.
 Established ownership supports this local correction; no North Star topic or
 ADR is warranted. No architectural exception is proposed.
 
-SEED-013 and SEED-014 are Taken and change the same expression-body state.
-At Take, refresh trunk and rerun the premise observations below on the
-execution checkout; reconcile with whichever landed rather than reintroducing
-their deferred outcomes.
+SEED-013/014 corrections are already in the execution baseline. Refreshed public
+observations preserve them; do not reintroduce their previous state heuristics.
 
 Preparation observations are retained in [PROOF.md](PROOF.md#premises-observed-during-preparation).
 
@@ -104,8 +100,9 @@ Accepted source comparisons are retained in [PROOF.md](PROOF.md).
 | Untyped branch arrows end at their ternary colon; internal colons and curried contract preserved | Slice 2: new public API regressions red→green in JS/TS/JSX/TSX and Vue; promised untyped frozen rows and supplemental controls pass |
 | Typed branch signatures split; genuine function-type bodies preserved | Slice 3: red→green typed regressions in TS/TSX/Vue; typed frozen rows and literal function-type controls pass |
 | Controls and shared consumers | Slices 2–3: focused consumer suites, retained reproducer showing only deferred rows failing |
-| Strict affected and broad throughput | Slice 4: warmed paired measurements, each upper 95% slowdown bound strictly below 3% versus current target and frozen baseline `2e21e404c1ab9f4e0b49acc80816e816629d0670` |
-| Final corrected revision accepted and acknowledged | Slice 5: full pytest/make, exact-head hosted checks and merge, contributor publication/merge/acknowledgement receipts |
+| Preserve semantics while removing annotation bookkeeping cost | Slice 4: public regression/replay proof after coherent owner simplification |
+| Strict affected and broad throughput | Slice 5: four warmed paired gates, each upper 95% slowdown bound strictly below 3% versus current target and frozen baseline `2e21e404c1ab9f4e0b49acc80816e816629d0670` |
+| Final corrected revision accepted and acknowledged | Slice 6: full pytest/make, exact-head hosted checks and merge, contributor publication/merge/acknowledgement receipts |
 
 Reusable proof commands and conventions: [PROOF.md](PROOF.md#proof-commands-and-conventions).
 
@@ -121,13 +118,12 @@ Behavior: given an explicit execution instruction, refresh PR534's patch,
 discussion, checks and current target, verify the head still names the
 intended contribution, and establish the authorized contributor-head delivery
 route (non-mutating authenticated push preview where available) before
-dependent implementation. A preview is not accepted publication; slice 5 owns
+dependent implementation. A preview is not accepted publication; slice 6 owns
 the real update. If the PR is closed, superseded, changed incompatibly or
 cannot receive corrections, stop and return the disposition/destination
 decision to Terry. Do not substitute an unrelated trunk patch.
 
-Boundedness: one external feasibility observation; product unchanged. Failure
-stops slices 2–5 and revises the plan before edits.
+Boundedness: one external feasibility observation; refusal stops dependent work.
 
 ### 2. End untyped branch arrows at their own ternary colon
 Type: Behavior
@@ -171,34 +167,39 @@ recognizer.
 Learning G2 requires metric-safe annotation lookahead with canonical runtime
 context; the bounded approach is retained in [PROOF.md](PROOF.md#slice-3-investigation).
 
-Boundedness: one annotation-versus-separator decision on the TypeScript path
-with its own regression loop; it reuses slice 2's ownership model. Safe stopping
-point, unmerged.
+Boundedness: one annotation decision reusing slice 2's owner; safe unmerged stopping point.
 
-### 4. Meet the strict performance budget without weakening semantics
+### 4. Remove whole-stream annotation bookkeeping
+Type: Structure
+Status: done
+Proof: slices 2–3 public regressions and all 128 retained rows stay green;
+new owner-context cases and full-metric comparisons preserve existing behavior.
+
+Structure: move group eligibility/emptiness bookkeeping into the existing
+binding/signature lifecycle and query it only at the annotation decision.
+The initial immutable comparison found +8.480%–9.567% incremental API cost;
+an unchanged-output profile implicates preprocessing overhead without allocating
+the full slowdown. Simplify the shared rule; add no raw-source fast path.
+An independently refactored, semantically qualified commit enables slice 5's
+exact-revision measurement. G4 remains open; this slice grants no timing waiver.
+
+### 5. Qualify the optimized revision against all four timing gates
 Type: Behavior
 Status: planned
-Proof: retained raw warmed timing pairs, immutable harness/corpus hashes,
-candidate/base revisions and intervals for every required workload.
+Proof: raw warmed pairs, immutable implementation/corpus/harness hashes,
+exact revisions and four upper 95% slowdown bounds strictly below 3%.
 
-Behavior: given the semantically correct candidate, affected API (frozen 92
-files plus the four supplemental controls, frozen and hashed as a labelled
-addition before timing, leaving the original manifest unchanged) and broader
-CLI workloads each show an upper paired 95% slowdown bound strictly below 3%
-versus current target (incremental) and the frozen `2e21e404` baseline
-(cumulative). A broad pass cannot hide an affected failure. The raw intervals
-remain diagnosis only.
+Behavior: affected API (original 92 + 4 supplemental + 32 labelled signature
+controls) and unchanged broad CLI each pass versus current target and frozen
+`2e21e404`, using the same Nix interpreter, 20 alternating pairs and 1.5-second
+calibration with every batch over one second. Preserve the original manifest;
+freeze additions and imports/public tuples before timing. Record every duration,
+medians, variability and intervals. Retain initial results; a broad pass cannot
+hide affected failure. Noise or upper bounds of 3% or more fail. Any further
+optimization repeats semantic proof; a quiet/longer retry needs prospective
+justification. The literal harness protocol is retained in PROOF.md.
 
-Run literal `paired.py --baseline <checkout> --candidate <candidate> --workload api|cli --pairs 20 --seconds 1.5 --out <result>`
-through Nix from the cache `corpus` directory, same interpreter, warmed
-alternating pairs with batches over one second; record load, durations,
-medians, variability and intervals. Confirm imported paths and public metric
-tuples before timing. Profile only when needed and simplify the shared rule
-rather than adding fast paths; re-run slices 2–3 proof after optimization.
-Noise or an upper bound of 3% or more is failing; fix a prospective quiet
-retry protocol rather than repeating for a pass.
-
-### 5. Deliver the qualified correction through PR534
+### 6. Deliver the qualified correction through PR534
 Type: Behavior
 Status: planned
 Proof: final contributor-head SHA and accepted push, green current required CI,
@@ -219,17 +220,6 @@ Boundedness: one qualified contribution reaching users and author, with
 separate hosted wait time. Pending CI, merge or acknowledgement leaves this
 slice unfinished.
 
-## Plan review
-
-Slice-plan refinement was not needed: slices separate a permitted early
-external probe, the untyped ownership rule, its typed-annotation extension
-(separate regression loop on the TypeScript path, reusing one model), the
-independent performance loop and hosted delivery. The cumulative design keeps
-one ternary-depth ownership model and rejects the raw snapshot overwrite and
-single-colon-check shapes. No remaining slice-specific concern was found;
-contributor publication is bounded by the early probe. No human decision is
-currently pending.
-
 ## Story obligations
 
 ### G1. Typed branch return signatures remain combined
@@ -246,3 +236,13 @@ Disposition: proved by slice 3: test_typed_branch_annotations_are_not_runtime_co
 Reported: slice 3 — "All six TS/TSX/Vue nested call/group cases fail on the first lookahead implementation, including the following typed cb initializer."
 Story clause: "Colons inside the arrow's own body, genuine TypeScript annotations, and property or computed-key colons keep their own syntax, and the enclosing and following functions keep their correct names, spans and CCN."
 Disposition: proved by slice 3: test_nested_runtime_separator_keeps_following_type_annotation and six baseline/candidate full-metric comparisons preserve runtime groups and named cb.
+
+### G4. Incremental affected API exceeds the strict budget
+Reported: slice 4 — "Current-target affected API median +8.886%, paired 95% interval [8.480%, 9.567%]."
+Story clause: "with a paired 95% upper slowdown bound strictly below 3% for both incremental and cumulative affected and broader workloads."
+Disposition: receiving slice 5
+
+### G5. Native CI observation ended after acquisition failed
+Reported: slice 4 — "CI_MONITOR_UNAVAILABLE: GitHub workflow-runs acquisition failed; original observer finished and its process ended."
+Story clause: "satisfactory performance/CI."
+Disposition: receiving slice 6

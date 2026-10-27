@@ -62,10 +62,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             self._pop_function_from_stack()
 
     def _state_global(self, token):
-        if token == ':' and isinstance(token, ReturnTypeColon):
-            self._consume_type_annotation()
-            return
-        if self._pending_bindings:
+        if self._pending_bindings and not isinstance(token, ReturnTypeColon):
             self._resolve_pending_bindings(token)
 
         if ((self._ts_declare or token in DECLARATION_WORDS)
@@ -73,6 +70,9 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             return
 
         if token in _MARKER_TOKENS:
+            if isinstance(token, ReturnTypeColon):
+                self._consume_type_annotation()
+                return
             # Track the static, async and new modifiers
             if token == 'static':
                 self._static_seen = True
@@ -128,6 +128,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             if name and (name[0].isalpha() or name[0] in ('_', '$', '#')):
                 self.function_name = name
         elif token == "(":
+            self._parenthesis_prefix = self._prev_token
             # Check if this is a method call or constructor
             if self._prev_token == '.' or self._prev_token == 'new':
                 # This is a method call or constructor, not a function definition
@@ -152,6 +153,8 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                     self.next(self._function, token)
             else:
                 self._read_binding_candidate(')')
+            self._parenthesis_group = (
+                self._state if isinstance(self._state, self.__class__) else None)
         elif token == '[' and self._prev_token not in ('.', ')', ']', '}'):
             previous = self._prev_token
             operand = (previous and (previous[0].isalnum()
@@ -171,6 +174,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                 self.read_object()
         elif token in ('}', ')') or (
                 token == ']' and self._binding_candidate):
+            self._empty_parenthesis = self.last_token is None
             self.statemachine_return()
         elif token == ';' or (
                 # An object member's arrow ends at its comma, which it owns
