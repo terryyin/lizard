@@ -26,25 +26,19 @@ The 2026-10-27 `dough-execute-plan` instruction and established start authorize 
 
 - Identity: `SEED-015#ternary-arrow-boundaries`; publisher
   `dashboard-territory.local-lizard`; agent Akiho-chan.
-- Mode: story-branch; execution/originating checkout
-  `/Users/terryyin/git/lizard/.worktrees/preserve-arrow-boundaries-across-ternary-and-typ`;
-  branch `codex/preserve-arrow-boundaries-across-ternary-and-typ`.
-- Remote `origin`, trunk `master`; ordinary increments target the execution
-  branch. Starting revision `a2d2ab778d03cbb9ea96d243ab7533105d304eb2`;
-  claim/published base `6f506711595e0ad832ab5a75f5a4750a2b362415`, confirmed
-  on both remote refs at startup. Claim trunk CI is unobserved.
+- Mode: story-branch; workspace `/Users/terryyin/git/lizard/.worktrees/preserve-arrow-boundaries-across-ternary-and-typ`; branch `codex/preserve-arrow-boundaries-across-ternary-and-typ`.
+- Remote `origin`, trunk `master`; ordinary increments target the execution branch.
+  Starting revision `a2d2ab778d03cbb9ea96d243ab7533105d304eb2`; claim `6f506711595e0ad832ab5a75f5a4750a2b362415` confirmed on both remote refs. Claim trunk CI is unobserved.
 - Default checkout `/Users/terryyin/git/lizard` is not an execution location.
 - Setup: checkout-bound Nix and initial public suites passed (43 tests).
   Use sequential `PIP_QUIET=1 nix develop -c`; no formatter/generator/hook
   applies. Commits credit the assigned agent; no new replanning restriction.
-- CI observation: the original stream ended after GitHub acquisition failed;
-  its exact identity and terminal evidence are in [PROOF.md](PROOF.md#ci-observation).
+- CI observation: original acquisition failed; exact identity/terminal evidence: [PROOF.md](PROOF.md#ci-observation).
   Workflow `python-app.yml` (ID `38306292`) remains push-triggered for all branches.
 - Active observer: coordinator `akiho-seed015-continuation-a5bbe368`, cell 5,
   session 21368, `/tmp/dough-ci-501/watch-LmZv82`, PID 80173; same checkout,
   repository and execution-branch target. Original finished stream remains closed.
-- Slice 1 route: [correction-route.md](../../../docs/reviews/fabio-malpezzi-20261027/pr534/correction-route.md).
-  Head unchanged/open, authenticated preview available; current target evidence is in PROOF.md.
+- Slice1 route: [correction-route.md](../../../docs/reviews/fabio-malpezzi-20261027/pr534/correction-route.md); open/preview available; current target evidence in PROOF.md.
 
 ## Existing owners and architectural direction
 
@@ -248,3 +242,8 @@ Disposition: proved by slice 7: api-attribution.md preserves setup1 source/exit,
 Reported: slice 7 — "Eight protocol tests passed; the alternate iterable fixture failed at unchanged preprocess's parallel_states[0] before delivery."
 Story clause: "satisfactory performance/CI."
 Disposition: proved by slice 7: reader-dispatch.md retains failed fixture/receipt and corrected indexed-without-len container; actual grammar/metrics and all eleven protocol observations pass.
+
+### G11. Auxiliary refactor audit counted only Python consumers
+Reported: slice 10 — "Audit wrongly counted only located consumer rows mentioning .py;492 covers every consumer kind"
+Story clause: "satisfactory performance/CI."
+Disposition: proved by slice 10: delivery-local-proof.md retains failed auxiliary filter and corrected audit exit0; all492 located consumers, original correct assertions and accepted product/proof remain unchanged.
