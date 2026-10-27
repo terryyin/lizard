@@ -134,7 +134,7 @@ substitute for actual required checks.
 
 ### 1. Establish the contributor correction route
 Type: Behavior
-Status: planned
+Status: done
 Proof: refreshed PR/head/base, contributor-edit permission and authenticated
 publication-route observations; preserve exact refusal if unavailable.
 
@@ -151,6 +151,22 @@ unrelated trunk patch. No implementation slice depends on unobserved permission.
 
 Boundedness: one external delivery feasibility observation; it leaves the
 product unchanged. A failure stops slices 2–4 and revises the plan before edits.
+
+Accepted proof (2026-10-27, Nana-chan): route viable; product unchanged.
+- PR528 OPEN, not draft: FabioMalpezzi:pr/js-regex-after-keywords @
+  `b66ec3a7f3ca1b3f59d8a76891ce556406231566` (exact retained review head).
+- Base `terryyin:master`; PR baseRefOid `01afe9c…`; current master tip
+  `874d284…`; compare diverged ahead 1 / behind 64; mergeable_state dirty.
+- Discussion empty; head checks 4× SUCCESS (ubuntu/windows × 3.8/3.10).
+- Auth `terryyin` with `repo` scope; base admin true; fork API `push: false`
+  but `maintainer_can_modify: true`.
+- Non-mutating divergent dry-run push (HTTPS + SSH) accepted forced-update
+  preview to PR head; same-SHA dry-run up-to-date. No push/comment/merge.
+- Source-only review retained P11 contributor-head obligations; this slice
+  owns only the early route probe. Slice 4 owns real push/rebase/merge/ack.
+- Learnings: fork collaborator 403/`push:false` alone is insufficient refusal
+  when MCM + divergent dry-run succeed; PR remains 64 behind master so slice 4
+  must rebase/update before merge.
 
 ### 2. Preserve regex and division semantics through every shared reader
 Type: Behavior
