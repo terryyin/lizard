@@ -120,7 +120,7 @@ delivery; preserve capability names and consolidate overlapping regression setup
 Focused command after relevant edits:
 
 ```sh
-nix develop -c python -m pytest test/test_languages/testJavaScript*.py test/test_languages/testTypeScript*.py test/test_languages/testES6.py test/test_languages/testJSX.py test/test_languages/testTSX.py test/test_languages/testVue.py test/test_languages/testRuby.py test/testNestedStructures.py test/testNestedStructureScopes.py
+nix develop -c python -m pytest test/test_languages/testJavaScript*.py test/test_languages/testTypeScript*.py test/test_languages/testES6.py test/test_languages/testJSX.py test/test_languages/testTSX.py test/test_languages/testVue.py test/test_languages/testRuby*.py test/testNestedStructures.py test/testJavaScriptNestedStructures.py test/testNestedStructureScopes.py
 ```
 
 `AGENTS.md` requires full `nix develop -c python -m pytest` before completion.
@@ -170,7 +170,7 @@ Accepted proof (2026-10-27, Nana-chan): route viable; product unchanged.
 
 ### 2. Preserve regex and division semantics through every shared reader
 Type: Behavior
-Status: planned
+Status: done
 Proof: red/green public regressions for the source examples and context
 counterexamples, plus the focused consumer command and retained reproducer.
 
@@ -194,6 +194,27 @@ and one semantic regression loop. Splitting by language or scanner would leave
 conflicting rules or conceal the original failure. No standalone preparatory
 abstraction slice is needed. A correct local result is a safe stopping point;
 it remains unmerged pending performance and final delivery gates.
+
+Accepted proof (2026-10-27, Nana-chan): semantic route green; unmerged pending
+performance (slice 3) and contributor delivery (slice 4).
+- Owner: previous-token `can_regex` mark in `js_style_regex_context.py` with
+  decorator/re-exports in `js_style_regex_expression.py`; Ruby via
+  `language='ruby'`. No keyword lookbehinds; `<>` not treated as regex openers
+  (avoids JSX `</tag>` false opens).
+- Source P1–P9 vs actual: return/arrow CCN 2; member/spaced/comment/optional
+  division CCN 2 / tokens 24; dollar/of/await/ordinary CCN 2 / tokens 22;
+  Ruby return CCN 2 and divide CCN 2 / tokens 22; Vue wrappers; opaque
+  quote/brace/flag literals with following functions; NS adjacent + next-file
+  independence. P10/P11 remain slices 3–4.
+- Reproducer: `nix develop -c python docs/reviews/fabio-malpezzi-20261027/pr528/reproduce.py --checkout <workspace>` → EXIT 0, 42/42 after refactor.
+- Focused pytest (post-refactor paths): 451 passed, 7 skipped.
+- Observations: `testJavaScriptRegex.py` return/arrow/member/identifier/for_of/
+  await_keyword/quote_brace/vue; `testRubyRegex.py`; `testJavaScriptNestedStructures.py`.
+- Consumer-trace (base ba5453c): typescript/tsx/javascript_templates/ruby run;
+  javascript/vue reused via inheritance/delegation; planning/review docs excluded.
+- Learnings: keyword lookbehinds cannot distinguish member vs keyword across
+  comments; single forward mark before shared `REGEX_TOKEN` is the coherent fix.
+  Refactor split context scan from decorator and extracted oversized Ruby/NS tests.
 
 ### 3. Meet the strict performance budget without weakening semantics
 Type: Behavior
