@@ -342,6 +342,16 @@ Disposition: excluded "Tag-triggered deployment, live GCP publication, DNS and t
   `gcloud meta list-files-for-upload` lists only the manifest, its two assets,
   images, favicon and template from `website/` and `templates/`. Full pytest
   1754 passed (implementer).
+- Slice 2 published at `f32439f`; its hosted run 40470784635 succeeded.
+- Slice 3 accepted locally (coordinator rerun): `nix develop -c python -m
+  pytest test/test_web_changes.py test/test_website.py` passed 43; removing
+  `website/` from `WEB_PATHS` failed the web and rename-out tests; breaking
+  the `detect` output name or adding `needs` to `build` failed the wiring
+  test; real history: `push 3adc9bc f32439f` → `web=true`, README-only
+  `2404dad` → `web=false`, unknown `before` → `cannot compare`, exit 2.
+  Full pytest 1767 passed; actionlint reported nothing on the new jobs.
+  Hosted run/skip receipts and G3 follow this publication: the web-changing
+  slice 3 increment, then a docs-only CI documentation increment.
 
 ## Learnings
 
