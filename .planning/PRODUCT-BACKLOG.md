@@ -11,4 +11,5 @@ Maintenance, bug fixing, and PR reviews.
 
 ## Backlog list
 
+- [Remove the duplicate template-interpolation CCN test on trunk](seeds/SEED-019-template-interpolation-conditions.md#dedupe-template-interpolation-tests) — SEED-019#dedupe-template-interpolation-tests
 - [Enter the development shell repeatedly without rebuilding its environment](seeds/SEED-018-repeatable-shell-entry.md#repeatable-shell-entry) — SEED-018#repeatable-shell-entry
