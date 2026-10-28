@@ -128,30 +128,6 @@ class Test_function_boundaries(unittest.TestCase):
                         [('a', 1, 3, 3), ('b', 5, 7, 3)])
 
 
-class Test_conditions_in_template_interpolations(unittest.TestCase):
-    """An interpolation is one token for the states; its conditions count."""
-
-    def test_conditions_in_interpolations(self):
-        code = (
-            "function a(x, y) {\n"
-            "  return `v: ${x ? 1 : 2} ${x && y || 0}`;\n"
-            "}\n"
-            "function b(x, y) {\n"
-            "  return `v: ${x ? `w: ${y ? 1 : 2}` : ''}`;\n"
-            "}\n"
-            "function c(x) {\n"
-            "  return `if (x) ${'&& ?'} ${x /* || */}`;\n"
-            "}\n"
-        )
-        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
-            with self.subTest(filename=filename):
-                functions = analyze_file.analyze_source_code(
-                    filename, code).function_list
-                self.assertEqual([('a', 4), ('b', 3), ('c', 1)],
-                                 [(f.name, f.cyclomatic_complexity)
-                                  for f in functions])
-
-
 class Test_TypeScript_conditional_style_arrays(unittest.TestCase):
     def test_conditional_style_array_with_object_and_following_child(self):
         code = ('const Alert = () => { return (<View style={[{ elevation: 0.4 }, '

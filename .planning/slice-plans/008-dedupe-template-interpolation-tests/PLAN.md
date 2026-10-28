@@ -2,6 +2,7 @@
 
 **Mapped story identity:** SEED-019#dedupe-template-interpolation-tests
 **Source:** [canonical story](../../seeds/SEED-019-template-interpolation-conditions.md#dedupe-template-interpolation-tests)
+**Source review:** [source-review.md](source-review.md)
 **Provenance:** SEED-019#template-interpolation-conditions execution retrospective;
 related commits `9ff15db`, `59a5131`, published `6f5638b`, merge `d0ecc33`.
 
@@ -47,7 +48,7 @@ Observed in this execution checkout against `origin/master` at `d0ecc33`
 
 ### 1. Drop residual duplicate interpolation CCN class
 Type: Structure
-Status: planned
+Status: done
 Proof: Focused pytest on the two TypeScript test modules green; only
 `testTypeScriptInterpolationConditions.py` collects
 `Test_conditions_in_template_interpolations`.
@@ -55,6 +56,21 @@ Behavior: Given trunk after #545 still defines the overlapping class in
 `testTypeScript.py` → delete that class only → the extracted module remains the
 sole owner and focused TypeScript language tests pass.
 Safe stop: Suite cost reduced; product CCN behavior unchanged.
+
+Accepted proof (slice 1):
+```
+proof:
+  command: nix develop -c python -m pytest test/test_languages/testTypeScript.py test/test_languages/testTypeScriptInterpolationConditions.py -q
+  covers: remaining testTypeScript.py suite + authoritative interpolation CCN suite
+  boundary: JS/TS language test modules; no product reader edit
+  observations:
+    - testTypeScriptInterpolationConditions.py::test_conditions_in_interpolations assertEqual([('a', 4), ('b', 3), ('c', 1)], …)
+    - testTypeScript.py: no Test_conditions_in_template_interpolations (grep empty)
+    - collect-only: class only under testTypeScriptInterpolationConditions.py (4 methods)
+  setup: none
+  result: pass (23 passed)
+```
+Refactor: none — already clean (`## REFACTOR COMPLETE`).
 
 ## Current decisions
 
