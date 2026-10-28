@@ -144,9 +144,10 @@ Proof: [slice 3](SLICE-PROOF.md); complete-cycle gates owned here.
 Accepted proof: `load` CCN 1 on four extensions; genuine controls still
 increment; focused 611 / full 2129; attempt1 six performance gates pass
 (inlined fast-path undo). Refactor that called `process_token` each token
-failed remasure and was reverted. Evidence:
-[pr546](../../../docs/reviews/fabio-malpezzi-20261027/pr546/). Remaining:
-publish adapted head, CI, exact-head merge, thanks.
+failed remasure and was reverted. Merged `559b8c8` at exact head `395ae04`
+after fourteen-job CI; thanks
+https://github.com/terryyin/lizard/pull/546#issuecomment-6461965881. Evidence:
+[pr546](../../../docs/reviews/fabio-malpezzi-20261027/pr546/).
 
 Behavior: given member access named `catch`/`if`/`for`/`while`/`case` (including
 `?.`), analyzing the four extensions does not add conditions, while genuine

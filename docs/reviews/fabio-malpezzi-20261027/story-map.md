@@ -37,7 +37,7 @@ the actual last cohort finisher reconciles all 19 and combined evidence.
 |15|[#543](https://github.com/terryyin/lizard/pull/543)|`f6a329b488bb1a6e5aa9af43f0cf3e5e761d8353`|SEED-010#review-structural-js-prs / 7|Pending full review cycle|
 |16|[#544](https://github.com/terryyin/lizard/pull/544)|`3ac7e4eaf61e898836fded88ab715b37f9fedbbf`|SEED-010#review-lexical-js-prs / 1|Merged `35b454b` at corrected head `77902f7`; [acknowledged](https://github.com/terryyin/lizard/pull/544#issuecomment-6456484491); [review record](pr544/README.md)|
 |17|[#545](https://github.com/terryyin/lizard/pull/545)|`baa95a4df8278421bb3d3a6487516030cc03a979`|SEED-010#review-lexical-js-prs / 2|Left unmerged — real defect; adapted candidate fails incremental names/counts &lt;3% upper CI after quiet longer retry; [review record](pr545/README.md)|
-|18|[#546](https://github.com/terryyin/lizard/pull/546)|`a671632141127fca9b2785fdbb0c675d45ae9042`|SEED-010#review-lexical-js-prs / 3|Pending full review cycle|
+|18|[#546](https://github.com/terryyin/lizard/pull/546)|`a671632141127fca9b2785fdbb0c675d45ae9042`|SEED-010#review-lexical-js-prs / 3|Merged `559b8c8` at corrected head `395ae04`; [acknowledged](https://github.com/terryyin/lizard/pull/546#issuecomment-6461965881); [review record](pr546/README.md)|
 |19|[#547](https://github.com/terryyin/lizard/pull/547)|`2766557096daac3f8e55657e9c48ba685157635d`|SEED-010#review-lexical-js-prs / 4|Pending full review cycle|
 
 ## Proof and priorities
