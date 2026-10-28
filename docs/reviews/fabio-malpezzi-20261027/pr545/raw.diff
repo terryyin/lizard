@@ -1,0 +1,117 @@
+# DISPLAY ONLY: exact executable bytes in literal-git-patches.json
+diff --git a/lizard_languages/javascript_templates.py b/lizard_languages/javascript_templates.py
+index b97886c..e10a849 100644
+--- a/lizard_languages/javascript_templates.py
++++ b/lizard_languages/javascript_templates.py
+@@ -93,6 +93,44 @@ def _converted_template(source, start, end, token_class, split):
+     yield token
+
+
++def interpolation_code(source, in_expression=False):
++    """Spans of the code in the interpolations of a template, at any depth.
++
++    The source is a whole template, or the expression of an interpolation.
++    Nested templates split the code around them, so that each character is
++    scanned once.
++    """
++    if not (in_expression or (source.startswith('`') and '${' in source)):
++        return
++    stack, pos, code = ([1], 0, 0) if in_expression else ([0], 1, None)
++    while stack:
++        pattern = _TEMPLATE_SPECIAL if stack[-1] == 0 else _EXPRESSION_SPECIAL
++        match = pattern.search(source, pos)
++        if match is None:
++            break
++        token = match.group()
++        pos = match.end()
++        if stack[-1] == 0:
++            if token == '${':
++                stack.append(1)
++                code = pos
++            elif token == '`':
++                stack.pop()
++                code = pos
++        elif token == '`':
++            yield code, match.start()
++            stack.append(0)
++        elif token == '{':
++            stack[-1] += 1
++        elif token == '}':
++            stack[-1] -= 1
++            if stack[-1] == 0:
++                yield code, match.start()
++                stack.pop()
++    if stack and stack[-1]:
++        yield code, len(source)
++
++
+ def template_tokens(source, addition='', token_class=None, split=True):
+     """Tokenize ordinary spans normally; TSX retains atomic template tokens."""
+     pattern = compiled_token_pattern(addition)
+diff --git a/lizard_languages/typescript.py b/lizard_languages/typescript.py
+index a63b5e4..576571c 100644
+--- a/lizard_languages/typescript.py
++++ b/lizard_languages/typescript.py
+@@ -8,7 +8,7 @@ from .js_style_regex_expression import js_style_regex_expression
+ from .javascript_bindings import JavaScriptBindings
+ from .typescript_declarations import TypeScriptTypeAnnotationStates
+ from .typescript_states import TypeScriptStates
+-from .javascript_templates import template_tokens
++from .javascript_templates import interpolation_code, template_tokens
+
+ # One token, so each ? in ?? is not its own ternary decision.
+ NULLISH_COALESCING = r"|(?:\?\?)"
+@@ -68,6 +68,18 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
+     def __init__(self, context):
+         super().__init__(context)
+         self.parallel_states = [TypeScriptStates(context)]
++        self._previous_token = None
++
++    def process_token(self, token):
++        # An interpolation is one token for the states, or a part of one in
++        # TSX; the conditions written in it are counted here.
++        for start, end in interpolation_code(
++                token, self._previous_token == '${'):
++            for inner in self.generate_tokens(token[start:end]):
++                if inner in self.conditions:
++                    self.context.add_condition()
++        self._previous_token = token
++        return False
+
+     @staticmethod
+     @js_style_regex_expression
+diff --git a/test/test_languages/testTypeScript.py b/test/test_languages/testTypeScript.py
+index 2c4a1d6..659ac7d 100644
+--- a/test/test_languages/testTypeScript.py
++++ b/test/test_languages/testTypeScript.py
+@@ -128,6 +128,30 @@ class Test_function_boundaries(unittest.TestCase):
+                         [('a', 1, 3, 3), ('b', 5, 7, 3)])
+
+
++class Test_conditions_in_template_interpolations(unittest.TestCase):
++    """An interpolation is one token for the states; its conditions count."""
++
++    def test_conditions_in_interpolations(self):
++        code = (
++            "function a(x, y) {\n"
++            "  return `v: ${x ? 1 : 2} ${x && y || 0}`;\n"
++            "}\n"
++            "function b(x, y) {\n"
++            "  return `v: ${x ? `w: ${y ? 1 : 2}` : ''}`;\n"
++            "}\n"
++            "function c(x) {\n"
++            "  return `if (x) ${'&& ?'} ${x /* || */}`;\n"
++            "}\n"
++        )
++        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
++            with self.subTest(filename=filename):
++                functions = analyze_file.analyze_source_code(
++                    filename, code).function_list
++                self.assertEqual([('a', 4), ('b', 3), ('c', 1)],
++                                 [(f.name, f.cyclomatic_complexity)
++                                  for f in functions])
++
++
+ class Test_TypeScript_conditional_style_arrays(unittest.TestCase):
+     def test_conditional_style_array_with_object_and_following_child(self):
+         code = ('const Alert = () => { return (<View style={[{ elevation: 0.4 }, '

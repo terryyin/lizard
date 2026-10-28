@@ -1,0 +1,330 @@
+{
+  "target": {
+    "all_match": false,
+    "mismatches": [
+      "label.js",
+      "label.ts",
+      "label.jsx",
+      "label.tsx",
+      "abc.js",
+      "abc.ts",
+      "abc.jsx",
+      "abc.tsx",
+      "nested-follow.js",
+      "literal-controls.js",
+      "regex-in-interp.js",
+      "line-comment-interp.js"
+    ],
+    "mismatch_detail": [
+      {
+        "filename": "label.js",
+        "observed": [
+          [
+            "label",
+            1,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "label",
+            3,
+            3
+          ]
+        ]
+      },
+      {
+        "filename": "label.ts",
+        "observed": [
+          [
+            "label",
+            1,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "label",
+            3,
+            3
+          ]
+        ]
+      },
+      {
+        "filename": "label.jsx",
+        "observed": [
+          [
+            "label",
+            1,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "label",
+            3,
+            3
+          ]
+        ]
+      },
+      {
+        "filename": "label.tsx",
+        "observed": [
+          [
+            "label",
+            1,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "label",
+            3,
+            3
+          ]
+        ]
+      },
+      {
+        "filename": "abc.js",
+        "observed": [
+          [
+            "a",
+            1,
+            3
+          ],
+          [
+            "b",
+            1,
+            3
+          ],
+          [
+            "c",
+            1,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "a",
+            4,
+            3
+          ],
+          [
+            "b",
+            3,
+            3
+          ],
+          [
+            "c",
+            1,
+            3
+          ]
+        ]
+      },
+      {
+        "filename": "abc.ts",
+        "observed": [
+          [
+            "a",
+            1,
+            3
+          ],
+          [
+            "b",
+            1,
+            3
+          ],
+          [
+            "c",
+            1,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "a",
+            4,
+            3
+          ],
+          [
+            "b",
+            3,
+            3
+          ],
+          [
+            "c",
+            1,
+            3
+          ]
+        ]
+      },
+      {
+        "filename": "abc.jsx",
+        "observed": [
+          [
+            "a",
+            1,
+            3
+          ],
+          [
+            "b",
+            1,
+            3
+          ],
+          [
+            "c",
+            1,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "a",
+            4,
+            3
+          ],
+          [
+            "b",
+            3,
+            3
+          ],
+          [
+            "c",
+            1,
+            3
+          ]
+        ]
+      },
+      {
+        "filename": "abc.tsx",
+        "observed": [
+          [
+            "a",
+            1,
+            3
+          ],
+          [
+            "b",
+            1,
+            3
+          ],
+          [
+            "c",
+            1,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "a",
+            4,
+            3
+          ],
+          [
+            "b",
+            3,
+            3
+          ],
+          [
+            "c",
+            1,
+            3
+          ]
+        ]
+      },
+      {
+        "filename": "nested-follow.js",
+        "observed": [
+          [
+            "a",
+            1,
+            3
+          ],
+          [
+            "b",
+            1,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "a",
+            2,
+            3
+          ],
+          [
+            "b",
+            1,
+            3
+          ]
+        ]
+      },
+      {
+        "filename": "literal-controls.js",
+        "observed": [
+          [
+            "a",
+            1,
+            3
+          ],
+          [
+            "b",
+            1,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "a",
+            2,
+            3
+          ],
+          [
+            "b",
+            1,
+            3
+          ]
+        ]
+      },
+      {
+        "filename": "regex-in-interp.js",
+        "observed": [
+          [
+            "a",
+            1,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "a",
+            2,
+            3
+          ]
+        ]
+      },
+      {
+        "filename": "line-comment-interp.js",
+        "observed": [
+          [
+            "a",
+            1,
+            4
+          ]
+        ],
+        "expected": [
+          [
+            "a",
+            2,
+            4
+          ]
+        ]
+      }
+    ]
+  },
+  "corrected": {
+    "all_match": true,
+    "mismatches": [],
+    "mismatch_detail": []
+  }
+}

@@ -1,11 +1,11 @@
 # PR546 keyword member names review
 
-Disposition: **merge-ready** — real defect; adapted candidate proves the
-semantic fix across four extensions, focused + full suite/`make`, and all six
-attempt1 performance gates (paired 95% upper CI strictly &lt;3%). A post-change
-refactor that called `process_token` on every fast-path token failed remasure
-(attempt2 retained) and was reverted to the inlined undo. Publish adapted head,
-hosted CI, exact-head merge, and thanks remain for the coordinator.
+Disposition: **merged** as `559b8c8da2b4e230269d9856969087b08bc241b9` at
+corrected head `395ae04d85f9a2cb181f1022340ce424fe549eb0` after full suite/`make`,
+fourteen-job CI, and exact-head merge. A post-change refactor that called
+`process_token` on every fast-path token failed remasure (attempt2 retained) and
+was reverted to the inlined undo before publish. Thank-you:
+https://github.com/terryyin/lizard/pull/546#issuecomment-6461965881.
 
 Frozen contributor head: `a671632141127fca9b2785fdbb0c675d45ae9042` (OPEN;
 CONFLICTING vs current master; historical 4-job checks SUCCESS). Current target

@@ -1,0 +1,18 @@
+[
+  {"filename": "label.js", "source": "function label(x, y) {\n  return `v: ${x ? 1 : 2} ${x && y}`;\n}\n", "expected": [["label", 3, 3]]},
+  {"filename": "label.ts", "source": "function label(x, y) {\n  return `v: ${x ? 1 : 2} ${x && y}`;\n}\n", "expected": [["label", 3, 3]]},
+  {"filename": "label.jsx", "source": "function label(x, y) {\n  return `v: ${x ? 1 : 2} ${x && y}`;\n}\n", "expected": [["label", 3, 3]]},
+  {"filename": "label.tsx", "source": "function label(x, y) {\n  return `v: ${x ? 1 : 2} ${x && y}`;\n}\n", "expected": [["label", 3, 3]]},
+  {"filename": "abc.js", "source": "function a(x, y) {\n  return `v: ${x ? 1 : 2} ${x && y || 0}`;\n}\nfunction b(x, y) {\n  return `v: ${x ? `w: ${y ? 1 : 2}` : ''}`;\n}\nfunction c(x) {\n  return `if (x) ${'&& ?'} ${x /* || */}`;\n}\n", "expected": [["a", 4, 3], ["b", 3, 3], ["c", 1, 3]]},
+  {"filename": "abc.ts", "source": "function a(x, y) {\n  return `v: ${x ? 1 : 2} ${x && y || 0}`;\n}\nfunction b(x, y) {\n  return `v: ${x ? `w: ${y ? 1 : 2}` : ''}`;\n}\nfunction c(x) {\n  return `if (x) ${'&& ?'} ${x /* || */}`;\n}\n", "expected": [["a", 4, 3], ["b", 3, 3], ["c", 1, 3]]},
+  {"filename": "abc.jsx", "source": "function a(x, y) {\n  return `v: ${x ? 1 : 2} ${x && y || 0}`;\n}\nfunction b(x, y) {\n  return `v: ${x ? `w: ${y ? 1 : 2}` : ''}`;\n}\nfunction c(x) {\n  return `if (x) ${'&& ?'} ${x /* || */}`;\n}\n", "expected": [["a", 4, 3], ["b", 3, 3], ["c", 1, 3]]},
+  {"filename": "abc.tsx", "source": "function a(x, y) {\n  return `v: ${x ? 1 : 2} ${x && y || 0}`;\n}\nfunction b(x, y) {\n  return `v: ${x ? `w: ${y ? 1 : 2}` : ''}`;\n}\nfunction c(x) {\n  return `if (x) ${'&& ?'} ${x /* || */}`;\n}\n", "expected": [["a", 4, 3], ["b", 3, 3], ["c", 1, 3]]},
+  {"filename": "outside.js", "source": "function outside(x, y) {\n  return (x ? 1 : 2) + (x && y ? 1 : 0);\n}\n", "expected": [["outside", 4, 3]]},
+  {"filename": "nested-follow.js", "source": "function a(x) {\n  return `${x ? `n:${x}` : ''}`;\n}\nfunction b() {\n  return 2;\n}\n", "expected": [["a", 2, 3], ["b", 1, 3]]},
+  {"filename": "literal-controls.js", "source": "function a(x) {\n  return `if (x) ${'&& ?'} ${x /* || */} ${/\\?/.test(x) ? 1 : 0}`;\n}\nfunction b() {\n  return 2;\n}\n", "expected": [["a", 2, 3], ["b", 1, 3]]},
+  {"filename": "plain-template.js", "source": "function a() {\n  return `no interpolation`;\n}\n", "expected": [["a", 1, 3]]},
+  {"filename": "regex-in-interp.js", "source": "function a(x) {\n  return `${x.replace(/\\?/g, '') && x}`;\n}\n", "expected": [["a", 2, 3]]},
+  {"filename": "line-comment-interp.js", "source": "function a(x) {\n  return `${x // ?\n} ${x && 1}`;\n}\n", "expected": [["a", 2, 4]]},
+  {"filename": "b-story.js", "source": "function b(code) {\n  return (\n    code === 47 || // /\n    code === 92 || // \\\n    code === 45 || // -\n    code === 32\n  )\n}\n", "expected": [["b", 4, 8]]},
+  {"filename": "optional-access.ts", "source": "function pick(o) {\n  return o?.a ?? o?.b ?? 0;\n}\n", "expected": [["pick", 3, 3]]}
+]

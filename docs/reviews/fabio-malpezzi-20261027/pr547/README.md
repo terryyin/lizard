@@ -1,10 +1,10 @@
 # PR547 unspaced ternary vs optional markers review
 
-Disposition: **merge-ready locally** — adapted product proves the defect
-red→green, focused + full suite/`make` pass, and all six performance gates’
-paired 95% upper bounds are strictly &lt;3%. Coordinator remaining: publish
-adapted head, hosted CI, exact-head merge, thank-you. Product and evidence left
-uncommitted in this worktree.
+Disposition: **merged** as `8567a4c7ee24029d76e54861defef01679238f34` at
+corrected head `bf75e500ae1495dfbf39ad3eef0cf6fef5baaaee` after full suite/`make`,
+fourteen-job CI, and exact-head merge. Independent refactor: none — already
+clean. Thank-you:
+https://github.com/terryyin/lizard/pull/547#issuecomment-6463154289.
 
 Frozen contributor head: `2766557096daac3f8e55657e9c48ba685157635d` (OPEN;
 CONFLICTING vs current master; historical 4-job checks SUCCESS). Current target
@@ -74,7 +74,9 @@ pass (upper CI strictly &lt;3%):
 | baseline→corrected | names/counts | −8.919% | [−10.054%, −8.667%] | pass |
 | baseline→corrected | broad CLI | +0.546% | [−1.215%, +1.171%] | pass |
 
-## Coordinator remaining
+## Merge
 
-Publish adapted product onto contributor head without force; guard hosted merge
-by exact head; required current CI; merge; thank-you comment.
+Published adapted product onto contributor head without force; guarded hosted
+merge by exact head `bf75e500ae1495dfbf39ad3eef0cf6fef5baaaee`; required current
+CI run https://github.com/terryyin/lizard/actions/runs/40648229253 succeeded;
+merged as `8567a4c7ee24029d76e54861defef01679238f34`; thank-you posted.
