@@ -9,7 +9,7 @@ successful practice, and DD-013 is qualified command-output practice. DD-004
 concerns application of this project's performance acceptance gate; it remains
 qualified and is not evidence of a shared performance mechanism defect.
 
-The local maintenance selected [repeatable shell entry](.planning/seeds/SEED-018-repeatable-shell-entry.md#repeatable-shell-entry)
+The local maintenance selected [repeatable shell entry](https://github.com/terryyin/lizard/blob/2d845a1eaaccee05592a486234ad49fb7d1723de/.planning/seeds/SEED-018-repeatable-shell-entry.md#repeatable-shell-entry)
 for DD-003. The adopted response is no longer only queued: `shell.nix`
 prepares when `.venv` is missing or the `dev_requirements.txt` stamp
 mismatches, otherwise reuses without pip install chatter, refreshes on
@@ -57,7 +57,7 @@ Distinct executions, original timestamps/releases/tools, observed effects and qu
 
 ## DD-003 — Nix shellHook reinstalls Python dependencies on every command
 
-**Adopted response:** [Enter the development shell repeatedly without rebuilding its environment](.planning/seeds/SEED-018-repeatable-shell-entry.md#repeatable-shell-entry) — SEED-018#repeatable-shell-entry.
+**Adopted response:** [Enter the development shell repeatedly without rebuilding its environment](https://github.com/terryyin/lizard/blob/2d845a1eaaccee05592a486234ad49fb7d1723de/.planning/seeds/SEED-018-repeatable-shell-entry.md#repeatable-shell-entry) — SEED-018#repeatable-shell-entry.
 **Adopted revision:** `be8d3c273fd475a0cedc4d1e9da58ff596c6db0c` (stamp-guarded `shell.nix` shellHook + relevant-use recording for SEED-018#repeatable-shell-entry).
 **Relevant-use outcome:** Isolated checkout proof on 2026-10-28 (`/tmp/lizard-shell-slice2-*.out`): cold prep installs once (stdout retained the historical `virtualenv 20.13.2 requires platformdirs<3,>=2, but you have platformdirs 4.4.0` line when pip ran); warm and overlapping warm entries exit 0 with command output only and no pip install chatter; changing `dev_requirements.txt` refreshes (pip runs, stamp updates) then subsequent warm reuses cleanly; a failing `pip install -r` surfaces `ERROR: No matching distribution…` with non-zero exit and does not run the requested command or write the new stamp. No latency claim is asserted. Finding is adopted with relevant-use evidence; full retirement under a longer observation criterion remains a triage judgment, not blocked by queueing alone.
 
