@@ -1,0 +1,49 @@
+warning: Git tree '/Users/terryyin/git/lizard/.worktrees/conclude-the-javascript-and-typescript-lexical-a' is dirty
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+virtualenv 20.13.2 requires platformdirs<3,>=2, but you have platformdirs 4.4.0 which is incompatible.
+WARNING: You are using pip version 22.0.3; however, version 26.0.1 is available.
+You should consider upgrading via the '/Users/terryyin/git/lizard/.worktrees/conclude-the-javascript-and-typescript-lexical-a/.venv/bin/python -m pip install --upgrade pip' command.
+============================= test session starts ==============================
+platform darwin -- Python 3.9.11, pytest-8.4.2, pluggy-1.6.0
+rootdir: /Users/terryyin/git/lizard/.worktrees/conclude-the-javascript-and-typescript-lexical-a
+configfile: setup.cfg
+plugins: cov-7.1.0
+collected 616 items
+
+test/test_languages/testJavaScript.py .........................          [  4%]
+test/test_languages/testJavaScriptArrowBoundaries.py ................... [  7%]
+....                                                                     [  7%]
+test/test_languages/testJavaScriptArrowLines.py .....                    [  8%]
+test/test_languages/testJavaScriptArrowParameters.py ................... [ 11%]
+..                                                                       [ 12%]
+test/test_languages/testJavaScriptFalsePositives.py ....                 [ 12%]
+test/test_languages/testJavaScriptFormalSlots.py .....................   [ 16%]
+test/test_languages/testJavaScriptFunctions.py ........................  [ 19%]
+test/test_languages/testJavaScriptMembers.py .............               [ 22%]
+test/test_languages/testJavaScriptParameterNames.py .................... [ 25%]
+..............                                                           [ 27%]
+test/test_languages/testJavaScriptRegex.py ..............                [ 29%]
+test/test_languages/testJavaScriptTernaryArrows.py ..................... [ 33%]
+........................................................................ [ 44%]
+.....................................................................    [ 56%]
+test/test_languages/testJavaScriptWidgets.py s.s.s                       [ 56%]
+test/test_languages/testTypeScript.py ....................               [ 60%]
+test/test_languages/testTypeScriptArrowFields.py ..........              [ 61%]
+test/test_languages/testTypeScriptDeclarations.py .................      [ 64%]
+test/test_languages/testTypeScriptFalsePositives.py .............        [ 66%]
+test/test_languages/testTypeScriptFields.py ......                       [ 67%]
+test/test_languages/testTypeScriptFunctions.py ....................      [ 70%]
+test/test_languages/testTypeScriptMembers.py s............               [ 73%]
+test/test_languages/testTypeScriptMetrics.py .........                   [ 74%]
+test/test_languages/testTypeScriptReaderDispatch.py ............         [ 76%]
+test/test_languages/testTypeScriptThisParameters.py .................... [ 79%]
+........                                                                 [ 81%]
+test/test_languages/testTypeScriptWidgets.py .s                          [ 81%]
+test/test_languages/testES6.py ......................................... [ 87%]
+.....                                                                    [ 88%]
+test/test_languages/testJSX.py .....................                     [ 92%]
+test/test_languages/testTSX.py ......................................... [ 98%]
+...                                                                      [ 99%]
+test/test_languages/testVue.py ....                                      [100%]
+
+======================== 611 passed, 5 skipped in 1.05s ========================

@@ -1,0 +1,81 @@
+{
+  "attempt1": {
+    "status": "inconclusive",
+    "retained": [
+      "attempt1/"
+    ]
+  },
+  "attempt2": {
+    "status": "failed-gate",
+    "retained": [
+      "attempt2/"
+    ]
+  },
+  "attempt3": {
+    "status": "inconclusive-high-load",
+    "retained": [
+      "attempt3/"
+    ]
+  },
+  "attempt4": {
+    "status": "failed-gate",
+    "retained": [
+      "attempt4/"
+    ]
+  },
+  "attempt5": {
+    "status": "failed-gate",
+    "retained": [
+      "attempt5/"
+    ],
+    "affected_files": 568
+  },
+  "attempt6": {
+    "status": "failed-gate",
+    "reason": "1212-file dilution; incremental API median 3.02% upper 3.62%; residual per-token backtick scan on JS/TS",
+    "retained": [
+      "attempt6/"
+    ],
+    "api_seconds": 8.0,
+    "cli_seconds": 12.0,
+    "affected_files": 1212
+  },
+  "attempt7": {
+    "status": "inconclusive-interrupted-high-load",
+    "chosen_before_launch": true,
+    "api_seconds": 8.0,
+    "cli_seconds": 12.0,
+    "affected_files": 1212,
+    "consumers_files": 730,
+    "rationale": "Prospective: TSX/JSX-only atomic template scan via _scan_atomic_templates; JS/TS fast path only checks after_interpolation and token=='${'. Same 1212-file corpus. Isolated microbench ~-1.0% (noise). Prior attempts retained. Not an invalid-code retry.",
+    "quiet_microbench_1212": {
+      "ratio": 0.9901515149329673,
+      "pct": -0.9848485067032731
+    },
+    "incremental": "target 35b454b778239846de4b467715717f67ac4bc6c3 versus corrected",
+    "cumulative": "baseline 2e21e404c1ab9f4e0b49acc80816e816629d0670 versus corrected",
+    "retained": [
+      "attempt7/"
+    ],
+    "partial": "incremental-api completed under load spikes (upper CI ~12.6% noise); interrupted during incremental-api-parameters"
+  },
+  "attempt8": {
+    "status": "failed-gate",
+    "chosen_before_launch": true,
+    "api_seconds": 16.0,
+    "cli_seconds": 24.0,
+    "affected_files": 1212,
+    "consumers_files": 730,
+    "rationale": "Quiet justified longer retry after attempt7 interruption under load ~5-11 with huge CI noise. Same frozen 1212-file expanded corpus and 730 consumers; same _scan_atomic_templates corrected snapshot (hashes unchanged). Double batch seconds (16s API / 24s CLI) to tighten paired 95% CI. Quiet microbench remains ~flat (~-1%). Prior attempts 1-7 retained. Not an invalid-code retry.",
+    "quiet_microbench_1212": {
+      "ratio": 0.9901515149329673,
+      "pct": -0.9848485067032731
+    },
+    "incremental": "target 35b454b778239846de4b467715717f67ac4bc6c3 versus corrected",
+    "cumulative": "baseline 2e21e404c1ab9f4e0b49acc80816e816629d0670 versus corrected",
+    "reason": "Quiet longer retry (16s API / 24s CLI, 1212-file corpus). Five gates pass; incremental-api-parameters median 1.83% but paired 95% upper 4.77% under load ~6\u20137. Quiet microbench remains ~flat. Not an invalid-code retry; unresolved noise / residual cost does not pass the strict <3% upper bound. Prior attempts 1\u20137 retained.",
+    "retained": [
+      "attempt8/"
+    ]
+  }
+}

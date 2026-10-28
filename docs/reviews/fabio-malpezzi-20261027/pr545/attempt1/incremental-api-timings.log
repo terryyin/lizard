@@ -1,0 +1,32 @@
+{"pair": 1, "baseline": 2.4911573340000004, "candidate": 2.780599125}
+{"pair": 2, "candidate": 2.8301335830000003, "baseline": 2.459726709}
+{"pair": 3, "baseline": 2.4428532910000005, "candidate": 2.8306624580000026}
+{"pair": 4, "candidate": 3.288175667000001, "baseline": 2.5011744999999976}
+{"pair": 5, "baseline": 2.5229832089999995, "candidate": 2.8013854579999986}
+{"pair": 6, "candidate": 2.797190540999999, "baseline": 2.467281082999996}
+{"pair": 7, "baseline": 2.464771750000004, "candidate": 2.749313583000003}
+{"pair": 8, "candidate": 2.788525875000005, "baseline": 2.4462982079999946}
+{"pair": 9, "baseline": 2.5128070419999986, "candidate": 2.8359548330000024}
+{"pair": 10, "candidate": 2.8825557500000016, "baseline": 2.540577084000006}
+{"pair": 11, "baseline": 2.5503677499999995, "candidate": 2.867931833000007}
+{"pair": 12, "candidate": 2.948745207999991, "baseline": 2.54574808400001}
+{"pair": 13, "baseline": 2.505416083, "candidate": 2.867200749999995}
+{"pair": 14, "candidate": 2.8386246249999942, "baseline": 2.4866277499999967}
+{"pair": 15, "baseline": 2.498441749999998, "candidate": 2.826748375000008}
+{"pair": 16, "candidate": 2.8682446659999954, "baseline": 2.450981749999997}
+{"pair": 17, "baseline": 2.463967958999987, "candidate": 2.8002264999999937}
+{"pair": 18, "candidate": 2.806303416999995, "baseline": 2.4546397090000056}
+{"pair": 19, "baseline": 2.4566313750000006, "candidate": 2.8650726249999963}
+{"pair": 20, "candidate": 2.827654457999998, "baseline": 2.7046824579999935}
+Traceback (most recent call last):
+  File "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr545/proof/paired.py", line 106, in <module>
+    run()
+  File "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr545/proof/paired.py", line 98, in run
+    'manifest_sha256': hashlib.sha256((ROOT / 'manifest.json').read_bytes()).hexdigest()}
+  File "/nix/store/1bn3i8c8xfwc77mp4q998mbkg1aqyy6b-python3-3.9.11/lib/python3.9/pathlib.py", line 1259, in read_bytes
+    with self.open(mode='rb') as f:
+  File "/nix/store/1bn3i8c8xfwc77mp4q998mbkg1aqyy6b-python3-3.9.11/lib/python3.9/pathlib.py", line 1252, in open
+    return io.open(self, mode, buffering, encoding, errors, newline,
+  File "/nix/store/1bn3i8c8xfwc77mp4q998mbkg1aqyy6b-python3-3.9.11/lib/python3.9/pathlib.py", line 1120, in _opener
+    return self._accessor.open(self, flags, mode)
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr545/proof/manifest.json'

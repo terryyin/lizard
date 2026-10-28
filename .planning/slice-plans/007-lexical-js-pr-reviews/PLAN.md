@@ -115,15 +115,25 @@ slowdown once hidden tokens are processed — expand controls before claiming.
 
 ### 2. Conditions in template interpolations — PR #545
 Type: Behavior
-Status: planned
+Status: done
 Source: https://github.com/terryyin/lizard/pull/545
 Frozen head: `baa95a4df8278421bb3d3a6487516030cc03a979`
 Proof: [slice 2](SLICE-PROOF.md); complete-cycle gates owned here.
+Accepted proof: defect reproduced (label CCN 1→3 on adapted candidate);
+focused suite green; consumer-trace recorded. Disposition: left unmerged —
+attempt8 incremental names/counts paired 95% upper 4.767% (median 1.831%)
+fails strict &lt;3% after quiet longer retry; product not published. Evidence:
+[pr545](../../../docs/reviews/fabio-malpezzi-20261027/pr545/). Follow-up:
+performance-qualify or trim adapted path, then merge/thanks.
 
 Behavior: given a template whose interpolations contain conditions, analyzing
 the four extensions counts those conditions in CCN while preserving function
 boundaries, state tokens, nested templates, and non-code lexical contexts; the
 PR receives a full contract disposition.
+
+Learnings: `_scan_atomic_templates` removes JS/TS per-token backtick cost;
+quiet microbench ~flat, but load noise still fails one incremental gate.
+Do not retime the same candidate to seek a pass.
 
 ### 3. Keyword member names — PR #546
 Type: Behavior

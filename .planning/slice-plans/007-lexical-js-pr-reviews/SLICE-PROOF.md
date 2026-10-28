@@ -37,6 +37,11 @@ balanced scanning preserves literal text, nested templates, strings, comments,
 regex literals and function/state-token boundaries. Same focused command plus
 reached consumers and complete-cycle gates.
 
+Execution disposition: adapted candidate proves CCN 3 / focused 611 passed,
+but attempt8 incremental-api-parameters upper CI 4.767% fails the performance
+gate; PR left unmerged with follow-up. Record:
+[docs/reviews/fabio-malpezzi-20261027/pr545/](../../../docs/reviews/fabio-malpezzi-20261027/pr545/).
+
 ### 3. Keyword member names — PR #546
 
 Source: https://github.com/terryyin/lizard/pull/546  
