@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "agent": "Tsukasa-chan",
+  "email": "tsukasa-chan@example.org",
+  "activity": "preparation",
+  "identity": "SEED-019#template-interpolation-conditions",
+  "host": "cursor",
+  "model": "auto"
+}
