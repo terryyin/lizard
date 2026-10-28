@@ -1,0 +1,72 @@
+# DISPLAY ONLY: exact executable bytes in literal-git-patches.json
+diff --git a/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr547/target/lizard_languages/typescript.py b/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr547/corrected/lizard_languages/typescript.py
+index c3562d4..1703e04 100644
+--- a/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr547/target/lizard_languages/typescript.py
++++ b/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr547/corrected/lizard_languages/typescript.py
+@@ -16,6 +16,9 @@ from .javascript_templates import LINE_COMMENT, template_tokens
+ # One token, so each ? in ?? is not its own ternary decision.
+ NULLISH_COALESCING = r"|(?:\?\?)"
+ OPTIONAL_ACCESS = r"|(?:\?\.(?!\d))"
++# An optional member or parameter, "name?: T" or "f(a?)"; in "x?y:0" the
++# "?" opens a ternary.
++OPTIONAL_NAME = r"|(?:\w+\?(?=\s*(?:[:,)]|\Z)))"
+ # JavaScript identifiers can contain dollar signs as well as word characters.
+ JS_IDENTIFIER = r"|(?:[\w$]+)"
+
+@@ -164,6 +167,6 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
+         # Line comment, private method (#), optional name (?), dollar
+         # identifiers, nullish (??).
+         addition = (addition + "|" + LINE_COMMENT + r"|(?:#\w+)"
+-                    + r"|(?:\w+\?(?![?.]))" + JS_IDENTIFIER + NULLISH_COALESCING
++                    + OPTIONAL_NAME + JS_IDENTIFIER + NULLISH_COALESCING
+                     + OPTIONAL_ACCESS)
+         yield from template_tokens(source_code, addition, token_class)
+diff --git a/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr547/target/lizard_languages/tsx.py b/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr547/corrected/lizard_languages/tsx.py
+index 53d44a5..5b185a6 100644
+--- a/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr547/target/lizard_languages/tsx.py
++++ b/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr547/corrected/lizard_languages/tsx.py
+@@ -7,7 +7,8 @@ Only overrides tokenization to handle JSX-specific syntax (<Component>, {express
+
+ from .js_style_regex_expression import js_style_regex_expression
+ from .typescript import (
+-    JS_IDENTIFIER, NULLISH_COALESCING, OPTIONAL_ACCESS, TypeScriptReader)
++    JS_IDENTIFIER, NULLISH_COALESCING, OPTIONAL_ACCESS, OPTIONAL_NAME,
++    TypeScriptReader)
+ from .typescript import JSTokenizer, Tokenizer
+ from .javascript_templates import LINE_COMMENT, template_tokens
+
+@@ -26,6 +27,7 @@ class TSXReader(TypeScriptReader):
+             r"|(?:<[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)*>)" + \
+             r"|(?:<\/[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)*>)" + \
+             r"|(?:#\w+)" + \
++            OPTIONAL_NAME + \
+             JS_IDENTIFIER + \
+             NULLISH_COALESCING + \
+             OPTIONAL_ACCESS + \
+diff --git a/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr547/target/test/test_languages/testOptionalOperators.py b/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr547/corrected/test/test_languages/testOptionalOperators.py
+index b28e938..1e883c3 100644
+--- a/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr547/target/test/test_languages/testOptionalOperators.py
++++ b/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr547/corrected/test/test_languages/testOptionalOperators.py
+@@ -117,3 +117,22 @@ def test_tsx_optional_operators_in_jsx():
+                      '  return n > 1 ? <A/> : <B x={p.f()?.g}/>;\n'
+                      '};\n', 'tsx')
+     assert [f.cyclomatic_complexity for f in result.function_list] == [3]
++
++
++@pytest.mark.parametrize('suffix', ['js', 'ts', 'jsx', 'tsx'])
++def test_ternary_without_spaces_is_a_decision(suffix):
++    result = analyze('function f(x, y) { return x?y:0; }\n'
++                     'function g(x) { return x?1:x?.y?2:3; }', suffix)
++    assert [f.cyclomatic_complexity for f in result.function_list] == [2, 3]
++
++
++@pytest.mark.parametrize('suffix', ['ts', 'tsx'])
++def test_optional_member_and_parameter_are_not_ternaries(suffix):
++    result = analyze('class A {\n'
++                     '  name?: string;\n'
++                     '  m(a?: number, b?: string): number { return 1; }\n'
++                     '}\n'
++                     'function f(cb: (a?: number, b?) => void) { return 1; }\n',
++                     suffix)
++    assert [(f.name, f.cyclomatic_complexity, f.parameter_count)
++            for f in result.function_list] == [('m', 1, 2), ('f', 1, 1)]

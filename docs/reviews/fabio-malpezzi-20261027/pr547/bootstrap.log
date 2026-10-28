@@ -1,0 +1,24 @@
+warning: Git tree '/Users/terryyin/git/lizard/.worktrees/conclude-the-javascript-and-typescript-lexical-a' is dirty
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+virtualenv 20.13.2 requires platformdirs<3,>=2, but you have platformdirs 4.4.0 which is incompatible.
+WARNING: You are using pip version 22.0.3; however, version 26.0.1 is available.
+You should consider upgrading via the '/Users/terryyin/git/lizard/.worktrees/conclude-the-javascript-and-typescript-lexical-a/.venv/bin/python -m pip install --upgrade pip' command.
+{
+  "target": "2e2adc4a76a3dc1e7d835e248f7cde223253e852",
+  "frozen_head": "2766557096daac3f8e55657e9c48ba685157635d",
+  "baseline": "2e21e404c1ab9f4e0b49acc80816e816629d0670",
+  "product": [
+    "lizard_languages/typescript.py",
+    "lizard_languages/tsx.py",
+    "test/test_languages/testOptionalOperators.py"
+  ],
+  "paired_sha256": "ec1c9c5eac0ad6a29294ecbd987b2a55d4cf31db145486d065bf13c096b76520",
+  "affected_count": 20,
+  "expanded_count": 1602,
+  "consumers_count": 1276,
+  "changed_vs_target": [
+    "lizard_languages/typescript.py",
+    "lizard_languages/tsx.py",
+    "test/test_languages/testOptionalOperators.py"
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "identity": "SEED-010#review-lexical-js-prs slice 4",
+  "pr": 547,
+  "frozen_head": "2766557096daac3f8e55657e9c48ba685157635d",
+  "target": "2e2adc4a76a3dc1e7d835e248f7cde223253e852",
+  "baseline": "2e21e404c1ab9f4e0b49acc80816e816629d0670",
+  "worktree_head_at_finish": "989118d1400e148ee4a03d6173865832b66e21b3",
+  "disposition": "merge-ready-locally",
+  "value": "unspaced ternary x?y:0 must count as a decision; optional field/params must not",
+  "baseline_observation": "pick CCN 1 on .js/.ts; m CCN 3 on .tsx/.jsx",
+  "expected": "pick CCN 2; m CCN 1",
+  "adaptation": "OPTIONAL_NAME positive lookahead shared by TypeScriptReader and TSXReader generate_tokens",
+  "product_files": [
+    "lizard_languages/typescript.py",
+    "lizard_languages/tsx.py",
+    "test/test_languages/testOptionalOperators.py"
+  ],
+  "proof": {
+    "reproduce": {"target_all_match": false, "corrected_all_match": true},
+    "focused": "649 passed, 5 skipped",
+    "full_pytest": "2135 passed, 7 skipped",
+    "make": "exit 0"
+  },
+  "performance": {
+    "attempt": 1,
+    "all_six_gates_pass": true,
+    "harness_sha256": "ec1c9c5eac0ad6a29294ecbd987b2a55d4cf31db145486d065bf13c096b76520"
+  },
+  "coordinator_remaining": [
+    "publish adapted head",
+    "hosted CI",
+    "exact-head merge",
+    "thanks"
+  ],
+  "committed": false
+}

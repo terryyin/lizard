@@ -16,6 +16,9 @@ from .javascript_templates import LINE_COMMENT, template_tokens
 # One token, so each ? in ?? is not its own ternary decision.
 NULLISH_COALESCING = r"|(?:\?\?)"
 OPTIONAL_ACCESS = r"|(?:\?\.(?!\d))"
+# An optional member or parameter, "name?: T" or "f(a?)"; in "x?y:0" the
+# "?" opens a ternary.
+OPTIONAL_NAME = r"|(?:\w+\?(?=\s*(?:[:,)]|\Z)))"
 # JavaScript identifiers can contain dollar signs as well as word characters.
 JS_IDENTIFIER = r"|(?:[\w$]+)"
 
@@ -164,6 +167,6 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         # Line comment, private method (#), optional name (?), dollar
         # identifiers, nullish (??).
         addition = (addition + "|" + LINE_COMMENT + r"|(?:#\w+)"
-                    + r"|(?:\w+\?(?![?.]))" + JS_IDENTIFIER + NULLISH_COALESCING
+                    + OPTIONAL_NAME + JS_IDENTIFIER + NULLISH_COALESCING
                     + OPTIONAL_ACCESS)
         yield from template_tokens(source_code, addition, token_class)
