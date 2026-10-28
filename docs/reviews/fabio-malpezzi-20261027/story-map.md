@@ -9,7 +9,7 @@ and run those later. Every story owns full cycles, not horizontal QA phases.
 | --- | --- | --- |
 |SEED-010#review-fabio-malpezzi-prs|527,528,531,533,534,532,535,536|Completed eight-disposition review scope; original proof retained. PR536's later SEED-016 correction is merged and acknowledged below.|
 |[SEED-010#review-structural-js-prs](../../../.planning/seeds/SEED-010-fabio-malpezzi-pr-reviews.md#review-structural-js-prs)|537–543|Queued; refined with realigned seven-slice plan. Complete function/parameter/boundary review cycles.|
-|[SEED-010#review-lexical-js-prs](../../../.planning/seeds/SEED-010-fabio-malpezzi-pr-reviews.md#review-lexical-js-prs)|544–547|Completed four-disposition lexical/condition review scope (#544/#546/#547 merged; #545 left unmerged on performance).|
+|SEED-010#review-lexical-js-prs (done)|544–547|Completed; spent plan/story recoverable at `94ec613b`; #545 follow-up [SEED-019](../../../.planning/seeds/SEED-019-template-interpolation-conditions.md#template-interpolation-conditions).|
 
 The first identity remains stable; its scope is the human-authorized first eight
 reviews. Nothing is marked delivered merely because split.
