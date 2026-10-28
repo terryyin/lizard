@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "agent": "Tsubomi-chan",
-  "email": "tsubomi-chan@example.org",
-  "identity": "SEED-010#review-structural-js-prs",
-  "mode": "story-branch",
-  "branch": "cursor/conclude-the-javascript-and-typescript-structura",
-  "host": "cursor"
-}

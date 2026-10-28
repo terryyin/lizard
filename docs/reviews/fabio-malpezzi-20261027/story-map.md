@@ -8,7 +8,7 @@ and run those later. Every story owns full cycles, not horizontal QA phases.
 | Story | PRs | State and value |
 | --- | --- | --- |
 |SEED-010#review-fabio-malpezzi-prs|527,528,531,533,534,532,535,536|Completed eight-disposition review scope; original proof retained. PR536's later SEED-016 correction is merged and acknowledged below.|
-|[SEED-010#review-structural-js-prs](../../../.planning/seeds/SEED-010-fabio-malpezzi-pr-reviews.md#review-structural-js-prs)|537–543|Done; #537–#543 dispositions recorded (#540 already-fixed/closed).|
+|[SEED-010#review-structural-js-prs](pr537/README.md)|537–543|Done; dispositions in `pr537`–`pr543` (recovery `e480e5d`); #540 already-fixed/closed.|
 |[SEED-010#review-lexical-js-prs](../../../.planning/seeds/SEED-010-fabio-malpezzi-pr-reviews.md#review-lexical-js-prs)|544–547|Queued; mapped four-slice plan awaits story refinement. Complete lexical/condition review cycles.|
 
 The first identity remains stable; its scope is the human-authorized first eight
