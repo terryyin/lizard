@@ -165,8 +165,9 @@ Proof: [slice 4](SLICE-PROOF.md); complete-cycle gates owned here.
 Accepted proof: unspaced ternary CCN 2; optional field/params `m` CCN 1;
 focused 649 / full 2135; attempt1 six performance gates pass (worst upper
 1.897%). Independent refactor: none — already clean. Evidence:
-[pr547](../../../docs/reviews/fabio-malpezzi-20261027/pr547/). Remaining:
-publish adapted head, CI, exact-head merge, thanks.
+[pr547](../../../docs/reviews/fabio-malpezzi-20261027/pr547/). Merged
+`8567a4c` at exact head `bf75e50` after fourteen-job CI; thanks
+https://github.com/terryyin/lizard/pull/547#issuecomment-6463154289.
 
 Behavior: given an unspaced ternary, analyzing `.js`/`.ts` counts it; given
 optional fields/parameters in `.tsx`/`.jsx`, analyzing does not count those

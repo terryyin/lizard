@@ -66,3 +66,8 @@ Proof: Unspaced ternaries count in JS/TS; optional fields/parameters do not add
 conditions in TS/TSX/JSX. Preserve optional chaining and nullish coalescing.
 Include `test/test_languages/testOptionalOperators.py` with the focused set
 plus reached consumers and complete-cycle gates.
+
+Execution: adapted shared `OPTIONAL_NAME` across TypeScript/TSX; focused 649 /
+full 2135; attempt1 six gates pass; merged `8567a4c` at `bf75e50` with thanks.
+Evidence:
+[docs/reviews/fabio-malpezzi-20261027/pr547/](../../../docs/reviews/fabio-malpezzi-20261027/pr547/).
