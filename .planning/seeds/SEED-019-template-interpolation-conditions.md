@@ -95,3 +95,32 @@ exact-head merge and thanks — or an evidenced further deferral.
 
 **Completion:** Merged acknowledgement on #545, or a linked further follow-up
 when the gate still fails after an eligible trim.
+
+<a id="dedupe-template-interpolation-tests"></a>
+
+### 2. Remove the duplicate template-interpolation CCN test on trunk
+
+**Identity:** SEED-019#dedupe-template-interpolation-tests
+```json dough-story-state
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/008-dedupe-template-interpolation-tests/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"4d6235f1c7e32b63cdd8dd273920515fbe49b88b349a8310fe0363f007846407","plan":"784440d23de2ab55147142028f452540479fb869b1ec5649e732a667f1d87b80"}}
+```
+
+**Goal:** For maintainers running the JS/TS language suite, the
+`test_conditions_in_interpolations` scenario runs once under
+`testTypeScriptInterpolationConditions.py`, which already owns story `label`,
+nested/literal/keyword-member controls, and the overlapping a/b/c case — without
+a second identical-class case left in `testTypeScript.py` from the #545 merge
+publish path.
+
+**Scope:** Delete only the residual
+`Test_conditions_in_template_interpolations` class from
+`test/test_languages/testTypeScript.py` on trunk. Preserve all cases in
+`testTypeScriptInterpolationConditions.py`. No product-parser changes.
+
+**Key examples:**
+
+- Given trunk after #545 merge, both `testTypeScript.py` and
+  `testTypeScriptInterpolationConditions.py` define
+  `Test_conditions_in_template_interpolations` with
+  `test_conditions_in_interpolations`; after the correction only the latter
+  file owns that class, and focused TypeScript language tests still pass.

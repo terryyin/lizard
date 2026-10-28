@@ -98,6 +98,14 @@ Depends on slice 1. Early probe owns the first six-gate observation of the
 re-adapted tree; its failure routes to trim-or-deferral inside this same slice
 rather than a separate outcome.
 
+## Execution complete
+
+Product advice: no backlog change. Feature outcome landed on trunk via #545;
+deferred language readers stay deferred. Hot-path inline learning stays in plan
+Learnings for wrap-up assimilation. Retrospective wrote correction
+SEED-019#dedupe-template-interpolation-tests (duplicate interpolation tests on
+trunk) for wrap-up follow-up disposition — not queued here.
+
 ## Current decisions
 
 - Two Behavior slices: semantic re-adapt first; performance disposition second.
