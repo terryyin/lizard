@@ -166,13 +166,14 @@ async function inspectStoryObligations(
 
 export async function checkStoryObligations(
   planPath,
-  { slice, completion, plannedCompletion } = {},
+  { slice, completion, plannedCompletion, committing = true } = {},
 ) {
+  // Progress publication passes committing: false so open receiving stays owned.
   const { result } = await inspectStoryObligations(planPath, {
     slice,
     completion: completion || plannedCompletion,
     plannedCompletion,
-    committingSlice: slice,
+    ...(committing && slice !== undefined ? { committingSlice: slice } : {}),
   });
   return result;
 }

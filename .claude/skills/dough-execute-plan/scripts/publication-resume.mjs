@@ -9,6 +9,7 @@ import {
   retainLandingComparison,
   captureAcceptedLanding,
 } from "./dashboard-landing.mjs";
+import { resolvePublicationLandingContext } from "./resolve-publication-landing-context.mjs";
 import {
   git,
   inspectDefaultCheckoutMaintenance,
@@ -16,57 +17,18 @@ import {
   pushExactRef,
   revParse,
 } from "./publication-git.mjs";
+import {
+  appendIdentity,
+  assertOwnedCommitsPreserved,
+  atStage,
+  hasReceipt,
+  ownedCommitIdentity,
+  registerIfBound,
+  remainingAfter,
+} from "./publication-resume-support.mjs";
+import { completedIdentityStop } from "./publication-backlog-validation.mjs";
 
 const defaultTargetRef = "refs/heads/main";
-
-// Runs one remote transport step. A step that outlasts the transport bound
-// rethrows its `transport-timeout` error naming the resume `stage` and the
-// attempt's facts, so a managed caller can report it as a stop while other
-// callers see it as any other thrown Git failure.
-async function atStage(stage, facts, operation) {
-  try {
-    return await operation();
-  } catch (error) {
-    if (error?.code === "transport-timeout") {
-      Object.assign(error, { stage, ...facts });
-    }
-    throw error;
-  }
-}
-
-function hasReceipt(observer, sha, targetRef) {
-  return (
-    observer?.bound === true &&
-    observer.receipts.some(
-      (receipt) => receipt.sha === sha && receipt.target === targetRef,
-    )
-  );
-}
-
-// A repository management context without a checked-out commit (a Git
-// directory whose owned worktree is already retired) holds no owned commits.
-async function ownedCommitIdentity(workspace) {
-  try {
-    await git(workspace, "rev-parse", "-q", "--verify", "HEAD");
-  } catch (error) {
-    if (error.code !== 1) throw error;
-    return { head: null, count: 0 };
-  }
-  return {
-    head: await revParse(workspace, "HEAD"),
-    count: Number(
-      (await git(workspace, "rev-list", "--count", "HEAD")).stdout.trim(),
-    ),
-  };
-}
-
-function appendIdentity(publishedRevisions, sha) {
-  if (!publishedRevisions.includes(sha)) {
-    publishedRevisions.push(sha);
-    return true;
-  }
-  return false;
-}
 
 // Classifies the retained candidate and completes the first unfinished
 // publication obligation. Does not commit, refresh the default checkout,
@@ -91,7 +53,9 @@ export async function resumeInterruptedPublication({
   targetRef = defaultTargetRef,
   remote = "origin",
   onFetchedTarget,
-  landingContext,
+  landingContext: suppliedLandingContext,
+  branch,
+  backlogPath,
 }) {
   if (supersededShas.includes(candidateSha)) {
     throw new Error(
@@ -99,6 +63,11 @@ export async function resumeInterruptedPublication({
     );
   }
 
+  const landingContext = await resolvePublicationLandingContext({
+    landingContext: suppliedLandingContext,
+    workspace: ownedWorkspace,
+    branch,
+  });
   await validateRetainedComparison(ownedWorkspace, candidateSha, suffixBase);
   const comparison = suffixBase === undefined ? {} : { suffixBase };
   const captureLanding = () =>
@@ -135,6 +104,18 @@ export async function resumeInterruptedPublication({
         pushCount: 0,
         ...comparison,
         held,
+      };
+    const invalid = await completedIdentityStop({
+      workspace: ownedWorkspace,
+      candidate: candidateSha,
+      backlogPath,
+    });
+    if (invalid)
+      return {
+        classification: "not-on-remote",
+        pushCount: 0,
+        ...comparison,
+        held: invalid,
       };
     if (landingContext)
       await retainLandingComparison(
@@ -247,32 +228,5 @@ export async function resumeInterruptedPublication({
       ? { attempted: false, reason: "already-recorded" }
       : { attempted: false, reason: "no-observer" },
     remaining: remainingAfter(observer, candidateSha, targetRef, maintenance),
-  };
-}
-
-function assertOwnedCommitsPreserved(before, after) {
-  if (after.head !== before.head || after.count !== before.count) {
-    throw new Error("resume duplicated or moved the owned commit");
-  }
-}
-
-function registerIfBound(observer, sha, targetRef) {
-  if (!observer?.bound) {
-    return { attempted: false, reason: "no-observer" };
-  }
-  observer.register(sha, targetRef);
-  return { attempted: true, sha, target: targetRef };
-}
-
-function remainingAfter(observer, sha, targetRef, maintenance) {
-  return {
-    registration: !observer?.bound
-      ? "not-applicable"
-      : hasReceipt(observer, sha, targetRef)
-        ? "satisfied"
-        : "remaining",
-    maintenance,
-    maintenancePerformed: false,
-    cleanup: "not-performed",
   };
 }

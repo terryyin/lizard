@@ -7,6 +7,7 @@ import {
   deliverRetainedReport,
   loopbackReportingOrigin,
 } from "./dashboard-completion.mjs";
+import { clearFirstLandingExpectationForContext } from "./first-landing-expectation.mjs";
 const commit = /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/;
 // A launch with no story supplies a context naming no identity; its landing
 // is kept by its launch reference alone. A caller reads this before handing
@@ -132,21 +133,27 @@ export async function captureAcceptedLanding(
   contextFile,
   { base, revision, remote, target },
 ) {
+  let receipt;
   try {
     const pending = await currentLandingInput(contextFile);
-    return {
-      state: "recorded",
-      receipt: await submitLandingInput(pending, {
-        base,
-        revision,
-        remote,
-        target,
-      }),
-    };
+    receipt = await submitLandingInput(pending, {
+      base,
+      revision,
+      remote,
+      target,
+    });
   } catch (error) {
     // Git acceptance stands independently of evidence transport or persistence.
     return { state: "unacknowledged", error: error.message };
   }
+  // Accepted capture closes the open first-landing expectation so later trunk
+  // publications take none. Clear stays outside the unacknowledged path so a
+  // clear failure cannot misreport an already-recorded landing.
+  await clearFirstLandingExpectationForContext(contextFile);
+  return {
+    state: "recorded",
+    receipt,
+  };
 }
 // `retained` is where a new submission's input is kept: beside this script
 // unless a caller names another directory.
