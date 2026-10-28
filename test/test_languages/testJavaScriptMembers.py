@@ -149,7 +149,6 @@ class Test_JavaScript_prototype_methods(unittest.TestCase):
         self.assertIn("Counter.prototype.getCount", names)
 
 
-
 class Test_JavaScript_class_inheritance(unittest.TestCase):
     """Tests class inheritance patterns."""
 
@@ -194,27 +193,56 @@ class Test_JavaScript_class_inheritance(unittest.TestCase):
         self.assertGreater(div.cyclomatic_complexity, 1)
 
 
+class Test_JavaScript_members_named_get_or_set(unittest.TestCase):
+
+    def summary(self, code):
+        return [(f.name, f.start_line, f.end_line, f.parameter_count)
+                for f in get_js_function_list(code)]
+
+    def test_methods_named_get_and_set(self):
+        code = (
+            "class A {\n"
+            "  get(key) { return this.map[key]; }\n"
+            "  set(key, value) { this.map[key] = value; }\n"
+            "  get size() { return 1; }\n"
+            "}\n"
+            "function after() { return 1; }\n"
+        )
+        self.assertEqual([('get', 2, 2, 1), ('set', 3, 3, 2),
+                          ('get size', 4, 4, 0), ('after', 6, 6, 0)],
+                         self.summary(code))
+
+    def test_properties_named_get_and_set(self):
+        code = (
+            "function g(set) {\n"
+            "  const o = { get: () => { return 1; }, set };\n"
+            "  return o;\n"
+            "}\n"
+            "function f(base, get, set) {\n"
+            "  return { base, get, set };\n"
+            "}\n"
+            "function after() { return 1; }\n"
+        )
+        self.assertEqual([('get', 2, 2, 0), ('g', 1, 4, 1), ('f', 5, 7, 3),
+                          ('after', 8, 8, 0)],
+                         self.summary(code))
+
+
 class Test_JavaScript_array_as_a_property_value(unittest.TestCase):
 
     def check_end(self, value):
-        code = (
-            "function a() {\n"
-            "  const o = {\n"
-            "    q: 1,\n"
-            "    p: %s,\n"
-            "  };\n"
-            "  return o;\n"
-            "}\n"
-            "function b() { return 1; }\n" % value
-        )
-        self.assertEqual([('a', 1, 7), ('b', 8, 8)],
-                         [(f.name, f.start_line, f.end_line)
-                          for f in get_js_function_list(code)], value)
+        code = ("function a() {\n  const o = {\n    q: 1,\n"
+                "    p: %s,\n  };\n  return o;\n}\n"
+                "function b() { return 1; }\n" % value)
+        self.assertEqual(
+            [('a', 1, 7), ('b', 8, 8)],
+            [(f.name, f.start_line, f.end_line)
+             for f in get_js_function_list(code)], value)
 
     def test_arrays_with_brackets_inside_as_a_property_value(self):
-        self.check_end("['image/png', from([1, 2])]")
-        self.check_end("[[1], 2]")
-        self.check_end("[{ id: 1, tags: ['a', 'b'] }, { id: 2 }]")
+        for value in ("['image/png', from([1, 2])]", "[[1], 2]",
+                      "[{ id: 1, tags: ['a', 'b'] }, { id: 2 }]"):
+            self.check_end(value)
 
     def test_computed_key_is_still_a_name(self):
         functions = get_js_function_list(

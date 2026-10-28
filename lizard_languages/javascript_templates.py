@@ -6,10 +6,11 @@ from .js_style_regex_expression import REGEX_TOKEN
 from .token_pattern import compiled_token_pattern, tokens_in_span
 
 
-# Skip lexical units before interpreting their quotes, backticks or braces.
 # JavaScript line comments end at any line terminator, even after a backslash.
+LINE_COMMENT = r'//[^\r\n\u2028\u2029]*'
+# Skip lexical units before interpreting their quotes, backticks or braces.
 _OPAQUE_CODE = (
-    r'/\*.*?\*/|//[^\r\n\u2028\u2029]*'
+    r'/\*.*?\*/|' + LINE_COMMENT +
     r'|"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\''
     r'|' + REGEX_TOKEN
 )

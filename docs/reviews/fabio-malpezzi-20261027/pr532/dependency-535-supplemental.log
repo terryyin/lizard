@@ -1,0 +1,9 @@
+{"module": "lizard", "path": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr532/dependency-535/lizard.py"}
+{"module": "lizard_languages", "path": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr532/dependency-535/lizard_languages/__init__.py"}
+{"module": "lizard_languages.javascript_functions", "path": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr532/dependency-535/lizard_languages/javascript_functions.py"}
+{"module": "lizard_languages.typescript_states", "path": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr532/dependency-535/lizard_languages/typescript_states.py"}
+{"module": "lizard_core.function_info", "path": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr532/dependency-535/lizard_core/function_info.py"}
+{"module": "test.test_languages.testTypeScript", "path": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr532/dependency-535/test/test_languages/testTypeScript.py"}
+{"case": "php-multiple.php", "expected": [["plain", 2]], "actual": [["plain", 1]], "passed": false, "parameters": [["tail"]], "full_parameters": [["$value $tail"]], "ccn": [1]}
+{"case": "this.ts", "expected": [["onClick", 1]], "actual": [["onClick", 1]], "passed": true, "parameters": [["event"]], "full_parameters": [[", event"]], "ccn": [1]}
+{"cases": 2, "failures": ["php-multiple.php"]}

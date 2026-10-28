@@ -3,17 +3,19 @@
 
 class JavaScriptObjectsMixin:
     def _handle_object_member(self, token):
-        if not self.as_object:
-            return False
+        """Called for tokens in an object literal or class body (as_object)."""
         # Support for getter/setter: look for 'get' or 'set' before method name
         if token in ('get', 'set'):
             self._getter_setter_prefix = token
             return True
         if self._getter_setter_prefix:
-            # Next token is the property name
-            self.last_tokens = f"{self._getter_setter_prefix} {token}"
-            self._getter_setter_prefix = None
-            return True
+            prefix, self._getter_setter_prefix = self._getter_setter_prefix, None
+            if token not in ('(', ':', ',', '}', '=', ';', '<'):
+                # Next token is the property name
+                self.last_tokens = f"{prefix} {token}"
+                return True
+            # A member named "get" or "set": get(key) {}, {get: f}, {get, set}
+            self.last_tokens = prefix
         if token == '[':
             if self._in_prop_value:
                 # An array value, {list: [[1], 2]}, not a computed name.
