@@ -137,14 +137,23 @@ Do not retime the same candidate to seek a pass.
 
 ### 3. Keyword member names — PR #546
 Type: Behavior
-Status: planned
+Status: done
 Source: https://github.com/terryyin/lizard/pull/546
 Frozen head: `a671632141127fca9b2785fdbb0c675d45ae9042`
 Proof: [slice 3](SLICE-PROOF.md); complete-cycle gates owned here.
+Accepted proof: `load` CCN 1 on four extensions; genuine controls still
+increment; focused 611 / full 2129; attempt1 six performance gates pass
+(inlined fast-path undo). Refactor that called `process_token` each token
+failed remasure and was reverted. Evidence:
+[pr546](../../../docs/reviews/fabio-malpezzi-20261027/pr546/). Remaining:
+publish adapted head, CI, exact-head merge, thanks.
 
 Behavior: given member access named `catch`/`if`/`for`/`while`/`case` (including
 `?.`), analyzing the four extensions does not add conditions, while genuine
 control-flow constructs still do; the PR receives a full contract disposition.
+
+Learnings: keep keyword-member undo inlined on the TypeScriptReader fast path;
+routing every token through `process_token` fails the &lt;3% gate under load.
 
 ### 4. Ternary and optional markers — PR #547
 Type: Behavior

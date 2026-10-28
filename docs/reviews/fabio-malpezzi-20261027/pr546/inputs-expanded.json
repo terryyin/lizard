@@ -1,0 +1,5578 @@
+[
+  {
+    "filename": "abc.js",
+    "sha256": "56e579ea0676c6bfa16b9004831dd7d75ae14bddd093bd034612ccfedbf3d762"
+  },
+  {
+    "filename": "abc.jsx",
+    "sha256": "56e579ea0676c6bfa16b9004831dd7d75ae14bddd093bd034612ccfedbf3d762"
+  },
+  {
+    "filename": "abc.ts",
+    "sha256": "56e579ea0676c6bfa16b9004831dd7d75ae14bddd093bd034612ccfedbf3d762"
+  },
+  {
+    "filename": "abc.tsx",
+    "sha256": "56e579ea0676c6bfa16b9004831dd7d75ae14bddd093bd034612ccfedbf3d762"
+  },
+  {
+    "filename": "arrow-abandoned.js",
+    "sha256": "56a151a284b6035d556f04483910b8f7fa7d3435bbef36affcb37d58c5a4ab69"
+  },
+  {
+    "filename": "arrow-alias-anonymous.js",
+    "sha256": "61e5356fdf4cf7c9a090446db81701d7b86bb43e8fc3bc92d506605bdb48929a"
+  },
+  {
+    "filename": "arrow-alias-named.js",
+    "sha256": "5460096083acfc89709e9b94a906266bb41cfdf3d55ccaca7eabe40af7c7061d"
+  },
+  {
+    "filename": "arrow-authored-single.js",
+    "sha256": "e39bf362ac9574ff0c7673d49a0b964312539c9950cab54119de87aa3f5baf64"
+  },
+  {
+    "filename": "arrow-authored-types.ts",
+    "sha256": "bb142f8237a0c35c8fa70b19acb07d2f5542987fd3d6475bd6cb02818b8700f1"
+  },
+  {
+    "filename": "arrow-authored-types.tsx",
+    "sha256": "bb142f8237a0c35c8fa70b19acb07d2f5542987fd3d6475bd6cb02818b8700f1"
+  },
+  {
+    "filename": "arrow-authored.js",
+    "sha256": "baf14c334885a49b91bd9f5729df588dc345339bc0f1b58da67f039d5bc43a17"
+  },
+  {
+    "filename": "arrow-binding-anonymous.js",
+    "sha256": "be60e3ed6a1a282bcfc107df3a3225dbb4823b02440c644fa305d6abb1f1b1fd"
+  },
+  {
+    "filename": "arrow-binding-named.js",
+    "sha256": "c317e54a8efb8cdbac899bb0a0f9e97ccd906eeecda0975e3f6aba82ac77f7f9"
+  },
+  {
+    "filename": "arrow-calls.js",
+    "sha256": "9c1f917dd2de35a89c9a459af30aa5d728a52f06d16aa7838957016792941c06"
+  },
+  {
+    "filename": "arrow-computed-binding.js",
+    "sha256": "9fbc35cbe0680e9de20032a91406e70af3d5f09a96bd8dc563092a96f80643c5"
+  },
+  {
+    "filename": "arrow-control.js",
+    "sha256": "5a6c1325fc00d7a77c662530355feecde4830504b0c08f72906831a7eb85d345"
+  },
+  {
+    "filename": "arrow-defaults.js",
+    "sha256": "c8201ff169c2434f08b6b7517ecb6c1ddc3ef87759fdec30facf0fcf9ef45cbf"
+  },
+  {
+    "filename": "arrow-empty-binding-named.js",
+    "sha256": "a128cd89fa9d9170bb75474a0343640b0780db8b97607595ebe46fc544bb3396"
+  },
+  {
+    "filename": "arrow-empty-binding.js",
+    "sha256": "083661c6fc422a2b7b229b22d9eba96f827723d470b93c4eacb88267b20b5be3"
+  },
+  {
+    "filename": "arrow-generic-named.ts",
+    "sha256": "98de85e99a3246d7737ff955cd90b7a562f1d0bf62ab75fed003daca150d418a"
+  },
+  {
+    "filename": "arrow-generic.ts",
+    "sha256": "f9626f4b5bd01f2fd986e2767547094065a0756e5f6b211fadc986c716382add"
+  },
+  {
+    "filename": "arrow-jsx.jsx",
+    "sha256": "7b794261d8691e4d81c1dbbd318f3e21d2397de7b224aaf93c2f4a84c4955ba4"
+  },
+  {
+    "filename": "arrow-member.js",
+    "sha256": "10cd4bd919fff4b654d8d1ee4bd64524a6fcffd926e44924cc1a571b33b751dc"
+  },
+  {
+    "filename": "arrow-named.js",
+    "sha256": "21260102f37c804e08441a1e13a82577ed8a7f3e0f938afc303994ccc3207bf1"
+  },
+  {
+    "filename": "arrow-nested-binding.js",
+    "sha256": "f42e9eeb62e5d8a32a723d6a65227bcd283a90b2287b62f5a286b09789d34421"
+  },
+  {
+    "filename": "arrow-nested-default.js",
+    "sha256": "bd8ff821db11c035b80ef62e2547bbc95714a75bd9626a54bfc1e2f8a043dcf3"
+  },
+  {
+    "filename": "arrow-quoted-binding.js",
+    "sha256": "98c3fb280b5d0055456423990680e61e304fd8e8fabd87064516e3bc43a85831"
+  },
+  {
+    "filename": "arrow-reported.ts",
+    "sha256": "7b11d3e958f884dc50c4dbf24c0c0411d886b2bf28dd7e6d919289912b621e98"
+  },
+  {
+    "filename": "arrow-return-function.ts",
+    "sha256": "42b0b489f2cf97335f7fa3e7a78152a48e1cc57debd060f2bdc55905e98ce154"
+  },
+  {
+    "filename": "arrow-return-object.ts",
+    "sha256": "1da35e85b00742aba1af60f8afc946f18410f74deeb276b6ddd45ed1134e8f8c"
+  },
+  {
+    "filename": "arrow-sigils.js",
+    "sha256": "156321fcc4ea84118645d0cadc791af0457b1d3d3d92972bccb083a8adabcf58"
+  },
+  {
+    "filename": "arrow-single-sigils.js",
+    "sha256": "e9c278059956960f7f8f83b4e4cb4a7e2b4ecb1dff2eceb9bf6a77d2cfe1ec25"
+  },
+  {
+    "filename": "arrow-ternary-default.js",
+    "sha256": "1892f400980271cdd7ede8339a4e8ef80d5eebc13b9e41833d2f7809eeea2b29"
+  },
+  {
+    "filename": "arrow-tsx.tsx",
+    "sha256": "a7a198cea55af072b496ca1ff234566c8766df621abc099b6f06aa623d215e84"
+  },
+  {
+    "filename": "arrow-typed.ts",
+    "sha256": "d0c78501a278296052a6b3a1a444911dc9637cd4ac07dc205ceee1eb7cd98fba"
+  },
+  {
+    "filename": "b-short.js",
+    "sha256": "a73d2a3ef4629b77043d7326ba01058059415c808120452315ecb220749eb07d"
+  },
+  {
+    "filename": "b-story.js",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "b-story.jsx",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "b-story.ts",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "b-story.tsx",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "block-comment.js",
+    "sha256": "bea3cd280f98904e63153f2cdc0c44f54f6718377c61209461759a78cff6d659"
+  },
+  {
+    "filename": "bulk-control-00.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "bulk-control-01.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "bulk-control-02.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "bulk-control-03.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "bulk-control-04.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "bulk-control-05.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "bulk-control-06.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "bulk-control-07.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "bulk-control-08.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "bulk-control-09.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "bulk-control-10.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "bulk-control-11.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "bulk-control-12.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "bulk-control-13.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "bulk-control-14.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "bulk-control-15.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "bulk-control-16.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "bulk-control-17.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "bulk-control-18.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "bulk-control-19.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "c-continuation.c",
+    "sha256": "fc8de3c419f6384624c327dd5edeefc8858968d6f6d439ba9a04370798e5a765"
+  },
+  {
+    "filename": "c-continuation.cpp",
+    "sha256": "fc8de3c419f6384624c327dd5edeefc8858968d6f6d439ba9a04370798e5a765"
+  },
+  {
+    "filename": "ctrl1-arrow-abandoned.js",
+    "sha256": "56a151a284b6035d556f04483910b8f7fa7d3435bbef36affcb37d58c5a4ab69"
+  },
+  {
+    "filename": "ctrl1-arrow-alias-anonymous.js",
+    "sha256": "61e5356fdf4cf7c9a090446db81701d7b86bb43e8fc3bc92d506605bdb48929a"
+  },
+  {
+    "filename": "ctrl1-arrow-alias-named.js",
+    "sha256": "5460096083acfc89709e9b94a906266bb41cfdf3d55ccaca7eabe40af7c7061d"
+  },
+  {
+    "filename": "ctrl1-arrow-authored-single.js",
+    "sha256": "e39bf362ac9574ff0c7673d49a0b964312539c9950cab54119de87aa3f5baf64"
+  },
+  {
+    "filename": "ctrl1-arrow-authored-types.ts",
+    "sha256": "bb142f8237a0c35c8fa70b19acb07d2f5542987fd3d6475bd6cb02818b8700f1"
+  },
+  {
+    "filename": "ctrl1-arrow-authored-types.tsx",
+    "sha256": "bb142f8237a0c35c8fa70b19acb07d2f5542987fd3d6475bd6cb02818b8700f1"
+  },
+  {
+    "filename": "ctrl1-arrow-authored.js",
+    "sha256": "baf14c334885a49b91bd9f5729df588dc345339bc0f1b58da67f039d5bc43a17"
+  },
+  {
+    "filename": "ctrl1-arrow-binding-anonymous.js",
+    "sha256": "be60e3ed6a1a282bcfc107df3a3225dbb4823b02440c644fa305d6abb1f1b1fd"
+  },
+  {
+    "filename": "ctrl1-arrow-binding-named.js",
+    "sha256": "c317e54a8efb8cdbac899bb0a0f9e97ccd906eeecda0975e3f6aba82ac77f7f9"
+  },
+  {
+    "filename": "ctrl1-arrow-calls.js",
+    "sha256": "9c1f917dd2de35a89c9a459af30aa5d728a52f06d16aa7838957016792941c06"
+  },
+  {
+    "filename": "ctrl1-arrow-computed-binding.js",
+    "sha256": "9fbc35cbe0680e9de20032a91406e70af3d5f09a96bd8dc563092a96f80643c5"
+  },
+  {
+    "filename": "ctrl1-arrow-control.js",
+    "sha256": "5a6c1325fc00d7a77c662530355feecde4830504b0c08f72906831a7eb85d345"
+  },
+  {
+    "filename": "ctrl1-arrow-defaults.js",
+    "sha256": "c8201ff169c2434f08b6b7517ecb6c1ddc3ef87759fdec30facf0fcf9ef45cbf"
+  },
+  {
+    "filename": "ctrl1-arrow-empty-binding-named.js",
+    "sha256": "a128cd89fa9d9170bb75474a0343640b0780db8b97607595ebe46fc544bb3396"
+  },
+  {
+    "filename": "ctrl1-arrow-empty-binding.js",
+    "sha256": "083661c6fc422a2b7b229b22d9eba96f827723d470b93c4eacb88267b20b5be3"
+  },
+  {
+    "filename": "ctrl1-arrow-generic-named.ts",
+    "sha256": "98de85e99a3246d7737ff955cd90b7a562f1d0bf62ab75fed003daca150d418a"
+  },
+  {
+    "filename": "ctrl1-arrow-generic.ts",
+    "sha256": "f9626f4b5bd01f2fd986e2767547094065a0756e5f6b211fadc986c716382add"
+  },
+  {
+    "filename": "ctrl1-arrow-jsx.jsx",
+    "sha256": "7b794261d8691e4d81c1dbbd318f3e21d2397de7b224aaf93c2f4a84c4955ba4"
+  },
+  {
+    "filename": "ctrl1-arrow-member.js",
+    "sha256": "10cd4bd919fff4b654d8d1ee4bd64524a6fcffd926e44924cc1a571b33b751dc"
+  },
+  {
+    "filename": "ctrl1-arrow-named.js",
+    "sha256": "21260102f37c804e08441a1e13a82577ed8a7f3e0f938afc303994ccc3207bf1"
+  },
+  {
+    "filename": "ctrl1-arrow-nested-binding.js",
+    "sha256": "f42e9eeb62e5d8a32a723d6a65227bcd283a90b2287b62f5a286b09789d34421"
+  },
+  {
+    "filename": "ctrl1-arrow-nested-default.js",
+    "sha256": "bd8ff821db11c035b80ef62e2547bbc95714a75bd9626a54bfc1e2f8a043dcf3"
+  },
+  {
+    "filename": "ctrl1-arrow-quoted-binding.js",
+    "sha256": "98c3fb280b5d0055456423990680e61e304fd8e8fabd87064516e3bc43a85831"
+  },
+  {
+    "filename": "ctrl1-arrow-reported.ts",
+    "sha256": "7b11d3e958f884dc50c4dbf24c0c0411d886b2bf28dd7e6d919289912b621e98"
+  },
+  {
+    "filename": "ctrl1-arrow-return-function.ts",
+    "sha256": "42b0b489f2cf97335f7fa3e7a78152a48e1cc57debd060f2bdc55905e98ce154"
+  },
+  {
+    "filename": "ctrl1-arrow-return-object.ts",
+    "sha256": "1da35e85b00742aba1af60f8afc946f18410f74deeb276b6ddd45ed1134e8f8c"
+  },
+  {
+    "filename": "ctrl1-arrow-sigils.js",
+    "sha256": "156321fcc4ea84118645d0cadc791af0457b1d3d3d92972bccb083a8adabcf58"
+  },
+  {
+    "filename": "ctrl1-arrow-single-sigils.js",
+    "sha256": "e9c278059956960f7f8f83b4e4cb4a7e2b4ecb1dff2eceb9bf6a77d2cfe1ec25"
+  },
+  {
+    "filename": "ctrl1-arrow-ternary-default.js",
+    "sha256": "1892f400980271cdd7ede8339a4e8ef80d5eebc13b9e41833d2f7809eeea2b29"
+  },
+  {
+    "filename": "ctrl1-arrow-tsx.tsx",
+    "sha256": "a7a198cea55af072b496ca1ff234566c8766df621abc099b6f06aa623d215e84"
+  },
+  {
+    "filename": "ctrl1-arrow-typed.ts",
+    "sha256": "d0c78501a278296052a6b3a1a444911dc9637cd4ac07dc205ceee1eb7cd98fba"
+  },
+  {
+    "filename": "ctrl1-b-short.js",
+    "sha256": "a73d2a3ef4629b77043d7326ba01058059415c808120452315ecb220749eb07d"
+  },
+  {
+    "filename": "ctrl1-b-story.js",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl1-b-story.jsx",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl1-b-story.ts",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl1-b-story.tsx",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl1-block-comment.js",
+    "sha256": "bea3cd280f98904e63153f2cdc0c44f54f6718377c61209461759a78cff6d659"
+  },
+  {
+    "filename": "ctrl1-bulk-control-00.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl1-bulk-control-01.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl1-bulk-control-02.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl1-bulk-control-03.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl1-bulk-control-04.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl1-bulk-control-05.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl1-bulk-control-06.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl1-bulk-control-07.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl1-bulk-control-08.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl1-bulk-control-09.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl1-bulk-control-10.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl1-bulk-control-11.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl1-bulk-control-12.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl1-bulk-control-13.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl1-bulk-control-14.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl1-bulk-control-15.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl1-bulk-control-16.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl1-bulk-control-17.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl1-bulk-control-18.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl1-bulk-control-19.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl1-dollar-id.js",
+    "sha256": "4bab567ad29205ad4140c5b4da86ca70bdedf722680b53520b9345f9d907dec2"
+  },
+  {
+    "filename": "ctrl1-genuine-all.js",
+    "sha256": "83ca72e4726df5645621706ea22096693d246da9494d9993a648caea709a95b8"
+  },
+  {
+    "filename": "ctrl1-genuine-case.js",
+    "sha256": "9ccaf4ae4da2bfceb12bc89d3c41106c09d329605e43ab245b21182cb1022f94"
+  },
+  {
+    "filename": "ctrl1-genuine-catch.js",
+    "sha256": "23a89000ea88ff90031b17228bacc3465ebe2d2eebbfa8a2e10626e926ad535c"
+  },
+  {
+    "filename": "ctrl1-genuine-for.js",
+    "sha256": "feadf3fabf59526bdd15b9c2ed1b129900e7d2553839c05aea58e91aae182fcf"
+  },
+  {
+    "filename": "ctrl1-genuine-if.js",
+    "sha256": "7e6ef888c17dc9f570cd2afb005d8e251ba0f688d1f3dec8d7d3f5c34d0db8b5"
+  },
+  {
+    "filename": "ctrl1-genuine-while.js",
+    "sha256": "19a72c2b61cd66ab5843aa4a782d0b46728eacce7481ae51b70e54d3c28e323e"
+  },
+  {
+    "filename": "ctrl1-line-comment-plain.js",
+    "sha256": "9e069d13b385a88a6085d89194677305ff67e4f44f15bc0dad857901a266ff1a"
+  },
+  {
+    "filename": "ctrl1-load.js",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl1-load.jsx",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl1-load.ts",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl1-load.tsx",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl1-members.js",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl1-members.jsx",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl1-members.ts",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl1-members.tsx",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl1-optional-access.ts",
+    "sha256": "1adcecc35601a013fad7cf3c050f03ffb06b074b7fb41f91592ee9e6129060ce"
+  },
+  {
+    "filename": "ctrl1-outside.js",
+    "sha256": "fa75f54bfb738784c7d898377d50390109c425e019583995aece6aa236c20b82"
+  },
+  {
+    "filename": "ctrl1-plain-template.js",
+    "sha256": "961bc29c4c7d7b2f4c410158b3d4e4277cc0cc4795ae04b3f7d66a8762fe4239"
+  },
+  {
+    "filename": "ctrl1-pr528-sample.js",
+    "sha256": "8276755adc957c67481dd5f52a77b64bac82dd8cf86597c45439c3aeecdaf0c8"
+  },
+  {
+    "filename": "ctrl1-pr531-sample.js",
+    "sha256": "b59ec1df153ef6a073b0234b64bbf44f858a638c1f64fee7815cfb5d4cab7059"
+  },
+  {
+    "filename": "ctrl1-pr532-sample.ts",
+    "sha256": "dbae4d65b68ffeb445476541a5f9a1a498e139448ecb0ce0bf1792f6a18d260a"
+  },
+  {
+    "filename": "ctrl1-pr533-sample.js",
+    "sha256": "3eb63ea8dfdd5b6ad5331cd5444847790315de72ebe9fff97d7f2d1a3dd4bdfc"
+  },
+  {
+    "filename": "ctrl1-pr534-sample.js",
+    "sha256": "7a72f078efd0476fc951cce56eb0c1e9c76d9986800eb128a7daa9a6fd2b63f7"
+  },
+  {
+    "filename": "ctrl1-pr535-sample.ts",
+    "sha256": "44c49822101c7535bef5e23aa5117ae4ecce877e98bd00aea823358ebb6e677d"
+  },
+  {
+    "filename": "ctrl1-pr536-sample.ts",
+    "sha256": "59ecfa342f70b98877d42c5b9d1928366d1f9a0b3c3786f47262ab171d7f08a6"
+  },
+  {
+    "filename": "ctrl1-pr537-sample.js",
+    "sha256": "10b749e81756178a04004d1ea5060fa211470f941e64d35e49635773ebba25ab"
+  },
+  {
+    "filename": "ctrl1-pr538-sample.js",
+    "sha256": "4c18cddffd29959af4bee8d5c2a7860fd22f16f703f8c5ccc5e56dcc5860913f"
+  },
+  {
+    "filename": "ctrl1-pr539-sample.js",
+    "sha256": "c38e1bc07b1597445a9b01b6c33a7b47cfdfc54c71604a438a63637e94c3ab19"
+  },
+  {
+    "filename": "ctrl1-pr540-sample.js",
+    "sha256": "a1b6bc422d78b5062512edb655ed6e589f2e4fac046cc2034cd972aa9aa6643d"
+  },
+  {
+    "filename": "ctrl1-pr541-sample.js",
+    "sha256": "536fbc51f580e121c9abbdd0fb2137b93f80604dc05715067a3a5f37141926dc"
+  },
+  {
+    "filename": "ctrl1-pr542-sample.js",
+    "sha256": "0f249ac6483097c6efb636bf29c39c5eab78526e5d3c41ebb85f8328fd28dfe7"
+  },
+  {
+    "filename": "ctrl1-pr543-sample.js",
+    "sha256": "db1418ecc2e033e4ead1d5206c64ed81cba74602d2acba25f97d177cb8baa147"
+  },
+  {
+    "filename": "ctrl1-pr544-sample.js",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl1-pr546-sample.js",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl1-pr547-sample.js",
+    "sha256": "1fb139b9f112bba41a502e6a2dc9034a291b7bac7ede99742798d77fe2bb408c"
+  },
+  {
+    "filename": "ctrl1-this-authored.ts",
+    "sha256": "3159b065baf9dea8e8876f3855b30a1fe73485ca8172070d45db1f458e50f0db"
+  },
+  {
+    "filename": "ctrl1-this-binding.js",
+    "sha256": "89bc3f4e29f353154f72f5615f24889242d1e8d89f26b0708a864313c2e38186"
+  },
+  {
+    "filename": "ctrl1-this-binding.jsx",
+    "sha256": "c4dcdd318c02d52ddfed0e974fb0a47ebde178d4f1de9f84aa42c542f28406ee"
+  },
+  {
+    "filename": "ctrl1-this-binding.ts",
+    "sha256": "89bc3f4e29f353154f72f5615f24889242d1e8d89f26b0708a864313c2e38186"
+  },
+  {
+    "filename": "ctrl1-this-binding.tsx",
+    "sha256": "c4dcdd318c02d52ddfed0e974fb0a47ebde178d4f1de9f84aa42c542f28406ee"
+  },
+  {
+    "filename": "ctrl1-this-initializer.js",
+    "sha256": "3796905fa231c4be961d4df0658826411c72927c829b987b8bc22ad1d04a8d28"
+  },
+  {
+    "filename": "ctrl1-this-method.ts",
+    "sha256": "c8d7e2d730bdee8072d71ffd3332c6e4aaf5f23e2865563152e9ee5e3db7fbab"
+  },
+  {
+    "filename": "ctrl1-this-nested-default.ts",
+    "sha256": "df890de7a0b2c5f85cc3fc840b55756414ef070f34ef1ae0e5d836ed66b6c25d"
+  },
+  {
+    "filename": "ctrl1-this-object.ts",
+    "sha256": "bddc693326a2fd998d959953f87d8d73e2d833bc0d06156a99843d6855b2a8fa"
+  },
+  {
+    "filename": "ctrl1-this-only.ts",
+    "sha256": "d7faf59a52e8cc93d280b1d187b79855735783e3933193076f43ccfc6851a5f9"
+  },
+  {
+    "filename": "ctrl1-this-render.tsx",
+    "sha256": "74a914771c85008fdf74b784303a1b9cc6271d6d19e1cb5bb1484b4a66665e5b"
+  },
+  {
+    "filename": "ctrl1-this-reported.ts",
+    "sha256": "44c49822101c7535bef5e23aa5117ae4ecce877e98bd00aea823358ebb6e677d"
+  },
+  {
+    "filename": "ctrl1-this-typed-defaults.ts",
+    "sha256": "d9af962397ca2c3302e622f0f873490e72500b9ce21d917eebb2b2ace327d9f1"
+  },
+  {
+    "filename": "ctrl10-arrow-abandoned.js",
+    "sha256": "56a151a284b6035d556f04483910b8f7fa7d3435bbef36affcb37d58c5a4ab69"
+  },
+  {
+    "filename": "ctrl10-arrow-alias-anonymous.js",
+    "sha256": "61e5356fdf4cf7c9a090446db81701d7b86bb43e8fc3bc92d506605bdb48929a"
+  },
+  {
+    "filename": "ctrl10-arrow-alias-named.js",
+    "sha256": "5460096083acfc89709e9b94a906266bb41cfdf3d55ccaca7eabe40af7c7061d"
+  },
+  {
+    "filename": "ctrl10-arrow-authored-single.js",
+    "sha256": "e39bf362ac9574ff0c7673d49a0b964312539c9950cab54119de87aa3f5baf64"
+  },
+  {
+    "filename": "ctrl10-arrow-authored-types.ts",
+    "sha256": "bb142f8237a0c35c8fa70b19acb07d2f5542987fd3d6475bd6cb02818b8700f1"
+  },
+  {
+    "filename": "ctrl10-arrow-authored-types.tsx",
+    "sha256": "bb142f8237a0c35c8fa70b19acb07d2f5542987fd3d6475bd6cb02818b8700f1"
+  },
+  {
+    "filename": "ctrl10-arrow-authored.js",
+    "sha256": "baf14c334885a49b91bd9f5729df588dc345339bc0f1b58da67f039d5bc43a17"
+  },
+  {
+    "filename": "ctrl10-arrow-binding-anonymous.js",
+    "sha256": "be60e3ed6a1a282bcfc107df3a3225dbb4823b02440c644fa305d6abb1f1b1fd"
+  },
+  {
+    "filename": "ctrl10-arrow-binding-named.js",
+    "sha256": "c317e54a8efb8cdbac899bb0a0f9e97ccd906eeecda0975e3f6aba82ac77f7f9"
+  },
+  {
+    "filename": "ctrl10-arrow-calls.js",
+    "sha256": "9c1f917dd2de35a89c9a459af30aa5d728a52f06d16aa7838957016792941c06"
+  },
+  {
+    "filename": "ctrl10-arrow-computed-binding.js",
+    "sha256": "9fbc35cbe0680e9de20032a91406e70af3d5f09a96bd8dc563092a96f80643c5"
+  },
+  {
+    "filename": "ctrl10-arrow-control.js",
+    "sha256": "5a6c1325fc00d7a77c662530355feecde4830504b0c08f72906831a7eb85d345"
+  },
+  {
+    "filename": "ctrl10-arrow-defaults.js",
+    "sha256": "c8201ff169c2434f08b6b7517ecb6c1ddc3ef87759fdec30facf0fcf9ef45cbf"
+  },
+  {
+    "filename": "ctrl10-arrow-empty-binding-named.js",
+    "sha256": "a128cd89fa9d9170bb75474a0343640b0780db8b97607595ebe46fc544bb3396"
+  },
+  {
+    "filename": "ctrl10-arrow-empty-binding.js",
+    "sha256": "083661c6fc422a2b7b229b22d9eba96f827723d470b93c4eacb88267b20b5be3"
+  },
+  {
+    "filename": "ctrl10-arrow-generic-named.ts",
+    "sha256": "98de85e99a3246d7737ff955cd90b7a562f1d0bf62ab75fed003daca150d418a"
+  },
+  {
+    "filename": "ctrl10-arrow-generic.ts",
+    "sha256": "f9626f4b5bd01f2fd986e2767547094065a0756e5f6b211fadc986c716382add"
+  },
+  {
+    "filename": "ctrl10-arrow-jsx.jsx",
+    "sha256": "7b794261d8691e4d81c1dbbd318f3e21d2397de7b224aaf93c2f4a84c4955ba4"
+  },
+  {
+    "filename": "ctrl10-arrow-member.js",
+    "sha256": "10cd4bd919fff4b654d8d1ee4bd64524a6fcffd926e44924cc1a571b33b751dc"
+  },
+  {
+    "filename": "ctrl10-arrow-named.js",
+    "sha256": "21260102f37c804e08441a1e13a82577ed8a7f3e0f938afc303994ccc3207bf1"
+  },
+  {
+    "filename": "ctrl10-arrow-nested-binding.js",
+    "sha256": "f42e9eeb62e5d8a32a723d6a65227bcd283a90b2287b62f5a286b09789d34421"
+  },
+  {
+    "filename": "ctrl10-arrow-nested-default.js",
+    "sha256": "bd8ff821db11c035b80ef62e2547bbc95714a75bd9626a54bfc1e2f8a043dcf3"
+  },
+  {
+    "filename": "ctrl10-arrow-quoted-binding.js",
+    "sha256": "98c3fb280b5d0055456423990680e61e304fd8e8fabd87064516e3bc43a85831"
+  },
+  {
+    "filename": "ctrl10-arrow-reported.ts",
+    "sha256": "7b11d3e958f884dc50c4dbf24c0c0411d886b2bf28dd7e6d919289912b621e98"
+  },
+  {
+    "filename": "ctrl10-arrow-return-function.ts",
+    "sha256": "42b0b489f2cf97335f7fa3e7a78152a48e1cc57debd060f2bdc55905e98ce154"
+  },
+  {
+    "filename": "ctrl10-arrow-return-object.ts",
+    "sha256": "1da35e85b00742aba1af60f8afc946f18410f74deeb276b6ddd45ed1134e8f8c"
+  },
+  {
+    "filename": "ctrl10-arrow-sigils.js",
+    "sha256": "156321fcc4ea84118645d0cadc791af0457b1d3d3d92972bccb083a8adabcf58"
+  },
+  {
+    "filename": "ctrl10-arrow-single-sigils.js",
+    "sha256": "e9c278059956960f7f8f83b4e4cb4a7e2b4ecb1dff2eceb9bf6a77d2cfe1ec25"
+  },
+  {
+    "filename": "ctrl10-arrow-ternary-default.js",
+    "sha256": "1892f400980271cdd7ede8339a4e8ef80d5eebc13b9e41833d2f7809eeea2b29"
+  },
+  {
+    "filename": "ctrl10-arrow-tsx.tsx",
+    "sha256": "a7a198cea55af072b496ca1ff234566c8766df621abc099b6f06aa623d215e84"
+  },
+  {
+    "filename": "ctrl10-arrow-typed.ts",
+    "sha256": "d0c78501a278296052a6b3a1a444911dc9637cd4ac07dc205ceee1eb7cd98fba"
+  },
+  {
+    "filename": "ctrl10-b-short.js",
+    "sha256": "a73d2a3ef4629b77043d7326ba01058059415c808120452315ecb220749eb07d"
+  },
+  {
+    "filename": "ctrl10-b-story.js",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl10-b-story.jsx",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl10-b-story.ts",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl10-b-story.tsx",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl10-block-comment.js",
+    "sha256": "bea3cd280f98904e63153f2cdc0c44f54f6718377c61209461759a78cff6d659"
+  },
+  {
+    "filename": "ctrl10-bulk-control-00.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl10-bulk-control-01.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl10-bulk-control-02.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl10-bulk-control-03.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl10-bulk-control-04.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl10-bulk-control-05.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl10-bulk-control-06.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl10-bulk-control-07.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl10-bulk-control-08.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl10-bulk-control-09.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl10-bulk-control-10.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl10-bulk-control-11.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl10-bulk-control-12.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl10-bulk-control-13.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl10-bulk-control-14.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl10-bulk-control-15.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl10-bulk-control-16.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl10-bulk-control-17.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl10-bulk-control-18.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl10-bulk-control-19.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl10-dollar-id.js",
+    "sha256": "4bab567ad29205ad4140c5b4da86ca70bdedf722680b53520b9345f9d907dec2"
+  },
+  {
+    "filename": "ctrl10-genuine-all.js",
+    "sha256": "83ca72e4726df5645621706ea22096693d246da9494d9993a648caea709a95b8"
+  },
+  {
+    "filename": "ctrl10-genuine-case.js",
+    "sha256": "9ccaf4ae4da2bfceb12bc89d3c41106c09d329605e43ab245b21182cb1022f94"
+  },
+  {
+    "filename": "ctrl10-genuine-catch.js",
+    "sha256": "23a89000ea88ff90031b17228bacc3465ebe2d2eebbfa8a2e10626e926ad535c"
+  },
+  {
+    "filename": "ctrl10-genuine-for.js",
+    "sha256": "feadf3fabf59526bdd15b9c2ed1b129900e7d2553839c05aea58e91aae182fcf"
+  },
+  {
+    "filename": "ctrl10-genuine-if.js",
+    "sha256": "7e6ef888c17dc9f570cd2afb005d8e251ba0f688d1f3dec8d7d3f5c34d0db8b5"
+  },
+  {
+    "filename": "ctrl10-genuine-while.js",
+    "sha256": "19a72c2b61cd66ab5843aa4a782d0b46728eacce7481ae51b70e54d3c28e323e"
+  },
+  {
+    "filename": "ctrl10-line-comment-plain.js",
+    "sha256": "9e069d13b385a88a6085d89194677305ff67e4f44f15bc0dad857901a266ff1a"
+  },
+  {
+    "filename": "ctrl10-load.js",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl10-load.jsx",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl10-load.ts",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl10-load.tsx",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl10-members.js",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl10-members.jsx",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl10-members.ts",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl10-members.tsx",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl10-optional-access.ts",
+    "sha256": "1adcecc35601a013fad7cf3c050f03ffb06b074b7fb41f91592ee9e6129060ce"
+  },
+  {
+    "filename": "ctrl10-outside.js",
+    "sha256": "fa75f54bfb738784c7d898377d50390109c425e019583995aece6aa236c20b82"
+  },
+  {
+    "filename": "ctrl10-plain-template.js",
+    "sha256": "961bc29c4c7d7b2f4c410158b3d4e4277cc0cc4795ae04b3f7d66a8762fe4239"
+  },
+  {
+    "filename": "ctrl10-pr528-sample.js",
+    "sha256": "8276755adc957c67481dd5f52a77b64bac82dd8cf86597c45439c3aeecdaf0c8"
+  },
+  {
+    "filename": "ctrl10-pr531-sample.js",
+    "sha256": "b59ec1df153ef6a073b0234b64bbf44f858a638c1f64fee7815cfb5d4cab7059"
+  },
+  {
+    "filename": "ctrl10-pr532-sample.ts",
+    "sha256": "dbae4d65b68ffeb445476541a5f9a1a498e139448ecb0ce0bf1792f6a18d260a"
+  },
+  {
+    "filename": "ctrl10-pr533-sample.js",
+    "sha256": "3eb63ea8dfdd5b6ad5331cd5444847790315de72ebe9fff97d7f2d1a3dd4bdfc"
+  },
+  {
+    "filename": "ctrl10-pr534-sample.js",
+    "sha256": "7a72f078efd0476fc951cce56eb0c1e9c76d9986800eb128a7daa9a6fd2b63f7"
+  },
+  {
+    "filename": "ctrl10-pr535-sample.ts",
+    "sha256": "44c49822101c7535bef5e23aa5117ae4ecce877e98bd00aea823358ebb6e677d"
+  },
+  {
+    "filename": "ctrl10-pr536-sample.ts",
+    "sha256": "59ecfa342f70b98877d42c5b9d1928366d1f9a0b3c3786f47262ab171d7f08a6"
+  },
+  {
+    "filename": "ctrl10-pr537-sample.js",
+    "sha256": "10b749e81756178a04004d1ea5060fa211470f941e64d35e49635773ebba25ab"
+  },
+  {
+    "filename": "ctrl10-pr538-sample.js",
+    "sha256": "4c18cddffd29959af4bee8d5c2a7860fd22f16f703f8c5ccc5e56dcc5860913f"
+  },
+  {
+    "filename": "ctrl10-pr539-sample.js",
+    "sha256": "c38e1bc07b1597445a9b01b6c33a7b47cfdfc54c71604a438a63637e94c3ab19"
+  },
+  {
+    "filename": "ctrl10-pr540-sample.js",
+    "sha256": "a1b6bc422d78b5062512edb655ed6e589f2e4fac046cc2034cd972aa9aa6643d"
+  },
+  {
+    "filename": "ctrl10-pr541-sample.js",
+    "sha256": "536fbc51f580e121c9abbdd0fb2137b93f80604dc05715067a3a5f37141926dc"
+  },
+  {
+    "filename": "ctrl10-pr542-sample.js",
+    "sha256": "0f249ac6483097c6efb636bf29c39c5eab78526e5d3c41ebb85f8328fd28dfe7"
+  },
+  {
+    "filename": "ctrl10-pr543-sample.js",
+    "sha256": "db1418ecc2e033e4ead1d5206c64ed81cba74602d2acba25f97d177cb8baa147"
+  },
+  {
+    "filename": "ctrl10-pr544-sample.js",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl10-pr546-sample.js",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl10-pr547-sample.js",
+    "sha256": "1fb139b9f112bba41a502e6a2dc9034a291b7bac7ede99742798d77fe2bb408c"
+  },
+  {
+    "filename": "ctrl10-this-authored.ts",
+    "sha256": "3159b065baf9dea8e8876f3855b30a1fe73485ca8172070d45db1f458e50f0db"
+  },
+  {
+    "filename": "ctrl10-this-binding.js",
+    "sha256": "89bc3f4e29f353154f72f5615f24889242d1e8d89f26b0708a864313c2e38186"
+  },
+  {
+    "filename": "ctrl10-this-binding.jsx",
+    "sha256": "c4dcdd318c02d52ddfed0e974fb0a47ebde178d4f1de9f84aa42c542f28406ee"
+  },
+  {
+    "filename": "ctrl10-this-binding.ts",
+    "sha256": "89bc3f4e29f353154f72f5615f24889242d1e8d89f26b0708a864313c2e38186"
+  },
+  {
+    "filename": "ctrl10-this-binding.tsx",
+    "sha256": "c4dcdd318c02d52ddfed0e974fb0a47ebde178d4f1de9f84aa42c542f28406ee"
+  },
+  {
+    "filename": "ctrl10-this-initializer.js",
+    "sha256": "3796905fa231c4be961d4df0658826411c72927c829b987b8bc22ad1d04a8d28"
+  },
+  {
+    "filename": "ctrl10-this-method.ts",
+    "sha256": "c8d7e2d730bdee8072d71ffd3332c6e4aaf5f23e2865563152e9ee5e3db7fbab"
+  },
+  {
+    "filename": "ctrl10-this-nested-default.ts",
+    "sha256": "df890de7a0b2c5f85cc3fc840b55756414ef070f34ef1ae0e5d836ed66b6c25d"
+  },
+  {
+    "filename": "ctrl10-this-object.ts",
+    "sha256": "bddc693326a2fd998d959953f87d8d73e2d833bc0d06156a99843d6855b2a8fa"
+  },
+  {
+    "filename": "ctrl10-this-only.ts",
+    "sha256": "d7faf59a52e8cc93d280b1d187b79855735783e3933193076f43ccfc6851a5f9"
+  },
+  {
+    "filename": "ctrl10-this-render.tsx",
+    "sha256": "74a914771c85008fdf74b784303a1b9cc6271d6d19e1cb5bb1484b4a66665e5b"
+  },
+  {
+    "filename": "ctrl10-this-reported.ts",
+    "sha256": "44c49822101c7535bef5e23aa5117ae4ecce877e98bd00aea823358ebb6e677d"
+  },
+  {
+    "filename": "ctrl10-this-typed-defaults.ts",
+    "sha256": "d9af962397ca2c3302e622f0f873490e72500b9ce21d917eebb2b2ace327d9f1"
+  },
+  {
+    "filename": "ctrl11-arrow-abandoned.js",
+    "sha256": "56a151a284b6035d556f04483910b8f7fa7d3435bbef36affcb37d58c5a4ab69"
+  },
+  {
+    "filename": "ctrl11-arrow-alias-anonymous.js",
+    "sha256": "61e5356fdf4cf7c9a090446db81701d7b86bb43e8fc3bc92d506605bdb48929a"
+  },
+  {
+    "filename": "ctrl11-arrow-alias-named.js",
+    "sha256": "5460096083acfc89709e9b94a906266bb41cfdf3d55ccaca7eabe40af7c7061d"
+  },
+  {
+    "filename": "ctrl11-arrow-authored-single.js",
+    "sha256": "e39bf362ac9574ff0c7673d49a0b964312539c9950cab54119de87aa3f5baf64"
+  },
+  {
+    "filename": "ctrl11-arrow-authored-types.ts",
+    "sha256": "bb142f8237a0c35c8fa70b19acb07d2f5542987fd3d6475bd6cb02818b8700f1"
+  },
+  {
+    "filename": "ctrl11-arrow-authored-types.tsx",
+    "sha256": "bb142f8237a0c35c8fa70b19acb07d2f5542987fd3d6475bd6cb02818b8700f1"
+  },
+  {
+    "filename": "ctrl11-arrow-authored.js",
+    "sha256": "baf14c334885a49b91bd9f5729df588dc345339bc0f1b58da67f039d5bc43a17"
+  },
+  {
+    "filename": "ctrl11-arrow-binding-anonymous.js",
+    "sha256": "be60e3ed6a1a282bcfc107df3a3225dbb4823b02440c644fa305d6abb1f1b1fd"
+  },
+  {
+    "filename": "ctrl11-arrow-binding-named.js",
+    "sha256": "c317e54a8efb8cdbac899bb0a0f9e97ccd906eeecda0975e3f6aba82ac77f7f9"
+  },
+  {
+    "filename": "ctrl11-arrow-calls.js",
+    "sha256": "9c1f917dd2de35a89c9a459af30aa5d728a52f06d16aa7838957016792941c06"
+  },
+  {
+    "filename": "ctrl11-arrow-computed-binding.js",
+    "sha256": "9fbc35cbe0680e9de20032a91406e70af3d5f09a96bd8dc563092a96f80643c5"
+  },
+  {
+    "filename": "ctrl11-arrow-control.js",
+    "sha256": "5a6c1325fc00d7a77c662530355feecde4830504b0c08f72906831a7eb85d345"
+  },
+  {
+    "filename": "ctrl11-arrow-defaults.js",
+    "sha256": "c8201ff169c2434f08b6b7517ecb6c1ddc3ef87759fdec30facf0fcf9ef45cbf"
+  },
+  {
+    "filename": "ctrl11-arrow-empty-binding-named.js",
+    "sha256": "a128cd89fa9d9170bb75474a0343640b0780db8b97607595ebe46fc544bb3396"
+  },
+  {
+    "filename": "ctrl11-arrow-empty-binding.js",
+    "sha256": "083661c6fc422a2b7b229b22d9eba96f827723d470b93c4eacb88267b20b5be3"
+  },
+  {
+    "filename": "ctrl11-arrow-generic-named.ts",
+    "sha256": "98de85e99a3246d7737ff955cd90b7a562f1d0bf62ab75fed003daca150d418a"
+  },
+  {
+    "filename": "ctrl11-arrow-generic.ts",
+    "sha256": "f9626f4b5bd01f2fd986e2767547094065a0756e5f6b211fadc986c716382add"
+  },
+  {
+    "filename": "ctrl11-arrow-jsx.jsx",
+    "sha256": "7b794261d8691e4d81c1dbbd318f3e21d2397de7b224aaf93c2f4a84c4955ba4"
+  },
+  {
+    "filename": "ctrl11-arrow-member.js",
+    "sha256": "10cd4bd919fff4b654d8d1ee4bd64524a6fcffd926e44924cc1a571b33b751dc"
+  },
+  {
+    "filename": "ctrl11-arrow-named.js",
+    "sha256": "21260102f37c804e08441a1e13a82577ed8a7f3e0f938afc303994ccc3207bf1"
+  },
+  {
+    "filename": "ctrl11-arrow-nested-binding.js",
+    "sha256": "f42e9eeb62e5d8a32a723d6a65227bcd283a90b2287b62f5a286b09789d34421"
+  },
+  {
+    "filename": "ctrl11-arrow-nested-default.js",
+    "sha256": "bd8ff821db11c035b80ef62e2547bbc95714a75bd9626a54bfc1e2f8a043dcf3"
+  },
+  {
+    "filename": "ctrl11-arrow-quoted-binding.js",
+    "sha256": "98c3fb280b5d0055456423990680e61e304fd8e8fabd87064516e3bc43a85831"
+  },
+  {
+    "filename": "ctrl11-arrow-reported.ts",
+    "sha256": "7b11d3e958f884dc50c4dbf24c0c0411d886b2bf28dd7e6d919289912b621e98"
+  },
+  {
+    "filename": "ctrl11-arrow-return-function.ts",
+    "sha256": "42b0b489f2cf97335f7fa3e7a78152a48e1cc57debd060f2bdc55905e98ce154"
+  },
+  {
+    "filename": "ctrl11-arrow-return-object.ts",
+    "sha256": "1da35e85b00742aba1af60f8afc946f18410f74deeb276b6ddd45ed1134e8f8c"
+  },
+  {
+    "filename": "ctrl11-arrow-sigils.js",
+    "sha256": "156321fcc4ea84118645d0cadc791af0457b1d3d3d92972bccb083a8adabcf58"
+  },
+  {
+    "filename": "ctrl11-arrow-single-sigils.js",
+    "sha256": "e9c278059956960f7f8f83b4e4cb4a7e2b4ecb1dff2eceb9bf6a77d2cfe1ec25"
+  },
+  {
+    "filename": "ctrl11-arrow-ternary-default.js",
+    "sha256": "1892f400980271cdd7ede8339a4e8ef80d5eebc13b9e41833d2f7809eeea2b29"
+  },
+  {
+    "filename": "ctrl11-arrow-tsx.tsx",
+    "sha256": "a7a198cea55af072b496ca1ff234566c8766df621abc099b6f06aa623d215e84"
+  },
+  {
+    "filename": "ctrl11-arrow-typed.ts",
+    "sha256": "d0c78501a278296052a6b3a1a444911dc9637cd4ac07dc205ceee1eb7cd98fba"
+  },
+  {
+    "filename": "ctrl11-b-short.js",
+    "sha256": "a73d2a3ef4629b77043d7326ba01058059415c808120452315ecb220749eb07d"
+  },
+  {
+    "filename": "ctrl11-b-story.js",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl11-b-story.jsx",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl11-b-story.ts",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl11-b-story.tsx",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl11-block-comment.js",
+    "sha256": "bea3cd280f98904e63153f2cdc0c44f54f6718377c61209461759a78cff6d659"
+  },
+  {
+    "filename": "ctrl11-bulk-control-00.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl11-bulk-control-01.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl11-bulk-control-02.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl11-bulk-control-03.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl11-bulk-control-04.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl11-bulk-control-05.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl11-bulk-control-06.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl11-bulk-control-07.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl11-bulk-control-08.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl11-bulk-control-09.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl11-bulk-control-10.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl11-bulk-control-11.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl11-bulk-control-12.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl11-bulk-control-13.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl11-bulk-control-14.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl11-bulk-control-15.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl11-bulk-control-16.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl11-bulk-control-17.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl11-bulk-control-18.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl11-bulk-control-19.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl11-dollar-id.js",
+    "sha256": "4bab567ad29205ad4140c5b4da86ca70bdedf722680b53520b9345f9d907dec2"
+  },
+  {
+    "filename": "ctrl11-genuine-all.js",
+    "sha256": "83ca72e4726df5645621706ea22096693d246da9494d9993a648caea709a95b8"
+  },
+  {
+    "filename": "ctrl11-genuine-case.js",
+    "sha256": "9ccaf4ae4da2bfceb12bc89d3c41106c09d329605e43ab245b21182cb1022f94"
+  },
+  {
+    "filename": "ctrl11-genuine-catch.js",
+    "sha256": "23a89000ea88ff90031b17228bacc3465ebe2d2eebbfa8a2e10626e926ad535c"
+  },
+  {
+    "filename": "ctrl11-genuine-for.js",
+    "sha256": "feadf3fabf59526bdd15b9c2ed1b129900e7d2553839c05aea58e91aae182fcf"
+  },
+  {
+    "filename": "ctrl11-genuine-if.js",
+    "sha256": "7e6ef888c17dc9f570cd2afb005d8e251ba0f688d1f3dec8d7d3f5c34d0db8b5"
+  },
+  {
+    "filename": "ctrl11-genuine-while.js",
+    "sha256": "19a72c2b61cd66ab5843aa4a782d0b46728eacce7481ae51b70e54d3c28e323e"
+  },
+  {
+    "filename": "ctrl11-line-comment-plain.js",
+    "sha256": "9e069d13b385a88a6085d89194677305ff67e4f44f15bc0dad857901a266ff1a"
+  },
+  {
+    "filename": "ctrl11-load.js",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl11-load.jsx",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl11-load.ts",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl11-load.tsx",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl11-members.js",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl11-members.jsx",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl11-members.ts",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl11-members.tsx",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl11-optional-access.ts",
+    "sha256": "1adcecc35601a013fad7cf3c050f03ffb06b074b7fb41f91592ee9e6129060ce"
+  },
+  {
+    "filename": "ctrl11-outside.js",
+    "sha256": "fa75f54bfb738784c7d898377d50390109c425e019583995aece6aa236c20b82"
+  },
+  {
+    "filename": "ctrl11-plain-template.js",
+    "sha256": "961bc29c4c7d7b2f4c410158b3d4e4277cc0cc4795ae04b3f7d66a8762fe4239"
+  },
+  {
+    "filename": "ctrl11-pr528-sample.js",
+    "sha256": "8276755adc957c67481dd5f52a77b64bac82dd8cf86597c45439c3aeecdaf0c8"
+  },
+  {
+    "filename": "ctrl11-pr531-sample.js",
+    "sha256": "b59ec1df153ef6a073b0234b64bbf44f858a638c1f64fee7815cfb5d4cab7059"
+  },
+  {
+    "filename": "ctrl11-pr532-sample.ts",
+    "sha256": "dbae4d65b68ffeb445476541a5f9a1a498e139448ecb0ce0bf1792f6a18d260a"
+  },
+  {
+    "filename": "ctrl11-pr533-sample.js",
+    "sha256": "3eb63ea8dfdd5b6ad5331cd5444847790315de72ebe9fff97d7f2d1a3dd4bdfc"
+  },
+  {
+    "filename": "ctrl11-pr534-sample.js",
+    "sha256": "7a72f078efd0476fc951cce56eb0c1e9c76d9986800eb128a7daa9a6fd2b63f7"
+  },
+  {
+    "filename": "ctrl11-pr535-sample.ts",
+    "sha256": "44c49822101c7535bef5e23aa5117ae4ecce877e98bd00aea823358ebb6e677d"
+  },
+  {
+    "filename": "ctrl11-pr536-sample.ts",
+    "sha256": "59ecfa342f70b98877d42c5b9d1928366d1f9a0b3c3786f47262ab171d7f08a6"
+  },
+  {
+    "filename": "ctrl11-pr537-sample.js",
+    "sha256": "10b749e81756178a04004d1ea5060fa211470f941e64d35e49635773ebba25ab"
+  },
+  {
+    "filename": "ctrl11-pr538-sample.js",
+    "sha256": "4c18cddffd29959af4bee8d5c2a7860fd22f16f703f8c5ccc5e56dcc5860913f"
+  },
+  {
+    "filename": "ctrl11-pr539-sample.js",
+    "sha256": "c38e1bc07b1597445a9b01b6c33a7b47cfdfc54c71604a438a63637e94c3ab19"
+  },
+  {
+    "filename": "ctrl11-pr540-sample.js",
+    "sha256": "a1b6bc422d78b5062512edb655ed6e589f2e4fac046cc2034cd972aa9aa6643d"
+  },
+  {
+    "filename": "ctrl11-pr541-sample.js",
+    "sha256": "536fbc51f580e121c9abbdd0fb2137b93f80604dc05715067a3a5f37141926dc"
+  },
+  {
+    "filename": "ctrl11-pr542-sample.js",
+    "sha256": "0f249ac6483097c6efb636bf29c39c5eab78526e5d3c41ebb85f8328fd28dfe7"
+  },
+  {
+    "filename": "ctrl11-pr543-sample.js",
+    "sha256": "db1418ecc2e033e4ead1d5206c64ed81cba74602d2acba25f97d177cb8baa147"
+  },
+  {
+    "filename": "ctrl11-pr544-sample.js",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl11-pr546-sample.js",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl11-pr547-sample.js",
+    "sha256": "1fb139b9f112bba41a502e6a2dc9034a291b7bac7ede99742798d77fe2bb408c"
+  },
+  {
+    "filename": "ctrl11-this-authored.ts",
+    "sha256": "3159b065baf9dea8e8876f3855b30a1fe73485ca8172070d45db1f458e50f0db"
+  },
+  {
+    "filename": "ctrl11-this-binding.js",
+    "sha256": "89bc3f4e29f353154f72f5615f24889242d1e8d89f26b0708a864313c2e38186"
+  },
+  {
+    "filename": "ctrl11-this-binding.jsx",
+    "sha256": "c4dcdd318c02d52ddfed0e974fb0a47ebde178d4f1de9f84aa42c542f28406ee"
+  },
+  {
+    "filename": "ctrl11-this-binding.ts",
+    "sha256": "89bc3f4e29f353154f72f5615f24889242d1e8d89f26b0708a864313c2e38186"
+  },
+  {
+    "filename": "ctrl11-this-binding.tsx",
+    "sha256": "c4dcdd318c02d52ddfed0e974fb0a47ebde178d4f1de9f84aa42c542f28406ee"
+  },
+  {
+    "filename": "ctrl11-this-initializer.js",
+    "sha256": "3796905fa231c4be961d4df0658826411c72927c829b987b8bc22ad1d04a8d28"
+  },
+  {
+    "filename": "ctrl11-this-method.ts",
+    "sha256": "c8d7e2d730bdee8072d71ffd3332c6e4aaf5f23e2865563152e9ee5e3db7fbab"
+  },
+  {
+    "filename": "ctrl11-this-nested-default.ts",
+    "sha256": "df890de7a0b2c5f85cc3fc840b55756414ef070f34ef1ae0e5d836ed66b6c25d"
+  },
+  {
+    "filename": "ctrl11-this-object.ts",
+    "sha256": "bddc693326a2fd998d959953f87d8d73e2d833bc0d06156a99843d6855b2a8fa"
+  },
+  {
+    "filename": "ctrl11-this-only.ts",
+    "sha256": "d7faf59a52e8cc93d280b1d187b79855735783e3933193076f43ccfc6851a5f9"
+  },
+  {
+    "filename": "ctrl11-this-render.tsx",
+    "sha256": "74a914771c85008fdf74b784303a1b9cc6271d6d19e1cb5bb1484b4a66665e5b"
+  },
+  {
+    "filename": "ctrl11-this-reported.ts",
+    "sha256": "44c49822101c7535bef5e23aa5117ae4ecce877e98bd00aea823358ebb6e677d"
+  },
+  {
+    "filename": "ctrl11-this-typed-defaults.ts",
+    "sha256": "d9af962397ca2c3302e622f0f873490e72500b9ce21d917eebb2b2ace327d9f1"
+  },
+  {
+    "filename": "ctrl12-arrow-abandoned.js",
+    "sha256": "56a151a284b6035d556f04483910b8f7fa7d3435bbef36affcb37d58c5a4ab69"
+  },
+  {
+    "filename": "ctrl12-arrow-alias-anonymous.js",
+    "sha256": "61e5356fdf4cf7c9a090446db81701d7b86bb43e8fc3bc92d506605bdb48929a"
+  },
+  {
+    "filename": "ctrl12-arrow-alias-named.js",
+    "sha256": "5460096083acfc89709e9b94a906266bb41cfdf3d55ccaca7eabe40af7c7061d"
+  },
+  {
+    "filename": "ctrl12-arrow-authored-single.js",
+    "sha256": "e39bf362ac9574ff0c7673d49a0b964312539c9950cab54119de87aa3f5baf64"
+  },
+  {
+    "filename": "ctrl12-arrow-authored-types.ts",
+    "sha256": "bb142f8237a0c35c8fa70b19acb07d2f5542987fd3d6475bd6cb02818b8700f1"
+  },
+  {
+    "filename": "ctrl12-arrow-authored-types.tsx",
+    "sha256": "bb142f8237a0c35c8fa70b19acb07d2f5542987fd3d6475bd6cb02818b8700f1"
+  },
+  {
+    "filename": "ctrl12-arrow-authored.js",
+    "sha256": "baf14c334885a49b91bd9f5729df588dc345339bc0f1b58da67f039d5bc43a17"
+  },
+  {
+    "filename": "ctrl12-arrow-binding-anonymous.js",
+    "sha256": "be60e3ed6a1a282bcfc107df3a3225dbb4823b02440c644fa305d6abb1f1b1fd"
+  },
+  {
+    "filename": "ctrl12-arrow-binding-named.js",
+    "sha256": "c317e54a8efb8cdbac899bb0a0f9e97ccd906eeecda0975e3f6aba82ac77f7f9"
+  },
+  {
+    "filename": "ctrl12-arrow-calls.js",
+    "sha256": "9c1f917dd2de35a89c9a459af30aa5d728a52f06d16aa7838957016792941c06"
+  },
+  {
+    "filename": "ctrl12-arrow-computed-binding.js",
+    "sha256": "9fbc35cbe0680e9de20032a91406e70af3d5f09a96bd8dc563092a96f80643c5"
+  },
+  {
+    "filename": "ctrl12-arrow-control.js",
+    "sha256": "5a6c1325fc00d7a77c662530355feecde4830504b0c08f72906831a7eb85d345"
+  },
+  {
+    "filename": "ctrl12-arrow-defaults.js",
+    "sha256": "c8201ff169c2434f08b6b7517ecb6c1ddc3ef87759fdec30facf0fcf9ef45cbf"
+  },
+  {
+    "filename": "ctrl12-arrow-empty-binding-named.js",
+    "sha256": "a128cd89fa9d9170bb75474a0343640b0780db8b97607595ebe46fc544bb3396"
+  },
+  {
+    "filename": "ctrl12-arrow-empty-binding.js",
+    "sha256": "083661c6fc422a2b7b229b22d9eba96f827723d470b93c4eacb88267b20b5be3"
+  },
+  {
+    "filename": "ctrl12-arrow-generic-named.ts",
+    "sha256": "98de85e99a3246d7737ff955cd90b7a562f1d0bf62ab75fed003daca150d418a"
+  },
+  {
+    "filename": "ctrl12-arrow-generic.ts",
+    "sha256": "f9626f4b5bd01f2fd986e2767547094065a0756e5f6b211fadc986c716382add"
+  },
+  {
+    "filename": "ctrl12-arrow-jsx.jsx",
+    "sha256": "7b794261d8691e4d81c1dbbd318f3e21d2397de7b224aaf93c2f4a84c4955ba4"
+  },
+  {
+    "filename": "ctrl12-arrow-member.js",
+    "sha256": "10cd4bd919fff4b654d8d1ee4bd64524a6fcffd926e44924cc1a571b33b751dc"
+  },
+  {
+    "filename": "ctrl12-arrow-named.js",
+    "sha256": "21260102f37c804e08441a1e13a82577ed8a7f3e0f938afc303994ccc3207bf1"
+  },
+  {
+    "filename": "ctrl12-arrow-nested-binding.js",
+    "sha256": "f42e9eeb62e5d8a32a723d6a65227bcd283a90b2287b62f5a286b09789d34421"
+  },
+  {
+    "filename": "ctrl12-arrow-nested-default.js",
+    "sha256": "bd8ff821db11c035b80ef62e2547bbc95714a75bd9626a54bfc1e2f8a043dcf3"
+  },
+  {
+    "filename": "ctrl12-arrow-quoted-binding.js",
+    "sha256": "98c3fb280b5d0055456423990680e61e304fd8e8fabd87064516e3bc43a85831"
+  },
+  {
+    "filename": "ctrl12-arrow-reported.ts",
+    "sha256": "7b11d3e958f884dc50c4dbf24c0c0411d886b2bf28dd7e6d919289912b621e98"
+  },
+  {
+    "filename": "ctrl12-arrow-return-function.ts",
+    "sha256": "42b0b489f2cf97335f7fa3e7a78152a48e1cc57debd060f2bdc55905e98ce154"
+  },
+  {
+    "filename": "ctrl12-arrow-return-object.ts",
+    "sha256": "1da35e85b00742aba1af60f8afc946f18410f74deeb276b6ddd45ed1134e8f8c"
+  },
+  {
+    "filename": "ctrl12-arrow-sigils.js",
+    "sha256": "156321fcc4ea84118645d0cadc791af0457b1d3d3d92972bccb083a8adabcf58"
+  },
+  {
+    "filename": "ctrl12-arrow-single-sigils.js",
+    "sha256": "e9c278059956960f7f8f83b4e4cb4a7e2b4ecb1dff2eceb9bf6a77d2cfe1ec25"
+  },
+  {
+    "filename": "ctrl12-arrow-ternary-default.js",
+    "sha256": "1892f400980271cdd7ede8339a4e8ef80d5eebc13b9e41833d2f7809eeea2b29"
+  },
+  {
+    "filename": "ctrl12-arrow-tsx.tsx",
+    "sha256": "a7a198cea55af072b496ca1ff234566c8766df621abc099b6f06aa623d215e84"
+  },
+  {
+    "filename": "ctrl12-arrow-typed.ts",
+    "sha256": "d0c78501a278296052a6b3a1a444911dc9637cd4ac07dc205ceee1eb7cd98fba"
+  },
+  {
+    "filename": "ctrl12-b-short.js",
+    "sha256": "a73d2a3ef4629b77043d7326ba01058059415c808120452315ecb220749eb07d"
+  },
+  {
+    "filename": "ctrl12-b-story.js",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl12-b-story.jsx",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl12-b-story.ts",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl12-b-story.tsx",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl12-block-comment.js",
+    "sha256": "bea3cd280f98904e63153f2cdc0c44f54f6718377c61209461759a78cff6d659"
+  },
+  {
+    "filename": "ctrl12-bulk-control-00.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl12-bulk-control-01.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl12-bulk-control-02.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl12-bulk-control-03.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl12-bulk-control-04.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl12-bulk-control-05.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl12-bulk-control-06.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl12-bulk-control-07.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl12-bulk-control-08.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl12-bulk-control-09.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl12-bulk-control-10.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl12-bulk-control-11.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl12-bulk-control-12.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl12-bulk-control-13.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl12-bulk-control-14.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl12-bulk-control-15.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl12-bulk-control-16.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl12-bulk-control-17.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl12-bulk-control-18.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl12-bulk-control-19.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl12-dollar-id.js",
+    "sha256": "4bab567ad29205ad4140c5b4da86ca70bdedf722680b53520b9345f9d907dec2"
+  },
+  {
+    "filename": "ctrl12-genuine-all.js",
+    "sha256": "83ca72e4726df5645621706ea22096693d246da9494d9993a648caea709a95b8"
+  },
+  {
+    "filename": "ctrl12-genuine-case.js",
+    "sha256": "9ccaf4ae4da2bfceb12bc89d3c41106c09d329605e43ab245b21182cb1022f94"
+  },
+  {
+    "filename": "ctrl12-genuine-catch.js",
+    "sha256": "23a89000ea88ff90031b17228bacc3465ebe2d2eebbfa8a2e10626e926ad535c"
+  },
+  {
+    "filename": "ctrl12-genuine-for.js",
+    "sha256": "feadf3fabf59526bdd15b9c2ed1b129900e7d2553839c05aea58e91aae182fcf"
+  },
+  {
+    "filename": "ctrl12-genuine-if.js",
+    "sha256": "7e6ef888c17dc9f570cd2afb005d8e251ba0f688d1f3dec8d7d3f5c34d0db8b5"
+  },
+  {
+    "filename": "ctrl12-genuine-while.js",
+    "sha256": "19a72c2b61cd66ab5843aa4a782d0b46728eacce7481ae51b70e54d3c28e323e"
+  },
+  {
+    "filename": "ctrl12-line-comment-plain.js",
+    "sha256": "9e069d13b385a88a6085d89194677305ff67e4f44f15bc0dad857901a266ff1a"
+  },
+  {
+    "filename": "ctrl12-load.js",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl12-load.jsx",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl12-load.ts",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl12-load.tsx",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl12-members.js",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl12-members.jsx",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl12-members.ts",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl12-members.tsx",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl12-optional-access.ts",
+    "sha256": "1adcecc35601a013fad7cf3c050f03ffb06b074b7fb41f91592ee9e6129060ce"
+  },
+  {
+    "filename": "ctrl12-outside.js",
+    "sha256": "fa75f54bfb738784c7d898377d50390109c425e019583995aece6aa236c20b82"
+  },
+  {
+    "filename": "ctrl12-plain-template.js",
+    "sha256": "961bc29c4c7d7b2f4c410158b3d4e4277cc0cc4795ae04b3f7d66a8762fe4239"
+  },
+  {
+    "filename": "ctrl12-pr528-sample.js",
+    "sha256": "8276755adc957c67481dd5f52a77b64bac82dd8cf86597c45439c3aeecdaf0c8"
+  },
+  {
+    "filename": "ctrl12-pr531-sample.js",
+    "sha256": "b59ec1df153ef6a073b0234b64bbf44f858a638c1f64fee7815cfb5d4cab7059"
+  },
+  {
+    "filename": "ctrl12-pr532-sample.ts",
+    "sha256": "dbae4d65b68ffeb445476541a5f9a1a498e139448ecb0ce0bf1792f6a18d260a"
+  },
+  {
+    "filename": "ctrl12-pr533-sample.js",
+    "sha256": "3eb63ea8dfdd5b6ad5331cd5444847790315de72ebe9fff97d7f2d1a3dd4bdfc"
+  },
+  {
+    "filename": "ctrl12-pr534-sample.js",
+    "sha256": "7a72f078efd0476fc951cce56eb0c1e9c76d9986800eb128a7daa9a6fd2b63f7"
+  },
+  {
+    "filename": "ctrl12-pr535-sample.ts",
+    "sha256": "44c49822101c7535bef5e23aa5117ae4ecce877e98bd00aea823358ebb6e677d"
+  },
+  {
+    "filename": "ctrl12-pr536-sample.ts",
+    "sha256": "59ecfa342f70b98877d42c5b9d1928366d1f9a0b3c3786f47262ab171d7f08a6"
+  },
+  {
+    "filename": "ctrl12-pr537-sample.js",
+    "sha256": "10b749e81756178a04004d1ea5060fa211470f941e64d35e49635773ebba25ab"
+  },
+  {
+    "filename": "ctrl12-pr538-sample.js",
+    "sha256": "4c18cddffd29959af4bee8d5c2a7860fd22f16f703f8c5ccc5e56dcc5860913f"
+  },
+  {
+    "filename": "ctrl12-pr539-sample.js",
+    "sha256": "c38e1bc07b1597445a9b01b6c33a7b47cfdfc54c71604a438a63637e94c3ab19"
+  },
+  {
+    "filename": "ctrl12-pr540-sample.js",
+    "sha256": "a1b6bc422d78b5062512edb655ed6e589f2e4fac046cc2034cd972aa9aa6643d"
+  },
+  {
+    "filename": "ctrl12-pr541-sample.js",
+    "sha256": "536fbc51f580e121c9abbdd0fb2137b93f80604dc05715067a3a5f37141926dc"
+  },
+  {
+    "filename": "ctrl12-pr542-sample.js",
+    "sha256": "0f249ac6483097c6efb636bf29c39c5eab78526e5d3c41ebb85f8328fd28dfe7"
+  },
+  {
+    "filename": "ctrl12-pr543-sample.js",
+    "sha256": "db1418ecc2e033e4ead1d5206c64ed81cba74602d2acba25f97d177cb8baa147"
+  },
+  {
+    "filename": "ctrl12-pr544-sample.js",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl12-pr546-sample.js",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl12-pr547-sample.js",
+    "sha256": "1fb139b9f112bba41a502e6a2dc9034a291b7bac7ede99742798d77fe2bb408c"
+  },
+  {
+    "filename": "ctrl12-this-authored.ts",
+    "sha256": "3159b065baf9dea8e8876f3855b30a1fe73485ca8172070d45db1f458e50f0db"
+  },
+  {
+    "filename": "ctrl12-this-binding.js",
+    "sha256": "89bc3f4e29f353154f72f5615f24889242d1e8d89f26b0708a864313c2e38186"
+  },
+  {
+    "filename": "ctrl12-this-binding.jsx",
+    "sha256": "c4dcdd318c02d52ddfed0e974fb0a47ebde178d4f1de9f84aa42c542f28406ee"
+  },
+  {
+    "filename": "ctrl12-this-binding.ts",
+    "sha256": "89bc3f4e29f353154f72f5615f24889242d1e8d89f26b0708a864313c2e38186"
+  },
+  {
+    "filename": "ctrl12-this-binding.tsx",
+    "sha256": "c4dcdd318c02d52ddfed0e974fb0a47ebde178d4f1de9f84aa42c542f28406ee"
+  },
+  {
+    "filename": "ctrl12-this-initializer.js",
+    "sha256": "3796905fa231c4be961d4df0658826411c72927c829b987b8bc22ad1d04a8d28"
+  },
+  {
+    "filename": "ctrl12-this-method.ts",
+    "sha256": "c8d7e2d730bdee8072d71ffd3332c6e4aaf5f23e2865563152e9ee5e3db7fbab"
+  },
+  {
+    "filename": "ctrl12-this-nested-default.ts",
+    "sha256": "df890de7a0b2c5f85cc3fc840b55756414ef070f34ef1ae0e5d836ed66b6c25d"
+  },
+  {
+    "filename": "ctrl12-this-object.ts",
+    "sha256": "bddc693326a2fd998d959953f87d8d73e2d833bc0d06156a99843d6855b2a8fa"
+  },
+  {
+    "filename": "ctrl12-this-only.ts",
+    "sha256": "d7faf59a52e8cc93d280b1d187b79855735783e3933193076f43ccfc6851a5f9"
+  },
+  {
+    "filename": "ctrl12-this-render.tsx",
+    "sha256": "74a914771c85008fdf74b784303a1b9cc6271d6d19e1cb5bb1484b4a66665e5b"
+  },
+  {
+    "filename": "ctrl12-this-reported.ts",
+    "sha256": "44c49822101c7535bef5e23aa5117ae4ecce877e98bd00aea823358ebb6e677d"
+  },
+  {
+    "filename": "ctrl12-this-typed-defaults.ts",
+    "sha256": "d9af962397ca2c3302e622f0f873490e72500b9ce21d917eebb2b2ace327d9f1"
+  },
+  {
+    "filename": "ctrl2-arrow-abandoned.js",
+    "sha256": "56a151a284b6035d556f04483910b8f7fa7d3435bbef36affcb37d58c5a4ab69"
+  },
+  {
+    "filename": "ctrl2-arrow-alias-anonymous.js",
+    "sha256": "61e5356fdf4cf7c9a090446db81701d7b86bb43e8fc3bc92d506605bdb48929a"
+  },
+  {
+    "filename": "ctrl2-arrow-alias-named.js",
+    "sha256": "5460096083acfc89709e9b94a906266bb41cfdf3d55ccaca7eabe40af7c7061d"
+  },
+  {
+    "filename": "ctrl2-arrow-authored-single.js",
+    "sha256": "e39bf362ac9574ff0c7673d49a0b964312539c9950cab54119de87aa3f5baf64"
+  },
+  {
+    "filename": "ctrl2-arrow-authored-types.ts",
+    "sha256": "bb142f8237a0c35c8fa70b19acb07d2f5542987fd3d6475bd6cb02818b8700f1"
+  },
+  {
+    "filename": "ctrl2-arrow-authored-types.tsx",
+    "sha256": "bb142f8237a0c35c8fa70b19acb07d2f5542987fd3d6475bd6cb02818b8700f1"
+  },
+  {
+    "filename": "ctrl2-arrow-authored.js",
+    "sha256": "baf14c334885a49b91bd9f5729df588dc345339bc0f1b58da67f039d5bc43a17"
+  },
+  {
+    "filename": "ctrl2-arrow-binding-anonymous.js",
+    "sha256": "be60e3ed6a1a282bcfc107df3a3225dbb4823b02440c644fa305d6abb1f1b1fd"
+  },
+  {
+    "filename": "ctrl2-arrow-binding-named.js",
+    "sha256": "c317e54a8efb8cdbac899bb0a0f9e97ccd906eeecda0975e3f6aba82ac77f7f9"
+  },
+  {
+    "filename": "ctrl2-arrow-calls.js",
+    "sha256": "9c1f917dd2de35a89c9a459af30aa5d728a52f06d16aa7838957016792941c06"
+  },
+  {
+    "filename": "ctrl2-arrow-computed-binding.js",
+    "sha256": "9fbc35cbe0680e9de20032a91406e70af3d5f09a96bd8dc563092a96f80643c5"
+  },
+  {
+    "filename": "ctrl2-arrow-control.js",
+    "sha256": "5a6c1325fc00d7a77c662530355feecde4830504b0c08f72906831a7eb85d345"
+  },
+  {
+    "filename": "ctrl2-arrow-defaults.js",
+    "sha256": "c8201ff169c2434f08b6b7517ecb6c1ddc3ef87759fdec30facf0fcf9ef45cbf"
+  },
+  {
+    "filename": "ctrl2-arrow-empty-binding-named.js",
+    "sha256": "a128cd89fa9d9170bb75474a0343640b0780db8b97607595ebe46fc544bb3396"
+  },
+  {
+    "filename": "ctrl2-arrow-empty-binding.js",
+    "sha256": "083661c6fc422a2b7b229b22d9eba96f827723d470b93c4eacb88267b20b5be3"
+  },
+  {
+    "filename": "ctrl2-arrow-generic-named.ts",
+    "sha256": "98de85e99a3246d7737ff955cd90b7a562f1d0bf62ab75fed003daca150d418a"
+  },
+  {
+    "filename": "ctrl2-arrow-generic.ts",
+    "sha256": "f9626f4b5bd01f2fd986e2767547094065a0756e5f6b211fadc986c716382add"
+  },
+  {
+    "filename": "ctrl2-arrow-jsx.jsx",
+    "sha256": "7b794261d8691e4d81c1dbbd318f3e21d2397de7b224aaf93c2f4a84c4955ba4"
+  },
+  {
+    "filename": "ctrl2-arrow-member.js",
+    "sha256": "10cd4bd919fff4b654d8d1ee4bd64524a6fcffd926e44924cc1a571b33b751dc"
+  },
+  {
+    "filename": "ctrl2-arrow-named.js",
+    "sha256": "21260102f37c804e08441a1e13a82577ed8a7f3e0f938afc303994ccc3207bf1"
+  },
+  {
+    "filename": "ctrl2-arrow-nested-binding.js",
+    "sha256": "f42e9eeb62e5d8a32a723d6a65227bcd283a90b2287b62f5a286b09789d34421"
+  },
+  {
+    "filename": "ctrl2-arrow-nested-default.js",
+    "sha256": "bd8ff821db11c035b80ef62e2547bbc95714a75bd9626a54bfc1e2f8a043dcf3"
+  },
+  {
+    "filename": "ctrl2-arrow-quoted-binding.js",
+    "sha256": "98c3fb280b5d0055456423990680e61e304fd8e8fabd87064516e3bc43a85831"
+  },
+  {
+    "filename": "ctrl2-arrow-reported.ts",
+    "sha256": "7b11d3e958f884dc50c4dbf24c0c0411d886b2bf28dd7e6d919289912b621e98"
+  },
+  {
+    "filename": "ctrl2-arrow-return-function.ts",
+    "sha256": "42b0b489f2cf97335f7fa3e7a78152a48e1cc57debd060f2bdc55905e98ce154"
+  },
+  {
+    "filename": "ctrl2-arrow-return-object.ts",
+    "sha256": "1da35e85b00742aba1af60f8afc946f18410f74deeb276b6ddd45ed1134e8f8c"
+  },
+  {
+    "filename": "ctrl2-arrow-sigils.js",
+    "sha256": "156321fcc4ea84118645d0cadc791af0457b1d3d3d92972bccb083a8adabcf58"
+  },
+  {
+    "filename": "ctrl2-arrow-single-sigils.js",
+    "sha256": "e9c278059956960f7f8f83b4e4cb4a7e2b4ecb1dff2eceb9bf6a77d2cfe1ec25"
+  },
+  {
+    "filename": "ctrl2-arrow-ternary-default.js",
+    "sha256": "1892f400980271cdd7ede8339a4e8ef80d5eebc13b9e41833d2f7809eeea2b29"
+  },
+  {
+    "filename": "ctrl2-arrow-tsx.tsx",
+    "sha256": "a7a198cea55af072b496ca1ff234566c8766df621abc099b6f06aa623d215e84"
+  },
+  {
+    "filename": "ctrl2-arrow-typed.ts",
+    "sha256": "d0c78501a278296052a6b3a1a444911dc9637cd4ac07dc205ceee1eb7cd98fba"
+  },
+  {
+    "filename": "ctrl2-b-short.js",
+    "sha256": "a73d2a3ef4629b77043d7326ba01058059415c808120452315ecb220749eb07d"
+  },
+  {
+    "filename": "ctrl2-b-story.js",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl2-b-story.jsx",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl2-b-story.ts",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl2-b-story.tsx",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl2-block-comment.js",
+    "sha256": "bea3cd280f98904e63153f2cdc0c44f54f6718377c61209461759a78cff6d659"
+  },
+  {
+    "filename": "ctrl2-bulk-control-00.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl2-bulk-control-01.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl2-bulk-control-02.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl2-bulk-control-03.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl2-bulk-control-04.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl2-bulk-control-05.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl2-bulk-control-06.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl2-bulk-control-07.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl2-bulk-control-08.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl2-bulk-control-09.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl2-bulk-control-10.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl2-bulk-control-11.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl2-bulk-control-12.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl2-bulk-control-13.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl2-bulk-control-14.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl2-bulk-control-15.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl2-bulk-control-16.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl2-bulk-control-17.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl2-bulk-control-18.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl2-bulk-control-19.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl2-dollar-id.js",
+    "sha256": "4bab567ad29205ad4140c5b4da86ca70bdedf722680b53520b9345f9d907dec2"
+  },
+  {
+    "filename": "ctrl2-genuine-all.js",
+    "sha256": "83ca72e4726df5645621706ea22096693d246da9494d9993a648caea709a95b8"
+  },
+  {
+    "filename": "ctrl2-genuine-case.js",
+    "sha256": "9ccaf4ae4da2bfceb12bc89d3c41106c09d329605e43ab245b21182cb1022f94"
+  },
+  {
+    "filename": "ctrl2-genuine-catch.js",
+    "sha256": "23a89000ea88ff90031b17228bacc3465ebe2d2eebbfa8a2e10626e926ad535c"
+  },
+  {
+    "filename": "ctrl2-genuine-for.js",
+    "sha256": "feadf3fabf59526bdd15b9c2ed1b129900e7d2553839c05aea58e91aae182fcf"
+  },
+  {
+    "filename": "ctrl2-genuine-if.js",
+    "sha256": "7e6ef888c17dc9f570cd2afb005d8e251ba0f688d1f3dec8d7d3f5c34d0db8b5"
+  },
+  {
+    "filename": "ctrl2-genuine-while.js",
+    "sha256": "19a72c2b61cd66ab5843aa4a782d0b46728eacce7481ae51b70e54d3c28e323e"
+  },
+  {
+    "filename": "ctrl2-line-comment-plain.js",
+    "sha256": "9e069d13b385a88a6085d89194677305ff67e4f44f15bc0dad857901a266ff1a"
+  },
+  {
+    "filename": "ctrl2-load.js",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl2-load.jsx",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl2-load.ts",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl2-load.tsx",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl2-members.js",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl2-members.jsx",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl2-members.ts",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl2-members.tsx",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl2-optional-access.ts",
+    "sha256": "1adcecc35601a013fad7cf3c050f03ffb06b074b7fb41f91592ee9e6129060ce"
+  },
+  {
+    "filename": "ctrl2-outside.js",
+    "sha256": "fa75f54bfb738784c7d898377d50390109c425e019583995aece6aa236c20b82"
+  },
+  {
+    "filename": "ctrl2-plain-template.js",
+    "sha256": "961bc29c4c7d7b2f4c410158b3d4e4277cc0cc4795ae04b3f7d66a8762fe4239"
+  },
+  {
+    "filename": "ctrl2-pr528-sample.js",
+    "sha256": "8276755adc957c67481dd5f52a77b64bac82dd8cf86597c45439c3aeecdaf0c8"
+  },
+  {
+    "filename": "ctrl2-pr531-sample.js",
+    "sha256": "b59ec1df153ef6a073b0234b64bbf44f858a638c1f64fee7815cfb5d4cab7059"
+  },
+  {
+    "filename": "ctrl2-pr532-sample.ts",
+    "sha256": "dbae4d65b68ffeb445476541a5f9a1a498e139448ecb0ce0bf1792f6a18d260a"
+  },
+  {
+    "filename": "ctrl2-pr533-sample.js",
+    "sha256": "3eb63ea8dfdd5b6ad5331cd5444847790315de72ebe9fff97d7f2d1a3dd4bdfc"
+  },
+  {
+    "filename": "ctrl2-pr534-sample.js",
+    "sha256": "7a72f078efd0476fc951cce56eb0c1e9c76d9986800eb128a7daa9a6fd2b63f7"
+  },
+  {
+    "filename": "ctrl2-pr535-sample.ts",
+    "sha256": "44c49822101c7535bef5e23aa5117ae4ecce877e98bd00aea823358ebb6e677d"
+  },
+  {
+    "filename": "ctrl2-pr536-sample.ts",
+    "sha256": "59ecfa342f70b98877d42c5b9d1928366d1f9a0b3c3786f47262ab171d7f08a6"
+  },
+  {
+    "filename": "ctrl2-pr537-sample.js",
+    "sha256": "10b749e81756178a04004d1ea5060fa211470f941e64d35e49635773ebba25ab"
+  },
+  {
+    "filename": "ctrl2-pr538-sample.js",
+    "sha256": "4c18cddffd29959af4bee8d5c2a7860fd22f16f703f8c5ccc5e56dcc5860913f"
+  },
+  {
+    "filename": "ctrl2-pr539-sample.js",
+    "sha256": "c38e1bc07b1597445a9b01b6c33a7b47cfdfc54c71604a438a63637e94c3ab19"
+  },
+  {
+    "filename": "ctrl2-pr540-sample.js",
+    "sha256": "a1b6bc422d78b5062512edb655ed6e589f2e4fac046cc2034cd972aa9aa6643d"
+  },
+  {
+    "filename": "ctrl2-pr541-sample.js",
+    "sha256": "536fbc51f580e121c9abbdd0fb2137b93f80604dc05715067a3a5f37141926dc"
+  },
+  {
+    "filename": "ctrl2-pr542-sample.js",
+    "sha256": "0f249ac6483097c6efb636bf29c39c5eab78526e5d3c41ebb85f8328fd28dfe7"
+  },
+  {
+    "filename": "ctrl2-pr543-sample.js",
+    "sha256": "db1418ecc2e033e4ead1d5206c64ed81cba74602d2acba25f97d177cb8baa147"
+  },
+  {
+    "filename": "ctrl2-pr544-sample.js",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl2-pr546-sample.js",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl2-pr547-sample.js",
+    "sha256": "1fb139b9f112bba41a502e6a2dc9034a291b7bac7ede99742798d77fe2bb408c"
+  },
+  {
+    "filename": "ctrl2-this-authored.ts",
+    "sha256": "3159b065baf9dea8e8876f3855b30a1fe73485ca8172070d45db1f458e50f0db"
+  },
+  {
+    "filename": "ctrl2-this-binding.js",
+    "sha256": "89bc3f4e29f353154f72f5615f24889242d1e8d89f26b0708a864313c2e38186"
+  },
+  {
+    "filename": "ctrl2-this-binding.jsx",
+    "sha256": "c4dcdd318c02d52ddfed0e974fb0a47ebde178d4f1de9f84aa42c542f28406ee"
+  },
+  {
+    "filename": "ctrl2-this-binding.ts",
+    "sha256": "89bc3f4e29f353154f72f5615f24889242d1e8d89f26b0708a864313c2e38186"
+  },
+  {
+    "filename": "ctrl2-this-binding.tsx",
+    "sha256": "c4dcdd318c02d52ddfed0e974fb0a47ebde178d4f1de9f84aa42c542f28406ee"
+  },
+  {
+    "filename": "ctrl2-this-initializer.js",
+    "sha256": "3796905fa231c4be961d4df0658826411c72927c829b987b8bc22ad1d04a8d28"
+  },
+  {
+    "filename": "ctrl2-this-method.ts",
+    "sha256": "c8d7e2d730bdee8072d71ffd3332c6e4aaf5f23e2865563152e9ee5e3db7fbab"
+  },
+  {
+    "filename": "ctrl2-this-nested-default.ts",
+    "sha256": "df890de7a0b2c5f85cc3fc840b55756414ef070f34ef1ae0e5d836ed66b6c25d"
+  },
+  {
+    "filename": "ctrl2-this-object.ts",
+    "sha256": "bddc693326a2fd998d959953f87d8d73e2d833bc0d06156a99843d6855b2a8fa"
+  },
+  {
+    "filename": "ctrl2-this-only.ts",
+    "sha256": "d7faf59a52e8cc93d280b1d187b79855735783e3933193076f43ccfc6851a5f9"
+  },
+  {
+    "filename": "ctrl2-this-render.tsx",
+    "sha256": "74a914771c85008fdf74b784303a1b9cc6271d6d19e1cb5bb1484b4a66665e5b"
+  },
+  {
+    "filename": "ctrl2-this-reported.ts",
+    "sha256": "44c49822101c7535bef5e23aa5117ae4ecce877e98bd00aea823358ebb6e677d"
+  },
+  {
+    "filename": "ctrl2-this-typed-defaults.ts",
+    "sha256": "d9af962397ca2c3302e622f0f873490e72500b9ce21d917eebb2b2ace327d9f1"
+  },
+  {
+    "filename": "ctrl3-arrow-abandoned.js",
+    "sha256": "56a151a284b6035d556f04483910b8f7fa7d3435bbef36affcb37d58c5a4ab69"
+  },
+  {
+    "filename": "ctrl3-arrow-alias-anonymous.js",
+    "sha256": "61e5356fdf4cf7c9a090446db81701d7b86bb43e8fc3bc92d506605bdb48929a"
+  },
+  {
+    "filename": "ctrl3-arrow-alias-named.js",
+    "sha256": "5460096083acfc89709e9b94a906266bb41cfdf3d55ccaca7eabe40af7c7061d"
+  },
+  {
+    "filename": "ctrl3-arrow-authored-single.js",
+    "sha256": "e39bf362ac9574ff0c7673d49a0b964312539c9950cab54119de87aa3f5baf64"
+  },
+  {
+    "filename": "ctrl3-arrow-authored-types.ts",
+    "sha256": "bb142f8237a0c35c8fa70b19acb07d2f5542987fd3d6475bd6cb02818b8700f1"
+  },
+  {
+    "filename": "ctrl3-arrow-authored-types.tsx",
+    "sha256": "bb142f8237a0c35c8fa70b19acb07d2f5542987fd3d6475bd6cb02818b8700f1"
+  },
+  {
+    "filename": "ctrl3-arrow-authored.js",
+    "sha256": "baf14c334885a49b91bd9f5729df588dc345339bc0f1b58da67f039d5bc43a17"
+  },
+  {
+    "filename": "ctrl3-arrow-binding-anonymous.js",
+    "sha256": "be60e3ed6a1a282bcfc107df3a3225dbb4823b02440c644fa305d6abb1f1b1fd"
+  },
+  {
+    "filename": "ctrl3-arrow-binding-named.js",
+    "sha256": "c317e54a8efb8cdbac899bb0a0f9e97ccd906eeecda0975e3f6aba82ac77f7f9"
+  },
+  {
+    "filename": "ctrl3-arrow-calls.js",
+    "sha256": "9c1f917dd2de35a89c9a459af30aa5d728a52f06d16aa7838957016792941c06"
+  },
+  {
+    "filename": "ctrl3-arrow-computed-binding.js",
+    "sha256": "9fbc35cbe0680e9de20032a91406e70af3d5f09a96bd8dc563092a96f80643c5"
+  },
+  {
+    "filename": "ctrl3-arrow-control.js",
+    "sha256": "5a6c1325fc00d7a77c662530355feecde4830504b0c08f72906831a7eb85d345"
+  },
+  {
+    "filename": "ctrl3-arrow-defaults.js",
+    "sha256": "c8201ff169c2434f08b6b7517ecb6c1ddc3ef87759fdec30facf0fcf9ef45cbf"
+  },
+  {
+    "filename": "ctrl3-arrow-empty-binding-named.js",
+    "sha256": "a128cd89fa9d9170bb75474a0343640b0780db8b97607595ebe46fc544bb3396"
+  },
+  {
+    "filename": "ctrl3-arrow-empty-binding.js",
+    "sha256": "083661c6fc422a2b7b229b22d9eba96f827723d470b93c4eacb88267b20b5be3"
+  },
+  {
+    "filename": "ctrl3-arrow-generic-named.ts",
+    "sha256": "98de85e99a3246d7737ff955cd90b7a562f1d0bf62ab75fed003daca150d418a"
+  },
+  {
+    "filename": "ctrl3-arrow-generic.ts",
+    "sha256": "f9626f4b5bd01f2fd986e2767547094065a0756e5f6b211fadc986c716382add"
+  },
+  {
+    "filename": "ctrl3-arrow-jsx.jsx",
+    "sha256": "7b794261d8691e4d81c1dbbd318f3e21d2397de7b224aaf93c2f4a84c4955ba4"
+  },
+  {
+    "filename": "ctrl3-arrow-member.js",
+    "sha256": "10cd4bd919fff4b654d8d1ee4bd64524a6fcffd926e44924cc1a571b33b751dc"
+  },
+  {
+    "filename": "ctrl3-arrow-named.js",
+    "sha256": "21260102f37c804e08441a1e13a82577ed8a7f3e0f938afc303994ccc3207bf1"
+  },
+  {
+    "filename": "ctrl3-arrow-nested-binding.js",
+    "sha256": "f42e9eeb62e5d8a32a723d6a65227bcd283a90b2287b62f5a286b09789d34421"
+  },
+  {
+    "filename": "ctrl3-arrow-nested-default.js",
+    "sha256": "bd8ff821db11c035b80ef62e2547bbc95714a75bd9626a54bfc1e2f8a043dcf3"
+  },
+  {
+    "filename": "ctrl3-arrow-quoted-binding.js",
+    "sha256": "98c3fb280b5d0055456423990680e61e304fd8e8fabd87064516e3bc43a85831"
+  },
+  {
+    "filename": "ctrl3-arrow-reported.ts",
+    "sha256": "7b11d3e958f884dc50c4dbf24c0c0411d886b2bf28dd7e6d919289912b621e98"
+  },
+  {
+    "filename": "ctrl3-arrow-return-function.ts",
+    "sha256": "42b0b489f2cf97335f7fa3e7a78152a48e1cc57debd060f2bdc55905e98ce154"
+  },
+  {
+    "filename": "ctrl3-arrow-return-object.ts",
+    "sha256": "1da35e85b00742aba1af60f8afc946f18410f74deeb276b6ddd45ed1134e8f8c"
+  },
+  {
+    "filename": "ctrl3-arrow-sigils.js",
+    "sha256": "156321fcc4ea84118645d0cadc791af0457b1d3d3d92972bccb083a8adabcf58"
+  },
+  {
+    "filename": "ctrl3-arrow-single-sigils.js",
+    "sha256": "e9c278059956960f7f8f83b4e4cb4a7e2b4ecb1dff2eceb9bf6a77d2cfe1ec25"
+  },
+  {
+    "filename": "ctrl3-arrow-ternary-default.js",
+    "sha256": "1892f400980271cdd7ede8339a4e8ef80d5eebc13b9e41833d2f7809eeea2b29"
+  },
+  {
+    "filename": "ctrl3-arrow-tsx.tsx",
+    "sha256": "a7a198cea55af072b496ca1ff234566c8766df621abc099b6f06aa623d215e84"
+  },
+  {
+    "filename": "ctrl3-arrow-typed.ts",
+    "sha256": "d0c78501a278296052a6b3a1a444911dc9637cd4ac07dc205ceee1eb7cd98fba"
+  },
+  {
+    "filename": "ctrl3-b-short.js",
+    "sha256": "a73d2a3ef4629b77043d7326ba01058059415c808120452315ecb220749eb07d"
+  },
+  {
+    "filename": "ctrl3-b-story.js",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl3-b-story.jsx",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl3-b-story.ts",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl3-b-story.tsx",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl3-block-comment.js",
+    "sha256": "bea3cd280f98904e63153f2cdc0c44f54f6718377c61209461759a78cff6d659"
+  },
+  {
+    "filename": "ctrl3-bulk-control-00.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl3-bulk-control-01.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl3-bulk-control-02.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl3-bulk-control-03.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl3-bulk-control-04.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl3-bulk-control-05.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl3-bulk-control-06.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl3-bulk-control-07.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl3-bulk-control-08.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl3-bulk-control-09.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl3-bulk-control-10.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl3-bulk-control-11.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl3-bulk-control-12.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl3-bulk-control-13.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl3-bulk-control-14.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl3-bulk-control-15.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl3-bulk-control-16.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl3-bulk-control-17.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl3-bulk-control-18.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl3-bulk-control-19.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl3-dollar-id.js",
+    "sha256": "4bab567ad29205ad4140c5b4da86ca70bdedf722680b53520b9345f9d907dec2"
+  },
+  {
+    "filename": "ctrl3-genuine-all.js",
+    "sha256": "83ca72e4726df5645621706ea22096693d246da9494d9993a648caea709a95b8"
+  },
+  {
+    "filename": "ctrl3-genuine-case.js",
+    "sha256": "9ccaf4ae4da2bfceb12bc89d3c41106c09d329605e43ab245b21182cb1022f94"
+  },
+  {
+    "filename": "ctrl3-genuine-catch.js",
+    "sha256": "23a89000ea88ff90031b17228bacc3465ebe2d2eebbfa8a2e10626e926ad535c"
+  },
+  {
+    "filename": "ctrl3-genuine-for.js",
+    "sha256": "feadf3fabf59526bdd15b9c2ed1b129900e7d2553839c05aea58e91aae182fcf"
+  },
+  {
+    "filename": "ctrl3-genuine-if.js",
+    "sha256": "7e6ef888c17dc9f570cd2afb005d8e251ba0f688d1f3dec8d7d3f5c34d0db8b5"
+  },
+  {
+    "filename": "ctrl3-genuine-while.js",
+    "sha256": "19a72c2b61cd66ab5843aa4a782d0b46728eacce7481ae51b70e54d3c28e323e"
+  },
+  {
+    "filename": "ctrl3-line-comment-plain.js",
+    "sha256": "9e069d13b385a88a6085d89194677305ff67e4f44f15bc0dad857901a266ff1a"
+  },
+  {
+    "filename": "ctrl3-load.js",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl3-load.jsx",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl3-load.ts",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl3-load.tsx",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl3-members.js",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl3-members.jsx",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl3-members.ts",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl3-members.tsx",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl3-optional-access.ts",
+    "sha256": "1adcecc35601a013fad7cf3c050f03ffb06b074b7fb41f91592ee9e6129060ce"
+  },
+  {
+    "filename": "ctrl3-outside.js",
+    "sha256": "fa75f54bfb738784c7d898377d50390109c425e019583995aece6aa236c20b82"
+  },
+  {
+    "filename": "ctrl3-plain-template.js",
+    "sha256": "961bc29c4c7d7b2f4c410158b3d4e4277cc0cc4795ae04b3f7d66a8762fe4239"
+  },
+  {
+    "filename": "ctrl3-pr528-sample.js",
+    "sha256": "8276755adc957c67481dd5f52a77b64bac82dd8cf86597c45439c3aeecdaf0c8"
+  },
+  {
+    "filename": "ctrl3-pr531-sample.js",
+    "sha256": "b59ec1df153ef6a073b0234b64bbf44f858a638c1f64fee7815cfb5d4cab7059"
+  },
+  {
+    "filename": "ctrl3-pr532-sample.ts",
+    "sha256": "dbae4d65b68ffeb445476541a5f9a1a498e139448ecb0ce0bf1792f6a18d260a"
+  },
+  {
+    "filename": "ctrl3-pr533-sample.js",
+    "sha256": "3eb63ea8dfdd5b6ad5331cd5444847790315de72ebe9fff97d7f2d1a3dd4bdfc"
+  },
+  {
+    "filename": "ctrl3-pr534-sample.js",
+    "sha256": "7a72f078efd0476fc951cce56eb0c1e9c76d9986800eb128a7daa9a6fd2b63f7"
+  },
+  {
+    "filename": "ctrl3-pr535-sample.ts",
+    "sha256": "44c49822101c7535bef5e23aa5117ae4ecce877e98bd00aea823358ebb6e677d"
+  },
+  {
+    "filename": "ctrl3-pr536-sample.ts",
+    "sha256": "59ecfa342f70b98877d42c5b9d1928366d1f9a0b3c3786f47262ab171d7f08a6"
+  },
+  {
+    "filename": "ctrl3-pr537-sample.js",
+    "sha256": "10b749e81756178a04004d1ea5060fa211470f941e64d35e49635773ebba25ab"
+  },
+  {
+    "filename": "ctrl3-pr538-sample.js",
+    "sha256": "4c18cddffd29959af4bee8d5c2a7860fd22f16f703f8c5ccc5e56dcc5860913f"
+  },
+  {
+    "filename": "ctrl3-pr539-sample.js",
+    "sha256": "c38e1bc07b1597445a9b01b6c33a7b47cfdfc54c71604a438a63637e94c3ab19"
+  },
+  {
+    "filename": "ctrl3-pr540-sample.js",
+    "sha256": "a1b6bc422d78b5062512edb655ed6e589f2e4fac046cc2034cd972aa9aa6643d"
+  },
+  {
+    "filename": "ctrl3-pr541-sample.js",
+    "sha256": "536fbc51f580e121c9abbdd0fb2137b93f80604dc05715067a3a5f37141926dc"
+  },
+  {
+    "filename": "ctrl3-pr542-sample.js",
+    "sha256": "0f249ac6483097c6efb636bf29c39c5eab78526e5d3c41ebb85f8328fd28dfe7"
+  },
+  {
+    "filename": "ctrl3-pr543-sample.js",
+    "sha256": "db1418ecc2e033e4ead1d5206c64ed81cba74602d2acba25f97d177cb8baa147"
+  },
+  {
+    "filename": "ctrl3-pr544-sample.js",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl3-pr546-sample.js",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl3-pr547-sample.js",
+    "sha256": "1fb139b9f112bba41a502e6a2dc9034a291b7bac7ede99742798d77fe2bb408c"
+  },
+  {
+    "filename": "ctrl3-this-authored.ts",
+    "sha256": "3159b065baf9dea8e8876f3855b30a1fe73485ca8172070d45db1f458e50f0db"
+  },
+  {
+    "filename": "ctrl3-this-binding.js",
+    "sha256": "89bc3f4e29f353154f72f5615f24889242d1e8d89f26b0708a864313c2e38186"
+  },
+  {
+    "filename": "ctrl3-this-binding.jsx",
+    "sha256": "c4dcdd318c02d52ddfed0e974fb0a47ebde178d4f1de9f84aa42c542f28406ee"
+  },
+  {
+    "filename": "ctrl3-this-binding.ts",
+    "sha256": "89bc3f4e29f353154f72f5615f24889242d1e8d89f26b0708a864313c2e38186"
+  },
+  {
+    "filename": "ctrl3-this-binding.tsx",
+    "sha256": "c4dcdd318c02d52ddfed0e974fb0a47ebde178d4f1de9f84aa42c542f28406ee"
+  },
+  {
+    "filename": "ctrl3-this-initializer.js",
+    "sha256": "3796905fa231c4be961d4df0658826411c72927c829b987b8bc22ad1d04a8d28"
+  },
+  {
+    "filename": "ctrl3-this-method.ts",
+    "sha256": "c8d7e2d730bdee8072d71ffd3332c6e4aaf5f23e2865563152e9ee5e3db7fbab"
+  },
+  {
+    "filename": "ctrl3-this-nested-default.ts",
+    "sha256": "df890de7a0b2c5f85cc3fc840b55756414ef070f34ef1ae0e5d836ed66b6c25d"
+  },
+  {
+    "filename": "ctrl3-this-object.ts",
+    "sha256": "bddc693326a2fd998d959953f87d8d73e2d833bc0d06156a99843d6855b2a8fa"
+  },
+  {
+    "filename": "ctrl3-this-only.ts",
+    "sha256": "d7faf59a52e8cc93d280b1d187b79855735783e3933193076f43ccfc6851a5f9"
+  },
+  {
+    "filename": "ctrl3-this-render.tsx",
+    "sha256": "74a914771c85008fdf74b784303a1b9cc6271d6d19e1cb5bb1484b4a66665e5b"
+  },
+  {
+    "filename": "ctrl3-this-reported.ts",
+    "sha256": "44c49822101c7535bef5e23aa5117ae4ecce877e98bd00aea823358ebb6e677d"
+  },
+  {
+    "filename": "ctrl3-this-typed-defaults.ts",
+    "sha256": "d9af962397ca2c3302e622f0f873490e72500b9ce21d917eebb2b2ace327d9f1"
+  },
+  {
+    "filename": "ctrl4-arrow-abandoned.js",
+    "sha256": "56a151a284b6035d556f04483910b8f7fa7d3435bbef36affcb37d58c5a4ab69"
+  },
+  {
+    "filename": "ctrl4-arrow-alias-anonymous.js",
+    "sha256": "61e5356fdf4cf7c9a090446db81701d7b86bb43e8fc3bc92d506605bdb48929a"
+  },
+  {
+    "filename": "ctrl4-arrow-alias-named.js",
+    "sha256": "5460096083acfc89709e9b94a906266bb41cfdf3d55ccaca7eabe40af7c7061d"
+  },
+  {
+    "filename": "ctrl4-arrow-authored-single.js",
+    "sha256": "e39bf362ac9574ff0c7673d49a0b964312539c9950cab54119de87aa3f5baf64"
+  },
+  {
+    "filename": "ctrl4-arrow-authored-types.ts",
+    "sha256": "bb142f8237a0c35c8fa70b19acb07d2f5542987fd3d6475bd6cb02818b8700f1"
+  },
+  {
+    "filename": "ctrl4-arrow-authored-types.tsx",
+    "sha256": "bb142f8237a0c35c8fa70b19acb07d2f5542987fd3d6475bd6cb02818b8700f1"
+  },
+  {
+    "filename": "ctrl4-arrow-authored.js",
+    "sha256": "baf14c334885a49b91bd9f5729df588dc345339bc0f1b58da67f039d5bc43a17"
+  },
+  {
+    "filename": "ctrl4-arrow-binding-anonymous.js",
+    "sha256": "be60e3ed6a1a282bcfc107df3a3225dbb4823b02440c644fa305d6abb1f1b1fd"
+  },
+  {
+    "filename": "ctrl4-arrow-binding-named.js",
+    "sha256": "c317e54a8efb8cdbac899bb0a0f9e97ccd906eeecda0975e3f6aba82ac77f7f9"
+  },
+  {
+    "filename": "ctrl4-arrow-calls.js",
+    "sha256": "9c1f917dd2de35a89c9a459af30aa5d728a52f06d16aa7838957016792941c06"
+  },
+  {
+    "filename": "ctrl4-arrow-computed-binding.js",
+    "sha256": "9fbc35cbe0680e9de20032a91406e70af3d5f09a96bd8dc563092a96f80643c5"
+  },
+  {
+    "filename": "ctrl4-arrow-control.js",
+    "sha256": "5a6c1325fc00d7a77c662530355feecde4830504b0c08f72906831a7eb85d345"
+  },
+  {
+    "filename": "ctrl4-arrow-defaults.js",
+    "sha256": "c8201ff169c2434f08b6b7517ecb6c1ddc3ef87759fdec30facf0fcf9ef45cbf"
+  },
+  {
+    "filename": "ctrl4-arrow-empty-binding-named.js",
+    "sha256": "a128cd89fa9d9170bb75474a0343640b0780db8b97607595ebe46fc544bb3396"
+  },
+  {
+    "filename": "ctrl4-arrow-empty-binding.js",
+    "sha256": "083661c6fc422a2b7b229b22d9eba96f827723d470b93c4eacb88267b20b5be3"
+  },
+  {
+    "filename": "ctrl4-arrow-generic-named.ts",
+    "sha256": "98de85e99a3246d7737ff955cd90b7a562f1d0bf62ab75fed003daca150d418a"
+  },
+  {
+    "filename": "ctrl4-arrow-generic.ts",
+    "sha256": "f9626f4b5bd01f2fd986e2767547094065a0756e5f6b211fadc986c716382add"
+  },
+  {
+    "filename": "ctrl4-arrow-jsx.jsx",
+    "sha256": "7b794261d8691e4d81c1dbbd318f3e21d2397de7b224aaf93c2f4a84c4955ba4"
+  },
+  {
+    "filename": "ctrl4-arrow-member.js",
+    "sha256": "10cd4bd919fff4b654d8d1ee4bd64524a6fcffd926e44924cc1a571b33b751dc"
+  },
+  {
+    "filename": "ctrl4-arrow-named.js",
+    "sha256": "21260102f37c804e08441a1e13a82577ed8a7f3e0f938afc303994ccc3207bf1"
+  },
+  {
+    "filename": "ctrl4-arrow-nested-binding.js",
+    "sha256": "f42e9eeb62e5d8a32a723d6a65227bcd283a90b2287b62f5a286b09789d34421"
+  },
+  {
+    "filename": "ctrl4-arrow-nested-default.js",
+    "sha256": "bd8ff821db11c035b80ef62e2547bbc95714a75bd9626a54bfc1e2f8a043dcf3"
+  },
+  {
+    "filename": "ctrl4-arrow-quoted-binding.js",
+    "sha256": "98c3fb280b5d0055456423990680e61e304fd8e8fabd87064516e3bc43a85831"
+  },
+  {
+    "filename": "ctrl4-arrow-reported.ts",
+    "sha256": "7b11d3e958f884dc50c4dbf24c0c0411d886b2bf28dd7e6d919289912b621e98"
+  },
+  {
+    "filename": "ctrl4-arrow-return-function.ts",
+    "sha256": "42b0b489f2cf97335f7fa3e7a78152a48e1cc57debd060f2bdc55905e98ce154"
+  },
+  {
+    "filename": "ctrl4-arrow-return-object.ts",
+    "sha256": "1da35e85b00742aba1af60f8afc946f18410f74deeb276b6ddd45ed1134e8f8c"
+  },
+  {
+    "filename": "ctrl4-arrow-sigils.js",
+    "sha256": "156321fcc4ea84118645d0cadc791af0457b1d3d3d92972bccb083a8adabcf58"
+  },
+  {
+    "filename": "ctrl4-arrow-single-sigils.js",
+    "sha256": "e9c278059956960f7f8f83b4e4cb4a7e2b4ecb1dff2eceb9bf6a77d2cfe1ec25"
+  },
+  {
+    "filename": "ctrl4-arrow-ternary-default.js",
+    "sha256": "1892f400980271cdd7ede8339a4e8ef80d5eebc13b9e41833d2f7809eeea2b29"
+  },
+  {
+    "filename": "ctrl4-arrow-tsx.tsx",
+    "sha256": "a7a198cea55af072b496ca1ff234566c8766df621abc099b6f06aa623d215e84"
+  },
+  {
+    "filename": "ctrl4-arrow-typed.ts",
+    "sha256": "d0c78501a278296052a6b3a1a444911dc9637cd4ac07dc205ceee1eb7cd98fba"
+  },
+  {
+    "filename": "ctrl4-b-short.js",
+    "sha256": "a73d2a3ef4629b77043d7326ba01058059415c808120452315ecb220749eb07d"
+  },
+  {
+    "filename": "ctrl4-b-story.js",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl4-b-story.jsx",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl4-b-story.ts",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl4-b-story.tsx",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl4-block-comment.js",
+    "sha256": "bea3cd280f98904e63153f2cdc0c44f54f6718377c61209461759a78cff6d659"
+  },
+  {
+    "filename": "ctrl4-bulk-control-00.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl4-bulk-control-01.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl4-bulk-control-02.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl4-bulk-control-03.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl4-bulk-control-04.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl4-bulk-control-05.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl4-bulk-control-06.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl4-bulk-control-07.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl4-bulk-control-08.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl4-bulk-control-09.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl4-bulk-control-10.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl4-bulk-control-11.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl4-bulk-control-12.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl4-bulk-control-13.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl4-bulk-control-14.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl4-bulk-control-15.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl4-bulk-control-16.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl4-bulk-control-17.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl4-bulk-control-18.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl4-bulk-control-19.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl4-dollar-id.js",
+    "sha256": "4bab567ad29205ad4140c5b4da86ca70bdedf722680b53520b9345f9d907dec2"
+  },
+  {
+    "filename": "ctrl4-genuine-all.js",
+    "sha256": "83ca72e4726df5645621706ea22096693d246da9494d9993a648caea709a95b8"
+  },
+  {
+    "filename": "ctrl4-genuine-case.js",
+    "sha256": "9ccaf4ae4da2bfceb12bc89d3c41106c09d329605e43ab245b21182cb1022f94"
+  },
+  {
+    "filename": "ctrl4-genuine-catch.js",
+    "sha256": "23a89000ea88ff90031b17228bacc3465ebe2d2eebbfa8a2e10626e926ad535c"
+  },
+  {
+    "filename": "ctrl4-genuine-for.js",
+    "sha256": "feadf3fabf59526bdd15b9c2ed1b129900e7d2553839c05aea58e91aae182fcf"
+  },
+  {
+    "filename": "ctrl4-genuine-if.js",
+    "sha256": "7e6ef888c17dc9f570cd2afb005d8e251ba0f688d1f3dec8d7d3f5c34d0db8b5"
+  },
+  {
+    "filename": "ctrl4-genuine-while.js",
+    "sha256": "19a72c2b61cd66ab5843aa4a782d0b46728eacce7481ae51b70e54d3c28e323e"
+  },
+  {
+    "filename": "ctrl4-line-comment-plain.js",
+    "sha256": "9e069d13b385a88a6085d89194677305ff67e4f44f15bc0dad857901a266ff1a"
+  },
+  {
+    "filename": "ctrl4-load.js",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl4-load.jsx",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl4-load.ts",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl4-load.tsx",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl4-members.js",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl4-members.jsx",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl4-members.ts",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl4-members.tsx",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl4-optional-access.ts",
+    "sha256": "1adcecc35601a013fad7cf3c050f03ffb06b074b7fb41f91592ee9e6129060ce"
+  },
+  {
+    "filename": "ctrl4-outside.js",
+    "sha256": "fa75f54bfb738784c7d898377d50390109c425e019583995aece6aa236c20b82"
+  },
+  {
+    "filename": "ctrl4-plain-template.js",
+    "sha256": "961bc29c4c7d7b2f4c410158b3d4e4277cc0cc4795ae04b3f7d66a8762fe4239"
+  },
+  {
+    "filename": "ctrl4-pr528-sample.js",
+    "sha256": "8276755adc957c67481dd5f52a77b64bac82dd8cf86597c45439c3aeecdaf0c8"
+  },
+  {
+    "filename": "ctrl4-pr531-sample.js",
+    "sha256": "b59ec1df153ef6a073b0234b64bbf44f858a638c1f64fee7815cfb5d4cab7059"
+  },
+  {
+    "filename": "ctrl4-pr532-sample.ts",
+    "sha256": "dbae4d65b68ffeb445476541a5f9a1a498e139448ecb0ce0bf1792f6a18d260a"
+  },
+  {
+    "filename": "ctrl4-pr533-sample.js",
+    "sha256": "3eb63ea8dfdd5b6ad5331cd5444847790315de72ebe9fff97d7f2d1a3dd4bdfc"
+  },
+  {
+    "filename": "ctrl4-pr534-sample.js",
+    "sha256": "7a72f078efd0476fc951cce56eb0c1e9c76d9986800eb128a7daa9a6fd2b63f7"
+  },
+  {
+    "filename": "ctrl4-pr535-sample.ts",
+    "sha256": "44c49822101c7535bef5e23aa5117ae4ecce877e98bd00aea823358ebb6e677d"
+  },
+  {
+    "filename": "ctrl4-pr536-sample.ts",
+    "sha256": "59ecfa342f70b98877d42c5b9d1928366d1f9a0b3c3786f47262ab171d7f08a6"
+  },
+  {
+    "filename": "ctrl4-pr537-sample.js",
+    "sha256": "10b749e81756178a04004d1ea5060fa211470f941e64d35e49635773ebba25ab"
+  },
+  {
+    "filename": "ctrl4-pr538-sample.js",
+    "sha256": "4c18cddffd29959af4bee8d5c2a7860fd22f16f703f8c5ccc5e56dcc5860913f"
+  },
+  {
+    "filename": "ctrl4-pr539-sample.js",
+    "sha256": "c38e1bc07b1597445a9b01b6c33a7b47cfdfc54c71604a438a63637e94c3ab19"
+  },
+  {
+    "filename": "ctrl4-pr540-sample.js",
+    "sha256": "a1b6bc422d78b5062512edb655ed6e589f2e4fac046cc2034cd972aa9aa6643d"
+  },
+  {
+    "filename": "ctrl4-pr541-sample.js",
+    "sha256": "536fbc51f580e121c9abbdd0fb2137b93f80604dc05715067a3a5f37141926dc"
+  },
+  {
+    "filename": "ctrl4-pr542-sample.js",
+    "sha256": "0f249ac6483097c6efb636bf29c39c5eab78526e5d3c41ebb85f8328fd28dfe7"
+  },
+  {
+    "filename": "ctrl4-pr543-sample.js",
+    "sha256": "db1418ecc2e033e4ead1d5206c64ed81cba74602d2acba25f97d177cb8baa147"
+  },
+  {
+    "filename": "ctrl4-pr544-sample.js",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl4-pr546-sample.js",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl4-pr547-sample.js",
+    "sha256": "1fb139b9f112bba41a502e6a2dc9034a291b7bac7ede99742798d77fe2bb408c"
+  },
+  {
+    "filename": "ctrl4-this-authored.ts",
+    "sha256": "3159b065baf9dea8e8876f3855b30a1fe73485ca8172070d45db1f458e50f0db"
+  },
+  {
+    "filename": "ctrl4-this-binding.js",
+    "sha256": "89bc3f4e29f353154f72f5615f24889242d1e8d89f26b0708a864313c2e38186"
+  },
+  {
+    "filename": "ctrl4-this-binding.jsx",
+    "sha256": "c4dcdd318c02d52ddfed0e974fb0a47ebde178d4f1de9f84aa42c542f28406ee"
+  },
+  {
+    "filename": "ctrl4-this-binding.ts",
+    "sha256": "89bc3f4e29f353154f72f5615f24889242d1e8d89f26b0708a864313c2e38186"
+  },
+  {
+    "filename": "ctrl4-this-binding.tsx",
+    "sha256": "c4dcdd318c02d52ddfed0e974fb0a47ebde178d4f1de9f84aa42c542f28406ee"
+  },
+  {
+    "filename": "ctrl4-this-initializer.js",
+    "sha256": "3796905fa231c4be961d4df0658826411c72927c829b987b8bc22ad1d04a8d28"
+  },
+  {
+    "filename": "ctrl4-this-method.ts",
+    "sha256": "c8d7e2d730bdee8072d71ffd3332c6e4aaf5f23e2865563152e9ee5e3db7fbab"
+  },
+  {
+    "filename": "ctrl4-this-nested-default.ts",
+    "sha256": "df890de7a0b2c5f85cc3fc840b55756414ef070f34ef1ae0e5d836ed66b6c25d"
+  },
+  {
+    "filename": "ctrl4-this-object.ts",
+    "sha256": "bddc693326a2fd998d959953f87d8d73e2d833bc0d06156a99843d6855b2a8fa"
+  },
+  {
+    "filename": "ctrl4-this-only.ts",
+    "sha256": "d7faf59a52e8cc93d280b1d187b79855735783e3933193076f43ccfc6851a5f9"
+  },
+  {
+    "filename": "ctrl4-this-render.tsx",
+    "sha256": "74a914771c85008fdf74b784303a1b9cc6271d6d19e1cb5bb1484b4a66665e5b"
+  },
+  {
+    "filename": "ctrl4-this-reported.ts",
+    "sha256": "44c49822101c7535bef5e23aa5117ae4ecce877e98bd00aea823358ebb6e677d"
+  },
+  {
+    "filename": "ctrl4-this-typed-defaults.ts",
+    "sha256": "d9af962397ca2c3302e622f0f873490e72500b9ce21d917eebb2b2ace327d9f1"
+  },
+  {
+    "filename": "ctrl5-arrow-abandoned.js",
+    "sha256": "56a151a284b6035d556f04483910b8f7fa7d3435bbef36affcb37d58c5a4ab69"
+  },
+  {
+    "filename": "ctrl5-arrow-alias-anonymous.js",
+    "sha256": "61e5356fdf4cf7c9a090446db81701d7b86bb43e8fc3bc92d506605bdb48929a"
+  },
+  {
+    "filename": "ctrl5-arrow-alias-named.js",
+    "sha256": "5460096083acfc89709e9b94a906266bb41cfdf3d55ccaca7eabe40af7c7061d"
+  },
+  {
+    "filename": "ctrl5-arrow-authored-single.js",
+    "sha256": "e39bf362ac9574ff0c7673d49a0b964312539c9950cab54119de87aa3f5baf64"
+  },
+  {
+    "filename": "ctrl5-arrow-authored-types.ts",
+    "sha256": "bb142f8237a0c35c8fa70b19acb07d2f5542987fd3d6475bd6cb02818b8700f1"
+  },
+  {
+    "filename": "ctrl5-arrow-authored-types.tsx",
+    "sha256": "bb142f8237a0c35c8fa70b19acb07d2f5542987fd3d6475bd6cb02818b8700f1"
+  },
+  {
+    "filename": "ctrl5-arrow-authored.js",
+    "sha256": "baf14c334885a49b91bd9f5729df588dc345339bc0f1b58da67f039d5bc43a17"
+  },
+  {
+    "filename": "ctrl5-arrow-binding-anonymous.js",
+    "sha256": "be60e3ed6a1a282bcfc107df3a3225dbb4823b02440c644fa305d6abb1f1b1fd"
+  },
+  {
+    "filename": "ctrl5-arrow-binding-named.js",
+    "sha256": "c317e54a8efb8cdbac899bb0a0f9e97ccd906eeecda0975e3f6aba82ac77f7f9"
+  },
+  {
+    "filename": "ctrl5-arrow-calls.js",
+    "sha256": "9c1f917dd2de35a89c9a459af30aa5d728a52f06d16aa7838957016792941c06"
+  },
+  {
+    "filename": "ctrl5-arrow-computed-binding.js",
+    "sha256": "9fbc35cbe0680e9de20032a91406e70af3d5f09a96bd8dc563092a96f80643c5"
+  },
+  {
+    "filename": "ctrl5-arrow-control.js",
+    "sha256": "5a6c1325fc00d7a77c662530355feecde4830504b0c08f72906831a7eb85d345"
+  },
+  {
+    "filename": "ctrl5-arrow-defaults.js",
+    "sha256": "c8201ff169c2434f08b6b7517ecb6c1ddc3ef87759fdec30facf0fcf9ef45cbf"
+  },
+  {
+    "filename": "ctrl5-arrow-empty-binding-named.js",
+    "sha256": "a128cd89fa9d9170bb75474a0343640b0780db8b97607595ebe46fc544bb3396"
+  },
+  {
+    "filename": "ctrl5-arrow-empty-binding.js",
+    "sha256": "083661c6fc422a2b7b229b22d9eba96f827723d470b93c4eacb88267b20b5be3"
+  },
+  {
+    "filename": "ctrl5-arrow-generic-named.ts",
+    "sha256": "98de85e99a3246d7737ff955cd90b7a562f1d0bf62ab75fed003daca150d418a"
+  },
+  {
+    "filename": "ctrl5-arrow-generic.ts",
+    "sha256": "f9626f4b5bd01f2fd986e2767547094065a0756e5f6b211fadc986c716382add"
+  },
+  {
+    "filename": "ctrl5-arrow-jsx.jsx",
+    "sha256": "7b794261d8691e4d81c1dbbd318f3e21d2397de7b224aaf93c2f4a84c4955ba4"
+  },
+  {
+    "filename": "ctrl5-arrow-member.js",
+    "sha256": "10cd4bd919fff4b654d8d1ee4bd64524a6fcffd926e44924cc1a571b33b751dc"
+  },
+  {
+    "filename": "ctrl5-arrow-named.js",
+    "sha256": "21260102f37c804e08441a1e13a82577ed8a7f3e0f938afc303994ccc3207bf1"
+  },
+  {
+    "filename": "ctrl5-arrow-nested-binding.js",
+    "sha256": "f42e9eeb62e5d8a32a723d6a65227bcd283a90b2287b62f5a286b09789d34421"
+  },
+  {
+    "filename": "ctrl5-arrow-nested-default.js",
+    "sha256": "bd8ff821db11c035b80ef62e2547bbc95714a75bd9626a54bfc1e2f8a043dcf3"
+  },
+  {
+    "filename": "ctrl5-arrow-quoted-binding.js",
+    "sha256": "98c3fb280b5d0055456423990680e61e304fd8e8fabd87064516e3bc43a85831"
+  },
+  {
+    "filename": "ctrl5-arrow-reported.ts",
+    "sha256": "7b11d3e958f884dc50c4dbf24c0c0411d886b2bf28dd7e6d919289912b621e98"
+  },
+  {
+    "filename": "ctrl5-arrow-return-function.ts",
+    "sha256": "42b0b489f2cf97335f7fa3e7a78152a48e1cc57debd060f2bdc55905e98ce154"
+  },
+  {
+    "filename": "ctrl5-arrow-return-object.ts",
+    "sha256": "1da35e85b00742aba1af60f8afc946f18410f74deeb276b6ddd45ed1134e8f8c"
+  },
+  {
+    "filename": "ctrl5-arrow-sigils.js",
+    "sha256": "156321fcc4ea84118645d0cadc791af0457b1d3d3d92972bccb083a8adabcf58"
+  },
+  {
+    "filename": "ctrl5-arrow-single-sigils.js",
+    "sha256": "e9c278059956960f7f8f83b4e4cb4a7e2b4ecb1dff2eceb9bf6a77d2cfe1ec25"
+  },
+  {
+    "filename": "ctrl5-arrow-ternary-default.js",
+    "sha256": "1892f400980271cdd7ede8339a4e8ef80d5eebc13b9e41833d2f7809eeea2b29"
+  },
+  {
+    "filename": "ctrl5-arrow-tsx.tsx",
+    "sha256": "a7a198cea55af072b496ca1ff234566c8766df621abc099b6f06aa623d215e84"
+  },
+  {
+    "filename": "ctrl5-arrow-typed.ts",
+    "sha256": "d0c78501a278296052a6b3a1a444911dc9637cd4ac07dc205ceee1eb7cd98fba"
+  },
+  {
+    "filename": "ctrl5-b-short.js",
+    "sha256": "a73d2a3ef4629b77043d7326ba01058059415c808120452315ecb220749eb07d"
+  },
+  {
+    "filename": "ctrl5-b-story.js",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl5-b-story.jsx",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl5-b-story.ts",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl5-b-story.tsx",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl5-block-comment.js",
+    "sha256": "bea3cd280f98904e63153f2cdc0c44f54f6718377c61209461759a78cff6d659"
+  },
+  {
+    "filename": "ctrl5-bulk-control-00.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl5-bulk-control-01.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl5-bulk-control-02.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl5-bulk-control-03.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl5-bulk-control-04.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl5-bulk-control-05.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl5-bulk-control-06.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl5-bulk-control-07.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl5-bulk-control-08.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl5-bulk-control-09.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl5-bulk-control-10.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl5-bulk-control-11.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl5-bulk-control-12.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl5-bulk-control-13.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl5-bulk-control-14.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl5-bulk-control-15.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl5-bulk-control-16.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl5-bulk-control-17.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl5-bulk-control-18.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl5-bulk-control-19.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl5-dollar-id.js",
+    "sha256": "4bab567ad29205ad4140c5b4da86ca70bdedf722680b53520b9345f9d907dec2"
+  },
+  {
+    "filename": "ctrl5-genuine-all.js",
+    "sha256": "83ca72e4726df5645621706ea22096693d246da9494d9993a648caea709a95b8"
+  },
+  {
+    "filename": "ctrl5-genuine-case.js",
+    "sha256": "9ccaf4ae4da2bfceb12bc89d3c41106c09d329605e43ab245b21182cb1022f94"
+  },
+  {
+    "filename": "ctrl5-genuine-catch.js",
+    "sha256": "23a89000ea88ff90031b17228bacc3465ebe2d2eebbfa8a2e10626e926ad535c"
+  },
+  {
+    "filename": "ctrl5-genuine-for.js",
+    "sha256": "feadf3fabf59526bdd15b9c2ed1b129900e7d2553839c05aea58e91aae182fcf"
+  },
+  {
+    "filename": "ctrl5-genuine-if.js",
+    "sha256": "7e6ef888c17dc9f570cd2afb005d8e251ba0f688d1f3dec8d7d3f5c34d0db8b5"
+  },
+  {
+    "filename": "ctrl5-genuine-while.js",
+    "sha256": "19a72c2b61cd66ab5843aa4a782d0b46728eacce7481ae51b70e54d3c28e323e"
+  },
+  {
+    "filename": "ctrl5-line-comment-plain.js",
+    "sha256": "9e069d13b385a88a6085d89194677305ff67e4f44f15bc0dad857901a266ff1a"
+  },
+  {
+    "filename": "ctrl5-load.js",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl5-load.jsx",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl5-load.ts",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl5-load.tsx",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl5-members.js",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl5-members.jsx",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl5-members.ts",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl5-members.tsx",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl5-optional-access.ts",
+    "sha256": "1adcecc35601a013fad7cf3c050f03ffb06b074b7fb41f91592ee9e6129060ce"
+  },
+  {
+    "filename": "ctrl5-outside.js",
+    "sha256": "fa75f54bfb738784c7d898377d50390109c425e019583995aece6aa236c20b82"
+  },
+  {
+    "filename": "ctrl5-plain-template.js",
+    "sha256": "961bc29c4c7d7b2f4c410158b3d4e4277cc0cc4795ae04b3f7d66a8762fe4239"
+  },
+  {
+    "filename": "ctrl5-pr528-sample.js",
+    "sha256": "8276755adc957c67481dd5f52a77b64bac82dd8cf86597c45439c3aeecdaf0c8"
+  },
+  {
+    "filename": "ctrl5-pr531-sample.js",
+    "sha256": "b59ec1df153ef6a073b0234b64bbf44f858a638c1f64fee7815cfb5d4cab7059"
+  },
+  {
+    "filename": "ctrl5-pr532-sample.ts",
+    "sha256": "dbae4d65b68ffeb445476541a5f9a1a498e139448ecb0ce0bf1792f6a18d260a"
+  },
+  {
+    "filename": "ctrl5-pr533-sample.js",
+    "sha256": "3eb63ea8dfdd5b6ad5331cd5444847790315de72ebe9fff97d7f2d1a3dd4bdfc"
+  },
+  {
+    "filename": "ctrl5-pr534-sample.js",
+    "sha256": "7a72f078efd0476fc951cce56eb0c1e9c76d9986800eb128a7daa9a6fd2b63f7"
+  },
+  {
+    "filename": "ctrl5-pr535-sample.ts",
+    "sha256": "44c49822101c7535bef5e23aa5117ae4ecce877e98bd00aea823358ebb6e677d"
+  },
+  {
+    "filename": "ctrl5-pr536-sample.ts",
+    "sha256": "59ecfa342f70b98877d42c5b9d1928366d1f9a0b3c3786f47262ab171d7f08a6"
+  },
+  {
+    "filename": "ctrl5-pr537-sample.js",
+    "sha256": "10b749e81756178a04004d1ea5060fa211470f941e64d35e49635773ebba25ab"
+  },
+  {
+    "filename": "ctrl5-pr538-sample.js",
+    "sha256": "4c18cddffd29959af4bee8d5c2a7860fd22f16f703f8c5ccc5e56dcc5860913f"
+  },
+  {
+    "filename": "ctrl5-pr539-sample.js",
+    "sha256": "c38e1bc07b1597445a9b01b6c33a7b47cfdfc54c71604a438a63637e94c3ab19"
+  },
+  {
+    "filename": "ctrl5-pr540-sample.js",
+    "sha256": "a1b6bc422d78b5062512edb655ed6e589f2e4fac046cc2034cd972aa9aa6643d"
+  },
+  {
+    "filename": "ctrl5-pr541-sample.js",
+    "sha256": "536fbc51f580e121c9abbdd0fb2137b93f80604dc05715067a3a5f37141926dc"
+  },
+  {
+    "filename": "ctrl5-pr542-sample.js",
+    "sha256": "0f249ac6483097c6efb636bf29c39c5eab78526e5d3c41ebb85f8328fd28dfe7"
+  },
+  {
+    "filename": "ctrl5-pr543-sample.js",
+    "sha256": "db1418ecc2e033e4ead1d5206c64ed81cba74602d2acba25f97d177cb8baa147"
+  },
+  {
+    "filename": "ctrl5-pr544-sample.js",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl5-pr546-sample.js",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl5-pr547-sample.js",
+    "sha256": "1fb139b9f112bba41a502e6a2dc9034a291b7bac7ede99742798d77fe2bb408c"
+  },
+  {
+    "filename": "ctrl5-this-authored.ts",
+    "sha256": "3159b065baf9dea8e8876f3855b30a1fe73485ca8172070d45db1f458e50f0db"
+  },
+  {
+    "filename": "ctrl5-this-binding.js",
+    "sha256": "89bc3f4e29f353154f72f5615f24889242d1e8d89f26b0708a864313c2e38186"
+  },
+  {
+    "filename": "ctrl5-this-binding.jsx",
+    "sha256": "c4dcdd318c02d52ddfed0e974fb0a47ebde178d4f1de9f84aa42c542f28406ee"
+  },
+  {
+    "filename": "ctrl5-this-binding.ts",
+    "sha256": "89bc3f4e29f353154f72f5615f24889242d1e8d89f26b0708a864313c2e38186"
+  },
+  {
+    "filename": "ctrl5-this-binding.tsx",
+    "sha256": "c4dcdd318c02d52ddfed0e974fb0a47ebde178d4f1de9f84aa42c542f28406ee"
+  },
+  {
+    "filename": "ctrl5-this-initializer.js",
+    "sha256": "3796905fa231c4be961d4df0658826411c72927c829b987b8bc22ad1d04a8d28"
+  },
+  {
+    "filename": "ctrl5-this-method.ts",
+    "sha256": "c8d7e2d730bdee8072d71ffd3332c6e4aaf5f23e2865563152e9ee5e3db7fbab"
+  },
+  {
+    "filename": "ctrl5-this-nested-default.ts",
+    "sha256": "df890de7a0b2c5f85cc3fc840b55756414ef070f34ef1ae0e5d836ed66b6c25d"
+  },
+  {
+    "filename": "ctrl5-this-object.ts",
+    "sha256": "bddc693326a2fd998d959953f87d8d73e2d833bc0d06156a99843d6855b2a8fa"
+  },
+  {
+    "filename": "ctrl5-this-only.ts",
+    "sha256": "d7faf59a52e8cc93d280b1d187b79855735783e3933193076f43ccfc6851a5f9"
+  },
+  {
+    "filename": "ctrl5-this-render.tsx",
+    "sha256": "74a914771c85008fdf74b784303a1b9cc6271d6d19e1cb5bb1484b4a66665e5b"
+  },
+  {
+    "filename": "ctrl5-this-reported.ts",
+    "sha256": "44c49822101c7535bef5e23aa5117ae4ecce877e98bd00aea823358ebb6e677d"
+  },
+  {
+    "filename": "ctrl5-this-typed-defaults.ts",
+    "sha256": "d9af962397ca2c3302e622f0f873490e72500b9ce21d917eebb2b2ace327d9f1"
+  },
+  {
+    "filename": "ctrl6-arrow-abandoned.js",
+    "sha256": "56a151a284b6035d556f04483910b8f7fa7d3435bbef36affcb37d58c5a4ab69"
+  },
+  {
+    "filename": "ctrl6-arrow-alias-anonymous.js",
+    "sha256": "61e5356fdf4cf7c9a090446db81701d7b86bb43e8fc3bc92d506605bdb48929a"
+  },
+  {
+    "filename": "ctrl6-arrow-alias-named.js",
+    "sha256": "5460096083acfc89709e9b94a906266bb41cfdf3d55ccaca7eabe40af7c7061d"
+  },
+  {
+    "filename": "ctrl6-arrow-authored-single.js",
+    "sha256": "e39bf362ac9574ff0c7673d49a0b964312539c9950cab54119de87aa3f5baf64"
+  },
+  {
+    "filename": "ctrl6-arrow-authored-types.ts",
+    "sha256": "bb142f8237a0c35c8fa70b19acb07d2f5542987fd3d6475bd6cb02818b8700f1"
+  },
+  {
+    "filename": "ctrl6-arrow-authored-types.tsx",
+    "sha256": "bb142f8237a0c35c8fa70b19acb07d2f5542987fd3d6475bd6cb02818b8700f1"
+  },
+  {
+    "filename": "ctrl6-arrow-authored.js",
+    "sha256": "baf14c334885a49b91bd9f5729df588dc345339bc0f1b58da67f039d5bc43a17"
+  },
+  {
+    "filename": "ctrl6-arrow-binding-anonymous.js",
+    "sha256": "be60e3ed6a1a282bcfc107df3a3225dbb4823b02440c644fa305d6abb1f1b1fd"
+  },
+  {
+    "filename": "ctrl6-arrow-binding-named.js",
+    "sha256": "c317e54a8efb8cdbac899bb0a0f9e97ccd906eeecda0975e3f6aba82ac77f7f9"
+  },
+  {
+    "filename": "ctrl6-arrow-calls.js",
+    "sha256": "9c1f917dd2de35a89c9a459af30aa5d728a52f06d16aa7838957016792941c06"
+  },
+  {
+    "filename": "ctrl6-arrow-computed-binding.js",
+    "sha256": "9fbc35cbe0680e9de20032a91406e70af3d5f09a96bd8dc563092a96f80643c5"
+  },
+  {
+    "filename": "ctrl6-arrow-control.js",
+    "sha256": "5a6c1325fc00d7a77c662530355feecde4830504b0c08f72906831a7eb85d345"
+  },
+  {
+    "filename": "ctrl6-arrow-defaults.js",
+    "sha256": "c8201ff169c2434f08b6b7517ecb6c1ddc3ef87759fdec30facf0fcf9ef45cbf"
+  },
+  {
+    "filename": "ctrl6-arrow-empty-binding-named.js",
+    "sha256": "a128cd89fa9d9170bb75474a0343640b0780db8b97607595ebe46fc544bb3396"
+  },
+  {
+    "filename": "ctrl6-arrow-empty-binding.js",
+    "sha256": "083661c6fc422a2b7b229b22d9eba96f827723d470b93c4eacb88267b20b5be3"
+  },
+  {
+    "filename": "ctrl6-arrow-generic-named.ts",
+    "sha256": "98de85e99a3246d7737ff955cd90b7a562f1d0bf62ab75fed003daca150d418a"
+  },
+  {
+    "filename": "ctrl6-arrow-generic.ts",
+    "sha256": "f9626f4b5bd01f2fd986e2767547094065a0756e5f6b211fadc986c716382add"
+  },
+  {
+    "filename": "ctrl6-arrow-jsx.jsx",
+    "sha256": "7b794261d8691e4d81c1dbbd318f3e21d2397de7b224aaf93c2f4a84c4955ba4"
+  },
+  {
+    "filename": "ctrl6-arrow-member.js",
+    "sha256": "10cd4bd919fff4b654d8d1ee4bd64524a6fcffd926e44924cc1a571b33b751dc"
+  },
+  {
+    "filename": "ctrl6-arrow-named.js",
+    "sha256": "21260102f37c804e08441a1e13a82577ed8a7f3e0f938afc303994ccc3207bf1"
+  },
+  {
+    "filename": "ctrl6-arrow-nested-binding.js",
+    "sha256": "f42e9eeb62e5d8a32a723d6a65227bcd283a90b2287b62f5a286b09789d34421"
+  },
+  {
+    "filename": "ctrl6-arrow-nested-default.js",
+    "sha256": "bd8ff821db11c035b80ef62e2547bbc95714a75bd9626a54bfc1e2f8a043dcf3"
+  },
+  {
+    "filename": "ctrl6-arrow-quoted-binding.js",
+    "sha256": "98c3fb280b5d0055456423990680e61e304fd8e8fabd87064516e3bc43a85831"
+  },
+  {
+    "filename": "ctrl6-arrow-reported.ts",
+    "sha256": "7b11d3e958f884dc50c4dbf24c0c0411d886b2bf28dd7e6d919289912b621e98"
+  },
+  {
+    "filename": "ctrl6-arrow-return-function.ts",
+    "sha256": "42b0b489f2cf97335f7fa3e7a78152a48e1cc57debd060f2bdc55905e98ce154"
+  },
+  {
+    "filename": "ctrl6-arrow-return-object.ts",
+    "sha256": "1da35e85b00742aba1af60f8afc946f18410f74deeb276b6ddd45ed1134e8f8c"
+  },
+  {
+    "filename": "ctrl6-arrow-sigils.js",
+    "sha256": "156321fcc4ea84118645d0cadc791af0457b1d3d3d92972bccb083a8adabcf58"
+  },
+  {
+    "filename": "ctrl6-arrow-single-sigils.js",
+    "sha256": "e9c278059956960f7f8f83b4e4cb4a7e2b4ecb1dff2eceb9bf6a77d2cfe1ec25"
+  },
+  {
+    "filename": "ctrl6-arrow-ternary-default.js",
+    "sha256": "1892f400980271cdd7ede8339a4e8ef80d5eebc13b9e41833d2f7809eeea2b29"
+  },
+  {
+    "filename": "ctrl6-arrow-tsx.tsx",
+    "sha256": "a7a198cea55af072b496ca1ff234566c8766df621abc099b6f06aa623d215e84"
+  },
+  {
+    "filename": "ctrl6-arrow-typed.ts",
+    "sha256": "d0c78501a278296052a6b3a1a444911dc9637cd4ac07dc205ceee1eb7cd98fba"
+  },
+  {
+    "filename": "ctrl6-b-short.js",
+    "sha256": "a73d2a3ef4629b77043d7326ba01058059415c808120452315ecb220749eb07d"
+  },
+  {
+    "filename": "ctrl6-b-story.js",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl6-b-story.jsx",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl6-b-story.ts",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl6-b-story.tsx",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl6-block-comment.js",
+    "sha256": "bea3cd280f98904e63153f2cdc0c44f54f6718377c61209461759a78cff6d659"
+  },
+  {
+    "filename": "ctrl6-bulk-control-00.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl6-bulk-control-01.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl6-bulk-control-02.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl6-bulk-control-03.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl6-bulk-control-04.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl6-bulk-control-05.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl6-bulk-control-06.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl6-bulk-control-07.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl6-bulk-control-08.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl6-bulk-control-09.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl6-bulk-control-10.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl6-bulk-control-11.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl6-bulk-control-12.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl6-bulk-control-13.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl6-bulk-control-14.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl6-bulk-control-15.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl6-bulk-control-16.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl6-bulk-control-17.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl6-bulk-control-18.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl6-bulk-control-19.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl6-dollar-id.js",
+    "sha256": "4bab567ad29205ad4140c5b4da86ca70bdedf722680b53520b9345f9d907dec2"
+  },
+  {
+    "filename": "ctrl6-genuine-all.js",
+    "sha256": "83ca72e4726df5645621706ea22096693d246da9494d9993a648caea709a95b8"
+  },
+  {
+    "filename": "ctrl6-genuine-case.js",
+    "sha256": "9ccaf4ae4da2bfceb12bc89d3c41106c09d329605e43ab245b21182cb1022f94"
+  },
+  {
+    "filename": "ctrl6-genuine-catch.js",
+    "sha256": "23a89000ea88ff90031b17228bacc3465ebe2d2eebbfa8a2e10626e926ad535c"
+  },
+  {
+    "filename": "ctrl6-genuine-for.js",
+    "sha256": "feadf3fabf59526bdd15b9c2ed1b129900e7d2553839c05aea58e91aae182fcf"
+  },
+  {
+    "filename": "ctrl6-genuine-if.js",
+    "sha256": "7e6ef888c17dc9f570cd2afb005d8e251ba0f688d1f3dec8d7d3f5c34d0db8b5"
+  },
+  {
+    "filename": "ctrl6-genuine-while.js",
+    "sha256": "19a72c2b61cd66ab5843aa4a782d0b46728eacce7481ae51b70e54d3c28e323e"
+  },
+  {
+    "filename": "ctrl6-line-comment-plain.js",
+    "sha256": "9e069d13b385a88a6085d89194677305ff67e4f44f15bc0dad857901a266ff1a"
+  },
+  {
+    "filename": "ctrl6-load.js",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl6-load.jsx",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl6-load.ts",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl6-load.tsx",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl6-members.js",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl6-members.jsx",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl6-members.ts",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl6-members.tsx",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl6-optional-access.ts",
+    "sha256": "1adcecc35601a013fad7cf3c050f03ffb06b074b7fb41f91592ee9e6129060ce"
+  },
+  {
+    "filename": "ctrl6-outside.js",
+    "sha256": "fa75f54bfb738784c7d898377d50390109c425e019583995aece6aa236c20b82"
+  },
+  {
+    "filename": "ctrl6-plain-template.js",
+    "sha256": "961bc29c4c7d7b2f4c410158b3d4e4277cc0cc4795ae04b3f7d66a8762fe4239"
+  },
+  {
+    "filename": "ctrl6-pr528-sample.js",
+    "sha256": "8276755adc957c67481dd5f52a77b64bac82dd8cf86597c45439c3aeecdaf0c8"
+  },
+  {
+    "filename": "ctrl6-pr531-sample.js",
+    "sha256": "b59ec1df153ef6a073b0234b64bbf44f858a638c1f64fee7815cfb5d4cab7059"
+  },
+  {
+    "filename": "ctrl6-pr532-sample.ts",
+    "sha256": "dbae4d65b68ffeb445476541a5f9a1a498e139448ecb0ce0bf1792f6a18d260a"
+  },
+  {
+    "filename": "ctrl6-pr533-sample.js",
+    "sha256": "3eb63ea8dfdd5b6ad5331cd5444847790315de72ebe9fff97d7f2d1a3dd4bdfc"
+  },
+  {
+    "filename": "ctrl6-pr534-sample.js",
+    "sha256": "7a72f078efd0476fc951cce56eb0c1e9c76d9986800eb128a7daa9a6fd2b63f7"
+  },
+  {
+    "filename": "ctrl6-pr535-sample.ts",
+    "sha256": "44c49822101c7535bef5e23aa5117ae4ecce877e98bd00aea823358ebb6e677d"
+  },
+  {
+    "filename": "ctrl6-pr536-sample.ts",
+    "sha256": "59ecfa342f70b98877d42c5b9d1928366d1f9a0b3c3786f47262ab171d7f08a6"
+  },
+  {
+    "filename": "ctrl6-pr537-sample.js",
+    "sha256": "10b749e81756178a04004d1ea5060fa211470f941e64d35e49635773ebba25ab"
+  },
+  {
+    "filename": "ctrl6-pr538-sample.js",
+    "sha256": "4c18cddffd29959af4bee8d5c2a7860fd22f16f703f8c5ccc5e56dcc5860913f"
+  },
+  {
+    "filename": "ctrl6-pr539-sample.js",
+    "sha256": "c38e1bc07b1597445a9b01b6c33a7b47cfdfc54c71604a438a63637e94c3ab19"
+  },
+  {
+    "filename": "ctrl6-pr540-sample.js",
+    "sha256": "a1b6bc422d78b5062512edb655ed6e589f2e4fac046cc2034cd972aa9aa6643d"
+  },
+  {
+    "filename": "ctrl6-pr541-sample.js",
+    "sha256": "536fbc51f580e121c9abbdd0fb2137b93f80604dc05715067a3a5f37141926dc"
+  },
+  {
+    "filename": "ctrl6-pr542-sample.js",
+    "sha256": "0f249ac6483097c6efb636bf29c39c5eab78526e5d3c41ebb85f8328fd28dfe7"
+  },
+  {
+    "filename": "ctrl6-pr543-sample.js",
+    "sha256": "db1418ecc2e033e4ead1d5206c64ed81cba74602d2acba25f97d177cb8baa147"
+  },
+  {
+    "filename": "ctrl6-pr544-sample.js",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl6-pr546-sample.js",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl6-pr547-sample.js",
+    "sha256": "1fb139b9f112bba41a502e6a2dc9034a291b7bac7ede99742798d77fe2bb408c"
+  },
+  {
+    "filename": "ctrl6-this-authored.ts",
+    "sha256": "3159b065baf9dea8e8876f3855b30a1fe73485ca8172070d45db1f458e50f0db"
+  },
+  {
+    "filename": "ctrl6-this-binding.js",
+    "sha256": "89bc3f4e29f353154f72f5615f24889242d1e8d89f26b0708a864313c2e38186"
+  },
+  {
+    "filename": "ctrl6-this-binding.jsx",
+    "sha256": "c4dcdd318c02d52ddfed0e974fb0a47ebde178d4f1de9f84aa42c542f28406ee"
+  },
+  {
+    "filename": "ctrl6-this-binding.ts",
+    "sha256": "89bc3f4e29f353154f72f5615f24889242d1e8d89f26b0708a864313c2e38186"
+  },
+  {
+    "filename": "ctrl6-this-binding.tsx",
+    "sha256": "c4dcdd318c02d52ddfed0e974fb0a47ebde178d4f1de9f84aa42c542f28406ee"
+  },
+  {
+    "filename": "ctrl6-this-initializer.js",
+    "sha256": "3796905fa231c4be961d4df0658826411c72927c829b987b8bc22ad1d04a8d28"
+  },
+  {
+    "filename": "ctrl6-this-method.ts",
+    "sha256": "c8d7e2d730bdee8072d71ffd3332c6e4aaf5f23e2865563152e9ee5e3db7fbab"
+  },
+  {
+    "filename": "ctrl6-this-nested-default.ts",
+    "sha256": "df890de7a0b2c5f85cc3fc840b55756414ef070f34ef1ae0e5d836ed66b6c25d"
+  },
+  {
+    "filename": "ctrl6-this-object.ts",
+    "sha256": "bddc693326a2fd998d959953f87d8d73e2d833bc0d06156a99843d6855b2a8fa"
+  },
+  {
+    "filename": "ctrl6-this-only.ts",
+    "sha256": "d7faf59a52e8cc93d280b1d187b79855735783e3933193076f43ccfc6851a5f9"
+  },
+  {
+    "filename": "ctrl6-this-render.tsx",
+    "sha256": "74a914771c85008fdf74b784303a1b9cc6271d6d19e1cb5bb1484b4a66665e5b"
+  },
+  {
+    "filename": "ctrl6-this-reported.ts",
+    "sha256": "44c49822101c7535bef5e23aa5117ae4ecce877e98bd00aea823358ebb6e677d"
+  },
+  {
+    "filename": "ctrl6-this-typed-defaults.ts",
+    "sha256": "d9af962397ca2c3302e622f0f873490e72500b9ce21d917eebb2b2ace327d9f1"
+  },
+  {
+    "filename": "ctrl7-arrow-abandoned.js",
+    "sha256": "56a151a284b6035d556f04483910b8f7fa7d3435bbef36affcb37d58c5a4ab69"
+  },
+  {
+    "filename": "ctrl7-arrow-alias-anonymous.js",
+    "sha256": "61e5356fdf4cf7c9a090446db81701d7b86bb43e8fc3bc92d506605bdb48929a"
+  },
+  {
+    "filename": "ctrl7-arrow-alias-named.js",
+    "sha256": "5460096083acfc89709e9b94a906266bb41cfdf3d55ccaca7eabe40af7c7061d"
+  },
+  {
+    "filename": "ctrl7-arrow-authored-single.js",
+    "sha256": "e39bf362ac9574ff0c7673d49a0b964312539c9950cab54119de87aa3f5baf64"
+  },
+  {
+    "filename": "ctrl7-arrow-authored-types.ts",
+    "sha256": "bb142f8237a0c35c8fa70b19acb07d2f5542987fd3d6475bd6cb02818b8700f1"
+  },
+  {
+    "filename": "ctrl7-arrow-authored-types.tsx",
+    "sha256": "bb142f8237a0c35c8fa70b19acb07d2f5542987fd3d6475bd6cb02818b8700f1"
+  },
+  {
+    "filename": "ctrl7-arrow-authored.js",
+    "sha256": "baf14c334885a49b91bd9f5729df588dc345339bc0f1b58da67f039d5bc43a17"
+  },
+  {
+    "filename": "ctrl7-arrow-binding-anonymous.js",
+    "sha256": "be60e3ed6a1a282bcfc107df3a3225dbb4823b02440c644fa305d6abb1f1b1fd"
+  },
+  {
+    "filename": "ctrl7-arrow-binding-named.js",
+    "sha256": "c317e54a8efb8cdbac899bb0a0f9e97ccd906eeecda0975e3f6aba82ac77f7f9"
+  },
+  {
+    "filename": "ctrl7-arrow-calls.js",
+    "sha256": "9c1f917dd2de35a89c9a459af30aa5d728a52f06d16aa7838957016792941c06"
+  },
+  {
+    "filename": "ctrl7-arrow-computed-binding.js",
+    "sha256": "9fbc35cbe0680e9de20032a91406e70af3d5f09a96bd8dc563092a96f80643c5"
+  },
+  {
+    "filename": "ctrl7-arrow-control.js",
+    "sha256": "5a6c1325fc00d7a77c662530355feecde4830504b0c08f72906831a7eb85d345"
+  },
+  {
+    "filename": "ctrl7-arrow-defaults.js",
+    "sha256": "c8201ff169c2434f08b6b7517ecb6c1ddc3ef87759fdec30facf0fcf9ef45cbf"
+  },
+  {
+    "filename": "ctrl7-arrow-empty-binding-named.js",
+    "sha256": "a128cd89fa9d9170bb75474a0343640b0780db8b97607595ebe46fc544bb3396"
+  },
+  {
+    "filename": "ctrl7-arrow-empty-binding.js",
+    "sha256": "083661c6fc422a2b7b229b22d9eba96f827723d470b93c4eacb88267b20b5be3"
+  },
+  {
+    "filename": "ctrl7-arrow-generic-named.ts",
+    "sha256": "98de85e99a3246d7737ff955cd90b7a562f1d0bf62ab75fed003daca150d418a"
+  },
+  {
+    "filename": "ctrl7-arrow-generic.ts",
+    "sha256": "f9626f4b5bd01f2fd986e2767547094065a0756e5f6b211fadc986c716382add"
+  },
+  {
+    "filename": "ctrl7-arrow-jsx.jsx",
+    "sha256": "7b794261d8691e4d81c1dbbd318f3e21d2397de7b224aaf93c2f4a84c4955ba4"
+  },
+  {
+    "filename": "ctrl7-arrow-member.js",
+    "sha256": "10cd4bd919fff4b654d8d1ee4bd64524a6fcffd926e44924cc1a571b33b751dc"
+  },
+  {
+    "filename": "ctrl7-arrow-named.js",
+    "sha256": "21260102f37c804e08441a1e13a82577ed8a7f3e0f938afc303994ccc3207bf1"
+  },
+  {
+    "filename": "ctrl7-arrow-nested-binding.js",
+    "sha256": "f42e9eeb62e5d8a32a723d6a65227bcd283a90b2287b62f5a286b09789d34421"
+  },
+  {
+    "filename": "ctrl7-arrow-nested-default.js",
+    "sha256": "bd8ff821db11c035b80ef62e2547bbc95714a75bd9626a54bfc1e2f8a043dcf3"
+  },
+  {
+    "filename": "ctrl7-arrow-quoted-binding.js",
+    "sha256": "98c3fb280b5d0055456423990680e61e304fd8e8fabd87064516e3bc43a85831"
+  },
+  {
+    "filename": "ctrl7-arrow-reported.ts",
+    "sha256": "7b11d3e958f884dc50c4dbf24c0c0411d886b2bf28dd7e6d919289912b621e98"
+  },
+  {
+    "filename": "ctrl7-arrow-return-function.ts",
+    "sha256": "42b0b489f2cf97335f7fa3e7a78152a48e1cc57debd060f2bdc55905e98ce154"
+  },
+  {
+    "filename": "ctrl7-arrow-return-object.ts",
+    "sha256": "1da35e85b00742aba1af60f8afc946f18410f74deeb276b6ddd45ed1134e8f8c"
+  },
+  {
+    "filename": "ctrl7-arrow-sigils.js",
+    "sha256": "156321fcc4ea84118645d0cadc791af0457b1d3d3d92972bccb083a8adabcf58"
+  },
+  {
+    "filename": "ctrl7-arrow-single-sigils.js",
+    "sha256": "e9c278059956960f7f8f83b4e4cb4a7e2b4ecb1dff2eceb9bf6a77d2cfe1ec25"
+  },
+  {
+    "filename": "ctrl7-arrow-ternary-default.js",
+    "sha256": "1892f400980271cdd7ede8339a4e8ef80d5eebc13b9e41833d2f7809eeea2b29"
+  },
+  {
+    "filename": "ctrl7-arrow-tsx.tsx",
+    "sha256": "a7a198cea55af072b496ca1ff234566c8766df621abc099b6f06aa623d215e84"
+  },
+  {
+    "filename": "ctrl7-arrow-typed.ts",
+    "sha256": "d0c78501a278296052a6b3a1a444911dc9637cd4ac07dc205ceee1eb7cd98fba"
+  },
+  {
+    "filename": "ctrl7-b-short.js",
+    "sha256": "a73d2a3ef4629b77043d7326ba01058059415c808120452315ecb220749eb07d"
+  },
+  {
+    "filename": "ctrl7-b-story.js",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl7-b-story.jsx",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl7-b-story.ts",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl7-b-story.tsx",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl7-block-comment.js",
+    "sha256": "bea3cd280f98904e63153f2cdc0c44f54f6718377c61209461759a78cff6d659"
+  },
+  {
+    "filename": "ctrl7-bulk-control-00.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl7-bulk-control-01.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl7-bulk-control-02.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl7-bulk-control-03.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl7-bulk-control-04.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl7-bulk-control-05.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl7-bulk-control-06.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl7-bulk-control-07.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl7-bulk-control-08.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl7-bulk-control-09.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl7-bulk-control-10.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl7-bulk-control-11.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl7-bulk-control-12.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl7-bulk-control-13.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl7-bulk-control-14.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl7-bulk-control-15.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl7-bulk-control-16.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl7-bulk-control-17.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl7-bulk-control-18.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl7-bulk-control-19.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl7-dollar-id.js",
+    "sha256": "4bab567ad29205ad4140c5b4da86ca70bdedf722680b53520b9345f9d907dec2"
+  },
+  {
+    "filename": "ctrl7-genuine-all.js",
+    "sha256": "83ca72e4726df5645621706ea22096693d246da9494d9993a648caea709a95b8"
+  },
+  {
+    "filename": "ctrl7-genuine-case.js",
+    "sha256": "9ccaf4ae4da2bfceb12bc89d3c41106c09d329605e43ab245b21182cb1022f94"
+  },
+  {
+    "filename": "ctrl7-genuine-catch.js",
+    "sha256": "23a89000ea88ff90031b17228bacc3465ebe2d2eebbfa8a2e10626e926ad535c"
+  },
+  {
+    "filename": "ctrl7-genuine-for.js",
+    "sha256": "feadf3fabf59526bdd15b9c2ed1b129900e7d2553839c05aea58e91aae182fcf"
+  },
+  {
+    "filename": "ctrl7-genuine-if.js",
+    "sha256": "7e6ef888c17dc9f570cd2afb005d8e251ba0f688d1f3dec8d7d3f5c34d0db8b5"
+  },
+  {
+    "filename": "ctrl7-genuine-while.js",
+    "sha256": "19a72c2b61cd66ab5843aa4a782d0b46728eacce7481ae51b70e54d3c28e323e"
+  },
+  {
+    "filename": "ctrl7-line-comment-plain.js",
+    "sha256": "9e069d13b385a88a6085d89194677305ff67e4f44f15bc0dad857901a266ff1a"
+  },
+  {
+    "filename": "ctrl7-load.js",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl7-load.jsx",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl7-load.ts",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl7-load.tsx",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl7-members.js",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl7-members.jsx",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl7-members.ts",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl7-members.tsx",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl7-optional-access.ts",
+    "sha256": "1adcecc35601a013fad7cf3c050f03ffb06b074b7fb41f91592ee9e6129060ce"
+  },
+  {
+    "filename": "ctrl7-outside.js",
+    "sha256": "fa75f54bfb738784c7d898377d50390109c425e019583995aece6aa236c20b82"
+  },
+  {
+    "filename": "ctrl7-plain-template.js",
+    "sha256": "961bc29c4c7d7b2f4c410158b3d4e4277cc0cc4795ae04b3f7d66a8762fe4239"
+  },
+  {
+    "filename": "ctrl7-pr528-sample.js",
+    "sha256": "8276755adc957c67481dd5f52a77b64bac82dd8cf86597c45439c3aeecdaf0c8"
+  },
+  {
+    "filename": "ctrl7-pr531-sample.js",
+    "sha256": "b59ec1df153ef6a073b0234b64bbf44f858a638c1f64fee7815cfb5d4cab7059"
+  },
+  {
+    "filename": "ctrl7-pr532-sample.ts",
+    "sha256": "dbae4d65b68ffeb445476541a5f9a1a498e139448ecb0ce0bf1792f6a18d260a"
+  },
+  {
+    "filename": "ctrl7-pr533-sample.js",
+    "sha256": "3eb63ea8dfdd5b6ad5331cd5444847790315de72ebe9fff97d7f2d1a3dd4bdfc"
+  },
+  {
+    "filename": "ctrl7-pr534-sample.js",
+    "sha256": "7a72f078efd0476fc951cce56eb0c1e9c76d9986800eb128a7daa9a6fd2b63f7"
+  },
+  {
+    "filename": "ctrl7-pr535-sample.ts",
+    "sha256": "44c49822101c7535bef5e23aa5117ae4ecce877e98bd00aea823358ebb6e677d"
+  },
+  {
+    "filename": "ctrl7-pr536-sample.ts",
+    "sha256": "59ecfa342f70b98877d42c5b9d1928366d1f9a0b3c3786f47262ab171d7f08a6"
+  },
+  {
+    "filename": "ctrl7-pr537-sample.js",
+    "sha256": "10b749e81756178a04004d1ea5060fa211470f941e64d35e49635773ebba25ab"
+  },
+  {
+    "filename": "ctrl7-pr538-sample.js",
+    "sha256": "4c18cddffd29959af4bee8d5c2a7860fd22f16f703f8c5ccc5e56dcc5860913f"
+  },
+  {
+    "filename": "ctrl7-pr539-sample.js",
+    "sha256": "c38e1bc07b1597445a9b01b6c33a7b47cfdfc54c71604a438a63637e94c3ab19"
+  },
+  {
+    "filename": "ctrl7-pr540-sample.js",
+    "sha256": "a1b6bc422d78b5062512edb655ed6e589f2e4fac046cc2034cd972aa9aa6643d"
+  },
+  {
+    "filename": "ctrl7-pr541-sample.js",
+    "sha256": "536fbc51f580e121c9abbdd0fb2137b93f80604dc05715067a3a5f37141926dc"
+  },
+  {
+    "filename": "ctrl7-pr542-sample.js",
+    "sha256": "0f249ac6483097c6efb636bf29c39c5eab78526e5d3c41ebb85f8328fd28dfe7"
+  },
+  {
+    "filename": "ctrl7-pr543-sample.js",
+    "sha256": "db1418ecc2e033e4ead1d5206c64ed81cba74602d2acba25f97d177cb8baa147"
+  },
+  {
+    "filename": "ctrl7-pr544-sample.js",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl7-pr546-sample.js",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl7-pr547-sample.js",
+    "sha256": "1fb139b9f112bba41a502e6a2dc9034a291b7bac7ede99742798d77fe2bb408c"
+  },
+  {
+    "filename": "ctrl7-this-authored.ts",
+    "sha256": "3159b065baf9dea8e8876f3855b30a1fe73485ca8172070d45db1f458e50f0db"
+  },
+  {
+    "filename": "ctrl7-this-binding.js",
+    "sha256": "89bc3f4e29f353154f72f5615f24889242d1e8d89f26b0708a864313c2e38186"
+  },
+  {
+    "filename": "ctrl7-this-binding.jsx",
+    "sha256": "c4dcdd318c02d52ddfed0e974fb0a47ebde178d4f1de9f84aa42c542f28406ee"
+  },
+  {
+    "filename": "ctrl7-this-binding.ts",
+    "sha256": "89bc3f4e29f353154f72f5615f24889242d1e8d89f26b0708a864313c2e38186"
+  },
+  {
+    "filename": "ctrl7-this-binding.tsx",
+    "sha256": "c4dcdd318c02d52ddfed0e974fb0a47ebde178d4f1de9f84aa42c542f28406ee"
+  },
+  {
+    "filename": "ctrl7-this-initializer.js",
+    "sha256": "3796905fa231c4be961d4df0658826411c72927c829b987b8bc22ad1d04a8d28"
+  },
+  {
+    "filename": "ctrl7-this-method.ts",
+    "sha256": "c8d7e2d730bdee8072d71ffd3332c6e4aaf5f23e2865563152e9ee5e3db7fbab"
+  },
+  {
+    "filename": "ctrl7-this-nested-default.ts",
+    "sha256": "df890de7a0b2c5f85cc3fc840b55756414ef070f34ef1ae0e5d836ed66b6c25d"
+  },
+  {
+    "filename": "ctrl7-this-object.ts",
+    "sha256": "bddc693326a2fd998d959953f87d8d73e2d833bc0d06156a99843d6855b2a8fa"
+  },
+  {
+    "filename": "ctrl7-this-only.ts",
+    "sha256": "d7faf59a52e8cc93d280b1d187b79855735783e3933193076f43ccfc6851a5f9"
+  },
+  {
+    "filename": "ctrl7-this-render.tsx",
+    "sha256": "74a914771c85008fdf74b784303a1b9cc6271d6d19e1cb5bb1484b4a66665e5b"
+  },
+  {
+    "filename": "ctrl7-this-reported.ts",
+    "sha256": "44c49822101c7535bef5e23aa5117ae4ecce877e98bd00aea823358ebb6e677d"
+  },
+  {
+    "filename": "ctrl7-this-typed-defaults.ts",
+    "sha256": "d9af962397ca2c3302e622f0f873490e72500b9ce21d917eebb2b2ace327d9f1"
+  },
+  {
+    "filename": "ctrl8-arrow-abandoned.js",
+    "sha256": "56a151a284b6035d556f04483910b8f7fa7d3435bbef36affcb37d58c5a4ab69"
+  },
+  {
+    "filename": "ctrl8-arrow-alias-anonymous.js",
+    "sha256": "61e5356fdf4cf7c9a090446db81701d7b86bb43e8fc3bc92d506605bdb48929a"
+  },
+  {
+    "filename": "ctrl8-arrow-alias-named.js",
+    "sha256": "5460096083acfc89709e9b94a906266bb41cfdf3d55ccaca7eabe40af7c7061d"
+  },
+  {
+    "filename": "ctrl8-arrow-authored-single.js",
+    "sha256": "e39bf362ac9574ff0c7673d49a0b964312539c9950cab54119de87aa3f5baf64"
+  },
+  {
+    "filename": "ctrl8-arrow-authored-types.ts",
+    "sha256": "bb142f8237a0c35c8fa70b19acb07d2f5542987fd3d6475bd6cb02818b8700f1"
+  },
+  {
+    "filename": "ctrl8-arrow-authored-types.tsx",
+    "sha256": "bb142f8237a0c35c8fa70b19acb07d2f5542987fd3d6475bd6cb02818b8700f1"
+  },
+  {
+    "filename": "ctrl8-arrow-authored.js",
+    "sha256": "baf14c334885a49b91bd9f5729df588dc345339bc0f1b58da67f039d5bc43a17"
+  },
+  {
+    "filename": "ctrl8-arrow-binding-anonymous.js",
+    "sha256": "be60e3ed6a1a282bcfc107df3a3225dbb4823b02440c644fa305d6abb1f1b1fd"
+  },
+  {
+    "filename": "ctrl8-arrow-binding-named.js",
+    "sha256": "c317e54a8efb8cdbac899bb0a0f9e97ccd906eeecda0975e3f6aba82ac77f7f9"
+  },
+  {
+    "filename": "ctrl8-arrow-calls.js",
+    "sha256": "9c1f917dd2de35a89c9a459af30aa5d728a52f06d16aa7838957016792941c06"
+  },
+  {
+    "filename": "ctrl8-arrow-computed-binding.js",
+    "sha256": "9fbc35cbe0680e9de20032a91406e70af3d5f09a96bd8dc563092a96f80643c5"
+  },
+  {
+    "filename": "ctrl8-arrow-control.js",
+    "sha256": "5a6c1325fc00d7a77c662530355feecde4830504b0c08f72906831a7eb85d345"
+  },
+  {
+    "filename": "ctrl8-arrow-defaults.js",
+    "sha256": "c8201ff169c2434f08b6b7517ecb6c1ddc3ef87759fdec30facf0fcf9ef45cbf"
+  },
+  {
+    "filename": "ctrl8-arrow-empty-binding-named.js",
+    "sha256": "a128cd89fa9d9170bb75474a0343640b0780db8b97607595ebe46fc544bb3396"
+  },
+  {
+    "filename": "ctrl8-arrow-empty-binding.js",
+    "sha256": "083661c6fc422a2b7b229b22d9eba96f827723d470b93c4eacb88267b20b5be3"
+  },
+  {
+    "filename": "ctrl8-arrow-generic-named.ts",
+    "sha256": "98de85e99a3246d7737ff955cd90b7a562f1d0bf62ab75fed003daca150d418a"
+  },
+  {
+    "filename": "ctrl8-arrow-generic.ts",
+    "sha256": "f9626f4b5bd01f2fd986e2767547094065a0756e5f6b211fadc986c716382add"
+  },
+  {
+    "filename": "ctrl8-arrow-jsx.jsx",
+    "sha256": "7b794261d8691e4d81c1dbbd318f3e21d2397de7b224aaf93c2f4a84c4955ba4"
+  },
+  {
+    "filename": "ctrl8-arrow-member.js",
+    "sha256": "10cd4bd919fff4b654d8d1ee4bd64524a6fcffd926e44924cc1a571b33b751dc"
+  },
+  {
+    "filename": "ctrl8-arrow-named.js",
+    "sha256": "21260102f37c804e08441a1e13a82577ed8a7f3e0f938afc303994ccc3207bf1"
+  },
+  {
+    "filename": "ctrl8-arrow-nested-binding.js",
+    "sha256": "f42e9eeb62e5d8a32a723d6a65227bcd283a90b2287b62f5a286b09789d34421"
+  },
+  {
+    "filename": "ctrl8-arrow-nested-default.js",
+    "sha256": "bd8ff821db11c035b80ef62e2547bbc95714a75bd9626a54bfc1e2f8a043dcf3"
+  },
+  {
+    "filename": "ctrl8-arrow-quoted-binding.js",
+    "sha256": "98c3fb280b5d0055456423990680e61e304fd8e8fabd87064516e3bc43a85831"
+  },
+  {
+    "filename": "ctrl8-arrow-reported.ts",
+    "sha256": "7b11d3e958f884dc50c4dbf24c0c0411d886b2bf28dd7e6d919289912b621e98"
+  },
+  {
+    "filename": "ctrl8-arrow-return-function.ts",
+    "sha256": "42b0b489f2cf97335f7fa3e7a78152a48e1cc57debd060f2bdc55905e98ce154"
+  },
+  {
+    "filename": "ctrl8-arrow-return-object.ts",
+    "sha256": "1da35e85b00742aba1af60f8afc946f18410f74deeb276b6ddd45ed1134e8f8c"
+  },
+  {
+    "filename": "ctrl8-arrow-sigils.js",
+    "sha256": "156321fcc4ea84118645d0cadc791af0457b1d3d3d92972bccb083a8adabcf58"
+  },
+  {
+    "filename": "ctrl8-arrow-single-sigils.js",
+    "sha256": "e9c278059956960f7f8f83b4e4cb4a7e2b4ecb1dff2eceb9bf6a77d2cfe1ec25"
+  },
+  {
+    "filename": "ctrl8-arrow-ternary-default.js",
+    "sha256": "1892f400980271cdd7ede8339a4e8ef80d5eebc13b9e41833d2f7809eeea2b29"
+  },
+  {
+    "filename": "ctrl8-arrow-tsx.tsx",
+    "sha256": "a7a198cea55af072b496ca1ff234566c8766df621abc099b6f06aa623d215e84"
+  },
+  {
+    "filename": "ctrl8-arrow-typed.ts",
+    "sha256": "d0c78501a278296052a6b3a1a444911dc9637cd4ac07dc205ceee1eb7cd98fba"
+  },
+  {
+    "filename": "ctrl8-b-short.js",
+    "sha256": "a73d2a3ef4629b77043d7326ba01058059415c808120452315ecb220749eb07d"
+  },
+  {
+    "filename": "ctrl8-b-story.js",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl8-b-story.jsx",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl8-b-story.ts",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl8-b-story.tsx",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl8-block-comment.js",
+    "sha256": "bea3cd280f98904e63153f2cdc0c44f54f6718377c61209461759a78cff6d659"
+  },
+  {
+    "filename": "ctrl8-bulk-control-00.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl8-bulk-control-01.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl8-bulk-control-02.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl8-bulk-control-03.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl8-bulk-control-04.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl8-bulk-control-05.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl8-bulk-control-06.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl8-bulk-control-07.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl8-bulk-control-08.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl8-bulk-control-09.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl8-bulk-control-10.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl8-bulk-control-11.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl8-bulk-control-12.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl8-bulk-control-13.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl8-bulk-control-14.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl8-bulk-control-15.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl8-bulk-control-16.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl8-bulk-control-17.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl8-bulk-control-18.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl8-bulk-control-19.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl8-dollar-id.js",
+    "sha256": "4bab567ad29205ad4140c5b4da86ca70bdedf722680b53520b9345f9d907dec2"
+  },
+  {
+    "filename": "ctrl8-genuine-all.js",
+    "sha256": "83ca72e4726df5645621706ea22096693d246da9494d9993a648caea709a95b8"
+  },
+  {
+    "filename": "ctrl8-genuine-case.js",
+    "sha256": "9ccaf4ae4da2bfceb12bc89d3c41106c09d329605e43ab245b21182cb1022f94"
+  },
+  {
+    "filename": "ctrl8-genuine-catch.js",
+    "sha256": "23a89000ea88ff90031b17228bacc3465ebe2d2eebbfa8a2e10626e926ad535c"
+  },
+  {
+    "filename": "ctrl8-genuine-for.js",
+    "sha256": "feadf3fabf59526bdd15b9c2ed1b129900e7d2553839c05aea58e91aae182fcf"
+  },
+  {
+    "filename": "ctrl8-genuine-if.js",
+    "sha256": "7e6ef888c17dc9f570cd2afb005d8e251ba0f688d1f3dec8d7d3f5c34d0db8b5"
+  },
+  {
+    "filename": "ctrl8-genuine-while.js",
+    "sha256": "19a72c2b61cd66ab5843aa4a782d0b46728eacce7481ae51b70e54d3c28e323e"
+  },
+  {
+    "filename": "ctrl8-line-comment-plain.js",
+    "sha256": "9e069d13b385a88a6085d89194677305ff67e4f44f15bc0dad857901a266ff1a"
+  },
+  {
+    "filename": "ctrl8-load.js",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl8-load.jsx",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl8-load.ts",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl8-load.tsx",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl8-members.js",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl8-members.jsx",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl8-members.ts",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl8-members.tsx",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl8-optional-access.ts",
+    "sha256": "1adcecc35601a013fad7cf3c050f03ffb06b074b7fb41f91592ee9e6129060ce"
+  },
+  {
+    "filename": "ctrl8-outside.js",
+    "sha256": "fa75f54bfb738784c7d898377d50390109c425e019583995aece6aa236c20b82"
+  },
+  {
+    "filename": "ctrl8-plain-template.js",
+    "sha256": "961bc29c4c7d7b2f4c410158b3d4e4277cc0cc4795ae04b3f7d66a8762fe4239"
+  },
+  {
+    "filename": "ctrl8-pr528-sample.js",
+    "sha256": "8276755adc957c67481dd5f52a77b64bac82dd8cf86597c45439c3aeecdaf0c8"
+  },
+  {
+    "filename": "ctrl8-pr531-sample.js",
+    "sha256": "b59ec1df153ef6a073b0234b64bbf44f858a638c1f64fee7815cfb5d4cab7059"
+  },
+  {
+    "filename": "ctrl8-pr532-sample.ts",
+    "sha256": "dbae4d65b68ffeb445476541a5f9a1a498e139448ecb0ce0bf1792f6a18d260a"
+  },
+  {
+    "filename": "ctrl8-pr533-sample.js",
+    "sha256": "3eb63ea8dfdd5b6ad5331cd5444847790315de72ebe9fff97d7f2d1a3dd4bdfc"
+  },
+  {
+    "filename": "ctrl8-pr534-sample.js",
+    "sha256": "7a72f078efd0476fc951cce56eb0c1e9c76d9986800eb128a7daa9a6fd2b63f7"
+  },
+  {
+    "filename": "ctrl8-pr535-sample.ts",
+    "sha256": "44c49822101c7535bef5e23aa5117ae4ecce877e98bd00aea823358ebb6e677d"
+  },
+  {
+    "filename": "ctrl8-pr536-sample.ts",
+    "sha256": "59ecfa342f70b98877d42c5b9d1928366d1f9a0b3c3786f47262ab171d7f08a6"
+  },
+  {
+    "filename": "ctrl8-pr537-sample.js",
+    "sha256": "10b749e81756178a04004d1ea5060fa211470f941e64d35e49635773ebba25ab"
+  },
+  {
+    "filename": "ctrl8-pr538-sample.js",
+    "sha256": "4c18cddffd29959af4bee8d5c2a7860fd22f16f703f8c5ccc5e56dcc5860913f"
+  },
+  {
+    "filename": "ctrl8-pr539-sample.js",
+    "sha256": "c38e1bc07b1597445a9b01b6c33a7b47cfdfc54c71604a438a63637e94c3ab19"
+  },
+  {
+    "filename": "ctrl8-pr540-sample.js",
+    "sha256": "a1b6bc422d78b5062512edb655ed6e589f2e4fac046cc2034cd972aa9aa6643d"
+  },
+  {
+    "filename": "ctrl8-pr541-sample.js",
+    "sha256": "536fbc51f580e121c9abbdd0fb2137b93f80604dc05715067a3a5f37141926dc"
+  },
+  {
+    "filename": "ctrl8-pr542-sample.js",
+    "sha256": "0f249ac6483097c6efb636bf29c39c5eab78526e5d3c41ebb85f8328fd28dfe7"
+  },
+  {
+    "filename": "ctrl8-pr543-sample.js",
+    "sha256": "db1418ecc2e033e4ead1d5206c64ed81cba74602d2acba25f97d177cb8baa147"
+  },
+  {
+    "filename": "ctrl8-pr544-sample.js",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl8-pr546-sample.js",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl8-pr547-sample.js",
+    "sha256": "1fb139b9f112bba41a502e6a2dc9034a291b7bac7ede99742798d77fe2bb408c"
+  },
+  {
+    "filename": "ctrl8-this-authored.ts",
+    "sha256": "3159b065baf9dea8e8876f3855b30a1fe73485ca8172070d45db1f458e50f0db"
+  },
+  {
+    "filename": "ctrl8-this-binding.js",
+    "sha256": "89bc3f4e29f353154f72f5615f24889242d1e8d89f26b0708a864313c2e38186"
+  },
+  {
+    "filename": "ctrl8-this-binding.jsx",
+    "sha256": "c4dcdd318c02d52ddfed0e974fb0a47ebde178d4f1de9f84aa42c542f28406ee"
+  },
+  {
+    "filename": "ctrl8-this-binding.ts",
+    "sha256": "89bc3f4e29f353154f72f5615f24889242d1e8d89f26b0708a864313c2e38186"
+  },
+  {
+    "filename": "ctrl8-this-binding.tsx",
+    "sha256": "c4dcdd318c02d52ddfed0e974fb0a47ebde178d4f1de9f84aa42c542f28406ee"
+  },
+  {
+    "filename": "ctrl8-this-initializer.js",
+    "sha256": "3796905fa231c4be961d4df0658826411c72927c829b987b8bc22ad1d04a8d28"
+  },
+  {
+    "filename": "ctrl8-this-method.ts",
+    "sha256": "c8d7e2d730bdee8072d71ffd3332c6e4aaf5f23e2865563152e9ee5e3db7fbab"
+  },
+  {
+    "filename": "ctrl8-this-nested-default.ts",
+    "sha256": "df890de7a0b2c5f85cc3fc840b55756414ef070f34ef1ae0e5d836ed66b6c25d"
+  },
+  {
+    "filename": "ctrl8-this-object.ts",
+    "sha256": "bddc693326a2fd998d959953f87d8d73e2d833bc0d06156a99843d6855b2a8fa"
+  },
+  {
+    "filename": "ctrl8-this-only.ts",
+    "sha256": "d7faf59a52e8cc93d280b1d187b79855735783e3933193076f43ccfc6851a5f9"
+  },
+  {
+    "filename": "ctrl8-this-render.tsx",
+    "sha256": "74a914771c85008fdf74b784303a1b9cc6271d6d19e1cb5bb1484b4a66665e5b"
+  },
+  {
+    "filename": "ctrl8-this-reported.ts",
+    "sha256": "44c49822101c7535bef5e23aa5117ae4ecce877e98bd00aea823358ebb6e677d"
+  },
+  {
+    "filename": "ctrl8-this-typed-defaults.ts",
+    "sha256": "d9af962397ca2c3302e622f0f873490e72500b9ce21d917eebb2b2ace327d9f1"
+  },
+  {
+    "filename": "ctrl9-arrow-abandoned.js",
+    "sha256": "56a151a284b6035d556f04483910b8f7fa7d3435bbef36affcb37d58c5a4ab69"
+  },
+  {
+    "filename": "ctrl9-arrow-alias-anonymous.js",
+    "sha256": "61e5356fdf4cf7c9a090446db81701d7b86bb43e8fc3bc92d506605bdb48929a"
+  },
+  {
+    "filename": "ctrl9-arrow-alias-named.js",
+    "sha256": "5460096083acfc89709e9b94a906266bb41cfdf3d55ccaca7eabe40af7c7061d"
+  },
+  {
+    "filename": "ctrl9-arrow-authored-single.js",
+    "sha256": "e39bf362ac9574ff0c7673d49a0b964312539c9950cab54119de87aa3f5baf64"
+  },
+  {
+    "filename": "ctrl9-arrow-authored-types.ts",
+    "sha256": "bb142f8237a0c35c8fa70b19acb07d2f5542987fd3d6475bd6cb02818b8700f1"
+  },
+  {
+    "filename": "ctrl9-arrow-authored-types.tsx",
+    "sha256": "bb142f8237a0c35c8fa70b19acb07d2f5542987fd3d6475bd6cb02818b8700f1"
+  },
+  {
+    "filename": "ctrl9-arrow-authored.js",
+    "sha256": "baf14c334885a49b91bd9f5729df588dc345339bc0f1b58da67f039d5bc43a17"
+  },
+  {
+    "filename": "ctrl9-arrow-binding-anonymous.js",
+    "sha256": "be60e3ed6a1a282bcfc107df3a3225dbb4823b02440c644fa305d6abb1f1b1fd"
+  },
+  {
+    "filename": "ctrl9-arrow-binding-named.js",
+    "sha256": "c317e54a8efb8cdbac899bb0a0f9e97ccd906eeecda0975e3f6aba82ac77f7f9"
+  },
+  {
+    "filename": "ctrl9-arrow-calls.js",
+    "sha256": "9c1f917dd2de35a89c9a459af30aa5d728a52f06d16aa7838957016792941c06"
+  },
+  {
+    "filename": "ctrl9-arrow-computed-binding.js",
+    "sha256": "9fbc35cbe0680e9de20032a91406e70af3d5f09a96bd8dc563092a96f80643c5"
+  },
+  {
+    "filename": "ctrl9-arrow-control.js",
+    "sha256": "5a6c1325fc00d7a77c662530355feecde4830504b0c08f72906831a7eb85d345"
+  },
+  {
+    "filename": "ctrl9-arrow-defaults.js",
+    "sha256": "c8201ff169c2434f08b6b7517ecb6c1ddc3ef87759fdec30facf0fcf9ef45cbf"
+  },
+  {
+    "filename": "ctrl9-arrow-empty-binding-named.js",
+    "sha256": "a128cd89fa9d9170bb75474a0343640b0780db8b97607595ebe46fc544bb3396"
+  },
+  {
+    "filename": "ctrl9-arrow-empty-binding.js",
+    "sha256": "083661c6fc422a2b7b229b22d9eba96f827723d470b93c4eacb88267b20b5be3"
+  },
+  {
+    "filename": "ctrl9-arrow-generic-named.ts",
+    "sha256": "98de85e99a3246d7737ff955cd90b7a562f1d0bf62ab75fed003daca150d418a"
+  },
+  {
+    "filename": "ctrl9-arrow-generic.ts",
+    "sha256": "f9626f4b5bd01f2fd986e2767547094065a0756e5f6b211fadc986c716382add"
+  },
+  {
+    "filename": "ctrl9-arrow-jsx.jsx",
+    "sha256": "7b794261d8691e4d81c1dbbd318f3e21d2397de7b224aaf93c2f4a84c4955ba4"
+  },
+  {
+    "filename": "ctrl9-arrow-member.js",
+    "sha256": "10cd4bd919fff4b654d8d1ee4bd64524a6fcffd926e44924cc1a571b33b751dc"
+  },
+  {
+    "filename": "ctrl9-arrow-named.js",
+    "sha256": "21260102f37c804e08441a1e13a82577ed8a7f3e0f938afc303994ccc3207bf1"
+  },
+  {
+    "filename": "ctrl9-arrow-nested-binding.js",
+    "sha256": "f42e9eeb62e5d8a32a723d6a65227bcd283a90b2287b62f5a286b09789d34421"
+  },
+  {
+    "filename": "ctrl9-arrow-nested-default.js",
+    "sha256": "bd8ff821db11c035b80ef62e2547bbc95714a75bd9626a54bfc1e2f8a043dcf3"
+  },
+  {
+    "filename": "ctrl9-arrow-quoted-binding.js",
+    "sha256": "98c3fb280b5d0055456423990680e61e304fd8e8fabd87064516e3bc43a85831"
+  },
+  {
+    "filename": "ctrl9-arrow-reported.ts",
+    "sha256": "7b11d3e958f884dc50c4dbf24c0c0411d886b2bf28dd7e6d919289912b621e98"
+  },
+  {
+    "filename": "ctrl9-arrow-return-function.ts",
+    "sha256": "42b0b489f2cf97335f7fa3e7a78152a48e1cc57debd060f2bdc55905e98ce154"
+  },
+  {
+    "filename": "ctrl9-arrow-return-object.ts",
+    "sha256": "1da35e85b00742aba1af60f8afc946f18410f74deeb276b6ddd45ed1134e8f8c"
+  },
+  {
+    "filename": "ctrl9-arrow-sigils.js",
+    "sha256": "156321fcc4ea84118645d0cadc791af0457b1d3d3d92972bccb083a8adabcf58"
+  },
+  {
+    "filename": "ctrl9-arrow-single-sigils.js",
+    "sha256": "e9c278059956960f7f8f83b4e4cb4a7e2b4ecb1dff2eceb9bf6a77d2cfe1ec25"
+  },
+  {
+    "filename": "ctrl9-arrow-ternary-default.js",
+    "sha256": "1892f400980271cdd7ede8339a4e8ef80d5eebc13b9e41833d2f7809eeea2b29"
+  },
+  {
+    "filename": "ctrl9-arrow-tsx.tsx",
+    "sha256": "a7a198cea55af072b496ca1ff234566c8766df621abc099b6f06aa623d215e84"
+  },
+  {
+    "filename": "ctrl9-arrow-typed.ts",
+    "sha256": "d0c78501a278296052a6b3a1a444911dc9637cd4ac07dc205ceee1eb7cd98fba"
+  },
+  {
+    "filename": "ctrl9-b-short.js",
+    "sha256": "a73d2a3ef4629b77043d7326ba01058059415c808120452315ecb220749eb07d"
+  },
+  {
+    "filename": "ctrl9-b-story.js",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl9-b-story.jsx",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl9-b-story.ts",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl9-b-story.tsx",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl9-block-comment.js",
+    "sha256": "bea3cd280f98904e63153f2cdc0c44f54f6718377c61209461759a78cff6d659"
+  },
+  {
+    "filename": "ctrl9-bulk-control-00.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl9-bulk-control-01.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl9-bulk-control-02.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl9-bulk-control-03.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl9-bulk-control-04.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl9-bulk-control-05.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl9-bulk-control-06.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl9-bulk-control-07.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl9-bulk-control-08.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl9-bulk-control-09.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl9-bulk-control-10.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl9-bulk-control-11.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl9-bulk-control-12.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl9-bulk-control-13.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl9-bulk-control-14.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl9-bulk-control-15.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl9-bulk-control-16.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl9-bulk-control-17.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl9-bulk-control-18.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl9-bulk-control-19.js",
+    "sha256": "9afcf45ce011719b7f44d5c73d46cbbb2e58c7c6c51ca5a2ebcc113ef979c8ca"
+  },
+  {
+    "filename": "ctrl9-dollar-id.js",
+    "sha256": "4bab567ad29205ad4140c5b4da86ca70bdedf722680b53520b9345f9d907dec2"
+  },
+  {
+    "filename": "ctrl9-genuine-all.js",
+    "sha256": "83ca72e4726df5645621706ea22096693d246da9494d9993a648caea709a95b8"
+  },
+  {
+    "filename": "ctrl9-genuine-case.js",
+    "sha256": "9ccaf4ae4da2bfceb12bc89d3c41106c09d329605e43ab245b21182cb1022f94"
+  },
+  {
+    "filename": "ctrl9-genuine-catch.js",
+    "sha256": "23a89000ea88ff90031b17228bacc3465ebe2d2eebbfa8a2e10626e926ad535c"
+  },
+  {
+    "filename": "ctrl9-genuine-for.js",
+    "sha256": "feadf3fabf59526bdd15b9c2ed1b129900e7d2553839c05aea58e91aae182fcf"
+  },
+  {
+    "filename": "ctrl9-genuine-if.js",
+    "sha256": "7e6ef888c17dc9f570cd2afb005d8e251ba0f688d1f3dec8d7d3f5c34d0db8b5"
+  },
+  {
+    "filename": "ctrl9-genuine-while.js",
+    "sha256": "19a72c2b61cd66ab5843aa4a782d0b46728eacce7481ae51b70e54d3c28e323e"
+  },
+  {
+    "filename": "ctrl9-line-comment-plain.js",
+    "sha256": "9e069d13b385a88a6085d89194677305ff67e4f44f15bc0dad857901a266ff1a"
+  },
+  {
+    "filename": "ctrl9-load.js",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl9-load.jsx",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl9-load.ts",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl9-load.tsx",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl9-members.js",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl9-members.jsx",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl9-members.ts",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl9-members.tsx",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "ctrl9-optional-access.ts",
+    "sha256": "1adcecc35601a013fad7cf3c050f03ffb06b074b7fb41f91592ee9e6129060ce"
+  },
+  {
+    "filename": "ctrl9-outside.js",
+    "sha256": "fa75f54bfb738784c7d898377d50390109c425e019583995aece6aa236c20b82"
+  },
+  {
+    "filename": "ctrl9-plain-template.js",
+    "sha256": "961bc29c4c7d7b2f4c410158b3d4e4277cc0cc4795ae04b3f7d66a8762fe4239"
+  },
+  {
+    "filename": "ctrl9-pr528-sample.js",
+    "sha256": "8276755adc957c67481dd5f52a77b64bac82dd8cf86597c45439c3aeecdaf0c8"
+  },
+  {
+    "filename": "ctrl9-pr531-sample.js",
+    "sha256": "b59ec1df153ef6a073b0234b64bbf44f858a638c1f64fee7815cfb5d4cab7059"
+  },
+  {
+    "filename": "ctrl9-pr532-sample.ts",
+    "sha256": "dbae4d65b68ffeb445476541a5f9a1a498e139448ecb0ce0bf1792f6a18d260a"
+  },
+  {
+    "filename": "ctrl9-pr533-sample.js",
+    "sha256": "3eb63ea8dfdd5b6ad5331cd5444847790315de72ebe9fff97d7f2d1a3dd4bdfc"
+  },
+  {
+    "filename": "ctrl9-pr534-sample.js",
+    "sha256": "7a72f078efd0476fc951cce56eb0c1e9c76d9986800eb128a7daa9a6fd2b63f7"
+  },
+  {
+    "filename": "ctrl9-pr535-sample.ts",
+    "sha256": "44c49822101c7535bef5e23aa5117ae4ecce877e98bd00aea823358ebb6e677d"
+  },
+  {
+    "filename": "ctrl9-pr536-sample.ts",
+    "sha256": "59ecfa342f70b98877d42c5b9d1928366d1f9a0b3c3786f47262ab171d7f08a6"
+  },
+  {
+    "filename": "ctrl9-pr537-sample.js",
+    "sha256": "10b749e81756178a04004d1ea5060fa211470f941e64d35e49635773ebba25ab"
+  },
+  {
+    "filename": "ctrl9-pr538-sample.js",
+    "sha256": "4c18cddffd29959af4bee8d5c2a7860fd22f16f703f8c5ccc5e56dcc5860913f"
+  },
+  {
+    "filename": "ctrl9-pr539-sample.js",
+    "sha256": "c38e1bc07b1597445a9b01b6c33a7b47cfdfc54c71604a438a63637e94c3ab19"
+  },
+  {
+    "filename": "ctrl9-pr540-sample.js",
+    "sha256": "a1b6bc422d78b5062512edb655ed6e589f2e4fac046cc2034cd972aa9aa6643d"
+  },
+  {
+    "filename": "ctrl9-pr541-sample.js",
+    "sha256": "536fbc51f580e121c9abbdd0fb2137b93f80604dc05715067a3a5f37141926dc"
+  },
+  {
+    "filename": "ctrl9-pr542-sample.js",
+    "sha256": "0f249ac6483097c6efb636bf29c39c5eab78526e5d3c41ebb85f8328fd28dfe7"
+  },
+  {
+    "filename": "ctrl9-pr543-sample.js",
+    "sha256": "db1418ecc2e033e4ead1d5206c64ed81cba74602d2acba25f97d177cb8baa147"
+  },
+  {
+    "filename": "ctrl9-pr544-sample.js",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "ctrl9-pr546-sample.js",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "ctrl9-pr547-sample.js",
+    "sha256": "1fb139b9f112bba41a502e6a2dc9034a291b7bac7ede99742798d77fe2bb408c"
+  },
+  {
+    "filename": "ctrl9-this-authored.ts",
+    "sha256": "3159b065baf9dea8e8876f3855b30a1fe73485ca8172070d45db1f458e50f0db"
+  },
+  {
+    "filename": "ctrl9-this-binding.js",
+    "sha256": "89bc3f4e29f353154f72f5615f24889242d1e8d89f26b0708a864313c2e38186"
+  },
+  {
+    "filename": "ctrl9-this-binding.jsx",
+    "sha256": "c4dcdd318c02d52ddfed0e974fb0a47ebde178d4f1de9f84aa42c542f28406ee"
+  },
+  {
+    "filename": "ctrl9-this-binding.ts",
+    "sha256": "89bc3f4e29f353154f72f5615f24889242d1e8d89f26b0708a864313c2e38186"
+  },
+  {
+    "filename": "ctrl9-this-binding.tsx",
+    "sha256": "c4dcdd318c02d52ddfed0e974fb0a47ebde178d4f1de9f84aa42c542f28406ee"
+  },
+  {
+    "filename": "ctrl9-this-initializer.js",
+    "sha256": "3796905fa231c4be961d4df0658826411c72927c829b987b8bc22ad1d04a8d28"
+  },
+  {
+    "filename": "ctrl9-this-method.ts",
+    "sha256": "c8d7e2d730bdee8072d71ffd3332c6e4aaf5f23e2865563152e9ee5e3db7fbab"
+  },
+  {
+    "filename": "ctrl9-this-nested-default.ts",
+    "sha256": "df890de7a0b2c5f85cc3fc840b55756414ef070f34ef1ae0e5d836ed66b6c25d"
+  },
+  {
+    "filename": "ctrl9-this-object.ts",
+    "sha256": "bddc693326a2fd998d959953f87d8d73e2d833bc0d06156a99843d6855b2a8fa"
+  },
+  {
+    "filename": "ctrl9-this-only.ts",
+    "sha256": "d7faf59a52e8cc93d280b1d187b79855735783e3933193076f43ccfc6851a5f9"
+  },
+  {
+    "filename": "ctrl9-this-render.tsx",
+    "sha256": "74a914771c85008fdf74b784303a1b9cc6271d6d19e1cb5bb1484b4a66665e5b"
+  },
+  {
+    "filename": "ctrl9-this-reported.ts",
+    "sha256": "44c49822101c7535bef5e23aa5117ae4ecce877e98bd00aea823358ebb6e677d"
+  },
+  {
+    "filename": "ctrl9-this-typed-defaults.ts",
+    "sha256": "d9af962397ca2c3302e622f0f873490e72500b9ce21d917eebb2b2ace327d9f1"
+  },
+  {
+    "filename": "dollar-id.js",
+    "sha256": "4bab567ad29205ad4140c5b4da86ca70bdedf722680b53520b9345f9d907dec2"
+  },
+  {
+    "filename": "genuine-all.js",
+    "sha256": "83ca72e4726df5645621706ea22096693d246da9494d9993a648caea709a95b8"
+  },
+  {
+    "filename": "genuine-case.js",
+    "sha256": "9ccaf4ae4da2bfceb12bc89d3c41106c09d329605e43ab245b21182cb1022f94"
+  },
+  {
+    "filename": "genuine-catch.js",
+    "sha256": "23a89000ea88ff90031b17228bacc3465ebe2d2eebbfa8a2e10626e926ad535c"
+  },
+  {
+    "filename": "genuine-for.js",
+    "sha256": "feadf3fabf59526bdd15b9c2ed1b129900e7d2553839c05aea58e91aae182fcf"
+  },
+  {
+    "filename": "genuine-if.js",
+    "sha256": "7e6ef888c17dc9f570cd2afb005d8e251ba0f688d1f3dec8d7d3f5c34d0db8b5"
+  },
+  {
+    "filename": "genuine-while.js",
+    "sha256": "19a72c2b61cd66ab5843aa4a782d0b46728eacce7481ae51b70e54d3c28e323e"
+  },
+  {
+    "filename": "label.js",
+    "sha256": "81a407904d799063ea018ad212978481597c31860b723367cb449a9b34e49696"
+  },
+  {
+    "filename": "label.jsx",
+    "sha256": "81a407904d799063ea018ad212978481597c31860b723367cb449a9b34e49696"
+  },
+  {
+    "filename": "label.ts",
+    "sha256": "81a407904d799063ea018ad212978481597c31860b723367cb449a9b34e49696"
+  },
+  {
+    "filename": "label.tsx",
+    "sha256": "81a407904d799063ea018ad212978481597c31860b723367cb449a9b34e49696"
+  },
+  {
+    "filename": "line-comment-interp.js",
+    "sha256": "aaa4e877c50d0a0471376ea33b8f986537df3be8a789d380cb84ceab5bc0bb4e"
+  },
+  {
+    "filename": "line-comment-plain.js",
+    "sha256": "9e069d13b385a88a6085d89194677305ff67e4f44f15bc0dad857901a266ff1a"
+  },
+  {
+    "filename": "literal-controls.js",
+    "sha256": "db953ffada4761aeaa23de6f3ef8a8a8c1544c9a9d832f298212af26aa7e123f"
+  },
+  {
+    "filename": "load.js",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "load.jsx",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "load.ts",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "load.tsx",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "members.js",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "members.jsx",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "members.ts",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "members.tsx",
+    "sha256": "403430c58cdbd9d7510aee567bd9851dea0b7ceeb0df7a54a363e9579f1af409"
+  },
+  {
+    "filename": "nested-follow.js",
+    "sha256": "a9508e09dc9917f8dc2ee94d72d673452d02a33c1bd69bfff014d9c85b8cbc01"
+  },
+  {
+    "filename": "optional-access.ts",
+    "sha256": "1adcecc35601a013fad7cf3c050f03ffb06b074b7fb41f91592ee9e6129060ce"
+  },
+  {
+    "filename": "outside.js",
+    "sha256": "fa75f54bfb738784c7d898377d50390109c425e019583995aece6aa236c20b82"
+  },
+  {
+    "filename": "plain-template.js",
+    "sha256": "961bc29c4c7d7b2f4c410158b3d4e4277cc0cc4795ae04b3f7d66a8762fe4239"
+  },
+  {
+    "filename": "pr528-sample.js",
+    "sha256": "8276755adc957c67481dd5f52a77b64bac82dd8cf86597c45439c3aeecdaf0c8"
+  },
+  {
+    "filename": "pr531-sample.js",
+    "sha256": "b59ec1df153ef6a073b0234b64bbf44f858a638c1f64fee7815cfb5d4cab7059"
+  },
+  {
+    "filename": "pr532-sample.ts",
+    "sha256": "dbae4d65b68ffeb445476541a5f9a1a498e139448ecb0ce0bf1792f6a18d260a"
+  },
+  {
+    "filename": "pr533-sample.js",
+    "sha256": "3eb63ea8dfdd5b6ad5331cd5444847790315de72ebe9fff97d7f2d1a3dd4bdfc"
+  },
+  {
+    "filename": "pr534-sample.js",
+    "sha256": "7a72f078efd0476fc951cce56eb0c1e9c76d9986800eb128a7daa9a6fd2b63f7"
+  },
+  {
+    "filename": "pr535-sample.ts",
+    "sha256": "44c49822101c7535bef5e23aa5117ae4ecce877e98bd00aea823358ebb6e677d"
+  },
+  {
+    "filename": "pr536-sample.ts",
+    "sha256": "59ecfa342f70b98877d42c5b9d1928366d1f9a0b3c3786f47262ab171d7f08a6"
+  },
+  {
+    "filename": "pr537-sample.js",
+    "sha256": "10b749e81756178a04004d1ea5060fa211470f941e64d35e49635773ebba25ab"
+  },
+  {
+    "filename": "pr538-sample.js",
+    "sha256": "4c18cddffd29959af4bee8d5c2a7860fd22f16f703f8c5ccc5e56dcc5860913f"
+  },
+  {
+    "filename": "pr539-sample.js",
+    "sha256": "c38e1bc07b1597445a9b01b6c33a7b47cfdfc54c71604a438a63637e94c3ab19"
+  },
+  {
+    "filename": "pr540-sample.js",
+    "sha256": "a1b6bc422d78b5062512edb655ed6e589f2e4fac046cc2034cd972aa9aa6643d"
+  },
+  {
+    "filename": "pr541-sample.js",
+    "sha256": "536fbc51f580e121c9abbdd0fb2137b93f80604dc05715067a3a5f37141926dc"
+  },
+  {
+    "filename": "pr542-sample.js",
+    "sha256": "0f249ac6483097c6efb636bf29c39c5eab78526e5d3c41ebb85f8328fd28dfe7"
+  },
+  {
+    "filename": "pr543-sample.js",
+    "sha256": "db1418ecc2e033e4ead1d5206c64ed81cba74602d2acba25f97d177cb8baa147"
+  },
+  {
+    "filename": "pr544-sample.js",
+    "sha256": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a"
+  },
+  {
+    "filename": "pr545-sample.js",
+    "sha256": "81a407904d799063ea018ad212978481597c31860b723367cb449a9b34e49696"
+  },
+  {
+    "filename": "pr546-sample.js",
+    "sha256": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e41d5b2670da55ef6a90"
+  },
+  {
+    "filename": "pr547-sample.js",
+    "sha256": "1fb139b9f112bba41a502e6a2dc9034a291b7bac7ede99742798d77fe2bb408c"
+  },
+  {
+    "filename": "regex-in-interp.js",
+    "sha256": "e83f75d0c46ff2effac3735cdbe8a61a6d861cb8a2fb985637a9f4cdee378d4d"
+  },
+  {
+    "filename": "template-comment.js",
+    "sha256": "78851429a56c42cb11f0b39e536e43328abd843b5dc6d38f0aeb3f10ffa0321b"
+  },
+  {
+    "filename": "this-authored.ts",
+    "sha256": "3159b065baf9dea8e8876f3855b30a1fe73485ca8172070d45db1f458e50f0db"
+  },
+  {
+    "filename": "this-binding.js",
+    "sha256": "89bc3f4e29f353154f72f5615f24889242d1e8d89f26b0708a864313c2e38186"
+  },
+  {
+    "filename": "this-binding.jsx",
+    "sha256": "c4dcdd318c02d52ddfed0e974fb0a47ebde178d4f1de9f84aa42c542f28406ee"
+  },
+  {
+    "filename": "this-binding.ts",
+    "sha256": "89bc3f4e29f353154f72f5615f24889242d1e8d89f26b0708a864313c2e38186"
+  },
+  {
+    "filename": "this-binding.tsx",
+    "sha256": "c4dcdd318c02d52ddfed0e974fb0a47ebde178d4f1de9f84aa42c542f28406ee"
+  },
+  {
+    "filename": "this-initializer.js",
+    "sha256": "3796905fa231c4be961d4df0658826411c72927c829b987b8bc22ad1d04a8d28"
+  },
+  {
+    "filename": "this-method.ts",
+    "sha256": "c8d7e2d730bdee8072d71ffd3332c6e4aaf5f23e2865563152e9ee5e3db7fbab"
+  },
+  {
+    "filename": "this-nested-default.ts",
+    "sha256": "df890de7a0b2c5f85cc3fc840b55756414ef070f34ef1ae0e5d836ed66b6c25d"
+  },
+  {
+    "filename": "this-object.ts",
+    "sha256": "bddc693326a2fd998d959953f87d8d73e2d833bc0d06156a99843d6855b2a8fa"
+  },
+  {
+    "filename": "this-only.ts",
+    "sha256": "d7faf59a52e8cc93d280b1d187b79855735783e3933193076f43ccfc6851a5f9"
+  },
+  {
+    "filename": "this-render.tsx",
+    "sha256": "74a914771c85008fdf74b784303a1b9cc6271d6d19e1cb5bb1484b4a66665e5b"
+  },
+  {
+    "filename": "this-reported.ts",
+    "sha256": "44c49822101c7535bef5e23aa5117ae4ecce877e98bd00aea823358ebb6e677d"
+  },
+  {
+    "filename": "this-typed-defaults.ts",
+    "sha256": "d9af962397ca2c3302e622f0f873490e72500b9ce21d917eebb2b2ace327d9f1"
+  }
+]
