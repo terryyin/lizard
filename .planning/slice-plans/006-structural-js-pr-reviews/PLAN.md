@@ -97,7 +97,7 @@ All complete-cycle gates belong to this slice. Original slice: 13.
 
 ### 6. Array values and computed names — PR #542
 Type: Behavior
-Status: planned
+Status: done
 Source: https://github.com/terryyin/lizard/pull/542 — frozen head `ddf075a0cdee4079e584919d818c28b6468a84b0`
 Proof: [slice 6](SLICE-PROOF.md).
 Behavior: Given array property values and bracketed computed keys → complete cycle for #542 → function end boundaries and following functions remain correct for the cases #542 owns; the known `[m[0]]` early-end left to #525 stays out of scope unless it is inside this PR's change — or a non-merge disposition is recorded.
@@ -145,6 +145,7 @@ All complete-cycle gates belong to this slice. Original slice: 15.
 - #539: abandoned provisional signatures restore enclosing metrics; merged as `2887bd88` with [thanks](https://github.com/terryyin/lizard/pull/539#issuecomment-6457825856); evidence under `docs/reviews/fabio-malpezzi-20261027/pr539/`.
 - #540: already-fixed disposition recorded; PR closed unmerged; evidence under `docs/reviews/fabio-malpezzi-20261027/pr540/`.
 - #541: get/set member names fixed; merged as `322132fc` with [thanks](https://github.com/terryyin/lizard/pull/541#issuecomment-6458221109); evidence under `docs/reviews/fabio-malpezzi-20261027/pr541/`.
+- #542: array property values / computed names fixed; merged as `ff2f984a`; `[m[0]]` remains with #525; evidence under `docs/reviews/fabio-malpezzi-20261027/pr542/`.
 
 - #540's claim fixture already matches the PR's fixed expectation on trunk.
 
