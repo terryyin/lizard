@@ -17,7 +17,11 @@ class JavaScriptObjectsMixin:
             # A member named "get" or "set": get(key) {}, {get: f}, {get, set}
             self.last_tokens = prefix
         if token == '[':
-            self._collect_computed_name()
+            if self._in_prop_value:
+                # An array value, {list: [[1], 2]}, not a computed name.
+                self._read_binding_candidate(']')
+            else:
+                self._collect_computed_name()
             return True
         if token == ':':
             # Only set function_name for valid identifiers
@@ -87,11 +91,13 @@ class JavaScriptObjectsMixin:
         self._async_seen = False
 
     def _collect_computed_name(self):
-        # Collect tokens between [ and ]
+        # Collect tokens between [ and its ]
         tokens = []
+        depth = [0]
 
         def collect(token):
-            if token == ']':
+            depth[0] += {'[': 1, ']': -1}.get(token, 0)
+            if depth[0] < 0:
                 # Try to join tokens and camelCase if possible
                 name = ''.join(tokens)
                 # Remove quotes and pluses for simple cases
