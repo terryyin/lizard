@@ -8,7 +8,7 @@ and run those later. Every story owns full cycles, not horizontal QA phases.
 | Story | PRs | State and value |
 | --- | --- | --- |
 |SEED-010#review-fabio-malpezzi-prs|527,528,531,533,534,532,535,536|Completed eight-disposition review scope; original proof retained. PR536's later SEED-016 correction is merged and acknowledged below.|
-|[SEED-010#review-structural-js-prs](../../../.planning/seeds/SEED-010-fabio-malpezzi-pr-reviews.md#review-structural-js-prs)|537–543|Queued; refined with realigned seven-slice plan. Complete function/parameter/boundary review cycles.|
+|[SEED-010#review-structural-js-prs](../../../.planning/seeds/SEED-010-fabio-malpezzi-pr-reviews.md#review-structural-js-prs)|537–543|Done; #537–#543 dispositions recorded (#540 already-fixed/closed).|
 |[SEED-010#review-lexical-js-prs](../../../.planning/seeds/SEED-010-fabio-malpezzi-pr-reviews.md#review-lexical-js-prs)|544–547|Queued; mapped four-slice plan awaits story refinement. Complete lexical/condition review cycles.|
 
 The first identity remains stable; its scope is the human-authorized first eight
@@ -34,7 +34,7 @@ the actual last cohort finisher reconciles all 19 and combined evidence.
 |12|[#540](https://github.com/terryyin/lizard/pull/540)|`d225a6d60af856ac155b882d1a3770b7d66457ef`|SEED-010#review-structural-js-prs / 4|Already fixed on trunk; left unmerged and closed; [evidence](pr540/README.md)|
 |13|[#541](https://github.com/terryyin/lizard/pull/541)|`644480ce9f46892fae258696583a6c18649c05dc`|SEED-010#review-structural-js-prs / 5|Merged `322132fc` and [acknowledged](https://github.com/terryyin/lizard/pull/541#issuecomment-6458221109); [qualified proof](pr541/README.md)|
 |14|[#542](https://github.com/terryyin/lizard/pull/542)|`ddf075a0cdee4079e584919d818c28b6468a84b0`|SEED-010#review-structural-js-prs / 6|Merged `ff2f984a` and [acknowledged](https://github.com/terryyin/lizard/pull/542#issuecomment-6458636093); [qualified proof](pr542/README.md)|
-|15|[#543](https://github.com/terryyin/lizard/pull/543)|`f6a329b488bb1a6e5aa9af43f0cf3e5e761d8353`|SEED-010#review-structural-js-prs / 7|Pending full review cycle|
+|15|[#543](https://github.com/terryyin/lizard/pull/543)|`f6a329b488bb1a6e5aa9af43f0cf3e5e761d8353`|SEED-010#review-structural-js-prs / 7|Merged `13ec5f70` with acknowledgement|
 |16|[#544](https://github.com/terryyin/lizard/pull/544)|`3ac7e4eaf61e898836fded88ab715b37f9fedbbf`|SEED-010#review-lexical-js-prs / 1|Pending full review cycle|
 |17|[#545](https://github.com/terryyin/lizard/pull/545)|`baa95a4df8278421bb3d3a6487516030cc03a979`|SEED-010#review-lexical-js-prs / 2|Pending full review cycle|
 |18|[#546](https://github.com/terryyin/lizard/pull/546)|`a671632141127fca9b2785fdbb0c675d45ae9042`|SEED-010#review-lexical-js-prs / 3|Pending full review cycle|
