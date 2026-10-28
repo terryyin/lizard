@@ -118,3 +118,107 @@ class TestJavaScriptRegex(unittest.TestCase):
         self.assertEqual([('a', 2, 5, 1), ('b', 6, 6, 2)], [
             (f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
             for f in functions])
+
+    def test_return_regex_exposes_following_condition(self):
+        source = (
+            'function a(s) { return /#/.test(s) || s === 1; }\n'
+            'function b(s) { return s; }\n'
+        )
+        self.assert_functions(source, [('a', 1, 1, 2), ('b', 2, 2, 1)])
+
+    def test_arrow_regex_exposes_nested_condition(self):
+        source = (
+            'function b(xs) { return xs.filter(s => /"/.test(s) || s === "a"); }\n'
+        )
+        for extension in self.extensions:
+            with self.subTest(extension=extension):
+                functions = analyze_file.analyze_source_code(
+                    'a.' + extension, source).function_list
+                self.assertEqual([2, 1], [
+                    f.cyclomatic_complexity for f in functions])
+                self.assertEqual('(anonymous)', functions[0].name)
+                self.assertEqual('b', functions[1].name)
+
+    def assert_ccn_and_tokens(self, source, expected_ccn, expected_tokens):
+        for extension in self.extensions:
+            with self.subTest(extension=extension):
+                functions = analyze_file.analyze_source_code(
+                    'a.' + extension, source).function_list
+                self.assertEqual(1, len(functions))
+                self.assertEqual(expected_ccn, functions[0].cyclomatic_complexity)
+                self.assertEqual(expected_tokens, functions[0].token_count)
+
+    def test_member_division_keeps_condition_and_tokens(self):
+        cases = (
+            ('member',
+             'function divide(obj,a,b,c) { return obj.return / (a || b) / c; }'),
+            ('spaced',
+             'function divide(obj,a,b,c) { return obj . return / (a || b) / c; }'),
+            ('commented',
+             'function divide(obj,a,b,c) {'
+             ' return obj. /* member */ return / (a || b) / c; }'),
+            ('optional',
+             'function divide(obj,a,b,c) { return obj?.return / (a || b) / c; }'),
+        )
+        for label, source in cases:
+            with self.subTest(label=label):
+                self.assert_ccn_and_tokens(source, 2, 24)
+
+    def test_identifier_division_keeps_baseline_tokens(self):
+        cases = (
+            ('dollar',
+             'function divide($return,a,b,c) { return $return / (a || b) / c; }'),
+            ('contextual_of',
+             'function divide(of,a,b,c) { return of / (a || b) / c; }'),
+            ('non_module_await',
+             'function divide(await,a,b,c) { return await / (a || b) / c; }'),
+            ('ordinary',
+             'function divide(x,a,b,c) { return x / (a || b) / c; }'),
+        )
+        for label, source in cases:
+            with self.subTest(label=label):
+                self.assert_ccn_and_tokens(source, 2, 22)
+
+    def test_for_of_regex_exposes_following_condition(self):
+        source = (
+            'function a(s) {\n'
+            '  for (const x of /#/.test(s) ? [] : [s]) {\n'
+            '    if (x || s === 1) { return x; }\n'
+            '  }\n'
+            '}\n'
+        )
+        # for + ternary + if + ||
+        self.assert_functions(source, [('a', 1, 5, 5)])
+
+    def test_await_keyword_regex_exposes_following_condition(self):
+        source = (
+            'async function a(s) { return await /#/.test(s) || s === 1; }\n'
+        )
+        self.assert_functions(source, [('a', 1, 1, 2)])
+
+    def test_regex_with_quote_brace_flag_preserves_following_function(self):
+        patterns = ('/"/', '/{/', '/}/', '/`/', r'/\\//', '/[/]/', '/x/g', '/[?#]/')
+        for pattern in patterns:
+            with self.subTest(pattern=pattern):
+                source = (
+                    'function a(s) {\n'
+                    '  if (' + pattern + '.test(s) || s) { return 1; }\n'
+                    '  return 0;\n'
+                    '}\n'
+                    'function b(s) { return s; }\n'
+                )
+                self.assert_functions(
+                    source, [('a', 1, 4, 3), ('b', 5, 5, 1)])
+
+    def test_vue_return_regex_and_member_division(self):
+        source = (
+            '<script>\n'
+            'function a(s) { return /#/.test(s) || s === 1; }\n'
+            'function divide(obj,a,b,c) { return obj.return / (a || b) / c; }\n'
+            '</script>\n'
+        )
+        functions = analyze_file.analyze_source_code(
+            'a.vue', source).function_list
+        self.assertEqual([('a', 2), ('divide', 2)], [
+            (f.name, f.cyclomatic_complexity) for f in functions])
+        self.assertEqual(24, functions[1].token_count)

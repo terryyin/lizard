@@ -4,7 +4,7 @@
 import { lstat } from "node:fs/promises";
 import { isAbsolute, relative, resolve } from "node:path";
 import { agentCommit } from "./agent-commit.mjs";
-import { exec, git, revParse } from "./publication-git.mjs";
+import { exec, execWithInput, git, revParse } from "./publication-git.mjs";
 import { markSelectedSliceDone } from "./selected-slice-status.mjs";
 import { checkStoryObligations } from "./story-obligations.mjs";
 
@@ -187,11 +187,12 @@ export async function commitPreparedExecutionIncrement(request) {
       const committed = await agentCommit(workspace, { message });
       return committed.ok ? committed : { ...committed, operation: "commit" };
     }
-    const committing = exec("git", ["commit", "--quiet", "-F", "-"], {
-      cwd: workspace,
-    });
-    committing.child.stdin.end(message);
-    await committing;
+    await execWithInput(
+      "git",
+      ["commit", "--quiet", "-F", "-"],
+      { cwd: workspace },
+      message,
+    );
     return {
       ok: true,
       status: "committed",

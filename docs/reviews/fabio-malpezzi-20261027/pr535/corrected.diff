@@ -1,0 +1,15 @@
+# DISPLAY ONLY: normalized whitespace; exact bytes in literal-git-patches.json
+diff --git a/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr535/target/lizard_languages/javascript_functions.py b/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr535/corrected/lizard_languages/javascript_functions.py
+index 2a1af64..1928b1c 100644
+--- a/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr535/target/lizard_languages/javascript_functions.py
++++ b/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr535/corrected/lizard_languages/javascript_functions.py
+@@ -73,6 +73,9 @@ class JavaScriptFunctionsMixin:
+             self._abandon_function()
+             self.next(self._state_global, token)
+             return
++        if token == 'this' and self._parameter_bindings.at_start:
++            # TypeScript's leading receiver declaration is not an argument.
++            self._in_parameter_type = True
+         event = self._read_parameter_binding(token)
+         if event.ended:
+             self._state = self._expecting_func_opening_bracket

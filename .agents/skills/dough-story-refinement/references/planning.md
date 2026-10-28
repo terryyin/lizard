@@ -141,7 +141,11 @@ Keep execution, proof, review, and resume information:
    limitation, or interim behavior uses the `## Story obligations` section and
    [entry format and dispositions](../../dough-execute-plan/references/story-obligations.md#record-format).
    Its `**Source:**` link names the selected story section. Plans without the
-   section have no obligations; no migration is required.
+   section have no obligations; no migration is required. Planned execution
+   requires a `**Source review:**` link under `**Source:**` to the
+   [source review](../../dough-execute-plan/references/story-obligations.md#record-the-source-review)
+   once acceptance retains it; acceptance adds and allocates it, and planning
+   does not write it.
 
 At execution completion, the executing agent adds one more element after the
 ordered slices: the
@@ -199,9 +203,10 @@ replace obsolete planned detail rather than appending a competing breakdown,
 and record only learnings that affect remaining work. Apply
 [story-obligation ownership](../../dough-execute-plan/references/story-obligations.md)
 when removing or renumbering slices: move receiving and interim obligations
-to their remaining owners, preserve reported text and provenance, and update
-slice references. Replanning never drops an obligation; the check refuses
-dangling references. Apply
+and source-review allocations to their remaining owners,
+preserve reported text and provenance, and update slice references.
+Replanning never drops an obligation; the check refuses dangling references.
+Apply
 [slice decomposition](../../dough-story-decomposition/references/problem-decomposition.md#decompose-slices)
 and its cumulative design assessment, sizing, and escalation rules when changing
 remaining-slice design. After a preparation plan rewrite (slice planning or

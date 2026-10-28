@@ -1,0 +1,14 @@
+[
+  {"filename": "b-story.js", "source": "function b(code) {\n  return (\n    code === 47 || // /\n    code === 92 || // \\\n    code === 45 || // -\n    code === 32\n  )\n}\n", "expected": [["b", 4, 8]]},
+  {"filename": "b-story.ts", "source": "function b(code) {\n  return (\n    code === 47 || // /\n    code === 92 || // \\\n    code === 45 || // -\n    code === 32\n  )\n}\n", "expected": [["b", 4, 8]]},
+  {"filename": "b-story.jsx", "source": "function b(code) {\n  return (\n    code === 47 || // /\n    code === 92 || // \\\n    code === 45 || // -\n    code === 32\n  )\n}\n", "expected": [["b", 4, 8]]},
+  {"filename": "b-story.tsx", "source": "function b(code) {\n  return (\n    code === 47 || // /\n    code === 92 || // \\\n    code === 45 || // -\n    code === 32\n  )\n}\n", "expected": [["b", 4, 8]]},
+  {"filename": "b-short.js", "source": "function b(code) {\n  return (\n    code === 92 || // \\\n    code === 45 || // -\n    code === 32\n  )\n}\n", "expected": [["b", 3, 7]]},
+  {"filename": "line-comment-plain.js", "source": "function a(x) {\n  return x === 1 || // one\n    x === 2 || // two\n    x === 3;\n}\n", "expected": [["a", 3, 5]]},
+  {"filename": "block-comment.js", "source": "function a(x) {\n  return x === 1 || /* / */\n    x === 2 || /* \\ */\n    x === 3;\n}\n", "expected": [["a", 3, 5]]},
+  {"filename": "template-comment.js", "source": "function a(x) {\n  return `${x // \\\n} tail`;\n}\nfunction b() {\n  return 2;\n}\n", "expected": [["a", 1, 4], ["b", 1, 3]]},
+  {"filename": "dollar-id.js", "source": "function render($el, text) {\n  return $el && text || 0;\n}\n", "expected": [["render", 3, 3]]},
+  {"filename": "optional-access.ts", "source": "function pick(o) {\n  return o?.a ?? o?.b ?? 0;\n}\n", "expected": [["pick", 3, 3]]},
+  {"filename": "c-continuation.c", "source": "int b(int code) {\n  return code == 92 || // \\\n    code == 45 || // -\n    code == 32;\n}\n", "expected": [["b", 2, 4]]},
+  {"filename": "c-continuation.cpp", "source": "int b(int code) {\n  return code == 92 || // \\\n    code == 45 || // -\n    code == 32;\n}\n", "expected": [["b", 2, 4]]}
+]

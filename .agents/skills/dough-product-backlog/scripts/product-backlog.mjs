@@ -50,7 +50,10 @@ import {
   readDependencies,
   updateDependency,
 } from "./product-backlog-story-dependencies-command.mjs";
-import { readConsumers } from "./product-backlog-dependency-consumers.mjs";
+import {
+  readConsumers,
+  visitConsumers,
+} from "./product-backlog-dependency-consumers.mjs";
 import { resolveDependency } from "./product-backlog-dependency-resolution.mjs";
 import { takeEntry } from "./product-backlog-take.mjs";
 import { usage } from "./product-backlog-usage.mjs";
@@ -183,6 +186,18 @@ async function merge(file, values) {
   console.log(reportMerge(outcome, values.file));
 }
 
+// Operations on canonical story homes; their refusals say nothing was
+// written rather than that the backlog was unchanged.
+const preparationOperations = {
+  "record-state": recordState,
+  "read-state": readState,
+  "discover-consumers": readConsumers,
+  "visit-consumers": visitConsumers,
+  "resolve-dependency": resolveDependency,
+  "read-dependencies": readDependencies,
+  "update-dependency": updateDependency,
+};
+
 const operations = {
   add,
   place,
@@ -193,13 +208,8 @@ const operations = {
   direction,
   adopt,
   merge,
-  "record-state": recordState,
-  "read-state": readState,
   "identity-evidence": printIdentityEvidence,
-  "discover-consumers": readConsumers,
-  "resolve-dependency": resolveDependency,
-  "read-dependencies": readDependencies,
-  "update-dependency": updateDependency,
+  ...preparationOperations,
 };
 
 async function main(argv) {
@@ -228,15 +238,7 @@ try {
   await main(process.argv.slice(2));
 } catch (error) {
   if (error instanceof BacklogError) {
-    const named = process.argv[2];
-    const refusal = [
-      "record-state",
-      "read-state",
-      "discover-consumers",
-      "resolve-dependency",
-      "read-dependencies",
-      "update-dependency",
-    ].includes(named)
+    const refusal = Object.hasOwn(preparationOperations, process.argv[2])
       ? preparationRefusal(error)
       : error.refusal;
     console.error(refusal);

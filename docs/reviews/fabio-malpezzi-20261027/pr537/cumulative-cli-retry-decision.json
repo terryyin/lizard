@@ -1,0 +1,6 @@
+{
+  "prior": "cumulative-cli.json (pairs=20, seconds=1.2, passes=false, paired_95pct_ci upper 4.58%)",
+  "reason": "Host load ~10–11; short CLI batches left unresolved noise above 3% upper bound. Prospective longer quiet-ish retry at 4.0s batches (PR535 precedent), same 20 pairs, no code change.",
+  "seconds": 4.0,
+  "pairs": 20
+}
