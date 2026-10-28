@@ -192,3 +192,38 @@ class Test_JavaScript_class_inheritance(unittest.TestCase):
         self.assertIn("divide", names)
         div = next(f for f in functions if f.name == "divide")
         self.assertGreater(div.cyclomatic_complexity, 1)
+
+
+class Test_JavaScript_members_named_get_or_set(unittest.TestCase):
+
+    def summary(self, code):
+        return [(f.name, f.start_line, f.end_line, f.parameter_count)
+                for f in get_js_function_list(code)]
+
+    def test_methods_named_get_and_set(self):
+        code = (
+            "class A {\n"
+            "  get(key) { return this.map[key]; }\n"
+            "  set(key, value) { this.map[key] = value; }\n"
+            "  get size() { return 1; }\n"
+            "}\n"
+            "function after() { return 1; }\n"
+        )
+        self.assertEqual([('get', 2, 2, 1), ('set', 3, 3, 2),
+                          ('get size', 4, 4, 0), ('after', 6, 6, 0)],
+                         self.summary(code))
+
+    def test_properties_named_get_and_set(self):
+        code = (
+            "function g(set) {\n"
+            "  const o = { get: () => { return 1; }, set };\n"
+            "  return o;\n"
+            "}\n"
+            "function f(base, get, set) {\n"
+            "  return { base, get, set };\n"
+            "}\n"
+            "function after() { return 1; }\n"
+        )
+        self.assertEqual([('get', 2, 2, 0), ('g', 1, 4, 1), ('f', 5, 7, 3),
+                          ('after', 8, 8, 0)],
+                         self.summary(code))
