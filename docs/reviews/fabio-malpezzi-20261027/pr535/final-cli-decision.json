@@ -1,0 +1,36 @@
+{
+  "owner": "review_535",
+  "host": "Territory.local",
+  "cpus": 16,
+  "launch_load": [
+    8.421875,
+    9.0166015625,
+    11.19580078125
+  ],
+  "memory": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                     7014.\nPages active:                                 565948.\nPages inactive:                               557770.\nPages speculative:                              6630.\nPages throttled:                                   0.\nPages wired down:                             341579.\nPages purgeable:                                   2.\n\"Translation faults\":                    13664682494.\nPages copy-on-write:                      1185750564.\nPages zero filled:                        7477926972.\nPages reactivated:                         338819299.\nPages purged:                              104579405.\nFile-backed pages:                            416857.\nAnonymous pages:                              713491.\nPages stored in compressor:                  4044161.\nPages occupied by compressor:                1606439.\nDecompressions:                            330901370.\nCompressions:                              400740350.\nPageins:                                   266890743.\nPageouts:                                    6597449.\nSwapins:                                    10015861.\nSwapouts:                                   12228929.\n",
+  "command": [
+    "/Users/terryyin/git/lizard/.worktrees/review-correct-and-merge-fabiomalpezzi-s-open-pr/.venv/bin/python",
+    "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr535/affected/paired.py",
+    "--baseline",
+    "/Users/terryyin/.cache/lizard-pr-reviews-20261027/baseline",
+    "--candidate",
+    "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr535/corrected",
+    "--workload",
+    "cli",
+    "--pairs",
+    "40",
+    "--seconds",
+    "4",
+    "--out",
+    "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr535/cumulative-cli-long.json"
+  ],
+  "prior_interval": [
+    -0.7257752359979053,
+    3.2664536711125125
+  ],
+  "prior_log_ratio_sd_pct": 4.212163269296693,
+  "new_evidence": "Terminal ENS upper1.2723% at load8.99 versus ordinary CLI upper3.2665% at load11.58. This supports a quieter-window/longer-batch decision, not cross-workload equivalence or a pass for the original ordinary run.",
+  "choice": "One fixed40-pair4-second calibrated run, about six minutes, one active subprocess at a time. Coordinator keeps owned heavy work idle. Judge only its terminal interval; if unresolved leave gate open.",
+  "harness_sha256": "ec1c9c5eac0ad6a29294ecbd987b2a55d4cf31db145486d065bf13c096b76520",
+  "gate": "Upper paired95% slowdown bound strictly below3%; retain every pair and earlier inconclusive result."
+}

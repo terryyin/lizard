@@ -1,0 +1,198 @@
+[
+  {
+    "filename": "report.js",
+    "source": "function a(s) {\n return /#/.test(s) || s === 1;\n}\nfunction b(list) {\n return list.filter(s => /\"/.test(s) || s === \"a\");\n}\nfunction c(s) { return s; }"
+  },
+  {
+    "filename": "report.ts",
+    "source": "function a(s) {\n return /#/.test(s) || s === 1;\n}\nfunction b(list) {\n return list.filter(s => /\"/.test(s) || s === \"a\");\n}\nfunction c(s) { return s; }"
+  },
+  {
+    "filename": "report.jsx",
+    "source": "function a(s) {\n return /#/.test(s) || s === 1;\n}\nfunction b(list) {\n return list.filter(s => /\"/.test(s) || s === \"a\");\n}\nfunction c(s) { return s; }"
+  },
+  {
+    "filename": "report.tsx",
+    "source": "function a(s) {\n return /#/.test(s) || s === 1;\n}\nfunction b(list) {\n return list.filter(s => /\"/.test(s) || s === \"a\");\n}\nfunction c(s) { return s; }"
+  },
+  {
+    "filename": "property.js",
+    "source": "function divide(obj,a,b,c) { return obj.return / (a || b) / c; }"
+  },
+  {
+    "filename": "property.ts",
+    "source": "function divide(obj,a,b,c) { return obj.return / (a || b) / c; }"
+  },
+  {
+    "filename": "property.jsx",
+    "source": "function divide(obj,a,b,c) { return obj.return / (a || b) / c; }"
+  },
+  {
+    "filename": "property.tsx",
+    "source": "function divide(obj,a,b,c) { return obj.return / (a || b) / c; }"
+  },
+  {
+    "filename": "spaced_property.js",
+    "source": "function divide(obj,a,b,c) { return obj . return / (a || b) / c; }"
+  },
+  {
+    "filename": "spaced_property.ts",
+    "source": "function divide(obj,a,b,c) { return obj . return / (a || b) / c; }"
+  },
+  {
+    "filename": "spaced_property.jsx",
+    "source": "function divide(obj,a,b,c) { return obj . return / (a || b) / c; }"
+  },
+  {
+    "filename": "spaced_property.tsx",
+    "source": "function divide(obj,a,b,c) { return obj . return / (a || b) / c; }"
+  },
+  {
+    "filename": "dollar_identifier.js",
+    "source": "function divide($return,a,b,c) { return $return / (a || b) / c; }"
+  },
+  {
+    "filename": "dollar_identifier.ts",
+    "source": "function divide($return,a,b,c) { return $return / (a || b) / c; }"
+  },
+  {
+    "filename": "dollar_identifier.jsx",
+    "source": "function divide($return,a,b,c) { return $return / (a || b) / c; }"
+  },
+  {
+    "filename": "dollar_identifier.tsx",
+    "source": "function divide($return,a,b,c) { return $return / (a || b) / c; }"
+  },
+  {
+    "filename": "contextual_of.js",
+    "source": "function divide(of,a,b,c) { return of / (a || b) / c; }"
+  },
+  {
+    "filename": "contextual_of.ts",
+    "source": "function divide(of,a,b,c) { return of / (a || b) / c; }"
+  },
+  {
+    "filename": "contextual_of.jsx",
+    "source": "function divide(of,a,b,c) { return of / (a || b) / c; }"
+  },
+  {
+    "filename": "contextual_of.tsx",
+    "source": "function divide(of,a,b,c) { return of / (a || b) / c; }"
+  },
+  {
+    "filename": "plain_division.js",
+    "source": "function divide(x,a,b,c) { return x / (a || b) / c; }"
+  },
+  {
+    "filename": "plain_division.ts",
+    "source": "function divide(x,a,b,c) { return x / (a || b) / c; }"
+  },
+  {
+    "filename": "plain_division.jsx",
+    "source": "function divide(x,a,b,c) { return x / (a || b) / c; }"
+  },
+  {
+    "filename": "plain_division.tsx",
+    "source": "function divide(x,a,b,c) { return x / (a || b) / c; }"
+  },
+  {
+    "filename": "keyword_prefix_identifier.js",
+    "source": "function divide(myreturn,a,b,c) { return myreturn / (a || b) / c; }"
+  },
+  {
+    "filename": "keyword_prefix_identifier.ts",
+    "source": "function divide(myreturn,a,b,c) { return myreturn / (a || b) / c; }"
+  },
+  {
+    "filename": "keyword_prefix_identifier.jsx",
+    "source": "function divide(myreturn,a,b,c) { return myreturn / (a || b) / c; }"
+  },
+  {
+    "filename": "keyword_prefix_identifier.tsx",
+    "source": "function divide(myreturn,a,b,c) { return myreturn / (a || b) / c; }"
+  },
+  {
+    "filename": "return_template.js",
+    "source": "function a(s) { return `x${s => /}/.test(s)}`; }\nfunction b(x) { return x || 0; }"
+  },
+  {
+    "filename": "return_template.ts",
+    "source": "function a(s) { return `x${s => /}/.test(s)}`; }\nfunction b(x) { return x || 0; }"
+  },
+  {
+    "filename": "return_template.jsx",
+    "source": "function a(s) { return `x${s => /}/.test(s)}`; }\nfunction b(x) { return x || 0; }"
+  },
+  {
+    "filename": "return_template.tsx",
+    "source": "function a(s) { return `x${s => /}/.test(s)}`; }\nfunction b(x) { return x || 0; }"
+  },
+  {
+    "filename": "ruby_return-a.rb",
+    "source": "def a(s)\n return /#/ =~ s ? 1 : 0\nend\ndef b(x)\n x || 0\nend"
+  },
+  {
+    "filename": "ruby_member-a.rb",
+    "source": "def divide(obj,a,b,c)\n obj.return / (a || b) / c\nend"
+  },
+  {
+    "filename": "ruby_controls-a.rb",
+    "source": "def split(s)\n s.split(/,/).size\nend\ndef clean(s)\n s.gsub(/[\\/\"]/, \"\")\nend"
+  },
+  {
+    "filename": "property_comment-a.js",
+    "source": "function divide(obj,a,b,c) { return obj. /* member */ return / (a || b) / c; }"
+  },
+  {
+    "filename": "optional_member-a.js",
+    "source": "function divide(obj,a,b,c) { return obj?.return / (a || b) / c; }"
+  },
+  {
+    "filename": "await_identifier-a.js",
+    "source": "function divide(await,a,b,c) { return await / (a || b) / c; }"
+  },
+  {
+    "filename": "for_of_regex-a.js",
+    "source": "function each(x) { for (x of /a/.exec(\"a\")) { if (x) return x; } }"
+  },
+  {
+    "filename": "jsx_template_division-a.tsx",
+    "source": "function divide(obj,a,b,c) { return `${obj.return / (a || b) / c}`; }\nfunction after(x) { return x || 0; }"
+  },
+  {
+    "filename": "js_template_division-a.js",
+    "source": "function divide(obj,a,b,c) { return `${obj.return / (a || b) / c}`; }\nfunction after(x) { return x || 0; }"
+  },
+  {
+    "filename": "regex-character-controls.js",
+    "source": "function regex0(s) {\n if (/#/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next0(x) { return x && 1; }\nfunction regex1(s) {\n if (/[?#]/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next1(x) { return x && 1; }\nfunction regex2(s) {\n if (/\\//.test(s)) { return s || 0; }\n return 0;\n}\nfunction next2(x) { return x && 1; }\nfunction regex3(s) {\n if (/\"/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next3(x) { return x && 1; }\nfunction regex4(s) {\n if (/'/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next4(x) { return x && 1; }\nfunction regex5(s) {\n if (/`/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next5(x) { return x && 1; }\nfunction regex6(s) {\n if (/{/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next6(x) { return x && 1; }\nfunction regex7(s) {\n if (/}/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next7(x) { return x && 1; }\nfunction regex8(s) {\n if (/[/]/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next8(x) { return x && 1; }\nfunction regex9(s) {\n if (/a\\/\\/b/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next9(x) { return x && 1; }\nfunction regex10(s) {\n if (/(\\d+)\\s*\\/\\/.*/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next10(x) { return x && 1; }\nfunction regex11(s) {\n if (/x/g.test(s)) { return s || 0; }\n return 0;\n}\nfunction next11(x) { return x && 1; }\nfunction regex12(s) {\n if (/a ?b||c&&d/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next12(x) { return x && 1; }"
+  },
+  {
+    "filename": "regex-character-controls.ts",
+    "source": "function regex0(s) {\n if (/#/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next0(x) { return x && 1; }\nfunction regex1(s) {\n if (/[?#]/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next1(x) { return x && 1; }\nfunction regex2(s) {\n if (/\\//.test(s)) { return s || 0; }\n return 0;\n}\nfunction next2(x) { return x && 1; }\nfunction regex3(s) {\n if (/\"/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next3(x) { return x && 1; }\nfunction regex4(s) {\n if (/'/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next4(x) { return x && 1; }\nfunction regex5(s) {\n if (/`/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next5(x) { return x && 1; }\nfunction regex6(s) {\n if (/{/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next6(x) { return x && 1; }\nfunction regex7(s) {\n if (/}/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next7(x) { return x && 1; }\nfunction regex8(s) {\n if (/[/]/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next8(x) { return x && 1; }\nfunction regex9(s) {\n if (/a\\/\\/b/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next9(x) { return x && 1; }\nfunction regex10(s) {\n if (/(\\d+)\\s*\\/\\/.*/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next10(x) { return x && 1; }\nfunction regex11(s) {\n if (/x/g.test(s)) { return s || 0; }\n return 0;\n}\nfunction next11(x) { return x && 1; }\nfunction regex12(s) {\n if (/a ?b||c&&d/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next12(x) { return x && 1; }"
+  },
+  {
+    "filename": "regex-character-controls.jsx",
+    "source": "function regex0(s) {\n if (/#/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next0(x) { return x && 1; }\nfunction regex1(s) {\n if (/[?#]/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next1(x) { return x && 1; }\nfunction regex2(s) {\n if (/\\//.test(s)) { return s || 0; }\n return 0;\n}\nfunction next2(x) { return x && 1; }\nfunction regex3(s) {\n if (/\"/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next3(x) { return x && 1; }\nfunction regex4(s) {\n if (/'/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next4(x) { return x && 1; }\nfunction regex5(s) {\n if (/`/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next5(x) { return x && 1; }\nfunction regex6(s) {\n if (/{/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next6(x) { return x && 1; }\nfunction regex7(s) {\n if (/}/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next7(x) { return x && 1; }\nfunction regex8(s) {\n if (/[/]/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next8(x) { return x && 1; }\nfunction regex9(s) {\n if (/a\\/\\/b/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next9(x) { return x && 1; }\nfunction regex10(s) {\n if (/(\\d+)\\s*\\/\\/.*/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next10(x) { return x && 1; }\nfunction regex11(s) {\n if (/x/g.test(s)) { return s || 0; }\n return 0;\n}\nfunction next11(x) { return x && 1; }\nfunction regex12(s) {\n if (/a ?b||c&&d/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next12(x) { return x && 1; }"
+  },
+  {
+    "filename": "regex-character-controls.tsx",
+    "source": "function regex0(s) {\n if (/#/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next0(x) { return x && 1; }\nfunction regex1(s) {\n if (/[?#]/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next1(x) { return x && 1; }\nfunction regex2(s) {\n if (/\\//.test(s)) { return s || 0; }\n return 0;\n}\nfunction next2(x) { return x && 1; }\nfunction regex3(s) {\n if (/\"/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next3(x) { return x && 1; }\nfunction regex4(s) {\n if (/'/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next4(x) { return x && 1; }\nfunction regex5(s) {\n if (/`/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next5(x) { return x && 1; }\nfunction regex6(s) {\n if (/{/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next6(x) { return x && 1; }\nfunction regex7(s) {\n if (/}/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next7(x) { return x && 1; }\nfunction regex8(s) {\n if (/[/]/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next8(x) { return x && 1; }\nfunction regex9(s) {\n if (/a\\/\\/b/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next9(x) { return x && 1; }\nfunction regex10(s) {\n if (/(\\d+)\\s*\\/\\/.*/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next10(x) { return x && 1; }\nfunction regex11(s) {\n if (/x/g.test(s)) { return s || 0; }\n return 0;\n}\nfunction next11(x) { return x && 1; }\nfunction regex12(s) {\n if (/a ?b||c&&d/.test(s)) { return s || 0; }\n return 0;\n}\nfunction next12(x) { return x && 1; }"
+  },
+  {
+    "filename": "full-pr-example.js",
+    "source": "function a(s) {\n  return /#/.test(s) || s === 1;\n}\n\nfunction b(list) {\n  return list.filter(s => /\"/.test(s) || s === \"a\");\n}\n\nfunction c(s) {\n  return s;\n}\n"
+  },
+  {
+    "filename": "full-pr-example.ts",
+    "source": "function a(s) {\n  return /#/.test(s) || s === 1;\n}\n\nfunction b(list) {\n  return list.filter(s => /\"/.test(s) || s === \"a\");\n}\n\nfunction c(s) {\n  return s;\n}\n"
+  },
+  {
+    "filename": "full-pr-example.jsx",
+    "source": "function a(s) {\n  return /#/.test(s) || s === 1;\n}\n\nfunction b(list) {\n  return list.filter(s => /\"/.test(s) || s === \"a\");\n}\n\nfunction c(s) {\n  return s;\n}\n"
+  },
+  {
+    "filename": "full-pr-example.tsx",
+    "source": "function a(s) {\n  return /#/.test(s) || s === 1;\n}\n\nfunction b(list) {\n  return list.filter(s => /\"/.test(s) || s === \"a\");\n}\n\nfunction c(s) {\n  return s;\n}\n"
+  }
+]

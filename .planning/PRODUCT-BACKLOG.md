@@ -6,6 +6,8 @@ Maintenance, bug fixing, and PR reviews.
 
 ## Taken
 
+- [Conclude the JavaScript and TypeScript lexical and condition PR reviews](seeds/SEED-010-fabio-malpezzi-pr-reviews.md#review-lexical-js-prs) — SEED-010#review-lexical-js-prs ([plan](slice-plans/007-lexical-js-pr-reviews/PLAN.md))
+
 ## Backlog list
 
-- [Claim support only for the Python versions CI verifies](seeds/SEED-006-python-version-support.md#ci-verified-python-support) — SEED-006#ci-verified-python-support
+- [Enter the development shell repeatedly without rebuilding its environment](seeds/SEED-018-repeatable-shell-entry.md#repeatable-shell-entry) — SEED-018#repeatable-shell-entry

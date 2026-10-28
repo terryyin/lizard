@@ -1,0 +1,22 @@
+[
+  {"filename": "pick.js", "source": "function pick(x, y) {\n  return x?y:0;\n}\n", "expected": [["pick", 2, 3]]},
+  {"filename": "pick.ts", "source": "function pick(x, y) {\n  return x?y:0;\n}\n", "expected": [["pick", 2, 3]]},
+  {"filename": "pick.jsx", "source": "function pick(x, y) {\n  return x?y:0;\n}\n", "expected": [["pick", 2, 3]]},
+  {"filename": "pick.tsx", "source": "function pick(x, y) {\n  return x?y:0;\n}\n", "expected": [["pick", 2, 3]]},
+  {"filename": "m.tsx", "source": "class A {\n  name?: string;\n  m(a?: number, b?: string) { return 1; }\n}\n", "expected": [["m", 1, 1]]},
+  {"filename": "m.jsx", "source": "class A {\n  name?: string;\n  m(a?: number, b?: string) { return 1; }\n}\n", "expected": [["m", 1, 1]]},
+  {"filename": "m.ts", "source": "class A {\n  name?: string;\n  m(a?: number, b?: string) { return 1; }\n}\n", "expected": [["m", 1, 1]]},
+  {"filename": "ternary-unspaced.js", "source": "function f(x, y) { return x?y:0; }\nfunction g(x) { return x?1:x?.y?2:3; }\n", "expected": [["f", 2, 1], ["g", 3, 1]]},
+  {"filename": "ternary-unspaced.ts", "source": "function f(x, y) { return x?y:0; }\nfunction g(x) { return x?1:x?.y?2:3; }\n", "expected": [["f", 2, 1], ["g", 3, 1]]},
+  {"filename": "ternary-unspaced.jsx", "source": "function f(x, y) { return x?y:0; }\nfunction g(x) { return x?1:x?.y?2:3; }\n", "expected": [["f", 2, 1], ["g", 3, 1]]},
+  {"filename": "ternary-unspaced.tsx", "source": "function f(x, y) { return x?y:0; }\nfunction g(x) { return x?1:x?.y?2:3; }\n", "expected": [["f", 2, 1], ["g", 3, 1]]},
+  {"filename": "optional-member.ts", "source": "class A {\n  name?: string;\n  m(a?: number, b?: string): number { return 1; }\n}\nfunction f(cb: (a?: number, b?) => void) { return 1; }\n", "expected": [["m", 1, 1], ["f", 1, 1]]},
+  {"filename": "optional-member.tsx", "source": "class A {\n  name?: string;\n  m(a?: number, b?: string): number { return 1; }\n}\nfunction f(cb: (a?: number, b?) => void) { return 1; }\n", "expected": [["m", 1, 1], ["f", 1, 1]]},
+  {"filename": "optional-chain.js", "source": "function f(a) {\n  const x = a?.items?.[0];\n  return x ?? (a ? 1 : 2);\n}\n", "expected": [["f", 3, 4]]},
+  {"filename": "optional-chain.ts", "source": "function f(a) {\n  const x = a?.items?.[0];\n  return x ?? (a ? 1 : 2);\n}\n", "expected": [["f", 3, 4]]},
+  {"filename": "optional-chain.tsx", "source": "function f(a) {\n  const x = a?.items?.[0];\n  return x ?? (a ? 1 : 2);\n}\n", "expected": [["f", 3, 4]]},
+  {"filename": "optional-access.ts", "source": "function pick(o) {\n  return o?.a ?? o?.b ?? 0;\n}\n", "expected": [["pick", 3, 3]]},
+  {"filename": "load.js", "source": "function load(p) {\n  return p.then(parse).catch(() => null);\n}\n", "expected": [["(anonymous)", 1, 1], ["load", 1, 3]]},
+  {"filename": "load.ts", "source": "function load(p) {\n  return p.then(parse).catch(() => null);\n}\n", "expected": [["(anonymous)", 1, 1], ["load", 1, 3]]},
+  {"filename": "b-story.js", "source": "function b(code) {\n  return (\n    code === 47 || // /\n    code === 92 || // \\\n    code === 45 || // -\n    code === 32\n  )\n}\n", "expected": [["b", 4, 8]]}
+]

@@ -22,7 +22,7 @@ def checkstyle_output(all_result, verbose):
                     column="0",
                     severity="info",
                     message=f"{func.name} has {func.nloc} NLOC, {func.cyclomatic_complexity} CCN, "
-                           f"{func.token_count} token, {len(func.parameters)} PARAM, {func.length} length",
+                           f"{func.token_count} token, {func.parameter_count} PARAM, {func.length} length",
                     source="lizard"
                 )
 

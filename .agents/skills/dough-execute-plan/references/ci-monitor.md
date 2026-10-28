@@ -85,7 +85,8 @@ and pending state; require no execution-completion banner to start review. After
 review — or with `--skip-retro` or another explicit review omission —
 publish the plan's [execution-complete record](finish-or-stop.md#record-execution-completion),
 then invoke exactly one completion action. Wrap-up uses it after registering the
-final accepted closure or integrated SHA. Follow [completion mechanics](ci-completion-wait.md),
+final accepted SHA: the closure or integrated SHA, or the last consumer
+publication. Follow [completion mechanics](ci-completion-wait.md),
 including its live-Claude Story Branch background handoff; handle delivered failures at safe boundaries.
 
 Success with confirmed shutdown ends observation; report `integrated_state` under completion mechanics.

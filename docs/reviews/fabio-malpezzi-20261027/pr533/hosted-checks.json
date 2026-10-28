@@ -1,0 +1,31 @@
+{
+  "head": "15423852c04aed302f684395fe9522251d88a2f2",
+  "run": 40418652237,
+  "jobs": [
+    {
+      "id": 121907195077,
+      "name": "build (windows-latest, 3.10)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 121907195290,
+      "name": "build (ubuntu-24.04, 3.8)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 121907195332,
+      "name": "build (ubuntu-24.04, 3.10)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 121907195484,
+      "name": "build (windows-latest, 3.8)",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "scope": "Historical authored-head checks; do not satisfy current fourteen-job merge gate."
+}

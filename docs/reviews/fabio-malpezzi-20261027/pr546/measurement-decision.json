@@ -1,0 +1,110 @@
+{
+  "attempt1": {
+    "status": "passed",
+    "chosen_before_launch": true,
+    "api_seconds": 2.5,
+    "cli_seconds": 4.0,
+    "rationale": "Expanded affected corpus with prior pr544/pr545/pr535/pr536 inputs plus bulk controls and replicas (learning from #544 tiny-corpus inflation and #545 load noise). Candidate keeps TypeScriptReader fast path while undoing keyword member conditions. PYTHONDONTWRITEBYTECODE=1; snapshot __pycache__ cleared. Incremental vs target f0887ec; cumulative vs baseline 2e21e404.",
+    "incremental": "target f0887eca versus corrected working-tree adaptation",
+    "cumulative": "starting baseline 2e21e404 versus corrected",
+    "summary": {
+      "incremental-api": {
+        "workload": "api",
+        "loops": 14,
+        "medians": {
+          "baseline": 2.770222499500001,
+          "candidate": 2.788030145499995
+        },
+        "median_slowdown_pct": 0.6428236722215708,
+        "paired_95pct_ci": [
+          -0.014828900205809958,
+          0.9725773309004593
+        ],
+        "passes": true
+      },
+      "incremental-api-parameters": {
+        "workload": "api-parameters",
+        "loops": 16,
+        "medians": {
+          "baseline": 2.4479750834999994,
+          "candidate": 2.442397520500002
+        },
+        "median_slowdown_pct": -0.2278439448829217,
+        "paired_95pct_ci": [
+          -0.04639413161858785,
+          1.1051583813992183
+        ],
+        "passes": true
+      },
+      "incremental-cli": {
+        "workload": "cli",
+        "loops": 21,
+        "medians": {
+          "baseline": 4.084839812999995,
+          "candidate": 4.087836270500002
+        },
+        "median_slowdown_pct": 0.07335556930461173,
+        "paired_95pct_ci": [
+          -1.6393537562849447,
+          0.8440401210673798
+        ],
+        "passes": true
+      },
+      "cumulative-api": {
+        "workload": "api",
+        "loops": 12,
+        "medians": {
+          "baseline": 2.6620202295000013,
+          "candidate": 2.426856646000001
+        },
+        "median_slowdown_pct": -8.834026912867243,
+        "paired_95pct_ci": [
+          -9.886474532942602,
+          -8.474258505544253
+        ],
+        "passes": true
+      },
+      "cumulative-api-parameters": {
+        "workload": "api-parameters",
+        "loops": 17,
+        "medians": {
+          "baseline": 2.842195833999998,
+          "candidate": 2.6101612915000025
+        },
+        "median_slowdown_pct": -8.163918183408182,
+        "paired_95pct_ci": [
+          -8.667163047099368,
+          -7.281180872161885
+        ],
+        "passes": true
+      },
+      "cumulative-cli": {
+        "workload": "cli",
+        "loops": 20,
+        "medians": {
+          "baseline": 3.8370773330000087,
+          "candidate": 3.8501601664999985
+        },
+        "median_slowdown_pct": 0.3409582962395241,
+        "paired_95pct_ci": [
+          -0.9396010345656514,
+          2.19235894716594
+        ],
+        "passes": true
+      }
+    }
+  },
+  "attempt2": {
+    "status": "failed-gate-after-refactor",
+    "chosen_before_launch": true,
+    "api_seconds": 5.0,
+    "cli_seconds": 8.0,
+    "rationale": "Remeasure after post-change refactor: fast path calls process_token instead of inlined undo. Longer 5s/8s batches under elevated host load to tighten CI. Same corpus; corrected typescript.py refreshed from working tree. Not seeking a pass on invalid code.",
+    "incremental": "target f0887eca versus corrected working-tree adaptation",
+    "cumulative": "starting baseline 2e21e404 versus corrected",
+    "reason": "Calling process_token on every fast-path token invalidated attempt1; incremental API median 3.54% upper 3.88% under load. Reverted to inlined undo on the fast path (attempt1-passing form). attempt2 retained.",
+    "retained": [
+      "attempt2/"
+    ]
+  }
+}

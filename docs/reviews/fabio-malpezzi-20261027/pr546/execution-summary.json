@@ -1,0 +1,36 @@
+{
+  "identity": "SEED-010#review-lexical-js-prs slice 3",
+  "pr": 546,
+  "frozen_head": "a671632141127fca9b2785fdbb0c675d45ae9042",
+  "target": "f0887eca8ab11c5e4d743a58424e221699ae1de9",
+  "baseline": "2e21e404c1ab9f4e0b49acc80816e816629d0670",
+  "worktree_head_at_start": "d10f498f7f9366da4e34b416843fa9c6393c3ea6",
+  "disposition": "merge-ready-locally",
+  "value": "member access named catch/if/for/while/case (including ?.) must not add conditions; genuine control-flow still does",
+  "baseline_observation": "load CCN 2 on .js/.ts/.jsx/.tsx",
+  "expected": "load CCN 1",
+  "adaptation": "TypeScriptReader.process_token undoes keyword members; fast path allows TypeScriptReader.process_token",
+  "product_files": [
+    "lizard_languages/typescript.py",
+    "test/test_languages/testJavaScript.py"
+  ],
+  "proof": {
+    "reproduce": {"target_all_match": false, "corrected_all_match": true},
+    "focused": "611 passed, 5 skipped",
+    "full_pytest": "2129 passed, 7 skipped",
+    "make": "exit 0"
+  },
+  "performance": {
+    "attempt": 1,
+    "all_six_gates_pass": true,
+    "harness_sha256": "ec1c9c5eac0ad6a29294ecbd987b2a55d4cf31db145486d065bf13c096b76520"
+  },
+  "deferred": "keyword-member-inside-interpolation residual after #545+#546",
+  "coordinator_remaining": [
+    "publish adapted head",
+    "hosted CI",
+    "exact-head merge",
+    "thanks"
+  ],
+  "committed": false
+}

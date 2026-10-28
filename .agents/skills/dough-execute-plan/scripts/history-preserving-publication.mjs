@@ -3,12 +3,12 @@
 // One owned workspace merges an already-published tip onto fetched trunk,
 // pushes that candidate SHA through pushExactRef, and recomputes the merge
 // once after a rejected push. A conflicted or uncommitted merge is preserved
-// for the agent to resolve and commit; the next run publishes that commit as
-// the candidate.
-// With a launch's landing context, each attempt's candidate and the fetched
-// tip it was built on are retained before its push, and the accepted pair is
-// recorded as that launch's landing. Installed guidance is the agent's
-// contract.
+// for the agent to resolve and commit; the next run publishes it as candidate.
+// A launch's landing context retains each attempt's candidate and the fetched
+// tip it was built on before its push, and records the accepted pair as that
+// launch's landing. The CLI runs unawaited: --supplier-identity lazily imports
+// supplier-integration.mjs, which imports this module back. Installed guidance
+// is the agent's contract.
 import { resolve } from "node:path";
 import { defaultBacklogPath } from "../../dough-product-backlog/scripts/product-backlog-store.mjs";
 import { flagValues, isDirectCliEntry } from "./ci-direct-entry.mjs";
@@ -29,7 +29,7 @@ import {
 } from "./publication-git.mjs";
 import { isAncestor } from "./workspace-publication-ownership.mjs";
 
-const trunkTarget = "refs/heads/main";
+export const trunkTarget = "refs/heads/main";
 
 async function pushRejected(workspace, sha, remote, targetRef) {
   try {
@@ -211,33 +211,40 @@ export async function publishHistoryPreservingCandidate({
 }
 
 const usage =
-  "usage: history-preserving-publication.mjs integrate --workspace PATH --published-tip SHA --branch NAME [--target-ref refs/heads/<branch>] [--remote NAME] [--backlog-path PATH] [--landing-context PATH]";
+  "usage: history-preserving-publication.mjs integrate --workspace PATH --published-tip SHA --branch NAME [--target-ref refs/heads/<branch>] [--remote NAME] [--backlog-path PATH] [--landing-context PATH] [--supplier-identity IDENTITY]";
 
 function argumentsOf(argv) {
   if (argv[0] !== "integrate") throw new Error(usage);
   const result = flagValues(argv.slice(1));
   const { workspace, publishedTip, branch, ...rest } = result;
-  const known = ["targetRef", "remote", "backlogPath", "landingContext"];
+  const known =
+    /^(targetRef|remote|backlogPath|landingContext|supplierIdentity)$/;
   if (
     !workspace ||
     !publishedTip ||
     !branch ||
-    Object.keys(rest).some((key) => !known.includes(key))
+    Object.keys(rest).some((key) => !known.test(key))
   ) {
     throw new Error(usage);
   }
   return { ownedWorkspace: resolve(workspace), publishedTip, branch, ...rest };
 }
 
-if (isDirectCliEntry(import.meta.url, process.argv[1])) {
+async function runCli(argv) {
   try {
-    const result = await publishHistoryPreservingCandidate(
-      argumentsOf(process.argv.slice(2)),
-    );
+    const request = argumentsOf(argv);
+    const integrate = request.supplierIdentity
+      ? (await import("./supplier-integration.mjs")).integrateSelectedSupplier
+      : publishHistoryPreservingCandidate;
+    const result = await integrate(request);
     process.stdout.write(`${JSON.stringify(result)}\n`);
     if (result.classification === "preserved") process.exitCode = 1;
   } catch (error) {
     process.stderr.write(`${error.message}\n`);
     process.exitCode = 2;
   }
+}
+
+if (isDirectCliEntry(import.meta.url, process.argv[1])) {
+  runCli(process.argv.slice(2));
 }

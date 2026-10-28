@@ -1,0 +1,1 @@
+{"prior":"cumulative-cli 8.0s passes=false upper 5.21%","reason":"Waited for quieter host then prospective 8.0s retry; no code change","seconds":8.0}

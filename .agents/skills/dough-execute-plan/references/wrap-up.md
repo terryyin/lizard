@@ -5,27 +5,43 @@ The coordinator runs this sequence after implementation, including owned CI repa
 ## Accept proof
 
 Apply [proof ownership](../../dough-story-refinement/references/planning.md#own-executable-proof).
-For each slice, obtain a source-only review before comparing its return. Spawn a
-fresh general-purpose reviewer without conversation inheritance, fork or resume;
-do not reuse the implementation or refactor agent. Supply only the original source
+Before comparing a slice's return, have a source-only review of its unchanged
+source. To obtain one, spawn a fresh general-purpose reviewer without
+conversation inheritance, fork or resume; do not reuse the implementation or
+refactor agent. Supply only the original source
 text and explicit human amendments: the selected story's Goal, Scope, key examples
 and exclusions, complete correction input, or authorized quick instruction. Give
 no plan, return, product, proof, suspected omission or current-slice scope. For a
 plan-homed correction, send its original correction input, not its slicing.
 Tell the reviewer: use only these inputs, read no other project files, change
 nothing; return source clauses with individual commitments, qualifications,
-trigger/journey examples and exclusions. Separate compound promises; preserve
+trigger/journey examples and exclusions. Number every commitment, and give each
+item of a listed compound commitment its own id (for example `4a.1`–`4a.6` for
+six listed filters). Separate compound promises; preserve
 alternatives without turning examples into rejection rules. Derive promises,
 not slice ownership or acceptance. Use supported fresh-context delegation or a
 separate new session with these limits. Retain the actual reviewer launch/input
 and returned commitments, or their inspectable locations, in existing acceptance
-evidence; a coordinator's assertion is insufficient. If isolation or that evidence
-is unavailable, name the missing review and stop dependent acceptance.
+evidence; a coordinator's assertion is insufficient. For planned execution,
+retain them beside the plan as `source-review.md` in its
+[record form](story-obligations.md#record-the-source-review), linked from the
+plan by `**Source review:**`, and allocate every id before the next obligations
+listing or check. Reuse that return for later slices while the source text is
+unchanged; after a story amendment, obtain a fresh review, replace it and
+allocate it again the same way. If isolation or that evidence is unavailable,
+name the missing review and stop dependent acceptance.
 
 Compare that independent return with the source, then the plan, implementation
 return, actual product and proof. In existing plan or acceptance evidence compare,
 in any equivalent layout: applicable original trigger/setup → source-expected
 result → actual observation → current or legitimate remaining owner/disposition.
+For planned execution, record that comparison per returned id in
+`source-review.md`, allocating and observing each id under its
+[record rules](story-obligations.md#record-the-source-review). A commitment the
+plan narrowed or omitted is a mismatch, not a disposition, and so is an
+observed location that shows a different result than the commitment states.
+Return it to the slice when this slice's output already owes it; when the plan
+claims a reason the story does not record, stop for human judgment.
 Include each qualification and journey example; a heading, count or plan list
 cannot stand for a compound promise. Return a concrete expected/actual mismatch
 unless a real human amendment changes it. Broad accuracy or compatibility claims
@@ -181,6 +197,10 @@ and retain its receipt. Existing candidates use retained candidate/base recovery
    remaining slices under
    [plan refinement](../../dough-story-refinement/references/planning.md#refine-the-active-plan);
    guarded fresh delivery marks the selected slice `done` itself.
+   In Story Branch Mode, before the obligations check below, run
+   `node '<installed-execute-plan>/scripts/source-freshness.mjs' check --workspace '<execution checkout>' --identity '<identity>' --remote '<authorized remote>' --target-ref 'refs/heads/<trunk>'`;
+   continue on `unchanged`, and handle any other result under
+   [source freshness](source-freshness.md).
    Before marking the slice done or committing, run the installed
    [story-obligations script](../scripts/story-obligations.mjs):
    `node '<installed-execute-plan>/scripts/story-obligations.mjs' check --plan '<PLAN.md>' --slice N`.

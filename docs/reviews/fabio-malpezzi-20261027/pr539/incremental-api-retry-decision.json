@@ -1,0 +1,1 @@
+{"prior":"incremental-api 1.2s passes=false upper CI 3.15%","reason":"Prospective longer batches at 2.0s for incremental api under elevated load; no code change","seconds":2.0,"pairs":20}

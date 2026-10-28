@@ -7,9 +7,10 @@ Only overrides tokenization to handle JSX-specific syntax (<Component>, {express
 
 from .js_style_regex_expression import js_style_regex_expression
 from .typescript import (
-    NULLISH_COALESCING, OPTIONAL_ACCESS, OPTIONAL_NAME, TypeScriptReader)
+    JS_IDENTIFIER, NULLISH_COALESCING, OPTIONAL_ACCESS, OPTIONAL_NAME,
+    TypeScriptReader)
 from .typescript import JSTokenizer, Tokenizer
-from .javascript_templates import template_tokens
+from .javascript_templates import LINE_COMMENT, template_tokens
 
 
 class TSXReader(TypeScriptReader):
@@ -22,12 +23,12 @@ class TSXReader(TypeScriptReader):
     @js_style_regex_expression
     def generate_tokens(source_code, addition='', token_class=None):
         # Add support for TypeScript type annotations in JSX
-        addition = addition + \
+        addition = addition + "|" + LINE_COMMENT + \
             r"|(?:<[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)*>)" + \
             r"|(?:<\/[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)*>)" + \
             r"|(?:#\w+)" + \
-            r"|(?:\$\w+)" + \
             OPTIONAL_NAME + \
+            JS_IDENTIFIER + \
             NULLISH_COALESCING + \
             OPTIONAL_ACCESS + \
             r"|(?:<\/\w+>)" + \

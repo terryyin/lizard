@@ -86,7 +86,7 @@ distinct from shutdown facts:
 - Other `unresolvedReason` values are `timeout`, `observation_unavailable`,
   `wait_cancelled`, `incomplete`, `evidence_unreadable`, or
   `missing_registration`. Stale, withdrawn, unsupported, foreign or unreadable
-  evidence cannot justify pending; worker loss stays explicitly unavailable.
+  evidence cannot justify pending.
   Except `wait_cancelled` and `pending`, a bounded unresolved result
   ends the wait and includes shutdown evidence; it never establishes success.
 - `shutdown.status: "retained"` with `reason: "unread_actionable_failure"` keeps
@@ -96,9 +96,8 @@ distinct from shutdown facts:
   do not treat unavailable shutdown as successful CI or as cleanup authority.
 
 The low-level `await-revision` reader remains available for its existing
-read-only purpose and does not shut down observation. Ordinary completion uses
-`complete-revision`. Explicit cancellation and human-judgment stops still
-use the host adapter's stop command.
+read-only purpose and does not shut down observation. Explicit cancellation and
+human-judgment stops still use the host adapter's stop command.
 
 Return that complete receipt to the owning procedure. Do not interpret a
 successful local command exit as a successful CI verdict.
