@@ -89,7 +89,7 @@ All complete-cycle gates belong to this slice. Original slice: 12.
 
 ### 5. Get and set member names — PR #541
 Type: Behavior
-Status: planned
+Status: done
 Source: https://github.com/terryyin/lizard/pull/541 — frozen head `644480ce9f46892fae258696583a6c18649c05dc`
 Proof: [slice 5](SLICE-PROOF.md).
 Behavior: Given members literally named `get`/`set` beside real accessors → complete cycle for #541 → named members and following functions have correct boundaries, or a non-merge disposition is recorded.
@@ -144,6 +144,8 @@ All complete-cycle gates belong to this slice. Original slice: 15.
   evidence under \`docs/reviews/fabio-malpezzi-20261027/pr538/\`.
 - #539: abandoned provisional signatures restore enclosing metrics; merged as `2887bd88` with [thanks](https://github.com/terryyin/lizard/pull/539#issuecomment-6457825856); evidence under `docs/reviews/fabio-malpezzi-20261027/pr539/`.
 - #540: already-fixed disposition recorded; PR closed unmerged; evidence under `docs/reviews/fabio-malpezzi-20261027/pr540/`.
+- #541: get/set member names fixed; merged as `322132fc` with [thanks](https://github.com/terryyin/lizard/pull/541#issuecomment-6458221109); evidence under `docs/reviews/fabio-malpezzi-20261027/pr541/`.
+
 - #540's claim fixture already matches the PR's fixed expectation on trunk.
 
 ## Concern evidence
