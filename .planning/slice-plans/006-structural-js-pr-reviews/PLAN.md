@@ -81,7 +81,7 @@ All complete-cycle gates belong to this slice. Original slice: 11. Prefer before
 
 ### 4. Switch label boundaries — PR #540
 Type: Behavior
-Status: planned
+Status: done
 Source: https://github.com/terryyin/lizard/pull/540 — frozen head `d225a6d60af856ac155b882d1a3770b7d66457ef`
 Proof: [slice 4](SLICE-PROOF.md).
 Behavior: Given `case`/`default` labels with callbacks → complete cycle for #540 → callbacks are reported without treating label colons as types (already observed on current trunk for the claim fixture), with genuine annotations/ternaries preserved, or record the already-fixed / other disposition with evidence.
@@ -115,8 +115,8 @@ All complete-cycle gates belong to this slice. Original slice: 15.
 
 - One Behavior slice per frozen PR; each owns the entire complete-cycle contract.
 - No sibling supplier agreement; lexical batch is deferred promise only.
-- #540's trunk observation steers that cycle toward confirming already-fixed
-  behavior and recording disposition, not assuming a merge is still required.
+- #540 confirmed already-fixed on trunk; unmerged/closed. Do not introduce
+  parallel `_case_labels` beside marker/ternary-depth ownership.
 - No project S/M/L band or numeric slice timing policy; the contract's 15‑minute
   correction limit (excluding review/measurement) bounds eligible product edits.
 - #537: contributor approach remains valid; stop sticky `_prev_token` for `.`
@@ -143,6 +143,7 @@ All complete-cycle gates belong to this slice. Original slice: 15.
   Merged as \`a2f0a538\` with [thanks](https://github.com/terryyin/lizard/pull/538#issuecomment-6456461311);
   evidence under \`docs/reviews/fabio-malpezzi-20261027/pr538/\`.
 - #539: abandoned provisional signatures restore enclosing metrics; merged as `2887bd88` with [thanks](https://github.com/terryyin/lizard/pull/539#issuecomment-6457825856); evidence under `docs/reviews/fabio-malpezzi-20261027/pr539/`.
+- #540: already-fixed disposition recorded; PR closed unmerged; evidence under `docs/reviews/fabio-malpezzi-20261027/pr540/`.
 - #540's claim fixture already matches the PR's fixed expectation on trunk.
 
 ## Concern evidence
