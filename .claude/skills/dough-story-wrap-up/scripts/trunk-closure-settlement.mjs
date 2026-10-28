@@ -70,7 +70,7 @@ async function closureIdentity(inspection, sha) {
 }
 
 // The commit `rev` names in this repository, or null when it holds none.
-async function commitOf(inspection, rev) {
+export async function commitOf(inspection, rev) {
   try {
     return (
       await git(inspection, "rev-parse", "-q", "--verify", `${rev}^{commit}`)
@@ -81,9 +81,12 @@ async function commitOf(inspection, rev) {
   }
 }
 
-// The rebased final closure the fetched target holds: the branch tip while the
-// branch exists, else a revision this execution's observers registered, whose
-// identity equals `final`'s. Null when none is recognized.
+// The rebased final closure the fetched target holds: the branch tip, or a
+// revision this execution's observers registered that the branch contains,
+// as when a consumer publication followed the closure, else once the branch
+// is gone any revision they registered, whose identity equals `final`'s.
+// A revision `final` already contains, such as an earlier closure published
+// within the same second, is never its rebase. Null when none is recognized.
 async function rebasedFinalClosure({
   inspection,
   tracking,
@@ -94,13 +97,23 @@ async function rebasedFinalClosure({
   const original = await commitOf(inspection, final);
   if (!original) return null;
   const tip = await commitOf(inspection, `refs/heads/${branch}`);
-  const candidates = tip
-    ? [tip]
-    : observers.directories.flatMap(listRegisteredRevisions);
+  const registered = observers.directories.flatMap(listRegisteredRevisions);
+  const candidates = [];
+  if (!tip) candidates.push(...registered);
+  else {
+    candidates.push(tip);
+    for (const candidate of registered)
+      if (
+        (await commitOf(inspection, candidate)) &&
+        (await isAncestor(inspection, candidate, tip))
+      )
+        candidates.push(candidate);
+  }
   const wanted = await closureIdentity(inspection, original);
   for (const candidate of new Set(candidates)) {
     // An observer may have registered a revision this repository lacks.
     if (!(await commitOf(inspection, candidate))) continue;
+    if (await isAncestor(inspection, candidate, original)) continue;
     if (!(await isAncestor(inspection, candidate, tracking))) continue;
     if ((await closureIdentity(inspection, candidate)) === wanted)
       return candidate;
@@ -143,14 +156,9 @@ async function publishFinalClosure(request) {
   };
 }
 
-// Returns the accepted final closure with its observer, or `stopped` naming
-// the unfinished step with nothing pushed or retired.
-export async function settleFinalClosure(request) {
+// Resumes the final closure the target holds on `observers`, or publishes it.
+async function acceptFinalClosure(request, observers) {
   const { workspace, inspection, tracking, final } = request;
-  const observers = closureObservers({
-    ...request,
-    branch: targetBranchName(request.targetRef),
-  });
   if (await isAncestor(inspection, final, tracking)) {
     return resumeAcceptedClosure({ ...request, observers, accepted: final });
   }
@@ -174,4 +182,19 @@ export async function settleFinalClosure(request) {
     };
   }
   return publishFinalClosure(request);
+}
+
+// Returns the accepted final closure with its observer and
+// `observerDirectories`, this execution's own observers whose registered
+// revisions the visit's settlement reads, or `stopped` naming the unfinished
+// step with nothing pushed or retired.
+export async function settleFinalClosure(request) {
+  const observers = closureObservers({
+    ...request,
+    branch: targetBranchName(request.targetRef),
+  });
+  const settled = await acceptFinalClosure(request, observers);
+  return settled.stopped
+    ? settled
+    : { ...settled, observerDirectories: observers.directories };
 }

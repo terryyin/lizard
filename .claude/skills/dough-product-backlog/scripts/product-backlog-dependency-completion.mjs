@@ -1,50 +1,37 @@
 // Validate recoverable outcome and accepted integration as distinct facts.
 import { dirname, relative, resolve, sep } from "node:path";
 import {
+  contains,
+  fetchAcceptedTarget,
+  fullRevision,
+} from "./product-backlog-accepted-integration.mjs";
+import {
   collectingGitDiagnostics,
   git,
-  gitOutcome,
   repositoryRoot,
 } from "./product-backlog-git-repository.mjs";
 import { parseBacklog } from "./product-backlog-document.mjs";
 import { namedIdentity, readHome } from "./product-backlog-home-reader.mjs";
 import { splitHref } from "./product-backlog-identity.mjs";
 import { readPlanSlices } from "./product-backlog-plan-reader.mjs";
-import { BacklogError, requireField } from "./product-backlog-refusal.mjs";
+import { BacklogError } from "./product-backlog-refusal.mjs";
 import { pathFor } from "./product-backlog-story-dependencies-command.mjs";
 import { declaredPlanTarget } from "./product-backlog-story-state-home.mjs";
 import { readStoryState } from "./product-backlog-story-state.mjs";
 
-function revision(value, field) {
-  requireField(value, field);
-  if (!/^[0-9a-f]{40,64}$/.test(value))
-    throw new BacklogError(`${field} must be a full Git revision.`);
-  return value;
-}
-
 export async function supplierCompletion(file, dependency, values) {
   const captured = await collectingGitDiagnostics(() => {
     const root = repositoryRoot(dirname(file));
-    const evidence = revision(
+    const evidence = fullRevision(
       dependency.resolution.revision,
       "resolution.revision",
     );
-    const accepted = revision(values["accepted-revision"], "accepted-revision");
-    requireField(values.remote, "remote");
-    requireField(values.target, "target");
-    const target = values.target.startsWith("refs/heads/")
-      ? values.target
-      : `refs/heads/${values.target}`;
-    git(["check-ref-format", target], root);
-    git(["fetch", "--quiet", values.remote, target], root);
+    const { accepted, target } = fetchAcceptedTarget(values, root);
     for (const [before, after] of [
-      [accepted, "FETCH_HEAD"],
+      [accepted, target.sha],
       [evidence, accepted],
     ]) {
-      if (
-        gitOutcome(["merge-base", "--is-ancestor", before, after], root)
-          .code !== 0
-      )
+      if (!contains(before, after, root))
         throw new BacklogError(
           "Supplier outcome and accepted revision must be contained in the authorized integration target. Nothing was written.",
         );
@@ -122,7 +109,7 @@ export async function supplierCompletion(file, dependency, values) {
           "Planless completion evidence must be readable in the supplier revision.",
         );
     }
-    const receipt = `Condition ${dependency.state === "satisfied" ? "satisfied" : "remains unresolved"}: ${dependency.condition}\nAccepted integration: ${accepted} on ${values.remote}/${target}.`;
+    const receipt = `Condition ${dependency.state === "satisfied" ? "satisfied" : "remains unresolved"}: ${dependency.condition}\nAccepted integration: ${accepted} on ${target.remote}/${target.ref}.`;
     const summary = dependency.resolution.summary;
     return {
       revision: evidence,

@@ -85,6 +85,13 @@ export function freshPendingRevision(revision, now = Date.now()) {
     };
   if (revision.queue && fresh(revision.queue.observedAt))
     return { source: "queue", ...revision.queue };
+  const progress = revision.integrated?.progress;
+  if (progress && fresh(progress.observedAt))
+    return {
+      source: "attempt",
+      ...progress,
+      checkedBy: { runId: progress.runId, attemptId: progress.attempt },
+    };
 }
 
 // Replaces `record`, keyed by its own normalized SHA.

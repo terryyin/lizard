@@ -11,10 +11,9 @@ coordinator may instead choose the explicit background alternative in
 [completion mechanics](ci-completion-wait.md), after any required review and
 execution-complete record publication below. That alternative satisfies the
 completion operation below: report its CI pending receipt and retained session,
-observer and resources instead of a successful shutdown. All other completion
-paths keep the bounded completion operation. While this explicit background
-handoff's required CI/shutdown remains pending, retain that handoff; do not
-automatically continue into wrap-up. Shared completion `pending` or
+observer and resources instead of a successful shutdown. While this explicit
+background handoff's required CI/shutdown remains pending, retain that handoff;
+do not automatically continue into wrap-up. Shared completion `pending` or
 `completion_expired` likewise stops dependent continuation and cleanup on every
 host; retain and recover it under [completion mechanics](ci-completion-wait.md).
 
@@ -24,9 +23,8 @@ proof/delivery/completion obligations. Explicit omit/defer instructions also
 take precedence. When skipped, publish the
 [execution-complete record](#record-execution-completion) with
 `Product advice: retrospective skipped`, then invoke the completion operation
-for the applicable accepted revision at this execution-completion boundary,
-then handle its receipt. Retain the completed plan and judged proof for later
-review and wrap-up, then apply [planned continuation](#continue-settled-planned-work-into-wrap-up).
+for the applicable accepted revision and handle its receipt. Retain the
+completed plan and judged proof for later review and wrap-up, then apply [planned continuation](#continue-settled-planned-work-into-wrap-up).
 
 Otherwise invoke
 [dough-execution-retrospective](../../dough-execution-retrospective/SKILL.md)
@@ -47,8 +45,8 @@ path as the retrospective's write location, so its process findings and correcti
 and plans stay with this execution's changes and enter its completion commit. Trunk Mode
 attributable commits are that identity's retained published revisions, not another ledger or a
 rewrite's unpublished SHA. Include an initial quick attempt and its planned
-continuation as one execution. Pass existing context to retrospective, which
-validates attribution and follows its
+continuation as one execution. The retrospective validates attribution and
+follows its
 [process-review evidence rules](../../dough-execution-retrospective/SKILL.md#review-process-only-from-a-real-record).
 
 Execution completion and review completion are distinct. A retrospective context
@@ -135,7 +133,7 @@ needed to resume. When attention remains, begin with
 `DEVELOPER ATTENTION REQUIRED`, followed by the issue, consequence, next action
 or decision, responsible owner when known, and needed evidence or recovery links.
 Apply [report attention at the execution-complete handoff](#report-attention-at-the-execution-complete-handoff)
-before giving the response; a quiet handoff submits nothing. Add no slice, proof,
+before giving the response. Add no slice, proof,
 advice, CI or shutdown recap or execution-completion banner.
 
 ## Other completion and stop paths
@@ -166,9 +164,8 @@ required recovery; quiet output never substitutes for an unfinished gate.
 
 Use this only when the launch supplied a dashboard reporting context for this
 session — its project, host, launch reference, and reporting command. Without
-that context, make no dashboard report at this handoff and change nothing
-above. This applies at the final execution/review handoff, before Dough Land
-or Story Wrap Up. For a completed handoff it is after the
+that context, make no dashboard report at this handoff. This applies at the
+final execution/review handoff, before Dough Land or Story Wrap Up. For a completed handoff it is after the
 [execution-complete record](#record-execution-completion) is published and
 the completion operation's receipts are handled (including the background
 alternative's receipts, where that path was chosen).
@@ -190,12 +187,15 @@ declare the story complete, or invoke Dough Land or Story Wrap Up.
 
 ## Record execution completion
 
-After the retrospective returns, or is skipped, run the installed
-[story-obligations script](../scripts/story-obligations.mjs):
-`node '<installed-execute-plan>/scripts/story-obligations.mjs' check --plan '<PLAN.md>' --completion`.
-Use the [resolved inputs](story-obligations.md#use-the-record-at-execution-boundaries).
+After the retrospective returns, or is skipped, in Story Branch Mode first run
+`node '<installed-execute-plan>/scripts/source-freshness.mjs' check` with the
+inputs in [source freshness](source-freshness.md#run-the-check) and handle its
+result there. Then run
+`node '<installed-execute-plan>/scripts/story-obligations.mjs' check --plan '<PLAN.md>' --completion`
+with the [resolved inputs](story-obligations.md#use-the-record-at-execution-boundaries).
 A refusal blocks the execution-complete record; resolve every open return,
-receiving, or interim obligation before continuing. Then add this record to
+receiving, or interim obligation, and every unobserved commitment of a linked
+source review, before continuing. Then add this record to
 the plan after its ordered slices:
 
 ```markdown

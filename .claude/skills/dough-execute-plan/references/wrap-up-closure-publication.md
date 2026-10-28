@@ -48,7 +48,8 @@ node <installed>/dough-story-wrap-up/scripts/trunk-closure.mjs finish \
   --target-ref refs/heads/<branch> --repo <owner/repo> --host <host> \
   [--remote <remote>] [--identity <work identity>] [--created-for-work] \
   [--session-json <json>] [--coordinator <value> --observer-directory <directory>] \
-  [--default-checkout <path>] [--repository <path>]
+  [--default-checkout <path>] [--repository <path>] \
+  [--supplier-identity <identity> [--visit-settled <SHA>] [--backlog-path <path>]]
 ```
 
 It confirms the fetched target contains the before-cleanup commit, publishes
@@ -72,12 +73,32 @@ claimed. It prints one JSON line, exits 1 when `ok` is not true and 2 on a
 usage error. An `integrated_state` success gates retirement as any success
 does; report it as [completion mechanics](ci-completion-wait.md) describe.
 
+Pass the closed work's identity as `--supplier-identity` under the
+[visit rule](../../dough-product-backlog/references/supplier-dependencies.md#which-completed-work-takes-the-visit);
+`--identity` never supplies it. Once the final closure is accepted, `finish` runs the
+[current-consumer visit](../../dough-product-backlog/references/supplier-dependencies.md#visit-current-consumers-after-integration)
+from the execution worktree against `acceptedSha`. When the `visit` is
+`visited` with no consumers and no problems, the same `finish` continues to
+complete `acceptedSha` and retire, and prints that `visit` with its result.
+Any consumer, discovery problem or stopped visit stops with `step: "visit"`
+before completion, refresh or retirement; the worktree, branch and observer
+stay. Judge each consumer from its `visit`, publish owned consumer changes from
+that worktree through `deliver` on this coordinator's observer, and finish the
+visit or explicitly retain its unresolved work. Then rerun `finish` with
+`--final <acceptedSha>` and `--visit-settled <last accepted SHA>`, the last
+consumer publication or `acceptedSha` when there was none. That rerun pushes
+nothing, completes that SHA once on the same observer, and retires. It refuses
+an SHA that a later publication registered on this coordinator's observers
+descends from, naming that publication; another writer's target commits do
+not count. Without `--visit-settled`, a rerun repeats the visit only.
+
 | Result                            | Act on it                                                                                                                                                                                                                                                                                                                             |
 | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ok: true`                        | Keep `acceptedSha`, the `completion` receipt, `refresh`, and `cleanup` as operational facts; apply [completion attention](../../dough-land/SKILL.md#completion-attention)                                                                                                                                                             |
 | `step: "before-cleanup"`          | Nothing was published. Publish the before-cleanup commit through `deliver` first                                                                                                                                                                                                                                                      |
 | `step: "context"`                 | The worktree is gone. Follow its `recovery`: rerun with `--repository`, rerun with an earlier result's `acceptedSha` as `--final`, or report the unpublished final closure                                                                                                                                                            |
 | `step: "conflict"` or `"publish"` | The final closure is unpublished; the worktree, branch, and both commits remain. Follow its `recovery`                                                                                                                                                                                                                                |
+| `step: "visit"`                   | The final closure is accepted; this call has not run completion or retirement. Act on `visit` as above, or follow `reason` and `recovery` when the visit stopped, `--visit-settled` names no accepted SHA containing the closure or one earlier than a publication registered on this coordinator's observers (rerun naming that later SHA), or the worktree is gone. If an earlier `finish` printed a clean visit with no consumers and no problems before the worktree disappeared, rerun with `--final <acceptedSha>` and `--visit-settled <acceptedSha>` to finish completion and retirement. Otherwise report the unfinished visit. Resources stay |
 | `step: "observation"`             | The final closure is accepted and `finish`, which completes it on this coordinator's live observer before any ended one, completed it on none of this coordinator's observers: its owner was not named, it holds no live observer and its ended ones leave none to repeat completion on (for example, none registered the closure, or those that did, whether one or several, recorded no CI verdict for it or verdicts that differ), or it holds several live ones. Follow the step `observation.reason` names: rerun, with this coordinator's own owner input when that was missing; keep the retained one of several live observers, stop the others, and rerun; as a session that replaces the coordinator stop the recorded observer; when this coordinator's observers have ended, run `deliver` from the execution worktree to establish its own, and rerun; otherwise report lost coverage. Resources stay |
 | `step: "completion"`              | Report the receipt: a CI failure, a receipt with no verdict, or retained or unconfirmed shutdown keeps the worktree and branch. Follow its `recovery`                                                                                                                                                                                 |
 | `step: "retire"`                  | Act on `cleanup` as Dough Land's retirement result table says                                                                                                                                                                                                                                                                         |
@@ -154,11 +175,18 @@ When the launch supplied a dashboard landing context, pass it as
 before retirement.
 After remote confirmation, register only the accepted integrated SHA, the
 printed receipt, with the trunk observer. A saved branch tip or superseded merge
-candidate is not that receipt. Invoke
+candidate is not that receipt. The caller passed `--supplier-identity` under the
+[visit rule](../../dough-product-backlog/references/supplier-dependencies.md#which-completed-work-takes-the-visit)
+and acts on the printed `visit` before completion:
+publish its owned consumer changes from the same workspace through
+[the common sequence](trunk-publication.md#publish-the-candidate) to the trunk
+target, register each accepted SHA with that trunk observer, and finish or
+explicitly retain the visit. Then invoke
 [the shared completion operation](ci-monitor.md#await-the-applicable-revision-at-completion)
-once for the accepted integrated SHA on that trunk observer and handle its
-combined receipt. With a `success` receipt with confirmed shutdown as its
-gate, wrap-up then retires the execution resources under the same
+once for the final accepted SHA, the integrated SHA or the last consumer
+publication, on that trunk observer and handle its combined receipt. With
+a `success` receipt with confirmed shutdown as its gate, wrap-up then retires
+the execution resources under the same
 [Retire the worktree](../../dough-land/SKILL.md#retire-the-worktree).
 After retirement and final wording settle, apply the
 [final dashboard operation](../../dough-land/references/dashboard-completion.md)

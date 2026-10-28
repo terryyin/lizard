@@ -1,11 +1,21 @@
 # Resolve consumers of a completed supplier
 
-Use this shared procedure during a selected supplier's landing or wrap-up, or
-to explicitly correct an existing consumer agreement after supplier cleanup.
-A generic checkout landing, an increment, a queue `complete`, disappearance from
-Taken, or missing history does not establish completion. Without a selected
-completed supplier, continue the ordinary caller without satisfying dependencies.
+Use this shared procedure during completed selected work's landing or wrap-up,
+or to explicitly correct an existing consumer agreement after supplier cleanup.
 Refinement and planning remain possible while consumer execution is blocked.
+
+## Which completed work takes the visit
+
+Every completed selected work item with a recorded identity is a potential
+supplier, including planless work [judged complete](#preserve-context-before-cleanup).
+Discovery, not the agent, decides whether consumers exist; zero consumers is ordinary.
+Pass the identity explicitly: `--supplier-identity` to Story Branch `integrate`
+or Trunk `finish`, `supplierIdentity` to the Land APIs; no script defaults it,
+`finish` never derives it from `--identity`, and `integrate` without it stays
+supplier-free. Work without a recorded identity, such as a context-only or
+one-shot instruction, takes no visit. A generic checkout landing, an increment,
+a queue `complete`, disappearance from Taken, or missing history establishes no
+completion; continue such a caller without satisfying dependencies.
 
 ## Preserve context before cleanup
 
@@ -27,18 +37,39 @@ preserved or recovered, leave the affected context intact and report the gap.
 
 ## Discover and judge each current consumer
 
-Run from the established project using its installed backlog command and path:
+<a id="visit-current-consumers-after-integration"></a>
+
+Judge consumers only from the integrated project after accepted supplier
+integration. A scan of the supplier branch before integration can help preserve
+context but never establishes which consumers exist. An accepted publication
+receipt does not show that the checkout advanced: the publisher may have
+returned to the supplier branch. Visit from the owned execution checkout, never
+from an optional default checkout. Where the caller's publication command or
+API returns the selected supplier's `visit` with its accepted receipt, use that
+visit. Otherwise, and for every repeated visit, run from the owned checkout:
 
 ```sh
-node <installed>/dough-product-backlog/scripts/product-backlog.mjs discover-consumers --file <backlog> --supplier-identity <supplier identity>
+node <installed>/dough-product-backlog/scripts/product-backlog.mjs visit-consumers --file <backlog> --supplier-identity <supplier identity> --accepted-revision <accepted supplier integration SHA> --remote <authorized remote> --target <integration branch>
 ```
+
+The visit fetches the target; without the accepted revision there, it stops with
+`accepted-not-on-target`. A clean checkout behind the target fast-forwards to
+it; one already holding it is used as is. It never resets or switches branches.
+`status: "visited"` reports the `checkout.revision` it discovered from, the
+fetched `target`, and the discovery below. `status: "stopped"` changed nothing:
+`local-changes` lists them, `divergent` means the checkout and target each hold
+commits the other lacks, and `error` carries any other Git failure, such as an
+unreachable remote. Follow its `recovery`; keep those changes and the execution
+resources, and report the unfinished visit instead of judging an older view.
 
 Discovery reads current canonical homes, including queued, Taken, prepared
 unqueued stories, sibling sections and canonical corrections. Its `consumers`
 carry each current agreement and basis; `problems` identifies unreadable or
 ambiguous homes. Inspect those problems and retain affected work; never claim
 all consumers were handled when discovery is incomplete. No reverse store or
-supplier card annotation is maintained.
+supplier card annotation is maintained. `discover-consumers --supplier-identity
+<supplier identity>` reports the same discovery for the checkout as it is,
+without fetching or advancing it.
 
 For each consumer, read its canonical goal, scope, examples, recorded condition,
 preparation and current plan. If required context is missing, retain the block
@@ -105,8 +136,8 @@ Before writing, reread the consumer's goal, scope and plan and compare with the
 context used above. Changed intent or failed verification requires a new
 judgment; do not apply an old satisfaction. The command separately refuses a
 stale dependency basis or a changed agreement without explicit correction intent.
-Do not repeatedly
-retry that refusal with a refreshed basis and the same unreviewed judgment.
+Do not repeatedly retry that refusal with a refreshed basis and the same
+unreviewed judgment.
 
 <a id="apply-and-publish-a-direct-resolution"></a>
 
@@ -167,8 +198,8 @@ canonical record. Reread the corrected agreement, evidence, current basis and
 pending as before. A stale refusal requires rereading and rejudging. A repeat
 visit with an unchanged agreement preserves the first satisfied record and its
 evidence byte for byte, including a correction replay with the current basis;
-reuse unchanged unresolved
-questions/evidence rather than rewriting them as fulfilled or duplicating receipts.
+reuse unchanged unresolved questions/evidence rather than rewriting them as
+fulfilled or duplicating receipts.
 
 ## Reassess a consumer's reasons after satisfaction
 
@@ -204,10 +235,16 @@ grants no execution, and is part of the owned consumer changes below.
 
 Publish owned consumer changes using the caller's authorized publication
 workflow after accepted supplier integration. Until that publication, published
-consumers remain blocked. Wrap-up must finish this visit and publication, or
-explicitly retain unresolved dependency work with its consumer agreements,
-evidence and next action in the existing active context before retiring resources
-or deleting needed material. Do not create a reverse registry, a substitute
+consumers remain blocked. When that publication incorporated other target
+changes, run `visit-consumers` again with the same accepted supplier revision;
+judge any consumer it adds and rejudge any agreement or relevant intent it shows
+changed, then publish those outcomes the same way. Keep that workflow's ordinary
+bounded retries: report persistent contention as an unfinished visit instead of
+looping. This visit covers the integrated content it observed, not future
+consumers. Finish this visit and publication, or explicitly retain unresolved
+dependency work with its consumer agreements, evidence, discovery gaps and next
+action in the existing active context, before the caller's final completion,
+resource retirement or deletion of needed material. Do not create a reverse registry, a substitute
 completion artifact, or claim unresolved relationships were satisfied. Report
 per-consumer outcomes and reassessments, discovery gaps and retained context separately from
 supplier publication and cleanup.

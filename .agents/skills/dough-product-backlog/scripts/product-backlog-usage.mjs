@@ -193,6 +193,11 @@ decided necessary prerequisite; it never infers one from shared code or order.
 
 discover-consumers --supplier-identity <identity> reads current canonical homes
 and reports reverse agreements plus discovery problems without writing.
+visit-consumers --supplier-identity <identity> --accepted-revision <sha>
+--remote <remote> --target <branch> runs that discovery after accepted supplier
+integration from a checkout holding the fetched target: a clean checkout behind
+it fast-forwards; local changes, divergence, or a target lacking the accepted
+revision stop with nothing changed. It reports the visited revision.
 resolve-dependency records an evidenced consumer judgment with --dependency-file
 and --expect-dependencies, including waiting or decision-needed after cleanup;
 --accepted-revision <sha> --remote <remote> --target <branch> establish accepted

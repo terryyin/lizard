@@ -39,6 +39,12 @@ implemented. Preserve sibling stories and unrelated work. Unresolved ownership
 stops the affected deletion and blocks closure; do not leave an unlisted plan
 and report wrap-up complete.
 
+## Keep an active follow-up's provenance
+
+Keep an active follow-up's queue link, correction input, and provenance. If its
+source locator points into deleted predecessor history, replace the locator
+with the before-cleanup commit and repository-relative path.
+
 ## Preserve follow-up priority during reconciliation
 
 When integrating or reconciling the queued follow-up with main or this project's
