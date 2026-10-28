@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "agent": "Yumi-chan",
+  "email": "yumi-chan@example.org",
+  "identity": "SEED-010#review-lexical-js-prs",
+  "mode": "story-branch",
+  "branch": "cursor/conclude-the-javascript-and-typescript-lexical-a",
+  "host": "cursor",
+  "model": "auto"
+}

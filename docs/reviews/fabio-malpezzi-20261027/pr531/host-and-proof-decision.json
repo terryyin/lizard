@@ -1,0 +1,15 @@
+{
+  "host": "Territory.local",
+  "machine": "arm64",
+  "cpus": 16,
+  "load": [
+    10.22705078125,
+    16.16650390625,
+    13.7353515625
+  ],
+  "memory_pressure": "The system has 51539607552 (3145728 pages with a page size of 16384).\nSystem-wide memory free percentage: 49%\n",
+  "python": "3.9.11 (main, Apr 10 2022, 22:01:55) \n[Clang 11.1.0 ]",
+  "executable": "/Users/terryyin/git/lizard/.worktrees/review-correct-and-merge-fabiomalpezzi-s-open-pr/.venv/bin/python",
+  "scope": "Sequential affected API and fixed-source CLI;20alternating pairs each,1.2second calibrated batches",
+  "choice": "Run once serially; no other owned heavy work; root promises no Nix while owned. Other worktree workloads unknown. Reconsider if contention invalidates 3% threshold. Raw invalid candidate evidence may remain inconclusive."
+}

@@ -3,8 +3,7 @@
 
 class JavaScriptObjectsMixin:
     def _handle_object_member(self, token):
-        if not self.as_object:
-            return False
+        """Called for tokens in an object literal or class body (as_object)."""
         # Support for getter/setter: look for 'get' or 'set' before method name
         if token == '...':
             # What a spread takes is a value: ...(c && {f() {}}), ...g(x)
@@ -15,12 +14,19 @@ class JavaScriptObjectsMixin:
             self._getter_setter_prefix = token
             return True
         if self._getter_setter_prefix:
-            # Next token is the property name
-            self.last_tokens = f"{self._getter_setter_prefix} {token}"
-            self._getter_setter_prefix = None
-            return True
+            prefix, self._getter_setter_prefix = self._getter_setter_prefix, None
+            if token not in ('(', ':', ',', '}', '=', ';', '<'):
+                # Next token is the property name
+                self.last_tokens = f"{prefix} {token}"
+                return True
+            # A member named "get" or "set": get(key) {}, {get: f}, {get, set}
+            self.last_tokens = prefix
         if token == '[':
-            self._collect_computed_name()
+            if self._in_prop_value:
+                # An array value, {list: [[1], 2]}, not a computed name.
+                self._read_binding_candidate(']')
+            else:
+                self._collect_computed_name()
             return True
         if token == ':':
             # Only set function_name for valid identifiers
@@ -90,11 +96,13 @@ class JavaScriptObjectsMixin:
         self._async_seen = False
 
     def _collect_computed_name(self):
-        # Collect tokens between [ and ]
+        # Collect tokens between [ and its ]
         tokens = []
+        depth = [0]
 
         def collect(token):
-            if token == ']':
+            depth[0] += {'[': 1, ']': -1}.get(token, 0)
+            if depth[0] < 0:
                 # Try to join tokens and camelCase if possible
                 name = ''.join(tokens)
                 # Remove quotes and pluses for simple cases

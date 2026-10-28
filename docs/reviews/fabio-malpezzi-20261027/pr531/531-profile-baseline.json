@@ -1,0 +1,175 @@
+{
+  "checkout": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr531-target",
+  "loops": 5000,
+  "source": "function outer(x) {\n const make = x => { return {a:x} || x; };\n return make;\n}\nfunction after() { return 1; }\n",
+  "source_sha256": "dd0ae1190c8dd14bf471b1a8683fe8be4c18325b403262ffeb84f41e404737f2",
+  "observed_metrics": [
+    [
+      "make",
+      2,
+      11,
+      0,
+      2,
+      2,
+      1
+    ],
+    [
+      "outer",
+      1,
+      15,
+      1,
+      1,
+      4,
+      4
+    ],
+    [
+      "after",
+      1,
+      7,
+      0,
+      5,
+      5,
+      1
+    ]
+  ],
+  "total_seconds": 1.5079699860000007,
+  "total_calls": 7965001,
+  "selected_profile": [
+    {
+      "file": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr531-target/lizard_languages/typescript_states.py",
+      "line": 44,
+      "function": "_state_global",
+      "calls": 145000,
+      "self_seconds": 0.139609279,
+      "cumulative_seconds": 0.23274424600000002
+    },
+    {
+      "file": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr531-target/lizard_languages/token_pattern.py",
+      "line": 75,
+      "function": "tokens_in_span",
+      "calls": 310000,
+      "self_seconds": 0.112022165,
+      "cumulative_seconds": 0.16462324
+    },
+    {
+      "file": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr531-target/lizard_languages/typescript_states.py",
+      "line": 30,
+      "function": "__call__",
+      "calls": 390000,
+      "self_seconds": 0.09768144200000001,
+      "cumulative_seconds": 0.632400054
+    },
+    {
+      "file": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr531-target/lizard_languages/code_reader.py",
+      "line": 48,
+      "function": "__call__",
+      "calls": 390000,
+      "self_seconds": 0.08934191000000001,
+      "cumulative_seconds": 0.587635251
+    },
+    {
+      "file": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr531-target/lizard_languages/js_style_regex_expression.py",
+      "line": 16,
+      "function": "generate_tokens_with_regex",
+      "calls": 310000,
+      "self_seconds": 0.07645971600000001,
+      "cumulative_seconds": 0.342050793
+    },
+    {
+      "file": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr531-target/lizard_core/file_analyzer.py",
+      "line": 41,
+      "function": "line_counter",
+      "calls": 185000,
+      "self_seconds": 0.07419213100000001,
+      "cumulative_seconds": 0.637290079
+    },
+    {
+      "file": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr531-target/lizard_languages/code_reader.py",
+      "line": 141,
+      "function": "__call__",
+      "calls": 185000,
+      "self_seconds": 0.072587332,
+      "cumulative_seconds": 1.4146065300000001
+    },
+    {
+      "file": "~",
+      "line": 0,
+      "function": "<method 'startswith' of 'str' objects>",
+      "calls": 750000,
+      "self_seconds": 0.049341560000000007,
+      "cumulative_seconds": 0.049341560000000007
+    },
+    {
+      "file": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr531-target/lizard_core/file_analyzer.py",
+      "line": 16,
+      "function": "<genexpr>",
+      "calls": 210000,
+      "self_seconds": 0.048481148,
+      "cumulative_seconds": 0.40056812700000005
+    },
+    {
+      "file": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr531-target/lizard_core/file_info_builder.py",
+      "line": 87,
+      "function": "add_nloc",
+      "calls": 180000,
+      "self_seconds": 0.046646066,
+      "cumulative_seconds": 0.046646066
+    },
+    {
+      "file": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr531-target/lizard_core/file_analyzer.py",
+      "line": 19,
+      "function": "comment_counter",
+      "calls": 210000,
+      "self_seconds": 0.042937402,
+      "cumulative_seconds": 0.502187767
+    },
+    {
+      "file": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr531-target/lizard_core/file_analyzer.py",
+      "line": 57,
+      "function": "token_counter",
+      "calls": 185000,
+      "self_seconds": 0.038606204000000005,
+      "cumulative_seconds": 0.675896283
+    },
+    {
+      "file": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr531-target/lizard_languages/token_pattern.py",
+      "line": 71,
+      "function": "_token_text",
+      "calls": 305000,
+      "self_seconds": 0.033213224,
+      "cumulative_seconds": 0.051641961
+    },
+    {
+      "file": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr531-target/lizard_languages/clike.py",
+      "line": 18,
+      "function": "get_comment_from_token",
+      "calls": 205000,
+      "self_seconds": 0.033097510000000004,
+      "cumulative_seconds": 0.058682238000000005
+    },
+    {
+      "file": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr531-target/lizard_languages/javascript_templates.py",
+      "line": 96,
+      "function": "template_tokens",
+      "calls": 310000,
+      "self_seconds": 0.028048305000000003,
+      "cumulative_seconds": 0.204924459
+    },
+    {
+      "file": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr531-target/lizard_languages/typescript_states.py",
+      "line": 13,
+      "function": "__init__",
+      "calls": 25000,
+      "self_seconds": 0.012164125000000001,
+      "cumulative_seconds": 0.027352300000000003
+    },
+    {
+      "file": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr531-target/lizard_languages/javascript_functions.py",
+      "line": 32,
+      "function": "_arrow_function",
+      "calls": 5000,
+      "self_seconds": 0.0022563,
+      "cumulative_seconds": 0.046831765000000004
+    }
+  ]
+}

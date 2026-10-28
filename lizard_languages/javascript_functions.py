@@ -1,16 +1,53 @@
-"""JavaScript function signatures, bodies, and optimistic arrow recognition."""
+"""JavaScript function signatures, bodies, optimistic arrow recognition,
+and where an expression-bodied arrow ends."""
 
 from .javascript_bindings import JavaScriptBindings
 
+# Words that still need an operand, so a line break after them continues.
+OPERAND_WORDS = frozenset((
+    'in', 'instanceof', 'typeof', 'new', 'await', 'void', 'delete', 'yield',
+    'of', 'as', 'satisfies', 'keyof'))
 
-# TypeScript type keywords that should not be counted as parameters
-_TS_TYPE_KEYWORDS = frozenset([
-    'string', 'number', 'boolean', 'void', 'any',
-    'object', 'unknown', 'never',
-])
+
+def ends_expression(token):
+    """Whether an expression may end with this token (JavaScript ASI)."""
+    first = token[:1]
+    if first.isalnum() or first in ('_', '$', '#', "'", '"', '`'):
+        return token not in OPERAND_WORDS
+    return (token in (')', ']', '}', '++', '--')
+            or (first == '/' and len(token) > 2)  # regular expression literal
+            or (first == '<' and (token.startswith('</')  # JSX element end
+                                  or token.endswith('/>'))))
+
+
+def starts_statement(token):
+    """Whether this line-start token cannot continue the previous line."""
+    first = token[0]
+    if first.isalnum() or first in ('_', '$', '#', "'", '"'):
+        # TypeScript reads `as`/`satisfies` after a line break as a statement.
+        return token not in ('in', 'instanceof')
+    # Restricted ++/--, prefix-only operators, blocks, decorators and closers.
+    return token in ('++', '--', '!', '~', '{', '@', '}', ')', ']')
+
+
+def parameter_group(prefix):
+    return (prefix is None or prefix in ('return', 'yield', 'await', 'async')
+            or (not ends_expression(prefix) and prefix not in ('.', '?.', 'new')))
 
 
 class JavaScriptFunctionsMixin:
+    def return_annotation_context(self):
+        """Return ternary depth and whether the completed group proves a signature."""
+        state = self
+        while isinstance(state._state, self.__class__):
+            state = state._state
+        group = getattr(state, '_parenthesis_group', None)
+        if (state._state == state._state_global and state.last_token == ')'
+                and group is not None and parameter_group(state._parenthesis_prefix)):
+            return (state._ternary_depth,
+                    group._empty_parenthesis or getattr(group, '_typed_parameters', False))
+        return None
+
     def _push_function_to_stack(self):
         if self._in_abstract_context:
             return
@@ -20,17 +57,64 @@ class JavaScriptFunctionsMixin:
     def _pop_function_from_stack(self):
         if self.started_function:
             self.context.end_of_function()
+        if self._expression_body:
+            self._close_expression_body()
         self.started_function = None
         self._in_prop_value = False
 
+    def end_expression_before(self, token):
+        """Called by the reader with a line's first token before it is
+        counted, so an ended arrow keeps none of the next statement."""
+        if (self._state == self._state_global
+                and ends_expression(self.last_token)
+                and starts_statement(token)):
+            self._end_statement()
+
     def _abandon_function(self):
         """Discard an optimistic signature that proved to be an expression."""
+        expression = self.context.current_function
         self.context.forgive = True
         self.context.end_of_function()
         self.started_function = None
+        # Conditions, tokens and lines of the expression, as in
+        # "x = (a && b) || c", belong to the function around it; its first
+        # token and line are counted there already. Parameter defaults stay out.
+        self.context.add_condition(expression.cyclomatic_complexity - 1
+                                   - self._parameter_bindings.defaults)
+        self.context.current_function.token_count += expression.token_count - 1
+        self.context.current_function.nloc += expression.nloc - 1
+        if self._expression_body:
+            self._close_expression_body()
+
+    def _abandon_optimistic_parameter_group(self):
+        """Grouped expression (IIFE), not parameters; keep the open "("."""
+        self._abandon_function()
+        self._open_groups += 1
+
+    def _end_grouped_function_expression(self):
+        """")" closes "(() => …)" / "(function () {})", not the outer block."""
+        self._open_groups -= 1
+        self._pop_function_from_stack()
+
+    def _close_expression_body(self):
+        self._expression_body = False
+        self.context.expression_arrows.remove(self)
 
     def _arrow_function(self, token):
         self._push_arrow_function()
+        if token == '{':
+            # A block body closes any expression body (`a => b => {}`).
+            if self._expression_body:
+                self._close_expression_body()
+        elif self.started_function and not self._expression_body:
+            # An expression body has no closing token, so a later "{" is an
+            # object operand; the reader asks the innermost open one at each
+            # line start (end_expression_before). Function-type "=>" must not
+            # reach here (see type annotation states).
+            self._expression_body = True
+            # Nested curried arrows reuse this function and keep its owner.
+            self._expression_ternary_depth = self._ternary_depth
+            self.context.expression_arrows.append(self)
         # Clear function_name so expression-body ( doesn't re-enter _function
         self.function_name = ''
         # Clear modifiers so the body's opening { isn't captured by the
@@ -62,48 +146,27 @@ class JavaScriptFunctionsMixin:
         else:
             if not self.started_function:
                 self._push_function_to_stack()
-            self._generic_depth_in_dec = 0
-            self._parameter_bindings = JavaScriptBindings(')')
+            self._parameter_bindings = JavaScriptBindings(
+                ')', self.context.current_function)
             self._state = self._dec
             self.context.add_to_long_function_name(" " + token)
 
     def _dec(self, token):
         if token == '(' and self._parameter_bindings.at_start:
             # Grouped expression, such as an arrow IIFE, rather than parameters.
-            self._abandon_function()
+            self._abandon_optimistic_parameter_group()
             self.next(self._state_global)
             self._read_binding_candidate(')')
             return
         if token == 'function' and not self._parameter_bindings.defaults:
             # The optimistic named-arrow signature is an IIFE expression.
-            self._abandon_function()
+            self._abandon_optimistic_parameter_group()
             self.next(self._state_global, token)
             return
         event = self._read_parameter_binding(token)
         if event.ended:
             self._state = self._expecting_func_opening_bracket
         elif (not event.in_expression or event.root_separator) and token != '(':
-            # Filter out TypeScript type keywords and operators from parameter count
-            if token == ',':
-                # Ignore commas inside generic type brackets: Map<K, V>
-                if event.root_separator and not getattr(self, '_generic_depth_in_dec', 0):
-                    self.context.parameter(',')
-            elif token == '<':
-                self._generic_depth_in_dec = getattr(
-                    self, '_generic_depth_in_dec', 0) + 1
-            elif token == '>':
-                depth = getattr(self, '_generic_depth_in_dec', 0)
-                if depth > 0:
-                    self._generic_depth_in_dec = depth - 1
-            elif token in _TS_TYPE_KEYWORDS:
-                pass
-            elif token in ('*', '+', '-', '/', '%', '=', '.'):
-                pass
-            elif not getattr(self, '_generic_depth_in_dec', 0):
-                if (token.replace('_', '').replace('?', '').isalnum() and
-                        token.replace('?', '') and
-                        token.replace('?', '')[0].isalpha()):
-                    self.context.parameter(token.replace('?', ''))
             return
         self.context.add_to_long_function_name(" " + token)
 
@@ -123,3 +186,14 @@ class JavaScriptFunctionsMixin:
             if self.started_function:
                 self._abandon_function()
         self.next(self._state_global, token)
+
+    def _field(self, token):
+        if token in ('(', '['):
+            # Optional calls and subscripts retain ordinary bracket handling;
+            # arguments may contain arrow functions and nested expressions.
+            self.function_name = ''
+            self._prev_token = '.'
+            self.next(self._state_global, token)
+            return
+        self.last_tokens += token
+        self._state = self._state_global
