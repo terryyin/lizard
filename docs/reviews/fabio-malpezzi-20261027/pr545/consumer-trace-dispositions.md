@@ -62,8 +62,16 @@ Records: consumer-trace.md (full HEAD), consumer-trace-product.md (path-scoped).
 | `.planning/slice-plans/007-lexical-js-pr-reviews/PLAN.md` | excluded: planning authority |
 | `docs/adrs/0000-use-adrs-accepted.md`, `0001-ubiquitous-language-accepted.md` | reused: terminology (reader, CCN, condition, token) |
 
+## Slice-2 hot-path trim (attempt10)
+
+`TypeScriptReader.__call__` restored the attempt8-style `after_interpolation` /
+bound `scan_atomic` checks so ordinary JS/TS tokens avoid a per-token
+`_count_conditions_from_token` method call. `process_token` still uses that
+helper; interpolation keyword-member undo (#546) remains inside
+`_count_interpolation_conditions`. Consumers unchanged: same JS/TS/TSX/Vue
+paths; re-run focused suite after trim.
+
 ## Deferred residual
 
-Keyword member name inside a template interpolation (e.g. `${p.catch(f)}`) may
-still count after #545; story names that residual as a follow-up after #546.
-Not treated as in-scope ≤15-minute fix here.
+Keyword-member residual inside interpolations is a regression guard only after
+#546 (not reopened here).

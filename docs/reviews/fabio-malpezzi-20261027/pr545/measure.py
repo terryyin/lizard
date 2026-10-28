@@ -7,7 +7,10 @@ import subprocess
 import sys
 
 REPO = Path(__file__).resolve().parents[4]
-EVIDENCE = Path(__file__).resolve().parent
+EVIDENCE_ROOT = Path(__file__).resolve().parent
+ATTEMPT = 'attempt10'
+EVIDENCE = EVIDENCE_ROOT / ATTEMPT
+EVIDENCE.mkdir(parents=True, exist_ok=True)
 CACHE = Path('/Users/terryyin/.cache/lizard-pr-reviews-20261027')
 ROOT = CACHE / 'pr545'
 PROOF = ROOT / 'proof'
@@ -56,16 +59,22 @@ assert set(changed) == {
     'lizard_languages/javascript_templates.py',
     'lizard_languages/typescript.py',
     'lizard_languages/tsx.py'}, changed
-(EVIDENCE / 'snapshot-hashes.json').write_text(json.dumps(
-    [{'path': name,
-      'target': hashes['target'][name],
-      'corrected': hashes['corrected'][name],
-      'baseline': hashes['baseline'].get(name)}
-     for name in changed], indent=2) + '\n')
+snapshot = [
+    {'path': name,
+     'target': hashes['target'][name],
+     'corrected': hashes['corrected'][name],
+     'baseline': hashes['baseline'].get(name)}
+    for name in changed]
+(EVIDENCE / 'snapshot-hashes.json').write_text(
+    json.dumps(snapshot, indent=2) + '\n')
+(EVIDENCE_ROOT / 'snapshot-hashes.json').write_text(
+    json.dumps(snapshot, indent=2) + '\n')
 
-decision = json.loads((EVIDENCE / 'measurement-decision.json').read_text())
+decision = json.loads((EVIDENCE_ROOT / 'measurement-decision.json').read_text())
 attempt = None
-for key in ('attempt8', 'attempt7', 'attempt6', 'attempt5', 'attempt4', 'attempt3', 'attempt2', 'attempt1'):
+for key in (
+        'attempt10', 'attempt9', 'attempt8', 'attempt7', 'attempt6',
+        'attempt5', 'attempt4', 'attempt3', 'attempt2', 'attempt1'):
     if key in decision and 'api_seconds' in decision[key]:
         attempt = decision[key]
         break
@@ -120,7 +129,8 @@ for phase, baseline in [
 if affected_dir.exists():
     shutil.rmtree(affected_dir)
 shutil.copytree(affected_backup, affected_dir)
-(EVIDENCE / 'measurement-summary.json').write_text(
-    json.dumps(results, indent=2) + '\n')
+summary_text = json.dumps(results, indent=2) + '\n'
+(EVIDENCE / 'measurement-summary.json').write_text(summary_text)
+(EVIDENCE_ROOT / 'measurement-summary.json').write_text(summary_text)
 assert all(item['passes'] for item in results.values()), results
 print(json.dumps({'all_pass': True, 'workloads': list(results)}, indent=2))

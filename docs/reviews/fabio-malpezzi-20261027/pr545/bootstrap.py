@@ -11,14 +11,14 @@ REPO = Path(__file__).resolve().parents[4]
 EVIDENCE = Path(__file__).resolve().parent
 CACHE = Path('/Users/terryyin/.cache/lizard-pr-reviews-20261027')
 ROOT = CACHE / 'pr545'
-TARGET = '35b454b778239846de4b467715717f67ac4bc6c3'
+TARGET = '949984c0eb089333cf70ac3f40c1e2e75c9c8002'
 HEAD = 'baa95a4df8278421bb3d3a6487516030cc03a979'
 BASELINE = '2e21e404c1ab9f4e0b49acc80816e816629d0670'
 PRODUCT = [
     'lizard_languages/javascript_templates.py',
     'lizard_languages/typescript.py',
     'lizard_languages/tsx.py',
-    'test/test_languages/testTypeScript.py',
+    'test/test_languages/testTypeScriptInterpolationConditions.py',
 ]
 ROOT.mkdir(parents=True, exist_ok=True)
 

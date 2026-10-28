@@ -135,11 +135,20 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         consume = CodeStateMachine.__call__.__get__(state)
         previous = self._previous_token
         conditions = self.conditions
-        count_from = self._count_conditions_from_token
+        # Bind once: ordinary JS/TS tokens pay only after_interpolation / '${'
+        # checks; TSX/JSX keep the atomic backtick scan on the rare path.
+        after_interpolation = previous == '${'
+        scan_atomic = type(self)._scan_atomic_templates
         for token in tokens:
             if previous in ('.', '?.') and token in conditions:
                 self.context.add_condition(-1)
-            count_from(previous, token)
+            if after_interpolation:
+                self._count_interpolation_conditions(token, True)
+                after_interpolation = False
+            elif token == '${':
+                after_interpolation = True
+            elif scan_atomic and token[:1] == '`' and '${' in token:
+                self._count_interpolation_conditions(token, False)
             previous = token
             consume(token)
             yield token

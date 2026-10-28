@@ -79,7 +79,7 @@ until slice 2 disposes the PR.
 
 ### 2. Performance-qualify and dispose PR #545
 Type: Behavior
-Status: planned
+Status: done
 Source: https://github.com/terryyin/lizard/pull/545 — frozen head
 `baa95a4df8278421bb3d3a6487516030cc03a979` (refresh before publish)
 Proof: All six contract comparisons' paired 95% upper bounds strictly &lt;3%
@@ -126,6 +126,14 @@ rather than a separate outcome.
   `inputs.json` 16/16; catch guard CCN 1 ×4;
   `test/test_languages/testTypeScriptInterpolationConditions.py`; focused
   JS/TS/ES6/JSX/TSX/Vue suite 628 passed / 5 skipped.
+- Slice 2: attempt9 re-adapted candidate failed `incremental-api` (upper
+  +5.02%); one eligible trim restored attempt8-style `after_interpolation`
+  inline on `TypeScriptReader.__call__`. Attempt10 all six gates passed
+  (max upper +2.449%). Published to contributor head without force
+  (`6f5638b`), exact-head merged (`d0ecc33`), thanks
+  https://github.com/terryyin/lizard/pull/545#issuecomment-6483363609.
+  Keep the hot-path inline shape; do not reintroduce per-token method
+  dispatch on `__call__` without a new six-gate pass.
 
 ## Concern evidence
 
