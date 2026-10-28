@@ -529,3 +529,50 @@ class Test_ES6_arrow_function_after_a_member_access(unittest.TestCase):
             "const v = r.status, f = (a, b, c) => { return a; };\n"
         )
         self.assertEqual([('add', 2, 1), ('f', 3, 1)], self.summary(code))
+
+
+class Test_ES6_parenthesized_expression_after_an_assignment(unittest.TestCase):
+    """"name = (" may start an arrow function or a parenthesized expression."""
+
+    def test_conditions_tokens_and_lines_stay_with_the_function(self):
+        code = (
+            "function f(a, b) {\n"
+            "  const ok = (a &&\n"
+            "    b) || a;\n"
+            "  return ok;\n"
+            "}\n"
+        )
+        same_on_one_line = (
+            "function f(a, b) {\n"
+            "  const ok = a &&\n"
+            "    b || a;\n"
+            "  return ok;\n"
+            "}\n"
+        )
+        for filename in ("a.js", "a.ts"):
+            expected = analyze_file.analyze_source_code(
+                filename, same_on_one_line).function_list[0]
+            function = analyze_file.analyze_source_code(
+                filename, code).function_list[0]
+            self.assertEqual(
+                (3, 5, expected.token_count + 2),
+                (function.cyclomatic_complexity, function.nloc,
+                 function.token_count), filename)
+
+    def test_call_spread_in_an_object(self):
+        code = (
+            "function merge(m, i) {\n"
+            "  return { ...g(i ? 1 : 2), u: m || 0 };\n"
+            "}\n"
+        )
+        self.assertEqual([('merge', 3)],
+                         [(f.name, f.cyclomatic_complexity)
+                          for f in get_js_function_list(code)])
+
+    def test_real_arrow_keeps_defaults_and_body_ccn(self):
+        # default `=` + `||` in the default + body `?` stay on the arrow
+        code = "const f = (a = x || y, b) => a ? b : 0;"
+        functions = get_js_function_list(code)
+        self.assertEqual([('f', 2, 4)],
+                         [(fn.name, fn.parameter_count, fn.cyclomatic_complexity)
+                          for fn in functions])
