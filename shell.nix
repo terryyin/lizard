@@ -14,13 +14,13 @@ in mkShell {
     git less
   ];
   shellHook = ''
-    # Create and activate virtual environment
-    python -m venv .venv
+    # Prepare once; warm entry reuses without reinstall chatter.
+    if [ ! -x .venv/bin/python ]; then
+      python -m venv .venv
+      .venv/bin/pip install -r dev_requirements.txt
+    fi
     source .venv/bin/activate
-    
-    # Install dependencies
-    pip install -r dev_requirements.txt
-    
+
     # Add local bin to PATH
     export PATH=$PATH:$PWD/.venv/bin
   '';

@@ -2,6 +2,7 @@
 
 **Identity:** SEED-018#repeatable-shell-entry
 **Source:** [canonical story](../../seeds/SEED-018-repeatable-shell-entry.md#repeatable-shell-entry)
+**Source review:** [source-review.md](./source-review.md)
 
 ## Outcome and boundaries
 
@@ -72,11 +73,14 @@ Nix-prefixed tooling.
 
 ### 1. Reuse prepared environment on unchanged shell entry
 Type: Behavior
-Status: planned
-Proof: Isolated checkout observations — cold import success; warm serial entry
-stdout free of pip install chatter with usable imports; two concurrent warm
-read-only entries both succeed and leave a usable environment; warm path no
-longer re-emits the platformdirs/virtualenv conflict as install output.
+Status: done
+Proof: Accepted — `shell.nix` prepares when `.venv/bin/python` missing, else
+activates without pip. Cold: isolated checkout `COLD_OK` + `.venv` left
+(`/tmp/lizard-shell-slice1-cold.out`). Warm: execution checkout
+`nix develop -c python -c 'import pytest; print("WARM_OK")'` → stdout `WARM_OK`
+only, no Requirement/Collecting/Successfully/platformdirs. Overlap: concurrent
+`A_OK`/`B_OK` exit 0, no pip chatter; env remains importable. Post-refactor warm
+recheck same.
 
 Behavior: Given a repository checkout whose Nix shell preparation has already
 succeeded and whose dependency inputs are unchanged, when a contributor or agent
@@ -115,7 +119,17 @@ no longer only queued.
 
 ## Learnings
 
-(none yet)
+Warm gate `test -x .venv/bin/python` is enough for non-mutating reuse; hashing
+inputs can wait for slice 2 refresh. Concurrent warm entries are safe once prep
+is skipped on the warm path.
+
+## Story obligations
+
+### G1. Deferred promises outside this story
+Reported: slice 1 — "Deferred promises outside this story (parser/analyzer, performance harness, shared guidance, latency claims, non-Nix installs)."
+Story clause: "Deferred promises: parser or analyzer changes; performance-harness redesign; shared Open Dough guidance or host-policy changes; inventing a latency or timing claim beyond before/after evidence of the reported platformdirs/virtualenv mismatch and the observable reuse/refresh behavior; changing how non-Nix workflows install dependencies."
+Disposition: excluded "Deferred promises: parser or analyzer changes; performance-harness redesign; shared Open Dough guidance or host-policy changes; inventing a latency or timing claim beyond before/after evidence of the reported platformdirs/virtualenv mismatch and the observable reuse/refresh behavior; changing how non-Nix workflows install dependencies."
+Commitment: 21, 21.1, 21.2, 21.3, 21.4, 21.5
 
 ## Concern evidence
 
