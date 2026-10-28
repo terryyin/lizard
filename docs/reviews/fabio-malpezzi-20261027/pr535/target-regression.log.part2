@@ -1,0 +1,32 @@
+E         NLOC    Avg.NLOC  AvgCCN  Avg.token  function_cnt    file
+E         --------------------------------------------------------------
+E               3       3.0     1.0       14.0         1     /private/tmp/nix-shell.6q4xOT/pytest-of-terryyin/pytest-0/test_receiver_cli_warning_thre0/receiver.ts
+E
+E         =========================================================================================================
+E         !!!! Warnings (cyclomatic_complexity > 15 or length > 1000 or nloc > 1000000 or parameter_count > 1) !!!!
+E         ================================================
+E           NLOC    CCN   token  PARAM  length  location
+E         ------------------------------------------------
+E                3      1     14      2       3 onClick@1-3@/private/tmp/nix-shell.6q4xOT/pytest-of-terryyin/pytest-0/test_receiver_cli_warning_thre0/receiver.ts
+E         ==========================================================================================
+E         Total nloc   Avg.NLOC  AvgCCN  Avg.token   Fun Cnt  Warning cnt   Fun Rt   nloc Rt
+E         ------------------------------------------------------------------------------------------
+E                  3       3.0     1.0       14.0        1            1      1.00    1.00
+E
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/Users/terryyin/git/lizard/.worktrees/review-correct-and-merge-fabiomalpezzi-s-open-pr/.venv/b...-----------------------\n         3       3.0     1.0       14.0        1            1      1.00    1.00\n', stderr='').returncode
+
+test/test_languages/testTypeScriptThisParameters.py:111: AssertionError
+=========================== short test summary info ============================
+FAILED test/test_languages/testTypeScriptThisParameters.py::test_authored_receiver_examples[ts]
+FAILED test/test_languages/testTypeScriptThisParameters.py::test_authored_receiver_examples[tsx]
+FAILED test/test_languages/testTypeScriptThisParameters.py::test_receiver_in_functions_and_methods[function read(this: Reader, value: string) { return this.value + value; }-ts]
+FAILED test/test_languages/testTypeScriptThisParameters.py::test_receiver_in_functions_and_methods[function read(this: Reader, value: string) { return this.value + value; }-tsx]
+FAILED test/test_languages/testTypeScriptThisParameters.py::test_receiver_in_functions_and_methods[class Reader { read(this: Reader, value: string) { return this.value + value; } }-ts]
+FAILED test/test_languages/testTypeScriptThisParameters.py::test_receiver_in_functions_and_methods[class Reader { read(this: Reader, value: string) { return this.value + value; } }-tsx]
+FAILED test/test_languages/testTypeScriptThisParameters.py::test_receiver_in_functions_and_methods[const reader = { read(this: Reader, value: string) { return this.value + value; } };-ts]
+FAILED test/test_languages/testTypeScriptThisParameters.py::test_receiver_in_functions_and_methods[const reader = { read(this: Reader, value: string) { return this.value + value; } };-tsx]
+FAILED test/test_languages/testTypeScriptThisParameters.py::test_receiver_does_not_hide_actual_defaults_or_body_complexity
+FAILED test/test_languages/testTypeScriptThisParameters.py::test_receiver_parameter_consumers
+FAILED test/test_languages/testTypeScriptThisParameters.py::test_receiver_cli_warning_threshold
+11 failed, 17 passed in 0.12s

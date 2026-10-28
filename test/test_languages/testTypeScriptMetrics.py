@@ -30,6 +30,26 @@ class Test_ts_param_type_filtering(unittest.TestCase):
         functions = get_ts_function_list(code)
         self.assertEqual(3, functions[0].parameter_count)
 
+    def test_parameters_named_as_a_type_keyword(self):
+        code = (
+            "function round(number: number, precision: number) { return 1; }\n"
+            "function widest(string: string): number { return 1; }\n"
+            "function json(object: any, _: unknown): T { return 1; }\n"
+        )
+        functions = get_ts_function_list(code)
+        self.assertEqual([('round', 2), ('widest', 1), ('json', 2)],
+                         [(f.name, f.parameter_count) for f in functions])
+
+    def test_this_parameter_is_not_a_parameter(self):
+        code = (
+            "function a(this: Window, x: number) { return x; }\n"
+            "const b = async function* (this: Reader) { yield 1; }\n"
+            "function c(this: Map<string, number>, x: number) { return x; }\n"
+        )
+        functions = get_ts_function_list(code)
+        self.assertEqual([('a', 1), ('b', 0), ('c', 1)],
+                         [(f.name, f.parameter_count) for f in functions])
+
     def test_parameter_count_with_union_return_type_and_following_function(self):
         """Issue #476: union return type must not swallow the body opening brace."""
         code = '''

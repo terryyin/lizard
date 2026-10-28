@@ -1,0 +1,84 @@
+........FFFF................                                             [100%]
+=================================== FAILURES ===================================
+___ test_this_property_is_part_of_a_real_binding[{first, this: receiver}-js] ___
+
+binding = '{first, this: receiver}', extension = 'js'
+
+    @pytest.mark.parametrize('extension', ['js', 'ts', 'jsx', 'tsx'])
+    @pytest.mark.parametrize('binding', [
+        '{first, this: receiver}', '{this: receiver}',
+        '{this: receiver = this.fallback}',
+    ])
+    def test_this_property_is_part_of_a_real_binding(binding, extension):
+        function, = functions('function unpack(' + binding + ', tail) '
+                              '{ return this.value; }', extension)
+>       assert function.parameters == ['receiver', 'tail']
+E       AssertionError: assert ['first', 'tail'] == ['receiver', 'tail']
+E
+E         At index 0 diff: 'first' != 'receiver'
+E         Use -v to get more diff
+
+test/test_languages/testTypeScriptThisParameters.py:57: AssertionError
+___ test_this_property_is_part_of_a_real_binding[{first, this: receiver}-ts] ___
+
+binding = '{first, this: receiver}', extension = 'ts'
+
+    @pytest.mark.parametrize('extension', ['js', 'ts', 'jsx', 'tsx'])
+    @pytest.mark.parametrize('binding', [
+        '{first, this: receiver}', '{this: receiver}',
+        '{this: receiver = this.fallback}',
+    ])
+    def test_this_property_is_part_of_a_real_binding(binding, extension):
+        function, = functions('function unpack(' + binding + ', tail) '
+                              '{ return this.value; }', extension)
+>       assert function.parameters == ['receiver', 'tail']
+E       AssertionError: assert ['first', 'tail'] == ['receiver', 'tail']
+E
+E         At index 0 diff: 'first' != 'receiver'
+E         Use -v to get more diff
+
+test/test_languages/testTypeScriptThisParameters.py:57: AssertionError
+__ test_this_property_is_part_of_a_real_binding[{first, this: receiver}-jsx] ___
+
+binding = '{first, this: receiver}', extension = 'jsx'
+
+    @pytest.mark.parametrize('extension', ['js', 'ts', 'jsx', 'tsx'])
+    @pytest.mark.parametrize('binding', [
+        '{first, this: receiver}', '{this: receiver}',
+        '{this: receiver = this.fallback}',
+    ])
+    def test_this_property_is_part_of_a_real_binding(binding, extension):
+        function, = functions('function unpack(' + binding + ', tail) '
+                              '{ return this.value; }', extension)
+>       assert function.parameters == ['receiver', 'tail']
+E       AssertionError: assert ['first', 'tail'] == ['receiver', 'tail']
+E
+E         At index 0 diff: 'first' != 'receiver'
+E         Use -v to get more diff
+
+test/test_languages/testTypeScriptThisParameters.py:57: AssertionError
+__ test_this_property_is_part_of_a_real_binding[{first, this: receiver}-tsx] ___
+
+binding = '{first, this: receiver}', extension = 'tsx'
+
+    @pytest.mark.parametrize('extension', ['js', 'ts', 'jsx', 'tsx'])
+    @pytest.mark.parametrize('binding', [
+        '{first, this: receiver}', '{this: receiver}',
+        '{this: receiver = this.fallback}',
+    ])
+    def test_this_property_is_part_of_a_real_binding(binding, extension):
+        function, = functions('function unpack(' + binding + ', tail) '
+                              '{ return this.value; }', extension)
+>       assert function.parameters == ['receiver', 'tail']
+E       AssertionError: assert ['first', 'tail'] == ['receiver', 'tail']
+E
+E         At index 0 diff: 'first' != 'receiver'
+E         Use -v to get more diff
+
+test/test_languages/testTypeScriptThisParameters.py:57: AssertionError
+=========================== short test summary info ============================
+FAILED test/test_languages/testTypeScriptThisParameters.py::test_this_property_is_part_of_a_real_binding[{first, this: receiver}-js]
+FAILED test/test_languages/testTypeScriptThisParameters.py::test_this_property_is_part_of_a_real_binding[{first, this: receiver}-ts]
+FAILED test/test_languages/testTypeScriptThisParameters.py::test_this_property_is_part_of_a_real_binding[{first, this: receiver}-jsx]
+FAILED test/test_languages/testTypeScriptThisParameters.py::test_this_property_is_part_of_a_real_binding[{first, this: receiver}-tsx]
+4 failed, 24 passed in 0.16s

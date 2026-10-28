@@ -1,0 +1,63 @@
+{
+  "base": "3a11bc6a5452be40a32721b5f6e2ab2fa787ca83",
+  "original_head": "171079e625966ac9c17aee29a5d74256befd85ae",
+  "anticipated_merge_tree": "cf67b36f7ecb3f066d72727ff9a1a5db1c6afaff",
+  "http_before": {
+    "baseline_observation": true,
+    "imports": {
+      "index": "/private/tmp/lizard-pr532-validation/index.py",
+      "lizard": "/private/tmp/lizard-pr532-validation/lizard.py",
+      "lizard_languages": "/private/tmp/lizard-pr532-validation/lizard_languages/__init__.py",
+      "lizard_languages.javascript_functions": "/private/tmp/lizard-pr532-validation/lizard_languages/javascript_functions.py",
+      "lizard_languages.typescript_states": "/private/tmp/lizard-pr532-validation/lizard_languages/typescript_states.py",
+      "lizard_core.function_info": "/private/tmp/lizard-pr532-validation/lizard_core/function_info.py"
+    },
+    "observations": [
+      {
+        "name": "onClick",
+        "count": 2,
+        "status": 200
+      }
+    ]
+  },
+  "http_after": {
+    "baseline_observation": false,
+    "imports": {
+      "index": "/private/tmp/lizard-pr532-validation/index.py",
+      "lizard": "/private/tmp/lizard-pr532-validation/lizard.py",
+      "lizard_languages": "/private/tmp/lizard-pr532-validation/lizard_languages/__init__.py",
+      "lizard_languages.javascript_functions": "/private/tmp/lizard-pr532-validation/lizard_languages/javascript_functions.py",
+      "lizard_languages.typescript_states": "/private/tmp/lizard-pr532-validation/lizard_languages/typescript_states.py",
+      "lizard_core.function_info": "/private/tmp/lizard-pr532-validation/lizard_core/function_info.py"
+    },
+    "observations": [
+      {
+        "name": "onClick",
+        "count": 1,
+        "status": 200
+      },
+      {
+        "name": "b",
+        "count": 0,
+        "status": 200
+      },
+      {
+        "name": "render",
+        "count": 3,
+        "status": 200
+      },
+      {
+        "name": "unpack",
+        "count": 2,
+        "status": 200
+      }
+    ]
+  },
+  "pytest": [
+    "================= 1780 passed, 7 skipped, 24 warnings in 2.72s ================="
+  ],
+  "make": [
+    "================= 1780 passed, 7 skipped, 24 warnings in 3.74s =================",
+    "Your code has been rated at 9.12/10 (previous run: 9.12/10, +0.00)"
+  ]
+}

@@ -21,14 +21,17 @@ class VueReader(TypeScriptReader):
         addition = addition + r"|(?:\<\/?\w+.*?\>)"
         return TypeScriptReader.generate_tokens(source_code, addition, token_class)
 
-    def preprocess(self, tokens):
-        current_block = None
-
+    @staticmethod
+    def code_tokens(tokens):
+        """Script tokens only; keep newline count of every filtered token."""
+        in_script = False
         for token in tokens:
             if token.startswith('<script'):
-                current_block = 'script'
+                in_script = True
             elif token.startswith('</script'):
-                current_block = None
-            elif current_block == 'script':
-                if not token.isspace() or token == '\n':
-                    yield token
+                in_script = False
+            elif in_script:
+                yield token
+                continue
+            for _ in range(token.count('\n')):
+                yield '\n'
