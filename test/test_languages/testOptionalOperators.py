@@ -117,3 +117,22 @@ def test_tsx_optional_operators_in_jsx():
                      '  return n > 1 ? <A/> : <B x={p.f()?.g}/>;\n'
                      '};\n', 'tsx')
     assert [f.cyclomatic_complexity for f in result.function_list] == [3]
+
+
+@pytest.mark.parametrize('suffix', ['js', 'ts', 'jsx', 'tsx'])
+def test_ternary_without_spaces_is_a_decision(suffix):
+    result = analyze('function f(x, y) { return x?y:0; }\n'
+                     'function g(x) { return x?1:x?.y?2:3; }', suffix)
+    assert [f.cyclomatic_complexity for f in result.function_list] == [2, 3]
+
+
+@pytest.mark.parametrize('suffix', ['ts', 'tsx'])
+def test_optional_member_and_parameter_are_not_ternaries(suffix):
+    result = analyze('class A {\n'
+                     '  name?: string;\n'
+                     '  m(a?: number, b?: string): number { return 1; }\n'
+                     '}\n'
+                     'function f(cb: (a?: number, b?) => void) { return 1; }\n',
+                     suffix)
+    assert [(f.name, f.cyclomatic_complexity, f.parameter_count)
+            for f in result.function_list] == [('m', 1, 2), ('f', 1, 1)]

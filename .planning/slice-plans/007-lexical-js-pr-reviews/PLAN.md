@@ -158,10 +158,15 @@ routing every token through `process_token` fails the &lt;3% gate under load.
 
 ### 4. Ternary and optional markers — PR #547
 Type: Behavior
-Status: planned
+Status: done
 Source: https://github.com/terryyin/lizard/pull/547
 Frozen head: `2766557096daac3f8e55657e9c48ba685157635d`
 Proof: [slice 4](SLICE-PROOF.md); complete-cycle gates owned here.
+Accepted proof: unspaced ternary CCN 2; optional field/params `m` CCN 1;
+focused 649 / full 2135; attempt1 six performance gates pass (worst upper
+1.897%). Independent refactor: none — already clean. Evidence:
+[pr547](../../../docs/reviews/fabio-malpezzi-20261027/pr547/). Remaining:
+publish adapted head, CI, exact-head merge, thanks.
 
 Behavior: given an unspaced ternary, analyzing `.js`/`.ts` counts it; given
 optional fields/parameters in `.tsx`/`.jsx`, analyzing does not count those
