@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-019_template-interpolation-conditions.json",
+      "identity": "SEED-019#template-interpolation-conditions",
+      "completedAt": "2026-10-28T23:37:53.174Z",
+      "blob": "f2b0da516924dddec31f95a54ca9515b832fe677"
+    },
+    {
       "fileName": "SEED-018_repeatable-shell-entry.json",
       "identity": "SEED-018#repeatable-shell-entry",
       "completedAt": "2026-10-28T08:57:46.928Z",

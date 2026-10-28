@@ -135,8 +135,9 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         consume = CodeStateMachine.__call__.__get__(state)
         previous = self._previous_token
         conditions = self.conditions
-        # Bind once: ordinary JS/TS tokens pay only after_interpolation / '${'
-        # checks; TSX/JSX keep the atomic backtick scan on the rare path.
+        # Bind once on this hot path: ordinary JS/TS tokens pay only the
+        # after_interpolation / '${' checks (no per-token helper call).
+        # TSX/JSX keep the atomic backtick scan on the rare path.
         after_interpolation = previous == '${'
         scan_atomic = type(self)._scan_atomic_templates
         for token in tokens:

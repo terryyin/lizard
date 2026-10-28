@@ -1,0 +1,20 @@
+[
+  {
+    "path": "lizard_languages/javascript_templates.py",
+    "target": "fd821c9a90639e160e165637955eb37a51be061b631cf8429d50c90b169f1295",
+    "corrected": "fca13a38b5c3016fa50e0effea9a7cea9f9d9accef7487267df94f5e40002e92",
+    "baseline": "1dbff8db76103aa77f09d24209744351829924220ceb48e4a04a1edf57369112"
+  },
+  {
+    "path": "lizard_languages/tsx.py",
+    "target": "e2feedb4fd4c01e2731ce07932a9f8e35f397f9f1b70d82694d0be8c6a363c78",
+    "corrected": "2c8ae1f2cc0fc1049d6f15b86915e1e42b573868e27d4b6835380769cf5fed88",
+    "baseline": "2a021159330f0c28a2764893db70e4bb345acb4e3f1f253de5adc415dbe3c9b9"
+  },
+  {
+    "path": "lizard_languages/typescript.py",
+    "target": "2ea3b772d877be830cd30e25a1b1f0bdc4a1ba86e489cc8f46cdd84c8c4fc2bc",
+    "corrected": "0e727c360909f56a3261b8dbdcfa012251cb7f19d85d33d818082fb28f97ac7a",
+    "baseline": "e4d0b99eb9b88a1cddfd413c7cff2377e0bb66e3085ee8391f7a21ed1bbe08ab"
+  }
+]

@@ -1,0 +1,18 @@
+{
+  "incremental-api": {
+    "workload": "api",
+    "loops": 96,
+    "medians": {
+      "baseline": 17.086275395499996,
+      "candidate": 17.715230854000012
+    },
+    "median_slowdown_pct": 3.6810565435791975,
+    "paired_95pct_ci": [
+      1.632480558547189,
+      5.01688964856879
+    ],
+    "passes": false
+  },
+  "status": "failed-gate-interrupted",
+  "note": "Stopped after incremental-api failed (median +3.68%, upper +5.02%) and host load spiked to ~13 during incremental-api-parameters. Not an invalid-code retry; first observation of re-adapted candidate."
+}

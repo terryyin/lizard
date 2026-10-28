@@ -6,7 +6,6 @@ Maintenance, bug fixing, and PR reviews.
 
 ## Taken
 
-- [Count conditions inside template interpolations under the performance gate](seeds/SEED-019-template-interpolation-conditions.md#template-interpolation-conditions) — SEED-019#template-interpolation-conditions ([plan](slice-plans/007-template-interpolation-conditions/PLAN.md))
-
 ## Backlog list
 
+- [Remove the duplicate template-interpolation CCN test on trunk](seeds/SEED-019-template-interpolation-conditions.md#dedupe-template-interpolation-tests) — SEED-019#dedupe-template-interpolation-tests

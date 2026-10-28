@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-019#template-interpolation-conditions",
+  "title": "Count conditions inside template interpolations under the performance gate",
+  "completedAt": "2026-10-28T23:37:53.174Z",
+  "developer": "Terry Yin",
+  "agent": "Kaoru-chan",
+  "host": "cursor",
+  "model": "auto"
+}

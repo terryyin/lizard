@@ -7,14 +7,14 @@
   },
   {
     "path": "lizard_languages/tsx.py",
-    "target": "1d607ff76f08bf7d919dffed74e326ca78018fb414dd3ebc7ad678de04ef43cd",
-    "corrected": "81144eb896280c83273d43f1657de29cb8a74409abbd7ca93ed9c13e47759395",
+    "target": "e2feedb4fd4c01e2731ce07932a9f8e35f397f9f1b70d82694d0be8c6a363c78",
+    "corrected": "2c8ae1f2cc0fc1049d6f15b86915e1e42b573868e27d4b6835380769cf5fed88",
     "baseline": "2a021159330f0c28a2764893db70e4bb345acb4e3f1f253de5adc415dbe3c9b9"
   },
   {
     "path": "lizard_languages/typescript.py",
-    "target": "feebcd21fd5c2f63e38441d29b2936b82e9454b5ec07dc7b54f3fe73e97cb673",
-    "corrected": "94438337d1fd1768705aeb5e11a7347558211838d79d66a24bfba34e134fe21a",
+    "target": "2ea3b772d877be830cd30e25a1b1f0bdc4a1ba86e489cc8f46cdd84c8c4fc2bc",
+    "corrected": "a299b1fe1253d151d9edf7d01ffbd78d17bc5af4d588ab6408046a35ae1baadd",
     "baseline": "e4d0b99eb9b88a1cddfd413c7cff2377e0bb66e3085ee8391f7a21ed1bbe08ab"
   }
 ]

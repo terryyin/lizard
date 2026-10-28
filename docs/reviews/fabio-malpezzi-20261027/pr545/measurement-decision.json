@@ -77,5 +77,56 @@
     "retained": [
       "attempt8/"
     ]
+  },
+  "attempt9": {
+    "status": "failed-gate-interrupted",
+    "chosen_before_launch": true,
+    "api_seconds": 16.0,
+    "cli_seconds": 24.0,
+    "affected_files": 1212,
+    "consumers_files": 730,
+    "rationale": "First six-gate probe of the slice-1 re-adapted candidate (typescript/tsx hashes differ from attempt8 corrected blobs; not a retime of failed bytes). Target refreshed to current master 949984c0eb089333cf70ac3f40c1e2e75c9c8002; cumulative baseline remains 2e21e404c1ab9f4e0b49acc80816e816629d0670. Same frozen 1212-file expanded corpus and 730 consumers. Prospectively fix 16s API / 24s CLI because attempt8 established shorter batches leave wide CI under similar host load (~3\u20136 on 16 cores, modest free pages). Prior attempts 1\u20138 retained.",
+    "incremental": "target 949984c0eb089333cf70ac3f40c1e2e75c9c8002 versus re-adapted corrected",
+    "cumulative": "baseline 2e21e404c1ab9f4e0b49acc80816e816629d0670 versus re-adapted corrected",
+    "headroom_at_decision": {
+      "uptime": "load averages: 3.26 5.08 5.90",
+      "free_approx_MB": 739,
+      "ncpu": 16
+    },
+    "reason": "incremental-api median +3.681% paired 95% upper +5.017% (fails). Stopped before completing remaining gates after load spiked to ~13 during incremental-api-parameters. Root cause: per-token _count_conditions_from_token method dispatch on the fast path (vs attempt8 after_interpolation inline). Eligible \u226415-minute hot-path trim applied; see attempt10.",
+    "retained": [
+      "attempt9/"
+    ]
+  },
+  "attempt10": {
+    "status": "passed-gate",
+    "chosen_before_launch": true,
+    "api_seconds": 16.0,
+    "cli_seconds": 24.0,
+    "affected_files": 1212,
+    "consumers_files": 730,
+    "rationale": "Single eligible hot-path trim after attempt9 fail: restore attempt8-style after_interpolation / scan_atomic inline in TypeScriptReader.__call__ (no per-token method call); keep _count_conditions_from_token for process_token fallback and keyword-member undo inside _count_interpolation_conditions. New candidate bytes (typescript a299b1fe1253\u2026). Same target 949984c / baseline 2e21e404, same 1212/730 corpora, same 16s/24s quiet batch settings. Wait for quieter host after attempt9 load spike before launch. Prior attempts 1\u20139 retained. Not a retime of attempt8 or attempt9 failed bytes.",
+    "trim": "typescript.py __call__ fast path: after_interpolation flag + bound scan_atomic; \u226415 minutes product edit",
+    "incremental": "target 949984c0eb089333cf70ac3f40c1e2e75c9c8002 versus trimmed re-adapted corrected",
+    "cumulative": "baseline 2e21e404c1ab9f4e0b49acc80816e816629d0670 versus trimmed re-adapted corrected",
+    "retained": [
+      "attempt10/"
+    ],
+    "headroom_at_decision": {
+      "uptime": "load averages: 5.60 6.18 7.00",
+      "free_approx_MB": 1323,
+      "ncpu": 16,
+      "note": "Waited after attempt9 spike; zulu/mysqld cooled; still modest free pages. Proceed with prospectively fixed 16s/24s."
+    },
+    "reason": "All six paired 95% upper bounds strictly <3% after eligible hot-path trim. Resume completed cumulative-api-parameters and cumulative-cli after interrupted first run; earlier four gates retained.",
+    "paired_95pct_upper": {
+      "incremental-api": 1.5149111296805629,
+      "incremental-api-parameters": 2.4491967103632106,
+      "incremental-cli": 0.7889400270586933,
+      "cumulative-api": -6.159654760018696,
+      "cumulative-api-parameters": -5.093585059254801,
+      "cumulative-cli": 2.2741369125254485
+    },
+    "all_pass": true
   }
 }

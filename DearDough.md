@@ -126,6 +126,15 @@ shellHook, printing pip output to stdout and upgrading `platformdirs` past
   - Observed effect: shellHook pip noise accompanied the contributor-head publish probe; semantic assert still passed and the push completed.
   - Inference: same project-environment shellHook cost; serial Nix use avoided races, but pin churn remained on entry.
 
+- Execution: SEED-019#template-interpolation-conditions
+  - Timestamp: unknown (2026-10-28T16:10+08:00 through 2026-10-29T07:28+08:00 execution window)
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.73
+  - Evidence: coordinator/refactor agents used `PIP_QUIET=1 nix develop -c` for slice-1 proof and full pytest/`make` (conversation b6ecc26c-f7f1-4c5f-a3aa-2a2ccfa36047); SEED-018 still queued for this issue.
+  - Observed effect: agents continued the quiet-install workaround on every Nix entry; proof verdicts remained valid.
+  - Inference: recurrence of the project-environment shellHook cost; no shared or local environment fix in this story.
+
 ## DD-004 — PR merge preceded a missing affected-workload performance gate
 
 Complete the source's relevant workload selection before the exact-head merge.
@@ -336,6 +345,32 @@ claim, and resume only remaining work without marking done on the interrupt.
   - Observed effect: no false done status; uncommitted adapted product and evidence were recovered; slice 2 completed as an evidenced non-merge without unexpected commits from the interrupted agents.
   - Inference: practice matches installed interrupted-delegation recovery; worth repeating on long measurement Tasks.
 
+- Execution: SEED-019#template-interpolation-conditions
+  - Timestamp: 2026-10-29T06:47:00+08:00
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.73
+  - Evidence: conversation b6ecc26c-f7f1-4c5f-a3aa-2a2ccfa36047 L60 after interrupted slice-2 Task; user resume at 2026-10-29T06:51:00+08:00; attempt10 had 4/6 gates finished; coordinator resumed only cumulative-api-parameters and cumulative-cli without re-timing passed gates; plan left undone until delivery.
+  - Observed effect: no false done; unfinished measurement and uncommitted trim were recovered; attempt10 completed and #545 merged after proof.
+  - Inference: same interrupted-delegation practice held on a long six-gate Task.
+
+## DD-016 — Post-change hot-path collapse reintroduced gated per-token dispatch
+
+On a path under a paired performance gate, do not collapse duplicated hot-path
+dispatch into a per-token method call without measuring first. Prefer keeping
+the already-qualified inline shape (or an explicit Structure slice that owns a
+new six-gate pass) when the contract cares about that loop.
+
+### Occurrences
+- Execution: SEED-019#template-interpolation-conditions
+  - Timestamp: 2026-10-28T16:41:29+08:00
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.73
+  - Evidence: slice-1 refactor agent 5dbb84bb-1fe7-4bb6-b359-cb3585c88194 extracted `_count_conditions_from_token` and bound `count_from = self._count_conditions_from_token` inside `TypeScriptReader.__call__`; attempt9 `measurement-summary.json` failed incremental-api (paired 95% upper +5.02%); slice-2 agent restored attempt8-style `after_interpolation` inline; attempt10 all six gates passed (max upper +2.449%); plan Learnings warn against reintroducing per-token method dispatch on `__call__` without a new six-gate pass.
+  - Observed effect: one eligible ≤15-minute trim and a full remeasure were required before merge; semantics were already correct after slice 1.
+  - Inference: duplication collapse on a measured hot path can recreate the cost the gate rejects; the contract's trim budget absorbed it here, but the refactor rule did not account for the gate.
+
 ## Retention
 
-- Highest allocated local number: 15
+- Highest allocated local number: 16
