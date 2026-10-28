@@ -68,7 +68,8 @@ export function sectionOf(source, href) {
 // resolves the plan a recorded approach names, relative to that home, and the
 // file `planPath` that plan link names. A plan naming the home's own document
 // is canonical: it is read and digested as the home, and a Taken entry never
-// links it. Any other plan is its own file, linked by `planTarget`. `read`
+// links it. Any other plan is its own file, linked by `planTarget`;
+// `linkedPlanPath` is the file a backlog entry's plan link target names. `read`
 // reads the preparation recorded in a home's text, digesting the declared
 // plan's `planSource` when one is given.
 export function selectedPreparation(repository, href) {
@@ -89,6 +90,11 @@ export function selectedPreparation(repository, href) {
       if (sameDocument(planHref, href))
         return { planPath, planHref, planIsCanonical: true };
       return { planPath, planHref, planTarget: planHref };
+    },
+    linkedPlanPath(target) {
+      return planFileOf(
+        within(repository, posix.join(dirname(backlogPath), target)),
+      );
     },
     read(source, { planIsCanonical } = {}, planSource) {
       return readStoryState(source, href, { planIsCanonical, planSource });

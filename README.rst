@@ -63,12 +63,18 @@ often very hard to get all the included folders and files right when
 they are complicated. But we don't really need that kind of accuracy for
 cyclomatic complexity.
 
-It requires Python 3.8 or above. The test suite runs on Python 3.8 and 3.10,
-on Linux and Windows, in continuous integration; other versions are not
-verified.
+It requires Python 3.8 or above. The test suite runs on Python 3.8, 3.9, 3.10,
+3.11, 3.12, 3.13 and 3.14, on Linux and Windows, in continuous integration;
+other versions are not verified.
 
-JavaScript and TypeScript defaults
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+JavaScript and TypeScript parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Named and anonymous arrows report the same formal parameter counts and binding
+names. Empty object and array patterns each occupy a parameter slot without
+adding a name to the API's ``parameters`` list; ``({}, [], tail) => tail`` has
+``parameter_count`` 3 and ``parameters`` ``['tail']``. Trailing commas and
+TypeScript receiver declarations add no slots. Callback types add no functions.
 
 Each default parameter or destructuring initializer adds 1 to CCN, because
 the initializer runs only when the supplied value is ``undefined``. For example,
@@ -78,8 +84,9 @@ also count, including nested defaults and destructuring inside a function body.
 Explicit decisions within an initializer, such as a ternary expression or
 ``&&`` / ``||``, contribute separately.
 
-This also applies to JSX and TSX. Existing CCN scores can increase for functions
-that use defaults, which may cause them to exceed a configured CCN threshold.
+This also applies to JSX and TSX. Defaults may increase CCN above a configured
+threshold. See `arrow boundaries <docs/javascript-arrow-boundaries.md>`_ for
+ternary branches, type annotations and the existing curried-arrow convention.
 
 Installation
 ------------

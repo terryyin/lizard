@@ -121,6 +121,61 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, msg=result.stderr or result.stdout)
 
 
+class TestVueSourceLineNumbersCli(unittest.TestCase):
+    """Real CLI checks for Vue original source locations (not mocked)."""
+
+    VUE_SOURCE = '''\
+<template>
+  <div>
+    Hello
+  </div>
+</template>
+
+<script>
+function first() {
+  if (x) return 1;
+  return 2;
+}
+
+function second() {
+  return 3;
+}
+</script>
+'''
+
+    def setUp(self):
+        self.lizard_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self.lizard_py = os.path.join(self.lizard_dir, 'lizard.py')
+
+    def test_default_output_and_warning_use_original_vue_lines(self):
+        with TemporaryDirectory() as directory:
+            vue_path = Path(directory) / 'component.vue'
+            vue_path.write_text(self.VUE_SOURCE)
+
+            default = subprocess.run(
+                [sys.executable, self.lizard_py, str(vue_path)],
+                capture_output=True,
+                text=True,
+                cwd=self.lizard_dir,
+            )
+            self.assertEqual(default.returncode, 0, msg=default.stderr or default.stdout)
+            self.assertEqual('', default.stderr)
+            self.assertIn('first@8-11@' + str(vue_path), default.stdout)
+            self.assertIn('second@13-15@' + str(vue_path), default.stdout)
+
+            warning = subprocess.run(
+                [sys.executable, self.lizard_py, '-w', '-C1', str(vue_path)],
+                capture_output=True,
+                text=True,
+                cwd=self.lizard_dir,
+            )
+            self.assertEqual(warning.returncode, 1, msg=warning.stderr or warning.stdout)
+            self.assertIn(
+                '%s:8: warning: first has' % vue_path,
+                warning.stdout,
+            )
+
+
 class TestHeaderDiscovery(unittest.TestCase):
 
     def test_directory_analysis_includes_hh_header_functions(self):

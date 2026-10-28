@@ -1,0 +1,46 @@
+warning: Git tree '/Users/terryyin/git/lizard/.worktrees/conclude-the-javascript-and-typescript-lexical-a' is dirty
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+virtualenv 20.13.2 requires platformdirs<3,>=2, but you have platformdirs 4.4.0 which is incompatible.
+WARNING: You are using pip version 22.0.3; however, version 26.0.1 is available.
+You should consider upgrading via the '/Users/terryyin/git/lizard/.worktrees/conclude-the-javascript-and-typescript-lexical-a/.venv/bin/python -m pip install --upgrade pip' command.
+........................................................................ [  3%]
+.................................................................ss..... [  6%]
+........................................................................ [ 10%]
+........................................................................ [ 13%]
+........................................................................ [ 16%]
+........................................................................ [ 20%]
+........................................................................ [ 23%]
+........................................................................ [ 26%]
+........................................................................ [ 30%]
+........................................................................ [ 33%]
+........................................................................ [ 37%]
+........................................................................ [ 40%]
+........................................................................ [ 43%]
+........................................................................ [ 47%]
+........................................................................ [ 50%]
+........................................................................ [ 53%]
+.......................................................................s [ 57%]
+.s.s.................................................................... [ 60%]
+........................................................................ [ 64%]
+........................................................................ [ 67%]
+........................................................................ [ 70%]
+........................................................................ [ 74%]
+........................................................................ [ 77%]
+........................................................................ [ 80%]
+........................................................................ [ 84%]
+........................................................................ [ 87%]
+...................................s.................................... [ 91%]
+..........................s............................................. [ 94%]
+........................................................................ [ 97%]
+................................................                         [100%]
+=============================== warnings summary ===============================
+test/testFilesFilter.py: 12 warnings
+  /Users/terryyin/git/lizard/.worktrees/conclude-the-javascript-and-typescript-lexical-a/.venv/lib/python3.9/site-packages/pathspec/pathspec.py:326: DeprecationWarning: GitWildMatchPattern ('gitwildmatch') is deprecated. Use 'gitignore' for GitIgnoreBasicPattern or GitIgnoreSpecPattern instead.
+    patterns = [use_factory(__line) for __line in lines if __line]  # type: ignore[arg-type]
+
+test/testFilesFilter.py: 12 warnings
+  /Users/terryyin/git/lizard/.worktrees/conclude-the-javascript-and-typescript-lexical-a/.venv/lib/python3.9/site-packages/pathspec/pattern.py:125: DeprecationWarning: GitWildMatchPattern ('gitwildmatch') is deprecated. Use 'gitignore' for GitIgnoreBasicPattern or GitIgnoreSpecPattern instead.
+    raw_regex, include = self.pattern_to_regex(pattern)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+2129 passed, 7 skipped, 24 warnings in 11.73s

@@ -9,6 +9,8 @@
 import { composeIdentity, splitHref } from "./product-backlog-identity.mjs";
 import { BacklogError } from "./product-backlog-refusal.mjs";
 import { splitSource } from "./product-backlog-source.mjs";
+import { storyDependenciesFence } from "./product-backlog-story-state-basis.mjs";
+import { storyStateFence } from "./product-backlog-story-state-block.mjs";
 
 const identityPattern = /^\*\*Identity:\*\* +(?<identity>\S.*?) *$/;
 const frontMatterIdPattern = /^id: +(?<id>\S+) *$/;
@@ -69,6 +71,53 @@ function anchoredSection(lines, start) {
     (line, index) => index > start && index < end && line.startsWith("### "),
   );
   return { start, end, heading };
+}
+
+// Evidence of an intended home, including malformed records that the strict
+// reader must report. Identity wins for whole-document homes; otherwise keep
+// dependency-before-preparation reporting when both records are orphaned.
+function discoveryRecord(lines) {
+  if (lines.some((line) => /^\*\*Identity:\*\*/.test(line))) return "Identity";
+  return [
+    [storyDependenciesFence, "Dependency"],
+    [storyStateFence, "Preparation"],
+  ].find(([fence]) =>
+    lines.some((line) => line.trim().startsWith(`\`\`\`${fence}`)),
+  )?.[1];
+}
+
+// Discovery distinguishes navigation anchors from story homes using the same
+// section/heading meaning as readHome. Records still identify an intended home
+// when its heading is malformed, including an accidental "## " heading. Look
+// for that evidence up to the next anchor so discovery reports the reader's
+// error rather than silently dropping a recorded story.
+function discoveryAnchors(lines) {
+  const anchors = [];
+  for (let start = 0; start < lines.length; start += 1) {
+    const match = /^<a id="([^"\n]+)"><\/a> *$/.exec(lines[start]);
+    if (!match) continue;
+    let end = start + 1;
+    while (end < lines.length && !isAnchorLine(lines[end])) end += 1;
+    const recorded = discoveryRecord(lines.slice(start + 1, end));
+    if (anchoredSection(lines, start).heading !== -1 || recorded)
+      anchors.push(match[1]);
+  }
+  return anchors;
+}
+
+// Classifies text for discovery without accepting it as a valid home. The
+// caller supplies document paths; readHome owns subsequent strict validation.
+export function discoveryCandidates(source) {
+  const { lines } = splitSource(source);
+  const anchors = discoveryAnchors(lines);
+  const record = anchors.length
+    ? undefined
+    : discoveryRecord(source.split(/\r\n?|\n/));
+  return {
+    anchors,
+    wholeDocument: record === "Identity",
+    orphanedRecord: record === "Identity" ? undefined : record,
+  };
 }
 
 // The home's document lines without the other stories' sections: every other

@@ -6,6 +6,7 @@ Maintenance, bug fixing, and PR reviews.
 
 ## Taken
 
+- [Count conditions inside template interpolations under the performance gate](seeds/SEED-019-template-interpolation-conditions.md#template-interpolation-conditions) — SEED-019#template-interpolation-conditions ([plan](slice-plans/007-template-interpolation-conditions/PLAN.md))
+
 ## Backlog list
 
-- [Claim support only for the Python versions CI verifies](seeds/SEED-006-python-version-support.md#ci-verified-python-support) — SEED-006#ci-verified-python-support

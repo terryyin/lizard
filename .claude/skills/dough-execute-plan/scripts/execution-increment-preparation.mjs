@@ -4,7 +4,7 @@
 import { lstat } from "node:fs/promises";
 import { isAbsolute, relative, resolve } from "node:path";
 import { agentCommit } from "./agent-commit.mjs";
-import { exec, git, revParse } from "./publication-git.mjs";
+import { exec, execWithInput, git, revParse } from "./publication-git.mjs";
 import { markSelectedSliceDone } from "./selected-slice-status.mjs";
 import { checkStoryObligations } from "./story-obligations.mjs";
 
@@ -55,6 +55,8 @@ function inputRefusal({ workspace, branch, message, preparation: p }) {
     const error = commandRefusal(p[name]);
     if (error) return `${name}: ${error}`;
   }
+  if (p.progress !== undefined && p.progress !== true)
+    return "progress must be true when supplied, or omitted for ordinary completion";
   if (p.kind === "planned") {
     if (
       !p.plan ||
@@ -67,8 +69,10 @@ function inputRefusal({ workspace, branch, message, preparation: p }) {
       (key) => !["path", "slice"].includes(key),
     );
     if (extra.length)
-      return `plan accepts only path and slice, not ${extra.join(", ")}; delivery marks the selected slice done itself`;
+      return `plan accepts only path and slice, not ${extra.join(", ")}; delivery marks the selected slice done itself unless progress is true`;
   } else if (p.plan !== undefined) return "quick work must not invent a plan";
+  if (p.progress === true && p.kind !== "planned")
+    return "progress publication requires planned work with its plan and selected slice";
   const staging = p.staging;
   if (
     !staging ||
@@ -147,11 +151,12 @@ export async function commitPreparedExecutionIncrement(request) {
       operation = name;
       await runCommand(workspace, p[name]);
     }
+    const progress = p.progress === true;
     const obligations = async () => {
       operation = "story obligations";
       const result = await checkStoryObligations(
         resolve(workspace, p.plan.path),
-        { slice: p.plan.slice },
+        { slice: p.plan.slice, committing: !progress },
       );
       if (!result.ok)
         throw Object.assign(
@@ -161,13 +166,15 @@ export async function commitPreparedExecutionIncrement(request) {
     };
     if (p.kind === "planned") {
       await obligations();
-      operation = "plan/status mutation";
-      await markSelectedSliceDone(workspace, p.plan);
+      if (!progress) {
+        operation = "plan/status mutation";
+        await markSelectedSliceDone(workspace, p.plan);
+      }
     }
     operation = "summary";
     await runCommand(workspace, p.summary);
-    // Also check the changed record: the done status and the summary cannot
-    // erase this dependent check or introduce an open obligation unnoticed.
+    // Recheck after summary: done/summary must not hide an open obligation.
+    // Progress rechecks without claiming the selected slice done.
     if (p.kind === "planned") await obligations();
     operation = "staged ownership";
     await assertOwnedIndex(workspace, p.staging);
@@ -187,11 +194,12 @@ export async function commitPreparedExecutionIncrement(request) {
       const committed = await agentCommit(workspace, { message });
       return committed.ok ? committed : { ...committed, operation: "commit" };
     }
-    const committing = exec("git", ["commit", "--quiet", "-F", "-"], {
-      cwd: workspace,
-    });
-    committing.child.stdin.end(message);
-    await committing;
+    await execWithInput(
+      "git",
+      ["commit", "--quiet", "-F", "-"],
+      { cwd: workspace },
+      message,
+    );
     return {
       ok: true,
       status: "committed",

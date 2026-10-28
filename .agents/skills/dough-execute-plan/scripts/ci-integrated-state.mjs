@@ -4,12 +4,19 @@
 // descendant C (Git ancestry B → C) validates the integrated state at C; it is
 // recorded beside B's own exact state, never as a result of B. Every poll
 // judges it afresh: nothing here is retained once contradicted or unreadable.
+// A locally proved descendant's current pending attempt supplies progress
+// beside an unresolved judgement; it never validates the integrated state.
 // The policy comes from ci-integrated-state-policy.mjs.
 import { GitHubAcquisitionHeld } from "./ci-github-actions.mjs";
 import {
   ancestryBasis,
   candidateAncestry,
 } from "./ci-integrated-state-ancestry.mjs";
+import {
+  currentAttemptFacts,
+  currentAttemptIneligibility,
+  successfulAttempt,
+} from "./ci-integrated-state-policy.mjs";
 import { isFullGitRevision } from "./ci-revisions.mjs";
 
 // B's own exact states this evidence may complete: no attempt of B was
@@ -27,56 +34,6 @@ const integratedEligible = ({ state, basis }) =>
 // Authoritative current-attempt reads per revision per poll.
 const verificationBound = 3;
 const consideredBound = 5;
-
-const succeeded = ({ status, conclusion }) =>
-  status === "completed" && conclusion === "success";
-
-// Why `current`, the provider's authoritative current attempt of the listed
-// `run` at `sha`, cannot validate the integrated state, or undefined.
-function ineligibility(run, sha, current, { branch, policy }) {
-  if (
-    String(current.databaseId) !== String(run.databaseId) ||
-    current.headSha?.toLowerCase() !== sha
-  )
-    return "facts_mismatch";
-  if (current.attempt !== run.attempt || current.contradicted)
-    return "attempt_changed";
-  if (current.headBranch !== branch) return "different_target";
-  if (current.check !== policy.check || current.context !== policy.context)
-    return "context_incompatible";
-  if (!succeeded(current)) return "not_current_success";
-  for (const name of policy.jobs ?? []) {
-    const jobs = (current.jobs ?? []).filter((job) => job.name === name);
-    if (jobs.length !== 1) return "missing_check";
-    if (!succeeded(jobs[0])) return "check_not_successful";
-  }
-  return undefined;
-}
-
-function validatedFacts(sha, current, policy) {
-  return {
-    sha,
-    branch: current.headBranch,
-    runId: current.databaseId,
-    attempt: current.attempt,
-    url: current.url,
-    check: current.check,
-    context: current.context,
-    ...(policy.jobs
-      ? {
-          jobs: policy.jobs.map((name) => {
-            const job = current.jobs.find((each) => each.name === name);
-            return {
-              name,
-              jobId: job.databaseId,
-              conclusion: job.conclusion,
-              url: job.url,
-            };
-          }),
-        }
-      : {}),
-  };
-}
 
 const failureDetail = (error) => String(error).slice(0, 300);
 
@@ -164,17 +121,26 @@ async function observeIntegratedState({
     bySha.set(sha, listed);
   }
 
-  const considered = [];
+  const considered = new Map();
+  let progress;
   let verifications = 0;
-  for (const [sha, listed] of bySha) {
+  // Preserve successful candidates' verification opportunity before spending
+  // the same bounded reads on pending progress. Diagnostics keep provider order.
+  const candidates = [...bySha].sort(
+    ([, left], [, right]) =>
+      Number(right.every(successfulAttempt)) -
+      Number(left.every(successfulAttempt)),
+  );
+  for (const [sha, listed] of candidates) {
     // Every listed attempt of C must be a current success: a pending or
     // failed rerun contradicts an older green of the same snapshot. Such a C
     // cannot validate whatever its ancestry, so it is never fetched.
-    const current = listed.every(succeeded);
+    const current = listed.every(successfulAttempt);
+    const pending = listed.every(({ status }) => status !== "completed");
     const ancestry = await ancestryOf(acceptedSha, sha, { fetch: current });
     if (ancestry === "not_ancestor") continue;
-    const consider = (reason) => considered.push({ sha, reason });
-    if (!current) {
+    const consider = (reason) => considered.set(sha, reason);
+    if (!current && !(pending && ancestry === "ancestor")) {
       consider("not_current_success");
       continue;
     }
@@ -190,9 +156,13 @@ async function observeIntegratedState({
     const runIds = [...new Set(listed.map(({ databaseId }) => databaseId))];
     let reason;
     let verified;
-    for (const runId of runIds) {
-      const run = listed.find(({ databaseId }) => databaseId === runId);
-      const key = String(runId);
+    const attempts = pending
+      ? listed
+      : runIds.map((runId) =>
+          listed.find(({ databaseId }) => databaseId === runId),
+        );
+    for (const run of attempts) {
+      const key = String(run.databaseId);
       if (!reads.has(key))
         reads.set(
           key,
@@ -205,7 +175,13 @@ async function observeIntegratedState({
         reason = "current_attempt_unavailable";
         break;
       }
-      reason = ineligibility(run, sha, current, { branch, policy });
+      reason = currentAttemptIneligibility(
+        run,
+        sha,
+        current,
+        { branch, policy },
+        pending,
+      );
       if (reason) break;
       verified ??= current;
     }
@@ -213,19 +189,32 @@ async function observeIntegratedState({
       consider(reason);
       continue;
     }
+    const ancestryEvidence = {
+      ancestor: acceptedSha,
+      descendant: sha,
+      basis: ancestryBasis,
+    };
+    if (pending) {
+      progress ??= {
+        ...currentAttemptFacts(sha, verified, policy, true),
+        ancestry: ancestryEvidence,
+      };
+      consider("not_current_success");
+      continue;
+    }
     return {
       state: "success",
       policy,
-      validated: validatedFacts(sha, verified, policy),
-      ancestry: {
-        ancestor: acceptedSha,
-        descendant: sha,
-        basis: ancestryBasis,
-      },
+      validated: currentAttemptFacts(sha, verified, policy),
+      ancestry: ancestryEvidence,
     };
   }
-  if (!considered.length) return unresolved("no_candidate");
+  if (!considered.size) return unresolved("no_candidate");
   return unresolved("no_eligible_candidate", {
-    considered: considered.slice(0, consideredBound),
+    considered: [...bySha.keys()]
+      .filter((sha) => considered.has(sha))
+      .slice(0, consideredBound)
+      .map((sha) => ({ sha, reason: considered.get(sha) })),
+    ...(progress ? { progress } : {}),
   });
 }

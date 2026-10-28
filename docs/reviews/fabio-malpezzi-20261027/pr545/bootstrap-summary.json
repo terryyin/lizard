@@ -1,0 +1,21 @@
+{
+  "target": "35b454b778239846de4b467715717f67ac4bc6c3",
+  "frozen_head": "baa95a4df8278421bb3d3a6487516030cc03a979",
+  "baseline": "2e21e404c1ab9f4e0b49acc80816e816629d0670",
+  "product": [
+    "lizard_languages/javascript_templates.py",
+    "lizard_languages/typescript.py",
+    "lizard_languages/tsx.py",
+    "test/test_languages/testTypeScript.py"
+  ],
+  "paired_sha256": "ec1c9c5eac0ad6a29294ecbd987b2a55d4cf31db145486d065bf13c096b76520",
+  "affected_count": 16,
+  "expanded_count": 1212,
+  "consumers_count": 730,
+  "changed_vs_target": [
+    "lizard_languages/javascript_templates.py",
+    "lizard_languages/typescript.py",
+    "lizard_languages/tsx.py",
+    "test/test_languages/testTypeScript.py"
+  ]
+}

@@ -1,0 +1,99 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Python application
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+      branches:
+      - master
+      - 'feature/**'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os:
+          # Pinned for Python 3.8/3.9 interpreter availability.
+          - ubuntu-24.04
+          - windows-latest
+        python-version:
+          - "3.8"
+          - "3.9"
+          - "3.10"
+          - "3.11"
+          - "3.12"
+          - "3.13"
+          - "3.14"
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r dev_requirements.txt
+
+    - name: build and Install
+      run: |
+        python -m pip install .
+
+    - name: Run tests
+      run: |
+        python -m pytest
+
+  changes:
+    runs-on: ubuntu-24.04
+    outputs:
+      web: ${{ steps.detect.outputs.web }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Detect web changes
+      id: detect
+      env:
+        EVENT: ${{ github.event_name }}
+        BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        HEAD: ${{ github.event.pull_request.head.sha || github.event.after }}
+        DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+      run: python3 scripts/web_changes.py "$EVENT" "$BASE" "$HEAD" --default-branch "$DEFAULT_BRANCH"
+
+  web:
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: website/frontend/package.json
+    - name: Use the declared npm
+      run: npm install -g "$(node -p "require('./website/frontend/package.json').packageManager")"
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.13"
+    - name: Install dependencies
+      run: |
+        python -m pip install -r requirements.txt
+        npm --prefix website/frontend ci
+        npm --prefix website/frontend exec -- playwright install --with-deps chromium
+    - name: Build
+      run: npm --prefix website/frontend run build
+    - name: Browser tests
+      run: npm --prefix website/frontend run test:e2e
+    - name: Keep browser test reports
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: browser-reports
+        path: website/frontend/reports/

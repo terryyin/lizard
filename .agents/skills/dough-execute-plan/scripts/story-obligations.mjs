@@ -9,8 +9,24 @@ import {
   normalizeStoryQuote,
   readStoryObligations,
 } from "./story-obligation-reader.mjs";
+import {
+  commitmentProblems,
+  obligationCommitments,
+  readLinkedSourceReview,
+} from "./story-obligation-source-review.mjs";
 
 export { readStoryObligations } from "./story-obligation-reader.mjs";
+
+async function readStoryText(planPath, sourceHref) {
+  const storySource = await readFile(
+    resolve(dirname(planPath), splitHref(sourceHref).path),
+    "utf8",
+  );
+  const home = readHome(storySource, sourceHref);
+  return normalizeStoryQuote(
+    home.document.lines.slice(home.region.start, home.region.end).join("\n"),
+  );
+}
 
 // Checks recorded ownership, not whether the coordinator's story judgment is right.
 async function inspectStoryObligations(
@@ -20,13 +36,18 @@ async function inspectStoryObligations(
   const source = await readFile(planPath, "utf8");
   const record = readStoryObligations(source);
   const problems = [...record.problems];
+  const review = await readLinkedSourceReview(planPath, source);
+  const { linked, commitments } = review;
+  problems.push(...review.problems);
   const result = () => ({
     result: {
       ok: problems.length === 0,
       entryCount: record.entries.length,
+      ...(linked && { commitmentCount: commitments.length }),
       ...(problems.length && { problems }),
     },
     entries: record.entries,
+    commitments,
   });
   // The caller resolves the execution plan. This checks recorded progress,
   // never whether the checkout is an execution workspace or its proof is valid.
@@ -47,13 +68,13 @@ async function inspectStoryObligations(
     }
   }
   const slices = new Map((read.slices ?? []).map((item) => [item.index, item]));
-  if (plannedCompletion || record.entries.length) {
+  if (plannedCompletion || record.entries.length || linked) {
     for (const item of read.slices ?? []) {
       if (slices.get(item.index) !== item)
         problems.push({ reason: "ambiguous-slice", slice: item.index });
     }
   }
-  if (!record.entries.length) return result();
+  if (!record.entries.length && !linked) return result();
   if (read.status !== "interpreted" && !plannedCompletion)
     problems.push({ reason: "unreadable-slices", message: read.problem });
   const isDoneOrCommitting = (index) =>
@@ -61,29 +82,26 @@ async function inspectStoryObligations(
   if (slice !== undefined && !slices.has(slice))
     problems.push({ reason: "unknown-slice", slice });
   let story;
-  if (!record.sourceHref) problems.push({ reason: "missing-story-source" });
-  else {
-    try {
-      const storySource = await readFile(
-        resolve(dirname(planPath), splitHref(record.sourceHref).path),
-        "utf8",
-      );
-      const home = readHome(storySource, record.sourceHref);
-      story = normalizeStoryQuote(
-        home.document.lines
-          .slice(home.region.start, home.region.end)
-          .join("\n"),
-      );
-    } catch (error) {
+  // Only obligation quotes need the story; commitment rows carry their text.
+  if (record.entries.length && !record.sourceHref)
+    problems.push({ reason: "missing-story-source" });
+  else if (record.entries.length)
+    story = await readStoryText(planPath, record.sourceHref).catch((error) => {
       problems.push({
         reason: "unreadable-story-source",
         message: error.message,
       });
-    }
-  }
+    });
   for (const entry of record.entries) {
+    const linked = obligationCommitments(entry, commitments);
     const problem = (reason, fields = {}) =>
-      problems.push({ entry: entry.id, reason, ...fields });
+      problems.push({
+        entry: entry.id,
+        ...(linked.disposed.length && { commitments: linked.disposed }),
+        reason,
+        ...fields,
+      });
+    for (const [reason, fields] of linked.problems) problem(reason, fields);
     if (story !== undefined) {
       for (const [field, quote] of [
         ["Story clause", entry.storyClause],
@@ -134,26 +152,37 @@ async function inspectStoryObligations(
     if (disposition.type === "proved" && !slices.has(disposition.slice))
       problem("dangling-proof-slice", { slice: disposition.slice });
   }
+  if (read.status === "interpreted")
+    problems.push(
+      ...commitmentProblems(commitments, {
+        slices,
+        entryIds: new Set(record.entries.map((entry) => entry.id)),
+        completion,
+        isDoneOrCommitting,
+      }),
+    );
   return result();
 }
 
 export async function checkStoryObligations(
   planPath,
-  { slice, completion, plannedCompletion } = {},
+  { slice, completion, plannedCompletion, committing = true } = {},
 ) {
+  // Progress publication passes committing: false so open receiving stays owned.
   const { result } = await inspectStoryObligations(planPath, {
     slice,
     completion: completion || plannedCompletion,
     plannedCompletion,
-    committingSlice: slice,
+    ...(committing && slice !== undefined ? { committingSlice: slice } : {}),
   });
   return result;
 }
 
 export async function listStoryObligations(planPath, slice) {
-  const { result, entries } = await inspectStoryObligations(planPath, {
-    slice,
-  });
+  const { result, entries, commitments } = await inspectStoryObligations(
+    planPath,
+    { slice },
+  );
   const receives = (entry) => {
     const disposition = entry.disposition;
     if (!disposition?.open) return false;
@@ -165,6 +194,11 @@ export async function listStoryObligations(planPath, slice) {
     ok: result.ok,
     slice,
     entries: result.ok ? entries.filter(receives) : [],
+    ...(result.commitmentCount !== undefined && {
+      commitments: result.ok
+        ? commitments.filter((item) => item.slice === slice)
+        : [],
+    }),
     ...(result.problems && { problems: result.problems }),
   };
 }

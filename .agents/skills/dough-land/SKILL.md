@@ -95,7 +95,8 @@ node <installed>/dough-execute-plan/scripts/story-obligations.mjs check --plan <
 
 Use this project's selected plan, not a plan found by guessing from this skill's
 location. The command reuses the existing plan and obligation readers: it names
-pending slices, open obligations, and unreadable or missing slice evidence. A
+pending slices, open obligations, source-review commitments without an owner
+or observation, and unreadable or missing slice evidence. A
 clear result checks those records only; judge the promised outcome and accepted
 proof too. For planless execution, judge its instruction, changes and execution
 results; absence of a plan is not completion evidence.
@@ -157,19 +158,20 @@ retirement; reporting failure leaves Git acceptance accepted and retries only ev
 Apply [reviewed-checkout publication](references/publish-reviewed-checkout.md):
 use [publish the candidate](../dough-execute-plan/references/publish-the-candidate.md)
 for a wholly unpublished suffix, or history-preserving integration for a published
-prefix and the complete reviewed tip above it. Keep the queued-closure check
+prefix and the complete reviewed tip above it; for completed selected work, use
+their [visit forms](references/publish-reviewed-checkout.md#land-completed-selected-work). Keep the queued-closure check
 before each reconciliation and retry, and recheck affected proof before pushing.
 Preserve the state on a conflict, refusal, failed recheck or second rejection;
 report publication, refresh and cleanup as unfinished. Do not loop.
 
 ## Visit consumers of completed selected work
 
-After accepted publication and before retirement, apply the shared
-[supplier dependency procedure](../dough-product-backlog/references/supplier-dependencies.md)
-when retained context establishes a selected completed supplier. Preserve its
-recoverable outcome before cleanup, publish directly justified consumer updates
-through this authorized landing workflow, and report unresolved work. A generic
-landing or an unfinished increment establishes no supplier completion.
+Completed selected work that retained context establishes [takes the current-consumer visit](../dough-product-backlog/references/supplier-dependencies.md#which-completed-work-takes-the-visit)
+under that shared procedure: preserve its recoverable outcome before cleanup and
+publish with its [visit forms](references/publish-reviewed-checkout.md#land-completed-selected-work).
+Judge each consumer, publish directly justified consumer updates through this
+authorized landing workflow, and finish the visit or explicitly retain
+unresolved work, before refresh, retirement and the final report.
 
 ## Review this landing's process
 

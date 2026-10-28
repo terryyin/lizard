@@ -2,6 +2,90 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-018_repeatable-shell-entry.json",
+      "identity": "SEED-018#repeatable-shell-entry",
+      "completedAt": "2026-10-28T08:57:46.928Z",
+      "blob": "82231cd656af0f96c796f7f09742e4f35d655948"
+    },
+    {
+      "fileName": "SEED-010_review-lexical-js-prs.json",
+      "identity": "SEED-010#review-lexical-js-prs",
+      "completedAt": "2026-10-28T07:30:49.798Z",
+      "blob": "d12601acff1d7c491d245c7db8a9f9dc27ce7a6e"
+    },
+    {
+      "fileName": "SEED-010_review-structural-js-prs.json",
+      "identity": "SEED-010#review-structural-js-prs",
+      "completedAt": "2026-10-28T03:25:30.991Z",
+      "blob": "84d1017001089c0612911578e29ecab208c899f3"
+    },
+    {
+      "fileName": "SEED-017_vue-source-line-numbers.json",
+      "identity": "SEED-017#vue-source-line-numbers",
+      "completedAt": "2026-10-27T23:01:34.543Z",
+      "blob": "b15172261715c45882d4b29b224d8c99908e656f"
+    },
+    {
+      "fileName": "SEED-015_ternary-arrow-boundaries.json",
+      "identity": "SEED-015#ternary-arrow-boundaries",
+      "completedAt": "2026-10-27T19:57:15.859Z",
+      "blob": "d068cd52436569e690b9126529655f21f09b851b"
+    },
+    {
+      "fileName": "SEED-016_arrow-parameter-bindings.json",
+      "identity": "SEED-016#arrow-parameter-bindings",
+      "completedAt": "2026-10-27T16:55:16.243Z",
+      "blob": "307bdfa8c76bffc5a72ff8739a81ebc3999071fa"
+    },
+    {
+      "fileName": "SEED-014_multiline-arrow-boundaries.json",
+      "identity": "SEED-014#multiline-arrow-boundaries",
+      "completedAt": "2026-10-27T13:44:23.150Z",
+      "blob": "e4ff57220686df6d425b03f4c448dffb3a2cb786"
+    },
+    {
+      "fileName": "SEED-012_release-website-from-tags.json",
+      "identity": "SEED-012#release-website-from-tags",
+      "completedAt": "2026-10-27T13:14:44.962Z",
+      "blob": "a5e2314d41da531b21d8f1a8b48dbda0af4fa6b2"
+    },
+    {
+      "fileName": "SEED-012_regex-literal-context.json",
+      "identity": "SEED-012#regex-literal-context",
+      "completedAt": "2026-10-27T12:45:16.453Z",
+      "blob": "981b5ed805ce2d1beaf2f465871d233e5865499a"
+    },
+    {
+      "fileName": "SEED-013_arrow-object-boundaries.json",
+      "identity": "SEED-013#arrow-object-boundaries",
+      "completedAt": "2026-10-27T12:10:15.609Z",
+      "blob": "d930a04441a77c598e012cf2cae0dece7f0f3766"
+    },
+    {
+      "fileName": "SEED-010_review-fabio-malpezzi-prs.json",
+      "identity": "SEED-010#review-fabio-malpezzi-prs",
+      "completedAt": "2026-10-27T09:58:45.282Z",
+      "blob": "c644564b0ce516939c8c361f9b1932f232708728"
+    },
+    {
+      "fileName": "SEED-012_modernize-website-react.json",
+      "identity": "SEED-012#modernize-website-react",
+      "completedAt": "2026-10-27T08:33:55.764Z",
+      "blob": "fa60c57f762708cc6043f96c3d5b7e1cdaa1c835"
+    },
+    {
+      "fileName": "SEED-011_revive-lizard-website.json",
+      "identity": "SEED-011#revive-lizard-website",
+      "completedAt": "2026-10-27T06:27:36.268Z",
+      "blob": "b76816df303aa19fad41561447e6c433e53d079d"
+    },
+    {
+      "fileName": "SEED-006_ci-verified-python-support.json",
+      "identity": "SEED-006#ci-verified-python-support",
+      "completedAt": "2026-10-27T04:14:39.002Z",
+      "blob": "1fa7f46c1c13e680a5dc8b94c05604d3a720ed23"
+    },
+    {
       "fileName": "SEED-009_balanced-template-scanning.json",
       "identity": "SEED-009#balanced-template-scanning",
       "completedAt": "2026-10-24T09:15:39.597Z",

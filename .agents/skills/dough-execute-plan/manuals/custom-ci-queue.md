@@ -36,3 +36,10 @@ fetches a non-successful candidate to establish that ancestry. Queue facts do
 not create attempts, run or attempt IDs, `checkedBy`, verdicts or diagnostics.
 Actual failures remain failures, and a current real pending retry supersedes an
 older successful attempt by its provider timestamp.
+
+When queue facts disappear as an automatic retry becomes a real pending attempt,
+that current same-target descendant attempt can still explain pending work under
+the declared policy and locally proved ancestry. Each successful poll renews this
+progress; failed or empty discovery withdraws it. It retains the original
+completion handoff and deadline, and supplies no success verdict. Completion
+still requires the current successful attempt and every declared required job.

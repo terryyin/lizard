@@ -1,0 +1,20 @@
+[
+  {
+    "path": "lizard_languages/javascript_templates.py",
+    "target": "fd821c9a90639e160e165637955eb37a51be061b631cf8429d50c90b169f1295",
+    "corrected": "fca13a38b5c3016fa50e0effea9a7cea9f9d9accef7487267df94f5e40002e92",
+    "baseline": "1dbff8db76103aa77f09d24209744351829924220ceb48e4a04a1edf57369112"
+  },
+  {
+    "path": "lizard_languages/tsx.py",
+    "target": "1d607ff76f08bf7d919dffed74e326ca78018fb414dd3ebc7ad678de04ef43cd",
+    "corrected": "81144eb896280c83273d43f1657de29cb8a74409abbd7ca93ed9c13e47759395",
+    "baseline": "2a021159330f0c28a2764893db70e4bb345acb4e3f1f253de5adc415dbe3c9b9"
+  },
+  {
+    "path": "lizard_languages/typescript.py",
+    "target": "feebcd21fd5c2f63e38441d29b2936b82e9454b5ec07dc7b54f3fe73e97cb673",
+    "corrected": "94438337d1fd1768705aeb5e11a7347558211838d79d66a24bfba34e134fe21a",
+    "baseline": "e4d0b99eb9b88a1cddfd413c7cff2377e0bb66e3085ee8391f7a21ed1bbe08ab"
+  }
+]

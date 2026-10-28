@@ -60,6 +60,7 @@ export async function resumeManagedExecutionIncrement(request) {
     storage,
     oneShotIdentity,
     landingContext,
+    branch,
   } = request;
 
   for (const field of ["workspace", "candidateSha", "targetRef", "repo"]) {
@@ -112,6 +113,8 @@ export async function resumeManagedExecutionIncrement(request) {
       suffixBase,
       remote,
       landingContext,
+      branch,
+      backlogPath: request.backlogPath,
       supersededShas,
       publishedRevisions,
       observer,

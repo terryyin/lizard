@@ -189,6 +189,8 @@ export async function observeRevisionCoverage(
       };
     }
     next = await judgeIntegratedState(next);
+    if (next.integrated?.progress)
+      next.integrated.progress.observedAt = observedAt;
     // Every successful poll replaces progress, including unsupported/empty
     // queue snapshots, and renews only actual attempts observed this poll.
     delete next.queue;

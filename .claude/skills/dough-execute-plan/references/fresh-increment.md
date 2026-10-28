@@ -50,6 +50,7 @@ the attempt before project commands or staging:
 | `formatting` | This project's selective formatter operation, or an explicit `notRequired` reason when the project requires no formatting. Do not substitute hook-owned lint. |
 | `summary` | Required project-summary mutation operation, or an explicit `notRequired` reason. Quick work must not invent an execution record. |
 | `plan` | Required only for planned work: workspace-relative `path` and positive integer `slice`, nothing else. Delivery marks that slice `done` itself. Put the plan's other evidence (accepted proof, learnings, revised remaining slices) in the plan before invocation, as your owned edit staged with it. Quick work omits this field. |
+| `progress` | Optional. `true` when planned hosted/external observation still needs the published revision: same path without done; motivating open receiving obligations stay open/owned and do not refuse. Omit for ordinary `done`. Not quick work or Git plumbing. |
 | `staging` | `ownedPaths`: exact workspace-relative files whose entire working contents you own and want staged; `stagedPaths`: exact files whose already-staged changes you own and want committed without restaging their unstaged bytes. Supply both arrays, even when one is empty. |
 
 An operation is an object such as
@@ -82,8 +83,12 @@ selected slice's real `Status:` line, leaving an already `done` slice as it is,
 so a repaired attempt repeats the same request. It refuses, naming the slice
 and changing nothing, when that slice is missing, duplicated or unreadable, or
 when another slice is `done` in the working plan but not at the checkout's
-`HEAD`. It then stages owned whole files, runs real `git diff --cached
---check`, and commits through `agentCommit` or ordinary Git as resolved above.
+`HEAD`. With `progress: true`, skip that mutation and recheck after summary without
+treating the unfinished selected slice as committing; failed prerequisites
+still publish nothing; after accepted observation omit `progress` so ordinary
+fresh marks `done` and still refuses while missing. It then stages owned whole
+files, runs real `git diff --cached --check`, and commits through
+`agentCommit` or ordinary Git as resolved above.
 Project hooks remain enabled. Refused agent identity never falls back to
 ordinary Git.
 
@@ -104,40 +109,33 @@ rewrite. Its observation is attached, reused, or an explicit coverage gap. A
 local-only success has `report: committed-pending-publication`, `commit.sha`,
 `publication: pending`, and `observation: null`, with no remote acceptance.
 
-Once a fresh commit succeeds, retain its `commit` and the returned `recovery`
-object even if delivery stops or throws. That object carries `candidateSha`
-and `suffixBase` together with the authorized checkout, remote/target and host
-owner context. Each pre-push rewrite updates the pair before transport. A
-`delivery-interrupted` result preserves that pair and reports publication as
-unknown: inspect actual remote acceptance through existing resume rather than
-assuming the push failed. A candidate-mismatch retains the fresh receipt as
-the recovery candidate, never the unrelated later branch tip. A proof stop
-retains the publisher's rewritten candidate and base; renew the required proof
-then use existing-candidate managed delivery with `validatedCandidate`, or the
-applicable interrupted-publication path. Do not rerun successful preparation
-or manufacture another commit to retry publication.
+Once a fresh commit succeeds, retain its `commit` and returned `recovery`
+(`candidateSha`, `suffixBase`, checkout/remote/target/host context) even if
+delivery stops or throws. Each pre-push rewrite updates that pair. A
+`delivery-interrupted` result keeps it and reports publication as unknown:
+inspect remote acceptance through existing resume. A candidate-mismatch
+retains the fresh receipt, never a later branch tip. A proof stop retains the
+publisher's rewritten candidate/base; renew proof, then use existing-candidate
+managed delivery with `validatedCandidate` (or interrupted-publication). Do
+not rerun successful preparation or invent another commit to retry.
 
 A thrown renewed-proof operation returns `validation-failed` with publication
-stopped and its retained rewritten candidate/base. It requires renewed proof
-before existing-candidate delivery; do not treat that failure as a transport
-interruption eligible for a push-only resume.
+stopped and its retained rewritten candidate/base. Renew proof before
+existing-candidate delivery; that failure is not a push-only resume.
 
 A failure exits nonzero and names its `operation` or commit `status`, error,
 and available terminal exit/signal details. It withholds dependent work and
-leaves preparation edits and staged content available for repair. Repair the
-named operation, renew proof only where the repair invalidates it, then retry
-fresh preparation. Do not undo owned edits or another writer's bytes merely
-to clear this failure. An already-committed or accepted candidate instead uses
-the existing [interrupted-publication recovery](trunk-publication.md#resume-an-interrupted-publication);
-it does not need another fresh commit just to resume publication.
+leaves preparation edits and staged content for repair. Repair the named
+operation, renew only invalidated proof, then retry fresh preparation. Do not
+undo owned edits or another writer's bytes merely to clear it. An
+already-committed or accepted candidate uses
+[interrupted-publication recovery](trunk-publication.md#resume-an-interrupted-publication)
+instead of another fresh commit.
 
-For example, if this project's required formatter exits nonzero, the fresh
-operation reports `operation: formatting`, preserves any edits it already
-made, and invokes neither commit nor managed delivery. Repair the formatter
-or its mechanical findings and repeat the same guarded request with
-still-valid proof; a slice the failed attempt already marked `done` stays so.
-When it succeeds, the commit receipt becomes the exact publication candidate
-and the accepted SHA is registered on the authorized observer. A
-refused hook follows the same stop; an already-accepted candidate instead
-resumes without another commit or push. A zero-exit output consumer around the
-fresh CLI cannot enable effects the operation has withheld.
+For example, a nonzero formatter reports `operation: formatting`, preserves
+edits, and withholds commit and delivery. Repair and repeat with still-valid
+proof; a slice already marked `done` stays so. On success the commit receipt
+is the exact publication candidate registered on the authorized observer. A
+refused hook stops the same way; an already-accepted candidate resumes without
+another commit or push. A zero-exit output consumer cannot enable withheld
+effects.

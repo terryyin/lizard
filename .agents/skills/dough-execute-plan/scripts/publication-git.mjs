@@ -6,6 +6,18 @@ import { promisify } from "node:util";
 
 export const exec = promisify(execFile);
 
+// `exec` with `input` as standard input. A command that exits before reading
+// all of it, as Git does when a hook rejects a commit, fails through its exit
+// status instead of an unhandled EPIPE on the closed pipe.
+export function execWithInput(command, args, options, input) {
+  const running = exec(command, args, options);
+  running.child.stdin.on("error", (error) => {
+    if (error.code !== "EPIPE") throw error;
+  });
+  running.child.stdin.end(input);
+  return running;
+}
+
 // Remote transport commands answer within a bound; local commands do not need
 // one. The default suits ordinary networks; the setting raises or lowers it.
 const transportSubcommands = new Set(["fetch", "push", "ls-remote"]);
