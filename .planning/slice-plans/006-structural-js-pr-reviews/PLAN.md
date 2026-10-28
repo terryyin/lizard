@@ -73,7 +73,7 @@ All complete-cycle gates belong to this slice. Original slice: 10.
 
 ### 3. Parenthesized expression metrics — PR #539
 Type: Behavior
-Status: planned
+Status: done
 Source: https://github.com/terryyin/lizard/pull/539 — frozen head `daa7d2068ad1bbaaa201b9685aa5d21582ec0015`
 Proof: [slice 3](SLICE-PROOF.md).
 Behavior: Given an abandoned provisional signature inside an enclosing expression → complete cycle for #539 → enclosing expression keeps tokens/CCN; real arrows keep defaults/body CCN — or a non-merge disposition is recorded.
@@ -142,6 +142,7 @@ All complete-cycle gates belong to this slice. Original slice: 15.
   IIFE restored. Refactor moved group lifecycle into \`JavaScriptFunctionsMixin\`.
   Merged as \`a2f0a538\` with [thanks](https://github.com/terryyin/lizard/pull/538#issuecomment-6456461311);
   evidence under \`docs/reviews/fabio-malpezzi-20261027/pr538/\`.
+- #539: abandoned provisional signatures restore enclosing metrics; merged as `2887bd88` with [thanks](https://github.com/terryyin/lizard/pull/539#issuecomment-6457825856); evidence under `docs/reviews/fabio-malpezzi-20261027/pr539/`.
 - #540's claim fixture already matches the PR's fixed expectation on trunk.
 
 ## Concern evidence
