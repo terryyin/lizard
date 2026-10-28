@@ -1,5 +1,19 @@
 # DearDough Process Findings
 
+The existing DearDough log currently holds both shared and project findings.
+Project-owned entries DD-003, DD-006, DD-007, DD-008, DD-011 and DD-012 stay here
+with their original evidence; DD-009 is a host-policy observation, DD-010 is a
+successful practice, and DD-013 is qualified command-output practice. DD-004
+concerns application of this project's performance acceptance gate; it remains
+qualified and is not evidence of a shared performance mechanism defect.
+
+The local maintenance selects [repeatable shell entry](.planning/seeds/SEED-018-repeatable-shell-entry.md#repeatable-shell-entry)
+for DD-003, **queued, not resolved**: six distinct executions report repeated
+setup/noise, including two overlapping-entry races. The import-probe trap has
+an established usable form, the parser issue was corrected before acceptance,
+and the remaining one-off proof seams were caught. They warrant no second
+implementation story. Existing Taken work and direction retain their order.
+
 ## DD-001 — Codex stream can yield before exposing observer identity
 
 The prescribed Codex binding prints the observer directory only in its initial
@@ -70,6 +84,8 @@ status transition.
   - Inference: same gap as above; also applies to slices whose proof is only an external observation.
 
 ## DD-003 — Nix shellHook reinstalls Python dependencies on every command
+
+**Follow-up:** [Enter the development shell repeatedly without rebuilding its environment](.planning/seeds/SEED-018-repeatable-shell-entry.md#repeatable-shell-entry) — SEED-018#repeatable-shell-entry, **queued, not resolved**.
 
 Every `nix develop -c` runs `pip install -r dev_requirements.txt` in the
 shellHook, printing pip output to stdout and upgrading `platformdirs` past

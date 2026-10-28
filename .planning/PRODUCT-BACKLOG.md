@@ -10,3 +10,4 @@ Maintenance, bug fixing, and PR reviews.
 
 ## Backlog list
 
+- [Enter the development shell repeatedly without rebuilding its environment](seeds/SEED-018-repeatable-shell-entry.md#repeatable-shell-entry) — SEED-018#repeatable-shell-entry
