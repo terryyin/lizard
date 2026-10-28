@@ -1,0 +1,1 @@
+[{"filename":"php-multiple.php","source":"<?php function plain($value, $tail) { return $value; } ?>","expected":[["plain",2]]},{"filename":"this.ts","source":"function onClick(this: HTMLElement, event: Event) { return event; }","expected":[["onClick",1]]}]
