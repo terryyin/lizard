@@ -92,12 +92,12 @@ environment still prepares successfully.
 
 ### 2. Refresh on dependency-input change and close DD-003
 Type: Behavior
-Status: planned
-Proof: After slice 1 reuse works, change a real dependency input that drives
-preparation; next entry refreshes so the environment matches; a following warm
-entry again reuses without pip install chatter. Induce a preparation failure and
-observe it on the failing entry. Update DearDough.md DD-003 with the adopted
-response revision and relevant-use outcome.
+Status: done
+Proof: Accepted — stamp of `dev_requirements.txt` at `.venv/.dev_requirements.sha256`.
+Isolated `/tmp/lizard-shell-slice2-*`: cold/warm/overlap clean; change requirements
+→ refresh pip then POST_REFRESH_WARM_OK without chatter; fail pin surfaces ERROR
+non-zero without advancing stamp. DearDough DD-003 Adopted response + relevant-use
+(no longer queued-only).
 
 Behavior: Given a prepared environment, when a real dependency input that drives
 preparation changes, the next shell entry refreshes preparation to match those
@@ -119,9 +119,11 @@ no longer only queued.
 
 ## Learnings
 
-Warm gate `test -x .venv/bin/python` is enough for non-mutating reuse; hashing
-inputs can wait for slice 2 refresh. Concurrent warm entries are safe once prep
-is skipped on the warm path.
+Warm gate `test -x .venv/bin/python` alone is not enough for refresh; hashing
+`dev_requirements.txt` into `.venv/.dev_requirements.sha256` and writing the
+stamp only after successful pip keeps failed prep retryable and warm
+non-mutating. Concurrent warm entries stay safe once prep is skipped on the
+warm path.
 
 ## Story obligations
 

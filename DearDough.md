@@ -9,10 +9,14 @@ successful practice, and DD-013 is qualified command-output practice. DD-004
 concerns application of this project's performance acceptance gate; it remains
 qualified and is not evidence of a shared performance mechanism defect.
 
-The local maintenance selects [repeatable shell entry](.planning/seeds/SEED-018-repeatable-shell-entry.md#repeatable-shell-entry)
-for DD-003, **queued, not resolved**: six distinct executions report repeated
-setup/noise, including two overlapping-entry races. The import-probe trap has
-an established usable form, the parser issue was corrected before acceptance,
+The local maintenance selected [repeatable shell entry](.planning/seeds/SEED-018-repeatable-shell-entry.md#repeatable-shell-entry)
+for DD-003. The adopted response is no longer only queued: `shell.nix`
+prepares when `.venv` is missing or the `dev_requirements.txt` stamp
+mismatches, otherwise reuses without pip install chatter, refreshes on
+dependency-input change, and surfaces preparation failures on the failing
+entry. Six distinct executions reported the prior repeated setup/noise,
+including two overlapping-entry races. The import-probe trap has an
+established usable form, the parser issue was corrected before acceptance,
 and the remaining one-off proof seams were caught. They warrant no second
 implementation story. Existing Taken work and direction retain their order.
 
@@ -53,9 +57,11 @@ Distinct executions, original timestamps/releases/tools, observed effects and qu
 
 ## DD-003 — Nix shellHook reinstalls Python dependencies on every command
 
-**Follow-up:** [Enter the development shell repeatedly without rebuilding its environment](.planning/seeds/SEED-018-repeatable-shell-entry.md#repeatable-shell-entry) — SEED-018#repeatable-shell-entry, **queued, not resolved**.
+**Adopted response:** [Enter the development shell repeatedly without rebuilding its environment](.planning/seeds/SEED-018-repeatable-shell-entry.md#repeatable-shell-entry) — SEED-018#repeatable-shell-entry.
+**Adopted revision:** stamp-guarded `shell.nix` shellHook for SEED-018#repeatable-shell-entry (slice-2 delivery on `cursor/enter-the-development-shell-repeatedly-without-r`; parent `e6df57254a71c056247881b50109d6730610b1f6`). Exact SHA is the published commit that lands this DearDough update with that shellHook.
+**Relevant-use outcome:** Isolated checkout proof on 2026-10-28 (`/tmp/lizard-shell-slice2-*.out`): cold prep installs once (stdout retained the historical `virtualenv 20.13.2 requires platformdirs<3,>=2, but you have platformdirs 4.4.0` line when pip ran); warm and overlapping warm entries exit 0 with command output only and no pip install chatter; changing `dev_requirements.txt` refreshes (pip runs, stamp updates) then subsequent warm reuses cleanly; a failing `pip install -r` surfaces `ERROR: No matching distribution…` with non-zero exit and does not run the requested command or write the new stamp. No latency claim is asserted. Finding is adopted with relevant-use evidence; full retirement under a longer observation criterion remains a triage judgment, not blocked by queueing alone.
 
-Every `nix develop -c` runs `pip install -r dev_requirements.txt` in the
+Every `nix develop -c` **formerly** ran `pip install -r dev_requirements.txt` in the
 shellHook, printing pip output to stdout and upgrading `platformdirs` past
 `virtualenv`'s pin each time. Agents had to filter that output out of
 `gcloud meta list-files-for-upload` and other parsed command results.
