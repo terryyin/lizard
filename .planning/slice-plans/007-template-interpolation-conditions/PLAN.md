@@ -2,6 +2,7 @@
 
 **Mapped story identity:** SEED-019#template-interpolation-conditions
 **Source:** [canonical story](../../seeds/SEED-019-template-interpolation-conditions.md#template-interpolation-conditions)
+**Source review:** [source-review.md](source-review.md)
 
 ## Goal and scope
 
@@ -63,7 +64,7 @@ machine. Attempt8 settles only the prior candidate.
 
 ### 1. Restore interpolation condition CCN on current trunk
 Type: Behavior
-Status: planned
+Status: done
 Proof: `label.*` and discriminating `inputs.json` fixtures show expected CCN via
 `analyze_source_code`; focused
 `test/test_languages/testJavaScript*.py testTypeScript*.py testES6.py testJSX.py testTSX.py testVue.py`;
@@ -116,6 +117,15 @@ rather than a separate outcome.
 - Attempt8 already consumed the justified quiet longer retry for that prior
   candidate; a new candidate (re-adapted and/or trimmed) may be measured under
   the contract, but the same bytes must not be re-timed seeking a pass.
+- Slice 1: keyword-member undo (#546) must also apply inside
+  `_count_interpolation_conditions` / re-tokenized `${…}` spans, or
+  `${p.catch(x)}` regresses to CCN 2. Keep interpolation dispatch in one helper
+  (`_count_conditions_from_token`); leave outer #546 inlining as the hot-path
+  shape for slice 2 measurement.
+- Slice 1 accepted proof: `analyze_source_code` label CCN 3 ×4; pr545
+  `inputs.json` 16/16; catch guard CCN 1 ×4;
+  `test/test_languages/testTypeScriptInterpolationConditions.py`; focused
+  JS/TS/ES6/JSX/TSX/Vue suite 628 passed / 5 skipped.
 
 ## Concern evidence
 
@@ -128,6 +138,26 @@ rather than a separate outcome.
 
 ## Story obligations
 
-None yet. During execution, every reported gap, loss, limitation, or interim
-behavior uses this section with
-**Source:** [canonical story](../../seeds/SEED-019-template-interpolation-conditions.md#template-interpolation-conditions).
+### G1. Unrelated language readers deferred
+Reported: slice 1 — "Deferred promises: unrelated language readers."
+Story clause: "Deferred promises: unrelated language readers"
+Disposition: excluded "Deferred promises: unrelated language readers"
+Commitment: 21
+
+### G2. Performance harness redesign deferred
+Reported: slice 1 — "Deferred promises: redesign of the performance harness."
+Story clause: "redesign of the performance harness"
+Disposition: excluded "redesign of the performance harness"
+Commitment: 22
+
+### G3. Prior attempt8 measurement assumptions
+Reported: slice 1 — "attempt8's incremental names/counts failure (+4.767% upper) is current evidence against the adapted candidate as-is; a justified quiet longer retry already ran."
+Story clause: "attempt8's incremental names/counts failure (+4.767% upper) is current evidence against the adapted candidate as-is"
+Disposition: no user cost "conditions written inside template interpolations contribute to each function's CCN the same way they do outside templates": these are measurement assumptions retained for slice 2 disposition, not a product gap in the CCN fix itself
+Commitment: 14.q1, 14.q2
+
+### G4. ADR ownership assumptions
+Reported: slice 1 — "ADR-0001 governs CCN meaning and ADR-0000 keeps human architectural ownership — no new Architecture section."
+Story clause: "ADR-0001 governs CCN meaning and ADR-0000 keeps human architectural ownership — no new Architecture section for this extension of existing reader behavior"
+Disposition: no user cost "conditions written inside template interpolations contribute to each function's CCN the same way they do outside templates": governing ADR assumptions; product extends existing readers without a new Architecture section
+Commitment: 14.q3, 14.q4

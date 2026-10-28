@@ -18,6 +18,7 @@ class TSXReader(TypeScriptReader):
 
     ext = ['tsx', 'jsx']
     language_names = ['tsx', 'jsx']
+    _scan_atomic_templates = True
 
     @staticmethod
     @js_style_regex_expression
