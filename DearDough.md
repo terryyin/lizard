@@ -128,6 +128,14 @@ shellHook, printing pip output to stdout and upgrading `platformdirs` past
   - Observed effect: shellHook initialization and dependency noise accompany read-only commands and proof. Every owned Nix entry was serialized; no SEED015 parallel-Nix race is claimed. Interpreter/import hashes and accepted proof held.
   - Inference: recurrence of the project environment issue; no total latency or causal timing allocation is asserted.
 
+- Execution: SEED-010#review-lexical-js-prs
+  - Timestamp: 2026-10-28T05:56:00Z
+  - Tool: Cursor
+  - Open Dough release: 0.3.71
+  - Evidence: conversation 9e3d53de-1aaa-43d4-a4c0-161f4d937215 compaction segment_000 around PR #546 publish; temporary checkout `/tmp/pr546-publish-10000` Nix probe printed platformdirs 4.4.0 vs virtualenv 20.13.2 despite `PIP_QUIET=1`.
+  - Observed effect: shellHook pip noise accompanied the contributor-head publish probe; semantic assert still passed and the push completed.
+  - Inference: same project-environment shellHook cost; serial Nix use avoided races, but pin churn remained on entry.
+
 ## DD-004 — PR merge preceded a missing affected-workload performance gate
 
 Complete the source's relevant workload selection before the exact-head merge.
@@ -307,6 +315,37 @@ job; retaining raw data need not print it into coordinator context.
   - Additional evidence: root retained a20,788-token GitHub ALL_TOOLS discovery matching shared description boilerplate, and a125,371-token broad installation rg output; exact-name projection and exact API/receiver files replaced those searches before conclusions. No unrelated launch-record contents or truncated output established acceptance.
   - Inference: avoidable output/context cost, not a provider or CI failure. No aggregate token saving or elapsed-time reduction is claimed.
 
+## DD-014 — Empty `gh pr checks` is not a green merge gate
+
+After pushing a corrected contributor head, do not treat `gh pr checks --watch`
+reporting "no checks reported" as passage. Wait until the new head's required
+workflow run is visible and successful before the exact-head merge; postpone
+thanks until that run succeeds if a merge already happened.
+
+### Occurrences
+- Execution: SEED-010#review-lexical-js-prs
+  - Timestamp: 2026-10-28T05:56:52Z
+  - Tool: Cursor
+  - Open Dough release: 0.3.71
+  - Evidence: conversation 9e3d53de-1aaa-43d4-a4c0-161f4d937215 compaction segment_000 turns ~224–230; `gh pr checks 546 --watch` printed `no checks reported on the 'pr/js-keyword-as-a-member-name' branch` then `gh pr merge 546 --match-head-commit 395ae04…` at mergedAt 2026-10-28T05:56:52Z; head check-runs were still queued; coordinator then watched run 40640907400 to success before thanks. Distinct from DD-004 (missing performance corpus before merge).
+  - Observed effect: PR #546 merged while the corrected-head fourteen-job matrix was not yet visible; merge commit `559b8c8` preceded green checks; thanks waited for run success.
+  - Inference: empty check listing is an absent gate, not a pass; race after push can hide the new run from `gh pr checks`.
+
+## DD-015 — Interrupted Task recovery by inspecting uncommitted checkout
+
+When a delegated Task is interrupted, treat the slice as incomplete, inspect the
+owned checkout's uncommitted diff and plan (and remote) before accepting any
+claim, and resume only remaining work without marking done on the interrupt.
+
+### Occurrences
+- Execution: SEED-010#review-lexical-js-prs
+  - Timestamp: unknown (2026-10-28 slice 2; interrupts after ~10580484ms and ~3240708ms)
+  - Tool: Cursor
+  - Open Dough release: 0.3.71
+  - Evidence: conversation 9e3d53de-1aaa-43d4-a4c0-161f4d937215 compaction segment_000; `CallDynamicTool was interrupted by the user` on slice 2 / finish-slice-2 Tasks; coordinator notes "Interrupted agent left uncommitted product and evidence; no unexpected commits. Re-establishing focused proof…"; later #545 disposition left unmerged with evidence after attempt8.
+  - Observed effect: no false done status; uncommitted adapted product and evidence were recovered; slice 2 completed as an evidenced non-merge without unexpected commits from the interrupted agents.
+  - Inference: practice matches installed interrupted-delegation recovery; worth repeating on long measurement Tasks.
+
 ## Retention
 
-- Highest allocated local number: 13
+- Highest allocated local number: 15
