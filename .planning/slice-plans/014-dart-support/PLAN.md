@@ -187,7 +187,7 @@ and fall through unchanged.
 
 ### 5. Constructors are reported only with a body, and initializer lists end at the body or `;`
 Type: Behavior
-Status: planned
+Status: done
 Proof: the story's `class Point` → exactly `Point::fromJson` (CCN 2, 1 param),
 `Point::sum`, `Point::scale=`, `Point::isOrigin`, `Point::toString`; no
 function spans lines of two members; `Point.checked(this.x, this.y) { if (x <
@@ -312,8 +312,7 @@ Disposition: proved by slice 4: test/test_languages/testDartExpressionBodies.py 
 ### G4. Constructors with initializer lists misparse; body-less not excluded yet
 Reported: slice 1 — "constructors with initializer lists misparse until slice 5"
 Story clause: "A declaration with no body, such as `Point(this.x, this.y);` or `Point.origin() : x = 0, y = 0;`, is not a function"
-Disposition: interim until slices 5
-Commitment: 21
+Disposition: proved by slice 5: test/test_languages/testDartConstructors.py TestDartConstructors
 
 ### G5. Exception `on T` clauses undercount
 Reported: slice 1 — "`on T` clauses undercount until slice 6"

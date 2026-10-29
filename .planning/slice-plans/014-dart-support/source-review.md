@@ -31,19 +31,19 @@ ids, qualifications Q1–Q8, examples E1–E9, exclusions X1–X4).
 | 12.4 | Methods of enums are recognized as functions. | slice 1 | observed: testDart.py enum → E::bar |
 | 13 | Getters (`get name`) are recognized as functions. | slice 4 | observed: testDartExpressionBodies.py test_point_getters_setters_and_arrow_tostring → Point::sum, Point::isOrigin |
 | 14 | Setters (`set name(v)`) are recognized as functions. | slice 4 | observed: testDartExpressionBodies.py test_point_getters_setters_and_arrow_tostring → Point::scale= |
-| 15.1 | Unnamed constructors with a body are recognized as functions. | slice 5 | |
-| 15.2 | Named constructors with a body are recognized as functions. | slice 5 | |
-| 15.3 | `factory` constructors with a body are recognized as functions. | slice 5 | |
+| 15.1 | Unnamed constructors with a body are recognized as functions. | slice 5 | observed: testDartConstructors.py TestDartConstructors.test_unnamed_constructor_with_body → Point::Point |
+| 15.2 | Named constructors with a body are recognized as functions. | slice 5 | observed: testDartConstructors.py test_named_constructor_with_body_and_initializing_formals → Point::checked |
+| 15.3 | `factory` constructors with a body are recognized as functions. | slice 5 | observed: testDartConstructors.py test_point_class_story_constructors_and_members → Point::fromJson |
 | 16 | Block bodies form a function. | slice 1 | observed: greet / add / MyWidget::build block bodies |
 | 17 | `=>` expression bodies form a function. | slice 4 | observed: testDartExpressionBodies.py maybe; Point::sum / toString; twice; nested map arrow still one function |
 | 18 | `async` between the parameter list and the body does not break recognition. | slice 7 | |
 | 19 | `async*` between the parameter list and the body does not break recognition. | slice 7 | G6 |
 | 20 | `sync*` between the parameter list and the body does not break recognition. | slice 7 | G6 |
-| 21 | A declaration with no body is not a function. | slice 5 | G4 |
+| 21 | A declaration with no body is not a function. | slice 5 | observed: testDartConstructors.py test_bodyless_constructors_and_const_not_reported; test_point_class_story body-less not in names |
 | 22 | Top-level functions are named `name`. | slice 1 | observed: greet, add |
 | 23 | Members are named `Class::member`. | slice 1 | observed: MyWidget::build; M::foo; E::bar |
-| 24 | Unnamed constructors are named `Class::Class`. | slice 5 | |
-| 25 | Named and factory constructors are named `Class::constructorName`. | slice 5 | |
+| 24 | Unnamed constructors are named `Class::Class`. | slice 5 | observed: testDartConstructors.py test_unnamed_constructor_with_body → Point::Point |
+| 25 | Named and factory constructors are named `Class::constructorName`. | slice 5 | observed: testDartConstructors.py Point::checked; Point::fromJson |
 | 26 | Getters are named `Class::getterName`. | slice 4 | observed: testDartExpressionBodies.py Point::sum, Point::isOrigin |
 | 27 | Setters are named `Class::setterName=`. | slice 4 | observed: testDartExpressionBodies.py Point::scale= |
 | 28.1 | `if` counts as a decision. | slice 1 | observed: greet CCN includes if; MyWidget::build |
@@ -80,7 +80,7 @@ ids, qualifications Q1–Q8, examples E1–E9, exclusions X1–X4).
 | 35 | Each declared positional parameter counts as one parameter. | slice 1 | observed: add 2 params; build context |
 | 36 | Each declared optional positional parameter in `[…]` counts as one parameter. | slice 2 | observed: testDart.py test_optional_positional_parameter_and_null_coalesce 2 params |
 | 37 | Each declared named parameter in `{…}` counts as one parameter. | slice 1 | observed: greet 3 params (name + times + shout) |
-| 38 | `this.x` initializing formals count as parameters. | slice 5 | |
+| 38 | `this.x` initializing formals count as parameters. | slice 5 | observed: testDartConstructors.py test_named_constructor_with_body_and_initializing_formals / test_unnamed_constructor_with_body → 2 params |
 | 39 | Defaults add nothing to the parameter count. | slice 1 | observed: greet shout = false still 3 params |
 | 40 | `required` adds nothing to the parameter count. | slice 1 | observed: greet required times counted once |
 | 41 | Existing language analysis is unchanged. | slice 1 | observed: full pytest suite 2169 passed, 7 skipped |
