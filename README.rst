@@ -17,6 +17,7 @@ A list of supported languages:
 
 -  C# (C Sharp)
 -  C/C++ (works with C++14)
+-  Dart
 -  Erlang
 -  Fortran
 -  GDScript
@@ -246,5 +247,4 @@ Contributions are welcome. Project-specific development rules are in
 ``AGENTS.md``. Adding a language reader uses
 ``.agents/skills/lizard-language-support/``.
 
-AI lifecycle guidance is installed under ``.agents/skills/`` and
-``.claude/skills/``.
+AI lifecycle guidance is installed under ``.agents/skills/`` and ``.claude/skills/``.

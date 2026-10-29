@@ -2,6 +2,7 @@
 
 **Mapped story identity:** SEED-021#dart-support
 **Source:** [canonical story](../../seeds/SEED-021-dart-support.md#dart-support)
+**Source review:** [source-review.md](source-review.md)
 
 ## Goal and scope
 
@@ -103,7 +104,7 @@ one-off Python process; no file in the checkout was edited.
 
 ### 1. Dart files are discovered and analyzed with C-like function recognition
 Type: Behavior
-Status: planned
+Status: done
 Proof: `testDart.py`: `greet` → CCN 3, 3 parameters, NLOC 7; `add` → CCN 1;
 `MyWidget::build` with an `onPressed: () { if … }` closure and a ternary → one
 function, CCN 3, no `(anonymous)`; CLI test: temp dir with `lib/main.dart` and
@@ -123,7 +124,8 @@ until slice 4; constructors with initializer lists misparse until slice 5;
 
 Files: `lizard_languages/dart.py` (`DartReader(CLikeReader)` with
 `ext = ['dart']`, `language_names = ['dart']`, `DartStates(CLikeStates)`
-initially empty, parallel states `DartStates` + `CLikeNestingStackStates`),
+initially empty, parallel states `DartStates` + `DartNestingStackStates`
+extending type keywords with `mixin`/`enum` via `_TYPE_KEYWORDS`),
 `lizard_languages/__init__.py`, `README.rst`,
 `test/test_languages/testDart.py` (+ `dart_helpers.py` if the Kotlin helper
 pattern is followed).
@@ -264,7 +266,12 @@ holds; interim behavior named in slice 1 shrinks slice by slice.
 
 ## Learnings
 
-- (none yet)
+- Minimal `DartReader(CLikeReader)` with empty `DartStates` plus
+  `DartNestingStackStates` is enough for block-body recognition; mixin/enum
+  need nesting type-keywords, while `extension` stays unqualified for slice 4's
+  bare `twice`.
+- Nesting keywords are shared via overridable
+  `CLikeNestingStackStates._TYPE_KEYWORDS` (post-change refactor).
 
 ## Concern evidence
 
@@ -278,3 +285,77 @@ holds; interim behavior named in slice 1 shrinks slice by slice.
   execution only if the switch-expression context handling overruns.
 - Interim behavior named in slice 1 is an accepted trade-off with its
   replacing slices listed.
+
+## Story obligations
+
+### G1. Nullable and null-aware tokens inflate or mis-split CCN
+Reported: slice 1 — "nullable `?` inflates CCN until slice 2"
+Story clause: "Not decisions: nullable `T?`, `?.`, `?..`, `!`"
+Disposition: interim until slices 2
+Commitment: 28.8, 28.9, 30.1, 30.2, 30.3, 30.4
+
+### G2. Triple-quoted / raw strings and doc comments not yet inert for NLOC
+Reported: slice 1 — "`'''…'''` leaks until slice 3"
+Story clause: "Their contents introduce neither decisions nor functions; comment lines are excluded from NLOC"
+Disposition: interim until slices 3
+Commitment: 31.3, 31.4, 31.5, 31.8, 32
+
+### G3. Expression bodies are missed
+Reported: slice 1 — "`=>` bodies are missed until slice 4"
+Story clause: "Block bodies and `=>` expression bodies both form a function"
+Disposition: interim until slices 4
+Commitment: 17
+
+### G3b. Getters and setters are missed
+Reported: slice 1 — "accessors are missed until slice 4"
+Story clause: "getters (`get name`), setters (`set name(v)`)"
+Disposition: interim until slices 4
+Commitment: 13, 14, 26, 27
+
+### G4. Constructors with initializer lists misparse; body-less not excluded yet
+Reported: slice 1 — "constructors with initializer lists misparse until slice 5"
+Story clause: "A declaration with no body, such as `Point(this.x, this.y);` or `Point.origin() : x = 0, y = 0;`, is not a function"
+Disposition: interim until slices 5
+Commitment: 21
+
+### G5. Exception `on T` clauses undercount
+Reported: slice 1 — "`on T` clauses undercount until slice 6"
+Story clause: "each exception clause once whether written `on T`, `catch (e)`, or `on T catch (e)`"
+Disposition: interim until slices 6
+Commitment: 28.5
+
+### G5b. Switch-expression arms uncounted
+Reported: slice 1 — "switch-expression arms are uncounted until slice 6"
+Story clause: "In a switch expression each arm counts once except a bare"
+Disposition: interim until slices 6
+Commitment: 29
+
+### G6. `async*` / `sync*` lose the function
+Reported: slice 1 — "`async*`/`sync*` lose the function until slice 7"
+Story clause: "`async`, `async*`, and `sync*` between the parameter list and the body do not break recognition"
+Disposition: interim until slices 7
+Commitment: 19, 20
+
+### G7. Interpolation decisions deferred
+Reported: slice 1 — "Decisions inside string interpolation are deferred"
+Story clause: "Decisions inside string interpolation `${…}` are not counted"
+Disposition: excluded "Decisions inside string interpolation `${…}` are not counted"
+Commitment: X1
+
+### G8. Separate anonymous closure reporting deferred
+Reported: slice 1 — "Separate anonymous closure reporting is deferred"
+Story clause: "Reporting closures and function literals as separate `(anonymous)` functions, as the JavaScript and Kotlin readers do"
+Disposition: excluded "Reporting closures and function literals as separate `(anonymous)` functions, as the JavaScript and Kotlin readers do"
+Commitment: X2
+
+### G9. Extension metrics beyond core four not verified
+Reported: slice 1 — "Extension metrics beyond the core four are not verified"
+Story clause: "Extension metrics beyond the core four (nesting depth, and so on) are whatever the shared machinery yields; not verified here"
+Disposition: excluded "Extension metrics beyond the core four (nesting depth, and so on) are whatever the shared machinery yields; not verified here"
+Commitment: X3
+
+### G10. Unlisted Dart 3 forms without dedicated verification
+Reported: slice 1 — "Unlisted Dart 3 forms follow the common rule without dedicated verification"
+Story clause: "`if (x case pattern)`, records, extension types, and other Dart 3 forms not in the key examples follow the common rule without their own verification"
+Disposition: excluded "`if (x case pattern)`, records, extension types, and other Dart 3 forms not in the key examples follow the common rule without their own verification"
+Commitment: X4

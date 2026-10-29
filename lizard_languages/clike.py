@@ -104,6 +104,7 @@ class CLikeNestingStackStates(CodeStateMachine):
     """
 
     __namespace_separators = ['<', ":", "final", "[", "extends", 'implements']
+    _TYPE_KEYWORDS = ("struct", "class", "namespace", "union")
 
     def _state_global(self, token):
         """Dual-purpose state for global and structure bodies."""
@@ -111,7 +112,7 @@ class CLikeNestingStackStates(CodeStateMachine):
             self._state = self._template_declaration
         elif token == ".":
             self._state = self._dot
-        elif token in ("struct", "class", "namespace", "union"):
+        elif token in self._TYPE_KEYWORDS:
             self._state = self._read_namespace
         elif token == "{":
             self.context.add_bare_nesting()
