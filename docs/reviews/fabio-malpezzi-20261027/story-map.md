@@ -9,14 +9,16 @@ and run those later. Every story owns full cycles, not horizontal QA phases.
 | --- | --- | --- |
 |SEED-010#review-fabio-malpezzi-prs|527,528,531,533,534,532,535,536|Completed eight-disposition review scope; original proof retained. PR536's later SEED-016 correction is merged and acknowledged below.|
 |[SEED-010#review-structural-js-prs](pr537/README.md)|537–543|Done; dispositions in `pr537`–`pr543` (recovery `e480e5d`); #540 already-fixed/closed.|
-|SEED-010#review-lexical-js-prs (done)|544–547|Completed; spent plan/story recoverable at `94ec613b`; #545 follow-up [SEED-019](../../../.planning/seeds/SEED-019-template-interpolation-conditions.md#template-interpolation-conditions).|
+|SEED-010#review-lexical-js-prs (done)|544–547|Completed; spent plan/story recoverable at `94ec613b`; #545 follow-up done as [SEED-019#template-interpolation-conditions](../../../.planning/done/SEED-019_template-interpolation-conditions.json) then [SEED-019#dedupe-template-interpolation-tests](../../../.planning/done/SEED-019_dedupe-template-interpolation-tests.json).|
 
 The first identity remains stable; its scope is the human-authorized first eight
 reviews. Nothing is marked delivered merely because split.
 All three review stories are disposition-complete. The structural batch has six
 merged and acknowledged PRs; #540 was already fixed and closed unmerged. The
-lexical batch left #545 unmerged with its active
-[SEED-019 follow-up](../../../.planning/seeds/SEED-019-template-interpolation-conditions.md#template-interpolation-conditions).
+lexical batch's #545 follow-up completed as
+[SEED-019#template-interpolation-conditions](../../../.planning/done/SEED-019_template-interpolation-conditions.json)
+then
+[SEED-019#dedupe-template-interpolation-tests](../../../.planning/done/SEED-019_dedupe-template-interpolation-tests.json).
 
 ## Every original slice is mapped once
 
@@ -38,7 +40,7 @@ lexical batch left #545 unmerged with its active
 |14|[#542](https://github.com/terryyin/lizard/pull/542)|`ddf075a0cdee4079e584919d818c28b6468a84b0`|SEED-010#review-structural-js-prs / 6|Merged `ff2f984a` and [acknowledged](https://github.com/terryyin/lizard/pull/542#issuecomment-6458636093); [qualified proof](pr542/README.md)|
 |15|[#543](https://github.com/terryyin/lizard/pull/543)|`f6a329b488bb1a6e5aa9af43f0cf3e5e761d8353`|SEED-010#review-structural-js-prs / 7|Merged `13ec5f70` with acknowledgement|
 |16|[#544](https://github.com/terryyin/lizard/pull/544)|`3ac7e4eaf61e898836fded88ab715b37f9fedbbf`|SEED-010#review-lexical-js-prs / 1|Merged `35b454b` at corrected head `77902f7`; [acknowledged](https://github.com/terryyin/lizard/pull/544#issuecomment-6456484491); [review record](pr544/README.md)|
-|17|[#545](https://github.com/terryyin/lizard/pull/545)|`baa95a4df8278421bb3d3a6487516030cc03a979`|SEED-010#review-lexical-js-prs / 2|Left unmerged — real defect; adapted candidate fails incremental names/counts &lt;3% upper CI after quiet longer retry; [review record](pr545/README.md); follow-up [SEED-019#template-interpolation-conditions](../../../.planning/seeds/SEED-019-template-interpolation-conditions.md#template-interpolation-conditions)|
+|17|[#545](https://github.com/terryyin/lizard/pull/545)|`baa95a4df8278421bb3d3a6487516030cc03a979`|SEED-010#review-lexical-js-prs / 2|Merged after SEED-019 performance qualification; [review record](pr545/README.md); follow-up done [SEED-019#template-interpolation-conditions](../../../.planning/done/SEED-019_template-interpolation-conditions.json) then [SEED-019#dedupe-template-interpolation-tests](../../../.planning/done/SEED-019_dedupe-template-interpolation-tests.json)|
 |18|[#546](https://github.com/terryyin/lizard/pull/546)|`a671632141127fca9b2785fdbb0c675d45ae9042`|SEED-010#review-lexical-js-prs / 3|Merged `559b8c8` at corrected head `395ae04`; [acknowledged](https://github.com/terryyin/lizard/pull/546#issuecomment-6461965881); [review record](pr546/README.md)|
 |19|[#547](https://github.com/terryyin/lizard/pull/547)|`2766557096daac3f8e55657e9c48ba685157635d`|SEED-010#review-lexical-js-prs / 4|Merged `8567a4c` at corrected head `bf75e50`; [acknowledged](https://github.com/terryyin/lizard/pull/547#issuecomment-6463154289); [review record](pr547/README.md)|
 
