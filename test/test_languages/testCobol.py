@@ -5,24 +5,10 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from lizard import analyze_file, get_reader_for
+from lizard import get_reader_for
 from lizard_languages import CobolReader
 
-
-def get_cobol_function_list(source_code):
-    return analyze_file.analyze_source_code("a.cbl", source_code).function_list
-
-
-def fixed(lines):
-    """Build fixed-format COBOL: 6-digit seq + indicator + body."""
-    out = []
-    for i, line in enumerate(lines, start=1):
-        if isinstance(line, tuple):
-            indicator, body = line
-        else:
-            indicator, body = ' ', line
-        out.append('%06d%s%s\n' % (i * 100, indicator, body))
-    return ''.join(out)
+from .cobol_helpers import fixed, get_cobol_function_list
 
 
 class TestCobol(unittest.TestCase):

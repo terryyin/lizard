@@ -83,16 +83,23 @@ class CobolReader(CodeReader, CobolCommentsMixin):
     ext = ['cbl', 'cob', 'cobol']
     language_names = ['cobol']
 
-    # Interim: leave condition sets empty so branching undercounts until
-    # decision keywords (IF/AND/OR/EVALUATE/SEARCH/conditional PERFORM) wire in.
-    _control_flow_keywords = set()
-    _logical_operators = set()
-    _case_keywords = set()
+    # Canonical uppercase forms; __init__ folds both cases for the shared
+    # counter (tokens keep source casing under (?i) matches). Conditional
+    # PERFORM is counted via UNTIL / TIMES / VARYING, not PERFORM itself.
+    _control_flow_keywords = {
+        'IF', 'ELSE IF', 'ELSEIF', 'UNTIL', 'TIMES', 'VARYING', 'AT END',
+    }
+    _logical_operators = {'AND', 'OR'}
+    _case_keywords = {'WHEN'}
     _ternary_operators = set()
 
     def __init__(self, context):
         super(CobolReader, self).__init__(context)
         self.parallel_states = [CobolStates(context)]
+        self.conditions = (
+            self.conditions
+            | {c.upper() for c in self.conditions}
+            | {c.lower() for c in self.conditions})
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
@@ -101,6 +108,12 @@ class CobolReader(CodeReader, CobolCommentsMixin):
             r'(?i)|'
             r'\*>' + _UNTIL_END + r'|'
             r'ELSE\s+IF|'
+            r'WHEN\s+OTHER|'
+            r'AT\s+END|'
+            r'END\s+IF|'
+            r'END\s+EVALUATE|'
+            r'END\s+PERFORM|'
+            r'END\s+SEARCH|'
             + _COBOL_WORD
             + addition
         )

@@ -120,12 +120,8 @@ the next paragraph/section header or end of PROCEDURE DIVISION arrives;
 
 ### 2. Core COBOL decisions raise CCN
 Type: Behavior
-Status: planned
-Proof: `CHECK-LIMIT` with `IF … AND …` → CCN 3; `CLASSIFY` EVALUATE with two
-counted `WHEN` arms and `WHEN OTHER` → CCN 3; `LOOKUP` SEARCH with `AT END`
-and `WHEN` → CCN 3; `DRIVE` with `PERFORM … UNTIL` and
-`PERFORM VARYING … UNTIL` → CCN 4; an unconditional `PERFORM` in another
-paragraph adds 0; `ELSE`, `END-IF`, and `WHEN OTHER` add nothing.
+Status: done
+Proof: Accepted 2026-10-29 — `nix develop -c python -m pytest test/test_languages/testCobol.py test/test_languages/testCobolDecisions.py` (18 passed): CHECK-LIMIT CCN 3; CLASSIFY CCN 3; LOOKUP CCN 3; DRIVE CCN 4; unconditional transfers add 0; ELSE IF/ELSEIF/TIMES covered. Full suite `nix develop -c python -m pytest` → 2179 passed, 7 skipped.
 
 Behavior: Given the story's decision forms inside a paragraph → analyze →
 CCN matches the Key examples; non-decision keywords listed in Scope add
@@ -155,14 +151,22 @@ interim undercounting named in slice 1 is gone after slice 2.
 - `line_counter` drops `\n` before the state machine, so Area-A paragraph/section
   detection must run in reader `preprocess` (while leading spaces/newlines still
   exist), then emit synthetic `@COBOL_PARAGRAPH` / `@COBOL_SECTION` markers.
+- Conditional PERFORM fits the shared model via `UNTIL`/`TIMES`/`VARYING`, not
+  `PERFORM`. Keep `WHEN OTHER` and `END-*` as intact tokens. Fall-through
+  EVALUATE (`WHEN 2 WHEN 3`) needs state-machine arm collapse after the shared
+  condition counter.
 
 ## Story obligations
 
 ### G1. Decision keywords undercount CCN until slice 2
 Reported: slice 1 — "Decision CCN (IF/AND/OR/EVALUATE/SEARCH/conditional PERFORM) — interim undercount until slice 2"
 Story clause: "Decisions (CCN): `IF`; each `ELSE IF` / `ELSEIF`; each `WHEN` in `EVALUATE` except `WHEN OTHER`; `PERFORM … UNTIL`, `PERFORM … TIMES`, and `PERFORM … VARYING` (one each); each `WHEN` and `AT END` in `SEARCH`; `AND` and `OR` in conditions."
-Disposition: interim until slices 2
-Commitment: 9a, 9b.1, 9b.2, 9c, 9d.1, 9d.2, 9d.3, 9e.1, 9e.2, 9f.1, 9f.2
+Disposition: proved by slice 2: test/test_languages/testCobolDecisions.py::test_if_and_raises_ccn, test_evaluate_when_arms_and_when_other, test_search_at_end_and_when, test_conditional_perform_until_and_varying, test_else_if_elseif_and_perform_times
+
+### G2. AT END also counts outside SEARCH
+Reported: slice 2 — "AT END counts globally (incl. READ), not SEARCH-only"
+Story clause: "each `WHEN` and `AT END` in `SEARCH`"
+Disposition: no user cost "so they can find paragraphs that need review or simplification": AT END on READ is still a real binary decision that raises paragraph CCN; SEARCH AT END remains proved, and no story text forbids counting other AT END phrases.
 
 ### GX-D1. Free-format deferred
 Reported: slice 1 — "deferred free/variable format"
