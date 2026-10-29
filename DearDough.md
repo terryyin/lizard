@@ -391,6 +391,15 @@ story-branch publishes should not bind it.
   - Observed effect: slice commit succeeded locally; remote execution branch stayed at Take SHA until a second resume after parking the expectation.
   - Inference: `resolvePublicationLandingContext` auto-applies an open first-trunk expectation to every publish from that workspace/branch; mismatch should skip capture rather than fail the push, or story-branch delivery should not resolve first-landing expectations.
 
+- Execution: SEED-020#cobol-support
+  - Timestamp: 2026-10-29T11:10:00+08:00
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.74
+  - Evidence: story-branch mode, landing-context target `refs/heads/master` (launch `7b1b9b82…/landing-context.json`); slice-1 `execution-increment-delivery.mjs fresh` committed `0da2e22` then interrupted on auto-resolved first-landing expectation `38119287389deb9e…json`; coordinator parked to `/tmp/cobol-first-landing-expectation-parked-95084.json`, resumed publish of `0da2e22`, restored expectation; slice-2 delivery likewise parked (`…-slice2-10311.json` at 11:21) before push of `3a7a933`, then restored.
+  - Observed effect: both Behavior increments needed the same park/resume/restore workaround before the story branch advanced; trunk first-landing expectation was preserved for later land.
+  - Inference: same auto-resolve path as SEED-019; recurrence on consecutive story-branch language-support launches under 0.3.74 confirms intermediate publishes still bind first-trunk landing context.
+
 ## Retention
 
 - Highest allocated local number: 17

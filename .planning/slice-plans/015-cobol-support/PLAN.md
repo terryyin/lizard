@@ -136,6 +136,17 @@ condition model over parallel recognizers per verb.
 Safe stop: after either slice the suite is green and earlier behavior holds;
 interim undercounting named in slice 1 is gone after slice 2.
 
+## Execution complete
+
+Product advice: Fixed-format COBOL paragraph Functions with core decision CCN
+close issue #431 for the common case and fit current direction (maintenance /
+PR work) as finishing Taken language intake — do not queue free-format,
+copybooks, nested/rollups, or vendor EXEC catalogues from deferred D1–D5 while
+near-future direction stays maintenance-first. Keep G2 (global `AT END`) as
+settled; optional hygiene if COBOL is touched again: an explicit `OR` fixture
+(wired, not story-example-proved) and a column-7 `/` comment case. No backlog
+change from this review.
+
 ## Current decisions
 
 - New `CobolReader` + custom states; do not extend `CLikeReader`.
