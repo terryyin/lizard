@@ -251,6 +251,13 @@ following `*` before `{` or `=>`.
 Safe stop: after any slice the suite is green and earlier slices' behavior
 holds; interim behavior named in slice 1 shrinks slice by slice.
 
+## Execution complete
+
+Product advice: No queue change from this review. Direction remains
+maintenance/PR reviews; COBOL stays next. Optional later hypotheses already
+deferred as X1–X4 (`${…}` decisions; separate `(anonymous)` closures; Dart 3
+`case pat =>` statement arms; issue #325 closure after land).
+
 ## Current decisions
 
 - Extend `CLikeStates`, not `JavaStates`; qualification via
