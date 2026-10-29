@@ -69,6 +69,8 @@ export async function publishHistoryPreservingCandidate({
     landingContext: suppliedLandingContext,
     workspace: ownedWorkspace,
     branch,
+    remote,
+    targetRef,
   });
   await git(ownedWorkspace, "fetch", remote);
   const tracking = originTrackingRef(targetRef, remote);

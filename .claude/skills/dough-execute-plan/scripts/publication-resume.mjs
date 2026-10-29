@@ -67,6 +67,8 @@ export async function resumeInterruptedPublication({
     landingContext: suppliedLandingContext,
     workspace: ownedWorkspace,
     branch,
+    remote,
+    targetRef,
   });
   await validateRetainedComparison(ownedWorkspace, candidateSha, suffixBase);
   const comparison = suffixBase === undefined ? {} : { suffixBase };

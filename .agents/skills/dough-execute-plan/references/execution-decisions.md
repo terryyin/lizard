@@ -97,17 +97,19 @@ North Star direction to work around the ADR.
 ## Resolve a disputed plan restriction
 
 Use [examples and constraints](../../dough-story-refinement/references/planning.md#examples-and-constraints)
-when a plan, quick story, or instruction requires rejection that appears supported only by
-fixture counts or arrangements. Cite the exact source contract and the
-conflicting story examples, deferred promises, or domain evidence. State what
-behavior the proposed change would alter and ask the human to resolve the
-restriction. Missing independent justification is grounds for this question,
-even when the error seems clear; it is not permission to remove the restriction.
+when a plan, quick story, or instruction imposes or preserves a restriction
+that appears supported only by scope limits, examples, or inherited code or tests.
+Restrictions include prerequisites, filters and suppressed operations. Cite the
+exact source contract and the conflicting story examples, scope limits, or
+domain evidence. State what behavior the proposed change would alter and ask the
+human to resolve the restriction. Missing independent justification is grounds
+for this question, even when the error seems clear; it is not permission to
+remove the restriction.
 
 Stop the conflicting implementation, refactor, or correction-planning path and
 leave disputed behavior unchanged. Return the evidence and decision needed in
 the execution conversation, existing handoff, or active plan. A
-behavior-preserving refactor cannot remove a contractual rejection, and passing
+behavior-preserving refactor cannot remove a contractual restriction, and passing
 tests or plan compliance do not justify it.
 Retain independently supported product constraints; a count limit is not
 accidental merely because examples also have counts. Resume the disputed path

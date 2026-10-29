@@ -43,8 +43,8 @@ For each story, establish:
 
 - **Goal:** beneficiary, desired change, and contribution to the business goal.
   Keep the story's observable outcome distinct from the broader ambition.
-- **Scope:** required behavior, justified rejection constraints, deferred
-  promises, and boundary assumptions, using the distinction below.
+- **Scope:** required behavior, required restrictions, scope limits, and boundary
+  assumptions, using the distinction below.
 - **Key examples:** concrete pre-condition → trigger → result situations that
   explain the scope. Include boundaries or exceptions when they resolve
   ambiguity; do not enumerate a complete test suite.
@@ -65,17 +65,27 @@ without turning refinement into technical planning. Omit unused optional section
 
 ## Examples and constraints
 
-Examples demonstrate required behavior; their counts and arrangements do not
-forbid unlisted cases. Require an independent domain or product requirement to
-justify rejection, and cite it when recording negative acceptance. Do not invent
-that justification when it is missing; record any unresolved constraint decision.
-Deferred promises state what this delivery does not commit to build or verify,
-not what the product must reject.
+Separate **scope limits** (work this increment does not undertake) from
+**required restrictions** (product behavior limited for an independently
+justified product need). Examples demonstrate required behavior; their counts
+and arrangements do not forbid unlisted cases. Before adding a restriction or
+preserving one implicated by the change, identify its independent product need
+or actual safety/correctness risk. This includes prerequisites, filters, count
+limits, and suppressed operations. Scope limits, examples, existing code and
+tests alone do not justify a required restriction. Cite the reason when making
+a restriction an acceptance requirement; leave consequential unresolved
+restriction decisions with the human.
+
+Deferred promises limit delivery and verification commitments; they do not
+require preventing other cases. A capability may remain unimplemented, and a
+guard may protect a known implementation limitation: identify the limitation
+and risk rather than treating the delivery boundary as its justification.
 
 For example, £10 + £20 gives a £30 basket. Summing prices also handles a valid
 third item; its absence from the example justifies neither rejection nor a
-separate handler. An explicit item limit does justify rejection. Deferring discounts
-adds no discount machinery and leaves naturally supported baskets intact.
+separate handler. An independently justified item limit does justify rejection.
+Deferring discounts adds no discount machinery and leaves naturally supported
+baskets intact.
 
 Story refinement sets delivery commitments, not product implementation
 boundaries. Implementation may change any product parts needed for the promised

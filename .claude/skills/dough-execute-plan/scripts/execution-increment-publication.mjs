@@ -37,6 +37,8 @@ export async function publishExecutionIncrement({
     landingContext: suppliedLandingContext,
     workspace,
     branch,
+    remote,
+    targetRef,
   });
   const preRebaseSha = await revParse(workspace, branch);
   const attempt = {

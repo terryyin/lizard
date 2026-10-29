@@ -1,7 +1,8 @@
-// First-trunk publication resolves an omitted landingContext from an open
-// first-landing expectation. Explicit landingContext still wins. Kept apart
+// An omitted landingContext resolves only for the open expectation's remote
+// and target. Explicit landingContext still wins and is validated by its caller. Kept apart
 // from first-landing-expectation.mjs so the reporting-dir clear copy never
 // needs publication-git.
+import { readFile } from "node:fs/promises";
 import { openFirstLandingExpectation } from "./first-landing-expectation.mjs";
 import { managementContext } from "./publication-git.mjs";
 
@@ -9,6 +10,8 @@ export async function resolvePublicationLandingContext({
   landingContext,
   workspace,
   branch,
+  remote,
+  targetRef,
 }) {
   if (typeof landingContext === "string" && landingContext !== "") {
     return landingContext;
@@ -17,7 +20,11 @@ export async function resolvePublicationLandingContext({
     typeof workspace !== "string" ||
     workspace === "" ||
     typeof branch !== "string" ||
-    branch === ""
+    branch === "" ||
+    typeof remote !== "string" ||
+    remote === "" ||
+    typeof targetRef !== "string" ||
+    targetRef === ""
   ) {
     return undefined;
   }
@@ -32,5 +39,9 @@ export async function resolvePublicationLandingContext({
     workspace,
     branch,
   });
-  return open?.landingContext;
+  if (!open) return undefined;
+  const context = JSON.parse(await readFile(open.landingContext, "utf8"));
+  return context.remote === remote && context.target === targetRef
+    ? open.landingContext
+    : undefined;
 }
