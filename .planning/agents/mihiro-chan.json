@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "agent": "Mihiro-chan",
-  "email": "mihiro-chan@example.org",
-  "activity": "preparation",
-  "identity": "SEED-021#dart-support",
-  "host": "claude",
-  "model": "fable"
-}
