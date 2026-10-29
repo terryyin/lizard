@@ -14,10 +14,10 @@ ids, qualifications Q1–Q8, examples E1–E9, exclusions X1–X4).
 
 | Id | Source commitment | Slice | Observation or obligation |
 | --- | --- | --- | --- |
-| 1 | Dart and Flutter developers, and maintainers of mixed-language codebases, can point Lizard at Dart sources through the existing CLI and Python API. | slice 7 | |
-| 2 | Each function and method is reported with CCN, NLOC, token count, and parameter count under a class-qualified name. | slice 7 | |
-| 3 | That reporting lets them find methods that need review (e.g. oversized Flutter `build` methods). | slice 7 | |
-| 4 | This closes the request behind issue #325 and extends Lizard's many-language promise to Dart. | slice 7 | |
+| 1 | Dart and Flutter developers, and maintainers of mixed-language codebases, can point Lizard at Dart sources through the existing CLI and Python API. | slice 7 | observed: testDart.py TestDartCliDiscovery (analyze API + `-l dart` / default `.dart` discovery); dart_helpers → analyze_source_code; README Dart list — Dart support complete through API/CLI with slices 1–7 |
+| 2 | Each function and method is reported with CCN, NLOC, token count, and parameter count under a class-qualified name. | slice 7 | observed: test_greet_branching_and_parameters (CCN/NLOC/params); MyWidget::build / Point::* / M::foo / E::bar class-qualified names across testDart*.py |
+| 3 | That reporting lets them find methods that need review (e.g. oversized Flutter `build` methods). | slice 7 | observed: test_widget_build_closures_counted_in_enclosing and testDartAsyncAndGenerators test_async_callback_inside_build_stays_one_function → MyWidget::build with CCN |
+| 4 | This closes the request behind issue #325 and extends Lizard's many-language promise to Dart. | slice 7 | observed: `.dart` discovered by default; `-l dart` / help list Dart; analyze_file / analyze_source_code; README language list includes Dart; function reporting through slice 7 async/generator proof |
 | 5 | `.dart` files are discovered by default. | slice 1 | observed: testDart.py TestDartCliDiscovery.test_analyze_api_discovers_dart; test_language_filter_and_help default run |
 | 6 | Dart is selectable with `-l dart`. | slice 1 | observed: testDart.py test_language_filter_and_help `-l dart` filters to Dart |
 | 7 | `dart` is listed in the `-l` help. | slice 1 | observed: testDart.py test_language_filter_and_help `-h` contains `dart` |
@@ -36,9 +36,9 @@ ids, qualifications Q1–Q8, examples E1–E9, exclusions X1–X4).
 | 15.3 | `factory` constructors with a body are recognized as functions. | slice 5 | observed: testDartConstructors.py test_point_class_story_constructors_and_members → Point::fromJson |
 | 16 | Block bodies form a function. | slice 1 | observed: greet / add / MyWidget::build block bodies |
 | 17 | `=>` expression bodies form a function. | slice 4 | observed: testDartExpressionBodies.py maybe; Point::sum / toString; twice; nested map arrow still one function |
-| 18 | `async` between the parameter list and the body does not break recognition. | slice 7 | |
-| 19 | `async*` between the parameter list and the body does not break recognition. | slice 7 | G6 |
-| 20 | `sync*` between the parameter list and the body does not break recognition. | slice 7 | G6 |
+| 18 | `async` between the parameter list and the body does not break recognition. | slice 7 | observed: testDartAsyncAndGenerators.py test_async_block_and_arrow_bodies → go, arrow; test_async_callback_inside_build_stays_one_function |
+| 19 | `async*` between the parameter list and the body does not break recognition. | slice 7 | observed: testDartAsyncAndGenerators.py test_async_star_generator_keeps_function_and_following → gen, after |
+| 20 | `sync*` between the parameter list and the body does not break recognition. | slice 7 | observed: testDartAsyncAndGenerators.py test_sync_star_generator_is_recognized → syn |
 | 21 | A declaration with no body is not a function. | slice 5 | observed: testDartConstructors.py test_bodyless_constructors_and_const_not_reported; test_point_class_story body-less not in names |
 | 22 | Top-level functions are named `name`. | slice 1 | observed: greet, add |
 | 23 | Members are named `Class::member`. | slice 1 | observed: MyWidget::build; M::foo; E::bar |

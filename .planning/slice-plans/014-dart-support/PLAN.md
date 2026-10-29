@@ -233,7 +233,7 @@ pattern is exactly `_`. Statement `switch` keeps the `case` rule.
 
 ### 7. Generator and async modifiers keep the function
 Type: Behavior
-Status: planned
+Status: done
 Proof: `Stream<int> gen() async* { yield 1; }` followed by `int after() => 1;`
 → both `gen` and `after`; `Iterable<int> syn() sync* { yield 1; }` → `syn`;
 `Future<int> go() async { … }` and `Future<int> arrow() async => 1;` → both
@@ -327,8 +327,7 @@ Disposition: proved by slice 6: test/test_languages/testDartExceptionsAndSwitch.
 ### G6. `async*` / `sync*` lose the function
 Reported: slice 1 — "`async*`/`sync*` lose the function until slice 7"
 Story clause: "`async`, `async*`, and `sync*` between the parameter list and the body do not break recognition"
-Disposition: interim until slices 7
-Commitment: 19, 20
+Disposition: proved by slice 7: test/test_languages/testDartAsyncAndGenerators.py TestDartAsyncAndGenerators
 
 ### G7. Interpolation decisions deferred
 Reported: slice 1 — "Decisions inside string interpolation are deferred"

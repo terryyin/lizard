@@ -101,7 +101,7 @@ class DartReader(CLikeReader):
 
 
 class DartStates(CLikeStates):  # pylint: disable=R0903
-    """Dart declarations: => bodies, accessors, and constructors."""
+    """Dart declarations: => bodies, accessors, constructors, async/generators."""
 
     def __init__(self, context):
         super(DartStates, self).__init__(context)
@@ -179,6 +179,9 @@ class DartStates(CLikeStates):  # pylint: disable=R0903
         self._state = self._state_global
 
     def _state_dec_to_imp(self, token):
+        # async / sync / async* / sync* sit between ) and { or =>.
+        if token in ('async', 'sync', '*'):
+            return
         if token == '=>':
             self._enter_expression_body()
             return
