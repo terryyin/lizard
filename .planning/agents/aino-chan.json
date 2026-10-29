@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "agent": "Aino-chan",
+  "email": "aino-chan@example.org",
+  "identity": "SEED-021#dart-support",
+  "mode": "story-branch",
+  "branch": "cursor/support-dart-analysis",
+  "host": "cursor",
+  "model": "auto"
+}
