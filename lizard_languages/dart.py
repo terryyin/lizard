@@ -22,11 +22,16 @@ class DartReader(CLikeReader):
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
-        # Longest first, subgroup-free: nullable names, ??=, ??, ?.., ?.
+        # Longest first, subgroup-free: triple/raw strings ahead of base
+        # quotes; then nullable names, ??=, ??, ?.., ?.
         # `(?!\.)` keeps int?/T? from swallowing the ? of ?. and ?..
         # Closing ?> generics stay the existing <…?> token.
         return CLikeReader.generate_tokens(
             source_code,
+            r"|(?:r)?'''[\s\S]*?'''" +
+            r'|(?:r)?"""[\s\S]*?"""' +
+            r"|r'(?:\\.|[^'\\])*?'" +
+            r'|r"(?:\\.|[^"\\])*"' +
             r"|\w+\?(?!\.)" +
             r"|\?\?=" +
             r"|\?\?" +

@@ -148,7 +148,7 @@ Design: tokenizer additions `\w+\?`, `\?\?=`, `\?\?`, `\?\.\.`, `\?\.`
 
 ### 3. Raw and triple-quoted strings and doc comments are inert
 Type: Behavior
-Status: planned
+Status: done
 Proof: function containing `var m = '''it's ? a : b''';`, `var r = r'$x ? y :
 z';`, `var d = """ ? """;` and preceded by `/// if while` → CCN 1; NLOC
 excludes the comment line; a following `int g() { return 2; }` is still
@@ -296,8 +296,7 @@ Disposition: proved by slice 2: test/test_languages/testDart.py TestDartNullSafe
 ### G2. Triple-quoted / raw strings and doc comments not yet inert for NLOC
 Reported: slice 1 — "`'''…'''` leaks until slice 3"
 Story clause: "Their contents introduce neither decisions nor functions; comment lines are excluded from NLOC"
-Disposition: interim until slices 3
-Commitment: 31.3, 31.4, 31.5, 31.8, 32
+Disposition: proved by slice 3: test/test_languages/testDart.py TestDartStringsAndCommentsInert
 
 ### G3. Expression bodies are missed
 Reported: slice 1 — "`=>` bodies are missed until slice 4"

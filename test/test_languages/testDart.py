@@ -156,6 +156,27 @@ int f(int? x, [int fallback = 0]) {
         self.assertEqual(2, result[0].parameter_count)
 
 
+class TestDartStringsAndCommentsInert(unittest.TestCase):
+
+    def test_raw_triple_quoted_strings_and_doc_comments_are_inert(self):
+        result = get_dart_function_list("""
+/// if while
+int f() {
+  var m = '''it's ? a : b''';
+  var r = r'$x ? y : z';
+  var d = \"\"\" ? \"\"\";
+  return 1;
+}
+int g() { return 2; }
+""")
+        self.assertEqual(2, len(result))
+        self.assertEqual('f', result[0].name)
+        self.assertEqual(1, result[0].cyclomatic_complexity)
+        self.assertEqual(6, result[0].nloc)
+        self.assertEqual('g', result[1].name)
+        self.assertEqual(1, result[1].cyclomatic_complexity)
+
+
 class TestDartCliDiscovery(unittest.TestCase):
 
     def setUp(self):

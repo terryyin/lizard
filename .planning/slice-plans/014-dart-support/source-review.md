@@ -68,13 +68,13 @@ ids, qualifications Q1–Q8, examples E1–E9, exclusions X1–X4).
 | 30.9 | `default` is not a decision. | slice 6 | |
 | 31.1 | `'…'` contents introduce neither decisions nor functions. | slice 1 | observed: greet string; MyWidget Text strings |
 | 31.2 | `"…"` contents introduce neither decisions nor functions. | slice 1 | observed: greet / build samples |
-| 31.3 | `'''…'''` contents introduce neither decisions nor functions. | slice 3 | G2 |
-| 31.4 | `"""…"""` contents introduce neither decisions nor functions. | slice 3 | G2 |
-| 31.5 | Raw `r'…'` contents introduce neither decisions nor functions. | slice 3 | G2 |
+| 31.3 | `'''…'''` contents introduce neither decisions nor functions. | slice 3 | observed: testDart.py test_raw_triple_quoted_strings_and_doc_comments_are_inert CCN 1 |
+| 31.4 | `"""…"""` contents introduce neither decisions nor functions. | slice 3 | observed: testDart.py test_raw_triple_quoted_strings_and_doc_comments_are_inert CCN 1 |
+| 31.5 | Raw `r'…'` contents introduce neither decisions nor functions. | slice 3 | observed: testDart.py test_raw_triple_quoted_strings_and_doc_comments_are_inert CCN 1 |
 | 31.6 | `//` comment contents introduce neither decisions nor functions. | slice 1 | observed: CCppCommentsMixin via CLikeReader |
 | 31.7 | `/* … */` contents introduce neither decisions nor functions. | slice 1 | observed: CCppCommentsMixin via CLikeReader |
-| 31.8 | `///` doc comments introduce neither decisions nor functions. | slice 3 | G2 |
-| 32 | Comment lines are excluded from NLOC. | slice 3 | G2 |
+| 31.8 | `///` doc comments introduce neither decisions nor functions. | slice 3 | observed: testDart.py test_raw_triple_quoted_strings_and_doc_comments_are_inert; `///` via CCppCommentsMixin |
+| 32 | Comment lines are excluded from NLOC. | slice 3 | observed: testDart.py test_raw_triple_quoted_strings_and_doc_comments_are_inert NLOC 6 (doc line above f excluded) |
 | 33 | A function literal's lines, tokens, and decisions belong to the enclosing function. | slice 1 | observed: test_widget_build_closures_counted_in_enclosing |
 | 34 | Closures are not reported separately. | slice 1 | observed: no `(anonymous)` in build test |
 | 35 | Each declared positional parameter counts as one parameter. | slice 1 | observed: add 2 params; build context |
