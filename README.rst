@@ -17,6 +17,7 @@ A list of supported languages:
 
 -  C# (C Sharp)
 -  C/C++ (works with C++14)
+-  COBOL
 -  Erlang
 -  Fortran
 -  GDScript

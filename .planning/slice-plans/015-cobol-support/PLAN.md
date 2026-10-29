@@ -2,6 +2,7 @@
 
 **Mapped story identity:** SEED-020#cobol-support
 **Source:** [canonical story](../../seeds/SEED-020-cobol-support.md#cobol-support)
+**Source review:** [source-review.md](source-review.md)
 
 ## Goal and scope
 
@@ -90,14 +91,8 @@ Observed on 2026-10-29 in this workspace
 
 ### 1. COBOL files are discovered and fixed-format paragraphs are analyzed
 Type: Behavior
-Status: planned
-Proof: `testCobol.py`: `MAIN` → CCN 1, parameter count 0, NLOC matches
-non-comment procedure lines; under `MAIN-SECTION SECTION.` only `INIT` and
-`RUN` appear; IDENTIFICATION/ENVIRONMENT/DATA content yields no Functions; a
-paragraph whose literals contain `IF AND OR WHEN` and a column-7 `*` comment
-→ CCN 1, comment excluded from NLOC; CLI: temp dir with `pay.cbl` and
-`tool.py`, `lizard -l cobol` reports only COBOL paragraphs, default run
-reports both, `-h` lists `cobol`; README lists COBOL; full suite green.
+Status: done
+Proof: Accepted 2026-10-29 — `nix develop -c python -m pytest test/test_languages/testCobol.py` (12 passed): `MAIN` CCN 1 / param 0 / NLOC 3; section → `INIT`/`RUN` only; non-PROCEDURE empty; literals + col-7 `*`/`D`/`-` continuation + Area B `*>` → CCN 1; preamble PROGRAM-ID/`(procedure)`; CLI `-l cobol` / default / `-h`; README lists COBOL. Full suite remains a delivery/CI gate (commitment 13 → slice 2). Refactor: `CobolStates` extracted to `cobol_states.py`.
 
 Behavior: Given a fixed-format `.cbl` / `.cob` / `.cobol` file → analyze
 through API or CLI → each PROCEDURE DIVISION paragraph is a Function with
@@ -157,7 +152,47 @@ interim undercounting named in slice 1 is gone after slice 2.
 
 ## Learnings
 
-- (none yet)
+- `line_counter` drops `\n` before the state machine, so Area-A paragraph/section
+  detection must run in reader `preprocess` (while leading spaces/newlines still
+  exist), then emit synthetic `@COBOL_PARAGRAPH` / `@COBOL_SECTION` markers.
+
+## Story obligations
+
+### G1. Decision keywords undercount CCN until slice 2
+Reported: slice 1 — "Decision CCN (IF/AND/OR/EVALUATE/SEARCH/conditional PERFORM) — interim undercount until slice 2"
+Story clause: "Decisions (CCN): `IF`; each `ELSE IF` / `ELSEIF`; each `WHEN` in `EVALUATE` except `WHEN OTHER`; `PERFORM … UNTIL`, `PERFORM … TIMES`, and `PERFORM … VARYING` (one each); each `WHEN` and `AT END` in `SEARCH`; `AND` and `OR` in conditions."
+Disposition: interim until slices 2
+Commitment: 9a, 9b.1, 9b.2, 9c, 9d.1, 9d.2, 9d.3, 9e.1, 9e.2, 9f.1, 9f.2
+
+### GX-D1. Free-format deferred
+Reported: slice 1 — "deferred free/variable format"
+Story clause: "Free-format and variable-format source (`SOURCEFORMAT"FREE"` / equivalent)."
+Disposition: excluded "Free-format and variable-format source (`SOURCEFORMAT"FREE"` / equivalent)."
+Commitment: D1
+
+### GX-D2. Copybooks deferred
+Reported: slice 1 — "deferred copybook inputs and COPY/REPLACE"
+Story clause: "`.cpy` / `.copy` copybook files as first-class inputs, and `COPY` / `REPLACE` expansion into the including program."
+Disposition: excluded "`.cpy` / `.copy` copybook files as first-class inputs, and `COPY` / `REPLACE` expansion into the including program."
+Commitment: D2
+
+### GX-D3. Nested programs and rollups deferred
+Reported: slice 1 — "deferred nested programs / declaratives / rolled-up CCN"
+Story clause: "Nested programs, declarative sections (`USE` after `DECLARATIVES`), and rolled-up section- or program-level CCN beyond the per-paragraph Functions and ordinary file aggregates."
+Disposition: excluded "Nested programs, declarative sections (`USE` after `DECLARATIVES`), and rolled-up section- or program-level CCN beyond the per-paragraph Functions and ordinary file aggregates."
+Commitment: D3
+
+### GX-D4. Vendor decision catalogues deferred
+Reported: slice 1 — "deferred vendor/dialect decision catalogues"
+Story clause: "Vendor/dialect decision catalogues (EXEC CICS HANDLE/LINK/XCTL, EXEC SQL, `ALTER`, `DEPENDING` on `GO TO`, and similar Sonar-listed extras)."
+Disposition: excluded "Vendor/dialect decision catalogues (EXEC CICS HANDLE/LINK/XCTL, EXEC SQL, `ALTER`, `DEPENDING` on `GO TO`, and similar Sonar-listed extras)."
+Commitment: D4
+
+### GX-D5. Extension metrics deferred
+Reported: slice 1 — "deferred nesting-depth / extension metrics verification"
+Story clause: "Nesting-depth or other extension metrics beyond the core set the shared machinery already yields; not verified here."
+Disposition: excluded "Nesting-depth or other extension metrics beyond the core set the shared machinery already yields; not verified here."
+Commitment: D5
 
 ## Concern evidence
 
