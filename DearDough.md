@@ -371,6 +371,26 @@ new six-gate pass) when the contract cares about that loop.
   - Observed effect: one eligible ≤15-minute trim and a full remeasure were required before merge; semantics were already correct after slice 1.
   - Inference: duplication collapse on a measured hot path can recreate the cost the gate rejects; the contract's trim budget absorbed it here, but the refactor rule did not account for the gate.
 
+## DD-017 — First-landing expectation blocks story-branch increment publish
+
+When a launch plants a first-landing expectation whose landing context targets
+trunk, story-branch increment delivery that omits `--landing-context` still
+resolves that expectation and calls `retainLandingComparison` against the
+execution-branch target. Context remote/target mismatch throws before push,
+leaving a committed candidate unpublished until the expectation is temporarily
+cleared. Landing context is for first trunk land only; intermediate
+story-branch publishes should not bind it.
+
+### Occurrences
+- Execution: SEED-019#dedupe-template-interpolation-tests
+  - Timestamp: 2026-10-29T07:58:34+08:00
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.74
+  - Evidence: `execution-increment-delivery.mjs fresh` committed `7ce8aec` then returned `delivery-interrupted` / `Publication does not match the supplied landing context.`; open expectation at `.git/open-dough/first-landing-expectations/71d4ea1a….json` named landing-context target `refs/heads/master` while publish target was `refs/heads/cursor/remove-the-duplicate-template-interpolation-ccn`; resume after parking that expectation accepted push of `7ce8aec`; expectation restored for later trunk land.
+  - Observed effect: slice commit succeeded locally; remote execution branch stayed at Take SHA until a second resume after parking the expectation.
+  - Inference: `resolvePublicationLandingContext` auto-applies an open first-trunk expectation to every publish from that workspace/branch; mismatch should skip capture rather than fail the push, or story-branch delivery should not resolve first-landing expectations.
+
 ## Retention
 
-- Highest allocated local number: 16
+- Highest allocated local number: 17
