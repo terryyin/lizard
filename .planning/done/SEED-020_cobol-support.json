@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-020#cobol-support",
+  "title": "Support COBOL analysis",
+  "completedAt": "2026-10-29T03:30:52.236Z",
+  "developer": "Terry Yin",
+  "agent": "Airi-chan",
+  "host": "cursor",
+  "model": "auto"
+}
