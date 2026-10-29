@@ -354,6 +354,15 @@ claim, and resume only remaining work without marking done on the interrupt.
   - Observed effect: no false done; unfinished measurement and uncommitted trim were recovered; attempt10 completed and #545 merged after proof.
   - Inference: same interrupted-delegation practice held on a long six-gate Task.
 
+- Execution: SEED-021#dart-support
+  - Timestamp: 2026-10-29T11:20:00+08:00
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.74
+  - Evidence: conversation 5ae6ce13-8910-4941-95bc-b0a708f808f0; slice-6 refactor Task `0767f523-8283-42ee-adab-0477adbf550b` started 2026-10-29T10:31+08:00 and ended mid-investigation without `## REFACTOR COMPLETE`; user `resume` at 11:20; coordinator inspected uncommitted slice-6 checkout/tests, re-ran refactor Task `93688ba4-6a67-47a7-8871-06f7a165395c` (no edits), then delivered `7a5b0d7` without marking done on the interrupt.
+  - Observed effect: no false done; uncommitted slice-6 product kept; refactor re-checked clean; delivery continued from remaining work only.
+  - Inference: same interrupted-delegation recovery held across a mid-refactor Task interrupt plus later coordinator resume.
+
 ## DD-016 — Post-change hot-path collapse reintroduced gated per-token dispatch
 
 On a path under a paired performance gate, do not collapse duplicated hot-path
@@ -399,6 +408,14 @@ story-branch publishes should not bind it.
   - Evidence: story-branch mode, landing-context target `refs/heads/master` (launch `7b1b9b82…/landing-context.json`); slice-1 `execution-increment-delivery.mjs fresh` committed `0da2e22` then interrupted on auto-resolved first-landing expectation `38119287389deb9e…json`; coordinator parked to `/tmp/cobol-first-landing-expectation-parked-95084.json`, resumed publish of `0da2e22`, restored expectation; slice-2 delivery likewise parked (`…-slice2-10311.json` at 11:21) before push of `3a7a933`, then restored.
   - Observed effect: both Behavior increments needed the same park/resume/restore workaround before the story branch advanced; trunk first-landing expectation was preserved for later land.
   - Inference: same auto-resolve path as SEED-019; recurrence on consecutive story-branch language-support launches under 0.3.74 confirms intermediate publishes still bind first-trunk landing context.
+- Execution: SEED-021#dart-support
+  - Timestamp: unknown (after slice-1 commit `6d6f76c` at 2026-10-29T09:25:39+08:00; resume publish before slice-2 `e50d5fe` at 09:32:25+08:00)
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.74
+  - Evidence: conversation 5ae6ce13-8910-4941-95bc-b0a708f808f0; coordinator recorded landing-context mismatch after slice-1 commit; launch had planted `--landing-context` for first trunk land; resume parked `.git/open-dough/first-landing-expectations/4655c4e492190b9e6736f2f1021597861334a115e6631e239b4602ea48a1ffa3.json`, ran `execution-increment-resume.mjs resume` for candidate `6d6f76c` / target `refs/heads/cursor/support-dart-analysis`, restored the expectation, then cleared it for remaining story-branch increments.
+  - Observed effect: slice-1 commit existed locally while publish needed a parked-expectation resume; later slices published after clearing the trunk-only expectation until land.
+  - Inference: same first-landing auto-bind as the SEED-019 occurrence; story-branch intermediate publishes should not resolve trunk landing expectations.
 
 ## Retention
 

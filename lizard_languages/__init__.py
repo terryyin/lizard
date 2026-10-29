@@ -12,6 +12,7 @@ from .ttcn import TTCNReader
 from .swift import SwiftReader
 from .ruby import RubyReader
 from .csharp import CSharpReader
+from .dart import DartReader
 from .php import PHPReader
 from .scala import ScalaReader
 from .gdscript import GDScriptReader
@@ -60,6 +61,7 @@ def languages():
         RReader,
         PLSQLReader,
         CobolReader,
+        DartReader,
     ]
 
 
