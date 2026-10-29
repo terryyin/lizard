@@ -29,13 +29,13 @@ ids, qualifications Q1–Q8, examples E1–E9, exclusions X1–X4).
 | 12.2 | Methods of mixins are recognized as functions. | slice 1 | observed: testDart.py mixin → M::foo |
 | 12.3 | Methods of extensions are recognized as functions. | slice 1 | observed: testDart.py extension → twice |
 | 12.4 | Methods of enums are recognized as functions. | slice 1 | observed: testDart.py enum → E::bar |
-| 13 | Getters (`get name`) are recognized as functions. | slice 4 | G3b |
-| 14 | Setters (`set name(v)`) are recognized as functions. | slice 4 | G3b |
+| 13 | Getters (`get name`) are recognized as functions. | slice 4 | observed: testDartExpressionBodies.py test_point_getters_setters_and_arrow_tostring → Point::sum, Point::isOrigin |
+| 14 | Setters (`set name(v)`) are recognized as functions. | slice 4 | observed: testDartExpressionBodies.py test_point_getters_setters_and_arrow_tostring → Point::scale= |
 | 15.1 | Unnamed constructors with a body are recognized as functions. | slice 5 | |
 | 15.2 | Named constructors with a body are recognized as functions. | slice 5 | |
 | 15.3 | `factory` constructors with a body are recognized as functions. | slice 5 | |
 | 16 | Block bodies form a function. | slice 1 | observed: greet / add / MyWidget::build block bodies |
-| 17 | `=>` expression bodies form a function. | slice 4 | G3 |
+| 17 | `=>` expression bodies form a function. | slice 4 | observed: testDartExpressionBodies.py maybe; Point::sum / toString; twice; nested map arrow still one function |
 | 18 | `async` between the parameter list and the body does not break recognition. | slice 7 | |
 | 19 | `async*` between the parameter list and the body does not break recognition. | slice 7 | G6 |
 | 20 | `sync*` between the parameter list and the body does not break recognition. | slice 7 | G6 |
@@ -44,8 +44,8 @@ ids, qualifications Q1–Q8, examples E1–E9, exclusions X1–X4).
 | 23 | Members are named `Class::member`. | slice 1 | observed: MyWidget::build; M::foo; E::bar |
 | 24 | Unnamed constructors are named `Class::Class`. | slice 5 | |
 | 25 | Named and factory constructors are named `Class::constructorName`. | slice 5 | |
-| 26 | Getters are named `Class::getterName`. | slice 4 | G3b |
-| 27 | Setters are named `Class::setterName=`. | slice 4 | G3b |
+| 26 | Getters are named `Class::getterName`. | slice 4 | observed: testDartExpressionBodies.py Point::sum, Point::isOrigin |
+| 27 | Setters are named `Class::setterName=`. | slice 4 | observed: testDartExpressionBodies.py Point::scale= |
 | 28.1 | `if` counts as a decision. | slice 1 | observed: greet CCN includes if; MyWidget::build |
 | 28.2 | `for` counts as a decision. | slice 1 | observed: inherited CLikeStates (suite green; not Dart-specific fixture) |
 | 28.3 | `while` (including `do … while`) counts as a decision. | slice 1 | observed: inherited CLikeStates |

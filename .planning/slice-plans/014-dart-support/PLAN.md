@@ -64,10 +64,11 @@ with a temporary directory holding a `.dart` and a `.py` file (filesystem
 boundary only; no parsing mocks).
 
 Local gates, cited from `AGENTS.md`: focused
-`nix develop -c python -m pytest test/test_languages/testDart.py` during each
-slice; before completing the change, the full suite and format check
-`nix develop -c make` (pytest with coverage, `pycodestyle`, `pylint`). Hosted
-CI (`python-app.yml`) runs pytest across Python 3.8–3.14 after publication;
+`nix develop -c python -m pytest test/test_languages/testDart.py
+test/test_languages/testDartExpressionBodies.py` during each slice; before
+completing the change, the full suite and format check `nix develop -c make`
+(pytest with coverage, `pycodestyle`, `pylint`). Hosted CI
+(`python-app.yml`) runs pytest across Python 3.8–3.14 after publication;
 avoid syntax newer than 3.8.
 
 | Promise (story scope) | Owning slice | Proof signal |
@@ -163,7 +164,7 @@ Design: tokenizer alternatives for `(?:r)?'''[\s\S]*?'''`,
 
 ### 4. Expression-bodied functions and `get`/`set` accessors are functions
 Type: Behavior
-Status: planned
+Status: done
 Proof: `int? maybe(int? x, [int fallback = 0]) => x ?? fallback;` → `maybe`,
 CCN 2, 2 params, NLOC 1; in `class Point`: `int get sum => x + y;` →
 `Point::sum` CCN 1 NLOC 1; `set scale(int f) { if (f > 0) { print(f); } }`
@@ -301,14 +302,12 @@ Disposition: proved by slice 3: test/test_languages/testDart.py TestDartStringsA
 ### G3. Expression bodies are missed
 Reported: slice 1 — "`=>` bodies are missed until slice 4"
 Story clause: "Block bodies and `=>` expression bodies both form a function"
-Disposition: interim until slices 4
-Commitment: 17
+Disposition: proved by slice 4: test/test_languages/testDartExpressionBodies.py TestDartExpressionBodiesAndAccessors
 
 ### G3b. Getters and setters are missed
 Reported: slice 1 — "accessors are missed until slice 4"
 Story clause: "getters (`get name`), setters (`set name(v)`)"
-Disposition: interim until slices 4
-Commitment: 13, 14, 26, 27
+Disposition: proved by slice 4: test/test_languages/testDartExpressionBodies.py TestDartExpressionBodiesAndAccessors.test_point_getters_setters_and_arrow_tostring
 
 ### G4. Constructors with initializer lists misparse; body-less not excluded yet
 Reported: slice 1 — "constructors with initializer lists misparse until slice 5"
