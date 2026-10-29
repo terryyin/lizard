@@ -53,14 +53,14 @@ ids, qualifications Q1–Q8, examples E1–E9, exclusions X1–X4).
 | 28.5 | Each exception clause counts once (`on T`, `catch (e)`, or `on T catch (e)`). | slice 6 | G5 |
 | 28.6 | `&&` counts as a decision. | slice 1 | observed: greet CCN 3 (if + &&) |
 | 28.7 | `\|\|` counts as a decision. | slice 1 | observed: inherited CLikeStates logical operators |
-| 28.8 | `??` counts as a decision. | slice 2 | G1 |
-| 28.9 | `??=` counts as a decision. | slice 2 | G1 |
+| 28.8 | `??` counts as a decision. | slice 2 | observed: testDart.py test_null_coalescing_counts_once CCN 2 |
+| 28.9 | `??=` counts as a decision. | slice 2 | observed: testDart.py test_null_aware_assignment_counts_once CCN 2 |
 | 28.10 | The ternary `?` counts as a decision. | slice 1 | observed: MyWidget::build CCN 3 includes ternary |
 | 29 | In a switch expression, each arm counts once except a bare `_` wildcard arm. | slice 6 | G5b |
-| 30.1 | Nullable `T?` is not a decision. | slice 2 | G1 |
-| 30.2 | `?.` is not a decision. | slice 2 | G1 |
-| 30.3 | `?..` is not a decision. | slice 2 | G1 |
-| 30.4 | `!` is not a decision. | slice 2 | G1 |
+| 30.1 | Nullable `T?` is not a decision. | slice 2 | observed: testDart.py nullable + ?? CCN 2; generic List int? CCN 1 |
+| 30.2 | `?.` is not a decision. | slice 2 | observed: testDart.py test_null_aware_access_and_cascade_and_bang_add_nothing |
+| 30.3 | `?..` is not a decision. | slice 2 | observed: testDart.py test_null_aware_access_and_cascade_and_bang_add_nothing |
+| 30.4 | `!` is not a decision. | slice 2 | observed: testDart.py test_null_aware_access_and_cascade_and_bang_add_nothing |
 | 30.5 | `is` is not a decision. | slice 1 | observed: inherited (not a control keyword in CLike) |
 | 30.6 | `as` is not a decision. | slice 1 | observed: inherited |
 | 30.7 | `await` is not a decision. | slice 1 | observed: inherited |
@@ -78,7 +78,7 @@ ids, qualifications Q1–Q8, examples E1–E9, exclusions X1–X4).
 | 33 | A function literal's lines, tokens, and decisions belong to the enclosing function. | slice 1 | observed: test_widget_build_closures_counted_in_enclosing |
 | 34 | Closures are not reported separately. | slice 1 | observed: no `(anonymous)` in build test |
 | 35 | Each declared positional parameter counts as one parameter. | slice 1 | observed: add 2 params; build context |
-| 36 | Each declared optional positional parameter in `[…]` counts as one parameter. | slice 2 | |
+| 36 | Each declared optional positional parameter in `[…]` counts as one parameter. | slice 2 | observed: testDart.py test_optional_positional_parameter_and_null_coalesce 2 params |
 | 37 | Each declared named parameter in `{…}` counts as one parameter. | slice 1 | observed: greet 3 params (name + times + shout) |
 | 38 | `this.x` initializing formals count as parameters. | slice 5 | |
 | 39 | Defaults add nothing to the parameter count. | slice 1 | observed: greet shout = false still 3 params |

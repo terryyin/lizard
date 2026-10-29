@@ -132,7 +132,7 @@ pattern is followed).
 
 ### 2. Nullable and null-aware operators are not decisions; `??` and `??=` count once
 Type: Behavior
-Status: planned
+Status: done
 Proof: `int? maybe(int? x, [int fallback = 0]) => x ?? fallback;` is covered
 after slice 4; for this slice use a block body: `int f(int? x) { return x ?? 0;
 }` → CCN 2; `a?.b`, `a?..c()`, `x!` → CCN 1; `a ??= b` → CCN 2;
@@ -291,8 +291,7 @@ holds; interim behavior named in slice 1 shrinks slice by slice.
 ### G1. Nullable and null-aware tokens inflate or mis-split CCN
 Reported: slice 1 — "nullable `?` inflates CCN until slice 2"
 Story clause: "Not decisions: nullable `T?`, `?.`, `?..`, `!`"
-Disposition: interim until slices 2
-Commitment: 28.8, 28.9, 30.1, 30.2, 30.3, 30.4
+Disposition: proved by slice 2: test/test_languages/testDart.py TestDartNullSafetyOperators
 
 ### G2. Triple-quoted / raw strings and doc comments not yet inert for NLOC
 Reported: slice 1 — "`'''…'''` leaks until slice 3"

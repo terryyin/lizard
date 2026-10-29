@@ -92,6 +92,70 @@ extension on int {
         self.assertEqual('twice', result[0].name)
 
 
+class TestDartNullSafetyOperators(unittest.TestCase):
+
+    def test_null_coalescing_counts_once(self):
+        result = get_dart_function_list('''
+int f(int? x) {
+  return x ?? 0;
+}
+''')
+        self.assertEqual(1, len(result))
+        self.assertEqual(2, result[0].cyclomatic_complexity)
+
+    def test_null_aware_access_and_cascade_and_bang_add_nothing(self):
+        result = get_dart_function_list('''
+int f(a, x) {
+  var b = a?.b;
+  a?..c();
+  return x!;
+}
+''')
+        self.assertEqual(1, len(result))
+        self.assertEqual(1, result[0].cyclomatic_complexity)
+
+    def test_null_aware_assignment_counts_once(self):
+        result = get_dart_function_list('''
+int f(a, b) {
+  a ??= b;
+  return a;
+}
+''')
+        self.assertEqual(1, len(result))
+        self.assertEqual(2, result[0].cyclomatic_complexity)
+
+    def test_nullable_type_in_generic_adds_nothing(self):
+        result = get_dart_function_list('''
+int f() {
+  List<int?> xs;
+  return xs.length;
+}
+''')
+        self.assertEqual(1, len(result))
+        self.assertEqual(1, result[0].cyclomatic_complexity)
+
+    def test_spaced_ternary_still_counts(self):
+        result = get_dart_function_list('''
+int f(x, y, z, w) {
+  x = y ? z : w;
+  return x;
+}
+''')
+        self.assertEqual(1, len(result))
+        self.assertEqual(2, result[0].cyclomatic_complexity)
+
+    def test_optional_positional_parameter_and_null_coalesce(self):
+        result = get_dart_function_list('''
+int f(int? x, [int fallback = 0]) {
+  return x ?? fallback;
+}
+''')
+        self.assertEqual(1, len(result))
+        self.assertEqual('f', result[0].name)
+        self.assertEqual(2, result[0].cyclomatic_complexity)
+        self.assertEqual(2, result[0].parameter_count)
+
+
 class TestDartCliDiscovery(unittest.TestCase):
 
     def setUp(self):
