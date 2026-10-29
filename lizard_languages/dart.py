@@ -2,6 +2,7 @@
 Language parser for Dart
 '''
 
+from .code_reader import CodeReader
 from .clike import CLikeReader, CLikeStates, CLikeNestingStackStates
 
 
@@ -11,6 +12,7 @@ class DartReader(CLikeReader):
     ext = ['dart']
     language_names = ['dart']
 
+    _control_flow_keywords = CodeReader._control_flow_keywords | {'on'}
     _logical_operators = {'&&', '||', '??', '??='}
 
     def __init__(self, context):
@@ -19,6 +21,62 @@ class DartReader(CLikeReader):
             DartStates(context),
             DartNestingStackStates(context)
         ]
+        self._prev_token = None
+        self._suppress_next_catch = False
+        self._switch_subject_paren = None
+        self._switch_stack = []
+
+    def process_token(self, token):
+        # `on T catch` is one clause: undo the automatic catch decision.
+        if token == 'on':
+            self._suppress_next_catch = True
+        elif token == 'catch' and self._suppress_next_catch:
+            self.context.add_condition(-1)
+            self._suppress_next_catch = False
+        elif token == '{' and self._suppress_next_catch:
+            self._suppress_next_catch = False
+
+        self._track_switch_expression(token)
+
+        if not token.isspace():
+            self._prev_token = token
+        return False
+
+    def _track_switch_expression(self, token):
+        # After `switch`, wait for the subject's braces to open.
+        if self._switch_subject_paren is not None:
+            if token == '(':
+                self._switch_subject_paren += 1
+            elif token == ')':
+                if self._switch_subject_paren > 0:
+                    self._switch_subject_paren -= 1
+            elif token == '{' and self._switch_subject_paren == 0:
+                self._switch_stack.append({'brace': 1, 'paren': 0})
+                self._switch_subject_paren = None
+            return
+
+        if token == 'switch' and self._prev_token != '.':
+            self._switch_subject_paren = 0
+            return
+
+        if not self._switch_stack:
+            return
+
+        sw = self._switch_stack[-1]
+        if token == '{':
+            sw['brace'] += 1
+        elif token == '}':
+            sw['brace'] -= 1
+            if sw['brace'] == 0:
+                self._switch_stack.pop()
+        elif token in '([':
+            sw['paren'] += 1
+        elif token in ')]':
+            if sw['paren'] > 0:
+                sw['paren'] -= 1
+        elif (token == '=>' and sw['brace'] == 1 and sw['paren'] == 0
+              and self._prev_token != '_'):
+            self.context.add_condition()
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
@@ -110,8 +168,15 @@ class DartStates(CLikeStates):  # pylint: disable=R0903
 
     def _enter_expression_body(self):
         self.context.confirm_new_function()
+        # Claim function nesting now so a later switch/map `{` is bare,
+        # not treated as the function's brace boundary.
+        self.context.add_bare_nesting()
         self._expr_nesting = 0
         self._state = self._expression_body
+
+    def _end_expression_body(self):
+        self.context.pop_nesting()
+        self._state = self._state_global
 
     def _state_dec_to_imp(self, token):
         if token == '=>':
@@ -153,12 +218,11 @@ class DartStates(CLikeStates):  # pylint: disable=R0903
                 self._expr_nesting -= 1
             return
         if self._expr_nesting == 0 and token == ';':
-            self.context.end_of_function()
-            self._state = self._state_global
+            self._end_expression_body()
 
     def statemachine_before_return(self):
         if self._state == self._expression_body:
-            self.context.end_of_function()
+            self._end_expression_body()
 
 
 class DartNestingStackStates(CLikeNestingStackStates):  # pylint: disable=R0903

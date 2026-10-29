@@ -211,7 +211,7 @@ namespace tracking (already producing `Point::`).
 
 ### 6. Exception clauses count once each; switch-expression arms count without creating functions
 Type: Behavior
-Status: planned
+Status: done
 Proof: `try { a(); } on FormatException { b(); } on IOException catch (e) {
 c(); } catch (e) { d(); }` in a function → CCN 4; `String size(int n) =>
 switch (n) { 0 => 'zero', 1 || 2 => 'small', _ => 'big' };` → one function
@@ -317,14 +317,12 @@ Disposition: proved by slice 5: test/test_languages/testDartConstructors.py Test
 ### G5. Exception `on T` clauses undercount
 Reported: slice 1 — "`on T` clauses undercount until slice 6"
 Story clause: "each exception clause once whether written `on T`, `catch (e)`, or `on T catch (e)`"
-Disposition: interim until slices 6
-Commitment: 28.5
+Disposition: proved by slice 6: test/test_languages/testDartExceptionsAndSwitch.py TestDartExceptionsAndSwitch.test_exception_clauses_count_once_each
 
 ### G5b. Switch-expression arms uncounted
 Reported: slice 1 — "switch-expression arms are uncounted until slice 6"
 Story clause: "In a switch expression each arm counts once except a bare"
-Disposition: interim until slices 6
-Commitment: 29
+Disposition: proved by slice 6: test/test_languages/testDartExceptionsAndSwitch.py TestDartExceptionsAndSwitch.test_switch_expression_arms_in_expression_body; test_switch_expression_as_statement_initializer
 
 ### G6. `async*` / `sync*` lose the function
 Reported: slice 1 — "`async*`/`sync*` lose the function until slice 7"

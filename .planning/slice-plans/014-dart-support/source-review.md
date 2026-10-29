@@ -49,14 +49,14 @@ ids, qualifications Q1–Q8, examples E1–E9, exclusions X1–X4).
 | 28.1 | `if` counts as a decision. | slice 1 | observed: greet CCN includes if; MyWidget::build |
 | 28.2 | `for` counts as a decision. | slice 1 | observed: inherited CLikeStates (suite green; not Dart-specific fixture) |
 | 28.3 | `while` (including `do … while`) counts as a decision. | slice 1 | observed: inherited CLikeStates |
-| 28.4 | `case` counts as a decision. | slice 6 | |
-| 28.5 | Each exception clause counts once (`on T`, `catch (e)`, or `on T catch (e)`). | slice 6 | G5 |
+| 28.4 | `case` counts as a decision. | slice 6 | observed: testDartExceptionsAndSwitch.py test_switch_statement_cases_and_default → classify CCN 4 |
+| 28.5 | Each exception clause counts once (`on T`, `catch (e)`, or `on T catch (e)`). | slice 6 | observed: testDartExceptionsAndSwitch.py test_exception_clauses_count_once_each → CCN 4 |
 | 28.6 | `&&` counts as a decision. | slice 1 | observed: greet CCN 3 (if + &&) |
 | 28.7 | `\|\|` counts as a decision. | slice 1 | observed: inherited CLikeStates logical operators |
 | 28.8 | `??` counts as a decision. | slice 2 | observed: testDart.py test_null_coalescing_counts_once CCN 2 |
 | 28.9 | `??=` counts as a decision. | slice 2 | observed: testDart.py test_null_aware_assignment_counts_once CCN 2 |
 | 28.10 | The ternary `?` counts as a decision. | slice 1 | observed: MyWidget::build CCN 3 includes ternary |
-| 29 | In a switch expression, each arm counts once except a bare `_` wildcard arm. | slice 6 | G5b |
+| 29 | In a switch expression, each arm counts once except a bare `_` wildcard arm. | slice 6 | observed: testDartExceptionsAndSwitch.py size expression-body and statement-initializer → CCN 4, one function |
 | 30.1 | Nullable `T?` is not a decision. | slice 2 | observed: testDart.py nullable + ?? CCN 2; generic List int? CCN 1 |
 | 30.2 | `?.` is not a decision. | slice 2 | observed: testDart.py test_null_aware_access_and_cascade_and_bang_add_nothing |
 | 30.3 | `?..` is not a decision. | slice 2 | observed: testDart.py test_null_aware_access_and_cascade_and_bang_add_nothing |
@@ -65,7 +65,7 @@ ids, qualifications Q1–Q8, examples E1–E9, exclusions X1–X4).
 | 30.6 | `as` is not a decision. | slice 1 | observed: inherited |
 | 30.7 | `await` is not a decision. | slice 1 | observed: inherited |
 | 30.8 | `else` is not a decision. | slice 1 | observed: inherited CLikeStates |
-| 30.9 | `default` is not a decision. | slice 6 | |
+| 30.9 | `default` is not a decision. | slice 6 | observed: testDartExceptionsAndSwitch.py test_switch_statement_cases_and_default → CCN 4 (three `case`, not `default`) |
 | 31.1 | `'…'` contents introduce neither decisions nor functions. | slice 1 | observed: greet string; MyWidget Text strings |
 | 31.2 | `"…"` contents introduce neither decisions nor functions. | slice 1 | observed: greet / build samples |
 | 31.3 | `'''…'''` contents introduce neither decisions nor functions. | slice 3 | observed: testDart.py test_raw_triple_quoted_strings_and_doc_comments_are_inert CCN 1 |
