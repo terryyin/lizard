@@ -23,7 +23,8 @@ and plan conventions from that project. Name genuinely missing context and
 stop only its dependent step; do not invent paths, commands, or a test taxonomy.
 
 Default mode profiles, plans, experiments, and re-profiles. A profile-only request
-ends with findings. For `--resolve`, follow only
+ends with findings and records them in the
+[candidate record](references/candidate-record.md). For `--resolve`, follow only
 [candidate resolution](references/resolving-candidates.md).
 
 An independently requested pass in any mode is an accepted mission:
@@ -44,11 +45,16 @@ Apply it across the authorized optimization scope, not just the current diff.
 
 ## Establish the baseline
 
+Read this project's
+[candidate record](references/candidate-record.md) when it exists, together with
+any approved profile exclusions it or the project already records. Follow that
+reference for accepted costs and later-pass preservation. Candidate proposals
+remain eligible and normal verification coverage stays intact.
+
 Run the selected local scope. Record revision, literal command, runner mode,
 workers, filters, relevant environment/cache conditions, wall time, executed
 case count, and available test/setup timings. Keep raw profiles out of commits.
-Use only approved profile exclusions; candidate proposals remain eligible and
-normal verification coverage stays intact. Report the limits of filtered runs.
+Use only approved profile exclusions. Report the limits of filtered runs.
 
 Measure the ordinary local test mode even if profiling needs a different mode.
 A failed or incomplete run supplies diagnostics, not a successful baseline.
@@ -152,10 +158,11 @@ test/support-code simplifications, experiments rejected, delivered commits, and
 remaining candidates. Distinguish measured improvement, no demonstrated gain,
 and incomplete work. Do not claim speedup from fewer cases or lines alone.
 
-Keep candidates with locations, cost, unique protection, attempted alternatives,
-evidence, date, and needed decisions in the existing record or active plan.
-Retain that plan and evidence for retrospective and
-[story wrap-up](../dough-story-wrap-up/SKILL.md); unresolved candidates must be
-resolved or transferred to the established follow-up location before cleanup.
+Write the latest-pass summary and remaining candidates to the
+[candidate record](references/candidate-record.md), including after a
+profile-only pass that ends with findings, following that reference for create,
+replace, and preservation rules. Retain the plan and evidence for retrospective
+and [story wrap-up](../dough-story-wrap-up/SKILL.md); unresolved candidates must
+be resolved or transferred in that record before cleanup.
 Emit `## TEST OPTIMIZATION COMPLETE` only when the pass's planned work,
 verification, measurement, and delivery are complete, stating its actual outcome.

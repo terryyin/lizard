@@ -99,25 +99,17 @@ When a retrospective follow-up exists, read and apply
 [follow-up disposition](references/follow-up-disposition.md) before closure:
 queue it first by default, or drop it only on explicit human instruction.
 
+## Keep test optimization candidates across cleanup
+
+Before the before-cleanup commit, when the spent plan holds test-optimization findings that exist only there, or this closing work is the receiver of a transferred obligation, follow the [candidate record](../dough-test-optimization/references/candidate-record.md).
+
 ## Apply product-review decisions
 
-When product advice or additional human input is present, apply only authorized
-compatible backlog and canonical-home changes, following [dough-product-backlog](../dough-product-backlog/SKILL.md)
-queue and active-home conventions. Without retrospective advice in the
-conversation, as in a fresh session, use the plan's recorded product advice; a
-recorded skip is a skipped review. Explicit human input wins over either advice.
+When product advice or additional human input is present, apply only authorized compatible backlog and canonical-home changes, following [dough-product-backlog](../dough-product-backlog/SKILL.md) queue and active-home conventions. Without retrospective advice in the conversation, as in a fresh session, use the plan's recorded product advice; a recorded skip is a skipped review. Explicit human input wins over either advice.
 
-Supported changes: relevant reorder, queue membership, understood new-story
-addition, understood bounded-correction addition, and canonical-detail
-edits. Apply the backlog skill's canonical-home admission rules to every new
-entry. Keep existing follow-up work first unless a later explicit human
-instruction changes that priority. Preserve unrelated content, still-needed
-acceptance work, and near-future direction.
+Supported changes: relevant reorder, queue membership, understood new-story addition, understood bounded-correction addition, and canonical-detail edits. Apply the backlog skill's canonical-home admission rules to every new entry. Keep existing follow-up work first unless a later explicit human instruction changes that priority. Preserve unrelated content, still-needed acceptance work, and near-future direction.
 
-A skipped, empty, or absent product review, or absent extra human input,
-introduces no mandatory question. Ordinary closure continues using the other
-available inputs. Leave unresolved necessary context with active work and report
-the choice; do not invent scope, launch discovery, or start another review.
+A skipped, empty, or absent product review, or absent extra human input, introduces no mandatory question. Ordinary closure continues using the other available inputs. Leave unresolved necessary context with active work and report the choice; do not invent scope, launch discovery, or start another review.
 
 ## Commit closure inputs and preserve Git recovery
 
