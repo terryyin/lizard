@@ -133,10 +133,29 @@ agent's owned workspace whose developer credit is refused, reports
 staged but not committed. Settle what the report names, then commit that
 catalog alone, crediting the developer as any other agent commit does.
 
-Record changes made outside these adapters, such as by raw Git, need the
-installed `scripts/product-backlog.mjs catalog-done [--file <path>]` from the
-same installed skill directory, then a commit of the catalog it writes or
-removes.
+### Catalog representation and repair
+
+The done catalog lists each done record's file name, identity, completion time,
+and Git blob hash, ordered newest first by completion time. Unreadable record
+files have their hash and no completion time, so a reader can order the records
+and read only the ones it needs. Titles, developers, agents, hosts, and models
+stay in the records. The catalog is derived from the record files: never edit or merge it
+by hand. `complete` and the installed merge, rebase, and cherry-pick adapters
+keep it current, rebuilding it from the resulting records whenever they change.
+Rebuild with the installed `scripts/product-backlog.mjs catalog-done
+[--file <backlog>]` from the same installed skill directory and commit its result
+when:
+
+- done records exist beside the backlog with no catalog because they predate it;
+- record files changed outside `complete` and those adapters, such as by raw Git,
+  a hand edit, or an older installed copy of these scripts; or
+- raw Git reports a conflict in `done/.catalog.json`: settle the record files
+  first, then rebuild and stage the catalog.
+
+`catalog-done` changes no record and no backlog entry, prunes nothing, and
+writes no completion; with no record left it removes the catalog. Its report
+names unreadable record files, which stay for a person to read; the catalog
+never makes up completion times for them.
 
 ## Fallback domain knowledge
 

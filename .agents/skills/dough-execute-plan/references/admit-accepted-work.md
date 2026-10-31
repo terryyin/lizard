@@ -60,9 +60,13 @@ declared plan into the isolated claim; other local edits stay local and
 unpublished. It publishes them, the Taken entry, and your agent profile in one
 remote-trunk commit, and lists the carried paths as `admitted`. Admission
 requires no ready assessment and grants no execution authority; later
-implementation still needs its normal source, approach, and authority. Because
-the draft remains in the originating checkout, a deferred local refresh is
-expected and leaves the accepted admission intact. `status: "existing"` means
+implementation still needs its normal source, approach, and authority. After
+confirmed acceptance, the command withdraws only the unchanged published
+contribution from the originating checkout and attempts its ordinary refresh.
+Unrelated files and sibling story edits, staged content, and subsequent draft
+edits remain untouched; those edits may defer refresh without undoing admission.
+An interrupted publication resumes that same reconciliation only after remote
+ownership is confirmed. `status: "existing"` means
 you already hold this claim; continue under it. A refusal starts no dependent
 work: `source-refused` names missing identity, preparation, or Goal, already
 queued work, a home listed under another identity, or an identity a trunk done
@@ -90,7 +94,8 @@ and publish that preparation through its ordinary keep. Recording the planned
 approach also links your Taken entry to its plan; keep and publish that
 backlog change with the plan and story. Then run the start command without
 `--admit`. It continues your claim as `status: "existing"` with the resolved
-`plan`, writing nothing: no second claim, profile, story, or backlog link. It
+`plan`, without publishing a second claim, profile, story, or backlog link. Local
+checkout maintenance remains a separate result. It
 refuses, starting nothing, while the published approach is unselected, the
 published preparation is not ready, the published Taken entry lacks the plan
 link its preparation declares (record the planned approach again with

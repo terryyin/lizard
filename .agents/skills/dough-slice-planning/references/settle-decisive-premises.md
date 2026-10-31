@@ -26,8 +26,9 @@ Reading, searching, listing, and read-only host queries locate it; presence cann
   and specs that drive HTTP sequences, rather than only names or direct imports.
   With a cheap local suite, the smallest complete observation is one scratch application
   of the planned change, one relevant test run, and a revert; failures identify consumers.
-  For a moved function reached through a script, run the feature's script steps with a
-  scratch failure in the function; record that step's failure. Caller traces or unit imports do not settle it.
+  For a moved function reached through a script, run the product intent's script
+  steps with a scratch failure in the function; record that step's failure.
+  Caller traces or unit imports do not settle it.
 - For a proof premise (a named test proves a behavior), observe discrimination: it fails
   with the behavior disabled in a scratch edit and passes with it enabled. If it stays
   green without the behavior, record the premise false and give the slice a discriminating proof.

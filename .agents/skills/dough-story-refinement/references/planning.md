@@ -6,38 +6,34 @@ Refine unresolved stories in their seeds. Once goal, scope, and key examples are
 understood and planning is authorized, write/refine one active executable plan.
 A plan does not decide story scope; a seed alone does not authorize execution.
 
-An evidenced bounded retrospective correction is a work item with correction
-input instead of a refined feature story. A new correction gets a minimal story
-in a suitable seed before its plan is written: reuse the reviewed story's seed
-or another seed whose problem hosts it, and create one under the
-[seed format](../../dough-story-decomposition/references/seed-format.md) only
-when none fits. That story records its `**Identity:**`, allocated under
+An evidenced bounded retrospective correction uses correction input instead of
+a refined feature story. Before planning, give a new correction a minimal story
+in the reviewed story's seed or another seed hosting the problem; create one
+under [seed format](../../dough-story-decomposition/references/seed-format.md) only when none fits.
+The story records its `**Identity:**`, allocated under
 [allocate a new identity](../../dough-product-backlog/references/identity.md#allocate-a-new-identity),
-a **Goal** naming the beneficiary and bounded correction outcome, the bounded
-**Scope**, and a link to the plan; it adds no feature promise. The plan
+a **Goal** naming the beneficiary and bounded correction outcome, bounded
+**Scope**, and its plan link, adding no promise about a product intent. The plan
 records the story's identity under
 [work item identity](../../dough-product-backlog/references/identity.md) and
-holds the rest of the correction input: source and provenance, current
-findings, preserved promises and genuine constraints, observable proof
-ownership, current decisions, and executable slices.
+holds the remaining input: source and provenance, current findings, preserved
+promises and genuine constraints, observable proof ownership, current decisions,
+and executable slices.
 
-An existing correction whose plan is already its canonical home keeps that home
-and its recorded identity, with the whole correction input in that plan. Do not
-migrate it or create a seed for it. For either kind, name whichever
-required correction field is missing and stop that path; do not invent it.
-Resolve disputed product constraints through the shared
+Existing plan-homed corrections keep their home, recorded identity, and complete
+input in that plan; do not migrate them or create seeds. For either kind, name
+missing required correction fields and stop rather than inventing them. Resolve
+disputed product constraints through the shared
 [plan-conflict handoff](../../dough-execute-plan/references/execution-decisions.md#resolve-a-disputed-plan-restriction),
 leaving the decision with the human.
 
-Planning and refinement never supply execution authority. Execute only when the
-current human or invoking workflow instruction authorizes execution; a
-planning-only handoff stops before implementation even when the plan is complete.
+Planning and refinement never supply execution authority. Execute only under a
+current human or invoking-workflow instruction authorizing implementation.
 
 ## Refine story understanding
 
-Read selected stories and relevant discussion; reuse prior answers. Ask only
-questions that change understanding, with concise proposed answers, without a
-questionnaire or approval ceremony. Distinguish unresolved proposals from decisions.
+Read the selected stories and discussion; reuse prior answers and distinguish proposals from decisions.
+Ask only understanding-changing questions with concise proposed answers, without a questionnaire or approval ceremony.
 
 For each story, establish:
 
@@ -96,22 +92,18 @@ boundary or structure for deferred behavior.
 
 ## Update a feature story in its seed
 
-For feature stories, use this section. A correction story stays minimal under
-the correction-input contract above; findings, proof, and decisions stay in its
-plan.
+For feature stories, use this section. Correction stories stay minimal under the
+contract above, keeping findings, proof, and decisions in their plans.
 
-Follow the shared
-[seed format](../../dough-story-decomposition/references/seed-format.md) for
-seed ownership, metadata, anchors, and backlog boundaries. Expand each selected
-story section with the understanding above, replacing overlapping detail.
-Record only open questions that affect that story. When refining several
-stories, keep each outcome and boundary separate; do not merge them into one
-delivery by implication.
+Follow [seed format](../../dough-story-decomposition/references/seed-format.md)
+for ownership, metadata, anchors, and backlog boundaries. Expand each selected
+story with the understanding above, replacing overlapping detail. Record only
+its relevant open questions. Keep each story's outcome and boundary separate
+when refining several; do not merge them into one delivery by implication.
 
-If no seed exists, create one using that format. Do not invent parent-problem
-decisions to fill it; route unresolved framing or candidate selection to
-[dough-story-decomposition](../../dough-story-decomposition/SKILL.md).
-Do not create a separate refinement file.
+Create a missing seed using that format; route unresolved parent framing or
+candidate selection to [dough-story-decomposition](../../dough-story-decomposition/SKILL.md)
+rather than inventing decisions. Keep refinement in the seed.
 
 Preserve the story's anchor and recorded identity when you rename or move its
 seed, updating incoming links instead: relocating a story does not re-identify it.
@@ -197,14 +189,12 @@ next Behavior it enables, or the directly owned retrospective correction under
 [slice decomposition](../../dough-story-decomposition/references/problem-decomposition.md#decompose-slices). Planning numbers stay in planning artifacts; product
 code, tests, and enduring documentation remain capability-named.
 
-After the plan file exists for a work item with a recorded identity, apply
-[record preparation facts](../../dough-product-backlog/references/record-preparation.md)
-for the planned approach (omit assessment on that write).
+After writing an identified work item's plan, [record preparation facts](../../dough-product-backlog/references/record-preparation.md)
+for the planned approach, omitting assessment on that write.
 
 ## Own executable proof
 
-Proof ownership for executable plans lives in
-[own executable proof](executable-proof.md).
+Follow [own executable proof](executable-proof.md) for executable plans.
 
 ## Refine the active plan
 

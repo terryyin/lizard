@@ -144,7 +144,8 @@ review continues. Plan compliance alone does not settle justification.
 Recheck findings against current revision/worktree; report later fixes and deduplicate by root
 cause. Current evidence bounds corrections, including beyond the old footprint, while preserving
 [scope and promises](../dough-story-refinement/references/planning.md#examples-and-constraints).
-No findings means unchanged plans; broader review grants no new feature promises.
+No findings means unchanged plans; broader review grants no new promises about
+product intents.
 
 Give suite cleanup explicit correction ownership, including older redundant tests. For consolidation,
 name surviving meaningful coverage/integration proof (retained E2E may suffice). For detail downgrades,

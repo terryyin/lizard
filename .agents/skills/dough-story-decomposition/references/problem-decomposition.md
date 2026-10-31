@@ -55,11 +55,11 @@ is insufficient.
 
 Frame each candidate story as a possibility worth pursuing for user or learning
 value. Invite imagination and discussion; allow incomplete understanding to
-evolve. Let the journey cross features and system boundaries. When selecting
-stories for planning, clarify an observable outcome. Cut around behavior, a
+evolve. Let the journey cross product intents and system boundaries. When
+selecting stories for planning, clarify an observable outcome. Cut around behavior, a
 product decision, risk, or learning question. Decompose only enough candidates
-to answer the current value or learning question; do not exhaust a feature for
-completeness.
+to answer the current value or learning question; do not exhaust a product intent
+for completeness.
 
 Select a candidate story for planning when all three answers are yes:
 

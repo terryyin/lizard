@@ -162,3 +162,31 @@ gate above has passed. Before arming, apply
 [runtime setup](runtime-setup.md) identity and stop rules; the initially loaded
 skill's copy is not a fallback. CI source is the authorized target branch;
 edits and repair stay in this checkout.
+
+## Read and recover the start result
+
+Use its compact one-line result directly; do not filter or fetch it again.
+Values you supplied stay in your execution context and are not echoed. An
+accepted result (`ok: true`, `status` `published` or `resumed`) carries
+`publishedSha`, `startingRevision`, `candidateSha`, `created`, `agent` when the
+claim names one, `plan` or `remote` when resolved rather than supplied, and the
+default checkout's `maintenance` (`result`, plus `reason` when not refreshed).
+Retain them; the first increment's managed delivery uses `publishedSha` as its
+previously published base. `existing` (work already Taken under your claim)
+returns that claim's `publishedSha` without publishing another claim. Accepted
+admission maintenance may withdraw unchanged published drafts and refresh the
+default checkout. No `maintenance`
+[result](maintain-default-checkout.md#independent-maintenance-outcome)
+or `earlierMaintenance` issue undoes accepted publication. A refusal or
+unconfirmed result (`ok: false`, non-zero exit) stops before implementation;
+report and act on its `status`, `error`, and any `recovery` or `provenance`,
+handling `developer-identity-refused` as under [agent
+commits](agent-commits.md). Inspect current Git state only when a
+reported reason needs it; never repeat a mutating command to obtain diagnostics.
+If publication is interrupted, invoke the same installed command with the
+retained workspace, branch, publisher ID, identity, `--starting-revision` and
+`--candidate-sha` from the last result (or its `recovery`) or confirmed pre-push
+candidate. Use the latest candidate SHA after a replay. A `resumed` result
+confirms current ownership through remote ancestry, even when trunk has
+advanced; it may finish eligible local refresh without another Take or push. A rival or ambiguous provenance stops implementation.
+Preserve the stopped candidate and exact recovery fields on an uncertain result.

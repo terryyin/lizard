@@ -15,7 +15,7 @@ No diagnosis, product repair, or unrequested tooling.
 
 ## Mission
 
-Resolve scope and time budget from the request: a feature, story set, recent
+Resolve scope and time budget from the request: a product intent, story set, recent
 deliveries, or change range. Recover current promises, examples, and
 constraints from this project's records or Git history, including deleted
 stories. Apply later decisions before older expectations; implementation,

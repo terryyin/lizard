@@ -101,8 +101,8 @@ product fact, put it in its maintained home in this project:
   If it is not already Accepted there, keep the temporary record and its
   references, report the context and the specific decision needed, and do not
   claim closure. Humans own ADR acceptance, amendment, and supersession.
-- Feature-local behavior or design belongs in that feature's maintained
-  documentation, in its existing format. Write it there; it needs no ADR. Tests
+- Individual product intent details or design belong in that product intent's
+  maintained documentation, in its existing format. Write it there; it needs no ADR. Tests
   that exercise related behavior do not replace that documentation.
 
 When the rule already has its maintained home, or the record holds only spent

@@ -154,8 +154,9 @@ Work without a Taken entry has no story section or plan to compare. On
   remaining section is spent;
 - its **Taken** or **Backlog list** entry when one exists, through the
   [dough-product-backlog](../dough-product-backlog/SKILL.md) `complete` command,
-  which also deletes that work's agent profile, writes its done record,
-  removes expired done records, and rebuilds the done catalog beside them, all
+  which also deletes that work's readable preparation and execution agent
+  profiles, writes its done record, removes expired done records, and rebuilds
+  the done catalog beside them, all
   owned closure changes; and
 - links whose sole purpose is preserving that history.
 

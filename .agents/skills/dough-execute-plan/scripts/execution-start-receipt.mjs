@@ -1,7 +1,10 @@
 // The accepted start result: publication and recovery coordinates, what the
 // command resolved beyond its invocation, and local maintenance reported
 // separately. Unchanged invocation context is not echoed back.
-import { reportedMaintenance } from "./execution-start-maintenance.mjs";
+import {
+  acceptedMaintenance,
+  reportedMaintenance,
+} from "./execution-start-maintenance.mjs";
 import { remoteOf } from "./workspace-publication-ownership.mjs";
 
 // Initial publication and an existing claim forward the same observed fact.
@@ -11,14 +14,19 @@ export function reviewChangeReceipt(source) {
   return changedSinceReview === undefined ? {} : { changedSinceReview };
 }
 
-export function acceptedReceipt(
+// Call only after publication and ownership are confirmed. Fresh and resumed
+// starts finish the same draft reconciliation before reporting maintenance.
+export async function finishAcceptedStart(
   request,
   selected,
   source,
   publication,
   beforeMaintenance,
-  afterMaintenance,
 ) {
+  const afterMaintenance = await acceptedMaintenance(
+    request,
+    publication.publishedSha,
+  );
   return {
     ok: true,
     status: publication.status,
@@ -34,7 +42,7 @@ export function acceptedReceipt(
     ...(request.plan || !source.planTarget ? {} : { plan: source.planTarget }),
     ...reviewChangeReceipt(source),
     // The drafted canonical files this admission published from the
-    // originating checkout, whose own copies stay as they were.
+    // originating checkout; accepted maintenance withdraws unchanged drafts.
     ...(source.admission
       ? { admitted: source.admission.files.map(({ path }) => path) }
       : {}),

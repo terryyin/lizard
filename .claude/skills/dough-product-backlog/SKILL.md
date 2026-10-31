@@ -188,48 +188,28 @@ requires a developer decision; it does not interrupt that execution automaticall
 - Standalone maintenance may remove a completed item from either active list
   when the human asks only for backlog maintenance. The applicable seed, plan,
   and proof remain available for later story wrap-up.
-- Work a human drops rather than finishes is removed with `complete --dropped`,
-  which removes the entry and releases its profile as below and leaves the done
-  records to finished work.
+- Remove human-dropped work with `complete --dropped`: release its entry and
+  profiles as below, leaving done records to finished work.
 
-Either path removes the entry with the installed `scripts/product-backlog.mjs
-complete` operation. It also deletes the execution agent profile under
-`agents/` beside the backlog that names the same identity, releasing that agent
-name, and writes the work's done record under `done/` beside the backlog: its
-identity, title, completion time, the developer configured in this workspace's
-Git, and that profile's agent, host, and model when one existed. The same run
-removes done records completed more than 30 days before, then rebuilds the done
-catalog `done/.catalog.json` from the records that remain, and its report names
-each file it wrote or removed. Commit those files with the backlog change; the
-done record stays in the project as the published fact that the work was done.
-A preparation assignment profile stays until its own release.
+Either path uses installed `scripts/product-backlog.mjs complete`. It removes
+the entry and every readable preparation or execution profile under `agents/`
+beside the backlog naming that identity, releasing those agent names. The done
+record under `done/` beside the backlog holds its identity, title, completion
+time, this workspace's configured Git developer, and the execution profile's
+agent, host, and model when one existed. Preparation profiles supply no execution
+credit. Other work's and unreadable profiles remain untouched.
+The same run removes records completed more than 30 days before and rebuilds
+`done/.catalog.json` from those remaining, reporting every file written or
+removed. Commit them with the backlog; the done record remains in the project
+as the published fact of completion.
 
 ### Adopt or repair the done catalog
 
-The done catalog lists each done record's file name, identity, completion time,
-and Git blob hash, newest first, and names each unreadable record file with its
-hash and no completion time, so a reader can order the records and read only
-the ones it needs. Titles, developers, agents, hosts, and models stay in the
-records. The catalog is derived from the record files: never edit or merge it
-by hand. `complete` and the installed merge, rebase, and cherry-pick adapters
-in [merge conflicts](references/merge-conflicts.md) keep it current: an
-operation through an adapter that changes records also leaves a catalog
-rebuilt from the resulting record files. Rebuild it with the installed
-`scripts/product-backlog.mjs catalog-done [--file <backlog>]` and commit the
-result when:
-
-- done records exist beside the backlog with no catalog, because they were
-  written before catalogs existed;
-- record files were added, removed, or changed outside `complete` and those
-  adapters, such as by raw Git, a hand edit, or an older installed copy of
-  these scripts; or
-- raw Git reports a conflict in `done/.catalog.json`: settle the record files
-  first, then rebuild and stage the catalog.
-
-`catalog-done` changes no record and no backlog entry, prunes nothing, and
-writes no completion; with no record left it removes the catalog. Its report
-names any unreadable record file, which stays for a person to read; the catalog
-never makes up a completion time for it.
+The catalog is derived; never edit or merge it by hand. When adopting older
+done records, repairing changes outside `complete` or the installed Git adapters,
+or settling a raw catalog conflict, follow
+[catalog representation and repair](references/merge-conflicts.md#catalog-representation-and-repair)
+for the catalog's fields, rebuild command, and preservation rules.
 
 ## Direct edits may be denied in Claude Code, Codex, or Cursor
 

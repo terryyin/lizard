@@ -43,8 +43,8 @@ For a correction handed off by
 use its evidenced current findings, one bounded correction outcome, affected
 concepts, preserved product promises and constraints, and evaluable proof as the
 planning input. Cite the original story and reviewed commits for provenance;
-do not invent a feature promise or require the correction to fit the old
-story's implementation footprint. The retrospective owns current-truth checks,
+do not invent a promise about a product intent or require the correction to fit
+the old story's implementation footprint. The retrospective owns current-truth checks,
 constraint disputes, and whether to amend an unfinished plan or create a
 follow-up. Missing correction scope or proof stops this planning path.
 
