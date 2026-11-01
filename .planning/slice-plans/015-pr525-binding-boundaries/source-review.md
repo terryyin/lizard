@@ -32,19 +32,19 @@ message once all checks pass.”
 | 12 | Preserve existing template behavior. | slice 1 |observed: test_template_substitutions_keep_members_and_enclosing_callback and complete template suites |
 | 13 | Preserve existing extension behavior. | slice 1 |observed: test_metric_extensions_keep_callback_decisions plus implementation/consumers-final.txt |
 | 14 | Preserve existing CLI behavior. | slice 1 |observed: test_cli_reports_complete_callback_and_following_metrics plus complete testApplication/options suites |
-| 15 | Independently refactor the aggregate change. | slice 2 | |
-| 16 | Profile runtime cost. | slice 2 | |
-| 17 | Remove unjustified runtime cost. | slice 2 | |
-| 18 | Qualify each affected API/parameter consumer using a paired 95% upper slowdown bound strictly below 3%. | slice 2 | |
-| 19 | Qualify the broad CLI workload using a paired 95% upper slowdown bound strictly below 3%. | slice 2 | |
-| 20 | Use frozen current master as the performance baseline. | slice 2 | |
-| 21 | Preserve original-parent comparisons where applicable. | slice 2 | |
-| 22 | Preserve cumulative comparisons where applicable. | slice 2 | |
-| 23 | Keep measurement inputs immutable. | slice 2 | |
-| 24 | Retain unfavorable measurement attempts. | slice 2 | |
+| 15 | Independently refactor the aggregate change. | slice 2 | observed: refactor3/README.md: independent whole-concept no-edit return, ## REFACTOR COMPLETE |
+| 16 | Profile runtime cost. | slice 2 | observed: cost-return/current-arguments-profile.json, pre-edit-arguments-profile.json and post-edit-arguments-profile.json on immutable inputs |
+| 17 | Remove unjustified runtime cost. | slice 2 | observed: cost-return/profile-comparison.json: binding reads 87360 to 52160, candidates 7200 to 4000; same syntax dispatch/formal reads |
+| 18 | Qualify each affected API/parameter consumer using a paired 95% upper slowdown bound strictly below 3%. | slice 2 | observed: measurements/attempt2/current-api.json, current-ns.json, arguments-api.json, arguments-ns.json: every upper <3% |
+| 19 | Qualify the broad CLI workload using a paired 95% upper slowdown bound strictly below 3%. | slice 2 | observed: measurements/attempt2/current-cli.json and parent-cli.json: upper -0.010% and +0.526% |
+| 20 | Use frozen current master as the performance baseline. | slice 2 | observed: evidence/workload-manifest.json and qualification-inputs.json pin frozen 6d288d4 runtime; all attempt2 source hashes match |
+| 21 | Preserve original-parent comparisons where applicable. | slice 2 | observed: measurements/attempt2/parent-api.json, parent-ns.json, parent-cli.json vs 01afe9c |
+| 22 | Preserve cumulative comparisons where applicable. | slice 2 | observed: same three original-parent comparisons establish cumulative qualification |
+| 23 | Keep measurement inputs immutable. | slice 2 | observed: cost-return/final-correspondence.json frozen_checks all true; all attempt2 input/source/harness stability checks pass |
+| 24 | Retain unfavorable measurement attempts. | slice 2 | observed: measurements/attempt1/ retained including isolated-call failure; rejected cost/ attempt preserved |
 | 25 | Establish semantic proof before merge. | slice 3 | |
-| 26 | Pass the full pytest suite before merge. | slice 2 | |
-| 27 | Pass make before merge. | slice 2 | |
+| 26 | Pass the full pytest suite before merge. | slice 2 | observed: verification2/pytest.json exit0: 2427 passed, 7 existing skips |
+| 27 | Pass make before merge. | slice 2 | observed: verification2/make.json exit0: 2427 passed, 7 existing skips and configured style checks |
 | 28 | Pass applicable hosted CI for the exact contributor head before merge. | slice 3 | |
 | 29 | Merge the exact qualified contributor head. | slice 3 | |
 | 30 | Post one thank-you acknowledgement describing material corrections. | slice 3 | |
@@ -53,8 +53,8 @@ message once all checks pass.”
 | 33 | Preserve public metric meanings. | slice 1 |observed: high-level summaries/CLI/HTTP assertions inspect names, CCN, parameters and start/end lines; ADR-0001 |
 | 34 | Avoid parallel bracket counters. | slice 1 |observed: aggregate diff: existing frame stack reused; no added bracket counter |
 | 35 | Avoid whole-stream buffering. | slice 1 |observed: aggregate diff: no buffering or token-stream wrapper |
-| 36 | Serialize Nix setup. | slice 2 | |
-| 37 | Serialize heavy measurements. | slice 2 | |
+| 36 | Serialize Nix setup. | slice 2 | observed: final full checks and all qualification entries were serial; delegated Nix ownership explicitly transferred at every final boundary |
+| 37 | Serialize heavy measurements. | slice 2 | observed: evidence/timing-host2.json and attempt2 raw sequence: one owned heavy comparison at a time |
 | 38 | Do not force-push. | slice 3 | |
 | 39 | Stop the dependent merge if the head moves. | slice 3 | |
 | 40 | Callback journey: it('t', () => {\n e(r[0]);\n if(x) g(x);\n}); spans lines 1–4. | slice 1 |observed: test_callback_keeps_decisions_and_following_formals: explicit lines 1–4 |
@@ -74,7 +74,7 @@ message once all checks pass.”
 | 54 | Keep template controls correct. | slice 1 |observed: test_template_substitutions_keep_members_and_enclosing_callback |
 | 55 | Pre-existing label limitations are outside the new behavioral promises. | slice 1 |observed: G2 explicitly excludes the unchanged labeled-body limitation |
 | 56 | Pre-existing deep-object limitations are outside the new behavioral promises. | slice 1 |observed: deep-object-array replay now passes; no broad deep-object promise added by source |
-| 57 | Honestly disposition introduced regressions. | slice 2 | |
-| 58 | Honestly disposition exposed regressions. | slice 2 | |
+| 57 | Honestly disposition introduced regressions. | slice 2 | observed: G1/G6 corrected and current affected proof passes; rejected specialization/failures retained; no expectation weakened |
+| 58 | Honestly disposition exposed regressions. | slice 2 | observed: G2-G4 explicit unchanged/excluded dispositions; G7 corrected, independently refactored and qualified without hiding failed workload |
 | 59 | The examples illustrate required behavior; they do not exclude other cases within the stated scope. | slice 1 |observed: argument-reader tests cover member/constructor/optional/object consumers beyond eleven illustrative cases |
 | 60 | The retained completed review and recoverable evidence are provenance; this interpretation makes no additional promises from their unread contents. | slice 1 |observed: implementation/README.md provenance and exact original diff/replay locations; no extra promise inferred |

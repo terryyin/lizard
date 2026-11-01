@@ -1,0 +1,248 @@
+{
+  "current": {
+    "total_seconds": 0.6589758440000003,
+    "files": 40,
+    "repeats": 40,
+    "binding_signals": [
+      {
+        "line": 19,
+        "function": "__init__",
+        "primitive_calls": 9120,
+        "calls": 9120,
+        "self_seconds": 0.001474461,
+        "cumulative_seconds": 0.001474461
+      },
+      {
+        "line": 29,
+        "function": "__init__",
+        "primitive_calls": 8960,
+        "calls": 8960,
+        "self_seconds": 0.006863037000000001,
+        "cumulative_seconds": 0.00831779
+      },
+      {
+        "line": 57,
+        "function": "read_token",
+        "primitive_calls": 62240,
+        "calls": 62240,
+        "self_seconds": 0.032123371000000005,
+        "cumulative_seconds": 0.04368298
+      },
+      {
+        "line": 107,
+        "function": "_read_parameter",
+        "primitive_calls": 9760,
+        "calls": 9760,
+        "self_seconds": 0.003886506,
+        "cumulative_seconds": 0.007924592000000001
+      },
+      {
+        "line": 134,
+        "function": "__init__",
+        "primitive_calls": 12000,
+        "calls": 12000,
+        "self_seconds": 0.006912167,
+        "cumulative_seconds": 0.011428142
+      },
+      {
+        "line": 141,
+        "function": "_resolve_pending_bindings",
+        "primitive_calls": 5760,
+        "calls": 5760,
+        "self_seconds": 0.0021014980000000003,
+        "cumulative_seconds": 0.002640434
+      },
+      {
+        "line": 156,
+        "function": "_read_binding_candidate",
+        "primitive_calls": 5760,
+        "calls": 5760,
+        "self_seconds": 0.006098616,
+        "cumulative_seconds": 0.025157355000000003
+      },
+      {
+        "line": 19,
+        "function": "__init__",
+        "primitive_calls": 12000,
+        "calls": 12000,
+        "self_seconds": 0.010937422,
+        "cumulative_seconds": 0.022365564
+      }
+    ],
+    "code_dispatch": [
+      {
+        "path": "/Users/terryyin/.cache/pr525-correction-qualified-20261101/current/lizard_languages/code_reader.py",
+        "line": 48,
+        "function": "__call__",
+        "primitive_calls": 68320,
+        "calls": 168800,
+        "self_seconds": 0.042720483000000004,
+        "cumulative_seconds": 0.281455513
+      }
+    ]
+  },
+  "pre-edit": {
+    "total_seconds": 0.6788711969999999,
+    "files": 40,
+    "repeats": 40,
+    "binding_signals": [
+      {
+        "line": 19,
+        "function": "__init__",
+        "primitive_calls": 12000,
+        "calls": 12000,
+        "self_seconds": 0.003298028,
+        "cumulative_seconds": 0.003298028
+      },
+      {
+        "line": 29,
+        "function": "__init__",
+        "primitive_calls": 10400,
+        "calls": 10400,
+        "self_seconds": 0.005906762,
+        "cumulative_seconds": 0.009016748
+      },
+      {
+        "line": 58,
+        "function": "read_token",
+        "primitive_calls": 87360,
+        "calls": 87360,
+        "self_seconds": 0.041839796000000005,
+        "cumulative_seconds": 0.053222087
+      },
+      {
+        "line": 108,
+        "function": "_read_parameter",
+        "primitive_calls": 6400,
+        "calls": 6400,
+        "self_seconds": 0.0026269960000000004,
+        "cumulative_seconds": 0.006263687
+      },
+      {
+        "line": 135,
+        "function": "__init__",
+        "primitive_calls": 12000,
+        "calls": 12000,
+        "self_seconds": 0.006715058,
+        "cumulative_seconds": 0.013959220000000001
+      },
+      {
+        "line": 142,
+        "function": "_resolve_pending_bindings",
+        "primitive_calls": 7200,
+        "calls": 7200,
+        "self_seconds": 0.002571877,
+        "cumulative_seconds": 0.003270676
+      },
+      {
+        "line": 157,
+        "function": "_read_binding_candidate",
+        "primitive_calls": 7200,
+        "calls": 7200,
+        "self_seconds": 0.006639799,
+        "cumulative_seconds": 0.031748682
+      },
+      {
+        "line": 19,
+        "function": "__init__",
+        "primitive_calls": 12000,
+        "calls": 12000,
+        "self_seconds": 0.009820091000000001,
+        "cumulative_seconds": 0.023779311
+      }
+    ],
+    "code_dispatch": [
+      {
+        "path": "/Users/terryyin/git/lizard/.worktrees/correct-pr525-binding-boundaries/lizard_languages/code_reader.py",
+        "line": 48,
+        "function": "__call__",
+        "primitive_calls": 68320,
+        "calls": 168800,
+        "self_seconds": 0.042886359000000006,
+        "cumulative_seconds": 0.30510727200000004
+      }
+    ]
+  },
+  "post-edit": {
+    "total_seconds": 0.6226709670000001,
+    "files": 40,
+    "repeats": 40,
+    "binding_signals": [
+      {
+        "line": 19,
+        "function": "__init__",
+        "primitive_calls": 7200,
+        "calls": 7200,
+        "self_seconds": 0.002657897,
+        "cumulative_seconds": 0.002657897
+      },
+      {
+        "line": 29,
+        "function": "__init__",
+        "primitive_calls": 7200,
+        "calls": 7200,
+        "self_seconds": 0.004918792,
+        "cumulative_seconds": 0.007576689
+      },
+      {
+        "line": 58,
+        "function": "read_token",
+        "primitive_calls": 52160,
+        "calls": 52160,
+        "self_seconds": 0.027083740000000002,
+        "cumulative_seconds": 0.036395406000000005
+      },
+      {
+        "line": 108,
+        "function": "_read_parameter",
+        "primitive_calls": 6400,
+        "calls": 6400,
+        "self_seconds": 0.002544296,
+        "cumulative_seconds": 0.006033801
+      },
+      {
+        "line": 135,
+        "function": "__init__",
+        "primitive_calls": 12000,
+        "calls": 12000,
+        "self_seconds": 0.005591722,
+        "cumulative_seconds": 0.012107119000000001
+      },
+      {
+        "line": 142,
+        "function": "_resolve_pending_bindings",
+        "primitive_calls": 4000,
+        "calls": 4000,
+        "self_seconds": 0.001379094,
+        "cumulative_seconds": 0.001682476
+      },
+      {
+        "line": 157,
+        "function": "_read_binding_candidate",
+        "primitive_calls": 4000,
+        "calls": 4000,
+        "self_seconds": 0.003866598,
+        "cumulative_seconds": 0.019225264000000002
+      },
+      {
+        "line": 19,
+        "function": "__init__",
+        "primitive_calls": 12000,
+        "calls": 12000,
+        "self_seconds": 0.008911401000000001,
+        "cumulative_seconds": 0.021018520000000002
+      }
+    ],
+    "code_dispatch": [
+      {
+        "path": "/Users/terryyin/git/lizard/.worktrees/correct-pr525-binding-boundaries/lizard_languages/code_reader.py",
+        "line": 48,
+        "function": "__call__",
+        "primitive_calls": 68320,
+        "calls": 168800,
+        "self_seconds": 0.040805717000000005,
+        "cumulative_seconds": 0.263475417
+      }
+    ]
+  }
+}

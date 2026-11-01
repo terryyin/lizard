@@ -36,6 +36,15 @@ def parameter_group(prefix):
 
 
 class JavaScriptFunctionsMixin:
+    def _read_parenthesis_group(self):
+        """Only possible signatures need provisional binding frames."""
+        if parameter_group(self._prev_token):
+            return self._read_binding_candidate(')')
+        group = self.__class__(self.context)
+        group._call_group = True
+        self.sub_state(group)
+        return group
+
     def return_annotation_context(self):
         """Return ternary depth and whether the completed group proves a signature."""
         state = self

@@ -1,0 +1,103 @@
+[
+  {
+    "label": "current-api",
+    "command": [
+      "/Users/terryyin/git/lizard/.worktrees/correct-pr525-binding-boundaries/.venv/bin/python",
+      "/Users/terryyin/git/lizard/.worktrees/correct-pr525-binding-boundaries/.agents/skills/lizard-process-pr/scripts/paired_benchmark.py",
+      "--baseline",
+      "/Users/terryyin/.cache/pr525-correction-qualified-20261101/current",
+      "--candidate",
+      "/Users/terryyin/git/lizard/.worktrees/correct-pr525-binding-boundaries",
+      "--corpus",
+      "/Users/terryyin/.cache/pr525-correction-qualified-20261101/complete",
+      "--workload",
+      "api-parameters",
+      "--out",
+      "/Users/terryyin/git/lizard/.worktrees/correct-pr525-binding-boundaries/docs/reviews/pr525-correction-20261101/measurements/attempt1/current-api.json",
+      "--pairs",
+      "20",
+      "--seconds",
+      "1.2",
+      "--limit-pct",
+      "3"
+    ],
+    "exit": 0,
+    "verdict": "passes",
+    "passes": true,
+    "paired_change_pct": 2.322619601216033,
+    "paired_95pct_ci": [
+      1.7978208570862766,
+      2.8501238425707918
+    ],
+    "stdout": "{\"verdict\": \"passes\", \"passes\": true, \"paired_95pct_ci\": [1.7978208570862766, 2.8501238425707918], \"out\": \"/Users/terryyin/git/lizard/.worktrees/correct-pr525-binding-boundaries/docs/reviews/pr525-correction-20261101/measurements/attempt1/current-api.json\"}\n",
+    "stderr": ""
+  },
+  {
+    "label": "current-ns",
+    "command": [
+      "/Users/terryyin/git/lizard/.worktrees/correct-pr525-binding-boundaries/.venv/bin/python",
+      "/Users/terryyin/git/lizard/.worktrees/correct-pr525-binding-boundaries/.agents/skills/lizard-process-pr/scripts/paired_benchmark.py",
+      "--baseline",
+      "/Users/terryyin/.cache/pr525-correction-qualified-20261101/current",
+      "--candidate",
+      "/Users/terryyin/git/lizard/.worktrees/correct-pr525-binding-boundaries",
+      "--corpus",
+      "/Users/terryyin/.cache/pr525-correction-qualified-20261101/complete",
+      "--workload",
+      "api-parameters",
+      "--out",
+      "/Users/terryyin/git/lizard/.worktrees/correct-pr525-binding-boundaries/docs/reviews/pr525-correction-20261101/measurements/attempt1/current-ns.json",
+      "--pairs",
+      "20",
+      "--seconds",
+      "1.2",
+      "--limit-pct",
+      "3",
+      "--extension",
+      "NS"
+    ],
+    "exit": 0,
+    "verdict": "passes",
+    "passes": true,
+    "paired_change_pct": 0.6116529783682734,
+    "paired_95pct_ci": [
+      -0.09502592377205314,
+      1.3233305812774847
+    ],
+    "stdout": "{\"verdict\": \"passes\", \"passes\": true, \"paired_95pct_ci\": [-0.09502592377205314, 1.3233305812774847], \"out\": \"/Users/terryyin/git/lizard/.worktrees/correct-pr525-binding-boundaries/docs/reviews/pr525-correction-20261101/measurements/attempt1/current-ns.json\"}\n",
+    "stderr": ""
+  },
+  {
+    "label": "arguments-api",
+    "command": [
+      "/Users/terryyin/git/lizard/.worktrees/correct-pr525-binding-boundaries/.venv/bin/python",
+      "/Users/terryyin/git/lizard/.worktrees/correct-pr525-binding-boundaries/.agents/skills/lizard-process-pr/scripts/paired_benchmark.py",
+      "--baseline",
+      "/Users/terryyin/.cache/pr525-correction-qualified-20261101/current",
+      "--candidate",
+      "/Users/terryyin/git/lizard/.worktrees/correct-pr525-binding-boundaries",
+      "--corpus",
+      "/Users/terryyin/.cache/pr525-correction-qualified-20261101/argument-consumers",
+      "--workload",
+      "api-parameters",
+      "--out",
+      "/Users/terryyin/git/lizard/.worktrees/correct-pr525-binding-boundaries/docs/reviews/pr525-correction-20261101/measurements/attempt1/arguments-api.json",
+      "--pairs",
+      "20",
+      "--seconds",
+      "1.2",
+      "--limit-pct",
+      "3"
+    ],
+    "exit": 1,
+    "verdict": "bound-not-met",
+    "passes": false,
+    "paired_change_pct": 5.554442857168002,
+    "paired_95pct_ci": [
+      5.0636041944036325,
+      6.047574631754602
+    ],
+    "stdout": "{\"verdict\": \"bound-not-met\", \"passes\": false, \"paired_95pct_ci\": [5.0636041944036325, 6.047574631754602], \"out\": \"/Users/terryyin/git/lizard/.worktrees/correct-pr525-binding-boundaries/docs/reviews/pr525-correction-20261101/measurements/attempt1/arguments-api.json\"}\n",
+    "stderr": ""
+  }
+]
