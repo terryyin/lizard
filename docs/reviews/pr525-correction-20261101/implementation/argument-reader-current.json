@@ -1,0 +1,1087 @@
+[
+  {
+    "suffix": "js",
+    "callee": "h",
+    "actual": [
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "id",
+        3,
+        1,
+        1,
+        [
+          "x"
+        ]
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "suffix": "js",
+    "callee": "api.h",
+    "actual": [
+      [
+        "id",
+        3,
+        1,
+        1,
+        [
+          "x"
+        ]
+      ],
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "suffix": "js",
+    "callee": "new Factory",
+    "actual": [
+      [
+        "id",
+        3,
+        1,
+        1,
+        [
+          "x"
+        ]
+      ],
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "suffix": "js",
+    "callee": "api?.h",
+    "actual": [
+      [
+        "id",
+        3,
+        1,
+        1,
+        [
+          "x"
+        ]
+      ],
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "suffix": "js",
+    "callee": "api?.",
+    "actual": [
+      [
+        "id",
+        3,
+        1,
+        1,
+        [
+          "x"
+        ]
+      ],
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "suffix": "ts",
+    "callee": "h",
+    "actual": [
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "id",
+        3,
+        1,
+        1,
+        [
+          "x"
+        ]
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "suffix": "ts",
+    "callee": "api.h",
+    "actual": [
+      [
+        "id",
+        3,
+        1,
+        1,
+        [
+          "x"
+        ]
+      ],
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "suffix": "ts",
+    "callee": "new Factory",
+    "actual": [
+      [
+        "id",
+        3,
+        1,
+        1,
+        [
+          "x"
+        ]
+      ],
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "suffix": "ts",
+    "callee": "api?.h",
+    "actual": [
+      [
+        "id",
+        3,
+        1,
+        1,
+        [
+          "x"
+        ]
+      ],
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "suffix": "ts",
+    "callee": "api?.",
+    "actual": [
+      [
+        "id",
+        3,
+        1,
+        1,
+        [
+          "x"
+        ]
+      ],
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "suffix": "jsx",
+    "callee": "h",
+    "actual": [
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "id",
+        3,
+        1,
+        1,
+        [
+          "x"
+        ]
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "suffix": "jsx",
+    "callee": "api.h",
+    "actual": [
+      [
+        "id",
+        3,
+        1,
+        1,
+        [
+          "x"
+        ]
+      ],
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "suffix": "jsx",
+    "callee": "new Factory",
+    "actual": [
+      [
+        "id",
+        3,
+        1,
+        1,
+        [
+          "x"
+        ]
+      ],
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "suffix": "jsx",
+    "callee": "api?.h",
+    "actual": [
+      [
+        "id",
+        3,
+        1,
+        1,
+        [
+          "x"
+        ]
+      ],
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "suffix": "jsx",
+    "callee": "api?.",
+    "actual": [
+      [
+        "id",
+        3,
+        1,
+        1,
+        [
+          "x"
+        ]
+      ],
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "suffix": "tsx",
+    "callee": "h",
+    "actual": [
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "id",
+        3,
+        1,
+        1,
+        [
+          "x"
+        ]
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "suffix": "tsx",
+    "callee": "api.h",
+    "actual": [
+      [
+        "id",
+        3,
+        1,
+        1,
+        [
+          "x"
+        ]
+      ],
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "suffix": "tsx",
+    "callee": "new Factory",
+    "actual": [
+      [
+        "id",
+        3,
+        1,
+        1,
+        [
+          "x"
+        ]
+      ],
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "suffix": "tsx",
+    "callee": "api?.h",
+    "actual": [
+      [
+        "id",
+        3,
+        1,
+        1,
+        [
+          "x"
+        ]
+      ],
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "suffix": "tsx",
+    "callee": "api?.",
+    "actual": [
+      [
+        "id",
+        3,
+        1,
+        1,
+        [
+          "x"
+        ]
+      ],
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "suffix": "mjs",
+    "callee": "h",
+    "actual": [
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "id",
+        3,
+        1,
+        1,
+        [
+          "x"
+        ]
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "suffix": "mjs",
+    "callee": "api.h",
+    "actual": [
+      [
+        "id",
+        3,
+        1,
+        1,
+        [
+          "x"
+        ]
+      ],
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "suffix": "mjs",
+    "callee": "new Factory",
+    "actual": [
+      [
+        "id",
+        3,
+        1,
+        1,
+        [
+          "x"
+        ]
+      ],
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "suffix": "mjs",
+    "callee": "api?.h",
+    "actual": [
+      [
+        "id",
+        3,
+        1,
+        1,
+        [
+          "x"
+        ]
+      ],
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "suffix": "mjs",
+    "callee": "api?.",
+    "actual": [
+      [
+        "id",
+        3,
+        1,
+        1,
+        [
+          "x"
+        ]
+      ],
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "suffix": "cjs",
+    "callee": "h",
+    "actual": [
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "id",
+        3,
+        1,
+        1,
+        [
+          "x"
+        ]
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "suffix": "cjs",
+    "callee": "api.h",
+    "actual": [
+      [
+        "id",
+        3,
+        1,
+        1,
+        [
+          "x"
+        ]
+      ],
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "suffix": "cjs",
+    "callee": "new Factory",
+    "actual": [
+      [
+        "id",
+        3,
+        1,
+        1,
+        [
+          "x"
+        ]
+      ],
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "suffix": "cjs",
+    "callee": "api?.h",
+    "actual": [
+      [
+        "id",
+        3,
+        1,
+        1,
+        [
+          "x"
+        ]
+      ],
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "suffix": "cjs",
+    "callee": "api?.",
+    "actual": [
+      [
+        "id",
+        3,
+        1,
+        1,
+        [
+          "x"
+        ]
+      ],
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "suffix": "vue",
+    "callee": "h",
+    "actual": [
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "id",
+        3,
+        1,
+        1,
+        [
+          "x"
+        ]
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "suffix": "vue",
+    "callee": "api.h",
+    "actual": [
+      [
+        "id",
+        3,
+        1,
+        1,
+        [
+          "x"
+        ]
+      ],
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "suffix": "vue",
+    "callee": "new Factory",
+    "actual": [
+      [
+        "id",
+        3,
+        1,
+        1,
+        [
+          "x"
+        ]
+      ],
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "suffix": "vue",
+    "callee": "api?.h",
+    "actual": [
+      [
+        "id",
+        3,
+        1,
+        1,
+        [
+          "x"
+        ]
+      ],
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "suffix": "vue",
+    "callee": "api?.",
+    "actual": [
+      [
+        "id",
+        3,
+        1,
+        1,
+        [
+          "x"
+        ]
+      ],
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  }
+]

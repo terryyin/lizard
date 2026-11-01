@@ -1,0 +1,7 @@
+{
+  "lizard_languages/javascript_bindings.py": "9d3303f0669f9c48d76dd6e55f0d201d7fbc8240eaacd8b4ad0b623a96eea509",
+  "lizard_languages/typescript_states.py": "903909e9bed27dc994a35c799380e0b19937c6cf08d0fa5a1306a94c29c5fdce",
+  "lizard_languages/javascript_objects.py": "584e24d512c1bb15e4726cb57d65995e381dc406f56196835d56ff6f26c93cc3",
+  "test/test_languages/testJavaScriptBindingBoundaries.py": "980b13183672bb020aaa5cd396bd72f5e00917e9a81c57d615c77d82dd424d28",
+  "CHANGELOG.md": "4661876b1c17cbd44c5842610f4d16a3bfa9d70c0c0442e63ae5cf56bc4aa1b5"
+}

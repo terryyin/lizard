@@ -1,0 +1,39 @@
+{
+  "patch": {
+    "patches": [
+      {
+        "filename": "CHANGELOG.md",
+        "patch": "@@ -1,5 +1,11 @@\n # Change Log\n \n+## Unreleased\n+\n+### Bug Fixes\n+- JavaScript, TypeScript, JSX, and TSX: no longer crash with `IndexError` when an expression-bodied arrow is followed by an object literal inside brackets, such as `h(() => f(), { id: 1 })`; an expression-bodied arrow now ends at the enclosing `,`, so the following object literal and its members are no longer folded into it (issue #524)\n+- JavaScript, TypeScript, JSX, and TSX: a subscript inside call arguments or an array, such as `e(r[0])`, no longer ends the enclosing function early (regression in 1.24.2, issue #524)\n+\n ## 1.24.3\n \n ### Bug Fixes"
+      },
+      {
+        "filename": "lizard_languages/javascript_bindings.py",
+        "patch": "@@ -31,7 +31,12 @@ def __init__(self, closing):\n \n     @property\n     def in_expression(self):\n-        return self._frames[-1].initializing or bool(self._expression_brackets)\n+        return not self.ended and (\n+            self._frames[-1].initializing or bool(self._expression_brackets))\n+\n+    @property\n+    def ended(self):\n+        return not self._frames\n \n     @property\n     def at_start(self):\n@@ -41,7 +46,7 @@ def __call__(self, token):\n         return self.read_token(token).ended\n \n     def read_token(self, token):\n-        if not self._frames:\n+        if self.ended:\n             return BindingEvent(True, False, False, False, False)\n         frame = self._frames[-1]\n         initializing = self.in_expression\n@@ -59,18 +64,19 @@ def read_token(self, token):\n             self._frames.pop()\n         elif token == ',':\n             frame.initializing = False\n-        elif frame.initializing or token == '(' or (\n+        elif frame.initializing or token in ('(', '${') or (\n                 token == '[' and frame.closing == '}'\n                 and self.previous in ('', '{', ',')):\n-            # Computed object keys and parentheses contain expressions.\n+            # Computed object keys, parentheses, and template substitutions\n+            # contain expressions.\n             if token in self.BRACKETS:\n                 self._expression_brackets.append(self.BRACKETS[token])\n         elif token in ('[', '{'):\n             self._frames.append(BindingFrame(']' if token == '[' else '}'))\n         elif token == '=':\n             self.defaults += 1\n             frame.initializing = True\n-        ended = not self._frames\n+        ended = self.ended\n         if not ended:\n             self.previous = token\n         return BindingEvent(ended, initializing, self.defaults != defaults,"
+      },
+      {
+        "filename": "lizard_languages/typescript_states.py",
+        "patch": "@@ -32,9 +32,15 @@ def __call__(self, token, reader=None):\n             self._binding_candidate(token)\n         return super().__call__(token, reader)\n \n+    def next(self, state, token=None):\n+        self._state = state\n+        if token is not None:\n+            return self._replay_token(token)\n+        return None\n+\n     def _replay_token(self, token):\n-        \"\"\"Process a token saved by a nested syntax reader through dispatch.\"\"\"\n-        return self(token)\n+        \"\"\"Dispatch a token the binding candidate has already read.\"\"\"\n+        return super().__call__(token)\n \n     def statemachine_before_return(self):\n         # Ensure the main function is closed at the end\n@@ -134,9 +140,12 @@ def _state_global(self, token):\n             else:\n                 self.read_object()\n         elif token in ('}', ')') or (\n-                token == ']' and self._binding_candidate):\n+                token == ']' and self._binding_candidate\n+                and self._binding_candidate.ended):\n             self.statemachine_return()\n-        elif self.context.newline or token == ';':\n+        elif self.context.newline or token == ';' or (\n+                token == ',' and self.started_function):\n+            # An expression-bodied arrow ends at its enclosing separator.\n             self.function_name = ''\n             self._pop_function_from_stack()\n             # Reset modifiers on newline/semicolon"
+      },
+      {
+        "filename": "test/test_languages/testJavaScript.py",
+        "patch": "@@ -148,6 +148,46 @@ def test_jsx_and_tsx_share_default_initializer_behavior(self):\n                                   for f in functions])\n \n \n+class Test_JavaScript_expression_arrow_before_object_literal(unittest.TestCase):\n+    def test_comma_ends_expression_arrow_inside_brackets(self):\n+        anonymous = ('(anonymous)', 1, 1, 1)\n+        cases = [\n+            (\"it('t', () => {\\n  const m = new Map([\\n\"\n+             \"    ['a', () => f(), { id: 1 }],\\n  ]);\\n  g(r);\\n});\\n\",\n+             [('(anonymous)', 1, 3, 3), ('(anonymous)', 1, 1, 6)]),\n+            ('h(() => f(), { id: 1 });\\ng(r);\\n', [anonymous]),\n+            ('h([[() => f(), { id: 1 }]]);\\ng(r);\\n', [anonymous]),\n+            ('const a = [() => f(), { id: 1 }];\\ng(r);\\n', [anonymous]),\n+            ('const a = [() => f(), x];\\ng(r);\\n', [anonymous]),\n+            ('const a = [() => { f(); }, { id: 1 }];\\ng(r);\\n', [anonymous]),\n+            ('h((a = 1) => f(), { id: 1 });\\ng(r);\\n',\n+             [('(anonymous)', 2, 1, 1)]),\n+            ('h(() => f(), { id: () => g() });\\ng(r);\\n',\n+             [anonymous, ('id', 1, 1, 1)]),\n+        ]\n+        self.check_functions(cases)\n+\n+    def test_subscript_in_call_arguments_keeps_function_open(self):\n+        self.check_functions([\n+            (\"it('t', () => {\\n  e(r[0]);\\n  g(x);\\n});\\n\",\n+             [('(anonymous)', 1, 1, 4)]),\n+            (\"it('t', () => {\\n  e(r[0]).t([{}]);\\n});\\n\",\n+             [('(anonymous)', 1, 1, 3)]),\n+            ('function f() {\\n  return { w: [m[n - 1]] };\\n}\\nfunction g() {}\\n',\n+             [('f', 1, 1, 3), ('g', 1, 4, 4)]),\n+        ])\n+\n+    def check_functions(self, cases):\n+        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):\n+            for code, expected in cases:\n+                with self.subTest(filename=filename, code=code):\n+                    functions = analyze_file.analyze_source_code(\n+                        filename, code).function_list\n+                    self.assertEqual(expected, [\n+                        (f.name, f.cyclomatic_complexity,\n+                         f.start_line, f.end_line) for f in functions])\n+\n+\n class Test_JavaScript_nullish_coalescing(unittest.TestCase):\n     def test_nullish_operators_count_once(self):\n         code = ("
+      }
+    ],
+    "url": "https://github.com/terryyin/lizard/pull/525",
+    "title": "terryyin/lizard#525 (patch)",
+    "display_url": "https://github.com/terryyin/lizard/pull/525",
+    "display_title": "terryyin/lizard#525 (patch)"
+  },
+  "comments": {
+    "comments": [],
+    "url": "https://github.com/terryyin/lizard/pull/525",
+    "title": "terryyin/lizard PR #525 comments",
+    "display_url": "https://github.com/terryyin/lizard/pull/525",
+    "display_title": "terryyin/lizard PR #525 comments"
+  },
+  "reviews": {
+    "reviews": []
+  },
+  "threads": {
+    "review_threads": []
+  }
+}

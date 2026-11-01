@@ -1,0 +1,1368 @@
+.................................................FFFFFFFFFFFFFFFFFFFFFFF [ 55%]
+FFFFFFFFFFFFFFFFFFF.......FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF               [100%]
+=================================== FAILURES ===================================
+______________ test_authored_binding_boundaries[object-arrow-js] _______________
+
+suffix = 'js', name = 'object-arrow'
+source = 'h(() => f(), { id: () => g() });\ng(r);\n'
+expected = [('(anonymous)', 1, 1, 1, []), ('id', 1, 1, 1, [])]
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('name,source,expected', AUTHORED,
+                             ids=[case[0] for case in AUTHORED])
+    def test_authored_binding_boundaries(suffix, name, source, expected):
+>       assert summaries(functions(source, suffix)) == expected
+E       AssertionError: assert [('id', 1, 1,... 1, 1, 1, [])] == [('(anonymous... 1, 1, 1, [])]
+E
+E         At index 0 diff: ('id', 1, 1, 1, []) != ('(anonymous)', 1, 1, 1, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:55: AssertionError
+______________ test_authored_binding_boundaries[object-arrow-ts] _______________
+
+suffix = 'ts', name = 'object-arrow'
+source = 'h(() => f(), { id: () => g() });\ng(r);\n'
+expected = [('(anonymous)', 1, 1, 1, []), ('id', 1, 1, 1, [])]
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('name,source,expected', AUTHORED,
+                             ids=[case[0] for case in AUTHORED])
+    def test_authored_binding_boundaries(suffix, name, source, expected):
+>       assert summaries(functions(source, suffix)) == expected
+E       AssertionError: assert [('id', 1, 1,... 1, 1, 1, [])] == [('(anonymous... 1, 1, 1, [])]
+E
+E         At index 0 diff: ('id', 1, 1, 1, []) != ('(anonymous)', 1, 1, 1, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:55: AssertionError
+______________ test_authored_binding_boundaries[object-arrow-jsx] ______________
+
+suffix = 'jsx', name = 'object-arrow'
+source = 'h(() => f(), { id: () => g() });\ng(r);\n'
+expected = [('(anonymous)', 1, 1, 1, []), ('id', 1, 1, 1, [])]
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('name,source,expected', AUTHORED,
+                             ids=[case[0] for case in AUTHORED])
+    def test_authored_binding_boundaries(suffix, name, source, expected):
+>       assert summaries(functions(source, suffix)) == expected
+E       AssertionError: assert [('id', 1, 1,... 1, 1, 1, [])] == [('(anonymous... 1, 1, 1, [])]
+E
+E         At index 0 diff: ('id', 1, 1, 1, []) != ('(anonymous)', 1, 1, 1, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:55: AssertionError
+______________ test_authored_binding_boundaries[object-arrow-tsx] ______________
+
+suffix = 'tsx', name = 'object-arrow'
+source = 'h(() => f(), { id: () => g() });\ng(r);\n'
+expected = [('(anonymous)', 1, 1, 1, []), ('id', 1, 1, 1, [])]
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('name,source,expected', AUTHORED,
+                             ids=[case[0] for case in AUTHORED])
+    def test_authored_binding_boundaries(suffix, name, source, expected):
+>       assert summaries(functions(source, suffix)) == expected
+E       AssertionError: assert [('id', 1, 1,... 1, 1, 1, [])] == [('(anonymous... 1, 1, 1, [])]
+E
+E         At index 0 diff: ('id', 1, 1, 1, []) != ('(anonymous)', 1, 1, 1, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:55: AssertionError
+______________ test_authored_binding_boundaries[object-arrow-mjs] ______________
+
+suffix = 'mjs', name = 'object-arrow'
+source = 'h(() => f(), { id: () => g() });\ng(r);\n'
+expected = [('(anonymous)', 1, 1, 1, []), ('id', 1, 1, 1, [])]
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('name,source,expected', AUTHORED,
+                             ids=[case[0] for case in AUTHORED])
+    def test_authored_binding_boundaries(suffix, name, source, expected):
+>       assert summaries(functions(source, suffix)) == expected
+E       AssertionError: assert [('id', 1, 1,... 1, 1, 1, [])] == [('(anonymous... 1, 1, 1, [])]
+E
+E         At index 0 diff: ('id', 1, 1, 1, []) != ('(anonymous)', 1, 1, 1, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:55: AssertionError
+______________ test_authored_binding_boundaries[object-arrow-cjs] ______________
+
+suffix = 'cjs', name = 'object-arrow'
+source = 'h(() => f(), { id: () => g() });\ng(r);\n'
+expected = [('(anonymous)', 1, 1, 1, []), ('id', 1, 1, 1, [])]
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('name,source,expected', AUTHORED,
+                             ids=[case[0] for case in AUTHORED])
+    def test_authored_binding_boundaries(suffix, name, source, expected):
+>       assert summaries(functions(source, suffix)) == expected
+E       AssertionError: assert [('id', 1, 1,... 1, 1, 1, [])] == [('(anonymous... 1, 1, 1, [])]
+E
+E         At index 0 diff: ('id', 1, 1, 1, []) != ('(anonymous)', 1, 1, 1, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:55: AssertionError
+______________ test_authored_binding_boundaries[object-arrow-vue] ______________
+
+suffix = 'vue', name = 'object-arrow'
+source = 'h(() => f(), { id: () => g() });\ng(r);\n'
+expected = [('(anonymous)', 1, 1, 1, []), ('id', 1, 1, 1, [])]
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('name,source,expected', AUTHORED,
+                             ids=[case[0] for case in AUTHORED])
+    def test_authored_binding_boundaries(suffix, name, source, expected):
+>       assert summaries(functions(source, suffix)) == expected
+E       AssertionError: assert [('id', 1, 1,... 1, 1, 1, [])] == [('(anonymous... 1, 1, 1, [])]
+E
+E         At index 0 diff: ('id', 1, 1, 1, []) != ('(anonymous)', 1, 1, 1, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:55: AssertionError
+________________ test_authored_binding_boundaries[subscript-js] ________________
+
+suffix = 'js', name = 'subscript'
+source = "it('t', () => {\n  e(r[0]);\n  g(x);\n});\n"
+expected = [('(anonymous)', 1, 1, 4, [])]
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('name,source,expected', AUTHORED,
+                             ids=[case[0] for case in AUTHORED])
+    def test_authored_binding_boundaries(suffix, name, source, expected):
+>       assert summaries(functions(source, suffix)) == expected
+E       AssertionError: assert [('(anonymous)', 1, 1, 2, [])] == [('(anonymous)', 1, 1, 4, [])]
+E
+E         At index 0 diff: ('(anonymous)', 1, 1, 2, []) != ('(anonymous)', 1, 1, 4, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:55: AssertionError
+________________ test_authored_binding_boundaries[subscript-ts] ________________
+
+suffix = 'ts', name = 'subscript'
+source = "it('t', () => {\n  e(r[0]);\n  g(x);\n});\n"
+expected = [('(anonymous)', 1, 1, 4, [])]
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('name,source,expected', AUTHORED,
+                             ids=[case[0] for case in AUTHORED])
+    def test_authored_binding_boundaries(suffix, name, source, expected):
+>       assert summaries(functions(source, suffix)) == expected
+E       AssertionError: assert [('(anonymous)', 1, 1, 2, [])] == [('(anonymous)', 1, 1, 4, [])]
+E
+E         At index 0 diff: ('(anonymous)', 1, 1, 2, []) != ('(anonymous)', 1, 1, 4, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:55: AssertionError
+_______________ test_authored_binding_boundaries[subscript-jsx] ________________
+
+suffix = 'jsx', name = 'subscript'
+source = "it('t', () => {\n  e(r[0]);\n  g(x);\n});\n"
+expected = [('(anonymous)', 1, 1, 4, [])]
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('name,source,expected', AUTHORED,
+                             ids=[case[0] for case in AUTHORED])
+    def test_authored_binding_boundaries(suffix, name, source, expected):
+>       assert summaries(functions(source, suffix)) == expected
+E       AssertionError: assert [('(anonymous)', 1, 1, 2, [])] == [('(anonymous)', 1, 1, 4, [])]
+E
+E         At index 0 diff: ('(anonymous)', 1, 1, 2, []) != ('(anonymous)', 1, 1, 4, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:55: AssertionError
+_______________ test_authored_binding_boundaries[subscript-tsx] ________________
+
+suffix = 'tsx', name = 'subscript'
+source = "it('t', () => {\n  e(r[0]);\n  g(x);\n});\n"
+expected = [('(anonymous)', 1, 1, 4, [])]
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('name,source,expected', AUTHORED,
+                             ids=[case[0] for case in AUTHORED])
+    def test_authored_binding_boundaries(suffix, name, source, expected):
+>       assert summaries(functions(source, suffix)) == expected
+E       AssertionError: assert [('(anonymous)', 1, 1, 2, [])] == [('(anonymous)', 1, 1, 4, [])]
+E
+E         At index 0 diff: ('(anonymous)', 1, 1, 2, []) != ('(anonymous)', 1, 1, 4, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:55: AssertionError
+_______________ test_authored_binding_boundaries[subscript-mjs] ________________
+
+suffix = 'mjs', name = 'subscript'
+source = "it('t', () => {\n  e(r[0]);\n  g(x);\n});\n"
+expected = [('(anonymous)', 1, 1, 4, [])]
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('name,source,expected', AUTHORED,
+                             ids=[case[0] for case in AUTHORED])
+    def test_authored_binding_boundaries(suffix, name, source, expected):
+>       assert summaries(functions(source, suffix)) == expected
+E       AssertionError: assert [('(anonymous)', 1, 1, 2, [])] == [('(anonymous)', 1, 1, 4, [])]
+E
+E         At index 0 diff: ('(anonymous)', 1, 1, 2, []) != ('(anonymous)', 1, 1, 4, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:55: AssertionError
+_______________ test_authored_binding_boundaries[subscript-cjs] ________________
+
+suffix = 'cjs', name = 'subscript'
+source = "it('t', () => {\n  e(r[0]);\n  g(x);\n});\n"
+expected = [('(anonymous)', 1, 1, 4, [])]
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('name,source,expected', AUTHORED,
+                             ids=[case[0] for case in AUTHORED])
+    def test_authored_binding_boundaries(suffix, name, source, expected):
+>       assert summaries(functions(source, suffix)) == expected
+E       AssertionError: assert [('(anonymous)', 1, 1, 2, [])] == [('(anonymous)', 1, 1, 4, [])]
+E
+E         At index 0 diff: ('(anonymous)', 1, 1, 2, []) != ('(anonymous)', 1, 1, 4, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:55: AssertionError
+_______________ test_authored_binding_boundaries[subscript-vue] ________________
+
+suffix = 'vue', name = 'subscript'
+source = "it('t', () => {\n  e(r[0]);\n  g(x);\n});\n"
+expected = [('(anonymous)', 1, 1, 4, [])]
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('name,source,expected', AUTHORED,
+                             ids=[case[0] for case in AUTHORED])
+    def test_authored_binding_boundaries(suffix, name, source, expected):
+>       assert summaries(functions(source, suffix)) == expected
+E       AssertionError: assert [('(anonymous)', 1, 1, 2, [])] == [('(anonymous)', 1, 1, 4, [])]
+E
+E         At index 0 diff: ('(anonymous)', 1, 1, 2, []) != ('(anonymous)', 1, 1, 4, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:55: AssertionError
+_____________ test_authored_binding_boundaries[subscript-chain-js] _____________
+
+suffix = 'js', name = 'subscript-chain'
+source = "it('t', () => {\n  e(r[0]).t([{}]);\n});\n"
+expected = [('(anonymous)', 1, 1, 3, [])]
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('name,source,expected', AUTHORED,
+                             ids=[case[0] for case in AUTHORED])
+    def test_authored_binding_boundaries(suffix, name, source, expected):
+>       assert summaries(functions(source, suffix)) == expected
+E       AssertionError: assert [('(anonymous)', 1, 1, 2, [])] == [('(anonymous)', 1, 1, 3, [])]
+E
+E         At index 0 diff: ('(anonymous)', 1, 1, 2, []) != ('(anonymous)', 1, 1, 3, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:55: AssertionError
+_____________ test_authored_binding_boundaries[subscript-chain-ts] _____________
+
+suffix = 'ts', name = 'subscript-chain'
+source = "it('t', () => {\n  e(r[0]).t([{}]);\n});\n"
+expected = [('(anonymous)', 1, 1, 3, [])]
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('name,source,expected', AUTHORED,
+                             ids=[case[0] for case in AUTHORED])
+    def test_authored_binding_boundaries(suffix, name, source, expected):
+>       assert summaries(functions(source, suffix)) == expected
+E       AssertionError: assert [('(anonymous)', 1, 1, 2, [])] == [('(anonymous)', 1, 1, 3, [])]
+E
+E         At index 0 diff: ('(anonymous)', 1, 1, 2, []) != ('(anonymous)', 1, 1, 3, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:55: AssertionError
+____________ test_authored_binding_boundaries[subscript-chain-jsx] _____________
+
+suffix = 'jsx', name = 'subscript-chain'
+source = "it('t', () => {\n  e(r[0]).t([{}]);\n});\n"
+expected = [('(anonymous)', 1, 1, 3, [])]
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('name,source,expected', AUTHORED,
+                             ids=[case[0] for case in AUTHORED])
+    def test_authored_binding_boundaries(suffix, name, source, expected):
+>       assert summaries(functions(source, suffix)) == expected
+E       AssertionError: assert [('(anonymous)', 1, 1, 2, [])] == [('(anonymous)', 1, 1, 3, [])]
+E
+E         At index 0 diff: ('(anonymous)', 1, 1, 2, []) != ('(anonymous)', 1, 1, 3, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:55: AssertionError
+____________ test_authored_binding_boundaries[subscript-chain-tsx] _____________
+
+suffix = 'tsx', name = 'subscript-chain'
+source = "it('t', () => {\n  e(r[0]).t([{}]);\n});\n"
+expected = [('(anonymous)', 1, 1, 3, [])]
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('name,source,expected', AUTHORED,
+                             ids=[case[0] for case in AUTHORED])
+    def test_authored_binding_boundaries(suffix, name, source, expected):
+>       assert summaries(functions(source, suffix)) == expected
+E       AssertionError: assert [('(anonymous)', 1, 1, 2, [])] == [('(anonymous)', 1, 1, 3, [])]
+E
+E         At index 0 diff: ('(anonymous)', 1, 1, 2, []) != ('(anonymous)', 1, 1, 3, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:55: AssertionError
+____________ test_authored_binding_boundaries[subscript-chain-mjs] _____________
+
+suffix = 'mjs', name = 'subscript-chain'
+source = "it('t', () => {\n  e(r[0]).t([{}]);\n});\n"
+expected = [('(anonymous)', 1, 1, 3, [])]
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('name,source,expected', AUTHORED,
+                             ids=[case[0] for case in AUTHORED])
+    def test_authored_binding_boundaries(suffix, name, source, expected):
+>       assert summaries(functions(source, suffix)) == expected
+E       AssertionError: assert [('(anonymous)', 1, 1, 2, [])] == [('(anonymous)', 1, 1, 3, [])]
+E
+E         At index 0 diff: ('(anonymous)', 1, 1, 2, []) != ('(anonymous)', 1, 1, 3, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:55: AssertionError
+____________ test_authored_binding_boundaries[subscript-chain-cjs] _____________
+
+suffix = 'cjs', name = 'subscript-chain'
+source = "it('t', () => {\n  e(r[0]).t([{}]);\n});\n"
+expected = [('(anonymous)', 1, 1, 3, [])]
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('name,source,expected', AUTHORED,
+                             ids=[case[0] for case in AUTHORED])
+    def test_authored_binding_boundaries(suffix, name, source, expected):
+>       assert summaries(functions(source, suffix)) == expected
+E       AssertionError: assert [('(anonymous)', 1, 1, 2, [])] == [('(anonymous)', 1, 1, 3, [])]
+E
+E         At index 0 diff: ('(anonymous)', 1, 1, 2, []) != ('(anonymous)', 1, 1, 3, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:55: AssertionError
+____________ test_authored_binding_boundaries[subscript-chain-vue] _____________
+
+suffix = 'vue', name = 'subscript-chain'
+source = "it('t', () => {\n  e(r[0]).t([{}]);\n});\n"
+expected = [('(anonymous)', 1, 1, 3, [])]
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('name,source,expected', AUTHORED,
+                             ids=[case[0] for case in AUTHORED])
+    def test_authored_binding_boundaries(suffix, name, source, expected):
+>       assert summaries(functions(source, suffix)) == expected
+E       AssertionError: assert [('(anonymous)', 1, 1, 2, [])] == [('(anonymous)', 1, 1, 3, [])]
+E
+E         At index 0 diff: ('(anonymous)', 1, 1, 2, []) != ('(anonymous)', 1, 1, 3, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:55: AssertionError
+______________ test_authored_binding_boundaries[object-array-js] _______________
+
+suffix = 'js', name = 'object-array'
+source = 'function f() {\n  return { w: [m[n - 1]] };\n}\nfunction g() {}\n'
+expected = [('f', 1, 1, 3, []), ('g', 1, 4, 4, [])]
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('name,source,expected', AUTHORED,
+                             ids=[case[0] for case in AUTHORED])
+    def test_authored_binding_boundaries(suffix, name, source, expected):
+>       assert summaries(functions(source, suffix)) == expected
+E       AssertionError: assert [('f', 1, 1, ... 1, 4, 4, [])] == [('f', 1, 1, ... 1, 4, 4, [])]
+E
+E         At index 0 diff: ('f', 1, 1, 2, []) != ('f', 1, 1, 3, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:55: AssertionError
+______________ test_authored_binding_boundaries[object-array-ts] _______________
+
+suffix = 'ts', name = 'object-array'
+source = 'function f() {\n  return { w: [m[n - 1]] };\n}\nfunction g() {}\n'
+expected = [('f', 1, 1, 3, []), ('g', 1, 4, 4, [])]
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('name,source,expected', AUTHORED,
+                             ids=[case[0] for case in AUTHORED])
+    def test_authored_binding_boundaries(suffix, name, source, expected):
+>       assert summaries(functions(source, suffix)) == expected
+E       AssertionError: assert [('f', 1, 1, ... 1, 4, 4, [])] == [('f', 1, 1, ... 1, 4, 4, [])]
+E
+E         At index 0 diff: ('f', 1, 1, 2, []) != ('f', 1, 1, 3, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:55: AssertionError
+______________ test_authored_binding_boundaries[object-array-jsx] ______________
+
+suffix = 'jsx', name = 'object-array'
+source = 'function f() {\n  return { w: [m[n - 1]] };\n}\nfunction g() {}\n'
+expected = [('f', 1, 1, 3, []), ('g', 1, 4, 4, [])]
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('name,source,expected', AUTHORED,
+                             ids=[case[0] for case in AUTHORED])
+    def test_authored_binding_boundaries(suffix, name, source, expected):
+>       assert summaries(functions(source, suffix)) == expected
+E       AssertionError: assert [('f', 1, 1, ... 1, 4, 4, [])] == [('f', 1, 1, ... 1, 4, 4, [])]
+E
+E         At index 0 diff: ('f', 1, 1, 2, []) != ('f', 1, 1, 3, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:55: AssertionError
+______________ test_authored_binding_boundaries[object-array-tsx] ______________
+
+suffix = 'tsx', name = 'object-array'
+source = 'function f() {\n  return { w: [m[n - 1]] };\n}\nfunction g() {}\n'
+expected = [('f', 1, 1, 3, []), ('g', 1, 4, 4, [])]
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('name,source,expected', AUTHORED,
+                             ids=[case[0] for case in AUTHORED])
+    def test_authored_binding_boundaries(suffix, name, source, expected):
+>       assert summaries(functions(source, suffix)) == expected
+E       AssertionError: assert [('f', 1, 1, ... 1, 4, 4, [])] == [('f', 1, 1, ... 1, 4, 4, [])]
+E
+E         At index 0 diff: ('f', 1, 1, 2, []) != ('f', 1, 1, 3, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:55: AssertionError
+______________ test_authored_binding_boundaries[object-array-mjs] ______________
+
+suffix = 'mjs', name = 'object-array'
+source = 'function f() {\n  return { w: [m[n - 1]] };\n}\nfunction g() {}\n'
+expected = [('f', 1, 1, 3, []), ('g', 1, 4, 4, [])]
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('name,source,expected', AUTHORED,
+                             ids=[case[0] for case in AUTHORED])
+    def test_authored_binding_boundaries(suffix, name, source, expected):
+>       assert summaries(functions(source, suffix)) == expected
+E       AssertionError: assert [('f', 1, 1, ... 1, 4, 4, [])] == [('f', 1, 1, ... 1, 4, 4, [])]
+E
+E         At index 0 diff: ('f', 1, 1, 2, []) != ('f', 1, 1, 3, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:55: AssertionError
+______________ test_authored_binding_boundaries[object-array-cjs] ______________
+
+suffix = 'cjs', name = 'object-array'
+source = 'function f() {\n  return { w: [m[n - 1]] };\n}\nfunction g() {}\n'
+expected = [('f', 1, 1, 3, []), ('g', 1, 4, 4, [])]
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('name,source,expected', AUTHORED,
+                             ids=[case[0] for case in AUTHORED])
+    def test_authored_binding_boundaries(suffix, name, source, expected):
+>       assert summaries(functions(source, suffix)) == expected
+E       AssertionError: assert [('f', 1, 1, ... 1, 4, 4, [])] == [('f', 1, 1, ... 1, 4, 4, [])]
+E
+E         At index 0 diff: ('f', 1, 1, 2, []) != ('f', 1, 1, 3, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:55: AssertionError
+______________ test_authored_binding_boundaries[object-array-vue] ______________
+
+suffix = 'vue', name = 'object-array'
+source = 'function f() {\n  return { w: [m[n - 1]] };\n}\nfunction g() {}\n'
+expected = [('f', 1, 1, 3, []), ('g', 1, 4, 4, [])]
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('name,source,expected', AUTHORED,
+                             ids=[case[0] for case in AUTHORED])
+    def test_authored_binding_boundaries(suffix, name, source, expected):
+>       assert summaries(functions(source, suffix)) == expected
+E       AssertionError: assert [('f', 1, 1, ... 1, 4, 4, [])] == [('f', 1, 1, ... 1, 4, 4, [])]
+E
+E         At index 0 diff: ('f', 1, 1, 2, []) != ('f', 1, 1, 3, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:55: AssertionError
+_______ test_callback_keeps_decisions_and_following_formals[e(r[0]);-js] _______
+
+suffix = 'js', call = 'e(r[0]);'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('call', ['e(r[0]);', 'e(r[0]).t([{}]);',
+                                      'e?.(r?.[0]).t([{}]);'])
+    def test_callback_keeps_decisions_and_following_formals(suffix, call):
+        source = ("it('t', () => {\n " + call + '\n if(x) g(x);\n});\n'
+                  'function after(y) { return y ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('(anonymous)', 2, 1, 4, []), ('after', 2, 5, 5, ['y'])]
+E       AssertionError: assert [('(anonymous... 5, 5, ['y'])] == [('(anonymous... 5, 5, ['y'])]
+E
+E         At index 0 diff: ('(anonymous)', 1, 1, 2, []) != ('(anonymous)', 2, 1, 4, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:64: AssertionError
+_______ test_callback_keeps_decisions_and_following_formals[e(r[0]);-ts] _______
+
+suffix = 'ts', call = 'e(r[0]);'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('call', ['e(r[0]);', 'e(r[0]).t([{}]);',
+                                      'e?.(r?.[0]).t([{}]);'])
+    def test_callback_keeps_decisions_and_following_formals(suffix, call):
+        source = ("it('t', () => {\n " + call + '\n if(x) g(x);\n});\n'
+                  'function after(y) { return y ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('(anonymous)', 2, 1, 4, []), ('after', 2, 5, 5, ['y'])]
+E       AssertionError: assert [('(anonymous... 5, 5, ['y'])] == [('(anonymous... 5, 5, ['y'])]
+E
+E         At index 0 diff: ('(anonymous)', 1, 1, 2, []) != ('(anonymous)', 2, 1, 4, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:64: AssertionError
+______ test_callback_keeps_decisions_and_following_formals[e(r[0]);-jsx] _______
+
+suffix = 'jsx', call = 'e(r[0]);'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('call', ['e(r[0]);', 'e(r[0]).t([{}]);',
+                                      'e?.(r?.[0]).t([{}]);'])
+    def test_callback_keeps_decisions_and_following_formals(suffix, call):
+        source = ("it('t', () => {\n " + call + '\n if(x) g(x);\n});\n'
+                  'function after(y) { return y ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('(anonymous)', 2, 1, 4, []), ('after', 2, 5, 5, ['y'])]
+E       AssertionError: assert [('(anonymous... 5, 5, ['y'])] == [('(anonymous... 5, 5, ['y'])]
+E
+E         At index 0 diff: ('(anonymous)', 1, 1, 2, []) != ('(anonymous)', 2, 1, 4, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:64: AssertionError
+______ test_callback_keeps_decisions_and_following_formals[e(r[0]);-tsx] _______
+
+suffix = 'tsx', call = 'e(r[0]);'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('call', ['e(r[0]);', 'e(r[0]).t([{}]);',
+                                      'e?.(r?.[0]).t([{}]);'])
+    def test_callback_keeps_decisions_and_following_formals(suffix, call):
+        source = ("it('t', () => {\n " + call + '\n if(x) g(x);\n});\n'
+                  'function after(y) { return y ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('(anonymous)', 2, 1, 4, []), ('after', 2, 5, 5, ['y'])]
+E       AssertionError: assert [('(anonymous... 5, 5, ['y'])] == [('(anonymous... 5, 5, ['y'])]
+E
+E         At index 0 diff: ('(anonymous)', 1, 1, 2, []) != ('(anonymous)', 2, 1, 4, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:64: AssertionError
+______ test_callback_keeps_decisions_and_following_formals[e(r[0]);-mjs] _______
+
+suffix = 'mjs', call = 'e(r[0]);'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('call', ['e(r[0]);', 'e(r[0]).t([{}]);',
+                                      'e?.(r?.[0]).t([{}]);'])
+    def test_callback_keeps_decisions_and_following_formals(suffix, call):
+        source = ("it('t', () => {\n " + call + '\n if(x) g(x);\n});\n'
+                  'function after(y) { return y ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('(anonymous)', 2, 1, 4, []), ('after', 2, 5, 5, ['y'])]
+E       AssertionError: assert [('(anonymous... 5, 5, ['y'])] == [('(anonymous... 5, 5, ['y'])]
+E
+E         At index 0 diff: ('(anonymous)', 1, 1, 2, []) != ('(anonymous)', 2, 1, 4, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:64: AssertionError
+______ test_callback_keeps_decisions_and_following_formals[e(r[0]);-cjs] _______
+
+suffix = 'cjs', call = 'e(r[0]);'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('call', ['e(r[0]);', 'e(r[0]).t([{}]);',
+                                      'e?.(r?.[0]).t([{}]);'])
+    def test_callback_keeps_decisions_and_following_formals(suffix, call):
+        source = ("it('t', () => {\n " + call + '\n if(x) g(x);\n});\n'
+                  'function after(y) { return y ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('(anonymous)', 2, 1, 4, []), ('after', 2, 5, 5, ['y'])]
+E       AssertionError: assert [('(anonymous... 5, 5, ['y'])] == [('(anonymous... 5, 5, ['y'])]
+E
+E         At index 0 diff: ('(anonymous)', 1, 1, 2, []) != ('(anonymous)', 2, 1, 4, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:64: AssertionError
+______ test_callback_keeps_decisions_and_following_formals[e(r[0]);-vue] _______
+
+suffix = 'vue', call = 'e(r[0]);'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('call', ['e(r[0]);', 'e(r[0]).t([{}]);',
+                                      'e?.(r?.[0]).t([{}]);'])
+    def test_callback_keeps_decisions_and_following_formals(suffix, call):
+        source = ("it('t', () => {\n " + call + '\n if(x) g(x);\n});\n'
+                  'function after(y) { return y ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('(anonymous)', 2, 1, 4, []), ('after', 2, 5, 5, ['y'])]
+E       AssertionError: assert [('(anonymous... 5, 5, ['y'])] == [('(anonymous... 5, 5, ['y'])]
+E
+E         At index 0 diff: ('(anonymous)', 1, 1, 2, []) != ('(anonymous)', 2, 1, 4, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:64: AssertionError
+___ test_callback_keeps_decisions_and_following_formals[e(r[0]).t([{}]);-js] ___
+
+suffix = 'js', call = 'e(r[0]).t([{}]);'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('call', ['e(r[0]);', 'e(r[0]).t([{}]);',
+                                      'e?.(r?.[0]).t([{}]);'])
+    def test_callback_keeps_decisions_and_following_formals(suffix, call):
+        source = ("it('t', () => {\n " + call + '\n if(x) g(x);\n});\n'
+                  'function after(y) { return y ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('(anonymous)', 2, 1, 4, []), ('after', 2, 5, 5, ['y'])]
+E       AssertionError: assert [('(anonymous... 5, 5, ['y'])] == [('(anonymous... 5, 5, ['y'])]
+E
+E         At index 0 diff: ('(anonymous)', 1, 1, 2, []) != ('(anonymous)', 2, 1, 4, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:64: AssertionError
+___ test_callback_keeps_decisions_and_following_formals[e(r[0]).t([{}]);-ts] ___
+
+suffix = 'ts', call = 'e(r[0]).t([{}]);'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('call', ['e(r[0]);', 'e(r[0]).t([{}]);',
+                                      'e?.(r?.[0]).t([{}]);'])
+    def test_callback_keeps_decisions_and_following_formals(suffix, call):
+        source = ("it('t', () => {\n " + call + '\n if(x) g(x);\n});\n'
+                  'function after(y) { return y ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('(anonymous)', 2, 1, 4, []), ('after', 2, 5, 5, ['y'])]
+E       AssertionError: assert [('(anonymous... 5, 5, ['y'])] == [('(anonymous... 5, 5, ['y'])]
+E
+E         At index 0 diff: ('(anonymous)', 1, 1, 2, []) != ('(anonymous)', 2, 1, 4, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:64: AssertionError
+__ test_callback_keeps_decisions_and_following_formals[e(r[0]).t([{}]);-jsx] ___
+
+suffix = 'jsx', call = 'e(r[0]).t([{}]);'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('call', ['e(r[0]);', 'e(r[0]).t([{}]);',
+                                      'e?.(r?.[0]).t([{}]);'])
+    def test_callback_keeps_decisions_and_following_formals(suffix, call):
+        source = ("it('t', () => {\n " + call + '\n if(x) g(x);\n});\n'
+                  'function after(y) { return y ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('(anonymous)', 2, 1, 4, []), ('after', 2, 5, 5, ['y'])]
+E       AssertionError: assert [('(anonymous... 5, 5, ['y'])] == [('(anonymous... 5, 5, ['y'])]
+E
+E         At index 0 diff: ('(anonymous)', 1, 1, 2, []) != ('(anonymous)', 2, 1, 4, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:64: AssertionError
+__ test_callback_keeps_decisions_and_following_formals[e(r[0]).t([{}]);-tsx] ___
+
+suffix = 'tsx', call = 'e(r[0]).t([{}]);'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('call', ['e(r[0]);', 'e(r[0]).t([{}]);',
+                                      'e?.(r?.[0]).t([{}]);'])
+    def test_callback_keeps_decisions_and_following_formals(suffix, call):
+        source = ("it('t', () => {\n " + call + '\n if(x) g(x);\n});\n'
+                  'function after(y) { return y ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('(anonymous)', 2, 1, 4, []), ('after', 2, 5, 5, ['y'])]
+E       AssertionError: assert [('(anonymous... 5, 5, ['y'])] == [('(anonymous... 5, 5, ['y'])]
+E
+E         At index 0 diff: ('(anonymous)', 1, 1, 2, []) != ('(anonymous)', 2, 1, 4, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:64: AssertionError
+__ test_callback_keeps_decisions_and_following_formals[e(r[0]).t([{}]);-mjs] ___
+
+suffix = 'mjs', call = 'e(r[0]).t([{}]);'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('call', ['e(r[0]);', 'e(r[0]).t([{}]);',
+                                      'e?.(r?.[0]).t([{}]);'])
+    def test_callback_keeps_decisions_and_following_formals(suffix, call):
+        source = ("it('t', () => {\n " + call + '\n if(x) g(x);\n});\n'
+                  'function after(y) { return y ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('(anonymous)', 2, 1, 4, []), ('after', 2, 5, 5, ['y'])]
+E       AssertionError: assert [('(anonymous... 5, 5, ['y'])] == [('(anonymous... 5, 5, ['y'])]
+E
+E         At index 0 diff: ('(anonymous)', 1, 1, 2, []) != ('(anonymous)', 2, 1, 4, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:64: AssertionError
+__ test_callback_keeps_decisions_and_following_formals[e(r[0]).t([{}]);-cjs] ___
+
+suffix = 'cjs', call = 'e(r[0]).t([{}]);'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('call', ['e(r[0]);', 'e(r[0]).t([{}]);',
+                                      'e?.(r?.[0]).t([{}]);'])
+    def test_callback_keeps_decisions_and_following_formals(suffix, call):
+        source = ("it('t', () => {\n " + call + '\n if(x) g(x);\n});\n'
+                  'function after(y) { return y ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('(anonymous)', 2, 1, 4, []), ('after', 2, 5, 5, ['y'])]
+E       AssertionError: assert [('(anonymous... 5, 5, ['y'])] == [('(anonymous... 5, 5, ['y'])]
+E
+E         At index 0 diff: ('(anonymous)', 1, 1, 2, []) != ('(anonymous)', 2, 1, 4, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:64: AssertionError
+__ test_callback_keeps_decisions_and_following_formals[e(r[0]).t([{}]);-vue] ___
+
+suffix = 'vue', call = 'e(r[0]).t([{}]);'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('call', ['e(r[0]);', 'e(r[0]).t([{}]);',
+                                      'e?.(r?.[0]).t([{}]);'])
+    def test_callback_keeps_decisions_and_following_formals(suffix, call):
+        source = ("it('t', () => {\n " + call + '\n if(x) g(x);\n});\n'
+                  'function after(y) { return y ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('(anonymous)', 2, 1, 4, []), ('after', 2, 5, 5, ['y'])]
+E       AssertionError: assert [('(anonymous... 5, 5, ['y'])] == [('(anonymous... 5, 5, ['y'])]
+E
+E         At index 0 diff: ('(anonymous)', 1, 1, 2, []) != ('(anonymous)', 2, 1, 4, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:64: AssertionError
+_________ test_object_array_keeps_decisions_and_following_formals[js] __________
+
+suffix = 'js'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    def test_object_array_keeps_decisions_and_following_formals(suffix):
+        source = ('function f(x) {\n return {w: [m[x ? 1 : 0]]};\n}\n'
+                  'function after(y) { return y ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('f', 2, 1, 3, ['x']), ('after', 2, 4, 4, ['y'])]
+E       AssertionError: assert [('f', 2, 1, ... 4, 4, ['y'])] == [('f', 2, 1, ... 4, 4, ['y'])]
+E
+E         At index 0 diff: ('f', 2, 1, 2, ['x']) != ('f', 2, 1, 3, ['x'])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:72: AssertionError
+_________ test_object_array_keeps_decisions_and_following_formals[ts] __________
+
+suffix = 'ts'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    def test_object_array_keeps_decisions_and_following_formals(suffix):
+        source = ('function f(x) {\n return {w: [m[x ? 1 : 0]]};\n}\n'
+                  'function after(y) { return y ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('f', 2, 1, 3, ['x']), ('after', 2, 4, 4, ['y'])]
+E       AssertionError: assert [('f', 2, 1, ... 4, 4, ['y'])] == [('f', 2, 1, ... 4, 4, ['y'])]
+E
+E         At index 0 diff: ('f', 2, 1, 2, ['x']) != ('f', 2, 1, 3, ['x'])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:72: AssertionError
+_________ test_object_array_keeps_decisions_and_following_formals[jsx] _________
+
+suffix = 'jsx'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    def test_object_array_keeps_decisions_and_following_formals(suffix):
+        source = ('function f(x) {\n return {w: [m[x ? 1 : 0]]};\n}\n'
+                  'function after(y) { return y ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('f', 2, 1, 3, ['x']), ('after', 2, 4, 4, ['y'])]
+E       AssertionError: assert [('f', 2, 1, ... 4, 4, ['y'])] == [('f', 2, 1, ... 4, 4, ['y'])]
+E
+E         At index 0 diff: ('f', 2, 1, 2, ['x']) != ('f', 2, 1, 3, ['x'])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:72: AssertionError
+_________ test_object_array_keeps_decisions_and_following_formals[tsx] _________
+
+suffix = 'tsx'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    def test_object_array_keeps_decisions_and_following_formals(suffix):
+        source = ('function f(x) {\n return {w: [m[x ? 1 : 0]]};\n}\n'
+                  'function after(y) { return y ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('f', 2, 1, 3, ['x']), ('after', 2, 4, 4, ['y'])]
+E       AssertionError: assert [('f', 2, 1, ... 4, 4, ['y'])] == [('f', 2, 1, ... 4, 4, ['y'])]
+E
+E         At index 0 diff: ('f', 2, 1, 2, ['x']) != ('f', 2, 1, 3, ['x'])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:72: AssertionError
+_________ test_object_array_keeps_decisions_and_following_formals[mjs] _________
+
+suffix = 'mjs'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    def test_object_array_keeps_decisions_and_following_formals(suffix):
+        source = ('function f(x) {\n return {w: [m[x ? 1 : 0]]};\n}\n'
+                  'function after(y) { return y ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('f', 2, 1, 3, ['x']), ('after', 2, 4, 4, ['y'])]
+E       AssertionError: assert [('f', 2, 1, ... 4, 4, ['y'])] == [('f', 2, 1, ... 4, 4, ['y'])]
+E
+E         At index 0 diff: ('f', 2, 1, 2, ['x']) != ('f', 2, 1, 3, ['x'])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:72: AssertionError
+_________ test_object_array_keeps_decisions_and_following_formals[cjs] _________
+
+suffix = 'cjs'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    def test_object_array_keeps_decisions_and_following_formals(suffix):
+        source = ('function f(x) {\n return {w: [m[x ? 1 : 0]]};\n}\n'
+                  'function after(y) { return y ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('f', 2, 1, 3, ['x']), ('after', 2, 4, 4, ['y'])]
+E       AssertionError: assert [('f', 2, 1, ... 4, 4, ['y'])] == [('f', 2, 1, ... 4, 4, ['y'])]
+E
+E         At index 0 diff: ('f', 2, 1, 2, ['x']) != ('f', 2, 1, 3, ['x'])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:72: AssertionError
+_________ test_object_array_keeps_decisions_and_following_formals[vue] _________
+
+suffix = 'vue'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    def test_object_array_keeps_decisions_and_following_formals(suffix):
+        source = ('function f(x) {\n return {w: [m[x ? 1 : 0]]};\n}\n'
+                  'function after(y) { return y ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('f', 2, 1, 3, ['x']), ('after', 2, 4, 4, ['y'])]
+E       AssertionError: assert [('f', 2, 1, ... 4, 4, ['y'])] == [('f', 2, 1, ... 4, 4, ['y'])]
+E
+E         At index 0 diff: ('f', 2, 1, 2, ['x']) != ('f', 2, 1, 3, ['x'])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:72: AssertionError
+_____ test_template_substitutions_keep_members_and_enclosing_callback[js] ______
+
+suffix = 'js'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    def test_template_substitutions_keep_members_and_enclosing_callback(suffix):
+        source = ("it('t', () => {\n"
+                  ' h(() => f(), {value: `${`${r[0]}`}`, id: x => x || 0});\n'
+                  ' if(x) g(x);\n});\n'
+                  'function after(y) { return y ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('(anonymous)', 1, 2, 2, []), ('id', 2, 2, 2, ['x']),
+            ('(anonymous)', 2, 1, 4, []), ('after', 2, 5, 5, ['y'])]
+E       AssertionError: assert [('id', 2, 2,... 5, 5, ['y'])] == [('(anonymous... 5, 5, ['y'])]
+E
+E         At index 0 diff: ('id', 2, 2, 2, ['x']) != ('(anonymous)', 1, 2, 2, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:82: AssertionError
+_____ test_template_substitutions_keep_members_and_enclosing_callback[ts] ______
+
+suffix = 'ts'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    def test_template_substitutions_keep_members_and_enclosing_callback(suffix):
+        source = ("it('t', () => {\n"
+                  ' h(() => f(), {value: `${`${r[0]}`}`, id: x => x || 0});\n'
+                  ' if(x) g(x);\n});\n'
+                  'function after(y) { return y ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('(anonymous)', 1, 2, 2, []), ('id', 2, 2, 2, ['x']),
+            ('(anonymous)', 2, 1, 4, []), ('after', 2, 5, 5, ['y'])]
+E       AssertionError: assert [('id', 2, 2,... 5, 5, ['y'])] == [('(anonymous... 5, 5, ['y'])]
+E
+E         At index 0 diff: ('id', 2, 2, 2, ['x']) != ('(anonymous)', 1, 2, 2, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:82: AssertionError
+_____ test_template_substitutions_keep_members_and_enclosing_callback[jsx] _____
+
+suffix = 'jsx'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    def test_template_substitutions_keep_members_and_enclosing_callback(suffix):
+        source = ("it('t', () => {\n"
+                  ' h(() => f(), {value: `${`${r[0]}`}`, id: x => x || 0});\n'
+                  ' if(x) g(x);\n});\n'
+                  'function after(y) { return y ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('(anonymous)', 1, 2, 2, []), ('id', 2, 2, 2, ['x']),
+            ('(anonymous)', 2, 1, 4, []), ('after', 2, 5, 5, ['y'])]
+E       AssertionError: assert [('id', 2, 2,... 5, 5, ['y'])] == [('(anonymous... 5, 5, ['y'])]
+E
+E         At index 0 diff: ('id', 2, 2, 2, ['x']) != ('(anonymous)', 1, 2, 2, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:82: AssertionError
+_____ test_template_substitutions_keep_members_and_enclosing_callback[tsx] _____
+
+suffix = 'tsx'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    def test_template_substitutions_keep_members_and_enclosing_callback(suffix):
+        source = ("it('t', () => {\n"
+                  ' h(() => f(), {value: `${`${r[0]}`}`, id: x => x || 0});\n'
+                  ' if(x) g(x);\n});\n'
+                  'function after(y) { return y ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('(anonymous)', 1, 2, 2, []), ('id', 2, 2, 2, ['x']),
+            ('(anonymous)', 2, 1, 4, []), ('after', 2, 5, 5, ['y'])]
+E       AssertionError: assert [('id', 2, 2,... 5, 5, ['y'])] == [('(anonymous... 5, 5, ['y'])]
+E
+E         At index 0 diff: ('id', 2, 2, 2, ['x']) != ('(anonymous)', 1, 2, 2, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:82: AssertionError
+_____ test_template_substitutions_keep_members_and_enclosing_callback[mjs] _____
+
+suffix = 'mjs'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    def test_template_substitutions_keep_members_and_enclosing_callback(suffix):
+        source = ("it('t', () => {\n"
+                  ' h(() => f(), {value: `${`${r[0]}`}`, id: x => x || 0});\n'
+                  ' if(x) g(x);\n});\n'
+                  'function after(y) { return y ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('(anonymous)', 1, 2, 2, []), ('id', 2, 2, 2, ['x']),
+            ('(anonymous)', 2, 1, 4, []), ('after', 2, 5, 5, ['y'])]
+E       AssertionError: assert [('id', 2, 2,... 5, 5, ['y'])] == [('(anonymous... 5, 5, ['y'])]
+E
+E         At index 0 diff: ('id', 2, 2, 2, ['x']) != ('(anonymous)', 1, 2, 2, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:82: AssertionError
+_____ test_template_substitutions_keep_members_and_enclosing_callback[cjs] _____
+
+suffix = 'cjs'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    def test_template_substitutions_keep_members_and_enclosing_callback(suffix):
+        source = ("it('t', () => {\n"
+                  ' h(() => f(), {value: `${`${r[0]}`}`, id: x => x || 0});\n'
+                  ' if(x) g(x);\n});\n'
+                  'function after(y) { return y ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('(anonymous)', 1, 2, 2, []), ('id', 2, 2, 2, ['x']),
+            ('(anonymous)', 2, 1, 4, []), ('after', 2, 5, 5, ['y'])]
+E       AssertionError: assert [('id', 2, 2,... 5, 5, ['y'])] == [('(anonymous... 5, 5, ['y'])]
+E
+E         At index 0 diff: ('id', 2, 2, 2, ['x']) != ('(anonymous)', 1, 2, 2, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:82: AssertionError
+_____ test_template_substitutions_keep_members_and_enclosing_callback[vue] _____
+
+suffix = 'vue'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    def test_template_substitutions_keep_members_and_enclosing_callback(suffix):
+        source = ("it('t', () => {\n"
+                  ' h(() => f(), {value: `${`${r[0]}`}`, id: x => x || 0});\n'
+                  ' if(x) g(x);\n});\n'
+                  'function after(y) { return y ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('(anonymous)', 1, 2, 2, []), ('id', 2, 2, 2, ['x']),
+            ('(anonymous)', 2, 1, 4, []), ('after', 2, 5, 5, ['y'])]
+E       AssertionError: assert [('id', 2, 2,... 5, 5, ['y'])] == [('(anonymous... 5, 5, ['y'])]
+E
+E         At index 0 diff: ('id', 2, 2, 2, ['x']) != ('(anonymous)', 1, 2, 2, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:82: AssertionError
+_______ test_typed_generic_and_ternary_arrows_keep_signature_owners[ts] ________
+
+suffix = 'ts'
+
+    @pytest.mark.parametrize('suffix', ('ts', 'tsx', 'vue'))
+    def test_typed_generic_and_ternary_arrows_keep_signature_owners(suffix):
+        source = ('h(<T,>(x: T, tail: T): T => x, {id: (y: number): number => y});\n'
+                  'const f = ok ? (x): number => x : (y): number => y;\n'
+                  'function after(z: number) { return z ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('(anonymous)', 1, 1, 1, ['x', 'tail']), ('id', 1, 1, 1, ['y']),
+            ('(anonymous)', 1, 2, 2, ['x']), ('(anonymous)', 1, 2, 2, ['y']),
+            ('after', 2, 3, 3, ['z'])]
+E       AssertionError: assert [('id', 1, 1,... 3, 3, ['z'])] == [('(anonymous... 3, 3, ['z'])]
+E
+E         At index 0 diff: ('id', 1, 1, 1, ['y']) != ('(anonymous)', 1, 1, 1, ['x', 'tail'])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:92: AssertionError
+_______ test_typed_generic_and_ternary_arrows_keep_signature_owners[tsx] _______
+
+suffix = 'tsx'
+
+    @pytest.mark.parametrize('suffix', ('ts', 'tsx', 'vue'))
+    def test_typed_generic_and_ternary_arrows_keep_signature_owners(suffix):
+        source = ('h(<T,>(x: T, tail: T): T => x, {id: (y: number): number => y});\n'
+                  'const f = ok ? (x): number => x : (y): number => y;\n'
+                  'function after(z: number) { return z ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('(anonymous)', 1, 1, 1, ['x', 'tail']), ('id', 1, 1, 1, ['y']),
+            ('(anonymous)', 1, 2, 2, ['x']), ('(anonymous)', 1, 2, 2, ['y']),
+            ('after', 2, 3, 3, ['z'])]
+E       AssertionError: assert [('id', 1, 1,... 3, 3, ['z'])] == [('(anonymous... 3, 3, ['z'])]
+E
+E         At index 0 diff: ('id', 1, 1, 1, ['y']) != ('(anonymous)', 1, 1, 1, ['x', 'tail'])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:92: AssertionError
+_______ test_typed_generic_and_ternary_arrows_keep_signature_owners[vue] _______
+
+suffix = 'vue'
+
+    @pytest.mark.parametrize('suffix', ('ts', 'tsx', 'vue'))
+    def test_typed_generic_and_ternary_arrows_keep_signature_owners(suffix):
+        source = ('h(<T,>(x: T, tail: T): T => x, {id: (y: number): number => y});\n'
+                  'const f = ok ? (x): number => x : (y): number => y;\n'
+                  'function after(z: number) { return z ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('(anonymous)', 1, 1, 1, ['x', 'tail']), ('id', 1, 1, 1, ['y']),
+            ('(anonymous)', 1, 2, 2, ['x']), ('(anonymous)', 1, 2, 2, ['y']),
+            ('after', 2, 3, 3, ['z'])]
+E       AssertionError: assert [('id', 1, 1,... 3, 3, ['z'])] == [('(anonymous... 3, 3, ['z'])]
+E
+E         At index 0 diff: ('id', 1, 1, 1, ['y']) != ('(anonymous)', 1, 1, 1, ['x', 'tail'])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:92: AssertionError
+_____ test_default_initializer_and_comma_keep_expression_arrow_owners[js] ______
+
+suffix = 'js'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    def test_default_initializer_and_comma_keep_expression_arrow_owners(suffix):
+        source = ('h((x = flag ? 1 : 2, y = make(1, 2)) => x || y, '
+                  '{id: z => z && 1});\n'
+                  'function after(tail) { return tail ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('(anonymous)', 5, 1, 1, ['x', 'y']), ('id', 2, 1, 1, ['z']),
+            ('after', 2, 2, 2, ['tail'])]
+E       AssertionError: assert [('id', 2, 1,... 2, ['tail'])] == [('(anonymous... 2, ['tail'])]
+E
+E         At index 0 diff: ('id', 2, 1, 1, ['z']) != ('(anonymous)', 5, 1, 1, ['x', 'y'])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:103: AssertionError
+_____ test_default_initializer_and_comma_keep_expression_arrow_owners[ts] ______
+
+suffix = 'ts'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    def test_default_initializer_and_comma_keep_expression_arrow_owners(suffix):
+        source = ('h((x = flag ? 1 : 2, y = make(1, 2)) => x || y, '
+                  '{id: z => z && 1});\n'
+                  'function after(tail) { return tail ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('(anonymous)', 5, 1, 1, ['x', 'y']), ('id', 2, 1, 1, ['z']),
+            ('after', 2, 2, 2, ['tail'])]
+E       AssertionError: assert [('id', 2, 1,... 2, ['tail'])] == [('(anonymous... 2, ['tail'])]
+E
+E         At index 0 diff: ('id', 2, 1, 1, ['z']) != ('(anonymous)', 5, 1, 1, ['x', 'y'])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:103: AssertionError
+_____ test_default_initializer_and_comma_keep_expression_arrow_owners[jsx] _____
+
+suffix = 'jsx'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    def test_default_initializer_and_comma_keep_expression_arrow_owners(suffix):
+        source = ('h((x = flag ? 1 : 2, y = make(1, 2)) => x || y, '
+                  '{id: z => z && 1});\n'
+                  'function after(tail) { return tail ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('(anonymous)', 5, 1, 1, ['x', 'y']), ('id', 2, 1, 1, ['z']),
+            ('after', 2, 2, 2, ['tail'])]
+E       AssertionError: assert [('id', 2, 1,... 2, ['tail'])] == [('(anonymous... 2, ['tail'])]
+E
+E         At index 0 diff: ('id', 2, 1, 1, ['z']) != ('(anonymous)', 5, 1, 1, ['x', 'y'])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:103: AssertionError
+_____ test_default_initializer_and_comma_keep_expression_arrow_owners[tsx] _____
+
+suffix = 'tsx'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    def test_default_initializer_and_comma_keep_expression_arrow_owners(suffix):
+        source = ('h((x = flag ? 1 : 2, y = make(1, 2)) => x || y, '
+                  '{id: z => z && 1});\n'
+                  'function after(tail) { return tail ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('(anonymous)', 5, 1, 1, ['x', 'y']), ('id', 2, 1, 1, ['z']),
+            ('after', 2, 2, 2, ['tail'])]
+E       AssertionError: assert [('id', 2, 1,... 2, ['tail'])] == [('(anonymous... 2, ['tail'])]
+E
+E         At index 0 diff: ('id', 2, 1, 1, ['z']) != ('(anonymous)', 5, 1, 1, ['x', 'y'])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:103: AssertionError
+_____ test_default_initializer_and_comma_keep_expression_arrow_owners[mjs] _____
+
+suffix = 'mjs'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    def test_default_initializer_and_comma_keep_expression_arrow_owners(suffix):
+        source = ('h((x = flag ? 1 : 2, y = make(1, 2)) => x || y, '
+                  '{id: z => z && 1});\n'
+                  'function after(tail) { return tail ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('(anonymous)', 5, 1, 1, ['x', 'y']), ('id', 2, 1, 1, ['z']),
+            ('after', 2, 2, 2, ['tail'])]
+E       AssertionError: assert [('id', 2, 1,... 2, ['tail'])] == [('(anonymous... 2, ['tail'])]
+E
+E         At index 0 diff: ('id', 2, 1, 1, ['z']) != ('(anonymous)', 5, 1, 1, ['x', 'y'])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:103: AssertionError
+_____ test_default_initializer_and_comma_keep_expression_arrow_owners[cjs] _____
+
+suffix = 'cjs'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    def test_default_initializer_and_comma_keep_expression_arrow_owners(suffix):
+        source = ('h((x = flag ? 1 : 2, y = make(1, 2)) => x || y, '
+                  '{id: z => z && 1});\n'
+                  'function after(tail) { return tail ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('(anonymous)', 5, 1, 1, ['x', 'y']), ('id', 2, 1, 1, ['z']),
+            ('after', 2, 2, 2, ['tail'])]
+E       AssertionError: assert [('id', 2, 1,... 2, ['tail'])] == [('(anonymous... 2, ['tail'])]
+E
+E         At index 0 diff: ('id', 2, 1, 1, ['z']) != ('(anonymous)', 5, 1, 1, ['x', 'y'])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:103: AssertionError
+_____ test_default_initializer_and_comma_keep_expression_arrow_owners[vue] _____
+
+suffix = 'vue'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    def test_default_initializer_and_comma_keep_expression_arrow_owners(suffix):
+        source = ('h((x = flag ? 1 : 2, y = make(1, 2)) => x || y, '
+                  '{id: z => z && 1});\n'
+                  'function after(tail) { return tail ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('(anonymous)', 5, 1, 1, ['x', 'y']), ('id', 2, 1, 1, ['z']),
+            ('after', 2, 2, 2, ['tail'])]
+E       AssertionError: assert [('id', 2, 1,... 2, ['tail'])] == [('(anonymous... 2, ['tail'])]
+E
+E         At index 0 diff: ('id', 2, 1, 1, ['z']) != ('(anonymous)', 5, 1, 1, ['x', 'y'])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:103: AssertionError
+____________ test_non_strict_extension_keeps_callback_decisions[js] ____________
+
+suffix = 'js'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    def test_non_strict_extension_keeps_callback_decisions(suffix):
+        source = ("it('t', () => {\n e(r[0]);\n if(x && y) g(x);\n});\n"
+                  'function after(y) { return y ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix, 'NS')) == [
+            ('(anonymous)', 2, 1, 4, []), ('after', 2, 5, 5, ['y'])]
+E       AssertionError: assert [('(anonymous... 5, 5, ['y'])] == [('(anonymous... 5, 5, ['y'])]
+E
+E         At index 0 diff: ('(anonymous)', 1, 1, 2, []) != ('(anonymous)', 2, 1, 4, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:112: AssertionError
+____________ test_non_strict_extension_keeps_callback_decisions[ts] ____________
+
+suffix = 'ts'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    def test_non_strict_extension_keeps_callback_decisions(suffix):
+        source = ("it('t', () => {\n e(r[0]);\n if(x && y) g(x);\n});\n"
+                  'function after(y) { return y ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix, 'NS')) == [
+            ('(anonymous)', 2, 1, 4, []), ('after', 2, 5, 5, ['y'])]
+E       AssertionError: assert [('(anonymous... 5, 5, ['y'])] == [('(anonymous... 5, 5, ['y'])]
+E
+E         At index 0 diff: ('(anonymous)', 1, 1, 2, []) != ('(anonymous)', 2, 1, 4, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:112: AssertionError
+___________ test_non_strict_extension_keeps_callback_decisions[jsx] ____________
+
+suffix = 'jsx'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    def test_non_strict_extension_keeps_callback_decisions(suffix):
+        source = ("it('t', () => {\n e(r[0]);\n if(x && y) g(x);\n});\n"
+                  'function after(y) { return y ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix, 'NS')) == [
+            ('(anonymous)', 2, 1, 4, []), ('after', 2, 5, 5, ['y'])]
+E       AssertionError: assert [('(anonymous... 5, 5, ['y'])] == [('(anonymous... 5, 5, ['y'])]
+E
+E         At index 0 diff: ('(anonymous)', 1, 1, 2, []) != ('(anonymous)', 2, 1, 4, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:112: AssertionError
+___________ test_non_strict_extension_keeps_callback_decisions[tsx] ____________
+
+suffix = 'tsx'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    def test_non_strict_extension_keeps_callback_decisions(suffix):
+        source = ("it('t', () => {\n e(r[0]);\n if(x && y) g(x);\n});\n"
+                  'function after(y) { return y ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix, 'NS')) == [
+            ('(anonymous)', 2, 1, 4, []), ('after', 2, 5, 5, ['y'])]
+E       AssertionError: assert [('(anonymous... 5, 5, ['y'])] == [('(anonymous... 5, 5, ['y'])]
+E
+E         At index 0 diff: ('(anonymous)', 1, 1, 2, []) != ('(anonymous)', 2, 1, 4, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:112: AssertionError
+___________ test_non_strict_extension_keeps_callback_decisions[mjs] ____________
+
+suffix = 'mjs'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    def test_non_strict_extension_keeps_callback_decisions(suffix):
+        source = ("it('t', () => {\n e(r[0]);\n if(x && y) g(x);\n});\n"
+                  'function after(y) { return y ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix, 'NS')) == [
+            ('(anonymous)', 2, 1, 4, []), ('after', 2, 5, 5, ['y'])]
+E       AssertionError: assert [('(anonymous... 5, 5, ['y'])] == [('(anonymous... 5, 5, ['y'])]
+E
+E         At index 0 diff: ('(anonymous)', 1, 1, 2, []) != ('(anonymous)', 2, 1, 4, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:112: AssertionError
+___________ test_non_strict_extension_keeps_callback_decisions[cjs] ____________
+
+suffix = 'cjs'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    def test_non_strict_extension_keeps_callback_decisions(suffix):
+        source = ("it('t', () => {\n e(r[0]);\n if(x && y) g(x);\n});\n"
+                  'function after(y) { return y ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix, 'NS')) == [
+            ('(anonymous)', 2, 1, 4, []), ('after', 2, 5, 5, ['y'])]
+E       AssertionError: assert [('(anonymous... 5, 5, ['y'])] == [('(anonymous... 5, 5, ['y'])]
+E
+E         At index 0 diff: ('(anonymous)', 1, 1, 2, []) != ('(anonymous)', 2, 1, 4, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:112: AssertionError
+___________ test_non_strict_extension_keeps_callback_decisions[vue] ____________
+
+suffix = 'vue'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    def test_non_strict_extension_keeps_callback_decisions(suffix):
+        source = ("it('t', () => {\n e(r[0]);\n if(x && y) g(x);\n});\n"
+                  'function after(y) { return y ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix, 'NS')) == [
+            ('(anonymous)', 2, 1, 4, []), ('after', 2, 5, 5, ['y'])]
+E       AssertionError: assert [('(anonymous... 5, 5, ['y'])] == [('(anonymous... 5, 5, ['y'])]
+E
+E         At index 0 diff: ('(anonymous)', 1, 1, 2, []) != ('(anonymous)', 2, 1, 4, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:112: AssertionError
+___________ test_cli_reports_complete_callback_and_following_metrics ___________
+
+tmp_path = PosixPath('/private/tmp/nix-shell.AuBudy/pytest-of-terryyin/pytest-0/test_cli_reports_complete_call0')
+
+    def test_cli_reports_complete_callback_and_following_metrics(tmp_path):
+        path = tmp_path / 'bindings.tsx'
+        path.write_text("it('t', () => {\n e(r[0]);\n if(x) g(x);\n});\n"
+                        'function after(y) { return y ? 1 : 0; }\n')
+        result = subprocess.run([sys.executable, '-m', 'lizard', '--csv', str(path)],
+                                capture_output=True, text=True)
+        assert result.returncode == 0, result.stderr
+        rows = list(csv.reader(io.StringIO(result.stdout)))
+>       assert [(row[7], int(row[1]), int(row[3]), int(row[9]), int(row[10]))
+                for row in rows] == [('(anonymous)', 2, 0, 1, 4),
+                                     ('after', 2, 1, 5, 5)]
+E       AssertionError: assert [('(anonymous..., 2, 1, 5, 5)] == [('(anonymous..., 2, 1, 5, 5)]
+E
+E         At index 0 diff: ('(anonymous)', 1, 0, 1, 2) != ('(anonymous)', 2, 0, 1, 4)
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:124: AssertionError
+=========================== short test summary info ============================
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_authored_binding_boundaries[object-arrow-js]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_authored_binding_boundaries[object-arrow-ts]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_authored_binding_boundaries[object-arrow-jsx]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_authored_binding_boundaries[object-arrow-tsx]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_authored_binding_boundaries[object-arrow-mjs]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_authored_binding_boundaries[object-arrow-cjs]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_authored_binding_boundaries[object-arrow-vue]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_authored_binding_boundaries[subscript-js]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_authored_binding_boundaries[subscript-ts]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_authored_binding_boundaries[subscript-jsx]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_authored_binding_boundaries[subscript-tsx]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_authored_binding_boundaries[subscript-mjs]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_authored_binding_boundaries[subscript-cjs]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_authored_binding_boundaries[subscript-vue]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_authored_binding_boundaries[subscript-chain-js]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_authored_binding_boundaries[subscript-chain-ts]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_authored_binding_boundaries[subscript-chain-jsx]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_authored_binding_boundaries[subscript-chain-tsx]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_authored_binding_boundaries[subscript-chain-mjs]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_authored_binding_boundaries[subscript-chain-cjs]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_authored_binding_boundaries[subscript-chain-vue]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_authored_binding_boundaries[object-array-js]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_authored_binding_boundaries[object-array-ts]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_authored_binding_boundaries[object-array-jsx]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_authored_binding_boundaries[object-array-tsx]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_authored_binding_boundaries[object-array-mjs]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_authored_binding_boundaries[object-array-cjs]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_authored_binding_boundaries[object-array-vue]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_callback_keeps_decisions_and_following_formals[e(r[0]);-js]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_callback_keeps_decisions_and_following_formals[e(r[0]);-ts]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_callback_keeps_decisions_and_following_formals[e(r[0]);-jsx]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_callback_keeps_decisions_and_following_formals[e(r[0]);-tsx]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_callback_keeps_decisions_and_following_formals[e(r[0]);-mjs]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_callback_keeps_decisions_and_following_formals[e(r[0]);-cjs]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_callback_keeps_decisions_and_following_formals[e(r[0]);-vue]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_callback_keeps_decisions_and_following_formals[e(r[0]).t([{}]);-js]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_callback_keeps_decisions_and_following_formals[e(r[0]).t([{}]);-ts]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_callback_keeps_decisions_and_following_formals[e(r[0]).t([{}]);-jsx]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_callback_keeps_decisions_and_following_formals[e(r[0]).t([{}]);-tsx]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_callback_keeps_decisions_and_following_formals[e(r[0]).t([{}]);-mjs]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_callback_keeps_decisions_and_following_formals[e(r[0]).t([{}]);-cjs]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_callback_keeps_decisions_and_following_formals[e(r[0]).t([{}]);-vue]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_object_array_keeps_decisions_and_following_formals[js]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_object_array_keeps_decisions_and_following_formals[ts]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_object_array_keeps_decisions_and_following_formals[jsx]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_object_array_keeps_decisions_and_following_formals[tsx]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_object_array_keeps_decisions_and_following_formals[mjs]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_object_array_keeps_decisions_and_following_formals[cjs]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_object_array_keeps_decisions_and_following_formals[vue]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_template_substitutions_keep_members_and_enclosing_callback[js]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_template_substitutions_keep_members_and_enclosing_callback[ts]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_template_substitutions_keep_members_and_enclosing_callback[jsx]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_template_substitutions_keep_members_and_enclosing_callback[tsx]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_template_substitutions_keep_members_and_enclosing_callback[mjs]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_template_substitutions_keep_members_and_enclosing_callback[cjs]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_template_substitutions_keep_members_and_enclosing_callback[vue]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_typed_generic_and_ternary_arrows_keep_signature_owners[ts]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_typed_generic_and_ternary_arrows_keep_signature_owners[tsx]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_typed_generic_and_ternary_arrows_keep_signature_owners[vue]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_default_initializer_and_comma_keep_expression_arrow_owners[js]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_default_initializer_and_comma_keep_expression_arrow_owners[ts]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_default_initializer_and_comma_keep_expression_arrow_owners[jsx]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_default_initializer_and_comma_keep_expression_arrow_owners[tsx]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_default_initializer_and_comma_keep_expression_arrow_owners[mjs]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_default_initializer_and_comma_keep_expression_arrow_owners[cjs]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_default_initializer_and_comma_keep_expression_arrow_owners[vue]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_non_strict_extension_keeps_callback_decisions[js]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_non_strict_extension_keeps_callback_decisions[ts]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_non_strict_extension_keeps_callback_decisions[jsx]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_non_strict_extension_keeps_callback_decisions[tsx]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_non_strict_extension_keeps_callback_decisions[mjs]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_non_strict_extension_keeps_callback_decisions[cjs]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_non_strict_extension_keeps_callback_decisions[vue]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_cli_reports_complete_callback_and_following_metrics
+74 failed, 56 passed in 0.67s

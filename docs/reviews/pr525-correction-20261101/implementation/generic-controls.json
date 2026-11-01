@@ -1,0 +1,514 @@
+{
+  "current": [
+    {
+      "case": "named-global",
+      "suffix": "ts",
+      "source": "const f = (x) => foo<A,\n B>(x)\nfunction after(y) { return y ? 1 : 0; }\n",
+      "actual": [
+        [
+          "f",
+          1,
+          1,
+          2,
+          [
+            "x"
+          ]
+        ],
+        [
+          "after",
+          2,
+          3,
+          3,
+          [
+            "y"
+          ]
+        ]
+      ]
+    },
+    {
+      "case": "anonymous-call",
+      "suffix": "ts",
+      "source": "h(x => foo<A,\n B>(x), {id: y => y});\nfunction after(z) {}\n",
+      "actual": [
+        [
+          "(anonymous)",
+          1,
+          1,
+          1,
+          [
+            "x"
+          ]
+        ],
+        [
+          "id",
+          1,
+          2,
+          2,
+          [
+            "y"
+          ]
+        ],
+        [
+          "after",
+          1,
+          3,
+          3,
+          [
+            "z"
+          ]
+        ]
+      ]
+    },
+    {
+      "case": "anonymous-member",
+      "suffix": "ts",
+      "source": "api.h(x => foo<A,\n B>(x), {id: y => y});\nfunction after(z) {}\n",
+      "actual": [
+        [
+          "(anonymous)",
+          1,
+          1,
+          1,
+          [
+            "x"
+          ]
+        ],
+        [
+          "id",
+          1,
+          2,
+          2,
+          [
+            "y"
+          ]
+        ],
+        [
+          "after",
+          1,
+          3,
+          3,
+          [
+            "z"
+          ]
+        ]
+      ]
+    },
+    {
+      "case": "anonymous-constructor",
+      "suffix": "ts",
+      "source": "new Factory(x => foo<A,\n B>(x), {id: y => y});\nfunction after(z) {}\n",
+      "actual": [
+        [
+          "(anonymous)",
+          1,
+          1,
+          1,
+          [
+            "x"
+          ]
+        ],
+        [
+          "id",
+          1,
+          2,
+          2,
+          [
+            "y"
+          ]
+        ],
+        [
+          "after",
+          1,
+          3,
+          3,
+          [
+            "z"
+          ]
+        ]
+      ]
+    },
+    {
+      "case": "named-global",
+      "suffix": "tsx",
+      "source": "const f = (x) => foo<A,\n B>(x)\nfunction after(y) { return y ? 1 : 0; }\n",
+      "actual": [
+        [
+          "f",
+          1,
+          1,
+          2,
+          [
+            "x"
+          ]
+        ],
+        [
+          "after",
+          2,
+          3,
+          3,
+          [
+            "y"
+          ]
+        ]
+      ]
+    },
+    {
+      "case": "anonymous-call",
+      "suffix": "tsx",
+      "source": "h(x => foo<A,\n B>(x), {id: y => y});\nfunction after(z) {}\n",
+      "actual": [
+        [
+          "(anonymous)",
+          1,
+          1,
+          1,
+          [
+            "x"
+          ]
+        ],
+        [
+          "id",
+          1,
+          2,
+          2,
+          [
+            "y"
+          ]
+        ],
+        [
+          "after",
+          1,
+          3,
+          3,
+          [
+            "z"
+          ]
+        ]
+      ]
+    },
+    {
+      "case": "anonymous-member",
+      "suffix": "tsx",
+      "source": "api.h(x => foo<A,\n B>(x), {id: y => y});\nfunction after(z) {}\n",
+      "actual": [
+        [
+          "(anonymous)",
+          1,
+          1,
+          1,
+          [
+            "x"
+          ]
+        ],
+        [
+          "id",
+          1,
+          2,
+          2,
+          [
+            "y"
+          ]
+        ],
+        [
+          "after",
+          1,
+          3,
+          3,
+          [
+            "z"
+          ]
+        ]
+      ]
+    },
+    {
+      "case": "anonymous-constructor",
+      "suffix": "tsx",
+      "source": "new Factory(x => foo<A,\n B>(x), {id: y => y});\nfunction after(z) {}\n",
+      "actual": [
+        [
+          "(anonymous)",
+          1,
+          1,
+          1,
+          [
+            "x"
+          ]
+        ],
+        [
+          "id",
+          1,
+          2,
+          2,
+          [
+            "y"
+          ]
+        ],
+        [
+          "after",
+          1,
+          3,
+          3,
+          [
+            "z"
+          ]
+        ]
+      ]
+    }
+  ],
+  "correction": [
+    {
+      "case": "named-global",
+      "suffix": "ts",
+      "source": "const f = (x) => foo<A,\n B>(x)\nfunction after(y) { return y ? 1 : 0; }\n",
+      "actual": [
+        [
+          "f",
+          1,
+          1,
+          2,
+          [
+            "x"
+          ]
+        ],
+        [
+          "after",
+          2,
+          3,
+          3,
+          [
+            "y"
+          ]
+        ]
+      ]
+    },
+    {
+      "case": "anonymous-call",
+      "suffix": "ts",
+      "source": "h(x => foo<A,\n B>(x), {id: y => y});\nfunction after(z) {}\n",
+      "actual": [
+        [
+          "(anonymous)",
+          1,
+          1,
+          1,
+          [
+            "x"
+          ]
+        ],
+        [
+          "id",
+          1,
+          2,
+          2,
+          [
+            "y"
+          ]
+        ],
+        [
+          "after",
+          1,
+          3,
+          3,
+          [
+            "z"
+          ]
+        ]
+      ]
+    },
+    {
+      "case": "anonymous-member",
+      "suffix": "ts",
+      "source": "api.h(x => foo<A,\n B>(x), {id: y => y});\nfunction after(z) {}\n",
+      "actual": [
+        [
+          "(anonymous)",
+          1,
+          1,
+          1,
+          [
+            "x"
+          ]
+        ],
+        [
+          "id",
+          1,
+          2,
+          2,
+          [
+            "y"
+          ]
+        ],
+        [
+          "after",
+          1,
+          3,
+          3,
+          [
+            "z"
+          ]
+        ]
+      ]
+    },
+    {
+      "case": "anonymous-constructor",
+      "suffix": "ts",
+      "source": "new Factory(x => foo<A,\n B>(x), {id: y => y});\nfunction after(z) {}\n",
+      "actual": [
+        [
+          "(anonymous)",
+          1,
+          1,
+          1,
+          [
+            "x"
+          ]
+        ],
+        [
+          "id",
+          1,
+          2,
+          2,
+          [
+            "y"
+          ]
+        ],
+        [
+          "after",
+          1,
+          3,
+          3,
+          [
+            "z"
+          ]
+        ]
+      ]
+    },
+    {
+      "case": "named-global",
+      "suffix": "tsx",
+      "source": "const f = (x) => foo<A,\n B>(x)\nfunction after(y) { return y ? 1 : 0; }\n",
+      "actual": [
+        [
+          "f",
+          1,
+          1,
+          2,
+          [
+            "x"
+          ]
+        ],
+        [
+          "after",
+          2,
+          3,
+          3,
+          [
+            "y"
+          ]
+        ]
+      ]
+    },
+    {
+      "case": "anonymous-call",
+      "suffix": "tsx",
+      "source": "h(x => foo<A,\n B>(x), {id: y => y});\nfunction after(z) {}\n",
+      "actual": [
+        [
+          "(anonymous)",
+          1,
+          1,
+          1,
+          [
+            "x"
+          ]
+        ],
+        [
+          "id",
+          1,
+          2,
+          2,
+          [
+            "y"
+          ]
+        ],
+        [
+          "after",
+          1,
+          3,
+          3,
+          [
+            "z"
+          ]
+        ]
+      ]
+    },
+    {
+      "case": "anonymous-member",
+      "suffix": "tsx",
+      "source": "api.h(x => foo<A,\n B>(x), {id: y => y});\nfunction after(z) {}\n",
+      "actual": [
+        [
+          "(anonymous)",
+          1,
+          1,
+          1,
+          [
+            "x"
+          ]
+        ],
+        [
+          "id",
+          1,
+          2,
+          2,
+          [
+            "y"
+          ]
+        ],
+        [
+          "after",
+          1,
+          3,
+          3,
+          [
+            "z"
+          ]
+        ]
+      ]
+    },
+    {
+      "case": "anonymous-constructor",
+      "suffix": "tsx",
+      "source": "new Factory(x => foo<A,\n B>(x), {id: y => y});\nfunction after(z) {}\n",
+      "actual": [
+        [
+          "(anonymous)",
+          1,
+          1,
+          1,
+          [
+            "x"
+          ]
+        ],
+        [
+          "id",
+          1,
+          2,
+          2,
+          [
+            "y"
+          ]
+        ],
+        [
+          "after",
+          1,
+          3,
+          3,
+          [
+            "z"
+          ]
+        ]
+      ]
+    }
+  ]
+}

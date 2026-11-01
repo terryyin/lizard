@@ -1,0 +1,511 @@
+warning: Git tree '/Users/terryyin/git/lizard/.worktrees/correct-pr525-binding-boundaries' is dirty
+........................................................................ [ 41%]
+.........................................................FFFFFFFFFFFFFFF [ 82%]
+FFFFFFFFFFFFF..................                                          [100%]
+=================================== FAILURES ===================================
+_______ test_argument_readers_finish_arrow_before_next_object[api.h-js] ________
+
+suffix = 'js', callee = 'api.h'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('callee', ['h', 'api.h', 'new Factory', 'api?.h', 'api?.'])
+    def test_argument_readers_finish_arrow_before_next_object(suffix, callee):
+        source = (callee + '(() => f(), {id: (x = 1) => x || 0});\n'
+                  'function after(tail) { return tail ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ANONYMOUS, ('id', 3, 1, 1, ['x']), ('after', 2, 2, 2, ['tail'])]
+E       AssertionError: assert [('id', 3, 1,... 2, ['tail'])] == [('(anonymous... 2, ['tail'])]
+E
+E         At index 0 diff: ('id', 3, 1, 1, ['x']) != ('(anonymous)', 1, 1, 1, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:113: AssertionError
+_______ test_argument_readers_finish_arrow_before_next_object[api.h-ts] ________
+
+suffix = 'ts', callee = 'api.h'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('callee', ['h', 'api.h', 'new Factory', 'api?.h', 'api?.'])
+    def test_argument_readers_finish_arrow_before_next_object(suffix, callee):
+        source = (callee + '(() => f(), {id: (x = 1) => x || 0});\n'
+                  'function after(tail) { return tail ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ANONYMOUS, ('id', 3, 1, 1, ['x']), ('after', 2, 2, 2, ['tail'])]
+E       AssertionError: assert [('id', 3, 1,... 2, ['tail'])] == [('(anonymous... 2, ['tail'])]
+E
+E         At index 0 diff: ('id', 3, 1, 1, ['x']) != ('(anonymous)', 1, 1, 1, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:113: AssertionError
+_______ test_argument_readers_finish_arrow_before_next_object[api.h-jsx] _______
+
+suffix = 'jsx', callee = 'api.h'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('callee', ['h', 'api.h', 'new Factory', 'api?.h', 'api?.'])
+    def test_argument_readers_finish_arrow_before_next_object(suffix, callee):
+        source = (callee + '(() => f(), {id: (x = 1) => x || 0});\n'
+                  'function after(tail) { return tail ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ANONYMOUS, ('id', 3, 1, 1, ['x']), ('after', 2, 2, 2, ['tail'])]
+E       AssertionError: assert [('id', 3, 1,... 2, ['tail'])] == [('(anonymous... 2, ['tail'])]
+E
+E         At index 0 diff: ('id', 3, 1, 1, ['x']) != ('(anonymous)', 1, 1, 1, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:113: AssertionError
+_______ test_argument_readers_finish_arrow_before_next_object[api.h-tsx] _______
+
+suffix = 'tsx', callee = 'api.h'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('callee', ['h', 'api.h', 'new Factory', 'api?.h', 'api?.'])
+    def test_argument_readers_finish_arrow_before_next_object(suffix, callee):
+        source = (callee + '(() => f(), {id: (x = 1) => x || 0});\n'
+                  'function after(tail) { return tail ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ANONYMOUS, ('id', 3, 1, 1, ['x']), ('after', 2, 2, 2, ['tail'])]
+E       AssertionError: assert [('id', 3, 1,... 2, ['tail'])] == [('(anonymous... 2, ['tail'])]
+E
+E         At index 0 diff: ('id', 3, 1, 1, ['x']) != ('(anonymous)', 1, 1, 1, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:113: AssertionError
+_______ test_argument_readers_finish_arrow_before_next_object[api.h-mjs] _______
+
+suffix = 'mjs', callee = 'api.h'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('callee', ['h', 'api.h', 'new Factory', 'api?.h', 'api?.'])
+    def test_argument_readers_finish_arrow_before_next_object(suffix, callee):
+        source = (callee + '(() => f(), {id: (x = 1) => x || 0});\n'
+                  'function after(tail) { return tail ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ANONYMOUS, ('id', 3, 1, 1, ['x']), ('after', 2, 2, 2, ['tail'])]
+E       AssertionError: assert [('id', 3, 1,... 2, ['tail'])] == [('(anonymous... 2, ['tail'])]
+E
+E         At index 0 diff: ('id', 3, 1, 1, ['x']) != ('(anonymous)', 1, 1, 1, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:113: AssertionError
+_______ test_argument_readers_finish_arrow_before_next_object[api.h-cjs] _______
+
+suffix = 'cjs', callee = 'api.h'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('callee', ['h', 'api.h', 'new Factory', 'api?.h', 'api?.'])
+    def test_argument_readers_finish_arrow_before_next_object(suffix, callee):
+        source = (callee + '(() => f(), {id: (x = 1) => x || 0});\n'
+                  'function after(tail) { return tail ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ANONYMOUS, ('id', 3, 1, 1, ['x']), ('after', 2, 2, 2, ['tail'])]
+E       AssertionError: assert [('id', 3, 1,... 2, ['tail'])] == [('(anonymous... 2, ['tail'])]
+E
+E         At index 0 diff: ('id', 3, 1, 1, ['x']) != ('(anonymous)', 1, 1, 1, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:113: AssertionError
+_______ test_argument_readers_finish_arrow_before_next_object[api.h-vue] _______
+
+suffix = 'vue', callee = 'api.h'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('callee', ['h', 'api.h', 'new Factory', 'api?.h', 'api?.'])
+    def test_argument_readers_finish_arrow_before_next_object(suffix, callee):
+        source = (callee + '(() => f(), {id: (x = 1) => x || 0});\n'
+                  'function after(tail) { return tail ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ANONYMOUS, ('id', 3, 1, 1, ['x']), ('after', 2, 2, 2, ['tail'])]
+E       AssertionError: assert [('id', 3, 1,... 2, ['tail'])] == [('(anonymous... 2, ['tail'])]
+E
+E         At index 0 diff: ('id', 3, 1, 1, ['x']) != ('(anonymous)', 1, 1, 1, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:113: AssertionError
+____ test_argument_readers_finish_arrow_before_next_object[new Factory-js] _____
+
+suffix = 'js', callee = 'new Factory'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('callee', ['h', 'api.h', 'new Factory', 'api?.h', 'api?.'])
+    def test_argument_readers_finish_arrow_before_next_object(suffix, callee):
+        source = (callee + '(() => f(), {id: (x = 1) => x || 0});\n'
+                  'function after(tail) { return tail ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ANONYMOUS, ('id', 3, 1, 1, ['x']), ('after', 2, 2, 2, ['tail'])]
+E       AssertionError: assert [('id', 3, 1,... 2, ['tail'])] == [('(anonymous... 2, ['tail'])]
+E
+E         At index 0 diff: ('id', 3, 1, 1, ['x']) != ('(anonymous)', 1, 1, 1, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:113: AssertionError
+____ test_argument_readers_finish_arrow_before_next_object[new Factory-ts] _____
+
+suffix = 'ts', callee = 'new Factory'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('callee', ['h', 'api.h', 'new Factory', 'api?.h', 'api?.'])
+    def test_argument_readers_finish_arrow_before_next_object(suffix, callee):
+        source = (callee + '(() => f(), {id: (x = 1) => x || 0});\n'
+                  'function after(tail) { return tail ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ANONYMOUS, ('id', 3, 1, 1, ['x']), ('after', 2, 2, 2, ['tail'])]
+E       AssertionError: assert [('id', 3, 1,... 2, ['tail'])] == [('(anonymous... 2, ['tail'])]
+E
+E         At index 0 diff: ('id', 3, 1, 1, ['x']) != ('(anonymous)', 1, 1, 1, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:113: AssertionError
+____ test_argument_readers_finish_arrow_before_next_object[new Factory-jsx] ____
+
+suffix = 'jsx', callee = 'new Factory'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('callee', ['h', 'api.h', 'new Factory', 'api?.h', 'api?.'])
+    def test_argument_readers_finish_arrow_before_next_object(suffix, callee):
+        source = (callee + '(() => f(), {id: (x = 1) => x || 0});\n'
+                  'function after(tail) { return tail ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ANONYMOUS, ('id', 3, 1, 1, ['x']), ('after', 2, 2, 2, ['tail'])]
+E       AssertionError: assert [('id', 3, 1,... 2, ['tail'])] == [('(anonymous... 2, ['tail'])]
+E
+E         At index 0 diff: ('id', 3, 1, 1, ['x']) != ('(anonymous)', 1, 1, 1, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:113: AssertionError
+____ test_argument_readers_finish_arrow_before_next_object[new Factory-tsx] ____
+
+suffix = 'tsx', callee = 'new Factory'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('callee', ['h', 'api.h', 'new Factory', 'api?.h', 'api?.'])
+    def test_argument_readers_finish_arrow_before_next_object(suffix, callee):
+        source = (callee + '(() => f(), {id: (x = 1) => x || 0});\n'
+                  'function after(tail) { return tail ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ANONYMOUS, ('id', 3, 1, 1, ['x']), ('after', 2, 2, 2, ['tail'])]
+E       AssertionError: assert [('id', 3, 1,... 2, ['tail'])] == [('(anonymous... 2, ['tail'])]
+E
+E         At index 0 diff: ('id', 3, 1, 1, ['x']) != ('(anonymous)', 1, 1, 1, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:113: AssertionError
+____ test_argument_readers_finish_arrow_before_next_object[new Factory-mjs] ____
+
+suffix = 'mjs', callee = 'new Factory'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('callee', ['h', 'api.h', 'new Factory', 'api?.h', 'api?.'])
+    def test_argument_readers_finish_arrow_before_next_object(suffix, callee):
+        source = (callee + '(() => f(), {id: (x = 1) => x || 0});\n'
+                  'function after(tail) { return tail ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ANONYMOUS, ('id', 3, 1, 1, ['x']), ('after', 2, 2, 2, ['tail'])]
+E       AssertionError: assert [('id', 3, 1,... 2, ['tail'])] == [('(anonymous... 2, ['tail'])]
+E
+E         At index 0 diff: ('id', 3, 1, 1, ['x']) != ('(anonymous)', 1, 1, 1, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:113: AssertionError
+____ test_argument_readers_finish_arrow_before_next_object[new Factory-cjs] ____
+
+suffix = 'cjs', callee = 'new Factory'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('callee', ['h', 'api.h', 'new Factory', 'api?.h', 'api?.'])
+    def test_argument_readers_finish_arrow_before_next_object(suffix, callee):
+        source = (callee + '(() => f(), {id: (x = 1) => x || 0});\n'
+                  'function after(tail) { return tail ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ANONYMOUS, ('id', 3, 1, 1, ['x']), ('after', 2, 2, 2, ['tail'])]
+E       AssertionError: assert [('id', 3, 1,... 2, ['tail'])] == [('(anonymous... 2, ['tail'])]
+E
+E         At index 0 diff: ('id', 3, 1, 1, ['x']) != ('(anonymous)', 1, 1, 1, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:113: AssertionError
+____ test_argument_readers_finish_arrow_before_next_object[new Factory-vue] ____
+
+suffix = 'vue', callee = 'new Factory'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('callee', ['h', 'api.h', 'new Factory', 'api?.h', 'api?.'])
+    def test_argument_readers_finish_arrow_before_next_object(suffix, callee):
+        source = (callee + '(() => f(), {id: (x = 1) => x || 0});\n'
+                  'function after(tail) { return tail ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ANONYMOUS, ('id', 3, 1, 1, ['x']), ('after', 2, 2, 2, ['tail'])]
+E       AssertionError: assert [('id', 3, 1,... 2, ['tail'])] == [('(anonymous... 2, ['tail'])]
+E
+E         At index 0 diff: ('id', 3, 1, 1, ['x']) != ('(anonymous)', 1, 1, 1, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:113: AssertionError
+_______ test_argument_readers_finish_arrow_before_next_object[api?.h-js] _______
+
+suffix = 'js', callee = 'api?.h'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('callee', ['h', 'api.h', 'new Factory', 'api?.h', 'api?.'])
+    def test_argument_readers_finish_arrow_before_next_object(suffix, callee):
+        source = (callee + '(() => f(), {id: (x = 1) => x || 0});\n'
+                  'function after(tail) { return tail ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ANONYMOUS, ('id', 3, 1, 1, ['x']), ('after', 2, 2, 2, ['tail'])]
+E       AssertionError: assert [('id', 3, 1,... 2, ['tail'])] == [('(anonymous... 2, ['tail'])]
+E
+E         At index 0 diff: ('id', 3, 1, 1, ['x']) != ('(anonymous)', 1, 1, 1, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:113: AssertionError
+_______ test_argument_readers_finish_arrow_before_next_object[api?.h-ts] _______
+
+suffix = 'ts', callee = 'api?.h'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('callee', ['h', 'api.h', 'new Factory', 'api?.h', 'api?.'])
+    def test_argument_readers_finish_arrow_before_next_object(suffix, callee):
+        source = (callee + '(() => f(), {id: (x = 1) => x || 0});\n'
+                  'function after(tail) { return tail ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ANONYMOUS, ('id', 3, 1, 1, ['x']), ('after', 2, 2, 2, ['tail'])]
+E       AssertionError: assert [('id', 3, 1,... 2, ['tail'])] == [('(anonymous... 2, ['tail'])]
+E
+E         At index 0 diff: ('id', 3, 1, 1, ['x']) != ('(anonymous)', 1, 1, 1, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:113: AssertionError
+______ test_argument_readers_finish_arrow_before_next_object[api?.h-jsx] _______
+
+suffix = 'jsx', callee = 'api?.h'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('callee', ['h', 'api.h', 'new Factory', 'api?.h', 'api?.'])
+    def test_argument_readers_finish_arrow_before_next_object(suffix, callee):
+        source = (callee + '(() => f(), {id: (x = 1) => x || 0});\n'
+                  'function after(tail) { return tail ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ANONYMOUS, ('id', 3, 1, 1, ['x']), ('after', 2, 2, 2, ['tail'])]
+E       AssertionError: assert [('id', 3, 1,... 2, ['tail'])] == [('(anonymous... 2, ['tail'])]
+E
+E         At index 0 diff: ('id', 3, 1, 1, ['x']) != ('(anonymous)', 1, 1, 1, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:113: AssertionError
+______ test_argument_readers_finish_arrow_before_next_object[api?.h-tsx] _______
+
+suffix = 'tsx', callee = 'api?.h'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('callee', ['h', 'api.h', 'new Factory', 'api?.h', 'api?.'])
+    def test_argument_readers_finish_arrow_before_next_object(suffix, callee):
+        source = (callee + '(() => f(), {id: (x = 1) => x || 0});\n'
+                  'function after(tail) { return tail ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ANONYMOUS, ('id', 3, 1, 1, ['x']), ('after', 2, 2, 2, ['tail'])]
+E       AssertionError: assert [('id', 3, 1,... 2, ['tail'])] == [('(anonymous... 2, ['tail'])]
+E
+E         At index 0 diff: ('id', 3, 1, 1, ['x']) != ('(anonymous)', 1, 1, 1, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:113: AssertionError
+______ test_argument_readers_finish_arrow_before_next_object[api?.h-mjs] _______
+
+suffix = 'mjs', callee = 'api?.h'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('callee', ['h', 'api.h', 'new Factory', 'api?.h', 'api?.'])
+    def test_argument_readers_finish_arrow_before_next_object(suffix, callee):
+        source = (callee + '(() => f(), {id: (x = 1) => x || 0});\n'
+                  'function after(tail) { return tail ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ANONYMOUS, ('id', 3, 1, 1, ['x']), ('after', 2, 2, 2, ['tail'])]
+E       AssertionError: assert [('id', 3, 1,... 2, ['tail'])] == [('(anonymous... 2, ['tail'])]
+E
+E         At index 0 diff: ('id', 3, 1, 1, ['x']) != ('(anonymous)', 1, 1, 1, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:113: AssertionError
+______ test_argument_readers_finish_arrow_before_next_object[api?.h-cjs] _______
+
+suffix = 'cjs', callee = 'api?.h'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('callee', ['h', 'api.h', 'new Factory', 'api?.h', 'api?.'])
+    def test_argument_readers_finish_arrow_before_next_object(suffix, callee):
+        source = (callee + '(() => f(), {id: (x = 1) => x || 0});\n'
+                  'function after(tail) { return tail ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ANONYMOUS, ('id', 3, 1, 1, ['x']), ('after', 2, 2, 2, ['tail'])]
+E       AssertionError: assert [('id', 3, 1,... 2, ['tail'])] == [('(anonymous... 2, ['tail'])]
+E
+E         At index 0 diff: ('id', 3, 1, 1, ['x']) != ('(anonymous)', 1, 1, 1, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:113: AssertionError
+______ test_argument_readers_finish_arrow_before_next_object[api?.h-vue] _______
+
+suffix = 'vue', callee = 'api?.h'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('callee', ['h', 'api.h', 'new Factory', 'api?.h', 'api?.'])
+    def test_argument_readers_finish_arrow_before_next_object(suffix, callee):
+        source = (callee + '(() => f(), {id: (x = 1) => x || 0});\n'
+                  'function after(tail) { return tail ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ANONYMOUS, ('id', 3, 1, 1, ['x']), ('after', 2, 2, 2, ['tail'])]
+E       AssertionError: assert [('id', 3, 1,... 2, ['tail'])] == [('(anonymous... 2, ['tail'])]
+E
+E         At index 0 diff: ('id', 3, 1, 1, ['x']) != ('(anonymous)', 1, 1, 1, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:113: AssertionError
+_______ test_argument_readers_finish_arrow_before_next_object[api?.-js] ________
+
+suffix = 'js', callee = 'api?.'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('callee', ['h', 'api.h', 'new Factory', 'api?.h', 'api?.'])
+    def test_argument_readers_finish_arrow_before_next_object(suffix, callee):
+        source = (callee + '(() => f(), {id: (x = 1) => x || 0});\n'
+                  'function after(tail) { return tail ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ANONYMOUS, ('id', 3, 1, 1, ['x']), ('after', 2, 2, 2, ['tail'])]
+E       AssertionError: assert [('id', 3, 1,... 2, ['tail'])] == [('(anonymous... 2, ['tail'])]
+E
+E         At index 0 diff: ('id', 3, 1, 1, ['x']) != ('(anonymous)', 1, 1, 1, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:113: AssertionError
+_______ test_argument_readers_finish_arrow_before_next_object[api?.-ts] ________
+
+suffix = 'ts', callee = 'api?.'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('callee', ['h', 'api.h', 'new Factory', 'api?.h', 'api?.'])
+    def test_argument_readers_finish_arrow_before_next_object(suffix, callee):
+        source = (callee + '(() => f(), {id: (x = 1) => x || 0});\n'
+                  'function after(tail) { return tail ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ANONYMOUS, ('id', 3, 1, 1, ['x']), ('after', 2, 2, 2, ['tail'])]
+E       AssertionError: assert [('id', 3, 1,... 2, ['tail'])] == [('(anonymous... 2, ['tail'])]
+E
+E         At index 0 diff: ('id', 3, 1, 1, ['x']) != ('(anonymous)', 1, 1, 1, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:113: AssertionError
+_______ test_argument_readers_finish_arrow_before_next_object[api?.-jsx] _______
+
+suffix = 'jsx', callee = 'api?.'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('callee', ['h', 'api.h', 'new Factory', 'api?.h', 'api?.'])
+    def test_argument_readers_finish_arrow_before_next_object(suffix, callee):
+        source = (callee + '(() => f(), {id: (x = 1) => x || 0});\n'
+                  'function after(tail) { return tail ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ANONYMOUS, ('id', 3, 1, 1, ['x']), ('after', 2, 2, 2, ['tail'])]
+E       AssertionError: assert [('id', 3, 1,... 2, ['tail'])] == [('(anonymous... 2, ['tail'])]
+E
+E         At index 0 diff: ('id', 3, 1, 1, ['x']) != ('(anonymous)', 1, 1, 1, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:113: AssertionError
+_______ test_argument_readers_finish_arrow_before_next_object[api?.-tsx] _______
+
+suffix = 'tsx', callee = 'api?.'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('callee', ['h', 'api.h', 'new Factory', 'api?.h', 'api?.'])
+    def test_argument_readers_finish_arrow_before_next_object(suffix, callee):
+        source = (callee + '(() => f(), {id: (x = 1) => x || 0});\n'
+                  'function after(tail) { return tail ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ANONYMOUS, ('id', 3, 1, 1, ['x']), ('after', 2, 2, 2, ['tail'])]
+E       AssertionError: assert [('id', 3, 1,... 2, ['tail'])] == [('(anonymous... 2, ['tail'])]
+E
+E         At index 0 diff: ('id', 3, 1, 1, ['x']) != ('(anonymous)', 1, 1, 1, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:113: AssertionError
+_______ test_argument_readers_finish_arrow_before_next_object[api?.-mjs] _______
+
+suffix = 'mjs', callee = 'api?.'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('callee', ['h', 'api.h', 'new Factory', 'api?.h', 'api?.'])
+    def test_argument_readers_finish_arrow_before_next_object(suffix, callee):
+        source = (callee + '(() => f(), {id: (x = 1) => x || 0});\n'
+                  'function after(tail) { return tail ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ANONYMOUS, ('id', 3, 1, 1, ['x']), ('after', 2, 2, 2, ['tail'])]
+E       AssertionError: assert [('id', 3, 1,... 2, ['tail'])] == [('(anonymous... 2, ['tail'])]
+E
+E         At index 0 diff: ('id', 3, 1, 1, ['x']) != ('(anonymous)', 1, 1, 1, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:113: AssertionError
+_______ test_argument_readers_finish_arrow_before_next_object[api?.-cjs] _______
+
+suffix = 'cjs', callee = 'api?.'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('callee', ['h', 'api.h', 'new Factory', 'api?.h', 'api?.'])
+    def test_argument_readers_finish_arrow_before_next_object(suffix, callee):
+        source = (callee + '(() => f(), {id: (x = 1) => x || 0});\n'
+                  'function after(tail) { return tail ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ANONYMOUS, ('id', 3, 1, 1, ['x']), ('after', 2, 2, 2, ['tail'])]
+E       AssertionError: assert [('id', 3, 1,... 2, ['tail'])] == [('(anonymous... 2, ['tail'])]
+E
+E         At index 0 diff: ('id', 3, 1, 1, ['x']) != ('(anonymous)', 1, 1, 1, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:113: AssertionError
+_______ test_argument_readers_finish_arrow_before_next_object[api?.-vue] _______
+
+suffix = 'vue', callee = 'api?.'
+
+    @pytest.mark.parametrize('suffix', SUFFIXES)
+    @pytest.mark.parametrize('callee', ['h', 'api.h', 'new Factory', 'api?.h', 'api?.'])
+    def test_argument_readers_finish_arrow_before_next_object(suffix, callee):
+        source = (callee + '(() => f(), {id: (x = 1) => x || 0});\n'
+                  'function after(tail) { return tail ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ANONYMOUS, ('id', 3, 1, 1, ['x']), ('after', 2, 2, 2, ['tail'])]
+E       AssertionError: assert [('id', 3, 1,... 2, ['tail'])] == [('(anonymous... 2, ['tail'])]
+E
+E         At index 0 diff: ('id', 3, 1, 1, ['x']) != ('(anonymous)', 1, 1, 1, [])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:113: AssertionError
+=========================== short test summary info ============================
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_argument_readers_finish_arrow_before_next_object[api.h-js]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_argument_readers_finish_arrow_before_next_object[api.h-ts]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_argument_readers_finish_arrow_before_next_object[api.h-jsx]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_argument_readers_finish_arrow_before_next_object[api.h-tsx]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_argument_readers_finish_arrow_before_next_object[api.h-mjs]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_argument_readers_finish_arrow_before_next_object[api.h-cjs]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_argument_readers_finish_arrow_before_next_object[api.h-vue]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_argument_readers_finish_arrow_before_next_object[new Factory-js]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_argument_readers_finish_arrow_before_next_object[new Factory-ts]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_argument_readers_finish_arrow_before_next_object[new Factory-jsx]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_argument_readers_finish_arrow_before_next_object[new Factory-tsx]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_argument_readers_finish_arrow_before_next_object[new Factory-mjs]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_argument_readers_finish_arrow_before_next_object[new Factory-cjs]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_argument_readers_finish_arrow_before_next_object[new Factory-vue]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_argument_readers_finish_arrow_before_next_object[api?.h-js]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_argument_readers_finish_arrow_before_next_object[api?.h-ts]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_argument_readers_finish_arrow_before_next_object[api?.h-jsx]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_argument_readers_finish_arrow_before_next_object[api?.h-tsx]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_argument_readers_finish_arrow_before_next_object[api?.h-mjs]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_argument_readers_finish_arrow_before_next_object[api?.h-cjs]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_argument_readers_finish_arrow_before_next_object[api?.h-vue]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_argument_readers_finish_arrow_before_next_object[api?.-js]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_argument_readers_finish_arrow_before_next_object[api?.-ts]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_argument_readers_finish_arrow_before_next_object[api?.-jsx]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_argument_readers_finish_arrow_before_next_object[api?.-tsx]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_argument_readers_finish_arrow_before_next_object[api?.-mjs]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_argument_readers_finish_arrow_before_next_object[api?.-cjs]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_argument_readers_finish_arrow_before_next_object[api?.-vue]
+28 failed, 147 passed in 0.25s

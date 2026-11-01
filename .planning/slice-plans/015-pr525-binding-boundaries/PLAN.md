@@ -70,11 +70,26 @@ introduced regressions require an explicit source-compatible disposition.
   runtime and final local checks. Slice 3 owns history-preserving publication,
   hosted head/base checks, guarded merge and acknowledgement.
 
+## CI observation and recovery
+
+On resume, the old code-mode host generation was stale. Exact coordinator/root
+record search found no matching observer JSON and `ps` found no matching
+`ci-mailbox.mjs` process; the old stream is absent. The newly armed observer is
+owned by coordinator `pr525-correct-resume`, GitHub Actions `python-app.yml`
+(`Python application`), target `terryyin/lizard:codex/correct-pr525-binding-boundaries`.
+Mailbox `/tmp/dough-ci-501/watch-Sae8bZ`, PID `77130`, session `60875`, yielded
+cell `g3:15`. Runtime belongs to this exact execution checkout. Reuse it for
+managed delivery; recover and close it before replacing or retiring the checkout.
+Admission `db54a2b` and preparation `1ba5cb5` were accepted on trunk before this
+branch observer and have unobserved trunk coverage; never register them as if
+they were this observer's branch publications. No product increment has yet
+been delivered. Exact handles are operational recovery facts, not CI success.
+
 ## Ordered slices
 
 ### 1. Keep nested expression brackets with their binding reader
 Type: Behavior
-Status: planned
+Status: done
 Behavior: Replayed parser tokens do not consume binding brackets twice;
 subscripts and template substitutions do not end their enclosing callbacks;
 expression-arrow separators preserve subsequent object members and functions.
@@ -132,6 +147,28 @@ Plan refinement not needed: three cohesive stopping points preserve one outcome,
 with behavior before performance and exact-head delivery last. No remaining
 slice-specific planning concern; runtime cost is measured work owned by slice 2,
 not an assumed pass. No product-boundary change or independent second outcome.
+
+## Story obligations
+
+### G1. Generic-call comma retains the expression arrow
+Reported: slice 1 — "global named expression arrow `const f = (x) => foo<A,\n B>(x)` ends at generic comma after generalizing comma termination."
+Story clause: "retain current arrow, formal-parameter, signature, template, extension and CLI behavior."
+Disposition: proved by slice 1: `testJavaScriptBindingBoundaries.py::test_global_arrow_generic_call_keeps_continued_expression`, the existing generic continuation test, and implementation/affected-final.txt preserve lines 1–2 on TS/TSX/Vue after the binding/object comma restriction. The coordinator inspected the source and terminal 897-test pass.
+
+### G2. Labeled block arrow remains a pre-existing limitation
+Reported: slice 1 — "label-body arrow omission in seven suffixes"
+Story clause: "Pre-existing label and deep-object limitations are not new promises"
+Disposition: excluded "Pre-existing label and deep-object limitations are not new promises"
+
+### G3. Typed class-field false positive is unchanged
+Reported: slice 1 — "typed class-field phantom function `d` in TS/TSX/Vue"
+Story clause: "retain current arrow, formal-parameter, signature, template, extension and CLI behavior."
+Disposition: proved by slice 1: implementation/current.json and correction.json class-type rows preserve the same pre-existing class-field output; this proves compatibility at that unrelated discovery path, not correctness of class-field function discovery. No new loss is attributed to the binding correction.
+
+### G4. Anonymous generic-call precision is unchanged
+Reported: slice 1 — "anonymous ordinary/member/constructor call arrows with multiline generic arguments still end at line 1 in both revisions."
+Story clause: "retain current arrow, formal-parameter, signature, template, extension and CLI behavior."
+Disposition: proved by slice 1: implementation/generic-controls.json compares frozen-current and corrected TS/TSX results through analyze_file and shows identical pre-existing anonymous-generic spans, while the named/global case keeps lines 1–2. This proves preservation, not a generic-call accuracy improvement; the limitation remains honestly reported and is not used as proof of corrected generic parsing.
 
 ## Learnings
 

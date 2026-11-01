@@ -3,6 +3,8 @@
 ## 1.24.3
 
 ### Bug Fixes
+- JavaScript, TypeScript, JSX, and TSX: preserve callback boundaries and CCN when call arguments or object values contain subscripts, including `e(r[0])` and `return {w: [m[n - 1]]}` (issue #524)
+- JavaScript, TypeScript, JSX, and TSX: end expression-bodied arrows at their enclosing argument, array, or object comma so following object members retain their own functions and metrics (issue #524)
 - TypeScript: preserve function boundaries and NLOC after return type annotations, including adjacent annotated functions (issue #521)
 - JavaScript, TypeScript, JSX, and TSX: use balanced scanning for nested template literals so deeper nesting, quoted delimiters, escapes, and comments do not swallow following functions (issue #521)
 - TypeScript and TSX: keep ternary colons in conditional expressions from being mistaken for type annotations, preventing crashes in conditional style arrays (issue #523)
