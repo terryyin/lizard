@@ -67,19 +67,16 @@ A later passing measurement repairs confidence but cannot repair the ordering.
   - Observed effect: the coordinator merged before resolving the independent refactor's omitted nested-function, async, match, continuation and class timing controls. The later expanded 22-control corpus passed with upper 95% slowdown bound -0.6803%; the temporal deviation remains.
   - Inference: a passing broad benchmark and original reported example did not establish that the affected corpus covered the accepted contract.
 
-## DD-005 — Native Git bypassed the installed backlog merge adapter
+## ODF-397 — Native Git bypassed the installed backlog merge adapter
+
+Former local code: DD-005.
 
 Resolve the actual checkout's installed adapter before every merge touching the
 backlog or done records, including clean fast-forwards and contributor branches.
 
 ### Occurrences
-- Execution: SEED-010#review-fabio-malpezzi-prs
-  - Timestamp: unknown
-  - Tool: Codex
-  - Open Dough release: unknown; installed guidance at execution baseline 2e21e404
-  - Evidence: PR535 dependency merge into contributor head 1a44c0cad59ea3f3dcabe3c1ac601d905437a7c7; execution-branch revision f25aeca2, .planning/slice-plans/004-fabio-malpezzi-pr-reviews/535-review.md and CONTEXT.md. Later validation-checkout advance to 53e4850 used its installed product-backlog-git-merge.mjs adapter.
-  - Observed effect: the coordinator used native Git for the dependency merge and an earlier private validation fast-forward before rereading the adapter rule. Complete candidate/landed trees matched the validated result, and the subsequent done-catalog audit found 18 records already current; no incorrect merged backlog was observed.
-  - Inference: clean Git output does not validate domain reconciliation. The resulting product proof remains supported, while the process bypass should not recur.
+Distinct executions, original provenance, observations and qualified inferences are
+[retained at ODF-397](https://github.com/terryyin/open-dough/blob/692bf5162b86fca9cbebc1c57c98efd227198e9d/docs/maintainer/findings/ODF-397.md); source recovery remains in this project’s pre-compaction revision.
 
 ## DD-006 — `python -c` import probes contaminate via argv0
 
@@ -298,7 +295,9 @@ new six-gate pass) when the contract cares about that loop.
   - Observed effect: one eligible ≤15-minute trim and a full remeasure were required before merge; semantics were already correct after slice 1.
   - Inference: duplication collapse on a measured hot path can recreate the cost the gate rejects; the contract's trim budget absorbed it here, but the refactor rule did not account for the gate.
 
-## DD-017 — First-landing expectation blocks story-branch increment publish
+## ODF-378 — First-landing expectation blocks story-branch increment publish
+
+Former local code: DD-017.
 
 When a launch plants a first-landing expectation whose landing context targets
 trunk, story-branch increment delivery that omits `--landing-context` still
@@ -309,31 +308,8 @@ cleared. Landing context is for first trunk land only; intermediate
 story-branch publishes should not bind it.
 
 ### Occurrences
-- Execution: SEED-019#dedupe-template-interpolation-tests
-  - Timestamp: 2026-10-29T07:58:34+08:00
-  - Tool: Cursor
-  - Model: auto
-  - Open Dough release: 0.3.74
-  - Evidence: `execution-increment-delivery.mjs fresh` committed `7ce8aec` then returned `delivery-interrupted` / `Publication does not match the supplied landing context.`; open expectation at `.git/open-dough/first-landing-expectations/71d4ea1a….json` named landing-context target `refs/heads/master` while publish target was `refs/heads/cursor/remove-the-duplicate-template-interpolation-ccn`; resume after parking that expectation accepted push of `7ce8aec`; expectation restored for later trunk land.
-  - Observed effect: slice commit succeeded locally; remote execution branch stayed at Take SHA until a second resume after parking the expectation.
-  - Inference: `resolvePublicationLandingContext` auto-applies an open first-trunk expectation to every publish from that workspace/branch; mismatch should skip capture rather than fail the push, or story-branch delivery should not resolve first-landing expectations.
-
-- Execution: SEED-020#cobol-support
-  - Timestamp: 2026-10-29T11:10:00+08:00
-  - Tool: Cursor
-  - Model: auto
-  - Open Dough release: 0.3.74
-  - Evidence: story-branch mode, landing-context target `refs/heads/master` (launch `7b1b9b82…/landing-context.json`); slice-1 `execution-increment-delivery.mjs fresh` committed `0da2e22` then interrupted on auto-resolved first-landing expectation `38119287389deb9e…json`; coordinator parked to `/tmp/cobol-first-landing-expectation-parked-95084.json`, resumed publish of `0da2e22`, restored expectation; slice-2 delivery likewise parked (`…-slice2-10311.json` at 11:21) before push of `3a7a933`, then restored.
-  - Observed effect: both Behavior increments needed the same park/resume/restore workaround before the story branch advanced; trunk first-landing expectation was preserved for later land.
-  - Inference: same auto-resolve path as SEED-019; recurrence on consecutive story-branch language-support launches under 0.3.74 confirms intermediate publishes still bind first-trunk landing context.
-- Execution: SEED-021#dart-support
-  - Timestamp: unknown (after slice-1 commit `6d6f76c` at 2026-10-29T09:25:39+08:00; resume publish before slice-2 `e50d5fe` at 09:32:25+08:00)
-  - Tool: Cursor
-  - Model: auto
-  - Open Dough release: 0.3.74
-  - Evidence: conversation 5ae6ce13-8910-4941-95bc-b0a708f808f0; coordinator recorded landing-context mismatch after slice-1 commit; launch had planted `--landing-context` for first trunk land; resume parked `.git/open-dough/first-landing-expectations/4655c4e492190b9e6736f2f1021597861334a115e6631e239b4602ea48a1ffa3.json`, ran `execution-increment-resume.mjs resume` for candidate `6d6f76c` / target `refs/heads/cursor/support-dart-analysis`, restored the expectation, then cleared it for remaining story-branch increments.
-  - Observed effect: slice-1 commit existed locally while publish needed a parked-expectation resume; later slices published after clearing the trunk-only expectation until land.
-  - Inference: same first-landing auto-bind as the SEED-019 occurrence; story-branch intermediate publishes should not resolve trunk landing expectations.
+Distinct executions, original provenance, observations and qualified inferences are
+[retained at ODF-378](https://github.com/terryyin/open-dough/blob/692bf5162b86fca9cbebc1c57c98efd227198e9d/docs/maintainer/findings/ODF-378.md); source recovery remains in this project’s pre-compaction revision.
 
 ## Retention
 
