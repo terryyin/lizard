@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-023_correct-pr525-binding-boundaries.json",
+      "identity": "SEED-023#correct-pr525-binding-boundaries",
+      "completedAt": "2026-11-01T17:17:43.441Z",
+      "blob": "8120f766d8679d43a7ce04c0695da9469b3857ba"
+    },
+    {
       "fileName": "SEED-022_review-pr525-issue524.json",
       "identity": "SEED-022#review-pr525-issue524",
       "completedAt": "2026-11-01T08:16:07.759Z",

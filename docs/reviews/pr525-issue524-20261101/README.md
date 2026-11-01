@@ -1,156 +1,96 @@
-# PR #525 review and relevance to issue #524
+# PR #525 and issue #524
 
-Review completed on 2026-11-01. **Still relevant; requires integration and
-performance qualification before merge.** The PR remains open and unmerged;
-no GitHub comments or reviews were posted, and no product code was changed.
+[PR #525](https://github.com/terryyin/lizard/pull/525) is **merged**, with
+current-master corrections and independent refactoring, as
+[b97f7958](https://github.com/terryyin/lizard/commit/b97f7958bd63bdafce692cf926c70d927410717b).
+The original contributor commit remains in its history.
+[One thank-you message](https://github.com/terryyin/lizard/pull/525#issuecomment-6561098652)
+acknowledges the contribution, material corrections and validation.
 
-The [linked issue comment](https://github.com/terryyin/lizard/issues/524#issuecomment-6525221776)
-specifically requests attention to [PR #525](https://github.com/terryyin/lizard/pull/525).
-The October 27–28 FabioMalpezzi cohort covered PRs #527, #528 and #531–#547;
-#525, by leonrosenshein, was outside that cohort.
+The [issue comment](https://github.com/terryyin/lizard/issues/524#issuecomment-6525221776)
+specifically names #525. Last week's FabioMalpezzi cohort covered #527, #528
+and #531–#547; #525, by leonrosenshein, was outside that cohort. That work
+already resolved several original crash examples, while #525 still supplied
+the missing callback/subscript-boundary correction.
 
-## Relevant completed work
-
-| PR | Relationship |
+| Related PR | Relationship |
 | --- | --- |
-| [#531](https://github.com/terryyin/lizard/pull/531) | Direct overlap: expression-bodied arrows must read object operands as objects. Merged with a corrected implementation, `ac2b454a`. |
-| [#533](https://github.com/terryyin/lizard/pull/533) | Related arrow-end and line-ownership work. Merged with a corrected implementation, `a2d2ab77`. |
-| [#534](https://github.com/terryyin/lizard/pull/534) | Related ternary versus type-annotation ownership; current signature handling must survive integration. Merged `48de7f29`. |
-| [#536](https://github.com/terryyin/lizard/pull/536) | Related binding/formal-parameter ownership in the same reader concept. Merged `1bc7cbd6`. |
-| [#545](https://github.com/terryyin/lizard/pull/545) | Shared template-substitution consumer; #525 also changes `${` bracket tracking. Merged `d0ecc33b`. |
+| [#531](https://github.com/terryyin/lizard/pull/531) | Expression arrows containing object operands. |
+| [#533](https://github.com/terryyin/lizard/pull/533) | Arrow endings and source-line ownership. |
+| [#534](https://github.com/terryyin/lizard/pull/534) | Ternary versus type-annotation ownership. |
+| [#536](https://github.com/terryyin/lizard/pull/536) | Binding and formal-parameter ownership. |
+| [#545](https://github.com/terryyin/lizard/pull/545) | Shared template-substitution consumer. |
 
-Issue [#523](https://github.com/terryyin/lizard/issues/523) was another exhausted
-binding-tracker crash, caused by a ternary colon being read as a type annotation.
-Its repair `a062c4d` is related but does not settle #524's subscript-boundary
-problem. The other reviewed JS/TS PRs share parser areas but are not substitutes
-for #525's remaining behavior.
+Issue [#523](https://github.com/terryyin/lizard/issues/523) involved a related
+exhausted binding tracker but did not settle #524's subscript boundaries.
+This merge does not claim to resolve every independent limitation in #524.
 
-## Revision-bound correctness
+## Resulting behavior
 
-The frozen reported target / PR parent is
-`01afe9c228ba2a3dc5253259d8415d2ef47f0b71`; PR head is
-`63798156566ea4ab100048dc1eb21a7366cde380`. Current target at review is
-`6863a63513325ba40e440bc19cf608b95f35bbf5`, whose product files are unchanged
-from `4e0b2c22c5845639c8686730da1c90868132e5c8`; its additional commit admits
-this review. The PR head was rechecked after analysis and had not moved.
+The callback in `it('t', () => {\n e(r[0]);\n if(x) g(x);\n});`
+retains lines 1–4 and CCN 2, and following functions retain their own metrics.
+Chained/optional subscripts, array-valued object properties and template
+substitutions preserve their enclosing function. Argument/object commas end
+expression arrows before subsequent arguments or members; global generic-call
+continuations retain their existing span.
 
-On current master, all of issue #524's original `h(() => f(), {id: 1})`,
-nested-array and Map crash examples now complete without an exception and
-retain the expected callback spans. Thus last week's work fixed a substantial
-part of the report, without incorporating #525.
+Replayed tokens reach binding tracking once. Actual/provisional formals retain
+the binding owner; proven calls reuse ordinary nested syntax with argument-comma
+context. No parallel bracket counter or whole-stream buffer was added.
 
-The PR still supplies useful behavior absent from current master:
+Public regressions retain all eleven authored cases across JS, TS, JSX, TSX,
+MJS, CJS and Vue, plus successor metrics, typed/default/ternary formals, templates,
+NS/nonstrict, actual CSV CLI and HTTP JSON. Full pytest and make each passed:
+**2,427 tests, seven existing skips**. Configured style checks passed; existing
+pylint diagnostics are not represented as zero messages.
 
-```javascript
-it('t', () => {
-  e(r[0]);
-  g(x);
-});
-```
+## Performance and hosted checks
 
-Current master reports the callback at lines **1–2**; #525 reports the correct
-**1–4**. Adding `if (x)` on line 3 also demonstrates lost callback CCN on master.
-The chained-subscript example ends at line 2 instead of line 3. In
-`function f() {\n return { w: [m[n - 1]] };\n}\nfunction g() {}`, master ends
-`f` on line 2 instead of line 3; #525 preserves both functions correctly.
+Eight prospectively frozen comparisons used twenty alternating warmed pairs
+each. API/parameter and NS batches calibrated to 1.2 seconds; CLI to four seconds.
+Every measured batch exceeded one second, with stable source/input/harness hashes
+and output observations. Each paired 95% upper slowdown bound is strictly below
+3%; the worst is **+0.526%**. Negative change means faster.
 
-The complete eleven-case authored matrix runs through `analyze_file` as
-JS, TS, JSX, TSX, MJS, CJS and Vue script input: the proposal matches **77/77**
-expectations, current master **49/77**. Of the 28 exact mismatches, 21 concern
-the three boundary examples above; seven concern the ordering of the two
-functions in the object-arrow example. The latter are reported as a changed
-completion order, not as another missing-function defect. For just the four
-suffixes named in the PR, the corresponding results are **44/44** and **28/44**.
-
-There are 128 total discriminating observations per source snapshot, including
-following-function/CCN, adjacent-member, type-signature, labeled-statement and
-template controls. The `ns` extension reproduces the same base metric results.
-The original target has 28 crashes, while proposal and current master have
-none in this bounded corpus. The original target aborts CSV, `-o` and `-Ens`
-batch CLI runs; both proposal and current master complete all three modes,
-including a following Python file. Current CSV output retains the incorrect
-subscript callback span seen through the API.
-
-This does not establish absence of crashes on arbitrary inputs or replay the
-contributor's private 28k-file corpus. The label and deeper nested-object-array
-limitations remain on both proposal and master. The old proposal also lacks
-newer type-signature improvements already present on master. Those inherited
-limitations are not treated as newly introduced PR defects.
-
-## Integration, quality and checks
-
-The complete four-file diff, PR discussion, submitted reviews, inline-thread
-states and hosted run were read. Discussion, reviews and threads were empty.
-The patch's defensive exhausted-frame guard is sensible; avoiding duplicate
-tracker input and consulting bracket ownership address the actual subscript
-failure. The fix belongs with the existing binding tracker and shared state
-dispatch. It must preserve the current parameter, signature, ternary and
-template consumers, rather than replacing current files with their older
-versions. ADR-0001's established metric meanings apply; no architectural
-exception is proposed.
-
-`git merge-tree --write-tree` reports content conflicts in both
-`lizard_languages/javascript_bindings.py` and
-`lizard_languages/typescript_states.py`. The original green branch therefore
-does not establish a correct current-master candidate. No contributor branch
-was modified and no write-access claim is made.
-
-Original branch full pytest: **1,667 passed, 7 skipped**. Current master full
-pytest: **2,210 passed, 7 skipped**; current `nix develop -c make` also exits 0,
-including the full suite and configured style checks. Existing pylint and
-dependency warnings are retained in the logs, not represented as zero messages.
-Original [hosted PR CI](https://github.com/terryyin/lizard/actions/runs/40242018917)
-succeeded on four historical jobs. Current CI requires fourteen
-Ubuntu/Windows × Python 3.8–3.14 builds and the changes job; web checks are
-conditional. No integrated proposal or current-matrix acceptance is claimed.
-
-## Measured cost
-
-The installed paired benchmark runner measured the original PR against its
-exact parent using Nix Python 3.9.11, once per workload, with twenty alternating
-warmed pairs calibrated to at least 1.2 seconds. Inputs were frozen before
-timing: 24 affected JS/TS-family API files that both revisions can analyze and
-100 original Python source files for the broad CLI. Runtime source and corpus
-hashes, every pair, load observations and output stability are retained.
-Source snapshots are Git archives, so runner revision fields are null; the
-workload manifest records their exact Git revisions and the runner records
-their production hashes.
-
-| Workload | Paired change | 95% interval |
+| Comparison | Paired change | Paired 95% interval |
 | --- | ---: | ---: |
-| Affected API including parameter consumers | +3.60% | +2.75% to +4.44% |
-| Broad CLI | +0.22% | -1.06% to +1.51% |
+| Current master, complete API/parameters | -5.965% | [-7.093%, -4.824%] |
+| Current master, complete NS | -4.951% | [-6.324%, -3.557%] |
+| Current master, isolated call API/parameters | -1.130% | [-1.721%, -0.535%] |
+| Current master, isolated call NS | -1.449% | [-1.934%, -0.961%] |
+| Current master, broad CLI | -1.176% | [-2.328%, -0.010%] |
+| Original parent, safe API/parameters | -13.443% | [-14.010%, -12.874%] |
+| Original parent, safe NS | -10.335% | [-11.001%, -9.664%] |
+| Original parent, broad CLI | -0.442% | [-1.401%, +0.526%] |
 
-The affected result does not establish compliance with the earlier Fabio
-cohort's strict sub-3% upper-bound policy. That historical policy is a useful
-reference, not a newly invented universal limit for #525. The broad pass does
-not cancel the affected cost. These measurements qualify neither a rebased
-candidate nor its performance against current master. No favorable retry or
-causal profiling claim is substituted for the recorded comparison.
+Runtime baseline: `6d288d4cdcb85bc50ab4c8a887196177607eeb7d`;
+original parent: `01afe9c228ba2a3dc5253259d8415d2ef47f0b71`.
+Later master `c694707` changed process guidance only. Qualified contributor head
+`e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0` retained all 107 accepted runtime
+and 174 test/fixture hashes after history-preserving integration.
 
-## Disposition
+Both exact-head hosted matrices (Ubuntu/Windows × Python 3.8–3.14) and both
+change-detection jobs passed; both web jobs were correctly skipped by the path
+filter. The merge guarded that exact head. The
+[merged-master run](https://github.com/terryyin/lizard/actions/runs/41329592732)
+also passed its complete applicable matrix.
 
-**Review completed within the requested scope.** Keep #525 open and unmerged
-pending a current-master correction. Reconcile its remaining binding lifecycle
-and replay changes with the current owners, preserve the authored public tests
-and newer signature/template controls, profile the affected overhead, and
-qualify the resulting candidate against current master and applicable hosted
-CI before a merge decision. The issue should not be closed merely because its
-first crash reproducer now passes.
+Pre-existing labeled-body arrow omission, typed-class-field false positive
+and anonymous multiline-generic truncation remain documented limitations.
+The bounded corpus does not replay the contributor's private monorepo or prove
+absence of crashes on arbitrary input.
 
-The review owner is SEED-022#review-pr525-issue524. Product correction and public
-GitHub actions have not been performed as part of this review.
+## Recoverable evidence
 
-## Replay evidence
+[Before-cleanup f5d10b7c](https://github.com/terryyin/lizard/tree/f5d10b7c371b933947d15805f484b33c1b39b0cb/docs/reviews/pr525-correction-20261101)
+retains the completed source/plan, implementation and independent refactor
+returns, public red/green observations, hashes, frozen manifests, profiles,
+full-check logs, all timing attempts, exact-head guard and merge/thanks receipts.
+The unfavorable +5.55% isolated-call attempt is preserved; the final correction
+removed its unnecessary tracking and passed the unchanged workload.
+The captured GitHub packet is losslessly encoded; `hosting/packet-storage.md`
+and its verified round-trip inspection explain recovery.
 
-At [before-cleanup 5f7d58fb](https://github.com/terryyin/lizard/tree/5f7d58fbad166bf05e1510162831bbc03cbabd96/docs/reviews/pr525-issue524-20261101),
-this directory contains `github-packet.json`,
-`final-state.json`, `reproduce.py`, six default/NS result files, `cli.json`,
-`workload-manifest.json`, both performance reports and full pytest/make logs.
-Run `reproduce.py --checkout <snapshot> --out <new-result.json>` in the prepared
-Nix checkout, optionally adding `--extension ns`. Snapshot roots are the exact
-`git archive` exports of the reported parent and proposal above; current uses
-the owned execution checkout. Recover any raw file with
-`git show 5f7d58fbad166bf05e1510162831bbc03cbabd96:docs/reviews/pr525-issue524-20261101/<file>`.
-The current snapshot retains this disposition; the full review inputs and
-diagnostics remain recoverable at that revision.
+The [initial review evidence](https://github.com/terryyin/lizard/tree/5f7d58fbad166bf05e1510162831bbc03cbabd96/docs/reviews/pr525-issue524-20261101)
+retains the original proposal/parent comparison and relevance investigation.
+Raw files can be recovered with `git show <revision>:<repository-relative-path>`.

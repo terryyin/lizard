@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "agent": "Eimi-chan",
-  "email": "eimi-chan@example.org",
-  "identity": "SEED-023#correct-pr525-binding-boundaries",
-  "mode": "story-branch",
-  "branch": "codex/correct-pr525-binding-boundaries",
-  "host": "codex"
-}
