@@ -1,0 +1,353 @@
+{
+  "review_scope": "Review and relevance assessment; no product corrections or GitHub messages",
+  "owner": "SEED-022#review-pr525-issue524",
+  "head": {
+    "url": "https://github.com/terryyin/lizard/pull/525",
+    "number": 525,
+    "state": "open",
+    "merged": false,
+    "mergeable": false,
+    "draft": false,
+    "body": "## Summary\n\nSince 1.24.2 (#509, `e253122`), lizard can abort an entire run with this error on valid JavaScript, TypeScript, JSX and TSX:\n\n```\nlizard_languages/javascript_bindings.py, in in_expression\n    return self._frames[-1].initializing or bool(self._expression_brackets)\nIndexError: list index out of range\n```\n\nOn a private monorepo with about 28k JS/TS files, current `master` crashes on 113 files. With this PR, none crash. This PR addresses issue [524](https://github.com/terryyin/lizard/issues/524)\n\nThe binding tracker from #509 keeps its own bracket count, separate from the reader state machine. Two common code shapes make the two disagree about where the bracket closes. After that, the reader keeps asking an exhausted tracker for state.\n\n### 1. An expression-bodied arrow, then `,`, then an object literal, inside brackets\n\n```js\nh(() => f(), { id: 1 });\ng(r);   // IndexError\n```\n\n- The arrow didn't end at the `,`, so `{` was read as the arrow's block body.\n- `id:` was then read as a TypeScript type annotation, which consumed the enclosing `)`.\n- The tracker saw that `)` and ended, but the reader never returned.\n\nThe shape is common in `setTimeout(() => f(), {...})`, test tables, and `new Map([[k, () => v, {...}]])`. Before 1.24.2 the same misparse didn't crash, but it reported wrong function boundaries.\n\n**Fix:** an expression-bodied arrow now ends at the enclosing `,`, the same way it already ends at `;`, a newline, or the closing bracket.\n\n### 2. A subscript inside call arguments ends the enclosing function\n\n```js\nit('t', () => {\n  e(r[0]);   // the arrow ended here, at the `]` of r[0]\n  g(x);\n});\n```\n\nA binding-candidate reader returned on any `]`, even the `]` of a subscript. Function boundaries came out wrong (the arrow above ended on line 2 instead of 4), and the leftover brackets were a second route into the crash.\n\n**Fix:** a binding-candidate reader now returns on `]` only when the tracker says its own bracket has closed. That check depends on two tracker fixes:\n\n- Tokens re-dispatched with `next(state, token)` or `_replay_token` were counted twice by the tracker. For example, the `{` after `=>` added a frame that never closed. They now skip the tracker.\n- `${` now always counts as an opening bracket. Outside an expression context it was ignored, so the `}` closing a template substitution was taken for the object's closing `}`.\n\n### 3. Defensive guard\n\n`JavaScriptBindings.in_expression` now returns `False` once the tracker has ended, the same check `read_token()` already made. A future misparse then gives wrong numbers for one file instead of aborting the whole run. In the corpus above this guard is load-bearing for a few dozen files; see \"Known remaining issues\".\n\n## Behavior changes\n\n- Expression-bodied arrows followed by `,` now end on the line of the `,`, not on the next token's line. For example, in `{ a: () => 1,\\n  b: 2 }` the arrow `a` now ends on line 1. This shifts `end_line` and NLOC for many such arrows. In the corpus run, about 5.8k files changed only in end lines.\n- Members after an expression arrow in a one-line object literal, like `{ a: () => 1, b: () => 2 }`, are now reported as separate functions instead of being merged into the first.\n- Files that previously lost functions to the `e(r[0])` early return get them back. In some test files this restores dozens of callbacks.\n\n## Tests\n\n- `test/test_languages/testJavaScript.py` gets `Test_JavaScript_expression_arrow_before_object_literal`. Each case runs as `.js`, `.ts`, `.jsx` and `.tsx` and asserts `(name, CCN, start_line, end_line)`. It covers:\n  - the crash cases (call arguments, nested arrays, `new Map([...])` tuples);\n  - #509 default counting next to the pattern (`h((a = 1) => f(), { id: 1 })` → CCN 2);\n  - an arrow inside the object literal;\n  - the subscript cases.\n- Both new tests fail on `master` and pass here. `make` passes: the full suite (1667 passed), pep8, and pylint with no new messages.\n\n## Known remaining issues (not fixed here)\n\nThese came up while checking this change against the corpus. All but the first behave identically on 1.24.1, `master` and this branch, so they predate #509. I left them out to keep this PR focused, and I'm happy to file them separately.\n\n1. **A labeled statement in an arrow's block body inside brackets loses the arrow.** This one is a 1.24.2 regression this PR does *not* fix: 1.24.1 reports the arrow, and `master` and this branch don't.\n\n   ```js\n   const x = [() => { a: 1 }];   // arrow not reported\n   ```\n\n   The `a:` is read as a type annotation that swallows the `}` and `]`. Making the reader return as soon as its tracker ends fixes this, but it also shifted function boundaries in about 2,000 corpus files. I didn't want that in a crash fix.\n\n2. **An array value inside an object literal is read as a computed key.** `_handle_object_member` sends every `[` to `_collect_computed_name()`, including in value position, so collection stops at the first `]`.\n\n   ```js\n   function f() {\n     return { e: [ { w: [m[0]] } ], b: { [a]: 1 } };\n   }   // f is reported ending on line 2\n   ```\n\n3. **A class field with a function type swallows the rest of the class.**\n\n   ```ts\n   class A {\n     private d: (() => void)[] = [];\n     constructor() { x(); }   // constructor and s() are not reported; only `d`\n     s() { return 1; }\n   }\n   ```\n\n4. **The `{` of a TS `as { ... }` type after an expression-bodied arrow is read as the arrow's block body.**\n\n   ```ts\n   const t = () => x as { b: string };   // t is reported ending on line 2\n   function g() {}\n   ```\n\n   In the corpus, 16 files that didn't crash on `master` now depend on the guard in section 3 because of this. `master`'s early `]` return happened to hide it in those files.\n\n5. **`TypeScriptTypeAnnotationStates._state_simple_type` ends only on `{ = ; )`.** It runs past an unmatched `}`, `]` or `,`. That is how steps 1 and 4 consume brackets that belong to the enclosing expression.\n\nCompared with `master` on the corpus, 224 files report fewer functions. Every one I traced came from the issues above, which `master`'s early `]` return happened to offset. One file I couldn't reduce to a cause in reasonable time. In the other direction, many more files gain functions that both 1.24.1 and `master` were folding into a single anonymous function.\n",
+    "title": "Fix JS/TS `IndexError` crash and early function end from binding-candidate tracking (1.24.2 regressions)",
+    "base": "master",
+    "base_sha": "01afe9c228ba2a3dc5253259d8415d2ef47f0b71",
+    "head": "jsBindingCandidateCrash",
+    "head_sha": "63798156566ea4ab100048dc1eb21a7366cde380",
+    "head_repo_id": 1407524113,
+    "head_repo_full_name": "leonrosenshein/lizard",
+    "merge_commit_sha": null,
+    "user": {
+      "login": "leonrosenshein",
+      "name": "leonrosenshein",
+      "email": null,
+      "avatar_url": "https://avatars.githubusercontent.com/u/8021970?v=4",
+      "id": 8021970
+    },
+    "requested_reviewers": null,
+    "requested_team_reviewers": null,
+    "diff": null,
+    "comments": null,
+    "created_at": "2026-10-25T22:50:05Z",
+    "updated_at": "2026-10-25T22:50:05Z",
+    "closed_at": null,
+    "merged_at": null,
+    "commits": 1,
+    "changed_files": 4,
+    "additions": 70,
+    "deletions": 9,
+    "display_url": "https://github.com/terryyin/lizard/pull/525",
+    "display_title": "Fix JS/TS `IndexError` crash and early function end from binding-candidate tracking (1.24.2 regressions)"
+  },
+  "related": {
+    "531": {
+      "url": "https://github.com/terryyin/lizard/pull/531",
+      "title": "Read an object in the body of a JavaScript arrow function as an object",
+      "merged": true,
+      "merged_at": "2026-10-27T12:00:44Z",
+      "merge_sha": "ac2b454a5ada49e472c5d96635cbbba091c57bc8"
+    },
+    "533": {
+      "url": "https://github.com/terryyin/lizard/pull/533",
+      "title": "End a JavaScript arrow function without braces with its last line",
+      "merged": true,
+      "merged_at": "2026-10-27T13:36:42Z",
+      "merge_sha": "a2d2ab778d03cbb9ea96d243ab7533105d304eb2"
+    },
+    "534": {
+      "url": "https://github.com/terryyin/lizard/pull/534",
+      "title": "End a JavaScript arrow function in a branch of a ternary at its colon",
+      "merged": true,
+      "merged_at": "2026-10-27T19:33:04Z",
+      "merge_sha": "48de7f294831b0b098c9ab2753c831346c645fd8"
+    },
+    "536": {
+      "url": "https://github.com/terryyin/lizard/pull/536",
+      "title": "Count the parameters of JavaScript/TypeScript arrow functions",
+      "merged": true,
+      "merged_at": "2026-10-27T16:20:19Z",
+      "merge_sha": "1bc7cbd64bef352300195c66888139bdf8d8d8e0"
+    },
+    "538": {
+      "url": "https://github.com/terryyin/lizard/pull/538",
+      "title": "Keep a JavaScript function going after an immediately invoked function",
+      "merged": true,
+      "merged_at": "2026-10-27T23:49:01Z",
+      "merge_sha": "a2f0a5385b19d7cb6255a8736d09ba9792403390"
+    },
+    "545": {
+      "url": "https://github.com/terryyin/lizard/pull/545",
+      "title": "Count the conditions in JavaScript/TypeScript template interpolations",
+      "merged": true,
+      "merged_at": "2026-10-28T23:25:36Z",
+      "merge_sha": "d0ecc33be16ab01a8a6ecbddf092034da40fc5af"
+    },
+    "547": {
+      "url": "https://github.com/terryyin/lizard/pull/547",
+      "title": "Count a JavaScript/TypeScript ternary written without spaces",
+      "merged": true,
+      "merged_at": "2026-10-28T07:19:55Z",
+      "merge_sha": "8567a4c7ee24029d76e54861defef01679238f34"
+    }
+  },
+  "ci_jobs": {
+    "jobs": [
+      {
+        "id": 121315649292,
+        "name": "build (windows-latest, 3.10)",
+        "status": "completed",
+        "conclusion": "success",
+        "run_id": 40242018917,
+        "logs_url": null,
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1
+          },
+          {
+            "name": "Run actions/checkout@v3",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2
+          },
+          {
+            "name": "Set up Python",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3
+          },
+          {
+            "name": "Install dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4
+          },
+          {
+            "name": "build and Install",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5
+          },
+          {
+            "name": "Run tests",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6
+          },
+          {
+            "name": "Post Set up Python",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11
+          },
+          {
+            "name": "Post Run actions/checkout@v3",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 12
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 13
+          }
+        ]
+      },
+      {
+        "id": 121315649546,
+        "name": "build (ubuntu-24.04, 3.8)",
+        "status": "completed",
+        "conclusion": "success",
+        "run_id": 40242018917,
+        "logs_url": null,
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1
+          },
+          {
+            "name": "Run actions/checkout@v3",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2
+          },
+          {
+            "name": "Set up Python",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3
+          },
+          {
+            "name": "Install dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4
+          },
+          {
+            "name": "build and Install",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5
+          },
+          {
+            "name": "Run tests",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6
+          },
+          {
+            "name": "Post Set up Python",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11
+          },
+          {
+            "name": "Post Run actions/checkout@v3",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 12
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 13
+          }
+        ]
+      },
+      {
+        "id": 121315649555,
+        "name": "build (ubuntu-24.04, 3.10)",
+        "status": "completed",
+        "conclusion": "success",
+        "run_id": 40242018917,
+        "logs_url": null,
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1
+          },
+          {
+            "name": "Run actions/checkout@v3",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2
+          },
+          {
+            "name": "Set up Python",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3
+          },
+          {
+            "name": "Install dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4
+          },
+          {
+            "name": "build and Install",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5
+          },
+          {
+            "name": "Run tests",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6
+          },
+          {
+            "name": "Post Set up Python",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11
+          },
+          {
+            "name": "Post Run actions/checkout@v3",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 12
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 13
+          }
+        ]
+      },
+      {
+        "id": 121315649632,
+        "name": "build (windows-latest, 3.8)",
+        "status": "completed",
+        "conclusion": "success",
+        "run_id": 40242018917,
+        "logs_url": null,
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1
+          },
+          {
+            "name": "Run actions/checkout@v3",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2
+          },
+          {
+            "name": "Set up Python",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3
+          },
+          {
+            "name": "Install dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4
+          },
+          {
+            "name": "build and Install",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5
+          },
+          {
+            "name": "Run tests",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6
+          },
+          {
+            "name": "Post Set up Python",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11
+          },
+          {
+            "name": "Post Run actions/checkout@v3",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 12
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 13
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,128 @@
+[
+  {
+    "label": "reported",
+    "mode": "csv",
+    "command": [
+      "/Users/terryyin/git/lizard/.worktrees/review-pr525-issue524/.venv/bin/python",
+      "/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard.py",
+      "--csv",
+      "/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs"
+    ],
+    "exit": 1,
+    "stdout": "",
+    "stderr": "Error: Fail to parse file '/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/a.js'\nTraceback (most recent call last):\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard.py\", line 97, in <module>\n    sys.exit(main())\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard_core/cli.py\", line 62, in main\n    warning_count = printer(result, options, schema, AllResult)\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard_ext/__init__.py\", line 18, in print_csv\n    csv_output(total_factory(list(results)), options)\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard_core/analysis.py\", line 30, in analyze_files\n    yield from result\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard_core/file_analyzer.py\", line 80, in __call__\n    return self.analyze_source_code(\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard_core/file_analyzer.py\", line 101, in analyze_source_code\n    for _ in reader(tokens, reader):\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard_languages/code_reader.py\", line 152, in __call__\n    state(token)\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard_languages/typescript_states.py\", line 33, in __call__\n    return super().__call__(token, reader)\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard_languages/code_reader.py\", line 49, in __call__\n    if self._state(token):\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard_languages/typescript_states.py\", line 33, in __call__\n    return super().__call__(token, reader)\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard_languages/code_reader.py\", line 49, in __call__\n    if self._state(token):\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard_languages/typescript_states.py\", line 104, in _state_global\n    and self._binding_candidate.in_expression):\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard_languages/javascript_bindings.py\", line 34, in in_expression\n    return self._frames[-1].initializing or bool(self._expression_brackets)\nIndexError: list index out of range\n"
+  },
+  {
+    "label": "reported",
+    "mode": "output",
+    "command": [
+      "/Users/terryyin/git/lizard/.worktrees/review-pr525-issue524/.venv/bin/python",
+      "/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard.py",
+      "-o",
+      "/Users/terryyin/.cache/lizard-pr525-20261101/reported-output.csv",
+      "/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs"
+    ],
+    "exit": 1,
+    "stdout": "",
+    "stderr": "Error: Fail to parse file '/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/a.js'\nTraceback (most recent call last):\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard.py\", line 97, in <module>\n    sys.exit(main())\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard_core/cli.py\", line 56, in main\n    warning_count = printer(result, options, schema, AllResult)\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard_ext/__init__.py\", line 18, in print_csv\n    csv_output(total_factory(list(results)), options)\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard_core/analysis.py\", line 30, in analyze_files\n    yield from result\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard_core/file_analyzer.py\", line 80, in __call__\n    return self.analyze_source_code(\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard_core/file_analyzer.py\", line 101, in analyze_source_code\n    for _ in reader(tokens, reader):\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard_languages/code_reader.py\", line 152, in __call__\n    state(token)\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard_languages/typescript_states.py\", line 33, in __call__\n    return super().__call__(token, reader)\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard_languages/code_reader.py\", line 49, in __call__\n    if self._state(token):\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard_languages/typescript_states.py\", line 33, in __call__\n    return super().__call__(token, reader)\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard_languages/code_reader.py\", line 49, in __call__\n    if self._state(token):\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard_languages/typescript_states.py\", line 104, in _state_global\n    and self._binding_candidate.in_expression):\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard_languages/javascript_bindings.py\", line 34, in in_expression\n    return self._frames[-1].initializing or bool(self._expression_brackets)\nIndexError: list index out of range\n",
+    "file_output": ""
+  },
+  {
+    "label": "reported",
+    "mode": "ns",
+    "command": [
+      "/Users/terryyin/git/lizard/.worktrees/review-pr525-issue524/.venv/bin/python",
+      "/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard.py",
+      "-Ens",
+      "--csv",
+      "/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs"
+    ],
+    "exit": 1,
+    "stdout": "",
+    "stderr": "Error: Fail to parse file '/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/a.js'\nTraceback (most recent call last):\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard.py\", line 97, in <module>\n    sys.exit(main())\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard_core/cli.py\", line 62, in main\n    warning_count = printer(result, options, schema, AllResult)\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard_ext/__init__.py\", line 18, in print_csv\n    csv_output(total_factory(list(results)), options)\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard_core/analysis.py\", line 30, in analyze_files\n    yield from result\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard_core/file_analyzer.py\", line 80, in __call__\n    return self.analyze_source_code(\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard_core/file_analyzer.py\", line 101, in analyze_source_code\n    for _ in reader(tokens, reader):\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard_languages/code_reader.py\", line 152, in __call__\n    state(token)\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard_languages/typescript_states.py\", line 33, in __call__\n    return super().__call__(token, reader)\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard_languages/code_reader.py\", line 49, in __call__\n    if self._state(token):\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard_languages/typescript_states.py\", line 33, in __call__\n    return super().__call__(token, reader)\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard_languages/code_reader.py\", line 49, in __call__\n    if self._state(token):\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard_languages/typescript_states.py\", line 104, in _state_global\n    and self._binding_candidate.in_expression):\n  File \"/Users/terryyin/.cache/lizard-pr525-20261101/reported/lizard_languages/javascript_bindings.py\", line 34, in in_expression\n    return self._frames[-1].initializing or bool(self._expression_brackets)\nIndexError: list index out of range\n"
+  },
+  {
+    "label": "proposal",
+    "mode": "csv",
+    "command": [
+      "/Users/terryyin/git/lizard/.worktrees/review-pr525-issue524/.venv/bin/python",
+      "/Users/terryyin/.cache/lizard-pr525-20261101/proposal/lizard.py",
+      "--csv",
+      "/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs"
+    ],
+    "exit": 0,
+    "stdout": "1,1,4,0,1,\"(anonymous)@1-1@/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/a.js\",\"/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/a.js\",\"(anonymous)\",\"(anonymous)\",1,1\n2,1,6,0,2,\"after@1-2@/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/z.py\",\"/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/z.py\",\"after\",\"after( )\",1,2\n4,2,19,0,4,\"(anonymous)@1-4@/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/b.tsx\",\"/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/b.tsx\",\"(anonymous)\",\"(anonymous)\",1,4\n",
+    "stderr": ""
+  },
+  {
+    "label": "proposal",
+    "mode": "output",
+    "command": [
+      "/Users/terryyin/git/lizard/.worktrees/review-pr525-issue524/.venv/bin/python",
+      "/Users/terryyin/.cache/lizard-pr525-20261101/proposal/lizard.py",
+      "-o",
+      "/Users/terryyin/.cache/lizard-pr525-20261101/proposal-output.csv",
+      "/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": "",
+    "file_output": "1,1,4,0,1,\"(anonymous)@1-1@/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/a.js\",\"/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/a.js\",\"(anonymous)\",\"(anonymous)\",1,1\n2,1,6,0,2,\"after@1-2@/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/z.py\",\"/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/z.py\",\"after\",\"after( )\",1,2\n4,2,19,0,4,\"(anonymous)@1-4@/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/b.tsx\",\"/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/b.tsx\",\"(anonymous)\",\"(anonymous)\",1,4\n"
+  },
+  {
+    "label": "proposal",
+    "mode": "ns",
+    "command": [
+      "/Users/terryyin/git/lizard/.worktrees/review-pr525-issue524/.venv/bin/python",
+      "/Users/terryyin/.cache/lizard-pr525-20261101/proposal/lizard.py",
+      "-Ens",
+      "--csv",
+      "/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs"
+    ],
+    "exit": 0,
+    "stdout": "1,1,4,0,1,\"(anonymous)@1-1@/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/a.js\",\"/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/a.js\",\"(anonymous)\",\"(anonymous)\",1,1,0\n2,1,6,0,2,\"after@1-2@/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/z.py\",\"/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/z.py\",\"after\",\"after( )\",1,2,0\n4,2,19,0,4,\"(anonymous)@1-4@/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/b.tsx\",\"/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/b.tsx\",\"(anonymous)\",\"(anonymous)\",1,4,1\n",
+    "stderr": ""
+  },
+  {
+    "label": "current",
+    "mode": "csv",
+    "command": [
+      "/Users/terryyin/git/lizard/.worktrees/review-pr525-issue524/.venv/bin/python",
+      "/Users/terryyin/git/lizard/.worktrees/review-pr525-issue524/lizard.py",
+      "--csv",
+      "/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs"
+    ],
+    "exit": 0,
+    "stdout": "1,1,10,0,1,\"(anonymous)@1-1@/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/a.js\",\"/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/a.js\",\"(anonymous)\",\"(anonymous)\",1,1\n2,1,6,0,2,\"after@1-2@/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/z.py\",\"/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/z.py\",\"after\",\"after( )\",1,2\n2,1,8,0,2,\"(anonymous)@1-2@/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/b.tsx\",\"/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/b.tsx\",\"(anonymous)\",\"(anonymous)\",1,2\n",
+    "stderr": ""
+  },
+  {
+    "label": "current",
+    "mode": "output",
+    "command": [
+      "/Users/terryyin/git/lizard/.worktrees/review-pr525-issue524/.venv/bin/python",
+      "/Users/terryyin/git/lizard/.worktrees/review-pr525-issue524/lizard.py",
+      "-o",
+      "/Users/terryyin/.cache/lizard-pr525-20261101/current-output.csv",
+      "/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": "",
+    "file_output": "1,1,10,0,1,\"(anonymous)@1-1@/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/a.js\",\"/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/a.js\",\"(anonymous)\",\"(anonymous)\",1,1\n2,1,6,0,2,\"after@1-2@/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/z.py\",\"/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/z.py\",\"after\",\"after( )\",1,2\n2,1,8,0,2,\"(anonymous)@1-2@/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/b.tsx\",\"/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/b.tsx\",\"(anonymous)\",\"(anonymous)\",1,2\n"
+  },
+  {
+    "label": "current",
+    "mode": "ns",
+    "command": [
+      "/Users/terryyin/git/lizard/.worktrees/review-pr525-issue524/.venv/bin/python",
+      "/Users/terryyin/git/lizard/.worktrees/review-pr525-issue524/lizard.py",
+      "-Ens",
+      "--csv",
+      "/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs"
+    ],
+    "exit": 0,
+    "stdout": "1,1,10,0,1,\"(anonymous)@1-1@/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/a.js\",\"/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/a.js\",\"(anonymous)\",\"(anonymous)\",1,1,0\n2,1,6,0,2,\"after@1-2@/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/z.py\",\"/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/z.py\",\"after\",\"after( )\",1,2,0\n2,1,8,0,2,\"(anonymous)@1-2@/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/b.tsx\",\"/Users/terryyin/.cache/lizard-pr525-20261101/cli-inputs/b.tsx\",\"(anonymous)\",\"(anonymous)\",1,2,0\n",
+    "stderr": ""
+  }
+]
