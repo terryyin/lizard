@@ -10,7 +10,7 @@ import {
 // Reads the retained source-only reviewer return that a plan links, and checks
 // that each returned commitment has an owner and, once due, an observation.
 
-function tableCells(line) {
+export function tableCells(line) {
   const cells = [];
   let cell = "";
   const body = line
@@ -101,8 +101,24 @@ export function readSourceReview(source) {
 // Only that exact label links it: another `Source review` label, or an
 // unlinked `source-review.md` beside the plan, is refused rather than read as
 // a plan without a review. Plans with neither keep obligation-only checks.
-const exactLink = /^\*\*Source review:\*\* +\[[^\]]+\]\(([^)]+)\)/;
+export const sourceReviewExactLink =
+  /^\*\*Source review:\*\* +\[[^\]]+\]\(([^)]+)\)/;
 const anyLabel = /^\s*[*_]*\s*source review\s*[*_]*\s*:/i;
+
+export function linkedSourceReviewHrefs(planSource) {
+  return unfencedLines(planSource).flatMap((line) => {
+    const href = sourceReviewExactLink.exec(line)?.[1];
+    return href ? [href] : [];
+  });
+}
+
+// Exactly one exact-label link resolves to the retained return path; otherwise
+// undefined. Callers that need refusal detail use readLinkedSourceReview.
+export function linkedSourceReviewPath(planPath, planSource) {
+  const links = linkedSourceReviewHrefs(planSource);
+  if (links.length !== 1) return undefined;
+  return resolve(dirname(planPath), splitHref(links[0]).path);
+}
 
 async function hasSiblingReview(planPath) {
   const names = await readdir(dirname(planPath)).catch(() => []);
@@ -111,12 +127,9 @@ async function hasSiblingReview(planPath) {
 
 export async function readLinkedSourceReview(planPath, planSource) {
   const lines = unfencedLines(planSource);
-  const links = lines.flatMap((line) => {
-    const href = exactLink.exec(line)?.[1];
-    return href ? [href] : [];
-  });
+  const links = linkedSourceReviewHrefs(planSource);
   const problems = lines
-    .filter((line) => anyLabel.test(line) && !exactLink.test(line))
+    .filter((line) => anyLabel.test(line) && !sourceReviewExactLink.test(line))
     .map((line) => ({
       reason: "unlinked-source-review",
       line,
@@ -139,8 +152,9 @@ export async function readLinkedSourceReview(planPath, planSource) {
     };
   let review;
   try {
-    const path = resolve(dirname(planPath), splitHref(links[0]).path);
-    review = readSourceReview(await readFile(path, "utf8"));
+    review = readSourceReview(
+      await readFile(linkedSourceReviewPath(planPath, planSource), "utf8"),
+    );
   } catch (error) {
     review = unreadable(error.message);
   }

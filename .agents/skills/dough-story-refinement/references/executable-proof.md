@@ -32,7 +32,11 @@ continuations, and recovery paths that reach it, then inspect their scenarios
 and setup. Moving an operation out of a conditional path can make its resources
 necessary for callers that previously bypassed it; include scenarios that omit
 those resources. A helper check or setup supplying the newly required resource
-does not prove those callers still work.
+does not prove those callers still work. For shared layout, input composition,
+or read infrastructure, the consumers are the journeys that pass through it
+under the conditions it changes: for example short, narrow or zoomed views with
+focus return, exact composed input and keyboard order, or response consumers
+with caching and refusal contracts, not only tests naming the changed component.
 
 For removals, renames, or relocations of symbols or modules, or changes to callable
 contracts, search production code, tests, and fixtures for old symbol names,
@@ -64,7 +68,10 @@ focused proof. For unresolved domain purpose, ask precisely about that consumer'
 requirement and stop its dependent obligation until answered rather than guessing
 policy.
 Discovering a failing assertion does not authorize weakening its promise; align
-behavior and proof under the project's existing failure policy.
+behavior and proof under the project's existing failure policy. A plan may
+record that a known failure predates the story; that attribution is diagnosis
+evidence, not an exclusion from proof or repair, and the plan carries the
+project's policy rather than an instruction to report the failure and continue.
 
 For artifact-preservation promises, identify installation, physical store, and
 predecessor using project-supplied identities/scope. Same-store continuity proves no
@@ -120,6 +127,18 @@ step phrases or exported names that reach the effect as `--term` and rerun
 until the journeys and callers using it are listed. Give every listed consumer
 a disposition: `run`, `reused`, or `excluded: <reason the effect does not reach
 its boundary>`. A record with every kind empty keeps the slice's focused proof.
+
+## Accept a repair on its affected behavior
+
+A repair, including a CI repair, is accepted on the diagnosed cause's affected
+behavior, not on the line that failed. Cover every failure the diagnosis lists,
+then replay the whole journey the cause reaches, with the transitions
+before and after the failing step (for example opening, operating, dismissing,
+focus return and navigation), plus the consumers of the repair's own changed
+effect. Several failures in one surface need one combined check, not a
+publication per assertion. Removing or loosening the only assertion that
+distinguishes a promise leaves that promise unproved: restore an equivalent
+observation, or report the promise incomplete.
 
 ## Plan and reuse developer-operated observation
 

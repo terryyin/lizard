@@ -181,16 +181,16 @@ await new Promise((resolve, reject) => {
   server.listen(socketPath, resolve);
 });
 
-// Ends every call no later requester could reach, then -- once each `gh` it
-// ran is gone, or two seconds on -- this process. Its record stays, so no
-// later owner takes its generation.
+// Ends every call no later requester could reach, then this process once each
+// `gh` it ran is gone or two seconds on. Its record stays: no later owner takes
+// its generation. Its socket goes first: an unwelcomed consumer finds it ended.
 function end() {
   if (ending) return;
   ending = true;
+  rmSync(socketPath, { force: true });
   for (const wait of requesters) wait.abort(left);
   server.close();
   for (const consumer of consumers) consumer.destroy();
-  rmSync(socketPath, { force: true });
   const lastAt = Date.now() + 2_000;
   setInterval(() => {
     if (calls.running === 0 || Date.now() > lastAt) process.exit(0);

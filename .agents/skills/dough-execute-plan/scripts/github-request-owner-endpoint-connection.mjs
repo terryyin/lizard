@@ -1,7 +1,7 @@
 // Connections to this user's private GitHub request owner endpoint: whether
 // its socket answers, whether its owner admits this caller, and the host/login
 // scope its directory names. Wire encoding owns what is said over the socket.
-import { lstatSync } from "node:fs";
+import { existsSync, lstatSync } from "node:fs";
 import { connect } from "node:net";
 import { basename, dirname } from "node:path";
 import { OwnerUnavailable } from "./github-request-owner-failure.mjs";
@@ -35,7 +35,9 @@ function knownOwner(pid, socket) {
 // nothing answers there. Throws when it is another user's or refuses this
 // caller. `onMessage` hears what it says after its welcome. Startup alone treats
 // an unanswered greeting as absence for fenced replacement. Readers recover
-// only a verified installed owner; other endpoints retain the diagnostic
+// only a verified installed owner, or one that ended before its welcome: an
+// ending owner removes its socket before it closes a connection, even while
+// its process is already gone. Other endpoints retain the diagnostic
 // failure. An actual refusal always remains a refusal.
 export function greeted(
   { socket: path, token, pid },
@@ -53,9 +55,11 @@ export function greeted(
       return;
     }
     const socket = connect(path);
+    const ended = () => !existsSync(path);
     const gone = () => {
       clearTimeout(limit);
-      if (unansweredIsAbsent || knownOwner(pid, path)) resolve(undefined);
+      if (unansweredIsAbsent || ended() || knownOwner(pid, path))
+        resolve(undefined);
       else reject(new OwnerUnavailable("connection-failed"));
     };
     const limit = setTimeout(() => {
@@ -68,7 +72,7 @@ export function greeted(
     socket.on("error", (error) => {
       socket.off("close", gone);
       clearTimeout(limit);
-      if (error.code === "ENOENT" || error.code === "ECONNREFUSED")
+      if (error.code === "ENOENT" || error.code === "ECONNREFUSED" || ended())
         resolve(undefined);
       else reject(new OwnerUnavailable("connection-failed"));
     });

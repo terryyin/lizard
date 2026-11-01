@@ -21,6 +21,8 @@ Use the task's project. Resolve the selected local test command and scope,
 test locations, runtime/service setup, applicable test and architectural rules,
 and plan conventions from that project. Name genuinely missing context and
 stop only its dependent step; do not invent paths, commands, or a test taxonomy.
+When this project records [Cucumber proof](references/cucumber-proof.md), keep
+the proof recorder in every Cucumber profile an experiment changes.
 
 Default mode profiles, plans, experiments, and re-profiles. A profile-only request
 ends with findings and records them in the

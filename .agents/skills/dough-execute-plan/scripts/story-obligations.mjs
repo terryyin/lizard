@@ -1,6 +1,5 @@
 import { readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
-import { parseArgs } from "node:util";
 import { readHome } from "../../dough-product-backlog/scripts/product-backlog-home-reader.mjs";
 import { splitHref } from "../../dough-product-backlog/scripts/product-backlog-identity.mjs";
 import { readPlanSlices } from "../../dough-product-backlog/scripts/product-backlog-plan-reader.mjs";
@@ -14,8 +13,13 @@ import {
   obligationCommitments,
   readLinkedSourceReview,
 } from "./story-obligation-source-review.mjs";
+import {
+  digest,
+  recordStoryCommitment,
+} from "./story-obligation-source-review-record.mjs";
 
 export { readStoryObligations } from "./story-obligation-reader.mjs";
+export { digest, recordStoryCommitment };
 
 async function readStoryText(planPath, sourceHref) {
   const storySource = await readFile(
@@ -204,46 +208,11 @@ export async function listStoryObligations(planPath, slice) {
 }
 
 if (isDirectCliEntry(import.meta.url, process.argv[1])) {
-  let result;
-  try {
-    const { values, positionals } = parseArgs({
-      options: {
-        plan: { type: "string" },
-        slice: { type: "string" },
-        completion: { type: "boolean" },
-        "planned-completion": { type: "boolean" },
-      },
-      allowPositionals: true,
-    });
-    if (
-      positionals.length !== 1 ||
-      !["check", "list"].includes(positionals[0]) ||
-      !values.plan ||
-      (values.slice !== undefined && !/^[1-9]\d*$/.test(values.slice)) ||
-      (values["planned-completion"] &&
-        (values.slice !== undefined || values.completion)) ||
-      (positionals[0] === "list" &&
-        (!values.slice || values.completion || values["planned-completion"]))
-    ) {
-      throw new Error(
-        "usage: story-obligations.mjs check --plan <PLAN.md> [--slice <N>] [--completion] | --planned-completion; or list --plan <PLAN.md> --slice <N>",
-      );
-    }
-    const slice = values.slice === undefined ? undefined : Number(values.slice);
-    result =
-      positionals[0] === "list"
-        ? await listStoryObligations(resolve(values.plan), slice)
-        : await checkStoryObligations(resolve(values.plan), {
-            slice,
-            completion: values.completion,
-            plannedCompletion: values["planned-completion"],
-          });
-  } catch (error) {
-    result = {
-      ok: false,
-      problems: [{ reason: "invalid-input", message: error.message }],
-    };
-  }
-  process.stdout.write(`${JSON.stringify(result)}\n`);
-  if (!result.ok) process.exitCode = 1;
+  const { runStoryObligationsCli } =
+    await import("./story-obligations-cli.mjs");
+  await runStoryObligationsCli({
+    checkStoryObligations,
+    listStoryObligations,
+    recordStoryCommitment,
+  });
 }
