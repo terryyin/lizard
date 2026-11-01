@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "agent": "Shunka-chan",
-  "email": "shunka-chan@example.org",
-  "identity": "SEED-022#review-pr525-issue524",
-  "mode": "story-branch",
-  "branch": "codex/review-pr525-issue524",
-  "host": "codex"
-}

@@ -143,10 +143,14 @@ GitHub actions have not been performed as part of this review.
 
 ## Replay evidence
 
-At the before-cleanup revision, this directory contains `github-packet.json`,
+At [before-cleanup 5f7d58fb](https://github.com/terryyin/lizard/tree/5f7d58fbad166bf05e1510162831bbc03cbabd96/docs/reviews/pr525-issue524-20261101),
+this directory contains `github-packet.json`,
 `final-state.json`, `reproduce.py`, six default/NS result files, `cli.json`,
 `workload-manifest.json`, both performance reports and full pytest/make logs.
 Run `reproduce.py --checkout <snapshot> --out <new-result.json>` in the prepared
 Nix checkout, optionally adding `--extension ns`. Snapshot roots are the exact
 `git archive` exports of the reported parent and proposal above; current uses
-the owned execution checkout. Recoverable Git coordinates are added at closure.
+the owned execution checkout. Recover any raw file with
+`git show 5f7d58fbad166bf05e1510162831bbc03cbabd96:docs/reviews/pr525-issue524-20261101/<file>`.
+The current snapshot retains this disposition; the full review inputs and
+diagnostics remain recoverable at that revision.
