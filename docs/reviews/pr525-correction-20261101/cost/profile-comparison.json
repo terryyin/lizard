@@ -1,0 +1,162 @@
+{
+  "current": {
+    "files": 131,
+    "repeats": 40,
+    "total_seconds": 1.5481098789999996,
+    "bindings": {
+      "in_expression": {
+        "calls": 7280,
+        "self_seconds": 0.001378468,
+        "cumulative_seconds": 0.001378468
+      },
+      "at_root": {
+        "calls": 9560,
+        "self_seconds": 0.0017012560000000002,
+        "cumulative_seconds": 0.0021142220000000002
+      },
+      "read_token": {
+        "calls": 161000,
+        "self_seconds": 0.09208932700000001,
+        "cumulative_seconds": 0.133332411
+      },
+      "_read_parameter": {
+        "calls": 67560,
+        "self_seconds": 0.020736159,
+        "cumulative_seconds": 0.029039542
+      },
+      "_read_binding_candidate": {
+        "calls": 21520,
+        "self_seconds": 0.021523412000000002,
+        "cumulative_seconds": 0.088685779
+      }
+    }
+  },
+  "pre-edit": {
+    "files": 131,
+    "repeats": 40,
+    "total_seconds": 1.6174527329999997,
+    "bindings": {
+      "in_expression": {
+        "calls": 6720,
+        "self_seconds": 0.001835388,
+        "cumulative_seconds": 0.001835388
+      },
+      "at_root": {
+        "calls": 10120,
+        "self_seconds": 0.0018210090000000002,
+        "cumulative_seconds": 0.002271106
+      },
+      "read_token": {
+        "calls": 168080,
+        "self_seconds": 0.101906907,
+        "cumulative_seconds": 0.146607714
+      },
+      "_read_parameter": {
+        "calls": 71120,
+        "self_seconds": 0.022535683,
+        "cumulative_seconds": 0.030890094000000003
+      },
+      "_read_binding_candidate": {
+        "calls": 22960,
+        "self_seconds": 0.02654352,
+        "cumulative_seconds": 0.09584155400000001
+      }
+    }
+  },
+  "rejected-specialization": {
+    "files": 131,
+    "repeats": 40,
+    "total_seconds": 1.4263654639999996,
+    "bindings": {
+      "in_expression": {
+        "calls": 6720,
+        "self_seconds": 0.0016733020000000002,
+        "cumulative_seconds": 0.0016733020000000002
+      },
+      "at_root": {
+        "calls": 40,
+        "self_seconds": 1.1125000000000001e-05,
+        "cumulative_seconds": 1.3085000000000001e-05
+      },
+      "read_token": {
+        "calls": 168080,
+        "self_seconds": 0.07686986500000001,
+        "cumulative_seconds": 0.088435467
+      },
+      "_read_parameter": {
+        "calls": 1680,
+        "self_seconds": 0.0008441690000000001,
+        "cumulative_seconds": 0.0016203010000000002
+      },
+      "_read_binding_candidate": {
+        "calls": 22960,
+        "self_seconds": 0.020697077,
+        "cumulative_seconds": 0.084643169
+      }
+    }
+  },
+  "restored-specialization": {
+    "files": 131,
+    "repeats": 40,
+    "total_seconds": 1.449564335,
+    "bindings": {
+      "in_expression": {
+        "calls": 6720,
+        "self_seconds": 0.0016993260000000001,
+        "cumulative_seconds": 0.0016993260000000001
+      },
+      "at_root": {
+        "calls": 40,
+        "self_seconds": 1.2838000000000001e-05,
+        "cumulative_seconds": 1.4587000000000001e-05
+      },
+      "read_token": {
+        "calls": 168080,
+        "self_seconds": 0.07724170000000001,
+        "cumulative_seconds": 0.088942191
+      },
+      "_read_parameter": {
+        "calls": 1800,
+        "self_seconds": 0.000950862,
+        "cumulative_seconds": 0.001790308
+      },
+      "_read_binding_candidate": {
+        "calls": 22960,
+        "self_seconds": 0.019240720000000003,
+        "cumulative_seconds": 0.086420179
+      }
+    }
+  },
+  "post-edit": {
+    "files": 131,
+    "repeats": 40,
+    "total_seconds": 1.3832405220000001,
+    "bindings": {
+      "in_expression": {
+        "calls": 6720,
+        "self_seconds": 0.001681821,
+        "cumulative_seconds": 0.001681821
+      },
+      "at_root": {
+        "calls": 40,
+        "self_seconds": 1.0295e-05,
+        "cumulative_seconds": 1.2123e-05
+      },
+      "read_token": {
+        "calls": 168080,
+        "self_seconds": 0.073727995,
+        "cumulative_seconds": 0.08488780700000001
+      },
+      "_read_parameter": {
+        "calls": 1800,
+        "self_seconds": 0.000876322,
+        "cumulative_seconds": 0.001667042
+      },
+      "_read_binding_candidate": {
+        "calls": 22960,
+        "self_seconds": 0.018276919000000003,
+        "cumulative_seconds": 0.082104537
+      }
+    }
+  }
+}

@@ -1,0 +1,3 @@
+warning: Git tree '/Users/terryyin/git/lizard/.worktrees/correct-pr525-binding-boundaries' is dirty
+..........................................                               [100%]
+42 passed in 2.81s

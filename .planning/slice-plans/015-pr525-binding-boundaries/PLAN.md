@@ -31,10 +31,15 @@ introduced regressions require an explicit source-compatible disposition.
   contributor publication, exact-head merge and one thank-you. No historical
   Fabio fifteen-minute correction cutoff applies. Existing planning authority
   permits bounded replanning within this outcome.
-- PFE: `JavaScriptBindings` already owns binding frames/defaults/formals;
-  `TypeScriptStates` owns parser dispatch; object/function/signature mixins
-  own their syntax. Extend these owners. Do not add another bracket counter,
-  whole-stream buffering, per-token wrapper or PR-specific switch.
+- PFE: `JavaScriptBindings` owns actual/provisional binding frames, defaults and
+  formals; `TypeScriptStates` and its nested syntax readers own runtime group
+  dispatch. Existing `parameter_group` distinguishes groups that may be arrow
+  formals from proven calls. Attempt 1 showed that giving proven call groups a
+  full binding tracker is unnecessary and too costly (G7). Reuse the ordinary
+  nested syntax reader for those groups, with an explicit call-group context
+  for its enclosing comma if needed; retain binding tracking where actual
+  bindings/signatures remain possible. This is a local existing-owner change,
+  not another bracket counter, buffering layer, per-token wrapper or PR switch.
 - ADR-0001 (`docs/adrs/0001-ubiquitous-language-accepted.md`) preserves function,
   CCN, NLOC, token and parameter meanings. ADR-0000 governs architectural
   decisions; this local reader correction proposes no exception or new boundary.
@@ -54,6 +59,16 @@ introduced regressions require an explicit source-compatible disposition.
   before timing. Other work is unknown and must not be terminated. Coordinator
   owns final performance runs; delegates must not time concurrently. Reconsider
   on contention, changed production/inputs, failed proof or longer commands.
+- Before the first paired measurement, qualification adds the newly traced
+  known-call/object argument contexts to a separate complete corpus (171 files)
+  and original-parent-safe corpus (85 files). The profiled 131/45/100 sets stay
+  immutable. Added sources are the same five ordinary/member/constructor/optional
+  callees and object/statement contexts already observed by the semantic tests,
+  for JS/TS/TSX/Vue. `qualification-inputs.json` freezes this supplement;
+  no timing result motivated its selection. Broad CLI remains the same 100
+  original source files. API and NS use 1.2-second calibration; broad CLI uses
+  4-second calibration prospectively for process/discovery noise. Every workload
+  still uses 20 alternating pairs and the strict 95% upper <3% criterion.
 
 ## Decisive premises and proof ownership
 
@@ -70,11 +85,27 @@ introduced regressions require an explicit source-compatible disposition.
   runtime and final local checks. Slice 3 owns history-preserving publication,
   hosted head/base checks, guarded merge and acknowledgement.
 
+## CI observation and recovery
+
+On resume, the old code-mode host generation was stale. Exact coordinator/root
+record search found no matching observer JSON and `ps` found no matching
+`ci-mailbox.mjs` process; the old stream is absent. The newly armed observer is
+owned by coordinator `pr525-correct-resume`, GitHub Actions `python-app.yml`
+(`Python application`), target `terryyin/lizard:codex/correct-pr525-binding-boundaries`.
+Mailbox `/tmp/dough-ci-501/watch-Sae8bZ`, PID `77130`, session `60875`, yielded
+cell `g3:15`. Runtime belongs to this exact execution checkout. Reuse it for
+managed delivery; recover and close it before replacing or retiring the checkout.
+Admission `db54a2b` and preparation `1ba5cb5` were accepted on trunk before this
+branch observer and have unobserved trunk coverage; never register them as if
+they were this observer's branch publications. Slice 1 was subsequently delivered
+on this execution branch at `4a2081598ac8d70debafe64d672d65fd05857944` and registered
+on this observer. Exact handles are operational recovery facts, not CI success.
+
 ## Ordered slices
 
 ### 1. Keep nested expression brackets with their binding reader
 Type: Behavior
-Status: planned
+Status: done
 Behavior: Replayed parser tokens do not consume binding brackets twice;
 subscripts and template substitutions do not end their enclosing callbacks;
 expression-arrow separators preserve subsequent object members and functions.
@@ -93,7 +124,7 @@ a new failure. Independent refactor precedes delivery.
 
 ### 2. Remove unjustified binding-dispatch cost and qualify the candidate
 Type: Structure
-Status: planned
+Status: done
 Structure: Profile the corrected aggregate change and simplify its actual hot
 paths within the existing reader/binding owners, preserving slice 1's external
 behavior. Avoid the original proposal's repeated ended-property overhead when
@@ -133,6 +164,57 @@ with behavior before performance and exact-head delivery last. No remaining
 slice-specific planning concern; runtime cost is measured work owned by slice 2,
 not an assumed pass. No product-boundary change or independent second outcome.
 
+## Story obligations
+
+### G1. Generic-call comma retains the expression arrow
+Reported: slice 1 — "global named expression arrow `const f = (x) => foo<A,\n B>(x)` ends at generic comma after generalizing comma termination."
+Story clause: "retain current arrow, formal-parameter, signature, template, extension and CLI behavior."
+Disposition: proved by slice 1: `testJavaScriptBindingBoundaries.py::test_global_arrow_generic_call_keeps_continued_expression`, the existing generic continuation test, and implementation/affected-final.txt preserve lines 1–2 on TS/TSX/Vue after the binding/object comma restriction. The coordinator inspected the source and terminal 897-test pass.
+
+### G2. Labeled block arrow remains a pre-existing limitation
+Reported: slice 1 — "label-body arrow omission in seven suffixes"
+Story clause: "Pre-existing label and deep-object limitations are not new promises"
+Disposition: excluded "Pre-existing label and deep-object limitations are not new promises"
+
+### G3. Typed class-field false positive is unchanged
+Reported: slice 1 — "typed class-field phantom function `d` in TS/TSX/Vue"
+Story clause: "retain current arrow, formal-parameter, signature, template, extension and CLI behavior."
+Disposition: proved by slice 1: implementation/current.json and correction.json class-type rows preserve the same pre-existing class-field output; this proves compatibility at that unrelated discovery path, not correctness of class-field function discovery. No new loss is attributed to the binding correction.
+
+### G4. Anonymous generic-call precision is unchanged
+Reported: slice 1 — "anonymous ordinary/member/constructor call arrows with multiline generic arguments still end at line 1 in both revisions."
+Story clause: "retain current arrow, formal-parameter, signature, template, extension and CLI behavior."
+Disposition: proved by slice 1: implementation/generic-controls.json compares frozen-current and corrected TS/TSX results through analyze_file and shows identical pre-existing anonymous-generic spans, while the named/global case keeps lines 1–2. This proves preservation, not a generic-call accuracy improvement; the limitation remains honestly reported and is not used as proof of corrected generic parsing.
+
+### G5. Known call groups capture provisional formals unnecessarily
+Reported: slice 2 — "Candidate _read_parameter71,120 vs current67,560 calls"
+Story clause: "profile and remove unjustified runtime cost"
+Disposition: proved by slice 2: cost/pre-edit-profile.json and post-edit-profile.json retain the first removed-capture experiment. G7 exposed the remaining full-tracker cost. The final cost-return/post-edit-arguments-profile.json and profile-comparison.json instead show ordinary syntax readers removing 35,200 binding-token reads and 3,200 candidates on the immutable forty-source workload; actual/provisional formals retain their existing binding owner. cost-return/affected-final.txt and consumers-final.txt pass on those exact bytes. These profiles establish removed work, not paired qualification.
+
+### G6. Ternary groups retain their formal parameters
+Reported: slice 2 — "over-specialized the differing-function-name branch to track_parameters=False; existing ternary arrows also reach it."
+Story clause: "retain current arrow, formal-parameter, signature, template, extension and CLI behavior."
+Disposition: proved by slice 2: existing parameter_group eligibility routes every dispatch/object group through the shared JavaScriptFunctionsMixin helper; cost-return/affected-final.txt passes 897 tests and consumers-final.txt passes 499. The coordinator inspected the typed/ternary/formal assertions and final-correspondence.json. Rejected specialization patch, profiles and failed assertions remain in cost/ as evidence; no assertion was weakened.
+
+### G7. Proven call arguments exceed the slowdown bound
+Reported: slice 2 — "arguments-api slowdown 5.554442857168002%; paired 95% interval [5.0636041944036325, 6.047574631754602]%"
+Story clause: "Each affected API/parameter consumer and broad CLI workload has a paired 95% upper slowdown bound strictly below 3% against frozen current master."
+Disposition: proved by slice 2: measurements/attempt2/arguments-api.json and arguments-ns.json pass on accepted-candidate.json bytes with upper bounds -0.535% and -0.961%. All eight required comparisons pass; the worst upper bound is +0.526% (parent CLI). The coordinator verified all 107 runtime hashes, stable observations, twenty pairs and minimum measured batch >=1 second. Failed attempt1 is retained unchanged.
+
 ## Learnings
 
 None beyond the settled premises above.
+
+## Accepted slice 2 proof
+
+`docs/reviews/pr525-correction-20261101/README.md` records the complete final
+qualification. `cost-return/` establishes removed call-tracker work and fresh
+897/499/42 semantic/consumer passes. `refactor3/README.md` is the independent
+final no-edit refactor return, with `## REFACTOR COMPLETE` and all production
+hashes unchanged. `verification2/pytest.json` and `make.json` each exit 0 with
+2427 passed / 7 existing skips on the final bytes. The eight attempt2 comparisons
+all pass; accepted-candidate.json pins 107 runtime and 174 test/fixture files.
+Original frozen corpora, archives, harnesses, earlier profiles, rejected changes
+and unfavorable attempt1 remain recoverable. No production edit followed the
+accepted profile/refactor/full-check/paired observations. All final Nix entries
+and heavy runs were serial; unrelated host work was preserved.

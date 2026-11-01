@@ -44,7 +44,8 @@ class JavaScriptBindings:
 
     @property
     def in_expression(self):
-        return self._frames[-1].initializing or bool(self._expression_brackets)
+        return bool(self._frames) and (
+            self._frames[-1].initializing or bool(self._expression_brackets))
 
     @property
     def at_start(self):
@@ -83,10 +84,10 @@ class JavaScriptBindings:
             self._frames.pop()
         elif token == ',':
             frame.initializing = False
-        elif frame.initializing or token == '(' or (
+        elif frame.initializing or token in ('(', '${') or (
                 token == '[' and frame.closing == '}'
                 and self.previous in ('', '{', ',')):
-            # Computed object keys and parentheses contain expressions.
+            # Computed keys, parentheses and template substitutions are expressions.
             if token in self.BRACKETS:
                 self._expression_brackets.append(self.BRACKETS[token])
         elif token in ('[', '{'):

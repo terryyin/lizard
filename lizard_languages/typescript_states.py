@@ -33,6 +33,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         self._condition_kind = None
         self._ternary_depth = 0
         self._expression_body = False  # An open expression-bodied arrow
+        self._call_group = False  # Argument commas end expression arrows
         self._open_groups = 0  # "(" of a group read as parameters
 
     def __call__(self, token, reader=None):
@@ -42,9 +43,15 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         # No mixin defines __call__; avoid super() once per token.
         return CodeStateMachine.__call__(self, token, reader)
 
+    def next(self, state, token=None):
+        self._state = state
+        if token is not None:
+            return self._replay_token(token)
+        return None
+
     def _replay_token(self, token):
-        """Process a token saved by a nested syntax reader through dispatch."""
-        return self(token)
+        """Dispatch a token this state's binding candidate has already read."""
+        return CodeStateMachine.__call__(self, token)
 
     def _end_statement(self):
         self.function_name = ''
@@ -132,27 +139,20 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                 self.function_name = name
         elif token == "(":
             self._parenthesis_prefix = self._prev_token
-            # Check if this is a method call or constructor
-            if self._prev_token == '.' or self._prev_token == 'new':
-                # This is a method call or constructor, not a function definition
-                self.sub_state(
-                    self.__class__(self.context))
-            elif (self._binding_candidate
-                  and self._binding_candidate.in_expression):
-                self._read_binding_candidate(')')
-            elif self.function_name:
-                # A differing identifier before "(" makes this a call;
-                # '=' or 'async' instead introduces the arrow's parameters.
-                if (self.last_tokens != self.function_name
-                        and self._prev_token not in ('=', 'async', '>')):
-                    self.function_name = ''
-                    self._read_binding_candidate(')')
-                else:
-                    if not self.started_function:
-                        self._function(self.function_name)
-                    self.next(self._function, token)
+            # Calls and initializer groups keep their nested syntax reader.
+            if (self._prev_token in ('.', 'new')
+                    or self._binding_candidate
+                    and self._binding_candidate.in_expression):
+                self._read_parenthesis_group()
+            elif (self.function_name
+                  and (self.last_tokens == self.function_name
+                       or self._prev_token in ('=', 'async', '>'))):
+                if not self.started_function:
+                    self._function(self.function_name)
+                self.next(self._function, token)
             else:
-                self._read_binding_candidate(')')
+                self.function_name = ''
+                self._read_parenthesis_group()
             self._parenthesis_group = (
                 self._state if isinstance(self._state, self.__class__) else None)
         elif token == '[' and self._prev_token not in ('.', ')', ']', '}'):
@@ -174,13 +174,16 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         elif token == ')' and self._open_groups:
             self._end_grouped_function_expression()
         elif token in ('}', ')') or (
-                token == ']' and self._binding_candidate):
+                token == ']' and self._binding_candidate
+                and not self._binding_candidate._frames):
             self._empty_parenthesis = self.last_token is None
             self.statemachine_return()
         elif token == ';' or (
-                # An object member's arrow ends at its comma, which it owns
-                # like a semicolon; members read `<...>` as generics.
-                token == ',' and self._expression_body and self.as_object
+                # A binding/object/call reader owns an arrow's enclosing comma.
+                # Global expression arrows retain commas in generic calls.
+                token == ',' and self._expression_body
+                and (self.as_object or self._binding_candidate
+                     or self._call_group)
         ) or (
                 # After an argument/declarator/generic comma, keep ending
                 # expression arrows here, at the next line's first token.

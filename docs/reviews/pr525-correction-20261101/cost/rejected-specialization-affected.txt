@@ -1,0 +1,143 @@
+warning: Git tree '/Users/terryyin/git/lizard/.worktrees/correct-pr525-binding-boundaries' is dirty
+..................................................................FF.... [  7%]
+........................................................................ [ 15%]
+...........................................FFF.......................... [ 23%]
+........................................................................ [ 31%]
+.......................F................................................ [ 39%]
+........................................................................ [ 47%]
+........................................................................ [ 55%]
+....................................................................s.s. [ 63%]
+s....................................................................... [ 71%]
+..................s..................................................... [ 79%]
+.........s.............................................................. [ 87%]
+........................................................................ [ 95%]
+......................................                                   [100%]
+=================================== FAILURES ===================================
+________________________ test_reported_arrow_forms[ts] _________________________
+
+extension = 'ts'
+
+    @pytest.mark.parametrize('extension', ['ts', 'tsx'])
+    def test_reported_arrow_forms(extension):
+        result = functions(
+            'const total = list.reduce((sum, item) => sum + item.price, 0);\n'
+            'const names = list.map(item => item.name);\n'
+            'const pick = flag ? (a, b) => a : null;\n'
+            'const sizes = list.map((x: Item, i: number): number => x.size * i);',
+            extension)
+>       assert [(f.name, f.parameter_count, f.parameters) for f in result] == [
+            ('(anonymous)', 2, ['sum', 'item']),
+            ('(anonymous)', 1, ['item']),
+            ('(anonymous)', 2, ['a', 'b']),
+            ('(anonymous)', 2, ['x', 'i'])]
+E       AssertionError: assert [('(anonymous..., ['x', 'i'])] == [('(anonymous..., ['x', 'i'])]
+E
+E         At index 2 diff: ('(anonymous)', 0, []) != ('(anonymous)', 2, ['a', 'b'])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptArrowParameters.py:55: AssertionError
+________________________ test_reported_arrow_forms[tsx] ________________________
+
+extension = 'tsx'
+
+    @pytest.mark.parametrize('extension', ['ts', 'tsx'])
+    def test_reported_arrow_forms(extension):
+        result = functions(
+            'const total = list.reduce((sum, item) => sum + item.price, 0);\n'
+            'const names = list.map(item => item.name);\n'
+            'const pick = flag ? (a, b) => a : null;\n'
+            'const sizes = list.map((x: Item, i: number): number => x.size * i);',
+            extension)
+>       assert [(f.name, f.parameter_count, f.parameters) for f in result] == [
+            ('(anonymous)', 2, ['sum', 'item']),
+            ('(anonymous)', 1, ['item']),
+            ('(anonymous)', 2, ['a', 'b']),
+            ('(anonymous)', 2, ['x', 'i'])]
+E       AssertionError: assert [('(anonymous..., ['x', 'i'])] == [('(anonymous..., ['x', 'i'])]
+E
+E         At index 2 diff: ('(anonymous)', 0, []) != ('(anonymous)', 2, ['a', 'b'])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptArrowParameters.py:55: AssertionError
+_______ test_typed_generic_and_ternary_arrows_keep_signature_owners[ts] ________
+
+suffix = 'ts'
+
+    @pytest.mark.parametrize('suffix', ('ts', 'tsx', 'vue'))
+    def test_typed_generic_and_ternary_arrows_keep_signature_owners(suffix):
+        source = ('h(<T,>(x: T, tail: T): T => x, {id: (y: number): number => y});\n'
+                  'const f = ok ? (x): number => x : (y): number => y;\n'
+                  'function after(z: number) { return z ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('(anonymous)', 1, 1, 1, ['x', 'tail']), ('id', 1, 1, 1, ['y']),
+            ('(anonymous)', 1, 2, 2, ['x']), ('(anonymous)', 1, 2, 2, ['y']),
+            ('after', 2, 3, 3, ['z'])]
+E       AssertionError: assert [('(anonymous... 3, 3, ['z'])] == [('(anonymous... 3, 3, ['z'])]
+E
+E         At index 2 diff: ('(anonymous)', 1, 2, 2, []) != ('(anonymous)', 1, 2, 2, ['x'])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:94: AssertionError
+_______ test_typed_generic_and_ternary_arrows_keep_signature_owners[tsx] _______
+
+suffix = 'tsx'
+
+    @pytest.mark.parametrize('suffix', ('ts', 'tsx', 'vue'))
+    def test_typed_generic_and_ternary_arrows_keep_signature_owners(suffix):
+        source = ('h(<T,>(x: T, tail: T): T => x, {id: (y: number): number => y});\n'
+                  'const f = ok ? (x): number => x : (y): number => y;\n'
+                  'function after(z: number) { return z ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('(anonymous)', 1, 1, 1, ['x', 'tail']), ('id', 1, 1, 1, ['y']),
+            ('(anonymous)', 1, 2, 2, ['x']), ('(anonymous)', 1, 2, 2, ['y']),
+            ('after', 2, 3, 3, ['z'])]
+E       AssertionError: assert [('(anonymous... 3, 3, ['z'])] == [('(anonymous... 3, 3, ['z'])]
+E
+E         At index 2 diff: ('(anonymous)', 1, 2, 2, []) != ('(anonymous)', 1, 2, 2, ['x'])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:94: AssertionError
+_______ test_typed_generic_and_ternary_arrows_keep_signature_owners[vue] _______
+
+suffix = 'vue'
+
+    @pytest.mark.parametrize('suffix', ('ts', 'tsx', 'vue'))
+    def test_typed_generic_and_ternary_arrows_keep_signature_owners(suffix):
+        source = ('h(<T,>(x: T, tail: T): T => x, {id: (y: number): number => y});\n'
+                  'const f = ok ? (x): number => x : (y): number => y;\n'
+                  'function after(z: number) { return z ? 1 : 0; }\n')
+>       assert summaries(functions(source, suffix)) == [
+            ('(anonymous)', 1, 1, 1, ['x', 'tail']), ('id', 1, 1, 1, ['y']),
+            ('(anonymous)', 1, 2, 2, ['x']), ('(anonymous)', 1, 2, 2, ['y']),
+            ('after', 2, 3, 3, ['z'])]
+E       AssertionError: assert [('(anonymous... 3, 3, ['z'])] == [('(anonymous... 3, 3, ['z'])]
+E
+E         At index 2 diff: ('(anonymous)', 1, 2, 2, []) != ('(anonymous)', 1, 2, 2, ['x'])
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptBindingBoundaries.py:94: AssertionError
+___________ test_nested_and_ternary_defaults_keep_complexity_owners ____________
+
+    def test_nested_and_ternary_defaults_keep_complexity_owners():
+        result = functions(
+            'run(({key: renamed = flag ? 1 : 2}, tail = fallback || 0) => '
+            '{ return tail; });\n'
+            'function outer(flag) { const a = flag ? '
+            '(x = fallback || 0, y) => { return x && y; } : null; return a; }')
+>       assert [(f.name, f.parameters, f.cyclomatic_complexity) for f in result] == [
+            ('(anonymous)', ['renamed', 'tail'], 5),
+            ('(anonymous)', ['x', 'y'], 4), ('outer', ['flag'], 2)]
+E       AssertionError: assert [('(anonymous... ['flag'], 2)] == [('(anonymous... ['flag'], 2)]
+E
+E         At index 1 diff: ('(anonymous)', [], 4) != ('(anonymous)', ['x', 'y'], 4)
+E         Use -v to get more diff
+
+test/test_languages/testJavaScriptFormalSlots.py:82: AssertionError
+=========================== short test summary info ============================
+FAILED test/test_languages/testJavaScriptArrowParameters.py::test_reported_arrow_forms[ts]
+FAILED test/test_languages/testJavaScriptArrowParameters.py::test_reported_arrow_forms[tsx]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_typed_generic_and_ternary_arrows_keep_signature_owners[ts]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_typed_generic_and_ternary_arrows_keep_signature_owners[tsx]
+FAILED test/test_languages/testJavaScriptBindingBoundaries.py::test_typed_generic_and_ternary_arrows_keep_signature_owners[vue]
+FAILED test/test_languages/testJavaScriptFormalSlots.py::test_nested_and_ternary_defaults_keep_complexity_owners
+6 failed, 891 passed, 5 skipped in 1.09s

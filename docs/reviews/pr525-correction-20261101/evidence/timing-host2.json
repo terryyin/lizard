@@ -1,0 +1,12 @@
+{
+  "time": "2026-11-01T16:39:14.587797+00:00",
+  "host": "Territory.local",
+  "cpu_count": 16,
+  "load": [
+    6.86865234375,
+    7.072265625,
+    8.0361328125
+  ],
+  "memory": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    18770.\nPages active:                                1357453.\nPages inactive:                              1261291.\nPages speculative:                             94514.\nPages throttled:                                   0.\nPages wired down:                             276775.\nPages purgeable:                                2746.\n\"Translation faults\":                     1557172756.\nPages copy-on-write:                       160534690.\nPages zero filled:                         487155113.\nPages reactivated:                            516985.\nPages purged:                                 277707.\nFile-backed pages:                            865841.\nAnonymous pages:                             1847417.\nPages stored in compressor:                   212413.\nPages occupied by compressor:                  76709.\nDecompressions:                                15123.\nCompressions:                                 233189.\nPageins:                                    17803884.\nPageouts:                                       6916.\nSwapins:                                           0.\nSwapouts:                                          0.\n",
+  "decision": "Run eight frozen comparisons serially, with 20 alternating warmed pairs and unchanged >=1s batches. No other owned heavy work; unrelated host work is left alone. Reconsider on contention, input/code change, or failed gate."
+}

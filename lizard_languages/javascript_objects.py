@@ -45,9 +45,9 @@ class JavaScriptObjectsMixin:
         elif token == '(':
             # Check if this is a method call (previous token was . or new)
             if self._prev_token == '.' or self._prev_token == 'new':
-                # Method call inside object — use sub_state so
+                # Method call inside object — use its group reader so
                 # the matching ')' doesn't escape the object reader.
-                self.sub_state(self.__class__(self.context))
+                self._read_parenthesis_group()
                 self._prev_token = token
                 return True
             # In property value (after ':'), identifier( is a function call
@@ -55,7 +55,7 @@ class JavaScriptObjectsMixin:
             if self._in_prop_value and (
                     not self.function_name
                     or self.last_tokens != self.function_name):
-                self.sub_state(self.__class__(self.context))
+                self._read_parenthesis_group()
                 self._prev_token = token
                 return True
             if not self.started_function:
