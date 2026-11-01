@@ -1,0 +1,316 @@
+{
+  "head": "e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0",
+  "base": "c694707c7a9fe4fba17621519119398be1827072",
+  "master": "c694707c7a9fe4fba17621519119398be1827072",
+  "mergeable": true,
+  "mergeable_state": "clean",
+  "checks": [
+    {
+      "id": 124915445786,
+      "name": "web",
+      "status": "completed",
+      "conclusion": "skipped",
+      "head_sha": "e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0",
+      "html_url": "https://github.com/terryyin/lizard/actions/runs/41328835342/job/124915445786"
+    },
+    {
+      "id": 124914632154,
+      "name": "web",
+      "status": "completed",
+      "conclusion": "skipped",
+      "head_sha": "e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0",
+      "html_url": "https://github.com/terryyin/lizard/actions/runs/41328876803/job/124914632154"
+    },
+    {
+      "id": 124914548216,
+      "name": "build (windows-latest, 3.11)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0",
+      "html_url": "https://github.com/terryyin/lizard/actions/runs/41328876803/job/124914548216"
+    },
+    {
+      "id": 124914548196,
+      "name": "build (windows-latest, 3.8)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0",
+      "html_url": "https://github.com/terryyin/lizard/actions/runs/41328876803/job/124914548196"
+    },
+    {
+      "id": 124914548189,
+      "name": "build (windows-latest, 3.10)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0",
+      "html_url": "https://github.com/terryyin/lizard/actions/runs/41328876803/job/124914548189"
+    },
+    {
+      "id": 124914548175,
+      "name": "build (windows-latest, 3.9)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0",
+      "html_url": "https://github.com/terryyin/lizard/actions/runs/41328876803/job/124914548175"
+    },
+    {
+      "id": 124914548149,
+      "name": "build (windows-latest, 3.13)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0",
+      "html_url": "https://github.com/terryyin/lizard/actions/runs/41328876803/job/124914548149"
+    },
+    {
+      "id": 124914548144,
+      "name": "build (ubuntu-24.04, 3.14)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0",
+      "html_url": "https://github.com/terryyin/lizard/actions/runs/41328876803/job/124914548144"
+    },
+    {
+      "id": 124914548142,
+      "name": "build (windows-latest, 3.14)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0",
+      "html_url": "https://github.com/terryyin/lizard/actions/runs/41328876803/job/124914548142"
+    },
+    {
+      "id": 124914548136,
+      "name": "build (ubuntu-24.04, 3.10)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0",
+      "html_url": "https://github.com/terryyin/lizard/actions/runs/41328876803/job/124914548136"
+    },
+    {
+      "id": 124914548132,
+      "name": "build (ubuntu-24.04, 3.11)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0",
+      "html_url": "https://github.com/terryyin/lizard/actions/runs/41328876803/job/124914548132"
+    },
+    {
+      "id": 124914548115,
+      "name": "build (windows-latest, 3.12)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0",
+      "html_url": "https://github.com/terryyin/lizard/actions/runs/41328876803/job/124914548115"
+    },
+    {
+      "id": 124914548104,
+      "name": "build (ubuntu-24.04, 3.12)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0",
+      "html_url": "https://github.com/terryyin/lizard/actions/runs/41328876803/job/124914548104"
+    },
+    {
+      "id": 124914548100,
+      "name": "build (ubuntu-24.04, 3.8)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0",
+      "html_url": "https://github.com/terryyin/lizard/actions/runs/41328876803/job/124914548100"
+    },
+    {
+      "id": 124914548055,
+      "name": "build (ubuntu-24.04, 3.13)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0",
+      "html_url": "https://github.com/terryyin/lizard/actions/runs/41328876803/job/124914548055"
+    },
+    {
+      "id": 124914548051,
+      "name": "build (ubuntu-24.04, 3.9)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0",
+      "html_url": "https://github.com/terryyin/lizard/actions/runs/41328876803/job/124914548051"
+    },
+    {
+      "id": 124914547835,
+      "name": "changes",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0",
+      "html_url": "https://github.com/terryyin/lizard/actions/runs/41328876803/job/124914547835"
+    },
+    {
+      "id": 124914423310,
+      "name": "build (windows-latest, 3.9)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0",
+      "html_url": "https://github.com/terryyin/lizard/actions/runs/41328835342/job/124914423310"
+    },
+    {
+      "id": 124914423307,
+      "name": "build (windows-latest, 3.8)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0",
+      "html_url": "https://github.com/terryyin/lizard/actions/runs/41328835342/job/124914423307"
+    },
+    {
+      "id": 124914423263,
+      "name": "build (ubuntu-24.04, 3.13)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0",
+      "html_url": "https://github.com/terryyin/lizard/actions/runs/41328835342/job/124914423263"
+    },
+    {
+      "id": 124914423259,
+      "name": "build (windows-latest, 3.10)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0",
+      "html_url": "https://github.com/terryyin/lizard/actions/runs/41328835342/job/124914423259"
+    },
+    {
+      "id": 124914423238,
+      "name": "build (ubuntu-24.04, 3.8)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0",
+      "html_url": "https://github.com/terryyin/lizard/actions/runs/41328835342/job/124914423238"
+    },
+    {
+      "id": 124914423223,
+      "name": "build (ubuntu-24.04, 3.9)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0",
+      "html_url": "https://github.com/terryyin/lizard/actions/runs/41328835342/job/124914423223"
+    },
+    {
+      "id": 124914423222,
+      "name": "build (windows-latest, 3.11)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0",
+      "html_url": "https://github.com/terryyin/lizard/actions/runs/41328835342/job/124914423222"
+    },
+    {
+      "id": 124914423218,
+      "name": "build (ubuntu-24.04, 3.11)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0",
+      "html_url": "https://github.com/terryyin/lizard/actions/runs/41328835342/job/124914423218"
+    },
+    {
+      "id": 124914423217,
+      "name": "build (windows-latest, 3.14)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0",
+      "html_url": "https://github.com/terryyin/lizard/actions/runs/41328835342/job/124914423217"
+    },
+    {
+      "id": 124914423208,
+      "name": "build (ubuntu-24.04, 3.12)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0",
+      "html_url": "https://github.com/terryyin/lizard/actions/runs/41328835342/job/124914423208"
+    },
+    {
+      "id": 124914423201,
+      "name": "build (ubuntu-24.04, 3.14)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0",
+      "html_url": "https://github.com/terryyin/lizard/actions/runs/41328835342/job/124914423201"
+    },
+    {
+      "id": 124914423185,
+      "name": "build (windows-latest, 3.13)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0",
+      "html_url": "https://github.com/terryyin/lizard/actions/runs/41328835342/job/124914423185"
+    },
+    {
+      "id": 124914423156,
+      "name": "build (windows-latest, 3.12)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0",
+      "html_url": "https://github.com/terryyin/lizard/actions/runs/41328835342/job/124914423156"
+    },
+    {
+      "id": 124914423064,
+      "name": "build (ubuntu-24.04, 3.10)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0",
+      "html_url": "https://github.com/terryyin/lizard/actions/runs/41328835342/job/124914423064"
+    },
+    {
+      "id": 124914423035,
+      "name": "changes",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0",
+      "html_url": "https://github.com/terryyin/lizard/actions/runs/41328835342/job/124914423035"
+    }
+  ],
+  "status_count": 0,
+  "original_contributor_is_ancestor": true,
+  "qualified_runtime_and_tests_match": true,
+  "packet": {
+    "base": "c694707c7a9fe4fba17621519119398be1827072",
+    "checks": {
+      "skipped": 2,
+      "success": 30
+    },
+    "counts": {
+      "checks": 32,
+      "comments": 0,
+      "files": 140,
+      "review_comments": 0,
+      "reviews": 0,
+      "statuses": 0,
+      "threads": 0
+    },
+    "first_paths": [
+      ".planning/slice-plans/015-pr525-binding-boundaries/PLAN.md",
+      ".planning/slice-plans/015-pr525-binding-boundaries/source-review.md",
+      "CHANGELOG.md",
+      "docs/reviews/pr525-correction-20261101/README.md",
+      "docs/reviews/pr525-correction-20261101/cost-return/README.md",
+      "docs/reviews/pr525-correction-20261101/cost-return/affected-final.txt",
+      "docs/reviews/pr525-correction-20261101/cost-return/affected-first.txt",
+      "docs/reviews/pr525-correction-20261101/cost-return/candidate-hashes.json",
+      "docs/reviews/pr525-correction-20261101/cost-return/changes-from-entry.json",
+      "docs/reviews/pr525-correction-20261101/cost-return/consumer-dispositions.md",
+      "docs/reviews/pr525-correction-20261101/cost-return/consumer-trace-product.md",
+      "docs/reviews/pr525-correction-20261101/cost-return/consumers-final.txt",
+      "docs/reviews/pr525-correction-20261101/cost-return/current-arguments-profile.json",
+      "docs/reviews/pr525-correction-20261101/cost-return/entry.json",
+      "docs/reviews/pr525-correction-20261101/cost-return/final-correspondence.json",
+      "docs/reviews/pr525-correction-20261101/cost-return/javascript_bindings.before.py",
+      "docs/reviews/pr525-correction-20261101/cost-return/javascript_functions.before.py",
+      "docs/reviews/pr525-correction-20261101/cost-return/javascript_objects.before.py",
+      "docs/reviews/pr525-correction-20261101/cost-return/located-consumers-final.txt",
+      "docs/reviews/pr525-correction-20261101/cost-return/post-edit-arguments-profile.json"
+    ],
+    "head": "e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0",
+    "merge_clearance": false,
+    "merged": false,
+    "number": 525,
+    "packet": "/Users/terryyin/git/lizard/.worktrees/correct-pr525-binding-boundaries/docs/reviews/pr525-correction-20261101/hosting/final-packet/terryyin--lizard--pr525/c4d66fec350682d032d9656410fa920cb5d65fa2ff5c54dbdb04bf3dfb7cccfa",
+    "repo": "terryyin/lizard",
+    "state": "open",
+    "title": "Fix JS/TS `IndexError` crash and early function end from binding-candidate tracking (1.24.2 regressions)",
+    "unresolved_threads": 0,
+    "updated_at": "2026-11-01T16:57:14Z"
+  }
+}

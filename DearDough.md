@@ -311,6 +311,22 @@ story-branch publishes should not bind it.
 Distinct executions, original provenance, observations and qualified inferences are
 [retained at ODF-378](https://github.com/terryyin/open-dough/blob/692bf5162b86fca9cbebc1c57c98efd227198e9d/docs/maintainer/findings/ODF-378.md); source recovery remains in this project’s pre-compaction revision.
 
+## DD-398 — Contributor publication carries spent qualification evidence
+
+Consider separating retained execution evidence from the final net contribution
+diff while preserving contributor history and immutable proof recovery. Publishing
+the full execution branch makes temporary reports dominate the hosted review,
+even when ordinary wrap-up will remove them afterward.
+
+### Occurrences
+- Execution: SEED-023#correct-pr525-binding-boundaries
+  - Timestamp: unknown (2026-11-01 UTC contributor publication)
+  - Tool: Codex
+  - Open Dough release: 0.3.80; c694707 integrated before publication
+  - Evidence: PR525 head e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0; GitHub update/packet reports 140 files, 49,924 additions and 89 deletions; runtime diff is four reader files plus one cohesive test module and two changelog lines.
+  - Observed effect: raw profiles, replay JSON, traces and intermediate failures enter the PR's net diff along with the correction. They are retained for acceptance and later recoverable cleanup.
+  - Inference: this adds review surface unrelated to the maintained product; no measured review-time cost is claimed. A future delivery recipe could retain the same proof without carrying temporary records in the final contribution diff.
+
 ## Retention
 
-- Highest allocated local number: 17
+- Highest allocated local number: 398

@@ -31,4 +31,4 @@ The unfavorable `measurements/attempt1/` is preserved: its isolated call API wor
 
 No expectation was weakened. The pre-existing labeled-body arrow omission, typed-class-field false positive and anonymous multiline-generic truncation remain separately dispositioned in the plan and retained baseline observations. Those observations establish preservation, not correctness improvements at those unrelated boundaries.
 
-Contributor-history integration, final tree correspondence, exact-head hosted CI, guarded merge and one acknowledgement are slice 3 and remain pending.
+Contributor history is preserved at qualified head `e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0`. The guarded merge completed as `b97f7958bd63bdafce692cf926c70d927410717b`. Both exact-head matrices and change jobs passed; web skips matched the path filter. Merged-master run 41329592732 also passed. One acknowledgement is https://github.com/terryyin/lizard/pull/525#issuecomment-6561098652. `hosting/` retains the fresh packet, guard, wait records, merge confirmation and acknowledgement.

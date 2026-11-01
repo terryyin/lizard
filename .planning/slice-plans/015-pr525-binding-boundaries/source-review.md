@@ -18,9 +18,9 @@ message once all checks pass.”
 
 | Id | Source commitment | Slice | Observation or obligation |
 | --- | --- | --- | --- |
-| 1 | Continue PR #525 through correction, refactoring, performance qualification, checks and merge. | slice 3 | |
+| 1 | Continue PR #525 through correction, refactoring, performance qualification, checks and merge. | slice 3 | observed: hosting/delivery-receipt.json: corrected/refactored/qualified PR525 merged b97f795 with one thank-you |
 | 2 | Reconcile the contributor’s binding lifecycle/replay correction with current master. | slice 1 |observed: javascript_bindings.py, javascript_objects.py and typescript_states.py aggregate diff reconciles the unchanged four-file authored proposal with current owners |
-| 3 | Preserve contributor history. | slice 3 | |
+| 3 | Preserve contributor history. | slice 3 | observed: hosting/merge-guard.json: original contributor6379815 is ancestor of e68c735; hosted merge method merge |
 | 4 | Correct remaining public function-boundary failures. | slice 1 |observed: test_callback_keeps_decisions_and_following_formals and test_object_array_keeps_decisions_and_following_formals |
 | 5 | Correct remaining cyclomatic complexity failures. | slice 1 |observed: same tests assert callback CCN2 and successor CCN2; CLI and HTTP assertions expose those metrics |
 | 6 | Cover enclosing-bracket interactions involving subscripts. | slice 1 |observed: test_callback_keeps_decisions_and_following_formals covers ordinary/chained/optional subscripts |
@@ -42,21 +42,21 @@ message once all checks pass.”
 | 22 | Preserve cumulative comparisons where applicable. | slice 2 | observed: same three original-parent comparisons establish cumulative qualification |
 | 23 | Keep measurement inputs immutable. | slice 2 | observed: cost-return/final-correspondence.json frozen_checks all true; all attempt2 input/source/harness stability checks pass |
 | 24 | Retain unfavorable measurement attempts. | slice 2 | observed: measurements/attempt1/ retained including isolated-call failure; rejected cost/ attempt preserved |
-| 25 | Establish semantic proof before merge. | slice 3 | |
+| 25 | Establish semantic proof before merge. | slice 3 | observed: cost-return affected/consumer assertions and verification2 full checks match all accepted runtime/test hashes before merge |
 | 26 | Pass the full pytest suite before merge. | slice 2 | observed: verification2/pytest.json exit0: 2427 passed, 7 existing skips |
 | 27 | Pass make before merge. | slice 2 | observed: verification2/make.json exit0: 2427 passed, 7 existing skips and configured style checks |
-| 28 | Pass applicable hosted CI for the exact contributor head before merge. | slice 3 | |
-| 29 | Merge the exact qualified contributor head. | slice 3 | |
-| 30 | Post one thank-you acknowledgement describing material corrections. | slice 3 | |
-| 31 | Corrections, publication to the contributor branch, merge and that acknowledgement are explicitly authorized. | slice 3 | |
+| 28 | Pass applicable hosted CI for the exact contributor head before merge. | slice 3 | observed: hosting/merge-guard.json:28matrix builds and2change jobs succeeded,2web skips applicable; exact e68c735 |
+| 29 | Merge the exact qualified contributor head. | slice 3 | observed: hosting/delivery-receipt.json: expected_head_sha e68c735, merged true as b97f795; fresh confirmation |
+| 30 | Post one thank-you acknowledgement describing material corrections. | slice 3 | observed: hosting/delivery-receipt.json: comments empty before one acknowledgement6561098652, includes material corrections and validation |
+| 31 | Corrections, publication to the contributor branch, merge and that acknowledgement are explicitly authorized. | slice 3 | observed: original human instructions and source scope authorize correction, fork publication, merge and thanks; no extra permission requested |
 | 32 | Preserve existing semantic owners. | slice 1 |observed: aggregate diff keeps JavaScriptBindings, TypeScriptStates and object/function/signature mixin responsibilities |
 | 33 | Preserve public metric meanings. | slice 1 |observed: high-level summaries/CLI/HTTP assertions inspect names, CCN, parameters and start/end lines; ADR-0001 |
 | 34 | Avoid parallel bracket counters. | slice 1 |observed: aggregate diff: existing frame stack reused; no added bracket counter |
 | 35 | Avoid whole-stream buffering. | slice 1 |observed: aggregate diff: no buffering or token-stream wrapper |
 | 36 | Serialize Nix setup. | slice 2 | observed: final full checks and all qualification entries were serial; delegated Nix ownership explicitly transferred at every final boundary |
 | 37 | Serialize heavy measurements. | slice 2 | observed: evidence/timing-host2.json and attempt2 raw sequence: one owned heavy comparison at a time |
-| 38 | Do not force-push. | slice 3 | |
-| 39 | Stop the dependent merge if the head moves. | slice 3 | |
+| 38 | Do not force-push. | slice 3 | observed: hosting/delivery-receipt.json: fork push was normal fast-forward6379815..e68c735; all managed publications used no force |
+| 39 | Stop the dependent merge if the head moves. | slice 3 | observed: hosting/merge-guard.json and connected merge: fresh head e68c735 unchanged, merge guarded by exact expected_head_sha |
 | 40 | Callback journey: it('t', () => {\n e(r[0]);\n if(x) g(x);\n}); spans lines 1–4. | slice 1 |observed: test_callback_keeps_decisions_and_following_formals: explicit lines 1–4 |
 | 41 | That callback has CCN 2. | slice 1 |observed: same assertion: callback CCN2 |
 | 42 | A following function retains its own metrics. | slice 1 |observed: same assertion: after(y) lines5–5, CCN2, parameter y |

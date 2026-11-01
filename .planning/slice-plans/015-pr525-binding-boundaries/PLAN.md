@@ -140,7 +140,7 @@ deferred to a later owner; no merge on an unresolved workload.
 
 ### 3. Merge the exact qualified contribution and acknowledge the author
 Type: Behavior
-Status: planned
+Status: done
 Behavior: Preserve the contributor commit and publish current-master integration
 and corrections to `jsBindingCandidateCrash` without force. Verify exact remote
 head/base and complete aggregate diff, production/test tree against accepted
@@ -218,3 +218,61 @@ Original frozen corpora, archives, harnesses, earlier profiles, rejected changes
 and unfavorable attempt1 remain recoverable. No production edit followed the
 accepted profile/refactor/full-check/paired observations. All final Nix entries
 and heavy runs were serial; unrelated host work was preserved.
+
+## Accepted slice 3 proof
+
+Original contributor `63798156566ea4ab100048dc1eb21a7366cde380` is an ancestor
+of qualified head `e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0`. Current master
+`c694707` changed only process guidance; its history-preserving integration and
+the contributor merge kept every accepted runtime/test byte. Four conflicting
+authored paths were resolved to the qualified tree, retaining the eleven
+authored examples in the cohesive public regression module.
+
+`hosting/merge-guard.json` pins head/base/master, all 107 runtime and 174 test
+hashes, original-commit ancestry, no unresolved threads and all 32 check results:
+28 matrix builds and two change jobs succeeded; two web jobs were correctly
+skipped. The fresh PR packet retains the complete current diff and discussion.
+Fast-forward fork push `6379815..e68c735` used no force. Guarded hosted merge
+returned `merged:true`, SHA `b97f7958bd63bdafce692cf926c70d927410717b`, confirmed
+by a fresh PR read. Comments were empty before posting exactly one thank-you:
+https://github.com/terryyin/lizard/pull/525#issuecomment-6561098652.
+`hosting/delivery-receipt.json` retains it. Merged-master run 41329592732 passed
+its 14 builds, change detector and applicable web skip; `merged-master-ci.json`
+is its explicit external delivery receipt, not execution-observer coverage.
+
+## Execution retrospective
+
+Reviewed the admitted source and preparation at db54a2b/1ba5cb5 against delivered
+product revisions 4a20815, e782d75 and e68c735, including original author6379815.
+Integration5174877 incorporates c694707 guidance; those are provenance and
+process-only changes, excluded from product attribution. The public trigger,
+callback continuation and successor metrics, formal/signature/default/template
+consumers, CLI/HTTP paths and all required performance consumers have current
+observations. Final independent refactor found cohesive existing ownership and
+no residue. Tests use real public entry points; the focused variations are
+parameterized and the two integration boundaries retain meaningful coverage.
+The full suite takes about fifteen seconds, providing no evidenced cleanup need.
+
+No product correction or follow-up plan is supported by this bounded outcome.
+The explicit pre-existing limitations stay honestly recorded without a new
+promise. Direction (maintenance, bug fixing and PR reviews) remains aligned;
+product advice: no change. Process review is enabled by open-dough.json. The
+current actual tool record supports DD-398 in DearDough.md: the external PR
+diff carries temporary evidence. Recorded at 332 physical lines, without
+retention or threshold warning. Earlier summarized history limits conclusions
+about unavailable pre-resume tool details; no events or costs are inferred.
+No pending product/permission decision or unresolved finding requires attention.
+Exact-head and merged-master CI are successful; final closure/trunk observer
+completion remains the invoking workflow's next obligation.
+
+Final delivery-record refactor: `refactor4/README.md` returns none/already clean
+and `## REFACTOR COMPLETE`; all 107 runtime and 174 test/fixture hashes match.
+Its 96-path record-consumer trace is fully dispositioned. No product/test edit
+invalidates semantic, full-check, performance or hosted proof.
+
+## Execution complete
+
+Product advice: no change. The bounded correction, strict performance gate,
+current-master integration, exact-head hosted merge and one thank-you are
+complete. The process observation DD-398 is recorded; it creates no product
+correction or unresolved decision. Ordinary recoverable cleanup follows.
