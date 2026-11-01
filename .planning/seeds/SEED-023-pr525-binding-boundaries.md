@@ -6,7 +6,7 @@
 
 **Identity:** SEED-023#correct-pr525-binding-boundaries
 ```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"unselected"}
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/015-pr525-binding-boundaries/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"c6049a127a787d9d3122792a582d29627fc0d09c13330b85ad8dbdc11d7dc1c2","plan":"390db5744a48573e55376399cbbc48fd2b19249a06e21d2bff40bfcb97e58afc"}}
 ```
 
 **Goal:** JS/TS users receive complete callback boundaries and complexity when
