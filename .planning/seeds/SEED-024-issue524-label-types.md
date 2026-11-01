@@ -6,7 +6,7 @@
 
 **Identity:** SEED-024#resolve-issue524-label-types
 ```json dough-story-state
-{"schemaVersion":1,"refinement":"not-refined","approach":"unselected"}
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/016-issue524-label-types/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"65f470e0f727139fdfd41003c3339e532a233b543f863e42db9e2d096ed11a9c","plan":"1b1f52efcc40d02d61ef2a06092b48c5f0c63e06668a76f43574f6c1faddf846"}}
 ```
 
 **Goal:** JS/TS users retain every runtime function and its metrics when a
