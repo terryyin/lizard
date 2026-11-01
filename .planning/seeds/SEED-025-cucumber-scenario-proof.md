@@ -13,7 +13,7 @@ trigger_when: Ordinary website Cucumber runs need published scenario observation
 
 **Identity:** SEED-025#cucumber-scenario-proof
 ```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"unselected"}
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/017-cucumber-scenario-proof/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"2e641e655f56b982135643cb99ab6948619bc0000d87097356ca965865ddd723","plan":"493eedfe06a4fdc9844b0e4dc909d5f26a94b2797ce97d96afd557c22d72584c"}}
 ```
 
 **Goal:** Maintainers see the latest observed result and tested version beside
