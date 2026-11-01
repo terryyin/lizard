@@ -18,6 +18,11 @@ project's own code; Open Dough ships no recorder or consolidation tool.
   for example `format: ['progress'], plugin: ['./<path>/proof-plugin.js']`.
   Add it to every profile that runs scenarios, so focused, tagged, parallel,
   retried and full runs all record proof.
+- Cucumber.js loads plugins with native `import()`, before `requireModule` or
+  `require` hooks such as `tsx` apply. In a TypeScript project, write the
+  recorder as JavaScript, or as a module Node loads by type stripping without
+  warnings (for example `.mts` with erasable syntax only), and check that
+  loading it prints nothing, so existing output stays unchanged.
 - Do not add the recorder as another `format` entry without its own output
   target: Cucumber.js writes standard output through only one formatter, the
   last such entry, so the recorder would replace the project's existing
@@ -48,6 +53,11 @@ project's own code; Open Dough ships no recorder or consolidation tool.
 
   `proof` is a directory path from the repository root. Commit its files; do
   not ignore it.
+
+- Record only scenarios of feature files under the Gherkin location or
+  locations that declare this proof directory. Scenarios of other features
+  run through the same configuration, such as throwaway features this
+  project's own tests run, are not recorded.
 
 ## One file per run
 
