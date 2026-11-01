@@ -28,12 +28,11 @@ completed plan and judged proof for later review and wrap-up, then apply [planne
 
 Otherwise invoke
 [dough-execution-retrospective](../../dough-execution-retrospective/SKILL.md)
-without another confirmation as soon as delivered implementation is available,
-including while applicable CI is pending. Preserve explicit review instructions
-and project preferences through its review selection; its authority excludes
-implementing findings or changing the backlog. Delivered implementation starts
-review; require no execution-completion banner as input. When review returns,
-publish the
+without another confirmation as soon as delivered implementation is available.
+Preserve explicit review instructions and project preferences through its review
+selection; its authority excludes implementing findings or changing the backlog.
+Delivered implementation starts review; require no execution-completion banner as input.
+When review returns, publish the
 [execution-complete record](#record-execution-completion), invoke the
 completion operation, handle its receipt, then apply
 [planned continuation](#continue-settled-planned-work-into-wrap-up).
@@ -57,8 +56,9 @@ claiming review completion. It writes no execution-complete record. On
 recovery, use retained review state to continue or recognize completed review;
 ambiguous state requires recovery rather than duplicate review or guessed
 completion. A CI failure handled through an authorized repair invalidates only
-the conclusions affected by changed code; resume those conclusions instead of
-restarting the full retrospective.
+the conclusions its changed code or proof affects; reconsider those on the
+repaired candidate, amending changed product advice in the execution-complete
+record, instead of restarting the full retrospective.
 
 When process history is unavailable, report the review limitation and continue
 independently supported outcome review and delivery.

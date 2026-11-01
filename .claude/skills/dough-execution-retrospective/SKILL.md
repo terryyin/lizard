@@ -237,5 +237,10 @@ unresolved attention. A successful return completes review, not the execution's 
 handoff; the invoking execution owns its combined final response. Repeated or
 overlapping reviews contribute each currently unresolved item once under its
 current disposition and designated writer; a later successful check cannot
-settle a finding. If an authorized CI repair later changes reviewed code, resume
-only the affected conclusions using the retained review state.
+settle a finding. If an authorized CI repair later changes reviewed code or
+proof, resume only the affected conclusions using the retained review state:
+on the repaired candidate, recheck each product and proof conclusion the repair
+broadens or weakens, including a removed or loosened distinguishing assertion, under
+[repair acceptance](../dough-story-refinement/references/executable-proof.md#accept-a-repair-on-its-affected-behavior),
+and retain each one's current result with the review. Return revised product
+advice when a changed conclusion alters it.

@@ -154,6 +154,20 @@ check refuses `unlinked-source-review` for a `source-review.md` beside the plan
 without the exact `**Source review:**` link, or a `Source review` label in any
 other form. A plan with neither keeps obligation-only checks.
 
+Settle a commitment's slice allocation, `observed:` location, or disposing
+obligation id with the same script's `record` operation rather than hand-built
+cell escaping or putting an obligation id in Slice:
+
+```sh
+node '<installed-execute-plan>/scripts/story-obligations.mjs' record --plan '<PLAN.md>' --commitment '<id>' [--slice N|""] [--observed '<product or proof location>' | --obligation '<id>'] [--entry-id '<id>' --title '<text>' --reported '<text>' --reported-slice N --story-clause '<text>' --disposition '<text>'] [--expected-review '<sha256>'] [--expected-plan '<sha256>']
+```
+
+It escapes `|` in written cells, keeps an obligation id out of Slice, and when
+you supply the entry fields writes the linked Story obligations
+`Reported: slice N — "…"` shape. Unknown commitment ids and stale
+`--expected-review` / `--expected-plan` digests refuse without rewriting either
+file.
+
 ## Use the record at execution boundaries
 
 Resolve `<installed-execute-plan>` to the installed execution skill directory,
@@ -165,22 +179,20 @@ node '<installed-execute-plan>/scripts/story-obligations.mjs' check --plan '<PLA
 node '<installed-execute-plan>/scripts/story-obligations.mjs' check --plan '<PLAN.md>' --completion
 ```
 
+Author Commitments with `record` under [the source review](#record-the-source-review).
 The listing returns full entries for the slice's returns, receiving
 obligations, and open interims naming it, and, when the plan links a source
 review, `commitments`: the rows allocated to the slice. Carry them as promises
 with the required observations before delegation. A refusal names the entry and
 reason in one JSON result and exits non-zero: correct the record or required
 behavior before the blocked delegation, slice commit/done transition, or
-completion record. `check --slice N` treats that slice as about to finish even while its
-status is `planned`. `check --completion` refuses every open return, receiving,
-or interim entry. With a linked source review, every check also refuses
-`unallocated-commitment` (a row with neither a slice nor an obligation, or
-naming a missing slice even with an obligation), `unobserved-commitment` (a
-row allocated to that slice, or to a done one, without an observation or an
-existing obligation, and at completion any such row), `unknown-commitment` (a
-`Commitment:` id the return lacks), and the
-[record's](#record-the-source-review) link refusals. Plans without this section have zero obligations; do
-not migrate them merely to use the script.
+completion record. `check --slice N` treats that slice as about to finish even
+while its status is `planned`. `check --completion` refuses every open return,
+receiving, or interim entry. With a linked source review, every check also
+refuses `unallocated-commitment`, `unobserved-commitment`,
+`unknown-commitment`, and the [record's](#record-the-source-review) link
+refusals. Plans without this section have zero obligations; do not migrate them
+merely to use the script.
 
 For a caller that already resolved a planned execution, `check --planned-completion`
 also requires a readable, non-empty ordered slice list with every slice done,
@@ -190,6 +202,6 @@ accepted proof. An absent plan or a planless instruction still requires the
 caller's completion judgment. This option takes neither `--slice` nor `--completion`.
 
 When replanning removes or renumbers slices, move their receiving and interim
-obligations to the remaining slices that own their behavior and proof; update
-other slice references consistently. Never drop an obligation through a plan
-rewrite. Run the check before delivery; dangling references are refused.
+obligations to the remaining slices that own their behavior and proof. Never drop
+an obligation through a plan rewrite. Run the check before delivery; dangling
+references are refused.

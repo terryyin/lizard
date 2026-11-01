@@ -119,11 +119,15 @@ exists.
 ## Diagnose failed proof
 
 For CI events, first use [CI observation and repair](ci-monitor.md#handle-a-notification).
-For other failures, use focused diagnosis. Discount a failure as pre-existing,
+For other failures, use focused diagnosis. Attribute a failure as pre-existing,
 unrelated, or environmental only with bounded evidence connecting its cause to
-the affected proof. Record the cause, supporting observation, affected proof,
-and remaining defect or disposition in the execution conversation, existing
-handoff, or active plan.
+the affected proof. Attribution explains the cause; it does not remove the
+failure from required proof or change who repairs it. Apply this project's
+failure policy as written. Leave a repair only when another active owner holds
+it, preserving their work and reporting that coordination boundary, or within
+the stated scope of an explicit human exception. Record the cause, supporting
+observation, affected proof, and remaining defect or disposition in the
+execution conversation, existing handoff, or active plan.
 Successful commands need no extra record.
 
 A passing retry, repeated test name, or successful cleanup does not establish
