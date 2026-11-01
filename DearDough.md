@@ -3,22 +3,22 @@
 Source maintenance on 2026-10-28 retained collected evidence before shortening at Open Dough `32b5ae0b4414d755bcde4ef6cd822774d7450771:docs/maintainer/findings/`. The complete post-local source is `1fab8f40c7577f53b7736c79ea3f91b67a1fd0ca:DearDough.md`; linked source records share that revision. Unknown execution releases and local facets remain qualified.
 
 The existing DearDough log currently holds both shared and project findings.
-Project-owned entries DD-003, DD-006, DD-007, DD-008, DD-011 and DD-012 stay here
+Project-owned entries DD-006, DD-007, DD-008, DD-011, DD-012 and DD-016 stay here
 with their original evidence; DD-009 is a host-policy observation, DD-010 is a
 successful practice, and DD-013 is qualified command-output practice. DD-004
 concerns application of this project's performance acceptance gate; it remains
 qualified and is not evidence of a shared performance mechanism defect.
 
-The local maintenance selected [repeatable shell entry](https://github.com/terryyin/lizard/blob/2d845a1eaaccee05592a486234ad49fb7d1723de/.planning/seeds/SEED-018-repeatable-shell-entry.md#repeatable-shell-entry)
-for DD-003. The adopted response is no longer only queued: `shell.nix`
-prepares when `.venv` is missing or the `dev_requirements.txt` stamp
-mismatches, otherwise reuses without pip install chatter, refreshes on
-dependency-input change, and surfaces preparation failures on the failing
-entry. Six distinct executions reported the prior repeated setup/noise,
-including two overlapping-entry races. The import-probe trap has an
-established usable form, the parser issue was corrected before acceptance,
-and the remaining one-off proof seams were caught. They warrant no second
-implementation story. Existing Taken work and direction retain their order.
+Local maintenance (2026-11-01) retires DD-003’s repeated shell setup:
+`be8d3c273fd475a0cedc4d1e9da58ff596c6db0c` adopted a dependency stamp;
+controlled cold/warm/overlapping-warm/changed-input/failure entries supplied
+direct outcomes. Current `shell.nix` retains the mechanism. All eight original
+executions and their exact provenance, including the pre-adoption 0.3.73 run,
+remain recoverable at `eebecc3e196a26f6f6b6a41df66ef97025a3361a:DearDough.md`.
+This is bounded retirement of the demonstrated repeat-install problem, with
+no latency claim or new watch. The other local incidents have repaired seams,
+usable probes or unresolved host/attribution limits, and justify no new story.
+Existing Taken work, direction and queue order stay unchanged.
 
 <a id="dd-001--codex-stream-can-yield-before-exposing-observer-identity"></a>
 
@@ -52,88 +52,6 @@ status transition.
 ### Occurrences
 
 Distinct executions, original timestamps/releases/tools, observed effects and qualified inferences are [retained at ODF-275](https://github.com/terryyin/open-dough/blob/32b5ae0b4414d755bcde4ef6cd822774d7450771/docs/maintainer/findings/ODF-275.md); rereading adds no occurrence.
-
-<a id="dd-003"></a>
-
-## DD-003 — Nix shellHook reinstalls Python dependencies on every command
-
-**Adopted response:** [Enter the development shell repeatedly without rebuilding its environment](https://github.com/terryyin/lizard/blob/2d845a1eaaccee05592a486234ad49fb7d1723de/.planning/seeds/SEED-018-repeatable-shell-entry.md#repeatable-shell-entry) — SEED-018#repeatable-shell-entry.
-**Adopted revision:** `be8d3c273fd475a0cedc4d1e9da58ff596c6db0c` (stamp-guarded `shell.nix` shellHook + relevant-use recording for SEED-018#repeatable-shell-entry).
-**Relevant-use outcome:** Isolated checkout proof on 2026-10-28 (`/tmp/lizard-shell-slice2-*.out`): cold prep installs once (stdout retained the historical `virtualenv 20.13.2 requires platformdirs<3,>=2, but you have platformdirs 4.4.0` line when pip ran); warm and overlapping warm entries exit 0 with command output only and no pip install chatter; changing `dev_requirements.txt` refreshes (pip runs, stamp updates) then subsequent warm reuses cleanly; a failing `pip install -r` surfaces `ERROR: No matching distribution…` with non-zero exit and does not run the requested command or write the new stamp. No latency claim is asserted. Finding is adopted with relevant-use evidence; full retirement under a longer observation criterion remains a triage judgment, not blocked by queueing alone.
-
-Every `nix develop -c` **formerly** ran `pip install -r dev_requirements.txt` in the
-shellHook, printing pip output to stdout and upgrading `platformdirs` past
-`virtualenv`'s pin each time. Agents had to filter that output out of
-`gcloud meta list-files-for-upload` and other parsed command results.
-
-### Occurrences
-- Execution: SEED-012#modernize-website-react
-  - Timestamp: unknown
-  - Tool: Claude Code
-  - Model: claude-opus-5-5
-  - Open Dough release: 0.3.71 (installed by commit 01afe9c)
-  - Evidence: `shell.nix` shellHook; slice 2 implementation report (upload list contained non-path pip lines); slice 2 refactor report (platformdirs 4.4.0 conflicts with virtualenv 20.13.2).
-  - Observed effect: extra latency and stdout noise on each Nix-prefixed command; no proof result changed.
-  - Inference: a project-environment issue rather than shared guidance; a stamp-guarded or quiet install would remove it.
-
-- Execution: SEED-012#release-website-from-tags
-  - Timestamp: unknown
-  - Tool: Codex
-  - Open Dough release: unknown; executed installed guidance was unchanged from established start 96e5aa4
-  - Evidence: shell.nix and repeated Nix-prefixed setup/read/test/cloud commands in this execution; the platformdirs 4.4.0 versus virtualenv 20.13.2 warning persisted, including final pytest/make checks (1,854 tests).
-  - Observed effect: repeated pip installation/noise accompanied read-only commands as well as tests. PIP_QUIET reduced ordinary output; coordinators sequenced shell initialization because each invocation recreates the local venv. Proof verdicts remained valid.
-  - Inference: this recurs in the existing project-environment issue; no shared guidance or environment fix was made by this story.
-
-### Additional occurrence
-- Execution: SEED-010#review-fabio-malpezzi-prs
-  - Timestamp: unknown
-  - Tool: Codex
-  - Open Dough release: unknown; installed guidance at execution baseline 2e21e404
-  - Evidence: PR535 independent refactor return and sequential environment recovery session 90108; execution-branch revision f25aeca2, docs/reviews/fabio-malpezzi-20261027/pr535/.
-  - Observed effect: two overlapping read-only Nix commands re-entered the mutating shellHook and produced an ensurepip diagnostic. A subsequent sequential Python/pytest import check passed. Accepted proof predated the race or ran in the separate validation checkout.
-  - Inference: read-only command intent does not make shellHook entry safe to parallelize. Serialize Nix entries across agents in the same checkout.
-
-### Additional occurrence
-- Execution: SEED-012#regex-literal-context
-  - Timestamp: 2026-10-27T20:25:00+08:00
-  - Tool: Cursor
-  - Open Dough release: 0.3.71 (installed by commit 01afe9c)
-  - Evidence: slice-3 post-change refactor agent d49cf4a4-9eaa-4044-96fb-f7e6a0bc649f; coordinator 946f4d3a-43e2-470f-8722-fc7bcd78fef5; `shell.nix` shellHook; filter stripping `platformdirs`/`Requirement already`/`Successfully` from `nix develop -c` stdout before a line-count check.
-  - Observed effect: every Nix-prefixed command re-entered pip install; agents filtered shellHook/platformdirs noise from parsed results. Semantic and performance proof still passed.
-  - Inference: same project-environment shellHook cost as prior DD-003 rows; serial Nix use avoided the parallel race, but stdout noise and platformdirs pin churn remained on each entry.
-
-- Execution: SEED-016#arrow-parameter-bindings
-  - Timestamp: unknown (2026-10-27 execution)
-  - Tool: Codex
-  - Open Dough release: unknown; installed guidance at established start 7f479101
-  - Evidence: slice-3 independent refactor return launched three Nix-prefixed reads concurrently and reported ensurepip failure; coordinator recovery session ran the affected 21 tests serially; [slice4 proof](https://github.com/terryyin/lizard/blob/4bfd49bc7eb7cd136f6adb3bfad3ab93f9a1631b/docs/reviews/fabio-malpezzi-20261027/pr536/slice4-proof.md) records serial final qualification.
-  - Observed effect: overlapping shellHook entry recreated the shared environment during read-only work. Sequential recovery passed; accepted final qualification used one serial outer runner.
-  - Inference: reinforces the existing project issue: serialize Nix entry across agents, including read-only probes and observer acknowledgements.
-
-- Execution: SEED-015#ternary-arrow-boundaries
-  - Timestamp: unknown (2026-10-27 UTC / 2026-10-28 Singapore execution)
-  - Tool: Codex
-  - Open Dough release: unknown; installed guidance retained from established claim6f506711
-  - Evidence: root-performance.md and delivery-local-proof.md at PR534 qualified head0bfc798; sequential Nix setup/read/test/publication tool results repeatedly print the platformdirs4.4.0/virtualenv20.13.2 warning despite PIP_QUIET=1.
-  - Observed effect: shellHook initialization and dependency noise accompany read-only commands and proof. Every owned Nix entry was serialized; no SEED015 parallel-Nix race is claimed. Interpreter/import hashes and accepted proof held.
-  - Inference: recurrence of the project environment issue; no total latency or causal timing allocation is asserted.
-
-- Execution: SEED-010#review-lexical-js-prs
-  - Timestamp: 2026-10-28T05:56:00Z
-  - Tool: Cursor
-  - Open Dough release: 0.3.71
-  - Evidence: conversation 9e3d53de-1aaa-43d4-a4c0-161f4d937215 compaction segment_000 around PR #546 publish; temporary checkout `/tmp/pr546-publish-10000` Nix probe printed platformdirs 4.4.0 vs virtualenv 20.13.2 despite `PIP_QUIET=1`.
-  - Observed effect: shellHook pip noise accompanied the contributor-head publish probe; semantic assert still passed and the push completed.
-  - Inference: same project-environment shellHook cost; serial Nix use avoided races, but pin churn remained on entry.
-
-- Execution: SEED-019#template-interpolation-conditions
-  - Timestamp: unknown (2026-10-28T16:10+08:00 through 2026-10-29T07:28+08:00 execution window)
-  - Tool: Cursor
-  - Model: auto
-  - Open Dough release: 0.3.73
-  - Evidence: coordinator/refactor agents used `PIP_QUIET=1 nix develop -c` for slice-1 proof and full pytest/`make` (conversation b6ecc26c-f7f1-4c5f-a3aa-2a2ccfa36047); SEED-018 still queued for this issue.
-  - Observed effect: agents continued the quiet-install workaround on every Nix entry; proof verdicts remained valid.
-  - Inference: recurrence of the project-environment shellHook cost; no shared or local environment fix in this story.
 
 ## DD-004 — PR merge preceded a missing affected-workload performance gate
 
