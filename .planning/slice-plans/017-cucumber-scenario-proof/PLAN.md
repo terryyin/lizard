@@ -2,6 +2,7 @@
 
 **Identity:** SEED-025#cucumber-scenario-proof
 **Source:** [selected story](../../seeds/SEED-025-cucumber-scenario-proof.md#cucumber-scenario-proof)
+**Source review:** [independent source-only commitments](source-review.md)
 
 ## Goal and scope
 
@@ -76,4 +77,50 @@ observed in this checkout. Implementation details remain with the slice.
 
 ## Learnings
 
-None yet.
+- Real Cucumber dry-runs can emit undefined/ambiguous results, not only skipped
+  results. Status alone is insufficient execution evidence. Invoked step/hook
+  stopwatch duration distinguishes actual code (including returning skipped)
+  from CLI/config/API dry-runs and fail-fast nonexecution; real-runner tests
+  discriminate these paths.
+- Hash the source message with Git's --stdin --path normalization: it preserves
+  the loaded version even when disk/HEAD change during execution and agrees
+  with hash-object file under CRLF/attributes.
+
+## Accepted local proof
+
+- `nix develop -c npm --prefix website/frontend run test:proof`: 11 passed
+  (3.355s). Actual temporary Git/Cucumber runs and assertions in
+  website/frontend/test/proof-plugin.test.js cover all recorder boundaries.
+  Consumer trace: /private/tmp/lizard-cucumber-proof-consumer-trace.md, all 122
+  dispositions complete; product consumers use ordinary Cucumber config.
+- `nix develop -c npm --prefix website/frontend run build`: passed.
+- `nix develop -c npm --prefix website/frontend run test:e2e -- features/languages.feature`:
+  full actual configured selection, 16 scenarios/134 steps and 2 hooks passed
+  in 25.102s. Cucumber 13 merges positional and configured paths and prints
+  its normal diagnostic; selection was verified, not inferred from the name.
+- `nix develop -c npm --prefix website/frontend run test:e2e -- --name 'Changing the language keeps the entered code until an example is loaded'`:
+  1 scenario/10 steps and 2 hooks passed, 0.569s. Existing progress and HTML
+  reports observed. Both runs produced real proof, retained with this change.
+- `nix develop -c npm --prefix website/frontend run test:e2e:dry`: 16 scenarios,
+  134 steps and 2 hooks skipped; proof filenames and bytes unchanged.
+- Actual Open Dough dashboard parseProofFile/latestObservations accepted both
+  real proof files: 17 observations, 16 latest identities, all passed. Native
+  Node24 imported /Users/terryyin/git/open-dough/dashboard/src/cucumberProof.ts;
+  no dashboard files were changed.
+- `nix develop -c python -m pytest`: 2427 passed, 7 skipped, 13.61s.
+- `nix develop -c make`: exit 0, full coverage tests and style checks passed.
+- `git diff --check`: passed. Independent refactor extracted the temporary runner fixture into
+  website/frontend/test/cucumber-runner.js (82 lines), leaving the same
+  assertions in proof-plugin.test.js (194 lines). `test:proof` reran with
+  11 passed in 3.342s; ## REFACTOR COMPLETE received. Plugin/config/browser
+  and Python proof boundaries are unchanged, so full accepted proof is reused.
+  Refactor trace: /private/tmp/lizard-cucumber-proof-refactor-consumer-trace.md.
+- Local implementation and review are settled. Progress publication retains
+  slice 1 as planned until its source's committed-proof, authorized trunk
+  landing and actual hosted-CI/report obligations can be observed. No product
+  implementation is deferred; the same workspace owns final delivery.
+- Branch observer: coordinator codex-lizard-cucumber-20261102,
+  /tmp/dough-ci-501/watch-5ZaSQr, PID 60196, yielded cell g12:22,
+  session 89191, checkout /private/tmp/lizard-cucumber-proof. It observes
+  codex/cucumber-scenario-proof, Python application / python-app.yml. Claim
+  and preparation on trunk were unobserved by this branch-specific stream.

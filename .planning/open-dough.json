@@ -2,6 +2,10 @@
   "ciWorkflow": "python-app.yml",
   "skipProcessRetrospective": false,
   "intent": {
-    "locations": [{ "path": "website/frontend/features", "kind": "gherkin" }]
+    "locations": [{
+      "path": "website/frontend/features",
+      "kind": "gherkin",
+      "proof": "website/frontend/proof"
+    }]
   }
 }

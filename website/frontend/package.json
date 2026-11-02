@@ -11,7 +11,8 @@
     "build": "vite build",
     "watch": "vite build --watch",
     "test:e2e": "cucumber-js",
-    "test:e2e:dry": "cucumber-js --dry-run"
+    "test:e2e:dry": "cucumber-js --dry-run",
+    "test:proof": "node --test test/proof-plugin.test.js"
   },
   "devDependencies": {
     "@cucumber/cucumber": "13.3.0",

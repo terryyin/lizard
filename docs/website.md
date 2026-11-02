@@ -90,6 +90,18 @@ nix develop -c npm --prefix website/frontend run test:e2e
 The suite tests the current build output; rebuild after frontend changes.
 Without a build it stops at startup and prints Flask's build diagnostic.
 
+Ordinary runs also record scenario proof under `website/frontend/proof/`,
+declared on the Gherkin location in `.planning/open-dough.json`. The native
+`proof-plugin.js` observes the main process, including retries and parallel
+workers, without changing the progress or HTML reports. Each run atomically
+updates its own file after each final scenario attempt; interruption retains
+completed scenarios. Focused runs update only the scenarios they execute, and
+dry runs write no observations. Commit generated proof with the work it tests;
+do not run the suite just to refresh proof. Recording is silent and best effort,
+so Git/configuration or filesystem problems never change the test result.
+`run test:proof` checks the recorder through real Cucumber runs in temporary
+Git repositories, including its output and exit-status contract.
+
 On Linux CI, also install the browser's system libraries with
 `playwright install --with-deps chromium`. `run test:e2e:dry` lists the
 scenarios without starting anything.

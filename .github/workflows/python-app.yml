@@ -89,6 +89,8 @@ jobs:
         npm --prefix website/frontend exec -- playwright install --with-deps chromium
     - name: Build
       run: npm --prefix website/frontend run build
+    - name: Cucumber proof recorder tests
+      run: npm --prefix website/frontend run test:proof
     - name: Browser tests
       run: npm --prefix website/frontend run test:e2e
     - name: Keep browser test reports
