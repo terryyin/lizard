@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "agent": "Hibiki-chan",
-  "email": "hibiki-chan@example.org",
-  "identity": "SEED-025#cucumber-scenario-proof",
-  "mode": "story-branch",
-  "branch": "codex/cucumber-scenario-proof",
-  "host": "codex"
-}
