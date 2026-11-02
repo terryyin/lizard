@@ -10,6 +10,7 @@ class JavaScriptReader(TypeScriptReader):
 
     ext = ['js', 'cjs', 'mjs']
     language_names = ['javascript', 'js']
+    _class_field_annotations = False
 
     def __init__(self, context):
         super(JavaScriptReader, self).__init__(context)

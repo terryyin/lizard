@@ -2,8 +2,30 @@
 
 
 class JavaScriptObjectsMixin:
+    def _typed_class_member(self):
+        return (self.as_class and not self._in_prop_value
+                and self.context.class_field_annotations)
+
+    def optional_member_context(self):
+        state = self
+        while isinstance(state._state, self.__class__):
+            state = state._state
+        return state._state == state._state_global and state._typed_class_member()
+
+    def _optional_class_member(self):
+        if not self._typed_class_member():
+            return False
+        self.context.add_condition(-1)
+        return True
+
     def _handle_object_member(self, token):
         """Called for tokens in an object literal or class body (as_object)."""
+        if token == '=' and self.as_class:
+            self._in_prop_value = True
+        if (self.as_class and token.endswith('?')
+                and self._typed_class_member()):
+            self.last_tokens = token[:-1]
+            return True
         # Support for getter/setter: look for 'get' or 'set' before method name
         if token == '...':
             # What a spread takes is a value: ...(c && {f() {}}), ...g(x)
@@ -27,6 +49,10 @@ class JavaScriptObjectsMixin:
                 self._read_binding_candidate(']')
             else:
                 self._collect_computed_name()
+            return True
+        if token == ':' and self.as_class and self._typed_class_member():
+            self.function_name = self.last_tokens
+            self._consume_type_annotation()
             return True
         if token == ':':
             # Only set function_name for valid identifiers
@@ -52,7 +78,7 @@ class JavaScriptObjectsMixin:
                 return True
             # In property value (after ':'), identifier( is a function call
             # unless it's the prop name itself: prop: (...) => {} is arrow fn
-            if self._in_prop_value and (
+            if self._in_prop_value and self.last_tokens != '=' and (
                     not self.function_name
                     or self.last_tokens != self.function_name):
                 self._read_parenthesis_group()
@@ -90,6 +116,8 @@ class JavaScriptObjectsMixin:
 
         object_reader = self._read_binding_candidate(
             '}', callback, as_object=True, track_complexity=False)
+        object_reader.as_class = self._class_body_pending
+        self._class_body_pending = False
         object_reader._static_seen = self._static_seen
         object_reader._async_seen = self._async_seen
         self._static_seen = False
