@@ -32,3 +32,5 @@ Installed paired runner; API/parameter/NS calibration1.2s, CLI4s, every batch>=1
 Maximum accepted upper: **2.7992%**, strictly below3%. Current108 runtime-file hashes match full local checks and independent audit; source/corpus/harness/import/observation stability is retained for every comparison.
 
 Detailed working evidence remains in the owned execution checkout through hosted disposition and will be preserved in Git before ordinary wrap-up cleanup. The repair increment contains the parser, regressions and this concise qualification; hosted exact-head checks are still required before merge.
+
+Disposition: [PR548](https://github.com/terryyin/lizard/pull/548) merged at2416c37 after31 successful checks and1 legitimate conditional skip. [Issue524](https://github.com/terryyin/lizard/issues/524#issuecomment-6569296813) is closed/completed with the related-fix summary and thanks. An isolated merged-master export matches all qualified runtime/test bytes and638-source default/NS plus100-source CLI observations.

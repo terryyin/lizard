@@ -3,6 +3,7 @@
 **Identity:** SEED-024#resolve-issue524-label-types
 **Source:** [Resolve label and annotation boundaries](../../seeds/SEED-024-issue524-label-types.md#resolve-issue524-label-types)
 **Source review:** [Source-only commitments](source-review.md)
+**Repair PR:** https://github.com/terryyin/lizard/pull/548 — delivery artifact of this existing canonical owner, not a second work item.
 
 ## Goal and scope
 
@@ -153,7 +154,7 @@ correction; no unresolved workload can move to the hosted-delivery slice.
 
 ### 2. Merge the qualified repair and close issue #524 with evidence
 Type: Behavior
-Status: planned
+Status: done
 Behavior: Publish the qualified repair PR against current master, inspect its
 aggregate diff and fresh discussion/checks, preserve accepted runtime/test bytes,
 and merge guarded by its exact head after applicable hosted CI passes. Confirm
@@ -269,6 +270,17 @@ Story clause: "qualify affected API/parameter/extension consumers and broad CLI 
 Disposition: proved by slice 1: performance5 current-calls-ns-pooled.json retains original40 plus new80 pairs and passes with upper+0.8488168262%; extra80 independently passes, cross-block observations match; summary.json contains all18 accepted current/cumulative gates, maximum upper+2.7992221230%; current108 runtime hashes match local5 full checks and independent refactor audit.
 
 ## Acceptance progress
+
+Slice2 external outcome: PR548 exact qualified head7fac94f8c5df9c1791b5ef3cf4899847dcaafee1
+passed31 checks with one legitimate conditional web skip across32 exact-head
+results; base0e352b7751fc8838dcde8b68051e305a200ebb9c unchanged, discussion empty.
+Guarded hosted merge succeeded at2416c37e91563965f5c98d00770c6e0083b3bb68.
+Fetched master matches this merge; runtime/test trees match the qualified head.
+An isolated master export's638-source default/NS and100-source broad CLI public
+observations exactly match accepted proof, with actual module-origin guards.
+Issue524 summary6569296813 is confirmed and issue state is closed/completed.
+No known reported/confirmed failure remains; ordinary completion/retrospective/
+Git recovery cleanup/integration/CI shutdown and owned retirement remain.
 
 Slice1 final acceptance: all18 performance5 summary cells pass on current
 candidate3 bytes; maximum paired95% upper+2.7992221230%, strictly below3.
