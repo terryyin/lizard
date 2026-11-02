@@ -30,3 +30,7 @@ All 490 label/annotation regression cases and the full 2917-test suite pass
 with 7 existing skips. No product change or new performance claim accompanies
 this review. The other 14 open PRs concern independent functionality; none
 was closed as a consequence of #524's resolution.
+
+[Review evidence](https://github.com/terryyin/lizard/tree/7b7e8026ab411c5ffb165a39e03127c78d1332f0/docs/reviews/issue524-superseded-prs-20261102)
+retains the complete PR snapshot, exact added-test probe, assertion differences,
+screening decisions and local checks.

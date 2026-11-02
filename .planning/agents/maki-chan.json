@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "agent": "Maki-chan",
-  "email": "maki-chan@example.org",
-  "identity": "SEED-026#close-superseded-issue524-prs",
-  "mode": "story-branch",
-  "branch": "codex/issue524-superseded-prs",
-  "host": "codex"
-}

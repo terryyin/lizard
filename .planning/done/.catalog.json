@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-026_close-superseded-issue524-prs.json",
+      "identity": "SEED-026#close-superseded-issue524-prs",
+      "completedAt": "2026-11-02T06:54:57.282Z",
+      "blob": "373ae1f10f98bbca08ec28f1112714b9345b832a"
+    },
+    {
       "fileName": "SEED-024_resolve-issue524-label-types.json",
       "identity": "SEED-024#resolve-issue524-label-types",
       "completedAt": "2026-11-02T05:16:46.132Z",
