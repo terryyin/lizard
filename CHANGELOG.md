@@ -1,10 +1,28 @@
 # Change Log
 
+## 1.25.0
+
+### New Features
+- **Dart** — discover `.dart` files and analyze functions, methods, getters, setters, and constructors with bodies, including expression bodies and `async`/generator modifiers; handle raw and triple-quoted strings, null-safety operators, exception clauses, and switch-expression arms
+- **COBOL** — discover `.cbl`, `.cob`, and `.cobol` files in fixed format, report Procedure Division paragraphs as functions, and count core conditional, loop, and selection decisions
+
+### Bug Fixes
+- JavaScript, TypeScript, JSX, and TSX: preserve callback boundaries and CCN when call arguments or object values contain subscripts, including `e(r[0])` and `return {w: [m[n - 1]]}` (issue #524, PR #525)
+- JavaScript, TypeScript, JSX, and TSX: end expression-bodied arrows at their enclosing argument, array, or object comma so following object members retain their own functions and metrics (issue #524, PR #525)
+- JavaScript, TypeScript, JSX, and TSX: preserve runtime functions across object bodies, ternary branches, multiline expressions, and immediately invoked functions (PRs #531, #533, #534)
+- JavaScript and TypeScript: distinguish runtime labeled blocks from type annotations; keep nested type brackets, function-type fields, assertions, and enclosing runtime delimiters from swallowing or inventing functions (issue #524, PR #548)
+- JavaScript and TypeScript: preserve arrow and callback parameters, including names containing `_` or `$`, type-keyword names, and empty destructuring slots; exclude TypeScript's `this` receiver from the parameter count and use the same count in text, CSV, HTML, and Checkstyle output (PRs #532, #535, #536, #537)
+- JavaScript, TypeScript, JSX, and TSX: count conditions inside nested template interpolations and unspaced ternaries, while keeping optional parameter/member markers and keyword-named properties from adding false decisions (PRs #545, #546, #547)
+- JavaScript and TypeScript: distinguish regex literals from division after keywords and arrows, and end line comments at the newline even after a trailing backslash (PRs #528, #544)
+- Vue: preserve original source line numbers when filtering script blocks, and recognize TypeScript annotations in typed script blocks
+- Python `-ENS`: count nested control structures by indentation, including `async` statements and `match`, without treating comprehensions or conditional expressions as nested statements (PR #527)
+
+### Improvements
+- Verify Python 3.8 through 3.14 on Linux and Windows in CI and update the supported-version documentation and package classifiers
+
 ## 1.24.3
 
 ### Bug Fixes
-- JavaScript, TypeScript, JSX, and TSX: preserve callback boundaries and CCN when call arguments or object values contain subscripts, including `e(r[0])` and `return {w: [m[n - 1]]}` (issue #524)
-- JavaScript, TypeScript, JSX, and TSX: end expression-bodied arrows at their enclosing argument, array, or object comma so following object members retain their own functions and metrics (issue #524)
 - TypeScript: preserve function boundaries and NLOC after return type annotations, including adjacent annotated functions (issue #521)
 - JavaScript, TypeScript, JSX, and TSX: use balanced scanning for nested template literals so deeper nesting, quoted delimiters, escapes, and comments do not swallow following functions (issue #521)
 - TypeScript and TSX: keep ternary colons in conditional expressions from being mistaken for type annotations, preventing crashes in conditional style arrays (issue #523)

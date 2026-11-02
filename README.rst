@@ -70,7 +70,7 @@ It requires Python 3.8 or above. The test suite runs on Python 3.8, 3.9, 3.10,
 other versions are not verified.
 
 JavaScript and TypeScript parameters
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Named and anonymous arrows report the same formal parameter counts and binding
 names. Empty object and array patterns each occupy a parameter slot without
@@ -223,7 +223,6 @@ Lizard may choose not to deal with some advanced or complicated language feature
 - Some C++ complicated templates may cause confusion with matching angle brackets
   and processing less-than ``<`` or more-than ``>`` operators
   inside of template arguments.
-
 
 Literature Referring to Lizard
 ------------------------------
