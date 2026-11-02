@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "agent": "Nana-chan",
-  "email": "nana-chan@example.org",
-  "identity": "SEED-027#release125",
-  "mode": "story-branch",
-  "branch": "codex/release125",
-  "host": "codex"
-}
