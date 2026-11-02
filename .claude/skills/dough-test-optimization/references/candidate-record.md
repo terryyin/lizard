@@ -2,33 +2,27 @@
 
 Own every recorded finding in this project's
 `.planning/TEST-OPTIMIZATION-CANDIDATES.md`. Head it exactly
-`# Test Optimization Candidates`. The record is a problem list with a discharge
-summary, not a pass history. Raw profiles stay outside it.
+`# Test Optimization Candidates`. The record tracks findings and their
+dispositions. Raw profiles stay outside it.
 
 ## Sections (required order)
 
-1. `## Latest pass` — only the most recent pass. Replace its body on the next
-   pass that records a summary. Include command and scope, revision, comparable
-   before/after wall time and executed case counts when available, outcome as
-   measured gain, no demonstrated gain, or incomplete measurement, measurement
-   limits, and evidence links.
-2. `## Pending candidates` — proposed changes not yet implemented or decided,
+1. `## Pending candidates` — proposed changes not yet implemented or decided,
    including those awaiting a named human decision.
-3. `## Accepted necessary costs` — cost judged inherent to unique protected
+2. `## Accepted necessary costs` — cost judged inherent to unique protected
    behavior. Acceptance is a decision record only: it filters, skips, or
    excludes nothing. Normal verification and CI keep running the test. An
    accepted cost is not an exclusion; later passes keep it unless new evidence
    supports moving it back to pending.
-4. `## Profile-only exclusions` — exclusions actually applied through this
+3. `## Profile-only exclusions` — exclusions actually applied through this
    project's existing mechanism. Name that mechanism and its scope. Do not
    invent a mechanism here.
-5. `## Transferred obligations` — candidates whose work now lives in a named
+4. `## Transferred obligations` — candidates whose work now lives in a named
    replacement story or plan. Keep the entry as a pointer until that work
    closes; never claim the replacement was implemented.
 
 An empty finding section holds exactly `None.` A record whose every finding
-section is `None.` is an explicit empty record. `## Latest pass` always holds
-the latest summary when the file exists.
+section is `None.` is an explicit empty record.
 
 ## Entry shape
 
@@ -48,13 +42,14 @@ labeled fields:
 ## Read and write rules
 
 - **Missing file:** no pass has recorded findings in this project. A pass that
-  records a summary or finding creates the file from this format; it needs no
+  records a finding creates the file from this format; it needs no
   pre-existing file. `--resolve` reports the absence without creating it.
 - **Unreadable or mismatched:** stop the write, report the problem, and never
   overwrite or guess at the file.
 - **Later passes:** read this record first. Preserve recorded decisions.
-  Replace only `## Latest pass`. Move an accepted cost back to pending only
-  with new evidence.
+  Move an accepted cost back to pending only with new evidence. Earlier records
+  may have a leading pass summary; remove it when updating the findings while
+  preserving their decisions and evidence.
 - **Lifecycle:** pending → accepted necessary cost, profile-only exclusion, or
   transferred obligation (or stay pending with its human decision). Before a
   spent plan is deleted, move any finding that exists only in that plan into
@@ -66,15 +61,6 @@ labeled fields:
 
 ```markdown
 # Test Optimization Candidates
-
-## Latest pass
-
-- **Command / scope:** …
-- **Revision:** …
-- **Before / after:** wall … / …; cases … / … (or unavailable)
-- **Outcome:** measured gain | no demonstrated gain | incomplete measurement
-- **Limits:** …
-- **Evidence:** …
 
 ## Pending candidates
 
