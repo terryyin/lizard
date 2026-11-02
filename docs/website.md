@@ -90,17 +90,41 @@ nix develop -c npm --prefix website/frontend run test:e2e
 The suite tests the current build output; rebuild after frontend changes.
 Without a build it stops at startup and prints Flask's build diagnostic.
 
-Ordinary runs also record scenario proof under `website/frontend/proof/`,
-declared on the Gherkin location in `.planning/open-dough.json`. The native
-`proof-plugin.js` observes the main process, including retries and parallel
-workers, without changing the progress or HTML reports. Each run atomically
-updates its own file after each final scenario attempt; interruption retains
-completed scenarios. Focused runs update only the scenarios they execute, and
-dry runs write no observations. Commit generated proof with the work it tests;
-do not run the suite just to refresh proof. Recording is silent and best effort,
-so Git/configuration or filesystem problems never change the test result.
-`run test:proof` checks the recorder through real Cucumber runs in temporary
-Git repositories, including its output and exit-status contract.
+Ordinary passing and failing runs, including CI and test optimization, never
+read or change retained scenario proof or allocate proof locks/directories.
+To deliberately generate or refresh proof after the same setup above, run the
+instruction declared on the Gherkin location in `.planning/open-dough.json`:
+
+```sh
+nix develop -c env RECORD_CUCUMBER_PROOF=1 npm --prefix website/frontend run test:e2e -- --profile default
+```
+
+Only the exact option value `1` enables recording. The default profile selects
+`features/**/*.feature`; add `--name 'scenario name'` or another ordinary
+Cucumber filter to the same command for a focused refresh. A whole-suite run
+is not required. Tests, progress/HTML reports, diagnostics and exit meaning stay
+the same. Recording is silent and best effort and never commits automatically.
+
+The native main-process recorder maintains `website/frontend/proof/latest.json`
+with passing scenarios only. Each final executed pass refreshes its source
+identity, attempts/timing, run-start commit and tested feature version. An
+executed final nonpass removes its older success everywhere; intermediate retry
+failures, unexecuted scenarios, dry runs and fail-fast skips leave earlier proof
+alone. Newer retained observations survive cleanup. Explicit refresh adopts old
+run files latest-first, letting a failure win a timestamp tie before keeping
+passes, then removes consumed files. Empty snapshots are deleted. Concurrent
+explicit runs serialize atomic updates; interruption retains completed updates
+and a later recording run recovers a stale lock.
+
+Proof is the last deliberately retained successful verification, independently
+of later normal runs and CI verdicts. Review and commit the deliberate snapshot
+and cleanup deletions with the work they observed. During Git reconciliation,
+compare snapshots by `(feature, scenario, example)`: preserve identity removals
+when the other side only retains an older success, rather than unioning arrays
+or restoring consumed run files. Preserve newer deliberate successes;
+when the ordering is unclear, explicitly refresh just the affected scenarios.
+`run test:proof` checks this contract through isolated real Cucumber/Git fixtures;
+it never refreshes this checkout's retained website proof.
 
 On Linux CI, also install the browser's system libraries with
 `playwright install --with-deps chromium`. `run test:e2e:dry` lists the

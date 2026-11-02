@@ -5,7 +5,10 @@
     "locations": [{
       "path": "website/frontend/features",
       "kind": "gherkin",
-      "proof": "website/frontend/proof"
+      "proof": "website/frontend/proof",
+      "proofGeneration": {
+        "command": "nix develop -c env RECORD_CUCUMBER_PROOF=1 npm --prefix website/frontend run test:e2e -- --profile default"
+      }
     }]
   }
 }

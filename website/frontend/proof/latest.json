@@ -1,0 +1,165 @@
+{
+  "version": 1,
+  "observations": [
+    {
+      "feature": "website/frontend/features/access.feature",
+      "scenario": "A keyboard user reaches the demo and analyzes the code",
+      "outcome": "passed",
+      "attempts": 1,
+      "durationMs": 279.94595599999997,
+      "finishedAt": "2026-11-02T00:02:58.099Z",
+      "commit": "80d78621cbb47f13a1aad3a688665c51c71251b2",
+      "featureBlob": "330d5fe513a327083724b0c4c528bb4e3503d50a"
+    },
+    {
+      "feature": "website/frontend/features/access.feature",
+      "scenario": "Keyboard focus on the demo controls is visible",
+      "outcome": "passed",
+      "attempts": 1,
+      "durationMs": 109.90907899999999,
+      "finishedAt": "2026-11-02T00:02:58.469Z",
+      "commit": "80d78621cbb47f13a1aad3a688665c51c71251b2",
+      "featureBlob": "330d5fe513a327083724b0c4c528bb4e3503d50a"
+    },
+    {
+      "feature": "website/frontend/features/access.feature",
+      "scenario": "The demo works on a narrow screen",
+      "outcome": "passed",
+      "attempts": 1,
+      "durationMs": 256.906911,
+      "finishedAt": "2026-11-02T00:02:58.357Z",
+      "commit": "80d78621cbb47f13a1aad3a688665c51c71251b2",
+      "featureBlob": "330d5fe513a327083724b0c4c528bb4e3503d50a"
+    },
+    {
+      "feature": "website/frontend/features/discovery.feature",
+      "scenario": "Installation and documentation are findable",
+      "outcome": "passed",
+      "attempts": 1,
+      "durationMs": 78.485874,
+      "finishedAt": "2026-11-02T00:02:58.548Z",
+      "commit": "80d78621cbb47f13a1aad3a688665c51c71251b2",
+      "featureBlob": "046c5dc4687b59187d4bf4b506b267122a216d43"
+    },
+    {
+      "feature": "website/frontend/features/discovery.feature",
+      "scenario": "The Python sample reports its metrics from the analyzer",
+      "outcome": "passed",
+      "attempts": 1,
+      "durationMs": 194.15208099999998,
+      "finishedAt": "2026-11-02T00:02:58.743Z",
+      "commit": "80d78621cbb47f13a1aad3a688665c51c71251b2",
+      "featureBlob": "046c5dc4687b59187d4bf4b506b267122a216d43"
+    },
+    {
+      "feature": "website/frontend/features/languages.feature",
+      "scenario": "Changing the language keeps the entered code until an example is loaded",
+      "outcome": "passed",
+      "attempts": 1,
+      "durationMs": 202.134746,
+      "finishedAt": "2026-11-02T10:09:44.912Z",
+      "commit": "87231fda3cad0ec3c8b59dbb3c82163fb9bafe9f",
+      "featureBlob": "d663a71e638ba006b35e016719f1ab8d5ed85760"
+    },
+    {
+      "feature": "website/frontend/features/languages.feature",
+      "scenario": "Pasted code is analyzed in a language without an example",
+      "outcome": "passed",
+      "attempts": 1,
+      "durationMs": 219.945743,
+      "finishedAt": "2026-11-02T00:02:59.145Z",
+      "commit": "80d78621cbb47f13a1aad3a688665c51c71251b2",
+      "featureBlob": "d663a71e638ba006b35e016719f1ab8d5ed85760"
+    },
+    {
+      "feature": "website/frontend/features/languages.feature",
+      "scenario": "Valid code without functions gives an empty result, not an error",
+      "outcome": "passed",
+      "attempts": 1,
+      "durationMs": 558.3460349999999,
+      "finishedAt": "2026-11-02T00:02:59.704Z",
+      "commit": "80d78621cbb47f13a1aad3a688665c51c71251b2",
+      "featureBlob": "d663a71e638ba006b35e016719f1ab8d5ed85760"
+    },
+    {
+      "feature": "website/frontend/features/published.feature",
+      "scenario": "The logo and favicon keep their published URLs",
+      "outcome": "passed",
+      "attempts": 1,
+      "durationMs": 87.83637200000003,
+      "finishedAt": "2026-11-02T00:02:59.793Z",
+      "commit": "80d78621cbb47f13a1aad3a688665c51c71251b2",
+      "featureBlob": "9d716973a02186d1fd94d124d2f9ed64b89b6373"
+    },
+    {
+      "feature": "website/frontend/features/published.feature",
+      "scenario": "The page runs from the built bundle, not the retired assets",
+      "outcome": "passed",
+      "attempts": 1,
+      "durationMs": 45.618247000000004,
+      "finishedAt": "2026-11-02T00:02:59.840Z",
+      "commit": "80d78621cbb47f13a1aad3a688665c51c71251b2",
+      "featureBlob": "9d716973a02186d1fd94d124d2f9ed64b89b6373"
+    },
+    {
+      "feature": "website/frontend/features/published.feature",
+      "scenario": "Visitors without JavaScript are pointed to the command-line tool",
+      "outcome": "passed",
+      "attempts": 1,
+      "durationMs": 70.56958,
+      "finishedAt": "2026-11-02T00:02:59.911Z",
+      "commit": "80d78621cbb47f13a1aad3a688665c51c71251b2",
+      "featureBlob": "9d716973a02186d1fd94d124d2f9ed64b89b6373"
+    },
+    {
+      "feature": "website/frontend/features/recovery.feature",
+      "scenario": "A stalled analyzer stops the wait after 20 seconds",
+      "outcome": "passed",
+      "attempts": 1,
+      "durationMs": 20580.887413000008,
+      "finishedAt": "2026-11-02T00:03:22.225Z",
+      "commit": "80d78621cbb47f13a1aad3a688665c51c71251b2",
+      "featureBlob": "19ea7e42d8e9c3aec31d21cd3c38a5949ad04313"
+    },
+    {
+      "feature": "website/frontend/features/recovery.feature",
+      "scenario": "Code over 64 KiB of UTF-8 is rejected and a retry succeeds",
+      "outcome": "passed",
+      "attempts": 1,
+      "durationMs": 567.3398699999999,
+      "finishedAt": "2026-11-02T00:03:00.993Z",
+      "commit": "80d78621cbb47f13a1aad3a688665c51c71251b2",
+      "featureBlob": "19ea7e42d8e9c3aec31d21cd3c38a5949ad04313"
+    },
+    {
+      "feature": "website/frontend/features/recovery.feature",
+      "scenario": "Empty code is rejected and a retry succeeds",
+      "outcome": "passed",
+      "attempts": 1,
+      "durationMs": 511.01807499999995,
+      "finishedAt": "2026-11-02T00:03:00.424Z",
+      "commit": "80d78621cbb47f13a1aad3a688665c51c71251b2",
+      "featureBlob": "19ea7e42d8e9c3aec31d21cd3c38a5949ad04313"
+    },
+    {
+      "feature": "website/frontend/features/recovery.feature",
+      "scenario": "Progress is announced and a second submission is prevented",
+      "outcome": "passed",
+      "attempts": 1,
+      "durationMs": 173.057453,
+      "finishedAt": "2026-11-02T00:03:01.167Z",
+      "commit": "80d78621cbb47f13a1aad3a688665c51c71251b2",
+      "featureBlob": "19ea7e42d8e9c3aec31d21cd3c38a5949ad04313"
+    },
+    {
+      "feature": "website/frontend/features/recovery.feature",
+      "scenario": "Unavailable analysis hides stale results and recovers after a retry",
+      "outcome": "passed",
+      "attempts": 1,
+      "durationMs": 474.19478699999996,
+      "finishedAt": "2026-11-02T00:03:01.643Z",
+      "commit": "80d78621cbb47f13a1aad3a688665c51c71251b2",
+      "featureBlob": "19ea7e42d8e9c3aec31d21cd3c38a5949ad04313"
+    }
+  ]
+}

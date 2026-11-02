@@ -1,8 +1,8 @@
 import { execFileSync } from "node:child_process";
-import { randomUUID } from "node:crypto";
-import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { refreshProof } from "./proof-snapshot.js";
 
 const statuses = ["UNKNOWN", "PASSED", "SKIPPED", "PENDING", "UNDEFINED", "AMBIGUOUS", "FAILED"];
 const milliseconds = ({ seconds = 0, nanos = 0 } = {}) => Number(seconds) * 1000 + nanos / 1e6;
@@ -14,8 +14,8 @@ const inside = (directory, file) => {
 /** A main-process observer only: it never controls execution or writes reports. */
 export default {
   type: "plugin",
-  coordinator({ operation, environment: { cwd }, on }) {
-    if (operation !== "runCucumber") return;
+  coordinator({ operation, environment: { cwd, env }, on }) {
+    if (operation !== "runCucumber" || env.RECORD_CUCUMBER_PROOF !== "1") return;
     try {
       const git = (...args) => execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] }).trim();
       const root = git("rev-parse", "--show-toplevel");
@@ -27,14 +27,12 @@ export default {
         .filter(({ path, proof }) => inside(root, path) && inside(root, proof));
       if (!locations.length) return;
 
-      const filename = `${new Date().toISOString().replace(/[-:.]/g, "")}-${randomUUID()}.json`;
       const sources = new Map();
       const nodes = new Map();
       const pickles = new Map();
       const cases = new Map();
       const attempts = new Map();
       const totals = new Map();
-      const observations = new Map();
 
       const rememberChildren = (children) => {
         for (const { scenario, rule } of children ?? []) {
@@ -44,18 +42,6 @@ export default {
           for (const examples of scenario.examples ?? []) {
             for (const row of examples.tableBody ?? []) nodes.set(row.id, { example: row.cells.map(({ value }) => value) });
           }
-        }
-      };
-      const write = (directory) => {
-        const entries = [...observations.values()].filter(({ proof }) => proof === directory).map(({ observation }) => observation);
-        mkdirSync(directory, { recursive: true });
-        const path = join(directory, filename);
-        const temporary = `${path}.${randomUUID()}.tmp`;
-        try {
-          writeFileSync(temporary, `${JSON.stringify({ version: 1, observations: entries })}\n`, { flag: "wx" });
-          renameSync(temporary, path);
-        } finally {
-          rmSync(temporary, { force: true });
         }
       };
       const observe = (message) => {
@@ -114,8 +100,7 @@ export default {
           feature: source.feature, ...identity, outcome, ...total,
           finishedAt: new Date(milliseconds(finished.timestamp)).toISOString(), commit, featureBlob: source.featureBlob,
         };
-        observations.set(JSON.stringify([source.feature, identity.scenario, identity.example]), { proof: source.proof, observation });
-        write(source.proof);
+        refreshProof(source.proof, observation);
       };
       on("message", (message) => {
         try { observe(message); } catch { /* Proof is best effort and never changes the test result. */ }
