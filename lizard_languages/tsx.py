@@ -20,6 +20,11 @@ class TSXReader(TypeScriptReader):
     language_names = ['tsx', 'jsx']
     _scan_atomic_templates = True
 
+    def __init__(self, context):
+        super().__init__(context)
+        context.class_field_annotations = context.fileinfo.filename.lower().endswith(
+            ".tsx")
+
     @staticmethod
     @js_style_regex_expression
     def generate_tokens(source_code, addition='', token_class=None):
@@ -98,6 +103,7 @@ class XMLTagWithAttrTokenizer(Tokenizer):
         return ()
 
     def abort(self):
+        self._aborted = True
         self.stop()
         return self.cache
 

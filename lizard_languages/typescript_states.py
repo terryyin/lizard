@@ -8,9 +8,10 @@ from .typescript_signatures import ReturnTypeColon
 from .typescript_declarations import (
     DECLARATION_WORDS, TypeScriptDeclarationsMixin)
 
-# Modifiers and conditional/switch markers share a set test so ordinary
-# tokens skip their checks.
+# Ordinary tokens skip declaration and marker dispatch together.
 _MARKER_TOKENS = frozenset(('static', 'async', 'new', '?', 'case', ':'))
+_SPECIAL_TOKENS = DECLARATION_WORDS | _MARKER_TOKENS
+_TAIL_TOKENS = frozenset(('`', ':', ',', '!'))
 
 
 class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
@@ -22,6 +23,9 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         self.function_name = ''
         self.started_function = None
         self.as_object = False
+        self.as_class = False
+        self._class_body_pending = False
+        self._declaration_binding = None
         self._getter_setter_prefix = None
 
         self._ts_declare = False  # Track if 'declare' was seen
@@ -40,7 +44,6 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         if self._binding_candidate:
             # Only named-formal readers need events for initializer dispatch.
             self._binding_candidate.read_token(token, report=False)
-        # No mixin defines __call__; avoid super() once per token.
         return CodeStateMachine.__call__(self, token, reader)
 
     def next(self, state, token=None):
@@ -56,62 +59,60 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
     def _end_statement(self):
         self.function_name = ''
         self._pop_function_from_stack()
-        # Reset modifiers on newline/semicolon
         self._static_seen = False
         self._async_seen = False
         self._in_abstract_context = False
         self._in_prop_value = False
         self._prev_token = ''
+        if self.last_token != ',':
+            self._declaration_binding = None
 
     def statemachine_before_return(self):
-        # Ensure the main function is closed at the end
         if self.started_function:
             self._pop_function_from_stack()
 
     def _state_global(self, token):
         if self._pending_bindings:
             self._resolve_pending_bindings(token)
-
-        if ((self._ts_declare or token in DECLARATION_WORDS)
-                and self._handle_type_declaration(token)):
-            return
-
-        if token in _MARKER_TOKENS:
-            if isinstance(token, ReturnTypeColon):
-                self._consume_type_annotation()
-                return
-            # Track the static, async and new modifiers
-            if token == 'static':
-                self._static_seen = True
-                self._prev_token = token
-                return
-            if token == 'async':
-                self._async_seen = True
-                self._prev_token = token
-                return
-            if token == 'new':
-                # Track 'new' to avoid treating constructors as functions
-                self._prev_token = token
-                return
-            if token != ':':
-                if token == '?' or not self.as_object:
-                    self._ternary_depth += 1
-            elif self._ternary_depth or (
-                    self.last_tokens == 'default' and not self.as_object):
-                # Runtime separators must not swallow next-line `return () =>`
-                # as a function type annotation.
-                if self.last_tokens != 'default':
-                    if (self._expression_body and self._ternary_depth
-                            == self._expression_ternary_depth):
-                        self._pop_function_from_stack()
-                    self._ternary_depth -= 1
-                self.last_tokens = token
-                self._prev_token = token
+        if self._ts_declare or token in _SPECIAL_TOKENS:
+            if ((self._ts_declare or token in DECLARATION_WORDS)
+                    and self._handle_type_declaration(token)):
                 return
 
+            if token in _MARKER_TOKENS:
+                if isinstance(token, ReturnTypeColon):
+                    self._consume_type_annotation()
+                    return
+                if token == 'static':
+                    self._static_seen = True
+                    self._prev_token = token
+                    return
+                if token == 'async':
+                    self._async_seen = True
+                    self._prev_token = token
+                    return
+                if token == 'new':
+                    self._prev_token = token
+                    return
+                if token == '?' and self.as_class:
+                    if self._optional_class_member():
+                        return
+                if token != ':':
+                    if token == '?' or not self.as_object:
+                        self._ternary_depth += 1
+                elif self._ternary_depth or (
+                        self.last_tokens == 'default' and not self.as_object):
+                    # Runtime colons must not swallow a following function type.
+                    if self.last_tokens != 'default':
+                        if (self._expression_body and self._ternary_depth
+                                == self._expression_ternary_depth):
+                            self._pop_function_from_stack()
+                        self._ternary_depth -= 1
+                    self.last_tokens = token
+                    self._prev_token = token
+                    return
         if self.as_object and self._handle_object_member(token):
             return
-
         if token in ('.', '?.'):
             self._state = self._field
             self.last_tokens += token
@@ -133,13 +134,15 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                     self._pending_bindings = BindingSummary(0, 0, 0, [name])
             self._state = self._arrow_function
         elif token == '=':
-            # Only set function_name for valid identifiers
+            if self._declaration_binding is not None:
+                self._declaration_binding = False
             name = self.last_tokens
             if name and (name[0].isalpha() or name[0] in ('_', '$', '#')):
                 self.function_name = name
+        elif token == '<' and self._class_body_pending:
+            self._consume_generic_type_params()
         elif token == "(":
             self._parenthesis_prefix = self._prev_token
-            # Calls and initializer groups keep their nested syntax reader.
             if (self._prev_token in ('.', 'new')
                     or self._binding_candidate
                     and self._binding_candidate.in_expression):
@@ -191,18 +194,19 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                     not self._expression_body or self.last_token == ',')):
             self._end_statement()
 
-        if token == '`':
-            self.next(self._state_template_literal)
-        if not self.as_object:
-            if token == ':':
-                binding = self._binding_candidate
-                if not binding or binding.at_root and not binding.in_expression:
-                    self._typed_parameters = True
-                self._consume_type_annotation()
-                self._prev_token = token
+        if token in _TAIL_TOKENS:
+            if token == '`':
+                self.next(self._state_template_literal)
+            elif token == ':' and not self.as_object:
+                self._read_runtime_colon()
                 return
-        if self.as_object and token == ',':
-            self._in_prop_value = False
+            elif token == '!':
+                self._postfix_operand = self._assertion_operand()
+            elif token == ',':
+                if self._declaration_binding is not None:
+                    self._declaration_binding = True
+                if self.as_object:
+                    self._in_prop_value = False
         self.last_tokens = token
         # Don't overwrite _prev_token if it's 'new' (preserve for next token)
         if self._prev_token != 'new':
@@ -238,6 +242,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             self.sub_state(
                 self.__class__(self.context), callback)
         else:
+            self._prev_token = ''
             self.next(self._state_global, token)
 
     def _state_template_literal(self, token):

@@ -2,7 +2,7 @@
 
 from .javascript_bindings import JavaScriptBindings
 from .javascript_functions import ends_expression, starts_statement
-from .typescript_declarations import TypeScriptTypeAnnotationStates
+from .typescript_type_annotation import TypeScriptTypeAnnotationStates
 
 
 class ReturnTypeColon(str):
@@ -16,15 +16,7 @@ def return_type_colon(tokens, depth):
         if token.isspace() or token.startswith(('//', '/*')):
             continue
         if annotation(token):
-            if annotation.saved_token is None:
-                # Inline and generic types end at their own closing bracket.
-                for token in tokens:
-                    if not token.isspace() and not token.startswith(('//', '/*')):
-                        break
-                else:
-                    return False
-            else:
-                token = annotation.saved_token
+            token = annotation.saved_token
             if token != '=>':
                 return False
             return not depth or _has_branch_separators(tokens, depth)

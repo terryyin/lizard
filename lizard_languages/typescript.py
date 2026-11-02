@@ -8,7 +8,7 @@ from .code_reader import CodeReader, CodeStateMachine
 from .clike import CCppCommentsMixin
 from .js_style_regex_expression import js_style_regex_expression
 from .javascript_bindings import JavaScriptBindings
-from .typescript_declarations import TypeScriptTypeAnnotationStates
+from .typescript_type_annotation import TypeScriptTypeAnnotationStates
 from .typescript_states import TypeScriptStates
 from .typescript_signatures import ReturnTypeColon, return_type_colon
 from .javascript_templates import LINE_COMMENT, interpolation_code, template_tokens
@@ -27,16 +27,19 @@ class Tokenizer(object):
     def __init__(self):
         self.sub_tokenizer = None
         self._ended = False
+        self._aborted = False
 
     def __call__(self, token):
         if self.sub_tokenizer:
-            for tok in self.sub_tokenizer(token):
-                yield tok
+            yield from self._sub_tokens(token)
             if self.sub_tokenizer._ended:
                 self.sub_tokenizer = None
             return
         for tok in self.process_token(token):
             yield tok
+
+    def _sub_tokens(self, token):
+        yield from self.sub_tokenizer(token)
 
     def stop(self):
         self._ended = True
@@ -50,6 +53,15 @@ class JSTokenizer(Tokenizer):
         super().__init__()
         self.depth = 1
 
+    def _sub_tokens(self, token):
+        for tok in self.sub_tokenizer(token):
+            if self.sub_tokenizer._aborted:
+                # An aborted JSX candidate is ordinary JavaScript. Its
+                # emitted braces still belong to this tokenizer.
+                yield from JSTokenizer.process_token(self, tok)
+            else:
+                yield tok
+
     def process_token(self, token):
         if token == "{":
             self.depth += 1
@@ -61,6 +73,16 @@ class JSTokenizer(Tokenizer):
         yield token
 
 
+class _OptionalMemberQuestion(str):
+    """A class member marker excluded by optional-aware metric consumers."""
+
+    is_optional = True
+
+
+_OPTIONAL_MEMBER_QUESTION = _OptionalMemberQuestion('?')
+_ANNOTATION_PUNCTUATION = frozenset(('?', ':'))
+
+
 class TypeScriptReader(CodeReader, CCppCommentsMixin):
     # pylint: disable=R0903
 
@@ -69,6 +91,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
     # JS/TS split templates into '${' + expression tokens; only TSX/JSX keep
     # atomic templates that need a backtick scan on the fast path.
     _scan_atomic_templates = False
+    _class_field_annotations = True
 
     # Separated condition categories
     _control_flow_keywords = {'if', 'elseif', 'for', 'while', 'catch'}
@@ -78,6 +101,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
 
     def __init__(self, context):
         super().__init__(context)
+        self.context.class_field_annotations = self._class_field_annotations
         self.parallel_states = [TypeScriptStates(context)]
         self._previous_token = None
 
@@ -167,6 +191,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         arrows = self.context.expression_arrows = []
         line_start = False
         state = self.parallel_states[0]
+        annotation_punctuation = _ANNOTATION_PUNCTUATION
         tokens = iter(self.code_tokens(tokens))
         while True:
             for token in tokens:
@@ -174,20 +199,25 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                     if line_start and not token.startswith(('//', '/*')):
                         line_start = False
                         arrows[-1].end_expression_before(token)
-                    if token == ':' and state.last_token == ')':
-                        annotation = state.return_annotation_context()
-                        if annotation is not None:
-                            depth, unambiguous_signature = annotation
-                            if unambiguous_signature:
-                                token = ReturnTypeColon(token)
-                            else:
-                                tokens, lookahead = tee(tokens)
-                                if return_type_colon(lookahead, depth):
+                    if token in annotation_punctuation:
+                        if token == '?':
+                            if (self.context.class_field_annotations
+                                    and state.optional_member_context()):
+                                token = _OPTIONAL_MEMBER_QUESTION
+                        elif state.last_token == ')':
+                            annotation = state.return_annotation_context()
+                            if annotation is not None:
+                                depth, unambiguous_signature = annotation
+                                if unambiguous_signature:
                                     token = ReturnTypeColon(token)
-                                del lookahead
-                                yield token
-                                # Resume on the main iterator, including buffered tokens.
-                                break
+                                else:
+                                    tokens, lookahead = tee(tokens)
+                                    if return_type_colon(lookahead, depth):
+                                        token = ReturnTypeColon(token)
+                                    del lookahead
+                                    yield token
+                                    # Resume with the buffered iterator.
+                                    break
                     yield token
                 elif token == '\n':
                     if arrows:
