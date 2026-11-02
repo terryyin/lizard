@@ -57,7 +57,7 @@ from its frontend working directory and generate the committed proof.
 
 ### 1. Record ordinary website scenario observations
 Type: Behavior
-Status: planned
+Status: done
 Proof: real-runner regression tests, focused and full browser Cucumber, full
 pytest and make, then exact applicable hosted Python application CI.
 
@@ -67,6 +67,13 @@ per-run files, without changing normal reports, diagnostics or status. Outline
 identity comes from parsed source; metadata captures the run-start commit and
 actual tested feature bytes. Partial/concurrent runs preserve completed work.
 Recording is silent and best effort; dry-run writes nothing.
+
+## Execution complete
+
+Product advice: no change. Independent retrospective found no product
+correction or architecture conflict. Local implementation, real committed proof,
+authorized landing and exact branch/trunk CI are complete. The completed
+source/review records remain recoverable for ordinary story wrap-up.
 
 ## Concern review
 
@@ -136,3 +143,13 @@ observed in this checkout. Implementation details remain with the slice.
 - Explicit Dough Land retained increment publishes the reviewed checkout to
   origin/master, preserving published history. Workspace and claim remain
   until final trunk CI, source completion and ordinary story wrap-up settle.
+- Dough Land accepted de117ed7954e426c74be7029ef9f9e6b964d8003 on origin/master,
+  preserving ad19779 and the reviewed records; default checkout advanced cleanly.
+  Exact trunk Python application CI succeeded: run 41366260926 attempt 1.
+  Published-tree dashboard reader confirms 2 proof files, 17 observations,
+  16 latest identities across all 5 features, matching committed feature blobs
+  and actual run-start commit 80d78621cbb47f13a1aad3a688665c51c71251b2.
+- Trunk observer retained for final closure: codex-lizard-cucumber-trunk-20261102,
+  /tmp/dough-ci-501/watch-nUDie1, PID 40223, cell g12:55, session 79329. Original
+  branch observer remains distinct. Both targets' implementation receipts are
+  exact success; final record/cleanup publications retain their own CI duties.

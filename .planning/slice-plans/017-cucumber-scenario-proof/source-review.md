@@ -92,14 +92,14 @@ incorporated by reference, not replaced by this summary.
 | 64 | Reuse compatible project implementation. | slice 1 | observed: PFE inspection found no project scenario recorder; implementation reuses existing native Cucumber plugin/messages and current progress/HTML config; no alternative representation added. |
 | 65 | Preserve concurrent changes. | slice 1 | observed: Owned worktree diff restricted to recorder/config/tests/CI/docs/proof/planning; managed Open Dough and SEED-024 parser files unchanged. |
 | 66 | Preserve unrelated changes. | slice 1 | observed: Owned worktree diff restricted to recorder/config/tests/CI/docs/proof/planning; managed Open Dough and SEED-024 parser files unchanged. |
-| 67 | Land to origin/master. | slice 1 | |
-| 68 | Push to origin/master. | slice 1 | |
-| 69 | Report landed commit. | slice 1 | |
-| 70 | Report remote containment. | slice 1 | |
-| 71 | Report proof locations. | slice 1 | |
-| 72 | Report configuration locations. | slice 1 | |
-| 73 | Report validation. | slice 1 | |
-| 74 | Report actual CI result or precise judgment/credential boundary. | slice 1 | |
+| 67 | Land to origin/master. | slice 1 | observed: Dough Land history-preserving publisher accepted de117ed7954e426c74be7029ef9f9e6b964d8003 on origin/master; default checkout fast-forwarded; workspace explicitly retained for final CI/closure. |
+| 68 | Push to origin/master. | slice 1 | observed: Dough Land exact push and post-fetch confirmation receipt: de117ed7954e426c74be7029ef9f9e6b964d8003 -> refs/heads/master; remote containment verified by merge-base --is-ancestor. |
+| 69 | Report landed commit. | slice 1 | observed: Coordinator reported landed de117ed to the user after its accepted receipt; final handoff retains exact implementation and closure SHAs. |
+| 70 | Report remote containment. | slice 1 | observed: Coordinator reported confirmed origin/master containment after Git ancestry verification and clean default checkout refresh. |
+| 71 | Report proof locations. | slice 1 | observed: Coordinator reported website/frontend/proof/ with two real committed run files; published-tree dashboard parser validates 17 observations, 16 identities across all five features. |
+| 72 | Report configuration locations. | slice 1 | observed: Coordinator reported .planning/open-dough.json declaring website/frontend/features -> website/frontend/proof; cucumber.mjs loads the native plugin. |
+| 73 | Report validation. | slice 1 | observed: Coordinator reported 11 real-runner tests, 16 full browser scenarios plus focused run, 2427 pytest passed/7 skips, make success and exact branch CI success; native trunk observation remains owned. |
+| 74 | Report actual CI result or precise judgment/credential boundary. | slice 1 | observed: Exact implementation branch CI success: ad19779, Python application 41365742887 attempt1. Exact landed trunk CI success: de117ed, run 41366260926 attempt1. Native observer receipts confirmed both; coordinator reported actual trunk success to user. |
 | 75 | Follow incorporated Open Dough failing/flaky policy as written, plus Lizard AGENTS.md. | slice 1 | observed: Failure policy read verbatim and linked unchanged in story/plan and all handoffs; all required local verification passed, final hosted CI remains explicitly owned. |
 | 76 | Focused ordinary run writes version-1 proof. | slice 1 | observed: Meaningful browser integration verification: full configured 16 scenarios/134 steps and focused --name 1 scenario/10 steps passed; two real proof JSONs produced during those runs, no suite launched solely to collect proof. |
 | 77 | Full ordinary run writes version-1 proof. | slice 1 | observed: Meaningful browser integration verification: full configured 16 scenarios/134 steps and focused --name 1 scenario/10 steps passed; two real proof JSONs produced during those runs, no suite launched solely to collect proof. |
