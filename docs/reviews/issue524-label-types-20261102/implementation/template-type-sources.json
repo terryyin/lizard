@@ -1,5 +1,0 @@
-{
-  "assertion": "const t = () => x as `p${string}`;\nfunction after(tail){return tail?1:0;}\n",
-  "named-return-formal": "const f = (x: `p${string}`, y = flag ? 1 : 0): `p${string}` => x;\nfunction after(tail){return tail?1:0;}\n",
-  "anonymous-return": "h((x): `p${string}` => `p${x}`);\nfunction after(tail){return tail?1:0;}\n"
-}

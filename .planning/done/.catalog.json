@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-024_resolve-issue524-label-types.json",
+      "identity": "SEED-024#resolve-issue524-label-types",
+      "completedAt": "2026-11-02T05:16:46.132Z",
+      "blob": "0fc32b43603bba995ed6a1b00960aa877de35845"
+    },
+    {
       "fileName": "SEED-025_cucumber-scenario-proof.json",
       "identity": "SEED-025#cucumber-scenario-proof",
       "completedAt": "2026-11-02T00:23:54.635Z",

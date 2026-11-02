@@ -1,6 +1,0 @@
-{
-  "command": "PIP_QUIET=3 nix develop -c node -e 'const ts=require(\\'/tmp/issue524-typescript-parse/node_modules/typescript\\'); const source=\"const run = () => value as Box<<T>(x:T)=>T>;\\\\nfunction after(tail) {return tail?1:0;}\\\\n\"; const result=[\\'TS\\',\\'TSX\\'].map(k=>{let f=ts.createSourceFile(\\'a.\\'+k.toLowerCase(),source,ts.ScriptTarget.Latest,true,ts.ScriptKind[k]);return {kind:k,diagnostics:f.parseDiagnostics.map(d=>({code:d.code,text:ts.flattenDiagnosticMessageText(d.messageText,\\'\\\\n\\')}))}}); console.log(JSON.stringify({version:ts.version,source,result}));'",
-  "exit_code": 0,
-  "stdout": "{\"version\":\"5.7.3\",\"source\":\"const run = () => value as Box<<T>(x:T)=>T>;\\nfunction after(tail) {return tail?1:0;}\\n\",\"result\":[{\"kind\":\"TS\",\"diagnostics\":[]},{\"kind\":\"TSX\",\"diagnostics\":[]}]}\n",
-  "stderr": ""
-}

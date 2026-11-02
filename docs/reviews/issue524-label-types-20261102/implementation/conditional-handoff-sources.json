@@ -1,4 +1,0 @@
-{
-  "unparenthesized": "const choose = x as T extends U ? V : W ? function yes(a) {return a;} : function no(b) {return b;};\nfunction after(c) {return c;}\n",
-  "parenthesized": "const choose = (x as T extends U ? V : W) ? function yes(a) {return a;} : function no(b) {return b;};\nfunction after(c) {return c;}\n"
-}

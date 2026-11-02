@@ -15,10 +15,14 @@ JS, TS, JSX, TSX, MJS, CJS and Vue readers.
 Regression documentation is in
 [annotation boundaries](../../../test/test_languages/testTypeScriptAnnotationBoundaries.py)
 and [assertion roles](../../../test/test_languages/testTypeScriptAssertionRoles.py).
-The two modules cover490 cases. Full pytest and make pass2917 tests with7
-existing skips. All18 measured current/cumulative comparisons have paired95%
-upper slowdown below3%; the highest is2.7992%.
+The two modules cover 490 cases. Full pytest and make pass 2917 tests with 7
+existing skips. All 18 measured current/cumulative comparisons have paired 95%
+upper slowdown below 3%; the highest is 2.7992%.
 
-[PR548](https://github.com/terryyin/lizard/pull/548) is merged at2416c37.
-[Issue524's resolution summary](https://github.com/terryyin/lizard/issues/524#issuecomment-6569296813)
+[PR #548](https://github.com/terryyin/lizard/pull/548) is merged at `2416c37`.
+[Issue #524's resolution summary](https://github.com/terryyin/lizard/issues/524#issuecomment-6569296813)
 links the related fixes and confirms merged-source verification.
+
+[Qualification evidence](https://github.com/terryyin/lizard/tree/72d0e8cda9c7789ac7c45a5500e8fec0b4c67bf8/docs/reviews/issue524-label-types-20261102)
+retains the frozen inputs, raw paired timings, failed observations, independent
+reviews and verification receipts in Git history.

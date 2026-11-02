@@ -1,6 +1,0 @@
-{
-  "command": "PIP_QUIET=3 nix develop -c python -m pytest test/test_languages/testTypeScriptAnnotationBoundaries.py -q",
-  "exit_code": 0,
-  "stdout": "........................................................................ [ 38%]\n........................................................................ [ 77%]\n.........................................                                [100%]\n185 passed in 0.54s\n",
-  "stderr": ""
-}
