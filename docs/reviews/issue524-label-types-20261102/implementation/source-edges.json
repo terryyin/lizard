@@ -1,0 +1,50 @@
+[
+  {
+    "edge": "TypeScriptReader.preprocess -> optional_member_context -> innermost TypeScriptStates typed-member header",
+    "disposition": "run",
+    "setup": "Spaced/$ optional class member, default/NS/nonstrict/complextags variants inside outer(flag); field initializer also contains genuine runtime ternary. Actual Vue script wrapper and TSX atomic tokenizer retained.",
+    "assertions": "outer CCN3 includes exactly2 runtime decisions; complextags outer has2 question markers, after has1. 3red optional-field-tags-red.json ->200 finalgreen; optional-fields-extension-correspondence.json proves18 comparisons."
+  },
+  {
+    "edge": "TypeScriptStates marker dispatch -> _optional_class_member -> core CCN undo",
+    "disposition": "run",
+    "setup": "Typed class header is determined by existing dialect and member/value role; initializer = sets value role. Compact optional token normalized at same owner.",
+    "assertions": "15 red optional-field cases fixed; actual initializer d/$d retains name, formal n,CCN2; normal/NS/nonstrict outer scope assertions preserve actual runtime ternaries."
+  },
+  {
+    "edge": "JavaScriptObjectsMixin =/parenthesis -> existing signature/default/binding readers",
+    "disposition": "run",
+    "setup": "Parenthesized actual field arrow retains existing optimistic signature path; ordinary initializer calls/groups use existing owner.",
+    "assertions": "24 retained function/method/successor metric observations equal before/after including NLOC/tokens; original9 typed/optional ternary controls pass unchanged; existing binding217cases remain in complete language suite."
+  },
+  {
+    "edge": "_OptionalMemberQuestion.is_optional -> ND/cognitive/complextags/ignoreassert and existing optional-aware extension protocol",
+    "disposition": "run",
+    "setup": "Reuse existing is_optional protocol (Swift owner remains unchanged), mark only typed class-member-header punctuation before metric consumers.",
+    "assertions": "optional-field-tags-red.json shows3 extra-tag failures; green and18 actual extension/suffix comparisons show agreement of compact/spaced/$ syntax and retained runtime decisions. Swift/optional-operator regression suites run in complete language command."
+  },
+  {
+    "edge": "TypeScriptTypeAnnotationStates ${ -> type bracket stack -> runtime delimiter saved/replayed",
+    "disposition": "run",
+    "setup": "Template type in assertion array-end/comma/method brace, named formal+return and ambiguous anonymous return. TS/Vue split ${; TSX atomic template is prior-green control.",
+    "assertions": "template-types-red.json10fail/190pass ->template-types-green.json200pass. after retains tail/CCN2/line2; anonymous retains x; named f retains x,y/defaultCCN3; no type brace consumed as runtime closer."
+  },
+  {
+    "edge": "typescript_signatures.return_type_colon(context=None) -> annotation completion delimiter",
+    "disposition": "run",
+    "setup": "Accepted independent signature refactor preserved exactly; negative/template/function/generic/conditional returns reuse same annotation owner.",
+    "assertions": "signature SHA a36101fb19d18ab86c0877972a387d1d829372e0cc156b3440b18fece67908a9 unchanged; complete language1097pass includes ambiguous anonymous template return formalx and all prior typed/ternary cases."
+  },
+  {
+    "edge": "annotation callback -> TypeScriptStates._replay_token -> CodeStateMachine.__call__",
+    "disposition": "run",
+    "setup": "Only saved enclosing runtime delimiters replay; binding tracker not fed twice.",
+    "assertions": "Complete binding/call-group/formal/default controls remain green; typed array/comma/brace/template examples retain exact callback and successor formals/spans/CCN."
+  },
+  {
+    "edge": "reader/container dialect -> class-member type versus JS legacy runtime role",
+    "disposition": "run",
+    "setup": "JS/MJS/CJS and JSX legacy member syntax, TS/TSX annotated fields, actual Vue JS/default/TS script modes.",
+    "assertions": "All existing seven-suffix authored/output/HTTP journeys remain in language1097 and consumer699 passes; no dialect or container bytes changed during final type-template addition."
+  }
+]

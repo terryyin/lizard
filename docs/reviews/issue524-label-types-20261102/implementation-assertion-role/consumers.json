@@ -1,0 +1,34 @@
+{
+  "command": "PIP_QUIET=3 nix develop -c python -m pytest test/test_languages/testJavaScriptBindingBoundaries.py test/testApplication.py test/test_options.py test/testLanguages.py test/test_analyzer.py test/testExtension.py test/testJavaScriptNestedStructures.py test/testNestedStructures.py test/testNestedStructureScopes.py test/test_extensions/testNonStrict.py test/test_extensions/testCognitiveComplexity.py test/test_extensions/testFanInFanOut.py test/test_extensions/testHalstead.py test/test_extensions/testHalsteadClassifier.py test/test_extensions/testHalsteadMetrics.py test/test_extensions/testDuplicatedParamList.py test/test_website.py test/test_languages/testTypeScriptAnnotationBoundaries.py test/test_languages/testTypeScriptAssertionRoles.py -q",
+  "resolved_files": [
+    "test/test_languages/testJavaScriptBindingBoundaries.py",
+    "test/testApplication.py",
+    "test/test_options.py",
+    "test/testLanguages.py",
+    "test/test_analyzer.py",
+    "test/testExtension.py",
+    "test/testJavaScriptNestedStructures.py",
+    "test/testNestedStructures.py",
+    "test/testNestedStructureScopes.py",
+    "test/test_extensions/testNonStrict.py",
+    "test/test_extensions/testCognitiveComplexity.py",
+    "test/test_extensions/testFanInFanOut.py",
+    "test/test_extensions/testHalstead.py",
+    "test/test_extensions/testHalsteadClassifier.py",
+    "test/test_extensions/testHalsteadMetrics.py",
+    "test/test_extensions/testDuplicatedParamList.py",
+    "test/test_website.py",
+    "test/test_languages/testTypeScriptAnnotationBoundaries.py",
+    "test/test_languages/testTypeScriptAssertionRoles.py"
+  ],
+  "exit_code": 0,
+  "stdout": "........................................................................ [  7%]\n........................................................................ [ 15%]\n........................................................................ [ 22%]\n........................................................................ [ 30%]\n............................ss.......................................... [ 37%]\n........................................................................ [ 45%]\n........................................................................ [ 52%]\n........................................................................ [ 60%]\n........................................................................ [ 67%]\n........................................................................ [ 75%]\n........................................................................ [ 83%]\n........................................................................ [ 90%]\n........................................................................ [ 98%]\n.................                                                        [100%]\n951 passed, 2 skipped in 1.92s\n",
+  "stderr": "",
+  "hashes": {
+    "lizard_languages/typescript_declarations.py": "c7aee49c5865a5e9f9f2111053b131cfbe51c9097b7ab975cffa747b706384c6",
+    "lizard_languages/typescript_states.py": "2ed69bc5b4f48696960979e6776f8e019ee1ae74496068f673491e7224fd7630",
+    "lizard_languages/typescript_type_annotation.py": "cbd8cca678e5c7142dce1342526ee3eca0666f9f3638f724ee9fe33eebe2645f",
+    "test/test_languages/testTypeScriptAssertionRoles.py": "77fceb6671b17a43a8bd6127239d5eacb977d7d450cc56fef5864b69c8f2e498",
+    "test/test_languages/testTypeScriptAnnotationBoundaries.py": "4b1d1ed0543ab1b4b75181fcfc78718506d2dacfb5d7b350cd34f8863fe358a6"
+  }
+}

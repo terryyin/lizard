@@ -1,0 +1,20 @@
+{
+  "command": "PIP_QUIET=3 nix develop -c python -m pytest test/testOutput.py test/testCommentOptions.py test/test_website_smoke.py test/testOutputCSV.py test/testOutputFile.py -q",
+  "resolved_files": [
+    "test/testOutput.py",
+    "test/testCommentOptions.py",
+    "test/test_website_smoke.py",
+    "test/testOutputCSV.py",
+    "test/testOutputFile.py"
+  ],
+  "exit_code": 0,
+  "stdout": "................................................................         [100%]\n64 passed in 2.34s\n",
+  "stderr": "",
+  "hashes": {
+    "lizard_languages/typescript_declarations.py": "e91daa6499973945a5242f502abfe07c7a3ac0ed5aaeebe397c0fb69f46d7042",
+    "lizard_languages/typescript_states.py": "2ed69bc5b4f48696960979e6776f8e019ee1ae74496068f673491e7224fd7630",
+    "lizard_languages/typescript_type_annotation.py": "2b9d4475babe82c63653fe8d542300e173a8536317b641ed3cc9f23811f60ac2",
+    "test/test_languages/testTypeScriptAssertionRoles.py": "72f6cb5bbf31cd44593ad30c0f56d58026c8902d6f29b1fe257e078c8f091f2d",
+    "test/test_languages/testTypeScriptAnnotationBoundaries.py": "4b1d1ed0543ab1b4b75181fcfc78718506d2dacfb5d7b350cd34f8863fe358a6"
+  }
+}

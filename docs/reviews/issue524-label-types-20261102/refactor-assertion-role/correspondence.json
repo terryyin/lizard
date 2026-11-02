@@ -1,0 +1,136 @@
+{
+  "outcome": "none \u2014 already clean",
+  "refactor_product_or_test_edits": [],
+  "runtime_manifest_sha256": "c5640bfc84aed773154e0a74b1e8ed4d7e94b1a9bb47721bc6c34d3da55c3ae3",
+  "runtime_files_match_live_bytes": 108,
+  "test_files_match_live_bytes": 157,
+  "story_files": [
+    {
+      "path": "lizard_languages/javascript.py",
+      "sha256": "3db42f05fdbe8d194af6ffceed131232a8d7bd180cd5d1c0c4a8b0462d65a512",
+      "lines": 16
+    },
+    {
+      "path": "lizard_languages/javascript_objects.py",
+      "sha256": "d9f484af96da6405d625429704a1d968f2949936b2cccf093e10b49f672b6c25",
+      "lines": 154
+    },
+    {
+      "path": "lizard_languages/typescript.py",
+      "sha256": "c856cb2dbb693c4fa6c90a187d07aa9e7b0c9314add4798d5defa614ba528a05",
+      "lines": 242
+    },
+    {
+      "path": "lizard_languages/typescript_declarations.py",
+      "sha256": "e91daa6499973945a5242f502abfe07c7a3ac0ed5aaeebe397c0fb69f46d7042",
+      "lines": 173
+    },
+    {
+      "path": "lizard_languages/typescript_states.py",
+      "sha256": "2ed69bc5b4f48696960979e6776f8e019ee1ae74496068f673491e7224fd7630",
+      "lines": 250
+    },
+    {
+      "path": "lizard_languages/typescript_type_annotation.py",
+      "sha256": "2b9d4475babe82c63653fe8d542300e173a8536317b641ed3cc9f23811f60ac2",
+      "lines": 97
+    },
+    {
+      "path": "lizard_languages/tsx.py",
+      "sha256": "233c5b42d5ad48be19716e243bd2e486e640370ed3737d7669fb292d7defb5c2",
+      "lines": 178
+    },
+    {
+      "path": "lizard_languages/vue.py",
+      "sha256": "c163ff1f2a070e050a02a2397abfbbdbe6133f23d91b5a31595ff3107f2d7dc5",
+      "lines": 41
+    },
+    {
+      "path": "test/test_languages/testTypeScriptAnnotationBoundaries.py",
+      "sha256": "4b1d1ed0543ab1b4b75181fcfc78718506d2dacfb5d7b350cd34f8863fe358a6",
+      "lines": 241
+    },
+    {
+      "path": "lizard_languages/typescript_signatures.py",
+      "sha256": "daec9731184e1b4e9be3ab7d741d70586dca7b94f1f9c7a53bae595c78d93702",
+      "lines": 57
+    },
+    {
+      "path": "test/test_languages/testTypeScriptAssertionRoles.py",
+      "sha256": "72f6cb5bbf31cd44593ad30c0f56d58026c8902d6f29b1fe257e078c8f091f2d",
+      "lines": 77
+    }
+  ],
+  "accepted_proof": [
+    {
+      "path": "implementation-assertion-role/languages-after-export.json",
+      "sha256": "e0a201c3c7670fc968046657fde0b4c89735f473486095431bc6d8646126d47f",
+      "command": "PIP_QUIET=3 nix develop -c python -m pytest test/test_languages/testJavaScript.py test/test_languages/testJavaScriptArrowBoundaries.py test/test_languages/testJavaScriptArrowLines.py test/test_languages/testJavaScriptArrowParameters.py test/test_languages/testJavaScriptBindingBoundaries.py test/test_languages/testJavaScriptFalsePositives.py test/test_languages/testJavaScriptFormalSlots.py test/test_languages/testJavaScriptFunctions.py test/test_languages/testJavaScriptGroupExpressions.py test/test_languages/testJavaScriptMembers.py test/test_languages/testJavaScriptObjectSpread.py test/test_languages/testJavaScriptParameterNames.py test/test_languages/testJavaScriptRegex.py test/test_languages/testJavaScriptTernaryArrows.py test/test_languages/testJavaScriptWidgets.py test/test_languages/testTypeScript.py test/test_languages/testTypeScriptAnnotationBoundaries.py test/test_languages/testTypeScriptArrowFields.py test/test_languages/testTypeScriptAssertionRoles.py test/test_languages/testTypeScriptDeclarations.py test/test_languages/testTypeScriptFalsePositives.py test/test_languages/testTypeScriptFields.py test/test_languages/testTypeScriptFunctions.py test/test_languages/testTypeScriptInterpolationConditions.py test/test_languages/testTypeScriptMembers.py test/test_languages/testTypeScriptMetrics.py test/test_languages/testTypeScriptReaderDispatch.py test/test_languages/testTypeScriptThisParameters.py test/test_languages/testTypeScriptWidgets.py test/test_languages/testArrowObjectBoundaries.py test/test_languages/testOptionalOperators.py test/test_languages/testJSX.py test/test_languages/testTSX.py test/test_languages/testES6.py test/test_languages/testVue.py test/test_languages/testVueSourceLineNumbers.py -q",
+      "exit_code": 0,
+      "terminal_result": "1387 passed, 5 skipped in 2.06s",
+      "boundary": "reused; no implementation/setup/assertion edit by refactor",
+      "inspected_hashes_match": true
+    },
+    {
+      "path": "implementation-assertion-role/consumers-after-export.json",
+      "sha256": "5aedb9e0ead6178076fe4ca6d8fa9655b2f9b50f80b68f6935135328c6a3c788",
+      "command": "PIP_QUIET=3 nix develop -c python -m pytest test/test_languages/testJavaScriptBindingBoundaries.py test/testApplication.py test/test_options.py test/testLanguages.py test/test_analyzer.py test/testExtension.py test/testJavaScriptNestedStructures.py test/testNestedStructures.py test/testNestedStructureScopes.py test/test_extensions/testNonStrict.py test/test_extensions/testCognitiveComplexity.py test/test_extensions/testFanInFanOut.py test/test_extensions/testHalstead.py test/test_extensions/testHalsteadClassifier.py test/test_extensions/testHalsteadMetrics.py test/test_extensions/testDuplicatedParamList.py test/test_website.py test/test_languages/testTypeScriptAnnotationBoundaries.py test/test_languages/testTypeScriptAssertionRoles.py -q",
+      "exit_code": 0,
+      "terminal_result": "989 passed, 2 skipped in 1.72s",
+      "boundary": "reused; no implementation/setup/assertion edit by refactor",
+      "inspected_hashes_match": true
+    },
+    {
+      "path": "implementation-assertion-role/outputs-after-export.json",
+      "sha256": "149e407bfe7167393264d6244860d7850ac70147ddd9c3dfd7b1e7d4cd6c16ec",
+      "command": "PIP_QUIET=3 nix develop -c python -m pytest test/testOutput.py test/testCommentOptions.py test/test_website_smoke.py test/testOutputCSV.py test/testOutputFile.py -q",
+      "exit_code": 0,
+      "terminal_result": "64 passed in 2.34s",
+      "boundary": "reused; no implementation/setup/assertion edit by refactor",
+      "inspected_hashes_match": true
+    }
+  ],
+  "fixture": {
+    "path": "implementation-assertion-role/cases-after-export.json",
+    "sha256": "d3decdc00e60682ee784679da90dd2d0641c9be7887a3d41936dd0fb0bcf6b6f",
+    "count": 490,
+    "all_prior476_actual_records_identical": true,
+    "prior200_correspondence_receipt": "implementation-assertion-role/fixture-correspondence-after-export.json",
+    "capture_command": "PIP_QUIET=3 nix develop -c python /Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/implementation-assertion-role/capture-after-export.py",
+    "capture_exit_code": 0,
+    "capture_terminal_result": "490 passed in 2.22s"
+  },
+  "calls": {
+    "path": "implementation-assertion-role/calls-correspondence-after-export.json",
+    "sha256": "1d2941c9c678463ad371e99b6e8d597b1b77e061600866c19f35e546b4fdab93",
+    "command": "PIP_QUIET=3 nix develop -c python -I /Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/implementation-cost/observe_calls.py --checkout /Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types --corpus /Users/terryyin/.cache/issue524-label-types-20261102/calls --out /Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/implementation-assertion-role/calls-after-export.json",
+    "exit_code": 0,
+    "same_frozen40_sources_80_default_NS_records_dispatch_counts": true,
+    "timing": false
+  },
+  "consumer_trace": {
+    "generated_by": "installed consumer-trace.mjs; retained aggregate/import traces",
+    "record": "refactor-final/consumer-dispositions.json",
+    "sha256": "b6b447b6e5a1560401037cec08593bd82d26d8e2e68ec0f0d0753f93a5b743cb",
+    "count": 719,
+    "accepted_dispositions": {
+      "excluded": 547,
+      "reused": 113,
+      "run": 59
+    },
+    "review_disposition": "reused with current matching focused proof",
+    "directed_edges": "implementation-assertion-role/source-edges-after-export.json",
+    "directed_edges_sha256": "a8cbb4ee5cfc03f8ed5760220b05d4df30781c6cac209874a847837d700e4e20",
+    "directed_edge_count": 6,
+    "uncovered_consumer_gaps": []
+  },
+  "verification": "skipped \u2014 no refactor edits",
+  "expensive_proof": "not launched; root owns current full checks and requalification",
+  "required_deferred_owner": "root",
+  "required_deferred": [
+    "full pytest/make and applicable style/hook checks",
+    "freeze expanded490 fixture corpus and serial strict below3% qualification",
+    "current trunk/exact head hosted checks, publication, merge and issue closure"
+  ],
+  "no_owned_running_processes": true
+}

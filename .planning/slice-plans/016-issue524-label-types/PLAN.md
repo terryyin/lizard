@@ -370,3 +370,33 @@ The runner stopped; all exact inputs and failed raw pairs are retained. Root
 profiles those exact bytes before returning G12 for cost correction; no timing
 result accepts the candidate, and source-review performance observations and
 slice1 delivery remain incomplete until every applicable result passes.
+
+## Execution retrospective
+
+Outcome/product review complete against the original ready source at a10a744
+and selected related revisions277ed48 (admission),a10a744 (preparation),7fac94f
+(implementation),2416c37 (hosted integration),61e23de (verified disposition).
+Intervening website/Dough commits through0e352b7 are excluded as sibling work.
+The aggregate keeps declaration/member/runtime/type/replay responsibilities in
+one JS/TS reader subsystem, with shared context-None signature type grammar,
+existing token protocols and no parallel runtime counter/buffer/issue switch.
+Actual public API/CLI/HTTP assertions and490 fixtures retain both positive
+runtime and genuine type journeys. Full2917-test checks,18 strict measured
+bounds, exact-head hosted CI and isolated merged-source observations settle
+all known source promises. Fresh independent aggregate reviews found no
+remaining structural correction. No evidence supports another product story
+or test cleanup; product advice is no change. No near-future direction file
+was found, so priority alignment beyond this urgent correctness outcome is
+unassessed rather than invented.
+
+Process review is enabled by the project's explicit false skip flag and uses
+the actual conversation/tool records. Existing DD-010 and DD-398 each receive
+one supported occurrence; DearDough remains below500 lines, with no pruning or
+new allocation. No guidance was edited and no retrospective finding was
+implemented. Reviews are complete, with no correction plan or unresolved
+human-owned choice. Current execution-branch metadata CI is still owned by
+normal completion; prior code-head31 successes/1conditional skip remain exact.
+
+## Execution complete
+
+Product advice: no change. Outcome, product and enabled process reviews are complete; no correction plan, new product story or unresolved human decision remains. All required code, regression, refactor, performance, hosted merge and issue closure promises are verified. Normal completion owns the current metadata revision and CI shutdown.

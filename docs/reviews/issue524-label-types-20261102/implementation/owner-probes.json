@@ -1,0 +1,178 @@
+[
+  {
+    "name": "generic-class",
+    "source": "class A<T extends {x:number}> { d: (()=>void)[]=[]; constructor(v:T){if(v)use(v);} s(tail:number){return tail?1:0;} }\nfunction after(tail) {return tail?1:0;}\n",
+    "suffix": "ts",
+    "result": [
+      [
+        "d",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "constructor",
+        2,
+        1,
+        1,
+        [
+          "v"
+        ]
+      ],
+      [
+        "s",
+        2,
+        1,
+        1,
+        [
+          "tail"
+        ]
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "name": "generic-class",
+    "source": "class A<T extends {x:number}> { d: (()=>void)[]=[]; constructor(v:T){if(v)use(v);} s(tail:number){return tail?1:0;} }\nfunction after(tail) {return tail?1:0;}\n",
+    "suffix": "tsx",
+    "result": [
+      [
+        "d",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "constructor",
+        2,
+        1,
+        1,
+        [
+          "v"
+        ]
+      ],
+      [
+        "s",
+        2,
+        1,
+        1,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "name": "generic-class",
+    "source": "<script lang=\"ts\">class A<T extends {x:number}> { d: (()=>void)[]=[]; constructor(v:T){if(v)use(v);} s(tail:number){return tail?1:0;} }\nfunction after(tail) {return tail?1:0;}\n</script>",
+    "suffix": "vue",
+    "result": [
+      [
+        "constructor",
+        2,
+        1,
+        1,
+        [
+          "v"
+        ]
+      ],
+      [
+        "s",
+        2,
+        1,
+        1,
+        [
+          "tail"
+        ]
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "name": "negative-return",
+    "source": "h((x): -1 => -1);\nfunction after(tail) {return tail?1:0;}\n",
+    "suffix": "ts",
+    "result": [
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "name": "negative-return",
+    "source": "h((x): -1 => -1);\nfunction after(tail) {return tail?1:0;}\n",
+    "suffix": "tsx",
+    "result": [
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "name": "negative-return",
+    "source": "<script lang=\"ts\">h((x): -1 => -1);\nfunction after(tail) {return tail?1:0;}\n</script>",
+    "suffix": "vue",
+    "result": [
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  }
+]

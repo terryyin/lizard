@@ -1,0 +1,13 @@
+{
+  "command": "PIP_QUIET=3 nix develop -c python -m pytest test/test_extensions/testComplexityTags.py test/testAssertionExtension.py test/testMcCabe.py test/testNestingDepth.py test/test_extensions/testHalsteadClassifier.py -q",
+  "resolved_files": [
+    "test/test_extensions/testComplexityTags.py",
+    "test/testAssertionExtension.py",
+    "test/testMcCabe.py",
+    "test/testNestingDepth.py",
+    "test/test_extensions/testHalsteadClassifier.py"
+  ],
+  "exit_code": 0,
+  "stdout": "............................................                             [100%]\n44 passed in 0.05s\n",
+  "stderr": ""
+}

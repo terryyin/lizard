@@ -1,0 +1,8 @@
+{
+  "command": "PIP_QUIET=3 nix develop -c python -m pytest test/test_languages/testTypeScriptAnnotationBoundaries.py -q",
+  "exit_code": 0,
+  "candidate_type_reader_sha256": "2dd509c96c006284bb615784b67a562372e88e2232441dfaae81d4b31a88f2e2",
+  "test_sha256": "8c1742e71ba5bb8c1e5ecce71c845ba42e05ad7dc018e75ce1cad539a75e286f",
+  "stdout": "........................................................................ [ 48%]\n........................................................................ [ 96%]\n.....                                                                    [100%]\n149 passed in 0.47s\n",
+  "stderr": ""
+}

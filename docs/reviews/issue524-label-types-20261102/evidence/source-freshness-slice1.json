@@ -1,0 +1,18 @@
+{
+  "command": [
+    "node",
+    ".agents/skills/dough-execute-plan/scripts/source-freshness.mjs",
+    "check",
+    "--workspace",
+    "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types",
+    "--identity",
+    "SEED-024#resolve-issue524-label-types",
+    "--remote",
+    "origin",
+    "--target-ref",
+    "refs/heads/master"
+  ],
+  "exit": 0,
+  "stdout": "{\"result\":\"unchanged\",\"identity\":\"SEED-024#resolve-issue524-label-types\",\"trunkRevision\":\"0e352b7751fc8838dcde8b68051e305a200ebb9c\",\"base\":\"a10a744422c7bd8d17b77be315682bf39ac5d92d\",\"records\":[{\"record\":\"story\",\"path\":\".planning/seeds/SEED-024-issue524-label-types.md\",\"from\":\"a10a744422c7bd8d17b77be315682bf39ac5d92d\",\"state\":\"unchanged\"},{\"record\":\"plan\",\"path\":\".planning/slice-plans/016-issue524-label-types/PLAN.md\",\"from\":\"a10a744422c7bd8d17b77be315682bf39ac5d92d\",\"state\":\"unchanged\"}]}\n",
+  "stderr": ""
+}

@@ -1,0 +1,1174 @@
+{
+  "checkout": "/Users/terryyin/.cache/issue524-label-types-20261102/current",
+  "loops": 100,
+  "python": "3.9.11 (main, Apr 10 2022, 22:01:55) \n[Clang 11.1.0 ]",
+  "extension": "NS",
+  "executable": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/.venv/bin/python",
+  "modules": {
+    "lizard_languages.token_pattern": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/token_pattern.py",
+    "lizard_languages.code_reader": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/code_reader.py",
+    "lizard_languages.clike_states": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/clike_states.py",
+    "lizard_languages.clike": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/clike.py",
+    "lizard_languages.golike": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/golike.py",
+    "lizard_languages.zig": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/zig.py",
+    "lizard_languages.erlang": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/erlang.py",
+    "lizard_languages.java_body_states": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/java_body_states.py",
+    "lizard_languages.java": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/java.py",
+    "lizard_languages.js_style_regex_context": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/js_style_regex_context.py",
+    "lizard_languages.js_style_regex_expression": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/js_style_regex_expression.py",
+    "lizard_core": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_core/__init__.py",
+    "lizard_core.function_info": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_core/function_info.py",
+    "lizard_languages.javascript_bindings": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/javascript_bindings.py",
+    "lizard_languages.typescript_declarations": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/typescript_declarations.py",
+    "lizard_languages.javascript_functions": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/javascript_functions.py",
+    "lizard_languages.javascript_objects": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/javascript_objects.py",
+    "lizard_languages.typescript_signatures": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/typescript_signatures.py",
+    "lizard_languages.typescript_states": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/typescript_states.py",
+    "lizard_languages.javascript_templates": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/javascript_templates.py",
+    "lizard_languages.typescript": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/typescript.py",
+    "lizard_languages.javascript": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/javascript.py",
+    "lizard_languages.swift_literals": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/swift_literals.py",
+    "lizard_languages.swift": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/swift.py",
+    "lizard_languages.kotlin": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/kotlin.py",
+    "lizard_languages.script_language": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/script_language.py",
+    "lizard_languages.python_tokens": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/python_tokens.py",
+    "lizard_languages.python_structure": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/python_structure.py",
+    "lizard_languages.python": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/python.py",
+    "lizard_languages.objc": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/objc.py",
+    "lizard_languages.ttcn": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/ttcn.py",
+    "lizard_languages.rubylike": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/rubylike.py",
+    "lizard_languages.ruby": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/ruby.py",
+    "lizard_languages.csharp": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/csharp.py",
+    "lizard_languages.dart": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/dart.py",
+    "lizard_languages.php_states": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/php_states.py",
+    "lizard_languages.php": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/php.py",
+    "lizard_languages.scala": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/scala.py",
+    "lizard_languages.gdscript": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/gdscript.py",
+    "lizard_languages.go_function": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/go_function.py",
+    "lizard_languages.go": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/go.py",
+    "lizard_languages.lua": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/lua.py",
+    "lizard_languages.rust": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/rust.py",
+    "lizard_languages.fortran_states": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/fortran_states.py",
+    "lizard_languages.fortran": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/fortran.py",
+    "lizard_languages.solidity": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/solidity.py",
+    "lizard_languages.tsx": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/tsx.py",
+    "lizard_languages.vue": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/vue.py",
+    "lizard_languages.perl": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/perl.py",
+    "lizard_languages.st": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/st.py",
+    "lizard_languages.r": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/r.py",
+    "lizard_languages.plsql": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/plsql.py",
+    "lizard_languages.cobol_states": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/cobol_states.py",
+    "lizard_languages.cobol": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/cobol.py",
+    "lizard_languages": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/__init__.py",
+    "lizard_ext.version": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_ext/version.py",
+    "lizard_ext.htmloutput": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_ext/htmloutput.py",
+    "lizard_ext.csvoutput": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_ext/csvoutput.py",
+    "lizard_ext.xmloutput": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_ext/xmloutput.py",
+    "lizard_ext.auto_open": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_ext/auto_open.py",
+    "lizard_ext.checkstyleoutput": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_ext/checkstyleoutput.py",
+    "lizard_ext": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_ext/__init__.py",
+    "lizard_core.file_discovery": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_core/file_discovery.py",
+    "lizard_core.file_info_builder": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_core/file_info_builder.py",
+    "lizard_core.file_analyzer": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_core/file_analyzer.py",
+    "lizard_core.extensions": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_core/extensions.py",
+    "lizard_core.analysis": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_core/analysis.py",
+    "lizard_core.warning_filter": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_core/warning_filter.py",
+    "lizard_core.output_scheme": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_core/output_scheme.py",
+    "lizard_core.text_output": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_core/text_output.py",
+    "lizard_core.options": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_core/options.py",
+    "lizard_core.cli": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_core/cli.py",
+    "lizard": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard.py",
+    "lizard_ext.lizardnd": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_ext/lizardnd.py",
+    "lizard_ext.extension_base": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_ext/extension_base.py",
+    "lizard_ext.lizardns": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_ext/lizardns.py",
+    "lizard_languages.js_style_regex_keyword_scan": "/Users/terryyin/.cache/issue524-label-types-20261102/current/lizard_languages/js_style_regex_keyword_scan.py"
+  },
+  "rows": [
+    {
+      "file": "lizard_languages/token_pattern.py",
+      "line": 75,
+      "name": "tokens_in_span",
+      "primitive": 269600,
+      "calls": 269600,
+      "own": 0.11041247100000001,
+      "cumulative": 0.16133698100000002
+    },
+    {
+      "file": "lizard_languages/code_reader.py",
+      "line": 48,
+      "name": "__call__",
+      "primitive": 170800,
+      "calls": 422000,
+      "own": 0.106356586,
+      "cumulative": 0.6954654480000001
+    },
+    {
+      "file": "lizard_languages/typescript_states.py",
+      "line": 71,
+      "name": "_state_global",
+      "primitive": 141200,
+      "calls": 141200,
+      "own": 0.104906065,
+      "cumulative": 0.29901156
+    },
+    {
+      "file": "lizard_core/file_analyzer.py",
+      "line": 41,
+      "name": "line_counter",
+      "primitive": 174800,
+      "calls": 174800,
+      "own": 0.07164611,
+      "cumulative": 0.63326537
+    },
+    {
+      "file": "lizard_languages/javascript_bindings.py",
+      "line": 58,
+      "name": "read_token",
+      "primitive": 130400,
+      "calls": 130400,
+      "own": 0.070357441,
+      "cumulative": 0.094610497
+    },
+    {
+      "file": "lizard_languages/typescript_states.py",
+      "line": 39,
+      "name": "__call__",
+      "primitive": 128400,
+      "calls": 230400,
+      "own": 0.059620004000000004,
+      "cumulative": 0.517483927
+    },
+    {
+      "file": "lizard_languages/typescript.py",
+      "line": 115,
+      "name": "__call__",
+      "primitive": 174800,
+      "calls": 174800,
+      "own": 0.056491227000000005,
+      "cumulative": 1.5553271590000002
+    },
+    {
+      "file": "lizard_languages/typescript.py",
+      "line": 160,
+      "name": "preprocess",
+      "primitive": 182800,
+      "calls": 182800,
+      "own": 0.05394969,
+      "cumulative": 0.40025779
+    },
+    {
+      "file": "lizard_core/file_info_builder.py",
+      "line": 87,
+      "name": "add_nloc",
+      "primitive": 170800,
+      "calls": 170800,
+      "own": 0.046448891000000006,
+      "cumulative": 0.046448891000000006
+    },
+    {
+      "file": "lizard_core/file_analyzer.py",
+      "line": 19,
+      "name": "comment_counter",
+      "primitive": 182800,
+      "calls": 182800,
+      "own": 0.043475967000000004,
+      "cumulative": 0.501084843
+    },
+    {
+      "file": "lizard_ext/extension_base.py",
+      "line": 8,
+      "name": "__call__",
+      "primitive": 174800,
+      "calls": 174800,
+      "own": 0.041113758,
+      "cumulative": 0.8019472400000001
+    },
+    {
+      "file": "lizard_core/file_analyzer.py",
+      "line": 57,
+      "name": "token_counter",
+      "primitive": 174800,
+      "calls": 174800,
+      "own": 0.039137743,
+      "cumulative": 0.672403113
+    },
+    {
+      "file": "lizard_ext/lizardns.py",
+      "line": 158,
+      "name": "_state_global",
+      "primitive": 170800,
+      "calls": 170800,
+      "own": 0.038008823000000004,
+      "cumulative": 0.051981267000000005
+    },
+    {
+      "file": "lizard_languages/typescript_states.py",
+      "line": 19,
+      "name": "__init__",
+      "primitive": 30000,
+      "calls": 30000,
+      "own": 0.032865971,
+      "cumulative": 0.058271341000000004
+    },
+    {
+      "file": "lizard_languages/token_pattern.py",
+      "line": 71,
+      "name": "_token_text",
+      "primitive": 265600,
+      "calls": 265600,
+      "own": 0.032472302,
+      "cumulative": 0.049707718000000005
+    },
+    {
+      "file": "lizard_languages/clike.py",
+      "line": 18,
+      "name": "get_comment_from_token",
+      "primitive": 178800,
+      "calls": 178800,
+      "own": 0.031720386,
+      "cumulative": 0.057351086
+    },
+    {
+      "file": "lizard_languages/typescript.py",
+      "line": 204,
+      "name": "generate_tokens",
+      "primitive": 202700,
+      "calls": 202700,
+      "own": 0.029948963000000002,
+      "cumulative": 0.182609611
+    },
+    {
+      "file": "lizard_languages/javascript_templates.py",
+      "line": 135,
+      "name": "template_tokens",
+      "primitive": 269600,
+      "calls": 269600,
+      "own": 0.026657450000000003,
+      "cumulative": 0.20476210900000003
+    },
+    {
+      "file": "lizard_core/file_analyzer.py",
+      "line": 65,
+      "name": "condition_counter",
+      "primitive": 174800,
+      "calls": 174800,
+      "own": 0.025004600000000002,
+      "cumulative": 0.6985187150000001
+    },
+    {
+      "file": "lizard_languages/tsx.py",
+      "line": 48,
+      "name": "process_token",
+      "primitive": 131800,
+      "calls": 131800,
+      "own": 0.024580207000000003,
+      "cumulative": 0.032192618
+    },
+    {
+      "file": "lizard_languages/tsx.py",
+      "line": 23,
+      "name": "generate_tokens",
+      "primitive": 66900,
+      "calls": 66900,
+      "own": 0.021428676,
+      "cumulative": 0.12614708500000002
+    },
+    {
+      "file": "lizard_core/file_analyzer.py",
+      "line": 94,
+      "name": "analyze_source_code",
+      "primitive": 4000,
+      "calls": 4000,
+      "own": 0.019562416000000003,
+      "cumulative": 1.733937226
+    },
+    {
+      "file": "lizard_languages/typescript.py",
+      "line": 31,
+      "name": "__call__",
+      "primitive": 131800,
+      "calls": 131800,
+      "own": 0.019397753,
+      "cumulative": 0.051590371
+    },
+    {
+      "file": "lizard_languages/code_reader.py",
+      "line": 130,
+      "name": "compile_file_extension_re",
+      "primitive": 65000,
+      "calls": 65000,
+      "own": 0.019145782,
+      "cumulative": 0.066388959
+    },
+    {
+      "file": "lizard_languages/code_reader.py",
+      "line": 128,
+      "name": "match_filename",
+      "primitive": 65000,
+      "calls": 65000,
+      "own": 0.018489429,
+      "cumulative": 0.09973607100000001
+    },
+    {
+      "file": "lizard_languages/vue.py",
+      "line": 24,
+      "name": "code_tokens",
+      "primitive": 66900,
+      "calls": 66900,
+      "own": 0.018382332,
+      "cumulative": 0.09763630400000001
+    },
+    {
+      "file": "lizard_languages/javascript_bindings.py",
+      "line": 29,
+      "name": "__init__",
+      "primitive": 18000,
+      "calls": 18000,
+      "own": 0.018241054,
+      "cumulative": 0.020779849000000003
+    },
+    {
+      "file": "lizard_languages/javascript_objects.py",
+      "line": 5,
+      "name": "_handle_object_member",
+      "primitive": 43200,
+      "calls": 43200,
+      "own": 0.017046181,
+      "cumulative": 0.067573695
+    },
+    {
+      "file": "lizard_languages/javascript_bindings.py",
+      "line": 135,
+      "name": "__init__",
+      "primitive": 30000,
+      "calls": 30000,
+      "own": 0.014582991000000002,
+      "cumulative": 0.02540537
+    },
+    {
+      "file": "lizard_core/file_info_builder.py",
+      "line": 93,
+      "name": "try_new_function",
+      "primitive": 12000,
+      "calls": 12000,
+      "own": 0.013590617000000001,
+      "cumulative": 0.050103629000000004
+    },
+    {
+      "file": "lizard_ext/lizardnd.py",
+      "line": 197,
+      "name": "appended",
+      "primitive": 16000,
+      "calls": 32000,
+      "own": 0.012378127000000001,
+      "cumulative": 0.026698078
+    },
+    {
+      "file": "lizard_languages/javascript_functions.py",
+      "line": 135,
+      "name": "_function",
+      "primitive": 16000,
+      "calls": 16000,
+      "own": 0.011736301000000001,
+      "cumulative": 0.074263172
+    },
+    {
+      "file": "lizard_languages/code_reader.py",
+      "line": 17,
+      "name": "__init__",
+      "primitive": 30000,
+      "calls": 30000,
+      "own": 0.010822379,
+      "cumulative": 0.010822379
+    },
+    {
+      "file": "lizard_languages/__init__.py",
+      "line": 68,
+      "name": "get_reader_for",
+      "primitive": 4000,
+      "calls": 4000,
+      "own": 0.010581455,
+      "cumulative": 0.11134136300000001
+    },
+    {
+      "file": "lizard_languages/javascript_bindings.py",
+      "line": 157,
+      "name": "_read_binding_candidate",
+      "primitive": 10000,
+      "calls": 10000,
+      "own": 0.010464230000000001,
+      "cumulative": 0.044756406000000006
+    },
+    {
+      "file": "lizard_languages/javascript_bindings.py",
+      "line": 193,
+      "name": "_read_parameter_binding",
+      "primitive": 24000,
+      "calls": 24000,
+      "own": 0.010280127,
+      "cumulative": 0.06547269700000001
+    },
+    {
+      "file": "lizard_core/function_info.py",
+      "line": 95,
+      "name": "add_to_long_name",
+      "primitive": 28000,
+      "calls": 28000,
+      "own": 0.010069036,
+      "cumulative": 0.011992458000000001
+    },
+    {
+      "file": "lizard_languages/javascript_functions.py",
+      "line": 163,
+      "name": "_dec",
+      "primitive": 24000,
+      "calls": 24000,
+      "own": 0.009949381,
+      "cumulative": 0.082869699
+    },
+    {
+      "file": "lizard_core/function_info.py",
+      "line": 36,
+      "name": "__init__",
+      "primitive": 16000,
+      "calls": 16000,
+      "own": 0.008561359000000001,
+      "cumulative": 0.008561359000000001
+    },
+    {
+      "file": "lizard_languages/typescript_states.py",
+      "line": 46,
+      "name": "next",
+      "primitive": 66000,
+      "calls": 70800,
+      "own": 0.008436622000000001,
+      "cumulative": 0.08735641400000001
+    },
+    {
+      "file": "lizard_ext/lizardns.py",
+      "line": 177,
+      "name": "_block_ending",
+      "primitive": 17999,
+      "calls": 17999,
+      "own": 0.00783111,
+      "cumulative": 0.01752656
+    },
+    {
+      "file": "lizard_languages/typescript.py",
+      "line": 53,
+      "name": "process_token",
+      "primitive": 127800,
+      "calls": 127800,
+      "own": 0.007612411,
+      "cumulative": 0.007612411
+    },
+    {
+      "file": "lizard_languages/javascript_functions.py",
+      "line": 66,
+      "name": "_pop_function_from_stack",
+      "primitive": 23600,
+      "calls": 23600,
+      "own": 0.007354879000000001,
+      "cumulative": 0.018657128000000002
+    },
+    {
+      "file": "lizard_languages/javascript_functions.py",
+      "line": 39,
+      "name": "_read_parenthesis_group",
+      "primitive": 12000,
+      "calls": 12000,
+      "own": 0.007299938000000001,
+      "cumulative": 0.056759455
+    },
+    {
+      "file": "lizard_languages/javascript_functions.py",
+      "line": 112,
+      "name": "_arrow_function",
+      "primitive": 8000,
+      "calls": 8000,
+      "own": 0.0072517120000000004,
+      "cumulative": 0.050216761000000006
+    },
+    {
+      "file": "lizard_core/file_info_builder.py",
+      "line": 124,
+      "name": "end_of_function",
+      "primitive": 12000,
+      "calls": 12000,
+      "own": 0.0066197980000000005,
+      "cumulative": 0.008807654
+    },
+    {
+      "file": "lizard_languages/javascript_bindings.py",
+      "line": 108,
+      "name": "_read_parameter",
+      "primitive": 16000,
+      "calls": 16000,
+      "own": 0.006616106,
+      "cumulative": 0.015816228
+    },
+    {
+      "file": "lizard_languages/javascript_functions.py",
+      "line": 12,
+      "name": "ends_expression",
+      "primitive": 12000,
+      "calls": 12000,
+      "own": 0.006365456,
+      "cumulative": 0.0071078470000000005
+    },
+    {
+      "file": "lizard_languages/code_reader.py",
+      "line": 43,
+      "name": "sub_state",
+      "primitive": 22000,
+      "calls": 22000,
+      "own": 0.005736262000000001,
+      "cumulative": 0.007546087000000001
+    },
+    {
+      "file": "lizard_core/file_info_builder.py",
+      "line": 100,
+      "name": "confirm_new_function",
+      "primitive": 12000,
+      "calls": 12000,
+      "own": 0.005654531,
+      "cumulative": 0.009022023
+    },
+    {
+      "file": "lizard_languages/javascript_bindings.py",
+      "line": 167,
+      "name": "complete",
+      "primitive": 10000,
+      "calls": 10000,
+      "own": 0.005559725000000001,
+      "cumulative": 0.010203216000000001
+    },
+    {
+      "file": "lizard_core/file_info_builder.py",
+      "line": 15,
+      "name": "with_namespace",
+      "primitive": 12000,
+      "calls": 12000,
+      "own": 0.005458631,
+      "cumulative": 0.007245224000000001
+    },
+    {
+      "file": "lizard_languages/typescript_states.py",
+      "line": 56,
+      "name": "_end_statement",
+      "primitive": 15600,
+      "calls": 15600,
+      "own": 0.005352146,
+      "cumulative": 0.013421489
+    },
+    {
+      "file": "lizard_languages/code_reader.py",
+      "line": 115,
+      "name": "__init__",
+      "primitive": 4000,
+      "calls": 4000,
+      "own": 0.005238372000000001,
+      "cumulative": 0.015011447
+    },
+    {
+      "file": "lizard_core/file_info_builder.py",
+      "line": 69,
+      "name": "__getattr__",
+      "primitive": 36000,
+      "calls": 36000,
+      "own": 0.0048290450000000006,
+      "cumulative": 0.011304617000000001
+    },
+    {
+      "file": "lizard_core/file_info_builder.py",
+      "line": 108,
+      "name": "push_new_function",
+      "primitive": 12000,
+      "calls": 12000,
+      "own": 0.00471377,
+      "cumulative": 0.06983497300000001
+    },
+    {
+      "file": "lizard_languages/javascript_functions.py",
+      "line": 60,
+      "name": "_push_function_to_stack",
+      "primitive": 12000,
+      "calls": 12000,
+      "own": 0.004489653000000001,
+      "cumulative": 0.074324626
+    },
+    {
+      "file": "lizard_languages/javascript_bindings.py",
+      "line": 181,
+      "name": "_push_arrow_function",
+      "primitive": 8000,
+      "calls": 8000,
+      "own": 0.0044869670000000006,
+      "cumulative": 0.030545358
+    },
+    {
+      "file": "lizard_ext/lizardnd.py",
+      "line": 204,
+      "name": "_init_nesting_depth_data",
+      "primitive": 16000,
+      "calls": 16000,
+      "own": 0.004454087000000001,
+      "cumulative": 0.004454087000000001
+    },
+    {
+      "file": "lizard_core/file_info_builder.py",
+      "line": 104,
+      "name": "restart_new_function",
+      "primitive": 12000,
+      "calls": 12000,
+      "own": 0.0044339520000000006,
+      "cumulative": 0.063559604
+    },
+    {
+      "file": "lizard_languages/code_reader.py",
+      "line": 39,
+      "name": "statemachine_return",
+      "primitive": 22000,
+      "calls": 22000,
+      "own": 0.004383721,
+      "cumulative": 0.012953258
+    },
+    {
+      "file": "lizard_core/file_info_builder.py",
+      "line": 58,
+      "name": "__init__",
+      "primitive": 4000,
+      "calls": 4000,
+      "own": 0.004365616,
+      "cumulative": 0.012464106
+    },
+    {
+      "file": "lizard_core/file_info_builder.py",
+      "line": 115,
+      "name": "add_to_long_function_name",
+      "primitive": 20000,
+      "calls": 20000,
+      "own": 0.004272846,
+      "cumulative": 0.013646164
+    },
+    {
+      "file": "lizard_languages/typescript_states.py",
+      "line": 52,
+      "name": "_replay_token",
+      "primitive": 20800,
+      "calls": 20800,
+      "own": 0.004128215,
+      "cumulative": 0.07931027800000001
+    },
+    {
+      "file": "lizard_core/function_info.py",
+      "line": 76,
+      "name": "parameters",
+      "primitive": 12000,
+      "calls": 12000,
+      "own": 0.004125388000000001,
+      "cumulative": 0.008727007
+    },
+    {
+      "file": "lizard_core/function_info.py",
+      "line": 85,
+      "name": "<listcomp>",
+      "primitive": 12000,
+      "calls": 12000,
+      "own": 0.004065804,
+      "cumulative": 0.004601619
+    },
+    {
+      "file": "lizard_languages/javascript_objects.py",
+      "line": 86,
+      "name": "read_object",
+      "primitive": 6000,
+      "calls": 6000,
+      "own": 0.00370665,
+      "cumulative": 0.033572156
+    },
+    {
+      "file": "lizard_languages/javascript_bindings.py",
+      "line": 142,
+      "name": "_resolve_pending_bindings",
+      "primitive": 10000,
+      "calls": 10000,
+      "own": 0.003691764,
+      "cumulative": 0.0045558840000000005
+    },
+    {
+      "file": "lizard_core/file_info_builder.py",
+      "line": 112,
+      "name": "add_condition",
+      "primitive": 26000,
+      "calls": 26000,
+      "own": 0.00367716,
+      "cumulative": 0.00367716
+    },
+    {
+      "file": "lizard_languages/token_pattern.py",
+      "line": 25,
+      "name": "_addition_key",
+      "primitive": 4000,
+      "calls": 4000,
+      "own": 0.003617073,
+      "cumulative": 0.010215845000000001
+    },
+    {
+      "file": "lizard_core/function_info.py",
+      "line": 101,
+      "name": "add_parameter",
+      "primitive": 8000,
+      "calls": 8000,
+      "own": 0.003471697,
+      "cumulative": 0.008067658
+    },
+    {
+      "file": "lizard_languages/javascript_functions.py",
+      "line": 33,
+      "name": "parameter_group",
+      "primitive": 12000,
+      "calls": 12000,
+      "own": 0.0031707090000000003,
+      "cumulative": 0.010278556000000001
+    },
+    {
+      "file": "lizard_ext/lizardns.py",
+      "line": 128,
+      "name": "_pop_scope",
+      "primitive": 10000,
+      "calls": 10000,
+      "own": 0.003001716,
+      "cumulative": 0.004012951
+    },
+    {
+      "file": "lizard_languages/typescript_states.py",
+      "line": 66,
+      "name": "statemachine_before_return",
+      "primitive": 30000,
+      "calls": 30000,
+      "own": 0.002965613,
+      "cumulative": 0.009217078
+    },
+    {
+      "file": "lizard_core/function_info.py",
+      "line": 71,
+      "name": "<genexpr>",
+      "primitive": 20000,
+      "calls": 20000,
+      "own": 0.0028259960000000003,
+      "cumulative": 0.004572286
+    },
+    {
+      "file": "lizard_core/function_info.py",
+      "line": 68,
+      "name": "parameter_count",
+      "primitive": 12000,
+      "calls": 12000,
+      "own": 0.002761214,
+      "cumulative": 0.009819445000000001
+    },
+    {
+      "file": "lizard_languages/javascript_functions.py",
+      "line": 182,
+      "name": "_expecting_func_opening_bracket",
+      "primitive": 8000,
+      "calls": 8000,
+      "own": 0.002753722,
+      "cumulative": 0.030227407
+    },
+    {
+      "file": "lizard_languages/typescript.py",
+      "line": 79,
+      "name": "__init__",
+      "primitive": 4000,
+      "calls": 4000,
+      "own": 0.002609232,
+      "cumulative": 0.024972483
+    },
+    {
+      "file": "lizard_languages/javascript_bindings.py",
+      "line": 19,
+      "name": "__init__",
+      "primitive": 18000,
+      "calls": 18000,
+      "own": 0.0025387950000000004,
+      "cumulative": 0.0025387950000000004
+    },
+    {
+      "file": "lizard_ext/lizardns.py",
+      "line": 139,
+      "name": "_reset_or_decrement_current_scope",
+      "primitive": 17999,
+      "calls": 17999,
+      "own": 0.00250239,
+      "cumulative": 0.00250239
+    },
+    {
+      "file": "lizard_languages/code_reader.py",
+      "line": 104,
+      "name": "_build_conditions",
+      "primitive": 4000,
+      "calls": 4000,
+      "own": 0.002221863,
+      "cumulative": 0.002221863
+    },
+    {
+      "file": "lizard_ext/lizardns.py",
+      "line": 72,
+      "name": "__call__",
+      "primitive": 4000,
+      "calls": 4000,
+      "own": 0.0020140640000000003,
+      "cumulative": 0.002386949
+    },
+    {
+      "file": "lizard_core/file_info_builder.py",
+      "line": 40,
+      "name": "current_nesting_level",
+      "primitive": 12000,
+      "calls": 12000,
+      "own": 0.0020002320000000002,
+      "cumulative": 0.002594607
+    },
+    {
+      "file": "lizard_languages/js_style_regex_expression.py",
+      "line": 37,
+      "name": "generate_tokens_with_regex",
+      "primitive": 4000,
+      "calls": 4000,
+      "own": 0.001903256,
+      "cumulative": 0.0050935450000000005
+    },
+    {
+      "file": "lizard_languages/javascript_functions.py",
+      "line": 108,
+      "name": "_close_expression_body",
+      "primitive": 8000,
+      "calls": 8000,
+      "own": 0.0019006490000000001,
+      "cumulative": 0.002494595
+    },
+    {
+      "file": "lizard_ext/lizardns.py",
+      "line": 124,
+      "name": "_push_scope",
+      "primitive": 10000,
+      "calls": 10000,
+      "own": 0.001877675,
+      "cumulative": 0.0023339990000000002
+    },
+    {
+      "file": "lizard_core/function_info.py",
+      "line": 105,
+      "name": "_append_parameter",
+      "primitive": 8000,
+      "calls": 8000,
+      "own": 0.001576719,
+      "cumulative": 0.001976821
+    },
+    {
+      "file": "lizard_languages/js_style_regex_context.py",
+      "line": 39,
+      "name": "mark_regex_literal_starts",
+      "primitive": 4000,
+      "calls": 4000,
+      "own": 0.001567528,
+      "cumulative": 0.0031902890000000002
+    },
+    {
+      "file": "lizard_languages/javascript_objects.py",
+      "line": 87,
+      "name": "callback",
+      "primitive": 6000,
+      "calls": 6000,
+      "own": 0.0015259190000000001,
+      "cumulative": 0.001953528
+    },
+    {
+      "file": "lizard_languages/token_pattern.py",
+      "line": 31,
+      "name": "compiled_token_pattern",
+      "primitive": 4000,
+      "calls": 4000,
+      "own": 0.001360829,
+      "cumulative": 0.016474273
+    },
+    {
+      "file": "lizard_ext/lizardns.py",
+      "line": 184,
+      "name": "_init_nested_structure_data",
+      "primitive": 16000,
+      "calls": 16000,
+      "own": 0.001304505,
+      "cumulative": 0.001304505
+    },
+    {
+      "file": "lizard_core/file_info_builder.py",
+      "line": 25,
+      "name": "start_new_function_nesting",
+      "primitive": 12000,
+      "calls": 12000,
+      "own": 0.0011491510000000002,
+      "cumulative": 0.0011491510000000002
+    },
+    {
+      "file": "lizard_core/file_info_builder.py",
+      "line": 16,
+      "name": "<listcomp>",
+      "primitive": 12000,
+      "calls": 12000,
+      "own": 0.001142075,
+      "cumulative": 0.001142075
+    },
+    {
+      "file": "lizard_languages/__init__.py",
+      "line": 34,
+      "name": "languages",
+      "primitive": 4000,
+      "calls": 4000,
+      "own": 0.001023837,
+      "cumulative": 0.001023837
+    },
+    {
+      "file": "lizard_core/function_info.py",
+      "line": 117,
+      "name": "__init__",
+      "primitive": 4000,
+      "calls": 4000,
+      "own": 0.000978076,
+      "cumulative": 0.000978076
+    },
+    {
+      "file": "lizard_core/file_analyzer.py",
+      "line": 13,
+      "name": "preprocessing",
+      "primitive": 4000,
+      "calls": 4000,
+      "own": 0.0009206840000000001,
+      "cumulative": 0.001383333
+    },
+    {
+      "file": "lizard_languages/javascript_functions.py",
+      "line": 199,
+      "name": "_field",
+      "primitive": 2400,
+      "calls": 2400,
+      "own": 0.000776086,
+      "cumulative": 0.007097624
+    },
+    {
+      "file": "lizard_core/file_info_builder.py",
+      "line": 11,
+      "name": "__init__",
+      "primitive": 4000,
+      "calls": 4000,
+      "own": 0.000603848,
+      "cumulative": 0.000603848
+    },
+    {
+      "file": "lizard_languages/vue.py",
+      "line": 15,
+      "name": "__init__",
+      "primitive": 1000,
+      "calls": 1000,
+      "own": 0.000506402,
+      "cumulative": 0.006590797000000001
+    },
+    {
+      "file": "lizard_languages/javascript.py",
+      "line": 14,
+      "name": "__init__",
+      "primitive": 1000,
+      "calls": 1000,
+      "own": 0.000495598,
+      "cumulative": 0.006785983000000001
+    },
+    {
+      "file": "lizard_languages/tsx.py",
+      "line": 45,
+      "name": "__init__",
+      "primitive": 1000,
+      "calls": 1000,
+      "own": 0.000428448,
+      "cumulative": 0.001026577
+    },
+    {
+      "file": "lizard_languages/vue.py",
+      "line": 18,
+      "name": "generate_tokens",
+      "primitive": 1000,
+      "calls": 1000,
+      "own": 0.000403872,
+      "cumulative": 0.002075042
+    },
+    {
+      "file": "lizard_languages/typescript.py",
+      "line": 49,
+      "name": "__init__",
+      "primitive": 1000,
+      "calls": 1000,
+      "own": 0.00040087,
+      "cumulative": 0.0005981290000000001
+    },
+    {
+      "file": "lizard_languages/token_pattern.py",
+      "line": 26,
+      "name": "<genexpr>",
+      "primitive": 4000,
+      "calls": 4000,
+      "own": 0.00040029400000000004,
+      "cumulative": 0.00040029400000000004
+    },
+    {
+      "file": "lizard_languages/token_pattern.py",
+      "line": 27,
+      "name": "<genexpr>",
+      "primitive": 4000,
+      "calls": 4000,
+      "own": 0.000352858,
+      "cumulative": 0.000352858
+    },
+    {
+      "file": "lizard_languages/code_reader.py",
+      "line": 158,
+      "name": "eof",
+      "primitive": 4000,
+      "calls": 4000,
+      "own": 0.000245322,
+      "cumulative": 0.000245322
+    },
+    {
+      "file": "lizard_languages/typescript.py",
+      "line": 27,
+      "name": "__init__",
+      "primitive": 1000,
+      "calls": 1000,
+      "own": 0.000197259,
+      "cumulative": 0.000197259
+    },
+    {
+      "file": "lizard_languages/typescript.py",
+      "line": 199,
+      "name": "code_tokens",
+      "primitive": 3000,
+      "calls": 3000,
+      "own": 0.00017863200000000002,
+      "cumulative": 0.00017863200000000002
+    },
+    {
+      "file": "lizard_languages/js_style_regex_keyword_scan.py",
+      "line": 14,
+      "name": "mark_keyword_slashes",
+      "primitive": 10,
+      "calls": 10,
+      "own": 4.2705000000000005e-05,
+      "cumulative": 8.579300000000001e-05
+    },
+    {
+      "file": "lizard_languages/js_style_regex_context.py",
+      "line": 55,
+      "name": "_mark_regex_literal_starts",
+      "primitive": 40,
+      "calls": 40,
+      "own": 3.9291e-05,
+      "cumulative": 0.000493791
+    },
+    {
+      "file": "lizard_languages/token_pattern.py",
+      "line": 40,
+      "name": "_compile_token_pattern",
+      "primitive": 3,
+      "calls": 3,
+      "own": 1.4418000000000002e-05,
+      "cumulative": 0.003964125000000001
+    },
+    {
+      "file": "lizard_languages/token_pattern.py",
+      "line": 64,
+      "name": "<genexpr>",
+      "primitive": 81,
+      "calls": 81,
+      "own": 1.2630000000000001e-05,
+      "cumulative": 4.4919e-05
+    },
+    {
+      "file": "lizard_languages/js_style_regex_keyword_scan.py",
+      "line": 28,
+      "name": "<listcomp>",
+      "primitive": 30,
+      "calls": 30,
+      "own": 7.125e-06,
+      "cumulative": 7.125e-06
+    },
+    {
+      "file": "lizard_languages/js_style_regex_keyword_scan.py",
+      "line": 1,
+      "name": "<module>",
+      "primitive": 1,
+      "calls": 1,
+      "own": 4.874e-06,
+      "cumulative": 5.958e-06
+    },
+    {
+      "file": "lizard_languages/js_style_regex_keyword_scan.py",
+      "line": 66,
+      "name": "_consider_slash",
+      "primitive": 10,
+      "calls": 10,
+      "own": 2.21e-06,
+      "cumulative": 1.4710000000000001e-05
+    },
+    {
+      "file": "lizard_languages/js_style_regex_context.py",
+      "line": 71,
+      "name": "_apply_marks",
+      "primitive": 10,
+      "calls": 10,
+      "own": 1.249e-06,
+      "cumulative": 1.249e-06
+    }
+  ],
+  "corpus": {
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-api-h-object-js.js": "7b530219bf676cfdbb2482ab71771263979611344fb7565b9a1fbbc5e80a291b",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-api-h-object-ts.ts": "7b530219bf676cfdbb2482ab71771263979611344fb7565b9a1fbbc5e80a291b",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-api-h-object-tsx.tsx": "7b530219bf676cfdbb2482ab71771263979611344fb7565b9a1fbbc5e80a291b",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-api-h-object-vue.vue": "ebaf377aedc3e4c603d2590e47a86ecc1ea27432c53c9c60be714968841abf85",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-api-h-statement-js.js": "460e2347499e709b1e50e80f592192a335ba8910a13e5fb5cda2d71434f78ac5",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-api-h-statement-ts.ts": "460e2347499e709b1e50e80f592192a335ba8910a13e5fb5cda2d71434f78ac5",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-api-h-statement-tsx.tsx": "460e2347499e709b1e50e80f592192a335ba8910a13e5fb5cda2d71434f78ac5",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-api-h-statement-vue.vue": "4f3a01a64a493007147900662b0643acb1193225af138a2d2a9055842ade7078",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-apioptional--object-js.js": "3ca65f50cc4c33540b5220a90eef3c2d3c8797504b0b2db58bd34ca884c4faa3",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-apioptional--object-ts.ts": "3ca65f50cc4c33540b5220a90eef3c2d3c8797504b0b2db58bd34ca884c4faa3",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-apioptional--object-tsx.tsx": "3ca65f50cc4c33540b5220a90eef3c2d3c8797504b0b2db58bd34ca884c4faa3",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-apioptional--object-vue.vue": "3a2f679462d9fd9beec580c041f54a5947372cdb9c3f17157feb1125f15d94e0",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-apioptional--statement-js.js": "dc075b9809d5a0b442fbbd68600eb246b7f76ec84c96e7c61f68f6101baf1c17",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-apioptional--statement-ts.ts": "dc075b9809d5a0b442fbbd68600eb246b7f76ec84c96e7c61f68f6101baf1c17",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-apioptional--statement-tsx.tsx": "dc075b9809d5a0b442fbbd68600eb246b7f76ec84c96e7c61f68f6101baf1c17",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-apioptional--statement-vue.vue": "6d651b6409270c4f43704219068e3f01807358ba6e178a70730bd7e4018a8683",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-apioptional-h-object-js.js": "36852b42ce23532201e2950b914a8c190ea936079c21a9f1d844ddad0d7db15d",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-apioptional-h-object-ts.ts": "36852b42ce23532201e2950b914a8c190ea936079c21a9f1d844ddad0d7db15d",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-apioptional-h-object-tsx.tsx": "36852b42ce23532201e2950b914a8c190ea936079c21a9f1d844ddad0d7db15d",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-apioptional-h-object-vue.vue": "491b263aeae518af8da33f303b118b6dca2ef40a364c17bb33b75e14c8f76af6",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-apioptional-h-statement-js.js": "f5b1c94dedffc5cde25ad1e19c11fc3bc2e469e3497391ca1881fb6f441d1181",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-apioptional-h-statement-ts.ts": "f5b1c94dedffc5cde25ad1e19c11fc3bc2e469e3497391ca1881fb6f441d1181",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-apioptional-h-statement-tsx.tsx": "f5b1c94dedffc5cde25ad1e19c11fc3bc2e469e3497391ca1881fb6f441d1181",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-apioptional-h-statement-vue.vue": "bf485847021bddcbd5483512a8e59d1b2f312e44c3274a78bbda6746d7172381",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-h-object-js.js": "b061214f5daba31265902ac03af20e3152deef4bba4324b052dfc06469580bdf",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-h-object-ts.ts": "b061214f5daba31265902ac03af20e3152deef4bba4324b052dfc06469580bdf",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-h-object-tsx.tsx": "b061214f5daba31265902ac03af20e3152deef4bba4324b052dfc06469580bdf",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-h-object-vue.vue": "781e70943be92a758ad9c40b5a22b1b5c06b32e5c44693272582437682ce3dd6",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-h-statement-js.js": "f11e693ef74c0e8bf5dcd3ae3e596ef28f85942a00168cc74fc39d6f49da6fe4",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-h-statement-ts.ts": "f11e693ef74c0e8bf5dcd3ae3e596ef28f85942a00168cc74fc39d6f49da6fe4",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-h-statement-tsx.tsx": "f11e693ef74c0e8bf5dcd3ae3e596ef28f85942a00168cc74fc39d6f49da6fe4",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-h-statement-vue.vue": "50c3321dd096f044c325d4778048045dc839a37e7d2bdcbe5bfaeb01d377b137",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-new Factory-object-js.js": "16ade89b5ea759b03a67d76d297af83a79d09e9c414ce56ca689c90ff716d666",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-new Factory-object-ts.ts": "16ade89b5ea759b03a67d76d297af83a79d09e9c414ce56ca689c90ff716d666",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-new Factory-object-tsx.tsx": "16ade89b5ea759b03a67d76d297af83a79d09e9c414ce56ca689c90ff716d666",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-new Factory-object-vue.vue": "bc530f9f4fe190c158ac857b15eb06d534fe677c41a0e222d1b46a1fb7a24612",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-new Factory-statement-js.js": "80dc7f941b52ad118c1491b26fdec87719cb7363d573a8535091f81d6004cdcc",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-new Factory-statement-ts.ts": "80dc7f941b52ad118c1491b26fdec87719cb7363d573a8535091f81d6004cdcc",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-new Factory-statement-tsx.tsx": "80dc7f941b52ad118c1491b26fdec87719cb7363d573a8535091f81d6004cdcc",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/calls/argument-new Factory-statement-vue.vue": "3f77166ca4b26ee4d55e974fd0ffc814bc329686148ebf884393efb6b20f8eeb"
+  }
+}

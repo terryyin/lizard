@@ -1,0 +1,170 @@
+[
+  {
+    "name": "assertionBox<<T>(x:T)=>T>",
+    "source": "const run = () => value as Box<<T>(x:T)=>T>;\nfunction after(tail) {return tail?1:0;}\n",
+    "suffixes": [
+      "ts",
+      "tsx",
+      "vue"
+    ],
+    "expected": [
+      [
+        "run",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "name": "returnBox<<T>(x:T)=>T>",
+    "source": "h((arg): Box<<T>(x:T)=>T> => arg);\nfunction after(tail) {return tail?1:0;}\n",
+    "suffixes": [
+      "ts",
+      "tsx",
+      "vue"
+    ],
+    "expected": [
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        [
+          "arg"
+        ]
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "name": "assertionimport(\"m\")<(n:number)=>number>",
+    "source": "const run = () => value as import(\"m\")<(n:number)=>number>;\nfunction after(tail) {return tail?1:0;}\n",
+    "suffixes": [
+      "ts",
+      "tsx",
+      "vue"
+    ],
+    "expected": [
+      [
+        "run",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "name": "returnimport(\"m\")<(n:number)=>number>",
+    "source": "h((arg): import(\"m\")<(n:number)=>number> => arg);\nfunction after(tail) {return tail?1:0;}\n",
+    "suffixes": [
+      "ts",
+      "tsx",
+      "vue"
+    ],
+    "expected": [
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        [
+          "arg"
+        ]
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "name": "assertiontypeof import(\"m\").factory<(n:number)=>number>",
+    "source": "const run = () => value as typeof import(\"m\").factory<(n:number)=>number>;\nfunction after(tail) {return tail?1:0;}\n",
+    "suffixes": [
+      "ts",
+      "tsx",
+      "vue"
+    ],
+    "expected": [
+      [
+        "run",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "name": "returntypeof import(\"m\").factory<(n:number)=>number>",
+    "source": "h((arg): typeof import(\"m\").factory<(n:number)=>number> => arg);\nfunction after(tail) {return tail?1:0;}\n",
+    "suffixes": [
+      "ts",
+      "tsx",
+      "vue"
+    ],
+    "expected": [
+      [
+        "(anonymous)",
+        1,
+        1,
+        1,
+        [
+          "arg"
+        ]
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  }
+]

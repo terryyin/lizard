@@ -1,0 +1,101 @@
+[
+  {
+    "label": "current-labels-api-parameters",
+    "command": [
+      "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/.venv/bin/python",
+      "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/.agents/skills/lizard-process-pr/scripts/paired_benchmark.py",
+      "--baseline",
+      "/Users/terryyin/.cache/issue524-label-types-20261102/current",
+      "--candidate",
+      "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types",
+      "--corpus",
+      "/Users/terryyin/.cache/issue524-label-types-20261102/labels",
+      "--workload",
+      "api-parameters",
+      "--out",
+      "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/evidence/performance1/current-labels-api-parameters.json",
+      "--pairs",
+      "20",
+      "--seconds",
+      "1.2",
+      "--limit-pct",
+      "3"
+    ],
+    "exit": 0,
+    "stdout": "{\"verdict\": \"passes\", \"passes\": true, \"paired_95pct_ci\": [-0.6942761758959524, 0.5579013432205432], \"out\": \"/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/evidence/performance1/current-labels-api-parameters.json\"}\n",
+    "stderr": "",
+    "passes": true,
+    "verdict": "passes",
+    "paired_change_pct": -0.07014870859978763,
+    "paired_95pct_ci": [
+      -0.6942761758959524,
+      0.5579013432205432
+    ]
+  },
+  {
+    "label": "current-annotations-api-parameters",
+    "command": [
+      "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/.venv/bin/python",
+      "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/.agents/skills/lizard-process-pr/scripts/paired_benchmark.py",
+      "--baseline",
+      "/Users/terryyin/.cache/issue524-label-types-20261102/current",
+      "--candidate",
+      "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types",
+      "--corpus",
+      "/Users/terryyin/.cache/issue524-label-types-20261102/annotations",
+      "--workload",
+      "api-parameters",
+      "--out",
+      "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/evidence/performance1/current-annotations-api-parameters.json",
+      "--pairs",
+      "20",
+      "--seconds",
+      "1.2",
+      "--limit-pct",
+      "3"
+    ],
+    "exit": 0,
+    "stdout": "{\"verdict\": \"passes\", \"passes\": true, \"paired_95pct_ci\": [-1.8213990257132022, -0.33638176018264276], \"out\": \"/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/evidence/performance1/current-annotations-api-parameters.json\"}\n",
+    "stderr": "",
+    "passes": true,
+    "verdict": "passes",
+    "paired_change_pct": -1.0816770925594401,
+    "paired_95pct_ci": [
+      -1.8213990257132022,
+      -0.33638176018264276
+    ]
+  },
+  {
+    "label": "current-calls-api-parameters",
+    "command": [
+      "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/.venv/bin/python",
+      "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/.agents/skills/lizard-process-pr/scripts/paired_benchmark.py",
+      "--baseline",
+      "/Users/terryyin/.cache/issue524-label-types-20261102/current",
+      "--candidate",
+      "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types",
+      "--corpus",
+      "/Users/terryyin/.cache/issue524-label-types-20261102/calls",
+      "--workload",
+      "api-parameters",
+      "--out",
+      "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/evidence/performance1/current-calls-api-parameters.json",
+      "--pairs",
+      "20",
+      "--seconds",
+      "1.2",
+      "--limit-pct",
+      "3"
+    ],
+    "exit": 1,
+    "stdout": "{\"verdict\": \"bound-not-met\", \"passes\": false, \"paired_95pct_ci\": [3.528025810408196, 6.03733287205409], \"out\": \"/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/evidence/performance1/current-calls-api-parameters.json\"}\n",
+    "stderr": "",
+    "passes": false,
+    "verdict": "bound-not-met",
+    "paired_change_pct": 4.775167546727699,
+    "paired_95pct_ci": [
+      3.528025810408196,
+      6.03733287205409
+    ]
+  }
+]

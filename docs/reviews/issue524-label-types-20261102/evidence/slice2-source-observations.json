@@ -1,0 +1,206 @@
+[
+  {
+    "id": "C44",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C44",
+      "--observed",
+      "docs/reviews/issue524-label-types-20261102/evidence/pr548-checks-final.json:32 exact-head results,31success/1conditional web skip; all Linux/Windows3.8-3.14 jobs and applicable web build/recorder/browser job succeed on7fac94f"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C44\",\"text\":\"Hosted checks: Pass applicable hosted CI on the exact head.\",\"slice\":2,\"observed\":\"docs/reviews/issue524-label-types-20261102/evidence/pr548-checks-final.json:32 exact-head results,31success/1conditional web skip; all Linux/Windows3.8-3.14 jobs and applicable web build/recorder/browser job succeed on7fac94f\"},\"reviewDigest\":\"0cf5204c9df2b4ed4281c2ba7b2b42be029523a96c41994949d4f51c87355a8a\"}\n",
+    "stderr": ""
+  },
+  {
+    "id": "C45",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C45",
+      "--observed",
+      "docs/reviews/issue524-label-types-20261102/evidence/external-disposition.json merge2416c37 from expected_head7fac94f and base0e352b7; merged-master-verification.json actualmaster source/test equality and isolated638default/NS+100CLI observation match"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C45\",\"text\":\"Merge: Merge the exact qualified head into current master.\",\"slice\":2,\"observed\":\"docs/reviews/issue524-label-types-20261102/evidence/external-disposition.json merge2416c37 from expected_head7fac94f and base0e352b7; merged-master-verification.json actualmaster source/test equality and isolated638default/NS+100CLI observation match\"},\"reviewDigest\":\"10f714b08a9c2c14f7b115fe0920954bf0ff6dd805b17567fd12af8305b8465e\"}\n",
+    "stderr": ""
+  },
+  {
+    "id": "C46",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C46",
+      "--observed",
+      "docs/reviews/issue524-label-types-20261102/evidence/external-disposition.json issue524 stateclosed/state_reasoncompleted/closed_at, confirmed by GitHub response after merged verification"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C46\",\"text\":\"Closure: Close issue #524 after the required checks pass.\",\"slice\":2,\"observed\":\"docs/reviews/issue524-label-types-20261102/evidence/external-disposition.json issue524 stateclosed/state_reasoncompleted/closed_at, confirmed by GitHub response after merged verification\"},\"reviewDigest\":\"111b86816fbc0c96409d5a7f81aa8b3e79abb6cf5c565a5b3a46522e74c9b47d\"}\n",
+    "stderr": ""
+  },
+  {
+    "id": "C47",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C47",
+      "--observed",
+      "docs/reviews/issue524-label-types-20261102/evidence/external-disposition.json confirmed summary https://github.com/terryyin/lizard/issues/524#issuecomment-6569296813 lists525,531,533,534,536,545,548 and qualified proof with thanks"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C47\",\"text\":\"Summary: Provide the related-fix summary with issue closure.\",\"slice\":2,\"observed\":\"docs/reviews/issue524-label-types-20261102/evidence/external-disposition.json confirmed summary https://github.com/terryyin/lizard/issues/524#issuecomment-6569296813 lists525,531,533,534,536,545,548 and qualified proof with thanks\"},\"reviewDigest\":\"bf6400d24d1312cf5d5b629d8dd1667773029e05d5dedc66640798d59aa3d483\"}\n",
+    "stderr": ""
+  },
+  {
+    "id": "C48",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C48",
+      "--observed",
+      "Plan G1-G18 all proved; current490 regressions/full2917 tests/18strict bounds/exact-head hosted checks/merged638-source verification leave no known reported or confirmed524 failure"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C48\",\"text\":\"Failure reporting: Report any remaining #524 failure.\",\"slice\":2,\"observed\":\"Plan G1-G18 all proved; current490 regressions/full2917 tests/18strict bounds/exact-head hosted checks/merged638-source verification leave no known reported or confirmed524 failure\"},\"reviewDigest\":\"c39b80f6e9c4c7ce43cb4a6844079e33fd4c7040605d395c6e5b71a53f95a730\"}\n",
+    "stderr": ""
+  },
+  {
+    "id": "Q05",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "Q05",
+      "--observed",
+      "Retained local5/performance5/refactor audit precede guarded expected-head hosted merge; checks-final precedes merge; master verification precedes summary and completed issue update in external-disposition.json"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"Q05\",\"text\":\"Delivery ordering: Merge and issue closure follow discriminating regression proof, independent refactoring, all required performance gates, full local checks, and applicable exact-head hosted CI.\",\"slice\":2,\"observed\":\"Retained local5/performance5/refactor audit precede guarded expected-head hosted merge; checks-final precedes merge; master verification precedes summary and completed issue update in external-disposition.json\"},\"reviewDigest\":\"4ff1ddf5f4e61f4462c7fe01aef62ffc6ab44b50fd149ae95597263c60f51a8f\"}\n",
+    "stderr": ""
+  },
+  {
+    "id": "Q06",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "Q06",
+      "--observed",
+      "All known18 obligations proved; original/new journeys and every required semantic/performance/hosted gate accepted before closing, including all original40 NS pairs in pooled120, not partial-default clearance"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"Q06\",\"text\":\"Completeness: Partial correctness cannot be represented as grounds for closing #524.\",\"slice\":2,\"observed\":\"All known18 obligations proved; original/new journeys and every required semantic/performance/hosted gate accepted before closing, including all original40 NS pairs in pooled120, not partial-default clearance\"},\"reviewDigest\":\"18fa8be7298ba0a29731e5809766efec81c48575ebe081f94cf6244da190ea26\"}\n",
+    "stderr": ""
+  },
+  {
+    "id": "Q09",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "Q09",
+      "--observed",
+      "Original human/source explicit PR creation authority; existing canonical plan Repair PR548 and GitHub creation receipt belongs same SEED024 owner"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"Q09\",\"text\":\"PR authority: The human explicitly authorizes PR creation.\",\"slice\":2,\"observed\":\"Original human/source explicit PR creation authority; existing canonical plan Repair PR548 and GitHub creation receipt belongs same SEED024 owner\"},\"reviewDigest\":\"0183060c48714eb9acc21ac65ece7a44724890d18fb05a1f3205b2f917f0faee\"}\n",
+    "stderr": ""
+  },
+  {
+    "id": "Q10",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "Q10",
+      "--observed",
+      "Original human/source explicit merge authority; GitHub merge receipt guarded exact qualified7fac94f head and confirmed2416c37 merge"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"Q10\",\"text\":\"Merge authority: The human explicitly authorizes merge.\",\"slice\":2,\"observed\":\"Original human/source explicit merge authority; GitHub merge receipt guarded exact qualified7fac94f head and confirmed2416c37 merge\"},\"reviewDigest\":\"a037a563cd005f0e0938fee1bc17a964b23772270f68288eb04c3e879a6a4a4b\"}\n",
+    "stderr": ""
+  },
+  {
+    "id": "Q11",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "Q11",
+      "--observed",
+      "Original human/source explicit summary/closure authority; confirmed comment6569296813 and closed/completed issue524 receipt"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"Q11\",\"text\":\"Issue authority: The human explicitly authorizes the issue summary and closure.\",\"slice\":2,\"observed\":\"Original human/source explicit summary/closure authority; confirmed comment6569296813 and closed/completed issue524 receipt\"},\"reviewDigest\":\"44b041d718758d5679146064c46ebe60ced84c00de87bf37dc9cdf2620e4c321\"}\n",
+    "stderr": ""
+  },
+  {
+    "id": "X04",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "X04",
+      "--observed",
+      "Qualified local/refactor/strict18 performance and31hosted successes are retained before successful guarded GitHub merge receipt; no premature merge"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"X04\",\"text\":\"Premature delivery exclusion: Do not merge before the stated gates pass.\",\"slice\":2,\"observed\":\"Qualified local/refactor/strict18 performance and31hosted successes are retained before successful guarded GitHub merge receipt; no premature merge\"},\"reviewDigest\":\"b98eb8e6e8de6d30a90d934fd25709551db07129bcb612175833fcbdef3b7d28\"}\n",
+    "stderr": ""
+  },
+  {
+    "id": "X05",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "X05",
+      "--observed",
+      "Merged-source/import/observation proof retained before confirmed summary and closed/completed issue receipt; no premature closure"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"X05\",\"text\":\"Premature closure exclusion: Do not close #524 before the stated gates pass.\",\"slice\":2,\"observed\":\"Merged-source/import/observation proof retained before confirmed summary and closed/completed issue receipt; no premature closure\"},\"reviewDigest\":\"2f6205d05b9d8185a5b9874c4aee14ef82cb8587703f117cbd4befe7b1b6a19e\"}\n",
+    "stderr": ""
+  }
+]

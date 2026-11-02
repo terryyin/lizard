@@ -1,0 +1,6 @@
+{
+  "command": "PIP_QUIET=3 nix develop -c python -m pytest test/testOutput.py test/testCommentOptions.py test/test_website_smoke.py -q",
+  "exit_code": 0,
+  "stdout": "..........................................                               [100%]\n42 passed in 2.25s\n",
+  "stderr": ""
+}

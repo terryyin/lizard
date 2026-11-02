@@ -1,0 +1,18 @@
+{
+  "scope": "Fresh independent post-change refactor of slice 1 G12 cost correction",
+  "story": "SEED-024#resolve-issue524-label-types",
+  "decision_before_verification": "none — already clean; no product or test edits",
+  "ordered_checks": {
+    "duplication": "The cheap class/dialect guards duplicate necessary preconditions only to avoid cold-path work. _typed_class_member remains the complete role owner; annotation punctuation is still interpreted by its existing owners. No duplicated grammar or parallel counter was added.",
+    "domain_naming": "The local declaration/marker, trailing-token and annotation-punctuation sets name dispatch groups, not new semantic owners. Names express parser responsibilities and preserve ADR-0001 metric meanings.",
+    "shotgun_surgery": "Existing class-member, declaration, return-signature, binding and replay owners remain authoritative. The cost gates retain declaration-before-marker order and do not add representations of type grammar.",
+    "dead_or_redundant_code": "All gates serve measured hot paths and reach current owners. Accepted direct annotation imports, historic aliases and signature fallback removal remain intact. No supported deletion or extraction candidate found.",
+    "behavioral_documentation": "Inspected the actual public helper, Vue wrappers and new regression assertions, plus declaration, custom-reader and optional-aware extension consumers. Existing matching receipts cover those boundaries; no test is narrowed or added.",
+    "file_size": "All nine changed/new product files and the new regression file are at most 250 lines; the active plan is 246 lines. Generated evidence and installed trace artifacts retain their existing exclusion."
+  },
+  "subsystem": "Existing JS/TS language-reader subsystem only; no architectural boundary change or ADR conflict",
+  "verification_choice": "Reuse implementation-cost complete focused receipts after checking current 108-file runtime hashes, source edges, unchanged fixture/assertion boundaries and retained 719 consumer dispositions. No refactor edit invalidates this proof; skipped — no refactor edits.",
+  "expensive_proof": "None launched. Root owns full pytest/make and all 18 unchanged frozen qualification gates on Territory.local. No additional host survey is needed for pure read/hash correspondence. Root must inspect current host conditions before timing.",
+  "remaining_observation": "G12 remains unresolved until root obtains strict paired 95% upper slowdown <3% for every required frozen comparison. Prior failed candidate evidence remains valid and retained.",
+  "commands": "All owned Nix commands remain serial and are owned to their terminal status. No tests, timing, formatter, hook lint, commit, push or CI action in this review."
+}

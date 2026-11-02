@@ -1,0 +1,110 @@
+{
+  "checkout": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types",
+  "branch": "codex/resolve-issue524-label-types",
+  "head": "a10a744422c7bd8d17b77be315682bf39ac5d92d",
+  "files": [
+    {
+      "path": "lizard_languages/javascript.py",
+      "sha256": "3db42f05fdbe8d194af6ffceed131232a8d7bd180cd5d1c0c4a8b0462d65a512",
+      "lines": 16,
+      "accepted_sha256": "3db42f05fdbe8d194af6ffceed131232a8d7bd180cd5d1c0c4a8b0462d65a512",
+      "unchanged_from_accepted": true
+    },
+    {
+      "path": "lizard_languages/javascript_objects.py",
+      "sha256": "9b852cf0ed8933b3a385fc2d15cde552cce409c177fef18ecc472feb200aa94a",
+      "lines": 153,
+      "accepted_sha256": "9b852cf0ed8933b3a385fc2d15cde552cce409c177fef18ecc472feb200aa94a",
+      "unchanged_from_accepted": true
+    },
+    {
+      "path": "lizard_languages/typescript.py",
+      "sha256": "8a2b408b471810da54b2d999ce652866e6b7ec3489a61f8bed73cfdc9857d7f7",
+      "lines": 237,
+      "accepted_sha256": "32b8fcd231e51fb8ceb878500b587d200506164b3cfd767fa646ea976ceb7324",
+      "unchanged_from_accepted": false
+    },
+    {
+      "path": "lizard_languages/typescript_declarations.py",
+      "sha256": "069299b15166e6aa591665f011454052fbe864d52ed95dee27743ecddb918481",
+      "lines": 157,
+      "accepted_sha256": "069299b15166e6aa591665f011454052fbe864d52ed95dee27743ecddb918481",
+      "unchanged_from_accepted": true
+    },
+    {
+      "path": "lizard_languages/typescript_states.py",
+      "sha256": "9ec29c64d7d9362eec004ffc2ffb77fb5d6e57849981973601e81422ff9781b8",
+      "lines": 250,
+      "accepted_sha256": "9ec29c64d7d9362eec004ffc2ffb77fb5d6e57849981973601e81422ff9781b8",
+      "unchanged_from_accepted": true
+    },
+    {
+      "path": "lizard_languages/typescript_type_annotation.py",
+      "sha256": "7027b6309477bc947c9e3ca2221b25f06efb135500ae8e9721545532e99758e0",
+      "lines": 77,
+      "accepted_sha256": "7027b6309477bc947c9e3ca2221b25f06efb135500ae8e9721545532e99758e0",
+      "unchanged_from_accepted": true
+    },
+    {
+      "path": "lizard_languages/tsx.py",
+      "sha256": "233c5b42d5ad48be19716e243bd2e486e640370ed3737d7669fb292d7defb5c2",
+      "lines": 178,
+      "accepted_sha256": "233c5b42d5ad48be19716e243bd2e486e640370ed3737d7669fb292d7defb5c2",
+      "unchanged_from_accepted": true
+    },
+    {
+      "path": "lizard_languages/vue.py",
+      "sha256": "c163ff1f2a070e050a02a2397abfbbdbe6133f23d91b5a31595ff3107f2d7dc5",
+      "lines": 41,
+      "accepted_sha256": "c163ff1f2a070e050a02a2397abfbbdbe6133f23d91b5a31595ff3107f2d7dc5",
+      "unchanged_from_accepted": true
+    },
+    {
+      "path": "test/test_languages/testTypeScriptAnnotationBoundaries.py",
+      "sha256": "4b1d1ed0543ab1b4b75181fcfc78718506d2dacfb5d7b350cd34f8863fe358a6",
+      "lines": 241,
+      "accepted_sha256": "4b1d1ed0543ab1b4b75181fcfc78718506d2dacfb5d7b350cd34f8863fe358a6",
+      "unchanged_from_accepted": true
+    },
+    {
+      "path": "lizard_languages/typescript_signatures.py",
+      "sha256": "daec9731184e1b4e9be3ab7d741d70586dca7b94f1f9c7a53bae595c78d93702",
+      "lines": 57,
+      "accepted_sha256": "a36101fb19d18ab86c0877972a387d1d829372e0cc156b3440b18fece67908a9",
+      "unchanged_from_accepted": false
+    }
+  ],
+  "refactor_edits": [
+    {
+      "path": "lizard_languages/typescript.py",
+      "line": 11,
+      "change": "Import existing class directly from typescript_type_annotation instead of declarations compatibility alias."
+    },
+    {
+      "path": "lizard_languages/typescript_signatures.py",
+      "line": 5,
+      "change": "Import existing class directly from typescript_type_annotation; previous unreachable fallback remains removed."
+    }
+  ],
+  "consumer_count": 719,
+  "traced_union_count": 446,
+  "new_consumers": 69,
+  "dispositions": {
+    "excluded": 547,
+    "reused": 113,
+    "run": 59
+  },
+  "fresh_proofs": [
+    "languages-after-refactor.json",
+    "consumers-after-refactor.json",
+    "outputs-after-refactor.json"
+  ],
+  "accepted_fixture_count": 200,
+  "parser_or_assertion_edits": false,
+  "runtime": {
+    "host": "Territory.local",
+    "python": "3.9.11 (main, Apr 10 2022, 22:01:55) \n[Clang 11.1.0 ]",
+    "executable": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/.venv/bin/python"
+  },
+  "file_size_exclusion": "Machine-generated trace/JSON evidence excluded; production/test and authored report remain <=250 lines. Root-owned plan/evidence not edited."
+}

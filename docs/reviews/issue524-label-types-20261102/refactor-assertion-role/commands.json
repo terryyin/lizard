@@ -1,0 +1,40 @@
+{
+  "checkout": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types",
+  "new_verification": [
+    {
+      "command": "PIP_QUIET=3 nix develop -c python docs/reviews/issue524-label-types-20261102/refactor-assertion-role/audit.py",
+      "exit_code": 0,
+      "terminal_result": {
+        "runtime_matches": 108,
+        "test_matches": 157,
+        "story_files": 11,
+        "fixtures": 490,
+        "prior476_actual_records_identical": true,
+        "consumer_dispositions": {"excluded": 547, "reused": 113, "run": 59},
+        "directed_edges": 6,
+        "no_product_or_test_edits": true,
+        "test_commands_launched": 0,
+        "timing_commands_launched": 0
+      }
+    },
+    {
+      "command": "PIP_QUIET=3 nix develop -c wc -l lizard_languages/javascript.py lizard_languages/javascript_objects.py lizard_languages/tsx.py lizard_languages/typescript.py lizard_languages/typescript_declarations.py lizard_languages/typescript_signatures.py lizard_languages/typescript_states.py lizard_languages/typescript_type_annotation.py lizard_languages/vue.py test/test_languages/testTypeScriptAnnotationBoundaries.py test/test_languages/testTypeScriptAssertionRoles.py",
+      "exit_code": 0,
+      "lines_in_argument_order": [16, 154, 178, 242, 173, 57, 250, 97, 41, 241, 77],
+      "total": 1526
+    }
+  ],
+  "git_reads": [
+    "git status --short",
+    "git diff --stat",
+    "git diff --cached --stat",
+    "git diff -- lizard_languages/typescript_declarations.py lizard_languages/typescript_states.py lizard_languages/typescript_type_annotation.py",
+    "git diff -- lizard_languages/javascript.py lizard_languages/javascript_objects.py lizard_languages/tsx.py lizard_languages/typescript.py lizard_languages/typescript_signatures.py lizard_languages/vue.py"
+  ],
+  "git_reads_exit_codes": [0, 0, 0, 0, 0],
+  "targeted_search_note": "One source/config rg returned2 because pyproject.toml and .pre-commit-config.yaml are absent; existing Makefile and setup.cfg subsequently read. This was a read command, not a test failure.",
+  "tests": "skipped — no refactor edits",
+  "timing": "not launched",
+  "nix_released_after_commands_terminal": true,
+  "owned_running_processes": []
+}

@@ -1,0 +1,14 @@
+{
+  "command": [
+    "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/.venv/bin/python",
+    "-I",
+    "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/evidence/export_default_probe.py",
+    "--checkout",
+    "/Users/terryyin/.cache/issue524-label-types-20261102/current",
+    "--out",
+    "docs/reviews/issue524-label-types-20261102/evidence/export-default-baseline.json"
+  ],
+  "exit": 0,
+  "stdout": "{\"out\": \"docs/reviews/issue524-label-types-20261102/evidence/export-default-baseline.json\", \"rows\": 14, \"names\": [{\"case\": \"as\", \"suffix\": \"js\", \"names\": [\"(anonymous)\", \"after\"]}, {\"case\": \"as\", \"suffix\": \"ts\", \"names\": [\"(anonymous)\", \"after\"]}, {\"case\": \"as\", \"suffix\": \"jsx\", \"names\": [\"(anonymous)\", \"after\"]}, {\"case\": \"as\", \"suffix\": \"tsx\", \"names\": [\"(anonymous)\", \"after\"]}, {\"case\": \"as\", \"suffix\": \"mjs\", \"names\": [\"(anonymous)\", \"after\"]}, {\"case\": \"as\", \"suffix\": \"cjs\", \"names\": [\"(anonymous)\", \"after\"]}, {\"case\": \"as\", \"suffix\": \"vue\", \"names\": [\"(anonymous)\", \"after\"]}, {\"case\": \"satisfies\", \"suffix\": \"js\", \"names\": [\"(anonymous)\", \"after\"]}, {\"case\": \"satisfies\", \"suffix\": \"ts\", \"names\": [\"(anonymous)\", \"after\"]}, {\"case\": \"satisfies\", \"suffix\": \"jsx\", \"names\": [\"(anonymous)\", \"after\"]}, {\"case\": \"satisfies\", \"suffix\": \"tsx\", \"names\": [\"(anonymous)\", \"after\"]}, {\"case\": \"satisfies\", \"suffix\": \"mjs\", \"names\": [\"(anonymous)\", \"after\"]}, {\"case\": \"satisfies\", \"suffix\": \"cjs\", \"names\": [\"(anonymous)\", \"after\"]}, {\"case\": \"satisfies\", \"suffix\": \"vue\", \"names\": [\"(anonymous)\", \"after\"]}]}\n",
+  "stderr": ""
+}

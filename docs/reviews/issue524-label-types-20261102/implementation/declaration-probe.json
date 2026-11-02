@@ -1,0 +1,152 @@
+[
+  {
+    "name": "multiline",
+    "source": "const x: number = 1,\n run: (n: number) => number = n => n || 0;\nfunction after(tail){return tail?1:0;}\n",
+    "suffix": "ts",
+    "result": [
+      [
+        "(anonymous)",
+        2,
+        2,
+        2,
+        [
+          "n"
+        ]
+      ],
+      [
+        "after",
+        2,
+        3,
+        3,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "name": "multiline",
+    "source": "const x: number = 1,\n run: (n: number) => number = n => n || 0;\nfunction after(tail){return tail?1:0;}\n",
+    "suffix": "tsx",
+    "result": [
+      [
+        "(anonymous)",
+        2,
+        2,
+        2,
+        [
+          "n"
+        ]
+      ],
+      [
+        "after",
+        2,
+        3,
+        3,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "name": "multiline",
+    "source": "<script lang=\"ts\">const x: number = 1,\n run: (n: number) => number = n => n || 0;\nfunction after(tail){return tail?1:0;}\n</script>",
+    "suffix": "vue",
+    "result": [
+      [
+        "(anonymous)",
+        2,
+        2,
+        2,
+        [
+          "n"
+        ]
+      ],
+      [
+        "after",
+        2,
+        3,
+        3,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "name": "same-line",
+    "source": "const x: number = 1, run: (n: number) => number = n => n || 0;\nfunction after(tail){return tail?1:0;}\n",
+    "suffix": "ts",
+    "result": [
+      [
+        "run",
+        2,
+        1,
+        1,
+        [
+          "n"
+        ]
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "name": "same-line",
+    "source": "const x: number = 1, run: (n: number) => number = n => n || 0;\nfunction after(tail){return tail?1:0;}\n",
+    "suffix": "tsx",
+    "result": [
+      [
+        "run",
+        2,
+        1,
+        1,
+        [
+          "n"
+        ]
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "name": "same-line",
+    "source": "<script lang=\"ts\">const x: number = 1, run: (n: number) => number = n => n || 0;\nfunction after(tail){return tail?1:0;}\n</script>",
+    "suffix": "vue",
+    "result": [
+      [
+        "run",
+        2,
+        1,
+        1,
+        [
+          "n"
+        ]
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  }
+]

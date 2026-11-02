@@ -1,0 +1,1133 @@
+[
+  {
+    "test": "test_labels_keep_actual_body_and_successor",
+    "family": "labels",
+    "source": "const x = [() => {\n a: 1\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "js",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_labels_keep_actual_body_and_successor",
+    "family": "labels",
+    "source": "const x = [() => {\n a: 1\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "ts",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_labels_keep_actual_body_and_successor",
+    "family": "labels",
+    "source": "const x = [() => {\n a: 1\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "jsx",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_labels_keep_actual_body_and_successor",
+    "family": "labels",
+    "source": "const x = [() => {\n a: 1\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "tsx",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_labels_keep_actual_body_and_successor",
+    "family": "labels",
+    "source": "const x = [() => {\n a: 1\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "mjs",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_labels_keep_actual_body_and_successor",
+    "family": "labels",
+    "source": "const x = [() => {\n a: 1\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "cjs",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_labels_keep_actual_body_and_successor",
+    "family": "labels",
+    "source": "const x = [() => {\n a: 1\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "vue",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_labels_keep_actual_body_and_successor",
+    "family": "labels",
+    "source": "const x = [() => {\n again: { if(flag) use(flag); }\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "js",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_labels_keep_actual_body_and_successor",
+    "family": "labels",
+    "source": "const x = [() => {\n again: { if(flag) use(flag); }\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "ts",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_labels_keep_actual_body_and_successor",
+    "family": "labels",
+    "source": "const x = [() => {\n again: { if(flag) use(flag); }\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "jsx",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_labels_keep_actual_body_and_successor",
+    "family": "labels",
+    "source": "const x = [() => {\n again: { if(flag) use(flag); }\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "tsx",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_labels_keep_actual_body_and_successor",
+    "family": "labels",
+    "source": "const x = [() => {\n again: { if(flag) use(flag); }\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "mjs",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_labels_keep_actual_body_and_successor",
+    "family": "labels",
+    "source": "const x = [() => {\n again: { if(flag) use(flag); }\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "cjs",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_labels_keep_actual_body_and_successor",
+    "family": "labels",
+    "source": "const x = [() => {\n again: { if(flag) use(flag); }\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "vue",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_labels_keep_actual_body_and_successor",
+    "family": "labels",
+    "source": "const x = [() => {\n again: while(flag) { break again; }\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "js",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_labels_keep_actual_body_and_successor",
+    "family": "labels",
+    "source": "const x = [() => {\n again: while(flag) { break again; }\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "ts",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_labels_keep_actual_body_and_successor",
+    "family": "labels",
+    "source": "const x = [() => {\n again: while(flag) { break again; }\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "jsx",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_labels_keep_actual_body_and_successor",
+    "family": "labels",
+    "source": "const x = [() => {\n again: while(flag) { break again; }\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "tsx",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_labels_keep_actual_body_and_successor",
+    "family": "labels",
+    "source": "const x = [() => {\n again: while(flag) { break again; }\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "mjs",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_labels_keep_actual_body_and_successor",
+    "family": "labels",
+    "source": "const x = [() => {\n again: while(flag) { break again; }\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "cjs",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_labels_keep_actual_body_and_successor",
+    "family": "labels",
+    "source": "const x = [() => {\n again: while(flag) { break again; }\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "vue",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_minimal_label_retains_anonymous_function",
+    "family": "labels",
+    "source": "const x = [() => { a: 1 }];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "js",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_minimal_label_retains_anonymous_function",
+    "family": "labels",
+    "source": "const x = [() => { a: 1 }];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "ts",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_minimal_label_retains_anonymous_function",
+    "family": "labels",
+    "source": "const x = [() => { a: 1 }];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "jsx",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_minimal_label_retains_anonymous_function",
+    "family": "labels",
+    "source": "const x = [() => { a: 1 }];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "tsx",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_minimal_label_retains_anonymous_function",
+    "family": "labels",
+    "source": "const x = [() => { a: 1 }];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "mjs",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_minimal_label_retains_anonymous_function",
+    "family": "labels",
+    "source": "const x = [() => { a: 1 }];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "cjs",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_minimal_label_retains_anonymous_function",
+    "family": "labels",
+    "source": "const x = [() => { a: 1 }];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "vue",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_type_only_fields_do_not_create_runtime_functions",
+    "family": "annotations",
+    "source": "class A {\n private d: (() => void)[] = [];\n constructor(value) { if(value) use(value); }\n s(tail) { return tail ? 1 : 0; }\n}\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "ts",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_type_only_fields_do_not_create_runtime_functions",
+    "family": "annotations",
+    "source": "class A {\n private d: (() => void)[] = [];\n constructor(value) { if(value) use(value); }\n s(tail) { return tail ? 1 : 0; }\n}\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "tsx",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_type_only_fields_do_not_create_runtime_functions",
+    "family": "annotations",
+    "source": "class A {\n private d: (() => void)[] = [];\n constructor(value) { if(value) use(value); }\n s(tail) { return tail ? 1 : 0; }\n}\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "vue",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_type_only_fields_do_not_create_runtime_functions",
+    "family": "annotations",
+    "source": "class A {\n d: (n: number) => number;\n constructor(value) { if(value) use(value); }\n s(tail) { return tail ? 1 : 0; }\n}\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "ts",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_type_only_fields_do_not_create_runtime_functions",
+    "family": "annotations",
+    "source": "class A {\n d: (n: number) => number;\n constructor(value) { if(value) use(value); }\n s(tail) { return tail ? 1 : 0; }\n}\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "tsx",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_type_only_fields_do_not_create_runtime_functions",
+    "family": "annotations",
+    "source": "class A {\n d: (n: number) => number;\n constructor(value) { if(value) use(value); }\n s(tail) { return tail ? 1 : 0; }\n}\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "vue",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_type_only_fields_do_not_create_runtime_functions",
+    "family": "annotations",
+    "source": "class A {\n d: { b: (n: number) => string };\n constructor(value) { if(value) use(value); }\n s(tail) { return tail ? 1 : 0; }\n}\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "ts",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_type_only_fields_do_not_create_runtime_functions",
+    "family": "annotations",
+    "source": "class A {\n d: { b: (n: number) => string };\n constructor(value) { if(value) use(value); }\n s(tail) { return tail ? 1 : 0; }\n}\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "tsx",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_type_only_fields_do_not_create_runtime_functions",
+    "family": "annotations",
+    "source": "class A {\n d: { b: (n: number) => string };\n constructor(value) { if(value) use(value); }\n s(tail) { return tail ? 1 : 0; }\n}\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "vue",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_type_only_fields_do_not_create_runtime_functions",
+    "family": "annotations",
+    "source": "class A {\n d: (() => void)[]\n constructor(value) { if(value) use(value); }\n s(tail) { return tail ? 1 : 0; }\n}\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "ts",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_type_only_fields_do_not_create_runtime_functions",
+    "family": "annotations",
+    "source": "class A {\n d: (() => void)[]\n constructor(value) { if(value) use(value); }\n s(tail) { return tail ? 1 : 0; }\n}\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "tsx",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_type_only_fields_do_not_create_runtime_functions",
+    "family": "annotations",
+    "source": "class A {\n d: (() => void)[]\n constructor(value) { if(value) use(value); }\n s(tail) { return tail ? 1 : 0; }\n}\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "vue",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_type_only_fields_do_not_create_runtime_functions",
+    "family": "annotations",
+    "source": "class A {\n d: Map<string, number[]>\n constructor(value) { if(value) use(value); }\n s(tail) { return tail ? 1 : 0; }\n}\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "ts",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_type_only_fields_do_not_create_runtime_functions",
+    "family": "annotations",
+    "source": "class A {\n d: Map<string, number[]>\n constructor(value) { if(value) use(value); }\n s(tail) { return tail ? 1 : 0; }\n}\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "tsx",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_type_only_fields_do_not_create_runtime_functions",
+    "family": "annotations",
+    "source": "class A {\n d: Map<string, number[]>\n constructor(value) { if(value) use(value); }\n s(tail) { return tail ? 1 : 0; }\n}\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "vue",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_typed_field_retains_its_actual_runtime_initializer",
+    "family": "annotations",
+    "source": "const C = class extends Base {\n d: (n: number) => number = (n) => n ? 1 : 0;\n s(tail) { return tail ? 1 : 0; }\n};\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "ts",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_typed_field_retains_its_actual_runtime_initializer",
+    "family": "annotations",
+    "source": "const C = class extends Base {\n d: (n: number) => number = (n) => n ? 1 : 0;\n s(tail) { return tail ? 1 : 0; }\n};\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "tsx",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_typed_field_retains_its_actual_runtime_initializer",
+    "family": "annotations",
+    "source": "const C = class extends Base {\n d: (n: number) => number = (n) => n ? 1 : 0;\n s(tail) { return tail ? 1 : 0; }\n};\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "vue",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_assertion_returns_runtime_delimiters",
+    "family": "annotations",
+    "source": "const x = [() => x as number];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "ts",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_assertion_returns_runtime_delimiters",
+    "family": "annotations",
+    "source": "const x = [() => x as number];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "tsx",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_assertion_returns_runtime_delimiters",
+    "family": "annotations",
+    "source": "const x = [() => x as number];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "vue",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_assertion_returns_runtime_delimiters",
+    "family": "annotations",
+    "source": "const x = [() => x as { b: string }];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "ts",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_assertion_returns_runtime_delimiters",
+    "family": "annotations",
+    "source": "const x = [() => x as { b: string }];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "tsx",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_assertion_returns_runtime_delimiters",
+    "family": "annotations",
+    "source": "const x = [() => x as { b: string }];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "vue",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_assertion_returns_runtime_delimiters",
+    "family": "annotations",
+    "source": "const x = [() => x as { b: (n: number) => string }];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "ts",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_assertion_returns_runtime_delimiters",
+    "family": "annotations",
+    "source": "const x = [() => x as { b: (n: number) => string }];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "tsx",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_assertion_returns_runtime_delimiters",
+    "family": "annotations",
+    "source": "const x = [() => x as { b: (n: number) => string }];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "vue",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_assertion_returns_runtime_delimiters",
+    "family": "annotations",
+    "source": "const x = [() => x as Map<string, (() => number)[]>];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "ts",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_assertion_returns_runtime_delimiters",
+    "family": "annotations",
+    "source": "const x = [() => x as Map<string, (() => number)[]>];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "tsx",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_assertion_returns_runtime_delimiters",
+    "family": "annotations",
+    "source": "const x = [() => x as Map<string, (() => number)[]>];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "vue",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_assertion_returns_runtime_delimiters",
+    "family": "annotations",
+    "source": "const x = [() => x as number, (y) => y || 0];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "ts",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_assertion_returns_runtime_delimiters",
+    "family": "annotations",
+    "source": "const x = [() => x as number, (y) => y || 0];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "tsx",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_assertion_returns_runtime_delimiters",
+    "family": "annotations",
+    "source": "const x = [() => x as number, (y) => y || 0];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "vue",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_assertion_returns_runtime_delimiters",
+    "family": "annotations",
+    "source": "const x = [() => x as { b: string }, (y) => y || 0];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "ts",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_assertion_returns_runtime_delimiters",
+    "family": "annotations",
+    "source": "const x = [() => x as { b: string }, (y) => y || 0];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "tsx",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_assertion_returns_runtime_delimiters",
+    "family": "annotations",
+    "source": "const x = [() => x as { b: string }, (y) => y || 0];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "vue",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_assertion_returns_runtime_delimiters",
+    "family": "annotations",
+    "source": "const x = [() => x as { b: (n: number) => string }, (y) => y || 0];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "ts",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_assertion_returns_runtime_delimiters",
+    "family": "annotations",
+    "source": "const x = [() => x as { b: (n: number) => string }, (y) => y || 0];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "tsx",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_assertion_returns_runtime_delimiters",
+    "family": "annotations",
+    "source": "const x = [() => x as { b: (n: number) => string }, (y) => y || 0];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "vue",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_assertion_returns_runtime_delimiters",
+    "family": "annotations",
+    "source": "const x = [() => x as Map<string, (() => number)[]>, (y) => y || 0];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "ts",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_assertion_returns_runtime_delimiters",
+    "family": "annotations",
+    "source": "const x = [() => x as Map<string, (() => number)[]>, (y) => y || 0];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "tsx",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_assertion_returns_runtime_delimiters",
+    "family": "annotations",
+    "source": "const x = [() => x as Map<string, (() => number)[]>, (y) => y || 0];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "vue",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_assertion_returns_runtime_delimiters",
+    "family": "annotations",
+    "source": "const x = { run() { return x as number }};\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "ts",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_assertion_returns_runtime_delimiters",
+    "family": "annotations",
+    "source": "const x = { run() { return x as number }};\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "tsx",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_assertion_returns_runtime_delimiters",
+    "family": "annotations",
+    "source": "const x = { run() { return x as number }};\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "vue",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_assertion_returns_runtime_delimiters",
+    "family": "annotations",
+    "source": "const x = { run() { return x as { b: string } }};\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "ts",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_assertion_returns_runtime_delimiters",
+    "family": "annotations",
+    "source": "const x = { run() { return x as { b: string } }};\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "tsx",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_assertion_returns_runtime_delimiters",
+    "family": "annotations",
+    "source": "const x = { run() { return x as { b: string } }};\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "vue",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_assertion_returns_runtime_delimiters",
+    "family": "annotations",
+    "source": "const x = { run() { return x as { b: (n: number) => string } }};\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "ts",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_assertion_returns_runtime_delimiters",
+    "family": "annotations",
+    "source": "const x = { run() { return x as { b: (n: number) => string } }};\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "tsx",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_assertion_returns_runtime_delimiters",
+    "family": "annotations",
+    "source": "const x = { run() { return x as { b: (n: number) => string } }};\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "vue",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_assertion_returns_runtime_delimiters",
+    "family": "annotations",
+    "source": "const x = { run() { return x as Map<string, (() => number)[]> }};\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "ts",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_assertion_returns_runtime_delimiters",
+    "family": "annotations",
+    "source": "const x = { run() { return x as Map<string, (() => number)[]> }};\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "tsx",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_assertion_returns_runtime_delimiters",
+    "family": "annotations",
+    "source": "const x = { run() { return x as Map<string, (() => number)[]> }};\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "vue",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_nested_annotation_types_preserve_formals_and_runtime_arrows",
+    "family": "annotations",
+    "source": "const f = (x: number[], y = flag ? 1 : 0): number[] => x;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "ts",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_nested_annotation_types_preserve_formals_and_runtime_arrows",
+    "family": "annotations",
+    "source": "const f = (x: number[], y = flag ? 1 : 0): number[] => x;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "tsx",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_nested_annotation_types_preserve_formals_and_runtime_arrows",
+    "family": "annotations",
+    "source": "const f = (x: number[], y = flag ? 1 : 0): number[] => x;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "vue",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_nested_annotation_types_preserve_formals_and_runtime_arrows",
+    "family": "annotations",
+    "source": "const f = (x: (n: number) => number, y = flag ? 1 : 0): (n: number) => number => x;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "ts",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_nested_annotation_types_preserve_formals_and_runtime_arrows",
+    "family": "annotations",
+    "source": "const f = (x: (n: number) => number, y = flag ? 1 : 0): (n: number) => number => x;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "tsx",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_nested_annotation_types_preserve_formals_and_runtime_arrows",
+    "family": "annotations",
+    "source": "const f = (x: (n: number) => number, y = flag ? 1 : 0): (n: number) => number => x;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "vue",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_nested_annotation_types_preserve_formals_and_runtime_arrows",
+    "family": "annotations",
+    "source": "const f = (x: Map<string, number[]>, y = flag ? 1 : 0): Map<string, number[]> => x;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "ts",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_nested_annotation_types_preserve_formals_and_runtime_arrows",
+    "family": "annotations",
+    "source": "const f = (x: Map<string, number[]>, y = flag ? 1 : 0): Map<string, number[]> => x;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "tsx",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_nested_annotation_types_preserve_formals_and_runtime_arrows",
+    "family": "annotations",
+    "source": "const f = (x: Map<string, number[]>, y = flag ? 1 : 0): Map<string, number[]> => x;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "vue",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_nested_annotation_types_preserve_formals_and_runtime_arrows",
+    "family": "annotations",
+    "source": "const f = (x: [number, { callback: () => number }], y = flag ? 1 : 0): [number, { callback: () => number }] => x;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "ts",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_nested_annotation_types_preserve_formals_and_runtime_arrows",
+    "family": "annotations",
+    "source": "const f = (x: [number, { callback: () => number }], y = flag ? 1 : 0): [number, { callback: () => number }] => x;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "tsx",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_nested_annotation_types_preserve_formals_and_runtime_arrows",
+    "family": "annotations",
+    "source": "const f = (x: [number, { callback: () => number }], y = flag ? 1 : 0): [number, { callback: () => number }] => x;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "vue",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_nested_annotation_types_preserve_formals_and_runtime_arrows",
+    "family": "annotations",
+    "source": "const f = (x: T extends number ? {v: T} : string[], y = flag ? 1 : 0): T extends number ? {v: T} : string[] => x;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "ts",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_nested_annotation_types_preserve_formals_and_runtime_arrows",
+    "family": "annotations",
+    "source": "const f = (x: T extends number ? {v: T} : string[], y = flag ? 1 : 0): T extends number ? {v: T} : string[] => x;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "tsx",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_nested_annotation_types_preserve_formals_and_runtime_arrows",
+    "family": "annotations",
+    "source": "const f = (x: T extends number ? {v: T} : string[], y = flag ? 1 : 0): T extends number ? {v: T} : string[] => x;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "vue",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_variable_and_object_property_annotations_keep_runtime_values",
+    "family": "annotations",
+    "source": "const f: (x: number) => number = (x) => x || 0;\nconst o = {class: (x: number): number => x, value: {run: () => 1}};\nconst t = () => `${f(1) ? 1 : 0}` as string;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "ts",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_variable_and_object_property_annotations_keep_runtime_values",
+    "family": "annotations",
+    "source": "const f: (x: number) => number = (x) => x || 0;\nconst o = {class: (x: number): number => x, value: {run: () => 1}};\nconst t = () => `${f(1) ? 1 : 0}` as string;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "tsx",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_variable_and_object_property_annotations_keep_runtime_values",
+    "family": "annotations",
+    "source": "const f: (x: number) => number = (x) => x || 0;\nconst o = {class: (x: number): number => x, value: {run: () => 1}};\nconst t = () => `${f(1) ? 1 : 0}` as string;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "vue",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_labeled_callback_extensions_keep_decisions",
+    "family": "labels",
+    "source": "const x = [() => {\n again: 1;\n if(a && b) use(a);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "js",
+    "extension": "NS",
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_labeled_callback_extensions_keep_decisions",
+    "family": "labels",
+    "source": "const x = [() => {\n again: 1;\n if(a && b) use(a);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "ts",
+    "extension": "NS",
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_labeled_callback_extensions_keep_decisions",
+    "family": "labels",
+    "source": "const x = [() => {\n again: 1;\n if(a && b) use(a);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "jsx",
+    "extension": "NS",
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_labeled_callback_extensions_keep_decisions",
+    "family": "labels",
+    "source": "const x = [() => {\n again: 1;\n if(a && b) use(a);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "tsx",
+    "extension": "NS",
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_labeled_callback_extensions_keep_decisions",
+    "family": "labels",
+    "source": "const x = [() => {\n again: 1;\n if(a && b) use(a);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "mjs",
+    "extension": "NS",
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_labeled_callback_extensions_keep_decisions",
+    "family": "labels",
+    "source": "const x = [() => {\n again: 1;\n if(a && b) use(a);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "cjs",
+    "extension": "NS",
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_labeled_callback_extensions_keep_decisions",
+    "family": "labels",
+    "source": "const x = [() => {\n again: 1;\n if(a && b) use(a);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "vue",
+    "extension": "NS",
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_labeled_callback_extensions_keep_decisions",
+    "family": "labels",
+    "source": "const x = [() => {\n again: 1;\n if(a && b) use(a);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "js",
+    "extension": "nonstrict",
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_labeled_callback_extensions_keep_decisions",
+    "family": "labels",
+    "source": "const x = [() => {\n again: 1;\n if(a && b) use(a);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "ts",
+    "extension": "nonstrict",
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_labeled_callback_extensions_keep_decisions",
+    "family": "labels",
+    "source": "const x = [() => {\n again: 1;\n if(a && b) use(a);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "jsx",
+    "extension": "nonstrict",
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_labeled_callback_extensions_keep_decisions",
+    "family": "labels",
+    "source": "const x = [() => {\n again: 1;\n if(a && b) use(a);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "tsx",
+    "extension": "nonstrict",
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_labeled_callback_extensions_keep_decisions",
+    "family": "labels",
+    "source": "const x = [() => {\n again: 1;\n if(a && b) use(a);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "mjs",
+    "extension": "nonstrict",
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_labeled_callback_extensions_keep_decisions",
+    "family": "labels",
+    "source": "const x = [() => {\n again: 1;\n if(a && b) use(a);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "cjs",
+    "extension": "nonstrict",
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_labeled_callback_extensions_keep_decisions",
+    "family": "labels",
+    "source": "const x = [() => {\n again: 1;\n if(a && b) use(a);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "vue",
+    "extension": "nonstrict",
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_label_cli_csv_and_output_option",
+    "family": "labels",
+    "source": "const x = [() => { a: 1 }];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "js",
+    "entry": "CLI CSV -o"
+  },
+  {
+    "test": "test_label_cli_csv_and_output_option",
+    "family": "labels",
+    "source": "const x = [() => { a: 1 }];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "ts",
+    "entry": "CLI CSV -o"
+  },
+  {
+    "test": "test_label_cli_csv_and_output_option",
+    "family": "labels",
+    "source": "const x = [() => { a: 1 }];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "jsx",
+    "entry": "CLI CSV -o"
+  },
+  {
+    "test": "test_label_cli_csv_and_output_option",
+    "family": "labels",
+    "source": "const x = [() => { a: 1 }];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "tsx",
+    "entry": "CLI CSV -o"
+  },
+  {
+    "test": "test_label_cli_csv_and_output_option",
+    "family": "labels",
+    "source": "const x = [() => { a: 1 }];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "mjs",
+    "entry": "CLI CSV -o"
+  },
+  {
+    "test": "test_label_cli_csv_and_output_option",
+    "family": "labels",
+    "source": "const x = [() => { a: 1 }];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "cjs",
+    "entry": "CLI CSV -o"
+  },
+  {
+    "test": "test_label_cli_csv_and_output_option",
+    "family": "labels",
+    "source": "<script lang=\"ts\">const x = [() => { a: 1 }];\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "suffix": "vue",
+    "entry": "CLI CSV -o"
+  },
+  {
+    "test": "test_http_returns_only_actual_functions_after_type_annotation",
+    "family": "annotations",
+    "source": "class A { d: (() => void)[] = []; s(x) {return x?1:0;} }\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "ts",
+    "entry": "HTTP"
+  },
+  {
+    "test": "test_http_returns_only_actual_functions_after_type_annotation",
+    "family": "annotations",
+    "source": "class A { d: (() => void)[] = []; s(x) {return x?1:0;} }\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "tsx",
+    "entry": "HTTP"
+  },
+  {
+    "test": "test_http_returns_only_actual_functions_after_type_annotation",
+    "family": "annotations",
+    "source": "<script lang=\"ts\">class A { d: (() => void)[] = []; s(x) {return x?1:0;} }\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "suffix": "vue",
+    "entry": "HTTP"
+  },
+  {
+    "test": "test_javascript_class_colon_values_remain_runtime_members",
+    "family": "annotations",
+    "source": "class A { g:(x,y)=>x+1; h:function(){return 1;} }\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "js",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_javascript_class_colon_values_remain_runtime_members",
+    "family": "annotations",
+    "source": "class A { g:(x,y)=>x+1; h:function(){return 1;} }\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "jsx",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_javascript_class_colon_values_remain_runtime_members",
+    "family": "annotations",
+    "source": "class A { g:(x,y)=>x+1; h:function(){return 1;} }\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "mjs",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_javascript_class_colon_values_remain_runtime_members",
+    "family": "annotations",
+    "source": "class A { g:(x,y)=>x+1; h:function(){return 1;} }\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "cjs",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_vue_script_mode_owns_class_member_colons",
+    "family": "annotations",
+    "source": "<script>class A {d:(x)=>x; s() {} }</script>",
+    "suffix": "vue",
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_vue_script_mode_owns_class_member_colons",
+    "family": "annotations",
+    "source": "<script lang=\"js\">class A {d:(x)=>x; s() {} }</script>",
+    "suffix": "vue",
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_vue_script_mode_owns_class_member_colons",
+    "family": "annotations",
+    "source": "<script setup lang=\"ts\">class A {d: (() => void)[] = []; s() {} }</script>",
+    "suffix": "vue",
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_generic_constraint_brace_does_not_own_class_members",
+    "family": "annotations",
+    "source": "class A<T extends {x:number}> { d: (()=>void)[]=[]; constructor(v:T){if(v)use(v);} s(tail:number){return tail?1:0;} }\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "ts",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_generic_constraint_brace_does_not_own_class_members",
+    "family": "annotations",
+    "source": "class A<T extends {x:number}> { d: (()=>void)[]=[]; constructor(v:T){if(v)use(v);} s(tail:number){return tail?1:0;} }\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "tsx",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_generic_constraint_brace_does_not_own_class_members",
+    "family": "annotations",
+    "source": "class A<T extends {x:number}> { d: (()=>void)[]=[]; constructor(v:T){if(v)use(v);} s(tail:number){return tail?1:0;} }\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "vue",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_negative_literal_return_type_keeps_arrow_formal",
+    "family": "annotations",
+    "source": "h((x): -1 => -1);\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "ts",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_negative_literal_return_type_keeps_arrow_formal",
+    "family": "annotations",
+    "source": "h((x): -1 => -1);\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "tsx",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_negative_literal_return_type_keeps_arrow_formal",
+    "family": "annotations",
+    "source": "h((x): -1 => -1);\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "vue",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_declarator_comma_keeps_type_ownership_across_line_break",
+    "family": "annotations",
+    "source": "const x: number = 1, run: (n: number) => number = n => n || 0;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "ts",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_declarator_comma_keeps_type_ownership_across_line_break",
+    "family": "annotations",
+    "source": "const x: number = 1, run: (n: number) => number = n => n || 0;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "tsx",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_declarator_comma_keeps_type_ownership_across_line_break",
+    "family": "annotations",
+    "source": "const x: number = 1, run: (n: number) => number = n => n || 0;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "vue",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_declarator_comma_keeps_type_ownership_across_line_break",
+    "family": "annotations",
+    "source": "const x: number = 1,\n run: (n: number) => number = n => n || 0;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "ts",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_declarator_comma_keeps_type_ownership_across_line_break",
+    "family": "annotations",
+    "source": "const x: number = 1,\n run: (n: number) => number = n => n || 0;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "tsx",
+    "extension": null,
+    "entry": "analyze_source_code"
+  },
+  {
+    "test": "test_declarator_comma_keeps_type_ownership_across_line_break",
+    "family": "annotations",
+    "source": "const x: number = 1,\n run: (n: number) => number = n => n || 0;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "suffix": "vue",
+    "extension": null,
+    "entry": "analyze_source_code"
+  }
+]

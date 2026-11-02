@@ -1,0 +1,2641 @@
+[
+  {
+    "family": "labels",
+    "filename": "8f63102f09c8e1d3.js",
+    "source": "const x = [() => {\n a: 1\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 0,
+        "test": "test_labels_keep_actual_body_and_successor",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.js"
+      }
+    ]
+  },
+  {
+    "family": "labels",
+    "filename": "8f63102f09c8e1d3.ts",
+    "source": "const x = [() => {\n a: 1\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 1,
+        "test": "test_labels_keep_actual_body_and_successor",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "labels",
+    "filename": "8f63102f09c8e1d3.jsx",
+    "source": "const x = [() => {\n a: 1\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 2,
+        "test": "test_labels_keep_actual_body_and_successor",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.jsx"
+      }
+    ]
+  },
+  {
+    "family": "labels",
+    "filename": "8f63102f09c8e1d3.tsx",
+    "source": "const x = [() => {\n a: 1\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 3,
+        "test": "test_labels_keep_actual_body_and_successor",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "labels",
+    "filename": "8f63102f09c8e1d3.mjs",
+    "source": "const x = [() => {\n a: 1\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 4,
+        "test": "test_labels_keep_actual_body_and_successor",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.mjs"
+      }
+    ]
+  },
+  {
+    "family": "labels",
+    "filename": "8f63102f09c8e1d3.cjs",
+    "source": "const x = [() => {\n a: 1\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 5,
+        "test": "test_labels_keep_actual_body_and_successor",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.cjs"
+      }
+    ]
+  },
+  {
+    "family": "labels",
+    "filename": "d3e8fda51d2b0832.vue",
+    "source": "<script lang=\"ts\">const x = [() => {\n a: 1\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 6,
+        "test": "test_labels_keep_actual_body_and_successor",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "labels",
+    "filename": "f8a4a59c8620f13d.js",
+    "source": "const x = [() => {\n again: { if(flag) use(flag); }\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 7,
+        "test": "test_labels_keep_actual_body_and_successor",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.js"
+      }
+    ]
+  },
+  {
+    "family": "labels",
+    "filename": "f8a4a59c8620f13d.ts",
+    "source": "const x = [() => {\n again: { if(flag) use(flag); }\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 8,
+        "test": "test_labels_keep_actual_body_and_successor",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "labels",
+    "filename": "f8a4a59c8620f13d.jsx",
+    "source": "const x = [() => {\n again: { if(flag) use(flag); }\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 9,
+        "test": "test_labels_keep_actual_body_and_successor",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.jsx"
+      }
+    ]
+  },
+  {
+    "family": "labels",
+    "filename": "f8a4a59c8620f13d.tsx",
+    "source": "const x = [() => {\n again: { if(flag) use(flag); }\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 10,
+        "test": "test_labels_keep_actual_body_and_successor",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "labels",
+    "filename": "f8a4a59c8620f13d.mjs",
+    "source": "const x = [() => {\n again: { if(flag) use(flag); }\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 11,
+        "test": "test_labels_keep_actual_body_and_successor",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.mjs"
+      }
+    ]
+  },
+  {
+    "family": "labels",
+    "filename": "f8a4a59c8620f13d.cjs",
+    "source": "const x = [() => {\n again: { if(flag) use(flag); }\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 12,
+        "test": "test_labels_keep_actual_body_and_successor",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.cjs"
+      }
+    ]
+  },
+  {
+    "family": "labels",
+    "filename": "4e61fb84c096354c.vue",
+    "source": "<script lang=\"ts\">const x = [() => {\n again: { if(flag) use(flag); }\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 13,
+        "test": "test_labels_keep_actual_body_and_successor",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "labels",
+    "filename": "5e75ef85a50adf6f.js",
+    "source": "const x = [() => {\n again: while(flag) { break again; }\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 14,
+        "test": "test_labels_keep_actual_body_and_successor",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.js"
+      }
+    ]
+  },
+  {
+    "family": "labels",
+    "filename": "5e75ef85a50adf6f.ts",
+    "source": "const x = [() => {\n again: while(flag) { break again; }\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 15,
+        "test": "test_labels_keep_actual_body_and_successor",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "labels",
+    "filename": "5e75ef85a50adf6f.jsx",
+    "source": "const x = [() => {\n again: while(flag) { break again; }\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 16,
+        "test": "test_labels_keep_actual_body_and_successor",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.jsx"
+      }
+    ]
+  },
+  {
+    "family": "labels",
+    "filename": "5e75ef85a50adf6f.tsx",
+    "source": "const x = [() => {\n again: while(flag) { break again; }\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 17,
+        "test": "test_labels_keep_actual_body_and_successor",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "labels",
+    "filename": "5e75ef85a50adf6f.mjs",
+    "source": "const x = [() => {\n again: while(flag) { break again; }\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 18,
+        "test": "test_labels_keep_actual_body_and_successor",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.mjs"
+      }
+    ]
+  },
+  {
+    "family": "labels",
+    "filename": "5e75ef85a50adf6f.cjs",
+    "source": "const x = [() => {\n again: while(flag) { break again; }\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 19,
+        "test": "test_labels_keep_actual_body_and_successor",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.cjs"
+      }
+    ]
+  },
+  {
+    "family": "labels",
+    "filename": "fee529317b1f9794.vue",
+    "source": "<script lang=\"ts\">const x = [() => {\n again: while(flag) { break again; }\n if(next) use(next);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 20,
+        "test": "test_labels_keep_actual_body_and_successor",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "labels",
+    "filename": "6878d6c88d5bb67c.js",
+    "source": "const x = [() => { a: 1 }];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 21,
+        "test": "test_minimal_label_retains_anonymous_function",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.js"
+      },
+      {
+        "capture_index": 126,
+        "test": "test_label_cli_csv_and_output_option",
+        "entry": "CLI CSV -o",
+        "extension": null,
+        "original_filename": null
+      }
+    ]
+  },
+  {
+    "family": "labels",
+    "filename": "6878d6c88d5bb67c.ts",
+    "source": "const x = [() => { a: 1 }];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 22,
+        "test": "test_minimal_label_retains_anonymous_function",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      },
+      {
+        "capture_index": 127,
+        "test": "test_label_cli_csv_and_output_option",
+        "entry": "CLI CSV -o",
+        "extension": null,
+        "original_filename": null
+      }
+    ]
+  },
+  {
+    "family": "labels",
+    "filename": "6878d6c88d5bb67c.jsx",
+    "source": "const x = [() => { a: 1 }];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 23,
+        "test": "test_minimal_label_retains_anonymous_function",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.jsx"
+      },
+      {
+        "capture_index": 128,
+        "test": "test_label_cli_csv_and_output_option",
+        "entry": "CLI CSV -o",
+        "extension": null,
+        "original_filename": null
+      }
+    ]
+  },
+  {
+    "family": "labels",
+    "filename": "6878d6c88d5bb67c.tsx",
+    "source": "const x = [() => { a: 1 }];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 24,
+        "test": "test_minimal_label_retains_anonymous_function",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      },
+      {
+        "capture_index": 129,
+        "test": "test_label_cli_csv_and_output_option",
+        "entry": "CLI CSV -o",
+        "extension": null,
+        "original_filename": null
+      }
+    ]
+  },
+  {
+    "family": "labels",
+    "filename": "6878d6c88d5bb67c.mjs",
+    "source": "const x = [() => { a: 1 }];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 25,
+        "test": "test_minimal_label_retains_anonymous_function",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.mjs"
+      },
+      {
+        "capture_index": 130,
+        "test": "test_label_cli_csv_and_output_option",
+        "entry": "CLI CSV -o",
+        "extension": null,
+        "original_filename": null
+      }
+    ]
+  },
+  {
+    "family": "labels",
+    "filename": "6878d6c88d5bb67c.cjs",
+    "source": "const x = [() => { a: 1 }];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 26,
+        "test": "test_minimal_label_retains_anonymous_function",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.cjs"
+      },
+      {
+        "capture_index": 131,
+        "test": "test_label_cli_csv_and_output_option",
+        "entry": "CLI CSV -o",
+        "extension": null,
+        "original_filename": null
+      }
+    ]
+  },
+  {
+    "family": "labels",
+    "filename": "cc5e747f5e26333f.vue",
+    "source": "<script lang=\"ts\">const x = [() => { a: 1 }];\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 27,
+        "test": "test_minimal_label_retains_anonymous_function",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      },
+      {
+        "capture_index": 132,
+        "test": "test_label_cli_csv_and_output_option",
+        "entry": "CLI CSV -o",
+        "extension": null,
+        "original_filename": null
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "8dd79960a5ceaa75.ts",
+    "source": "class A {\n private d: (() => void)[] = [];\n constructor(value) { if(value) use(value); }\n s(tail) { return tail ? 1 : 0; }\n}\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 28,
+        "test": "test_type_only_fields_do_not_create_runtime_functions",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "8dd79960a5ceaa75.tsx",
+    "source": "class A {\n private d: (() => void)[] = [];\n constructor(value) { if(value) use(value); }\n s(tail) { return tail ? 1 : 0; }\n}\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 29,
+        "test": "test_type_only_fields_do_not_create_runtime_functions",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "e8dc825444d67241.vue",
+    "source": "<script lang=\"ts\">class A {\n private d: (() => void)[] = [];\n constructor(value) { if(value) use(value); }\n s(tail) { return tail ? 1 : 0; }\n}\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 30,
+        "test": "test_type_only_fields_do_not_create_runtime_functions",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "1b959ee98966a001.ts",
+    "source": "class A {\n d: (n: number) => number;\n constructor(value) { if(value) use(value); }\n s(tail) { return tail ? 1 : 0; }\n}\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 31,
+        "test": "test_type_only_fields_do_not_create_runtime_functions",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "1b959ee98966a001.tsx",
+    "source": "class A {\n d: (n: number) => number;\n constructor(value) { if(value) use(value); }\n s(tail) { return tail ? 1 : 0; }\n}\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 32,
+        "test": "test_type_only_fields_do_not_create_runtime_functions",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "b4f71d3d5e9f009f.vue",
+    "source": "<script lang=\"ts\">class A {\n d: (n: number) => number;\n constructor(value) { if(value) use(value); }\n s(tail) { return tail ? 1 : 0; }\n}\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 33,
+        "test": "test_type_only_fields_do_not_create_runtime_functions",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "00fbc327beb2c753.ts",
+    "source": "class A {\n d: { b: (n: number) => string };\n constructor(value) { if(value) use(value); }\n s(tail) { return tail ? 1 : 0; }\n}\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 34,
+        "test": "test_type_only_fields_do_not_create_runtime_functions",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "00fbc327beb2c753.tsx",
+    "source": "class A {\n d: { b: (n: number) => string };\n constructor(value) { if(value) use(value); }\n s(tail) { return tail ? 1 : 0; }\n}\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 35,
+        "test": "test_type_only_fields_do_not_create_runtime_functions",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "82d415d03f4c777f.vue",
+    "source": "<script lang=\"ts\">class A {\n d: { b: (n: number) => string };\n constructor(value) { if(value) use(value); }\n s(tail) { return tail ? 1 : 0; }\n}\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 36,
+        "test": "test_type_only_fields_do_not_create_runtime_functions",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "11aff0fa617b5864.ts",
+    "source": "class A {\n d: (() => void)[]\n constructor(value) { if(value) use(value); }\n s(tail) { return tail ? 1 : 0; }\n}\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 37,
+        "test": "test_type_only_fields_do_not_create_runtime_functions",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "11aff0fa617b5864.tsx",
+    "source": "class A {\n d: (() => void)[]\n constructor(value) { if(value) use(value); }\n s(tail) { return tail ? 1 : 0; }\n}\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 38,
+        "test": "test_type_only_fields_do_not_create_runtime_functions",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "ea37066d644f4db3.vue",
+    "source": "<script lang=\"ts\">class A {\n d: (() => void)[]\n constructor(value) { if(value) use(value); }\n s(tail) { return tail ? 1 : 0; }\n}\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 39,
+        "test": "test_type_only_fields_do_not_create_runtime_functions",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "f9566ee5f7316b08.ts",
+    "source": "class A {\n d: Map<string, number[]>\n constructor(value) { if(value) use(value); }\n s(tail) { return tail ? 1 : 0; }\n}\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 40,
+        "test": "test_type_only_fields_do_not_create_runtime_functions",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "f9566ee5f7316b08.tsx",
+    "source": "class A {\n d: Map<string, number[]>\n constructor(value) { if(value) use(value); }\n s(tail) { return tail ? 1 : 0; }\n}\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 41,
+        "test": "test_type_only_fields_do_not_create_runtime_functions",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "7ec8b7f6730b0548.vue",
+    "source": "<script lang=\"ts\">class A {\n d: Map<string, number[]>\n constructor(value) { if(value) use(value); }\n s(tail) { return tail ? 1 : 0; }\n}\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 42,
+        "test": "test_type_only_fields_do_not_create_runtime_functions",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "a502140429988ee4.ts",
+    "source": "const C = class extends Base {\n d: (n: number) => number = (n) => n ? 1 : 0;\n s(tail) { return tail ? 1 : 0; }\n};\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 43,
+        "test": "test_typed_field_retains_its_actual_runtime_initializer",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "a502140429988ee4.tsx",
+    "source": "const C = class extends Base {\n d: (n: number) => number = (n) => n ? 1 : 0;\n s(tail) { return tail ? 1 : 0; }\n};\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 44,
+        "test": "test_typed_field_retains_its_actual_runtime_initializer",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "a12da569da4e1010.vue",
+    "source": "<script lang=\"ts\">const C = class extends Base {\n d: (n: number) => number = (n) => n ? 1 : 0;\n s(tail) { return tail ? 1 : 0; }\n};\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 45,
+        "test": "test_typed_field_retains_its_actual_runtime_initializer",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "cf9ad3446d1d028a.ts",
+    "source": "const x = [() => x as number];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 46,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "cf9ad3446d1d028a.tsx",
+    "source": "const x = [() => x as number];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 47,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "d65ebdcbf2501159.vue",
+    "source": "<script lang=\"ts\">const x = [() => x as number];\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 48,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "063d4c369177d045.ts",
+    "source": "const x = [() => x as { b: string }];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 49,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "063d4c369177d045.tsx",
+    "source": "const x = [() => x as { b: string }];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 50,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "5d9eeca7355990c7.vue",
+    "source": "<script lang=\"ts\">const x = [() => x as { b: string }];\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 51,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "1efce3b3530ea0a2.ts",
+    "source": "const x = [() => x as { b: (n: number) => string }];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 52,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "1efce3b3530ea0a2.tsx",
+    "source": "const x = [() => x as { b: (n: number) => string }];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 53,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "023f8888c143aec4.vue",
+    "source": "<script lang=\"ts\">const x = [() => x as { b: (n: number) => string }];\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 54,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "924ea8d238bf16f6.ts",
+    "source": "const x = [() => x as Map<string, (() => number)[]>];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 55,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "924ea8d238bf16f6.tsx",
+    "source": "const x = [() => x as Map<string, (() => number)[]>];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 56,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "3679c29781308225.vue",
+    "source": "<script lang=\"ts\">const x = [() => x as Map<string, (() => number)[]>];\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 57,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "a5d92beded7b7d8e.ts",
+    "source": "const x = [() => x as `p${string}`];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 58,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "a5d92beded7b7d8e.tsx",
+    "source": "const x = [() => x as `p${string}`];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 59,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "d605a228260c94dc.vue",
+    "source": "<script lang=\"ts\">const x = [() => x as `p${string}`];\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 60,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "b9038701bf71ed24.ts",
+    "source": "const x = [() => x as number, (y) => y || 0];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 61,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "b9038701bf71ed24.tsx",
+    "source": "const x = [() => x as number, (y) => y || 0];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 62,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "b01e846422237fe3.vue",
+    "source": "<script lang=\"ts\">const x = [() => x as number, (y) => y || 0];\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 63,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "4ca14836239a94f9.ts",
+    "source": "const x = [() => x as { b: string }, (y) => y || 0];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 64,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "4ca14836239a94f9.tsx",
+    "source": "const x = [() => x as { b: string }, (y) => y || 0];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 65,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "2217cb991a8433e3.vue",
+    "source": "<script lang=\"ts\">const x = [() => x as { b: string }, (y) => y || 0];\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 66,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "e935ca456aca057a.ts",
+    "source": "const x = [() => x as { b: (n: number) => string }, (y) => y || 0];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 67,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "e935ca456aca057a.tsx",
+    "source": "const x = [() => x as { b: (n: number) => string }, (y) => y || 0];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 68,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "f223d344c0eae359.vue",
+    "source": "<script lang=\"ts\">const x = [() => x as { b: (n: number) => string }, (y) => y || 0];\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 69,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "59cec1ae42083948.ts",
+    "source": "const x = [() => x as Map<string, (() => number)[]>, (y) => y || 0];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 70,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "59cec1ae42083948.tsx",
+    "source": "const x = [() => x as Map<string, (() => number)[]>, (y) => y || 0];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 71,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "869d26c826f3ddd7.vue",
+    "source": "<script lang=\"ts\">const x = [() => x as Map<string, (() => number)[]>, (y) => y || 0];\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 72,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "cc7bc6058a9fe82f.ts",
+    "source": "const x = [() => x as `p${string}`, (y) => y || 0];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 73,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "cc7bc6058a9fe82f.tsx",
+    "source": "const x = [() => x as `p${string}`, (y) => y || 0];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 74,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "98387d40941ec9c4.vue",
+    "source": "<script lang=\"ts\">const x = [() => x as `p${string}`, (y) => y || 0];\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 75,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "7e8cc366b13ff53d.ts",
+    "source": "const x = { run() { return x as number }};\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 76,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "7e8cc366b13ff53d.tsx",
+    "source": "const x = { run() { return x as number }};\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 77,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "5ca876915a9e2c44.vue",
+    "source": "<script lang=\"ts\">const x = { run() { return x as number }};\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 78,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "a89e12f43a01258d.ts",
+    "source": "const x = { run() { return x as { b: string } }};\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 79,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "a89e12f43a01258d.tsx",
+    "source": "const x = { run() { return x as { b: string } }};\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 80,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "5846b3171150b621.vue",
+    "source": "<script lang=\"ts\">const x = { run() { return x as { b: string } }};\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 81,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "ac56633d6ba6c66b.ts",
+    "source": "const x = { run() { return x as { b: (n: number) => string } }};\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 82,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "ac56633d6ba6c66b.tsx",
+    "source": "const x = { run() { return x as { b: (n: number) => string } }};\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 83,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "dbfb8415ac99aa61.vue",
+    "source": "<script lang=\"ts\">const x = { run() { return x as { b: (n: number) => string } }};\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 84,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "def68ef1dce1198a.ts",
+    "source": "const x = { run() { return x as Map<string, (() => number)[]> }};\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 85,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "def68ef1dce1198a.tsx",
+    "source": "const x = { run() { return x as Map<string, (() => number)[]> }};\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 86,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "ef71f7cf127bcf7d.vue",
+    "source": "<script lang=\"ts\">const x = { run() { return x as Map<string, (() => number)[]> }};\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 87,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "fbb3f6e745fae070.ts",
+    "source": "const x = { run() { return x as `p${string}` }};\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 88,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "fbb3f6e745fae070.tsx",
+    "source": "const x = { run() { return x as `p${string}` }};\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 89,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "b1eb04afc83b41dc.vue",
+    "source": "<script lang=\"ts\">const x = { run() { return x as `p${string}` }};\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 90,
+        "test": "test_assertion_returns_runtime_delimiters",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "13755271f0e55197.ts",
+    "source": "const f = (x: number[], y = flag ? 1 : 0): number[] => x;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 91,
+        "test": "test_nested_annotation_types_preserve_formals_and_runtime_arrows",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "13755271f0e55197.tsx",
+    "source": "const f = (x: number[], y = flag ? 1 : 0): number[] => x;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 92,
+        "test": "test_nested_annotation_types_preserve_formals_and_runtime_arrows",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "d5fdeb3368a5eb5c.vue",
+    "source": "<script lang=\"ts\">const f = (x: number[], y = flag ? 1 : 0): number[] => x;\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 93,
+        "test": "test_nested_annotation_types_preserve_formals_and_runtime_arrows",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "cab992d27948b08c.ts",
+    "source": "const f = (x: (n: number) => number, y = flag ? 1 : 0): (n: number) => number => x;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 94,
+        "test": "test_nested_annotation_types_preserve_formals_and_runtime_arrows",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "cab992d27948b08c.tsx",
+    "source": "const f = (x: (n: number) => number, y = flag ? 1 : 0): (n: number) => number => x;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 95,
+        "test": "test_nested_annotation_types_preserve_formals_and_runtime_arrows",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "2cd8f4a15fe1f1ba.vue",
+    "source": "<script lang=\"ts\">const f = (x: (n: number) => number, y = flag ? 1 : 0): (n: number) => number => x;\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 96,
+        "test": "test_nested_annotation_types_preserve_formals_and_runtime_arrows",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "437e1ce692ca6793.ts",
+    "source": "const f = (x: Map<string, number[]>, y = flag ? 1 : 0): Map<string, number[]> => x;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 97,
+        "test": "test_nested_annotation_types_preserve_formals_and_runtime_arrows",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "437e1ce692ca6793.tsx",
+    "source": "const f = (x: Map<string, number[]>, y = flag ? 1 : 0): Map<string, number[]> => x;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 98,
+        "test": "test_nested_annotation_types_preserve_formals_and_runtime_arrows",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "f82730d51eb4c1f4.vue",
+    "source": "<script lang=\"ts\">const f = (x: Map<string, number[]>, y = flag ? 1 : 0): Map<string, number[]> => x;\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 99,
+        "test": "test_nested_annotation_types_preserve_formals_and_runtime_arrows",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "a98bce0b16f0b498.ts",
+    "source": "const f = (x: [number, { callback: () => number }], y = flag ? 1 : 0): [number, { callback: () => number }] => x;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 100,
+        "test": "test_nested_annotation_types_preserve_formals_and_runtime_arrows",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "a98bce0b16f0b498.tsx",
+    "source": "const f = (x: [number, { callback: () => number }], y = flag ? 1 : 0): [number, { callback: () => number }] => x;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 101,
+        "test": "test_nested_annotation_types_preserve_formals_and_runtime_arrows",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "f2f06143b3b75fea.vue",
+    "source": "<script lang=\"ts\">const f = (x: [number, { callback: () => number }], y = flag ? 1 : 0): [number, { callback: () => number }] => x;\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 102,
+        "test": "test_nested_annotation_types_preserve_formals_and_runtime_arrows",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "38e5764b0a75f1b1.ts",
+    "source": "const f = (x: T extends number ? {v: T} : string[], y = flag ? 1 : 0): T extends number ? {v: T} : string[] => x;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 103,
+        "test": "test_nested_annotation_types_preserve_formals_and_runtime_arrows",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "38e5764b0a75f1b1.tsx",
+    "source": "const f = (x: T extends number ? {v: T} : string[], y = flag ? 1 : 0): T extends number ? {v: T} : string[] => x;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 104,
+        "test": "test_nested_annotation_types_preserve_formals_and_runtime_arrows",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "1deb98f08b6510ab.vue",
+    "source": "<script lang=\"ts\">const f = (x: T extends number ? {v: T} : string[], y = flag ? 1 : 0): T extends number ? {v: T} : string[] => x;\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 105,
+        "test": "test_nested_annotation_types_preserve_formals_and_runtime_arrows",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "0ed6bf7a8440f697.ts",
+    "source": "const f = (x: `p${string}`, y = flag ? 1 : 0): `p${string}` => x;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 106,
+        "test": "test_nested_annotation_types_preserve_formals_and_runtime_arrows",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "0ed6bf7a8440f697.tsx",
+    "source": "const f = (x: `p${string}`, y = flag ? 1 : 0): `p${string}` => x;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 107,
+        "test": "test_nested_annotation_types_preserve_formals_and_runtime_arrows",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "8a7d46116da008f5.vue",
+    "source": "<script lang=\"ts\">const f = (x: `p${string}`, y = flag ? 1 : 0): `p${string}` => x;\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 108,
+        "test": "test_nested_annotation_types_preserve_formals_and_runtime_arrows",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "3b72c4ebc2b6c6fa.ts",
+    "source": "const f: (x: number) => number = (x) => x || 0;\nconst o = {class: (x: number): number => x, value: {run: () => 1}};\nconst t = () => `${f(1) ? 1 : 0}` as string;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 109,
+        "test": "test_variable_and_object_property_annotations_keep_runtime_values",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "3b72c4ebc2b6c6fa.tsx",
+    "source": "const f: (x: number) => number = (x) => x || 0;\nconst o = {class: (x: number): number => x, value: {run: () => 1}};\nconst t = () => `${f(1) ? 1 : 0}` as string;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 110,
+        "test": "test_variable_and_object_property_annotations_keep_runtime_values",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "0dc0575173e905d8.vue",
+    "source": "<script lang=\"ts\">const f: (x: number) => number = (x) => x || 0;\nconst o = {class: (x: number): number => x, value: {run: () => 1}};\nconst t = () => `${f(1) ? 1 : 0}` as string;\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 111,
+        "test": "test_variable_and_object_property_annotations_keep_runtime_values",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "labels",
+    "filename": "13003ab5b746b97a.js",
+    "source": "const x = [() => {\n again: 1;\n if(a && b) use(a);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 112,
+        "test": "test_labeled_callback_extensions_keep_decisions",
+        "entry": "analyze_source_code",
+        "extension": "NS",
+        "original_filename": "bindings.js"
+      },
+      {
+        "capture_index": 119,
+        "test": "test_labeled_callback_extensions_keep_decisions",
+        "entry": "analyze_source_code",
+        "extension": "nonstrict",
+        "original_filename": "bindings.js"
+      }
+    ]
+  },
+  {
+    "family": "labels",
+    "filename": "13003ab5b746b97a.ts",
+    "source": "const x = [() => {\n again: 1;\n if(a && b) use(a);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 113,
+        "test": "test_labeled_callback_extensions_keep_decisions",
+        "entry": "analyze_source_code",
+        "extension": "NS",
+        "original_filename": "bindings.ts"
+      },
+      {
+        "capture_index": 120,
+        "test": "test_labeled_callback_extensions_keep_decisions",
+        "entry": "analyze_source_code",
+        "extension": "nonstrict",
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "labels",
+    "filename": "13003ab5b746b97a.jsx",
+    "source": "const x = [() => {\n again: 1;\n if(a && b) use(a);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 114,
+        "test": "test_labeled_callback_extensions_keep_decisions",
+        "entry": "analyze_source_code",
+        "extension": "NS",
+        "original_filename": "bindings.jsx"
+      },
+      {
+        "capture_index": 121,
+        "test": "test_labeled_callback_extensions_keep_decisions",
+        "entry": "analyze_source_code",
+        "extension": "nonstrict",
+        "original_filename": "bindings.jsx"
+      }
+    ]
+  },
+  {
+    "family": "labels",
+    "filename": "13003ab5b746b97a.tsx",
+    "source": "const x = [() => {\n again: 1;\n if(a && b) use(a);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 115,
+        "test": "test_labeled_callback_extensions_keep_decisions",
+        "entry": "analyze_source_code",
+        "extension": "NS",
+        "original_filename": "bindings.tsx"
+      },
+      {
+        "capture_index": 122,
+        "test": "test_labeled_callback_extensions_keep_decisions",
+        "entry": "analyze_source_code",
+        "extension": "nonstrict",
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "labels",
+    "filename": "13003ab5b746b97a.mjs",
+    "source": "const x = [() => {\n again: 1;\n if(a && b) use(a);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 116,
+        "test": "test_labeled_callback_extensions_keep_decisions",
+        "entry": "analyze_source_code",
+        "extension": "NS",
+        "original_filename": "bindings.mjs"
+      },
+      {
+        "capture_index": 123,
+        "test": "test_labeled_callback_extensions_keep_decisions",
+        "entry": "analyze_source_code",
+        "extension": "nonstrict",
+        "original_filename": "bindings.mjs"
+      }
+    ]
+  },
+  {
+    "family": "labels",
+    "filename": "13003ab5b746b97a.cjs",
+    "source": "const x = [() => {\n again: 1;\n if(a && b) use(a);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 117,
+        "test": "test_labeled_callback_extensions_keep_decisions",
+        "entry": "analyze_source_code",
+        "extension": "NS",
+        "original_filename": "bindings.cjs"
+      },
+      {
+        "capture_index": 124,
+        "test": "test_labeled_callback_extensions_keep_decisions",
+        "entry": "analyze_source_code",
+        "extension": "nonstrict",
+        "original_filename": "bindings.cjs"
+      }
+    ]
+  },
+  {
+    "family": "labels",
+    "filename": "079566aca6fbf2cd.vue",
+    "source": "<script lang=\"ts\">const x = [() => {\n again: 1;\n if(a && b) use(a);\n}];\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 118,
+        "test": "test_labeled_callback_extensions_keep_decisions",
+        "entry": "analyze_source_code",
+        "extension": "NS",
+        "original_filename": "bindings.vue"
+      },
+      {
+        "capture_index": 125,
+        "test": "test_labeled_callback_extensions_keep_decisions",
+        "entry": "analyze_source_code",
+        "extension": "nonstrict",
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "1b16cedf21233c18.ts",
+    "source": "class A { d: (() => void)[] = []; s(x) {return x?1:0;} }\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 133,
+        "test": "test_http_returns_only_actual_functions_after_type_annotation",
+        "entry": "HTTP",
+        "extension": null,
+        "original_filename": null
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "1b16cedf21233c18.tsx",
+    "source": "class A { d: (() => void)[] = []; s(x) {return x?1:0;} }\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 134,
+        "test": "test_http_returns_only_actual_functions_after_type_annotation",
+        "entry": "HTTP",
+        "extension": null,
+        "original_filename": null
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "1fc2fe96d76db371.vue",
+    "source": "<script lang=\"ts\">class A { d: (() => void)[] = []; s(x) {return x?1:0;} }\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 135,
+        "test": "test_http_returns_only_actual_functions_after_type_annotation",
+        "entry": "HTTP",
+        "extension": null,
+        "original_filename": null
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "8cda28f98c2f3f21.js",
+    "source": "class A { g:(x,y)=>x+1; h:function(){return 1;} }\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 136,
+        "test": "test_javascript_class_colon_values_remain_runtime_members",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.js"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "8cda28f98c2f3f21.jsx",
+    "source": "class A { g:(x,y)=>x+1; h:function(){return 1;} }\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 137,
+        "test": "test_javascript_class_colon_values_remain_runtime_members",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.jsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "8cda28f98c2f3f21.mjs",
+    "source": "class A { g:(x,y)=>x+1; h:function(){return 1;} }\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 138,
+        "test": "test_javascript_class_colon_values_remain_runtime_members",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.mjs"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "8cda28f98c2f3f21.cjs",
+    "source": "class A { g:(x,y)=>x+1; h:function(){return 1;} }\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 139,
+        "test": "test_javascript_class_colon_values_remain_runtime_members",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.cjs"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "2cefd6f9cee8c107.vue",
+    "source": "<script>class A {d:(x)=>x; s() {} }</script>",
+    "provenance": [
+      {
+        "capture_index": 140,
+        "test": "test_vue_script_mode_owns_class_member_colons",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": null
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "de4ce7324ff1712d.vue",
+    "source": "<script lang=\"js\">class A {d:(x)=>x; s() {} }</script>",
+    "provenance": [
+      {
+        "capture_index": 141,
+        "test": "test_vue_script_mode_owns_class_member_colons",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": null
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "71c09f99022c36df.vue",
+    "source": "<script setup lang=\"ts\">class A {d: (() => void)[] = []; s() {} }</script>",
+    "provenance": [
+      {
+        "capture_index": 142,
+        "test": "test_vue_script_mode_owns_class_member_colons",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": null
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "8ad28e94ec5020ac.ts",
+    "source": "class A<T extends {x:number}> { d: (()=>void)[]=[]; constructor(v:T){if(v)use(v);} s(tail:number){return tail?1:0;} }\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 143,
+        "test": "test_generic_constraint_brace_does_not_own_class_members",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "8ad28e94ec5020ac.tsx",
+    "source": "class A<T extends {x:number}> { d: (()=>void)[]=[]; constructor(v:T){if(v)use(v);} s(tail:number){return tail?1:0;} }\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 144,
+        "test": "test_generic_constraint_brace_does_not_own_class_members",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "dfc57630c2e5df97.vue",
+    "source": "<script lang=\"ts\">class A<T extends {x:number}> { d: (()=>void)[]=[]; constructor(v:T){if(v)use(v);} s(tail:number){return tail?1:0;} }\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 145,
+        "test": "test_generic_constraint_brace_does_not_own_class_members",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "e0b15e00119ea619.ts",
+    "source": "h((x): -1 => -1);\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 146,
+        "test": "test_literal_return_type_keeps_arrow_formal",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "e0b15e00119ea619.tsx",
+    "source": "h((x): -1 => -1);\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 147,
+        "test": "test_literal_return_type_keeps_arrow_formal",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "8fcaca31ac4d3021.vue",
+    "source": "<script lang=\"ts\">h((x): -1 => -1);\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 148,
+        "test": "test_literal_return_type_keeps_arrow_formal",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "e0292010033c1721.ts",
+    "source": "h((x): `p${string}` => `p${x}`);\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 149,
+        "test": "test_literal_return_type_keeps_arrow_formal",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "e0292010033c1721.tsx",
+    "source": "h((x): `p${string}` => `p${x}`);\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 150,
+        "test": "test_literal_return_type_keeps_arrow_formal",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "93b84558e96367a3.vue",
+    "source": "<script lang=\"ts\">h((x): `p${string}` => `p${x}`);\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 151,
+        "test": "test_literal_return_type_keeps_arrow_formal",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "e05e41253a25107f.ts",
+    "source": "const x: number = 1, run: (n: number) => number = n => n || 0;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 152,
+        "test": "test_declarator_comma_keeps_type_ownership_across_line_break",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "e05e41253a25107f.tsx",
+    "source": "const x: number = 1, run: (n: number) => number = n => n || 0;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 153,
+        "test": "test_declarator_comma_keeps_type_ownership_across_line_break",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "f3e3989193243610.vue",
+    "source": "<script lang=\"ts\">const x: number = 1, run: (n: number) => number = n => n || 0;\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 154,
+        "test": "test_declarator_comma_keeps_type_ownership_across_line_break",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "9390e1acb232720a.ts",
+    "source": "const x: number = 1,\n run: (n: number) => number = n => n || 0;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 155,
+        "test": "test_declarator_comma_keeps_type_ownership_across_line_break",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "9390e1acb232720a.tsx",
+    "source": "const x: number = 1,\n run: (n: number) => number = n => n || 0;\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 156,
+        "test": "test_declarator_comma_keeps_type_ownership_across_line_break",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "0b14a86ca2a454a4.vue",
+    "source": "<script lang=\"ts\">const x: number = 1,\n run: (n: number) => number = n => n || 0;\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 157,
+        "test": "test_declarator_comma_keeps_type_ownership_across_line_break",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "ff2794b902157b51.ts",
+    "source": "const choose = x as T extends U ? V : W ? function yes(a) {return a;} : function no(b) {return b;};\nfunction after(c) {return c;}\n",
+    "provenance": [
+      {
+        "capture_index": 158,
+        "test": "test_conditional_type_returns_following_runtime_ternary",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "ff2794b902157b51.tsx",
+    "source": "const choose = x as T extends U ? V : W ? function yes(a) {return a;} : function no(b) {return b;};\nfunction after(c) {return c;}\n",
+    "provenance": [
+      {
+        "capture_index": 159,
+        "test": "test_conditional_type_returns_following_runtime_ternary",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "7c9af7c0315d04a9.vue",
+    "source": "<script lang=\"ts\">const choose = x as T extends U ? V : W ? function yes(a) {return a;} : function no(b) {return b;};\nfunction after(c) {return c;}\n</script>",
+    "provenance": [
+      {
+        "capture_index": 160,
+        "test": "test_conditional_type_returns_following_runtime_ternary",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "e2853d92936da4aa.ts",
+    "source": "const choose = (x as T extends U ? V : W) ? function yes(a) {return a;} : function no(b) {return b;};\nfunction after(c) {return c;}\n",
+    "provenance": [
+      {
+        "capture_index": 161,
+        "test": "test_conditional_type_returns_following_runtime_ternary",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "e2853d92936da4aa.tsx",
+    "source": "const choose = (x as T extends U ? V : W) ? function yes(a) {return a;} : function no(b) {return b;};\nfunction after(c) {return c;}\n",
+    "provenance": [
+      {
+        "capture_index": 162,
+        "test": "test_conditional_type_returns_following_runtime_ternary",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "d855bb993266db01.vue",
+    "source": "<script lang=\"ts\">const choose = (x as T extends U ? V : W) ? function yes(a) {return a;} : function no(b) {return b;};\nfunction after(c) {return c;}\n</script>",
+    "provenance": [
+      {
+        "capture_index": 163,
+        "test": "test_conditional_type_returns_following_runtime_ternary",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "e7f2eca5ecb11daf.ts",
+    "source": "class A { d?: (()=>void)[]; constructor(v){if(v)use(v);} s(tail){return tail?1:0;} }\nfunction after(tail){return tail?1:0;}\n",
+    "provenance": [
+      {
+        "capture_index": 164,
+        "test": "test_optional_members_and_runtime_initializers_own_question_marks",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "e7f2eca5ecb11daf.tsx",
+    "source": "class A { d?: (()=>void)[]; constructor(v){if(v)use(v);} s(tail){return tail?1:0;} }\nfunction after(tail){return tail?1:0;}\n",
+    "provenance": [
+      {
+        "capture_index": 165,
+        "test": "test_optional_members_and_runtime_initializers_own_question_marks",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "a1d5fbf8d5a82ff2.vue",
+    "source": "<script lang=\"ts\">class A { d?: (()=>void)[]; constructor(v){if(v)use(v);} s(tail){return tail?1:0;} }\nfunction after(tail){return tail?1:0;}\n</script>",
+    "provenance": [
+      {
+        "capture_index": 166,
+        "test": "test_optional_members_and_runtime_initializers_own_question_marks",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "2faf52ebc37e9471.ts",
+    "source": "class A { d ? : (()=>void)[]; constructor(v){if(v)use(v);} s(tail){return tail?1:0;} }\nfunction after(tail){return tail?1:0;}\n",
+    "provenance": [
+      {
+        "capture_index": 167,
+        "test": "test_optional_members_and_runtime_initializers_own_question_marks",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "2faf52ebc37e9471.tsx",
+    "source": "class A { d ? : (()=>void)[]; constructor(v){if(v)use(v);} s(tail){return tail?1:0;} }\nfunction after(tail){return tail?1:0;}\n",
+    "provenance": [
+      {
+        "capture_index": 168,
+        "test": "test_optional_members_and_runtime_initializers_own_question_marks",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "062d157ce86bcf30.vue",
+    "source": "<script lang=\"ts\">class A { d ? : (()=>void)[]; constructor(v){if(v)use(v);} s(tail){return tail?1:0;} }\nfunction after(tail){return tail?1:0;}\n</script>",
+    "provenance": [
+      {
+        "capture_index": 169,
+        "test": "test_optional_members_and_runtime_initializers_own_question_marks",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "8ca0289e4272593d.ts",
+    "source": "class A { $d?: (()=>void)[]; constructor(v){if(v)use(v);} s(tail){return tail?1:0;} }\nfunction after(tail){return tail?1:0;}\n",
+    "provenance": [
+      {
+        "capture_index": 170,
+        "test": "test_optional_members_and_runtime_initializers_own_question_marks",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "8ca0289e4272593d.tsx",
+    "source": "class A { $d?: (()=>void)[]; constructor(v){if(v)use(v);} s(tail){return tail?1:0;} }\nfunction after(tail){return tail?1:0;}\n",
+    "provenance": [
+      {
+        "capture_index": 171,
+        "test": "test_optional_members_and_runtime_initializers_own_question_marks",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "1b3041ec5932124e.vue",
+    "source": "<script lang=\"ts\">class A { $d?: (()=>void)[]; constructor(v){if(v)use(v);} s(tail){return tail?1:0;} }\nfunction after(tail){return tail?1:0;}\n</script>",
+    "provenance": [
+      {
+        "capture_index": 172,
+        "test": "test_optional_members_and_runtime_initializers_own_question_marks",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "6740956ec3766987.ts",
+    "source": "class A { d ? : (n:number)=>number = (n)=>n||0; constructor(v){if(v)use(v);} s(tail){return tail?1:0;} }\nfunction after(tail){return tail?1:0;}\n",
+    "provenance": [
+      {
+        "capture_index": 173,
+        "test": "test_optional_members_and_runtime_initializers_own_question_marks",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "6740956ec3766987.tsx",
+    "source": "class A { d ? : (n:number)=>number = (n)=>n||0; constructor(v){if(v)use(v);} s(tail){return tail?1:0;} }\nfunction after(tail){return tail?1:0;}\n",
+    "provenance": [
+      {
+        "capture_index": 174,
+        "test": "test_optional_members_and_runtime_initializers_own_question_marks",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "86c97da846c330de.vue",
+    "source": "<script lang=\"ts\">class A { d ? : (n:number)=>number = (n)=>n||0; constructor(v){if(v)use(v);} s(tail){return tail?1:0;} }\nfunction after(tail){return tail?1:0;}\n</script>",
+    "provenance": [
+      {
+        "capture_index": 175,
+        "test": "test_optional_members_and_runtime_initializers_own_question_marks",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "72b6fd9c4bf71531.ts",
+    "source": "class A { $d?: (n:number)=>number = (n)=>n||0; constructor(v){if(v)use(v);} s(tail){return tail?1:0;} }\nfunction after(tail){return tail?1:0;}\n",
+    "provenance": [
+      {
+        "capture_index": 176,
+        "test": "test_optional_members_and_runtime_initializers_own_question_marks",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "72b6fd9c4bf71531.tsx",
+    "source": "class A { $d?: (n:number)=>number = (n)=>n||0; constructor(v){if(v)use(v);} s(tail){return tail?1:0;} }\nfunction after(tail){return tail?1:0;}\n",
+    "provenance": [
+      {
+        "capture_index": 177,
+        "test": "test_optional_members_and_runtime_initializers_own_question_marks",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "bfb5f7d9ee4e1811.vue",
+    "source": "<script lang=\"ts\">class A { $d?: (n:number)=>number = (n)=>n||0; constructor(v){if(v)use(v);} s(tail){return tail?1:0;} }\nfunction after(tail){return tail?1:0;}\n</script>",
+    "provenance": [
+      {
+        "capture_index": 178,
+        "test": "test_optional_members_and_runtime_initializers_own_question_marks",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "ef44a22ea5b9587a.ts",
+    "source": "class A { d?: (n:number)=>number = (n)=>n||0; constructor(v){if(v)use(v);} s(tail){return tail?1:0;} }\nfunction after(tail){return tail?1:0;}\n",
+    "provenance": [
+      {
+        "capture_index": 179,
+        "test": "test_optional_members_and_runtime_initializers_own_question_marks",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "ef44a22ea5b9587a.tsx",
+    "source": "class A { d?: (n:number)=>number = (n)=>n||0; constructor(v){if(v)use(v);} s(tail){return tail?1:0;} }\nfunction after(tail){return tail?1:0;}\n",
+    "provenance": [
+      {
+        "capture_index": 180,
+        "test": "test_optional_members_and_runtime_initializers_own_question_marks",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "30ebe96e7656efb0.vue",
+    "source": "<script lang=\"ts\">class A { d?: (n:number)=>number = (n)=>n||0; constructor(v){if(v)use(v);} s(tail){return tail?1:0;} }\nfunction after(tail){return tail?1:0;}\n</script>",
+    "provenance": [
+      {
+        "capture_index": 181,
+        "test": "test_optional_members_and_runtime_initializers_own_question_marks",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "566b5956d8a80462.ts",
+    "source": "class A { d = flag ? function yes(n){return n||0;} : function no(n){return n&&1;}; constructor(v){if(v)use(v);} s(tail){return tail?1:0;} }\nfunction after(tail){return tail?1:0;}\n",
+    "provenance": [
+      {
+        "capture_index": 182,
+        "test": "test_optional_members_and_runtime_initializers_own_question_marks",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "566b5956d8a80462.tsx",
+    "source": "class A { d = flag ? function yes(n){return n||0;} : function no(n){return n&&1;}; constructor(v){if(v)use(v);} s(tail){return tail?1:0;} }\nfunction after(tail){return tail?1:0;}\n",
+    "provenance": [
+      {
+        "capture_index": 183,
+        "test": "test_optional_members_and_runtime_initializers_own_question_marks",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "5ee1bbcf2bc7b824.vue",
+    "source": "<script lang=\"ts\">class A { d = flag ? function yes(n){return n||0;} : function no(n){return n&&1;}; constructor(v){if(v)use(v);} s(tail){return tail?1:0;} }\nfunction after(tail){return tail?1:0;}\n</script>",
+    "provenance": [
+      {
+        "capture_index": 184,
+        "test": "test_optional_members_and_runtime_initializers_own_question_marks",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "a20ac5f887535d3a.ts",
+    "source": "class A { d = () => flag ? 1 : 0; constructor(v){if(v)use(v);} s(tail){return tail?1:0;} }\nfunction after(tail){return tail?1:0;}\n",
+    "provenance": [
+      {
+        "capture_index": 185,
+        "test": "test_optional_members_and_runtime_initializers_own_question_marks",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "a20ac5f887535d3a.tsx",
+    "source": "class A { d = () => flag ? 1 : 0; constructor(v){if(v)use(v);} s(tail){return tail?1:0;} }\nfunction after(tail){return tail?1:0;}\n",
+    "provenance": [
+      {
+        "capture_index": 186,
+        "test": "test_optional_members_and_runtime_initializers_own_question_marks",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "141d2fe734eb1d67.vue",
+    "source": "<script lang=\"ts\">class A { d = () => flag ? 1 : 0; constructor(v){if(v)use(v);} s(tail){return tail?1:0;} }\nfunction after(tail){return tail?1:0;}\n</script>",
+    "provenance": [
+      {
+        "capture_index": 187,
+        "test": "test_optional_members_and_runtime_initializers_own_question_marks",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "5c8068b7c450ff61.ts",
+    "source": "function outer(flag) { class A { $d ? : (()=>void)[]; d = flag ? function yes(n){return n||0;} : function no(n){return n&&1;}; } return flag?1:0; }\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 188,
+        "test": "test_optional_member_marker_is_not_an_enclosing_runtime_decision",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.ts"
+      },
+      {
+        "capture_index": 191,
+        "test": "test_optional_member_marker_is_not_an_enclosing_runtime_decision",
+        "entry": "analyze_source_code",
+        "extension": "NS",
+        "original_filename": "bindings.ts"
+      },
+      {
+        "capture_index": 194,
+        "test": "test_optional_member_marker_is_not_an_enclosing_runtime_decision",
+        "entry": "analyze_source_code",
+        "extension": "nonstrict",
+        "original_filename": "bindings.ts"
+      },
+      {
+        "capture_index": 197,
+        "test": "test_optional_member_marker_is_not_an_enclosing_runtime_decision",
+        "entry": "analyze_source_code",
+        "extension": "complextags",
+        "original_filename": "bindings.ts"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "5c8068b7c450ff61.tsx",
+    "source": "function outer(flag) { class A { $d ? : (()=>void)[]; d = flag ? function yes(n){return n||0;} : function no(n){return n&&1;}; } return flag?1:0; }\nfunction after(tail) { return tail ? 1 : 0; }\n",
+    "provenance": [
+      {
+        "capture_index": 189,
+        "test": "test_optional_member_marker_is_not_an_enclosing_runtime_decision",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.tsx"
+      },
+      {
+        "capture_index": 192,
+        "test": "test_optional_member_marker_is_not_an_enclosing_runtime_decision",
+        "entry": "analyze_source_code",
+        "extension": "NS",
+        "original_filename": "bindings.tsx"
+      },
+      {
+        "capture_index": 195,
+        "test": "test_optional_member_marker_is_not_an_enclosing_runtime_decision",
+        "entry": "analyze_source_code",
+        "extension": "nonstrict",
+        "original_filename": "bindings.tsx"
+      },
+      {
+        "capture_index": 198,
+        "test": "test_optional_member_marker_is_not_an_enclosing_runtime_decision",
+        "entry": "analyze_source_code",
+        "extension": "complextags",
+        "original_filename": "bindings.tsx"
+      }
+    ]
+  },
+  {
+    "family": "annotations",
+    "filename": "4a58a1453bff31c5.vue",
+    "source": "<script lang=\"ts\">function outer(flag) { class A { $d ? : (()=>void)[]; d = flag ? function yes(n){return n||0;} : function no(n){return n&&1;}; } return flag?1:0; }\nfunction after(tail) { return tail ? 1 : 0; }\n</script>",
+    "provenance": [
+      {
+        "capture_index": 190,
+        "test": "test_optional_member_marker_is_not_an_enclosing_runtime_decision",
+        "entry": "analyze_source_code",
+        "extension": null,
+        "original_filename": "bindings.vue"
+      },
+      {
+        "capture_index": 193,
+        "test": "test_optional_member_marker_is_not_an_enclosing_runtime_decision",
+        "entry": "analyze_source_code",
+        "extension": "NS",
+        "original_filename": "bindings.vue"
+      },
+      {
+        "capture_index": 196,
+        "test": "test_optional_member_marker_is_not_an_enclosing_runtime_decision",
+        "entry": "analyze_source_code",
+        "extension": "nonstrict",
+        "original_filename": "bindings.vue"
+      },
+      {
+        "capture_index": 199,
+        "test": "test_optional_member_marker_is_not_an_enclosing_runtime_decision",
+        "entry": "analyze_source_code",
+        "extension": "complextags",
+        "original_filename": "bindings.vue"
+      }
+    ]
+  }
+]

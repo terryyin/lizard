@@ -180,6 +180,14 @@ implementer's passing tests and the reproducer did not cover.
   - Observed effect: two return rounds before delivery instead of a later regression; both became discriminating tests.
   - Inference: a practice worth keeping for grammar heuristics where examples are not exhaustive.
 
+- Execution: SEED-024#resolve-issue524-label-types
+  - Timestamp: unknown (2026-11-02 UTC, before implementation publication 7fac94f)
+  - Tool: Codex
+  - Open Dough release: 0.3.80 during probes at a10a744;0.3.81 after 0e352b7 reconciliation before publication.
+  - Evidence: 61e23de:.planning/slice-plans/016-issue524-label-types/PLAN.md G14–G17;7fac94f:test/test_languages/testTypeScriptAssertionRoles.py; retained root baseline/candidate and official-parser observations.
+  - Observed effect: contextual identifier calls, runtime operator handoff and export-default callbacks lost under the first annotation heuristic became discriminating public regressions before merge. The final490 cases preserve the earlier200; qualified timing for superseded bytes was retained and not reused.
+  - Inference: directed opposite-role controls should finish with semantic acceptance before expensive qualification; this records caught gaps and repetition, not measured review-time savings.
+
 ## DD-011 — Integrity checks must separate measured inputs from acceptance records
 
 A post-measurement integrity checker asserted an entirely clean tracked tree,
@@ -334,6 +342,14 @@ even when ordinary wrap-up will remove them afterward.
   - Evidence: PR525 head e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0; GitHub update/packet reports 140 files, 49,924 additions and 89 deletions; runtime diff is four reader files plus one cohesive test module and two changelog lines.
   - Observed effect: raw profiles, replay JSON, traces and intermediate failures enter the PR's net diff along with the correction. They are retained for acceptance and later recoverable cleanup.
   - Inference: this adds review surface unrelated to the maintained product; no measured review-time cost is claimed. A future delivery recipe could retain the same proof without carrying temporary records in the final contribution diff.
+
+- Execution: SEED-024#resolve-issue524-label-types
+  - Timestamp: 2026-11-02T04:32:30Z
+  - Tool: Codex
+  - Open Dough release: 0.3.81 at publication 7fac94f after 0e352b7 reconciliation.
+  - Evidence: PR548 at head7fac94f,14 files/910 additions/211 deletions; its owned staging list selects11 product/test files, plan/source observations and concise qualification. Detailed producers, failed attempts and timing pairs remained owned locally through the hosted merge.
+  - Observed effect: the initial repair review exposes the product change and qualification summary while retaining detailed evidence for the ordinary before-cleanup Git recovery commit.
+  - Inference: this is an observed selective delivery mitigation, not evidence that shared guidance has adopted a complete recipe; no review-time saving is measured.
 
 ## Retention
 

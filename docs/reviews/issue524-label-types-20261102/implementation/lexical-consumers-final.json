@@ -1,0 +1,9 @@
+{
+  "command": "PIP_QUIET=3 nix develop -c python -m pytest test/testTokenizer.py -q",
+  "resolved_files": [
+    "test/testTokenizer.py"
+  ],
+  "exit_code": 0,
+  "stdout": "........................                                                 [100%]\n24 passed in 0.02s\n",
+  "stderr": ""
+}

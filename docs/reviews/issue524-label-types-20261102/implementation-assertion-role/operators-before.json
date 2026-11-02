@@ -1,0 +1,4585 @@
+{
+  "command": "PIP_QUIET=3 nix develop -c python -I docs/reviews/issue524-label-types-20261102/implementation-assertion-role/operator-probe.py --checkout /Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types --out docs/reviews/issue524-label-types-20261102/implementation-assertion-role/operators-before.json",
+  "python": "3.9.11 (main, Apr 10 2022, 22:01:55) \n[Clang 11.1.0 ]",
+  "executable": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/.venv/bin/python",
+  "checkout": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types",
+  "modules": {
+    "lizard_languages.token_pattern": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/token_pattern.py",
+      "sha256": "43ea90af99d7ac1002e77d0e39c118f3fc3741baecdb38193eaa06bf22d19dc2"
+    },
+    "lizard_languages.code_reader": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/code_reader.py",
+      "sha256": "eb900aa64840bfa5c3c30376a95b6f95d856647d8da58a155223b3557c0ea49f"
+    },
+    "lizard_languages.clike_states": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/clike_states.py",
+      "sha256": "5e3c8e496bccc0c7724caf258351df15e21c4690b9255c549ef6342f7a118e79"
+    },
+    "lizard_languages.clike": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/clike.py",
+      "sha256": "35b317bc34476b1760281b7298abc90ebdfdc8b4f50b4c42ce023887cf6a671b"
+    },
+    "lizard_languages.golike": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/golike.py",
+      "sha256": "6736e1499483e7ad3ce4e521144f2e742d1086770624961cfc2d6f09f71959c8"
+    },
+    "lizard_languages.zig": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/zig.py",
+      "sha256": "b589e67b727f4bbb19ea2e4d35ef1b22f30965e285169f119dd223d5ddc37222"
+    },
+    "lizard_languages.erlang": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/erlang.py",
+      "sha256": "88b532f2eb8477d7a197610b77b977084377494288061411270beb37fd7fd1a4"
+    },
+    "lizard_languages.java_body_states": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/java_body_states.py",
+      "sha256": "c944dd874e0bb48dd1ee236f470d7e2e0a7ae0a7b613e4e7794070d7f1cb6016"
+    },
+    "lizard_languages.java": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/java.py",
+      "sha256": "fd714199ddcb8b6e46f08ab72a9c52de8bb5f401041eeff2aa5cd83dd0fe5647"
+    },
+    "lizard_languages.js_style_regex_context": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/js_style_regex_context.py",
+      "sha256": "4f8e1fcbf8858bcc0b936794b381c5367cb1df0cc9e99f394cfb13348a96b60b"
+    },
+    "lizard_languages.js_style_regex_expression": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/js_style_regex_expression.py",
+      "sha256": "6e47d09f617e9f3c6bce8851207822b85580e5c636516abbe7da35986b11b5b9"
+    },
+    "lizard_core": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_core/__init__.py",
+      "sha256": "345df9bf6abd477b82b7546d212473cf78aa1a15450be0f75ba32603206d066c"
+    },
+    "lizard_core.function_info": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_core/function_info.py",
+      "sha256": "14798ce7b4c554239ca38b4e5ed96cf133cba30f0472dafc9888b71501dc2b3c"
+    },
+    "lizard_languages.javascript_bindings": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/javascript_bindings.py",
+      "sha256": "9d3303f0669f9c48d76dd6e55f0d201d7fbc8240eaacd8b4ad0b623a96eea509"
+    },
+    "lizard_languages.javascript_functions": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/javascript_functions.py",
+      "sha256": "1f0bbeb262f0ff24ce6ed84b2527488bf92b4317dda314caf73814c97e189f03"
+    },
+    "lizard_languages.typescript_type_annotation": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/typescript_type_annotation.py",
+      "sha256": "23b614ce55b8cdb04bbaab188def26a679584e43eca681a695834ec93b5eaedc"
+    },
+    "lizard_languages.javascript_objects": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/javascript_objects.py",
+      "sha256": "d9f484af96da6405d625429704a1d968f2949936b2cccf093e10b49f672b6c25"
+    },
+    "lizard_languages.typescript_signatures": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/typescript_signatures.py",
+      "sha256": "daec9731184e1b4e9be3ab7d741d70586dca7b94f1f9c7a53bae595c78d93702"
+    },
+    "lizard_languages.typescript_declarations": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/typescript_declarations.py",
+      "sha256": "c7aee49c5865a5e9f9f2111053b131cfbe51c9097b7ab975cffa747b706384c6"
+    },
+    "lizard_languages.typescript_states": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/typescript_states.py",
+      "sha256": "2ed69bc5b4f48696960979e6776f8e019ee1ae74496068f673491e7224fd7630"
+    },
+    "lizard_languages.javascript_templates": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/javascript_templates.py",
+      "sha256": "fca13a38b5c3016fa50e0effea9a7cea9f9d9accef7487267df94f5e40002e92"
+    },
+    "lizard_languages.typescript": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/typescript.py",
+      "sha256": "c856cb2dbb693c4fa6c90a187d07aa9e7b0c9314add4798d5defa614ba528a05"
+    },
+    "lizard_languages.javascript": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/javascript.py",
+      "sha256": "3db42f05fdbe8d194af6ffceed131232a8d7bd180cd5d1c0c4a8b0462d65a512"
+    },
+    "lizard_languages.swift_literals": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/swift_literals.py",
+      "sha256": "acf9736c9cbcb51e5b940392f3c9a668bc35bb52fc7509f03269769f43a1f448"
+    },
+    "lizard_languages.swift": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/swift.py",
+      "sha256": "95fdefdf66da0a1fcdeec380e9425ff96c981fdcbbc3539fc1f0baf18b3cab7e"
+    },
+    "lizard_languages.kotlin": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/kotlin.py",
+      "sha256": "9b4628bbeb9b0588258af501ba3a4caf2f0bfcbc6e4d9608e3bb5272bffe51d5"
+    },
+    "lizard_languages.script_language": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/script_language.py",
+      "sha256": "1a06d3d12a9bb308b2379b8a96da6b01f288a543f3caeb780d62356825fd27ef"
+    },
+    "lizard_languages.python_tokens": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/python_tokens.py",
+      "sha256": "d55d239b659d2c0315debd7dc675c5f24d9fc848cf097664da4f62ae76dea41e"
+    },
+    "lizard_languages.python_structure": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/python_structure.py",
+      "sha256": "8c162a1dbe1b4726a3bf4b2b7f26cc0b85759eec8fd3f55b4bc78e743c5eba74"
+    },
+    "lizard_languages.python": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/python.py",
+      "sha256": "6a41ab500517ba7d130b34d3cc6ed2808627621a48c333a26d7e81c0a3addaaf"
+    },
+    "lizard_languages.objc": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/objc.py",
+      "sha256": "073bc3a0c6e0595e26dd730576c873630633362b587dbb2e156318e368bf60a7"
+    },
+    "lizard_languages.ttcn": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/ttcn.py",
+      "sha256": "b5290f9ad89fb2e508e5a50a046fae1efc1c9994d671bb4c5a850c1770b0e1c2"
+    },
+    "lizard_languages.rubylike": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/rubylike.py",
+      "sha256": "ca32376d2379a92aa337e41495bca2cdf374c7dccc176ee566a702c834f9c774"
+    },
+    "lizard_languages.ruby": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/ruby.py",
+      "sha256": "c45af5a1637a393c91b942bb3a59cac2cce88d50280f9d39ed5e8bd0c8862890"
+    },
+    "lizard_languages.csharp": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/csharp.py",
+      "sha256": "503ba21b6d1875b6f828c0ff9a06fcdac843dfb511ab766fa8d2e923bed504f1"
+    },
+    "lizard_languages.dart": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/dart.py",
+      "sha256": "4ba133c6e6842ab07e790f00f8558b73a5b9aaad392350e2c57f6655c1855cdd"
+    },
+    "lizard_languages.php_states": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/php_states.py",
+      "sha256": "c66fc7335ffaf829c17e0828a29bc6faae241ea941be4d2e145e4abc53a2308b"
+    },
+    "lizard_languages.php": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/php.py",
+      "sha256": "8673a6d35077a6901e887d64ca4126d30539a1c7db007b2774a05aca91610ef0"
+    },
+    "lizard_languages.scala": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/scala.py",
+      "sha256": "fa13d519e7992df1beccb1085328f159ed151a2382d9e27b9b75e16f28291452"
+    },
+    "lizard_languages.gdscript": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/gdscript.py",
+      "sha256": "00c080b91dbd332cfe6e1e769748cdc4f31bfb8b34dc36d9c260f0f3de460093"
+    },
+    "lizard_languages.go_function": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/go_function.py",
+      "sha256": "dcd09d6e8b6645972d46cbd89d484ab74b16831974acfe2728b966928698e68f"
+    },
+    "lizard_languages.go": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/go.py",
+      "sha256": "5a939c4a74156af2e5ae51268c7ceda951c4bfb7b5707d611dddd0c3632e383f"
+    },
+    "lizard_languages.lua": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/lua.py",
+      "sha256": "de7a8172e9c1cc9ae1bf822a69ff31bdbcaac59cb7692c49f888878a61c595a7"
+    },
+    "lizard_languages.rust": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/rust.py",
+      "sha256": "731a51c9515896f753d3f31222624a2c0d8b57b4d77dced258a03eaadc1820f0"
+    },
+    "lizard_languages.fortran_states": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/fortran_states.py",
+      "sha256": "5c6da8dceb037abcfa7fee601009e8d388c8d263a45bc5aa05df339b3223e703"
+    },
+    "lizard_languages.fortran": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/fortran.py",
+      "sha256": "95eae5ba56c7d7cc7cd5b1ed59451b1c22f9a88a2ff955cb4f0aa02cf812f544"
+    },
+    "lizard_languages.solidity": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/solidity.py",
+      "sha256": "9af5823bed0c6418fb68bb8a3881df66f151c2f421c473814ef5f7153d3393c8"
+    },
+    "lizard_languages.tsx": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/tsx.py",
+      "sha256": "233c5b42d5ad48be19716e243bd2e486e640370ed3737d7669fb292d7defb5c2"
+    },
+    "lizard_languages.vue": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/vue.py",
+      "sha256": "c163ff1f2a070e050a02a2397abfbbdbe6133f23d91b5a31595ff3107f2d7dc5"
+    },
+    "lizard_languages.perl": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/perl.py",
+      "sha256": "43ea3d749d0eeec3bd5a635382db4b6f2c92dc2eb72143b68f4d5c1efc9e2b47"
+    },
+    "lizard_languages.st": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/st.py",
+      "sha256": "42288635813c0b399f999005ff02d02a8bd7935172a9af101464d733599e34d9"
+    },
+    "lizard_languages.r": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/r.py",
+      "sha256": "34734f0c69d65dc97c84c8b554bf0e33a9f0f05f693fac595fb120508a1c39e7"
+    },
+    "lizard_languages.plsql": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/plsql.py",
+      "sha256": "5ad9f2ebe616e0973a1b81210a0a12bb0f03f3ac7a255444a6bcda504c8a7dfc"
+    },
+    "lizard_languages.cobol_states": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/cobol_states.py",
+      "sha256": "226814d243e27c16571e61c729a442675e166a3b1e6bbaf258db0e08297b7e75"
+    },
+    "lizard_languages.cobol": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/cobol.py",
+      "sha256": "52209eb2d3b3d6d83b32acdd624bef1ac685c1a6942f6d0c80023dce5efe5e6f"
+    },
+    "lizard_languages": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/__init__.py",
+      "sha256": "ff6839e1410960a8dafd194c9d576290dfc2bb05371e321da59c45ebed1a6478"
+    },
+    "lizard_ext.version": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_ext/version.py",
+      "sha256": "8622f416e5e2108bd6d9bc2a9f9789bedab4e33a13b3159afccb1753a671b2f5"
+    },
+    "lizard_ext.htmloutput": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_ext/htmloutput.py",
+      "sha256": "480bb7f73b2e54b516cb5813a8f1476deb707319ce0a2191bb15b25b2a26c58b"
+    },
+    "lizard_ext.csvoutput": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_ext/csvoutput.py",
+      "sha256": "a422eeea3e6c8ea9165d1049b68fba49b71e468426bb962b4123f6a542dff28d"
+    },
+    "lizard_ext.xmloutput": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_ext/xmloutput.py",
+      "sha256": "f9c6e1d217b83bf5fec17e7a824bfd02748f34dd2abd1ec5002aa505e7b3512e"
+    },
+    "lizard_ext.auto_open": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_ext/auto_open.py",
+      "sha256": "6f20ff45b79586f494851d9b24c462b6f037cdc2846a9170bf4f9768327a185a"
+    },
+    "lizard_ext.checkstyleoutput": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_ext/checkstyleoutput.py",
+      "sha256": "343973e5ede2e996a6d99a8e526dfcffe489debd1cdf49bad7d308db7f76334d"
+    },
+    "lizard_ext": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_ext/__init__.py",
+      "sha256": "510da86787a3d4209e920898d908fcb06c7c1e17a8632c6370ec6faf017bd247"
+    },
+    "lizard_core.file_discovery": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_core/file_discovery.py",
+      "sha256": "a0e043b2fe3d5afe8ca64c1a2a711ca480bc6da689c3a4b920381a3fec9dfcaa"
+    },
+    "lizard_core.file_info_builder": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_core/file_info_builder.py",
+      "sha256": "fb1092b7cc5e9d6fb07263bf6cba94f6ef1127f22901a9ae68534c7c63ccfe29"
+    },
+    "lizard_core.file_analyzer": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_core/file_analyzer.py",
+      "sha256": "487157f9c9d7fe6737ead1f96aaaa99aaee7afb7701804b2d1fec8784b68b75d"
+    },
+    "lizard_core.extensions": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_core/extensions.py",
+      "sha256": "94f1ca948689b63c7ebb5b8c47416b657dad8eebe518df508a560ab612f8d274"
+    },
+    "lizard_core.analysis": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_core/analysis.py",
+      "sha256": "4e6c15d0b00aff70b5264d4032c3945e0a304dce114904df37cb1cc1ee22c550"
+    },
+    "lizard_core.warning_filter": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_core/warning_filter.py",
+      "sha256": "2a6908f10cb1ddd559b25763b46a2cd47c5d762b0cae474401f392603a32aeed"
+    },
+    "lizard_core.output_scheme": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_core/output_scheme.py",
+      "sha256": "7d1ad0da4dae2394a0f699bf6823e5352e6298c6adcd7aca4e9d7f4f61448b1a"
+    },
+    "lizard_core.text_output": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_core/text_output.py",
+      "sha256": "c867fe4d076ff38724658fe1197cfe09170a801e8f883956ab05482043a68637"
+    },
+    "lizard_core.options": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_core/options.py",
+      "sha256": "c9aada24a46c7cb4e920c572faf0cacfb1f016bfc2a6a537dea09ff3e387f7bc"
+    },
+    "lizard_core.cli": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_core/cli.py",
+      "sha256": "560bb95e42bad9bb3bb02040100bf2ff30fd5e02d7b7979e0a66b43d9213ab8f"
+    },
+    "lizard": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard.py",
+      "sha256": "fc83d74b7d74e6b579d81808451e89661c26d599624c5acc4a41614a46253c71"
+    },
+    "lizard_languages.js_style_regex_keyword_scan": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/js_style_regex_keyword_scan.py",
+      "sha256": "750607e334015bb09937e1fda9cda2a5937480dc2fffc7dde5c95b4cadc43b46"
+    }
+  },
+  "observations": [
+    {
+      "kind": "operator-family",
+      "name": "numberinstanceof",
+      "source": "const run = () => value as number instanceof call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "suffixes": [
+        "ts",
+        "tsx",
+        "vue"
+      ],
+      "expected": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "suffix": "ts",
+      "analyzed_source": "const run = () => value as number instanceof call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "tokens": [
+        "const",
+        " ",
+        "run",
+        " ",
+        "=",
+        " ",
+        "(",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "value",
+        " ",
+        "as",
+        " ",
+        "number",
+        " ",
+        "instanceof",
+        " ",
+        "call",
+        "(",
+        "(",
+        "arg",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "arg",
+        " ",
+        "||",
+        " ",
+        "0",
+        ")",
+        ";",
+        "\n",
+        "function",
+        " ",
+        "after",
+        "(",
+        "tail",
+        ")",
+        " ",
+        "{",
+        "return",
+        " ",
+        "tail",
+        "?",
+        "1",
+        ":",
+        "0",
+        ";",
+        "}",
+        "\n"
+      ],
+      "actual": [
+        [
+          "run",
+          2,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "matched": false
+    },
+    {
+      "kind": "operator-family",
+      "name": "numberinstanceof",
+      "source": "const run = () => value as number instanceof call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "suffixes": [
+        "ts",
+        "tsx",
+        "vue"
+      ],
+      "expected": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "suffix": "tsx",
+      "analyzed_source": "const run = () => value as number instanceof call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "tokens": [
+        "const",
+        " ",
+        "run",
+        " ",
+        "=",
+        " ",
+        "(",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "value",
+        " ",
+        "as",
+        " ",
+        "number",
+        " ",
+        "instanceof",
+        " ",
+        "call",
+        "(",
+        "(",
+        "arg",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "arg",
+        " ",
+        "||",
+        " ",
+        "0",
+        ")",
+        ";",
+        "\n",
+        "function",
+        " ",
+        "after",
+        "(",
+        "tail",
+        ")",
+        " ",
+        "{",
+        "return",
+        " ",
+        "tail",
+        "?",
+        "1",
+        ":",
+        "0",
+        ";",
+        "}",
+        "\n"
+      ],
+      "actual": [
+        [
+          "run",
+          2,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "matched": false
+    },
+    {
+      "kind": "operator-family",
+      "name": "numberinstanceof",
+      "source": "const run = () => value as number instanceof call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "suffixes": [
+        "ts",
+        "tsx",
+        "vue"
+      ],
+      "expected": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "suffix": "vue",
+      "analyzed_source": "<script lang=\"ts\">const run = () => value as number instanceof call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n</script>",
+      "tokens": [
+        "<script lang=\"ts\">",
+        "const",
+        " ",
+        "run",
+        " ",
+        "=",
+        " ",
+        "(",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "value",
+        " ",
+        "as",
+        " ",
+        "number",
+        " ",
+        "instanceof",
+        " ",
+        "call",
+        "(",
+        "(",
+        "arg",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "arg",
+        " ",
+        "||",
+        " ",
+        "0",
+        ")",
+        ";",
+        "\n",
+        "function",
+        " ",
+        "after",
+        "(",
+        "tail",
+        ")",
+        " ",
+        "{",
+        "return",
+        " ",
+        "tail",
+        "?",
+        "1",
+        ":",
+        "0",
+        ";",
+        "}",
+        "\n",
+        "</script>"
+      ],
+      "actual": [
+        [
+          "run",
+          2,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "matched": false
+    },
+    {
+      "kind": "operator-family",
+      "name": "Map<string, number[]>instanceof",
+      "source": "const run = () => value as Map<string, number[]> instanceof call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "suffixes": [
+        "ts",
+        "tsx",
+        "vue"
+      ],
+      "expected": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "suffix": "ts",
+      "analyzed_source": "const run = () => value as Map<string, number[]> instanceof call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "tokens": [
+        "const",
+        " ",
+        "run",
+        " ",
+        "=",
+        " ",
+        "(",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "value",
+        " ",
+        "as",
+        " ",
+        "Map",
+        "<",
+        "string",
+        ",",
+        " ",
+        "number",
+        "[",
+        "]",
+        ">",
+        " ",
+        "instanceof",
+        " ",
+        "call",
+        "(",
+        "(",
+        "arg",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "arg",
+        " ",
+        "||",
+        " ",
+        "0",
+        ")",
+        ";",
+        "\n",
+        "function",
+        " ",
+        "after",
+        "(",
+        "tail",
+        ")",
+        " ",
+        "{",
+        "return",
+        " ",
+        "tail",
+        "?",
+        "1",
+        ":",
+        "0",
+        ";",
+        "}",
+        "\n"
+      ],
+      "actual": [
+        [
+          "run",
+          2,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "matched": false
+    },
+    {
+      "kind": "operator-family",
+      "name": "Map<string, number[]>instanceof",
+      "source": "const run = () => value as Map<string, number[]> instanceof call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "suffixes": [
+        "ts",
+        "tsx",
+        "vue"
+      ],
+      "expected": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "suffix": "tsx",
+      "analyzed_source": "const run = () => value as Map<string, number[]> instanceof call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "tokens": [
+        "const",
+        " ",
+        "run",
+        " ",
+        "=",
+        " ",
+        "(",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "value",
+        " ",
+        "as",
+        " ",
+        "Map",
+        "<",
+        "string",
+        ",",
+        " ",
+        "number",
+        "[",
+        "]",
+        ">",
+        " ",
+        "instanceof",
+        " ",
+        "call",
+        "(",
+        "(",
+        "arg",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "arg",
+        " ",
+        "||",
+        " ",
+        "0",
+        ")",
+        ";",
+        "\n",
+        "function",
+        " ",
+        "after",
+        "(",
+        "tail",
+        ")",
+        " ",
+        "{",
+        "return",
+        " ",
+        "tail",
+        "?",
+        "1",
+        ":",
+        "0",
+        ";",
+        "}",
+        "\n"
+      ],
+      "actual": [
+        [
+          "run",
+          2,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "matched": false
+    },
+    {
+      "kind": "operator-family",
+      "name": "Map<string, number[]>instanceof",
+      "source": "const run = () => value as Map<string, number[]> instanceof call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "suffixes": [
+        "ts",
+        "tsx",
+        "vue"
+      ],
+      "expected": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "suffix": "vue",
+      "analyzed_source": "<script lang=\"ts\">const run = () => value as Map<string, number[]> instanceof call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n</script>",
+      "tokens": [
+        "<script lang=\"ts\">",
+        "const",
+        " ",
+        "run",
+        " ",
+        "=",
+        " ",
+        "(",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "value",
+        " ",
+        "as",
+        " ",
+        "Map",
+        "<string, number[]>",
+        " ",
+        "instanceof",
+        " ",
+        "call",
+        "(",
+        "(",
+        "arg",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "arg",
+        " ",
+        "||",
+        " ",
+        "0",
+        ")",
+        ";",
+        "\n",
+        "function",
+        " ",
+        "after",
+        "(",
+        "tail",
+        ")",
+        " ",
+        "{",
+        "return",
+        " ",
+        "tail",
+        "?",
+        "1",
+        ":",
+        "0",
+        ";",
+        "}",
+        "\n",
+        "</script>"
+      ],
+      "actual": [
+        [
+          "run",
+          2,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "matched": false
+    },
+    {
+      "kind": "operator-family",
+      "name": "numberin",
+      "source": "const run = () => value as number in call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "suffixes": [
+        "ts",
+        "tsx",
+        "vue"
+      ],
+      "expected": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "suffix": "ts",
+      "analyzed_source": "const run = () => value as number in call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "tokens": [
+        "const",
+        " ",
+        "run",
+        " ",
+        "=",
+        " ",
+        "(",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "value",
+        " ",
+        "as",
+        " ",
+        "number",
+        " ",
+        "in",
+        " ",
+        "call",
+        "(",
+        "(",
+        "arg",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "arg",
+        " ",
+        "||",
+        " ",
+        "0",
+        ")",
+        ";",
+        "\n",
+        "function",
+        " ",
+        "after",
+        "(",
+        "tail",
+        ")",
+        " ",
+        "{",
+        "return",
+        " ",
+        "tail",
+        "?",
+        "1",
+        ":",
+        "0",
+        ";",
+        "}",
+        "\n"
+      ],
+      "actual": [
+        [
+          "run",
+          2,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "matched": false
+    },
+    {
+      "kind": "operator-family",
+      "name": "numberin",
+      "source": "const run = () => value as number in call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "suffixes": [
+        "ts",
+        "tsx",
+        "vue"
+      ],
+      "expected": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "suffix": "tsx",
+      "analyzed_source": "const run = () => value as number in call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "tokens": [
+        "const",
+        " ",
+        "run",
+        " ",
+        "=",
+        " ",
+        "(",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "value",
+        " ",
+        "as",
+        " ",
+        "number",
+        " ",
+        "in",
+        " ",
+        "call",
+        "(",
+        "(",
+        "arg",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "arg",
+        " ",
+        "||",
+        " ",
+        "0",
+        ")",
+        ";",
+        "\n",
+        "function",
+        " ",
+        "after",
+        "(",
+        "tail",
+        ")",
+        " ",
+        "{",
+        "return",
+        " ",
+        "tail",
+        "?",
+        "1",
+        ":",
+        "0",
+        ";",
+        "}",
+        "\n"
+      ],
+      "actual": [
+        [
+          "run",
+          2,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "matched": false
+    },
+    {
+      "kind": "operator-family",
+      "name": "numberin",
+      "source": "const run = () => value as number in call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "suffixes": [
+        "ts",
+        "tsx",
+        "vue"
+      ],
+      "expected": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "suffix": "vue",
+      "analyzed_source": "<script lang=\"ts\">const run = () => value as number in call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n</script>",
+      "tokens": [
+        "<script lang=\"ts\">",
+        "const",
+        " ",
+        "run",
+        " ",
+        "=",
+        " ",
+        "(",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "value",
+        " ",
+        "as",
+        " ",
+        "number",
+        " ",
+        "in",
+        " ",
+        "call",
+        "(",
+        "(",
+        "arg",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "arg",
+        " ",
+        "||",
+        " ",
+        "0",
+        ")",
+        ";",
+        "\n",
+        "function",
+        " ",
+        "after",
+        "(",
+        "tail",
+        ")",
+        " ",
+        "{",
+        "return",
+        " ",
+        "tail",
+        "?",
+        "1",
+        ":",
+        "0",
+        ";",
+        "}",
+        "\n",
+        "</script>"
+      ],
+      "actual": [
+        [
+          "run",
+          2,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "matched": false
+    },
+    {
+      "kind": "operator-family",
+      "name": "Map<string, number[]>in",
+      "source": "const run = () => value as Map<string, number[]> in call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "suffixes": [
+        "ts",
+        "tsx",
+        "vue"
+      ],
+      "expected": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "suffix": "ts",
+      "analyzed_source": "const run = () => value as Map<string, number[]> in call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "tokens": [
+        "const",
+        " ",
+        "run",
+        " ",
+        "=",
+        " ",
+        "(",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "value",
+        " ",
+        "as",
+        " ",
+        "Map",
+        "<",
+        "string",
+        ",",
+        " ",
+        "number",
+        "[",
+        "]",
+        ">",
+        " ",
+        "in",
+        " ",
+        "call",
+        "(",
+        "(",
+        "arg",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "arg",
+        " ",
+        "||",
+        " ",
+        "0",
+        ")",
+        ";",
+        "\n",
+        "function",
+        " ",
+        "after",
+        "(",
+        "tail",
+        ")",
+        " ",
+        "{",
+        "return",
+        " ",
+        "tail",
+        "?",
+        "1",
+        ":",
+        "0",
+        ";",
+        "}",
+        "\n"
+      ],
+      "actual": [
+        [
+          "run",
+          2,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "matched": false
+    },
+    {
+      "kind": "operator-family",
+      "name": "Map<string, number[]>in",
+      "source": "const run = () => value as Map<string, number[]> in call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "suffixes": [
+        "ts",
+        "tsx",
+        "vue"
+      ],
+      "expected": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "suffix": "tsx",
+      "analyzed_source": "const run = () => value as Map<string, number[]> in call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "tokens": [
+        "const",
+        " ",
+        "run",
+        " ",
+        "=",
+        " ",
+        "(",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "value",
+        " ",
+        "as",
+        " ",
+        "Map",
+        "<",
+        "string",
+        ",",
+        " ",
+        "number",
+        "[",
+        "]",
+        ">",
+        " ",
+        "in",
+        " ",
+        "call",
+        "(",
+        "(",
+        "arg",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "arg",
+        " ",
+        "||",
+        " ",
+        "0",
+        ")",
+        ";",
+        "\n",
+        "function",
+        " ",
+        "after",
+        "(",
+        "tail",
+        ")",
+        " ",
+        "{",
+        "return",
+        " ",
+        "tail",
+        "?",
+        "1",
+        ":",
+        "0",
+        ";",
+        "}",
+        "\n"
+      ],
+      "actual": [
+        [
+          "run",
+          2,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "matched": false
+    },
+    {
+      "kind": "operator-family",
+      "name": "Map<string, number[]>in",
+      "source": "const run = () => value as Map<string, number[]> in call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "suffixes": [
+        "ts",
+        "tsx",
+        "vue"
+      ],
+      "expected": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "suffix": "vue",
+      "analyzed_source": "<script lang=\"ts\">const run = () => value as Map<string, number[]> in call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n</script>",
+      "tokens": [
+        "<script lang=\"ts\">",
+        "const",
+        " ",
+        "run",
+        " ",
+        "=",
+        " ",
+        "(",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "value",
+        " ",
+        "as",
+        " ",
+        "Map",
+        "<string, number[]>",
+        " ",
+        "in",
+        " ",
+        "call",
+        "(",
+        "(",
+        "arg",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "arg",
+        " ",
+        "||",
+        " ",
+        "0",
+        ")",
+        ";",
+        "\n",
+        "function",
+        " ",
+        "after",
+        "(",
+        "tail",
+        ")",
+        " ",
+        "{",
+        "return",
+        " ",
+        "tail",
+        "?",
+        "1",
+        ":",
+        "0",
+        ";",
+        "}",
+        "\n",
+        "</script>"
+      ],
+      "actual": [
+        [
+          "run",
+          2,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "matched": false
+    },
+    {
+      "kind": "operator-family",
+      "name": "number^",
+      "source": "const run = () => value as number ^ call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "suffixes": [
+        "ts",
+        "tsx",
+        "vue"
+      ],
+      "expected": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "suffix": "ts",
+      "analyzed_source": "const run = () => value as number ^ call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "tokens": [
+        "const",
+        " ",
+        "run",
+        " ",
+        "=",
+        " ",
+        "(",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "value",
+        " ",
+        "as",
+        " ",
+        "number",
+        " ",
+        "^",
+        " ",
+        "call",
+        "(",
+        "(",
+        "arg",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "arg",
+        " ",
+        "||",
+        " ",
+        "0",
+        ")",
+        ";",
+        "\n",
+        "function",
+        " ",
+        "after",
+        "(",
+        "tail",
+        ")",
+        " ",
+        "{",
+        "return",
+        " ",
+        "tail",
+        "?",
+        "1",
+        ":",
+        "0",
+        ";",
+        "}",
+        "\n"
+      ],
+      "actual": [
+        [
+          "run",
+          2,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "matched": false
+    },
+    {
+      "kind": "operator-family",
+      "name": "number^",
+      "source": "const run = () => value as number ^ call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "suffixes": [
+        "ts",
+        "tsx",
+        "vue"
+      ],
+      "expected": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "suffix": "tsx",
+      "analyzed_source": "const run = () => value as number ^ call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "tokens": [
+        "const",
+        " ",
+        "run",
+        " ",
+        "=",
+        " ",
+        "(",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "value",
+        " ",
+        "as",
+        " ",
+        "number",
+        " ",
+        "^",
+        " ",
+        "call",
+        "(",
+        "(",
+        "arg",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "arg",
+        " ",
+        "||",
+        " ",
+        "0",
+        ")",
+        ";",
+        "\n",
+        "function",
+        " ",
+        "after",
+        "(",
+        "tail",
+        ")",
+        " ",
+        "{",
+        "return",
+        " ",
+        "tail",
+        "?",
+        "1",
+        ":",
+        "0",
+        ";",
+        "}",
+        "\n"
+      ],
+      "actual": [
+        [
+          "run",
+          2,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "matched": false
+    },
+    {
+      "kind": "operator-family",
+      "name": "number^",
+      "source": "const run = () => value as number ^ call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "suffixes": [
+        "ts",
+        "tsx",
+        "vue"
+      ],
+      "expected": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "suffix": "vue",
+      "analyzed_source": "<script lang=\"ts\">const run = () => value as number ^ call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n</script>",
+      "tokens": [
+        "<script lang=\"ts\">",
+        "const",
+        " ",
+        "run",
+        " ",
+        "=",
+        " ",
+        "(",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "value",
+        " ",
+        "as",
+        " ",
+        "number",
+        " ",
+        "^",
+        " ",
+        "call",
+        "(",
+        "(",
+        "arg",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "arg",
+        " ",
+        "||",
+        " ",
+        "0",
+        ")",
+        ";",
+        "\n",
+        "function",
+        " ",
+        "after",
+        "(",
+        "tail",
+        ")",
+        " ",
+        "{",
+        "return",
+        " ",
+        "tail",
+        "?",
+        "1",
+        ":",
+        "0",
+        ";",
+        "}",
+        "\n",
+        "</script>"
+      ],
+      "actual": [
+        [
+          "run",
+          2,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "matched": false
+    },
+    {
+      "kind": "operator-family",
+      "name": "Map<string, number[]>^",
+      "source": "const run = () => value as Map<string, number[]> ^ call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "suffixes": [
+        "ts",
+        "tsx",
+        "vue"
+      ],
+      "expected": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "suffix": "ts",
+      "analyzed_source": "const run = () => value as Map<string, number[]> ^ call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "tokens": [
+        "const",
+        " ",
+        "run",
+        " ",
+        "=",
+        " ",
+        "(",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "value",
+        " ",
+        "as",
+        " ",
+        "Map",
+        "<",
+        "string",
+        ",",
+        " ",
+        "number",
+        "[",
+        "]",
+        ">",
+        " ",
+        "^",
+        " ",
+        "call",
+        "(",
+        "(",
+        "arg",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "arg",
+        " ",
+        "||",
+        " ",
+        "0",
+        ")",
+        ";",
+        "\n",
+        "function",
+        " ",
+        "after",
+        "(",
+        "tail",
+        ")",
+        " ",
+        "{",
+        "return",
+        " ",
+        "tail",
+        "?",
+        "1",
+        ":",
+        "0",
+        ";",
+        "}",
+        "\n"
+      ],
+      "actual": [
+        [
+          "run",
+          2,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "matched": false
+    },
+    {
+      "kind": "operator-family",
+      "name": "Map<string, number[]>^",
+      "source": "const run = () => value as Map<string, number[]> ^ call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "suffixes": [
+        "ts",
+        "tsx",
+        "vue"
+      ],
+      "expected": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "suffix": "tsx",
+      "analyzed_source": "const run = () => value as Map<string, number[]> ^ call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "tokens": [
+        "const",
+        " ",
+        "run",
+        " ",
+        "=",
+        " ",
+        "(",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "value",
+        " ",
+        "as",
+        " ",
+        "Map",
+        "<",
+        "string",
+        ",",
+        " ",
+        "number",
+        "[",
+        "]",
+        ">",
+        " ",
+        "^",
+        " ",
+        "call",
+        "(",
+        "(",
+        "arg",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "arg",
+        " ",
+        "||",
+        " ",
+        "0",
+        ")",
+        ";",
+        "\n",
+        "function",
+        " ",
+        "after",
+        "(",
+        "tail",
+        ")",
+        " ",
+        "{",
+        "return",
+        " ",
+        "tail",
+        "?",
+        "1",
+        ":",
+        "0",
+        ";",
+        "}",
+        "\n"
+      ],
+      "actual": [
+        [
+          "run",
+          2,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "matched": false
+    },
+    {
+      "kind": "operator-family",
+      "name": "Map<string, number[]>^",
+      "source": "const run = () => value as Map<string, number[]> ^ call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "suffixes": [
+        "ts",
+        "tsx",
+        "vue"
+      ],
+      "expected": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "suffix": "vue",
+      "analyzed_source": "<script lang=\"ts\">const run = () => value as Map<string, number[]> ^ call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n</script>",
+      "tokens": [
+        "<script lang=\"ts\">",
+        "const",
+        " ",
+        "run",
+        " ",
+        "=",
+        " ",
+        "(",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "value",
+        " ",
+        "as",
+        " ",
+        "Map",
+        "<string, number[]>",
+        " ",
+        "^",
+        " ",
+        "call",
+        "(",
+        "(",
+        "arg",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "arg",
+        " ",
+        "||",
+        " ",
+        "0",
+        ")",
+        ";",
+        "\n",
+        "function",
+        " ",
+        "after",
+        "(",
+        "tail",
+        ")",
+        " ",
+        "{",
+        "return",
+        " ",
+        "tail",
+        "?",
+        "1",
+        ":",
+        "0",
+        ";",
+        "}",
+        "\n",
+        "</script>"
+      ],
+      "actual": [
+        [
+          "run",
+          2,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "matched": false
+    },
+    {
+      "kind": "operator-family",
+      "name": "number>>",
+      "source": "const run = () => value as number >> call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "suffixes": [
+        "ts",
+        "tsx",
+        "vue"
+      ],
+      "expected": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "suffix": "ts",
+      "analyzed_source": "const run = () => value as number >> call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "tokens": [
+        "const",
+        " ",
+        "run",
+        " ",
+        "=",
+        " ",
+        "(",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "value",
+        " ",
+        "as",
+        " ",
+        "number",
+        " ",
+        ">",
+        ">",
+        " ",
+        "call",
+        "(",
+        "(",
+        "arg",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "arg",
+        " ",
+        "||",
+        " ",
+        "0",
+        ")",
+        ";",
+        "\n",
+        "function",
+        " ",
+        "after",
+        "(",
+        "tail",
+        ")",
+        " ",
+        "{",
+        "return",
+        " ",
+        "tail",
+        "?",
+        "1",
+        ":",
+        "0",
+        ";",
+        "}",
+        "\n"
+      ],
+      "actual": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "matched": true
+    },
+    {
+      "kind": "operator-family",
+      "name": "number>>",
+      "source": "const run = () => value as number >> call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "suffixes": [
+        "ts",
+        "tsx",
+        "vue"
+      ],
+      "expected": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "suffix": "tsx",
+      "analyzed_source": "const run = () => value as number >> call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "tokens": [
+        "const",
+        " ",
+        "run",
+        " ",
+        "=",
+        " ",
+        "(",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "value",
+        " ",
+        "as",
+        " ",
+        "number",
+        " ",
+        ">",
+        ">",
+        " ",
+        "call",
+        "(",
+        "(",
+        "arg",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "arg",
+        " ",
+        "||",
+        " ",
+        "0",
+        ")",
+        ";",
+        "\n",
+        "function",
+        " ",
+        "after",
+        "(",
+        "tail",
+        ")",
+        " ",
+        "{",
+        "return",
+        " ",
+        "tail",
+        "?",
+        "1",
+        ":",
+        "0",
+        ";",
+        "}",
+        "\n"
+      ],
+      "actual": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "matched": true
+    },
+    {
+      "kind": "operator-family",
+      "name": "number>>",
+      "source": "const run = () => value as number >> call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "suffixes": [
+        "ts",
+        "tsx",
+        "vue"
+      ],
+      "expected": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "suffix": "vue",
+      "analyzed_source": "<script lang=\"ts\">const run = () => value as number >> call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n</script>",
+      "tokens": [
+        "<script lang=\"ts\">",
+        "const",
+        " ",
+        "run",
+        " ",
+        "=",
+        " ",
+        "(",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "value",
+        " ",
+        "as",
+        " ",
+        "number",
+        " ",
+        ">",
+        ">",
+        " ",
+        "call",
+        "(",
+        "(",
+        "arg",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "arg",
+        " ",
+        "||",
+        " ",
+        "0",
+        ")",
+        ";",
+        "\n",
+        "function",
+        " ",
+        "after",
+        "(",
+        "tail",
+        ")",
+        " ",
+        "{",
+        "return",
+        " ",
+        "tail",
+        "?",
+        "1",
+        ":",
+        "0",
+        ";",
+        "}",
+        "\n",
+        "</script>"
+      ],
+      "actual": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "matched": true
+    },
+    {
+      "kind": "operator-family",
+      "name": "Map<string, number[]>>>",
+      "source": "const run = () => value as Map<string, number[]> >> call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "suffixes": [
+        "ts",
+        "tsx",
+        "vue"
+      ],
+      "expected": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "suffix": "ts",
+      "analyzed_source": "const run = () => value as Map<string, number[]> >> call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "tokens": [
+        "const",
+        " ",
+        "run",
+        " ",
+        "=",
+        " ",
+        "(",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "value",
+        " ",
+        "as",
+        " ",
+        "Map",
+        "<",
+        "string",
+        ",",
+        " ",
+        "number",
+        "[",
+        "]",
+        ">",
+        " ",
+        ">",
+        ">",
+        " ",
+        "call",
+        "(",
+        "(",
+        "arg",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "arg",
+        " ",
+        "||",
+        " ",
+        "0",
+        ")",
+        ";",
+        "\n",
+        "function",
+        " ",
+        "after",
+        "(",
+        "tail",
+        ")",
+        " ",
+        "{",
+        "return",
+        " ",
+        "tail",
+        "?",
+        "1",
+        ":",
+        "0",
+        ";",
+        "}",
+        "\n"
+      ],
+      "actual": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "matched": true
+    },
+    {
+      "kind": "operator-family",
+      "name": "Map<string, number[]>>>",
+      "source": "const run = () => value as Map<string, number[]> >> call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "suffixes": [
+        "ts",
+        "tsx",
+        "vue"
+      ],
+      "expected": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "suffix": "tsx",
+      "analyzed_source": "const run = () => value as Map<string, number[]> >> call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "tokens": [
+        "const",
+        " ",
+        "run",
+        " ",
+        "=",
+        " ",
+        "(",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "value",
+        " ",
+        "as",
+        " ",
+        "Map",
+        "<",
+        "string",
+        ",",
+        " ",
+        "number",
+        "[",
+        "]",
+        ">",
+        " ",
+        ">",
+        ">",
+        " ",
+        "call",
+        "(",
+        "(",
+        "arg",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "arg",
+        " ",
+        "||",
+        " ",
+        "0",
+        ")",
+        ";",
+        "\n",
+        "function",
+        " ",
+        "after",
+        "(",
+        "tail",
+        ")",
+        " ",
+        "{",
+        "return",
+        " ",
+        "tail",
+        "?",
+        "1",
+        ":",
+        "0",
+        ";",
+        "}",
+        "\n"
+      ],
+      "actual": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "matched": true
+    },
+    {
+      "kind": "operator-family",
+      "name": "Map<string, number[]>>>",
+      "source": "const run = () => value as Map<string, number[]> >> call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "suffixes": [
+        "ts",
+        "tsx",
+        "vue"
+      ],
+      "expected": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "suffix": "vue",
+      "analyzed_source": "<script lang=\"ts\">const run = () => value as Map<string, number[]> >> call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n</script>",
+      "tokens": [
+        "<script lang=\"ts\">",
+        "const",
+        " ",
+        "run",
+        " ",
+        "=",
+        " ",
+        "(",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "value",
+        " ",
+        "as",
+        " ",
+        "Map",
+        "<string, number[]>",
+        " ",
+        ">",
+        ">",
+        " ",
+        "call",
+        "(",
+        "(",
+        "arg",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "arg",
+        " ",
+        "||",
+        " ",
+        "0",
+        ")",
+        ";",
+        "\n",
+        "function",
+        " ",
+        "after",
+        "(",
+        "tail",
+        ")",
+        " ",
+        "{",
+        "return",
+        " ",
+        "tail",
+        "?",
+        "1",
+        ":",
+        "0",
+        ";",
+        "}",
+        "\n",
+        "</script>"
+      ],
+      "actual": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "matched": true
+    },
+    {
+      "kind": "operator-family",
+      "name": "number>>>",
+      "source": "const run = () => value as number >>> call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "suffixes": [
+        "ts",
+        "tsx",
+        "vue"
+      ],
+      "expected": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "suffix": "ts",
+      "analyzed_source": "const run = () => value as number >>> call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "tokens": [
+        "const",
+        " ",
+        "run",
+        " ",
+        "=",
+        " ",
+        "(",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "value",
+        " ",
+        "as",
+        " ",
+        "number",
+        " ",
+        ">",
+        ">",
+        ">",
+        " ",
+        "call",
+        "(",
+        "(",
+        "arg",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "arg",
+        " ",
+        "||",
+        " ",
+        "0",
+        ")",
+        ";",
+        "\n",
+        "function",
+        " ",
+        "after",
+        "(",
+        "tail",
+        ")",
+        " ",
+        "{",
+        "return",
+        " ",
+        "tail",
+        "?",
+        "1",
+        ":",
+        "0",
+        ";",
+        "}",
+        "\n"
+      ],
+      "actual": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "matched": true
+    },
+    {
+      "kind": "operator-family",
+      "name": "number>>>",
+      "source": "const run = () => value as number >>> call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "suffixes": [
+        "ts",
+        "tsx",
+        "vue"
+      ],
+      "expected": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "suffix": "tsx",
+      "analyzed_source": "const run = () => value as number >>> call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "tokens": [
+        "const",
+        " ",
+        "run",
+        " ",
+        "=",
+        " ",
+        "(",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "value",
+        " ",
+        "as",
+        " ",
+        "number",
+        " ",
+        ">",
+        ">",
+        ">",
+        " ",
+        "call",
+        "(",
+        "(",
+        "arg",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "arg",
+        " ",
+        "||",
+        " ",
+        "0",
+        ")",
+        ";",
+        "\n",
+        "function",
+        " ",
+        "after",
+        "(",
+        "tail",
+        ")",
+        " ",
+        "{",
+        "return",
+        " ",
+        "tail",
+        "?",
+        "1",
+        ":",
+        "0",
+        ";",
+        "}",
+        "\n"
+      ],
+      "actual": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "matched": true
+    },
+    {
+      "kind": "operator-family",
+      "name": "number>>>",
+      "source": "const run = () => value as number >>> call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "suffixes": [
+        "ts",
+        "tsx",
+        "vue"
+      ],
+      "expected": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "suffix": "vue",
+      "analyzed_source": "<script lang=\"ts\">const run = () => value as number >>> call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n</script>",
+      "tokens": [
+        "<script lang=\"ts\">",
+        "const",
+        " ",
+        "run",
+        " ",
+        "=",
+        " ",
+        "(",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "value",
+        " ",
+        "as",
+        " ",
+        "number",
+        " ",
+        ">",
+        ">",
+        ">",
+        " ",
+        "call",
+        "(",
+        "(",
+        "arg",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "arg",
+        " ",
+        "||",
+        " ",
+        "0",
+        ")",
+        ";",
+        "\n",
+        "function",
+        " ",
+        "after",
+        "(",
+        "tail",
+        ")",
+        " ",
+        "{",
+        "return",
+        " ",
+        "tail",
+        "?",
+        "1",
+        ":",
+        "0",
+        ";",
+        "}",
+        "\n",
+        "</script>"
+      ],
+      "actual": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "matched": true
+    },
+    {
+      "kind": "operator-family",
+      "name": "Map<string, number[]>>>>",
+      "source": "const run = () => value as Map<string, number[]> >>> call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "suffixes": [
+        "ts",
+        "tsx",
+        "vue"
+      ],
+      "expected": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "suffix": "ts",
+      "analyzed_source": "const run = () => value as Map<string, number[]> >>> call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "tokens": [
+        "const",
+        " ",
+        "run",
+        " ",
+        "=",
+        " ",
+        "(",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "value",
+        " ",
+        "as",
+        " ",
+        "Map",
+        "<",
+        "string",
+        ",",
+        " ",
+        "number",
+        "[",
+        "]",
+        ">",
+        " ",
+        ">",
+        ">",
+        ">",
+        " ",
+        "call",
+        "(",
+        "(",
+        "arg",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "arg",
+        " ",
+        "||",
+        " ",
+        "0",
+        ")",
+        ";",
+        "\n",
+        "function",
+        " ",
+        "after",
+        "(",
+        "tail",
+        ")",
+        " ",
+        "{",
+        "return",
+        " ",
+        "tail",
+        "?",
+        "1",
+        ":",
+        "0",
+        ";",
+        "}",
+        "\n"
+      ],
+      "actual": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "matched": true
+    },
+    {
+      "kind": "operator-family",
+      "name": "Map<string, number[]>>>>",
+      "source": "const run = () => value as Map<string, number[]> >>> call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "suffixes": [
+        "ts",
+        "tsx",
+        "vue"
+      ],
+      "expected": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "suffix": "tsx",
+      "analyzed_source": "const run = () => value as Map<string, number[]> >>> call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "tokens": [
+        "const",
+        " ",
+        "run",
+        " ",
+        "=",
+        " ",
+        "(",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "value",
+        " ",
+        "as",
+        " ",
+        "Map",
+        "<",
+        "string",
+        ",",
+        " ",
+        "number",
+        "[",
+        "]",
+        ">",
+        " ",
+        ">",
+        ">",
+        ">",
+        " ",
+        "call",
+        "(",
+        "(",
+        "arg",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "arg",
+        " ",
+        "||",
+        " ",
+        "0",
+        ")",
+        ";",
+        "\n",
+        "function",
+        " ",
+        "after",
+        "(",
+        "tail",
+        ")",
+        " ",
+        "{",
+        "return",
+        " ",
+        "tail",
+        "?",
+        "1",
+        ":",
+        "0",
+        ";",
+        "}",
+        "\n"
+      ],
+      "actual": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "matched": true
+    },
+    {
+      "kind": "operator-family",
+      "name": "Map<string, number[]>>>>",
+      "source": "const run = () => value as Map<string, number[]> >>> call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "suffixes": [
+        "ts",
+        "tsx",
+        "vue"
+      ],
+      "expected": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "suffix": "vue",
+      "analyzed_source": "<script lang=\"ts\">const run = () => value as Map<string, number[]> >>> call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n</script>",
+      "tokens": [
+        "<script lang=\"ts\">",
+        "const",
+        " ",
+        "run",
+        " ",
+        "=",
+        " ",
+        "(",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "value",
+        " ",
+        "as",
+        " ",
+        "Map",
+        "<string, number[]>",
+        " ",
+        ">",
+        ">",
+        ">",
+        " ",
+        "call",
+        "(",
+        "(",
+        "arg",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "arg",
+        " ",
+        "||",
+        " ",
+        "0",
+        ")",
+        ";",
+        "\n",
+        "function",
+        " ",
+        "after",
+        "(",
+        "tail",
+        ")",
+        " ",
+        "{",
+        "return",
+        " ",
+        "tail",
+        "?",
+        "1",
+        ":",
+        "0",
+        ";",
+        "}",
+        "\n",
+        "</script>"
+      ],
+      "actual": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "matched": true
+    },
+    {
+      "kind": "operator-family",
+      "name": "number<<",
+      "source": "const run = () => value as number << call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "suffixes": [
+        "ts",
+        "tsx",
+        "vue"
+      ],
+      "expected": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "suffix": "ts",
+      "analyzed_source": "const run = () => value as number << call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "tokens": [
+        "const",
+        " ",
+        "run",
+        " ",
+        "=",
+        " ",
+        "(",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "value",
+        " ",
+        "as",
+        " ",
+        "number",
+        " ",
+        "<",
+        "<",
+        " ",
+        "call",
+        "(",
+        "(",
+        "arg",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "arg",
+        " ",
+        "||",
+        " ",
+        "0",
+        ")",
+        ";",
+        "\n",
+        "function",
+        " ",
+        "after",
+        "(",
+        "tail",
+        ")",
+        " ",
+        "{",
+        "return",
+        " ",
+        "tail",
+        "?",
+        "1",
+        ":",
+        "0",
+        ";",
+        "}",
+        "\n"
+      ],
+      "actual": [
+        [
+          "run",
+          3,
+          1,
+          2,
+          []
+        ]
+      ],
+      "matched": false
+    },
+    {
+      "kind": "operator-family",
+      "name": "number<<",
+      "source": "const run = () => value as number << call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "suffixes": [
+        "ts",
+        "tsx",
+        "vue"
+      ],
+      "expected": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "suffix": "tsx",
+      "analyzed_source": "const run = () => value as number << call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "tokens": [
+        "const",
+        " ",
+        "run",
+        " ",
+        "=",
+        " ",
+        "(",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "value",
+        " ",
+        "as",
+        " ",
+        "number",
+        " ",
+        "<",
+        "<",
+        " ",
+        "call",
+        "(",
+        "(",
+        "arg",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "arg",
+        " ",
+        "||",
+        " ",
+        "0",
+        ")",
+        ";",
+        "\n",
+        "function",
+        " ",
+        "after",
+        "(",
+        "tail",
+        ")",
+        " ",
+        "{",
+        "return",
+        " ",
+        "tail",
+        "?",
+        "1",
+        ":",
+        "0",
+        ";",
+        "}",
+        "\n"
+      ],
+      "actual": [
+        [
+          "run",
+          3,
+          1,
+          2,
+          []
+        ]
+      ],
+      "matched": false
+    },
+    {
+      "kind": "operator-family",
+      "name": "number<<",
+      "source": "const run = () => value as number << call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "suffixes": [
+        "ts",
+        "tsx",
+        "vue"
+      ],
+      "expected": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "suffix": "vue",
+      "analyzed_source": "<script lang=\"ts\">const run = () => value as number << call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n</script>",
+      "tokens": [
+        "<script lang=\"ts\">",
+        "const",
+        " ",
+        "run",
+        " ",
+        "=",
+        " ",
+        "(",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "value",
+        " ",
+        "as",
+        " ",
+        "number",
+        " ",
+        "<",
+        "<",
+        " ",
+        "call",
+        "(",
+        "(",
+        "arg",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "arg",
+        " ",
+        "||",
+        " ",
+        "0",
+        ")",
+        ";",
+        "\n",
+        "function",
+        " ",
+        "after",
+        "(",
+        "tail",
+        ")",
+        " ",
+        "{",
+        "return",
+        " ",
+        "tail",
+        "?",
+        "1",
+        ":",
+        "0",
+        ";",
+        "}",
+        "\n",
+        "</script>"
+      ],
+      "actual": [
+        [
+          "run",
+          3,
+          1,
+          2,
+          []
+        ]
+      ],
+      "matched": false
+    },
+    {
+      "kind": "operator-family",
+      "name": "Map<string, number[]><<",
+      "source": "const run = () => value as Map<string, number[]> << call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "suffixes": [
+        "ts",
+        "tsx",
+        "vue"
+      ],
+      "expected": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "suffix": "ts",
+      "analyzed_source": "const run = () => value as Map<string, number[]> << call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "tokens": [
+        "const",
+        " ",
+        "run",
+        " ",
+        "=",
+        " ",
+        "(",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "value",
+        " ",
+        "as",
+        " ",
+        "Map",
+        "<",
+        "string",
+        ",",
+        " ",
+        "number",
+        "[",
+        "]",
+        ">",
+        " ",
+        "<",
+        "<",
+        " ",
+        "call",
+        "(",
+        "(",
+        "arg",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "arg",
+        " ",
+        "||",
+        " ",
+        "0",
+        ")",
+        ";",
+        "\n",
+        "function",
+        " ",
+        "after",
+        "(",
+        "tail",
+        ")",
+        " ",
+        "{",
+        "return",
+        " ",
+        "tail",
+        "?",
+        "1",
+        ":",
+        "0",
+        ";",
+        "}",
+        "\n"
+      ],
+      "actual": [
+        [
+          "run",
+          3,
+          1,
+          2,
+          []
+        ]
+      ],
+      "matched": false
+    },
+    {
+      "kind": "operator-family",
+      "name": "Map<string, number[]><<",
+      "source": "const run = () => value as Map<string, number[]> << call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "suffixes": [
+        "ts",
+        "tsx",
+        "vue"
+      ],
+      "expected": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "suffix": "tsx",
+      "analyzed_source": "const run = () => value as Map<string, number[]> << call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "tokens": [
+        "const",
+        " ",
+        "run",
+        " ",
+        "=",
+        " ",
+        "(",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "value",
+        " ",
+        "as",
+        " ",
+        "Map",
+        "<",
+        "string",
+        ",",
+        " ",
+        "number",
+        "[",
+        "]",
+        ">",
+        " ",
+        "<",
+        "<",
+        " ",
+        "call",
+        "(",
+        "(",
+        "arg",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "arg",
+        " ",
+        "||",
+        " ",
+        "0",
+        ")",
+        ";",
+        "\n",
+        "function",
+        " ",
+        "after",
+        "(",
+        "tail",
+        ")",
+        " ",
+        "{",
+        "return",
+        " ",
+        "tail",
+        "?",
+        "1",
+        ":",
+        "0",
+        ";",
+        "}",
+        "\n"
+      ],
+      "actual": [
+        [
+          "run",
+          3,
+          1,
+          2,
+          []
+        ]
+      ],
+      "matched": false
+    },
+    {
+      "kind": "operator-family",
+      "name": "Map<string, number[]><<",
+      "source": "const run = () => value as Map<string, number[]> << call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+      "suffixes": [
+        "ts",
+        "tsx",
+        "vue"
+      ],
+      "expected": [
+        [
+          "(anonymous)",
+          2,
+          1,
+          1,
+          [
+            "arg"
+          ]
+        ],
+        [
+          "run",
+          1,
+          1,
+          1,
+          []
+        ],
+        [
+          "after",
+          2,
+          2,
+          2,
+          [
+            "tail"
+          ]
+        ]
+      ],
+      "suffix": "vue",
+      "analyzed_source": "<script lang=\"ts\">const run = () => value as Map<string, number[]> << call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n</script>",
+      "tokens": [
+        "<script lang=\"ts\">",
+        "const",
+        " ",
+        "run",
+        " ",
+        "=",
+        " ",
+        "(",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "value",
+        " ",
+        "as",
+        " ",
+        "Map",
+        "<string, number[]>",
+        " ",
+        "<",
+        "<",
+        " ",
+        "call",
+        "(",
+        "(",
+        "arg",
+        ")",
+        " ",
+        "=>",
+        " ",
+        "arg",
+        " ",
+        "||",
+        " ",
+        "0",
+        ")",
+        ";",
+        "\n",
+        "function",
+        " ",
+        "after",
+        "(",
+        "tail",
+        ")",
+        " ",
+        "{",
+        "return",
+        " ",
+        "tail",
+        "?",
+        "1",
+        ":",
+        "0",
+        ";",
+        "}",
+        "\n",
+        "</script>"
+      ],
+      "actual": [
+        [
+          "run",
+          3,
+          1,
+          2,
+          []
+        ]
+      ],
+      "matched": false
+    }
+  ],
+  "matched": 12,
+  "total": 36,
+  "exit_code": 0
+}

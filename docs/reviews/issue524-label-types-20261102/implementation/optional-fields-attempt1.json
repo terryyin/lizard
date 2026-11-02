@@ -1,0 +1,12 @@
+{
+  "command": "PIP_QUIET=3 nix develop -c python -m pytest test/test_languages/testTypeScriptAnnotationBoundaries.py -q",
+  "exit_code": 0,
+  "hashes": {
+    "lizard_languages/typescript_signatures.py": "a36101fb19d18ab86c0877972a387d1d829372e0cc156b3440b18fece67908a9",
+    "lizard_languages/javascript_objects.py": "4a0c0a8081cc83cf3720b6e60a3cc2232f82d34558e0a45faf2500c7604c2300",
+    "lizard_languages/typescript_states.py": "9ec29c64d7d9362eec004ffc2ffb77fb5d6e57849981973601e81422ff9781b8",
+    "test/test_languages/testTypeScriptAnnotationBoundaries.py": "c6ead8eaf13c56e0d4502cd0da50211624018ff96ddcfc3cecda3b7ff669979c"
+  },
+  "stdout": "........................................................................ [ 41%]\n........................................................................ [ 83%]\n.............................                                            [100%]\n173 passed in 0.48s\n",
+  "stderr": ""
+}

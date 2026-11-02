@@ -1,0 +1,168 @@
+[
+  {
+    "label": "current-calls-api-parameters",
+    "report": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/evidence/performance4/current-calls-api-parameters.json",
+    "reused": true,
+    "paired_95pct_ci": [
+      1.3458840000753731,
+      2.7992221229942627
+    ],
+    "passes": true
+  },
+  {
+    "label": "current-labels-api-parameters",
+    "report": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/evidence/performance4/current-labels-api-parameters.json",
+    "reused": true,
+    "paired_95pct_ci": [
+      -3.309906125538896,
+      -1.6282274744974605
+    ],
+    "passes": true
+  },
+  {
+    "label": "current-annotations-api-parameters",
+    "report": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/evidence/performance4/current-annotations-api-parameters.json",
+    "reused": true,
+    "paired_95pct_ci": [
+      -1.6749645406727094,
+      0.2549722745386266
+    ],
+    "passes": true
+  },
+  {
+    "label": "current-complete-api-parameters",
+    "report": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/evidence/performance4/current-complete-api-parameters.json",
+    "reused": true,
+    "paired_95pct_ci": [
+      -0.44079482944699894,
+      1.4179862066050288
+    ],
+    "passes": true
+  },
+  {
+    "label": "current-calls-ns",
+    "report": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/evidence/performance5/current-calls-ns-pooled.json",
+    "paired_95pct_ci": [
+      -0.015275647144962835,
+      0.8488168261979949
+    ],
+    "passes": true
+  },
+  {
+    "label": "current-labels-ns",
+    "report": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/evidence/performance5/current-labels-ns.json",
+    "passes": true,
+    "paired_95pct_ci": [
+      -2.5272786874895474,
+      -1.1815987630214908
+    ]
+  },
+  {
+    "label": "current-annotations-ns",
+    "report": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/evidence/performance5/current-annotations-ns.json",
+    "passes": true,
+    "paired_95pct_ci": [
+      -0.4886485927333885,
+      2.028786227109074
+    ]
+  },
+  {
+    "label": "current-complete-ns",
+    "report": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/evidence/performance5/current-complete-ns.json",
+    "passes": true,
+    "paired_95pct_ci": [
+      -3.7951907407357397,
+      -2.0335277878980222
+    ]
+  },
+  {
+    "label": "current-broad-cli",
+    "report": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/evidence/performance5/current-broad-cli.json",
+    "passes": true,
+    "paired_95pct_ci": [
+      -0.6575293461342094,
+      0.9436281986660716
+    ]
+  },
+  {
+    "label": "cumulative-calls-api-parameters",
+    "report": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/evidence/performance5/cumulative-calls-api-parameters.json",
+    "passes": true,
+    "paired_95pct_ci": [
+      -0.6769781778756642,
+      0.5651392755493205
+    ]
+  },
+  {
+    "label": "cumulative-labels-api-parameters",
+    "report": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/evidence/performance5/cumulative-labels-api-parameters.json",
+    "passes": true,
+    "paired_95pct_ci": [
+      -3.379608342895425,
+      -2.00191004288369
+    ]
+  },
+  {
+    "label": "cumulative-annotations-api-parameters",
+    "report": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/evidence/performance5/cumulative-annotations-api-parameters.json",
+    "passes": true,
+    "paired_95pct_ci": [
+      -2.342741080735824,
+      -0.5901852394555772
+    ]
+  },
+  {
+    "label": "cumulative-complete-api-parameters",
+    "report": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/evidence/performance5/cumulative-complete-api-parameters.json",
+    "passes": true,
+    "paired_95pct_ci": [
+      -4.545024107698366,
+      -2.7395439986152446
+    ]
+  },
+  {
+    "label": "cumulative-calls-ns",
+    "report": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/evidence/performance5/cumulative-calls-ns.json",
+    "passes": true,
+    "paired_95pct_ci": [
+      -0.065334421031168,
+      1.2666382025335217
+    ]
+  },
+  {
+    "label": "cumulative-labels-ns",
+    "report": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/evidence/performance5/cumulative-labels-ns.json",
+    "passes": true,
+    "paired_95pct_ci": [
+      -2.0127935428280783,
+      -0.18375216785714962
+    ]
+  },
+  {
+    "label": "cumulative-annotations-ns",
+    "report": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/evidence/performance5/cumulative-annotations-ns.json",
+    "passes": true,
+    "paired_95pct_ci": [
+      -0.2470796064680546,
+      1.2100315584347097
+    ]
+  },
+  {
+    "label": "cumulative-complete-ns",
+    "report": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/evidence/performance5/cumulative-complete-ns.json",
+    "passes": true,
+    "paired_95pct_ci": [
+      -3.4180325799743256,
+      -1.7658108865727402
+    ]
+  },
+  {
+    "label": "cumulative-broad-cli",
+    "report": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/evidence/performance5/cumulative-broad-cli.json",
+    "passes": true,
+    "paired_95pct_ci": [
+      -0.5485507301856677,
+      1.670519656945578
+    ]
+  }
+]

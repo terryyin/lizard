@@ -1,0 +1,14 @@
+{
+  "command": [
+    "node",
+    ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+    "check",
+    "--plan",
+    ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+    "--slice",
+    "1"
+  ],
+  "exit": 1,
+  "stdout": "{\"ok\":false,\"entryCount\":18,\"commitmentCount\":80,\"problems\":[{\"entry\":\"G15\",\"reason\":\"no-disposition\",\"field\":\"Disposition\"}]}\n",
+  "stderr": ""
+}

@@ -1,0 +1,446 @@
+[
+  {
+    "kind": "operator-family",
+    "name": "numberinstanceof",
+    "source": "const run = () => value as number instanceof call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+    "suffixes": [
+      "ts",
+      "tsx",
+      "vue"
+    ],
+    "expected": [
+      [
+        "(anonymous)",
+        2,
+        1,
+        1,
+        [
+          "arg"
+        ]
+      ],
+      [
+        "run",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "kind": "operator-family",
+    "name": "Map<string, number[]>instanceof",
+    "source": "const run = () => value as Map<string, number[]> instanceof call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+    "suffixes": [
+      "ts",
+      "tsx",
+      "vue"
+    ],
+    "expected": [
+      [
+        "(anonymous)",
+        2,
+        1,
+        1,
+        [
+          "arg"
+        ]
+      ],
+      [
+        "run",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "kind": "operator-family",
+    "name": "numberin",
+    "source": "const run = () => value as number in call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+    "suffixes": [
+      "ts",
+      "tsx",
+      "vue"
+    ],
+    "expected": [
+      [
+        "(anonymous)",
+        2,
+        1,
+        1,
+        [
+          "arg"
+        ]
+      ],
+      [
+        "run",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "kind": "operator-family",
+    "name": "Map<string, number[]>in",
+    "source": "const run = () => value as Map<string, number[]> in call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+    "suffixes": [
+      "ts",
+      "tsx",
+      "vue"
+    ],
+    "expected": [
+      [
+        "(anonymous)",
+        2,
+        1,
+        1,
+        [
+          "arg"
+        ]
+      ],
+      [
+        "run",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "kind": "operator-family",
+    "name": "number^",
+    "source": "const run = () => value as number ^ call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+    "suffixes": [
+      "ts",
+      "tsx",
+      "vue"
+    ],
+    "expected": [
+      [
+        "(anonymous)",
+        2,
+        1,
+        1,
+        [
+          "arg"
+        ]
+      ],
+      [
+        "run",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "kind": "operator-family",
+    "name": "Map<string, number[]>^",
+    "source": "const run = () => value as Map<string, number[]> ^ call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+    "suffixes": [
+      "ts",
+      "tsx",
+      "vue"
+    ],
+    "expected": [
+      [
+        "(anonymous)",
+        2,
+        1,
+        1,
+        [
+          "arg"
+        ]
+      ],
+      [
+        "run",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "kind": "operator-family",
+    "name": "number>>",
+    "source": "const run = () => value as number >> call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+    "suffixes": [
+      "ts",
+      "tsx",
+      "vue"
+    ],
+    "expected": [
+      [
+        "(anonymous)",
+        2,
+        1,
+        1,
+        [
+          "arg"
+        ]
+      ],
+      [
+        "run",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "kind": "operator-family",
+    "name": "Map<string, number[]>>>",
+    "source": "const run = () => value as Map<string, number[]> >> call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+    "suffixes": [
+      "ts",
+      "tsx",
+      "vue"
+    ],
+    "expected": [
+      [
+        "(anonymous)",
+        2,
+        1,
+        1,
+        [
+          "arg"
+        ]
+      ],
+      [
+        "run",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "kind": "operator-family",
+    "name": "number>>>",
+    "source": "const run = () => value as number >>> call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+    "suffixes": [
+      "ts",
+      "tsx",
+      "vue"
+    ],
+    "expected": [
+      [
+        "(anonymous)",
+        2,
+        1,
+        1,
+        [
+          "arg"
+        ]
+      ],
+      [
+        "run",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "kind": "operator-family",
+    "name": "Map<string, number[]>>>>",
+    "source": "const run = () => value as Map<string, number[]> >>> call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+    "suffixes": [
+      "ts",
+      "tsx",
+      "vue"
+    ],
+    "expected": [
+      [
+        "(anonymous)",
+        2,
+        1,
+        1,
+        [
+          "arg"
+        ]
+      ],
+      [
+        "run",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "kind": "operator-family",
+    "name": "number<<",
+    "source": "const run = () => value as number << call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+    "suffixes": [
+      "ts",
+      "tsx",
+      "vue"
+    ],
+    "expected": [
+      [
+        "(anonymous)",
+        2,
+        1,
+        1,
+        [
+          "arg"
+        ]
+      ],
+      [
+        "run",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  },
+  {
+    "kind": "operator-family",
+    "name": "Map<string, number[]><<",
+    "source": "const run = () => value as Map<string, number[]> << call((arg) => arg || 0);\nfunction after(tail) {return tail?1:0;}\n",
+    "suffixes": [
+      "ts",
+      "tsx",
+      "vue"
+    ],
+    "expected": [
+      [
+        "(anonymous)",
+        2,
+        1,
+        1,
+        [
+          "arg"
+        ]
+      ],
+      [
+        "run",
+        1,
+        1,
+        1,
+        []
+      ],
+      [
+        "after",
+        2,
+        2,
+        2,
+        [
+          "tail"
+        ]
+      ]
+    ]
+  }
+]

@@ -1,0 +1,342 @@
+[
+  {
+    "id": "C01",
+    "text": "Function retention: Retain every runtime function affected by labeled blocks sharing enclosing brackets.",
+    "slice": 1
+  },
+  {
+    "id": "C02",
+    "text": "Metric retention: Retain those functions’ metrics.",
+    "slice": 1
+  },
+  {
+    "id": "C03",
+    "text": "Annotation function retention: Retain every runtime function affected by type annotations sharing enclosing brackets.",
+    "slice": 1
+  },
+  {
+    "id": "C04",
+    "text": "Annotation metric retention: Retain those functions’ metrics.",
+    "slice": 1
+  },
+  {
+    "id": "C05",
+    "text": "Ownership: Correct the distinction between runtime-label ownership and type-annotation ownership.",
+    "slice": 1
+  },
+  {
+    "id": "C06",
+    "text": "Termination: Correct annotation termination at enclosing runtime delimiters.",
+    "slice": 1
+  },
+  {
+    "id": "C07",
+    "text": "Replay: Correct replay of enclosing runtime delimiters to their runtime reader.",
+    "slice": 1
+  },
+  {
+    "id": "C08",
+    "text": "Field investigation: Investigate related function-type class-field cases.",
+    "slice": 1
+  },
+  {
+    "id": "C09",
+    "text": "Assertion investigation: Investigate related object-type assertion cases.",
+    "slice": 1
+  },
+  {
+    "id": "C10",
+    "text": "Related corrections: Correct confirmed failures within the same ownership concept.",
+    "slice": 1
+  },
+  {
+    "id": "C11",
+    "text": "Label interpretation: Treat a runtime labeled statement as runtime syntax.",
+    "slice": 1
+  },
+  {
+    "id": "C12",
+    "text": "Label continuation: Preserve later decisions within the labeled runtime block.",
+    "slice": 1
+  },
+  {
+    "id": "C13",
+    "text": "Statement continuation: Preserve later statements within that block.",
+    "slice": 1
+  },
+  {
+    "id": "C14",
+    "text": "Runtime closure: Close the block at its actual runtime brace.",
+    "slice": 1
+  },
+  {
+    "id": "C15",
+    "text": "Brace boundary: Prevent annotations from swallowing an unmatched enclosing-runtime `}`.",
+    "slice": 1
+  },
+  {
+    "id": "C16",
+    "text": "Bracket boundary: Prevent annotations from swallowing an unmatched enclosing-runtime `]`.",
+    "slice": 1
+  },
+  {
+    "id": "C17",
+    "text": "Comma boundary: Prevent annotations from swallowing an unmatched enclosing-runtime `,`.",
+    "slice": 1
+  },
+  {
+    "id": "C18",
+    "text": "Type brackets: Preserve legitimate nested type brackets.",
+    "slice": 1
+  },
+  {
+    "id": "C19",
+    "text": "Type commas: Preserve legitimate nested type commas.",
+    "slice": 1
+  },
+  {
+    "id": "C20",
+    "text": "Type arrows: Preserve legitimate function-type arrows.",
+    "slice": 1
+  },
+  {
+    "id": "C21",
+    "text": "Signatures: Preserve valid signatures.",
+    "slice": 1
+  },
+  {
+    "id": "C22",
+    "text": "Defaults: Preserve valid defaults.",
+    "slice": 1
+  },
+  {
+    "id": "C23",
+    "text": "Ternaries: Preserve valid ternaries.",
+    "slice": 1
+  },
+  {
+    "id": "C24",
+    "text": "Templates: Preserve valid templates.",
+    "slice": 1
+  },
+  {
+    "id": "C25",
+    "text": "Extension metrics: Preserve established extension metrics.",
+    "slice": 1
+  },
+  {
+    "id": "C26",
+    "text": "CLI output: Preserve established CLI output.",
+    "slice": 1
+  },
+  {
+    "id": "C27",
+    "text": "Earlier fixes: Preserve all previously fixed #524 examples.",
+    "slice": 1
+  },
+  {
+    "id": "C28",
+    "text": "Original examples: Preserve established behavior for the six original issue examples.",
+    "slice": 1
+  },
+  {
+    "id": "C29",
+    "text": "Authored PR examples: Preserve established behavior for all eleven authored PR #525 examples.",
+    "slice": 1
+  },
+  {
+    "id": "C30",
+    "text": "Suffixes: Preserve established behavior across the seven JS-family suffixes.",
+    "slice": 1
+  },
+  {
+    "id": "C31",
+    "text": "NS: Preserve established NS behavior.",
+    "slice": 1
+  },
+  {
+    "id": "C32",
+    "text": "Nonstrict: Preserve established nonstrict behavior.",
+    "slice": 1
+  },
+  {
+    "id": "C33",
+    "text": "CSV: Preserve established CSV-consumer behavior.",
+    "slice": 1
+  },
+  {
+    "id": "C34",
+    "text": "Output option: Preserve established `-o`-consumer behavior.",
+    "slice": 1
+  },
+  {
+    "id": "C35",
+    "text": "HTTP: Preserve established HTTP-consumer behavior.",
+    "slice": 1
+  },
+  {
+    "id": "C36",
+    "text": "Regression proof: Add discriminating regression tests.",
+    "slice": 1
+  },
+  {
+    "id": "C37",
+    "text": "Refactoring: Independently refactor the aggregate change.",
+    "slice": 1
+  },
+  {
+    "id": "C38",
+    "text": "API performance: Qualify affected API consumers.",
+    "slice": 1
+  },
+  {
+    "id": "C39",
+    "text": "Parameter performance: Qualify affected parameter consumers.",
+    "slice": 1
+  },
+  {
+    "id": "C40",
+    "text": "Extension performance: Qualify affected extension consumers.",
+    "slice": 1
+  },
+  {
+    "id": "C41",
+    "text": "CLI performance: Qualify broad CLI performance.",
+    "slice": 1
+  },
+  {
+    "id": "C42",
+    "text": "Pytest: Run the full pytest suite successfully.",
+    "slice": 1
+  },
+  {
+    "id": "C43",
+    "text": "Make: Run the full make checks successfully.",
+    "slice": 1
+  },
+  {
+    "id": "C49",
+    "text": "Observation retention: Retain failed observations.",
+    "slice": 1
+  },
+  {
+    "id": "C50",
+    "text": "Timing retention: Retain immutable timing inputs.",
+    "slice": 1
+  },
+  {
+    "id": "C51",
+    "text": "Public meanings: Preserve public metric meanings.",
+    "slice": 1
+  },
+  {
+    "id": "C52",
+    "text": "Working tree: Preserve unrelated working-tree changes.",
+    "slice": 1
+  },
+  {
+    "id": "Q01",
+    "text": "Performance threshold: Each required performance qualification must satisfy a strict paired 95% upper slowdown bound below 3%; equality does not satisfy “below.”",
+    "slice": 1
+  },
+  {
+    "id": "Q02",
+    "text": "Related-case scope: Field/assertion corrections are conditional on confirming failures that exercise the same ownership responsibility.",
+    "slice": 1
+  },
+  {
+    "id": "Q03",
+    "text": "Ownership uncertainty: Determine the smallest existing reader/signature owners that distinguish runtime labels and own nested type syntax.",
+    "slice": 1
+  },
+  {
+    "id": "Q04",
+    "text": "Investigation order: Confirm the exact related field/assertion failures before choosing their implementation.",
+    "slice": 1
+  },
+  {
+    "id": "Q07",
+    "text": "Authority: The human explicitly authorizes implementation.",
+    "slice": 1
+  },
+  {
+    "id": "Q08",
+    "text": "Publication authority: The human explicitly authorizes publication.",
+    "slice": 1
+  },
+  {
+    "id": "T01",
+    "text": "Minimal labeled-block example: `const x = [() => { a: 1 }];` must report one anonymous function.",
+    "slice": 1
+  },
+  {
+    "id": "T02",
+    "text": "Minimal-example location: That function must be reported at line 1.",
+    "slice": 1
+  },
+  {
+    "id": "T03",
+    "text": "Reference behavior: The minimal example must match the stated 1.24.1 behavior; the source reports zero functions on master `da29d5d`.",
+    "slice": 1
+  },
+  {
+    "id": "T04",
+    "text": "Successor name: A following function retains its own name.",
+    "slice": 1
+  },
+  {
+    "id": "T05",
+    "text": "Successor formals: A following function retains its own formals.",
+    "slice": 1
+  },
+  {
+    "id": "T06",
+    "text": "Successor span: A following function retains its own span.",
+    "slice": 1
+  },
+  {
+    "id": "T07",
+    "text": "Successor complexity: A following function retains its own CCN.",
+    "slice": 1
+  },
+  {
+    "id": "T08",
+    "text": "Field-to-constructor journey: A function-type class field preserves a following constructor when it exercises the shared ownership responsibility.",
+    "slice": 1
+  },
+  {
+    "id": "T09",
+    "text": "Field-to-method journey: A function-type class field preserves a following method under that qualification.",
+    "slice": 1
+  },
+  {
+    "id": "T10",
+    "text": "Assertion-to-arrow journey: An object-type assertion preserves expression-arrow boundaries under that qualification.",
+    "slice": 1
+  },
+  {
+    "id": "T11",
+    "text": "Assertion-to-successor journey: An object-type assertion preserves successor boundaries under that qualification.",
+    "slice": 1
+  },
+  {
+    "id": "T12",
+    "text": "Example reach: These examples demonstrate required behavior; they do not restrict the promise to only those spellings, delimiters, or successor forms.",
+    "slice": 1
+  },
+  {
+    "id": "X01",
+    "text": "Counter exclusion: Do not introduce a parallel runtime bracket counter.",
+    "slice": 1
+  },
+  {
+    "id": "X02",
+    "text": "Buffer exclusion: Do not introduce a whole-stream buffer.",
+    "slice": 1
+  },
+  {
+    "id": "X03",
+    "text": "Switch exclusion: Do not introduce an issue-specific switch.",
+    "slice": 1
+  }
+]

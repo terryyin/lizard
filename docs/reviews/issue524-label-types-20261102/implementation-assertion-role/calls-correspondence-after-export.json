@@ -1,0 +1,10 @@
+{
+  "command": "PIP_QUIET=3 nix develop -c python -I /Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/implementation-cost/observe_calls.py --checkout /Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types --corpus /Users/terryyin/.cache/issue524-label-types-20261102/calls --out /Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/implementation-assertion-role/calls-after-export.json",
+  "exit_code": 0,
+  "stdout": "{\"out\": \"/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/implementation-assertion-role/calls-after-export.json\", \"source_count\": 40, \"analysis_count\": 80, \"dispatch_counts\": {\"javascript_objects.py:_handle_object_member\": 864, \"javascript_objects.py:_typed_class_member\": 60, \"javascript_objects.py:callback\": 120, \"javascript_objects.py:optional_member_context\": 60, \"javascript_objects.py:read_object\": 120, \"typescript.py:__call__\": 6132, \"typescript.py:__init__\": 120, \"typescript.py:code_tokens\": 60, \"typescript.py:generate_tokens\": 4054, \"typescript.py:preprocess\": 3656, \"typescript.py:process_token\": 2556, \"typescript_states.py:__call__\": 4608, \"typescript_states.py:__init__\": 600, \"typescript_states.py:_end_statement\": 272, \"typescript_states.py:_replay_token\": 416, \"typescript_states.py:_state_global\": 2824, \"typescript_states.py:next\": 1416, \"typescript_states.py:statemachine_before_return\": 600}}\n",
+  "stderr": "",
+  "same_frozen40_hashes": true,
+  "same80_default_NS_records": true,
+  "same_dispatch_counts": true,
+  "timing": false
+}

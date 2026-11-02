@@ -1,0 +1,50 @@
+{
+  "refactor_only": "Two import statements now refer directly to the already extracted annotation owner.",
+  "changed_paths": {
+    "lizard_languages/typescript.py": {
+      "line": 11,
+      "before_sha256": "32b8fcd231e51fb8ceb878500b587d200506164b3cfdc767fa646ea976ceb7324",
+      "after_sha256": "8a2b408b471810da54b2d999ce652866e6b7ec3489a61f8bed73cfdc9857d7f7"
+    },
+    "lizard_languages/typescript_signatures.py": {
+      "line": 5,
+      "before_sha256": "a36101fb19d18ab86c0877972a387d1d829372e0cc156b3440b18fece67908a9",
+      "after_sha256": "daec9731184e1b4e9be3ab7d741d70586dca7b94f1f9c7a53bae595c78d93702"
+    }
+  },
+  "unchanged_accepted_paths_at_refactor_nix_release": 8,
+  "post_release_root_change": {
+    "path": "lizard_languages/typescript_declarations.py",
+    "line": 24,
+    "reported_edit": "Root mechanically added one continuation-alignment space to correct pycodestyle E128; no AST change.",
+    "manifest_scope": "This agent's manifest and focused proof record the pre-format import bytes at Nix release. Root owns the final aggregate hash and post-format make proof.",
+    "semantic_setup_and_assertion_correspondence": "unchanged"
+  },
+  "changed_parser_logic": false,
+  "changed_fixture_sources_or_assertions": false,
+  "removed_signature_fallback_still_absent": true,
+  "all_historic_annotation_import_paths_same_class": "import-provenance.json",
+  "replaced_incoming_proof": {
+    "languages-complete-owner-final.json": "languages-after-refactor.json:1097 passed,5 skipped",
+    "consumers-complete-owner-final.json": "consumers-after-refactor.json:699 passed,2 skipped",
+    "outputs-complete-owner-final.json": "outputs-after-refactor.json:64 passed"
+  },
+  "reused_unchanged_proof": [
+    "../implementation/optional-fields-extra-consumers.json:44 passed",
+    "../implementation/lexical-consumers-final.json:24 passed",
+    "../implementation/extra-consumers-green.json:1022 passed",
+    "../implementation/fixture-capture.json:200 passed"
+  ],
+  "source_edges": "source-edge-correspondence.json:8 inspected existing source edges; unchanged behavior and assertion locations",
+  "consumer_trace": "consumer-dispositions.json:719 paths,59 run,113 reused,547 excluded with path-specific retained reasons",
+  "deferred_required_owner": "root",
+  "deferred_required": [
+    "full pytest and make",
+    "applicable style/hook checks",
+    "frozen strict paired 95% upper slowdown below 3% matrix",
+    "current-trunk reconciliation",
+    "applicable exact-head hosted CI",
+    "authorized publication, merge and issue summary/closure"
+  ],
+  "release": "Nix ownership explicitly released after focused proof; no further Nix/product/test edits by this agent, no running owned commands."
+}

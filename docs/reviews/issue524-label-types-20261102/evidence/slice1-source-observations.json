@@ -1,0 +1,1158 @@
+[
+  {
+    "commitment": "C01",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C01",
+      "--observed",
+      "test/test_languages/testTypeScriptAnnotationBoundaries.py:15-32; actual labels, later decisions, callback/successor tuples, NLOC/tokens; local5 current full checks"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C01\",\"text\":\"Function retention: Retain every runtime function affected by labeled blocks sharing enclosing brackets.\",\"slice\":1,\"observed\":\"test/test_languages/testTypeScriptAnnotationBoundaries.py:15-32; actual labels, later decisions, callback/successor tuples, NLOC/tokens; local5 current full checks\"},\"reviewDigest\":\"7ca44cf18d781a953cc968541eea085313599857ccf44780563bfbd6f10823b4\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C02",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C02",
+      "--observed",
+      "test/test_languages/testTypeScriptAnnotationBoundaries.py:15-32; actual labels, later decisions, callback/successor tuples, NLOC/tokens; local5 current full checks"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C02\",\"text\":\"Metric retention: Retain those functions\u2019 metrics.\",\"slice\":1,\"observed\":\"test/test_languages/testTypeScriptAnnotationBoundaries.py:15-32; actual labels, later decisions, callback/successor tuples, NLOC/tokens; local5 current full checks\"},\"reviewDigest\":\"dd0154990036e3761a4408dd4d6b1443755ebc62057349faa58163a06641ef27\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C11",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C11",
+      "--observed",
+      "test/test_languages/testTypeScriptAnnotationBoundaries.py:15-32; actual labels, later decisions, callback/successor tuples, NLOC/tokens; local5 current full checks"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C11\",\"text\":\"Label interpretation: Treat a runtime labeled statement as runtime syntax.\",\"slice\":1,\"observed\":\"test/test_languages/testTypeScriptAnnotationBoundaries.py:15-32; actual labels, later decisions, callback/successor tuples, NLOC/tokens; local5 current full checks\"},\"reviewDigest\":\"09b63f3dee0fbd6c26c7f45e50be69aa6e9d9ae0ca57be245365c644dd4fd8c8\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C12",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C12",
+      "--observed",
+      "test/test_languages/testTypeScriptAnnotationBoundaries.py:15-32; actual labels, later decisions, callback/successor tuples, NLOC/tokens; local5 current full checks"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C12\",\"text\":\"Label continuation: Preserve later decisions within the labeled runtime block.\",\"slice\":1,\"observed\":\"test/test_languages/testTypeScriptAnnotationBoundaries.py:15-32; actual labels, later decisions, callback/successor tuples, NLOC/tokens; local5 current full checks\"},\"reviewDigest\":\"266fec765640a311d85dff2e3f6bce2502e313265ddc24091c75ec6becbbf959\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C13",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C13",
+      "--observed",
+      "test/test_languages/testTypeScriptAnnotationBoundaries.py:15-32; actual labels, later decisions, callback/successor tuples, NLOC/tokens; local5 current full checks"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C13\",\"text\":\"Statement continuation: Preserve later statements within that block.\",\"slice\":1,\"observed\":\"test/test_languages/testTypeScriptAnnotationBoundaries.py:15-32; actual labels, later decisions, callback/successor tuples, NLOC/tokens; local5 current full checks\"},\"reviewDigest\":\"a82e83dc35c84a7facdb41ac8258486aecd3beb142b6fba3e57b29b94c141b0a\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C14",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C14",
+      "--observed",
+      "test/test_languages/testTypeScriptAnnotationBoundaries.py:15-32; actual labels, later decisions, callback/successor tuples, NLOC/tokens; local5 current full checks"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C14\",\"text\":\"Runtime closure: Close the block at its actual runtime brace.\",\"slice\":1,\"observed\":\"test/test_languages/testTypeScriptAnnotationBoundaries.py:15-32; actual labels, later decisions, callback/successor tuples, NLOC/tokens; local5 current full checks\"},\"reviewDigest\":\"e9a5e7689ca5acebf124ee85288e70412fdb16b87214b91705fd5470b83b80d2\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C03",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C03",
+      "--observed",
+      "test/test_languages/testTypeScriptAnnotationBoundaries.py:35-99 and test/test_languages/testTypeScriptAssertionRoles.py:42-77; type-only versus actual field functions, assertion containers, runtime callbacks and exact metrics; retained initial/red/green observations"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C03\",\"text\":\"Annotation function retention: Retain every runtime function affected by type annotations sharing enclosing brackets.\",\"slice\":1,\"observed\":\"test/test_languages/testTypeScriptAnnotationBoundaries.py:35-99 and test/test_languages/testTypeScriptAssertionRoles.py:42-77; type-only versus actual field functions, assertion containers, runtime callbacks and exact metrics; retained initial/red/green observations\"},\"reviewDigest\":\"45d1ef04f2bdeabe8907ccbad163f74c0d7d3da298d6ab5cdd203fd5cec3d450\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C04",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C04",
+      "--observed",
+      "test/test_languages/testTypeScriptAnnotationBoundaries.py:35-99 and test/test_languages/testTypeScriptAssertionRoles.py:42-77; type-only versus actual field functions, assertion containers, runtime callbacks and exact metrics; retained initial/red/green observations"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C04\",\"text\":\"Annotation metric retention: Retain those functions\u2019 metrics.\",\"slice\":1,\"observed\":\"test/test_languages/testTypeScriptAnnotationBoundaries.py:35-99 and test/test_languages/testTypeScriptAssertionRoles.py:42-77; type-only versus actual field functions, assertion containers, runtime callbacks and exact metrics; retained initial/red/green observations\"},\"reviewDigest\":\"418f2125f623f3807c6c58190df33c4a2f9dde922878325b736c993b0d58f623\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C08",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C08",
+      "--observed",
+      "test/test_languages/testTypeScriptAnnotationBoundaries.py:35-99 and test/test_languages/testTypeScriptAssertionRoles.py:42-77; type-only versus actual field functions, assertion containers, runtime callbacks and exact metrics; retained initial/red/green observations"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C08\",\"text\":\"Field investigation: Investigate related function-type class-field cases.\",\"slice\":1,\"observed\":\"test/test_languages/testTypeScriptAnnotationBoundaries.py:35-99 and test/test_languages/testTypeScriptAssertionRoles.py:42-77; type-only versus actual field functions, assertion containers, runtime callbacks and exact metrics; retained initial/red/green observations\"},\"reviewDigest\":\"1595b3c28ba22350b6fb5a426ae637f3cdbaee6207af1ffe0bd6181ac4f5fcde\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C09",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C09",
+      "--observed",
+      "test/test_languages/testTypeScriptAnnotationBoundaries.py:35-99 and test/test_languages/testTypeScriptAssertionRoles.py:42-77; type-only versus actual field functions, assertion containers, runtime callbacks and exact metrics; retained initial/red/green observations"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C09\",\"text\":\"Assertion investigation: Investigate related object-type assertion cases.\",\"slice\":1,\"observed\":\"test/test_languages/testTypeScriptAnnotationBoundaries.py:35-99 and test/test_languages/testTypeScriptAssertionRoles.py:42-77; type-only versus actual field functions, assertion containers, runtime callbacks and exact metrics; retained initial/red/green observations\"},\"reviewDigest\":\"b9013ae7778b44c835446b59e0b1f664bdca94aa36282493d9e30395f7a01588\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C10",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C10",
+      "--observed",
+      "test/test_languages/testTypeScriptAnnotationBoundaries.py:35-99 and test/test_languages/testTypeScriptAssertionRoles.py:42-77; type-only versus actual field functions, assertion containers, runtime callbacks and exact metrics; retained initial/red/green observations"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C10\",\"text\":\"Related corrections: Correct confirmed failures within the same ownership concept.\",\"slice\":1,\"observed\":\"test/test_languages/testTypeScriptAnnotationBoundaries.py:35-99 and test/test_languages/testTypeScriptAssertionRoles.py:42-77; type-only versus actual field functions, assertion containers, runtime callbacks and exact metrics; retained initial/red/green observations\"},\"reviewDigest\":\"f357c51ec1c0c09d75ed01d2484f4d1c0d7492412f330a2d84bb9e8628c19ab8\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C05",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C05",
+      "--observed",
+      "lizard_languages/typescript_declarations.py:20-31,129-138; runtime/class/declaration/operand/newline roles; test/test_languages/testTypeScriptAssertionRoles.py:8-51 actual contextual/genuine assertion controls including export-default"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C05\",\"text\":\"Ownership: Correct the distinction between runtime-label ownership and type-annotation ownership.\",\"slice\":1,\"observed\":\"lizard_languages/typescript_declarations.py:20-31,129-138; runtime/class/declaration/operand/newline roles; test/test_languages/testTypeScriptAssertionRoles.py:8-51 actual contextual/genuine assertion controls including export-default\"},\"reviewDigest\":\"09f287bd4da227dd5cc87d164c238f2de0999e920c18e339d39e4b6fa63a6df8\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C06",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C06",
+      "--observed",
+      "lizard_languages/typescript_type_annotation.py:35-97 and declarations callback/replay; test/test_languages/testTypeScriptAnnotationBoundaries.py:60-74 and test/test_languages/testTypeScriptAssertionRoles.py:54-77 observe runtime array/comma/brace/operator handoff exactly once"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C06\",\"text\":\"Termination: Correct annotation termination at enclosing runtime delimiters.\",\"slice\":1,\"observed\":\"lizard_languages/typescript_type_annotation.py:35-97 and declarations callback/replay; test/test_languages/testTypeScriptAnnotationBoundaries.py:60-74 and test/test_languages/testTypeScriptAssertionRoles.py:54-77 observe runtime array/comma/brace/operator handoff exactly once\"},\"reviewDigest\":\"920e8a51c334259128d64aa1f1f69b380b285c60570e2c9989bfd209f60f7f0e\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C07",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C07",
+      "--observed",
+      "lizard_languages/typescript_type_annotation.py:35-97 and declarations callback/replay; test/test_languages/testTypeScriptAnnotationBoundaries.py:60-74 and test/test_languages/testTypeScriptAssertionRoles.py:54-77 observe runtime array/comma/brace/operator handoff exactly once"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C07\",\"text\":\"Replay: Correct replay of enclosing runtime delimiters to their runtime reader.\",\"slice\":1,\"observed\":\"lizard_languages/typescript_type_annotation.py:35-97 and declarations callback/replay; test/test_languages/testTypeScriptAnnotationBoundaries.py:60-74 and test/test_languages/testTypeScriptAssertionRoles.py:54-77 observe runtime array/comma/brace/operator handoff exactly once\"},\"reviewDigest\":\"a1d93b3796ce51db89037019498e3c4e9ab4d9462304f2a156328e14c0fca491\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C15",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C15",
+      "--observed",
+      "lizard_languages/typescript_type_annotation.py:35-97 and declarations callback/replay; test/test_languages/testTypeScriptAnnotationBoundaries.py:60-74 and test/test_languages/testTypeScriptAssertionRoles.py:54-77 observe runtime array/comma/brace/operator handoff exactly once"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C15\",\"text\":\"Brace boundary: Prevent annotations from swallowing an unmatched enclosing-runtime `}`.\",\"slice\":1,\"observed\":\"lizard_languages/typescript_type_annotation.py:35-97 and declarations callback/replay; test/test_languages/testTypeScriptAnnotationBoundaries.py:60-74 and test/test_languages/testTypeScriptAssertionRoles.py:54-77 observe runtime array/comma/brace/operator handoff exactly once\"},\"reviewDigest\":\"534835c0ed9a485d32c16097e382878cca6f85a516874cea124dd5a48abba0cf\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C16",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C16",
+      "--observed",
+      "lizard_languages/typescript_type_annotation.py:35-97 and declarations callback/replay; test/test_languages/testTypeScriptAnnotationBoundaries.py:60-74 and test/test_languages/testTypeScriptAssertionRoles.py:54-77 observe runtime array/comma/brace/operator handoff exactly once"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C16\",\"text\":\"Bracket boundary: Prevent annotations from swallowing an unmatched enclosing-runtime `]`.\",\"slice\":1,\"observed\":\"lizard_languages/typescript_type_annotation.py:35-97 and declarations callback/replay; test/test_languages/testTypeScriptAnnotationBoundaries.py:60-74 and test/test_languages/testTypeScriptAssertionRoles.py:54-77 observe runtime array/comma/brace/operator handoff exactly once\"},\"reviewDigest\":\"903624b52798ebe711038ee2f489be96e94fac75e1cab08bbf41b12cf5c4e8fd\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C17",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C17",
+      "--observed",
+      "lizard_languages/typescript_type_annotation.py:35-97 and declarations callback/replay; test/test_languages/testTypeScriptAnnotationBoundaries.py:60-74 and test/test_languages/testTypeScriptAssertionRoles.py:54-77 observe runtime array/comma/brace/operator handoff exactly once"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C17\",\"text\":\"Comma boundary: Prevent annotations from swallowing an unmatched enclosing-runtime `,`.\",\"slice\":1,\"observed\":\"lizard_languages/typescript_type_annotation.py:35-97 and declarations callback/replay; test/test_languages/testTypeScriptAnnotationBoundaries.py:60-74 and test/test_languages/testTypeScriptAssertionRoles.py:54-77 observe runtime array/comma/brace/operator handoff exactly once\"},\"reviewDigest\":\"f7e31f65c4646c4ea2c4970804709d8837699adee418b6e9fe2b64ad9542b635\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C18",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C18",
+      "--observed",
+      "test/test_languages/testTypeScriptAnnotationBoundaries.py:77-99,177-205 and test/test_languages/testTypeScriptAssertionRoles.py:42-77; nested/function/generic/template/conditional types, defaults/formals, runtime branches, import/query types and anonymous return arg; current490 actual capture"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C18\",\"text\":\"Type brackets: Preserve legitimate nested type brackets.\",\"slice\":1,\"observed\":\"test/test_languages/testTypeScriptAnnotationBoundaries.py:77-99,177-205 and test/test_languages/testTypeScriptAssertionRoles.py:42-77; nested/function/generic/template/conditional types, defaults/formals, runtime branches, import/query types and anonymous return arg; current490 actual capture\"},\"reviewDigest\":\"07abdbac746886f45ccbbbbd4b1ef03dde9ed35bf2b9b4e25935dddc57975023\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C19",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C19",
+      "--observed",
+      "test/test_languages/testTypeScriptAnnotationBoundaries.py:77-99,177-205 and test/test_languages/testTypeScriptAssertionRoles.py:42-77; nested/function/generic/template/conditional types, defaults/formals, runtime branches, import/query types and anonymous return arg; current490 actual capture"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C19\",\"text\":\"Type commas: Preserve legitimate nested type commas.\",\"slice\":1,\"observed\":\"test/test_languages/testTypeScriptAnnotationBoundaries.py:77-99,177-205 and test/test_languages/testTypeScriptAssertionRoles.py:42-77; nested/function/generic/template/conditional types, defaults/formals, runtime branches, import/query types and anonymous return arg; current490 actual capture\"},\"reviewDigest\":\"e41c2279d17ce2e24ae19d7640629fa472a0288357a41219c8f1d22faa348503\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C20",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C20",
+      "--observed",
+      "test/test_languages/testTypeScriptAnnotationBoundaries.py:77-99,177-205 and test/test_languages/testTypeScriptAssertionRoles.py:42-77; nested/function/generic/template/conditional types, defaults/formals, runtime branches, import/query types and anonymous return arg; current490 actual capture"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C20\",\"text\":\"Type arrows: Preserve legitimate function-type arrows.\",\"slice\":1,\"observed\":\"test/test_languages/testTypeScriptAnnotationBoundaries.py:77-99,177-205 and test/test_languages/testTypeScriptAssertionRoles.py:42-77; nested/function/generic/template/conditional types, defaults/formals, runtime branches, import/query types and anonymous return arg; current490 actual capture\"},\"reviewDigest\":\"be8e419df98614f846e23ef6c99cdc1fc3d524eb35aac05f1271bcd30f05ad4a\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C21",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C21",
+      "--observed",
+      "test/test_languages/testTypeScriptAnnotationBoundaries.py:77-99,177-205 and test/test_languages/testTypeScriptAssertionRoles.py:42-77; nested/function/generic/template/conditional types, defaults/formals, runtime branches, import/query types and anonymous return arg; current490 actual capture"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C21\",\"text\":\"Signatures: Preserve valid signatures.\",\"slice\":1,\"observed\":\"test/test_languages/testTypeScriptAnnotationBoundaries.py:77-99,177-205 and test/test_languages/testTypeScriptAssertionRoles.py:42-77; nested/function/generic/template/conditional types, defaults/formals, runtime branches, import/query types and anonymous return arg; current490 actual capture\"},\"reviewDigest\":\"bc0e430d68865d1edf74a848a9b3cf814b683e0a71a851fde726b42043d18415\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C22",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C22",
+      "--observed",
+      "test/test_languages/testTypeScriptAnnotationBoundaries.py:77-99,177-205 and test/test_languages/testTypeScriptAssertionRoles.py:42-77; nested/function/generic/template/conditional types, defaults/formals, runtime branches, import/query types and anonymous return arg; current490 actual capture"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C22\",\"text\":\"Defaults: Preserve valid defaults.\",\"slice\":1,\"observed\":\"test/test_languages/testTypeScriptAnnotationBoundaries.py:77-99,177-205 and test/test_languages/testTypeScriptAssertionRoles.py:42-77; nested/function/generic/template/conditional types, defaults/formals, runtime branches, import/query types and anonymous return arg; current490 actual capture\"},\"reviewDigest\":\"99f2e4432412b0b80a92fa42df6ed3026f999c1994f9d29f7e24b9b2385698c5\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C23",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C23",
+      "--observed",
+      "test/test_languages/testTypeScriptAnnotationBoundaries.py:77-99,177-205 and test/test_languages/testTypeScriptAssertionRoles.py:42-77; nested/function/generic/template/conditional types, defaults/formals, runtime branches, import/query types and anonymous return arg; current490 actual capture"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C23\",\"text\":\"Ternaries: Preserve valid ternaries.\",\"slice\":1,\"observed\":\"test/test_languages/testTypeScriptAnnotationBoundaries.py:77-99,177-205 and test/test_languages/testTypeScriptAssertionRoles.py:42-77; nested/function/generic/template/conditional types, defaults/formals, runtime branches, import/query types and anonymous return arg; current490 actual capture\"},\"reviewDigest\":\"3e1b7bbdd995b2499e33f9d3a3c4cbe13d9f7826ae5990c09e9bf85961863d5a\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C24",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C24",
+      "--observed",
+      "test/test_languages/testTypeScriptAnnotationBoundaries.py:77-99,177-205 and test/test_languages/testTypeScriptAssertionRoles.py:42-77; nested/function/generic/template/conditional types, defaults/formals, runtime branches, import/query types and anonymous return arg; current490 actual capture"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C24\",\"text\":\"Templates: Preserve valid templates.\",\"slice\":1,\"observed\":\"test/test_languages/testTypeScriptAnnotationBoundaries.py:77-99,177-205 and test/test_languages/testTypeScriptAssertionRoles.py:42-77; nested/function/generic/template/conditional types, defaults/formals, runtime branches, import/query types and anonymous return arg; current490 actual capture\"},\"reviewDigest\":\"5c75c80df9f25991c77bcd90caf48fd45d32af7fe1d67272aae2842aa63bc068\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C25",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C25",
+      "--observed",
+      "test/test_languages/testTypeScriptAnnotationBoundaries.py:102-115,226-241; actual NS nesting/nonstrict CCN/optional complex-tags; producer extension correspondence and unchanged frozen40 default/NS80 public records"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C25\",\"text\":\"Extension metrics: Preserve established extension metrics.\",\"slice\":1,\"observed\":\"test/test_languages/testTypeScriptAnnotationBoundaries.py:102-115,226-241; actual NS nesting/nonstrict CCN/optional complex-tags; producer extension correspondence and unchanged frozen40 default/NS80 public records\"},\"reviewDigest\":\"e5ddbc3b693ba068bf4e180ae37df31ad66dc5e99147a443dfa787c2985b54ba\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C31",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C31",
+      "--observed",
+      "test/test_languages/testTypeScriptAnnotationBoundaries.py:102-115,226-241; actual NS nesting/nonstrict CCN/optional complex-tags; producer extension correspondence and unchanged frozen40 default/NS80 public records"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C31\",\"text\":\"NS: Preserve established NS behavior.\",\"slice\":1,\"observed\":\"test/test_languages/testTypeScriptAnnotationBoundaries.py:102-115,226-241; actual NS nesting/nonstrict CCN/optional complex-tags; producer extension correspondence and unchanged frozen40 default/NS80 public records\"},\"reviewDigest\":\"f732ed2f7b82499c9984cdc5c71532d679527205c51df89bc51bdd5fc74fe06c\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C32",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C32",
+      "--observed",
+      "test/test_languages/testTypeScriptAnnotationBoundaries.py:102-115,226-241; actual NS nesting/nonstrict CCN/optional complex-tags; producer extension correspondence and unchanged frozen40 default/NS80 public records"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C32\",\"text\":\"Nonstrict: Preserve established nonstrict behavior.\",\"slice\":1,\"observed\":\"test/test_languages/testTypeScriptAnnotationBoundaries.py:102-115,226-241; actual NS nesting/nonstrict CCN/optional complex-tags; producer extension correspondence and unchanged frozen40 default/NS80 public records\"},\"reviewDigest\":\"95ff840f1d609eecfed0f75e6167600fcb5880db9e63e9e4f2af52ea0bf4a5fb\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C26",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C26",
+      "--observed",
+      "test/test_languages/testTypeScriptAnnotationBoundaries.py:118-130; real per-suffix CLI CSV/output files and current outputs-after-export.json64 passes"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C26\",\"text\":\"CLI output: Preserve established CLI output.\",\"slice\":1,\"observed\":\"test/test_languages/testTypeScriptAnnotationBoundaries.py:118-130; real per-suffix CLI CSV/output files and current outputs-after-export.json64 passes\"},\"reviewDigest\":\"5dd345f5c253daa1466b93e18461e511307ac04c7b9d5026b4c8e88479cb83e2\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C33",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C33",
+      "--observed",
+      "test/test_languages/testTypeScriptAnnotationBoundaries.py:118-130; real per-suffix CLI CSV/output files and current outputs-after-export.json64 passes"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C33\",\"text\":\"CSV: Preserve established CSV-consumer behavior.\",\"slice\":1,\"observed\":\"test/test_languages/testTypeScriptAnnotationBoundaries.py:118-130; real per-suffix CLI CSV/output files and current outputs-after-export.json64 passes\"},\"reviewDigest\":\"9c4963a7dba10c7949acb12f18958a783747b2f924b869f129b47fb6172d2f3d\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C34",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C34",
+      "--observed",
+      "test/test_languages/testTypeScriptAnnotationBoundaries.py:118-130; real per-suffix CLI CSV/output files and current outputs-after-export.json64 passes"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C34\",\"text\":\"Output option: Preserve established `-o`-consumer behavior.\",\"slice\":1,\"observed\":\"test/test_languages/testTypeScriptAnnotationBoundaries.py:118-130; real per-suffix CLI CSV/output files and current outputs-after-export.json64 passes\"},\"reviewDigest\":\"316ca25a63863ce11078ae559c64276876363443ffcbfc9a73c2bddc81e3edab\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C27",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C27",
+      "--observed",
+      "test/test_languages/testJavaScriptBindingBoundaries.py:14-50 authored eleven/original six source journeys, all seven suffixes; current languages-after-export.json1387 passes and local5 full checks"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C27\",\"text\":\"Earlier fixes: Preserve all previously fixed #524 examples.\",\"slice\":1,\"observed\":\"test/test_languages/testJavaScriptBindingBoundaries.py:14-50 authored eleven/original six source journeys, all seven suffixes; current languages-after-export.json1387 passes and local5 full checks\"},\"reviewDigest\":\"812a37ccbe3ab5f7a5412b02c1c1541d9000d510c0ff294894c8ba2308d3f5bc\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C28",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C28",
+      "--observed",
+      "test/test_languages/testJavaScriptBindingBoundaries.py:14-50 authored eleven/original six source journeys, all seven suffixes; current languages-after-export.json1387 passes and local5 full checks"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C28\",\"text\":\"Original examples: Preserve established behavior for the six original issue examples.\",\"slice\":1,\"observed\":\"test/test_languages/testJavaScriptBindingBoundaries.py:14-50 authored eleven/original six source journeys, all seven suffixes; current languages-after-export.json1387 passes and local5 full checks\"},\"reviewDigest\":\"62ba6aec525f6fe4442867728703bb386e51840a821363cc818f0fa6b33154ca\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C29",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C29",
+      "--observed",
+      "test/test_languages/testJavaScriptBindingBoundaries.py:14-50 authored eleven/original six source journeys, all seven suffixes; current languages-after-export.json1387 passes and local5 full checks"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C29\",\"text\":\"Authored PR examples: Preserve established behavior for all eleven authored PR #525 examples.\",\"slice\":1,\"observed\":\"test/test_languages/testJavaScriptBindingBoundaries.py:14-50 authored eleven/original six source journeys, all seven suffixes; current languages-after-export.json1387 passes and local5 full checks\"},\"reviewDigest\":\"cf541d3114d0f65ffe0e2665da5f7634244082ab7b6886d70d1c76572fec6f7a\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C30",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C30",
+      "--observed",
+      "test/test_languages/testJavaScriptBindingBoundaries.py:14-50 authored eleven/original six source journeys, all seven suffixes; current languages-after-export.json1387 passes and local5 full checks"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C30\",\"text\":\"Suffixes: Preserve established behavior across the seven JS-family suffixes.\",\"slice\":1,\"observed\":\"test/test_languages/testJavaScriptBindingBoundaries.py:14-50 authored eleven/original six source journeys, all seven suffixes; current languages-after-export.json1387 passes and local5 full checks\"},\"reviewDigest\":\"0e094cf5d072c4f8e450d76c52d574a4e47f162b1fea6b596b5be2d8478a98fa\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C35",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C35",
+      "--observed",
+      "test/test_languages/testTypeScriptAnnotationBoundaries.py:133-144; real Flask /analyze JSON function lists across TS/TSX/Vue; current consumers-after-export.json989 passes"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C35\",\"text\":\"HTTP: Preserve established HTTP-consumer behavior.\",\"slice\":1,\"observed\":\"test/test_languages/testTypeScriptAnnotationBoundaries.py:133-144; real Flask /analyze JSON function lists across TS/TSX/Vue; current consumers-after-export.json989 passes\"},\"reviewDigest\":\"4e038578db3a7f83326885889f0f32f3f24d2ad0e35bfc780647dd3a235b8175\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C36",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C36",
+      "--observed",
+      "docs/reviews/issue524-label-types-20261102/implementation-assertion-role/red.json, operator-red.json, left-shift-red.json, export-red.json and cases-after-export.json490; exact public names/formals/spans/CCN distinguish all known losses; prior200/476 unchanged"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C36\",\"text\":\"Regression proof: Add discriminating regression tests.\",\"slice\":1,\"observed\":\"docs/reviews/issue524-label-types-20261102/implementation-assertion-role/red.json, operator-red.json, left-shift-red.json, export-red.json and cases-after-export.json490; exact public names/formals/spans/CCN distinguish all known losses; prior200/476 unchanged\"},\"reviewDigest\":\"5e0915d5b2fda4ed5b71d6cdcec826b657fa141708d9683880586aa8ca066ba3\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C37",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C37",
+      "--observed",
+      "docs/reviews/issue524-label-types-20261102/refactor-assertion-role/README.md explicit REFACTOR COMPLETE;108 runtime/157 tests/11 files audit,719 retained consumer dispositions and6 current source edges; no further edit"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C37\",\"text\":\"Refactoring: Independently refactor the aggregate change.\",\"slice\":1,\"observed\":\"docs/reviews/issue524-label-types-20261102/refactor-assertion-role/README.md explicit REFACTOR COMPLETE;108 runtime/157 tests/11 files audit,719 retained consumer dispositions and6 current source edges; no further edit\"},\"reviewDigest\":\"08aaadeb4cbfe21a7e5f27e84a1038fdf9bb5ac966dc5c0c33fc3ff09c3f2258\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C38",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C38",
+      "--observed",
+      "docs/reviews/issue524-label-types-20261102/evidence/performance5/summary.json all current/cumulative label/annotation/call/complete API-parameters gates strictly below3; actual public parameter consumption, source/import/stability hashes"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C38\",\"text\":\"API performance: Qualify affected API consumers.\",\"slice\":1,\"observed\":\"docs/reviews/issue524-label-types-20261102/evidence/performance5/summary.json all current/cumulative label/annotation/call/complete API-parameters gates strictly below3; actual public parameter consumption, source/import/stability hashes\"},\"reviewDigest\":\"7f2bad77fe52daa3a7fdef1445febc7ff2bade156dc92373d957126dd26c2649\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C39",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C39",
+      "--observed",
+      "docs/reviews/issue524-label-types-20261102/evidence/performance5/summary.json all current/cumulative label/annotation/call/complete API-parameters gates strictly below3; actual public parameter consumption, source/import/stability hashes"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C39\",\"text\":\"Parameter performance: Qualify affected parameter consumers.\",\"slice\":1,\"observed\":\"docs/reviews/issue524-label-types-20261102/evidence/performance5/summary.json all current/cumulative label/annotation/call/complete API-parameters gates strictly below3; actual public parameter consumption, source/import/stability hashes\"},\"reviewDigest\":\"435672a8d10a542e225c19ba52dbe52226c1199d5f6a0a5fb53874eaaf7c2898\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C40",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C40",
+      "--observed",
+      "docs/reviews/issue524-label-types-20261102/evidence/performance5/summary.json all NS families; calls pooled120 retains original40 plus additional80, both additional and pooled strict bounds pass with matching cross-block observations"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C40\",\"text\":\"Extension performance: Qualify affected extension consumers.\",\"slice\":1,\"observed\":\"docs/reviews/issue524-label-types-20261102/evidence/performance5/summary.json all NS families; calls pooled120 retains original40 plus additional80, both additional and pooled strict bounds pass with matching cross-block observations\"},\"reviewDigest\":\"1931d68a413eaf4ccd768d4a7ae8880f38910876ce7bac65a37abbb88aeafcaa\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C41",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C41",
+      "--observed",
+      "docs/reviews/issue524-label-types-20261102/evidence/performance5/summary.json current/cumulative100-source actual broad CLI gates,4-second calibration and stable path-bearing output"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C41\",\"text\":\"CLI performance: Qualify broad CLI performance.\",\"slice\":1,\"observed\":\"docs/reviews/issue524-label-types-20261102/evidence/performance5/summary.json current/cumulative100-source actual broad CLI gates,4-second calibration and stable path-bearing output\"},\"reviewDigest\":\"7be61d24bfe339ec46856e57221b624963facf9a68b5e7903b4d992a26be4374\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C42",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C42",
+      "--observed",
+      "docs/reviews/issue524-label-types-20261102/evidence/local5/pytest.json exit0,2917 passed7 existing skips; exact current108 production hashes stable"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C42\",\"text\":\"Pytest: Run the full pytest suite successfully.\",\"slice\":1,\"observed\":\"docs/reviews/issue524-label-types-20261102/evidence/local5/pytest.json exit0,2917 passed7 existing skips; exact current108 production hashes stable\"},\"reviewDigest\":\"d5362e8757407e7c307b3ce039b0d66f9b28c3a2bd769a83edd549a18400c763\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C43",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C43",
+      "--observed",
+      "docs/reviews/issue524-label-types-20261102/evidence/local5/make.json exit0,2917 passed7 skips, pycodestyle passes; exit-zero pylint diagnostics retained rather than claimed absent"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C43\",\"text\":\"Make: Run the full make checks successfully.\",\"slice\":1,\"observed\":\"docs/reviews/issue524-label-types-20261102/evidence/local5/make.json exit0,2917 passed7 skips, pycodestyle passes; exit-zero pylint diagnostics retained rather than claimed absent\"},\"reviewDigest\":\"eaf3210ab0ffd68b5a874777f146a2d5ff88fa0c0c994a432148e27e8baeade4\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C49",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C49",
+      "--observed",
+      "docs/reviews/issue524-label-types-20261102 raw initial/semantic/operator/export/cost/precision failures retained; representation-correspondence.json preserves exact decoded patch/snapshot bytes; raw archive owned through wrap-up"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C49\",\"text\":\"Observation retention: Retain failed observations.\",\"slice\":1,\"observed\":\"docs/reviews/issue524-label-types-20261102 raw initial/semantic/operator/export/cost/precision failures retained; representation-correspondence.json preserves exact decoded patch/snapshot bytes; raw archive owned through wrap-up\"},\"reviewDigest\":\"4d88828cad622db3a8e11223f2932c3223c616affa941d4347d02f4b7a58259a\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C50",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C50",
+      "--observed",
+      "docs/reviews/issue524-label-types-20261102/evidence/qualification-inputs-candidate3.json frozen638 complete/35 labels/432 annotations/40 calls/100 broad,490 actual contexts; performance5 complete matrix and prospective precision decision, every accepted upper strictly<3"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C50\",\"text\":\"Timing retention: Retain immutable timing inputs.\",\"slice\":1,\"observed\":\"docs/reviews/issue524-label-types-20261102/evidence/qualification-inputs-candidate3.json frozen638 complete/35 labels/432 annotations/40 calls/100 broad,490 actual contexts; performance5 complete matrix and prospective precision decision, every accepted upper strictly<3\"},\"reviewDigest\":\"2fa6f25122d0046fbc680c56d89df84a6b73bec5d0e9a00070fa45bdb8358598\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "Q01",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "Q01",
+      "--observed",
+      "docs/reviews/issue524-label-types-20261102/evidence/qualification-inputs-candidate3.json frozen638 complete/35 labels/432 annotations/40 calls/100 broad,490 actual contexts; performance5 complete matrix and prospective precision decision, every accepted upper strictly<3"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"Q01\",\"text\":\"Performance threshold: Each required performance qualification must satisfy a strict paired 95% upper slowdown bound below 3%; equality does not satisfy \u201cbelow.\u201d\",\"slice\":1,\"observed\":\"docs/reviews/issue524-label-types-20261102/evidence/qualification-inputs-candidate3.json frozen638 complete/35 labels/432 annotations/40 calls/100 broad,490 actual contexts; performance5 complete matrix and prospective precision decision, every accepted upper strictly<3\"},\"reviewDigest\":\"bd478dd973d0145c2e2c4b7c2523cab40c68ffa5fcbc976e7f3b6afa24647423\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C51",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C51",
+      "--observed",
+      "docs/adrs/0001-ubiquitous-language-accepted.md; current490 exact function/CCN/NLOC/token/parameter records, original200 and frozen40/80 unchanged, no public schema/meaning change"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C51\",\"text\":\"Public meanings: Preserve public metric meanings.\",\"slice\":1,\"observed\":\"docs/adrs/0001-ubiquitous-language-accepted.md; current490 exact function/CCN/NLOC/token/parameter records, original200 and frozen40/80 unchanged, no public schema/meaning change\"},\"reviewDigest\":\"4d3c8ae7b52ce5ab93155a924068b1ac42a6da55a331ecbecf9364b2b2128182\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "C52",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "C52",
+      "--observed",
+      "docs/reviews/issue524-label-types-20261102/evidence/slice1-ownership.json; retained isolated checkout identity, declared ownership and selected delivery paths; unrelated/default checkout work preserved"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"C52\",\"text\":\"Working tree: Preserve unrelated working-tree changes.\",\"slice\":1,\"observed\":\"docs/reviews/issue524-label-types-20261102/evidence/slice1-ownership.json; retained isolated checkout identity, declared ownership and selected delivery paths; unrelated/default checkout work preserved\"},\"reviewDigest\":\"d15a6469d60d14254115b89db14d5d85972fceb4b7a0f4d9d7a1045876a68249\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "Q02",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "Q02",
+      "--observed",
+      "docs/reviews/issue524-label-types-20261102/implementation original red/baseline/import receipts before edits and current field/assertion controls; confirmed failures share annotation/member ownership, old green controls preserved"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"Q02\",\"text\":\"Related-case scope: Field/assertion corrections are conditional on confirming failures that exercise the same ownership responsibility.\",\"slice\":1,\"observed\":\"docs/reviews/issue524-label-types-20261102/implementation original red/baseline/import receipts before edits and current field/assertion controls; confirmed failures share annotation/member ownership, old green controls preserved\"},\"reviewDigest\":\"d1e96b4668df3a2f0644fedfc7f126ba9c4ea8295d9ff8a1464836734ed81775\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "Q04",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "Q04",
+      "--observed",
+      "docs/reviews/issue524-label-types-20261102/implementation original red/baseline/import receipts before edits and current field/assertion controls; confirmed failures share annotation/member ownership, old green controls preserved"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"Q04\",\"text\":\"Investigation order: Confirm the exact related field/assertion failures before choosing their implementation.\",\"slice\":1,\"observed\":\"docs/reviews/issue524-label-types-20261102/implementation original red/baseline/import receipts before edits and current field/assertion controls; confirmed failures share annotation/member ownership, old green controls preserved\"},\"reviewDigest\":\"0885600be6cb8e903107488cfb5c018b645400c738ab928c866fd49de3ea98ef\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "Q03",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "Q03",
+      "--observed",
+      "Plan decisive observations/PFE and current declarations/member/type/signature/CodeStateMachine owners; fresh independent aggregate/cost/assertion reviews confirm existing ownership, no duplicate grammar framework"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"Q03\",\"text\":\"Ownership uncertainty: Determine the smallest existing reader/signature owners that distinguish runtime labels and own nested type syntax.\",\"slice\":1,\"observed\":\"Plan decisive observations/PFE and current declarations/member/type/signature/CodeStateMachine owners; fresh independent aggregate/cost/assertion reviews confirm existing ownership, no duplicate grammar framework\"},\"reviewDigest\":\"6b808ab25ba37e9f7b4e469634ff8cc3ebafb9730e7d649d76cbf5c0eb49fe78\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "Q07",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "Q07",
+      "--observed",
+      ".planning/seeds/SEED-024-issue524-label-types.md Goal/Scope/Source and original explicit human instruction authorize implementation/publication; execution identity and remote/trunk in plan"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"Q07\",\"text\":\"Authority: The human explicitly authorizes implementation.\",\"slice\":1,\"observed\":\".planning/seeds/SEED-024-issue524-label-types.md Goal/Scope/Source and original explicit human instruction authorize implementation/publication; execution identity and remote/trunk in plan\"},\"reviewDigest\":\"e16b72037db0264cb55d9e48e929430f8fc6bb68bf3af3c523213517db065d1c\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "Q08",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "Q08",
+      "--observed",
+      ".planning/seeds/SEED-024-issue524-label-types.md Goal/Scope/Source and original explicit human instruction authorize implementation/publication; execution identity and remote/trunk in plan"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"Q08\",\"text\":\"Publication authority: The human explicitly authorizes publication.\",\"slice\":1,\"observed\":\".planning/seeds/SEED-024-issue524-label-types.md Goal/Scope/Source and original explicit human instruction authorize implementation/publication; execution identity and remote/trunk in plan\"},\"reviewDigest\":\"45a4fd71229b93ba970a4f09346bede2d90c8b0570e480bda36e0653adaffd25\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "T01",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "T01",
+      "--observed",
+      "test/test_languages/testTypeScriptAnnotationBoundaries.py:26-32 exact minimal label reports anonymous line1/CCN1/formals[], matching source-stated1.24.1 reference; retained pre-change red drops it; successor separately asserted"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"T01\",\"text\":\"Minimal labeled-block example: `const x = [() => { a: 1 }];` must report one anonymous function.\",\"slice\":1,\"observed\":\"test/test_languages/testTypeScriptAnnotationBoundaries.py:26-32 exact minimal label reports anonymous line1/CCN1/formals[], matching source-stated1.24.1 reference; retained pre-change red drops it; successor separately asserted\"},\"reviewDigest\":\"ea89ebd46cff54bdfa8afef78efa712a4e4f66c4f79f2f8d6b72f48a375d581f\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "T02",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "T02",
+      "--observed",
+      "test/test_languages/testTypeScriptAnnotationBoundaries.py:26-32 exact minimal label reports anonymous line1/CCN1/formals[], matching source-stated1.24.1 reference; retained pre-change red drops it; successor separately asserted"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"T02\",\"text\":\"Minimal-example location: That function must be reported at line 1.\",\"slice\":1,\"observed\":\"test/test_languages/testTypeScriptAnnotationBoundaries.py:26-32 exact minimal label reports anonymous line1/CCN1/formals[], matching source-stated1.24.1 reference; retained pre-change red drops it; successor separately asserted\"},\"reviewDigest\":\"a1f00d8a006e98e1421a635a50da82ccca38bd8b829e1e29676cc046e5081806\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "T03",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "T03",
+      "--observed",
+      "test/test_languages/testTypeScriptAnnotationBoundaries.py:26-32 exact minimal label reports anonymous line1/CCN1/formals[], matching source-stated1.24.1 reference; retained pre-change red drops it; successor separately asserted"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"T03\",\"text\":\"Reference behavior: The minimal example must match the stated 1.24.1 behavior; the source reports zero functions on master `da29d5d`.\",\"slice\":1,\"observed\":\"test/test_languages/testTypeScriptAnnotationBoundaries.py:26-32 exact minimal label reports anonymous line1/CCN1/formals[], matching source-stated1.24.1 reference; retained pre-change red drops it; successor separately asserted\"},\"reviewDigest\":\"aedbc0ed6866960f778d90a263bd52c0aeeaa267c281a9223c2fb8761462e334\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "T04",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "T04",
+      "--observed",
+      "test/test_languages/testTypeScriptAnnotationBoundaries.py and test/test_languages/testTypeScriptAssertionRoles.py; actual after/tail span/CCN2 tuples in every journey, branch yes/no and constructor/method successors independently checked"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"T04\",\"text\":\"Successor name: A following function retains its own name.\",\"slice\":1,\"observed\":\"test/test_languages/testTypeScriptAnnotationBoundaries.py and test/test_languages/testTypeScriptAssertionRoles.py; actual after/tail span/CCN2 tuples in every journey, branch yes/no and constructor/method successors independently checked\"},\"reviewDigest\":\"22e9e41f6109de31d1c8cf9408940781c37bbc0eb2197378cdaba156157a92eb\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "T05",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "T05",
+      "--observed",
+      "test/test_languages/testTypeScriptAnnotationBoundaries.py and test/test_languages/testTypeScriptAssertionRoles.py; actual after/tail span/CCN2 tuples in every journey, branch yes/no and constructor/method successors independently checked"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"T05\",\"text\":\"Successor formals: A following function retains its own formals.\",\"slice\":1,\"observed\":\"test/test_languages/testTypeScriptAnnotationBoundaries.py and test/test_languages/testTypeScriptAssertionRoles.py; actual after/tail span/CCN2 tuples in every journey, branch yes/no and constructor/method successors independently checked\"},\"reviewDigest\":\"e70369e9583cf78330715b7a6277318fab90b2cdcc5530cd031db0516db812ab\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "T06",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "T06",
+      "--observed",
+      "test/test_languages/testTypeScriptAnnotationBoundaries.py and test/test_languages/testTypeScriptAssertionRoles.py; actual after/tail span/CCN2 tuples in every journey, branch yes/no and constructor/method successors independently checked"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"T06\",\"text\":\"Successor span: A following function retains its own span.\",\"slice\":1,\"observed\":\"test/test_languages/testTypeScriptAnnotationBoundaries.py and test/test_languages/testTypeScriptAssertionRoles.py; actual after/tail span/CCN2 tuples in every journey, branch yes/no and constructor/method successors independently checked\"},\"reviewDigest\":\"f56f48d2acd307a61344bb947f1d2a9ae3ec934c9f846276dcffd89426c242c5\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "T07",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "T07",
+      "--observed",
+      "test/test_languages/testTypeScriptAnnotationBoundaries.py and test/test_languages/testTypeScriptAssertionRoles.py; actual after/tail span/CCN2 tuples in every journey, branch yes/no and constructor/method successors independently checked"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"T07\",\"text\":\"Successor complexity: A following function retains its own CCN.\",\"slice\":1,\"observed\":\"test/test_languages/testTypeScriptAnnotationBoundaries.py and test/test_languages/testTypeScriptAssertionRoles.py; actual after/tail span/CCN2 tuples in every journey, branch yes/no and constructor/method successors independently checked\"},\"reviewDigest\":\"5a98f67f1469c45d442136563bb1f0eb36f1daa86f207730b17060ff888cba8d\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "T08",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "T08",
+      "--observed",
+      "test/test_languages/testTypeScriptAnnotationBoundaries.py:35-57,167-174; type-only fields and genuine initializer preserve constructor/value and s/tail at exact spans/CCN; phantom absence independently checked"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"T08\",\"text\":\"Field-to-constructor journey: A function-type class field preserves a following constructor when it exercises the shared ownership responsibility.\",\"slice\":1,\"observed\":\"test/test_languages/testTypeScriptAnnotationBoundaries.py:35-57,167-174; type-only fields and genuine initializer preserve constructor/value and s/tail at exact spans/CCN; phantom absence independently checked\"},\"reviewDigest\":\"eb24c79281ad284471e1af83c52e3ce330076becf5bf352bba23017a1e80b32f\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "T09",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "T09",
+      "--observed",
+      "test/test_languages/testTypeScriptAnnotationBoundaries.py:35-57,167-174; type-only fields and genuine initializer preserve constructor/value and s/tail at exact spans/CCN; phantom absence independently checked"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"T09\",\"text\":\"Field-to-method journey: A function-type class field preserves a following method under that qualification.\",\"slice\":1,\"observed\":\"test/test_languages/testTypeScriptAnnotationBoundaries.py:35-57,167-174; type-only fields and genuine initializer preserve constructor/value and s/tail at exact spans/CCN; phantom absence independently checked\"},\"reviewDigest\":\"58a9c37b564176154a49fffce5ac6e240f6cd69dfdc997a3e5cb84a956e4d1f4\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "T10",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "T10",
+      "--observed",
+      "test/test_languages/testTypeScriptAnnotationBoundaries.py:60-74 and test/test_languages/testTypeScriptAssertionRoles.py:42-77; assertion expression arrows and all runtime successors retain exact names/formals/spans/CCN through runtime handoff"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"T10\",\"text\":\"Assertion-to-arrow journey: An object-type assertion preserves expression-arrow boundaries under that qualification.\",\"slice\":1,\"observed\":\"test/test_languages/testTypeScriptAnnotationBoundaries.py:60-74 and test/test_languages/testTypeScriptAssertionRoles.py:42-77; assertion expression arrows and all runtime successors retain exact names/formals/spans/CCN through runtime handoff\"},\"reviewDigest\":\"c91f3b1c3920bae84aa0ea904c600f199505abcd76b21fafb94c6842ba489fcf\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "T11",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "T11",
+      "--observed",
+      "test/test_languages/testTypeScriptAnnotationBoundaries.py:60-74 and test/test_languages/testTypeScriptAssertionRoles.py:42-77; assertion expression arrows and all runtime successors retain exact names/formals/spans/CCN through runtime handoff"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"T11\",\"text\":\"Assertion-to-successor journey: An object-type assertion preserves successor boundaries under that qualification.\",\"slice\":1,\"observed\":\"test/test_languages/testTypeScriptAnnotationBoundaries.py:60-74 and test/test_languages/testTypeScriptAssertionRoles.py:42-77; assertion expression arrows and all runtime successors retain exact names/formals/spans/CCN through runtime handoff\"},\"reviewDigest\":\"d2db83c2dc2373c10bffa63636c22cd02559d4b6647f0d358f06ac8ca8b94643\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "T12",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "T12",
+      "--observed",
+      "General runtime/declaration/member/operand/type capability owners, not enumerated source switches;490 real variants include contextual/newline/prefix/operator/atomic Vue/nested generic/import/query controls with current source and public proof"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"T12\",\"text\":\"Example reach: These examples demonstrate required behavior; they do not restrict the promise to only those spellings, delimiters, or successor forms.\",\"slice\":1,\"observed\":\"General runtime/declaration/member/operand/type capability owners, not enumerated source switches;490 real variants include contextual/newline/prefix/operator/atomic Vue/nested generic/import/query controls with current source and public proof\"},\"reviewDigest\":\"bb58b3582c3dfbe9ef765920c0382415644064ae8e9caa63937d3d777509b416\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "X01",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "X01",
+      "--observed",
+      "Current aggregate diff and independent refactor-assertion-role report: existing runtime bindings/scopes, type-owned bracket stack, streaming tokenizer/replay; no parallel runtime counter, whole-stream buffer or issue-specific switch"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"X01\",\"text\":\"Counter exclusion: Do not introduce a parallel runtime bracket counter.\",\"slice\":1,\"observed\":\"Current aggregate diff and independent refactor-assertion-role report: existing runtime bindings/scopes, type-owned bracket stack, streaming tokenizer/replay; no parallel runtime counter, whole-stream buffer or issue-specific switch\"},\"reviewDigest\":\"58b3efe7e27c746ed12a9b74a81140232403a12d04645e4736d83be523245d47\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "X02",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "X02",
+      "--observed",
+      "Current aggregate diff and independent refactor-assertion-role report: existing runtime bindings/scopes, type-owned bracket stack, streaming tokenizer/replay; no parallel runtime counter, whole-stream buffer or issue-specific switch"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"X02\",\"text\":\"Buffer exclusion: Do not introduce a whole-stream buffer.\",\"slice\":1,\"observed\":\"Current aggregate diff and independent refactor-assertion-role report: existing runtime bindings/scopes, type-owned bracket stack, streaming tokenizer/replay; no parallel runtime counter, whole-stream buffer or issue-specific switch\"},\"reviewDigest\":\"31b8bca3b7c1893cd3b644920103f952ffe47b47b8f2eebe0f74beab1cc71b63\"}\n",
+    "stderr": ""
+  },
+  {
+    "commitment": "X03",
+    "command": [
+      "node",
+      ".agents/skills/dough-execute-plan/scripts/story-obligations.mjs",
+      "record",
+      "--plan",
+      ".planning/slice-plans/016-issue524-label-types/PLAN.md",
+      "--commitment",
+      "X03",
+      "--observed",
+      "Current aggregate diff and independent refactor-assertion-role report: existing runtime bindings/scopes, type-owned bracket stack, streaming tokenizer/replay; no parallel runtime counter, whole-stream buffer or issue-specific switch"
+    ],
+    "exit": 0,
+    "stdout": "{\"ok\":true,\"commitment\":{\"id\":\"X03\",\"text\":\"Switch exclusion: Do not introduce an issue-specific switch.\",\"slice\":1,\"observed\":\"Current aggregate diff and independent refactor-assertion-role report: existing runtime bindings/scopes, type-owned bracket stack, streaming tokenizer/replay; no parallel runtime counter, whole-stream buffer or issue-specific switch\"},\"reviewDigest\":\"3e973fee0b9ad653f667adeb1749fd7d8d47735f98baf4a4a92a404d4c2f880d\"}\n",
+    "stderr": ""
+  }
+]

@@ -1,0 +1,13 @@
+{
+  "command": "PIP_QUIET=3 nix develop -c python -m pytest test/testOutput.py test/testCommentOptions.py test/test_website_smoke.py test/testOutputCSV.py test/testOutputFile.py -q",
+  "resolved_files": [
+    "test/testOutput.py",
+    "test/testCommentOptions.py",
+    "test/test_website_smoke.py",
+    "test/testOutputCSV.py",
+    "test/testOutputFile.py"
+  ],
+  "exit_code": 0,
+  "stdout": "................................................................         [100%]\n64 passed in 2.39s\n",
+  "stderr": ""
+}

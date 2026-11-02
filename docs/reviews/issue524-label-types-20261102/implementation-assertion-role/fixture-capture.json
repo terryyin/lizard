@@ -1,0 +1,17 @@
+{
+  "command": "PIP_QUIET=3 nix develop -c python /Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/implementation-assertion-role/capture-fixtures.py",
+  "exit_code": 0,
+  "case_count": 476,
+  "stdout": "........................................................................ [ 15%]\n........................................................................ [ 30%]\n........................................................................ [ 45%]\n........................................................................ [ 60%]\n........................................................................ [ 75%]\n........................................................................ [ 90%]\n............................................                             [100%]\n476 passed in 2.15s\n",
+  "purpose": "Observe actual parameterized public fixture setup and return; no parser logic replaced.",
+  "modules": {
+    "lizard": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard.py",
+      "sha256": "fc83d74b7d74e6b579d81808451e89661c26d599624c5acc4a41614a46253c71"
+    },
+    "lizard_languages.typescript": {
+      "path": "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/lizard_languages/typescript.py",
+      "sha256": "c856cb2dbb693c4fa6c90a187d07aa9e7b0c9314add4798d5defa614ba528a05"
+    }
+  }
+}

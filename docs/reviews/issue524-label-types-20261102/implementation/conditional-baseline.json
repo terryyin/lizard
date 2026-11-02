@@ -1,0 +1,8 @@
+{
+  "baseline": "da29d5dfd904ba7333199a79ffbf4c0da24c5641",
+  "checkout": "/tmp/nix-shell.mkZbUQ/issue524-implementation-baseline-rtagh7nu",
+  "command": "python -c 'from lizard import analyze_file\\nsource = \\'const f = (x: T extends number ? {v: T} : string[], y = flag ? 1 : 0): T extends number ? {v: T} : string[] => x;\\\\nfunction after(tail) { return tail ? 1 : 0; }\\\\n\\'\\nfor suffix in (\\'ts\\',\\'tsx\\',\\'vue\\'):\\n s=\\'<script lang=\"ts\">\\'+source+\\'</script>\\' if suffix==\\'vue\\' else source\\n print(suffix,[(f.name,f.cyclomatic_complexity,f.start_line,f.end_line,f.parameters) for f in analyze_file.analyze_source_code(\\'a.\\'+suffix,s).function_list])\\n'",
+  "exit_code": 0,
+  "stdout": "ts [('(anonymous)', 1, 1, 1, ['v']), ('after', 2, 2, 2, ['tail']), ('f', 5, 1, 2, ['x', 'y'])]\ntsx [('(anonymous)', 1, 1, 1, ['v']), ('after', 2, 2, 2, ['tail']), ('f', 5, 1, 2, ['x', 'y'])]\nvue [('(anonymous)', 1, 1, 1, ['v']), ('after', 2, 2, 2, ['tail']), ('f', 5, 1, 2, ['x', 'y'])]\n",
+  "stderr": ""
+}

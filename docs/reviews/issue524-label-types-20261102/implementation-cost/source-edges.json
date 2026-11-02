@@ -1,0 +1,44 @@
+[
+  {
+    "edge": "TypeScriptStates declaration -> marker dispatch",
+    "change": "Union gate skips both unchanged handlers only when token belongs to neither set and no declare is pending; declaration handler still runs before marker logic.",
+    "disposition": "run",
+    "proof": "languages.json; consumers.json; calls-correspondence.json",
+    "assertions": "All200 semantic regressions and existing declare/type/default/formal/ternary cases pass; frozen40 default/NS records and state/replay/next/end_statement counts identical."
+  },
+  {
+    "edge": "TypeScriptStates trailing backtick/colon/comma ownership",
+    "change": "One rare-token gate preserves original order and all individual transitions before last_tokens/_prev_token update.",
+    "disposition": "run",
+    "proof": "languages.json; consumers.json; outputs.json; cases.json",
+    "assertions": "Exact200 captured input/wrapper/public records match before; labels, unmatched delimiters, comma-separated declarators/calls, templates, return signatures and successors retain observing assertions."
+  },
+  {
+    "edge": "JavaScriptObjectsMixin class optional-name/colon role",
+    "change": "Necessary as_class predicate is checked before endswith and member-role helper; same helper remains the complete role definition.",
+    "disposition": "run",
+    "proof": "calls-correspondence.json; languages.json; consumers.json",
+    "assertions": "Frozen40 member calls remain864, endswith864->0, marker helper80->0, typed-member helper280->60; exact output equality.200cases preserve optional-spaced/$ fields, legacy dialects, type-only fields and actual runtime ternaries."
+  },
+  {
+    "edge": "TypeScriptReader preprocess question/colon -> annotation and optional owner",
+    "change": "Rare punctuation gate groups the same two tokens; question role lookup requires already necessary dialect flag. Colon lookahead/tee/replay order and is_optional token protocol are unchanged.",
+    "disposition": "run",
+    "proof": "languages.json; consumers.json; cases.json; calls-correspondence.json",
+    "assertions": "Optional/complex-tags/NS/nonstrict cases, context-None return lookahead, templates/TSX/Vue dialects, custom-reader dispatch/EOF and original line/discovery controls pass; same frozen corpus and observed parameters."
+  },
+  {
+    "edge": "API/parameters/NS -> function records",
+    "change": "No schema/metric meaning or consumer code change.",
+    "disposition": "run",
+    "proof": "calls-before.json; calls-after.json; calls-correspondence.json; consumers.json",
+    "assertions": "One pass of frozen40 through default andNS produces80 equal records including file/function tokens/NLOC, name/long_name/spans, full/filtered parameters/count andNS nesting."
+  },
+  {
+    "edge": "CLI/CSV/-o/HTTP/extensions",
+    "change": "Outputs consume unchanged observable records/token protocol.",
+    "disposition": "run",
+    "proof": "languages.json; consumers.json; outputs.json; fixture-capture.json",
+    "assertions": "Complete existing real suffix/HTTP/CSV/-o/parameter/extension assertions pass. No consumer is excluded merely because its file was unchanged."
+  }
+]

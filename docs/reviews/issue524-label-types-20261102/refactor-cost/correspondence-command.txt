@@ -1,0 +1,25 @@
+PIP_QUIET=3 nix develop -c python -c 'from pathlib import Path
+import hashlib,json,collections
+root=Path.cwd(); base=root/"docs/reviews/issue524-label-types-20261102"; cost=base/"implementation-cost"
+sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+manifest=json.loads((cost/"manifest.json").read_text())
+actual={p:sha(root/p) for p in manifest["after_runtime_hashes"]}
+assert actual==manifest["after_runtime_hashes"]
+changed=[p for p in actual if actual[p]!=manifest["before_runtime_hashes"][p]]
+assert set(changed)=={i["path"] for i in manifest["cost_changed_files"]}
+for item in manifest["cost_changed_files"]: assert sha(root/item["before_source"])==item["before_sha256"]
+for p,h in manifest["after_test_hashes"].items(): assert sha(root/p)==h
+old=json.loads((base/"implementation/cases.json").read_text()); new=json.loads((cost/"cases.json").read_text())
+assert old==new and len(new)==200
+before=json.loads((cost/"calls-before.json").read_text()); after=json.loads((cost/"calls-after.json").read_text())
+assert before["corpus"]==after["corpus"] and before["observations"]==after["observations"] and len(after["observations"])==80
+assert all(sha(Path(p))==h for p,h in after["corpus"].items())
+receipts={}
+for name in ("languages.json","consumers.json","outputs.json"):
+ d=json.loads((cost/name).read_text()); assert d["exit_code"]==0
+ assert all(sha(root/p)==h for p,h in d["hashes"].items())
+ receipts[name]={"command":d["command"],"exit_code":d["exit_code"],"result":d["stdout"].splitlines()[-1],"receipt_sha256":sha(cost/name),"boundary":"unchanged; reused, no refactor edits"}
+consumers=json.loads((base/"refactor-final/consumer-dispositions.json").read_text()); assert len(consumers)==719
+record={"checkout":str(root),"decision":"none — already clean; no product/test edits","runtime_files":len(actual),"all_current_runtime_hashes_match_cost_proof":True,"before_after_cost_changed_files":changed,"other_runtime_files_unchanged":len(actual)-len(changed),"runtime_hashes":actual,"test_hashes":manifest["after_test_hashes"],"actual_200_fixtures_equal_accepted_implementation":True,"frozen40_corpus_and_80_default_NS_observations_equal":True,"frozen40_current_sources_match":True,"source_edges":{"record":"../implementation-cost/source-edges.json","count":len(json.loads((cost/"source-edges.json").read_text())),"sha256":sha(cost/"source-edges.json"),"disposition":"all reused on unchanged current hashes"},"consumer_trace":{"record":"../refactor-final/consumer-dispositions.json","count":719,"sha256":sha(base/"refactor-final/consumer-dispositions.json"),"accepted_dispositions":dict(collections.Counter(i["disposition"] for i in consumers)),"this_review_disposition":"Reuse all dispositions; no new contract, import, caller, assertion or refactor edit"},"focused_receipts":receipts,"timing_run":False,"G12_status":"unresolved; root owns all required frozen performance gates"}
+(base/"refactor-cost/correspondence.json").write_text(json.dumps(record,indent=2)+"\n")
+print(json.dumps({"runtime_hashes_match":len(actual),"cost_changed_files":changed,"other_runtime_files_unchanged":len(actual)-len(changed),"fixtures_equal":len(new),"frozen_observations_equal":len(after["observations"]),"consumer_dispositions_reused":len(consumers),"focused_receipts_match":list(receipts),"output":"docs/reviews/issue524-label-types-20261102/refactor-cost/correspondence.json"}))'

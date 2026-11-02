@@ -1,0 +1,14 @@
+{
+  "accepted_record": "docs/reviews/issue524-label-types-20261102/refactor-final/consumer-dispositions.json",
+  "accepted_count": 719,
+  "disposition": "reused with changed-edge proof; no broad rediscovery",
+  "basis": "Only three existing owners changed; no imports/exports/callers, wrapper protocol, corpus, test expectations or consumer schemas changed. Direct reached edges and their current assertions are enumerated in source-edges.json. Root owns fresh whole-concept refactor, fullchecks and all18 qualification gates.",
+  "current_direct_proof": [
+    "languages.json",
+    "consumers.json",
+    "outputs.json",
+    "calls-correspondence.json",
+    "fixture-capture.json"
+  ],
+  "other_proof_reuse": "Prior non-JS/core/tokenizer/independent extension boundaries are byte-identical; keep their accepted setup/observation correspondence. New token/member gates are exercised by current focused suites, including all200 regressions."
+}

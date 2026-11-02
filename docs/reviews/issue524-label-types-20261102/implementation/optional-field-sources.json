@@ -1,0 +1,34 @@
+[
+  {
+    "field": "d?: (()=>void)[];",
+    "source": "class A { d?: (()=>void)[]; constructor(v){if(v)use(v);} s(tail){return tail?1:0;} }\nfunction after(tail){return tail?1:0;}\n"
+  },
+  {
+    "field": "d ? : (()=>void)[];",
+    "source": "class A { d ? : (()=>void)[]; constructor(v){if(v)use(v);} s(tail){return tail?1:0;} }\nfunction after(tail){return tail?1:0;}\n"
+  },
+  {
+    "field": "$d?: (()=>void)[];",
+    "source": "class A { $d?: (()=>void)[]; constructor(v){if(v)use(v);} s(tail){return tail?1:0;} }\nfunction after(tail){return tail?1:0;}\n"
+  },
+  {
+    "field": "d ? : (n:number)=>number = (n)=>n||0;",
+    "source": "class A { d ? : (n:number)=>number = (n)=>n||0; constructor(v){if(v)use(v);} s(tail){return tail?1:0;} }\nfunction after(tail){return tail?1:0;}\n"
+  },
+  {
+    "field": "$d?: (n:number)=>number = (n)=>n||0;",
+    "source": "class A { $d?: (n:number)=>number = (n)=>n||0; constructor(v){if(v)use(v);} s(tail){return tail?1:0;} }\nfunction after(tail){return tail?1:0;}\n"
+  },
+  {
+    "field": "d?: (n:number)=>number = (n)=>n||0;",
+    "source": "class A { d?: (n:number)=>number = (n)=>n||0; constructor(v){if(v)use(v);} s(tail){return tail?1:0;} }\nfunction after(tail){return tail?1:0;}\n"
+  },
+  {
+    "field": "d = flag ? function yes(n){return n||0;} : function no(n){return n&&1;};",
+    "source": "class A { d = flag ? function yes(n){return n||0;} : function no(n){return n&&1;}; constructor(v){if(v)use(v);} s(tail){return tail?1:0;} }\nfunction after(tail){return tail?1:0;}\n"
+  },
+  {
+    "field": "d = () => flag ? 1 : 0;",
+    "source": "class A { d = () => flag ? 1 : 0; constructor(v){if(v)use(v);} s(tail){return tail?1:0;} }\nfunction after(tail){return tail?1:0;}\n"
+  }
+]

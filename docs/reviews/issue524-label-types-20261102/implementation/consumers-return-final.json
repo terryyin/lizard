@@ -1,0 +1,26 @@
+{
+  "command": "PIP_QUIET=3 nix develop -c python -m pytest test/test_languages/testJavaScriptBindingBoundaries.py test/testApplication.py test/test_options.py test/testLanguages.py test/test_analyzer.py test/testExtension.py test/testJavaScriptNestedStructures.py test/testNestedStructures.py test/testNestedStructureScopes.py test/test_extensions/testNonStrict.py test/test_extensions/testCognitiveComplexity.py test/test_extensions/testFanInFanOut.py test/test_extensions/testHalstead.py test/test_extensions/testHalsteadClassifier.py test/test_extensions/testHalsteadMetrics.py test/test_extensions/testDuplicatedParamList.py test/test_website.py test/test_languages/testTypeScriptAnnotationBoundaries.py -q",
+  "resolved_files": [
+    "test/test_languages/testJavaScriptBindingBoundaries.py",
+    "test/testApplication.py",
+    "test/test_options.py",
+    "test/testLanguages.py",
+    "test/test_analyzer.py",
+    "test/testExtension.py",
+    "test/testJavaScriptNestedStructures.py",
+    "test/testNestedStructures.py",
+    "test/testNestedStructureScopes.py",
+    "test/test_extensions/testNonStrict.py",
+    "test/test_extensions/testCognitiveComplexity.py",
+    "test/test_extensions/testFanInFanOut.py",
+    "test/test_extensions/testHalstead.py",
+    "test/test_extensions/testHalsteadClassifier.py",
+    "test/test_extensions/testHalsteadMetrics.py",
+    "test/test_extensions/testDuplicatedParamList.py",
+    "test/test_website.py",
+    "test/test_languages/testTypeScriptAnnotationBoundaries.py"
+  ],
+  "exit_code": 0,
+  "stdout": "........................................................................ [ 11%]\n........................................................................ [ 22%]\n........................................................................ [ 33%]\n........................................................................ [ 44%]\n............................ss.......................................... [ 55%]\n........................................................................ [ 67%]\n........................................................................ [ 78%]\n........................................................................ [ 89%]\n....................................................................     [100%]\n642 passed, 2 skipped in 1.13s\n",
+  "stderr": ""
+}

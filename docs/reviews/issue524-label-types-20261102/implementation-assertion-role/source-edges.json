@@ -1,0 +1,76 @@
+[
+  {
+    "edge": "Contextual assertion word -> consumed operand predicate",
+    "disposition": "run",
+    "proof": [
+      "red.json",
+      "green-complete.json",
+      "languages-final.json",
+      "keyword-owner-after.json"
+    ],
+    "setup": "Shared expression-prefix grammar plus actual last_token, newline, binding/class/member roles; no operator-prefix blacklist or ASI mutation.",
+    "observed": "All168 runtime-call positions retain anonymous formalarg/CCN2, enclosing metric/span where present, and successor;36 genuine assertions retain only runtime run/after. Exact14 root regressions now equal frozen baseline;14property and3genuine controls remain exact."
+  },
+  {
+    "edge": "Control statement continuation -> runtime statement replay",
+    "disposition": "run",
+    "proof": [
+      "languages-final.json",
+      "consumers-final.json",
+      "calls-correspondence.json"
+    ],
+    "setup": "Only existing _expecting_statement_or_block clears sticky prefix before replay; no ordinary-call callback wrapper/allocation.",
+    "observed": "return/throw/case/else/if/await and newline semicolon/no-semicolon controls pass;80 frozen40 default/NS records unchanged."
+  },
+  {
+    "edge": "Prefix ! versus non-null postfix operand",
+    "disposition": "run",
+    "proof": [
+      "green-complete.json",
+      "languages-final.json"
+    ],
+    "setup": "Rare existing tail-token dispatch records only postfix operand fact, preserving consumed last_token and all shared ASI functions.",
+    "observed": "!as/satisfies runtime callbacks survive; value! genuine assertion controls retain actual functions and successor."
+  },
+  {
+    "edge": "Root runtime operators -> annotation delimiter replay",
+    "disposition": "run",
+    "proof": [
+      "operator-red.json",
+      "operators-before.json",
+      "operators-baseline.json",
+      "operator-official-parser.json",
+      "languages-final.json"
+    ],
+    "setup": "Root >/>=/<=/instanceof/in/^ terminate; current type bracket stack protects legitimate nested operators/generic closers; actual >>/>>> split into > tokens.",
+    "observed": "54 runtime-operator/type/suffix cases retain nestedcallbackarg CCN2, runCCN1, aftertailCCN2; generic Map arguments remain type-owned."
+  },
+  {
+    "edge": "Positive closed type -> runtime < while reference keeps generic opener",
+    "disposition": "run",
+    "proof": [
+      "left-shift-red.json",
+      "left-shift-green.json",
+      "green-complete.json",
+      "nested-generic-before.json",
+      "reference-candidate2.json",
+      "reference-after.json",
+      "reference-official-parser.json"
+    ],
+    "setup": "Known non-generic/literal or completed type tails return < without lookahead/buffer; qualified references, opener-derived import parentheses, and atomic Vue generic groups preserve type arguments.",
+    "observed": "All6 confirmed << losses fixed; prior1Vue atomic-group failure retained.18 isolated exactcandidate2 pre/current post Box/import/query assertions and anonymous returns match with formalarg; parser diagnostics empty."
+  },
+  {
+    "edge": "Public consumers and established token/cost protocols",
+    "disposition": "run/reused",
+    "proof": [
+      "languages-final.json",
+      "consumers-final.json",
+      "outputs-final.json",
+      "fixture-capture.json",
+      "calls-correspondence.json"
+    ],
+    "setup": "Reuse accepted719consumer record, inspect only changed boundaries. Direct imports/aliases, optional is_optional, template ${, rare-token cost gates, tokenizer/field owners preserved.",
+    "observed": "Original200 fixture sources/wrappers/public records identical;476currentcapture,1373language,975consumer,64output checks pass. No timing verdict claimed on new bytes."
+  }
+]

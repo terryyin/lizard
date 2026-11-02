@@ -1,0 +1,169 @@
+[
+  {
+    "label": "current-calls-api-parameters",
+    "command": [
+      "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/.venv/bin/python",
+      "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/.agents/skills/lizard-process-pr/scripts/paired_benchmark.py",
+      "--baseline",
+      "/Users/terryyin/.cache/issue524-label-types-20261102-candidate3/current",
+      "--candidate",
+      "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types",
+      "--corpus",
+      "/Users/terryyin/.cache/issue524-label-types-20261102-candidate3/calls",
+      "--workload",
+      "api-parameters",
+      "--out",
+      "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/evidence/performance4/current-calls-api-parameters.json",
+      "--pairs",
+      "40",
+      "--seconds",
+      "1.2",
+      "--limit-pct",
+      "3"
+    ],
+    "exit": 0,
+    "stdout": "{\"verdict\": \"passes\", \"passes\": true, \"paired_95pct_ci\": [1.3458840000753731, 2.7992221229942627], \"out\": \"/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/evidence/performance4/current-calls-api-parameters.json\"}\n",
+    "stderr": "",
+    "passes": true,
+    "verdict": "passes",
+    "paired_change_pct": 2.069966398421816,
+    "paired_95pct_ci": [
+      1.3458840000753731,
+      2.7992221229942627
+    ]
+  },
+  {
+    "label": "current-labels-api-parameters",
+    "command": [
+      "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/.venv/bin/python",
+      "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/.agents/skills/lizard-process-pr/scripts/paired_benchmark.py",
+      "--baseline",
+      "/Users/terryyin/.cache/issue524-label-types-20261102-candidate3/current",
+      "--candidate",
+      "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types",
+      "--corpus",
+      "/Users/terryyin/.cache/issue524-label-types-20261102-candidate3/labels",
+      "--workload",
+      "api-parameters",
+      "--out",
+      "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/evidence/performance4/current-labels-api-parameters.json",
+      "--pairs",
+      "20",
+      "--seconds",
+      "1.2",
+      "--limit-pct",
+      "3"
+    ],
+    "exit": 0,
+    "stdout": "{\"verdict\": \"passes\", \"passes\": true, \"paired_95pct_ci\": [-3.309906125538896, -1.6282274744974605], \"out\": \"/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/evidence/performance4/current-labels-api-parameters.json\"}\n",
+    "stderr": "",
+    "passes": true,
+    "verdict": "passes",
+    "paired_change_pct": -2.472691413696983,
+    "paired_95pct_ci": [
+      -3.309906125538896,
+      -1.6282274744974605
+    ]
+  },
+  {
+    "label": "current-annotations-api-parameters",
+    "command": [
+      "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/.venv/bin/python",
+      "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/.agents/skills/lizard-process-pr/scripts/paired_benchmark.py",
+      "--baseline",
+      "/Users/terryyin/.cache/issue524-label-types-20261102-candidate3/current",
+      "--candidate",
+      "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types",
+      "--corpus",
+      "/Users/terryyin/.cache/issue524-label-types-20261102-candidate3/annotations",
+      "--workload",
+      "api-parameters",
+      "--out",
+      "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/evidence/performance4/current-annotations-api-parameters.json",
+      "--pairs",
+      "20",
+      "--seconds",
+      "1.2",
+      "--limit-pct",
+      "3"
+    ],
+    "exit": 0,
+    "stdout": "{\"verdict\": \"passes\", \"passes\": true, \"paired_95pct_ci\": [-1.6749645406727094, 0.2549722745386266], \"out\": \"/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/evidence/performance4/current-annotations-api-parameters.json\"}\n",
+    "stderr": "",
+    "passes": true,
+    "verdict": "passes",
+    "paired_change_pct": -0.7146853564542262,
+    "paired_95pct_ci": [
+      -1.6749645406727094,
+      0.2549722745386266
+    ]
+  },
+  {
+    "label": "current-complete-api-parameters",
+    "command": [
+      "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/.venv/bin/python",
+      "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/.agents/skills/lizard-process-pr/scripts/paired_benchmark.py",
+      "--baseline",
+      "/Users/terryyin/.cache/issue524-label-types-20261102-candidate3/current",
+      "--candidate",
+      "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types",
+      "--corpus",
+      "/Users/terryyin/.cache/issue524-label-types-20261102-candidate3/complete",
+      "--workload",
+      "api-parameters",
+      "--out",
+      "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/evidence/performance4/current-complete-api-parameters.json",
+      "--pairs",
+      "20",
+      "--seconds",
+      "1.2",
+      "--limit-pct",
+      "3"
+    ],
+    "exit": 0,
+    "stdout": "{\"verdict\": \"passes\", \"passes\": true, \"paired_95pct_ci\": [-0.44079482944699894, 1.4179862066050288], \"out\": \"/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/evidence/performance4/current-complete-api-parameters.json\"}\n",
+    "stderr": "",
+    "passes": true,
+    "verdict": "passes",
+    "paired_change_pct": 0.48429776202699976,
+    "paired_95pct_ci": [
+      -0.44079482944699894,
+      1.4179862066050288
+    ]
+  },
+  {
+    "label": "current-calls-ns",
+    "command": [
+      "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/.venv/bin/python",
+      "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/.agents/skills/lizard-process-pr/scripts/paired_benchmark.py",
+      "--baseline",
+      "/Users/terryyin/.cache/issue524-label-types-20261102-candidate3/current",
+      "--candidate",
+      "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types",
+      "--corpus",
+      "/Users/terryyin/.cache/issue524-label-types-20261102-candidate3/calls",
+      "--workload",
+      "api-parameters",
+      "--out",
+      "/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/evidence/performance4/current-calls-ns.json",
+      "--pairs",
+      "40",
+      "--seconds",
+      "1.2",
+      "--limit-pct",
+      "3",
+      "--extension",
+      "NS"
+    ],
+    "exit": 1,
+    "stdout": "{\"verdict\": \"bound-not-met\", \"passes\": false, \"paired_95pct_ci\": [1.3761678265550505, 3.143266276442392], \"out\": \"/Users/terryyin/git/lizard/.worktrees/resolve-issue524-label-types/docs/reviews/issue524-label-types-20261102/evidence/performance4/current-calls-ns.json\"}\n",
+    "stderr": "",
+    "passes": false,
+    "verdict": "bound-not-met",
+    "paired_change_pct": 2.255899938437194,
+    "paired_95pct_ci": [
+      1.3761678265550505,
+      3.143266276442392
+    ]
+  }
+]
