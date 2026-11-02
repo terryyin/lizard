@@ -229,6 +229,14 @@ job; retaining raw data need not print it into coordinator context.
   - Additional evidence: root retained a20,788-token GitHub ALL_TOOLS discovery matching shared description boilerplate, and a125,371-token broad installation rg output; exact-name projection and exact API/receiver files replaced those searches before conclusions. No unrelated launch-record contents or truncated output established acceptance.
   - Inference: avoidable output/context cost, not a provider or CI failure. No aggregate token saving or elapsed-time reduction is claimed.
 
+- Execution: SEED-025#cucumber-scenario-proof
+  - Timestamp: unknown (2026-11-02 implementation before ad19779 publication)
+  - Tool: Codex
+  - Open Dough release: 0.3.81
+  - Evidence: execution chat source search over website/scripts/test for proof terms included generated website/frontend/reports/cucumber.html; its tool result reported 274,007 original tokens and truncation. Subsequent source searches excluded generated reports and selected source extensions. Batched guidance and whole consumer-trace reads also returned truncation notices.
+  - Observed effect: generated Cucumber HTML/messages and bundle text obscured the small recorder search; later bounded source inspection established the implementation. No acceptance or CI verdict was inferred from truncated output.
+  - Inference: this is the existing search/projection problem recurring, not a new provider or product defect. Output bounds should constrain source selection as well as rendering; no aggregate time or token saving is claimed.
+
 ## DD-014 — Empty `gh pr checks` is not a green merge gate
 
 After pushing a corrected contributor head, do not treat `gh pr checks --watch`
