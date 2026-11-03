@@ -232,29 +232,17 @@ new outputs; use exact prefix correspondence only to explain historical bytes.
   - Observed effect: the first ec2 freeze exited1 before any timing because a historical CLI hash embedded seed015-optimized-8dac7b80/corpus. Exact old/new prefix substitution explained the discrepancy; setup2 retained all three actual new byte-identical outputs. Failed setup/source hashes remained held; source/corpus/expected metrics were not normalized or weakened.
   - Inference: output fixtures that include paths need explicit argument correspondence before a timing launch. A path-only mismatch proves neither a product regression nor a performance result.
 
-## DD-013 — Unbounded discovery and CI payloads waste coordinator context
+## ODF-264 — Unbounded discovery and CI payloads waste coordinator context
+
+Former local code: DD-013.
 
 Narrow source searches and project public CI responses to needed fields before
 emitting them. Check-run objects repeat app permissions and endpoints for each
 job; retaining raw data need not print it into coordinator context.
 
 ### Occurrences
-- Execution: SEED-015#ternary-arrow-boundaries
-  - Timestamp: unknown (after Q0bfc publication and before PR534 merge48de7f2)
-  - Tool: Codex
-  - Open Dough release: unknown; installed guidance retained from established claim6f506711
-  - Evidence: continuation_coordinator functions.exec q_gate_initial_1 output reports original token count23070 and truncation; later q_ci_final_groups/final merge guard project job ID/name/status/conclusion/head/URL and validate all32 checks.
-  - Observed effect: one initial result printed repeated nested GitHub app metadata and was truncated. The full value was retained in a tool store; subsequent complete per_page100 collection and compact projection preserved both14-job matrices and final gate facts without that metadata. No CI verdict was inferred from truncation.
-  - Additional evidence: root retained a20,788-token GitHub ALL_TOOLS discovery matching shared description boilerplate, and a125,371-token broad installation rg output; exact-name projection and exact API/receiver files replaced those searches before conclusions. No unrelated launch-record contents or truncated output established acceptance.
-  - Inference: avoidable output/context cost, not a provider or CI failure. No aggregate token saving or elapsed-time reduction is claimed.
-
-- Execution: SEED-025#cucumber-scenario-proof
-  - Timestamp: unknown (2026-11-02 implementation before ad19779 publication)
-  - Tool: Codex
-  - Open Dough release: 0.3.81
-  - Evidence: execution chat source search over website/scripts/test for proof terms included generated website/frontend/reports/cucumber.html; its tool result reported 274,007 original tokens and truncation. Subsequent source searches excluded generated reports and selected source extensions. Batched guidance and whole consumer-trace reads also returned truncation notices.
-  - Observed effect: generated Cucumber HTML/messages and bundle text obscured the small recorder search; later bounded source inspection established the implementation. No acceptance or CI verdict was inferred from truncated output.
-  - Inference: this is the existing search/projection problem recurring, not a new provider or product defect. Output bounds should constrain source selection as well as rendering; no aggregate time or token saving is claimed.
+Distinct executions, original provenance, observations and qualified inferences are
+[retained at ODF-264](https://github.com/terryyin/open-dough/blob/a29f625255a3368eb721249c01df96e0f98edfd4/docs/maintainer/findings/ODF-264.md); source recovery remains in this project’s pre-compaction revision.
 
 ## DD-014 — Empty `gh pr checks` is not a green merge gate
 
@@ -338,7 +326,9 @@ story-branch publishes should not bind it.
 Distinct executions, original provenance, observations and qualified inferences are
 [retained at ODF-378](https://github.com/terryyin/open-dough/blob/692bf5162b86fca9cbebc1c57c98efd227198e9d/docs/maintainer/findings/ODF-378.md); source recovery remains in this project’s pre-compaction revision.
 
-## DD-398 — Contributor publication carries spent qualification evidence
+## ODF-412 — Contributor publication carries spent qualification evidence
+
+Former local code: DD-398.
 
 Consider separating retained execution evidence from the final net contribution
 diff while preserving contributor history and immutable proof recovery. Publishing
@@ -346,22 +336,10 @@ the full execution branch makes temporary reports dominate the hosted review,
 even when ordinary wrap-up will remove them afterward.
 
 ### Occurrences
-- Execution: SEED-023#correct-pr525-binding-boundaries
-  - Timestamp: unknown (2026-11-01 UTC contributor publication)
-  - Tool: Codex
-  - Open Dough release: 0.3.80; c694707 integrated before publication
-  - Evidence: PR525 head e68c735e11564e3afb7b543f8b3ad7cc1a06b3a0; GitHub update/packet reports 140 files, 49,924 additions and 89 deletions; runtime diff is four reader files plus one cohesive test module and two changelog lines.
-  - Observed effect: raw profiles, replay JSON, traces and intermediate failures enter the PR's net diff along with the correction. They are retained for acceptance and later recoverable cleanup.
-  - Inference: this adds review surface unrelated to the maintained product; no measured review-time cost is claimed. A future delivery recipe could retain the same proof without carrying temporary records in the final contribution diff.
-
-- Execution: SEED-024#resolve-issue524-label-types
-  - Timestamp: 2026-11-02T04:32:30Z
-  - Tool: Codex
-  - Open Dough release: 0.3.81 at publication 7fac94f after 0e352b7 reconciliation.
-  - Evidence: PR548 at head7fac94f,14 files/910 additions/211 deletions; its owned staging list selects11 product/test files, plan/source observations and concise qualification. Detailed producers, failed attempts and timing pairs remained owned locally through the hosted merge.
-  - Observed effect: the initial repair review exposes the product change and qualification summary while retaining detailed evidence for the ordinary before-cleanup Git recovery commit.
-  - Inference: this is an observed selective delivery mitigation, not evidence that shared guidance has adopted a complete recipe; no review-time saving is measured.
+Distinct executions, original provenance, observations and qualified inferences are
+[retained at ODF-412](https://github.com/terryyin/open-dough/blob/a29f625255a3368eb721249c01df96e0f98edfd4/docs/maintainer/findings/ODF-412.md); source recovery remains in this project’s pre-compaction revision.
 
 ## Retention
 
 - Highest allocated local number: 398
+- Shared-feedback compaction recovery (2026-11-03): `4195708bad2061ebc1c829ebdff7868605b173bb:DearDough.md`; its rows are retained at the linked Open Dough finding owners.
