@@ -46,18 +46,20 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0903
         'fun', 'class', 'interface', 'val', 'var',
     }
 
-    def __init__(self, context, in_when_cases=False, accessor_scope=None):
+    def __init__(self, context, in_when_cases=False, accessor_declaration_scope=None):
         super().__init__(context)
         self._in_when_cases = in_when_cases
         self._expr_nesting = 0
-        self._accessor = None
-        self._accessor_scope = accessor_scope or context.global_pseudo_function
+        self._accessor_name = None
+        self._accessor_declaration_scope = (
+            accessor_declaration_scope or context.global_pseudo_function
+        )
         self._when_return_state = self._state_global
 
     def _state_global(self, token):
         if (token in self._ACCESSORS
-                and self.context.current_function is self._accessor_scope):
-            self._accessor = token
+                and self.context.current_function is self._accessor_declaration_scope):
+            self._accessor_name = token
             self.context.push_new_function(token)
             self._state = self._expect_function_impl
         elif (token in ('class', 'object') and self.last_token != '::'
@@ -77,7 +79,7 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0903
             self._start_when(self._state_global)
         else:
             if token == self.FUNC_KEYWORD:
-                self._accessor = None
+                self._accessor_name = None
             super(KotlinStates, self)._state_global(token)
 
     def _local_class_header(self, token):
@@ -87,7 +89,7 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0903
             # A local class can declare accessors while its enclosing function is active.
             self.next(self._state_global)
             self.sub_state(KotlinStates(
-                self.context, accessor_scope=self.context.current_function,
+                self.context, accessor_declaration_scope=self.context.current_function,
             ))
         elif token in self._EXPRESSION_BODY_ENDERS or token in ('}', ';'):
             self.next(self._state_global, token)
@@ -129,14 +131,18 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0903
 
     def _is_expression_body_ender(self, token):
         if token in self._ACCESSORS:
-            # A property can declare its other accessor after an expression body.
-            return (self._accessor is not None and token != self._accessor
-                    and (self.context.newline or self.last_token == ';'
-                         or self.last_token in self._ACCESSOR_MODIFIERS)
-                    and self.last_token not in ('=', '.', '::'))
+            return self._starts_sibling_accessor(token)
         if token == 'class' and self.last_token == '::':
             return False
         return token in self._EXPRESSION_BODY_ENDERS
+
+    def _starts_sibling_accessor(self, token):
+        if self._accessor_name is None or token == self._accessor_name:
+            return False
+        if self.last_token in ('=', '.', '::'):
+            return False
+        return (self.context.newline or self.last_token == ';'
+                or self.last_token in self._ACCESSOR_MODIFIERS)
 
     def _end_expression_body(self, token):
         self.context.end_of_function()
