@@ -61,10 +61,10 @@ class JavaScriptObjectsMixin:
                 self.function_name = name
             self._in_prop_value = True
             return True
-        elif token == '<' or (
-                token.startswith('<') and token.endswith('>') and len(token) > 1):
-            # Generic type params on method: sortByKey<T>(...) {
-            # Handles both multi-token <T, U> and single-token <T> from TSX tokenizer.
+        elif (token == '<' or token.startswith('<') and token.endswith('>')) and (
+                not self._in_prop_value or self.last_token in (':', '=')):
+            # Methods and the start of arrow values can have type parameters.
+            # Inside a value, an infix '<' is not a method signature.
             if token == '<':
                 self._consume_generic_type_params()
             return True

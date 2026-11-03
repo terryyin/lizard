@@ -190,8 +190,11 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         ) or (
                 # After an argument/declarator/generic comma, keep ending
                 # expression arrows here, at the next line's first token.
-                self.context.newline and (
-                    not self._expression_body or self.last_token == ',')):
+                self.context.newline
+                # An object property value can continue across line breaks.
+                and (not self.as_object or self.as_class
+                     or not self._in_prop_value or self.started_function)
+                and (not self._expression_body or self.last_token == ',')):
             self._end_statement()
 
         if token in _TAIL_TOKENS:

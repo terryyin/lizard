@@ -75,6 +75,29 @@ def test_object_array_keeps_decisions_and_following_formals(suffix):
         ('f', 2, 1, 3, ['x']), ('after', 2, 4, 4, ['y'])]
 
 
+@pytest.mark.parametrize('suffix', ('js', 'ts'))
+@pytest.mark.parametrize('separator', (' ', '\n    '), ids=('single-line', 'multiline'))
+def test_object_property_comparison_preserves_function_boundaries(suffix, separator):
+    source = ('function a(xs) {\n'
+              '  return { ok:' + separator + 'xs.length < 3 };\n'
+              '}\n'
+              'function b(x) {\n'
+              '  if (x) return 1;\n'
+              '  return 2;\n'
+              '}\n')
+    extra_line = separator.count('\n')
+    assert summaries(functions(source, suffix)) == [
+        ('a', 1, 1, 3 + extra_line, ['xs']),
+        ('b', 2, 4 + extra_line, 7 + extra_line, ['x'])]
+
+
+@pytest.mark.parametrize('separator', (' ', '\n    '), ids=('single-line', 'multiline'))
+def test_typescript_generic_arrow_property_keeps_parameters(separator):
+    source = 'const obj = { f:' + separator + '<T>(x: T) => x };\n'
+    line = 1 + separator.count('\n')
+    assert summaries(functions(source, 'ts')) == [('f', 1, line, line, ['x'])]
+
+
 @pytest.mark.parametrize('suffix', SUFFIXES)
 def test_template_substitutions_keep_members_and_enclosing_callback(suffix):
     source = ("it('t', () => {\n"
