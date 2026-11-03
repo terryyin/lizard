@@ -65,6 +65,34 @@ class Test_parser_for_Kotlin(unittest.TestCase):
                 ''')
         self.assertEqual(2, result[0].cyclomatic_complexity)
 
+    def test_get_and_set_in_block_body(self):
+        for name in ("get", "set"):
+            for expression in (f"m.{name}(1)", f"m.{name}", f"{name}()"):
+                with self.subTest(expression=expression):
+                    result = get_kotlin_function_list(f"""
+                        fun f() {{
+                            val c = {expression}
+                            if (c == 1) println()
+                        }}
+                    """)
+                    self.assertEqual(
+                        [("f", 2)],
+                        [(f.name, f.cyclomatic_complexity) for f in result],
+                    )
+
+    def test_get_and_set_in_expression_body(self):
+        for name in ("get", "set"):
+            for expression in (f"m.{name}(1)", f"m.{name}", f"{name}()"):
+                with self.subTest(expression=expression):
+                    result = get_kotlin_function_list(f"""
+                        fun f() = {expression} ?: 0
+                        fun next() {{}}
+                    """)
+                    self.assertEqual(
+                        [("f", 2), ("next", 1)],
+                        [(f.name, f.cyclomatic_complexity) for f in result],
+                    )
+
     def test_interface(self):
         result = get_kotlin_function_list('''
             interface p {
@@ -114,15 +142,31 @@ class Test_parser_for_Kotlin(unittest.TestCase):
         result = get_kotlin_function_list('''
             class Time
             {
-                var seconds: Double = 17.0
-                var minutes: Double
-                    get() = seconds / 60
-                    set(newValue) {
-                        this.seconds = (newValue * 60)
+                var minutes: Double = 17.0
+                    get() = source.set() ?: field
+                    private set(newValue) {
+                        source.set(newValue)
+                        field = newValue
                     }
             }
                 ''')
         self.assertEqual(["get", "set"], [f.name for f in result])
+        self.assertEqual([2, 1], [f.cyclomatic_complexity for f in result])
+
+    def test_getter_in_local_class(self):
+        result = get_kotlin_function_list('''
+            fun outer() {
+                class Local(val source: Source) {
+                    val minutes: Double
+                        get() = source.get() ?: 0.0
+                }
+                source.set(0.0)
+            }
+        ''')
+        self.assertEqual(
+            [("get", 2), ("outer", 1)],
+            [(f.name, f.cyclomatic_complexity) for f in result],
+        )
 
     # https://docs.kotlin.org/kotlin-book/LanguageGuide/Properties.html#ID259
     def test_explicit_getter_setter(self):
