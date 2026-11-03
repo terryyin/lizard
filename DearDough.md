@@ -20,6 +20,17 @@ no latency claim or new watch. The other local incidents have repaired seams,
 usable probes or unresolved host/attribution limits, and justify no new story.
 Existing Taken work, direction and queue order stay unchanged.
 
+Local maintenance (2026-11-03) classifies rows added since then and the
+unclassified DD-014/DD-015. DD-398 is shared: the contributor delivery recipe
+publishes the whole execution branch; PR548's selective staging is one
+execution's mitigation. DD-013's SEED-025 row has no project facet, because
+`website/frontend/reports/` is already gitignored. DD-010 and DD-015 remain
+practice confirmations. DD-014 is project-owned: `lizard-process-pr` section 5
+(since `f0887ec`, before the occurrence) already blocks unresolved required
+checks. No repair was adopted. Later hosted merges PR525 (`b97f795`) and PR548
+(`2416c37`) waited for all 32 exact-head check runs to succeed, so DD-014 stays
+open without a new story. No retirement, story or queue change.
+
 <a id="dd-001--codex-stream-can-yield-before-exposing-observer-identity"></a>
 
 ## ODF-376 — Codex stream can yield before exposing observer identity
