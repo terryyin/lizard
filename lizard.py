@@ -89,7 +89,9 @@ from lizard_core.text_output import (  # noqa: E402
     print_msvs_style_warning)
 from lizard_core.options import (  # noqa: E402
     DEFAULT_CCN_THRESHOLD, DEFAULT_MAX_FUNC_LENGTH, _extension_arg,
-    arg_parser, parse_args, infer_printer_from_file_ext)
+    arg_parser)
+from lizard_core.option_resolution import (  # noqa: E402
+    parse_args, infer_printer_from_file_ext)
 from lizard_core.cli import open_output_file, main  # noqa: E402
 
 

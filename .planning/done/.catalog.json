@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-030_compact-callback-report.json",
+      "identity": "SEED-030#compact-callback-report",
+      "completedAt": "2026-11-04T04:15:21.598Z",
+      "blob": "6f71fcf34cc74f9f8f2598531d3e8b76b80d77b3"
+    },
+    {
       "fileName": "SEED-028_deliberate-cucumber-proof.json",
       "identity": "SEED-028#deliberate-cucumber-proof",
       "completedAt": "2026-11-02T10:47:42.043Z",

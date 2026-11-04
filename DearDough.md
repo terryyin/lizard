@@ -339,7 +339,26 @@ even when ordinary wrap-up will remove them afterward.
 Distinct executions, original provenance, observations and qualified inferences are
 [retained at ODF-412](https://github.com/terryyin/open-dough/blob/a29f625255a3368eb721249c01df96e0f98edfd4/docs/maintainer/findings/ODF-412.md); source recovery remains in this project’s pre-compaction revision.
 
+## DD-399 — Source-only review restored formatter promises the plan proof narrowed
+
+The story listed seven formatters whose `--compact` output must stay unchanged
+(XML, CSV, Checkstyle, HTML, clang, MSVS, extension printers). The executable
+plan's proof named only "`--xml` (or `--csv`)", and the first implementation
+proof followed the plan. The independent source-only review split the list into
+separate ids, and the coordinator added the missing observations before
+acceptance.
+
+### Occurrences
+- Execution: SEED-030#compact-callback-report
+  - Timestamp: 2026-11-04T11:00:00+07:00 (approximate; slice 1 acceptance before d912695)
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.82 (installed by commit 210ae36)
+  - Evidence: plan proof item 5 at `bd4069d:.planning/slice-plans/019-compact-callback-report/PLAN.md`; review ids S9.3–S9.7 and K3 in `d912695:.planning/slice-plans/019-compact-callback-report/source-review.md`; `test_compact_leaves_other_formatters_unchanged` and `test_compact_leaves_extension_printer_unchanged` in `test/testCompactReport.py`.
+  - Observed effect: one extra test round before delivery. Five formatter commitments and the analysis-results example became observed proof instead of being accepted on the plan's narrower mapping.
+  - Inference: slice planning can collapse a listed compound scope item into "e.g." proof. The separate-ids source review is the gate that catches this. Practice confirmation, not a defect in this execution's delivery.
+
 ## Retention
 
-- Highest allocated local number: 398
+- Highest allocated local number: 399
 - Shared-feedback compaction recovery (2026-11-03): `4195708bad2061ebc1c829ebdff7868605b173bb:DearDough.md`; its rows are retained at the linked Open Dough finding owners.

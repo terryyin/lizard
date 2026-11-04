@@ -106,8 +106,11 @@ class FileInfoBuilder(object):
         self.confirm_new_function()
 
     def push_new_function(self, name):
-        self.stacked_functions.append(self.current_function)
+        enclosing = self.current_function
+        self.stacked_functions.append(enclosing)
         self.restart_new_function(name)
+        self.current_function.defined_in_function = (
+            enclosing is not self.global_pseudo_function)
 
     def add_condition(self, inc=1):
         self.current_function.cyclomatic_complexity += inc

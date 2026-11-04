@@ -1,7 +1,7 @@
 """
 The default text printers and the clang/MSVS style warning printers.
 """
-from lizard_core.warning_filter import get_warnings
+from lizard_core.warning_filter import get_warnings, warning_policy
 
 
 def print_warnings(option, scheme, warnings):
@@ -46,13 +46,13 @@ def print_total(warning_count, warning_nloc, all_result, scheme):
                   nloc_rate=(warning_nloc/all_result.nloc_in_functions())))
 
 
-def print_and_save_modules(all_fileinfos, scheme):
+def print_and_save_modules(all_fileinfos, scheme, shown=lambda fun: True):
     saved_fileinfos = []
     print(scheme.function_info_head())
     for module_info in all_fileinfos:
         if module_info:
             saved_fileinfos.append(module_info)
-            for fun in module_info.function_list:
+            for fun in filter(shown, module_info.function_list):
                 try:
                     print(scheme.function_info(fun))
                 except UnicodeEncodeError:
@@ -72,9 +72,21 @@ def print_and_save_modules(all_fileinfos, scheme):
     return saved_fileinfos
 
 
+def is_trivial_nested_callback(fun):
+    return (fun.name == '(anonymous)' and fun.defined_in_function and
+            fun.cyclomatic_complexity == 1)
+
+
 def print_result(result, option, scheme, total_factory):
-    result = print_and_save_modules(result, scheme)
-    warnings = get_warnings(result, option)
+    # Only --compact needs the warning policy before the table; building it
+    # later keeps the default report's missing-whitelist notice after it.
+    is_warning = warning_policy(option) if option.compact else None
+
+    def shown(fun):
+        return (is_warning is None or is_warning(fun) or
+                not is_trivial_nested_callback(fun))
+    result = print_and_save_modules(result, scheme, shown)
+    warnings = get_warnings(result, option, is_warning)
     warning_count, warning_nloc = print_warnings(option, scheme, warnings)
     print_total(warning_count, warning_nloc, total_factory(result), scheme)
     return warning_count

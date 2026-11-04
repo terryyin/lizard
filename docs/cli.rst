@@ -34,6 +34,8 @@ Options
                         fdiagnostics-format
   --warning-msvs        Show warnings only, using Visual Studio's warning format for printing
                         warnings. https://msdn.microsoft.com/en-us/library/yxkt8b26.aspx
+  --compact             Leave out of the default report's function table the anonymous functions
+                        defined inside another function that have CCN 1 and no warning.
   -i NUMBER, --ignore_warnings NUMBER
                         If the number of warnings is equal or less than the number, the tool will
                         exit normally; otherwise, it will generate error. If the number is

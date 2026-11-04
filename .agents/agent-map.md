@@ -12,7 +12,8 @@ Short navigation index for the Lizard repository.
   `extensions.py` (extension loading), `analysis.py` (batch `analyze`),
   `warning_filter.py` (thresholds and whitelist), `output_scheme.py` (column
   schema), `text_output.py` (default and warning printers), `options.py`
-  (option table and resolution), `cli.py` (`main`). `lizard.py` is the public
+  (option table), `option_resolution.py` (resolving parsed options into
+  thresholds and the printer), `cli.py` (`main`). `lizard.py` is the public
   facade: it re-exports those names and is the script and console entry point.
   `lizard_core` modules never import `lizard`.
 - **Language readers:** `lizard_languages/` — one module per language, with
