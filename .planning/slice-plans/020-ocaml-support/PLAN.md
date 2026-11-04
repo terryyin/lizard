@@ -146,6 +146,15 @@ Behavior: Given `let rec … and …`, `module Name = struct … end`, `type`,
 struct's `end` closes its last function, and non-`let` items close the open
 function without adding decisions.
 
+## Execution complete
+
+Product advice: no change to the story or queue. Follow-up candidates for a
+product decision: `class` / `object` items are not structure-item boundaries
+(story-deferred objects), so a function before a `class … end` absorbs its
+lines (observed: `let h = function …` followed by `class point = object … end`
+spans both); reporting complex `let () =` entry blocks remains the story's noted
+possible follow-up. The sibling F# story needs no change from this execution.
+
 ## Current decisions
 
 - Tokens come from Pygments' OCaml lexer (P2, P3); the reader corrects its

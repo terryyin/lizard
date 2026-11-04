@@ -232,6 +232,15 @@ new outputs; use exact prefix correspondence only to explain historical bytes.
   - Observed effect: the first ec2 freeze exited1 before any timing because a historical CLI hash embedded seed015-optimized-8dac7b80/corpus. Exact old/new prefix substitution explained the discrepancy; setup2 retained all three actual new byte-identical outputs. Failed setup/source hashes remained held; source/corpus/expected metrics were not normalized or weakened.
   - Inference: output fixtures that include paths need explicit argument correspondence before a timing launch. A path-only mismatch proves neither a product regression nor a performance result.
 
+- Execution: SEED-029#ocaml-support
+  - Timestamp: 2026-11-04 (time unknown; slice 1 and slice 3 acceptance before e8ecf8a and 59ddc71)
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.82 (installed by commit 210ae36)
+  - Evidence: `test_let_after_non_ending_tokens_is_local` in `e8ecf8a:test/test_languages/testOCaml.py` (rewritten so `then`/`else`/`->` lets sit at depth 0, not inside parentheses); `test_one_line_module_example` in `59ddc71:test/test_languages/testOCamlItemBoundaries.py`.
+  - Observed effect: a returned test that passed only through the bracket rule, and the story's literal one-line module example, were caught by coordinator probes and pinned; the product needed no change.
+  - Inference: the probes caught tests that did not discriminate, not product gaps; a test whose setup satisfies a second rule cannot observe the first.
+
 ## ODF-264 — Unbounded discovery and CI payloads waste coordinator context
 
 Former local code: DD-013.
@@ -357,6 +366,15 @@ acceptance.
   - Evidence: plan proof item 5 at `bd4069d:.planning/slice-plans/019-compact-callback-report/PLAN.md`; review ids S9.3–S9.7 and K3 in `d912695:.planning/slice-plans/019-compact-callback-report/source-review.md`; `test_compact_leaves_other_formatters_unchanged` and `test_compact_leaves_extension_printer_unchanged` in `test/testCompactReport.py`.
   - Observed effect: one extra test round before delivery. Five formatter commitments and the analysis-results example became observed proof instead of being accepted on the plan's narrower mapping.
   - Inference: slice planning can collapse a listed compound scope item into "e.g." proof. The separate-ids source review is the gate that catches this. Practice confirmation, not a defect in this execution's delivery.
+
+- Execution: SEED-029#ocaml-support
+  - Timestamp: 2026-11-04 (time unknown; slice 1 acceptance before e8ecf8a)
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.82 (installed by commit 210ae36)
+  - Evidence: slice 1 proof row in `ba8d367:.planning/slice-plans/020-ocaml-support/PLAN.md` named only key examples 1, 2, 6, 8; obligation G1 and review ids 2.3, 2.11.3–2.11.7, 2.12, 4.5, 5.1.2, 5.1.3, 5.7.3, 6.1.2, 7.1 in `e8ecf8a:.planning/slice-plans/020-ocaml-support/source-review.md`.
+  - Observed effect: one return round on slice 1 (seven tests added, no product change) before delivery.
+  - Inference: the source review ran at first acceptance, after the slice-1 delegation, so the implementer received only the plan's example-shaped proof; obtaining the review before first delegation would have put the ids in the brief.
 
 ## Retention
 
