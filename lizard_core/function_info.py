@@ -71,7 +71,7 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
         # Binding patterns can occupy formal slots without introducing names.
         return sum(
             bool(_PARAMETER_NAME.search(parameter))
-            or parameter.strip() in ('{}', '[]')
+            or parameter.strip() in ('{}', '[]', '()')
             for parameter in self.full_parameters)
 
     @property

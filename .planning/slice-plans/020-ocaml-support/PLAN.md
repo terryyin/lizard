@@ -2,6 +2,7 @@
 
 **Mapped story identity:** SEED-029#ocaml-support
 **Source:** [canonical story](../../seeds/SEED-029-ocaml-fsharp-support.md#ocaml-support)
+**Source review:** [source-review.md](source-review.md)
 
 ## Goal and scope
 
@@ -99,7 +100,7 @@ edited.
 
 ### 1. OCaml files are discovered and their top-level functions analyzed
 Type: Behavior
-Status: planned
+Status: done
 Proof: `testOCaml.py`: example 2 (`fact` CCN 2 / 1 param / NLOC 1; `greet`
 CCN 1 / 3 params); `let g a b = a || b` CCN 2; example 6 boundaries (exactly
 `sum` with its start/end lines, and `after`; no `go`, `next`); example 8 (CCN
@@ -152,6 +153,11 @@ function without adding decisions.
 - Item-versus-local `let` uses the heading-position rule (P6), not `in`
   balance (P5).
 
+## Learnings
+
+- Slice 1 (accepted proof `nix develop -c python -m pytest test/test_languages/testOCaml.py`, 13 tests; full suite 2946 passed): Pygments splits `<=`, `>=`, `<>`, `|>` into single characters but keeps `->`, `&&`, `::`, `;;`, `[|`, `|]` whole, so arm detection can rely on a whole `->` token; `| |` with a space stays two arm bars; `()` is one token (counted as a parameter slot in `FunctionInfo.parameter_count`).
+- The heading `let` is charged to the previous function's NLOC and tokens before the reader sees it; `OCamlStates._start_item` compensates and is the place to reuse for `and`, `type`, `module`, `open`, `;;` in slice 3. `struct` is not yet an opener and `end` clamps depth at 0; slice 3 must make `struct` / `sig` / `object` open a scope.
+
 ## Plan concerns
 
 Refinement: not needed — three Behavior slices each own one proof loop over
@@ -160,3 +166,30 @@ token stream in 2, more heading kinds in 3); no hidden preparation or
 independent outcomes found.
 
 Remaining slice-specific concerns: none identified in this review.
+
+## Story obligations
+
+### EX1. Story deferred promises
+Reported: slice 1 — "Deferred promises (not built or verified by this story) returned by the source review as X1–X7."
+Story clause: "Deferred promises (not built or verified by this story)"
+Disposition: excluded "Deferred promises (not built or verified by this story)"
+
+### EX2. No rejection constraints
+Reported: slice 1 — "Source review R1: no rejection constraints."
+Story clause: "No product requirement calls for rejecting any OCaml input."
+Disposition: excluded "No product requirement calls for rejecting any OCaml input."
+
+### I1. Match, function and try arms and when guards uncounted
+Reported: slice 1 — "Interim behaviour, as planned: match / function / try arms and when are not counted."
+Story clause: "A `match … with` or `function` with n arms adds n − 1"
+Disposition: interim until slices 2
+
+### I2. and siblings, modules, type and other items are not boundaries
+Reported: slice 1 — "and, module…struct…end, type and ;; items are not boundaries. A let right after struct counts as local, so functions inside a module are not reported until slice 3."
+Story clause: "including each `and` sibling of a `let rec … and …` group and bindings inside `module Name = struct … end`"
+Disposition: interim until slices 3
+
+### G1. Slice 1 proof lacks observations for owned commitments (discovered at slice 1 acceptance)
+Reported: slice 1 — "Acceptance found no observing assertion for a `fun`-bodied binding, local `let` after `->`/`then`/`else`/`;`/operator, `let` inside brackets or `begin … end`, local tokens counted in the enclosing function, `while`, `for`, `begin` not a decision, optional `?x`, and comments inside a function adding no decisions."
+Story clause: "Parameters: each curried argument before `=` counts one, including labelled `~x`, optional `?x` / `?(x = d)`, annotated `(x : t)`, and unit `()`."
+Disposition: proved by slice 1: test/test_languages/testOCaml.py tests test_binding_whose_body_starts_with_fun_is_a_function, test_let_after_non_ending_tokens_is_local, test_let_inside_brackets_and_begin_end_is_local, test_local_let_and_fun_tokens_count_in_enclosing_function, test_loops_are_decisions_and_begin_end_is_not, test_optional_argument_counts_one_parameter, test_comment_inside_function_body_is_inert

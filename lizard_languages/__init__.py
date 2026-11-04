@@ -29,6 +29,7 @@ from .st import StReader
 from .r import RReader
 from .plsql import PLSQLReader
 from .cobol import CobolReader
+from .ocaml import OCamlReader
 
 
 def languages():
@@ -62,6 +63,7 @@ def languages():
         PLSQLReader,
         CobolReader,
         DartReader,
+        OCamlReader,
     ]
 
 

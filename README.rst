@@ -28,6 +28,7 @@ A list of supported languages:
 -  Kotlin
 -  Lua
 -  Objective-C
+-  OCaml
 -  Perl
 -  PHP
 -  PL/SQL
