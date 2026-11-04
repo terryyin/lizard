@@ -27,19 +27,19 @@ reviewer's return, lightly shortened where the source example text is long.
 | 1.7 | The README language list gains F#. | slice 1 | observed: test/test_languages/testFSharp.py::TestFSharpCliDiscovery.test_readme_and_docs_describe_fsharp |
 | 1.8 | A `docs/fsharp-analysis.md` page is added, like the OCaml one. | slice 1 | observed: test/test_languages/testFSharp.py::TestFSharpCliDiscovery.test_readme_and_docs_describe_fsharp |
 | 2.1 | A binding starts at a `let`, `let rec`, `and`, `member`, `static member`, `override` or `default` that is the first code token of its line, with all brackets closed. | slice 3 |  |
-| 2.2 | A binding ends on the last code line before the next line whose first code token, with brackets closed, is at a column less than or equal to the binding's own column, or at end of file. | slice 1 | observed: test/test_languages/testFSharp.py::TestFSharpItemBoundaries.test_locals_lambdas_and_values_stay_inside, test_module_level_statement_ends_a_binding |
-| 2.3 | Blank lines never end a binding. | slice 1 | observed: test/test_languages/testFSharp.py::TestFSharpItemBoundaries.test_blank_and_comment_lines_do_not_end_a_binding |
-| 2.4 | Comment lines never end a binding. | slice 1 | observed: test/test_languages/testFSharp.py::TestFSharpItemBoundaries.test_blank_and_comment_lines_do_not_end_a_binding |
-| 2.5 | Lines that begin with `\|` or with an infix operator such as `\|>` or `+` never end a binding (F# permits those undentations). | slice 1 | observed: test/test_languages/testFSharp.py::TestFSharpItemBoundaries.test_bar_and_infix_lines_continue_a_binding, test_brackets_suspend_the_offside_rule |
+| 2.2 | A binding ends on the last code line before the next line whose first code token, with brackets closed, is at a column less than or equal to the binding's own column, or at end of file. | slice 1 | observed: test/test_languages/testFSharpItemBoundaries.py::TestFSharpItemBoundaries.test_locals_lambdas_and_values_stay_inside, test_module_level_statement_ends_a_binding |
+| 2.3 | Blank lines never end a binding. | slice 1 | observed: test/test_languages/testFSharpItemBoundaries.py::TestFSharpItemBoundaries.test_blank_and_comment_lines_do_not_end_a_binding |
+| 2.4 | Comment lines never end a binding. | slice 1 | observed: test/test_languages/testFSharpItemBoundaries.py::TestFSharpItemBoundaries.test_blank_and_comment_lines_do_not_end_a_binding |
+| 2.5 | Lines that begin with `\|` or with an infix operator such as `\|>` or `+` never end a binding (F# permits those undentations). | slice 1 | observed: test/test_languages/testFSharpItemBoundaries.py::TestFSharpItemBoundaries.test_bar_and_infix_lines_continue_a_binding, test_brackets_suspend_the_offside_rule |
 | 2.6 | Bindings written directly under a `type`, `module` or `namespace` heading are bindings at their own deeper column, so nested modules and type members are found. | slice 3 |  |
 | 3.1 | A `let` binding is a function when it takes arguments. | slice 1 | observed: test/test_languages/testFSharp.py::TestFSharpFunctionRecognition.test_straight_line_and_branching |
 | 3.2 | A `let` binding is a function when its body starts with `fun` or `function`. | slice 1 | observed: test/test_languages/testFSharp.py::TestFSharpFunctionRecognition.test_fun_and_function_bodies_are_functions |
 | 3.3 | A member is a function when it has a parameter list: `()`, a tuple such as `(a: int, b: int)`, or curried arguments. | slice 3 |  |
 | 3.4 | Each function is reported under its own name (`Increment`, `g`), not a qualified one (`Counter.Increment`, `Outer.Inner.g`). | slice 3 |  |
-| 4.1 | Local `let` bindings belong to the enclosing binding (lines, tokens, decisions counted there; not reported separately). | slice 1 | observed: test/test_languages/testFSharp.py::TestFSharpItemBoundaries.test_decisions_of_locals_and_lambdas_count_in_the_binding |
+| 4.1 | Local `let` bindings belong to the enclosing binding (lines, tokens, decisions counted there; not reported separately). | slice 1 | observed: test/test_languages/testFSharpItemBoundaries.py::TestFSharpItemBoundaries.test_decisions_of_locals_and_lambdas_count_in_the_binding |
 | 4.2 | Local `use` bindings belong to the enclosing binding. | slice 3 |  |
-| 4.3 | `fun` lambdas belong to the enclosing binding. | slice 1 | observed: test/test_languages/testFSharp.py::TestFSharpItemBoundaries.test_decisions_of_locals_and_lambdas_count_in_the_binding |
-| 4.4 | `function` bodies belong to the enclosing binding. | slice 1 | observed: test/test_languages/testFSharp.py::TestFSharpItemBoundaries.test_decisions_of_locals_and_lambdas_count_in_the_binding |
+| 4.3 | `fun` lambdas belong to the enclosing binding. | slice 1 | observed: test/test_languages/testFSharpItemBoundaries.py::TestFSharpItemBoundaries.test_decisions_of_locals_and_lambdas_count_in_the_binding |
+| 4.4 | `function` bodies belong to the enclosing binding. | slice 1 | observed: test/test_languages/testFSharpItemBoundaries.py::TestFSharpItemBoundaries.test_decisions_of_locals_and_lambdas_count_in_the_binding |
 | 5.1 | Value bindings (`let x = …`, `let mutable c = …`, `let a, b = …`) are not reported as functions. | slice 1 | observed: test/test_languages/testFSharp.py::TestFSharpFunctionRecognition.test_value_bindings_are_not_functions |
 | 5.2 | Properties and auto-properties (`member _.Value = …`, `member val Name = …`) are not reported as functions. | slice 3 |  |
 | 5.3 | `abstract` declarations are not reported as functions. | slice 3 |  |
@@ -52,22 +52,22 @@ reviewer's return, lightly shortened where the source example text is long.
 | 6.4 | `for` adds one. | slice 1 | observed: test/test_languages/testFSharp.py::TestFSharpFunctionRecognition.test_each_control_flow_keyword_and_operator_adds_one |
 | 6.5 | `&&` adds one. | slice 1 | observed: test/test_languages/testFSharp.py::TestFSharpFunctionRecognition.test_each_control_flow_keyword_and_operator_adds_one |
 | 6.6 | `\|\|` adds one. | slice 1 | observed: test/test_languages/testFSharp.py::TestFSharpFunctionRecognition.test_each_control_flow_keyword_and_operator_adds_one |
-| 6.7 | Each `when` pattern guard adds one. | slice 2 |  |
-| 6.8 | A `match … with`, `match! … with` or `function` with n arms adds n − 1. | slice 2 |  |
-| 6.9 | Or-patterns add nothing. | slice 2 |  |
-| 6.10 | Each handler arm of `try … with` adds one. | slice 2 |  |
-| 6.11 | `try … finally` adds nothing. | slice 2 |  |
-| 7.1 | `then`, `else` and `do` are not decisions. | slice 2 |  |
-| 7.2 | The pipeline and bitwise operators `\|>`, `<\|`, `\|\|>` and `\|\|\|` are not decisions. | slice 2 |  |
+| 6.7 | Each `when` pattern guard adds one. | slice 2 | observed: test/test_languages/testFSharpArmDecisions.py::TestFSharpArmDecisions.test_match_arms_guards_and_elif |
+| 6.8 | A `match … with`, `match! … with` or `function` with n arms adds n − 1. | slice 2 | observed: test/test_languages/testFSharpArmDecisions.py::TestFSharpArmDecisions.test_match_arms_guards_and_elif, test_function_arms_on_one_line, test_match_bang_in_a_computation_expression |
+| 6.9 | Or-patterns add nothing. | slice 2 | observed: test/test_languages/testFSharpArmDecisions.py::TestFSharpArmDecisions.test_or_patterns_add_nothing |
+| 6.10 | Each handler arm of `try … with` adds one. | slice 2 | observed: test/test_languages/testFSharpArmDecisions.py::TestFSharpArmDecisions.test_try_handler_arms_each_add_one, test_single_try_handler_adds_one |
+| 6.11 | `try … finally` adds nothing. | slice 2 | observed: test/test_languages/testFSharpArmDecisions.py::TestFSharpArmDecisions.test_try_handler_arms_each_add_one |
+| 7.1 | `then`, `else` and `do` are not decisions. | slice 2 | observed: test/test_languages/testFSharpArmDecisions.py::TestFSharpArmDecisions.test_then_else_do_add_nothing |
+| 7.2 | The pipeline and bitwise operators `\|>`, `<\|`, `\|\|>` and `\|\|\|` are not decisions. | slice 2 | observed: test/test_languages/testFSharpArmDecisions.py::TestFSharpArmDecisions.test_pipelines_and_bitwise_bars_are_not_arms, test_other_pipelines_add_nothing |
 | 7.3 | Union-case `\|` in a type definition is not a decision. | slice 3 |  |
-| 7.4 | `->` in lambdas and in type annotations is not a decision. | slice 2 |  |
-| 7.5 | The `with` of a record copy, a type augmentation or an auto-property is not a decision. | slice 2 |  |
-| 7.6 | `when` inside a generic constraint is not a decision. | slice 2 |  |
-| 7.7 | `:?` type tests are not decisions. | slice 2 |  |
+| 7.4 | `->` in lambdas and in type annotations is not a decision. | slice 2 | observed: test/test_languages/testFSharpArmDecisions.py::TestFSharpArmDecisions.test_constraint_when_and_type_arrows_add_nothing |
+| 7.5 | The `with` of a record copy, a type augmentation or an auto-property is not a decision. | slice 2 | observed: test/test_languages/testFSharpArmDecisions.py::TestFSharpArmDecisions.test_record_copy_with_and_type_tests_add_nothing, test_with_of_augmentation_and_auto_property_starts_no_arms |
+| 7.6 | `when` inside a generic constraint is not a decision. | slice 2 | observed: test/test_languages/testFSharpArmDecisions.py::TestFSharpArmDecisions.test_constraint_when_and_type_arrows_add_nothing |
+| 7.7 | `:?` type tests are not decisions. | slice 2 | observed: test/test_languages/testFSharpArmDecisions.py::TestFSharpArmDecisions.test_record_copy_with_and_type_tests_add_nothing, test_try_handler_arms_each_add_one |
 | 8.1 | Each curried argument counts one, including an annotated `(x: t)`. | slice 1 | observed: test/test_languages/testFSharp.py::TestFSharpFunctionRecognition.test_straight_line_and_branching |
 | 8.2 | Each element of a tuple parameter list counts one. | slice 1 | observed: test/test_languages/testFSharp.py::TestFSharpFunctionRecognition.test_tuple_elements_each_count_one |
 | 8.3 | `()` counts zero (differs from the OCaml reader). | slice 1 | observed: test/test_languages/testFSharp.py::TestFSharpFunctionRecognition.test_unit_parameter_counts_zero |
-| 8.4 | Generic parameter lists `<'T …>` add nothing. | slice 2 |  |
+| 8.4 | Generic parameter lists `<'T …>` add nothing. | slice 2 | observed: test/test_languages/testFSharpArmDecisions.py::TestFSharpArmDecisions.test_constraint_when_and_type_arrows_add_nothing (E12 f 1 param) |
 | 8.5 | Return-type annotations `: t` add nothing. | slice 1 | observed: test/test_languages/testFSharp.py::TestFSharpFunctionRecognition.test_return_annotation_and_generics_add_no_parameters |
 | 9.1 | `(* … *)` comments, including nested comments, introduce neither decisions nor functions. | slice 1 | observed: test/test_languages/testFSharp.py::TestFSharpCommentsAndStrings.test_comments_strings_and_attributes_are_inert |
 | 9.2 | `//` comments are inert. | slice 1 | observed: test/test_languages/testFSharp.py::TestFSharpCommentsAndStrings.test_comments_strings_and_attributes_are_inert |
@@ -118,18 +118,18 @@ reviewer's return, lightly shortened where the source example text is long.
 | E2.4 | `greet` has 2 parameters. | slice 1 | observed: test/test_languages/testFSharp.py::TestFSharpFunctionRecognition.test_straight_line_and_branching |
 | E2.5 | `g` has CCN 2. | slice 1 | observed: test/test_languages/testFSharp.py::TestFSharpFunctionRecognition.test_straight_line_and_branching |
 | E2.6 | Each function has NLOC 1. | slice 1 | observed: test/test_languages/testFSharp.py::TestFSharpFunctionRecognition.test_straight_line_and_branching |
-| E3.1 | `classify` has CCN 7: two extra arms, `when`, `if`, `&&` and `elif`. | slice 2 |  |
-| E3.2 | The or-pattern adds nothing. | slice 2 |  |
-| E3.3 | `let f = function Some x -> x \| None -> 0` gives a function `f`. | slice 2 |  |
-| E3.4 | That `f` has CCN 2. | slice 2 |  |
-| E3.5 | That `f` has 0 parameters. | slice 2 |  |
-| E4.1 | Pipelines and bitwise bars example: CCN 3. | slice 2 |  |
-| E5.1 | `read` with two `try` handler arms has CCN 3. | slice 2 |  |
-| E5.2 | `safe` with `try … finally` has CCN 1. | slice 2 |  |
-| E6.1 | The only functions are `sum` and `after`. | slice 1 | observed: test/test_languages/testFSharp.py::TestFSharpItemBoundaries.test_locals_lambdas_and_values_stay_inside |
-| E6.2 | `sum` has CCN 2. | slice 2 |  |
-| E6.3 | `sum` spans lines 1–6. | slice 1 | observed: test/test_languages/testFSharp.py::TestFSharpItemBoundaries.test_locals_lambdas_and_values_stay_inside |
-| E6.4 | No `go`, `next`, `a`, `table`, `build` or anonymous function is reported. | slice 1 | observed: test/test_languages/testFSharp.py::TestFSharpItemBoundaries.test_locals_lambdas_and_values_stay_inside |
+| E3.1 | `classify` has CCN 7: two extra arms, `when`, `if`, `&&` and `elif`. | slice 2 | observed: test/test_languages/testFSharpArmDecisions.py::TestFSharpArmDecisions.test_match_arms_guards_and_elif |
+| E3.2 | The or-pattern adds nothing. | slice 2 | observed: test/test_languages/testFSharpArmDecisions.py::TestFSharpArmDecisions.test_match_arms_guards_and_elif |
+| E3.3 | `let f = function Some x -> x \| None -> 0` gives a function `f`. | slice 2 | observed: test/test_languages/testFSharpArmDecisions.py::TestFSharpArmDecisions.test_function_arms_on_one_line |
+| E3.4 | That `f` has CCN 2. | slice 2 | observed: test/test_languages/testFSharpArmDecisions.py::TestFSharpArmDecisions.test_function_arms_on_one_line |
+| E3.5 | That `f` has 0 parameters. | slice 2 | observed: test/test_languages/testFSharpArmDecisions.py::TestFSharpArmDecisions.test_function_arms_on_one_line |
+| E4.1 | Pipelines and bitwise bars example: CCN 3. | slice 2 | observed: test/test_languages/testFSharpArmDecisions.py::TestFSharpArmDecisions.test_pipelines_and_bitwise_bars_are_not_arms |
+| E5.1 | `read` with two `try` handler arms has CCN 3. | slice 2 | observed: test/test_languages/testFSharpArmDecisions.py::TestFSharpArmDecisions.test_try_handler_arms_each_add_one |
+| E5.2 | `safe` with `try … finally` has CCN 1. | slice 2 | observed: test/test_languages/testFSharpArmDecisions.py::TestFSharpArmDecisions.test_try_handler_arms_each_add_one |
+| E6.1 | The only functions are `sum` and `after`. | slice 1 | observed: test/test_languages/testFSharpItemBoundaries.py::TestFSharpItemBoundaries.test_locals_lambdas_and_values_stay_inside |
+| E6.2 | `sum` has CCN 2. | slice 2 | observed: test/test_languages/testFSharpItemBoundaries.py::TestFSharpItemBoundaries.test_locals_lambdas_and_values_stay_inside |
+| E6.3 | `sum` spans lines 1–6. | slice 1 | observed: test/test_languages/testFSharpItemBoundaries.py::TestFSharpItemBoundaries.test_locals_lambdas_and_values_stay_inside |
+| E6.4 | No `go`, `next`, `a`, `table`, `build` or anonymous function is reported. | slice 1 | observed: test/test_languages/testFSharpItemBoundaries.py::TestFSharpItemBoundaries.test_locals_lambdas_and_values_stay_inside |
 | E7.1 | `bump` has CCN 2 and 1 parameter. | slice 3 |  |
 | E7.2 | `Increment` spans its three lines and has 0 parameters. | slice 3 |  |
 | E7.3 | `Add` has CCN 2 and 2 parameters. | slice 3 |  |
@@ -150,13 +150,13 @@ reviewer's return, lightly shortened where the source example text is long.
 | E9.3 | `main` has NLOC 5. | slice 1 | observed: test/test_languages/testFSharp.py::TestFSharpCommentsAndStrings.test_comments_strings_and_attributes_are_inert |
 | E9.4 | File NLOC excludes the three comment lines. | slice 1 | observed: test/test_languages/testFSharp.py::TestFSharpCommentsAndStrings.test_comment_lines_are_out_of_file_nloc |
 | E9.5 | `h` is still found. | slice 1 | observed: test/test_languages/testFSharp.py::TestFSharpCommentsAndStrings.test_comments_strings_and_attributes_are_inert |
-| E10.1 | `f` spans through the `]` line. | slice 1 | observed: test/test_languages/testFSharp.py::TestFSharpItemBoundaries.test_brackets_suspend_the_offside_rule |
-| E10.2 | `eval` spans its two arm lines. | slice 1 | observed: test/test_languages/testFSharp.py::TestFSharpItemBoundaries.test_brackets_suspend_the_offside_rule |
-| E10.3 | `eval` has CCN 2. | slice 2 |  |
+| E10.1 | `f` spans through the `]` line. | slice 1 | observed: test/test_languages/testFSharpItemBoundaries.py::TestFSharpItemBoundaries.test_brackets_suspend_the_offside_rule |
+| E10.2 | `eval` spans its two arm lines. | slice 1 | observed: test/test_languages/testFSharpItemBoundaries.py::TestFSharpItemBoundaries.test_brackets_suspend_the_offside_rule |
+| E10.3 | `eval` has CCN 2. | slice 2 | observed: test/test_languages/testFSharpItemBoundaries.py::TestFSharpItemBoundaries.test_brackets_suspend_the_offside_rule |
 | E11.1 | `f` has CCN 2, not 3. | slice 3 |  |
 | E11.2 | `g` ends before the `printfn` line. | slice 3 |  |
-| E12.1 | `let f<'T when 'T : comparison> (x: 'T) : 'T = x` has CCN 1. | slice 2 |  |
-| E12.2 | That `f` has 1 parameter. | slice 2 |  |
-| E12.3 | `run` with `match!` has CCN 2. | slice 2 |  |
+| E12.1 | `let f<'T when 'T : comparison> (x: 'T) : 'T = x` has CCN 1. | slice 2 | observed: test/test_languages/testFSharpArmDecisions.py::TestFSharpArmDecisions.test_constraint_when_and_type_arrows_add_nothing |
+| E12.2 | That `f` has 1 parameter. | slice 2 | observed: test/test_languages/testFSharpArmDecisions.py::TestFSharpArmDecisions.test_constraint_when_and_type_arrows_add_nothing |
+| E12.3 | `run` with `match!` has CCN 2. | slice 2 | observed: test/test_languages/testFSharpArmDecisions.py::TestFSharpArmDecisions.test_match_bang_in_a_computation_expression |
 | E13.1 | After the reader lands, the full test suite is green. | slice 3 |  |
 | E13.2 | No existing language's results change. | slice 3 |  |

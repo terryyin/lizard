@@ -146,7 +146,7 @@ the shared fragment module it extracts from `ocaml_tokens.py`,
 
 ### 2. Match, `function`, `try` arms and guards count as decisions
 Type: Behavior
-Status: planned
+Status: done
 Proof: `testFSharp.py`: example 3 (`classify` CCN 7; `f` CCN 2, 0 params),
 example 4 (`g` CCN 3), example 5 (`read` CCN 3, `safe` CCN 1), example 10
 (`eval` CCN 2), example 12 (generic `f` CCN 1, `run` CCN 2); OCaml tests
@@ -214,6 +214,18 @@ the shared module), `docs/fsharp-analysis.md` (final rules and limitations),
 - `_starts_item` uses one `_item_column`; slice 3's `type` / `module` /
   `namespace` containers need a stack of item columns.
 - Slice 2 proof adds example 6's `sum` CCN 2.
+- Slice 2 (accepted proof: `nix develop -c python -m pytest
+  test/test_languages/testFSharp.py test/test_languages/testFSharpItemBoundaries.py
+  test/test_languages/testFSharpArmDecisions.py test/test_languages/testOCaml.py
+  test/test_languages/testOCamlItemBoundaries.py` 67 passed; full suite 3000
+  passed, 7 skipped). The arm tracker is `lizard_languages/match_arms.py`
+  (`ocaml_arms.py` renamed); F# counts `when` only where
+  `ArmTracker.in_pattern` holds. The tracker resets at each item start, so
+  slice 3 members get a fresh tracker. Arms attach by bracket depth; nested
+  indentation-only `match` / `try` totals were probed correct (4 and 3).
+- F# tests are split: `testFSharp.py` (recognition, comments, CLI),
+  `testFSharpItemBoundaries.py`, `testFSharpArmDecisions.py`; shared helpers
+  live in `fsharp_helpers.py` (`by_name`, `spans`).
 
 ## Plan concerns
 
@@ -236,7 +248,7 @@ Commitment: X1, X2, X3, X4, X5, X6, X7, X8, X9, X10, X11, X12, X13, X14, X15, X1
 ### O2. Arms and guards uncounted until slice 2
 Reported: slice 1 — "match / `function` / `try` arms are uncounted and `when` counts nowhere until slice 2; example 6's `sum` reads CCN 1, not 2."
 Story clause: "A `match … with`, `match! … with`, or `function` with n arms adds n − 1"
-Disposition: interim until slices 2
+Disposition: proved by slice 2: test/test_languages/testFSharpArmDecisions.py TestFSharpArmDecisions and the E6/E10 span tests in testFSharpItemBoundaries.py asserting `sum` CCN 2 and `eval` CCN 2
 
 ### O3. Members and nested items only by column until slice 3
 Reported: slice 1 — "`member`, `and`, `type` and `module` headings are plain offside items until slice 3, so members are not yet reported and bindings nested under `type` or `module` are found only by column."

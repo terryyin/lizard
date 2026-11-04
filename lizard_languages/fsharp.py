@@ -6,6 +6,7 @@ import re
 from .code_reader import CodeReader, CodeStateMachine
 from .fsharp_tokens import generate_tokens as generate_fsharp_tokens, \
     is_operator
+from .match_arms import ArmTracker
 
 
 class FSharpReader(CodeReader):
@@ -46,7 +47,10 @@ class FSharpStates(CodeStateMachine):
     operator. A `let` item is a function when it takes arguments or its
     body starts with `fun` / `function`; any other item belongs to no
     function. Everything deeper belongs to the item. A `let` right after
-    the attribute group that starts an item heads the item instead.'''
+    the attribute group that starts an item heads the item instead.
+    In an item, n `match` / `function` arms add n - 1, each `try`
+    handler arm adds one, and a `when` in an arm's pattern adds one;
+    or-pattern bars and other `->` and `when` add nothing.'''
     # pylint: disable=R0902
 
     _OPENERS = {'(', '[', '{', '[|', '[<'}
@@ -64,6 +68,7 @@ class FSharpStates(CodeStateMachine):
         self._has_params = False
         self._angles = 0
         self._attribute_item = False
+        self._arms = ArmTracker()
 
     def __call__(self, token, reader=None):
         starts_item = self._starts_item(token)
@@ -71,13 +76,21 @@ class FSharpStates(CodeStateMachine):
             self._depth += 1
         elif token in self._CLOSERS:
             self._depth = max(0, self._depth - 1)
+            self._arms.close_to(self._depth)
         if starts_item:
             self._start_item(token)
             result = None
         else:
             result = super().__call__(token, reader)
+        if self._adds_decision(token):
+            self.context.add_condition()
         self._prev_line = self.context.current_line
         return result
+
+    def _adds_decision(self, token):
+        if token == 'when':
+            return self._arms.in_pattern(self._depth)
+        return self._arms.adds_decision(token, self._depth)
 
     def _starts_item(self, token):
         if self._depth != 0:
@@ -103,6 +116,7 @@ class FSharpStates(CodeStateMachine):
             context.end_of_function()
         self._item_column = getattr(token, 'column', self._item_column)
         self._attribute_item = token == '[<'
+        self._arms = ArmTracker()
         if token == 'let':
             context.push_new_function('')
             self._candidate, self._has_params = True, False

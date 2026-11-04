@@ -6,7 +6,7 @@ import re
 from pygments import lex, lexers
 from .code_reader import CodeReader, CodeStateMachine
 from .pygments_fragments import join_fragments
-from .ocaml_arms import ArmTracker
+from .match_arms import ArmTracker
 
 
 def _joins_bars(run, value):

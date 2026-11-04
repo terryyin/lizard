@@ -1,4 +1,5 @@
-'''OCaml `match` / `try` / `function` arm counting.'''
+'''`match` / `try` / `function` arm counting shared by the ML-family
+readers (OCaml, F#).'''
 
 
 class _ArmScope:
@@ -46,6 +47,12 @@ class ArmTracker:
             scope = self._scopes[-1]
             return scope.depth == depth and scope.arm_token(token)
         return False
+
+    def in_pattern(self, depth):
+        '''Whether the innermost construct is in an arm's pattern at
+        `depth`, where `when` starts a guard.'''
+        return bool(self._scopes) and self._scopes[-1].depth == depth and \
+            self._scopes[-1].phase == 'pattern'
 
     def close_to(self, depth):
         '''A closer ends the constructs opened inside it.'''

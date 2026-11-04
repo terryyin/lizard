@@ -28,8 +28,29 @@ and they are not reported separately.
 
 ## Complexity
 
-`if`, `elif`, `while`, `for`, `&&` and `||` add one each. `then`, `else` and
-the pipeline operators `|>` and `<|` add nothing.
+`if`, `elif`, `while`, `for`, `&&` and `||` add one each.
+
+A `match … with`, `match! … with` or `function` with n arms adds n − 1: the
+first arm is the default path. Each handler arm of `try … with` adds one, and
+`try … finally` adds nothing. Each `when` guard in an arm's pattern adds one.
+An or-pattern such as `| 0 | 1 -> …` is one arm and adds nothing beyond it.
+Arms are counted per bracket level, so a `function` inside a lambda's
+parentheses counts its own arms. For example,
+
+```fsharp
+let classify x =
+    match x with
+    | 0 | 1 -> "small"
+    | n when n < 0 -> "neg"
+    | n -> if n > 9 && n < 100 then "mid" elif n = 5 then "five" else "big"
+```
+
+has CCN 7: two extra arms, the `when` guard, `if`, `&&` and `elif`.
+
+Not decisions: `then`, `else`, `do`; the operators `|>`, `<|`, `||>` and
+`|||`; `->` in lambdas and type annotations; the `with` of a record copy
+`{ r with X = 1 }`, a type augmentation or an auto-property; `when` in a
+generic constraint `<'T when 'T : comparison>`; and `:?` type tests.
 
 ## Parameters
 
@@ -49,7 +70,6 @@ lines, including `///` doc comments, are excluded from NLOC.
 
 ## Limitations
 
-- `match`, `function` and `try` arms and `when` guards are not counted yet.
 - `member`, `override`, `default`, `and`, `type` and `module` lines are plain
   items: members, the `and` siblings of a `let rec … and …` group, and
   bindings indented under a `type`, `module` or `namespace` heading are not
