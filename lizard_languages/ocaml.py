@@ -3,9 +3,15 @@ Language parser for OCaml
 '''
 
 import re
+from pygments import lex, lexers
 from .code_reader import CodeReader, CodeStateMachine
-from .ocaml_tokens import generate_tokens as generate_ocaml_tokens
+from .pygments_fragments import join_fragments
 from .ocaml_arms import ArmTracker
+
+
+def _joins_bars(run, value):
+    '''OCaml's lexer splits `||` into two `|`.'''
+    return value == '|' and run in ('', '|')
 
 
 class OCamlReader(CodeReader):
@@ -32,7 +38,9 @@ class OCamlReader(CodeReader):
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
-        return generate_ocaml_tokens(source_code)
+        return join_fragments(
+            lex(source_code, lexer=lexers.get_lexer_by_name('ocaml')),
+            joins=_joins_bars)
 
 
 class OCamlStates(CodeStateMachine):
@@ -181,7 +189,7 @@ class OCamlStates(CodeStateMachine):
             self.context.add_to_function_name(token)
             self._state = self._state_params
         else:
-            self._drop_item()
+            self.fold_into_enclosing_function()
             self.next(self._state_global, token)
 
     def _state_params(self, token):
@@ -222,16 +230,8 @@ class OCamlStates(CodeStateMachine):
 
     def _state_body_start(self, token):
         if not self._has_params and token not in ('fun', 'function'):
-            self._drop_item()
+            self.fold_into_enclosing_function()
         self.next(self._state_global, token)
-
-    def _drop_item(self):
-        '''The binding is a value, not a function: fold it into global.'''
-        context = self.context
-        dropped = context.current_function
-        context.current_function = context.stacked_functions.pop()
-        context.current_function.nloc += dropped.nloc
-        context.current_function.token_count += dropped.token_count
 
     def statemachine_before_return(self):
         self._end_function()

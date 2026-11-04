@@ -40,6 +40,15 @@ class CodeStateMachine:
         self.to_exit = True
         self.statemachine_before_return()
 
+    def fold_into_enclosing_function(self):
+        '''The current function turned out not to be one: its lines and
+        tokens count in the enclosing function instead.'''
+        context = self.context
+        dropped = context.current_function
+        context.current_function = context.stacked_functions.pop()
+        context.current_function.nloc += dropped.nloc
+        context.current_function.token_count += dropped.token_count
+
     def sub_state(self, state, callback=None, token=None):
         self.saved_state = self._state
         self.callback = callback

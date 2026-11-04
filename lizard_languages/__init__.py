@@ -30,6 +30,7 @@ from .r import RReader
 from .plsql import PLSQLReader
 from .cobol import CobolReader
 from .ocaml import OCamlReader
+from .fsharp import FSharpReader
 
 
 def languages():
@@ -64,6 +65,7 @@ def languages():
         CobolReader,
         DartReader,
         OCamlReader,
+        FSharpReader,
     ]
 
 

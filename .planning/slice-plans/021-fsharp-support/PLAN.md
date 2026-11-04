@@ -2,6 +2,7 @@
 
 **Mapped story identity:** SEED-029#fsharp-support
 **Source:** [canonical story](../../seeds/SEED-029-ocaml-fsharp-support.md#fsharp-support)
+**Source review:** [source-review.md](source-review.md)
 
 ## Goal and scope
 
@@ -113,7 +114,7 @@ reader run on F# text, and a scratch `CodeReader` subclass appended to
 
 ### 1. F# files are discovered and their top-level functions analyzed
 Type: Behavior
-Status: planned
+Status: done
 Proof: `testFSharp.py`: example 2 (`fact` CCN 2 / 1 param / NLOC 1; `greet`
 2 params; `g` CCN 2); `let f () = ()` 0 params; example 6 boundaries
 (exactly `sum` 1–6 and `after`; no `go`, `next`, `a`, `table`, `build`);
@@ -193,6 +194,27 @@ the shared module), `docs/fsharp-analysis.md` (final rules and limitations),
   counters (P6).
 - `()` counts zero parameters (story scope); the OCaml reader is unchanged.
 
+## Learnings
+
+- Slice 1 (accepted proof: `nix develop -c python -m pytest
+  test/test_languages/testFSharp.py test/test_languages/testOCaml.py
+  test/test_languages/testOCamlItemBoundaries.py` 54 passed; full suite 2987
+  passed, 7 skipped). The shared joiner is `lizard_languages/pygments_fragments.py`
+  (`ocaml_tokens.py` removed); the value-binding fold is
+  `CodeStateMachine.fold_into_enclosing_function` in `code_reader.py`.
+- Line starts reach the state machine as `LineStart` str tokens carrying
+  `column` (not via `preprocess`); later processors must not rebuild them as
+  plain strings. Operator runs are joined (`|>`, `||`, `|||`, `->`, `:?>`, …);
+  `#`, `$`, `,` never join; `{|` / `|}` arrive split.
+- F# lexes with `stripnl=False` to keep leading blank lines' line numbers.
+- `[<Attr>] let f …` on one line starts a binding at the attribute's column;
+  slice 3 extends this to `[<Attr>] member …`.
+- Example 6's `sum` CCN 2 depends on `function` arm counting: owned by slice 2
+  (O2), not slice 1.
+- `_starts_item` uses one `_item_column`; slice 3's `type` / `module` /
+  `namespace` containers need a stack of item columns.
+- Slice 2 proof adds example 6's `sum` CCN 2.
+
 ## Plan concerns
 
 Refinement: not needed — three Behavior slices each own one proof loop over
@@ -202,3 +224,26 @@ in 3); the two shared-module moves are the structure each slice's behavior
 needs and are proven by the existing OCaml tests.
 
 Remaining slice-specific concerns: none identified in this review.
+
+## Story obligations
+
+### O1. Deferred promises stay out of this story
+Reported: slice 1 — "Source review lists the story's deferred promises X1–X17 as exclusions."
+Story clause: "Deferred promises (not built or verified by this story):"
+Disposition: excluded "Deferred promises (not built or verified by this story):"
+Commitment: X1, X2, X3, X4, X5, X6, X7, X8, X9, X10, X11, X12, X13, X14, X15, X16, X17
+
+### O2. Arms and guards uncounted until slice 2
+Reported: slice 1 — "match / `function` / `try` arms are uncounted and `when` counts nowhere until slice 2; example 6's `sum` reads CCN 1, not 2."
+Story clause: "A `match … with`, `match! … with`, or `function` with n arms adds n − 1"
+Disposition: interim until slices 2
+
+### O3. Members and nested items only by column until slice 3
+Reported: slice 1 — "`member`, `and`, `type` and `module` headings are plain offside items until slice 3, so members are not yet reported and bindings nested under `type` or `module` are found only by column."
+Story clause: "Bindings written directly under a `type`, `module`, or `namespace` heading are bindings at their own deeper column, so nested modules and type members are found."
+Disposition: interim until slices 3
+
+### O4. Directive lines not inert until slice 3
+Reported: slice 1 — "Pygments lexes `#if` as `#` + `if`, so a directive at a function's column ends that function and the `if` counts as a decision."
+Story clause: "`#r`, `#load`, `#if`, `#else` and `#endif` lines add no decisions and no functions"
+Disposition: interim until slices 3

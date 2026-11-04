@@ -20,6 +20,7 @@ A list of supported languages:
 -  COBOL
 -  Dart
 -  Erlang
+-  F# (see `F# analysis <docs/fsharp-analysis.md>`_)
 -  Fortran
 -  GDScript
 -  Golang
