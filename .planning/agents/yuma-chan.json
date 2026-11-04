@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "agent": "Yuma-chan",
+  "email": "yuma-chan@example.org",
+  "identity": "SEED-029#fsharp-support",
+  "mode": "story-branch",
+  "branch": "claude/support-f-analysis",
+  "host": "claude",
+  "model": "opus"
+}
