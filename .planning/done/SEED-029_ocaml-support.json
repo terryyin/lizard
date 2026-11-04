@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-029#ocaml-support",
+  "title": "Support OCaml analysis",
+  "completedAt": "2026-11-04T05:43:52.519Z",
+  "developer": "Terry Yin",
+  "agent": "Yui-chan",
+  "host": "claude",
+  "model": "opus"
+}
