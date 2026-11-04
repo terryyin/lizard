@@ -38,9 +38,9 @@ class OCamlReader(CodeReader):
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
-        return join_fragments(
-            lex(source_code, lexer=lexers.get_lexer_by_name('ocaml')),
-            joins=_joins_bars)
+        lexer = lexers.get_lexer_by_name('ocaml', stripnl=False)
+        return join_fragments(lex(source_code, lexer=lexer),
+                              joins=_joins_bars)
 
 
 class OCamlStates(CodeStateMachine):

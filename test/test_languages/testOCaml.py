@@ -51,6 +51,12 @@ let after x = x
             [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
              for f in functions])
 
+    def test_leading_blank_lines_keep_line_numbers(self):
+        functions = get_ocaml_function_list('\n\nlet f x = x\n')
+        self.assertEqual(
+            [('f', 3, 3)],
+            [(f.name, f.start_line, f.end_line) for f in functions])
+
     def test_comments_and_strings_are_inert(self):
         result = analyze_file.analyze_source_code("a.ml", '''\
 (* if (* while *) || *)
