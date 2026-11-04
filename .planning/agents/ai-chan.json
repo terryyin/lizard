@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "agent": "Ai-chan",
-  "email": "ai-chan@example.org",
-  "activity": "preparation",
-  "identity": "SEED-034#process-fabio-malpezzi-prs",
-  "host": "cursor",
-  "model": "auto"
-}
