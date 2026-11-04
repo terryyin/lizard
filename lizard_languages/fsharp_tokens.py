@@ -1,5 +1,6 @@
 """F# tokens from Pygments' lexer, with fragments and split operators
-joined and each line's first code token marked with its column."""
+joined, `#` directive lines dropped and each line's first code token
+marked with its column."""
 
 from pygments import lex, lexers
 import pygments.token as py_token
@@ -35,15 +36,20 @@ def generate_tokens(source_code, is_comment):
 
 
 def _mark_line_starts(tokens, is_comment):
-    column, at_line_start = 0, True
+    column, at_line_start, directive = 0, True, False
     for token in tokens:
         if token == '\n':
-            column, at_line_start = 0, True
+            column, at_line_start, directive = 0, True, False
             yield token
+        elif directive:
+            continue
         elif token.isspace():
             column += len(token)
         else:
             if at_line_start and not is_comment(token):
+                if token == '#':
+                    directive = True
+                    continue
                 token, at_line_start = LineStart(token, column), False
             if '\n' in token:
                 column = len(token) - token.rfind('\n') - 1

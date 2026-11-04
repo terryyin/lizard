@@ -1,8 +1,9 @@
 # F# analysis
 
 Lizard analyzes `.fs` and `.fsx` files, or `-l fsharp`. Signature files
-(`.fsi`) and files that turn light syntax off are not analyzed. Pygments' F#
-lexer provides the tokens, so no .NET toolchain is needed.
+(`.fsi`) are not analyzed, and files that turn light syntax off are not
+supported. Pygments' F# lexer provides the tokens, so no .NET toolchain is
+needed.
 
 ## Functions
 
@@ -11,20 +12,40 @@ when its first code token is at or left of the current item's column and all
 brackets are closed. Blank lines, comment lines, lines inside open brackets,
 and lines that begin with `|` or an infix operator such as `|>` or `+` never
 end an item. An item ends on the last code line before the next item, or at
-the end of the file.
+the end of the file. Under a `type`, `module` or `namespace` heading, or an
+`and` that continues a `type` group (`type A() = …` / `and B() = …`), a deeper
+line starts a nested item at its own column, so type members and the bindings
+of nested modules are found; anywhere else a deeper line belongs to the item
+above it.
 
-A `let` or `let rec` item is a function when it takes arguments, or when its
-body starts with `fun` or `function`. The function has the binding's own name.
-Value bindings such as `let x = …`, `let mutable c = …` and `let a, b = …` are
-not reported. Any other item, such as an attribute line `[<EntryPoint>]` or a
-module-level statement like `printfn …`, belongs to no function. An
-attribute on the same line as its `let`, as in `[<Fact>] let t () = …`, also
-belongs to no function: `t` is still reported, starting on that line, and the
-attribute's tokens are not counted in it.
+A binding starts with `let`, `let rec`, `and`, `member`, `static member`,
+`override` or `default`, including after an attribute on the same line, as in
+`[<Fact>] member _.Works() = …`. A `let` or `and` binding is a function when
+it takes arguments, or when its body starts with `fun` or `function`. A member
+is a function when it has a parameter list: `()`, a tuple such as
+`(a: int, b: int)`, or curried arguments. Each function has its own name:
+`member this.Increment() = …` is `Increment`, and `g` in a nested module is
+`g`, not `Outer.Inner.g`.
 
-Local `let` bindings, `fun` lambdas and `function` bodies belong to the
-function that encloses them: their lines, tokens and decisions count there,
-and they are not reported separately.
+Not reported as functions: value bindings such as `let x = …`,
+`let mutable c = …` and `let a, b = …`; properties and auto-properties such
+as `member _.Value = …` and `member val Name = "" with get, set`; `abstract`
+declarations; `type`, `module`, `namespace`, `open` and `exception` items;
+module-level statements such as `printfn …`. An attribute line such as
+`[<EntryPoint>]` belongs to no function, and an attribute on the binding's
+line is not counted in the function.
+
+Local `let` and `use` bindings, `fun` lambdas and `function` bodies belong to
+the function that encloses them: their lines, tokens and decisions count
+there, and they are not reported separately.
+
+## Scripts and directives
+
+`.fsx` scripts follow the same rules. `#` directive lines such as `#r`,
+`#load`, `#if`, `#else` and `#endif` are dropped before analysis: they add no
+decisions and no lines, belong to no function, and do not end one even at
+column 0. A conditionally compiled branch inside a function counts only its
+own code.
 
 ## Complexity
 
@@ -50,7 +71,8 @@ has CCN 7: two extra arms, the `when` guard, `if`, `&&` and `elif`.
 Not decisions: `then`, `else`, `do`; the operators `|>`, `<|`, `||>` and
 `|||`; `->` in lambdas and type annotations; the `with` of a record copy
 `{ r with X = 1 }`, a type augmentation or an auto-property; `when` in a
-generic constraint `<'T when 'T : comparison>`; and `:?` type tests.
+generic constraint `<'T when 'T : comparison>`; `:?` type tests; and the
+case bars of a union type definition.
 
 ## Parameters
 
@@ -70,15 +92,20 @@ lines, including `///` doc comments, are excluded from NLOC.
 
 ## Limitations
 
-- `member`, `override`, `default`, `and`, `type` and `module` lines are plain
-  items: members, the `and` siblings of a `let rec … and …` group, and
-  bindings indented under a `type`, `module` or `namespace` heading are not
-  reported yet.
-- `#if`, `#else`, `#endif`, `#r` and `#load` lines are not inert yet: a
-  directive at a function's column ends the function, and the words on a
-  directive line still count as decisions.
-- Active patterns, operator definitions, properties and secondary
-  constructors are not reported as functions.
-- Interpolated string expressions are not analyzed, and lines undented below
-  their binding's column, other than `|` and infix lines, are not supported.
-  Indentation is assumed to use spaces.
+- Signature files (`.fsi`) are not analyzed, and files that turn light
+  syntax off (`#light "off"`, `begin … end` with `in`) are not supported.
+- Properties with bodies, explicit `with get() … and set v …` accessors and
+  secondary constructors `new(…)` are not reported; their decisions count in
+  the enclosing item.
+- Active patterns `let (|Even|Odd|) n = …` and operator definitions
+  `let (+.) a b = …` are not reported; their decisions count in the
+  enclosing item.
+- Names are not qualified by their type or module (`Counter.Increment`), and
+  members inside interface implementations and object expressions are not
+  reported separately.
+- Expressions inside interpolated strings are not analyzed.
+- Lines undented below their binding's column, other than `|` and infix
+  lines, are not supported, and indentation is assumed to use spaces, not
+  tabs.
+- Modified CCN (`-m`) does not treat a `match` as one decision, and the
+  legacy `or` / `&` operators are not counted.

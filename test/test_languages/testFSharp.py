@@ -7,7 +7,8 @@ from tempfile import TemporaryDirectory
 
 from lizard import analyze_file
 
-from .fsharp_helpers import analyze_fsharp, by_name, get_fsharp_function_list, spans
+from .fsharp_helpers import SCRIPT, analyze_fsharp, by_name, \
+    get_fsharp_function_list, spans
 
 
 class TestFSharpFunctionRecognition(unittest.TestCase):
@@ -153,7 +154,7 @@ class TestFSharpCliDiscovery(unittest.TestCase):
         (src_dir / 'Lib.fsi').write_text(
             'module Lib\nval double : int -> int\nlet in_signature y = y\n')
         (Path(directory) / 'Script.fsx').write_text(
-            'let script_f x = if x then 1 else 2\n')
+            SCRIPT)
         (Path(directory) / 'tool.py').write_text(
             'def tool_f():\n    return 1\n')
 
@@ -165,7 +166,8 @@ class TestFSharpCliDiscovery(unittest.TestCase):
 
         for output in (everything, fsharp_only):
             self.assertIn('double@3-3@', output)
-            self.assertIn('script_f@1-1@', output)
+            self.assertIn('f@3-7@', output)
+            self.assertIn('g@9-9@', output)
             self.assertNotIn('Lib.fsi', output)
             self.assertNotIn('in_signature', output)
         self.assertIn('tool_f@1-2@', everything)

@@ -162,7 +162,7 @@ Files: `lizard_languages/fsharp.py`, the shared arm module renamed from
 
 ### 3. Members, nested modules, groups and directives bound functions
 Type: Behavior
-Status: planned
+Status: done
 Proof: `testFSharp.py`: example 7 (`bump`, `Increment` 0 params over three
 lines, `Add` CCN 2 / 2 params, `Create` 0 params, `ToString`, `Foo` CCN 2 on
 the `default` line only; no `count`, `Value`, `Name`, abstract `Foo`; `Scale`
@@ -226,6 +226,13 @@ the shared module), `docs/fsharp-analysis.md` (final rules and limitations),
 - F# tests are split: `testFSharp.py` (recognition, comments, CLI),
   `testFSharpItemBoundaries.py`, `testFSharpArmDecisions.py`; shared helpers
   live in `fsharp_helpers.py` (`by_name`, `spans`).
+- Slice 3 (accepted proof: focused F# + OCaml modules incl.
+  `test/test_languages/testFSharpMembers.py` 76 passed; `nix develop -c make`
+  exit 0, 3009 passed, 7 skipped). Offside items are a stack in
+  `lizard_languages/fsharp_items.py` (`OffsideItems`, `CONTAINER_HEADINGS`);
+  `and` continuing a `type` group is a type heading; `#` directive lines are
+  dropped in `fsharp_tokens.py` (so they count in no NLOC, O5). `fsharp.py` is
+  at 250 lines; the binding-heading parser is the seam for a later split.
 
 ## Plan concerns
 
@@ -253,9 +260,19 @@ Disposition: proved by slice 2: test/test_languages/testFSharpArmDecisions.py Te
 ### O3. Members and nested items only by column until slice 3
 Reported: slice 1 — "`member`, `and`, `type` and `module` headings are plain offside items until slice 3, so members are not yet reported and bindings nested under `type` or `module` are found only by column."
 Story clause: "Bindings written directly under a `type`, `module`, or `namespace` heading are bindings at their own deeper column, so nested modules and type members are found."
-Disposition: interim until slices 3
+Disposition: proved by slice 3: test/test_languages/testFSharpMembers.py TestFSharpMembers, TestFSharpNestedItems
 
 ### O4. Directive lines not inert until slice 3
 Reported: slice 1 — "Pygments lexes `#if` as `#` + `if`, so a directive at a function's column ends that function and the `if` counts as a decision."
 Story clause: "`#r`, `#load`, `#if`, `#else` and `#endif` lines add no decisions and no functions"
-Disposition: interim until slices 3
+Disposition: proved by slice 3: test/test_languages/testFSharpMembers.py TestFSharpDirectives.test_directive_lines_are_inert
+
+### O5. Directive lines count in no NLOC (first reported in slice 3)
+Reported: slice 3 — "Directive lines are removed from the token stream, so they also count in no NLOC, file NLOC included (`Script.fsx` file NLOC is 5)."
+Story clause: "`#r`, `#load`, `#if`, `#else` and `#endif` lines add no decisions and no functions"
+Disposition: no user cost "so they can find the functions that need review": directive lines belong to no function, so every function's NLOC, CCN, tokens and parameters are unchanged; only the file-level total omits compiler directives, which hold no reviewable code (inspected: Script.fsx example 11 `f` NLOC/CCN in testFSharp directive test and CLI run)
+
+### O6. Interface implementation and object-expression members not reported (first reported in slice 3)
+Reported: slice 3 — "Members inside `interface … with` and object expressions are not reported."
+Story clause: "interface implementations and object expressions beyond what the common rule yields"
+Disposition: excluded "interface implementations and object expressions beyond what the common rule yields"
