@@ -123,7 +123,7 @@ Dart helper pattern is followed).
 
 ### 2. Match, `function`, and `try` arms and guards count as decisions
 Type: Behavior
-Status: planned
+Status: done
 Proof: `testOCaml.py`: example 3 (`classify` CCN 6; `f` CCN 2, 0 params),
 example 4 (`g` CCN 3), example 5 (`read` CCN 3), example 6 (`sum` CCN 2); a
 `fun x -> …` inside an arm and a type annotation `int -> int` add nothing.
@@ -156,6 +156,7 @@ function without adding decisions.
 ## Learnings
 
 - Slice 1 (accepted proof `nix develop -c python -m pytest test/test_languages/testOCaml.py`, 13 tests; full suite 2946 passed): Pygments splits `<=`, `>=`, `<>`, `|>` into single characters but keeps `->`, `&&`, `::`, `;;`, `[|`, `|]` whole, so arm detection can rely on a whole `->` token; `| |` with a space stays two arm bars; `()` is one token (counted as a parameter slot in `FunctionInfo.parameter_count`).
+- Slice 2 (21 focused tests; full suite 2954 passed): arm scopes (`_ArmScope`) are reset by `_start_item`, so new item boundaries close open matches; a `type t = A | B` folded into a function whose match is in an arm body would count a constructor's `of a -> b`, so slice 3 must close the item at `type`.
 - The heading `let` is charged to the previous function's NLOC and tokens before the reader sees it; `OCamlStates._start_item` compensates and is the place to reuse for `and`, `type`, `module`, `open`, `;;` in slice 3. `struct` is not yet an opener and `end` clamps depth at 0; slice 3 must make `struct` / `sig` / `object` open a scope.
 
 ## Plan concerns
@@ -182,7 +183,7 @@ Disposition: excluded "No product requirement calls for rejecting any OCaml inpu
 ### I1. Match, function and try arms and when guards uncounted
 Reported: slice 1 — "Interim behaviour, as planned: match / function / try arms and when are not counted."
 Story clause: "A `match … with` or `function` with n arms adds n − 1"
-Disposition: interim until slices 2
+Disposition: proved by slice 2: test/test_languages/testOCaml.py TestOCamlMatchArms (function, match, try arms, when, or-patterns, nested constructs) and test_local_helpers_and_lambdas_stay_inside sum CCN 2
 
 ### I2. and siblings, modules, type and other items are not boundaries
 Reported: slice 1 — "and, module…struct…end, type and ;; items are not boundaries. A let right after struct counts as local, so functions inside a module are not reported until slice 3."

@@ -18,7 +18,7 @@
 | 2.1 | Each top-level `let` binding that takes arguments is one function. | slice 1 | observed: test/test_languages/testOCaml.py::test_branching_and_curried_parameters: fact (CCN 2, 1 param, NLOC 1), greet (CCN 1, 3 params, NLOC 1) |
 | 2.2 | Each top-level `let rec` binding that takes arguments is one function. | slice 1 | observed: test/test_languages/testOCaml.py::test_branching_and_curried_parameters: fact (CCN 2, 1 param, NLOC 1), greet (CCN 1, 3 params, NLOC 1) |
 | 2.3 | Each top-level `let` / `let rec` binding whose body starts with `fun` is one function. | slice 1 | observed: test/test_languages/testOCaml.py::test_binding_whose_body_starts_with_fun_is_a_function: add reported, 0 params |
-| 2.4 | Each top-level `let` / `let rec` binding whose body starts with `function` is one function. | slice 2 |  |
+| 2.4 | Each top-level `let` / `let rec` binding whose body starts with `function` is one function. | slice 2 | observed: test/test_languages/testOCaml.py::TestOCamlMatchArms.test_function_arms_without_leading_bar: (f, CCN 2, 0 params) |
 | 2.5 | Each `and` sibling of a `let rec … and …` group is one function. | slice 3 |  |
 | 2.6 | Bindings inside `module Name = struct … end` are functions under the same rule. | slice 3 |  |
 | 2.7 | A function ends at the next structure item. The listed structure items are: | slice 3 |  |
@@ -49,26 +49,26 @@
 | 4.3 | `function` belongs to the enclosing function. | slice 1 | observed: test/test_languages/testOCaml.py::test_local_helpers_and_lambdas_stay_inside: exactly [(sum,1,6),(after,8,8)] |
 | 4.4 | Their lines count in the enclosing function. | slice 1 | observed: test/test_languages/testOCaml.py::test_local_helpers_and_lambdas_stay_inside: exactly [(sum,1,6),(after,8,8)] |
 | 4.5 | Their tokens count in the enclosing function. | slice 1 | observed: test/test_languages/testOCaml.py::test_local_let_and_fun_tokens_count_in_enclosing_function: f.token_count 14 |
-| 4.6 | Their decisions count in the enclosing function. | slice 2 |  |
+| 4.6 | Their decisions count in the enclosing function. | slice 2 | observed: test/test_languages/testOCaml.py::test_local_helpers_and_lambdas_stay_inside: [(sum,1,6,CCN 2),(after,8,8,1)] |
 | 4.7 | They are not reported separately. | slice 1 | observed: test/test_languages/testOCaml.py::test_local_helpers_and_lambdas_stay_inside: exactly [(sum,1,6),(after,8,8)] |
 | 5.1.1 | `if` adds one. | slice 1 | observed: test/test_languages/testOCaml.py::test_branching_and_curried_parameters: fact (CCN 2, 1 param, NLOC 1), greet (CCN 1, 3 params, NLOC 1) |
 | 5.1.2 | `while` adds one. | slice 1 | observed: test/test_languages/testOCaml.py::test_loops_are_decisions_and_begin_end_is_not: while + for + begin/end gives CCN 3 |
 | 5.1.3 | `for` adds one. | slice 1 | observed: test/test_languages/testOCaml.py::test_loops_are_decisions_and_begin_end_is_not: while + for + begin/end gives CCN 3 |
-| 5.1.4 | `&&` adds one. | slice 2 |  |
+| 5.1.4 | `&&` adds one. | slice 2 | observed: test/test_languages/testOCaml.py::TestOCamlMatchArms.test_arms_guards_and_or_patterns: classify CCN 6 |
 | 5.1.5 | `\|\|` adds one. | slice 1 | observed: test/test_languages/testOCaml.py::test_or_operator_is_a_decision: g CCN 2 |
-| 5.1.6 | Each `when` guard adds one. | slice 2 |  |
-| 5.2 | A `match … with` with n arms adds n − 1. | slice 2 |  |
-| 5.3 | A `function` with n arms adds n − 1. | slice 2 |  |
-| 5.4 | Qualification: this is the same rule as Rust `match`, so a match and its equivalent `if … else` chain score alike. | slice 2 |  |
-| 5.5 | Or-patterns (`\| A \| B ->`) add nothing. | slice 2 |  |
-| 5.6 | Each handler arm of `try … with` adds one, as `catch` does elsewhere. | slice 2 |  |
-| 5.7 | These are not decisions: | slice 2 |  |
+| 5.1.6 | Each `when` guard adds one. | slice 2 | observed: test/test_languages/testOCaml.py::TestOCamlMatchArms.test_arms_guards_and_or_patterns: classify CCN 6 |
+| 5.2 | A `match … with` with n arms adds n − 1. | slice 2 | observed: test/test_languages/testOCaml.py::TestOCamlMatchArms.test_arms_guards_and_or_patterns: classify CCN 6 |
+| 5.3 | A `function` with n arms adds n − 1. | slice 2 | observed: test/test_languages/testOCaml.py::test_local_helpers_and_lambdas_stay_inside: [(sum,1,6,CCN 2),(after,8,8,1)] |
+| 5.4 | Qualification: this is the same rule as Rust `match`, so a match and its equivalent `if … else` chain score alike. | slice 2 | observed: test/test_languages/testOCaml.py::TestOCamlMatchArms.test_match_scores_like_equivalent_if_chain: m CCN 3 = i CCN 3 |
+| 5.5 | Or-patterns (`\| A \| B ->`) add nothing. | slice 2 | observed: test/test_languages/testOCaml.py::TestOCamlMatchArms.test_arms_guards_and_or_patterns: classify CCN 6 |
+| 5.6 | Each handler arm of `try … with` adds one, as `catch` does elsewhere. | slice 2 | observed: test/test_languages/testOCaml.py::TestOCamlMatchArms.test_each_try_handler_arm_adds_one: read CCN 3, lead CCN 3 |
+| 5.7 | These are not decisions: | slice 2 | observed: test/test_languages/testOCaml.py::TestOCamlMatchArms.test_fun_and_type_arrows_add_nothing: a 2, h 1, k 1; else/then/begin in slice 1 tests |
 | 5.7.1 | `else` | slice 1 | observed: test/test_languages/testOCaml.py::test_branching_and_curried_parameters: fact (CCN 2, 1 param, NLOC 1), greet (CCN 1, 3 params, NLOC 1) |
 | 5.7.2 | `then` | slice 1 | observed: test/test_languages/testOCaml.py::test_branching_and_curried_parameters: fact (CCN 2, 1 param, NLOC 1), greet (CCN 1, 3 params, NLOC 1) |
 | 5.7.3 | `begin` | slice 1 | observed: test/test_languages/testOCaml.py::test_loops_are_decisions_and_begin_end_is_not: while + for + begin/end gives CCN 3 |
 | 5.7.4 | type-definition `\|` | slice 3 |  |
-| 5.7.5 | `->` in `fun` | slice 2 |  |
-| 5.7.6 | `->` in type annotations | slice 2 |  |
+| 5.7.5 | `->` in `fun` | slice 2 | observed: test/test_languages/testOCaml.py::TestOCamlMatchArms.test_fun_and_type_arrows_add_nothing: a 2, h 1, k 1; else/then/begin in slice 1 tests |
+| 5.7.6 | `->` in type annotations | slice 2 | observed: test/test_languages/testOCaml.py::TestOCamlMatchArms.test_fun_and_type_arrows_add_nothing: a 2, h 1, k 1; else/then/begin in slice 1 tests |
 | 6.1 | Each curried argument before `=` counts as one parameter. This includes: | slice 1 | observed: test/test_languages/testOCaml.py::test_branching_and_curried_parameters: fact (CCN 2, 1 param, NLOC 1), greet (CCN 1, 3 params, NLOC 1) |
 | 6.1.1 | labelled `~x` | slice 1 | observed: test/test_languages/testOCaml.py::test_branching_and_curried_parameters: fact (CCN 2, 1 param, NLOC 1), greet (CCN 1, 3 params, NLOC 1) |
 | 6.1.2 | optional `?x` | slice 1 | observed: test/test_languages/testOCaml.py::test_optional_argument_counts_one_parameter: opt 2 params |
@@ -116,12 +116,12 @@
 | E2 | `let rec fact n = if n <= 1 then 1 else n * fact (n - 1)` followed by `let greet ~name ?(punct = "!") () = print_endline (name ^ punct)`: | slice 1 | observed: test/test_languages/testOCaml.py::test_branching_and_curried_parameters: fact (CCN 2, 1 param, NLOC 1), greet (CCN 1, 3 params, NLOC 1) |
 | E2.1 | `fact` → CCN 2, 1 parameter, NLOC 1. | slice 1 | observed: test/test_languages/testOCaml.py::test_branching_and_curried_parameters: fact (CCN 2, 1 param, NLOC 1), greet (CCN 1, 3 params, NLOC 1) |
 | E2.2 | `greet` → CCN 1, 3 parameters, NLOC 1. | slice 1 | observed: test/test_languages/testOCaml.py::test_branching_and_curried_parameters: fact (CCN 2, 1 param, NLOC 1), greet (CCN 1, 3 params, NLOC 1) |
-| E3.1 | `let classify x = match x with \| 0 \| 1 -> "small" \| n when n < 0 -> "neg" \| n -> if n > 9 && n < 100 then "mid" else "big"` → `classify` CCN 6 (two extra arms, `when`, `if`, `&&`); the or-pattern adds nothing. | slice 2 |  |
-| E3.2 | `let f = function Some x -> x \| None -> 0` → function `f`, CCN 2, 0 parameters. | slice 2 |  |
-| E4 | `let g a b = match a with \| true -> a \|\| b \| false -> not b` → CCN 3 (one extra arm and `\|\|`); `\|\|` is not an arm. | slice 2 |  |
-| E5 | `let read k = try find k with Not_found -> None \| Invalid_argument _ -> None` → CCN 3 (two handler arms). | slice 2 |  |
+| E3.1 | `let classify x = match x with \| 0 \| 1 -> "small" \| n when n < 0 -> "neg" \| n -> if n > 9 && n < 100 then "mid" else "big"` → `classify` CCN 6 (two extra arms, `when`, `if`, `&&`); the or-pattern adds nothing. | slice 2 | observed: test/test_languages/testOCaml.py::TestOCamlMatchArms.test_arms_guards_and_or_patterns: classify CCN 6 |
+| E3.2 | `let f = function Some x -> x \| None -> 0` → function `f`, CCN 2, 0 parameters. | slice 2 | observed: test/test_languages/testOCaml.py::TestOCamlMatchArms.test_function_arms_without_leading_bar: (f, CCN 2, 0 params) |
+| E4 | `let g a b = match a with \| true -> a \|\| b \| false -> not b` → CCN 3 (one extra arm and `\|\|`); `\|\|` is not an arm. | slice 2 | observed: test/test_languages/testOCaml.py::TestOCamlMatchArms.test_logical_or_inside_arm_is_not_an_arm: g CCN 3 |
+| E5 | `let read k = try find k with Not_found -> None \| Invalid_argument _ -> None` → CCN 3 (two handler arms). | slice 2 | observed: test/test_languages/testOCaml.py::TestOCamlMatchArms.test_each_try_handler_arm_adds_one: read CCN 3, lead CCN 3 |
 | E6 | `let sum l = let rec go acc = function [] -> acc \| x :: t -> go (acc + x) t in go 0 (List.filter (fun x -> x > 0) l)` over several lines, followed by `let next = 1` and `let after x = x`: | slice 1 | observed: test/test_languages/testOCaml.py::test_local_helpers_and_lambdas_stay_inside: exactly [(sum,1,6),(after,8,8)] |
-| E6.1 | → function `sum`, CCN 2, covering all its lines. | slice 2 |  |
+| E6.1 | → function `sum`, CCN 2, covering all its lines. | slice 2 | observed: test/test_languages/testOCaml.py::test_local_helpers_and_lambdas_stay_inside: [(sum,1,6,CCN 2),(after,8,8,1)] |
 | E6.2 | → function `after`. | slice 1 | observed: test/test_languages/testOCaml.py::test_local_helpers_and_lambdas_stay_inside: exactly [(sum,1,6),(after,8,8)] |
 | E6.3 | → no `go` function, no anonymous function, no `next` function. | slice 1 | observed: test/test_languages/testOCaml.py::test_local_helpers_and_lambdas_stay_inside: exactly [(sum,1,6),(after,8,8)] |
 | E7.1 | `let rec even n = if n = 0 then true else odd (n - 1) and odd n = if n = 0 then false else even (n - 1)` → `even` and `odd`, each CCN 2. | slice 3 |  |

@@ -14,6 +14,11 @@ def get_ocaml_function_list(source_code):
     ).function_list
 
 
+def ccn_by_name(source_code):
+    return {f.name: f.cyclomatic_complexity
+            for f in get_ocaml_function_list(source_code)}
+
+
 class TestOCamlFunctionRecognition(unittest.TestCase):
 
     def test_branching_and_curried_parameters(self):
@@ -46,8 +51,9 @@ let next = 1
 let after x = x
 ''')
         self.assertEqual(
-            [('sum', 1, 6), ('after', 8, 8)],
-            [(f.name, f.start_line, f.end_line) for f in functions])
+            [('sum', 1, 6, 2), ('after', 8, 8, 1)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+             for f in functions])
 
     def test_comments_and_strings_are_inert(self):
         result = analyze_file.analyze_source_code("a.ml", '''\
@@ -123,6 +129,68 @@ let f x =
         self.assertEqual(
             ('f', 1, 2, 3),
             (f.name, f.cyclomatic_complexity, f.nloc, f.end_line))
+
+
+class TestOCamlMatchArms(unittest.TestCase):
+
+    def test_function_arms_without_leading_bar(self):
+        f, = get_ocaml_function_list(
+            'let f = function Some x -> x | None -> 0\n')
+        self.assertEqual(
+            ('f', 2, 0),
+            (f.name, f.cyclomatic_complexity, f.parameter_count))
+
+    def test_arms_guards_and_or_patterns(self):
+        self.assertEqual({'classify': 6}, ccn_by_name('''\
+let classify x = match x with
+  | 0 | 1 -> "small"
+  | n when n < 0 -> "neg"
+  | n -> if n > 9 && n < 100 then "mid" else "big"
+'''))
+
+    def test_logical_or_inside_arm_is_not_an_arm(self):
+        self.assertEqual({'g': 3}, ccn_by_name(
+            'let g a b = match a with | true -> a || b | false -> not b\n'))
+
+    def test_each_try_handler_arm_adds_one(self):
+        self.assertEqual({'read': 3, 'lead': 3}, ccn_by_name('''\
+let read k = try find k with Not_found -> None | Invalid_argument _ -> None
+let lead k = try find k with | Not_found -> None | Exit -> None
+'''))
+
+    def test_match_scores_like_equivalent_if_chain(self):
+        self.assertEqual({'m': 3, 'i': 3}, ccn_by_name('''\
+let m x = match x with 0 -> "a" | 1 -> "b" | _ -> "c"
+let i x = if x = 0 then "a" else if x = 1 then "b" else "c"
+'''))
+
+    def test_fun_and_type_arrows_add_nothing(self):
+        self.assertEqual({'a': 2, 'h': 1, 'k': 1}, ccn_by_name('''\
+let a x = match x with | A -> fun y -> y | B -> fun y -> y + 1
+let h (k : int -> int) x = k x
+let k : int -> int = fun x -> x
+'''))
+
+    def test_nested_arms_belong_to_inner_construct(self):
+        self.assertEqual({'p': 4, 'b': 3, 'l': 3, 'w': 3}, ccn_by_name('''\
+let p x y = match x with
+  | A -> (match y with C -> 1 | D -> 2)
+  | B -> 3
+  | E -> 4
+let b x y = match x with
+  | A -> begin match y with C -> 1 | D -> 2 end
+  | B -> 3
+let l x y = match x with
+  | A -> let v = match y with C -> 1 | D -> 2 in v
+  | B -> 3
+let w x = try match x with A -> 1 | B -> 2 with Exit -> 0
+'''))
+
+    def test_record_update_has_no_arms(self):
+        self.assertEqual({'u': 2, 't': 3}, ccn_by_name('''\
+let u r = match r with A -> { r with x = 1 } | B -> r
+let t r = match (try { r with x = 1 } with E -> r) with A -> 1 | B -> 2
+'''))
 
 
 class TestOCamlCliDiscovery(unittest.TestCase):
