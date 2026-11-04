@@ -84,10 +84,12 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                     self._consume_type_annotation()
                     return
                 if token == 'static':
+                    self._end_field_before_modifier()
                     self._static_seen = True
                     self._prev_token = token
                     return
                 if token == 'async':
+                    self._end_field_before_modifier()
                     self._async_seen = True
                     self._prev_token = token
                     return
