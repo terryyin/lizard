@@ -19,7 +19,7 @@ containing only source inputs. Historical corpora can be reconstructed with the
 retained cohort README and manifests. Keep outputs outside that directory.
 
 ```sh
-nix develop -c python .agents/skills/lizard-process-pr/scripts/paired_benchmark.py \
+./scripts/dev python .agents/skills/lizard-process-pr/scripts/paired_benchmark.py \
   --baseline /absolute/target --candidate /absolute/candidate \
   --corpus /absolute/frozen-corpus --workload api-parameters \
   --out /absolute/evidence/api-parameters.json

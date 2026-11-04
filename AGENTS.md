@@ -11,26 +11,31 @@ Claude Code receives the same payload under `.claude/skills/dough-*`.
 
 ## Environment and tests
 
-This project uses Nix. Run `nix develop` once in every new terminal window.
-For AI agents, prefix tooling with `nix develop -c`:
+All coding agents should run local project tooling through `scripts/dev` from
+the repository root. It uses offline Nix and disables pip package indexes by
+default, so agents can use it on a hotspot or when the connection is unknown.
 
-```
-nix develop -c <command>
+```bash
+./scripts/dev <command>
 ```
 
-**Exception:** `git` commands do not need the Nix prefix — run them directly.
+If dependencies are missing, report the blocker. Run `nix develop` for online
+setup only after the user confirms an unmetered connection or authorizes the
+downloads. Then return to `scripts/dev` for project tooling.
+
+Run `git` commands directly.
 
 During focused work, targeted pytest files are enough. Before completing a
 change, run the full suite:
 
 ```bash
-nix develop -c python -m pytest   # Run all tests
+./scripts/dev python -m pytest
 ```
 
 Run all tests and format checking:
 
 ```bash
-nix develop -c make
+./scripts/dev make
 ```
 
 Adding or changing a language reader: use the `lizard-language-support` skill

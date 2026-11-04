@@ -53,7 +53,7 @@ Prefer connected GitHub tools when available. On CLI hosts, the read-only helper
 collects paginated REST evidence and review-thread states with `gh`:
 
 ```sh
-nix develop -c python .agents/skills/lizard-process-pr/scripts/pr_packet.py capture \
+./scripts/dev python .agents/skills/lizard-process-pr/scripts/pr_packet.py capture \
   --repo terryyin/lizard --pr 123 --out /absolute/evidence-directory
 ```
 
@@ -112,8 +112,8 @@ Keep heavy work serial. Nix shell entry mutates `.venv`: serialize **all** Nix
 entries in one checkout, including reads and observer actions. Batch reads inside
 one invocation; `PIP_QUIET=3` reduces noise without changing the required Nix wrapper.
 
-Before accepting a corrected candidate, run full `nix develop -c python -m pytest`
-and `nix develop -c make`, plus applicable hooks and current hosted CI. Discover
+Before accepting a corrected candidate, run `./scripts/dev python -m pytest`
+and `./scripts/dev make`, plus applicable hooks and current hosted CI. Discover
 workflow/matrix/conditional-job applicability at that boundary. Reuse proof only
 when its promise, production bytes, inputs, interpreter/options and consuming
 boundary still match. Evidence-only edits do not automatically require remeasurement.
