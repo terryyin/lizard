@@ -4,7 +4,8 @@ description: >-
   Process a Lizard pull request from product-backlog intake through evidence-based
   review, correction, performance qualification and an authorized disposition.
   Use for evaluating, accepting, correcting or processing incoming PRs, including
-  batches. Preserve the requested review-only or delivery scope.
+  batches, or for pre-closure qualification of a complete local issue repair.
+  Preserve the requested review-only or delivery scope.
 ---
 
 # Process a pull request
@@ -12,6 +13,11 @@ description: >-
 Make the PR backlog-owned first, then complete the requested scope with reusable,
 revision-bound evidence. This is project guidance for Codex, Cursor and Claude Code.
 It composes the installed Open Dough lifecycle rather than replacing it.
+
+For `--local-change` or a handoff from `lizard-process-issue`, go directly to
+[Qualify a local change](#qualify-a-local-change). The repair's existing owner
+supplies scope and lifecycle; sections for hosted PR intake and delivery apply
+only to actual PRs.
 
 ## 1. Put every PR in the product backlog first
 
@@ -70,6 +76,8 @@ Recover this small context on resume before searching raw history again.
 
 ## 3. Decide what the contribution needs
 
+### Compare behavior and consumers
+
 Reproduce on the current target through `analyze_file` or the CLI. Distinguish a real
 defect from an obsolete example, already-fixed behavior, invalid fixture or a change
 whose value does not justify its cost. A green contributor suite is evidence of its
@@ -83,6 +91,8 @@ extensions, public names/counts, CLI output and the website when reached. Apply
 [dough-adr-awareness](../dough-adr-awareness/SKILL.md) for architectural constraints.
 Prefer the existing semantic owner over parallel counters, per-token wrappers,
 whole-stream buffering or PR-specific switches.
+
+### Route hosted corrections
 
 Before corrections, establish whether they can reach the contributor branch while
 preserving history. Fork `push: false` alone does not disprove maintainer access;
@@ -100,7 +110,7 @@ must reach a complete disposition for its named PRs.
 ## 4. Correct and qualify only the authorized scope
 
 Use the selected execution workflow for corrections and independent post-change
-refactoring. Review the aggregate contributor change plus corrections, including
+refactoring. Review the aggregate change, including
 untouched representations of the same concept. Preserve discriminating red/green
 proof, valid controls and relevant shared consumers. Do not weaken an expectation
 to disguise an implementation failure.
@@ -113,8 +123,7 @@ entries in one checkout, including reads and observer actions. Batch reads insid
 one invocation; `PIP_QUIET=3` reduces noise without changing the required Nix wrapper.
 
 Before accepting a corrected candidate, run full `nix develop -c python -m pytest`
-and `nix develop -c make`, plus applicable hooks and current hosted CI. Discover
-workflow/matrix/conditional-job applicability at that boundary. Reuse proof only
+and `nix develop -c make`, plus applicable hooks. Reuse proof only
 when its promise, production bytes, inputs, interpreter/options and consuming
 boundary still match. Evidence-only edits do not automatically require remeasurement.
 
@@ -123,7 +132,8 @@ boundary still match. Evidence-only edits do not automatically require remeasure
 For authorized delivery, publish corrections without losing contributor history;
 use the installed backlog Git adapters when combining backlog/done records. Verify
 the final contributor head, base and tree against accepted proof, refresh required
-checks and guard the hosted merge with the exact head SHA. Stop if the head moves.
+checks, including current workflow/matrix/conditional-job applicability, and guard
+the hosted merge with the exact head SHA. Stop if the head moves.
 Local green checks never replace required hosted results. Do not merge while an
 affected workload, refactor or required check remains unresolved.
 
@@ -137,6 +147,38 @@ state); unnecessary/already fixed with evidence; real defect deferred to a linke
 correction; or blocked/pending with the precise unmet gate. A review, deferral or
 closed PR is never labelled merged. A batch's final report accounts for every frozen
 member; later arrivals require their own intake.
+
+## Qualify a local change
+
+Use the issue's existing story/execution or authorized unlisted one-shot as
+owner. Accept the issue source, expected and actual behavior, starting baseline,
+execution checkout, candidate revision or exact uncommitted tree, attributable
+changes, and retained proof. This mode reviews and qualifies; it creates no
+hosted PR, second backlog item, execution, or publication authority.
+
+Read the **whole owned repair** as one diff, including its tests and refactors,
+even if it spans several commits or has uncommitted files. Establish attribution
+from the execution's proof and commit history; omit unrelated edits, trunk merges,
+and workflow bookkeeping. Compare the final candidate with an equivalent
+baseline without the repair, accounting for intervening trunk changes. Preserve
+the original baseline for the reported reproduction. If a comparison cannot be
+isolated safely, report what is missing and keep the dependent verdict pending.
+
+Apply [behavior and consumer review](#compare-behavior-and-consumers) and
+[qualification](#4-correct-and-qualify-only-the-authorized-scope) to this
+aggregate candidate. Reuse the execution's independent refactor and
+valid red/green proof. Evaluate performance for every repair: explain why it is
+unaffected, or use the [paired benchmark](references/performance.md) for material
+runtime effects on affected consumers and applicable CLI workloads. Apply the
+story's bounds when specified; the runner's default is a screening result, not
+a new project policy. Record consequential regressions and inconclusive evidence.
+
+Return `qualified`, `needs correction`, or `pending evidence` to the execution
+coordinator, with the owner, base/candidate, proof, performance result, and any
+blocker. Use the existing conversation or plan proof records. A finding needing
+correction returns to that owner; a changed candidate or integration base reopens
+only affected proof. Leave CI, integration, and wrap-up with the existing workflow;
+missing required qualification holds dependent delivery and closure.
 
 The [experience summary](references/experience.md) explains the historical basis.
 Read it when changing this skill or diagnosing a recurrence, not on every PR.
