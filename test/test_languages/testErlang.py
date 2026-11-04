@@ -29,6 +29,13 @@ class TestErlang(unittest.TestCase):
         self.assertEqual('lookup', result[1].name)
         self.assertEqual('lookup', result[2].name)
 
+    def test_functions_report_their_own_lines(self):
+        result = get_erlang_function_list(
+            '\n\nf(X) -> X.\n\ng(Y) ->\n    Y.\n')
+        self.assertEqual(
+            [('f', 3, 3), ('g', 5, 6)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
     def test_empty(self):
         result = get_erlang_function_list('''
 

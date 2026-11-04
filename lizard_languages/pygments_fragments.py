@@ -1,6 +1,14 @@
 """Lizard tokens from a Pygments token stream, with its fragments joined."""
 
+from pygments import lex, lexers
 import pygments.token as py_token
+
+
+def lex_keeping_newlines(source_code, language):
+    '''Pygments tokens of `source_code` in `language`, keeping leading and
+    trailing newlines so Lizard's line numbers stay right.'''
+    return lex(source_code,
+               lexers.get_lexer_by_name(language, stripnl=False))
 
 
 def _joins_nothing(_run, _value):

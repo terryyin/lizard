@@ -2,9 +2,8 @@
 joined, `#` directive lines dropped and each line's first code token
 marked with its column."""
 
-from pygments import lex, lexers
 import pygments.token as py_token
-from .pygments_fragments import join_fragments
+from .pygments_fragments import join_fragments, lex_keeping_newlines
 
 OPERATOR_CHARS = frozenset('!%&*+-./:<=>?@^|~')
 
@@ -27,9 +26,8 @@ class LineStart(str):
 
 def generate_tokens(source_code, is_comment):
     '''`is_comment(token)` tells comments, which start no line.'''
-    lexer = lexers.get_lexer_by_name('fsharp', stripnl=False)
     return _mark_line_starts(join_fragments(
-        lex(source_code, lexer=lexer),
+        lex_keeping_newlines(source_code, 'fsharp'),
         joins=lambda _run, value: is_operator(value),
         comment_types=(py_token.String.Doc,),
         keep_spaces=True), is_comment)

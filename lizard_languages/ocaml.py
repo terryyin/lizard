@@ -3,9 +3,8 @@ Language parser for OCaml
 '''
 
 import re
-from pygments import lex, lexers
 from .code_reader import CodeReader, CodeStateMachine
-from .pygments_fragments import join_fragments
+from .pygments_fragments import join_fragments, lex_keeping_newlines
 from .match_arms import ArmTracker
 
 
@@ -38,8 +37,7 @@ class OCamlReader(CodeReader):
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
-        lexer = lexers.get_lexer_by_name('ocaml', stripnl=False)
-        return join_fragments(lex(source_code, lexer=lexer),
+        return join_fragments(lex_keeping_newlines(source_code, 'ocaml'),
                               joins=_joins_bars)
 
 
