@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-029_fsharp-support.json",
+      "identity": "SEED-029#fsharp-support",
+      "completedAt": "2026-11-04T08:54:44.499Z",
+      "blob": "b414425275ef2992d91354e4d6cfb957d3b79f14"
+    },
+    {
       "fileName": "SEED-029_ocaml-support.json",
       "identity": "SEED-029#ocaml-support",
       "completedAt": "2026-11-04T05:43:52.519Z",

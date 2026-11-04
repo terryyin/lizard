@@ -204,7 +204,7 @@ implementer's passing tests and the reproducer did not cover.
   - Tool: Claude Code
   - Model: claude-opus-5-5
   - Open Dough release: 0.3.82 (installed by commit 210ae36)
-  - Evidence: `test_attribute_on_the_binding_line_belongs_to_no_function` in `65c552a:test/test_languages/testFSharp.py`; `test_and_continuing_a_type_group_is_a_type` in `a20ab79:test/test_languages/testFSharpMembers.py`; story clauses on `type` items and type members in `.planning/seeds/SEED-029-ocaml-fsharp-support.md#fsharp-support`.
+  - Evidence: `test_attribute_on_the_binding_line_belongs_to_no_function` in `65c552a:test/test_languages/testFSharp.py`; `test_and_continuing_a_type_group_is_a_type` in `a20ab79:test/test_languages/testFSharpMembers.py`; story clauses on `type` items and type members in `b0c42aa:.planning/seeds/SEED-029-ocaml-fsharp-support.md` (`#fsharp-support`).
   - Observed effect: the slice 3 implementer reported `type A … and B` as "not a story example; left alone". The coordinator's probe showed a fake function `B` and a missing member `N`. Together with the same-line `[<Attr>] let` gap in slice 1, that made two return rounds, each ending in a discriminating test, before delivery.
   - Inference: an implementer's "unpromised edge" label needs a coordinator probe against the story's general clauses before it is accepted.
 
