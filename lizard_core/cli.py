@@ -9,7 +9,7 @@ from lizard_core.function_info import AllResult
 from lizard_core.extensions import print_extension_results
 from lizard_core.analysis import analyze
 from lizard_core.text_output import print_result, silent_printer
-from lizard_core.options import parse_args
+from lizard_core.option_resolution import parse_args
 from lizard_core.output_scheme import OutputScheme
 
 

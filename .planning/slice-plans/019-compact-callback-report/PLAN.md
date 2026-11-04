@@ -2,6 +2,7 @@
 
 **Identity:** SEED-030#compact-callback-report
 **Source:** [selected story](../../seeds/SEED-030-compact-javascript-callback-report.md#compact-callback-report)
+**Source review:** [source-review.md](source-review.md)
 
 ## Goal and scope
 
@@ -38,7 +39,7 @@ marker, no compact behavior for other formatters, no language filter.
 
 ## Outside-in proof
 
-Real CLI tests in `test/testApplication.py` (subprocess against `lizard.py` on
+Real CLI tests in `test/testCompactReport.py` (subprocess against `lizard.py` on
 a temporary `.js` file, like `TestVueSourceLineNumbersCli`), observing stdout
 and the exit code:
 
@@ -53,14 +54,14 @@ and the exit code:
 5. `--compact --xml` (or `--csv`) output equals the same run without
    `--compact`.
 
-Focused: `nix develop -c python -m pytest test/testApplication.py`. Before
+Focused: `nix develop -c python -m pytest test/testCompactReport.py`. Before
 completion: `nix develop -c make`.
 
 ## Ordered slices
 
 ### 1. Opt into a compact text report that omits trivial nested callbacks
 Type: Behavior
-Status: planned
+Status: done
 Proof: CLI examples 1-5 above; full `nix develop -c make`.
 
 Behavior: Given a JavaScript file with nested anonymous callbacks, running the
@@ -78,4 +79,11 @@ observed in this checkout. No human decision remains.
 
 ## Learnings
 
-None yet.
+- Lizard lists a nested callback before its enclosing function (it ends
+  first), so `sum`'s table order is `(anonymous)`, `sum`.
+- The warning policy (`warning_filter.warning_policy`) is built before the
+  table only under `--compact`, so the default report still prints a missing
+  whitelist notice after the table.
+- Accepted proof: `nix develop -c python -m pytest test/testCompactReport.py`
+  (examples 1-5 plus Checkstyle, HTML, clang/MSVS, `-Eduplicate` and analysis
+  results) and `nix develop -c make extensive` (2933 passed).
