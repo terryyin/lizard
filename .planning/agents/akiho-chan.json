@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "agent": "Akiho-chan",
+  "email": "akiho-chan@example.org",
+  "activity": "preparation",
+  "identity": "SEED-029#fsharp-support",
+  "host": "claude",
+  "model": "fable"
+}
