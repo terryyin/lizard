@@ -28,7 +28,7 @@ A list of supported languages:
 -  Kotlin
 -  Lua
 -  Objective-C
--  OCaml
+-  OCaml (see `OCaml analysis <docs/ocaml-analysis.md>`_)
 -  Perl
 -  PHP
 -  PL/SQL
