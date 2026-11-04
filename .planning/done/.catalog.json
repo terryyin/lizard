@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-032_erlang-leading-blank-lines.json",
+      "identity": "SEED-032#erlang-leading-blank-lines",
+      "completedAt": "2026-11-04T12:19:50.343Z",
+      "blob": "184121039d4349383a9c5dff3a1e993433973c94"
+    },
+    {
       "fileName": "SEED-031_ocaml-leading-blank-lines.json",
       "identity": "SEED-031#ocaml-leading-blank-lines",
       "completedAt": "2026-11-04T09:17:34.953Z",

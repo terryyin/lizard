@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-032#erlang-leading-blank-lines",
+  "title": "Fix Erlang leading blank lines",
+  "completedAt": "2026-11-04T12:19:50.343Z",
+  "developer": "Terry Yin",
+  "agent": "Yua-chan",
+  "host": "claude",
+  "model": "claude-opus-5-5"
+}
