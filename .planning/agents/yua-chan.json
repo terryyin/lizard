@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "agent": "Yua-chan",
+  "email": "yua-chan@example.org",
+  "identity": "SEED-032#erlang-leading-blank-lines",
+  "mode": "story-branch",
+  "branch": "dough/seed-032-erlang-leading-blank-lines",
+  "host": "claude",
+  "model": "claude-opus-5-5"
+}
