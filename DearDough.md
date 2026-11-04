@@ -199,6 +199,15 @@ implementer's passing tests and the reproducer did not cover.
   - Observed effect: contextual identifier calls, runtime operator handoff and export-default callbacks lost under the first annotation heuristic became discriminating public regressions before merge. The final490 cases preserve the earlier200; qualified timing for superseded bytes was retained and not reused.
   - Inference: directed opposite-role controls should finish with semantic acceptance before expensive qualification; this records caught gaps and repetition, not measured review-time savings.
 
+- Execution: SEED-029#fsharp-support
+  - Timestamp: 2026-11-04 (time unknown; slice 1 and slice 3 acceptance before 65c552a and a20ab79)
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.82 (installed by commit 210ae36)
+  - Evidence: `test_attribute_on_the_binding_line_belongs_to_no_function` in `65c552a:test/test_languages/testFSharp.py`; `test_and_continuing_a_type_group_is_a_type` in `a20ab79:test/test_languages/testFSharpMembers.py`; story clauses on `type` items and type members in `.planning/seeds/SEED-029-ocaml-fsharp-support.md#fsharp-support`.
+  - Observed effect: the slice 3 implementer reported `type A … and B` as "not a story example; left alone". The coordinator's probe showed a fake function `B` and a missing member `N`. Together with the same-line `[<Attr>] let` gap in slice 1, that made two return rounds, each ending in a discriminating test, before delivery.
+  - Inference: an implementer's "unpromised edge" label needs a coordinator probe against the story's general clauses before it is accepted.
+
 ## DD-011 — Integrity checks must separate measured inputs from acceptance records
 
 A post-measurement integrity checker asserted an entirely clean tracked tree,
@@ -375,6 +384,15 @@ acceptance.
   - Evidence: slice 1 proof row in `ba8d367:.planning/slice-plans/020-ocaml-support/PLAN.md` named only key examples 1, 2, 6, 8; obligation G1 and review ids 2.3, 2.11.3–2.11.7, 2.12, 4.5, 5.1.2, 5.1.3, 5.7.3, 6.1.2, 7.1 in `e8ecf8a:.planning/slice-plans/020-ocaml-support/source-review.md`.
   - Observed effect: one return round on slice 1 (seven tests added, no product change) before delivery.
   - Inference: the source review ran at first acceptance, after the slice-1 delegation, so the implementer received only the plan's example-shaped proof; obtaining the review before first delegation would have put the ids in the brief.
+
+- Execution: SEED-029#fsharp-support
+  - Timestamp: 2026-11-04 (time unknown; during slice 1 implementation before 65c552a)
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.82 (installed by commit 210ae36)
+  - Evidence: `65c552a:.planning/slice-plans/021-fsharp-support/source-review.md`, with the slice 1 rows for 2.3–2.5, 3.2, 4.x, 5.x, 6.x, 8.x and 9.x and E6.2 moved to slice 2.
+  - Observed effect: the coordinator again launched the source review after the slice 1 delegation. The added ids reached the implementer as a mid-flight message, not a return round, so no extra test round was needed. One allocation (E6.2, `sum` CCN 2) contradicted the plan's interim and came back as an implementer gap.
+  - Inference: this is the third occurrence in a row. Running the source review and its allocation before first delegation remains the cheaper ordering; checking allocations against named interims would have prevented the E6.2 mismatch.
 
 ## Retention
 

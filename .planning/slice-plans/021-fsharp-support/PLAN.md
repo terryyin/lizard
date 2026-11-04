@@ -182,6 +182,19 @@ Files: `lizard_languages/fsharp.py`, `lizard_languages/fsharp_tokens.py` (or
 the shared module), `docs/fsharp-analysis.md` (final rules and limitations),
 `test/test_languages/testFSharp.py`.
 
+## Execution complete
+
+Product advice: no change to this story's direction; the F# reader delivers
+the story's scope, and its deferred promises (property bodies, accessors,
+`new(…)` constructors, interface and object-expression members, active
+patterns) remain candidate follow-ups only on user demand. Recommend a
+bug-fix story, in line with the near-future direction "Maintenance, bug
+fixing, and PR reviews": the OCaml reader (SEED-029#ocaml-support, earlier
+execution) lexes with Pygments' default `stripnl=True`, so leading blank
+lines are dropped and every function's line numbers shift (`\n\nlet f x = x`
+in `a.ml` reports `f` at line 1, not 3; F# passes `stripnl=False` and
+reports 3).
+
 ## Current decisions
 
 - Tokens come from Pygments' F# lexer (P1, P2); the reader joins fragments and
