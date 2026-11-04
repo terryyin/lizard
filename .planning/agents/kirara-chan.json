@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "agent": "Kirara-chan",
+  "email": "kirara-chan@example.org",
+  "identity": "SEED-034#process-fabio-malpezzi-prs",
+  "mode": "story-branch",
+  "branch": "cursor/process-fabiomalpezzi-s-open-prs",
+  "host": "cursor",
+  "model": "auto"
+}
