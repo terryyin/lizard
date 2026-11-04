@@ -70,6 +70,12 @@ functions defined inside another function with CCN 1 and no warning under the
 current thresholds and whitelist, while file/total counts, the warning section,
 exit status, and non-text formatter output are the same as without the option.
 
+## Execution complete
+
+Product advice: no change. The compact report is delivered as scoped. The
+retrospective found no defects, residue or test-suite cleanup, and no direction
+or queue evidence that suggests reprioritizing.
+
 ## Concern review
 
 Refinement not needed: one cohesive user-visible outcome with one small data
