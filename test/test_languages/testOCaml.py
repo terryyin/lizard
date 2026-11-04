@@ -7,11 +7,7 @@ from tempfile import TemporaryDirectory
 
 from lizard import analyze_file
 
-
-def get_ocaml_function_list(source_code):
-    return analyze_file.analyze_source_code(
-        "a.ml", source_code
-    ).function_list
+from .ocaml_helpers import get_ocaml_function_list
 
 
 def ccn_by_name(source_code):

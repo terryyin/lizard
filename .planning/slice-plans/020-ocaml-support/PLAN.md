@@ -62,8 +62,8 @@ boundary with a temporary directory holding `src/main.ml`, `src/main.mli`, and
 `tool.py` (filesystem boundary only; no parsing mocks).
 
 Local gates, cited from `AGENTS.md`: focused
-`nix develop -c python -m pytest test/test_languages/testOCaml.py` during each
-slice; before completing the change, `nix develop -c make` (full pytest,
+`nix develop -c python -m pytest test/test_languages/testOCaml.py test/test_languages/testOCamlItemBoundaries.py`
+during each slice (item-boundary tests split out in slice 3); before completing the change, `nix develop -c make` (full pytest,
 `pycodestyle`, `pylint`). Hosted CI (`python-app.yml`) runs pytest across
 Python 3.8–3.14 after publication; avoid syntax newer than 3.8.
 
@@ -135,7 +135,7 @@ remains one logical decision.
 
 ### 3. `and` siblings, modules, and type items bound functions
 Type: Behavior
-Status: planned
+Status: done
 Proof: `testOCaml.py`: example 7 (`even`, `odd` each CCN 2; `g` CCN 3 with
 end line at `end`; `h` reported; the type's `|` adds nothing); a `;;`
 separator and `open M` between functions end the previous function; full
@@ -156,7 +156,8 @@ function without adding decisions.
 ## Learnings
 
 - Slice 1 (accepted proof `nix develop -c python -m pytest test/test_languages/testOCaml.py`, 13 tests; full suite 2946 passed): Pygments splits `<=`, `>=`, `<>`, `|>` into single characters but keeps `->`, `&&`, `::`, `;;`, `[|`, `|]` whole, so arm detection can rely on a whole `->` token; `| |` with a space stays two arm bars; `()` is one token (counted as a parameter slot in `FunctionInfo.parameter_count`).
-- Slice 2 (21 focused tests; full suite 2954 passed): arm scopes (`_ArmScope`) are reset by `_start_item`, so new item boundaries close open matches; a `type t = A | B` folded into a function whose match is in an arm body would count a constructor's `of a -> b`, so slice 3 must close the item at `type`.
+- Slice 2 (21 focused tests; full suite 2954 passed): arm scopes (`_ArmScope`, now in `ocaml_arms.py`) are reset by `_start_item`, so new item boundaries close open matches; a `type t = A | B` folded into a function whose match is in an arm body would count a constructor's `of a -> b`, so slice 3 must close the item at `type`.
+- Slice 3 (32 focused tests; `nix develop -c make` 2964 passed): heading position is measured from the enclosing module struct; a function ending at a struct's `end` includes that line, other boundaries end on the line before the item.
 - The heading `let` is charged to the previous function's NLOC and tokens before the reader sees it; `OCamlStates._start_item` compensates and is the place to reuse for `and`, `type`, `module`, `open`, `;;` in slice 3. `struct` is not yet an opener and `end` clamps depth at 0; slice 3 must make `struct` / `sig` / `object` open a scope.
 
 ## Plan concerns
@@ -188,7 +189,7 @@ Disposition: proved by slice 2: test/test_languages/testOCaml.py TestOCamlMatchA
 ### I2. and siblings, modules, type and other items are not boundaries
 Reported: slice 1 — "and, module…struct…end, type and ;; items are not boundaries. A let right after struct counts as local, so functions inside a module are not reported until slice 3."
 Story clause: "including each `and` sibling of a `let rec … and …` group and bindings inside `module Name = struct … end`"
-Disposition: interim until slices 3
+Disposition: proved by slice 3: test/test_languages/testOCamlItemBoundaries.py TestOCamlItemBoundaries (and siblings, module struct end, type/module/open/include/exception/external/;; boundaries, realistic sample)
 
 ### G1. Slice 1 proof lacks observations for owned commitments (discovered at slice 1 acceptance)
 Reported: slice 1 — "Acceptance found no observing assertion for a `fun`-bodied binding, local `let` after `->`/`then`/`else`/`;`/operator, `let` inside brackets or `begin … end`, local tokens counted in the enclosing function, `while`, `for`, `begin` not a decision, optional `?x`, and comments inside a function adding no decisions."

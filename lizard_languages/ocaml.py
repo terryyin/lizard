@@ -5,6 +5,7 @@ Language parser for OCaml
 import re
 from .code_reader import CodeReader, CodeStateMachine
 from .ocaml_tokens import generate_tokens as generate_ocaml_tokens
+from .ocaml_arms import ArmTracker
 
 
 class OCamlReader(CodeReader):
@@ -34,44 +35,22 @@ class OCamlReader(CodeReader):
         return generate_ocaml_tokens(source_code)
 
 
-class _ArmScope:
-    '''An open `match` / `try` / `function` at the bracket depth where
-    it began. It moves from its subject (before `with`) to a pattern
-    (before an arm's `->`) to an arm body (until the next `|`). The first
-    `match` / `function` arm is the default path; every `try` handler
-    arm is a decision.'''
-    # pylint: disable=R0903
-
-    def __init__(self, depth, phase, counts_first_arm):
-        self.depth, self.phase = depth, phase
-        self.counts_arm = counts_first_arm
-
-    def arm_token(self, token):
-        '''Advance on `|` or `->`; return whether it adds a decision.'''
-        if self.phase == 'subject':
-            return False
-        if token == '|':
-            self.phase = 'pattern'
-            return False
-        if self.phase != 'pattern':
-            return False
-        counts, self.counts_arm = self.counts_arm, True
-        self.phase = 'body'
-        return counts
-
-
 class OCamlStates(CodeStateMachine):
-    '''Top-level `let` bindings with arguments, or whose body starts with
-    `fun` / `function`, are functions. A `let` starts a new item when it
-    is outside brackets and `begin ... end`, and the token before it ends
-    an expression or is `;;`; otherwise it is a local `let ... in`.
-    In a function body, n `match` / `function` arms add n - 1 and each
-    `try` handler arm adds one; or-pattern bars and other `->` add
-    nothing.'''
+    '''Item `let` / `and` bindings with arguments, or whose body starts
+    with `fun` / `function`, are functions. A heading token starts a new
+    item when it is at item depth (outside brackets and `begin ... end`,
+    directly inside a module's `struct`), and the token before it ends an
+    expression, is `;;`, or opens the struct; otherwise it is local.
+    `type`, `module`, `open`, ... items and `;;` end the function, as does
+    its struct's `end`. In a function body, n `match` / `function` arms
+    add n - 1 and each `try` handler arm adds one; or-pattern bars and
+    other `->` add nothing.'''
     # pylint: disable=R0902
 
-    _OPENERS = {'(', '[', '{', '[|', 'begin'}
+    _OPENERS = {'(', '[', '{', '[|', 'begin', 'struct', 'sig', 'object'}
     _CLOSERS = {')', ']', '}', '|]', 'end'}
+    _OTHER_ITEMS = {'type', 'module', 'open', 'include', 'exception',
+                    'external'}
     _NON_ENDING_KEYWORDS = {
         'and', 'as', 'assert', 'begin', 'class', 'constraint', 'do',
         'downto', 'else', 'exception', 'external', 'for', 'fun',
@@ -90,7 +69,11 @@ class OCamlStates(CodeStateMachine):
         self._has_params = False
         self._continues_param = False
         self._after_label = False
-        self._arm_scopes = []
+        self._arms = ArmTracker()
+        self._param_depth = 0
+        self._structs = []      # item depth inside each module struct
+        self._local_lets = []   # depth of each local `let` awaiting `in`
+        self._item_kind = None
 
     def __call__(self, token, reader=None):
         result = super().__call__(token, reader)
@@ -105,59 +88,88 @@ class OCamlStates(CodeStateMachine):
         return token in self._CLOSERS or token in ('done', '()') or \
             self._is_name_or_literal(token)
 
+    def _item_depth(self):
+        return self._structs[-1] if self._structs else 0
+
+    def _in_heading_position(self):
+        return self._depth == self._item_depth() and (
+            self.last_token in (None, ';;', 'struct') or
+            self._ends_expression(self.last_token))
+
     def _state_global(self, token):
         if token in self._OPENERS:
-            self._depth += 1
+            self._open(token)
         elif token in self._CLOSERS:
-            self._depth = max(0, self._depth - 1)
-            scopes = self._arm_scopes
-            while scopes and scopes[-1].depth > self._depth:
-                scopes.pop()
-        elif token == 'let' and self._depth == 0 and (
-                self.last_token is None or self.last_token == ';;' or
-                self._ends_expression(self.last_token)):
-            self._start_item()
-        else:
-            self._track_arms(token)
+            self._close()
+        elif token == ';;' and self._depth == self._item_depth():
+            self._start_other_item(token)
+        elif token in self._OTHER_ITEMS and self._in_heading_position():
+            self._start_other_item(token)
+        elif token == 'let' and self._in_heading_position():
+            self._start_item(token)
+        elif token == 'let':
+            self._local_lets.append(self._depth)
+        elif token == 'in' and self._local_lets:
+            self._local_lets.pop()
+        elif token == 'and' and self._item_kind == 'let' and \
+                self._depth == self._item_depth() and \
+                self._depth not in self._local_lets:
+            self._start_item(token)
+        elif self._arms.adds_decision(token, self._depth):
+            self.context.add_condition()
 
-    def _track_arms(self, token):
-        if token in ('match', 'try'):
-            self._arm_scopes.append(
-                _ArmScope(self._depth, 'subject', token == 'try'))
-        elif token == 'function':
-            self._arm_scopes.append(_ArmScope(self._depth, 'pattern', False))
-        elif token == 'with':
-            self._start_arms()
-        elif token in ('->', '|') and self._arm_scopes:
-            scope = self._arm_scopes[-1]
-            if scope.depth == self._depth and scope.arm_token(token):
-                self.context.add_condition()
+    def _open(self, token):
+        '''A module item's `struct` holds items of its own.'''
+        if token == 'struct' and self._item_kind == 'module' and \
+                self._depth == self._item_depth():
+            self._structs.append(self._depth + 1)
+            self._item_kind = None
+        self._depth += 1
 
-    def _start_arms(self):
-        '''`with` starts the arms of the innermost `match` / `try` still
-        in its subject at this depth, ending constructs opened since; a
-        record update's `with` is inside braces and finds none.'''
-        for index in range(len(self._arm_scopes) - 1, -1, -1):
-            scope = self._arm_scopes[index]
-            if scope.depth != self._depth:
-                return
-            if scope.phase == 'subject':
-                del self._arm_scopes[index + 1:]
-                scope.phase = 'pattern'
-                return
+    def _close(self):
+        '''A closer ends constructs opened inside it; a module struct's
+        `end` ends its last function at that line.'''
+        self._depth = max(0, self._depth - 1)
+        self._arms.close_to(self._depth)
+        while self._local_lets and self._local_lets[-1] > self._depth:
+            self._local_lets.pop()
+        if self._structs and self._structs[-1] > self._depth:
+            self._structs.pop()
+            self._item_kind = 'module'
+            self._arms = ArmTracker()
+            self._end_function()
 
-    def _start_item(self):
-        '''The `let` token was already counted in the previous item; the
-        new function counts its first token and line from the start.'''
+    def _end_function(self, end_line=None):
+        '''End the open function, if any; global stays open.'''
+        function = self.context.current_function
+        if function is not self.context.global_pseudo_function:
+            function.end_line = end_line or function.end_line
+            self.context.end_of_function()
+
+    def _end_item(self, token):
+        '''The heading token was already counted in the previous item;
+        return its line share after taking it back.'''
         context = self.context
         previous = context.current_function
-        previous.nloc -= 1 if context.newline else 0
+        line = 1 if context.newline else 0
+        previous.nloc -= line
         previous.token_count -= 1
-        if previous is not context.global_pseudo_function:
-            previous.end_line = self._prev_line
-            context.end_of_function()
-        context.push_new_function('')
-        self._arm_scopes = []
+        self._end_function(self._prev_line)
+        self._arms, self._local_lets = ArmTracker(), []
+        self._item_kind = 'let' if token == 'and' else token
+        return line
+
+    def _start_other_item(self, token):
+        '''A non-`let` item belongs to no function: global keeps it.'''
+        line = self._end_item(token)
+        self.context.current_function.nloc += line
+        self.context.current_function.token_count += 1
+
+    def _start_item(self, token):
+        '''The new function counts its first token and line from the
+        start.'''
+        self._end_item(token)
+        self.context.push_new_function('')
         self._has_params = False
         self._continues_param = self._after_label = False
         self._state = self._state_name
@@ -185,7 +197,7 @@ class OCamlStates(CodeStateMachine):
             self._after_label = self.last_token in ('~', '?') and token != '('
             self._continues_param = token in ('~', '?')
             if token == '(':
-                self._depth = 1
+                self._param_depth = 1
                 self._state = self._state_bracketed_param
 
     def _add_param_token(self, token):
@@ -197,10 +209,10 @@ class OCamlStates(CodeStateMachine):
     def _state_bracketed_param(self, token):
         self.context.parameter(token)
         if token in self._OPENERS:
-            self._depth += 1
+            self._param_depth += 1
         elif token in self._CLOSERS:
-            self._depth -= 1
-            if self._depth == 0:
+            self._param_depth -= 1
+            if self._param_depth == 0:
                 self._continues_param = False
                 self._state = self._state_params
 
@@ -222,6 +234,4 @@ class OCamlStates(CodeStateMachine):
         context.current_function.token_count += dropped.token_count
 
     def statemachine_before_return(self):
-        if self.context.current_function is not \
-                self.context.global_pseudo_function:
-            self.context.end_of_function()
+        self._end_function()

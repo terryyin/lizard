@@ -8,7 +8,7 @@
 
 | Id | Source commitment | Slice | Observation or obligation |
 | --- | --- | --- | --- |
-| G | Goal: OCaml maintainers point Lizard at their OCaml sources through the existing CLI and Python API and receive each named function binding with CCN, NLOC, token count, and parameter count, so they can find the functions that need review (OCaml half of GitHub issue #303; extends the many-language promise to the ML family). | slice 3 |  |
+| G | Goal: OCaml maintainers point Lizard at their OCaml sources through the existing CLI and Python API and receive each named function binding with CCN, NLOC, token count, and parameter count, so they can find the functions that need review (OCaml half of GitHub issue #303; extends the many-language promise to the ML family). | slice 3 | observed: test/test_languages/testOCaml.py and testOCamlItemBoundaries.py (32 tests: names, CCN, NLOC, token_count, parameter_count via analyze_source_code) and TestOCamlCliDiscovery CLI run |
 | 1.1 | `.ml` files are discovered by default. | slice 1 | observed: test/test_languages/testOCaml.py::TestOCamlCliDiscovery.test_language_filter_and_help (default run lists double@ and tool_f@, -l ocaml only double, no main.mli, -h contains ocaml) |
 | 1.2 | OCaml is selectable with `-l ocaml`. | slice 1 | observed: test/test_languages/testOCaml.py::TestOCamlCliDiscovery.test_language_filter_and_help (default run lists double@ and tool_f@, -l ocaml only double, no main.mli, -h contains ocaml) |
 | 1.3 | `ocaml` is listed in the `-l` help. | slice 1 | observed: test/test_languages/testOCaml.py::TestOCamlCliDiscovery.test_language_filter_and_help (default run lists double@ and tool_f@, -l ocaml only double, no main.mli, -h contains ocaml) |
@@ -19,19 +19,19 @@
 | 2.2 | Each top-level `let rec` binding that takes arguments is one function. | slice 1 | observed: test/test_languages/testOCaml.py::test_branching_and_curried_parameters: fact (CCN 2, 1 param, NLOC 1), greet (CCN 1, 3 params, NLOC 1) |
 | 2.3 | Each top-level `let` / `let rec` binding whose body starts with `fun` is one function. | slice 1 | observed: test/test_languages/testOCaml.py::test_binding_whose_body_starts_with_fun_is_a_function: add reported, 0 params |
 | 2.4 | Each top-level `let` / `let rec` binding whose body starts with `function` is one function. | slice 2 | observed: test/test_languages/testOCaml.py::TestOCamlMatchArms.test_function_arms_without_leading_bar: (f, CCN 2, 0 params) |
-| 2.5 | Each `and` sibling of a `let rec … and …` group is one function. | slice 3 |  |
-| 2.6 | Bindings inside `module Name = struct … end` are functions under the same rule. | slice 3 |  |
-| 2.7 | A function ends at the next structure item. The listed structure items are: | slice 3 |  |
+| 2.5 | Each `and` sibling of a `let rec … and …` group is one function. | slice 3 | observed: test/test_languages/testOCamlItemBoundaries.py::TestOCamlItemBoundaries.test_and_siblings_on_one_line [(even,1,1,2),(odd,1,1,2)]; test_and_siblings_over_lines_follow_the_function_rule; test_local_and_and_type_and_are_not_siblings |
+| 2.6 | Bindings inside `module Name = struct … end` are functions under the same rule. | slice 3 | observed: test/test_languages/testOCamlItemBoundaries.py::TestOCamlItemBoundaries.test_one_line_module_example [(g,1,1,CCN 3),(h,3,3,1)]; test_module_struct_end_closes_its_last_function g ends on end line 3 |
+| 2.7 | A function ends at the next structure item. The listed structure items are: | slice 3 | observed: test/test_languages/testOCamlItemBoundaries.py::TestOCamlItemBoundaries.test_each_item_kind_ends_the_function (type, module, open, include, exception, ;;, external: f ends line 2, CCN 2, 10 tokens; file NLOC 4) |
 | 2.7.1 | a `let` in heading position | slice 1 | observed: test/test_languages/testOCaml.py::test_local_helpers_and_lambdas_stay_inside: exactly [(sum,1,6),(after,8,8)] |
-| 2.7.2 | an `and` in heading position | slice 3 |  |
-| 2.7.3 | `type` | slice 3 |  |
-| 2.7.4 | `module` | slice 3 |  |
-| 2.7.5 | `open` | slice 3 |  |
-| 2.7.6 | `include` | slice 3 |  |
-| 2.7.7 | `exception` | slice 3 |  |
-| 2.7.8 | `external` | slice 3 |  |
-| 2.7.9 | `;;` | slice 3 |  |
-| 2.8 | A function ends at its struct's `end`. | slice 3 |  |
+| 2.7.2 | an `and` in heading position | slice 3 | observed: test/test_languages/testOCamlItemBoundaries.py::TestOCamlItemBoundaries.test_and_siblings_on_one_line [(even,1,1,2),(odd,1,1,2)]; test_and_siblings_over_lines_follow_the_function_rule; test_local_and_and_type_and_are_not_siblings |
+| 2.7.3 | `type` | slice 3 | observed: test/test_languages/testOCamlItemBoundaries.py::TestOCamlItemBoundaries.test_each_item_kind_ends_the_function (type, module, open, include, exception, ;;, external: f ends line 2, CCN 2, 10 tokens; file NLOC 4) |
+| 2.7.4 | `module` | slice 3 | observed: test/test_languages/testOCamlItemBoundaries.py::TestOCamlItemBoundaries.test_each_item_kind_ends_the_function (type, module, open, include, exception, ;;, external: f ends line 2, CCN 2, 10 tokens; file NLOC 4) |
+| 2.7.5 | `open` | slice 3 | observed: test/test_languages/testOCamlItemBoundaries.py::TestOCamlItemBoundaries.test_each_item_kind_ends_the_function (type, module, open, include, exception, ;;, external: f ends line 2, CCN 2, 10 tokens; file NLOC 4) |
+| 2.7.6 | `include` | slice 3 | observed: test/test_languages/testOCamlItemBoundaries.py::TestOCamlItemBoundaries.test_each_item_kind_ends_the_function (type, module, open, include, exception, ;;, external: f ends line 2, CCN 2, 10 tokens; file NLOC 4) |
+| 2.7.7 | `exception` | slice 3 | observed: test/test_languages/testOCamlItemBoundaries.py::TestOCamlItemBoundaries.test_each_item_kind_ends_the_function (type, module, open, include, exception, ;;, external: f ends line 2, CCN 2, 10 tokens; file NLOC 4) |
+| 2.7.8 | `external` | slice 3 | observed: test/test_languages/testOCamlItemBoundaries.py::TestOCamlItemBoundaries.test_each_item_kind_ends_the_function (type, module, open, include, exception, ;;, external: f ends line 2, CCN 2, 10 tokens; file NLOC 4) |
+| 2.7.9 | `;;` | slice 3 | observed: test/test_languages/testOCamlItemBoundaries.py::TestOCamlItemBoundaries.test_each_item_kind_ends_the_function (type, module, open, include, exception, ;;, external: f ends line 2, CCN 2, 10 tokens; file NLOC 4) |
+| 2.8 | A function ends at its struct's `end`. | slice 3 | observed: test/test_languages/testOCamlItemBoundaries.py::TestOCamlItemBoundaries.test_one_line_module_example [(g,1,1,CCN 3),(h,3,3,1)]; test_module_struct_end_closes_its_last_function g ends on end line 3 |
 | 2.9 | A function ends at end of file. | slice 1 | observed: test/test_languages/testOCaml.py::test_local_helpers_and_lambdas_stay_inside: exactly [(sum,1,6),(after,8,8)] |
 | 2.10 | Qualification: a `let` is in heading position (outside brackets and `begin … end`) when the token before it ends an expression or is `;;`. | slice 1 | observed: test/test_languages/testOCaml.py::test_local_helpers_and_lambdas_stay_inside: exactly [(sum,1,6),(after,8,8)] |
 | 2.11 | Qualification: a `let` after any of the following is a local `let … in`, not a heading: | slice 1 | observed: test/test_languages/testOCaml.py::test_let_after_non_ending_tokens_is_local: lets after ; + then else -> at depth 0 local; exactly [(f,1,5),(g,6,6),(last,7,7)] |
@@ -43,7 +43,7 @@
 | 2.11.6 | `;` | slice 1 | observed: test/test_languages/testOCaml.py::test_let_after_non_ending_tokens_is_local: lets after ; + then else -> at depth 0 local; exactly [(f,1,5),(g,6,6),(last,7,7)] |
 | 2.11.7 | an operator | slice 1 | observed: test/test_languages/testOCaml.py::test_let_after_non_ending_tokens_is_local: lets after ; + then else -> at depth 0 local; exactly [(f,1,5),(g,6,6),(last,7,7)] |
 | 2.12 | Qualification: a `let` inside brackets or inside `begin … end` is not in heading position. | slice 1 | observed: test/test_languages/testOCaml.py::test_let_inside_brackets_and_begin_end_is_local: exactly [(f,1,5),(last,6,6)] |
-| 3.1 | The reported name is the binding's own name (e.g. `fact`; `g` inside `module M`). | slice 3 |  |
+| 3.1 | The reported name is the binding's own name (e.g. `fact`; `g` inside `module M`). | slice 3 | observed: test/test_languages/testOCamlItemBoundaries.py::TestOCamlItemBoundaries.test_one_line_module_example [(g,1,1,CCN 3),(h,3,3,1)]; test_module_struct_end_closes_its_last_function g ends on end line 3 |
 | 4.1 | `let … in` local bindings belong to the enclosing function. | slice 1 | observed: test/test_languages/testOCaml.py::test_local_helpers_and_lambdas_stay_inside: exactly [(sum,1,6),(after,8,8)] |
 | 4.2 | `fun` belongs to the enclosing function. | slice 1 | observed: test/test_languages/testOCaml.py::test_local_helpers_and_lambdas_stay_inside (fun x -> inside sum, no anonymous); test_local_let_and_fun_tokens_count_in_enclosing_function |
 | 4.3 | `function` belongs to the enclosing function. | slice 1 | observed: test/test_languages/testOCaml.py::test_local_helpers_and_lambdas_stay_inside: exactly [(sum,1,6),(after,8,8)] |
@@ -66,7 +66,7 @@
 | 5.7.1 | `else` | slice 1 | observed: test/test_languages/testOCaml.py::test_branching_and_curried_parameters: fact (CCN 2, 1 param, NLOC 1), greet (CCN 1, 3 params, NLOC 1) |
 | 5.7.2 | `then` | slice 1 | observed: test/test_languages/testOCaml.py::test_branching_and_curried_parameters: fact (CCN 2, 1 param, NLOC 1), greet (CCN 1, 3 params, NLOC 1) |
 | 5.7.3 | `begin` | slice 1 | observed: test/test_languages/testOCaml.py::test_loops_are_decisions_and_begin_end_is_not: while + for + begin/end gives CCN 3 |
-| 5.7.4 | type-definition `\|` | slice 3 |  |
+| 5.7.4 | type-definition `\|` | slice 3 | observed: test/test_languages/testOCamlItemBoundaries.py::TestOCamlItemBoundaries.test_one_line_module_example h CCN 1, g CCN 3; test_type_after_match_arm_adds_nothing k CCN 2 |
 | 5.7.5 | `->` in `fun` | slice 2 | observed: test/test_languages/testOCaml.py::TestOCamlMatchArms.test_fun_and_type_arrows_add_nothing: a 2, h 1, k 1; else/then/begin in slice 1 tests |
 | 5.7.6 | `->` in type annotations | slice 2 | observed: test/test_languages/testOCaml.py::TestOCamlMatchArms.test_fun_and_type_arrows_add_nothing: a 2, h 1, k 1; else/then/begin in slice 1 tests |
 | 6.1 | Each curried argument before `=` counts as one parameter. This includes: | slice 1 | observed: test/test_languages/testOCaml.py::test_branching_and_curried_parameters: fact (CCN 2, 1 param, NLOC 1), greet (CCN 1, 3 params, NLOC 1) |
@@ -81,7 +81,7 @@
 | 7.4 | `'x'` char literals introduce neither decisions nor functions. | slice 1 | observed: test/test_languages/testOCaml.py::test_comments_and_strings_are_inert: file NLOC 4 of 5 lines, f CCN 1 / 1 param, next function h found |
 | 7.5 | `'a` type variables do not disturb tokenisation. | slice 1 | observed: test/test_languages/testOCaml.py::test_comments_and_strings_are_inert: file NLOC 4 of 5 lines, f CCN 1 / 1 param, next function h found |
 | 7.6 | Comment lines are excluded from NLOC. | slice 1 | observed: test/test_languages/testOCaml.py::test_comments_and_strings_are_inert: file NLOC 4 of 5 lines, f CCN 1 / 1 param, next function h found |
-| 8.1 | Existing language analysis is unchanged: the full suite stays green. | slice 3 |  |
+| 8.1 | Existing language analysis is unchanged: the full suite stays green. | slice 3 | observed: nix develop -c make: 2964 passed, 7 skipped, pycodestyle clean (slice 3 return) |
 | X1 | Value bindings without arguments are not reported as functions. The listed forms: |  | EX1 |
 | X1.1 | `let x = …` |  | EX1 |
 | X1.2 | `let () = …` |  | EX1 |
@@ -106,9 +106,9 @@
 | X7.3 | The deprecated `&` operator is excluded. |  | EX1 |
 | X7.4 | Extension metrics beyond the core four are excluded. |  | EX1 |
 | R1 | None. No product requirement calls for rejecting any OCaml input. |  | EX2 |
-| B1 | Current OCaml 4.14/5.x syntax, as formatted by hand or by `ocamlformat`. | slice 3 |  |
-| B2 | Lizard depends on no OCaml toolchain. | slice 3 |  |
-| B3 | Pygments' OCaml lexer, already a Lizard dependency, supplies the tokens. | slice 3 |  |
+| B1 | Current OCaml 4.14/5.x syntax, as formatted by hand or by `ocamlformat`. | slice 3 | observed: test/test_languages/testOCamlItemBoundaries.py::TestOCamlItemBoundaries.test_realistic_sample (ocamlformat-style module, let rec/and, type, open, ;;, let () not reported) |
+| B2 | Lizard depends on no OCaml toolchain. | slice 3 | observed: setup.py install_requires has no OCaml toolchain; tests run without one (nix develop -c make green) |
+| B3 | Pygments' OCaml lexer, already a Lizard dependency, supplies the tokens. | slice 3 | observed: lizard_languages/ocaml_tokens.py generate_tokens uses pygments lexers.get_lexer_by_name('ocaml') |
 | E1 | Directory with `src/main.ml`, `src/main.mli`, `tool.py`: | slice 1 | observed: test/test_languages/testOCaml.py::TestOCamlCliDiscovery.test_language_filter_and_help (default run lists double@ and tool_f@, -l ocaml only double, no main.mli, -h contains ocaml) |
 | E1.1 | `lizard .` → reports the `.ml` functions and the Python ones. | slice 1 | observed: test/test_languages/testOCaml.py::TestOCamlCliDiscovery.test_language_filter_and_help (default run lists double@ and tool_f@, -l ocaml only double, no main.mli, -h contains ocaml) |
 | E1.2 | `lizard -l ocaml .` → reports only the `.ml` functions. | slice 1 | observed: test/test_languages/testOCaml.py::TestOCamlCliDiscovery.test_language_filter_and_help (default run lists double@ and tool_f@, -l ocaml only double, no main.mli, -h contains ocaml) |
@@ -124,13 +124,13 @@
 | E6.1 | → function `sum`, CCN 2, covering all its lines. | slice 2 | observed: test/test_languages/testOCaml.py::test_local_helpers_and_lambdas_stay_inside: [(sum,1,6,CCN 2),(after,8,8,1)] |
 | E6.2 | → function `after`. | slice 1 | observed: test/test_languages/testOCaml.py::test_local_helpers_and_lambdas_stay_inside: exactly [(sum,1,6),(after,8,8)] |
 | E6.3 | → no `go` function, no anonymous function, no `next` function. | slice 1 | observed: test/test_languages/testOCaml.py::test_local_helpers_and_lambdas_stay_inside: exactly [(sum,1,6),(after,8,8)] |
-| E7.1 | `let rec even n = if n = 0 then true else odd (n - 1) and odd n = if n = 0 then false else even (n - 1)` → `even` and `odd`, each CCN 2. | slice 3 |  |
-| E7.2 | `module M = struct let g a b = a && b \|\| not a end` followed by `type t = A \| B` and `let h x = x`: | slice 3 |  |
-| E7.2.1 | → `g`, CCN 3, ending at `end`. | slice 3 |  |
-| E7.2.2 | → `h`. | slice 3 |  |
-| E7.2.3 | → the type's `\|` adds nothing to anything. | slice 3 |  |
+| E7.1 | `let rec even n = if n = 0 then true else odd (n - 1) and odd n = if n = 0 then false else even (n - 1)` → `even` and `odd`, each CCN 2. | slice 3 | observed: test/test_languages/testOCamlItemBoundaries.py::TestOCamlItemBoundaries.test_and_siblings_on_one_line [(even,1,1,2),(odd,1,1,2)]; test_and_siblings_over_lines_follow_the_function_rule; test_local_and_and_type_and_are_not_siblings |
+| E7.2 | `module M = struct let g a b = a && b \|\| not a end` followed by `type t = A \| B` and `let h x = x`: | slice 3 | observed: test/test_languages/testOCamlItemBoundaries.py::TestOCamlItemBoundaries.test_one_line_module_example [(g,1,1,CCN 3),(h,3,3,1)]; test_module_struct_end_closes_its_last_function g ends on end line 3 |
+| E7.2.1 | → `g`, CCN 3, ending at `end`. | slice 3 | observed: test/test_languages/testOCamlItemBoundaries.py::TestOCamlItemBoundaries.test_one_line_module_example [(g,1,1,CCN 3),(h,3,3,1)]; test_module_struct_end_closes_its_last_function g ends on end line 3 |
+| E7.2.2 | → `h`. | slice 3 | observed: test/test_languages/testOCamlItemBoundaries.py::TestOCamlItemBoundaries.test_one_line_module_example [(g,1,1,CCN 3),(h,3,3,1)]; test_module_struct_end_closes_its_last_function g ends on end line 3 |
+| E7.2.3 | → the type's `\|` adds nothing to anything. | slice 3 | observed: test/test_languages/testOCamlItemBoundaries.py::TestOCamlItemBoundaries.test_one_line_module_example h CCN 1, g CCN 3; test_type_after_match_arm_adds_nothing k CCN 2 |
 | E8 | A function preceded by `(* if (* while *) \|\| *)`, whose body is `let s = "if \" then" in let c = '\|' in …`, with an annotation `(x : 'a list)`: | slice 1 | observed: test/test_languages/testOCaml.py::test_comments_and_strings_are_inert: file NLOC 4 of 5 lines, f CCN 1 / 1 param, next function h found |
 | E8.1 | → that function CCN 1. | slice 1 | observed: test/test_languages/testOCaml.py::test_comments_and_strings_are_inert: file NLOC 4 of 5 lines, f CCN 1 / 1 param, next function h found |
 | E8.2 | → its comment line excluded from NLOC. | slice 1 | observed: test/test_languages/testOCaml.py::test_comments_and_strings_are_inert: file NLOC 4 of 5 lines, f CCN 1 / 1 param, next function h found |
 | E8.3 | → the next function still recognised. | slice 1 | observed: test/test_languages/testOCaml.py::test_comments_and_strings_are_inert: file NLOC 4 of 5 lines, f CCN 1 / 1 param, next function h found |
-| E9 | The full test suite after the reader lands → green, with no change to any existing language's results. | slice 3 |  |
+| E9 | The full test suite after the reader lands → green, with no change to any existing language's results. | slice 3 | observed: nix develop -c make: 2964 passed, 7 skipped, pycodestyle clean (slice 3 return) |
