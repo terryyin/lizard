@@ -7,6 +7,7 @@
 - **COBOL** — discover `.cbl`, `.cob`, and `.cobol` files in fixed format, report Procedure Division paragraphs as functions, and count core conditional, loop, and selection decisions
 
 ### Bug Fixes
+- Swift: mask keyword argument labels that have a separate local name (e.g. `func f(for value: Int)`), so they are not counted as control flow (PR #555)
 - JavaScript, TypeScript, JSX, and TSX: preserve callback boundaries and CCN when call arguments or object values contain subscripts, including `e(r[0])` and `return {w: [m[n - 1]]}` (issue #524, PR #525)
 - JavaScript, TypeScript, JSX, and TSX: end expression-bodied arrows at their enclosing argument, array, or object comma so following object members retain their own functions and metrics (issue #524, PR #525)
 - JavaScript, TypeScript, JSX, and TSX: preserve runtime functions across object bodies, ternary branches, multiline expressions, and immediately invoked functions (PRs #531, #533, #534)

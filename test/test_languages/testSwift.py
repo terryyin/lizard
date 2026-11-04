@@ -1,4 +1,6 @@
 import unittest
+from lizard import FileAnalyzer, get_extensions
+from lizard_ext.lizardcognitive import LizardExtension as Cognitive
 from lizard_languages import SwiftReader
 from .swift_helpers import get_swift_function_list
 
@@ -201,3 +203,69 @@ struct S {{
                     [("init", 3)],
                     [(function.name, function.cyclomatic_complexity)
                      for function in result])
+
+
+class Test_Swift_keyword_argument_labels(unittest.TestCase):
+    """A keyword used as an argument label is not a control-flow keyword,
+    even when a declaration gives it a separate local name."""
+
+    BODY = """ -> Int {
+    switch value {
+    case 1: return enabled ? 10 : 20
+    default:
+        if enabled { return value > 0 ? 30 : 40 }
+        return 0
+    }
+}
+"""
+
+    def measure(self, code):
+        result = FileAnalyzer(get_extensions([Cognitive()])) \
+            .analyze_source_code("a.swift", code)
+        return [(f.cyclomatic_complexity, f.cognitive_complexity)
+                for f in result.function_list]
+
+    def test_unlabelled_baseline(self):
+        self.assertEqual(
+            [(5, 8)],
+            self.measure("func f(_ value: Int, enabled: Bool)" + self.BODY))
+
+    def test_keyword_label_with_local_name(self):
+        for label in ('for', 'if', 'while', 'guard', 'catch', 'case'):
+            with self.subTest(label=label):
+                self.assertEqual([(5, 8)], self.measure(
+                    "func f(%s value: Int, enabled: Bool)" % label
+                    + self.BODY))
+
+    def test_keyword_label_after_another_parameter(self):
+        self.assertEqual([(5, 8)], self.measure(
+            "func f(enabled: Bool, for value: Int)" + self.BODY))
+
+    def test_keyword_label_with_wildcard_or_backtick_name(self):
+        for name in ('_', '`default`'):
+            with self.subTest(name=name):
+                self.assertEqual([(5, 8)], self.measure(
+                    "func f(for %s: Int, enabled: Bool)" % name
+                    + self.BODY))
+
+    def test_comments_and_newlines_around_local_name(self):
+        self.assertEqual([(5, 8)], self.measure(
+            "func f(\n    for /* label */\n    value // name\n    : Int,"
+            "\n    enabled: Bool)" + self.BODY))
+
+    def test_call_labels_still_masked(self):
+        self.assertEqual([(1, 0), (2, 1)], self.measure("""
+func a() { run(for: x, if: y, case: z) }
+func b() { run(for: ok ? 1 : 2) }
+"""))
+
+    def test_real_loops_still_count(self):
+        self.assertEqual([(4, 4)], self.measure("""
+func loop(xs: [Int]) -> Int {
+    var t = 0
+    for i: Int in xs { if i > 0 { t += i } }
+    run(a, b)
+    for x in xs { t += x }
+    return t
+}
+"""))
