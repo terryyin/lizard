@@ -52,6 +52,11 @@ def _next_significant(tokens, index):
     return None
 
 
+def _is_local_name(token):
+    return token.isidentifier() or (
+        len(token) > 2 and token[0] == token[-1] == '`')
+
+
 class SwiftReplaceLabel:
     _DECLARATION_LABELS = []
 
@@ -70,6 +75,10 @@ class SwiftReplaceLabel:
                 index += 1
                 continue
             colon = _next_significant(tokens, label + 1)
+            if colon is not None and _is_local_name(tokens[colon]):
+                # A declaration may give the label a separate local name:
+                # `func f(for value: Int)`.
+                colon = _next_significant(tokens, colon + 1)
             if colon is not None and tokens[colon] == ':':
                 tokens[label] = '_' + tokens[label]
                 index = colon + 1
