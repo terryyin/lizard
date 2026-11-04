@@ -33,17 +33,17 @@ capability names over phase or ticket numbers in product code.
 
 ## Commands
 
-Run repository tooling through `scripts/dev` using the policy in `AGENTS.md`.
+Run repository tooling through Nix. Git commands are the exception.
 
 | Area | Command |
 |------|---------|
-| All checks | `./scripts/dev make` |
-| Full pytest suite | `./scripts/dev python -m pytest` |
-| Core analyzer (`lizard_core/`) | `./scripts/dev python -m pytest test/test_analyzer.py test/testOutput.py` |
-| Language reader | `./scripts/dev python -m pytest test/test_languages/test<Lang>.py` |
-| Extension | `./scripts/dev python -m pytest test/test_extensions/test<Name>.py` |
-| CLI and options | `./scripts/dev python -m pytest test/testApplication.py test/test_options.py` |
-| Style | `./scripts/dev make pep8` or `./scripts/dev make pylint` |
+| All checks | `nix develop -c make` |
+| Full pytest suite | `nix develop -c python -m pytest` |
+| Core analyzer (`lizard_core/`) | `nix develop -c python -m pytest test/test_analyzer.py test/testOutput.py` |
+| Language reader | `nix develop -c python -m pytest test/test_languages/test<Lang>.py` |
+| Extension | `nix develop -c python -m pytest test/test_extensions/test<Name>.py` |
+| CLI and options | `nix develop -c python -m pytest test/testApplication.py test/test_options.py` |
+| Style | `nix develop -c make pep8` or `nix develop -c make pylint` |
 
 ## Project rules
 

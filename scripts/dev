@@ -1,4 +1,0 @@
-#!/bin/sh
-
-PIP_NO_INDEX=1 exec nix develop --offline --option substitute false \
-  --max-jobs 0 --builders '' -c "$@"
