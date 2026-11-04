@@ -137,9 +137,10 @@ class TypeScriptDeclarationsMixin:
         return ((self._prev_token == '.' or token not in _EXPRESSION_PREFIXES)
                 and (ends_expression(token) or token.isidentifier()))
 
-    def _consume_generic_type_params(self):
+    def _consume_generic_type_params(self, resume=None):
         """Consume <...> generic type parameters (e.g., method<T>(...))
-        so the method name in last_tokens is preserved."""
+        so the method name in last_tokens is preserved; then continue in
+        resume (the global state by default)."""
         depth = 1
 
         def consume(token):
@@ -149,7 +150,7 @@ class TypeScriptDeclarationsMixin:
             elif token == '>':
                 depth -= 1
                 if depth == 0:
-                    self.next(self._state_global)
+                    self.next(resume or self._state_global)
         self.next(consume)
 
     def _consume_type_annotation(self):
