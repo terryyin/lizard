@@ -16,16 +16,16 @@ class Test_tokenizing_TSX(unittest.TestCase):
         self.check_tokens(['<abc />'], '<abc />')
 
     def test_simple_open_closing(self):
-        self.check_tokens(['<abc>', '</abc>'], '<abc></abc>')
+        self.check_tokens(['<abc></abc>'], '<abc></abc>')
 
     def test_open_closing_with_content(self):
-        self.check_tokens(['(', '<abc>', 'xxx', '  ', '+', 'yyy', '</abc>', ')'], '(<abc>xxx  +yyy</abc>)')
+        self.check_tokens(['(', '<abc>xxx  +yyy</abc>', ')'], '(<abc>xxx  +yyy</abc>)')
 
     def test_nested(self):
-        self.check_tokens(['(', '<abc>', '<b>', 'xxx', '</b>', '</abc>', ')'], '(<abc><b>xxx</b></abc>)')
+        self.check_tokens(['(', '<abc>', '<b>xxx</b>', '</abc>', ')'], '(<abc><b>xxx</b></abc>)')
 
     def test_nested_save_tag(self):
-        self.check_tokens(['(', '<b>', '<b>', 'xxx', '</b>', '</b>', ')'], '(<b><b>xxx</b></b>)')
+        self.check_tokens(['(', '<b>', '<b>xxx</b>', '</b>', ')'], '(<b><b>xxx</b></b>)')
 
     def test_with_embeded_code(self):
         self.check_tokens(['<abc>', '{', 'x', '}', '</abc>'], '<abc>{x}</abc>')
@@ -737,3 +737,56 @@ class Test_TSX_class_with_static_fields(unittest.TestCase):
         # static field names should NOT appear as functions
         self.assertNotIn("propTypes", names)
         self.assertNotIn("defaultProps", names)
+
+
+def jsx_and_tsx_functions(source_code):
+    return {ext: [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                  for f in analyze_file.analyze_source_code(
+                      "a." + ext, source_code).function_list]
+            for ext in ("jsx", "tsx")}
+
+
+class Test_JSX_text_is_not_code(unittest.TestCase):
+
+    def assert_both(self, expected, source_code):
+        self.assertEqual({"jsx": expected, "tsx": expected},
+                         jsx_and_tsx_functions(source_code))
+
+    def test_words_and_punctuation_in_text_are_not_decisions(self):
+        self.assert_both([("Banner", 1, 1, 1), ("Hello", 2, 2, 1)], '''\
+function Banner() { return <p>What if we wait for it?</p>; }
+function Hello() { return <p>Hello</p>; }
+''')
+
+    def test_text_with_operators_in_nested_tags_and_fragments(self):
+        self.assert_both([("Page", 1, 10, 1), ("after", 11, 11, 2)], '''\
+function Page() {
+  return (
+    <section>
+      <h1>Case: while (x) = y; a && b || c ? d : e</h1>
+      <p>
+        for each catch
+      </p>
+      <>if not now</>
+    </section>);
+}
+function after(x) { if (x) { return 1 } }
+''')
+
+    def test_expressions_in_children_and_attributes_still_count(self):
+        self.assert_both([("(anonymous)", 6, 6, 2), ("List", 1, 8, 3)], '''\
+function List({ items, flag, a, b }) {
+  return (
+    <div>
+      {flag ? <b>on</b> : <i>off</i>}
+      <span>{a && b}</span>
+      <ul>{items.map(i => <li>{i > 1 || i}</li>)}</ul>
+    </div>);
+}
+''')
+
+    def test_comparisons_and_type_arguments_are_not_elements(self):
+        self.assert_both([("cmp", 1, 1, 2), ("g", 2, 2, 1)], '''\
+const cmp = (a, b) => a < b && b > 0;
+function g(x) { return useState<string>(x); }
+''')

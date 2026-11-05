@@ -1,5 +1,10 @@
 # Change Log
 
+## Unreleased
+
+### Bug Fixes
+- JSX and TSX: element text is text, not code, so words such as `if`/`for` and punctuation such as `?`, `&&` or `;` in children no longer add decisions; `{...}` child and attribute expressions are still analyzed. Element text, including its tags, is reported as text tokens, so token counts for JSX children change
+
 ## 1.25.0
 
 ### New Features
