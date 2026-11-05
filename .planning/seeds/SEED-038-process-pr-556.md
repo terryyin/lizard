@@ -15,6 +15,9 @@ scope: Swift computed properties and closure-initialized properties
 ### Process PR #556 — Swift computed properties and closure initializers
 
 **Identity:** SEED-038#process-pr-556
+```json dough-story-state
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/024-process-pr-556/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"0d3ea7b146f387baf6125f4250d6cbb5255e204683ae8bc26d1c180dd69d4ccd","plan":"7e539a1284eb2ed3dc861abf023ff4ffe7692d81d9e95e27bdfcca3f1f38a102"}}
+```
 
 **Goal.** Swift analyzer users and maintainers receive one evidenced disposition
 for [PR #556](https://github.com/terryyin/lizard/pull/556): a worthwhile change
