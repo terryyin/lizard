@@ -1,5 +1,10 @@
 # Change Log
 
+## Unreleased
+
+### Bug Fixes
+- Swift: report a computed property with an implicit getter (`var body: some View { ... }`) and a property initialized by a closure (`let f: (Int) -> Int = { ... }`) as a function named after the property, so their branches no longer count in the global scope; the function starts at the property name. Accessor blocks (`get`, `set`, `willSet`, `didSet`) are still reported as their accessors, and locals inside functions stay with the function
+
 ## 1.25.0
 
 ### New Features
