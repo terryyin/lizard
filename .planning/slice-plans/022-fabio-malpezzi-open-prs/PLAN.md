@@ -90,7 +90,7 @@ Behavior: Given a TypeScript function declaration with type parameters → compl
 
 ### 3. Quoted optional members vs ternaries — PR #553
 Type: Behavior
-Status: planned
+Status: done
 Source: https://github.com/terryyin/lizard/pull/553 — preparation head `692a456cfa5448a9435cf4e7c43b31eba8c47701`
 Proof: [slice 3](SLICE-PROOF.md); complete-cycle gates owned here.
 Behavior: Given a quoted TypeScript optional member in a type → complete cycle for #553 → CCN excludes that `?` while a genuine string ternary still adds one, or a non-merge disposition is recorded.

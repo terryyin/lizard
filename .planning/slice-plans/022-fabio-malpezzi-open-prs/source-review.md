@@ -44,7 +44,7 @@ retained in the execution conversation. Returned commitments follow.
 | Q4 | Key examples are claims to verify, not automatic acceptance | slice 1 | observed: reproduction + value judgment before merge |
 | E1 | Class field without `;` then async/static/get/set → report methods in JS/TS; multiline handler=async field stays one field | slice 1 | observed: reproduction.json corrected claim_match + control_match; ClassFields/TypeScriptFields tests |
 | E2 | TypeScript generic function declaration reported with end line and parameters | slice 2 | observed: docs/reviews/fabio-malpezzi-SEED-034/pr552/reproduction.json corrected all_match; testTypeScriptFunctions.test_generic_function_declaration; merged eec8c38b |
-| E3 | Quoted TypeScript optional member `?` not counted as ternary; string ternary still adds one | slice 3 | |
+| E3 | Quoted TypeScript optional member `?` not counted as ternary; string ternary still adds one | slice 3 | observed: docs/reviews/fabio-malpezzi-SEED-034/pr553/reproduction.json corrected_all_match; test_optional_quoted_member_is_not_a_ternary; merged at 692a456c |
 | E4 | `.catch` / `?.catch` under -ENS not nested structures; real if/try-catch still raise NS | slice 4 | |
 | X1 | Deferred: PRs after the freeze | slice 1 | observed: seed/plan deferred later arrivals |
 | X2 | Deferred: other authors | slice 1 | observed: seed scope FabioMalpezzi only |
