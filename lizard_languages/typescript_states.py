@@ -84,10 +84,16 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                     self._consume_type_annotation()
                     return
                 if token == 'static':
+                    # Hot path: most `static`/`async` tokens are not inside an
+                    # open field value; avoid the helper call overhead there.
+                    if self._in_prop_value:
+                        self._end_field_before_modifier()
                     self._static_seen = True
                     self._prev_token = token
                     return
                 if token == 'async':
+                    if self._in_prop_value:
+                        self._end_field_before_modifier()
                     self._async_seen = True
                     self._prev_token = token
                     return
