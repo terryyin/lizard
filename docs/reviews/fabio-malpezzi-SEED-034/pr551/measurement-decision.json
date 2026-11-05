@@ -1,0 +1,166 @@
+{
+  "reason": "PR551 changes class-member ASI in javascript_objects/typescript_states; public function names/boundaries/parameter_count are reached, so api + api-parameters + broad cli are required. Slice-1 frozen trunk equals current target, so incremental and cumulative use the same baseline revision but both gates are still recorded.",
+  "attempt1": {
+    "api_seconds": 2.5,
+    "cli_seconds": 4.0,
+    "pairs": 20,
+    "limit_pct": 3.0,
+    "corpus": {
+      "api_cli": "proof/corpus/affected-expanded (~1408 files after claim fixtures, prior JS-family inputs, bulk controls, one replica round)",
+      "api_parameters": "proof/corpus/consumers (~1185 files)"
+    },
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "harness": ".agents/skills/lizard-process-pr/scripts/paired_benchmark.py"
+    },
+    "incremental_api_result": {
+      "passes": false,
+      "verdict": "bound-not-met",
+      "paired_95pct_ci": [
+        -12.80408319112232,
+        15.955084930539773
+      ],
+      "paired_change_pct": 0.5525232859409241,
+      "medians": {
+        "baseline": 3.0548199164999943,
+        "candidate": 3.133449313
+      },
+      "load_before": [
+        8.62451171875,
+        12.03466796875,
+        14.58056640625
+      ],
+      "load_after": [
+        24.2119140625,
+        18.63818359375,
+        16.90478515625
+      ],
+      "note": "Preserved under attempt1-*; high host load produced inconclusive noise; median change ~0.55% but CI upper far above 3%"
+    }
+  },
+  "attempt2": {
+    "chosen_before_launch": true,
+    "justification": "Attempt1 API gate failed on noisy high-load machine (load 8\u201324); retain attempt1 bytes. Prospectively lengthen batches to 4.0s API / 6.0s CLI on the same frozen corpus when 1-minute load is under 6.",
+    "api_seconds": 4.0,
+    "cli_seconds": 6.0,
+    "pairs": 20,
+    "limit_pct": 3.0,
+    "same_corpus": true,
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "harness": ".agents/skills/lizard-process-pr/scripts/paired_benchmark.py"
+    },
+    "incremental_api_result": {
+      "passes": false,
+      "verdict": "bound-not-met",
+      "paired_95pct_ci": [
+        -11.147252726750363,
+        16.331971715932067
+      ],
+      "paired_change_pct": 1.6681625813830518,
+      "note": "Still noise-dominated (pair changes \u221254% to +60%); 5\u201315 min loads remained elevated"
+    }
+  },
+  "attempt3": {
+    "chosen_before_launch": true,
+    "justification": "Attempts 1\u20132 retained; host 1-minute load fell to ~3. Prospectively use 8.0s API / 10.0s CLI batches on the same frozen corpus to average through residual scheduling noise.",
+    "api_seconds": 8.0,
+    "cli_seconds": 10.0,
+    "pairs": 20,
+    "limit_pct": 3.0,
+    "same_corpus": true,
+    "load_gate": "1-minute load under 3.5 before launch",
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "harness": ".agents/skills/lizard-process-pr/scripts/paired_benchmark.py"
+    },
+    "incremental_api_result": {
+      "passes": false,
+      "verdict": "bound-not-met",
+      "paired_95pct_ci": [
+        -7.8602091196794035,
+        20.191336533737076
+      ],
+      "paired_change_pct": 5.234997096235866,
+      "note": "Load rose during run (after ~8\u201311); still noise-dominated; retained under attempt3/"
+    }
+  },
+  "attempt4": {
+    "chosen_before_launch": true,
+    "justification": "Attempts 1\u20133 retained after interrupted delegation recovery and re-established focused proof (1385 passed). Host load ~2.8/3.1/2.8. Prospectively use 12.0s API / 15.0s CLI / 12.0s api-parameters on the same frozen corpora to shrink CI width; tiny ASI helper should not move medians materially.",
+    "api_seconds": 12.0,
+    "cli_seconds": 15.0,
+    "api_parameters_seconds": 12.0,
+    "pairs": 20,
+    "limit_pct": 3.0,
+    "same_corpus": true,
+    "load_gate": "1-minute load under 3.5 at launch (observed ~2.8)",
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "harness": ".agents/skills/lizard-process-pr/scripts/paired_benchmark.py"
+    },
+    "incremental_api_result": {
+      "passes": false,
+      "verdict": "bound-not-met",
+      "paired_95pct_ci": [
+        0.027428703366859368,
+        14.313668783755846
+      ],
+      "paired_change_pct": 6.932232531110243,
+      "load_after": [
+        33.01220703125,
+        32.70556640625,
+        25.9541015625
+      ],
+      "pair_change_pct_stdev": 15.755,
+      "note": "Contaminated mid-run by unrelated host load spike to ~33 (pnpm/tsc/vite/other agents). Production trees differ only in the two owned reader files. Retained; await quieter host for attempt5."
+    }
+  },
+  "suite": {
+    "focused_reestablished": "1385 passed, 5 skipped",
+    "full_pytest": "3021 passed, 7 skipped",
+    "make": "exit 0"
+  },
+  "attempt5": {
+    "chosen_before_launch": true,
+    "justification": "Attempts 1\u20134 retained after host-load contamination. Prior wait-loop died empty; relaunched 2026-11-05 ~14:23 when 1-minute load was 2.44. Run 15s API, 15s api-parameters, 18s CLI on the same frozen corpora. Cumulative gates reuse the same baseline revision as frozen trunk.",
+    "api_seconds": 15.0,
+    "api_parameters_seconds": 15.0,
+    "cli_seconds": 18.0,
+    "pairs": 20,
+    "limit_pct": 3.0,
+    "same_corpus": true,
+    "load_gate": "1-minute load 2.44 at launch (under 2.5)",
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "harness": ".agents/skills/lizard-process-pr/scripts/paired_benchmark.py"
+    },
+    "incremental_api_result": {
+      "passes": false,
+      "verdict": "bound-not-met",
+      "paired_95pct_ci": [
+        2.009705583932251,
+        3.277097087534951
+      ],
+      "paired_change_pct": 2.6414451742697715,
+      "pair_change_pct_stdev": 1.34855,
+      "note": "Quiet host; tight CI shows real ~2.6% API overhead from unguarded helper calls on every async/static/get/set. Function counts identical. Stopped script via nonzero harness exit before other workloads."
+    }
+  },
+  "attempt6": {
+    "chosen_before_launch": true,
+    "justification": "Attempt5 established a real cost: call _end_field_before_modifier only when _in_prop_value is already true (required for the ASI fix). Preserve attempt5 bytes. Re-measure api/api-parameters/cli at 15/15/18s on same corpora.",
+    "adaptation": "guard call sites with if self._in_prop_value before helper",
+    "api_seconds": 15.0,
+    "api_parameters_seconds": 15.0,
+    "cli_seconds": 18.0,
+    "pairs": 20,
+    "limit_pct": 3.0,
+    "same_corpus": true,
+    "load_gate": "prefer 1-minute load under 3.5",
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "harness": ".agents/skills/lizard-process-pr/scripts/paired_benchmark.py"
+    }
+  }
+}

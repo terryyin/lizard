@@ -83,12 +83,14 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                 if isinstance(token, ReturnTypeColon):
                     self._consume_type_annotation()
                     return
-                if token == 'static':
-                    self._static_seen = True
-                    self._prev_token = token
-                    return
-                if token == 'async':
-                    self._async_seen = True
+                if token in ('static', 'async'):
+                    # Hot path: skip the helper unless a field value is open.
+                    if self._in_prop_value:
+                        self._end_field_before_modifier()
+                    if token == 'static':
+                        self._static_seen = True
+                    else:
+                        self._async_seen = True
                     self._prev_token = token
                     return
                 if token == 'new':
@@ -214,40 +216,3 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         # Don't overwrite _prev_token if it's 'new' (preserve for next token)
         if self._prev_token != 'new':
             self._prev_token = token
-
-    def _expecting_condition_and_statement_block(self, token):
-        def callback():
-            self.next(self._expecting_statement_or_block)
-
-        if token == "await":
-            return
-
-        if token != '(':
-            self.next(self._state_global, token)
-            return
-
-        if self._condition_kind == 'catch':
-            def catch_callback(summary):
-                self.context.add_condition(summary.defaults)
-                callback()
-
-            self._read_binding_candidate(')', catch_callback, track_complexity=False)
-            return
-
-        self.sub_state(
-            self.__class__(self.context), callback)
-
-    def _expecting_statement_or_block(self, token):
-        def callback():
-            self._prev_token = ''
-            self.next(self._state_global)
-        if token == "{":
-            self.sub_state(
-                self.__class__(self.context), callback)
-        else:
-            self._prev_token = ''
-            self.next(self._state_global, token)
-
-    def _state_template_literal(self, token):
-        if token == '`':
-            self.next(self._state_global)

@@ -1,5 +1,7 @@
 """JavaScript object and class members, including computed method names."""
 
+from .javascript_functions import ends_expression
+
 
 class JavaScriptObjectsMixin:
     def _typed_class_member(self):
@@ -11,6 +13,13 @@ class JavaScriptObjectsMixin:
         while isinstance(state._state, self.__class__):
             state = state._state
         return state._state == state._state_global and state._typed_class_member()
+
+    def _end_field_before_modifier(self):
+        """A modifier at a line start begins the next class member, so a
+        field value written without ';' ends before it, as before a name."""
+        if (self.as_class and self._in_prop_value and self.context.newline
+                and ends_expression(self.last_token)):
+            self._end_statement()
 
     def _optional_class_member(self):
         if not self._typed_class_member():
@@ -33,6 +42,10 @@ class JavaScriptObjectsMixin:
             self.last_tokens = token
             return True
         if token in ('get', 'set'):
+            # Only relevant while a semicolon-less field value is open; skip
+            # the helper on the common path (method/getter declarations).
+            if self._in_prop_value:
+                self._end_field_before_modifier()
             self._getter_setter_prefix = token
             return True
         if self._getter_setter_prefix:

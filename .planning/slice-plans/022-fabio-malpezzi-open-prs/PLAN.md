@@ -2,6 +2,7 @@
 
 **Identity:** SEED-034#process-fabio-malpezzi-prs
 **Source:** [canonical story](../../seeds/SEED-034-fabio-malpezzi-prs.md#process-fabio-malpezzi-prs)
+**Source review:** [source-review.md](source-review.md)
 
 ## Goal and scope
 
@@ -75,7 +76,7 @@ Observed in this preparation workspace at product revision
 
 ### 1. Class methods after semicolon-less fields — PR #551
 Type: Behavior
-Status: planned
+Status: done
 Source: https://github.com/terryyin/lizard/pull/551 — preparation head `a8dabb2351014cbf5164fe31a3472036877130fc`
 Proof: [slice 1](SLICE-PROOF.md); complete-cycle gates owned here.
 Behavior: Given a class field without `;` followed by `async`/`static`/`get`/`set` on the current target → complete review cycle for #551 → public analysis reports those methods with correct boundaries in JS and TS while multiline async-arrow field values stay fields, or an evidence-backed non-merge disposition is recorded.
@@ -104,12 +105,21 @@ Behavior: Given `.catch(...)` / `?.catch(...)` under `-ENS` → complete cycle f
 ## Current decisions
 
 - One Behavior slice per frozen PR; each owns the entire complete-cycle contract.
-- Freeze the open set and starting trunk revision at execution start; if it is
-  not #551–#554, stop and replan before continuing cycles.
+- Execution-start freeze (2026-11-04): open FabioMalpezzi set remains #551–#554
+  with heads `a8dabb2351014cbf5164fe31a3472036877130fc`,
+  `c58534ac54c1f3edbe0fe009322170c4831fcf9f`,
+  `692a456cfa5448a9435cf4e7c43b31eba8c47701`,
+  `2368413b2de05b05ff44ce863dcded8061342492`; starting trunk revision
+  `4a05e4056cebb2edd75cb02b7a43e911369f4ce5` (`origin/master`). No replan.
 - No sibling supplier agreement; no project S/M/L or numeric slice timing policy;
   the contract's 15-minute correction budget (excluding review/measurement)
   remains the only correction time bound.
 - Reuse existing JS/TS / NS owners; do not add parallel counters.
+- Replanning permission for this execution: preserved (overrun may replan).
+- Expensive proof (performance): required before any merge; serial Nix-bound
+  paired benchmarks in this checkout per REVIEW-CONTRACT / lizard-process-pr
+  performance.md; reconsider if candidate/target/corpus change.
+- Slice 1: merged PR #551 at head b0733889d (merge b6b6b8c6); thanks posted; attempt6 perf worst upper CI 0.989%.
 
 ## Concern evidence
 

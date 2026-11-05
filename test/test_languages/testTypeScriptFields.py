@@ -94,3 +94,29 @@ class Test_ts_dot_field_assignment(unittest.TestCase):
         self.assertIn("getSettings", names)
         self.assertIn("getMode", names)
         self.assertIn("render", names)
+
+
+class Test_TypeScript_member_modifier_after_a_field(unittest.TestCase):
+    """A field without ';' ends at the line of the next member's modifier."""
+
+    def test_methods_with_modifiers_after_fields_without_semicolons(self):
+        code = (
+            "class Store {\n"
+            "  count = 0\n"
+            "  static create(): Store {\n"
+            "    return new Store();\n"
+            "  }\n"
+            "  limit: number = 10\n"
+            "  async load(x: number): Promise<number> {\n"
+            "    return x;\n"
+            "  }\n"
+            "  name = 'a'\n"
+            "  get value(): number {\n"
+            "    return this.count;\n"
+            "  }\n"
+            "}\n"
+        )
+        self.assertEqual(
+            [('create', 3, 5), ('load', 7, 9), ('get value', 11, 13)],
+            [(f.name, f.start_line, f.end_line)
+             for f in get_ts_function_list(code)])
