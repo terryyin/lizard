@@ -137,8 +137,9 @@ class JavaScriptFunctionsMixin:
             return
         if token == '<':
             # Generic type params: function name<T>(...) — consume <...>
-            # so function_name (already set) is preserved.
-            self._consume_generic_type_params()
+            # so function_name (already set) is preserved and "(" still
+            # opens the parameters.
+            self._consume_generic_type_params(self._function)
             return
         if token.startswith('<') and token.endswith('>') and len(token) > 1:
             # Single-token generic from TSX tokenizer (e.g., <T>, <Props>)

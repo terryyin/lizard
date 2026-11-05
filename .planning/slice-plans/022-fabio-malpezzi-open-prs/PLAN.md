@@ -83,7 +83,7 @@ Behavior: Given a class field without `;` followed by `async`/`static`/`get`/`se
 
 ### 2. TypeScript generic function declarations — PR #552
 Type: Behavior
-Status: planned
+Status: done
 Source: https://github.com/terryyin/lizard/pull/552 — preparation head `c58534ac54c1f3edbe0fe009322170c4831fcf9f`
 Proof: [slice 2](SLICE-PROOF.md); complete-cycle gates owned here.
 Behavior: Given a TypeScript function declaration with type parameters → complete cycle for #552 → analysis reports the function with correct end line and parameters without breaking generic methods/arrows, or a non-merge disposition is recorded.
@@ -120,6 +120,7 @@ Behavior: Given `.catch(...)` / `?.catch(...)` under `-ENS` → complete cycle f
   paired benchmarks in this checkout per REVIEW-CONTRACT / lizard-process-pr
   performance.md; reconsider if candidate/target/corpus change.
 - Slice 1: merged PR #551 at head b0733889d (merge b6b6b8c6); thanks posted; attempt6 perf worst upper CI 0.989%.
+- Slice 2: merged PR #552 at head c58534ac (merge eec8c38b); thanks posted; perf worst upper CI 2.961%.
 
 ## Concern evidence
 

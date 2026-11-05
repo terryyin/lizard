@@ -1,0 +1,81 @@
+warning: Git tree '/Users/terryyin/git/lizard/.worktrees/process-fabiomalpezzi-s-open-prs' is dirty
+{
+  "target": {
+    "all_match": false,
+    "claim_match": false,
+    "control_match": true,
+    "mismatches": [
+      "first.ts",
+      "pair.ts",
+      "contributor.ts"
+    ],
+    "mismatch_detail": [
+      {
+        "filename": "first.ts",
+        "observed": [],
+        "expected": [
+          [
+            "first",
+            1,
+            3,
+            [
+              "list"
+            ]
+          ]
+        ]
+      },
+      {
+        "filename": "pair.ts",
+        "observed": [],
+        "expected": [
+          [
+            "pair",
+            1,
+            3,
+            [
+              "a",
+              "b"
+            ]
+          ]
+        ]
+      },
+      {
+        "filename": "contributor.ts",
+        "observed": [],
+        "expected": [
+          [
+            "first",
+            1,
+            3,
+            [
+              "list"
+            ]
+          ],
+          [
+            "pair",
+            4,
+            6,
+            [
+              "a",
+              "b"
+            ]
+          ]
+        ]
+      }
+    ]
+  },
+  "corrected": {
+    "all_match": true,
+    "claim_match": true,
+    "control_match": true,
+    "mismatches": [],
+    "mismatch_detail": []
+  },
+  "raw": {
+    "all_match": true,
+    "claim_match": true,
+    "control_match": true,
+    "mismatches": [],
+    "mismatch_detail": []
+  }
+}
