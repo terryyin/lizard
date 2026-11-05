@@ -5,7 +5,7 @@ Language parser for Apple Swift
 from .code_reader import CodeReader, CodeStateMachine
 from .clike import CCppCommentsMixin
 from .golike import GoLikeStates
-from .swift_literals import literal_spans
+from .swift_literals import literal_spans, string_parts
 from .token_pattern import compiled_token_pattern, tokens_in_span
 
 # Backtick names, failable markers, and macros. Compiler directives stay a
@@ -115,11 +115,25 @@ class SwiftReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
         if token_class is None and '?' in source_code:
             token_class = _swift_token
         for is_literal, start, end in literal_spans(source_code):
-            if is_literal:
-                yield source_code[start:end]
-            else:
+            if not is_literal:
                 yield from tokens_in_span(
                     pattern, source_code, start, end, token_class)
+            elif source_code.startswith('/', start):
+                yield source_code[start:end]
+            else:
+                yield from _string_tokens(
+                    source_code, start, end, addition, token_class)
+
+
+def _string_tokens(source, start, end, addition, token_class):
+    # Literal text stays whole; the text around an interpolation keeps
+    # its `\\(` and `)`, so the pieces still join into the literal.
+    for is_code, part_start, part_end in string_parts(source, start, end):
+        if is_code:
+            yield from SwiftReader.generate_tokens(
+                source[part_start:part_end], addition, token_class)
+        elif part_start < part_end:
+            yield source[part_start:part_end]
 
 
 class SwiftStates(GoLikeStates):  # pylint: disable=R0903

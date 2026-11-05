@@ -1,5 +1,10 @@
 # Change Log
 
+## Unreleased
+
+### Bug Fixes
+- Swift: count decisions inside string interpolation (`"\(a ? b : c)"`); interpolated expressions are tokenized as code, including nested strings and comments, while literal text, escapes, raw-string delimiters and multiline literals keep their meaning. A literal with interpolation is now reported as several tokens, so token counts for such strings change
+
 ## 1.25.0
 
 ### New Features

@@ -2,6 +2,7 @@
 
 A regular expression cannot delimit either one, because interpolation and
 block comments both nest. Line comments stay with the surrounding code.
+Interpolated expressions (`\\(...)`) are code inside a string literal.
 """
 
 import re
@@ -10,7 +11,7 @@ import re
 _LITERAL_START = re.compile(r'//|/\*|#*"')
 _COMMENT_DELIMITER = re.compile(r'/\*|\*/')
 _STRING_SPECIAL = re.compile(r'[\\"\n]')
-_INTERPOLATION_SPECIAL = re.compile(r'[()\n]|#*"')
+_INTERPOLATION_SPECIAL = re.compile(r'//|/\*|[()\n]|#*"')
 
 
 def literal_spans(source):
@@ -46,7 +47,25 @@ def _block_comment_end(source, start):
     return len(source)
 
 
-def _string_end(source, start, hashes):
+def string_parts(source, start, end):
+    """Yield (is_code, start, end) spans covering the string literal
+    source[start:end]: literal text, and the interpolated expressions
+    between each `\\(` and its closing `)`."""
+    hashes = 0
+    while source.startswith('#', start + hashes):
+        hashes += 1
+    interpolations = []
+    _string_end(source, start, hashes, interpolations)
+    pos = start
+    for code_start, code_end in interpolations:
+        yield False, pos, code_start
+        yield True, code_start, code_end
+        pos = code_end
+    if pos < end:
+        yield False, pos, end
+
+
+def _string_end(source, start, hashes, interpolations=None):
     quote = start + hashes
     multiline = source.startswith('"""', quote)
     close = ('"""' if multiline else '"') + '#' * hashes
@@ -62,7 +81,10 @@ def _string_end(source, start, hashes):
         if source.startswith(escape, pos):
             pos += len(escape)
             if source.startswith('(', pos):
-                pos = _interpolation_end(source, pos, multiline)
+                code = pos + 1
+                pos, closed = _interpolation_end(source, pos, multiline)
+                if interpolations is not None:
+                    interpolations.append((code, pos - closed))
             else:
                 pos += 1
         elif source[pos] == '\n' and not multiline:
@@ -77,7 +99,7 @@ def _interpolation_end(source, start, multiline):
     while True:
         match = _INTERPOLATION_SPECIAL.search(source, pos)
         if match is None:
-            return len(source)
+            return len(source), False
         token = match.group()
         pos = match.end()
         if token == '(':
@@ -85,9 +107,15 @@ def _interpolation_end(source, start, multiline):
         elif token == ')':
             depth -= 1
             if depth == 0:
-                return pos
+                return pos, True
         elif token == '\n':
             if not multiline:
-                return match.start()
+                return match.start(), False
+        elif token == '/*':
+            # Parentheses in comments do not close the interpolation.
+            pos = _block_comment_end(source, match.start())
+        elif token == '//':
+            newline = source.find('\n', pos)
+            pos = len(source) if newline < 0 else newline
         else:
             pos = _string_end(source, match.start(), len(token) - 1)
