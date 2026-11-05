@@ -1,7 +1,7 @@
 # Guard a fresh execution increment or owned repair
 
-Use this after accepting semantic proof and completing the independent refactor
-for a fresh increment or owned repair. Keep the recorded execution checkout,
+Use this after accepting semantic proof and completing the independent refactor,
+or recording its disposition, for a fresh increment or owned repair. Keep the recorded execution checkout,
 branch, ownership, and project hook contract. This operation performs mechanical
 preparation, commit, and authorized managed delivery in dependency order;
 successful commit does not establish semantic proof.

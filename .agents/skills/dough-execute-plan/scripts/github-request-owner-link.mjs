@@ -55,8 +55,14 @@ function readable(read) {
  *   readonly told?: boolean;
  *   readonly refused?: string;
  *   readonly failure?: import("./github-request-owner-failure.mjs").OwnerUnavailableFailure;
+ *   readonly owner?: OwnerIdentity;
  * }} OwnerReply
  */
+
+// The owner a request was sent to, as its standing record names it: its
+// process, generation and the protocol it reports speaking, never its caller
+// token or socket path.
+/** @typedef {{ readonly pid?: number; readonly generation: number; readonly protocol?: number }} OwnerIdentity */
 
 export class OwnerLink {
   #backoffBaseMs;
@@ -65,7 +71,7 @@ export class OwnerLink {
 
   // The connection to the owner this process last asked, and each request
   // still waiting for that owner's reply, by its number.
-  /** @type {{ readonly directory: string; connecting?: Promise<Socket>; readonly waiting: Map<number, (reply: OwnerReply) => void> } | undefined} */
+  /** @type {{ readonly directory: string; connecting?: Promise<Socket>; owner?: OwnerIdentity; readonly waiting: Map<number, (reply: OwnerReply) => void> } | undefined} */
   #link;
 
   #asked = 0;
@@ -87,12 +93,12 @@ export class OwnerLink {
   }
 
   // The owner's reply to one request: its `answer`, and whether the call
-  // failed (`told`); `timedOut` when the call reached its own bound; `left`
-  // once `signal` ended this wait, which tells the owner so, at this
-  // requester's own bound when `leavingAtBound` says so; a safe `failure`
-  // when the owner cannot be asked. A reply to what was
-  // asked under a login this process has no more is dropped, and the
-  // request asked again under the one it has.
+  // failed (`told`); the `owner` it was sent to, once sent; `timedOut` when
+  // the call reached its own bound; `left` once `signal` ended this wait,
+  // which tells the owner so, at this requester's own bound when
+  // `leavingAtBound` says so; a safe `failure` when the owner cannot be
+  // asked. A reply to what was asked under a login this process has no more
+  // is dropped, and the request asked again under the one it has.
   /**
    * @param {{ readonly args: readonly string[]; readonly boundMs: number; readonly maxBufferBytes: number }} request
    * @param {AbortSignal} signal
@@ -132,7 +138,7 @@ export class OwnerLink {
           link.waiting.delete(sent.id);
           if (link.waiting.size === 0) sent.socket.unref();
         }
-        resolve(reply);
+        resolve(sent?.owner ? { ...reply, owner: sent.owner } : reply);
       };
       const leave = () => {
         if (sent !== undefined)
@@ -147,7 +153,7 @@ export class OwnerLink {
         (socket) => {
           if (signal.aborted) return;
           this.#asked += 1;
-          sent = { id: this.#asked, socket };
+          sent = { id: this.#asked, socket, owner: link.owner };
           link.waiting.set(sent.id, settle);
           socket.ref();
           send(socket, { id: sent.id, request });
@@ -176,7 +182,8 @@ export class OwnerLink {
   #connected(directory) {
     const link = this.#linked(directory);
     link.connecting ??= this.#connect(link).then(
-      (socket) => {
+      ({ socket, record: { pid, generation, protocol } }) => {
+        link.owner = { pid, generation, protocol };
         socket.unref();
         socket.once("close", () => {
           link.connecting = undefined;
@@ -184,7 +191,7 @@ export class OwnerLink {
             settle({
               failure: {
                 kind: "owner-unavailable",
-                cause: "connection-failed",
+                cause: "connection-lost",
               },
             });
         });
@@ -198,6 +205,7 @@ export class OwnerLink {
     return link.connecting;
   }
 
+  // The connection to the owner standing in `directory`, and its record.
   async #connect({ directory, waiting }) {
     const deadline = Date.now() + startLimitMs;
     let starting;
@@ -209,7 +217,7 @@ export class OwnerLink {
           : await greeted(record, ({ id, ...reply }) =>
               waiting.get(id)?.(reply),
             );
-      if (socket !== undefined) return socket;
+      if (socket !== undefined) return { socket, record };
       if (starting?.failure) throw starting.failure;
       if (starting?.process.signalCode || starting?.process.exitCode)
         throw new OwnerUnavailable("start-failed");

@@ -17,13 +17,18 @@ import {
   doneRecordDirectory,
   parseDoneRecordFile,
 } from "./product-backlog-done-record.mjs";
-import { documentIdIn } from "./product-backlog-home-reader.mjs";
+import {
+  documentIdIn,
+  recordedIdentitiesIn,
+  recordedFor,
+} from "./product-backlog-identity.mjs";
 import { BacklogError } from "./product-backlog-refusal.mjs";
 
 // A seed ID's number is the digits it ends with ("SEED-084" is 84, written
 // three digits wide). An identity is read by its seed ID, before any anchor;
 // a plan-path identity ends in no digits and names no seed number.
 const seedIdPattern = /^(?<prefix>.*\D)(?<digits>\d+)$/;
+const seedFileNamePattern = /^(?<seed>\D*\d+)/;
 
 export function seedNumberOf(identity) {
   const seed = identity.split("#")[0];
@@ -31,6 +36,34 @@ export function seedNumberOf(identity) {
   if (!match) return undefined;
   const { prefix, digits } = match.groups;
   return { seed, prefix, width: digits.length, number: Number(digits) };
+}
+
+export function seedIdentityFromFileName(fileName) {
+  return seedFileNamePattern.exec(fileName)?.groups.seed;
+}
+
+// Context documents allocate nothing. Preserve every explicit identity and
+// numeric filename reservation without requiring today's canonical-home layout.
+export function seedDocumentEvidence(source, fileName, evidence) {
+  const named = [];
+  const gaps = [];
+  const seeds = new Set([
+    documentIdIn(source),
+    seedIdentityFromFileName(fileName),
+  ]);
+  for (const identity of seeds) {
+    if (identity) named.push({ identity, kind: "seed" });
+  }
+  try {
+    for (const identity of recordedIdentitiesIn(source, evidence)) {
+      recordedFor(identity, "");
+      named.push({ identity, kind: "story" });
+    }
+  } catch (error) {
+    if (!(error instanceof BacklogError)) throw error;
+    gaps.push({ reason: error.message });
+  }
+  return { named, gaps };
 }
 
 export const posixPath = (path) => path.split(sep).join("/");
@@ -52,12 +85,17 @@ export function seedDirectorySource(backlogDirectory, directory) {
   for (const fileName of readdirSync(directory).sort()) {
     if (!fileName.endsWith(".md")) continue;
     const evidence = `${path}/${fileName}`;
-    const id = documentIdIn(readFileSync(join(directory, fileName), "utf8"));
-    if (id === "") {
-      gaps.push({ path: evidence, reason: "front matter names no seed ID" });
-    } else {
-      named.push({ identity: id, evidence });
+    let text;
+    try {
+      text = readFileSync(join(directory, fileName), "utf8");
+    } catch (error) {
+      if (!error.code) throw error;
+      gaps.push({ path: evidence, reason: error.message });
+      continue;
     }
+    const document = seedDocumentEvidence(text, fileName, evidence);
+    named.push(...document.named.map((entry) => ({ ...entry, evidence })));
+    gaps.push(...document.gaps.map((gap) => ({ path: evidence, ...gap })));
   }
   return { source: "seed-directory", path, read: true, named, gaps };
 }

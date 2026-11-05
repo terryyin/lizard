@@ -63,6 +63,15 @@ Read that evidence with the
 reading filenames. It reserves nothing; the canonical home records what you
 choose.
 
+The reader preserves numeric reservations from seed metadata and filenames and
+recovers explicit identities from readable legacy homes, including old heading
+layouts and nonnumeric identities. It examines later versions of unnumbered
+historical paths so an earlier context-only version cannot hide an allocation.
+Readable context documents allocate nothing; they are not missing identities.
+Malformed identity records and unreadable evidence remain gaps. A declared
+historical story is reported under `history.story` and is already used, even
+without a done record.
+
 - Run it from a checkout current with trunk: history covers only what that
   checkout reaches, at the `revision` the history source names.
 - Number a new seed `next` or above, which exceeds the reported `highest`.

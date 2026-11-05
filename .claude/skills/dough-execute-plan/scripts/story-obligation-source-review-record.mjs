@@ -5,6 +5,7 @@ import {
   readStoryObligations,
 } from "./story-obligation-reader.mjs";
 import {
+  lifecycleOwners,
   linkedSourceReviewPath,
   readSourceReview,
 } from "./story-obligation-source-review.mjs";
@@ -31,96 +32,93 @@ function fail(problems) {
   return { ok: false, problems };
 }
 
-function validateEntry(entry) {
+const invalid = (message) => problem("invalid-input", { message });
+const positiveInteger = (value) => /^[1-9]\d*$/.test(String(value ?? ""));
+
+function entryProblems(entry) {
   if (!entry) return [];
-  const problems = [];
-  if (!commitmentId.test(entry.id ?? ""))
-    problems.push(
-      problem("invalid-input", { message: "obligation id is required" }),
-    );
-  if (!entry.title?.trim())
-    problems.push(
-      problem("invalid-input", { message: "obligation title is required" }),
-    );
-  if (!/^[1-9]\d*$/.test(String(entry.reportedSlice ?? "")))
-    problems.push(
-      problem("invalid-input", {
-        message: "reported slice must be a positive integer",
-      }),
-    );
-  if (!entry.reported?.trim())
-    problems.push(
-      problem("invalid-input", { message: "reported text is required" }),
-    );
-  if (!entry.storyClause?.trim())
-    problems.push(
-      problem("invalid-input", { message: "story clause is required" }),
-    );
-  if (!entry.disposition?.trim())
-    problems.push(
-      problem("invalid-input", { message: "disposition is required" }),
-    );
-  if (
-    entry.commitments &&
-    (!entry.commitments.length ||
-      !entry.commitments.every((id) => commitmentId.test(id)))
-  )
-    problems.push(
-      problem("invalid-input", {
-        message: "Commitment field must name valid commitment ids",
-      }),
-    );
-  return problems;
+  return [
+    [!commitmentId.test(entry.id ?? ""), "obligation id is required"],
+    [!entry.title?.trim(), "obligation title is required"],
+    [
+      !positiveInteger(entry.reportedSlice),
+      "reported slice must be a positive integer",
+    ],
+    [!entry.reported?.trim(), "reported text is required"],
+    [!entry.storyClause?.trim(), "story clause is required"],
+    [!entry.disposition?.trim(), "disposition is required"],
+    [
+      entry.commitments &&
+        (!entry.commitments.length ||
+          !entry.commitments.every((id) => commitmentId.test(id))),
+      "Commitment field must name valid commitment ids",
+    ],
+  ].flatMap(([failed, message]) => (failed ? [invalid(message)] : []));
 }
 
-// Records one commitment's slice allocation, observation, and/or linked Story
-// obligation. Unknown ids and stale expected digests leave both files intact.
-export async function recordStoryCommitment(planPath, request = {}) {
-  const commitment = request.commitment;
-  if (!commitmentId.test(commitment ?? ""))
-    return fail([
-      problem("invalid-input", { message: "commitment id is required" }),
-    ]);
-  const hasObserved = Object.hasOwn(request, "observed");
-  const hasObligation = Object.hasOwn(request, "obligation");
-  const hasSlice = Object.hasOwn(request, "slice");
+// The first input refusal for a record request, before either file is read.
+function requestProblems(request, supplied) {
+  const { hasObserved, hasObligation, hasSlice, hasLifecycle } = supplied;
+  const cellOptions = [hasSlice, hasObserved, hasObligation, request.entry];
+  if (!commitmentId.test(request.commitment ?? ""))
+    return [invalid("commitment id is required")];
+  if (hasLifecycle && !lifecycleOwners.includes(request.lifecycle))
+    return [
+      invalid(`lifecycle owner must be one of: ${lifecycleOwners.join(", ")}`),
+    ];
+  if (hasLifecycle && cellOptions.some(Boolean))
+    return [
+      invalid(
+        "a lifecycle owner takes no slice, observation, obligation, or obligation entry",
+      ),
+    ];
   if (hasObserved && hasObligation)
-    return fail([
-      problem("invalid-input", {
-        message: "supply observed text or an obligation id, not both",
-      }),
-    ]);
-  if (!hasObserved && !hasObligation && !hasSlice && !request.entry)
-    return fail([
-      problem("invalid-input", {
-        message: "supply a slice, observation, obligation, or obligation entry",
-      }),
-    ]);
+    return [invalid("supply observed text or an obligation id, not both")];
+  if (!hasLifecycle && !cellOptions.some(Boolean))
+    return [
+      invalid(
+        "supply a slice, lifecycle owner, observation, obligation, or obligation entry",
+      ),
+    ];
   if (
     hasObligation &&
     request.obligation &&
     !commitmentId.test(request.obligation)
   )
-    return fail([
-      problem("invalid-input", { message: "obligation id is malformed" }),
-    ]);
+    return [invalid("obligation id is malformed")];
+  const slice = request.slice;
   if (
     hasSlice &&
-    request.slice !== null &&
-    request.slice !== undefined &&
-    !/^[1-9]\d*$/.test(String(request.slice))
+    slice !== null &&
+    slice !== undefined &&
+    !positiveInteger(slice)
   )
-    return fail([
-      problem("invalid-input", { message: "slice must be a positive integer" }),
-    ]);
-  const entryProblems = validateEntry(request.entry);
-  if (entryProblems.length) return fail(entryProblems);
+    return [invalid("slice must be a positive integer")];
+  return entryProblems(request.entry);
+}
+
+// Records one commitment's slice allocation or lifecycle owner, observation,
+// and/or linked Story obligation. Unknown ids and stale expected digests leave
+// both files intact.
+export async function recordStoryCommitment(planPath, request = {}) {
+  const commitment = request.commitment;
+  const hasObserved = Object.hasOwn(request, "observed");
+  const hasObligation = Object.hasOwn(request, "obligation");
+  const hasSlice = Object.hasOwn(request, "slice");
+  const hasLifecycle = Object.hasOwn(request, "lifecycle");
+  const inputProblems = requestProblems(request, {
+    hasObserved,
+    hasObligation,
+    hasSlice,
+    hasLifecycle,
+  });
+  if (inputProblems.length) return fail(inputProblems);
 
   let planSource;
   try {
     planSource = await readFile(planPath, "utf8");
   } catch (error) {
-    return fail([problem("invalid-input", { message: error.message })]);
+    return fail([invalid(error.message)]);
   }
   if (
     request.expectedPlan !== undefined &&
@@ -160,23 +158,32 @@ export async function recordStoryCommitment(planPath, request = {}) {
     id: current.id,
     text: current.text,
   };
-  if (hasSlice) {
+  if (hasLifecycle) {
+    // Its owner observes it after execution; any earlier state is dropped.
+    next.lifecycle = request.lifecycle;
+  } else if (hasSlice) {
     if (request.slice !== null && request.slice !== undefined)
       next.slice = Number(request.slice);
-  } else if (current.slice !== undefined && !(hasObligation || request.entry)) {
-    next.slice = current.slice;
+  } else if (!(hasObligation || request.entry)) {
+    if (current.slice !== undefined) next.slice = current.slice;
+    if (current.lifecycle !== undefined) next.lifecycle = current.lifecycle;
   }
+  if (hasObserved && next.lifecycle)
+    return fail([
+      problem("observed-lifecycle-commitment", {
+        commitment,
+        owner: next.lifecycle,
+        message:
+          "Its owner observes a lifecycle commitment after execution; record no observation for it.",
+      }),
+    ]);
   if (hasObserved) {
     if (!/^\S/.test(request.observed ?? ""))
-      return fail([
-        problem("invalid-input", {
-          message: "observed location must be non-empty",
-        }),
-      ]);
+      return fail([invalid("observed location must be non-empty")]);
     next.observed = request.observed;
   } else if (hasObligation) {
     next.obligation = request.obligation;
-  } else {
+  } else if (!hasLifecycle) {
     if (current.observed !== undefined) next.observed = current.observed;
     if (current.obligation !== undefined) next.obligation = current.obligation;
   }
@@ -208,10 +215,10 @@ export async function recordStoryCommitment(planPath, request = {}) {
     const written = parsed.entries.find((item) => item.id === entry.id);
     if (!written || parsed.problems.some((item) => item.entry === entry.id))
       return fail([
-        problem("invalid-input", {
-          message: "the obligation entry would not match the reader",
+        {
+          ...invalid("the obligation entry would not match the reader"),
           ...(parsed.problems.length && { problems: parsed.problems }),
-        }),
+        },
       ]);
   }
 

@@ -111,8 +111,8 @@ the plan as `source-review.md`. When you retain it, link it from the plan's
 header with one line under `**Source:**` that starts with `**Source review:**`
 followed by a Markdown link to that file. Keep the launch and input
 description above one `## Commitments` table with one row per returned id: the
-id, the source text as returned, the allocated slice, and the observation or
-the obligation id that disposes it.
+id, the source text as returned, the allocated slice or lifecycle owner, and
+the observation or the obligation id that disposes it.
 Escape a `|` inside a cell as `\|`.
 
 ```markdown
@@ -123,6 +123,7 @@ Escape a `|` inside a cell as `\|`.
 | 4a.1 | Listed with its filter: outside the Area | slice 4 | observed: decision.test.py excluded list |
 | 4a.5 | Listed with its filter: already held | slice 4 | G2 |
 | 7 | Each decision has an identity | slice 7 | |
+| 8 | Final target CI is settled | target CI | |
 ```
 
 - **Allocate** every id when you retain the return or replace it after a story
@@ -132,6 +133,17 @@ Escape a `|` inside a cell as `\|`.
   slice, excluded with a story quote, or owner changed). A whole-story
   commitment, such as the goal, belongs to the slice that completes it,
   usually the last. Correct a wrong allocation at any later acceptance.
+- **Allocate to a lifecycle owner** a commitment that only an operation after
+  execution completion can observe. Write the owner in Slice:
+  `landing` (landing or Story Branch integration, observed by its accepted
+  integration or landing receipt), `target CI` (the success completion receipt
+  for the final accepted SHA with confirmed shutdown) or `reporting` (the final
+  dashboard operation). No other owner exists; another value is malformed.
+  Split a compound commitment first: "the dialog lists the source and the work
+  is landed normally" gives the dialog to the slice that renders it and only
+  the landing to `landing`. A commitment a slice's output owes stays with that
+  slice, and a release or other step a slice performs from trunk is slice work,
+  not a lifecycle owner.
 - **Observe** at each acceptance: for every id allocated to this slice, write
   `observed: <product or proof location>` once inspected, or the id of the
   obligation that owns the gap. The location must show the commitment's own
@@ -143,6 +155,12 @@ Escape a `|` inside a cell as `\|`.
   An id allocated to a slice already done when you allocate it cites that
   slice's earlier recorded proof as `observed:` when that proof shows the
   result; otherwise record its obligation.
+- **Leave a lifecycle row's last cell empty.** Its owner observes it after
+  execution, when the plan and this file are gone. Never record it as observed
+  from a pending gate, current branch CI or other branch evidence, or the
+  enforcing check itself: branch CI is not the final target CI, and closure
+  must not rest on a result nobody observed. Every check refuses
+  `observed-lifecycle-commitment` for a lifecycle row carrying `observed:`.
 - **Link** an obligation back, optionally, with `Commitment: 4a.5, 4a.6` after
   its `Disposition:`. When present, it must name exactly the rows whose last
   cell is that obligation's id, or the check refuses `mismatched-commitment`;
@@ -154,17 +172,19 @@ check refuses `unlinked-source-review` for a `source-review.md` beside the plan
 without the exact `**Source review:**` link, or a `Source review` label in any
 other form. A plan with neither keeps obligation-only checks.
 
-Settle a commitment's slice allocation, `observed:` location, or disposing
-obligation id with the same script's `record` operation rather than hand-built
-cell escaping or putting an obligation id in Slice:
+Settle a commitment's slice allocation, lifecycle owner, `observed:` location,
+or disposing obligation id with the same script's `record` operation rather
+than hand-built cell escaping or putting an obligation id in Slice:
 
 ```sh
-node '<installed-execute-plan>/scripts/story-obligations.mjs' record --plan '<PLAN.md>' --commitment '<id>' [--slice N|""] [--observed '<product or proof location>' | --obligation '<id>'] [--entry-id '<id>' --title '<text>' --reported '<text>' --reported-slice N --story-clause '<text>' --disposition '<text>'] [--expected-review '<sha256>'] [--expected-plan '<sha256>']
+node '<installed-execute-plan>/scripts/story-obligations.mjs' record --plan '<PLAN.md>' --commitment '<id>' [--slice N|"" | --lifecycle '<landing|target CI|reporting>'] [--observed '<product or proof location>' | --obligation '<id>'] [--entry-id '<id>' --title '<text>' --reported '<text>' --reported-slice N --story-clause '<text>' --disposition '<text>'] [--expected-review '<sha256>'] [--expected-plan '<sha256>']
 ```
 
 It escapes `|` in written cells, keeps an obligation id out of Slice, and when
 you supply the entry fields writes the linked Story obligations
-`Reported: slice N — "…"` shape. Unknown commitment ids and stale
+`Reported: slice N — "…"` shape. `--lifecycle` clears the row's observation
+or obligation and takes no other cell option; `--observed` on a lifecycle row
+is refused. Unknown commitment ids and stale
 `--expected-review` / `--expected-plan` digests refuse without rewriting either
 file.
 
@@ -190,9 +210,11 @@ completion record. `check --slice N` treats that slice as about to finish even
 while its status is `planned`. `check --completion` refuses every open return,
 receiving, or interim entry. With a linked source review, every check also
 refuses `unallocated-commitment`, `unobserved-commitment`,
-`unknown-commitment`, and the [record's](#record-the-source-review) link
-refusals. Plans without this section have zero obligations; do not migrate them
-merely to use the script.
+`unknown-commitment`, `observed-lifecycle-commitment`, and the
+[record's](#record-the-source-review) link refusals. A lifecycle row needs no
+observation here; each result lists it in `pendingLifecycle` with its `id`,
+`text` and `owner`, still owed to that owner. Plans without this section have zero
+obligations; do not migrate them merely to use the script.
 
 For a caller that already resolved a planned execution, `check --planned-completion`
 also requires a readable, non-empty ordered slice list with every slice done,

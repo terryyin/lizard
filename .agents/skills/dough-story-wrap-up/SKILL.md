@@ -56,10 +56,11 @@ Resolve from this project, not this skill's location:
   incoming links, and assessment records.
 
 Before deleting a plan that carries planned-execution identity, retain the
-resolved mode, checkout, branch, remote, target, and the execution checkout's
-[management context](../dough-land/SKILL.md#retire-the-worktree) in the
-coordinator's available execution context for the remaining wrap-up actions and
-report. Do not create a parallel registry. Missing identity needed by a later
+resolved mode, checkout, branch, remote, target, the execution checkout's
+[management context](../dough-land/SKILL.md#retire-the-worktree) and its pending
+[lifecycle commitments](references/lifecycle-commitments.md#carry-them-past-deletion)
+in the coordinator's available execution context for the remaining wrap-up
+actions and report. Do not create a parallel registry. Missing identity needed by a later
 action stops that action instead of reconstructing or guessing it after plan
 deletion.
 
@@ -73,7 +74,8 @@ outside it; reporting itself remains the final operation.
 
 Judge completion from the selected work and available execution evidence.
 
-- Planned work is complete when every slice is done.
+- Planned work is complete when every slice is done. Run `check --planned-completion`
+  and take its `pendingLifecycle` rows under [lifecycle commitments](references/lifecycle-commitments.md#read-them-at-completion).
 - Work without a plan, including an investigation whose approach stayed unselected, is
   complete when its story or instruction, changes, and execution results show the promised outcome, including evidenced no-change.
 - Incomplete implementation leaves the affected active work intact. Report the
@@ -239,5 +241,7 @@ from the closure's own, integration from refused cleanup, committed pending
 publication from an accepted receipt, and completed wrap-up from a refusal that
 left files intact.
 Missing context, unfinished work, unresolved recovery/integration, required
-push, unpublished Trunk Mode closure, retained or unconfirmed observation, or
-resource cleanup prevents successful closure. Local-only current-branch pending publication is not a required push.
+push, unpublished Trunk Mode closure, retained or unconfirmed observation,
+resource cleanup, or a [lifecycle commitment](references/lifecycle-commitments.md#report-the-outcome)
+without its owner's receipt prevents successful closure; name each such
+commitment and its owner. Local-only current-branch pending publication is not a required push.

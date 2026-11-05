@@ -62,7 +62,8 @@ architecture, credentials or permissions, or ambiguity that could waste a
 commit. For a change to the story, correction, or instruction's beneficiary, outcome, proof
 or evaluation, scope, or story order, apply a change already authorized by the
 human; otherwise name the affected source and field, evidence, and specific
-decision needed, then wait.
+decision needed, then wait. A retained landing that the plan's human checkpoint
+names is not a separate stop: [land it under that go-ahead](#land-before-a-trunk-step-under-its-checkpoint).
 Follow [learning escalation](../../dough-story-decomposition/references/problem-decomposition.md#size-and-escalate-slices)
 before further subdivision. Use the handoff below for conflicting recorded
 direction; the executing role must not revise direction to justify its work.
@@ -71,6 +72,23 @@ Deliver completed safe work under [wrap-up](wrap-up.md) before waiting unless a
 refactor stop or unresolved proof failure prevents delivery. Resolve routine
 naming, placement, test choices, minor refactoring, and necessary defects within
 the authorized scope without another approval.
+
+## Land before a trunk step under its checkpoint
+
+When the selected slice's human checkpoint names a
+[Dough Land](../../dough-land/SKILL.md) `--keep-worktree` landing before a step
+that acts from trunk, such as a release from trunk, the developer's go-ahead for
+that checkpoint authorizes both. Deliver the slice's completed work first, then
+run Dough Land with `--keep-worktree` on this execution checkout, asking no
+separate landing question. Perform the trunk step from the landed revision only
+after Dough Land reports the landing accepted; a refused or unfinished landing
+stops that step. Resume the remaining work in the same workspace.
+
+This go-ahead covers only the checkpoint it answers. A Story Branch Mode slice
+that needs trunk without such a named landing stops for that checkpoint decision
+under [human judgment](#stop-for-human-judgment). The retained landing does not
+observe a `landing` lifecycle commitment; closure still integrates the story
+branch. The trunk step's own procedure, CI and release gates apply unchanged.
 
 ## Resolve conflicting recorded direction
 

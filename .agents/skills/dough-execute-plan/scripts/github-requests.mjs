@@ -20,13 +20,14 @@ import { ownerFailure } from "./github-request-owner-failure.mjs";
 
 // One failed call this process waited on, told once to its `failed`: why,
 // when this process's wait on it started and -- once asked of GitHub --
-// when, and with what answer.
+// when, with what answer, and -- once sent to an owner -- that owner.
 /**
  * @typedef {{
  *   readonly cause: GhRequestFailure["kind"];
  *   readonly startedAtMs: number;
  *   readonly askedAt?: string;
  *   readonly answer?: GhAnswer;
+ *   readonly owner?: import("./github-request-owner-link.mjs").OwnerIdentity;
  * }} FailedGhRequest
  */
 
@@ -85,6 +86,14 @@ export class GitHubRequests {
    * @param {AbortSignal} signal
    * @returns {Promise<GhAnswer>}
    */
+  // How this process names the API host and login it asks under now, without
+  // a secret; undefined while their endpoint cannot be established. Revision
+  // observations key by this so separately logged-in processes share nothing.
+  /** @returns {Promise<string | undefined>} */
+  scope() {
+    return this.#owner.scope();
+  }
+
   async request(args, signal) {
     return this.#outstanding.waitFor(
       JSON.stringify([await this.#owner.scope(), args]),
@@ -105,8 +114,9 @@ export class GitHubRequests {
     if (reply.left && !endedAtBound(signal)) {
       return unasked({ kind: "failed" });
     }
+    const { owner } = reply;
     if (reply.left || reply.timedOut) {
-      this.#failed({ cause: "timed-out", startedAtMs });
+      this.#failed({ cause: "timed-out", startedAtMs, owner });
       throw new GhFailure({ kind: "timed-out" });
     }
     if (reply.answer === undefined) {
@@ -114,7 +124,7 @@ export class GitHubRequests {
         reply.failure ??
           (reply.refused ? { kind: "failed" } : ownerFailure(undefined)),
       );
-      this.#failed({ cause: answer.failure.kind, startedAtMs, answer });
+      this.#failed({ cause: answer.failure.kind, startedAtMs, answer, owner });
       return answer;
     }
     const answer = answerFromWire(reply.answer);
@@ -124,6 +134,7 @@ export class GitHubRequests {
         startedAtMs,
         askedAt: answer.askedAt,
         answer,
+        owner,
       });
     }
     return answer;

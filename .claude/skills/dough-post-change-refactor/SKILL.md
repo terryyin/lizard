@@ -16,9 +16,12 @@ committing, pushing, amending, or triggering CI.
 
 ## Discover scope
 
-Run `git status`, `git diff`, and `git diff --cached`. If there is no uncommitted
-change, report empty scope and use the completion handoff below without edits
-or tests.
+Run `git status`, `git diff`, and `git diff --cached`. When the caller supplies
+refactor dispositions recorded since the last pass (`records-only` or an
+already-traced repair naming its accepted return), their committed changes are
+part of the change under review: read their diffs and include their concepts in
+this discovery. If there is no uncommitted change and no supplied disposition,
+report empty scope and use the completion handoff below without edits or tests.
 
 For a nonempty change, resolve this project's navigation, domain vocabulary,
 production subsystem boundaries and applicable architectural decisions, tooling wrapper,

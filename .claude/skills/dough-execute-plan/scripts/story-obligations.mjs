@@ -11,6 +11,7 @@ import {
 import {
   commitmentProblems,
   obligationCommitments,
+  pendingLifecycle,
   readLinkedSourceReview,
 } from "./story-obligation-source-review.mjs";
 import {
@@ -43,11 +44,13 @@ async function inspectStoryObligations(
   const review = await readLinkedSourceReview(planPath, source);
   const { linked, commitments } = review;
   problems.push(...review.problems);
+  const lifecycle = pendingLifecycle(commitments);
   const result = () => ({
     result: {
       ok: problems.length === 0,
       entryCount: record.entries.length,
       ...(linked && { commitmentCount: commitments.length }),
+      ...(lifecycle.length && { pendingLifecycle: lifecycle }),
       ...(problems.length && { problems }),
     },
     entries: record.entries,

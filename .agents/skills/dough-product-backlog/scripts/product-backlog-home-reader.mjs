@@ -6,21 +6,19 @@
 // This owns how a home is read from text, not where that text was loaded from
 // and not which identity a work item is allocated.
 
-import { composeIdentity, splitHref } from "./product-backlog-identity.mjs";
 import { BacklogError } from "./product-backlog-refusal.mjs";
 import { splitSource } from "./product-backlog-source.mjs";
 import { storyDependenciesFence } from "./product-backlog-story-state-basis.mjs";
 import { storyStateFence } from "./product-backlog-story-state-block.mjs";
+import {
+  claimsIdentityRecord,
+  composeIdentity,
+  documentIdFor,
+  identityRecordIn,
+  splitHref,
+} from "./product-backlog-identity.mjs";
 
-const identityPattern = /^\*\*Identity:\*\* +(?<identity>\S.*?) *$/;
-const frontMatterIdPattern = /^id: +(?<id>\S+) *$/;
-const fence = "---";
-
-// The one spelling of a recorded identity line in home text. Writers and the
-// reader share this form so a line written under a heading still matches.
-export function identityLine(identity) {
-  return `**Identity:** ${identity}`;
-}
+export { identityLine } from "./product-backlog-identity.mjs";
 
 // The whole document, or just the story section the anchor names.
 function regionFor(lines, relative, anchor) {
@@ -77,7 +75,7 @@ function anchoredSection(lines, start) {
 // reader must report. Identity wins for whole-document homes; otherwise keep
 // dependency-before-preparation reporting when both records are orphaned.
 function discoveryRecord(lines) {
-  if (lines.some((line) => /^\*\*Identity:\*\*/.test(line))) return "Identity";
+  if (lines.some(claimsIdentityRecord)) return "Identity";
   return [
     [storyDependenciesFence, "Dependency"],
     [storyStateFence, "Preparation"],
@@ -151,34 +149,12 @@ export function storyContextLines(home) {
   return kept;
 }
 
-// The immutable document ID a seed already carries. Adoption reuses it rather
-// than allocating a number of its own, so no shared registry is needed.
-function documentIdFor(lines) {
-  if (lines[0] !== fence) {
-    return "";
-  }
-  const close = lines.findIndex((line, index) => index > 0 && line === fence);
-  const end = close === -1 ? lines.length : close;
-  for (let index = 1; index < end; index += 1) {
-    const match = frontMatterIdPattern.exec(lines[index]);
-    if (match) {
-      return match.groups.id;
-    }
-  }
-  return "";
-}
-
-// The seed ID a document's front matter carries, or "" when it carries none.
-export function documentIdIn(source) {
-  return documentIdFor(splitSource(source).lines);
-}
-
 function recordedIn(lines, region, relative) {
   const found = [];
   for (let index = region.start; index < region.end; index += 1) {
-    const match = identityPattern.exec(lines[index]);
-    if (match) {
-      found.push({ identity: match.groups.identity, index });
+    const identity = identityRecordIn(lines[index]);
+    if (identity !== undefined) {
+      found.push({ identity, index });
     }
   }
   if (found.length > 1) {

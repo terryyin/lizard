@@ -125,6 +125,15 @@ obvious defects such as an independent second outcome before assessing readiness
 preserve proof ownership and any supplied sizing constraints on every resulting
 slice.
 
+A Story Branch Mode slice that must act from trunk, such as a release from
+trunk, needs a human checkpoint before that step. Write it in the plan: it names
+the slice, the trunk step, and a
+[Dough Land](../dough-land/SKILL.md) `--keep-worktree` landing of the story
+branch before the step, so one go-ahead covers both and execution asks no
+separate landing question. Alternatively, record in Current decisions that the
+story executes in Trunk Mode (`--trunk`). The trunk step stays that slice's
+work, not a lifecycle owner, and keeps its own procedure and gates.
+
 After the plan file exists for a work item with a recorded identity, apply
 [record preparation facts](../dough-product-backlog/references/record-preparation.md)
 for the planned approach (omit assessment on that write).

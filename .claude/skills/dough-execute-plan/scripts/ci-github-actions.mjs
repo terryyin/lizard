@@ -5,6 +5,7 @@
 import { GitHubRequests } from "./github-requests.mjs";
 import { GhFailure } from "./github-request-answer.mjs";
 import { ownerFailureText } from "./github-request-owner-failure.mjs";
+import { labelledArchive } from "./github-request-owner-wire.mjs";
 import { readCiConfiguration } from "./ci-project-configuration.mjs";
 
 // Every request this process asks of GitHub for CI evidence: one `gh api`
@@ -37,20 +38,26 @@ function failureText(failure) {
       unreachable: "GitHub is unreachable",
       "output-bound": "gh output exceeded the request's size limit",
       "timed-out": "gh did not answer within the request's time limit",
+      "not-archive": "GitHub's answer is not an archive",
+      "archive-as-text":
+        "the local GitHub request owner, started by an earlier Open Dough, passed the archive on as text",
     }[failure.kind] ?? "gh failed"
   );
 }
 
-// A failed acquisition whose message contains only its route and safe cause.
+// A failed acquisition whose message contains only its route and safe cause;
+// `failure` keeps that cause, so a caller can tell GitHub having no such
+// thing (`{ kind: "http", status: 404 }`) from other failures.
 export class GitHubAcquisitionFailed extends Error {
   constructor(route, failure) {
     super(`GitHub request ${route} failed: ${failureText(failure)}`);
+    this.failure = failure;
   }
 }
 
-// The body of one `gh api` answer, for a fixed argument array starting with
+// One successful `gh api` answer, for a fixed argument array starting with
 // `api`. A wait GitHub directed is a `GitHubAcquisitionHeld`.
-export async function askGitHub(args, signal = new AbortController().signal) {
+async function answered(args, signal) {
   let answer;
   try {
     answer = await requests.request(args, signal);
@@ -59,11 +66,34 @@ export async function askGitHub(args, signal = new AbortController().signal) {
       throw new GitHubAcquisitionFailed(args[1], error.reason);
     throw error;
   }
-  const { failure, body } = answer;
-  if (failure === undefined) return body;
+  const { failure } = answer;
+  if (failure === undefined) return answer;
   if (failure.kind === "rate-limited" || failure.kind === "held-back")
     throw new GitHubAcquisitionHeld(failure.waitSeconds);
   throw new GitHubAcquisitionFailed(args[1], failure);
+}
+
+// The body of one `gh api` answer, as `answered` asks it.
+export async function askGitHub(args, signal = new AbortController().signal) {
+  return (await answered(args, signal)).body;
+}
+
+// The bytes of `answer` to `route`, which GitHub labels as an archive; a
+// `GitHubAcquisitionFailed` when it is not one ("not-archive"), or when the
+// local GitHub request owner passed it on as text, as one an earlier Open
+// Dough started does ("archive-as-text").
+export function archiveBytes(route, answer) {
+  if (answer.bodyEncoding === "base64")
+    return Buffer.from(answer.body, "base64");
+  throw new GitHubAcquisitionFailed(route, {
+    kind: labelledArchive(answer.headers) ? "archive-as-text" : "not-archive",
+  });
+}
+
+// The bytes of one `gh api` answer GitHub labels as an archive, such as an
+// Actions artifact's zip, as `answered` asks it (`archiveBytes`).
+export async function askGitHubArchive(args, signal) {
+  return archiveBytes(args[1], await answered(args, signal));
 }
 
 export async function readGitHubActions(args, signal) {

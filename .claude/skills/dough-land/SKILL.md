@@ -69,8 +69,7 @@ Stop before committing, and name the gap, when:
 - no checkout is in context, or more than one candidate fits;
 - the named default checkout is on another branch than the target; name both
   branches;
-- the target is missing, contradictory, or not a branch on an authorized
-  remote; or
+- the target is missing, contradictory, or not a branch on an authorized remote; or
 - the checkout has an `index.lock` or an unfinished merge, rebase,
   cherry-pick, or revert. Name it; the developer resolves it, then reruns.
 
@@ -84,8 +83,7 @@ not execution; completed preparation keeps its existing release and landing
 journey. Do not label ordinary reviewed work unfinished merely because it has no
 story or plan.
 
-For execution, apply wrap-up's
-[execution-completion judgment](../dough-story-wrap-up/SKILL.md#establish-execution-completion)
+For execution, apply wrap-up's [execution-completion judgment](../dough-story-wrap-up/SKILL.md#establish-execution-completion)
 to the selected source and available results. For a resolved executable plan,
 check its recorded slices and obligations before any Git change:
 
@@ -93,36 +91,38 @@ check its recorded slices and obligations before any Git change:
 node <installed>/dough-execute-plan/scripts/story-obligations.mjs check --plan <PLAN.md> --planned-completion
 ```
 
-Use this project's selected plan, not a plan found by guessing from this skill's
-location. The command reuses the existing plan and obligation readers: it names
-pending slices, open obligations, source-review commitments without an owner
-or observation, and unreadable or missing slice evidence. A
-clear result checks those records only; judge the promised outcome and accepted
-proof too. For planless execution, judge its instruction, changes and execution
-results; absence of a plan is not completion evidence.
+Use this project's selected plan, never a guessed one. The command names pending
+slices, open obligations, unowned or unobserved source-review commitments, and
+unreadable or missing slice evidence. Commitments allocated to a lifecycle owner
+(`landing`, `target CI` or `reporting`) do not stop landing: the result lists
+them as `pendingLifecycle`, still owed to their owners' receipts; never mark one
+observed to land. A clear result checks those records only; judge the promised
+outcome and accepted proof too. For planless execution, judge its instruction,
+changes and results; absence of a plan is not completion evidence.
 
 On an ordinary invocation, unfinished execution or missing or ambiguous completion
 evidence stops here, before commit or publication. Keep the checkout, branches,
 index, plan and assignment unchanged; name the remaining work or exact missing
-evidence and explain `--keep-worktree` as the explicit retained-landing choice.
-Never infer that choice from a request to land. A completed execution still Taken
-is not refused merely for that membership: preserve its owning completion and
-retirement gates. Landing does not perform wrap-up, release its assignment, or
-manufacture completion.
+evidence and explain `--keep-worktree` as the explicit retained-landing
+choice, never inferred from a bare request to land. A completed execution still
+Taken is not refused merely for that membership: preserve its owning completion
+and retirement gates. Landing does not perform wrap-up, release its assignment,
+or manufacture completion.
 
 On every rerun, establish completion again before commit or publication. A tip
 already accepted by trunk does not establish completion or authorize retirement.
 
 An explicit `--keep-worktree` selects a retained increment, including when
-execution is unfinished or its completion evidence is unavailable. Carry the
-remaining work or evidence gap forward; it is not a completion result. Continue
-through commit, publication and optional refresh, then skip retirement entirely.
-Keep the same worktree, local branch and existing remote execution branches, Taken entry, agent
-profile, plan and session context. Do not release an execution assignment or
-change its mode, branch destination for later execution, or observer target.
-Resume its next unfinished work in that same workspace through its existing
-execution workflow; eventual closure still belongs to ordinary story wrap-up
-and its completion, CI and ownership gates.
+execution is unfinished or its completion evidence is unavailable. So does a
+plan's human checkpoint that names this landing, once answered with its
+go-ahead. Carry the remaining work or evidence gap forward; it is not a
+completion result. Continue through commit, publication and optional refresh,
+then skip retirement entirely. Keep the same worktree, local branch and existing
+remote execution branches, Taken entry, agent profile, plan and session context.
+Do not release an execution assignment or change its mode, branch destination
+for later execution, or observer target. Resume its next unfinished work in that
+same workspace through its existing execution workflow; eventual closure still
+belongs to ordinary story wrap-up and its completion, CI and ownership gates.
 
 ## Commit everything in the checkout
 

@@ -8,11 +8,26 @@ premises such as "works as today" count the same as those you write.
 Derive premises from key examples: trace each from trigger to observable result through
 existing code. Every step assumed to behave is decisive, written down or not, including
 colliding overlays or rules and transformations from fixture inputs to their evaluation.
+When a promised outcome names a selected set or restriction, such as "the shown done
+items", how the product selects it is a premise: read the selecting code before sizing the slice.
 A premise is settled only when its recorded observation reaches the consuming operation
-in the checkout the plan names and records the promised outcome: the example's result,
-or a proof's failure without the behavior it claims to prove. "Exists", "found", "callers
-listed", "step defined", "server answered", and "no commit to the spec since" are
-presence, not settling; leave the premise open and name the unreached operation.
+in the same form and profile the slice uses (the command with its flags or interpreter
+mode, the named input, and the checkout, profile, or environment that consumes it) and
+records the promised outcome: the example's result, or a proof's failure without the
+behavior it claims to prove. "Exists", "found", "callers listed", "step defined", "server
+answered", and "no commit to the spec since" are presence, not settling; leave the
+premise open and name the unreached operation.
+An observation in a different form or profile is a proxy, such as `python3 -c` for a
+slice that runs `python3 -I`, a companion file for the profile's own published input, or
+a development checkout for a deployed profile. A proxy settles the premise only when the
+plan records why the difference cannot change the outcome; otherwise leave the premise
+open and name the unverified input or host condition. A read-only query of the consuming
+profile settles a premise about that profile's own state, such as which inputs it publishes.
+A retained observation that already reached the same form and profile, such as a
+retained proof record, an earlier plan's premise row, or a dated host listing, settles the
+premise when cited with its time or revision and result, while nothing that changes the
+result has changed since; no re-run is needed. A checkout moved past that revision on
+the paths the observation runs through reopens the premise.
 A claimed fix is a premise: reproduce the symptom before dependent work. A remedy spec
 that already passes leaves the symptom unexplained. Run an existing fixture when it can
 observe the journey cheaply and safely, instead of reading call sites.
@@ -42,8 +57,9 @@ Reading, searching, listing, and read-only host queries locate it; presence cann
 Scratch observations run only in the preparation's owned workspace, never a default or shared
 checkout; revert scratch edits before any record write or commit. For uncertain infrastructure
 or storage behavior, use one isolated representative proof against the relevant engine and
-version, unless matching evidence exists. Record each premise, its consuming operation, the
-literal observation reaching it, and its result in the plan. A false premise changes the plan
+version, unless matching evidence exists. Record each premise in the plan with its consuming
+operation, the form and profile observed (the literal observation or citation), when or at which
+revision, the result, and any unverified remainder. A false premise changes the plan
 before broad implementation. Do not inspect claims the approach does not depend on, and keep
 experiments off shared and production systems.
 

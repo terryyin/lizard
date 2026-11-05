@@ -9,14 +9,9 @@
 // array -- never a shell string.
 
 import { execFile } from "node:child_process";
-import {
-  endedAtBound,
-  GhFailure,
-  readAnswer,
-  unasked,
-} from "./github-request-answer.mjs";
+import { endedAtBound, GhFailure, unasked } from "./github-request-answer.mjs";
 import { OutstandingReads } from "./github-request-outstanding.mjs";
-import { readRoutes } from "./github-request-owner-wire.mjs";
+import { printedAnswer, readRoutes } from "./github-request-owner-wire.mjs";
 
 /** @import { GhAnswer } from "./github-request-answer.mjs" */
 /** @import { KeptAdmissions } from "./github-request-kept-admissions.mjs" */
@@ -152,7 +147,7 @@ export class AdmittedCalls {
         {
           signal,
           maxBuffer: maxBufferBytes,
-          encoding: "utf8",
+          encoding: "buffer",
           env: { ...process.env, GH_PROMPT_DISABLED: "1" },
         },
         (...ended) => {
@@ -227,7 +222,7 @@ export class AdmittedCalls {
       return unasked({ kind: "failed" }, askedAt);
     }
     const learned = admission.answered(
-      readAnswer(error, stdout, stderr, askedAt),
+      printedAnswer(error, stdout, stderr, askedAt),
       Date.now(),
     );
     // A rate limit is answered only once its wait is kept: otherwise the

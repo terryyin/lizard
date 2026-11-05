@@ -10,6 +10,9 @@ const explanations = {
   "path-too-long": "its endpoint path is too long for a local socket",
   "start-failed": "its process could not start",
   "connection-failed": "its local connection failed",
+  // Raised only by the reader's own link, for a request already sent when
+  // the owner's connection ended; the owner never sends it.
+  "connection-lost": "its local connection was lost",
   incompatible: "it explicitly refused the protocol",
   unauthenticated: "it explicitly refused this caller",
   unknown: "it gave no usable answer",

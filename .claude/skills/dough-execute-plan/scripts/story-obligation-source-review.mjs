@@ -30,13 +30,17 @@ export function tableCells(line) {
   return cells;
 }
 
+// Post-execution operations that alone can observe some commitments. A row
+// allocated to one stays unobserved: no execution check waits for its owner.
+export const lifecycleOwners = ["landing", "target CI", "reporting"];
+
 const unreadable = (message) => ({
   commitments: [],
   problems: [{ reason: "unreadable-source-review", message }],
 });
 
 // Reads the `## Commitments` table: one row per returned id with its source
-// text, allocated slice, and observation or disposing obligation id.
+// text, slice or lifecycle owner, and observation or disposing obligation id.
 export function readSourceReview(source) {
   const section = readSection(unfencedLines(source), /^## +Commitments\s*$/);
   if (section.count !== 1)
@@ -62,7 +66,8 @@ export function readSourceReview(source) {
       malformed();
       continue;
     }
-    if (allocation) {
+    if (lifecycleOwners.includes(allocation)) commitment.lifecycle = allocation;
+    else if (allocation) {
       const slice = /^slice ([1-9]\d*)$/.exec(allocation);
       if (!slice) {
         malformed();
@@ -73,7 +78,8 @@ export function readSourceReview(source) {
     if (state) {
       const observed = /^observed: *(\S.*)$/.exec(state);
       if (observed) commitment.observed = observed[1];
-      else if (commitmentId.test(state)) commitment.obligation = state;
+      else if (commitmentId.test(state) && !commitment.lifecycle)
+        commitment.obligation = state;
       else {
         malformed();
         continue;
@@ -82,13 +88,10 @@ export function readSourceReview(source) {
     commitments.push(commitment);
   }
   const ids = new Set();
-  for (const commitment of commitments) {
-    if (ids.has(commitment.id))
-      problems.push({
-        commitment: commitment.id,
-        reason: "duplicate-commitment",
-      });
-    ids.add(commitment.id);
+  for (const { id } of commitments) {
+    if (ids.has(id))
+      problems.push({ commitment: id, reason: "duplicate-commitment" });
+    ids.add(id);
   }
   if (!commitments.length && !problems.length)
     return unreadable(
@@ -200,8 +203,16 @@ export function obligationCommitments(entry, commitments) {
   return { disposed, problems };
 }
 
-// Every row needs an existing slice or obligation; a row allocated to a
-// finishing slice, or any row at completion, also needs its observation.
+// Lifecycle rows each check reports as still owed to their owners.
+export function pendingLifecycle(commitments) {
+  return commitments
+    .filter((item) => item.lifecycle)
+    .map(({ id, text, lifecycle }) => ({ id, text, owner: lifecycle }));
+}
+
+// Every row needs an existing slice, lifecycle owner or obligation; a row
+// allocated to a finishing slice, or any slice row at completion, also needs
+// its observation. A lifecycle row never carries one in the plan.
 export function commitmentProblems(
   commitments,
   { slices, entryIds, completion, isDoneOrCommitting },
@@ -210,6 +221,15 @@ export function commitmentProblems(
   for (const item of commitments) {
     const problem = (reason, fields = {}) =>
       problems.push({ commitment: item.id, reason, ...fields });
+    if (item.lifecycle) {
+      if (item.observed !== undefined)
+        problem("observed-lifecycle-commitment", {
+          owner: item.lifecycle,
+          message:
+            "Its owner observes a lifecycle commitment after execution; leave the last cell empty.",
+        });
+      continue;
+    }
     if (item.slice === undefined ? !item.obligation : !slices.has(item.slice))
       problem("unallocated-commitment", {
         ...(item.slice !== undefined && { slice: item.slice }),

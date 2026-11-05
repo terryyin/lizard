@@ -73,7 +73,7 @@ now. Then choose:
 
 | Assessment | Requires |
 | --- | --- |
-| `ready` | Refinement `refined`; approach is a selected `planned` path with bounded slices, mapped proof, and decisive premises settled by the consuming operation's recorded result in the named checkout or bounded by a permitted early probe slice, or an explicitly authorized `planless` path; no blocking concern remains |
+| `ready` | Refinement `refined`; approach is a selected `planned` path with bounded slices, mapped proof, and decisive premises settled where their plan rows record the consuming operation's result in the form and profile the slice uses, or bounded by a permitted early probe slice, or an explicitly authorized `planless` path; no blocking concern remains |
 | `not-ready` | At least one blocking reason naming what still blocks readiness; a recorded dependency is not such a reason |
 
 A remaining slice-specific concern, unresolved goal/scope/examples, missing or
@@ -90,13 +90,19 @@ review. Judge decisive premises, result-bearing
 observations, and permitted early probe slices under
 [slice planning](../../dough-slice-planning/SKILL.md#write-the-plan).
 
-Presence results or observations outside the checkout the plan names block
-`ready` for an unsettled premise not bounded by a permitted probe. An
+Read the plan's
+[premise rows](../../dough-slice-planning/references/settle-decisive-premises.md).
+Presence results, observations outside the checkout the plan names, and an
+unverified input or host condition that can change its slice's outcome block
+`ready` for a premise not bounded by a permitted early probe slice. An
 observation or replay recording part of the promised journey as not covered
 also blocks `ready`. Record `not-ready` with one `--reason` per blocking premise
-naming it and the unreached operation; name other blocking concerns too. Clear
-a premise-based reason only with a fresh observation of that premise; citing
-earlier evidence again does not clear it. Once no blocking concern remains,
+naming it and its unreached operation or unverified input or host condition;
+name other blocking concerns too. Clear
+a premise-based reason only with an observation of that premise in the form
+and profile its slice uses, fresh or a matching retained one cited with its
+time or revision; citing again the evidence that left it open does not clear
+it. Once no blocking concern remains,
 re-read the current basis and record `ready` without reasons.
 
 ### Planless authority

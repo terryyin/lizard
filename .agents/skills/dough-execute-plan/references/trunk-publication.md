@@ -21,7 +21,7 @@ a Story Branch claim's unobserved trunk target, follows [Own one observer](ci-mo
 
 ## Publish an execution increment or repair
 
-After wrap-up proof and refactor, fresh increments and owned repairs use
+After wrap-up proof and refactor or its disposition, fresh increments and owned repairs use
 [guarded fresh preparation and delivery](fresh-increment.md): required local
 operations and commit precede managed delivery, with the successful receipt as
 `validatedCandidate`. Failed preparation or commit withholds publication and

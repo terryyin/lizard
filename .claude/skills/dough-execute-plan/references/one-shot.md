@@ -94,8 +94,7 @@ sits on the checkout's local trunk branch, after any earlier local commits.
 ## Verify and retain the result
 
 Work only in that workspace. Run the focused verification the outcome needs
-and the [post-change refactor](../../dough-post-change-refactor/SKILL.md) pass,
-then use [guarded fresh preparation](fresh-increment.md) with `commit: "git"`:
+and [wrap-up's refactor step](wrap-up.md), then use [guarded fresh preparation](fresh-increment.md) with `commit: "git"`:
 the start named no agent, so ordinary Git authorship and project hooks apply.
 Resolve its project requirements and exact owned paths under this one-shot
 scope, including all checkout content when default-checkout execution was
@@ -151,8 +150,8 @@ carries `landing: "auto-land"`, and `authority-required` names missing
 publication authority before any workspace is selected. Tracked work refuses
 `--auto-land` with `invalid-request`.
 
-Land only once the focused verification passes, the post-change refactor pass
-is done, and no product, scope, or architecture decision remains open. Then
+Land only once the focused verification passes, the refactor pass or its
+[recorded disposition](wrap-up.md#deliver-the-change) is done, and no product, scope, or architecture decision remains open. Then
 deliver the committed result as [Land the retained result](#land-the-retained-result)
 describes, without waiting for a landing request: a queued story's closure
 lands in the same commit, with `--one-shot-identity`.

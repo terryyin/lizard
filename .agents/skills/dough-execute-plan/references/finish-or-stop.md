@@ -194,9 +194,9 @@ result there. Then run
 `node '<installed-execute-plan>/scripts/story-obligations.mjs' check --plan '<PLAN.md>' --completion`
 with the [resolved inputs](story-obligations.md#use-the-record-at-execution-boundaries).
 A refusal blocks the execution-complete record; resolve every open return,
-receiving, or interim obligation, and every unobserved commitment of a linked
-source review, before continuing. Then add this record to
-the plan after its ordered slices:
+receiving, or interim obligation, and every unobserved slice commitment of a
+linked source review, before continuing; a lifecycle row stays unobserved for
+its owner. Then add this record to the plan after its ordered slices:
 
 ```markdown
 ## Execution complete

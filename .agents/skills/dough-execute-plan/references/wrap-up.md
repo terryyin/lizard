@@ -26,10 +26,13 @@ evidence; a coordinator's assertion is insufficient. For planned execution,
 retain them beside the plan as `source-review.md` in its
 [record form](story-obligations.md#record-the-source-review), linked from the
 plan by `**Source review:**`, and allocate every id before the next obligations
-listing or check. Reuse that return for later slices while the source text is
-unchanged; after a story amendment, obtain a fresh review, replace it and
-allocate it again the same way. If isolation or that evidence is unavailable,
-name the missing review and stop dependent acceptance.
+listing or check: to the slice whose output owes it, to a disposing obligation,
+or, if only a post-execution operation can observe it, to its
+[lifecycle owner](story-obligations.md#record-the-source-review). Reuse that
+return for later slices while the source text is unchanged; after a story
+amendment, obtain a fresh review, replace it and allocate it again the same way.
+If isolation or that evidence is unavailable, name the missing review and stop
+dependent acceptance.
 
 Compare that independent return with the source, then the plan, implementation
 return, actual product and proof. In existing plan or acceptance evidence compare,
@@ -155,35 +158,45 @@ the owned unpublished increment or repair through
 
 As each obligation finishes, retain its delivery boundary in the execution conversation:
 owned unfinished paths, accepted proof and boundary, implementation or refactor return,
-exact observer identity when present, unpublished candidate and final `suffixBase`,
-previously published base, and accepted revision and target after any rewrite.
+refactor disposition, exact observer identity when present, unpublished
+candidate and final `suffixBase`, previously published base, and accepted revision and target after any rewrite.
 On recovery, reconcile actual Git, agent and observer state under
 [execution-boundary recovery](../SKILL.md#continue-or-recover-at-an-execution-boundary), classify the increment or repair with
 [interrupted publication](trunk-publication.md#resume-an-interrupted-publication), and continue only that unfinished obligation.
 
-After proof acceptance and the independent refactor below, fresh increments and
+After proof acceptance and the independent refactor or disposition below, fresh increments and
 owned repairs use [guarded fresh preparation and delivery](fresh-increment.md)
 for steps 3–8. Resolve its required project operations and publication context
-first. It passes the successful commit SHA to managed delivery; failed preparation
-or commit withholds delivery and observation. Never follow failure with a separate
-commit or older-HEAD delivery. Without publication authority, select local-only
-and retain its receipt. Existing candidates use retained candidate/base recovery.
+first. Never follow failure with a separate commit or older-HEAD delivery.
+Without publication authority, select local-only and retain its receipt.
 
-1. Spawn a fresh agent to run
+1. Classify the uncommitted change once. Record `records-only` when it touches
+   only planning, execution, finding or research records, such as plans, seeds,
+   backlog, source reviews, agent records, DearDough entries or maintainer
+   findings. For an owned CI repair or small change whose every
+   changed concept lies within a slice's accepted refactor return (its reported
+   changed paths and consumer-trace record), adding no representation, helper,
+   dependency or path, record an already-traced disposition naming that return.
+   Either replaces the agent; retain the disposition beside the slice in the
+   plan, or in the quick delivery boundary. Otherwise, or when unsure, spawn a fresh agent to run
    [dough-post-change-refactor](../../dough-post-change-refactor/SKILL.md).
    Supply source, execution checkout/branch, slice, project context, changed paths and
    boundaries, ownership boundaries, and accepted proof/consumer trace with inspected
-   setup/observation locations; include an existing plan's path. Carry the retained
+   setup/observation locations; include an existing plan's path and the
+   dispositions since the last pass. Carry the retained
    expensive-proof decision and same-machine competing owned work. Keep formatting and
    hook-owned lint with the coordinator; uphold decide-before-testing and explicit human verification authority.
+   A triggered pass keeps whole-product reach, never only the story's, slice's
+   or repair's files.
 2. Inspect its report, require `## REFACTOR COMPLETE`, and recheck
-   [execution decisions](execution-decisions.md). Use the reported changed paths,
+   [execution decisions](execution-decisions.md); only those two dispositions
+   replace that marker. Use the reported changed paths,
    boundaries, and proof effects to inspect only newly affected implementation
    and observation locations. Reuse accepted inspection for boundaries reported
    and confirmed unchanged; when refactoring invalidated a boundary, accept its
    rerun or replacement proof only after inspecting the new boundary and
-   observation locations under **Accept proof**. A refactor stop, missing marker,
-   contradiction, or unresolved proof gap prevents commit. Report unnecessary
+   observation locations under **Accept proof**. A refactor stop, missing marker
+   or disposition, contradiction, or unresolved proof gap prevents commit. Report unnecessary
    test runs as deviations; reuse valid evidence instead of repeating work.
 3. Run this project's generator if its trigger changed and the required output was
    not already regenerated and verified during refactoring. Fix generation at
@@ -239,45 +252,33 @@ and retain its receipt. Existing candidates use retained candidate/base recovery
    repairs invalidate preparation, rerun formatting before restaging and
    retrying.
 8. Immediately before publishing, resolve the owned unpublished suffix in the
-   execution workspace. Publish it through managed
-   [increment and repair publication](trunk-publication.md#publish-an-execution-increment-or-repair)
-   when this caller has publication authority.
-   Caller-selected current-branch work and an already-supported host-owned
-   execution stay in the recorded checkout. Create no worktree and do not
-   switch branches. Without that authority, commit there and report the
-   revision as committed and pending publication. Do not push. Remote refs
-   stay unchanged, and the checkout identity stays the recorded path.
-   With that authority, the guarded fresh entry invokes managed delivery from
-   that same checkout, passing the actual commit receipt as `validatedCandidate`
-   and its `HEAD` from before this operation's first commit as
-   `--previously-published-base`. Handle an `unpublished-base` stop
-   as [current-branch publication](trunk-publication.md#publish-an-execution-increment-or-repair)
-   does.
-   The receipt names the accepted SHA, authorized target and observation result
-   (attached, reused or explicit coverage gap). Supply the owner inputs required
+   execution workspace. With publication authority, publish it through managed
+   [increment and repair publication](trunk-publication.md#publish-an-execution-increment-or-repair).
+   Caller-selected current-branch and host-owned work stay in the recorded
+   checkout. Without that authority, commit there, report the revision as
+   committed and pending publication, and do not push; remote refs and the
+   recorded checkout identity stay unchanged.
+   Supply the owner inputs required
    by [managed observation](trunk-publication.md#publish-the-candidate); Codex
-   uses its retained coordinator and exact stream directory. Do not probe,
-   start or register separately, or copy mailbox directories. Pending human edits
+   uses its retained coordinator and exact stream directory. Pending human edits
    stay out of the published commit.
-   When the selected checkout is the default checkout, follow its
+   On the default checkout, follow its
    [direct edit](maintain-default-checkout.md#direct-edit) checks before
-   mutating it. A local commit or a local merge stays a local
-   operation; do not report it as remote publication. Codex, Cursor, and
-   Claude keep the recorded checkout and authorized target their existing
-   adapters already supply. A rejected push follows
+   mutating it. A local commit or merge stays local; do not report it as remote
+   publication. Codex, Cursor, and Claude keep the recorded checkout and
+   authorized target their adapters supply. A rejected push follows
    [rejected-push recovery](trunk-publication.md#recover-a-rejected-push).
-   A [publication stop](trunk-publication.md#preconditions),
-   including a
+   A [publication stop](trunk-publication.md#preconditions), including a
    [rebase conflict stop](trunk-publication.md#resolve-a-publication-rebase-conflict)
    or a recovery stop, leaves that candidate unpublished and recoverable.
    A [default-checkout preservation result](maintain-default-checkout.md#preserve-pending-local-work)
    defers maintenance and does not by itself reject an accepted remote
-   candidate or block a push from a separate owned workspace. Do not register
-   a SHA the remote has not accepted, and do not treat that unpublished
-   candidate as delivered.
-   When observation is attached or reused, keep that observer running and
-   handle delivered failures through its repair protocol. An unavailable
-   bridge leaves publications unobserved: report that gap and continue.
+   candidate or block a push from a separate owned workspace. Never register
+   a SHA the remote has not accepted or treat that unpublished candidate as
+   delivered.
+   With observation attached or reused, keep that observer running and handle
+   delivered failures through its repair protocol. An unavailable bridge leaves
+   publications unobserved: report that gap and continue.
    Success completes routine delivery; a post-slice decision stop occurs after
    safe work is delivered. Never wait for CI or deployment after a normal or
    repair publication.

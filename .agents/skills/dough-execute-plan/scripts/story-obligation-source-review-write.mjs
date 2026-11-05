@@ -10,9 +10,17 @@ export function escapeCell(text) {
   return String(text).replace(/\|/g, "\\|");
 }
 
-export function renderCommitmentRow({ id, text, slice, observed, obligation }) {
-  const allocation =
-    slice === undefined || slice === null ? "" : `slice ${slice}`;
+export function renderCommitmentRow({
+  id,
+  text,
+  slice,
+  lifecycle,
+  observed,
+  obligation,
+}) {
+  let allocation = "";
+  if (lifecycle) allocation = lifecycle;
+  else if (slice !== undefined && slice !== null) allocation = `slice ${slice}`;
   let state = "";
   if (observed !== undefined && observed !== null)
     state = `observed: ${observed}`;

@@ -53,7 +53,8 @@ import { longestDirectedWaitSeconds } from "./github-request-rules.mjs";
 // admitted, unless `Failure` says it is still as `gh` printed it.
 // - `status`, `headers`: GitHub's, when `gh` printed them; no status when no
 //   answer came from GitHub (no login, no connection, no `gh`).
-// - `body`: what `gh` printed after the head, filtered by any `--jq`.
+// - `body`: what `gh` printed after the head, filtered by any `--jq`; an
+//   archive's bytes as base64 when `bodyEncoding` says so.
 // - `failure`: how the call failed, when `gh` exited non-zero; a successful
 //   exit has none. A conditional caller still decides from `status` first (a
 //   `304` exits non-zero too).
@@ -65,6 +66,7 @@ import { longestDirectedWaitSeconds } from "./github-request-rules.mjs";
  *   readonly status: number | undefined;
  *   readonly headers: ReadonlyMap<string, string>;
  *   readonly body: string;
+ *   readonly bodyEncoding?: "base64";
  *   readonly failure: Failure | undefined;
  *   readonly askedAt: string;
  * }} GhAnswer
@@ -83,8 +85,7 @@ export class GhFailure extends Error {
 }
 
 // An answer that never came from GitHub: held back, or -- `failed` -- for a
-// call no requester waits on any more, whether waiting its turn or already
-// asked.
+// call no requester waits on any more, waiting its turn or already asked.
 /**
  * @param {GhRequestFailure} failure
  * @param {string} [askedAt]

@@ -2,7 +2,7 @@ import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 
 const usage =
-  'usage: story-obligations.mjs check --plan <PLAN.md> [--slice <N>] [--completion] | --planned-completion; or list --plan <PLAN.md> --slice <N>; or record --plan <PLAN.md> --commitment <id> [--slice <N>|""] [--observed <text> | --obligation <id>] [--entry-id <id> --title <text> --reported <text> --reported-slice <N> --story-clause <text> --disposition <text>] [--expected-review <sha256>] [--expected-plan <sha256>]';
+  'usage: story-obligations.mjs check --plan <PLAN.md> [--slice <N>] [--completion] | --planned-completion; or list --plan <PLAN.md> --slice <N>; or record --plan <PLAN.md> --commitment <id> [--slice <N>|"" | --lifecycle <landing|target CI|reporting>] [--observed <text> | --obligation <id>] [--entry-id <id> --title <text> --reported <text> --reported-slice <N> --story-clause <text> --disposition <text>] [--expected-review <sha256>] [--expected-plan <sha256>]';
 
 function parseRecordRequest(values) {
   const request = { commitment: values.commitment };
@@ -10,6 +10,7 @@ function parseRecordRequest(values) {
     if (values.slice === "") request.slice = null;
     else request.slice = Number(values.slice);
   }
+  if (values.lifecycle !== undefined) request.lifecycle = values.lifecycle;
   if (values.observed !== undefined) request.observed = values.observed;
   if (values.obligation !== undefined) request.obligation = values.obligation;
   if (values["expected-review"] !== undefined)
@@ -63,6 +64,7 @@ export async function runStoryObligationsCli({
         completion: { type: "boolean" },
         "planned-completion": { type: "boolean" },
         commitment: { type: "string" },
+        lifecycle: { type: "string" },
         observed: { type: "string" },
         obligation: { type: "string" },
         "entry-id": { type: "string" },
@@ -108,6 +110,7 @@ export async function runStoryObligationsCli({
       (positionals[0] === "list" &&
         (!values.slice || values.completion || values["planned-completion"])) ||
       values.commitment !== undefined ||
+      values.lifecycle !== undefined ||
       values.observed !== undefined ||
       values.obligation !== undefined
     ) {

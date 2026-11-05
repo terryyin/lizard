@@ -47,7 +47,8 @@ function highestOf(named) {
 
 // A candidate is "active" while the backlog lists it, else "completed" while
 // a done record names it, else "in-history" when history shows its own done
-// record or its seed ID while no active seed carries that ID, else
+// record, a declared legacy story, or its seed ID while no active seed carries
+// that ID, else
 // "unlisted". Whatever history shows of it is reported under `history` with
 // every status.
 function candidateStatus(identity, { seeds, backlog, records, history }) {
@@ -79,6 +80,7 @@ function candidateStatus(identity, { seeds, backlog, records, history }) {
   const activeSeed = seeds.named.some((entry) => entry.identity === seed);
   if (
     traced?.record !== undefined ||
+    traced?.story !== undefined ||
     (traced?.seed !== undefined && !activeSeed)
   )
     return { identity, status: "in-history", ...inHistory };

@@ -214,7 +214,8 @@ until that missing history is accounted for.
    If deeper analysis proves all failures were CI infrastructure, record evidence
    and ignore the attempt without a repair commit. If HEAD contains a demonstrated
    repair, accept focused proof without manufacturing another commit. For a new
-   repair, the coordinator runs [wrap-up](wrap-up.md), publishing through
+   repair, the coordinator runs [wrap-up](wrap-up.md), including its refactor
+   step, publishing through
    [increment and repair publication](trunk-publication.md#publish-an-execution-increment-or-repair).
    Do not use a second repair push. Preserve the same observer through it.
 5. **Restore unfinished owned work and resume the same execution.** Publish a

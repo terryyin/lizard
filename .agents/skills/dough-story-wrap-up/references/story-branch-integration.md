@@ -25,7 +25,9 @@ commit and returns the receipt.
 Require that procedure's accepted receipt before resource cleanup. The receipt
 is the accepted candidate SHA and the remote trunk ref. A superseded candidate
 is not the receipt. Unresolved integration preserves the execution resources
-and blocks completion. Do not force-push.
+and blocks completion; closure names each `landing`
+[lifecycle commitment](lifecycle-commitments.md#report-the-outcome) as
+unobserved, with Story Branch integration as its owner. Do not force-push.
 
 Pass the selected identity to that integration as `--supplier-identity` under
 the [visit rule](../../dough-product-backlog/references/supplier-dependencies.md#which-completed-work-takes-the-visit),

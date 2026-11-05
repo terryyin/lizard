@@ -133,10 +133,11 @@ The contextual instruction must require:
    and dead code. Run the regression test and related tests in the same file or
    feature. Select only relevant E2E specs using this project's test runner. Do
    not run the full E2E suite unless explicitly requested.
-6. **Shared refactoring.** Keep the existing pre-commit refactoring obligation.
-   Execute-plan delivery already runs
-   [dough-post-change-refactor](../dough-post-change-refactor/SKILL.md) on the
-   full uncommitted change. Do not replace that step with a local refactor loop.
+6. **Shared refactoring.** Keep the existing pre-commit refactoring obligation:
+   execute-plan
+   [wrap-up's refactor step](../dough-execute-plan/references/wrap-up.md#deliver-the-change)
+   settles it for the full uncommitted change. Do not replace that step with a
+   local refactor loop.
 
 A supported conclusion that the reported behavior is already correct is a valid
 resolution. Use execute-plan's explained-empty-change path. Do not invent a
@@ -218,7 +219,7 @@ expectation, actual, evidence, and gaps, and execution result or remaining-work 
 
 - **Repaired:** the reproduction test failed for the reported mismatch, the
   smallest change made that proof green, related verification passed, and
-  shared refactoring completed. A one-shot repair is retained for review unless landing was requested or automatic landing was
+  wrap-up's refactor step completed. A one-shot repair is retained for review unless landing was requested or automatic landing was
   selected; report its workspace and [landing request](../dough-execute-plan/references/one-shot.md#land-the-retained-result).
   Only a landed result proceeds to [retirement](../dough-execute-plan/references/one-shot.md#retire-the-workspace).
   For tracked work, complete shared delivery before reporting it; do not report

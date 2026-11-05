@@ -42,6 +42,14 @@ Give the agent:
   it. Require the agent to return contrary evidence through [execution
   decisions](execution-decisions.md#resolve-conflicting-recorded-direction),
   without changing the topic or continuing the affected path.
+- For planned execution, the slice's
+  [premise rows](../../dough-slice-planning/references/settle-decisive-premises.md)
+  as the plan records them, including each unverified remainder. Require the
+  agent to reuse a settled result without repeating its observation, check a
+  remainder in the form the slice prescribes before work that depends on it,
+  and return a false premise through [execution
+  reassessment](execution-decisions.md#reassess-before-extending-work) rather
+  than continuing on it.
 - For planned execution continuing an oversized quick attempt, the remaining-work
   plan plus the preserved completed work and proof and any incomplete-change
   disposition needed to identify the true starting boundary. Require the agent

@@ -7,10 +7,11 @@
 // host and login it is asked under as its endpoint directory is named. No
 // credential, command or path is ever said.
 
+import { readAnswer } from "./github-request-answer.mjs";
 import { safeOwnerCause } from "./github-request-owner-failure.mjs";
 
 /** @import { Socket } from "node:net" */
-/** @import { GhAnswer } from "./github-request-answer.mjs" */
+/** @import { GhAnswer, GhPrintedFailure } from "./github-request-answer.mjs" */
 
 // What an owner and its consumers must agree on to be spoken to at all.
 export const protocol = 2;
@@ -59,6 +60,43 @@ export function receive(socket, onMessage, limitBytes = Infinity) {
   });
 }
 
+// What one `gh api --include` call printed, as bytes, read as its answer
+// (`./github-request-answer.mjs`) for this wire. An answer GitHub labels as
+// an archive, such as an Actions artifact's zip, keeps its exact bytes as
+// base64 (`bodyEncoding`), so they survive the JSON line; every other body
+// is read as UTF-8 text, as `gh` printed it.
+const archiveTypes = /^application\/(?:zip|octet-stream)\s*(?:;|$)/i;
+
+/** @param {ReadonlyMap<string, string>} headers */
+export const labelledArchive = (headers) =>
+  archiveTypes.test(headers.get("content-type") ?? "");
+
+/**
+ * @param {{ readonly code?: string | number | null | undefined } | null} error
+ * @param {Buffer} stdout
+ * @param {Buffer} stderr
+ * @param {string} askedAt
+ * @returns {GhAnswer<GhPrintedFailure>}
+ */
+export function printedAnswer(error, stdout, stderr, askedAt) {
+  const answer = readAnswer(
+    error,
+    stdout.toString("utf8"),
+    stderr.toString("utf8"),
+    askedAt,
+  );
+  if (error || !labelledArchive(answer.headers)) return answer;
+  // The body follows the head's first blank line; Latin-1 keeps one
+  // character per byte, so its index is the body's byte offset.
+  const blank = /\n\r?\n/.exec(stdout.toString("latin1"));
+  if (blank === null) return answer;
+  return {
+    ...answer,
+    body: stdout.subarray(blank.index + blank[0].length).toString("base64"),
+    bodyEncoding: "base64",
+  };
+}
+
 /** @param {GhAnswer} answer */
 export const wireAnswer = (answer) => ({
   ...answer,
@@ -70,12 +108,14 @@ export const answerFromWire = ({
   status,
   headers,
   body,
+  bodyEncoding,
   failure,
   askedAt,
 }) => ({
   status,
   headers: new Map(headers),
   body,
+  ...(bodyEncoding === "base64" && { bodyEncoding }),
   failure:
     failure?.kind === "owner-unavailable"
       ? { kind: "owner-unavailable", cause: safeOwnerCause(failure.cause) }
