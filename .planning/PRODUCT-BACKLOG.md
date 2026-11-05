@@ -7,7 +7,6 @@ Maintenance, bug fixing, and PR reviews.
 ## Taken
 
 - [Process FabioMalpezzi's open PRs](seeds/SEED-034-fabio-malpezzi-prs.md#process-fabio-malpezzi-prs) — SEED-034#process-fabio-malpezzi-prs ([plan](slice-plans/022-fabio-malpezzi-open-prs/PLAN.md))
-- [Remove local proof from Lizard](seeds/SEED-036-remove-local-proof.md#remove-local-proof) — SEED-036#remove-local-proof ([plan](slice-plans/023-remove-local-proof/PLAN.md))
 - [Report C# methods after a nested class under the outer class](seeds/SEED-037-csharp-methods-after-nested-class.md#csharp-methods-after-nested-class) — SEED-037#csharp-methods-after-nested-class
 
 ## Backlog list

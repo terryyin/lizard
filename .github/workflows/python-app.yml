@@ -116,8 +116,6 @@ jobs:
         npm --prefix website/frontend exec -- playwright install --with-deps chromium
     - name: Build
       run: npm --prefix website/frontend run build
-    - name: Cucumber proof recorder tests
-      run: npm --prefix website/frontend run test:proof
     - name: Browser tests
       id: cucumber
       run: npm --prefix website/frontend run test:e2e -- --format json:reports/cucumber.json
