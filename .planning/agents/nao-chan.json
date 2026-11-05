@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "agent": "Nao-chan",
+  "email": "nao-chan@example.org",
+  "activity": "preparation",
+  "identity": "SEED-038#process-pr-556",
+  "host": "cursor",
+  "model": "grok-4.7"
+}
