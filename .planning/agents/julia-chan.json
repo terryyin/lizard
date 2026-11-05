@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "agent": "Julia-chan",
-  "email": "julia-chan@example.org",
-  "activity": "preparation",
-  "identity": "SEED-036#remove-local-proof",
-  "host": "cursor",
-  "model": "auto"
-}
