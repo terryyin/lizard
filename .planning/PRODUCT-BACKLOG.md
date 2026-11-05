@@ -12,3 +12,4 @@ Maintenance, bug fixing, and PR reviews.
 
 ## Backlog list
 
+- [Process PR #556 — Swift computed properties and closure initializers](seeds/SEED-038-process-pr-556.md#process-pr-556) — SEED-038#process-pr-556
