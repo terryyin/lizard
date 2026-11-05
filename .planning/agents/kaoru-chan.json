@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "agent": "Kaoru-chan",
+  "email": "kaoru-chan@example.org",
+  "identity": "SEED-037#csharp-methods-after-nested-class",
+  "mode": "story-branch",
+  "branch": "cursor/csharp-methods-after-nested-class",
+  "host": "cursor",
+  "model": "Grok 4.7"
+}
