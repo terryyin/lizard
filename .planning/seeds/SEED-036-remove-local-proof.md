@@ -43,7 +43,7 @@ continue to serve their existing purposes.
 - Preserve the analyzer and website behavior, ordinary local test execution,
   diagnostics and failure semantics. Preserve GitHub Actions' native test
   reports, proof fragments, summary artifacts and the dashboard contract in
-  [Publish Lizard CI proof for Intent](SEED-035-publish-lizard-ci-proof.md#publish-lizard-ci-proof).
+  [Publish Lizard CI proof for Intent](https://github.com/terryyin/lizard/blob/2f30a766eaa5a53fc7ef825e36fcb67d2eea7cff/.planning/seeds/SEED-035-publish-lizard-ci-proof.md#publish-lizard-ci-proof).
   Shared code remains only where a surviving test or CI responsibility needs
   it; delete local-proof collection and persistence entry points.
 - Receive shared guidance removal through Open Dough's released update rather
