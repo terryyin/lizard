@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "agent": "Tsubomi-chan",
+  "email": "tsubomi-chan@example.org",
+  "activity": "preparation",
+  "identity": "SEED-035#publish-lizard-ci-proof",
+  "host": "claude",
+  "model": "opus"
+}
