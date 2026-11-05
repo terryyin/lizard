@@ -93,17 +93,18 @@ website entry, so the website location shows no CI proof for these runs.
 
 ### 2. Website scenario counts, or their absence, reach Intent
 Type: Behavior
-Status: planned
+Status: done
 Proof: one real run with `web` run → summary has
 `website/frontend/features` part 1 of 1 with 16-scenario-sized counts; one
 real run with `web` skipped (for example a push touching only `.planning/`)
 → that part shows missing; the tab shows both states; full local suite and
 `make` pass.
 
-Accepted proof in progress (2026-11-05):
-Local gates passed. Web-covered run 42017933530 at `15dc13b` summary has
-`test` 3021/7 and `website/frontend/features` 16 passed part 1/1; Intent tab
-shows both. Web-skipped run still owed (this plan-only push).
+Accepted proof (2026-11-05):
+Local gates passed. Web-covered run 42017933530 at `15dc13b`: test 3021/7 and
+website/frontend/features 16 passed; Intent tab shows both. Web-skipped run
+42018498291 at `78e05c9`: web skipped; website part 1 of 1 missing on summary
+and Intent tab (not zero).
 
 Behavior: a push whose changes reach the website boundary → the `web` job
 writes the website fragment from its Cucumber JSON report → the tab shows
@@ -198,4 +199,4 @@ Commitment: X5
 ### G1. Website entry absent from collector expect (interim)
 Reported: slice 1 — "the summary declares no website entry, so the website location shows no CI proof for these runs."
 Story clause: "sees, beside the run's verdict, how many analyzer tests (`test`) and website scenarios (`website/frontend/features`) that run passed, failed or did something else, and sees plainly when the website part was not run."
-Disposition: interim until slices 2
+Disposition: proved by slice 2: Intent CI status runs 42017933530 (both present) and 42018498291 (website part missing)
