@@ -45,18 +45,18 @@ run is the promised boundary; local replays settle the conversions only.
 
 ### 1. The analyzer suite's counts reach Intent
 Type: Behavior
-Status: planned
+Status: done
 Proof: real `python-app.yml` run on the story branch publishes
 `ci-proof-summary-attempt-<n>` with `test` part 1 of 1 and suite-sized
 counts; Intent's CI status tab shows them for that run; full local suite
 and `make` pass.
 
-Accepted local proof (2026-11-05, pending published-revision observation):
-`nix develop -c python -m pytest test/test_web_changes.py test/testPythonVersionClaims.py`
-14 passed; full suite 3021 passed / 7 skipped; `nix develop -c make` exit 0;
-local junit→fragment→summarize `--expect test=1` → test part 1/1 present with
-3021 passed / 7 other. Real-run artifact + Intent tab still owed (progress
-publication).
+Accepted proof (2026-11-05):
+Local: focused workflow tests 14 passed; full suite 3021/7; `make` exit 0;
+junit→fragment→summarize suite-sized. Real run 42016250359 on
+`cursor/publish-lizard-ci-proof-for-intent` at `c7643ce` published
+`ci-proof-summary-attempt-1` with test 3021 passed / 7 other, part 1/1;
+Intent CI status tab (story selected) shows the same counts.
 
 Behavior: a push to the story branch → the `ubuntu-24.04` / `3.13` `build`
 leg writes the `test` fragment from its pytest JUnit report, the collector

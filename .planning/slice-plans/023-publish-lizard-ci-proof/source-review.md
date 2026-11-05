@@ -13,7 +13,7 @@ read no other project files.
 
 | Id | Source commitment | Slice | Observation or obligation |
 | --- | --- | --- | --- |
-| 1 | A Lizard developer looking at a Python application run in Intent's CI status tab sees, beside the run's verdict, how many analyzer tests (`test`) that run passed, failed, or did something else. | slice 1 |  |
+| 1 | A Lizard developer looking at a Python application run in Intent's CI status tab sees, beside the run's verdict, how many analyzer tests (`test`) that run passed, failed, or did something else. | slice 1 | observed: Intent CI status tab (story branch cursor/publish-lizard-ci-proof-for-intent): test: 3021 passed and 7 other checks; 1 of 1 part present. Run 42016250359 at c7643ce. |
 | 2 | That same view shows how many website scenarios (`website/frontend/features`) that run passed, failed, or did something else. | slice 2 |  |
 | 3 | That same view shows plainly when the website part was not run. | slice 2 |  |
 | 4 | This replaces reading job logs to learn what a run proved, and gives the dashboard's CI proof its first live Lizard use. | slice 2 |  |
@@ -32,7 +32,7 @@ read no other project files.
 | 10.4 | The separate `test:proof` Node tests are not an Intent location and are not counted. | slice 2 |  |
 | 11 | One collector job in `python-app.yml` runs after `build` and `web` however they ended, including when `web` was skipped. | slice 2 |  |
 | 12 | That collector expects both entries with one part each. | slice 2 |  |
-| 13 | That collector publishes `ci-proof-summary-attempt-<n>`. | slice 1 |  |
+| 13 | That collector publishes `ci-proof-summary-attempt-<n>`. | slice 1 | observed: gh artifact ci-proof-summary-attempt-1 on run 42016250359; Intent Proof heading shows Attempt 1 of that run |
 | 14 | The CI scripts the recipe names (the four collector modules and the report conversions) live in this repository, and the workflow runs those copies. | slice 2 |  |
 | 15 | Fragments are written after failing tests too, so failures appear in the counts as well as the verdict. | slice 1 | observed: fragment/keep if !cancelled() && steps.pytest.outcome != skipped; local failed→failed in junit-outcomes.py |
 | 16 | Only the representative leg reports `test`. | slice 1 | observed: only representative leg writes fragment artifact |
