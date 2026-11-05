@@ -200,3 +200,14 @@ Commitment: X5
 Reported: slice 1 — "the summary declares no website entry, so the website location shows no CI proof for these runs."
 Story clause: "sees, beside the run's verdict, how many analyzer tests (`test`) and website scenarios (`website/frontend/features`) that run passed, failed or did something else, and sees plainly when the website part was not run."
 Disposition: proved by slice 2: Intent CI status runs 42017933530 (both present) and 42018498291 (website part missing)
+
+
+## Execution complete
+
+Product advice:
+- Keep `scripts/ci-proof/` and the `python-app.yml` fragment/collector contract
+  stable through SEED-036#remove-local-proof; that story already preserves CI proof.
+- After `dough-update` changes collector modules, refresh the vendored
+  `scripts/ci-proof/` copies (currently identical to Open Dough 0.3.86).
+- No new backlog item; near-future direction needs no reorder.
+- Intent CI status for story-branch runs follows the selected story.

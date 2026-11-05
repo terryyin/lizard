@@ -394,7 +394,26 @@ acceptance.
   - Observed effect: the coordinator again launched the source review after the slice 1 delegation. The added ids reached the implementer as a mid-flight message, not a return round, so no extra test round was needed. One allocation (E6.2, `sum` CCN 2) contradicted the plan's interim and came back as an implementer gap.
   - Inference: this is the third occurrence in a row. Running the source review and its allocation before first delegation remains the cheaper ordering; checking allocations against named interims would have prevented the E6.2 mismatch.
 
+## DD-400 — Hosted CI-proof slices published with `progress: true` until observation
+
+For a Behavior slice whose own proof needs a hosted CI receipt of its
+publication, use fresh-increment `progress: true` so the slice stays unfinished
+while the published revision is observed, then mark it done after the receipt.
+Related to ODF-275's missing unfinished publish path; this records the
+documented progress route working for story-branch hosted proof without a
+manual commit fallback.
+
+### Occurrences
+- Execution: SEED-035#publish-lizard-ci-proof
+  - Timestamp: 2026-11-05T18:06:32+07:00
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.86
+  - Evidence: coordinator checked `progress: true` before slice 1 delivery; progress publish `c7643ce7e` (analyzer fragments); observation on run 42016250359 then done at `7a4aff612`; slice 2 progress publish `15dc13b8d`, web-covered run 42017933530 and web-skipped run 42018498291, done observations `78e05c9f9`/`cedd44fba`; wrap-up guidance at `.agents/skills/dough-execute-plan/references/wrap-up.md` / `fresh-increment.md`.
+  - Observed effect: both hosted-proof slices published without premature `done`; real-run tab and artifact receipts were accepted afterward; no manual agent-commit workaround.
+  - Inference: practice confirmation that `progress: true` is the guarded unfinished publish for hosted CI-proof slices in current guidance (addresses the ODF-275 gap for this path).
+
 ## Retention
 
-- Highest allocated local number: 399
+- Highest allocated local number: 400
 - Shared-feedback compaction recovery (2026-11-03): `4195708bad2061ebc1c829ebdff7868605b173bb:DearDough.md`; its rows are retained at the linked Open Dough finding owners.
