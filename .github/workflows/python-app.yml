@@ -119,16 +119,33 @@ jobs:
     - name: Cucumber proof recorder tests
       run: npm --prefix website/frontend run test:proof
     - name: Browser tests
-      run: npm --prefix website/frontend run test:e2e
+      id: cucumber
+      run: npm --prefix website/frontend run test:e2e -- --format json:reports/cucumber.json
     - name: Keep browser test reports
       if: failure()
       uses: actions/upload-artifact@v4
       with:
         name: browser-reports
         path: website/frontend/reports/
+    - name: Write the CI proof fragments
+      if: ${{ !cancelled() && steps.cucumber.outcome != 'skipped' }}
+      run: |
+        node scripts/ci-proof/cucumber-outcomes.mjs website/frontend/reports/cucumber.json > "${RUNNER_TEMP}/ci-proof-outcomes.tsv"
+        node scripts/ci-proof/ci-proof-summary.mjs fragment \
+          --outcomes "${RUNNER_TEMP}/ci-proof-outcomes.tsv" --entry website/frontend/features \
+          --part 1 --of 1 --attempt "${GITHUB_RUN_ATTEMPT}" \
+          --revision "${CI_PROOF_REVISION}" --out "${RUNNER_TEMP}/ci-proof"
+    - name: Keep the CI proof fragments
+      if: ${{ !cancelled() && steps.cucumber.outcome != 'skipped' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: ci-proof-fragments-web-1-attempt-${{ github.run_attempt }}
+        path: ${{ runner.temp }}/ci-proof/
+        if-no-files-found: ignore
+        retention-days: 1
 
   ci-proof:
-    needs: [build]
+    needs: [build, web]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     steps:
@@ -145,7 +162,7 @@ jobs:
           mkdir -p -- "${RUNNER_TEMP}/ci-proof-fragments"
           node scripts/ci-proof/ci-proof-summary.mjs summarize \
             --fragments "${RUNNER_TEMP}/ci-proof-fragments" \
-            --expect test=1 \
+            --expect test=1 --expect website/frontend/features=1 \
             --repository "${GITHUB_REPOSITORY}" --run-id "${GITHUB_RUN_ID}" \
             --attempt "${GITHUB_RUN_ATTEMPT}" --revision "${CI_PROOF_REVISION}" \
             --out "${RUNNER_TEMP}/ci-proof-summary.json"

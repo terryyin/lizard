@@ -100,6 +100,13 @@ real run with `web` skipped (for example a push touching only `.planning/`)
 → that part shows missing; the tab shows both states; full local suite and
 `make` pass.
 
+Accepted local proof (2026-11-05, pending published-revision observation):
+`cucumber-outcomes.mjs` + workflow web fragment/keep; collector
+`needs: [build, web]` with both `--expect`s; focused workflow tests 14
+passed; full suite/`make` pass; local summarize shows website missing without
+web fragment and present with both. Real runs (web covered + skipped) and
+Intent tab still owed.
+
 Behavior: a push whose changes reach the website boundary → the `web` job
 writes the website fragment from its Cucumber JSON report → the tab shows
 the scenario counts; a push outside it → the collector still runs and the
