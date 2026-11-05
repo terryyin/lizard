@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-036#remove-local-proof",
+  "title": "Remove local proof from Lizard",
+  "completedAt": "2026-11-05T23:34:09.407Z",
+  "developer": "Terry Yin",
+  "agent": "Tsukasa-chan",
+  "host": "cursor",
+  "model": "auto"
+}

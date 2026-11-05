@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-036_remove-local-proof.json",
+      "identity": "SEED-036#remove-local-proof",
+      "completedAt": "2026-11-05T23:34:09.407Z",
+      "blob": "07171869c53c326928eb54b1ae56965d53b45e9e"
+    },
+    {
       "fileName": "SEED-035_publish-lizard-ci-proof.json",
       "identity": "SEED-035#publish-lizard-ci-proof",
       "completedAt": "2026-11-05T11:34:13.814Z",
