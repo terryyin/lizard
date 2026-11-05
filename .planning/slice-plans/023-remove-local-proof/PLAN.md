@@ -2,6 +2,7 @@
 
 **Identity:** SEED-036#remove-local-proof
 **Source:** [canonical story](../../seeds/SEED-036-remove-local-proof.md#remove-local-proof)
+**Source review:** [source-review.md](source-review.md)
 
 ## Goal and scope
 
@@ -65,13 +66,21 @@ Observed in this preparation workspace at product revision
 
 ### 1. Local Cucumber proof collection and persistence are gone
 Type: Behavior
-Status: planned
+Status: done
 Proof: After deletion, `test:e2e:dry` succeeds with no proof plugin; Intent Gherkin
 location has no `proof`/`proofGeneration`; `test:proof` script, dedicated tests,
 exclusive deps, and the workflow's Cucumber proof-recorder step are gone; CI
 proof fragment/summarize expectations for `test` and `website/frontend/features`
 remain; whole-product search finds no local-proof collection/persistence entry
 points or orphaned exclusive support.
+
+Accepted proof (slice 1):
+- `npm --prefix website/frontend run test:e2e:dry` → exit 0; 16 scenarios / 134 steps skipped; `cucumber.mjs` has no `plugin` field.
+- `.planning/open-dough.json` keeps Intent locations `test` and `website/frontend/features` without `proof`/`proofGeneration`.
+- `.github/workflows/python-app.yml` lacks the Cucumber proof-recorder / `test:proof` step; fragment `--entry` and summarize `--expect test=1 --expect website/frontend/features=1` remain; `scripts/ci-proof/` has no local recorder refs.
+- Product-tree search: no `proof-plugin`, `proof-snapshot`, `RECORD_CUCUMBER_PROOF`, `test:proof`, `proper-lockfile`, `proofGeneration`, or `website/frontend/proof` entry points (managed Open Dough guidance and this story/plan excluded by scope).
+- `nix develop -c python -m pytest test/test_analyzer.py` → 22 passed.
+- Refactor disposition: none — already clean (`## REFACTOR COMPLETE`).
 
 Behavior: Given the repository still carries `website/frontend/proof`, the
 recorder modules, `RECORD_CUCUMBER_PROOF` wiring, Intent local-proof fields,
@@ -87,3 +96,20 @@ Slice-plan refinement: not needed — one cohesive Behavior, single proof loop,
 no cumulative special-case design, and premises settled by observation.
 
 Remaining slice-specific concerns: none identified.
+
+## Story obligations
+
+### G1. Deferred richer CI proof
+Reported: slice 1 — "Deferred: richer CI proof than today's contract."
+Story clause: "Deferred promises: richer CI proof than today's contract"
+Disposition: excluded "Deferred promises: richer CI proof than today's contract"
+
+### G2. Deferred replacement local archive
+Reported: slice 1 — "Deferred: any replacement local verification archive."
+Story clause: "any replacement local verification archive"
+Disposition: excluded "any replacement local verification archive"
+
+### G3. Deferred Intent identity changes
+Reported: slice 1 — "Deferred: changing Intent entry identities beyond dropping local-proof fields."
+Story clause: "changing Intent entry identities beyond dropping local-proof fields"
+Disposition: excluded "changing Intent entry identities beyond dropping local-proof fields"
