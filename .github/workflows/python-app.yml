@@ -15,6 +15,9 @@ on:
 permissions:
   contents: read
 
+env:
+  CI_PROOF_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
+
 jobs:
   build:
     strategy:
@@ -48,8 +51,32 @@ jobs:
         python -m pip install .
 
     - name: Run tests
+      id: pytest
       run: |
-        python -m pytest
+        python -m pytest -o junit_family=xunit1 --junitxml=pytest-junit.xml
+
+    # Representative leg: ubuntu-24.04 / 3.13 writes the analyzer suite fragment.
+    - name: Set up Node for CI proof
+      if: ${{ !cancelled() && steps.pytest.outcome != 'skipped' && matrix.os == 'ubuntu-24.04' && matrix.python-version == '3.13' }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: 24
+    - name: Write the CI proof fragments
+      if: ${{ !cancelled() && steps.pytest.outcome != 'skipped' && matrix.os == 'ubuntu-24.04' && matrix.python-version == '3.13' }}
+      run: |
+        python scripts/ci-proof/junit-outcomes.py pytest-junit.xml > "${RUNNER_TEMP}/ci-proof-outcomes.tsv"
+        node scripts/ci-proof/ci-proof-summary.mjs fragment \
+          --outcomes "${RUNNER_TEMP}/ci-proof-outcomes.tsv" --entry test \
+          --part 1 --of 1 --attempt "${GITHUB_RUN_ATTEMPT}" \
+          --revision "${CI_PROOF_REVISION}" --out "${RUNNER_TEMP}/ci-proof"
+    - name: Keep the CI proof fragments
+      if: ${{ !cancelled() && steps.pytest.outcome != 'skipped' && matrix.os == 'ubuntu-24.04' && matrix.python-version == '3.13' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: ci-proof-fragments-build-1-attempt-${{ github.run_attempt }}
+        path: ${{ runner.temp }}/ci-proof/
+        if-no-files-found: ignore
+        retention-days: 1
 
   changes:
     runs-on: ubuntu-24.04
@@ -99,3 +126,32 @@ jobs:
       with:
         name: browser-reports
         path: website/frontend/reports/
+
+  ci-proof:
+    needs: [build]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: ci-proof-fragments-*-attempt-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/ci-proof-fragments
+      - name: Summarize CI proof
+        run: |
+          mkdir -p -- "${RUNNER_TEMP}/ci-proof-fragments"
+          node scripts/ci-proof/ci-proof-summary.mjs summarize \
+            --fragments "${RUNNER_TEMP}/ci-proof-fragments" \
+            --expect test=1 \
+            --repository "${GITHUB_REPOSITORY}" --run-id "${GITHUB_RUN_ID}" \
+            --attempt "${GITHUB_RUN_ATTEMPT}" --revision "${CI_PROOF_REVISION}" \
+            --out "${RUNNER_TEMP}/ci-proof-summary.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ci-proof-summary-attempt-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/ci-proof-summary.json
+          if-no-files-found: error
+          retention-days: 30

@@ -2,6 +2,7 @@
 
 **Identity:** SEED-035#publish-lizard-ci-proof
 **Source:** [canonical story](../../seeds/SEED-035-publish-lizard-ci-proof.md#publish-lizard-ci-proof)
+**Source review:** [source-review.md](source-review.md)
 
 ## Goal and scope
 
@@ -49,6 +50,13 @@ Proof: real `python-app.yml` run on the story branch publishes
 `ci-proof-summary-attempt-<n>` with `test` part 1 of 1 and suite-sized
 counts; Intent's CI status tab shows them for that run; full local suite
 and `make` pass.
+
+Accepted local proof (2026-11-05, pending published-revision observation):
+`nix develop -c python -m pytest test/test_web_changes.py test/testPythonVersionClaims.py`
+14 passed; full suite 3021 passed / 7 skipped; `nix develop -c make` exit 0;
+local junit→fragment→summarize `--expect test=1` → test part 1/1 present with
+3021 passed / 7 other. Real-run artifact + Intent tab still owed (progress
+publication).
 
 Behavior: a push to the story branch → the `ubuntu-24.04` / `3.13` `build`
 leg writes the `test` fragment from its pytest JUnit report, the collector
@@ -147,3 +155,42 @@ concerns.
 Remaining slice-specific concerns: none identified in this review. The
 real-run and dashboard rendering premise is bounded by slice 1 as the
 early probe.
+
+
+## Story obligations
+
+### X1-excl. Non-representative leg counts excluded
+Reported: slice 1 — "source review E4/X1 — failure only on another leg shows in verdict, not necessarily in test counts"
+Story clause: "Counts from non-representative legs. A failure that happens only on another operating system or Python version shows in the run's verdict, not in the `test` counts."
+Disposition: excluded "Counts from non-representative legs. A failure that happens only on another operating system or Python version shows in the run's verdict, not in the `test` counts."
+Commitment: E4, X1
+
+
+### X2-excl. Committed pytest proof excluded
+Reported: slice 1 — "source review X2 — committed pytest proof for test not undertaken"
+Story clause: "Committed pytest proof for the `test` location (a `proof` directory and proof generation); this story publishes CI observations only."
+Disposition: excluded "Committed pytest proof for the `test` location (a `proof` directory and proof generation); this story publishes CI observations only."
+Commitment: X2
+
+### X3-excl. Matrix and web condition unchanged
+Reported: slice 1 — "source review X3 — matrix/fail-fast/web detection/condition not changed"
+Story clause: "Changing the matrix, its `fail-fast` behavior, the website change detection, or the `web` job's condition."
+Disposition: excluded "Changing the matrix, its `fail-fast` behavior, the website change detection, or the `web` job's condition."
+Commitment: X3
+
+### X4-excl. Retained Cucumber proof unchanged
+Reported: slice 1 — "source review X4 — website/frontend/proof stays as it is"
+Story clause: "Retained Cucumber proof under `website/frontend/proof`, which stays as it is."
+Disposition: excluded "Retained Cucumber proof under `website/frontend/proof`, which stays as it is."
+Commitment: X4
+
+### X5-excl. CI adapter path out of scope
+Reported: slice 1 — "source review X5 — adapter-attempt proof does not apply"
+Story clause: "Lizard's CI is GitHub Actions with no `ciAdapter`. Open Dough 0.3.86 also lets a project read through a CI adapter show proof for an adapter's attempt; that path does not apply here and changes nothing in this story's outcome."
+Disposition: excluded "that path does not apply here and changes nothing in this story's outcome."
+Commitment: X5
+
+### G1. Website entry absent from collector expect (interim)
+Reported: slice 1 — "the summary declares no website entry, so the website location shows no CI proof for these runs."
+Story clause: "sees, beside the run's verdict, how many analyzer tests (`test`) and website scenarios (`website/frontend/features`) that run passed, failed or did something else, and sees plainly when the website part was not run."
+Disposition: interim until slices 2
