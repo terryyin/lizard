@@ -1,18 +1,21 @@
-// Collects one run attempt's CI proof fragments into its summary. The
-// declaration is the expectation: fragments present never add a part. A
-// fragment from another attempt or revision, or for an undeclared part, is
-// excluded; a declared part with no fragment is missing, and one with more
-// than one is ambiguous. Neither is counted. Node built-ins only, like the
-// rest of the collector (ci-proof-summary.mjs).
+// Collects one attempt's CI proof fragments into its summary: a GitHub
+// Actions run attempt's or a CI adapter's attempt's (ci-proof-contract.mjs).
+// The declaration is the expectation: fragments present never add a part. A
+// fragment from another attempt, of either identity, or another revision, or
+// for an undeclared part, is excluded; a declared part with no fragment is
+// missing, and one with more than one is ambiguous. Neither is counted. Node
+// built-ins only, like the rest of the collector (ci-proof-summary.mjs).
 import {
   COUNT_FIELDS,
   SUMMARY_SCHEMA_VERSION,
+  attemptOf,
   fragmentProblems,
+  summaryAttempt,
   zeroCounts,
 } from "./ci-proof-contract.mjs";
 
-// Builds the run attempt's summary from the fragments read. Returns the
-// summary and a note for every fragment excluded from it.
+// Builds the summary of RUN, the attempt collected, from the fragments read.
+// Returns the summary and a note for every fragment excluded from it.
 export function summarize({ fragments, expect, run }) {
   const notes = [];
   const byPart = new Map(expect.map(({ entry }) => [entry, new Map()]));
@@ -21,8 +24,8 @@ export function summarize({ fragments, expect, run }) {
     const problems = fragmentProblems(value);
     const exclude = (reason) => notes.push(`excluded ${source}: ${reason}`);
     if (problems.length > 0) exclude(problems.join("; "));
-    else if (value.attempt !== run.attempt) {
-      exclude(`attempt ${value.attempt}, not ${run.attempt}`);
+    else if (attemptOf(value) !== attemptOf(run)) {
+      exclude(`${attemptOf(value)}, not ${attemptOf(run)}`);
     } else if (value.revision !== run.revision) {
       exclude(`revision ${value.revision}, not ${run.revision}`);
     } else if (!declared.has(value.entry)) {
@@ -64,8 +67,7 @@ export function summarize({ fragments, expect, run }) {
     summary: {
       schemaVersion: SUMMARY_SCHEMA_VERSION,
       repository: run.repository,
-      runId: run.runId,
-      runAttempt: run.attempt,
+      ...summaryAttempt(run),
       revision: run.revision,
       entries,
     },

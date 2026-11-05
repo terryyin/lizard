@@ -74,6 +74,15 @@ export class GitHubRequests {
     this.#bounds = { boundMs, maxBufferBytes };
   }
 
+  // How a request names the API host and login this process asks under now,
+  // without a secret; undefined while their endpoint cannot be established.
+  // The same name keys outstanding calls above, so a caller that keys its
+  // own sharing by scope uses one source.
+  /** @returns {Promise<string | undefined>} */
+  scope() {
+    return this.#owner.scope();
+  }
+
   // One `gh api` answer, settled whatever its exit: `gh` prints GitHub's
   // status line on stdout even when it exits non-zero, so a caller can decide
   // from that status before treating the exit as a failure. `signal` ends
@@ -87,16 +96,9 @@ export class GitHubRequests {
    * @returns {Promise<GhAnswer>}
    */
   // How this process names the API host and login it asks under now, without
-  // a secret; undefined while their endpoint cannot be established. Revision
-  // observations key by this so separately logged-in processes share nothing.
-  /** @returns {Promise<string | undefined>} */
-  scope() {
-    return this.#owner.scope();
-  }
-
   async request(args, signal) {
     return this.#outstanding.waitFor(
-      JSON.stringify([await this.#owner.scope(), args]),
+      JSON.stringify([await this.scope(), args]),
       signal,
       (shared) => this.#asked(args, shared),
     );

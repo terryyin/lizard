@@ -1,7 +1,7 @@
 // The CI proof contract: the versioned fragment and summary schemas, their
-// artifact names, and their validation. Readers of a fragment or summary
-// validate it with fragmentProblems or summaryProblems. Node built-ins only,
-// like the rest of the collector (ci-proof-summary.mjs).
+// attempt identity, their artifact names, and their validation. Readers of a
+// fragment or summary validate it with fragmentProblems or summaryProblems.
+// Node built-ins only, like the rest of the collector (ci-proof-summary.mjs).
 
 export const FRAGMENT_SCHEMA_VERSION = 1;
 export const SUMMARY_SCHEMA_VERSION = 1;
@@ -18,18 +18,44 @@ export function entrySlug(entry) {
     .toLowerCase();
 }
 
+// The artifact name of a GitHub Actions run attempt's summary.
 export function summaryArtifactName(attempt) {
   return `ci-proof-summary-attempt-${attempt}`;
 }
 
-// One entry's fragment for one part of one run attempt's revision.
+// An attempt is named by exactly one of two identities: a GitHub Actions run
+// attempt, by the positive integer `attempt` (with `runId` in a run or
+// summary), or a CI adapter's attempt, by its text `attemptId`. A fragment
+// names the attempt's `attempt` or `attemptId`; a summary its `runId` and
+// `runAttempt` or its `attemptId`.
+const isAdapterAttempt = (value) => value.attemptId !== undefined;
+
+// The attempt that VALUE, a fragment or run, names, as text.
+export const attemptOf = (value) =>
+  isAdapterAttempt(value)
+    ? `attemptId ${value.attemptId}`
+    : `attempt ${value.attempt}`;
+
+// A fragment's attempt fields for IDENTITY, a run or fragment identity.
+const fragmentAttempt = (identity) =>
+  isAdapterAttempt(identity)
+    ? { attemptId: identity.attemptId }
+    : { attempt: identity.attempt };
+
+// A summary's attempt fields for RUN.
+export const summaryAttempt = (run) =>
+  isAdapterAttempt(run)
+    ? { attemptId: run.attemptId }
+    : { runId: run.runId, runAttempt: run.attempt };
+
+// One entry's fragment for one part of one attempt's revision.
 export function fragment(identity, entry, unit, counts) {
   return {
     schemaVersion: FRAGMENT_SCHEMA_VERSION,
     entry,
     part: identity.part,
     of: identity.of,
-    attempt: identity.attempt,
+    ...fragmentAttempt(identity),
     revision: identity.revision,
     unit,
     ...counts,
@@ -41,6 +67,24 @@ const isObject = (value) =>
 const isCount = (value) => Number.isSafeInteger(value) && value >= 0;
 export const isPositive = (value) => Number.isSafeInteger(value) && value >= 1;
 const isText = (value) => typeof value === "string" && value !== "";
+
+// Why VALUE does not name exactly one attempt identity, where GITHUB are the
+// fields of its GitHub Actions identity; empty when it names one.
+export function attemptProblems(value, github) {
+  const named = github.filter((field) => value[field] !== undefined);
+  if (isAdapterAttempt(value)) {
+    if (named.length > 0) {
+      return [`names both ${named.join(" and ")} and attemptId`];
+    }
+    return isText(value.attemptId) ? [] : ["attemptId is not a string"];
+  }
+  if (named.length === 0) {
+    return [`names neither ${github.join(" and ")} nor attemptId`];
+  }
+  return github
+    .filter((field) => !isPositive(value[field]))
+    .map((field) => `${field} is not a positive integer`);
+}
 
 function countProblems(value, where) {
   return COUNT_FIELDS.filter((field) => !isCount(value[field])).map(
@@ -58,11 +102,12 @@ export function fragmentProblems(value) {
   for (const field of ["entry", "revision", "unit"]) {
     if (!isText(value[field])) problems.push(`${field} is not a string`);
   }
-  for (const field of ["part", "of", "attempt"]) {
+  for (const field of ["part", "of"]) {
     if (!isPositive(value[field])) {
       problems.push(`${field} is not a positive integer`);
     }
   }
+  problems.push(...attemptProblems(value, ["attempt"]));
   if (isPositive(value.part) && isPositive(value.of) && value.part > value.of) {
     problems.push("part is greater than of");
   }
@@ -110,11 +155,7 @@ export function summaryProblems(value) {
   for (const field of ["repository", "revision"]) {
     if (!isText(value[field])) problems.push(`${field} is not a string`);
   }
-  for (const field of ["runId", "runAttempt"]) {
-    if (!isPositive(value[field])) {
-      problems.push(`${field} is not a positive integer`);
-    }
-  }
+  problems.push(...attemptProblems(value, ["runId", "runAttempt"]));
   if (!Array.isArray(value.entries)) {
     return [...problems, "entries is not an array"];
   }

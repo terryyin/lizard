@@ -1,16 +1,22 @@
-import { execFile } from "node:child_process";
 import {
   currentCommandAttempt,
   latestCommandAttempts,
   targetCommandAttempts,
 } from "./ci-command-attempts.mjs";
+import {
+  defaultAdapterTimeoutMs,
+  runAdapter,
+  truncateUtf8,
+} from "./ci-command-run.mjs";
 import { ciAttemptKey } from "./ci-failures.mjs";
 import { createStartupRunFilter } from "./ci-runs.mjs";
 import { isFullGitRevision } from "./ci-revisions.mjs";
 
-const defaultAdapterTimeoutMs = 20_000;
-const adapterResponseBytes = 64 * 1024;
 export const diagnosticExcerptBytes = 16 * 1024;
+const unavailableReasonBytes = 600;
+
+const isObject = (value) =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
 
 // Retained attempts remain evidence for registered revisions, and candidates
 // for applicable ancestors and integrated state, even when the ordinary
@@ -158,33 +164,36 @@ function createCommandFailureAcquisition({
   };
 }
 
-function runAdapter(command, request, { signal, cwd, timeoutMs }) {
-  return new Promise((resolve, reject) => {
-    const child = execFile(
-      command[0],
-      command.slice(1),
-      {
-        cwd,
-        signal,
-        timeout: timeoutMs,
-        maxBuffer: adapterResponseBytes,
-        encoding: "utf8",
+// The dashboard's proof read of one discovered attempt, asked in `cwd` under
+// the same per-invocation limits as discover and diagnose. The observer never
+// asks it. The adapter answers the attempt's CI proof summary, unchecked here,
+// or why it has none; anything else is refused.
+export async function readCommandProof(
+  command,
+  check,
+  attempt,
+  { signal, cwd, timeoutMs = defaultAdapterTimeoutMs },
+) {
+  const response = await runAdapter(
+    command,
+    {
+      operation: "proof",
+      check,
+      attempt: {
+        runId: attempt.runId,
+        attemptId: attempt.attemptId,
+        sha: attempt.sha,
       },
-      (error, stdout) => {
-        if (error) return reject(error);
-        try {
-          resolve(JSON.parse(stdout));
-        } catch (parseError) {
-          reject(
-            new Error(
-              `CI adapter returned invalid JSON: ${parseError.message}`,
-            ),
-          );
-        }
-      },
-    );
-    child.stdin.end(`${JSON.stringify(request)}\n`);
-  });
+    },
+    { signal, cwd, timeoutMs },
+  );
+  const { summary, unavailable } = isObject(response) ? response : {};
+  if (isObject(summary) && unavailable === undefined) return { summary };
+  if (typeof unavailable === "string" && unavailable && summary === undefined)
+    return {
+      unavailable: truncateUtf8(unavailable, unavailableReasonBytes).text,
+    };
+  throw new Error("CI adapter proof must return summary or unavailable");
 }
 
 function commandFailureEvent(repo, run, response) {
@@ -209,7 +218,7 @@ function boundedDiagnostic(response) {
   if (unavailable !== undefined) {
     if (typeof unavailable !== "string" || !unavailable)
       throw new Error("CI adapter diagnostic unavailability must be a reason");
-    const bounded = truncateUtf8(unavailable, 600);
+    const bounded = truncateUtf8(unavailable, unavailableReasonBytes);
     return {
       unavailable: bounded.text,
       truncated: bounded.truncated,
@@ -227,16 +236,4 @@ function boundedDiagnostic(response) {
     excerpt: bounded.text,
     truncated: Boolean(response.truncated) || bounded.truncated,
   };
-}
-
-function truncateUtf8(value, limit) {
-  let text = "";
-  let bytes = 0;
-  for (const character of value) {
-    const size = Buffer.byteLength(character);
-    if (bytes + size > limit) return { text, truncated: true };
-    text += character;
-    bytes += size;
-  }
-  return { text, truncated: false };
 }

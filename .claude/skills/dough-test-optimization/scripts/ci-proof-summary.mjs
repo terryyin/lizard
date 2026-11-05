@@ -3,9 +3,12 @@
 //
 //   fragment  converts one job's test report into one fragment per proof
 //             entry it ran (ci-proof-fragments.mjs).
-//   summarize collects the current run attempt's fragments against the
+//   summarize collects the current attempt's fragments against the
 //             declared entries and parts (`--expect <entry>=<parts>`) into
-//             the run attempt's summary (ci-proof-collect.mjs).
+//             the attempt's summary (ci-proof-collect.mjs).
+//
+// Both name the attempt: a GitHub Actions run attempt by `--attempt` (and
+// `summarize` by `--run-id`), or a CI adapter's attempt by `--attempt-id`.
 //
 // The versioned schemas are in ci-proof-contract.mjs; this module re-exports
 // the collector's whole API.
@@ -22,6 +25,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
 import { describeSummary, summarize } from "./ci-proof-collect.mjs";
 import {
+  attemptProblems,
   entrySlug,
   fragmentProblems,
   isPositive,
@@ -83,6 +87,25 @@ function options(argv, { required, optional = [], multiple = [] }) {
   return values;
 }
 
+// The attempt that VALUES name for a COMMAND: `--attempt-id`, or the
+// integer options GITHUB maps to their identity fields.
+function attemptIdentity(command, values, github) {
+  const identity = {};
+  for (const [name, field] of Object.entries(github)) {
+    if (values[name] !== undefined) {
+      identity[field] = positive(name, values[name]);
+    }
+  }
+  if (values["attempt-id"] !== undefined) {
+    identity.attemptId = values["attempt-id"];
+  }
+  const problems = attemptProblems(identity, Object.values(github));
+  if (problems.length > 0) {
+    throw new Error(`${command} ${problems.join("; ")}`);
+  }
+  return identity;
+}
+
 function parseExpect(declaration) {
   const equals = declaration.lastIndexOf("=");
   const entry = declaration.slice(0, equals);
@@ -94,15 +117,15 @@ function parseExpect(declaration) {
 
 function runFragment(argv) {
   const values = options(argv, {
-    required: ["entry", "part", "of", "attempt", "revision", "out"],
-    optional: ["playwright-record", "outcomes"],
+    required: ["entry", "part", "of", "revision", "out"],
+    optional: ["attempt", "attempt-id", "playwright-record", "outcomes"],
     multiple: ["entry"],
   });
   const identity = {
     entries: values.entry,
     part: positive("part", values.part),
     of: positive("of", values.of),
-    attempt: positive("attempt", values.attempt),
+    ...attemptIdentity("fragment", values, { attempt: "attempt" }),
     revision: values.revision,
   };
   let fragments;
@@ -131,15 +154,8 @@ function runFragment(argv) {
 
 function runSummarize(argv) {
   const values = options(argv, {
-    required: [
-      "fragments",
-      "expect",
-      "repository",
-      "run-id",
-      "attempt",
-      "revision",
-      "out",
-    ],
+    required: ["fragments", "expect", "repository", "revision", "out"],
+    optional: ["run-id", "attempt", "attempt-id"],
     multiple: ["expect"],
   });
   const { summary, notes } = summarize({
@@ -147,8 +163,10 @@ function runSummarize(argv) {
     expect: values.expect.map(parseExpect),
     run: {
       repository: values.repository,
-      runId: positive("run-id", values["run-id"]),
-      attempt: positive("attempt", values.attempt),
+      ...attemptIdentity("summarize", values, {
+        "run-id": "runId",
+        attempt: "attempt",
+      }),
       revision: values.revision,
     },
   });

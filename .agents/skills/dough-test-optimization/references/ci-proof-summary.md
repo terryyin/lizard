@@ -1,41 +1,50 @@
 # CI proof summary
 
-Intent's **CI status** tab can show, below the verdict of the shown GitHub
-Actions run, which of this project's Intent locations that run proved: passed,
+Intent's **CI status** tab can show, below the verdict of the shown CI
+result, which of this project's Intent locations that result proved: passed,
 failed and other counts per location, and any part of it that did not report.
-It reads one small summary artifact that this project's own workflow
-publishes. Use this reference when the request is to make this project's CI
-publish that summary, or when the tab says the shown run published no CI
+It reads one small summary that this project's own CI writes: a GitHub Actions
+workflow publishes it as an artifact of the shown run, and a project whose CI
+is read through a `ciAdapter` serves it from that adapter for the shown
+attempt. Use this reference when the request is to make this project's CI
+publish that summary, or when the tab says the shown run or attempt has no CI
 proof summary.
 
-This works with GitHub Actions only. It adds observations of ordinary CI runs
-beside any deliberately retained proof (such as
-[Cucumber proof](cucumber-proof.md)), which it leaves untouched. Every change
-is to this project's own workflow and CI scripts.
+It adds observations of ordinary CI results beside any deliberately retained
+proof (such as [Cucumber proof](cucumber-proof.md)), which it leaves
+untouched. Every change is to this project's own workflow, CI scripts or CI
+adapter.
 
 ## Check the project first
 
-Resolve these from this project before editing its workflow:
+Resolve these from this project before editing its CI:
 
 - **Proof entries.** `.planning/open-dough.json` `intent.locations[].path`, in
   that order. Each proved path is one proof entry (written entry below),
   spelled exactly as configured. Without configured Intent locations, stop:
   the tab shows proof only for them, so name the missing setting instead of
   inventing entries.
-- **Judged workflow.** The tab judges `.planning/open-dough.json`
-  `ciWorkflow` (default `ci.yml`) under `.github/workflows/`. The summary must
-  come from a run of that workflow. When the project sets a nonempty
-  `ciAdapter`, or its CI is not GitHub Actions, stop and say the tab cannot show
-  proof for it.
+- **Judged CI.** When `.planning/open-dough.json` sets a nonempty
+  `ciAdapter`, the tab judges the attempts that adapter discovers: follow
+  steps 1 and 2, then [publish through a CI adapter](#publish-through-a-ci-adapter)
+  in place of steps 3 to 6. Otherwise the tab judges `ciWorkflow` (default
+  `ci.yml`) under `.github/workflows/`, and the summary must come from a run
+  of that workflow. When neither applies, because the CI is not GitHub
+  Actions and no `ciAdapter` reads it, stop and say the tab cannot show proof
+  for it until the project reads its CI through a
+  [CI command adapter](../../dough-execute-plan/manuals/custom-ci.md).
 - **Per-test results.** For each entry, the CI job and test command that run
   its tests, and a report file that command can write with one result per test
   or check. An exit status alone proves nothing per test: name that entry as
   not provable by its current command and leave it out, or stop for the
   developer when no entry is provable.
-- **Node.js 20.12 or later** on the producer and collector runners
-  (`actions/setup-node`). The collector uses only Node built-ins.
+- **Node.js 20.12 or later** wherever the collector runs (on GitHub
+  Actions, `actions/setup-node` on the producer and collector runners). The
+  collector uses only Node built-ins.
 
 ## How the summary is made
+
+On GitHub Actions:
 
 1. Each job part that runs an entry's tests converts its report into one
    **fragment** per entry and keeps them as an artifact named for its job,
@@ -48,6 +57,12 @@ Resolve these from this project before editing its workflow:
    shown run's. A declared part without a fragment is shown as missing, a part
    reported twice as ambiguous, and neither is counted.
 
+Through a CI adapter, the attempt's own CI job writes the fragments and the
+summary, named by the adapter's `attemptId`, and the adapter answers the
+tab's `proof` request with that summary. The tab uses it only when its
+repository, `attemptId` and revision equal the shown attempt's, and shows
+missing and ambiguous parts the same way.
+
 ## 1. Copy the collector into this project
 
 Copy these four modules, unchanged and side by side, from this skill's
@@ -59,7 +74,7 @@ scripts in (written `<ci-scripts>` below), and commit them:
 - [ci-proof-fragments.mjs](../scripts/ci-proof-fragments.mjs);
 - [ci-proof-collect.mjs](../scripts/ci-proof-collect.mjs).
 
-The workflow runs these copies, never a path inside the installed skill. When
+The CI job runs these copies, never a path inside the installed skill. When
 a later guidance update changes them, copy them again.
 
 ## 2. Map test commands to entries
@@ -239,3 +254,86 @@ The listing names `ci-proof-summary-attempt-<n>`, and the archive holds only
 run. When it names another revision, check `CI_PROOF_REVISION`; when a part is
 missing, check that part's fragment step and artifact, and the collector's
 exclusion notes.
+
+## Publish through a CI adapter
+
+Follow this in place of steps 3 to 6 when `ciAdapter` reads this project's
+CI. Its inputs are the attempt's identity as this project's adapter discovers
+it, the full revision the attempt checked, and the repository the dashboard
+reads this project as (`OWNER/REPO`, the `check.repo` of the adapter's
+requests). When the CI job cannot learn its own `attemptId` or full revision,
+stop and name that missing input: a summary under another identity is never
+shown.
+
+### Write the fragments and the summary in the attempt's own job
+
+After the tests run, whether they passed or failed, in the same CI job and
+with its own identity:
+
+```sh
+node <ci-scripts>/ci-proof-summary.mjs fragment \
+  --outcomes <report> --entry <entry> [--entry <entry>…] \
+  --part <part> --of <parts> --attempt-id "<attempt id>" \
+  --revision "<full revision>" --out <fragments dir>
+node <ci-scripts>/ci-proof-summary.mjs summarize \
+  --fragments <fragments dir> \
+  --expect <entry>=<parts> [--expect <entry>=<parts>…] \
+  --repository "<OWNER/REPO>" --attempt-id "<attempt id>" \
+  --revision "<full revision>" --out <summary file>
+```
+
+- `<attempt id>` is exactly the `attemptId` this project's adapter returns
+  from `discover` for this attempt, as text: the tab compares the text form,
+  so a discovered `7` is written `7`.
+- `<full revision>` is the full commit SHA the attempt checked, the
+  discovered `sha`.
+- Name the attempt only by `--attempt-id`. `--run-id` and `--attempt` are a
+  GitHub Actions run's identity; naming both identities, or neither, is
+  refused.
+- `--expect` lists the proved entries in `intent.locations` order with their
+  part counts, as in step 4. A part whose tests wrote no report gives no
+  fragment and shows as missing. A fragment of another attempt or revision is
+  excluded with a note on stderr; the per-entry lines go to stdout. When an
+  entry's parts run in separate jobs, gather this attempt's fragments into
+  one directory before `summarize`, as step 4 does.
+- A proof step that fails leaves the job's own result as it is; that attempt
+  then shows no proof.
+
+The summary is labelled by the attempt that wrote it, so its counts are only
+as trustworthy as this project's CI job, the same as the verdict that job
+reports.
+
+### Keep the summary where the adapter can read it
+
+Keep `<summary file>` with the attempt, in a location this project chooses
+that the adapter can read by attempt for as long as developers should see that
+attempt's proof, such as job output this CI service retains and serves per
+attempt. Each attempt keeps its own summary; a rerun is a new attempt with a
+new one. A pruned or expired summary is answered as unavailable.
+
+### Answer the adapter's proof request
+
+Implement the adapter's `proof` operation as its
+[CI proof reads](../../dough-execute-plan/manuals/custom-ci.md#ci-proof-reads)
+contract describes, reading the attempt's retained summary. Before answering
+it, check it: `summaryProblems` from the copied `ci-proof-summary.mjs` is
+empty, and its `attemptId` and `revision` equal the attempt record's.
+Otherwise answer `unavailable` with which differs.
+
+### Check it
+
+From this project's root, ask the configured adapter for a completed
+attempt that `discover` returned:
+
+```sh
+printf '%s\n' '{"operation":"proof","check":{"repo":"<OWNER/REPO>","branch":"<branch>"},"attempt":{"runId":"<run id>","attemptId":"<attempt id>","sha":"<full revision>"}}' \
+  | <ciAdapter command and arguments>
+```
+
+It prints `{"summary": …}` naming that repository, `attemptId` and revision.
+Intent's **CI status** tab then shows Proof for that attempt, named by its
+`attemptId` and short revision. When the tab names another attempt or
+revision, check the `--attempt-id` and `--revision` values the job passed;
+when it says the attempt is ambiguous, give attempts sharing a revision their
+own `attemptId`s; when a part is missing, check that part's report and the
+collector's exclusion notes.
