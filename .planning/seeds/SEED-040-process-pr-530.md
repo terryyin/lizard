@@ -15,6 +15,9 @@ scope: Python inline function discovery and suite boundaries
 ### Process PR #530 — Python inline function discovery
 
 **Identity:** SEED-040#process-pr-530
+```json dough-story-state
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/025-python-inline-suites/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"de8988caa0f509e08fb712b192116a9e3705c12b8b773ec87e32d2792c767261","plan":"1be76cb926f63be6b6164e6ebf112326665a91e1268ca2b8d37d93fc8006e7fb"}}
+```
 
 **Goal.** Python users whose functions use an inline suite, and maintainers
 deciding [PR #530](https://github.com/terryyin/lizard/pull/530), get one
@@ -46,11 +49,18 @@ Required behavior of a merge disposition:
   explicit continuation stays inside the function that opened it.
 - An f-string interpolation does not move the surrounding function's
   indentation boundary.
-- Block-bodied functions and recovery from a malformed declaration keep their
-  existing behavior aside from the inline-suite correction.
-- Discriminating tests, the full suite, style checks, required CI, and
-  performance evidence for this per-token reader change all hold for the
-  revision that is merged.
+- A block-bodied function keeps the metrics it has on the current target.
+- A one-line function whose suite is a docstring, or a docstring plus another
+  statement, still counts the definition line. `def value(): """A value.""";
+  return 1` reports `value` with NLOC 1, as a block function counts its `def`
+  line after excluding a following docstring.
+- Discriminating tests, the full suite, style checks, and the required CI jobs
+  that apply to this diff all hold for the revision that is merged.
+- Performance for this per-token reader change uses the installed paired
+  benchmark. Compare the corrected candidate with the current target on
+  `api`, `api-parameters`, and `cli`. Each workload's paired 95% upper
+  slowdown bound is strictly below 3%. This story records that screening
+  bound for itself. There is no cohort cumulative baseline.
 
 Deferred promises: the multiline f-string `end_line` limitation the PR leaves
 out of this correction; closed PRs #526 and #529, which discussion says were
@@ -69,13 +79,14 @@ weaken an expectation to hide a failed result.
       def close(self) -> None: ...
   ```
 
-- Given a function whose suite is inline and itself contains an inline
-  function, analysis still reports the outer function.
+- Given a block function whose body contains an inline function, analysis
+  reports both the inner function and the outer function.
 - Given a function header or argument list that continues inside brackets or
   with an explicit continuation, the following suite still belongs to that
   function.
-- Given an f-string whose interpolation contains newlines or braces, the
-  function that contains the f-string keeps the boundary it had without that
-  interpolation.
-- Given a block-bodied function and a malformed `def`, analysis still reports
-  the block-bodied function and still recovers.
+- Given an f-string whose interpolation contains a decision, that decision
+  still counts, and the next function keeps its own boundary.
+- Given `def kept(x):` with an `if` body, analysis still reports `kept` with
+  CCN 2.
+- Given `def value(): """A value."""; return 1`, analysis reports `value`
+  with NLOC 1.

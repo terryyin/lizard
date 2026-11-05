@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "agent": "Maria-chan",
-  "email": "maria-chan@example.org",
-  "activity": "preparation",
-  "identity": "SEED-040#process-pr-530",
-  "host": "cursor",
-  "model": "Grok 4.7"
-}
