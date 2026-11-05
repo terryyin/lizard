@@ -1,5 +1,10 @@
 # Change Log
 
+## Unreleased
+
+### Bug Fixes
+- Swift: count each top-level comma of an `if`, `guard` or `while` condition list as a decision, like `&&`, so `guard a, b, c else` and `guard a && b && c else` have the same CCN; commas inside brackets, closures, patterns and generic arguments, and `repeat { } while`, are not counted
+
 ## 1.25.0
 
 ### New Features

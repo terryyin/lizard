@@ -269,3 +269,51 @@ func loop(xs: [Int]) -> Int {
     return t
 }
 """))
+
+
+class TestSwiftConditionLists(unittest.TestCase):
+
+    def ccn(self, body):
+        source = "func f() -> Bool {\n" + body + "\n}\n"
+        return get_swift_function_list(source)[0].cyclomatic_complexity
+
+    def test_condition_list_commas_count_like_and(self):
+        self.assertEqual(
+            self.ccn("guard a && b && c else { return false }\nreturn true"),
+            self.ccn("guard a, b, c else { return false }\nreturn true"))
+        self.assertEqual(4, self.ccn("if a, b, c { return true }"))
+        self.assertEqual(3, self.ccn("while a, b { step() }"))
+
+    def test_optional_bindings_and_patterns_in_condition_lists(self):
+        self.assertEqual(4, self.ccn("""\
+guard let x = first,
+      var y = second,
+      x > y else { return false }"""))
+        self.assertEqual(3, self.ccn("if let a, let b { use(a, b) }"))
+        self.assertEqual(4, self.ccn(
+            "if case let (a, b) = pair, a > 0 { return true }"))
+        self.assertEqual(3, self.ccn(
+            "if #available(iOS 15, *), ok { return true }"))
+
+    def test_nested_commas_are_not_conditions(self):
+        self.assertEqual(2, self.ccn("if f(a, b) { return true }"))
+        self.assertEqual(2, self.ccn("if [a, b].contains(c) { }"))
+        self.assertEqual(2, self.ccn("if (a, b) == (c, d) { }"))
+        self.assertEqual(2, self.ccn("if xs.contains(where: { a, b in a }) { }"))
+        self.assertEqual(2, self.ccn("if let d = x as? [String: Int] { }"))
+        self.assertEqual(3, self.ccn(
+            "if x is Result<Int, Error>, y { return true }"))
+        self.assertEqual(2, self.ccn(
+            "guard let r = x as? Dictionary<String, Int> else { return false }"))
+
+    def test_comparisons_are_not_generic_arguments(self):
+        self.assertEqual(3, self.ccn("if a < b, c > d { return true }"))
+        self.assertEqual(3, self.ccn("if a < 1, b { return true }"))
+
+    def test_commas_outside_condition_lists_are_not_conditions(self):
+        self.assertEqual(3, self.ccn("""\
+repeat { step() } while a
+let x = 1, y = 2
+if ok { use(x, y) }
+var z = [1, 2]"""))
+        self.assertEqual(2, self.ccn("if ok { let p = 1, q = 2 }"))

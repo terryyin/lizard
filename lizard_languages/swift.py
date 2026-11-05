@@ -5,6 +5,7 @@ Language parser for Apple Swift
 from .code_reader import CodeReader, CodeStateMachine
 from .clike import CCppCommentsMixin
 from .golike import GoLikeStates
+from .swift_conditions import SwiftConditionLists
 from .swift_literals import literal_spans
 from .token_pattern import compiled_token_pattern, tokens_in_span
 
@@ -104,8 +105,10 @@ class SwiftReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
     def __init__(self, context):
         super(SwiftReader, self).__init__(context)
         self.parallel_states = [SwiftStates(context)]
+        self._condition_lists = SwiftConditionLists(context)
 
     def process_token(self, token):
+        self._condition_lists(token)
         if token is _POSTFIX_OPTIONAL:
             self.context.add_condition(-1)
 
