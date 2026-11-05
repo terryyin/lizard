@@ -18,8 +18,11 @@ judged workflow (`ciWorkflow` in `.planning/open-dough.json`).
 proof for `test`; changes to the matrix, `fail-fast`, website change
 detection or the `web` job's condition; the retained Cucumber proof.
 
-**Assumptions:** GitHub Actions only (no `ciAdapter`); the developer's `gh`
-reads this repository's Actions.
+**Assumptions:** `.planning/open-dough.json` sets no `ciAdapter`, so the
+recipe (Open Dough 0.3.86) judges `python-app.yml` runs and its GitHub
+Actions steps 3 to 6 apply; its CI-adapter path (attempt-named summaries
+served by an adapter's `proof` read) does not. The developer's `gh` reads
+this repository's Actions.
 
 ## Outside-in proof
 
@@ -58,7 +61,9 @@ Work:
   location byte-for-byte as it is. Order: `test` first, then
   `website/frontend/features` (the `--expect` order follows it).
 - Copy the four collector modules unchanged from
-  `.agents/skills/dough-test-optimization/scripts/` into `scripts/ci-proof/`,
+  `.agents/skills/dough-test-optimization/scripts/` (0.3.86, which names a
+  GitHub Actions attempt by `--attempt` and `--run-id`) into
+  `scripts/ci-proof/`,
   and add the recipe's `junit-outcomes.py` there.
 - `python-app.yml`: workflow-level `env.CI_PROOF_REVISION`; give the `build`
   test step an `id`; run pytest with `-o junit_family=xunit1
@@ -129,7 +134,7 @@ Work:
 | pytest's xunit1 JUnit report names every test's repository-relative file | `python -m pytest -o junit_family=xunit1 --junitxml=F` then `junit-outcomes.py F` | Full suite in `nix develop` (Python 3.9.11, pytest 8.4.2) in this workspace. Proxy for CI's 3.13 + latest pytest: the `file` attribute is pytest's xunit1 writer, the same in pytest 8 on any interpreter | 2026-11-05, `1503696` | 3,025 testcases, 0 without `file`, all under `test/`; 3,018 passed, 7 other |
 | Cucumber can add a JSON report without changing existing output | `npm --prefix website/frontend run test:e2e -- --format json:reports/cucumber.json` | Real local run (build + browser) in `nix develop`, Node 24.21 | 2026-11-05, `1503696` | progress output and `cucumber.html` unchanged; JSON has 16 scenarios with `features/<name>.feature` URIs, all steps `passed` |
 | Cucumber JSON distinguishes failed and other scenarios | the conversion above | Scratch failing and undefined scenarios in this workspace, reverted | 2026-11-05 | step statuses `failed` and `undefined` → `failed` and `other` |
-| The recipe's fragment/summarize produce the promised counts and missing part | `ci-proof-summary.mjs fragment` / `summarize` with this plan's entries | Installed scripts (copied unchanged, so same code) on the two real local reports | 2026-11-05 | `test: 3018 passed, 0 failed, 7 other`; `website/frontend/features: 16 passed`; without the web fragment: `part 1 of 1 missing` |
+| The recipe's fragment/summarize produce the promised counts and missing part | `ci-proof-summary.mjs fragment` / `summarize` with this plan's entries | Installed 0.3.84 scripts on the two real local reports; installed 0.3.86 scripts (the ones slice 1 copies) replayed `fragment --attempt 1` and `summarize --run-id 5 --attempt 1` with both `--expect` entries on a scratch outcomes file | 2026-11-05; 0.3.86 at `563b534` | 0.3.84: `test: 3018 passed, 0 failed, 7 other`; `website/frontend/features: 16 passed`; without the web fragment: `part 1 of 1 missing`. 0.3.86: same flags accepted, summary keeps `runId`/`runAttempt`, passed/failed/other counted and the missing website part reported |
 | The `test` Intent location lists pytest files | dashboard `python` kind with `include` | Read of `dashboard/src/intentLocationSelection.ts` (`python: .py`) in `~/git/open-dough` `d503b1dc8` | 2026-11-05 | Presence only; observed in the tab during slice 1 |
 | The real run publishes, `gh` reads, and the tab renders the summary | GitHub Actions run of `python-app.yml`; `gh api .../artifacts`; dashboard CI status tab | `gh auth status` (signed in as `terryyin`); `gh api .../workflows/python-app.yml/runs` lists runs | 2026-11-05 | Route reachable; publishing and rendering are the slices' own proofs (state-changing push), so slice 1 is the early probe: if the summary does not appear or the tab does not render it, stop and replan before slice 2 |
 

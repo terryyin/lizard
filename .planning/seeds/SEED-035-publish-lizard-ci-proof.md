@@ -15,7 +15,7 @@ scope: story
 
 **Identity:** SEED-035#publish-lizard-ci-proof
 ```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/023-publish-lizard-ci-proof/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"a68915dee9715d90323b1b717bc1bc399207e8f6b44c9daf9b11fc329a49901c","plan":"973755e5a0964173517cebe32238d58327fccdd758fe3282251f90e719956839"}}
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/023-publish-lizard-ci-proof/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"b1179b0649419fdb6c5f7d0c28b404be1edc5c54b8a3c8aca99cee2bd5e67603","plan":"94b94189fcc12620cff23acc5bc25a181e963a6abfeb153d8a75b1a29ae899bf"}}
 ```
 
 **Outcome:** A Lizard developer can see the analyzer and website test
@@ -99,6 +99,10 @@ Boundary assumptions:
 - The installed dashboard reads `ci-proof-summary-attempt-<n>` artifacts
   (its server has a CI proof artifact reader); that it renders Lizard's
   summary is observed only on the real run.
+- Lizard's CI is GitHub Actions with no `ciAdapter`. Open Dough 0.3.86 also
+  lets a project read through a CI adapter show proof for an adapter's
+  attempt; that path does not apply here and changes nothing in this
+  story's outcome.
 
 #### Key examples
 
