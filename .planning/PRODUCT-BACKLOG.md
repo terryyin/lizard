@@ -13,3 +13,4 @@ Maintenance, bug fixing, and PR reviews.
 ## Backlog list
 
 - [Process PR #556 — Swift computed properties and closure initializers](seeds/SEED-038-process-pr-556.md#process-pr-556) — SEED-038#process-pr-556
+- [Process PR #530 — Python inline function discovery](seeds/SEED-040-process-pr-530.md#process-pr-530) — SEED-040#process-pr-530
