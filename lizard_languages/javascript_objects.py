@@ -42,7 +42,10 @@ class JavaScriptObjectsMixin:
             self.last_tokens = token
             return True
         if token in ('get', 'set'):
-            self._end_field_before_modifier()
+            # Only relevant while a semicolon-less field value is open; skip
+            # the helper on the common path (method/getter declarations).
+            if self._in_prop_value:
+                self._end_field_before_modifier()
             self._getter_setter_prefix = token
             return True
         if self._getter_setter_prefix:
