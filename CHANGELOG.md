@@ -1,5 +1,10 @@
 # Change Log
 
+## Unreleased
+
+### Bug Fixes
+- Swift: do not count `case` declarations in an enum body as decisions, so enums no longer raise the CCN of the global scope (`-Eoutside`) or of a function declaring a local enum; `case` in a `switch` still counts
+
 ## 1.25.0
 
 ### New Features

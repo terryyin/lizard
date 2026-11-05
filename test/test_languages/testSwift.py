@@ -269,3 +269,50 @@ func loop(xs: [Int]) -> Int {
     return t
 }
 """))
+
+
+def swift_with_outside(source_code):
+    return FileAnalyzer(get_extensions(["outside"])).analyze_source_code(
+        "a.swift", source_code).function_list
+
+
+class TestSwiftEnumCaseDeclarations(unittest.TestCase):
+
+    def ccn(self, source):
+        return {function.name: function.cyclomatic_complexity
+                for function in swift_with_outside(source)}
+
+    def test_enum_case_declarations_are_not_decisions(self):
+        self.assertEqual({"*global*": 1}, self.ccn("""\
+extension Foo {
+    enum Kind { case a, b
+        case c }
+}
+indirect enum Tree<T>: Equatable where T: Hashable {
+    case leaf(T), node(Tree, Tree)
+}
+"""))
+
+    def test_switch_cases_still_count_beside_an_enum(self):
+        self.assertEqual({"*global*": 3}, self.ccn("""\
+enum Kind { case a; case b }
+switch k { case .a: print(1); case .b: print(2) }
+"""))
+
+    def test_local_enum_and_methods_inside_enum(self):
+        self.assertEqual({"f": 3, "area": 2, "*global*": 1}, self.ccn("""\
+func f(k: Kind) -> Int {
+    enum Local { case x, y; case z }
+    switch k {
+    case .a: return 1
+    case .b: return 2
+    }
+}
+enum Shape {
+    case circle, square
+    func area() -> Double {
+        switch self { case .circle: return 1
+        default: return 0 }
+    }
+}
+"""))

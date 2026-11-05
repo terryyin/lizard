@@ -104,9 +104,29 @@ class SwiftReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
     def __init__(self, context):
         super(SwiftReader, self).__init__(context)
         self.parallel_states = [SwiftStates(context)]
+        self._enum_braces = []
+        self._enum_header = False
+        self._previous_token = None
 
     def process_token(self, token):
         if token is _POSTFIX_OPTIONAL:
+            self.context.add_condition(-1)
+        self._skip_enum_case_declaration(token)
+        self._previous_token = token
+
+    def _skip_enum_case_declaration(self, token):
+        # `case` directly in an enum body declares cases; only `case`
+        # in a switch, or a pattern, is a decision.
+        if token == 'enum' and self._previous_token != '.':
+            self._enum_header = True
+        elif token == '{':
+            self._enum_braces.append(self._enum_header)
+            self._enum_header = False
+        elif token == '}':
+            if self._enum_braces:
+                self._enum_braces.pop()
+        elif token == 'case' and self._enum_braces \
+                and self._enum_braces[-1]:
             self.context.add_condition(-1)
 
     @staticmethod
