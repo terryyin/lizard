@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-037_csharp-methods-after-nested-class.json",
+      "identity": "SEED-037#csharp-methods-after-nested-class",
+      "completedAt": "2026-11-06T00:02:23.823Z",
+      "blob": "7d658d35d94a286eda3cfdfb8ffbdb2d49f73a22"
+    },
+    {
       "fileName": "SEED-036_remove-local-proof.json",
       "identity": "SEED-036#remove-local-proof",
       "completedAt": "2026-11-05T23:34:09.407Z",
