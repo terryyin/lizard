@@ -162,6 +162,8 @@ class XMLTagWithAttrTokenizer(Tokenizer):
             self.state = self._body
         elif token == "/":
             self.state = self._expecting_self_closing
+        elif token == "{":
+            self._attribute_expression()  # spread: <L {...props} />
         elif isidentifier(token):
             self.state = self._expecting_equal_sign
         else:
@@ -176,6 +178,14 @@ class XMLTagWithAttrTokenizer(Tokenizer):
     def _expecting_equal_sign(self, token):
         if token == '=':
             self.state = self._expecting_value
+        elif token == '-':
+            self.state = self._attribute_name_part  # data-x, aria-hidden
+        else:
+            return self.abort()
+
+    def _attribute_name_part(self, token):
+        if isidentifier(token):
+            self.state = self._expecting_equal_sign
         else:
             return self.abort()
 
@@ -183,13 +193,14 @@ class XMLTagWithAttrTokenizer(Tokenizer):
         if token[0] in "'\"":
             self.state = self._after_tag
         elif token == "{":
-            # TSXTokenizer handles brace-depth tracking and stops at the
-            # matching '}'.  Transition straight to _after_tag so the next
-            # attribute (or '>') is processed correctly once the sub-
-            # tokenizer finishes.
             self.state = self._after_tag
-            self.sub_tokenizer = TSXTokenizer()
-            self._expression_end = ';'
+            self._attribute_expression()
+
+    def _attribute_expression(self):
+        # TSXTokenizer handles brace-depth tracking and stops at the
+        # matching '}'; the next attribute (or '>') follows in _after_tag.
+        self.sub_tokenizer = TSXTokenizer()
+        self._expression_end = ';'
 
     def _body(self, token):
         # Abort if token can't be JSX body content — likely a type

@@ -4,7 +4,7 @@
 
 ### Bug Fixes
 - Swift: count each top-level comma of an `if`, `guard` or `while` condition list as a decision, like `&&`, so `guard a, b, c else` and `guard a && b && c else` have the same CCN; commas inside brackets, closures, patterns and generic arguments, and `repeat { } while`, are not counted. A same-line trailing closure stays in the condition (`if items.contains { $0 > 1 }, ready`); a brace that continues on the next line is the body
-- JSX and TSX: element text is text, not code, so words such as `if`/`for` and punctuation such as `?`, `&&` or `;` in children no longer add decisions; `{...}` child and attribute expressions are still analyzed. Element text, including its tags, is reported as text tokens, so token counts for JSX children change
+- JSX and TSX: element text is text, not code, so words such as `if`/`for` and punctuation such as `?`, `&&` or `;` in children no longer add decisions; `{...}` child and attribute expressions are still analyzed. Element text, including its tags, is reported as text tokens, so token counts for JSX children change. Spread attributes (`{...props}`) and hyphenated attribute names (`data-x`, `aria-hidden`) are read as attributes, so they no longer end an element early and move the end of the enclosing function
 
 ## 1.25.0
 

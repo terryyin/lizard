@@ -785,6 +785,26 @@ function List({ items, flag, a, b }) {
 }
 ''')
 
+    def test_spread_and_hyphenated_attributes_keep_function_bounds(self):
+        self.assert_both([("Row", 1, 3, 1), ("Grid", 4, 11, 3),
+                          ("Card", 12, 14, 2), ("after", 15, 15, 2)], '''\
+function Row(props) {
+  return <i {...props} />;
+}
+function Grid({ rows, extra, open, k }) {
+  return (
+    <div>
+      <Row {...extra} />
+      <Row {...(open ? extra : rows)} />
+      <table><tbody><tr><td key={k} data-state={open && 'on'}>x</td></tr></tbody></table>
+    </div>);
+}
+function Card({ r, href }) {
+  return <ul>{r ? <li><a href={href}>Open the result <span aria-hidden="true">\u2197</span></a></li> : null}</ul>;
+}
+function after(x) { if (x) { return 1 } return 2; }
+''')
+
     def test_comparisons_and_type_arguments_are_not_elements(self):
         self.assert_both([("cmp", 1, 1, 2), ("g", 2, 2, 1)], '''\
 const cmp = (a, b) => a < b && b > 0;
