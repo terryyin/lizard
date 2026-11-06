@@ -39,5 +39,5 @@ counter; D.5 relaxing &lt;3% / frozen-baseline contract for this merge.
 | 5a.5 | This contract explicitly includes cumulative `api-parameters` against the frozen accepted-set baseline (not optional and not waivable by incremental-only results). | slice 2 | observed: seed035-slice2/cumulative-api-parameters.json CI [+1.860%, +2.177%] |
 | 5a.6 | Incomplete, contaminated, or otherwise non–quiet-load decisive runs SHALL not count as a pass (the narrative cites unfinished cumulative `cli` in attempt5 as an example of a non-passing run). | slice 2 | observed: seed035-slice2/cumulative-cli.json quiet-load decisive pass |
 | 6a.1 | PR #554 (or an equivalent exact-head revision carrying the same obligations) SHALL be landed only after commitments 4 and 5 (including all sub-items) are satisfied. | landing | |
-| 6a.2 | After merge, the contributor SHALL receive acknowledgement of the landed work. | reporting | |
+| 6a.2 | After merge, the contributor SHALL receive acknowledgement of the landed work. | reporting |  |
 | 7a.1 | This work is the follow-up because the SEED-034 ≤15-minute product budget could not clear the cumulative overage; the Fabio cohort complete-cycle performance contract applies to this story’s required workloads. | slice 2 | observed: PLAN Current decisions + seed035-slice2 NOTES under Fabio cohort contract |
