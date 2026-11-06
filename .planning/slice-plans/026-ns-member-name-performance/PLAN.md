@@ -109,6 +109,16 @@ still raise NS, the exact head merges, and the contributor is thanked; if a
 required gate cannot pass without relaxing the story’s contract, leave #554
 unmerged with evidence and stop for human review of that contract.
 
+## Execution complete
+
+Product advice: Land #554 (or equivalent exact-head with as-authored
+`_member_name` + discriminating test) under lifecycle 6a.1 once merge-head CI
+is green, then acknowledge the contributor (6a.2). Semantic and all six quiet-load
+paired `--extension ns` gates support merge without further NS remediation.
+If `master` moves again before land, remasure at least cumulative
+`api-parameters` (upper ~2.18% has less headroom than the other five). No
+backlog change from this review.
+
 ## Current decisions
 
 - Keep the Fabio cohort strict &lt;3% upper bound and the frozen cumulative
