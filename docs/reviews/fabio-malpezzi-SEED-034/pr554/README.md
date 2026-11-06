@@ -1,9 +1,10 @@
 # PR #554 — Member names that look like structures under NS
 
-**Disposition:** left unmerged — real defect; as-authored candidate fails the
-strict &lt;3% paired upper bound on **cumulative `api-parameters` with
-`--extension ns`** after a quiet, decisive measurement (attempt5). Follow-up:
-[SEED-035#ns-member-name-performance](../../../.planning/seeds/SEED-035-ns-member-name-performance.md#ns-member-name-performance).
+**Disposition:** SEED-035 cleared every required quiet-load paired `--extension ns`
+gate (including cumulative `api-parameters` and CLI) for the as-authored
+`_member_name` candidate on refreshed master; story-branch wrap-up lands the
+equivalent exact-head revision and acknowledges the contributor. Attempt5
+evidence below remains the SEED-034 non-merge record.
 
 **Head:** `2368413b2de05b05ff44ce863dcded8061342492` (OPEN; hosted CI green).
 **Incremental target:** `ed78b3b13240297681f82fe6a32c84c377498114` (after #553).
