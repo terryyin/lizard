@@ -1,0 +1,37 @@
+post-prior-set load: (3.0869140625, 3.34423828125, 3.279296875)
+2026-11-06T20:40:50+0700 sample=1 load1=3.640625 consec_before=0
+2026-11-06T20:40:50+0700 ABOVE_GATE reset consec
+2026-11-06T20:41:50+0700 sample=2 load1=2.4931640625 consec_before=0
+2026-11-06T20:41:50+0700 under_gate consec=1
+2026-11-06T20:42:50+0700 sample=3 load1=5.271484375 consec_before=1
+2026-11-06T20:42:50+0700 ABOVE_GATE reset consec
+2026-11-06T20:43:51+0700 sample=4 load1=3.44580078125 consec_before=0
+2026-11-06T20:43:51+0700 ABOVE_GATE reset consec
+2026-11-06T20:44:51+0700 sample=5 load1=2.84716796875 consec_before=0
+2026-11-06T20:44:51+0700 ABOVE_GATE reset consec
+2026-11-06T20:45:51+0700 sample=6 load1=2.12548828125 consec_before=0
+2026-11-06T20:45:51+0700 under_gate consec=1
+2026-11-06T20:46:51+0700 sample=7 load1=2.0771484375 consec_before=1
+2026-11-06T20:46:51+0700 under_gate consec=2
+2026-11-06T20:47:51+0700 sample=8 load1=2.615234375 consec_before=2
+2026-11-06T20:47:51+0700 ABOVE_GATE reset consec
+2026-11-06T20:48:51+0700 sample=9 load1=2.71630859375 consec_before=0
+2026-11-06T20:48:51+0700 ABOVE_GATE reset consec
+2026-11-06T20:49:51+0700 sample=10 load1=2.3388671875 consec_before=0
+2026-11-06T20:49:51+0700 under_gate consec=1
+2026-11-06T20:50:51+0700 sample=11 load1=2.16259765625 consec_before=1
+2026-11-06T20:50:51+0700 under_gate consec=2
+2026-11-06T20:51:51+0700 sample=12 load1=2.65087890625 consec_before=2
+2026-11-06T20:51:51+0700 ABOVE_GATE reset consec
+2026-11-06T20:52:51+0700 sample=13 load1=2.5478515625 consec_before=0
+2026-11-06T20:52:51+0700 ABOVE_GATE reset consec
+2026-11-06T20:53:51+0700 sample=14 load1=3.30712890625 consec_before=0
+2026-11-06T20:53:51+0700 ABOVE_GATE reset consec
+2026-11-06T20:54:51+0700 sample=15 load1=2.37841796875 consec_before=0
+2026-11-06T20:54:51+0700 under_gate consec=1
+2026-11-06T20:55:51+0700 sample=16 load1=2.03271484375 consec_before=1
+2026-11-06T20:55:51+0700 under_gate consec=2
+2026-11-06T20:56:52+0700 sample=17 load1=2.31591796875 consec_before=2
+2026-11-06T20:56:52+0700 under_gate consec=3
+QUIET_GATE_MET at 2026-11-06T20:56:52+0700 after 17 samples
+loadavg (2.31591796875, 2.51318359375, 2.796875)

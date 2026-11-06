@@ -2,6 +2,7 @@
 
 **Identity:** SEED-035#ns-member-name-performance
 **Source:** [canonical story](../../seeds/SEED-035-ns-member-name-performance.md#ns-member-name-performance)
+**Source review:** [source-review.md](./source-review.md)
 
 ## Goal and scope
 
@@ -73,13 +74,13 @@ afterward.
 | Frozen corpora present | `ls …/pr552/proof/corpus/` | `affected-expanded`, `consumers` present |
 | Quiet-load cumulative `api-parameters` failed for #554 candidate | retained attempt5 JSON / README; median ~3.638%, CI [+2.770%, +4.513%], `--extension ns` | Bound not met |
 | Incremental api / api-parameters / cli and cumulative api passed under quiet load | retained attempt5 measurement-decision / README | Pass |
-| Prior-set-alone NS cumulative `api-parameters` owner | attempt5-isolation timed out under load | Unsettled — early probe slice 1 |
+| Prior-set-alone NS cumulative `api-parameters` owner | Quiet-load SEED-035 slice1 prior-set vs frozen baseline `4a05e405…`: median ~0.643%, CI [+0.303%, +0.984%], `--extension ns`, passes; full-candidate (master `996046c9…` + `pr.diff`) CI [+1.127%, +1.411%], also passes. Evidence: `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice1/` | Settled — prior-set alone does **not** exceed &lt;3%; incremental cost of #554’s `_member_name` / `_state_global` still under bound; no trunk NS owner must change solely for this gate |
 
 ## Ordered slices
 
 ### 1. Confirm who owns the cumulative NS api-parameters overage
 Type: Behavior
-Status: planned
+Status: done
 Early probe: yes — settles the open prior-set cost-owner premise; a result
 that cannot guide a gate-passing merge stops dependent slice 2 and revises
 the plan.
@@ -121,6 +122,26 @@ unmerged with evidence and stop for human review of that contract.
   lost history when the PR head must move.
 - Thank the contributor only after a confirmed merge.
 
+### Slice 1 learnings (measurement; Status remains planned until coordinator delivery)
+
+- Prior-set alone (current `origin/master` `996046c9…` without #554) vs
+  frozen baseline: cumulative NS `api-parameters` **passes** (CI upper
+  ~0.984% &lt; 3). Already-accepted trunk work does **not** own a failing
+  overage on this gate; `lizardns.py` unchanged vs baseline-cum.
+- Full candidate (same master + retained `pr.diff`): also **passes** (CI
+  upper ~1.411% &lt; 3). Incremental cost is owned by #554’s
+  `NestedStructure._state_global` (`.` / `?.` branch) and
+  `_member_name` in `lizard_ext/lizardns.py`, still under the bound.
+- Slice 2 product owner for the member-name landing remains those
+  functions (plus the discriminating test); no separate trunk NS
+  performance remediation is required for cumulative api-parameters on
+  this refreshed observation. No early-probe stop — result can guide a
+  gate-passing merge for this workload; remaining paired gates
+  (including quiet-load cumulative CLI; attempt5 cum-cli left incomplete)
+  still required.
+- Expensive-proof: quiet-gate wait retained; sequential prior-set then
+  full-candidate; cum-cli skipped after full-candidate `load_after` ≫ 2.5.
+
 ## Concern evidence
 
 - Slice-plan refinement: not needed — one early probe for the unsettled
@@ -128,3 +149,11 @@ unmerged with evidence and stop for human review of that contract.
   slice.
 - Remaining slice-specific concerns: none identified beyond the early probe
   bounded in slice 1.
+
+## Story obligations
+
+### G1. Cumulative CLI still lacks a quiet-load decisive pass
+Reported: slice 1 — "Cumulative CLI not replaced (post-run load too high); attempt5 incomplete cum-cli retained."
+Story clause: "Incomplete or contaminated runs (including attempt5’s unfinished cumulative CLI) do not count as a pass; quiet-load decisive results are required."
+Disposition: interim until slices 2
+Commitment: 5a.6

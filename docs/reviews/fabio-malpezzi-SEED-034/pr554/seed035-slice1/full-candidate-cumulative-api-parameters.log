@@ -1,0 +1,1 @@
+{"verdict": "passes", "passes": true, "paired_95pct_ci": [1.1271091974531033, 1.4110651734204778], "out": "/Users/terryyin/git/lizard/.worktrees/land-nested-structure-member-name-skip-under-cum/docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice1/full-candidate-cumulative-api-parameters.json"}
