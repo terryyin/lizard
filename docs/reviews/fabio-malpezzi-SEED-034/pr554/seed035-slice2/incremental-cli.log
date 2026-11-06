@@ -1,2 +1,0 @@
-warning: Git tree '/Users/terryyin/git/lizard/.worktrees/land-nested-structure-member-name-skip-under-cum' is dirty
-{"verdict": "passes", "passes": true, "paired_95pct_ci": [-0.8622719704602985, 1.3953887585805134], "out": "/Users/terryyin/git/lizard/.worktrees/land-nested-structure-member-name-skip-under-cum/docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/incremental-cli.json"}
