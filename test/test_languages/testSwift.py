@@ -317,3 +317,37 @@ let x = 1, y = 2
 if ok { use(x, y) }
 var z = [1, 2]"""))
         self.assertEqual(2, self.ccn("if ok { let p = 1, q = 2 }"))
+
+    def test_same_line_trailing_closure_keeps_the_following_comma(self):
+        self.assertEqual(3, self.ccn(
+            "if items.contains { $0 > 1 }, ready { return true }"))
+        self.assertEqual(3, self.ccn(
+            "guard items.contains { $0 > 1 }, ready else { return false }"))
+        self.assertEqual(2, self.ccn(
+            "if items.contains { $0 > 1 } { return true }"))
+        self.assertEqual(3, self.ccn(
+            "if items.filter { ($0, 1).0 > 0 }.isEmpty, ready "
+            "{ return true }"))
+
+    def test_multiline_brace_ends_the_condition_list(self):
+        self.assertEqual(2, self.ccn("""\
+if items.contains {
+    ($0, 1).0 > 0
+}, ready { return true }"""))
+        self.assertEqual(2, self.ccn("""\
+if ok {
+    let p = 1, q = 2
+}"""))
+
+    def test_trailing_closure_does_not_swallow_the_next_function(self):
+        functions = get_swift_function_list("""\
+func f(items: [Int], ready: Bool) -> Bool {
+    if items.contains { $0 > 1 }, ready { return true }
+    return false
+}
+func g() -> Int { return 1 }
+""")
+        self.assertEqual(
+            [("f", 1, 4, 3), ("g", 5, 5, 1)],
+            [(function.name, function.start_line, function.end_line,
+              function.cyclomatic_complexity) for function in functions])

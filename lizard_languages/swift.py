@@ -108,7 +108,14 @@ class SwiftReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
         self._condition_lists = SwiftConditionLists(context)
 
     def process_token(self, token):
-        self._condition_lists(token)
+        scanner = self._condition_lists
+        # Ordinary tokens only remember the previous one. Braces, condition
+        # keywords, and an already-open list do the real scan.
+        if (scanner._lists or scanner._closed_repeat or token == '{'
+                or token == '}' or token in scanner._STARTS):
+            scanner(token)
+        else:
+            scanner._previous = token
         if token is _POSTFIX_OPTIONAL:
             self.context.add_condition(-1)
 
