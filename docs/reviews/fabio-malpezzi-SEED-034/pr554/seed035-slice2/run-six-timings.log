@@ -1,0 +1,164 @@
+2026-11-06T21:32:27+0700 START host=Territory master_candidate=7e4ef442c1df7a2db1f181a86f6439f7ed933910 baseline_cum=4a05e4056cebb2edd75cb02b7a43e911369f4ce5 baseline_inc=7e4ef442c1df7a2db1f181a86f6439f7ed933910
+2026-11-06T21:32:27+0700 WAIT_QUIET start label=incremental-api
+2026-11-06T21:32:27+0700 label=incremental-api sample=1 load1=2.31 streak=0
+2026-11-06T21:33:27+0700 label=incremental-api sample=2 load1=2.46 streak=1
+2026-11-06T21:34:27+0700 label=incremental-api sample=3 load1=2.44 streak=2
+2026-11-06T21:34:27+0700 QUIET_GATE_MET label=incremental-api load1=2.44
+2026-11-06T21:34:27+0700 LAUNCH name=incremental-api mode=inc workload=api seconds=30 host=Territory
+  baseline=7e4ef442c1df7a2db1f181a86f6439f7ed933910 candidate=7e4ef442c1df7a2db1f181a86f6439f7ed933910
+warning: Git tree '/Users/terryyin/git/lizard/.worktrees/land-nested-structure-member-name-skip-under-cum' is dirty
+{"verdict": "passes", "passes": true, "paired_95pct_ci": [-0.4172177269365443, 0.23283507046118457], "out": "/Users/terryyin/git/lizard/.worktrees/land-nested-structure-member-name-skip-under-cum/docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/incremental-api.json"}
+2026-11-06T21:57:37+0700 RESULT name=incremental-api passes=True change=-0.0927200278497468 ci=[-0.4172177269365443, 0.23283507046118457] load_after=3.90
+2026-11-06T21:57:37+0700 WAIT_QUIET start label=incremental-api-parameters
+2026-11-06T21:57:37+0700 label=incremental-api-parameters sample=1 load1=3.90 streak=0
+2026-11-06T21:58:37+0700 label=incremental-api-parameters sample=2 load1=3.68 streak=0
+2026-11-06T21:59:37+0700 label=incremental-api-parameters sample=3 load1=3.52 streak=0
+2026-11-06T22:00:38+0700 label=incremental-api-parameters sample=4 load1=3.72 streak=0
+2026-11-06T22:01:38+0700 label=incremental-api-parameters sample=5 load1=5.30 streak=0
+2026-11-06T22:02:38+0700 label=incremental-api-parameters sample=6 load1=6.29 streak=0
+2026-11-06T22:03:38+0700 label=incremental-api-parameters sample=7 load1=5.92 streak=0
+2026-11-06T22:04:38+0700 label=incremental-api-parameters sample=8 load1=3.89 streak=0
+2026-11-06T22:05:38+0700 label=incremental-api-parameters sample=9 load1=2.86 streak=0
+2026-11-06T22:06:38+0700 label=incremental-api-parameters sample=10 load1=2.38 streak=0
+2026-11-06T22:07:38+0700 label=incremental-api-parameters sample=11 load1=3.17 streak=1
+2026-11-06T22:08:38+0700 label=incremental-api-parameters sample=12 load1=2.86 streak=0
+2026-11-06T22:09:38+0700 label=incremental-api-parameters sample=13 load1=2.32 streak=0
+2026-11-06T22:10:38+0700 label=incremental-api-parameters sample=14 load1=3.21 streak=1
+2026-11-06T22:11:38+0700 label=incremental-api-parameters sample=15 load1=2.91 streak=0
+2026-11-06T22:12:38+0700 label=incremental-api-parameters sample=16 load1=2.61 streak=0
+2026-11-06T22:13:38+0700 label=incremental-api-parameters sample=17 load1=2.86 streak=0
+2026-11-06T22:14:38+0700 label=incremental-api-parameters sample=18 load1=4.18 streak=0
+2026-11-06T22:15:38+0700 label=incremental-api-parameters sample=19 load1=2.86 streak=0
+2026-11-06T22:16:38+0700 label=incremental-api-parameters sample=20 load1=2.52 streak=0
+2026-11-06T22:17:38+0700 label=incremental-api-parameters sample=21 load1=2.30 streak=0
+2026-11-06T22:18:38+0700 label=incremental-api-parameters sample=22 load1=2.48 streak=1
+2026-11-06T22:19:38+0700 label=incremental-api-parameters sample=23 load1=3.29 streak=2
+2026-11-06T22:20:38+0700 label=incremental-api-parameters sample=24 load1=5.18 streak=0
+2026-11-06T22:21:38+0700 label=incremental-api-parameters sample=25 load1=4.33 streak=0
+2026-11-06T22:22:38+0700 label=incremental-api-parameters sample=26 load1=3.22 streak=0
+2026-11-06T22:23:38+0700 label=incremental-api-parameters sample=27 load1=2.88 streak=0
+2026-11-06T22:24:38+0700 label=incremental-api-parameters sample=28 load1=3.12 streak=0
+2026-11-06T22:25:38+0700 label=incremental-api-parameters sample=29 load1=3.03 streak=0
+2026-11-06T22:26:38+0700 label=incremental-api-parameters sample=30 load1=2.59 streak=0
+2026-11-06T22:27:38+0700 label=incremental-api-parameters sample=31 load1=2.05 streak=0
+2026-11-06T22:28:38+0700 label=incremental-api-parameters sample=32 load1=2.47 streak=1
+2026-11-06T22:29:38+0700 label=incremental-api-parameters sample=33 load1=2.58 streak=2
+2026-11-06T22:30:38+0700 label=incremental-api-parameters sample=34 load1=3.69 streak=0
+2026-11-06T22:31:38+0700 label=incremental-api-parameters sample=35 load1=3.46 streak=0
+2026-11-06T22:32:38+0700 label=incremental-api-parameters sample=36 load1=2.66 streak=0
+2026-11-06T22:33:38+0700 label=incremental-api-parameters sample=37 load1=2.05 streak=0
+2026-11-06T22:34:38+0700 label=incremental-api-parameters sample=38 load1=1.84 streak=1
+2026-11-06T22:35:38+0700 label=incremental-api-parameters sample=39 load1=3.30 streak=2
+2026-11-06T22:36:38+0700 label=incremental-api-parameters sample=40 load1=3.52 streak=0
+2026-11-06T22:37:38+0700 label=incremental-api-parameters sample=41 load1=2.77 streak=0
+2026-11-06T22:38:38+0700 label=incremental-api-parameters sample=42 load1=3.66 streak=0
+2026-11-06T22:39:38+0700 label=incremental-api-parameters sample=43 load1=3.31 streak=0
+2026-11-06T22:40:38+0700 label=incremental-api-parameters sample=44 load1=2.18 streak=0
+2026-11-06T22:41:38+0700 label=incremental-api-parameters sample=45 load1=2.93 streak=1
+2026-11-06T22:42:38+0700 label=incremental-api-parameters sample=46 load1=2.62 streak=0
+2026-11-06T22:43:38+0700 label=incremental-api-parameters sample=47 load1=2.06 streak=0
+2026-11-06T22:44:38+0700 label=incremental-api-parameters sample=48 load1=3.79 streak=1
+2026-11-06T22:45:38+0700 label=incremental-api-parameters sample=49 load1=2.19 streak=0
+2026-11-06T22:46:38+0700 label=incremental-api-parameters sample=50 load1=2.04 streak=1
+2026-11-06T22:47:38+0700 label=incremental-api-parameters sample=51 load1=1.82 streak=2
+2026-11-06T22:47:38+0700 QUIET_GATE_MET label=incremental-api-parameters load1=1.82
+2026-11-06T22:47:38+0700 LAUNCH name=incremental-api-parameters mode=inc workload=api-parameters seconds=30 host=Territory
+  baseline=7e4ef442c1df7a2db1f181a86f6439f7ed933910 candidate=7e4ef442c1df7a2db1f181a86f6439f7ed933910
+warning: Git tree '/Users/terryyin/git/lizard/.worktrees/land-nested-structure-member-name-skip-under-cum' is dirty
+{"verdict": "passes", "passes": true, "paired_95pct_ci": [-0.4655129186653355, 0.3099038695091739], "out": "/Users/terryyin/git/lizard/.worktrees/land-nested-structure-member-name-skip-under-cum/docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/incremental-api-parameters.json"}
+2026-11-06T23:10:20+0700 RESULT name=incremental-api-parameters passes=True change=-0.07855670162893938 ci=[-0.4655129186653355, 0.3099038695091739] load_after=7.65
+2026-11-06T23:10:20+0700 WAIT_QUIET start label=incremental-cli
+2026-11-06T23:10:20+0700 label=incremental-cli sample=1 load1=7.65 streak=0
+2026-11-06T23:11:20+0700 label=incremental-cli sample=2 load1=5.86 streak=0
+2026-11-06T23:12:20+0700 label=incremental-cli sample=3 load1=7.56 streak=0
+2026-11-06T23:13:20+0700 label=incremental-cli sample=4 load1=6.41 streak=0
+2026-11-06T23:14:20+0700 label=incremental-cli sample=5 load1=7.36 streak=0
+2026-11-06T23:15:20+0700 label=incremental-cli sample=6 load1=5.83 streak=0
+2026-11-06T23:16:20+0700 label=incremental-cli sample=7 load1=4.90 streak=0
+2026-11-06T23:17:20+0700 label=incremental-cli sample=8 load1=5.19 streak=0
+2026-11-06T23:18:20+0700 label=incremental-cli sample=9 load1=4.41 streak=0
+2026-11-06T23:19:20+0700 label=incremental-cli sample=10 load1=4.54 streak=0
+2026-11-06T23:20:20+0700 label=incremental-cli sample=11 load1=4.70 streak=0
+2026-11-06T23:21:20+0700 label=incremental-cli sample=12 load1=8.70 streak=0
+2026-11-06T23:22:20+0700 label=incremental-cli sample=13 load1=8.86 streak=0
+2026-11-06T23:23:21+0700 label=incremental-cli sample=14 load1=7.15 streak=0
+2026-11-06T23:24:21+0700 label=incremental-cli sample=15 load1=6.40 streak=0
+2026-11-06T23:25:21+0700 label=incremental-cli sample=16 load1=5.57 streak=0
+2026-11-06T23:26:21+0700 label=incremental-cli sample=17 load1=4.76 streak=0
+2026-11-06T23:27:21+0700 label=incremental-cli sample=18 load1=5.41 streak=0
+2026-11-06T23:28:21+0700 label=incremental-cli sample=19 load1=5.56 streak=0
+2026-11-06T23:29:21+0700 label=incremental-cli sample=20 load1=4.55 streak=0
+2026-11-06T23:30:21+0700 label=incremental-cli sample=21 load1=5.07 streak=0
+2026-11-06T23:31:21+0700 label=incremental-cli sample=22 load1=4.24 streak=0
+2026-11-06T23:32:21+0700 label=incremental-cli sample=23 load1=5.78 streak=0
+2026-11-06T23:33:21+0700 label=incremental-cli sample=24 load1=5.75 streak=0
+2026-11-06T23:34:21+0700 label=incremental-cli sample=25 load1=7.54 streak=0
+2026-11-06T23:35:21+0700 label=incremental-cli sample=26 load1=5.82 streak=0
+2026-11-06T23:36:21+0700 label=incremental-cli sample=27 load1=6.33 streak=0
+2026-11-06T23:37:21+0700 label=incremental-cli sample=28 load1=7.23 streak=0
+2026-11-06T23:38:21+0700 label=incremental-cli sample=29 load1=5.91 streak=0
+2026-11-06T23:39:21+0700 label=incremental-cli sample=30 load1=5.33 streak=0
+2026-11-06T23:40:21+0700 label=incremental-cli sample=31 load1=3.86 streak=0
+2026-11-06T23:41:21+0700 label=incremental-cli sample=32 load1=2.63 streak=0
+2026-11-06T23:42:21+0700 label=incremental-cli sample=33 load1=4.04 streak=0
+2026-11-06T23:43:21+0700 label=incremental-cli sample=34 load1=2.84 streak=0
+2026-11-06T23:44:21+0700 label=incremental-cli sample=35 load1=2.05 streak=0
+2026-11-06T23:45:21+0700 label=incremental-cli sample=36 load1=1.93 streak=1
+2026-11-06T23:46:21+0700 label=incremental-cli sample=37 load1=1.90 streak=2
+2026-11-06T23:46:21+0700 QUIET_GATE_MET label=incremental-cli load1=1.90
+2026-11-06T23:46:21+0700 LAUNCH name=incremental-cli mode=inc workload=cli seconds=30 host=Territory
+  baseline=7e4ef442c1df7a2db1f181a86f6439f7ed933910 candidate=7e4ef442c1df7a2db1f181a86f6439f7ed933910
+warning: Git tree '/Users/terryyin/git/lizard/.worktrees/land-nested-structure-member-name-skip-under-cum' is dirty
+{"verdict": "passes", "passes": true, "paired_95pct_ci": [-0.8622719704602985, 1.3953887585805134], "out": "/Users/terryyin/git/lizard/.worktrees/land-nested-structure-member-name-skip-under-cum/docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/incremental-cli.json"}
+2026-11-07T00:09:57+0700 RESULT name=incremental-cli passes=True change=0.26020384079419034 ci=[-0.8622719704602985, 1.3953887585805134] load_after=3.11
+2026-11-07T00:09:57+0700 WAIT_QUIET start label=cumulative-api
+2026-11-07T00:09:57+0700 label=cumulative-api sample=1 load1=3.11 streak=0
+2026-11-07T00:10:57+0700 label=cumulative-api sample=2 load1=3.01 streak=0
+2026-11-07T00:11:57+0700 label=cumulative-api sample=3 load1=2.92 streak=0
+2026-11-07T00:12:57+0700 label=cumulative-api sample=4 load1=2.73 streak=0
+2026-11-07T00:13:57+0700 label=cumulative-api sample=5 load1=2.62 streak=0
+2026-11-07T00:14:57+0700 label=cumulative-api sample=6 load1=2.07 streak=0
+2026-11-07T00:15:57+0700 label=cumulative-api sample=7 load1=3.81 streak=1
+2026-11-07T00:16:57+0700 label=cumulative-api sample=8 load1=2.53 streak=0
+2026-11-07T00:17:57+0700 label=cumulative-api sample=9 load1=1.98 streak=0
+2026-11-07T00:18:58+0700 label=cumulative-api sample=10 load1=1.45 streak=1
+2026-11-07T00:19:58+0700 label=cumulative-api sample=11 load1=1.98 streak=2
+2026-11-07T00:19:58+0700 QUIET_GATE_MET label=cumulative-api load1=1.98
+2026-11-07T00:19:58+0700 LAUNCH name=cumulative-api mode=cum workload=api seconds=30 host=Territory
+  baseline=4a05e4056cebb2edd75cb02b7a43e911369f4ce5 candidate=7e4ef442c1df7a2db1f181a86f6439f7ed933910
+warning: Git tree '/Users/terryyin/git/lizard/.worktrees/land-nested-structure-member-name-skip-under-cum' is dirty
+{"verdict": "passes", "passes": true, "paired_95pct_ci": [0.3592332927971769, 0.8193028601166507], "out": "/Users/terryyin/git/lizard/.worktrees/land-nested-structure-member-name-skip-under-cum/docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/cumulative-api.json"}
+2026-11-07T00:43:04+0700 RESULT name=cumulative-api passes=True change=0.5890050460567018 ci=[0.3592332927971769, 0.8193028601166507] load_after=2.87
+2026-11-07T00:43:04+0700 WAIT_QUIET start label=cumulative-api-parameters
+2026-11-07T00:43:04+0700 label=cumulative-api-parameters sample=1 load1=2.87 streak=0
+2026-11-07T00:44:04+0700 label=cumulative-api-parameters sample=2 load1=3.84 streak=0
+2026-11-07T00:45:04+0700 label=cumulative-api-parameters sample=3 load1=2.46 streak=0
+2026-11-07T00:46:04+0700 label=cumulative-api-parameters sample=4 load1=2.02 streak=1
+2026-11-07T00:47:04+0700 label=cumulative-api-parameters sample=5 load1=2.13 streak=2
+2026-11-07T00:47:04+0700 QUIET_GATE_MET label=cumulative-api-parameters load1=2.13
+2026-11-07T00:47:04+0700 LAUNCH name=cumulative-api-parameters mode=cum workload=api-parameters seconds=30 host=Territory
+  baseline=4a05e4056cebb2edd75cb02b7a43e911369f4ce5 candidate=7e4ef442c1df7a2db1f181a86f6439f7ed933910
+warning: Git tree '/Users/terryyin/git/lizard/.worktrees/land-nested-structure-member-name-skip-under-cum' is dirty
+{"verdict": "passes", "passes": true, "paired_95pct_ci": [1.8597996269919763, 2.177216964208843], "out": "/Users/terryyin/git/lizard/.worktrees/land-nested-structure-member-name-skip-under-cum/docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/cumulative-api-parameters.json"}
+2026-11-07T01:10:12+0700 RESULT name=cumulative-api-parameters passes=True change=2.0183848451738533 ci=[1.8597996269919763, 2.177216964208843] load_after=3.03
+2026-11-07T01:10:13+0700 WAIT_QUIET start label=cumulative-cli
+2026-11-07T01:10:13+0700 label=cumulative-cli sample=1 load1=3.03 streak=0
+2026-11-07T01:11:13+0700 label=cumulative-cli sample=2 load1=3.64 streak=0
+2026-11-07T01:12:13+0700 label=cumulative-cli sample=3 load1=2.76 streak=0
+2026-11-07T01:13:13+0700 label=cumulative-cli sample=4 load1=3.11 streak=0
+2026-11-07T01:14:13+0700 label=cumulative-cli sample=5 load1=2.43 streak=0
+2026-11-07T01:15:13+0700 label=cumulative-cli sample=6 load1=2.16 streak=1
+2026-11-07T01:16:13+0700 label=cumulative-cli sample=7 load1=3.82 streak=2
+2026-11-07T01:17:13+0700 label=cumulative-cli sample=8 load1=5.16 streak=0
+2026-11-07T01:18:13+0700 label=cumulative-cli sample=9 load1=3.63 streak=0
+2026-11-07T01:19:13+0700 label=cumulative-cli sample=10 load1=3.03 streak=0
+2026-11-07T01:20:13+0700 label=cumulative-cli sample=11 load1=2.33 streak=0
+2026-11-07T01:21:13+0700 label=cumulative-cli sample=12 load1=1.81 streak=1
+2026-11-07T01:22:13+0700 label=cumulative-cli sample=13 load1=2.36 streak=2
+2026-11-07T01:22:13+0700 QUIET_GATE_MET label=cumulative-cli load1=2.36
+2026-11-07T01:22:13+0700 LAUNCH name=cumulative-cli mode=cum workload=cli seconds=30 host=Territory
+  baseline=4a05e4056cebb2edd75cb02b7a43e911369f4ce5 candidate=7e4ef442c1df7a2db1f181a86f6439f7ed933910
+warning: Git tree '/Users/terryyin/git/lizard/.worktrees/land-nested-structure-member-name-skip-under-cum' is dirty
+{"verdict": "passes", "passes": true, "paired_95pct_ci": [0.44885292693365964, 0.6105726801304326], "out": "/Users/terryyin/git/lizard/.worktrees/land-nested-structure-member-name-skip-under-cum/docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/cumulative-cli.json"}
+2026-11-07T01:45:26+0700 RESULT name=cumulative-cli passes=True change=0.5296802841876719 ci=[0.44885292693365964, 0.6105726801304326] load_after=2.58
+2026-11-07T01:45:26+0700 ALL_SIX_DONE

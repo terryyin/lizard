@@ -96,7 +96,7 @@ owner must change for slice 2.
 
 ### 2. Land member-name skip under every required NS performance gate
 Type: Behavior
-Status: planned
+Status: done
 Proof: discriminating test red then green; focused NS/JS/TS coverage reached
 by the change; full pytest and `make`; all six paired workloads under
 `--extension ns` with paired 95% upper slowdown strictly below 3%; required
@@ -142,6 +142,22 @@ unmerged with evidence and stop for human review of that contract.
 - Expensive-proof: quiet-gate wait retained; sequential prior-set then
   full-candidate; cum-cli skipped after full-candidate `load_after` ≫ 2.5.
 
+### Slice 2 learnings (measurement + product; Status remains planned until coordinator delivery)
+
+- Landed as-authored `_member_name` / `_state_global` `.`/`?.` plus
+  discriminating test on the execution tree (uncommitted). Timing candidate
+  = current `origin/master` `7e4ef442…` + retained `pr.diff` (product bytes
+  match execution). Slice1 cum-api-parameters JSON not reused (master advanced).
+- Discriminating red-without / green-with proved; focused NS file 4 passed;
+  full pytest 3038 passed / 7 skipped; `make` exit 0.
+- Quiet-load remasured all six paired `--extension ns` workloads
+  (`--seconds 30 --pairs 20 --limit-pct 3`): every paired 95% upper strictly
+  &lt; 3%. Cumulative api-parameters vs frozen `4a05e405…`: CI
+  [+1.860%, +2.177%]. Cumulative CLI: CI [+0.449%, +0.611%] — decisive quiet
+  pass; G1 interim can become proved (coordinator records disposition).
+- Evidence: `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/`.
+  No contract relaxation; no extra NS owner changes beyond as-authored patch.
+
 ## Concern evidence
 
 - Slice-plan refinement: not needed — one early probe for the unsettled
@@ -155,5 +171,4 @@ unmerged with evidence and stop for human review of that contract.
 ### G1. Cumulative CLI still lacks a quiet-load decisive pass
 Reported: slice 1 — "Cumulative CLI not replaced (post-run load too high); attempt5 incomplete cum-cli retained."
 Story clause: "Incomplete or contaminated runs (including attempt5’s unfinished cumulative CLI) do not count as a pass; quiet-load decisive results are required."
-Disposition: interim until slices 2
-Commitment: 5a.6
+Disposition: proved by slice 2: docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/cumulative-cli.json (quiet-load pass, CI upper ~0.611%)

@@ -1,0 +1,218 @@
+# Consumer trace
+
+## Effect terms searched
+
+| Term | Origin |
+| --- | --- |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/consumer-trace.txt` | changed path |
+| `consumer-trace.txt` | basename of `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/consumer-trace.txt` |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/discriminating-green.log` | changed path |
+| `discriminating-green.log` | basename of `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/discriminating-green.log` |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/discriminating-red.log` | changed path |
+| `discriminating-red.log` | basename of `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/discriminating-red.log` |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/focused-ns.log` | changed path |
+| `focused-ns.log` | basename of `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/focused-ns.log` |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/full-pytest.log` | changed path |
+| `full-pytest.log` | basename of `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/full-pytest.log` |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/load-gate.log` | changed path |
+| `load-gate.log` | basename of `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/load-gate.log` |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/make.log` | changed path |
+| `make.log` | basename of `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/make.log` |
+| `lizard_ext/lizardns.py` | changed path |
+| `lizardns.py` | basename of `lizard_ext/lizardns.py` |
+| `test/testJavaScriptNestedStructures.py` | changed path |
+| `testJavaScriptNestedStructures.py` | basename of `test/testJavaScriptNestedStructures.py` |
+| `_member_name` | supplied |
+| `NestedStructure` | supplied |
+| `max_nested_structures` | supplied |
+| `lizard_ext/lizardns` | import path of `lizard_ext/lizardns.py`; in 98 files, too broad to list consumers by itself; supply it as a `--term` to list them |
+| `lizardns` | import path of `lizard_ext/lizardns.py`; in 106 files, too broad to list consumers by itself; supply it as a `--term` to list them |
+| `test/testJavaScriptNestedStructures` | import path of `test/testJavaScriptNestedStructures.py` |
+| `testJavaScriptNestedStructures` | import path of `test/testJavaScriptNestedStructures.py`; in 25 files, too broad to list consumers by itself; supply it as a `--term` to list them |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/consumer-trace` | import path of `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/consumer-trace.txt` |
+| `consumer-trace` | import path of `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/consumer-trace.txt`; in 46 files, too broad to list consumers by itself; supply it as a `--term` to list them |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/discriminating-green` | import path of `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/discriminating-green.log` |
+| `discriminating-green` | import path of `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/discriminating-green.log` |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/discriminating-red` | import path of `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/discriminating-red.log` |
+| `discriminating-red` | import path of `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/discriminating-red.log` |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/focused-ns` | import path of `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/focused-ns.log` |
+| `focused-ns` | import path of `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/focused-ns.log` |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/full-pytest` | import path of `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/full-pytest.log` |
+| `full-pytest` | import path of `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/full-pytest.log` |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/load-gate` | import path of `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/load-gate.log` |
+| `load-gate` | import path of `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/load-gate.log` |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/make` | import path of `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/make.log` |
+| `make` | import path of `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/make.log`; in 240 files, too broad to list consumers by itself; supply it as a `--term` to list them |
+| `warning` | declared in `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/discriminating-green.log`; in 310 files, too broad to list consumers by itself; supply it as a `--term` to list them |
+| `rootdir` | declared in `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/full-pytest.log` |
+| `configfile` | declared in `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/full-pytest.log` |
+| `plugins` | declared in `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/full-pytest.log`; in 31 files, too broad to list consumers by itself; supply it as a `--term` to list them |
+
+## Scope
+
+Whole checkout at `43a07aafa2e1`, including uncommitted and untracked files: 2173 tracked and untracked non-ignored files searched with fixed-string, case-insensitive matching.
+
+Changed files not searched: `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/consumer-trace.txt`, `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/discriminating-green.log`, `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/discriminating-red.log`, `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/focused-ns.log`, `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/full-pytest.log`, `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/load-gate.log`, `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice2/make.log`, `lizard_ext/lizardns.py`, `test/testJavaScriptNestedStructures.py`.
+
+## Located consumers
+
+Kinds are path hints for inspection; each file appears once. Fill every Disposition with `run`, `reused` or `excluded: <reason the effect does not reach its boundary>`.
+
+### Production
+
+| File | Terms matched | First matching line | Disposition |
+| --- | --- | --- | --- |
+| `docs/reviews/fabio-malpezzi-20261027/controls/manifest.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 49: `"lizard_ext/lizardns.py": "dcf609ad765e163cc59dba2d20d6419be307792f0c43154db6440977f4b97d80",` | |
+| `docs/reviews/fabio-malpezzi-20261027/manifest.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 49: `"lizard_ext/lizardns.py": "dcf609ad765e163cc59dba2d20d6419be307792f0c43154db6440977f4b97d80",` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr528/manifest.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 49: `"lizard_ext/lizardns.py": "dcf609ad765e163cc59dba2d20d6419be307792f0c43154db6440977f4b97d80",` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr528/proposed-patch.json` | `NestedStructure`, `max_nested_structures` | 8: `"filename": "test/testNestedStructures.py",` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr528/review-input.json` | `NestedStructure` | 12: `"body": "Supersedes #504. Since d90c086 (#505) a regex literal is recognized before\nstrings, which fixes most of what #504 addressed: of its 23 tests, 20 pass…` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr531/531-focused-candidate-isolated.log` | `rootdir`, `configfile` | 10: `rootdir: /Users/terryyin/.cache/lizard-pr-reviews-20261027/pr531-readonly` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr531/531-focused-candidate.log` | `rootdir`, `configfile` | 5: `rootdir: /Users/terryyin/.cache/lizard-pr-reviews-20261027/pr531-readonly` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr531/comparison-basis.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 24: `"path": "lizard_ext/lizardns.py",` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr531/manifest.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 51: `"lizard_ext/lizardns.py": "dcf609ad765e163cc59dba2d20d6419be307792f0c43154db6440977f4b97d80",` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr532/affected-manifest.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 63: `"lizard_ext/lizardns.py": "dcf609ad765e163cc59dba2d20d6419be307792f0c43154db6440977f4b97d80",` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr532/consumers-manifest.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 68: `"lizard_ext/lizardns.py": "dcf609ad765e163cc59dba2d20d6419be307792f0c43154db6440977f4b97d80",` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr532/current-base-make.log.part1` | `lizard_ext/lizardns.py`, `lizardns.py`, `NestedStructure`, `rootdir`, `configfile` | 4: `rootdir: /private/tmp/lizard-pr532-validation` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr532/current-base-make.log.part2` | `lizard_ext/lizardns.py`, `lizardns.py`, `max_nested_structures` | 45: `lizard_ext/lizardns.py:61:17: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr532/current-base-pytest.log` | `NestedStructure`, `rootdir`, `configfile` | 3: `rootdir: /private/tmp/lizard-pr532-validation` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr533/comparison-basis.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 5: `"lizard_ext/lizardns.py"` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr533/manifest.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 1: `{"revision": "2e21e404c1ab9f4e0b49acc80816e816629d0670", "target": "7ac449f59b3f155fd159ce9aad6794a422045632", "head": "15423852c04aed302f684395fe9522251d88a2f…` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr535/affected-manifest.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 76: `"lizard_ext/lizardns.py": "dcf609ad765e163cc59dba2d20d6419be307792f0c43154db6440977f4b97d80",` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr535/consumers-manifest.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 81: `"lizard_ext/lizardns.py": "dcf609ad765e163cc59dba2d20d6419be307792f0c43154db6440977f4b97d80",` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr535/current-base-make.log.part1` | `lizard_ext/lizardns.py`, `lizardns.py`, `NestedStructure`, `rootdir`, `configfile` | 4: `rootdir: /private/tmp/lizard-pr532-validation` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr535/current-base-make.log.part2` | `lizard_ext/lizardns.py`, `lizardns.py`, `max_nested_structures` | 47: `lizard_ext/lizardns.py:61:17: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr535/current-base-pytest.log` | `NestedStructure`, `rootdir`, `configfile` | 3: `rootdir: /private/tmp/lizard-pr532-validation` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr535/final-invariants.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 31: `"lizard_ext/lizardns.py",` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr535/finish-proof.py` | `lizard_ext/lizardns.py`, `lizardns.py` | 66: `'lizard_core/cli.py', 'lizard_ext/lizardns.py', 'lizard_languages/python.py']` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr535/snapshot-hashes.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 1: `[{"path":"lizard.py","target":"fc83d74b7d74e6b579d81808451e89661c26d599624c5acc4a41614a46253c71","corrected":"fc83d74b7d74e6b579d81808451e89661c26d599624c5acc4…` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr536/consumer-trace-1.md.part1` | `make.log` | 61: `` \| `docs/reviews/fabio-malpezzi-20261027/pr532/current-base-make.log.part1` \| `lizard_languages/javascript_bindings.py`, `javascript_bindings.py` \| 212: `lizard… `` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr536/manifest.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 1: `{"affected/annotations.ts": "93f5227836b388139b742a6ded0234207d1f3020f7bd302a4e107cbf99155386", "affected/arrow-abandoned.js": "56a151a284b6035d556f04483910b8f…` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr536/source-hashes.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 1: `{"target": {"lizard_core/__init__.py": "345df9bf6abd477b82b7546d212473cf78aa1a15450be0f75ba32603206d066c", "lizard_core/analysis.py": "4e6c15d0b00aff70b5264d40…` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr537/snapshot-hashes.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 1: `[{"path":"lizard.py","target":"fc83d74b7d74e6b579d81808451e89661c26d599624c5acc4a41614a46253c71","corrected":"fc83d74b7d74e6b579d81808451e89661c26d599624c5acc4…` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr538/snapshot-hashes.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 1: `[{"path":"lizard.py","target":"fc83d74b7d74e6b579d81808451e89661c26d599624c5acc4a41614a46253c71","corrected":"fc83d74b7d74e6b579d81808451e89661c26d599624c5acc4…` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr539/snapshot-hashes.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 1: `[{"path":"lizard.py","target":"fc83d74b7d74e6b579d81808451e89661c26d599624c5acc4a41614a46253c71","corrected":"fc83d74b7d74e6b579d81808451e89661c26d599624c5acc4…` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr541/snapshot-hashes.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 1: `[{"path":"lizard.py","target":"fc83d74b7d74e6b579d81808451e89661c26d599624c5acc4a41614a46253c71","corrected":"fc83d74b7d74e6b579d81808451e89661c26d599624c5acc4…` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr542/snapshot-hashes.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 1: `[{"path":"lizard.py","target":"fc83d74b7d74e6b579d81808451e89661c26d599624c5acc4a41614a46253c71","corrected":"fc83d74b7d74e6b579d81808451e89661c26d599624c5acc4…` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr543/snapshot-hashes.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 1: `[{"path":"lizard.py","target":"fc83d74b7d74e6b579d81808451e89661c26d599624c5acc4a41614a46253c71","corrected":"fc83d74b7d74e6b579d81808451e89661c26d599624c5acc4…` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr544/full-pytest.log` | `test/testJavaScriptNestedStructures.py`, `testJavaScriptNestedStructures.py`, `NestedStructure`, `test/testJavaScriptNestedStructures`, `rootdir`, `configfile` | 8: `rootdir: /Users/terryyin/git/lizard/.worktrees/conclude-the-javascript-and-typescript-lexical-a` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr544/make.log` | `lizard_ext/lizardns.py`, `lizardns.py`, `test/testJavaScriptNestedStructures.py`, `testJavaScriptNestedStructures.py`, `NestedStructure`, `max_nested_structures`, `test/testJavaScriptNestedStructures`, `rootdir`, `configfile` | 9: `rootdir: /Users/terryyin/git/lizard/.worktrees/conclude-the-javascript-and-typescript-lexical-a` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr544/manifest.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 1: `{"affected/b-short.js": "a73d2a3ef4629b77043d7326ba01058059415c808120452315ecb220749eb07d", "affected/b-story.js": "faf4393a26bc51a330b562c5068695e08cf1fe2b825…` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr544/source-hashes.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 1: `{"target": {"lizard_core/__init__.py": "345df9bf6abd477b82b7546d212473cf78aa1a15450be0f75ba32603206d066c", "lizard_core/analysis.py": "4e6c15d0b00aff70b5264d40…` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr545/focused.log` | `rootdir`, `configfile` | 8: `rootdir: /Users/terryyin/git/lizard/.worktrees/conclude-the-javascript-and-typescript-lexical-a` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr545/manifest.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 1: `{"affected/abc.js": "56e579ea0676c6bfa16b9004831dd7d75ae14bddd093bd034612ccfedbf3d762", "affected/abc.jsx": "56e579ea0676c6bfa16b9004831dd7d75ae14bddd093bd0346…` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr545/source-hashes.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 1: `{"target": {"lizard_core/__init__.py": "345df9bf6abd477b82b7546d212473cf78aa1a15450be0f75ba32603206d066c", "lizard_core/analysis.py": "4e6c15d0b00aff70b5264d40…` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr546/make.log` | `lizard_ext/lizardns.py`, `lizardns.py`, `test/testJavaScriptNestedStructures.py`, `testJavaScriptNestedStructures.py`, `NestedStructure`, `max_nested_structures`, `test/testJavaScriptNestedStructures`, `rootdir`, `configfile` | 9: `rootdir: /Users/terryyin/git/lizard/.worktrees/conclude-the-javascript-and-typescript-lexical-a` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr546/manifest.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 1: `{"affected/b-story.js": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a", "affected/genuine-all.js": "83ca72e4726df5645621706ea22096693d246da…` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr546/source-hashes.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 1: `{"target": {"lizard_core/__init__.py": "345df9bf6abd477b82b7546d212473cf78aa1a15450be0f75ba32603206d066c", "lizard_core/analysis.py": "4e6c15d0b00aff70b5264d40…` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr547/focused.log` | `rootdir`, `configfile` | 8: `rootdir: /Users/terryyin/git/lizard/.worktrees/conclude-the-javascript-and-typescript-lexical-a` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr547/full-pytest.log` | `test/testJavaScriptNestedStructures.py`, `testJavaScriptNestedStructures.py`, `NestedStructure`, `test/testJavaScriptNestedStructures`, `rootdir`, `configfile` | 8: `rootdir: /Users/terryyin/git/lizard/.worktrees/conclude-the-javascript-and-typescript-lexical-a` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr547/make.log` | `lizard_ext/lizardns.py`, `lizardns.py`, `test/testJavaScriptNestedStructures.py`, `testJavaScriptNestedStructures.py`, `NestedStructure`, `max_nested_structures`, `test/testJavaScriptNestedStructures`, `rootdir`, `configfile` | 9: `rootdir: /Users/terryyin/git/lizard/.worktrees/conclude-the-javascript-and-typescript-lexical-a` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr547/manifest.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 1: `{"affected/b-story.js": "faf4393a26bc51a330b562c5068695e08cf1fe2b82503d1c094ee033c84fa50a", "affected/load.js": "4e3d6d63a14aaa4fd070c381e8f84a67775ff7534906e4…` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr547/source-hashes.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 1: `{"target": {"lizard_core/__init__.py": "345df9bf6abd477b82b7546d212473cf78aa1a15450be0f75ba32603206d066c", "lizard_core/analysis.py": "4e6c15d0b00aff70b5264d40…` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr551/attempt1-incremental-api.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 166: `"lizard_ext/lizardns.py": "1bf9ca4a8c6e571fb61873ab7ca4861c88c4c50a5f4a553b237dbdc4215ee25a",` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr551/attempt2/incremental-api.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 166: `"lizard_ext/lizardns.py": "1bf9ca4a8c6e571fb61873ab7ca4861c88c4c50a5f4a553b237dbdc4215ee25a",` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr551/attempt3/incremental-api.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 166: `"lizard_ext/lizardns.py": "1bf9ca4a8c6e571fb61873ab7ca4861c88c4c50a5f4a553b237dbdc4215ee25a",` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr551/attempt4/incremental-api.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 166: `"lizard_ext/lizardns.py": "1bf9ca4a8c6e571fb61873ab7ca4861c88c4c50a5f4a553b237dbdc4215ee25a",` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr551/attempt5/incremental-api.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 166: `"lizard_ext/lizardns.py": "1bf9ca4a8c6e571fb61873ab7ca4861c88c4c50a5f4a553b237dbdc4215ee25a",` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr551/attempt6/cumulative-api-parameters.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 166: `"lizard_ext/lizardns.py": "1bf9ca4a8c6e571fb61873ab7ca4861c88c4c50a5f4a553b237dbdc4215ee25a",` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr551/attempt6/cumulative-api.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 166: `"lizard_ext/lizardns.py": "1bf9ca4a8c6e571fb61873ab7ca4861c88c4c50a5f4a553b237dbdc4215ee25a",` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr551/attempt6/cumulative-cli.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 166: `"lizard_ext/lizardns.py": "1bf9ca4a8c6e571fb61873ab7ca4861c88c4c50a5f4a553b237dbdc4215ee25a",` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr551/attempt6/incremental-api-parameters.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 166: `"lizard_ext/lizardns.py": "1bf9ca4a8c6e571fb61873ab7ca4861c88c4c50a5f4a553b237dbdc4215ee25a",` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr551/attempt6/incremental-api.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 166: `"lizard_ext/lizardns.py": "1bf9ca4a8c6e571fb61873ab7ca4861c88c4c50a5f4a553b237dbdc4215ee25a",` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr551/attempt6/incremental-cli.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 166: `"lizard_ext/lizardns.py": "1bf9ca4a8c6e571fb61873ab7ca4861c88c4c50a5f4a553b237dbdc4215ee25a",` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr551/focused-command.json` | `test/testJavaScriptNestedStructures.py`, `testJavaScriptNestedStructures.py`, `NestedStructure`, `test/testJavaScriptNestedStructures` | 2: `"command": "nix develop -c python -m pytest test/test_languages/testJavaScript*.py test/test_languages/testTypeScript*.py test/test_languages/testES6.py test/t…` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr551/incremental-api.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 166: `"lizard_ext/lizardns.py": "1bf9ca4a8c6e571fb61873ab7ca4861c88c4c50a5f4a553b237dbdc4215ee25a",` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr551/make-after-opt.log` | `lizard_ext/lizardns.py`, `lizardns.py`, `test/testJavaScriptNestedStructures.py`, `testJavaScriptNestedStructures.py`, `NestedStructure`, `max_nested_structures`, `test/testJavaScriptNestedStructures`, `rootdir`, `configfile` | 5: `rootdir: /Users/terryyin/git/lizard/.worktrees/process-fabiomalpezzi-s-open-prs` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr551/make-after-refactor.log` | `lizard_ext/lizardns.py`, `lizardns.py`, `test/testJavaScriptNestedStructures.py`, `testJavaScriptNestedStructures.py`, `NestedStructure`, `max_nested_structures`, `test/testJavaScriptNestedStructures`, `rootdir`, `configfile` | 5: `rootdir: /Users/terryyin/git/lizard/.worktrees/process-fabiomalpezzi-s-open-prs` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr551/make.log` | `lizard_ext/lizardns.py`, `lizardns.py`, `test/testJavaScriptNestedStructures.py`, `testJavaScriptNestedStructures.py`, `NestedStructure`, `max_nested_structures`, `test/testJavaScriptNestedStructures`, `rootdir`, `configfile` | 5: `rootdir: /Users/terryyin/git/lizard/.worktrees/process-fabiomalpezzi-s-open-prs` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr551/manifest.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 1: `{"affected/contributor-js.js": "6c6e209113226b02c17a86c455e40d089c0c7a01cc37c3880c87e1b1dbac1485", "affected/contributor-ts.ts": "34aefa661fe91090030300d44a84e…` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr551/source-hashes.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 1: `{"target": {"lizard_core/__init__.py": "345df9bf6abd477b82b7546d212473cf78aa1a15450be0f75ba32603206d066c", "lizard_core/analysis.py": "4e6c15d0b00aff70b5264d40…` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr552/attempt1/cumulative-api.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 166: `"lizard_ext/lizardns.py": "1bf9ca4a8c6e571fb61873ab7ca4861c88c4c50a5f4a553b237dbdc4215ee25a",` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr552/attempt1/incremental-api-parameters.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 166: `"lizard_ext/lizardns.py": "1bf9ca4a8c6e571fb61873ab7ca4861c88c4c50a5f4a553b237dbdc4215ee25a",` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr552/attempt1/incremental-api.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 166: `"lizard_ext/lizardns.py": "1bf9ca4a8c6e571fb61873ab7ca4861c88c4c50a5f4a553b237dbdc4215ee25a",` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr552/attempt1/incremental-cli.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 166: `"lizard_ext/lizardns.py": "1bf9ca4a8c6e571fb61873ab7ca4861c88c4c50a5f4a553b237dbdc4215ee25a",` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr552/attempt2/cumulative-api-parameters.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 166: `"lizard_ext/lizardns.py": "1bf9ca4a8c6e571fb61873ab7ca4861c88c4c50a5f4a553b237dbdc4215ee25a",` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr552/attempt2/cumulative-api.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 166: `"lizard_ext/lizardns.py": "1bf9ca4a8c6e571fb61873ab7ca4861c88c4c50a5f4a553b237dbdc4215ee25a",` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr552/attempt2/cumulative-cli.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 166: `"lizard_ext/lizardns.py": "1bf9ca4a8c6e571fb61873ab7ca4861c88c4c50a5f4a553b237dbdc4215ee25a",` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr552/focused-command.json` | `test/testJavaScriptNestedStructures.py`, `testJavaScriptNestedStructures.py`, `NestedStructure`, `test/testJavaScriptNestedStructures` | 2: `"command": "PIP_QUIET=3 nix develop -c python -m pytest test/test_languages/testJavaScript*.py test/test_languages/testTypeScript*.py test/test_languages/testE…` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr552/make.log` | `lizard_ext/lizardns.py`, `lizardns.py`, `test/testJavaScriptNestedStructures.py`, `testJavaScriptNestedStructures.py`, `NestedStructure`, `max_nested_structures`, `test/testJavaScriptNestedStructures`, `rootdir`, `configfile` | 5: `rootdir: /Users/terryyin/git/lizard/.worktrees/process-fabiomalpezzi-s-open-prs` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr552/manifest.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 1: `{"affected/contributor.ts": "2e16560af0cb5a80dbd89cb56297f4141899de8367d0dc9227342f60327348f9", "affected/first.ts": "4809492946c0e401503a468339cb3829bbc9a978f…` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr552/source-hashes.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 1: `{"target": {"lizard_core/__init__.py": "345df9bf6abd477b82b7546d212473cf78aa1a15450be0f75ba32603206d066c", "lizard_core/analysis.py": "4e6c15d0b00aff70b5264d40…` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr553/attempt1/incremental-api-parameters.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 166: `"lizard_ext/lizardns.py": "1bf9ca4a8c6e571fb61873ab7ca4861c88c4c50a5f4a553b237dbdc4215ee25a",` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr553/attempt1/incremental-api.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 166: `"lizard_ext/lizardns.py": "1bf9ca4a8c6e571fb61873ab7ca4861c88c4c50a5f4a553b237dbdc4215ee25a",` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr553/attempt1/incremental-cli.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 166: `"lizard_ext/lizardns.py": "1bf9ca4a8c6e571fb61873ab7ca4861c88c4c50a5f4a553b237dbdc4215ee25a",` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr553/attempt2/cumulative-api-parameters.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 166: `"lizard_ext/lizardns.py": "1bf9ca4a8c6e571fb61873ab7ca4861c88c4c50a5f4a553b237dbdc4215ee25a",` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr553/attempt2/cumulative-api.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 166: `"lizard_ext/lizardns.py": "1bf9ca4a8c6e571fb61873ab7ca4861c88c4c50a5f4a553b237dbdc4215ee25a",` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr553/attempt2/cumulative-cli.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 166: `"lizard_ext/lizardns.py": "1bf9ca4a8c6e571fb61873ab7ca4861c88c4c50a5f4a553b237dbdc4215ee25a",` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr553/attempt2/incremental-cli.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 166: `"lizard_ext/lizardns.py": "1bf9ca4a8c6e571fb61873ab7ca4861c88c4c50a5f4a553b237dbdc4215ee25a",` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr553/make.txt` | `lizard_ext/lizardns.py`, `lizardns.py`, `test/testJavaScriptNestedStructures.py`, `testJavaScriptNestedStructures.py`, `NestedStructure`, `max_nested_structures`, `test/testJavaScriptNestedStructures`, `rootdir`, `configfile` | 5: `rootdir: /Users/terryyin/git/lizard/.worktrees/process-fabiomalpezzi-s-open-prs` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr554/adapted.diff` | `lizard_ext/lizardns.py`, `lizardns.py`, `test/testJavaScriptNestedStructures.py`, `testJavaScriptNestedStructures.py`, `_member_name`, `NestedStructure`, `test/testJavaScriptNestedStructures` | 1: `diff --git a/lizard_ext/lizardns.py b/lizard_ext/lizardns.py` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr554/attempt1/incremental-api.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 168: `"lizard_ext/lizardns.py": "1bf9ca4a8c6e571fb61873ab7ca4861c88c4c50a5f4a553b237dbdc4215ee25a",` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr554/attempt2/incremental-api.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 168: `"lizard_ext/lizardns.py": "1bf9ca4a8c6e571fb61873ab7ca4861c88c4c50a5f4a553b237dbdc4215ee25a",` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr554/attempt3/incremental-api.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 125: `"lizard_ext/lizardns.py": "1bf9ca4a8c6e571fb61873ab7ca4861c88c4c50a5f4a553b237dbdc4215ee25a",` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr554/attempt4/incremental-api.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 168: `"lizard_ext/lizardns.py": "1bf9ca4a8c6e571fb61873ab7ca4861c88c4c50a5f4a553b237dbdc4215ee25a",` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr554/attempt5/cumulative-api-parameters.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 168: `"lizard_ext/lizardns.py": "1bf9ca4a8c6e571fb61873ab7ca4861c88c4c50a5f4a553b237dbdc4215ee25a",` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr554/attempt5/cumulative-api.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 168: `"lizard_ext/lizardns.py": "1bf9ca4a8c6e571fb61873ab7ca4861c88c4c50a5f4a553b237dbdc4215ee25a",` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr554/attempt5/incremental-api-parameters.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 168: `"lizard_ext/lizardns.py": "1bf9ca4a8c6e571fb61873ab7ca4861c88c4c50a5f4a553b237dbdc4215ee25a",` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr554/attempt5/incremental-api.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 168: `"lizard_ext/lizardns.py": "1bf9ca4a8c6e571fb61873ab7ca4861c88c4c50a5f4a553b237dbdc4215ee25a",` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr554/attempt5/incremental-cli.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 168: `"lizard_ext/lizardns.py": "1bf9ca4a8c6e571fb61873ab7ca4861c88c4c50a5f4a553b237dbdc4215ee25a",` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr554/make.txt` | `lizard_ext/lizardns.py`, `lizardns.py`, `test/testJavaScriptNestedStructures.py`, `testJavaScriptNestedStructures.py`, `NestedStructure`, `max_nested_structures`, `test/testJavaScriptNestedStructures`, `rootdir`, `configfile` | 5: `rootdir: /Users/terryyin/git/lizard/.worktrees/process-fabiomalpezzi-s-open-prs` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr554/measurement-decision.json` | `lizard_ext/lizardns.py`, `lizardns.py`, `max_nested_structures` | 2: `"reason": "PR554 changes lizard_ext/lizardns.py nested-structure detection; public max_nested_structures is reached under -ENS. Require api + api-parameters + …` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr554/pr-meta.json` | `lizard_ext/lizardns.py`, `lizardns.py`, `test/testJavaScriptNestedStructures.py`, `testJavaScriptNestedStructures.py`, `_member_name`, `NestedStructure`, `test/testJavaScriptNestedStructures` | 1: `{"additions":23,"author":{"id":"U_kgDOBhT8FA","is_bot":false,"login":"FabioMalpezzi","name":""},"baseRefOid":"c8ae80a3553df80bacdfdd9ce2e6c32eba13a81c","body":…` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr554/pr.diff` | `lizard_ext/lizardns.py`, `lizardns.py`, `test/testJavaScriptNestedStructures.py`, `testJavaScriptNestedStructures.py`, `_member_name`, `NestedStructure`, `test/testJavaScriptNestedStructures` | 1: `diff --git a/lizard_ext/lizardns.py b/lizard_ext/lizardns.py` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr554/raw.diff` | `lizard_ext/lizardns.py`, `lizardns.py`, `test/testJavaScriptNestedStructures.py`, `testJavaScriptNestedStructures.py`, `_member_name`, `NestedStructure`, `test/testJavaScriptNestedStructures` | 1: `diff --git a/lizard_ext/lizardns.py b/lizard_ext/lizardns.py` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice1/full-candidate-cumulative-api-parameters.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 168: `"lizard_ext/lizardns.py": "1bf9ca4a8c6e571fb61873ab7ca4861c88c4c50a5f4a553b237dbdc4215ee25a",` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice1/prior-set-cumulative-api-parameters.json` | `lizard_ext/lizardns.py`, `lizardns.py` | 168: `"lizard_ext/lizardns.py": "1bf9ca4a8c6e571fb61873ab7ca4861c88c4c50a5f4a553b237dbdc4215ee25a",` | |
+| `lizard_core/option_resolution.py` | `max_nested_structures` | 37: `if "max_nested_structures" not in opt.thresholds and hasattr(opt, "NS"):` | |
+
+### Test
+
+| File | Terms matched | First matching line | Disposition |
+| --- | --- | --- | --- |
+| `test/test_languages/testJavaScriptBindingBoundaries.py` | `max_nested_structures` | 161: `assert [f.max_nested_structures for f in result] == [1, 0]` | |
+| `test/test_languages/testTypeScriptAnnotationBoundaries.py` | `max_nested_structures` | 111: `assert [f.max_nested_structures for f in result] == [1, 0]` | |
+| `test/testExtension.py` | `max_nested_structures` | 75: `{func.name: func.max_nested_structures for func in self.lizard_object.function_list})` | |
+| `test/testNestedStructures.py` | `NestedStructure`, `max_nested_structures` | 4: `from lizard_ext.lizardns import LizardExtension as NestedStructure` | |
+| `test/testNestedStructureScopes.py` | `NestedStructure`, `max_nested_structures` | 3: `from .testNestedStructures import process_cpp` | |
+| `test/testPythonNestedStructures.py` | `NestedStructure`, `max_nested_structures` | 4: `from lizard_ext.lizardns import LizardExtension as NestedStructure` | |
+
+### Test support or stand-in
+
+none found
+
+### Journey or feature
+
+none found
+
+### Guidance reader
+
+| File | Terms matched | First matching line | Disposition |
+| --- | --- | --- | --- |
+| `.agents/skills/dough-test-optimization/references/pytest-proof.md` | `rootdir` | 83: `` (`git rev-parse --show-toplevel`), not pytest's `rootdir` or the working `` | |
+| `.claude/skills/dough-test-optimization/references/pytest-proof.md` | `rootdir` | 83: `` (`git rev-parse --show-toplevel`), not pytest's `rootdir` or the working `` | |
+| `.planning/seeds/SEED-035-ns-member-name-performance.md` | `lizard_ext/lizardns.py`, `lizardns.py`, `_member_name`, `max_nested_structures` | 20: `` **Goal.** JavaScript/TypeScript users of `-ENS` / `max_nested_structures` `` | |
+| `.planning/slice-plans/026-ns-member-name-performance/PLAN.md` | `lizard_ext/lizardns.py`, `lizardns.py`, `test/testJavaScriptNestedStructures.py`, `testJavaScriptNestedStructures.py`, `_member_name`, `NestedStructure`, `test/testJavaScriptNestedStructures` | 17: `` **In scope:** the as-authored `_member_name` after `.` / `?.` in `` | |
+| `.planning/slice-plans/026-ns-member-name-performance/source-review.md` | `lizard_ext/lizardns.py`, `lizardns.py`, `_member_name` | 29: `` \| 2a.1 \| Public analysis for the story’s key fixtures SHALL match the named test’s expected function names and NS values (`test_member_named_like_a_structure_i… `` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr533/review-findings.md` | `lizardns.py` | 143: `equivalent: only lizardns.py differs in analyzer sources, its initializer is` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr535/consumer-trace-1.md` | `make.log` | 48: `` \| `docs/reviews/fabio-malpezzi-20261027/pr532/current-base-make.log.part1` \| `lizard_languages/javascript_functions.py`, `javascript_functions.py` \| 213: `liza… `` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr544/consumer-trace-product.md` | `make.log` | 46: `` \| `docs/reviews/fabio-malpezzi-20261027/pr532/current-base-make.log.part1` \| `lizard_languages/javascript_templates.py`, `javascript_templates.py`, `tsx.py`, `… `` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr544/consumer-trace.md` | `make.log` | 75: `` \| `docs/reviews/fabio-malpezzi-20261027/pr532/current-base-make.log.part1` \| `lizard_languages/javascript_templates.py`, `javascript_templates.py`, `tsx.py`, `… `` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr545/consumer-trace-product.md` | `full-pytest.log`, `make.log`, `full-pytest` | 45: `` \| `docs/reviews/fabio-malpezzi-20261027/pr532/current-base-make.log.part1` \| `lizard_languages/javascript_templates.py`, `javascript_templates.py`, `typescript… `` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr545/consumer-trace.md` | `full-pytest.log`, `make.log`, `full-pytest`, `rootdir`, `configfile` | 112: `` \| `rootdir` \| declared in `docs/reviews/fabio-malpezzi-20261027/pr545/focused.log` \| `` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr546/consumer-trace-product.md` | `full-pytest.log`, `make.log`, `full-pytest` | 47: `` \| `docs/reviews/fabio-malpezzi-20261027/pr532/current-base-make.log.part1` \| `typescript.py`, `test/test_languages/testJavaScript.py`, `testJavaScript.py` \| 71… `` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr546/consumer-trace.md` | `full-pytest.log`, `make.log`, `full-pytest` | 184: `` \| `docs/reviews/fabio-malpezzi-20261027/pr532/current-base-make.log.part1` \| `typescript.py`, `test/test_languages/testJavaScript.py`, `testJavaScript.py` \| 71… `` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr547/consumer-trace-product.md` | `full-pytest.log`, `make.log`, `full-pytest` | 49: `` \| `docs/reviews/fabio-malpezzi-20261027/pr532/current-base-make.log.part1` \| `tsx.py`, `typescript.py`, `test/test_languages/testOptionalOperators.py`, `testOp… `` | |
+| `docs/reviews/fabio-malpezzi-20261027/pr547/consumer-trace.md` | `full-pytest.log`, `make.log`, `full-pytest` | 176: `` \| `docs/reviews/fabio-malpezzi-20261027/pr532/current-base-make.log.part1` \| `tsx.py`, `typescript.py`, `test/test_languages/testOptionalOperators.py`, `testOp… `` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr551/consumer-trace-dispositions.md` | `testJavaScriptNestedStructures.py`, `NestedStructure` | 56: `` \| `test/test_languages/testES6.py`, `testJSX.py`, `testTSX.py`, `testVue.py`, `testOptionalOperators.py`, `testJavaScriptNestedStructures.py` \| run: focused su… `` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr551/consumer-trace-product.md` | `full-pytest.log`, `make.log`, `full-pytest` | 56: `` \| `docs/reviews/fabio-malpezzi-20261027/pr532/current-base-make.log.part1` \| `lizard_languages/javascript_objects.py`, `javascript_objects.py`, `test/test_lang… `` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr551/consumer-trace.md` | `full-pytest.log`, `make.log`, `full-pytest` | 76: `` \| `docs/reviews/fabio-malpezzi-20261027/pr532/current-base-make.log.part1` \| `lizard_languages/javascript_objects.py`, `javascript_objects.py`, `test/test_lang… `` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr551/README.md` | `test/testJavaScriptNestedStructures.py`, `testJavaScriptNestedStructures.py`, `NestedStructure`, `test/testJavaScriptNestedStructures` | 36: `test/testJavaScriptNestedStructures.py` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr552/consumer-trace-dispositions.md` | `testJavaScriptNestedStructures.py`, `NestedStructure` | 50: `` \| `test/test_languages/testES6.py`, `testJSX.py`, `testTSX.py`, `testVue.py`, `testOptionalOperators.py`, `testJavaScriptNestedStructures.py` \| run: focused su… `` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr552/consumer-trace-product.md` | `full-pytest.log`, `make.log`, `lizard_ext/lizardns.py`, `lizardns.py`, `test/testJavaScriptNestedStructures.py`, `testJavaScriptNestedStructures.py`, `NestedStructure`, `test/testJavaScriptNestedStructures`, `full-pytest` | 386: `` \| `docs/reviews/fabio-malpezzi-20261027/pr532/current-base-make.log.part1` \| `lizard_languages/javascript_functions.py`, `javascript_functions.py`, `test/test_… `` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr552/consumer-trace.md` | `full-pytest.log`, `make.log`, `lizard_ext/lizardns.py`, `lizardns.py`, `test/testJavaScriptNestedStructures.py`, `testJavaScriptNestedStructures.py`, `NestedStructure`, `test/testJavaScriptNestedStructures`, `full-pytest` | 378: `` \| `docs/reviews/fabio-malpezzi-20261027/pr532/current-base-make.log.part1` \| `lizard_languages/javascript_functions.py`, `javascript_functions.py`, `test/test_… `` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr554/consumer-trace-dispositions.md` | `_member_name` | 5: `` \| NS structure keywords after `.` / `?.` \| Accept contributor `_member_name` skip \| `` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr554/consumer-trace-product.md` | `lizard_ext/lizardns.py`, `lizardns.py` | 5: `` - `lizard_ext/lizardns.py` — after `.` or `?.`, do not treat the next token as `` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr554/README.md` | `lizard_ext/lizardns.py`, `lizardns.py`, `_member_name`, `max_nested_structures` | 14: `` Under `-ENS`, `.catch` / `?.catch` member calls inflate `max_nested_structures`. `` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice1/NOTES.md` | `load-gate.log`, `lizard_ext/lizardns.py`, `lizardns.py`, `test/testJavaScriptNestedStructures.py`, `testJavaScriptNestedStructures.py`, `_member_name`, `NestedStructure`, `test/testJavaScriptNestedStructures`, `load-gate` | 13: `` - First quiet gate (before prior-set): samples 17–19 in `load-gate.log` `` | |
+| `docs/reviews/fabio-malpezzi-SEED-034/pr554/source-review-commitments.md` | `lizard_ext/lizardns.py`, `lizardns.py`, `_member_name` | 7: `` \| E4 \| Candidate `_member_name` after `.`/`?.` makes `-ENS` treat `.catch`/`?.catch` as non-structures while real `if`/`try`/`catch` still raise NS (`reproduct… `` | |
