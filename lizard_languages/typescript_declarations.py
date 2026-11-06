@@ -88,7 +88,8 @@ class TypeScriptDeclarationsMixin:
                         if generic_depth[0] == 0:
                             phase[0] = 1
                 elif phase[0] == 4:
-                    if t == '{':
+                    # A template literal type's '${' closes with '}' too.
+                    if t in ('{', '${'):
                         brace_count[0] += 1
                     elif t == '}':
                         brace_count[0] -= 1
@@ -107,12 +108,13 @@ class TypeScriptDeclarationsMixin:
 
             def skip_interface(t):
                 nonlocal brace_count, interface_started
-                if t == '{':
-                    interface_started = True
+                # A template literal type's '${' closes with '}' too.
+                if t in ('{', '${'):
+                    interface_started = interface_started or t == '{'
                     brace_count += 1
-                elif t == '}' and interface_started:
+                elif t == '}' and brace_count:
                     brace_count -= 1
-                    if brace_count == 0:
+                    if brace_count == 0 and interface_started:
                         self.next(self._state_global)
                         return True
                 return False

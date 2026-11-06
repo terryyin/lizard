@@ -1,5 +1,6 @@
 import unittest
 
+from lizard import FileAnalyzer, get_extensions
 from .testTypeScript import get_ts_function_list
 
 
@@ -179,3 +180,63 @@ class Test_TypeScript_interface_enum_no_fp(unittest.TestCase):
         '''
         functions = get_ts_function_list(code)
         self.assertEqual(["getStatus"], [f.name for f in functions])
+
+
+class Test_TypeScript_template_literal_types_in_declarations(unittest.TestCase):
+    """A template literal type's '${' closes with '}' inside skipped
+    interface and object-type bodies; later code keeps its functions."""
+
+    def test_functions_after_template_literal_types_in_declarations(self):
+        bodies = {
+            'optional field': 'interface O { kind?: `x-${string}`; }',
+            'required field': 'interface O { kind: `x-${string}`; }',
+            'generic argument':
+                'interface O { kind?: Extract<string, `x-${string}`>; }',
+            'nested generics':
+                'interface O { tag: Map<string, Array<`t-${string}`>>; }',
+            'nested interpolation': 'interface O { n: `a-${`b-${string}`}`; }',
+            'extends clause':
+                'interface O extends Array<`e-${string}`> { n: number; }',
+            'object type alias': 'type O = { label: `s-${string}` };',
+        }
+        for case, declaration in bodies.items():
+            with self.subTest(case=case):
+                functions = get_ts_function_list(
+                    declaration + "\n"
+                    "function choose(x: boolean) { if (x) return 1; return 0; }")
+                self.assertEqual([('choose', 2)],
+                                 [(f.name, f.cyclomatic_complexity)
+                                  for f in functions])
+
+    def test_ccn_and_cognitive_match_code_without_the_types(self):
+        types = (
+            "type Prefix = `x-${string}`;\n"
+            "interface Options {\n"
+            "  kind?: Extract<string, `x-${string}`>;\n"
+            "  name: `id-${number}`;\n"
+            "  tag: Map<string, Array<`t-${Uppercase<`k${string}`>}`>>;\n"
+            "  nested: `a-${`b-${string}`}`;\n"
+            "}\n"
+            "type Shape = { label: `s-${string}`; size?: number };\n"
+            "interface Tagged extends Array<`e-${string}`> { first: Prefix; }\n"
+        )
+        code = (
+            "function choose(x: boolean, o: Options): string {\n"
+            "  if (x) return `${o.name ? 'a' : 'b'}`;\n"
+            "  return o.kind ?? '';\n"
+            "}\n"
+            "class Box {\n"
+            "  run(s: Shape, t: Tagged): number {\n"
+            "    return s.size && t.length ? 1 : 0;\n"
+            "  }\n"
+            "}\n"
+        )
+        analyzer = FileAnalyzer(get_extensions(['cognitive', 'outside']))
+        for source in (types + code, code):
+            with self.subTest(with_types=source != code):
+                functions = analyzer.analyze_source_code(
+                    'a.ts', source).function_list
+                self.assertEqual(
+                    [('choose', 4, 1), ('run', 3, 2), ('*global*', 1, 0)],
+                    [(f.name, f.cyclomatic_complexity,
+                      f.cognitive_complexity) for f in functions])
