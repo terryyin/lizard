@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "agent": "Airi-chan",
+  "email": "airi-chan@example.org",
+  "activity": "preparation",
+  "identity": "SEED-035#ns-member-name-performance",
+  "host": "cursor",
+  "model": "auto"
+}
