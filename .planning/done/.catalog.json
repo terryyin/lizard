@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-034_process-fabio-malpezzi-prs.json",
+      "identity": "SEED-034#process-fabio-malpezzi-prs",
+      "completedAt": "2026-11-06T11:28:49.452Z",
+      "blob": "821c6193aafc3eafc5486b2b3436b8c563836e49"
+    },
+    {
       "fileName": "SEED-039_process-pr-557.json",
       "identity": "SEED-039#process-pr-557",
       "completedAt": "2026-11-06T00:25:26.440Z",
@@ -308,5 +314,14 @@
       "blob": "85482d88f73db3f9c1c8ac1e1be7f74b1c5e4bea"
     }
   ],
-  "unreadable": []
+  "unreadable": [
+    {
+      "fileName": "aino-chan.json",
+      "blob": "d0b8319a2a4d49263af438a0dc59b949ecf7bd03"
+    },
+    {
+      "fileName": "rio-chan.json",
+      "blob": "47a6b63aafb1a6cc4b8877e6360965e80de7ef28"
+    }
+  ]
 }

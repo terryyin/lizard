@@ -1,0 +1,35 @@
+{
+  "identity": "SEED-034#process-fabio-malpezzi-prs slice 1",
+  "pr": 551,
+  "frozen_head": "a8dabb2351014cbf5164fe31a3472036877130fc",
+  "corrected_head": "b0733889d075dbbbfa2985648e5910e383dd36aa",
+  "target": "4a05e4056cebb2edd75cb02b7a43e911369f4ce5",
+  "baseline": "4a05e4056cebb2edd75cb02b7a43e911369f4ce5",
+  "disposition": "merged",
+  "value": "class methods with async/static/get/set after a semicolon-less field must be reported in JS/TS; multiline async-arrow fields stay fields",
+  "adaptation": "contributor ASI helper plus _in_prop_value call-site guards to keep hot-path cost under the 3% paired bound",
+  "product_files": [
+    "lizard_languages/javascript_objects.py",
+    "lizard_languages/typescript_states.py",
+    "test/test_languages/testJavaScriptMembers.py",
+    "test/test_languages/testTypeScriptFields.py"
+  ],
+  "proof": {
+    "reproduce": {
+      "target_all_match": false,
+      "corrected_all_match": true
+    },
+    "focused": "1385 passed, 5 skipped (re-established); member/field suites green after opt",
+    "full_pytest": "3021 passed, 7 skipped",
+    "make": "exit 0"
+  },
+  "performance": {
+    "attempt": 6,
+    "all_gates_pass": true,
+    "worst_upper_ci_pct": 0.9892708055838415,
+    "note": "attempt5 unguarded helper failed API at ~2.64% (CI upper 3.28%); attempt6 after hot-path guards passed api/api-parameters/cli; cumulative mirrors incremental"
+  },
+  "ci_run": "https://github.com/terryyin/lizard/actions/runs/41996874747",
+  "merge_commit": "b6b6b8c671bab79da1a6c28c61a2076e4735998d",
+  "thanks": "https://github.com/terryyin/lizard/pull/551#issuecomment-6653712649"
+}
