@@ -2,6 +2,7 @@
 
 **Identity:** SEED-042#python-inline-function-suites
 **Source:** [canonical story](../../seeds/SEED-042-python-inline-function-suites.md#python-inline-function-suites)
+**Source review:** [source-only review](source-review.md)
 
 ## Goal and scope
 
@@ -81,13 +82,18 @@ held only the seed edit afterward. Intake packet also retained under
 
 ### 1. Decide inline-suite reporting under the 3% gate
 Type: Behavior
-Status: planned
-Proof: story examples through `analyze_file.analyze_source_code`; red then
-green on discriminating inline-suite and shared-line docstring NLOC tests;
-focused Python reader coverage; full pytest and `make`; paired `api`,
-`api-parameters`, and `cli` against current trunk with frozen corpus and
-paired 95% upper slowdown strictly below 3%; required hosted CI on any
-landable head; otherwise a recorded judgment on PR #530 with trunk unchanged.
+Status: done
+Refactor disposition: records-only (planning evidence, source review, and
+retained paired-benchmark summaries; no product code change)
+Proof: Reject disposition accepted. Trunk defects confirmed via
+`lizard.analyze_file.analyze_source_code` (STREAM only `kept` CCN2/NLOC4;
+NESTED only `outer.inner`; DOC `[]`). Candidate A (PR head `2948b38` +
+shared-line docstring NLOC 1) and Candidate B (structure-only cheaper alt)
+restored story examples in isolated checkouts but missed the strict &lt;3%
+paired upper bound on required workloads versus frozen trunk
+`b1052466` / 295-file corpus (see `evidence/summary.json`). Judgment posted
+on PR #530 as https://github.com/terryyin/lizard/pull/530#issuecomment-6687330144;
+PR remains OPEN; owned reader unchanged.
 Behavior: Given the confirmed trunk defects and PR #530 as candidate → evaluate
 at most the PR head plus shared-line docstring NLOC fix, and one cheaper
 alternative in the same Python reader owners if that candidate misses the
@@ -101,16 +107,29 @@ on the PR, leave it unmerged, and leave the reader on trunk unchanged.
   `api-parameters`, and `cli` versus current trunk. No cumulative cohort
   baseline.
 - Change only the existing Python reader owners; never add a second parser.
-- Bound search: try the PR head + NLOC correction first; if it fails the
-  bound, try one cheaper alternative in those owners that avoids per-token
-  bracket-depth work when possible. If neither clears both gates, the reject
-  disposition completes the story.
+- Bound search completed: PR head + NLOC correction failed all three
+  workloads; one cheaper structure-only alternative failed api and
+  api-parameters (upper ≥ 3%) while cli alone passed. Reject disposition
+  completes the story.
 - Freeze baseline/candidate checkouts and a Python corpus before timing;
-  retain every valid measurement, including failures.
+  retain every valid measurement, including failures — retained under
+  `evidence/`.
 - Do not force-push `ahuimanu:fix/python-inline-suites`. Prefer a
   fast-forward when the remote accepts a descendant; otherwise an equivalent
   exact-head vehicle that keeps contributor history.
-- Thank the contributor only after a confirmed merge.
+- Thank the contributor only after a confirmed merge — not applicable on
+  reject.
+
+## Learnings
+
+- Shared-line docstring NLOC must key off `current_line == start_line`, not
+  “docstring has no newlines” (block docstrings are also single-token).
+- Structure-only alt nearly clears the bound (~2.6% mean; API upper still
+  ≥ 3%) and restores story examples; per-token bracket-depth remains the
+  large API cost (~12%+) and is still needed for some paren/continuation
+  cases.
+- Paired freeze used trunk `b1052466`; later trunk advance does not invalidate
+  that frozen comparison.
 
 ## Concern evidence
 

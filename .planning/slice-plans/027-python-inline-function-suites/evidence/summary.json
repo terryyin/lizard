@@ -1,0 +1,191 @@
+{
+  "freeze": {
+    "baseline": "/tmp/pr530-slice1/baseline-master",
+    "baseline_rev": "b1052466a472010d753c0853966225514603a069",
+    "candidate": "/tmp/pr530-slice1/candidate-pr530-nloc",
+    "candidate_base_rev": "b1052466a472010d753c0853966225514603a069",
+    "candidate_overlay": [
+      "lizard_languages/python.py",
+      "lizard_languages/python_structure.py"
+    ],
+    "corpus": "/tmp/pr530-slice1/corpus",
+    "corpus_file_count": 295,
+    "corpus_manifest": "/tmp/pr530-slice1/corpus-manifest.json",
+    "limit_pct": 3.0,
+    "workloads": [
+      "api",
+      "api-parameters",
+      "cli"
+    ],
+    "host_note": "Darwin 16-core; load before first workload recorded below",
+    "load_before_first": [
+      4.08544921875,
+      3.43115234375,
+      2.99560546875
+    ]
+  },
+  "results": [
+    {
+      "file": "candidate1-api-parameters.json",
+      "workload": "api-parameters",
+      "verdict": "bound-not-met",
+      "limit_pct": 3.0,
+      "paired_95pct_ci": [
+        14.286736436237282,
+        15.547799148315047
+      ],
+      "paired_change_pct": 14.915537970505818,
+      "medians": {
+        "baseline": 1.225520563,
+        "candidate": 1.4124903544999992
+      },
+      "load_before": [
+        1.865234375,
+        2.3232421875,
+        2.5947265625
+      ],
+      "load_after": [
+        1.8017578125,
+        2.2119140625,
+        2.53125
+      ],
+      "host": "Territory.local",
+      "passes": false
+    },
+    {
+      "file": "candidate1-api.json",
+      "workload": "api",
+      "verdict": "bound-not-met",
+      "limit_pct": 3.0,
+      "paired_95pct_ci": [
+        11.833878184438978,
+        13.604074734639642
+      ],
+      "paired_change_pct": 12.715501396789216,
+      "medians": {
+        "baseline": 1.226873916999999,
+        "candidate": 1.3776752079999977
+      },
+      "load_before": [
+        4.08544921875,
+        3.43115234375,
+        2.99560546875
+      ],
+      "load_after": [
+        2.875,
+        3.21728515625,
+        2.94677734375
+      ],
+      "host": "Territory.local",
+      "passes": false
+    },
+    {
+      "file": "candidate1-cli.json",
+      "workload": "cli",
+      "verdict": "bound-not-met",
+      "limit_pct": 3.0,
+      "paired_95pct_ci": [
+        9.71332566449829,
+        12.244543380462316
+      ],
+      "paired_change_pct": 10.971717757109483,
+      "medians": {
+        "baseline": 1.429588229500002,
+        "candidate": 1.584816791999998
+      },
+      "load_before": [
+        1.67822265625,
+        2.17138671875,
+        2.5126953125
+      ],
+      "load_after": [
+        2.40185546875,
+        2.32861328125,
+        2.54345703125
+      ],
+      "host": "Territory.local",
+      "passes": false
+    },
+    {
+      "file": "candidate2-alt-api-parameters.json",
+      "workload": "api-parameters",
+      "verdict": "bound-not-met",
+      "limit_pct": 3.0,
+      "paired_95pct_ci": [
+        1.9363824792385482,
+        3.2879570279120243
+      ],
+      "paired_change_pct": 2.6099444162036147,
+      "medians": {
+        "baseline": 1.223955208500005,
+        "candidate": 1.2546936455000015
+      },
+      "load_before": [
+        2.0322265625,
+        2.25146484375,
+        2.51318359375
+      ],
+      "load_after": [
+        2.0185546875,
+        2.20361328125,
+        2.47607421875
+      ],
+      "host": "Territory.local",
+      "passes": false
+    },
+    {
+      "file": "candidate2-alt-api.json",
+      "workload": "api",
+      "verdict": "bound-not-met",
+      "limit_pct": 3.0,
+      "paired_95pct_ci": [
+        1.9211007434494574,
+        3.3064668794106913
+      ],
+      "paired_change_pct": 2.611445844341565,
+      "medians": {
+        "baseline": 1.591454437000003,
+        "candidate": 1.6418593540000046
+      },
+      "load_before": [
+        1.431640625,
+        2.40966796875,
+        2.6552734375
+      ],
+      "load_after": [
+        2.22607421875,
+        2.42333984375,
+        2.6376953125
+      ],
+      "host": "Territory.local",
+      "passes": false
+    },
+    {
+      "file": "candidate2-alt-cli.json",
+      "workload": "cli",
+      "verdict": "passes",
+      "limit_pct": 3.0,
+      "paired_95pct_ci": [
+        1.0471648288569602,
+        2.3732148903954733
+      ],
+      "paired_change_pct": 1.7080287838171855,
+      "medians": {
+        "baseline": 1.4520927289999985,
+        "candidate": 1.4717777499999976
+      },
+      "load_before": [
+        1.93994140625,
+        2.1767578125,
+        2.46142578125
+      ],
+      "load_after": [
+        2.25927734375,
+        2.23876953125,
+        2.46142578125
+      ],
+      "host": "Territory.local",
+      "passes": true
+    }
+  ]
+}
