@@ -8,7 +8,9 @@ from .js_style_regex_context import (
     REGEX_LITERAL,
     REGEX_START_MARKER,
     REGEX_TOKEN,
+    REGEX_TOKEN_JSX,
     REGEX_TOKEN_PUNCT,
+    REGEX_TOKEN_PUNCT_JSX,
     mark_regex_literal_starts,
 )
 
@@ -33,14 +35,18 @@ def _unmark_regex_token(token):
 
 
 def js_style_regex_expression(func=None, *, language='js'):
+    jsx = language == 'jsx'
+    token_punct = REGEX_TOKEN_PUNCT_JSX if jsx else REGEX_TOKEN_PUNCT
+    token = REGEX_TOKEN_JSX if jsx else REGEX_TOKEN
+
     def decorator(generate_tokens):
         def generate_tokens_with_regex(source_code, addition='', token_class=None):
             # Recognize literals before strings or JSX can consume their contents.
             marked = mark_regex_literal_starts(source_code, language=language)
             if marked is source_code:
-                addition += r"|" + REGEX_TOKEN_PUNCT
+                addition += r"|" + token_punct
                 return generate_tokens(marked, addition, token_class)
-            addition += r"|" + REGEX_TOKEN
+            addition += r"|" + token
             return _yield_unmarked(generate_tokens(marked, addition, token_class))
         return generate_tokens_with_regex
 

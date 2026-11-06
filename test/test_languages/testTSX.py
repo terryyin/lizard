@@ -819,6 +819,30 @@ function Chart({ data, wide }) {
 function after(x) { if (x) { return 1 } return 2; }
 ''')
 
+    def test_slash_in_text_does_not_open_a_regex(self):
+        # `for` anywhere switches regex detection to a forward scan; a
+        # slash in element text must not read as a literal up to `</th>`.
+        source = '''\
+function Rates({ rows }) {
+  return (
+    <table>
+      <thead><tr><th>At 9% / 11%</th><th>Share (/ total)</th><th>like-for-like</th></tr></thead>
+      <tbody>{rows.map(r => <tr key={r.id}><td>{r.ok ? 'yes' : 'no'}</td></tr>)}</tbody>
+    </table>);
+}
+function escape(s) { return s.replace(/</g, '&lt;').replace(/>/g, s && '&gt;'); }
+function after(x) { if (x) { return 1 } return 2; }
+'''
+        expected = [("(anonymous)", 5, 5, 1, 4), ("Rates", 1, 7, 2, 47),
+                     ("escape", 8, 8, 2, 24), ("after", 9, 9, 2, 16)]
+        for ext in ("jsx", "tsx"):
+            with self.subTest(ext=ext):
+                self.assertEqual(expected, [
+                    (f.name, f.start_line, f.end_line,
+                     f.cyclomatic_complexity, f.token_count)
+                    for f in analyze_file.analyze_source_code(
+                        "a." + ext, source).function_list])
+
     def test_type_parameter_with_extends_is_not_an_element(self):
         self.assertEqual(
             [("pick", 1, 1, 2), ("after", 2, 2, 2)],

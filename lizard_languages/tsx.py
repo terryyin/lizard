@@ -26,7 +26,7 @@ class TSXReader(TypeScriptReader):
             ".tsx")
 
     @staticmethod
-    @js_style_regex_expression
+    @js_style_regex_expression(language='jsx')
     def generate_tokens(source_code, addition='', token_class=None):
         # Add support for TypeScript type annotations in JSX
         addition = addition + "|" + LINE_COMMENT + \
