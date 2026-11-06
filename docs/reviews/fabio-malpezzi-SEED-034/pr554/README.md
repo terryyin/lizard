@@ -1,10 +1,9 @@
 # PR #554 — Member names that look like structures under NS
 
-**Disposition:** SEED-035 cleared every required quiet-load paired `--extension ns`
-gate (including cumulative `api-parameters` and CLI) for the as-authored
-`_member_name` candidate on refreshed master; story-branch wrap-up lands the
-equivalent exact-head revision and acknowledges the contributor. Attempt5
-evidence below remains the SEED-034 non-merge record.
+**Disposition:** landed on `master` as `ba1e3dc2222382d1f7b1b6ced731b7e03945bede`
+via SEED-035 (equivalent exact-head to as-authored `_member_name` + discriminating
+test). PR #554 closed with contributor acknowledgement. Attempt5 evidence below
+remains the SEED-034 non-merge record that motivated the follow-up.
 
 **Head:** `2368413b2de05b05ff44ce863dcded8061342492` (OPEN; hosted CI green).
 **Incremental target:** `ed78b3b13240297681f82fe6a32c84c377498114` (after #553).
