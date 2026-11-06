@@ -1,0 +1,209 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index eb2738a4..8e589764 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,5 +1,10 @@
+ # Change Log
+ 
++## Unreleased
++
++### Bug Fixes
++- Swift: count each top-level comma of an `if`, `guard` or `while` condition list as a decision, like `&&`, so `guard a, b, c else` and `guard a && b && c else` have the same CCN; commas inside brackets, closures, patterns and generic arguments, and `repeat { } while`, are not counted
++
+ ## 1.25.0
+ 
+ ### New Features
+diff --git a/lizard_languages/swift.py b/lizard_languages/swift.py
+index 96f115e9..63a66387 100644
+--- a/lizard_languages/swift.py
++++ b/lizard_languages/swift.py
+@@ -5,6 +5,7 @@
+ from .code_reader import CodeReader, CodeStateMachine
+ from .clike import CCppCommentsMixin
+ from .golike import GoLikeStates
++from .swift_conditions import SwiftConditionLists
+ from .swift_literals import literal_spans
+ from .token_pattern import compiled_token_pattern, tokens_in_span
+ 
+@@ -104,8 +105,10 @@ class SwiftReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
+     def __init__(self, context):
+         super(SwiftReader, self).__init__(context)
+         self.parallel_states = [SwiftStates(context)]
++        self._condition_lists = SwiftConditionLists(context)
+ 
+     def process_token(self, token):
++        self._condition_lists(token)
+         if token is _POSTFIX_OPTIONAL:
+             self.context.add_condition(-1)
+ 
+diff --git a/lizard_languages/swift_conditions.py b/lizard_languages/swift_conditions.py
+new file mode 100644
+index 00000000..06e9bec5
+--- /dev/null
++++ b/lizard_languages/swift_conditions.py
+@@ -0,0 +1,109 @@
++"""Swift condition lists.
++
++`if a, b`, `guard a, b else` and `while a, b` evaluate their clauses
++left to right and stop at the first one that fails, just like `a && b`, so
++each top-level comma of such a list is a decision. Commas nested in
++brackets, generic argument lists, closures and patterns are not.
++"""
++
++_STARTS = ('if', 'guard', 'while')
++_OPEN = ('(', '[', '{')
++_CLOSE = (')', ']', '}')
++# Swift reads `<...>` as generic arguments only when the token after the
++# closing `>` is one of these; otherwise `<` and `>` are comparisons.
++_AFTER_GENERIC_ARGUMENTS = {
++    '(', ')', '[', ']', '{', '}', '.', ',', ';', ':', '?', '!', '==', '!=',
++    'else'}
++_IN_GENERIC_ARGUMENTS = {'.', ':', '->', '?', '!', '&', '...'}
++
++
++def _is_type_name(token):
++    name = token.rstrip('?!')
++    return name.isidentifier() or (
++        len(name) > 2 and name[0] == name[-1] == '`')
++
++
++class _ConditionList:
++    # pylint: disable=too-few-public-methods
++
++    def __init__(self, context, keyword):
++        self._context = context
++        self._keyword = keyword
++        self._depth = 0
++        # A `<` in the list may open generic arguments; its commas wait
++        # until the closing `>` and the token after it tell which it is.
++        self._angles = 0
++        self._angle_depth = 0
++        self._angle_commas = 0
++        self._angle_closed = False
++
++    def feed(self, token):
++        """Read one token; return False once the list has ended."""
++        if self._angle_closed:
++            self._angle_closed = False
++            self._resolve_angle(token not in _AFTER_GENERIC_ARGUMENTS)
++        elif self._angles:
++            if self._in_angle(token):
++                return True
++            self._resolve_angle(True)
++        if token in _OPEN and (self._depth or token != '{'):
++            self._depth += 1
++        elif token in _CLOSE:
++            self._depth -= 1
++            return self._depth >= 0
++        elif self._depth == 0:
++            if token in ('{', ';') or (
++                    token == 'else' and self._keyword == 'guard'):
++                return False
++            if token == ',':
++                self._context.add_condition()
++            elif token == '<':
++                self._angles = 1
++        return True
++
++    def _in_angle(self, token):
++        if token == '<':
++            self._angles += 1
++        elif token == '>':
++            self._angles -= 1
++            self._angle_closed = self._angles == 0
++        elif token == ',':
++            self._angle_commas += self._angle_depth == 0
++        elif token in ('(', '['):
++            self._angle_depth += 1
++        elif token in (')', ']'):
++            self._angle_depth -= 1
++            return self._angle_depth >= 0
++        else:
++            return token in _IN_GENERIC_ARGUMENTS or _is_type_name(token)
++        return True
++
++    def _resolve_angle(self, comparison):
++        if comparison:
++            self._context.add_condition(self._angle_commas)
++        self._angles = self._angle_depth = self._angle_commas = 0
++
++
++class SwiftConditionLists:
++    """Counts the clause-separating commas of Swift condition lists."""
++
++    def __init__(self, context):
++        self.context = context
++        self._lists = []
++        self._previous = None
++        self._repeat_braces = []
++        self._closed_repeat = False
++
++    def __call__(self, token):
++        previous, self._previous = self._previous, token
++        self._lists = [lst for lst in self._lists if lst.feed(token)]
++        repeat_while = self._closed_repeat
++        self._closed_repeat = False
++        if token == '{':
++            self._repeat_braces.append(previous == 'repeat')
++        elif token == '}' and self._repeat_braces:
++            self._closed_repeat = self._repeat_braces.pop()
++        elif token in _STARTS and previous != '.' and not (
++                token == 'while' and repeat_while):
++            # `repeat { } while x` takes one expression, not a list.
++            self._lists.append(_ConditionList(self.context, token))
+diff --git a/test/test_languages/testSwift.py b/test/test_languages/testSwift.py
+index 03cc91b2..87f45a62 100644
+--- a/test/test_languages/testSwift.py
++++ b/test/test_languages/testSwift.py
+@@ -269,3 +269,51 @@ def test_real_loops_still_count(self):
+     return t
+ }
+ """))
++
++
++class TestSwiftConditionLists(unittest.TestCase):
++
++    def ccn(self, body):
++        source = "func f() -> Bool {\n" + body + "\n}\n"
++        return get_swift_function_list(source)[0].cyclomatic_complexity
++
++    def test_condition_list_commas_count_like_and(self):
++        self.assertEqual(
++            self.ccn("guard a && b && c else { return false }\nreturn true"),
++            self.ccn("guard a, b, c else { return false }\nreturn true"))
++        self.assertEqual(4, self.ccn("if a, b, c { return true }"))
++        self.assertEqual(3, self.ccn("while a, b { step() }"))
++
++    def test_optional_bindings_and_patterns_in_condition_lists(self):
++        self.assertEqual(4, self.ccn("""\
++guard let x = first,
++      var y = second,
++      x > y else { return false }"""))
++        self.assertEqual(3, self.ccn("if let a, let b { use(a, b) }"))
++        self.assertEqual(4, self.ccn(
++            "if case let (a, b) = pair, a > 0 { return true }"))
++        self.assertEqual(3, self.ccn(
++            "if #available(iOS 15, *), ok { return true }"))
++
++    def test_nested_commas_are_not_conditions(self):
++        self.assertEqual(2, self.ccn("if f(a, b) { return true }"))
++        self.assertEqual(2, self.ccn("if [a, b].contains(c) { }"))
++        self.assertEqual(2, self.ccn("if (a, b) == (c, d) { }"))
++        self.assertEqual(2, self.ccn("if xs.contains(where: { a, b in a }) { }"))
++        self.assertEqual(2, self.ccn("if let d = x as? [String: Int] { }"))
++        self.assertEqual(3, self.ccn(
++            "if x is Result<Int, Error>, y { return true }"))
++        self.assertEqual(2, self.ccn(
++            "guard let r = x as? Dictionary<String, Int> else { return false }"))
++
++    def test_comparisons_are_not_generic_arguments(self):
++        self.assertEqual(3, self.ccn("if a < b, c > d { return true }"))
++        self.assertEqual(3, self.ccn("if a < 1, b { return true }"))
++
++    def test_commas_outside_condition_lists_are_not_conditions(self):
++        self.assertEqual(3, self.ccn("""\
++repeat { step() } while a
++let x = 1, y = 2
++if ok { use(x, y) }
++var z = [1, 2]"""))
++        self.assertEqual(2, self.ccn("if ok { let p = 1, q = 2 }"))

@@ -12,3 +12,4 @@ Maintenance, bug fixing, and PR reviews.
 
 ## Backlog list
 
+- [Process PR #557 — Count Swift condition-list commas as decisions](seeds/SEED-039-process-pr-557.md#process-pr-557) — SEED-039#process-pr-557
