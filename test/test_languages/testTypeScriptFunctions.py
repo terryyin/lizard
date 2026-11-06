@@ -128,6 +128,21 @@ class Test_TypeScript_generic_arrow_functions(unittest.TestCase):
         functions = get_ts_function_list(code)
         self.assertEqual(["identity"], [f.name for f in functions])
 
+    def test_generic_function_declaration(self):
+        """function first<T>(list: T[]) {} keeps its parameters after <T>"""
+        code = '''
+            export function first<T>(list: T[]) {
+                return list[0];
+            }
+            function pair<T, U extends object>(a: T, b: U): T {
+                return a;
+            }
+        '''
+        functions = get_ts_function_list(code)
+        self.assertEqual([("first", 2, 4, ["list"]), ("pair", 5, 7, ["a", "b"])],
+                         [(f.name, f.start_line, f.end_line, f.parameters)
+                          for f in functions])
+
 
 
 class Test_TypeScript_export_patterns(unittest.TestCase):
