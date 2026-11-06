@@ -95,6 +95,52 @@ class TestRust(unittest.TestCase):
 
         self.assertEqual(1, len(result))
 
+    def test_char_literal_does_not_hide_the_functions_after_it(self):
+        result = get_rust_function_list('''
+        fn is_call(code: char) -> bool {
+            code == 'C'
+        }
+
+        fn either(a: bool, b: bool) -> bool {
+            if a {
+                return true;
+            }
+            a || b
+        }
+
+        fn label(code: char) -> &'static str {
+            match code {
+                'C' => "call",
+                'P' => "put",
+                _ => "",
+            }
+        }
+        ''')
+        self.assertEqual(['is_call', 'either', 'label'],
+                         [f.name for f in result])
+        self.assertEqual([1, 3, 3],
+                         [f.cyclomatic_complexity for f in result])
+
+    def test_escaped_char_literals_lifetimes_and_labels(self):
+        result = get_rust_function_list(r'''
+        fn scan<'a>(text: &'a str) -> usize {
+            let mut n = 0;
+            'outer: for c in text.chars() {
+                if c == '\'' || c == '\\' || c == '\n' {
+                    break 'outer;
+                }
+                if c == '\x41' || c == '\u{1F600}' {
+                    n += 1;
+                }
+            }
+            n
+        }
+
+        fn after() {}
+        ''')
+        self.assertEqual(['scan', 'after'], [f.name for f in result])
+        self.assertEqual(7, result[0].cyclomatic_complexity)
+
     def test_case_as_identifier(self):
         """
         Test that 'case' used as an identifier doesn't add to CCN.

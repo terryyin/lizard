@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Bug Fixes
+- Rust: read a char literal such as `'C'` as one token, not as the lifetime `'C` followed by a string that swallowed the code up to the next quote, which hid or merged the functions after it; lifetimes and labels are read as before
 - Swift: count each top-level comma of an `if`, `guard` or `while` condition list as a decision, like `&&`, so `guard a, b, c else` and `guard a && b && c else` have the same CCN; commas inside brackets, closures, patterns and generic arguments, and `repeat { } while`, are not counted. A same-line trailing closure stays in the condition (`if items.contains { $0 > 1 }, ready`); a brace that continues on the next line is the body
 - Swift: report a computed property with an implicit getter (`var body: some View { ... }`) and a property initialized by a closure (`let f: (Int) -> Int = { ... }`) as a function named after the property, so their branches no longer count in the global scope; the function starts at the property name. Accessor blocks (`get`, `set`, `willSet`, `didSet`) are still reported as their accessors, and locals inside functions stay with the function
 

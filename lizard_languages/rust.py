@@ -26,7 +26,10 @@ class RustReader(CodeReader, CCppCommentsMixin):
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
-        addition = r"|(?:'\w+\b)"  # lifetimes, labels
+        addition = (
+            # char literals, before lifetimes, which also start with `'`
+            r"|(?:'(?:\\(?:x[0-9a-fA-F]{2}|u\{[0-9a-fA-F]+\}|.)|[^'\\\n])')"
+            r"|(?:'\w+\b)")  # lifetimes, labels
         return CodeReader.generate_tokens(source_code, addition, token_class)
 
 
