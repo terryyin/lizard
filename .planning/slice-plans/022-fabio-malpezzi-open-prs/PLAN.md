@@ -97,7 +97,7 @@ Behavior: Given a quoted TypeScript optional member in a type → complete cycle
 
 ### 4. Member names that look like structures under NS — PR #554
 Type: Behavior
-Status: planned
+Status: done
 Source: https://github.com/terryyin/lizard/pull/554 — preparation head `2368413b2de05b05ff44ce863dcded8061342492`
 Proof: [slice 4](SLICE-PROOF.md); complete-cycle gates owned here.
 Behavior: Given `.catch(...)` / `?.catch(...)` under `-ENS` → complete cycle for #554 → nested-structure metric does not treat those member names as structures while real `if` / `try`/`catch` still raise NS, or a non-merge disposition is recorded.
@@ -121,6 +121,12 @@ Behavior: Given `.catch(...)` / `?.catch(...)` under `-ENS` → complete cycle f
   performance.md; reconsider if candidate/target/corpus change.
 - Slice 1: merged PR #551 at head b0733889d (merge b6b6b8c6); thanks posted; attempt6 perf worst upper CI 0.989%.
 - Slice 2: merged PR #552 at head c58534ac (merge eec8c38b); thanks posted; perf worst upper CI 2.961%.
+- Slice 3: merged PR #553 at head 692a456c (merge ed78b3b1); thanks posted.
+- Slice 4: left PR #554 unmerged at head 2368413b; quiet attempt5 cumulative
+  api-parameters under `--extension ns` paired 95% CI [2.770%, 4.513%]
+  (median +3.638%) fails &lt;3%; incremental all pass; follow-up
+  SEED-035#ns-member-name-performance first on Backlog list; disposition
+  comment posted; product WT restored (no product publish).
 
 ## Concern evidence
 

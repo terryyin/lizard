@@ -1,0 +1,4 @@
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+virtualenv 20.13.2 requires platformdirs<3,>=2, but you have platformdirs 4.4.0 which is incompatible.
+lizard /Users/terryyin/.cache/lizard-pr-reviews-SEED-034/pr554/candidate/lizard.py
+[('(anonymous)', 0), ('(anonymous)', 0), ('load', 0), ('(anonymous)', 1), ('retry', 1)]

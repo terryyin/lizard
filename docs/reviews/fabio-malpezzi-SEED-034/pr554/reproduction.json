@@ -1,0 +1,74 @@
+{
+  "pr": 554,
+  "head": "2368413b2de05b05ff44ce863dcded8061342492",
+  "target_baseline": "ed78b3b13240297681f82fe6a32c84c377498114",
+  "claim": ".catch / ?.catch under -ENS not nested structures; real if/try-catch still raise NS",
+  "expected": [
+    [
+      "(anonymous)",
+      0
+    ],
+    [
+      "(anonymous)",
+      0
+    ],
+    [
+      "load",
+      0
+    ],
+    [
+      "(anonymous)",
+      1
+    ],
+    [
+      "retry",
+      1
+    ]
+  ],
+  "target": [
+    [
+      "(anonymous)",
+      0
+    ],
+    [
+      "(anonymous)",
+      1
+    ],
+    [
+      "load",
+      0
+    ],
+    [
+      "(anonymous)",
+      0
+    ],
+    [
+      "retry",
+      2
+    ]
+  ],
+  "corrected": [
+    [
+      "(anonymous)",
+      0
+    ],
+    [
+      "(anonymous)",
+      0
+    ],
+    [
+      "load",
+      0
+    ],
+    [
+      "(anonymous)",
+      1
+    ],
+    [
+      "retry",
+      1
+    ]
+  ],
+  "target_claim_match": false,
+  "corrected_all_match": true
+}
