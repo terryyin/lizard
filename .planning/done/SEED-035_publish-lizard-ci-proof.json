@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-035#publish-lizard-ci-proof",
+  "title": "Publish Lizard CI proof for Intent",
+  "completedAt": "2026-11-05T11:34:13.814Z",
+  "developer": "Terry Yin",
+  "agent": "Yumi-chan",
+  "host": "cursor",
+  "model": "auto"
+}

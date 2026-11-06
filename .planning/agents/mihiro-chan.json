@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "agent": "Mihiro-chan",
+  "email": "mihiro-chan@example.org",
+  "identity": "SEED-038#process-pr-556",
+  "mode": "trunk",
+  "branch": "origin/master",
+  "host": "cursor",
+  "model": "grok-4.7"
+}
