@@ -14,22 +14,24 @@ _STRING_SPECIAL = re.compile(r'[\\"\n]')
 _INTERPOLATION_SPECIAL = re.compile(r'//|/\*|[()\n]|#*"')
 
 
-def literal_spans(source):
-    """Yield (is_literal, start, end) spans covering source."""
-    start = pos = 0
-    length = len(source)
+def literal_spans(source, start=0, length=None):
+    """Yield (is_literal, start, end) spans covering source[start:length]."""
+    if length is None:
+        length = len(source)
+    pos = start
     while True:
-        match = _LITERAL_START.search(source, pos)
+        match = _LITERAL_START.search(source, pos, length)
         if match is None:
             break
         if match.group() == '//':
-            newline = source.find('\n', match.end())
+            newline = source.find('\n', match.end(), length)
             pos = length if newline < 0 else newline
             continue
         if match.group() == '/*':
             end = _block_comment_end(source, match.start())
         else:
             end = _string_end(source, match.start(), len(match.group()) - 1)
+        end = min(end, length)
         if start < match.start():
             yield False, start, match.start()
         yield True, match.start(), end
@@ -49,8 +51,8 @@ def _block_comment_end(source, start):
 
 def string_parts(source, start, end):
     """Yield (is_code, start, end) spans covering the string literal
-    source[start:end]: literal text, and the interpolated expressions
-    between each `\\(` and its closing `)`."""
+    source[start:end]: literal text, and each interpolated expression
+    with its own parentheses, from the `(` after `\\` to its closing `)`."""
     hashes = 0
     while source.startswith('#', start + hashes):
         hashes += 1
@@ -81,10 +83,10 @@ def _string_end(source, start, hashes, interpolations=None):
         if source.startswith(escape, pos):
             pos += len(escape)
             if source.startswith('(', pos):
-                code = pos + 1
-                pos, closed = _interpolation_end(source, pos, multiline)
+                code = pos
+                pos = _interpolation_end(source, pos, multiline)
                 if interpolations is not None:
-                    interpolations.append((code, pos - closed))
+                    interpolations.append((code, pos))
             else:
                 pos += 1
         elif source[pos] == '\n' and not multiline:
@@ -99,7 +101,7 @@ def _interpolation_end(source, start, multiline):
     while True:
         match = _INTERPOLATION_SPECIAL.search(source, pos)
         if match is None:
-            return len(source), False
+            return len(source)
         token = match.group()
         pos = match.end()
         if token == '(':
@@ -107,10 +109,10 @@ def _interpolation_end(source, start, multiline):
         elif token == ')':
             depth -= 1
             if depth == 0:
-                return pos, True
+                return pos
         elif token == '\n':
             if not multiline:
-                return match.start(), False
+                return match.start()
         elif token == '/*':
             # Parentheses in comments do not close the interpolation.
             pos = _block_comment_end(source, match.start())

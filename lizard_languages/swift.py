@@ -124,26 +124,29 @@ class SwiftReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
         pattern = compiled_token_pattern(_SWIFT_TOKEN_ADDITION + addition)
         if token_class is None and '?' in source_code:
             token_class = _swift_token
-        for is_literal, start, end in literal_spans(source_code):
-            if not is_literal:
-                yield from tokens_in_span(
-                    pattern, source_code, start, end, token_class)
-            elif source_code.startswith('/', start):
-                yield source_code[start:end]
-            else:
-                yield from _string_tokens(
-                    source_code, start, end, addition, token_class)
+        return _swift_tokens(
+            pattern, token_class, source_code, 0, len(source_code))
 
 
-def _string_tokens(source, start, end, addition, token_class):
-    # Literal text stays whole; the text around an interpolation keeps
-    # its `\\(` and `)`, so the pieces still join into the literal.
-    for is_code, part_start, part_end in string_parts(source, start, end):
-        if is_code:
-            yield from SwiftReader.generate_tokens(
-                source[part_start:part_end], addition, token_class)
-        elif part_start < part_end:
-            yield source[part_start:part_end]
+def _swift_tokens(pattern, token_class, source, start, end):
+    for is_literal, span_start, span_end in literal_spans(source, start, end):
+        if not is_literal:
+            yield from tokens_in_span(
+                pattern, source, span_start, span_end, token_class)
+        elif source.startswith('/', span_start) or source.find(
+                '\\', span_start, span_end) < 0:
+            yield source[span_start:span_end]
+        else:
+            # Literal text stays whole. An interpolation's parentheses are
+            # code tokens, so brackets stay balanced for the scanners that
+            # track them; the pieces still join into the literal.
+            for is_code, part_start, part_end in string_parts(
+                    source, span_start, span_end):
+                if is_code:
+                    yield from _swift_tokens(
+                        pattern, token_class, source, part_start, part_end)
+                elif part_start < part_end:
+                    yield source[part_start:part_end]
 
 
 class SwiftStates(GoLikeStates):  # pylint: disable=R0903

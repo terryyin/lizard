@@ -182,3 +182,13 @@ func e(_ flag: Bool) -> String {
 func g() { }
 ''', [("a", 1, 1, 2), ("b", 2, 2, 2), ("c", 3, 3, 2), ("d", 4, 4, 2),
       ("e", 5, 10, 2), ("g", 11, 11, 1)])
+
+    def test_closure_in_interpolation_stays_inside_a_condition_list(self):
+        self.assert_functions('''\
+func f(_ xs: [Int], _ ok: Bool) -> Int {
+    if "\\(xs.map { $0 > 1 ? 1 : 0 })".isEmpty, ok { return 1 }
+    guard "\\(ok ? 1 : 2)" != "", xs.count > 0 else { return 0 }
+    return 2
+}
+func g() { }
+''', [("f", 1, 5, 7), ("g", 6, 6, 1)])
