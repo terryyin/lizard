@@ -91,6 +91,7 @@ class XMLTagWithAttrTokenizer(Tokenizer):
     def __init__(self, in_expression=False):
         super(XMLTagWithAttrTokenizer, self).__init__()
         self.tag = None
+        self._attribute = None
         self.state = self._global_state
         self.cache = ['<']
         # Token emitted when an embedded {expression} ends, if any.
@@ -165,6 +166,7 @@ class XMLTagWithAttrTokenizer(Tokenizer):
         elif token == "{":
             self._attribute_expression()  # spread: <L {...props} />
         elif isidentifier(token):
+            self._attribute = token
             self.state = self._expecting_equal_sign
         else:
             return self.abort()
@@ -180,6 +182,10 @@ class XMLTagWithAttrTokenizer(Tokenizer):
             self.state = self._expecting_value
         elif token == '-':
             self.state = self._attribute_name_part  # data-x, aria-hidden
+        elif self._in_expression and self._attribute != 'extends':
+            # A valueless attribute (<A x={1} flag>); `<T extends U>` is
+            # a TypeScript type parameter instead.
+            return self._after_tag(token)
         else:
             return self.abort()
 

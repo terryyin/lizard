@@ -805,6 +805,29 @@ function Card({ r, href }) {
 function after(x) { if (x) { return 1 } return 2; }
 ''')
 
+    def test_valueless_attributes_keep_function_bounds(self):
+        self.assert_both([("Chart", 1, 9, 2), ("after", 10, 10, 2)], '''\
+function Chart({ data, wide }) {
+  return (
+    <div>
+      <chart margin={{ top: 6 }} accessibilityLayer>
+        <axis data={data} hide />
+      </chart>
+      <label x={1} flag>{wide ? 'wide' : 'narrow'}</label>
+    </div>);
+}
+function after(x) { if (x) { return 1 } return 2; }
+''')
+
+    def test_type_parameter_with_extends_is_not_an_element(self):
+        self.assertEqual(
+            [("pick", 1, 1, 2), ("after", 2, 2, 2)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+             for f in get_tsx_function_list('''\
+const pick = <T extends unknown>(x: T, y: T) => x ? x : y;
+function after(x: number) { if (x) { return 1 } return 2; }
+''')])
+
     def test_comparisons_and_type_arguments_are_not_elements(self):
         self.assert_both([("cmp", 1, 1, 2), ("g", 2, 2, 1)], '''\
 const cmp = (a, b) => a < b && b > 0;
