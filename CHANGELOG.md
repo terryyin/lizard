@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Bug Fixes
+- Swift: count each top-level comma of an `if`, `guard` or `while` condition list as a decision, like `&&`, so `guard a, b, c else` and `guard a && b && c else` have the same CCN; commas inside brackets, closures, patterns and generic arguments, and `repeat { } while`, are not counted. A same-line trailing closure stays in the condition (`if items.contains { $0 > 1 }, ready`); a brace that continues on the next line is the body
 - Swift: do not count `case` declarations in an enum body as decisions, so enums no longer raise the CCN of the global scope (`-Eoutside`) or of a function declaring a local enum; `case` in a `switch` still counts
 
 ## 1.25.0

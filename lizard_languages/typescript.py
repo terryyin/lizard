@@ -16,9 +16,10 @@ from .javascript_templates import LINE_COMMENT, interpolation_code, template_tok
 # One token, so each ? in ?? is not its own ternary decision.
 NULLISH_COALESCING = r"|(?:\?\?)"
 OPTIONAL_ACCESS = r"|(?:\?\.(?!\d))"
-# An optional member or parameter, "name?: T" or "f(a?)"; in "x?y:0" the
-# "?" opens a ternary.
-OPTIONAL_NAME = r"|(?:\w+\?(?=\s*(?:[:,)]|\Z)))"
+# An optional member or parameter, "name?: T", "'a-b'?: T" or "f(a?)"; in
+# "x?y:0" the "?" opens a ternary.
+OPTIONAL_NAME = (r"|(?:(?:\w+|\"(?:\\.|[^\"\\])*\"|\'(?:\\.|[^\'\\])*\')"
+                 r"\?(?=\s*(?:[:,)]|\Z)))")
 # JavaScript identifiers can contain dollar signs as well as word characters.
 JS_IDENTIFIER = r"|(?:[\w$]+)"
 

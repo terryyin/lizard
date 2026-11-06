@@ -271,6 +271,86 @@ func loop(xs: [Int]) -> Int {
 """))
 
 
+class TestSwiftConditionLists(unittest.TestCase):
+
+    def ccn(self, body):
+        source = "func f() -> Bool {\n" + body + "\n}\n"
+        return get_swift_function_list(source)[0].cyclomatic_complexity
+
+    def test_condition_list_commas_count_like_and(self):
+        self.assertEqual(
+            self.ccn("guard a && b && c else { return false }\nreturn true"),
+            self.ccn("guard a, b, c else { return false }\nreturn true"))
+        self.assertEqual(4, self.ccn("if a, b, c { return true }"))
+        self.assertEqual(3, self.ccn("while a, b { step() }"))
+
+    def test_optional_bindings_and_patterns_in_condition_lists(self):
+        self.assertEqual(4, self.ccn("""\
+guard let x = first,
+      var y = second,
+      x > y else { return false }"""))
+        self.assertEqual(3, self.ccn("if let a, let b { use(a, b) }"))
+        self.assertEqual(4, self.ccn(
+            "if case let (a, b) = pair, a > 0 { return true }"))
+        self.assertEqual(3, self.ccn(
+            "if #available(iOS 15, *), ok { return true }"))
+
+    def test_nested_commas_are_not_conditions(self):
+        self.assertEqual(2, self.ccn("if f(a, b) { return true }"))
+        self.assertEqual(2, self.ccn("if [a, b].contains(c) { }"))
+        self.assertEqual(2, self.ccn("if (a, b) == (c, d) { }"))
+        self.assertEqual(2, self.ccn("if xs.contains(where: { a, b in a }) { }"))
+        self.assertEqual(2, self.ccn("if let d = x as? [String: Int] { }"))
+        self.assertEqual(3, self.ccn(
+            "if x is Result<Int, Error>, y { return true }"))
+        self.assertEqual(2, self.ccn(
+            "guard let r = x as? Dictionary<String, Int> else { return false }"))
+
+    def test_comparisons_are_not_generic_arguments(self):
+        self.assertEqual(3, self.ccn("if a < b, c > d { return true }"))
+        self.assertEqual(3, self.ccn("if a < 1, b { return true }"))
+
+    def test_commas_outside_condition_lists_are_not_conditions(self):
+        self.assertEqual(3, self.ccn("""\
+repeat { step() } while a
+let x = 1, y = 2
+if ok { use(x, y) }
+var z = [1, 2]"""))
+        self.assertEqual(2, self.ccn("if ok { let p = 1, q = 2 }"))
+
+    def test_same_line_trailing_closure_keeps_the_following_comma(self):
+        self.assertEqual(3, self.ccn(
+            "if items.contains { $0 > 1 }, ready { return true }"))
+        self.assertEqual(3, self.ccn(
+            "guard items.contains { $0 > 1 }, ready else { return false }"))
+        self.assertEqual(2, self.ccn(
+            "if items.contains { $0 > 1 } { return true }"))
+        self.assertEqual(3, self.ccn(
+            "if items.filter { ($0, 1).0 > 0 }.isEmpty, ready "
+            "{ return true }"))
+
+    def test_multiline_brace_ends_the_condition_list(self):
+        self.assertEqual(2, self.ccn("""\
+if items.contains {
+    ($0, 1).0 > 0
+}, ready { return true }"""))
+        self.assertEqual(2, self.ccn("""\
+if ok {
+    let p = 1, q = 2
+}"""))
+
+    def test_trailing_closure_does_not_swallow_the_next_function(self):
+        functions = get_swift_function_list("""\
+func f(items: [Int], ready: Bool) -> Bool {
+    if items.contains { $0 > 1 }, ready { return true }
+    return false
+}
+func g() -> Int { return 1 }
+""")
+        self.assertEqual(
+            [("f", 1, 4, 3), ("g", 5, 5, 1)],
+            [(function.name, function.start_line, function.end_line,
+              function.cyclomatic_complexity) for function in functions])
 def swift_with_outside(source_code):
     return FileAnalyzer(get_extensions(["outside"])).analyze_source_code(
         "a.swift", source_code).function_list

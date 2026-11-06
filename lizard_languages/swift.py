@@ -5,6 +5,7 @@ Language parser for Apple Swift
 from .code_reader import CodeReader, CodeStateMachine
 from .clike import CCppCommentsMixin
 from .golike import GoLikeStates
+from .swift_conditions import SwiftConditionLists
 from .swift_literals import literal_spans
 from .token_pattern import compiled_token_pattern, tokens_in_span
 
@@ -37,6 +38,9 @@ def _swift_token(match):
                 '*/', 0, start):
             return _POSTFIX_OPTIONAL
     return token
+
+
+_ENUM_CASE_TOKENS = frozenset(('enum', '{', '}', 'case'))
 
 
 def _separates_label(token):
@@ -104,20 +108,29 @@ class SwiftReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
     def __init__(self, context):
         super(SwiftReader, self).__init__(context)
         self.parallel_states = [SwiftStates(context)]
+        self._condition_lists = SwiftConditionLists(context)
         self._enum_braces = []
         self._enum_header = False
-        self._previous_token = None
 
     def process_token(self, token):
+        if token in _ENUM_CASE_TOKENS:
+            self._skip_enum_case_declaration(token)
+        scanner = self._condition_lists
+        # Ordinary tokens only remember the previous one. Braces, condition
+        # keywords, and an already-open list do the real scan.
+        if (scanner._lists or scanner._closed_repeat or token == '{'
+                or token == '}' or token in scanner._STARTS):
+            scanner(token)
+        else:
+            scanner._previous = token
         if token is _POSTFIX_OPTIONAL:
             self.context.add_condition(-1)
-        self._skip_enum_case_declaration(token)
-        self._previous_token = token
 
     def _skip_enum_case_declaration(self, token):
         # `case` directly in an enum body declares cases; only `case`
-        # in a switch, or a pattern, is a decision.
-        if token == 'enum' and self._previous_token != '.':
+        # in a switch, or a pattern, is a decision. The condition-list
+        # scanner still holds the token before this one.
+        if token == 'enum' and self._condition_lists._previous != '.':
             self._enum_header = True
         elif token == '{':
             self._enum_braces.append(self._enum_header)
