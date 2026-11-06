@@ -17,7 +17,7 @@ scope: story
 
 **Identity:** SEED-042#python-inline-function-suites
 ```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"unselected"}
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/027-python-inline-function-suites/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"f949f0bbd40140cbe929e4587404c0ba8009abee764660fcc405ab2f5327f69a","plan":"7780453013a91edc5df2ca6eb4494aae568f7b8e1f8c10e50d1470dcbbedaa8e"}}
 ```
 
 **Goal.** Python users and maintainers get a recorded decision about functions
@@ -32,11 +32,15 @@ and maintainers who would carry a slower Python reader.
 **Source.** PR #530, head `2948b38ed0bf70c5a4c39163b45dfa50c3020314` at review
 on 2026-11-06. The process execution SEED-040#process-pr-530 is dropped.
 Its uncommitted reader experiment is not product code and is not a commitment
-to accept the pull request.
+to accept the pull request. That head alone still reports
+`def value(): """A value."""; return 1` with NLOC 0; a disposition that
+lands must correct that as well.
 
 **Scope.** Decide whether inline Python suites belong in Lizard. Change the
 Python reader only after both conditions below hold. PR #530 is a candidate
-and a source of examples, not an acceptance.
+and a source of examples, not an acceptance. Function discovery and suite
+boundaries stay in the existing Python reader (`python.py` /
+`python_structure.py`); do not add a second parser.
 
 Required behavior:
 
@@ -54,7 +58,7 @@ Required behavior:
   not by itself accept a slower reader.
 - Land a reader change only when both conditions hold, preserving contributor
   history if the pull request is still the vehicle. Otherwise record the
-  judgment and leave the pull request unmerged.
+  judgment on the pull request and leave it unmerged.
 - If a change is accepted, a shared-line docstring still counts the `def`
   line: `def value(): """A value."""; return 1` reports `value` with NLOC 1.
   A block function keeps the metrics it already has. The multiline f-string
@@ -70,9 +74,12 @@ add a second Python parser.
 - Given `class Stream` with `def read(self) -> str: ...` and
   `def close(self) -> None: ...` on current trunk, analysis lists no
   functions. A block function such as `def kept(x):` with an `if` still
-  reports `kept` with CCN 2.
+  reports `kept` with CCN 2. Given only
+  `def outer():` / `def inner(): return 1`, analysis lists `outer.inner` and
+  drops `outer`.
 - Given those `Stream` methods, when both the missing functions and a
-  slowdown within 3% are shown, analysis reports `read` and `close`, and a
-  block function that contains an inline function still reports both.
+  slowdown within 3% are shown, analysis reports `read` and `close`, a
+  nested inline keeps both the outer and inner functions, and
+  `def value(): """A value."""; return 1` reports `value` with NLOC 1.
 - Given a performance result whose upper bound is not strictly below 3%,
   the reader on trunk stays unchanged and PR #530 stays open.
