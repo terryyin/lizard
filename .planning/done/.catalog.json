@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-041_swift-computed-property-reporting.json",
+      "identity": "SEED-041#swift-computed-property-reporting",
+      "completedAt": "2026-11-06T15:43:56.611Z",
+      "blob": "a6e9d5dbaedabe8aee99b21a0f814cd7f06cd541"
+    },
+    {
       "fileName": "SEED-042_python-inline-function-suites.json",
       "identity": "SEED-042#python-inline-function-suites",
       "completedAt": "2026-11-06T14:42:40.174Z",
