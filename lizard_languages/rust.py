@@ -20,6 +20,10 @@ class RustReader(CodeReader, CCppCommentsMixin):
     # Note: '?' in Rust is the error propagation operator, not ternary
     _ternary_operators = {'?'}
 
+    # After one of these, `||` opens a closure without parameters.
+    _CLOSURE_OPENERS = {'(', '[', '{', ',', ';', ':', '=', '=>', '->',
+                        '&&', '||', '|', 'move', 'async', 'return'}
+
     def __init__(self, context):
         super().__init__(context)
         self.parallel_states = [RustStates(context)]
@@ -31,6 +35,24 @@ class RustReader(CodeReader, CCppCommentsMixin):
             r"|(?:'(?:\\(?:x[0-9a-fA-F]{2}|u\{[0-9a-fA-F]+\}|.)|[^'\\\n])')"
             r"|(?:'\w+\b)")  # lifetimes, labels
         return CodeReader.generate_tokens(source_code, addition, token_class)
+
+    def preprocess(self, tokens):
+        """Split the `||` of a closure without parameters, `|| x`, into two
+        `|`, as `|a| x` has, so that it is not counted as a logical or."""
+        openers = self._CLOSURE_OPENERS
+        last = None
+        for token in tokens:
+            if token.isspace():
+                if token == '\n':
+                    yield token
+                continue
+            if token == '||' and last in openers:
+                yield '|'
+                yield '|'
+            else:
+                yield token
+            if token[0] != '/':  # comments do not end an expression
+                last = token
 
 
 class RustStates(GoLikeStates):  # pylint: disable=R0903

@@ -141,6 +141,25 @@ class TestRust(unittest.TestCase):
         self.assertEqual(['scan', 'after'], [f.name for f in result])
         self.assertEqual(7, result[0].cyclomatic_complexity)
 
+    def test_closure_without_parameters_is_not_a_logical_or(self):
+        result = get_rust_function_list('''
+        fn closures(x: Option<i32>) -> i32 {
+            let zero = || 0;
+            let task = move || x;
+            let fs = [|| 1, || 2];
+            x.unwrap_or_else(|| zero())
+        }
+        ''')
+        self.assertEqual(1, result[0].cyclomatic_complexity)
+
+    def test_logical_or_after_an_expression_is_counted(self):
+        result = get_rust_function_list('''
+        fn either(a: bool, b: Option<i32>, c: &[i32]) -> bool {
+            a || b.is_some() || c[0] > 1 || (a) || true
+        }
+        ''')
+        self.assertEqual(5, result[0].cyclomatic_complexity)
+
     def test_case_as_identifier(self):
         """
         Test that 'case' used as an identifier doesn't add to CCN.
