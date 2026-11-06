@@ -35,6 +35,10 @@ class CSharpStates(CLikeStates):
         super(CSharpStates, self).__init__(context)
         self.in_primary_constructor = False
         self.class_name = None
+        # (name to restore, brace depth when the type was declared). The
+        # type's own "{" is not counted; "{" seen in the global state is.
+        self._enclosing_classes = []
+        self._open_braces = 0
 
     def try_new_function(self, name):
         if not self.in_primary_constructor:
@@ -59,7 +63,19 @@ class CSharpStates(CLikeStates):
             self._state = self._state_global
 
     def _state_global(self, token):
+        if token == '{':
+            self._open_braces += 1
+        elif token == '}':
+            entered_at = (
+                self._enclosing_classes[-1][1]
+                if self._enclosing_classes else None)
+            if entered_at is not None and self._open_braces == entered_at:
+                self.class_name = self._enclosing_classes.pop()[0]
+            elif self._open_braces > 0:
+                self._open_braces -= 1
         if token in ("class", "struct", "record"):
+            self._enclosing_classes.append(
+                (self.class_name, self._open_braces))
             self.class_name = None
             self._state = self._state_class_declaration
         else:

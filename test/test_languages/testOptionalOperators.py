@@ -136,3 +136,19 @@ def test_optional_member_and_parameter_are_not_ternaries(suffix):
                      suffix)
     assert [(f.name, f.cyclomatic_complexity, f.parameter_count)
             for f in result.function_list] == [('m', 1, 2), ('f', 1, 1)]
+
+
+@pytest.mark.parametrize('suffix', ['ts', 'tsx'])
+def test_optional_quoted_member_is_not_a_ternary(suffix):
+    result = analyze('class A {\n'
+                     "  'max-age'?: number;\n"
+                     '  m() { return 1; }\n'
+                     '}\n'
+                     'function f(e: unknown, o: { "a-b"?: number }) {\n'
+                     "  const h = (e as { 'retry-after'?: string })['retry-after'];\n"
+                     "  return h || 'x';\n"
+                     '}\n'
+                     "function g(c) { return c?'a':'b'; }\n",
+                     suffix)
+    assert [(f.name, f.cyclomatic_complexity)
+            for f in result.function_list] == [('m', 1), ('f', 2), ('g', 2)]
