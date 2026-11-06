@@ -3,7 +3,7 @@ id: SEED-041
 status: active
 planted: 2026-11-06
 planted_during: Maintainer request to queue Swift computed-property reporting for a later decision
-trigger_when: A maintainer can judge whether this Swift reporting is worth its cost
+trigger_when: A maintainer can judge whether reporting Swift computed properties and closure-initialized properties is worth a reader change whose slowdown stays within 3%
 scope: story
 ---
 
@@ -17,45 +17,53 @@ scope: story
 
 **Identity:** SEED-041#swift-computed-property-reporting
 ```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"unselected"}
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/028-swift-computed-property-reporting/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"d12cf9f09131ac2971047d29c3b5eb5902b1b89d6f1268dec705de0ab4ae612a","plan":"f8af8e613ed74ae36c9e09b0fdcbabfb775b0b678cf098b4d3e24a0aef7b036a"}}
 ```
 
 **Goal.** Swift users and maintainers get a recorded decision about computed
 properties with an implicit getter and properties initialized by a closure.
-Those properties become functions only when the reporting is worth more than
-its cost and its performance is good enough. Until both are shown, the reader
-stays as it is and
+Those properties become functions only when a maintainer accepts that the
+reporting is worth its cost and every required paired 95% upper slowdown is
+strictly below 3%. Until both hold, the reader stays as it is and
 [PR #556](https://github.com/terryyin/lizard/pull/556) stays unmerged.
 
 **Beneficiary.** People who analyze Swift types that hold logic in computed
 properties or closure-initialized properties, and maintainers who would carry
 the cost of a slower reader.
 
-**Source.** PR #556, head `0f323dbfb22ad4bc999563bfb1e84480148cb2ac` at review
-on 2026-11-06. The process execution SEED-038#process-pr-556 is abandoned.
-Its unpublished candidate `8c0f3b7202eb1e66c3bf06c5045df058d5af542e` is not
-product code and is not a commitment to accept the pull request.
+**Source.** PR #556, review head `0f323dbfb22ad4bc999563bfb1e84480148cb2ac`
+on 2026-11-06; current open head `363cfb19adde9cb10ed0a1d0a40085c9df7cd574`
+after merging master. The process execution SEED-038#process-pr-556 is
+abandoned. Its unpublished candidate
+`8c0f3b7202eb1e66c3bf06c5045df058d5af542e` is not product code and is not a
+commitment to accept the pull request.
 
 **Scope.** Decide whether this reporting belongs in Lizard. Change the Swift
 reader only after both conditions below hold. PR #556 is a candidate and a
-source of examples, not an acceptance.
+source of examples, not an acceptance. Function discovery stays in the
+existing Swift reader (`swift.py` / `SwiftStates`); do not add a second
+parser.
 
 Required behavior:
 
 - On current trunk, confirm the examples below before any reader change.
-- Performance has to be good enough for the affected Swift analysis and for
-  broader CLI analysis. A timing result alone does not accept the change.
-  The 2026-11-06 paired runs, kept under host load of about 12–28 on 16
-  cores, did not show that: mixed-corpus Swift `api-parameters` upper bounds
-  were 11.4% and 23.8%, and the contributor patch alone was 13.3%. The broad
-  Python `cli` run did pass, with an upper bound of 2.79%. Revisit those
-  measurements on a quieter host before relying on them.
+  The 2026-11-06 check still found no functions for `score` or `handler`,
+  while an explicit `get` / `willSet` stayed reported.
+- A reader change lands only when its paired 95% upper slowdown bound is
+  strictly below 3% on the affected Swift API, on public parameter names and
+  counts, and on broader CLI analysis, each compared with current trunk.
+  A result at 3% or above does not land. The 2026-11-06 paired runs, kept
+  under host load of about 12–28 on 16 cores, did not meet that bound:
+  mixed-corpus Swift `api-parameters` upper bounds were 11.4% and 23.8%, and
+  the contributor patch alone was 13.3%. The broad Python `cli` run did pass,
+  with an upper bound of 2.79%. Revisit those measurements on a quieter host
+  before relying on them.
 - The worth of the reporting has to be greater than its cost. A maintainer
-  makes that judgment. Clearing a performance number does not make the change
-  worth shipping.
+  makes that judgment. Clearing the &lt;3% bound does not by itself accept
+  the change, and a worth judgment does not waive a failed bound.
 - Land a reader change only when both conditions hold, preserving contributor
   history if the pull request is still the vehicle. Otherwise record the
-  judgment and leave the pull request unmerged.
+  judgment on the pull request and leave it unmerged.
 - If the change is accepted, a later binding in the same declaration
   (`let a = 1, handler = { ... }`) is the same kind of property. Commas inside
   calls and generics are not new functions. Accessor blocks, stored
@@ -74,8 +82,9 @@ abandoned candidate as accepted code; do not add a second Swift reader beside
   branches count in the global scope. An explicit `get` or `willSet` stays
   reported, and the global count around those accessors stays unchanged.
 - Given those same properties, when a maintainer has accepted both the worth
-  and the performance, analysis reports `score` and `handler`, and those
-  branches are not left only in the global scope.
-- Given a performance result that is not good enough, or a judgment that the
-  reporting is not worth its cost, the reader on trunk stays unchanged and
-  PR #556 stays open.
+  and a slowdown whose paired 95% upper bound is strictly below 3%, analysis
+  reports `score` and `handler`, and those branches are not left only in the
+  global scope.
+- Given a performance result whose upper bound is not strictly below 3%, or a
+  judgment that the reporting is not worth its cost, the reader on trunk stays
+  unchanged and PR #556 stays open.
