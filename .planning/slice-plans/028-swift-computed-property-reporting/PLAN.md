@@ -2,6 +2,7 @@
 
 **Identity:** SEED-041#swift-computed-property-reporting
 **Source:** [canonical story](../../seeds/SEED-041-swift-computed-property-reporting.md#swift-computed-property-reporting)
+**Source review:** [source-review.md](./source-review.md)
 
 ## Goal and scope
 
@@ -85,14 +86,13 @@ Prior paired JSON under `/private/tmp/lizard-pr556-bench/`.
 
 ### 1. Decide computed-property reporting under the 3% and worth gates
 Type: Behavior
-Status: planned
-Proof: story examples through `analyze_file.analyze_source_code`; red then
-green on discriminating property-function tests; focused Swift reader
-coverage; full pytest and `make`; paired `api`, `api-parameters`, and `cli`
-against current trunk with a frozen Swift corpus and paired 95% upper
-slowdown strictly below 3% on a quieter host than the 2026-11-06 runs;
-maintainer worth accept only when the bound holds; required hosted CI on any
-landable head; otherwise a recorded judgment on PR #556 with trunk unchanged.
+Status: done
+Proof: story examples through `analyze_file.analyze_source_code`; focused
+Swift accessors 23 passed on candidate; full pytest 3043 passed and `make`
+on head `363cfb19ad`; quieter-host paired `api` / `api-parameters` / `cli`
+uppers 0.956% / 1.930% / 0.359% (`/private/tmp/lizard-pr556-bench-quiet/`);
+maintainer worth accept 2026-11-06; hosted CI green on exact head; merged
+`96b45e2ae` preserving contributor history; thanks posted.
 Behavior: Given the confirmed trunk defects and PR #556 as candidate →
 evaluate the current PR head in the existing Swift reader owners → when both
 the maintainer worth judgment and the &lt;3% bound hold, land with contributor
@@ -117,6 +117,10 @@ on the PR, leave it unmerged, and leave the reader on trunk unchanged.
   true; otherwise an equivalent exact-head vehicle that keeps contributor
   history.
 - Thank the contributor only after a confirmed merge.
+- Quieter-host remeasure cleared all three workloads; maintainer accepted
+  worth; PR #556 merged at `96b45e2ae` (head `363cfb19ad`).
+- Delivery disposition for this increment: `records-only` (plan + source
+  review). Product landed on trunk via merge of PR #556.
 
 ## Concern evidence
 
