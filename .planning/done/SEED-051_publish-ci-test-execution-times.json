@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-051#publish-ci-test-execution-times",
+  "title": "Publish Lizard test execution times in Intent",
+  "completedAt": "2026-11-07T14:51:01.676Z",
+  "developer": "Terry Yin",
+  "agent": "Koharu-chan",
+  "host": "codex",
+  "model": "gpt-6.1-sol"
+}
