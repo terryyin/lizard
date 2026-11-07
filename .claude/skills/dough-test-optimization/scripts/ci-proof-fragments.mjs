@@ -137,9 +137,9 @@ function forEachTabLine(text, kind, left, visit) {
   }
 }
 
-// Per-check summed milliseconds from a times file, one
-// `<seconds><TAB><check path>` line per check, for checks in some entry; a
-// check in no entry contributes to none.
+// Sum milliseconds and count timings by check path, one
+// `<seconds><TAB><check path>` line per timed check. Paths in no entry
+// contribute to none.
 function checkTimes(text, entries) {
   const times = new Map();
   forEachTabLine(text, "times", "<seconds>", (secondsText, check, line) => {
@@ -150,7 +150,11 @@ function checkTimes(text, entries) {
       );
     }
     if (owningEntry(entries, check) === undefined) return;
-    times.set(check, (times.get(check) ?? 0) + seconds * 1000);
+    const time = times.get(check) ?? { durationMs: 0, timedChecks: 0 };
+    times.set(check, {
+      durationMs: time.durationMs + seconds * 1000,
+      timedChecks: time.timedChecks + 1,
+    });
   });
   return times;
 }
@@ -159,9 +163,9 @@ function checkTimes(text, entries) {
 // times line appear.
 function durationsOf(times, entries) {
   const durations = new Map();
-  for (const [check, ms] of times) {
+  for (const [check, { durationMs }] of times) {
     const entry = owningEntry(entries, check);
-    durations.set(entry, (durations.get(entry) ?? 0) + ms);
+    durations.set(entry, (durations.get(entry) ?? 0) + durationMs);
   }
   return durations;
 }
@@ -200,13 +204,13 @@ export function fragmentsFromOutcomes(
     if (byFile) recordResult(breakdowns.get(entry), check, field, undefined);
   });
   if (byFile) {
-    for (const [check, ms] of times) {
+    for (const [check, { durationMs, timedChecks }] of times) {
       const breakdown = breakdowns.get(owningEntry(identity.entries, check));
-      // The check's time replaces the untimed mark its outcomes gave it.
+      const figures = breakdown.get(check) ?? emptyFigures();
       breakdown.set(check, {
-        ...(breakdown.get(check) ?? emptyFigures()),
-        untimed: 0,
-        durationMs: ms,
+        ...figures,
+        untimed: Math.max(0, figures.untimed - timedChecks),
+        durationMs,
       });
     }
     for (const [entry, breakdown] of breakdowns)
