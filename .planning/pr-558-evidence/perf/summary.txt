@@ -1,0 +1,3 @@
+swift-api.json: change=1.632% ci=[1.0373319900355393, 2.2293837725157477] medians={'baseline': 1.2149423124999998, 'candidate': 1.2361396660000006} passes=True
+swift-api-parameters.json: change=1.366% ci=[0.6992852493175827, 2.0378015427967875] medians={'baseline': 1.2090573960000004, 'candidate': 1.2243558960000005} passes=True
+broad-cli-v3.json: change=0.500% ci=[-0.17126083700063505, 1.176384693317998] medians={'baseline': 4.229109729499999, 'candidate': 4.225301437500001} passes=True
