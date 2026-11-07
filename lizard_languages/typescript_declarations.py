@@ -144,9 +144,19 @@ class TypeScriptDeclarationsMixin:
         so the method name in last_tokens is preserved; then continue in
         resume (the global state by default)."""
         depth = 1
+        braces = 0
 
         def consume(token):
-            nonlocal depth
+            nonlocal depth, braces
+            if token == '{':
+                braces += 1
+            elif token == '}' and braces:
+                braces -= 1
+            elif token in ('}', ';') and not braces:
+                # A comparison, not type parameters: `{i < n}`. Object
+                # types inside them (`Promise<{ a: T; }>`) keep their own.
+                self.next(resume or self._state_global, token)
+                return
             if token == '<':
                 depth += 1
             elif token == '>':

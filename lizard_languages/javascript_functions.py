@@ -111,6 +111,11 @@ class JavaScriptFunctionsMixin:
 
     def _arrow_function(self, token):
         self._push_arrow_function()
+        arrow_line = getattr(self, '_arrow_line', None)
+        if (arrow_line is not None and self.started_function
+                and self.context.current_function):
+            # The body may start on the next line: `(e) =>\n  f(e)`.
+            self.context.current_function.start_line = arrow_line
         if token == '{':
             # A block body closes any expression body (`a => b => {}`).
             if self._expression_body:
@@ -170,6 +175,12 @@ class JavaScriptFunctionsMixin:
             return
         if token == 'function' and not self._parameter_bindings.defaults:
             # The optimistic named-arrow signature is an IIFE expression.
+            self._abandon_optimistic_parameter_group()
+            self.next(self._state_global, token)
+            return
+        if (self._parameter_bindings.at_start and self.last_token == '('
+                and token.startswith('<') and len(token) > 1):
+            # Parenthesized JSX: `c = (<div>…</div>)`, not parameters.
             self._abandon_optimistic_parameter_group()
             self.next(self._state_global, token)
             return

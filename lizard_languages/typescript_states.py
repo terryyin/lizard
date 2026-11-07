@@ -37,6 +37,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         self._condition_kind = None
         self._ternary_depth = 0
         self._expression_body = False  # An open expression-bodied arrow
+        self._arrow_line = None  # Line of `=>` for expression-body start
         self._call_group = False  # Argument commas end expression arrows
         self._open_groups = 0  # "(" of a group read as parameters
 
@@ -134,6 +135,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         elif token in ('else', 'do', 'try', 'final'):
             self.next(self._expecting_statement_or_block)
         elif token in ('=>',):
+            self._arrow_line = self.context.current_line
             if not self._pending_bindings:
                 name = self.last_tokens
                 if name.replace('$', '_').isidentifier():

@@ -236,3 +236,57 @@ class Test_TypeScript_function_scopes(unittest.TestCase):
         '''
         functions = get_ts_function_list(code)
         self.assertEqual(["safeFetch"], [f.name for f in functions])
+
+
+class Test_ts_expression_bodied_arrows(unittest.TestCase):
+
+    def spans(self, code):
+        return [(f.name, f.start_line, f.end_line)
+                for f in get_ts_function_list(code)]
+
+    def test_arrow_starts_at_its_arrow_when_the_body_is_on_the_next_line(self):
+        code = (
+            "function h(xs) {\n"
+            "  return xs.map((x) =>\n"
+            "    x + 1);\n"
+            "}\n"
+        )
+        self.assertEqual([('(anonymous)', 2, 3), ('h', 1, 4)], self.spans(code))
+
+    def test_parenthesized_function_expression_is_not_a_parameter_list(self):
+        code = (
+            "const m = (function () {\n"
+            "  function inner() { return 1; }\n"
+            "  return inner;\n"
+            "})();\n"
+            "function after() {}\n"
+        )
+        # The IIFE keeps the binding name `m`, matching other grouped
+        # function expressions; `after` must still be a separate function.
+        self.assertEqual(['inner', 'm', 'after'],
+                         [name for name, _, _ in self.spans(code)])
+
+    def test_expression_body_keeps_internal_commas_and_ternaries(self):
+        code = "const f = () => [1, x ? 2 : 3];\n"
+        functions = get_ts_function_list(code)
+        self.assertEqual([('f', 1, 1)],
+                         [(f.name, f.start_line, f.end_line) for f in functions])
+        self.assertEqual(2, functions[0].cyclomatic_complexity)
+
+    def test_return_type_arrow_does_not_end_the_function_early(self):
+        code = (
+            "function f(): () => [number, number] {\n"
+            "  return () => [1, 2];\n"
+            "}\n"
+        )
+        self.assertEqual([('(anonymous)', 2, 2), ('f', 1, 3)], self.spans(code))
+
+    def test_optional_index_keeps_nested_callback(self):
+        code = (
+            "class C {\n"
+            "  value = callbacks?.[items.findIndex(item => item.ok)];\n"
+            "  method() {}\n"
+            "}\n"
+        )
+        self.assertEqual(['(anonymous)', 'method'],
+                         [name for name, _, _ in self.spans(code)])

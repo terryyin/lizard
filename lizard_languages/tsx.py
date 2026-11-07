@@ -49,9 +49,10 @@ class TSXReader(TypeScriptReader):
 
 # Tokens after which a JSX element can start an expression. After a name,
 # `)` or `]`, an angle bracket is a comparison or type arguments instead.
+# `}` and `>` keep sibling elements after a child expression or prior tag.
 _BEFORE_EXPRESSION = {
-    None, '(', '[', '{', ',', '=', '=>', 'return', '?', ':', '&&', '||',
-    '??', '!', 'yield', 'default', 'case', ';'}
+    None, '(', '[', '{', '}', '>', ',', '=', '=>', 'return', '?', ':',
+    '&&', '||', '??', '!', 'yield', 'default', 'case', ';'}
 
 
 def _is_opening_tag(token):
@@ -70,8 +71,13 @@ class TSXTokenizer(JSTokenizer):
         if not token.isspace():
             self._previous = token
         if token == "<":
-            self.sub_tokenizer = XMLTagWithAttrTokenizer(
-                previous in _BEFORE_EXPRESSION)
+            if previous in _BEFORE_EXPRESSION:
+                self.sub_tokenizer = XMLTagWithAttrTokenizer(True)
+            else:
+                # Comparison or type arguments: `i < n`, `f<T>()`. Starting
+                # a tag and aborting would hand `}` to brace counting and
+                # end the enclosing expression too early.
+                yield token
             return
         if _is_opening_tag(token) and previous in _BEFORE_EXPRESSION:
             # The children of an element are text except for {...}.
@@ -96,6 +102,8 @@ class XMLTagWithAttrTokenizer(Tokenizer):
         self.cache = ['<']
         # Token emitted when an embedded {expression} ends, if any.
         self._expression_end = None
+        # Tag text flushed before an attribute expression starts.
+        self._pending_flush = None
         # Where an expression is expected, `<` can only open an element,
         # so its children are text even when they hold `=`, `;` or `)`.
         self._in_expression = in_expression
@@ -108,6 +116,10 @@ class XMLTagWithAttrTokenizer(Tokenizer):
         return tokenizer
 
     def __call__(self, token):
+        if self._pending_flush:
+            for tok in self._pending_flush:
+                yield tok
+            self._pending_flush = None
         if self.sub_tokenizer:
             for tok in self.sub_tokenizer(token):
                 yield tok
@@ -125,6 +137,13 @@ class XMLTagWithAttrTokenizer(Tokenizer):
             yield tok
 
     def process_token(self, token):
+        if token.isspace() and '\n' in token:
+            # Attribute expressions pass through before the cached tag
+            # text, so newlines go out now to keep their lines in order.
+            for _ in range(token.count('\n')):
+                yield '\n'
+            self.cache.append(' ')
+            return
         self.cache.append(token)
         if not token.isspace():
             result = self.state(token)
@@ -156,7 +175,30 @@ class XMLTagWithAttrTokenizer(Tokenizer):
         if not isidentifier(token):
             return self.abort()
         self.tag = token
-        self.state = self._after_tag
+        self.state = self._after_tag_name
+
+    def _after_tag_name(self, token):
+        if token == '.':
+            # Member tag name with attributes: <Modal.Footer className="x">
+            self.state = self._tag_name_part
+            return None
+        if token.startswith('<') and token.endswith('>') and len(token) > 2:
+            self.state = self._after_type_arguments
+            return None
+        return self._after_tag(token)
+
+    def _after_type_arguments(self, token):
+        # <Select<number> value={v} /> is an element; a generic call such
+        # as useState<Result<T>>(x) has no attribute after them.
+        if isidentifier(token) or token == '/':
+            return self._after_tag(token)
+        return self.abort()
+
+    def _tag_name_part(self, token):
+        if not isidentifier(token):
+            return self.abort()
+        self.state = self._after_tag_name
+        return None
 
     def _after_tag(self, token):
         if token == '>':
@@ -203,8 +245,11 @@ class XMLTagWithAttrTokenizer(Tokenizer):
             self._attribute_expression()
 
     def _attribute_expression(self):
-        # TSXTokenizer handles brace-depth tracking and stops at the
-        # matching '}'; the next attribute (or '>') follows in _after_tag.
+        # Emit the tag text read so far before the expression so the state
+        # machine meets `<D f={` before the expression's tokens, and an
+        # abort cannot hand back an opening '{' whose '}' the expression
+        # tokenizer consumes.
+        self._pending_flush = self.flush()
         self.sub_tokenizer = TSXTokenizer()
         self._expression_end = ';'
 

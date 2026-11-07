@@ -34,9 +34,9 @@ class Test_tokenizing_TSX(unittest.TestCase):
         self.check_tokens(['<abc x="x">a</abc>'], '<abc x="x">a</abc>')
 
     def test_with_embeded_attributes(self):
-        # After Fix 1, attribute expressions handled by TSXTokenizer sub-tokenizer;
-        # ';' injected on close, residual tag tokens emitted
-        self.check_tokens(['y', ';', '<abc x={>a</abc>', '<a>', '</a>'],
+        # The tag text read so far precedes the attribute expression, which
+        # ends with an injected ';'; the rest of the tag follows
+        self.check_tokens(['<abc x={', 'y', ';', '>a</abc>', '<a>', '</a>'],
                          '<abc x={y}>a</abc><a></a>')
 
     def test_less_than(self):
@@ -46,8 +46,8 @@ class Test_tokenizing_TSX(unittest.TestCase):
         self.check_tokens(['a', '<', 'b', ' ', 'and', ' ', 'c', '>', ' ', 'd'], 'a<b and c> d')
 
     def test_complicated_properties(self):
-        # After Fix 1, ';' injected when attribute expression ends
-        self.check_tokens(['data', ' ', '=>', '(', ')', ';', '<StaticQuery render={ />'],
+        # ';' injected when attribute expression ends
+        self.check_tokens(['<StaticQuery render={', 'data', ' ', '=>', '(', ')', ';', ' />'],
                          '<StaticQuery render={data =>()} />')
 
 
@@ -833,7 +833,7 @@ function Rates({ rows }) {
 function escape(s) { return s.replace(/</g, '&lt;').replace(/>/g, s && '&gt;'); }
 function after(x) { if (x) { return 1 } return 2; }
 '''
-        expected = [("(anonymous)", 5, 5, 1, 4), ("Rates", 1, 7, 2, 47),
+        expected = [("(anonymous)", 5, 5, 1, 5), ("Rates", 1, 7, 2, 47),
                      ("escape", 8, 8, 2, 24), ("after", 9, 9, 2, 16)]
         for ext in ("jsx", "tsx"):
             with self.subTest(ext=ext):
@@ -857,3 +857,122 @@ function after(x: number) { if (x) { return 1 } return 2; }
 const cmp = (a, b) => a < b && b > 0;
 function g(x) { return useState<string>(x); }
 ''')
+
+
+class Test_TSX_attribute_names(unittest.TestCase):
+    """Attribute forms the tag reader must accept without aborting the tag."""
+
+    TEMPLATE = (
+        "const C = (p) => {\n"
+        "  return (\n"
+        "    <G className={cx('a', { b: p.b })} %s>\n"
+        "      <B onClick={() => p.f()}>x</B>\n"
+        "    </G>\n"
+        "  );\n"
+        "};\n"
+        "const N = (p) => {\n"
+        "  return <C />;\n"
+        "};\n"
+    )
+
+    def spans(self, attribute):
+        return [(f.name, f.start_line, f.end_line)
+                for f in get_tsx_function_list(self.TEMPLATE % attribute)]
+
+    def test_hyphenated_attribute(self):
+        self.assertEqual(self.spans('title={p.d}'), self.spans('data-action={p.d}'))
+
+    def test_attribute_without_value(self):
+        self.assertEqual(self.spans('title={p.d}'), self.spans('title={p.d} hidden'))
+
+    def test_spread_attribute(self):
+        self.assertEqual(self.spans('title={p.d}'), self.spans('title={p.d} {...p.rest}'))
+
+
+class Test_TSX_lines_in_multiline_tags(unittest.TestCase):
+
+    def test_functions_after_a_multiline_tag_keep_their_lines(self):
+        code = (
+            "const C = (p) => {\n"
+            "  return (\n"
+            "    <G\n"
+            "      title={p.t}\n"
+            "      onClick={() => p.f()}\n"
+            "    >\n"
+            "      x\n"
+            "    </G>\n"
+            "  );\n"
+            "};\n"
+            "const N = (p) => {\n"
+            "  return <C />;\n"
+            "};\n"
+        )
+        self.assertEqual([('(anonymous)', 5, 5), ('C', 1, 10), ('N', 11, 13)],
+                         [(f.name, f.start_line, f.end_line)
+                          for f in get_tsx_function_list(code)])
+
+
+class Test_TSX_tag_structure(unittest.TestCase):
+    """Tag forms whose misreading moved braces and ended components early."""
+
+    def spans(self, code):
+        return [(f.name, f.start_line, f.end_line)
+                for f in get_tsx_function_list(code)]
+
+    def component(self, jsx):
+        return (
+            "const C = (p) => {\n"
+            "  return (\n"
+            "    %s\n"
+            "  );\n"
+            "};\n"
+            "const N = (p) => {\n"
+            "  return <C />;\n"
+            "};\n" % jsx)
+
+    def test_member_tag_name_with_attributes_and_a_child(self):
+        code = self.component(
+            "<M.Footer className={p.c} title={p.t}><B onClick={() => p.f()} /></M.Footer>")
+        self.assertEqual([('(anonymous)', 3, 3), ('C', 1, 5), ('N', 6, 8)],
+                         self.spans(code))
+
+    def test_type_arguments_on_an_element_with_a_child(self):
+        code = self.component(
+            "<S<number> value={p.v}><B onClick={() => p.f()} /></S>")
+        self.assertEqual([('(anonymous)', 3, 3), ('C', 1, 5), ('N', 6, 8)],
+                         self.spans(code))
+
+    def test_comparison_inside_an_expression_container(self):
+        code = self.component(
+            "<div>{p.i < p.n}{p.label}<B onClick={() => p.f()} /></div>")
+        self.assertEqual([('(anonymous)', 3, 3), ('C', 1, 5), ('N', 6, 8)],
+                         self.spans(code))
+
+    def test_comparison_in_attribute_keeps_enclosing_component(self):
+        code = (
+            "const C = (p) => {\n"
+            "  const e = <D visible={p.i < p.n} />;\n"
+            "  if (p.x) {\n"
+            "    return 1;\n"
+            "  }\n"
+            "  return e;\n"
+            "};\n"
+        )
+        functions = get_tsx_function_list(code)
+        self.assertEqual([('C', 1, 7)],
+                         [(f.name, f.start_line, f.end_line) for f in functions])
+        self.assertEqual(2, functions[0].cyclomatic_complexity)
+
+    def test_parenthesized_jsx_assigned_to_a_variable(self):
+        code = (
+            "const T = () => {\n"
+            "  let c = null;\n"
+            "  if (a) {\n"
+            "    c = (\n"
+            "      <D f={(v) => g(v)} />\n"
+            "    );\n"
+            "  }\n"
+            "  return c;\n"
+            "};\n"
+        )
+        self.assertEqual([('(anonymous)', 5, 5), ('T', 1, 9)], self.spans(code))
