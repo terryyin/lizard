@@ -2,7 +2,8 @@
 // section, the seed's shared context outside other stories' sections (the
 // caller supplies that story-scoped text), and a distinct plan. CLI and
 // browser share this meaning: normalize line endings only, exclude every
-// story-state fence, then digest. Planned work may add a plan digest; when
+// story-state fence, digest each dependency fence by its agreement only, then
+// digest. Planned work may add a plan digest; when
 // the plan is the canonical document itself, digest that document once so the
 // basis cannot become self-referential through the block that stores it.
 
@@ -102,9 +103,88 @@ export function normalizeLineEndings(source) {
   return source.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
 }
 
+export const storyDependenciesFence = "json dough-story-dependencies";
+
+// The agreement of one dependency: what the consumer and supplier decided.
+// State, resolution, and decision are a supplier's progress against it, so
+// they stay out of the readiness basis and out of a resolution's stale check.
+export function dependencyAgreement({
+  supplier,
+  implementation,
+  rationale,
+  condition,
+}) {
+  return { supplier, implementation, rationale, condition };
+}
+
+// A dependency fence body with each dependency object rewritten. Anything not
+// shaped as a record of dependency objects is digested as written.
+function rewrittenBody(body, rewrite) {
+  let payload;
+  try {
+    payload = JSON.parse(body);
+  } catch {
+    return body;
+  }
+  if (
+    !payload ||
+    typeof payload !== "object" ||
+    Array.isArray(payload) ||
+    !Array.isArray(payload.dependencies) ||
+    !payload.dependencies.every(
+      (entry) => entry && typeof entry === "object" && !Array.isArray(entry),
+    )
+  ) {
+    return body;
+  }
+  const dependencies = payload.dependencies.map(rewrite);
+  return JSON.stringify({ ...payload, dependencies });
+}
+
+// Each dependency reduced to its agreement, the current basis meaning.
+function agreementBody(body) {
+  return rewrittenBody(body, dependencyAgreement);
+}
+
+// Each dependency returned to the bytes its agreement was first written as,
+// before any resolution or decision, the meaning a legacy record reviewed
+// while every supplier was still waiting carries.
+function waitingBody(body) {
+  return rewrittenBody(body, (entry) => ({
+    ...dependencyAgreement(entry),
+    state: "waiting",
+  }));
+}
+
+const dependencyFenceBodies = {
+  agreement: agreementBody,
+  waiting: waitingBody,
+};
+
+function digestDependencyFences(lines, rewrite) {
+  for (let open = 0; open < lines.length; open += 1) {
+    if (lines[open].trim() !== `\`\`\`${storyDependenciesFence}`) {
+      continue;
+    }
+    const close = lines.findIndex(
+      (line, index) => index > open && line.trim() === "```",
+    );
+    if (close === -1) {
+      return;
+    }
+    const body = lines.slice(open + 1, close).join("\n");
+    lines.splice(open + 1, close - open - 1, rewrite(body));
+    open += 1;
+  }
+}
+
 // Bytes hashed for one Markdown document: line endings normalized, every
-// story-state fence removed, nothing else rewritten.
-export function digestSource(source) {
+// story-state fence removed, each dependency fence reduced to its agreement,
+// nothing else rewritten. `dependencyFences: "as-written"` keeps dependency
+// fences byte for byte, and `dependencyFences: "waiting"` returns each to its
+// unresolved bytes: the two meanings a record from before agreement digests
+// carries.
+export function digestSource(source, options = {}) {
   const normalized = normalizeLineEndings(source);
   const endsWithNewline = normalized.endsWith("\n");
   const body = endsWithNewline ? normalized.slice(0, -1) : normalized;
@@ -112,6 +192,10 @@ export function digestSource(source) {
   const blocks = findStoryStateBlocks(lines, { start: 0, end: lines.length });
   for (const block of [...blocks].reverse()) {
     lines.splice(block.open, block.close - block.open + 1);
+  }
+  const fences = options.dependencyFences ?? "agreement";
+  if (fences !== "as-written") {
+    digestDependencyFences(lines, dependencyFenceBodies[fences]);
   }
   const stripped = lines.join("\n");
   const forHash = endsWithNewline ? `${stripped}\n` : stripped;
@@ -121,12 +205,12 @@ export function digestSource(source) {
 // Builds the assessment basis for already-loaded canonical text and, when
 // planned work uses a distinct plan file, that plan's text. Same-file plan
 // content is digested once as the document.
-export function computeBasis(documentSource, planSource) {
-  const document = digestSource(documentSource);
+export function computeBasis(documentSource, planSource, options = {}) {
+  const document = digestSource(documentSource, options);
   if (planSource === undefined || planSource === documentSource) {
     return { document };
   }
-  return { document, plan: digestSource(planSource) };
+  return { document, plan: digestSource(planSource, options) };
 }
 
 export function basesEqual(left, right) {

@@ -1,0 +1,6 @@
+{
+  "note": "quiet microbench after attempt3 code; same 108-file expanded corpus",
+  "all_files_ratio_corrected_over_target": 1.006982086522794,
+  "no_template_94_files_ratio": 0.9981833889657865,
+  "interpretation": "paired ~10% under load averages 8-13 is unresolved noise relative to ~0.7% quiet ratio"
+}

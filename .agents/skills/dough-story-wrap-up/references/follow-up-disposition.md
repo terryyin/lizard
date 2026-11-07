@@ -5,8 +5,8 @@ explicit human instruction, before wrap-up can complete. Do not silently retain
 an unlisted follow-up or infer permission to drop it from absent, empty, or
 skipped retrospective advice. Handle it by its presence even when advice is
 absent. Record which disposition was applied; use
-[completion attention](../../dough-land/SKILL.md#completion-attention) for a useful
-follow-up reminder or an unresolved disposition.
+[completion attention](../../dough-land/SKILL.md#completion-attention) after
+settling it or when a disposition remains unresolved.
 
 Without an explicit drop instruction, validate the follow-up against the
 correction-input contract in
@@ -38,6 +38,12 @@ records during cleanup. Dropping does not claim that the follow-up was
 implemented. Preserve sibling stories and unrelated work. Unresolved ownership
 stops the affected deletion and blocks closure; do not leave an unlisted plan
 and report wrap-up complete.
+
+## Keep an active follow-up's provenance
+
+Keep an active follow-up's queue link, correction input, and provenance. If its
+source locator points into deleted predecessor history, replace the locator
+with the before-cleanup commit and repository-relative path.
 
 ## Preserve follow-up priority during reconciliation
 

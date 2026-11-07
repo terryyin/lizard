@@ -1,145 +1,202 @@
 # Slice wrap-up
 
-The coordinator runs this sequence after implementation, including an owned CI
-repair. Publication of a validated increment or that repair is
-[increment and repair publication](trunk-publication.md#publish-an-execution-increment-or-repair).
+The coordinator runs this sequence after implementation, including owned CI repair, using [increment and repair publication](trunk-publication.md#publish-an-execution-increment-or-repair) for validated work.
 
 ## Accept proof
 
 Apply [proof ownership](../../dough-story-refinement/references/planning.md#own-executable-proof).
-Treat the implementation return as an index, not as accepted evidence. For each
-promise the return treats as covered or verified, inspect the uncommitted change
-at its reported product boundary and the concrete setup and assertion or signal
-locations it names. Confirm that setup supplies only the starting precondition,
-that an observing assertion or signal actually exercises the claimed behavior,
-and that the product at that boundary establishes the promised outcome. A
-passing command, test name, `proof:` summary, prose that says the fixture covers
-a behavior, or an assertion whose setup supplies the outcome does not establish
-the promise. When the return presents behavior as verified without a matching
-observation, or the product contradicts that claim, do not tell the developer it
-is covered: return the required behavior for correction, or obtain the matching
-observation within authority, before accepting it. A truthful description of
-untested or out-of-scope behavior stays incomplete for that claim; it is not
-verified evidence and does not invent a new story promise.
+Before comparing a slice's return, have a source-only review of its unchanged
+source. To obtain one, spawn a fresh general-purpose reviewer without
+conversation inheritance, fork or resume; do not reuse the implementation or
+refactor agent. Supply only the original source
+text and explicit human amendments: the selected story's Goal, Scope, key examples
+and exclusions, complete correction input, or authorized quick instruction. Give
+no plan, return, product, proof, suspected omission or current-slice scope. For a
+plan-homed correction, send its original correction input, not its slicing.
+Tell the reviewer: use only these inputs, read no other project files, change
+nothing; return source clauses with individual commitments, qualifications,
+trigger/journey examples and exclusions. Number every commitment, and give each
+item of a listed compound commitment its own id (for example `4a.1`–`4a.6` for
+six listed filters). Separate compound promises; preserve
+alternatives without turning examples into rejection rules. Derive promises,
+not slice ownership or acceptance. Use supported fresh-context delegation or a
+separate new session with these limits. Retain the actual reviewer launch/input
+and returned commitments, or their inspectable locations, in existing acceptance
+evidence; a coordinator's assertion is insufficient. For planned execution,
+retain them beside the plan as `source-review.md` in its
+[record form](story-obligations.md#record-the-source-review), linked from the
+plan by `**Source review:**`, and allocate every id before the next obligations
+listing or check: to the slice whose output owes it, to a disposing obligation,
+or, if only a post-execution operation can observe it, to its
+[lifecycle owner](story-obligations.md#record-the-source-review). Reuse that
+return for later slices while the source text is unchanged; after a story
+amendment, obtain a fresh review, replace it and allocate it again the same way.
+If isolation or that evidence is unavailable, name the missing review and stop
+dependent acceptance.
 
-When the claimed proof used name, pattern, or other filtering, verify which
-tests or observations were actually selected against the promises the return
-treats as covered. Accept only promises whose selected observations match.
+Compare that independent return with the source, then the plan, implementation
+return, actual product and proof. In existing plan or acceptance evidence compare,
+in any equivalent layout: applicable original trigger/setup → source-expected
+result → actual observation → current or legitimate remaining owner/disposition.
+For planned execution, record that comparison per returned id in
+`source-review.md`, allocating and observing each id under its
+[record rules](story-obligations.md#record-the-source-review). A commitment the
+plan narrowed or omitted is a mismatch, not a disposition, and so is an
+observed location that shows a different result than the commitment states.
+Return it to the slice when this slice's output already owes it; when the plan
+claims a reason the story does not record, stop for human judgment.
+Include each qualification and journey example; a heading, count or plan list
+cannot stand for a compound promise. Return a concrete expected/actual mismatch
+unless a real human amendment changes it. Broad accuracy or compatibility claims
+cannot replace an explicit journey's expected result. Check source completeness before reuse.
+When a slice's proof includes a developer-operated observation, accept it under
+[developer-operated observation](../../dough-story-refinement/references/executable-proof.md#plan-and-reuse-developer-operated-observation).
+Establish applicability at the current trigger or output before allowing later
+ownership: a later slice cannot qualify an output that already owes the promise.
+The source and human amendments outrank plan/return; correct a contrary mapping,
+retaining source-correct behavior and proof. An owner-decision label is no human
+amendment. Preserve legitimate remaining owners, exclusions and human
+changes; resolve disputes through [human judgment](execution-decisions.md#stop-for-human-judgment),
+stopping only dependent acceptance. Use existing records, not a second promise registry.
+
+If a delegated call was interrupted, or its return arrived only after interruption, follow
+[interrupted-delegation recovery](delegation.md#recover-an-interrupted-delegated-result) before accepting anything from it.
+Use the return as a location index, never the promise list or accepted evidence. Inspect product, setup and observing
+assertions/signals at each applicable boundary. Setup supplies preconditions; product and observation establish
+the outcome. Passing commands, test names, `proof:` summaries, coverage claims or setup supplying the outcome
+do not prove it. Untested or out-of-scope claims remain incomplete; they neither verify nor invent a source promise.
+
+For filtered proof, compare actually selected tests/observations with the claimed promises.
 A zero-exit command that selected nothing, or that selected fewer observations
 than the claimed promises require, leaves those promises incomplete — obtain
 the missing observations (broader or corrected selection, retargeted titles, or
 another sufficient check) before accepting them, or return them as uncovered.
-A selected test count supports that check; it is never the full promise mapping.
 Reuse a trustworthy recorded selection and result when they still match the
 claimed command, filter, and candidate; do not rerun solely for process.
 
-When the change has consumers, as
+When the change alters an operation or contract, a message or value, a
+default, rendered output, or shared text, return a slice without its
+[consumer-trace record](../../dough-story-refinement/references/executable-proof.md#record-the-consumer-trace)
+for the trace. When the change has consumers, as
 [own executable proof](../../dough-story-refinement/references/planning.md#own-executable-proof)
-defines them, check its current consumers against the return's selection and the
-claimed proof. Do not accept on a prior unaffected-suite or unused-consumer
-exclusion when the change still reaches that consumer. Do not accept or publish
-the slice while a known consumer — one the return's selection found, or one you
-can name — is unrun, including one left for CI: run it, or return the slice for
-it. Unrelated consumers and unchanged boundaries keep their accepted evidence.
-Reuse sufficient equivalent-purpose proof; require the changed surface's suite
-when it runs within the slice's focused-check time, not every suite.
+defines them, compare the record's terms with the diff's removals, renames, or
+relocations of symbols or modules, changes to callable contracts, and the changed
+behavior, including retired behavior, altered preconditions, and a too-broad
+derived term naming the changed contract that was not resupplied. Do not accept
+a record with a listed consumer lacking a disposition, or with an exclusion the
+effect reaches. Inspect discovered consumers, including
+unchanged tests and fixtures, then follow the changed effect through the reported
+surface or entry points and compare the reached consumers with the return's
+selection and proof.
+A return that stops at file, selector, or helper matches leaves that trace
+incomplete: inspect the enclosing observations or caller scenarios and their
+setup before accepting it. Confirm sufficient current observations for the
+affected purposes, including newly reached consumers. Do not accept on a prior
+unaffected-suite or unused-consumer exclusion when the change reaches that
+boundary. Do not accept or publish until proof for the record's unexcluded
+consumers and any other known affected consumer ran or was reused, including
+one left unrun for CI: obtain the missing observation or
+return the slice for it. Preserve sufficient reused or equivalent-purpose proof
+and accepted evidence for unrelated consumers and unchanged boundaries. Require
+the changed surface's suite when it runs within the slice's focused-check time,
+not every suite. A discovered failure keeps the project's failure policy and
+the consumer's legitimate promise; passing by supplying the outcome in setup or
+weakening the assertion is not sufficient proof.
 
-When a required observation is explicitly missing from the return — including
-required readiness or requeue behavior named as untested while delivery is still
-treated as ready — obtain that observation within authority before accepting the
-dependent promise, or name the required promise incomplete and leave its
-dependent delivery unaccepted. In planned execution, record it as a story
-obligation under the procedure below; quick execution keeps the same-slice rule.
-If the required proof cannot be obtained, stop only that dependent path and
-preserve independently valid accepted evidence.
-
-For planned execution, record every named gap, loss, limitation, or interim
-behavior as a structured [story obligation](story-obligations.md), including
-reported text, the story clause, and exactly one disposition. Read the selected
-story's goal, key examples, and exclusions before choosing that disposition;
-the script checks structure and quotes, not that judgment. Re-read every open
+For a required behavior or observation missing from the product or return, obtain
+it within authority or return it for correction before dependent acceptance. If
+proof is unavailable, name the promise incomplete and stop only its dependent
+delivery; preserve independently valid accepted evidence. For planned execution,
+record every reported or independently discovered gap, loss, limitation or interim
+behavior as a structured [story obligation](story-obligations.md), with discovery
+provenance in the existing reported text or title, the story clause and exactly
+one disposition before declaring dependent acceptance; a short outcome file does
+not replace these obligations. The script checks structure and quotes, not judgment. Apply
+[the relevant-path check](story-obligations.md#check-the-paths-before-closing-a-gap)
+before closing a gap as `no user cost` or `proved`. Re-read every open
 interim the current slice depends on; a newly wrong result becomes a return
 owned by this slice, preserving the original text and provenance. For quick
 execution, apply that reference's same-slice rule without creating a plan.
 
-Read every fixture or setup change that turns a failing scenario green against
-the story's examples. When the return reshapes or
-simplifies a fixture or setup, check the example in its real shape, the real
-file or input it names; green on a fixture the example does not describe does
-not accept it. Examine a limit that could lose the only copy of paused or saved
-work for that consequence; guidance for a neighbouring case does not authorize
-it.
+Read fixture or setup changes that turn a failing scenario green against the
+story's examples. Check a reshaped example in its real shape, file or input;
+green on a different fixture does not accept it. Examine a limit that could lose
+the only copy of paused or saved work for that consequence; guidance for a
+neighbouring case does not authorize it.
 
-During this slice, accept only observations supported by inspected locations and
-results. Retain the promise, accepted boundary, inspected locations, and literal
-command in the slice wrap-up for refactoring. Expand inspection to the smallest
-relevant underlying callers, setup, assertions, or implementation
-when a location is missing, the boundary is unclear, or evidence contradicts the
-change. Return incomplete or contradictory evidence to implementation, naming
-the promise, inspected locations, and gap; refactoring cannot supply missing
-behavior.
+Retain the promise, accepted boundary, consumer trace, inspected setup/assertion
+locations, results and literal commands for refactoring. When a location is missing,
+the boundary unclear or evidence contradictory, inspect the smallest relevant
+callers or implementation. Return incomplete or contradictory evidence with the
+promise, inspected locations and gap; refactoring cannot supply missing behavior.
 
-Judge the return by its substance, not its layout. The `proof:` block under
-[the return contract](delegation.md#return-a-targeted-report-with-focused-proof)
-is an example representation; accept an equivalent layout that carries the same
-inspectable evidence — literal commands, results, owned changes, promise
-coverage, boundaries, and setup and observation locations — without a
-report-only resend or formatting-only retry. Formatting never substitutes for
-substance: a canonical-looking report missing the terminal result or
-contradicting inspected evidence remains incomplete whatever its layout.
-Explicit completion markers with a separate workflow contract, such as
-`## REFACTOR COMPLETE`, stay verbatim.
+Judge substance under [the return contract](delegation.md#return-a-targeted-report-with-focused-proof).
+Equivalent layouts carrying literal commands, results, owned changes, promise
+coverage, boundaries, setup and observation locations need no report-only resend
+or formatting retry. Missing terminal results or contradictions remain incomplete.
+Explicit completion markers such as `## REFACTOR COMPLETE` stay verbatim.
 
-Reuse accepted inspection while its promise, boundary, implementation, setup,
-and observations remain unchanged. Recover literal commands from the original
-handoff when possible. Rerun only for missing or ambiguous proof, a covered
-boundary changed during wrap-up, or omitted integration proof required by the
-slice. Do not sample randomly or repeat valid proof to manufacture process
-compliance. Preserve failures under
-[execution decisions](execution-decisions.md#diagnose-failed-proof).
+Reuse accepted inspection only while its promise, boundary, implementation, setup
+and observations match. Recover literal commands from the original handoff; rerun
+only missing, ambiguous, changed-boundary or omitted required integration proof.
+Preserve failures under [execution decisions](execution-decisions.md#diagnose-failed-proof).
+For expensive proof, inspect the handoff's retained [pre-launch decision](../../dough-story-refinement/references/executable-proof.md#choose-expensive-proof-before-launch).
+Reconsider changed host/workload conditions before launch; deferred proof stays incomplete with its owner and next condition.
 
-Require CI-safe work before delivery: no deliberate failing tests or unfinished
-end-to-end proof represented as complete. Use this project's convention to mark
-unfinished proof. Do not run full CI before commit unless explicitly required.
+Require CI-safe work: no deliberate failing tests or unfinished end-to-end proof
+represented as complete. Mark unfinished proof by this project's convention;
+run full CI before commit only when explicitly required.
 
 ## Deliver the change
 
-Run this sequence in the selected execution location established by
-[execution location](execution-location.md). Pass its checkout to every
-delegated refactor, generator, and host operation; do not let an inherited
-working directory redirect delivery. This slice delivery does not integrate
-or remove a retained execution branch or worktree. After the commit, publish
+Run this sequence in the selected [execution location](execution-location.md).
+Pass its checkout to every delegated refactor, generator and host operation;
+an inherited working directory must not redirect delivery. This sequence does
+not integrate or remove a retained branch or worktree. After the commit, publish
 the owned unpublished increment or repair through
 [increment and repair publication](trunk-publication.md#publish-an-execution-increment-or-repair).
 
-As each obligation finishes, retain the current delivery boundary in the
-execution conversation with the owned unfinished paths, accepted proof and its
-boundary, applicable implementation or refactor return, exact observer
-identity when present, and the unpublished candidate with its final `suffixBase`,
-previously published base, and accepted revision and target after any rewrite. On recovery,
-reconcile this focused record with actual Git, agent, and observer state under
-[execution-boundary recovery](../SKILL.md#continue-or-recover-at-an-execution-boundary).
-Classify the increment or repair with
-[interrupted publication](trunk-publication.md#resume-an-interrupted-publication)
-and continue that unfinished obligation only.
+As each obligation finishes, retain its delivery boundary in the execution conversation:
+owned unfinished paths, accepted proof and boundary, implementation or refactor return,
+refactor disposition, exact observer identity when present, unpublished
+candidate and final `suffixBase`, previously published base, and accepted revision and target after any rewrite.
+On recovery, reconcile actual Git, agent and observer state under
+[execution-boundary recovery](../SKILL.md#continue-or-recover-at-an-execution-boundary), classify the increment or repair with
+[interrupted publication](trunk-publication.md#resume-an-interrupted-publication), and continue only that unfinished obligation.
 
-1. Spawn a fresh agent to run
+After proof acceptance and the independent refactor or disposition below, fresh increments and
+owned repairs use [guarded fresh preparation and delivery](fresh-increment.md)
+for steps 3–8. Resolve its required project operations and publication context
+first. Never follow failure with a separate commit or older-HEAD delivery.
+Without publication authority, select local-only and retain its receipt.
+
+1. Classify the uncommitted change once. Record `records-only` when it touches
+   only planning, execution, finding or research records, such as plans, seeds,
+   backlog, source reviews, agent records, DearDough entries or maintainer
+   findings. For an owned CI repair or small change whose every
+   changed concept lies within a slice's accepted refactor return (its reported
+   changed paths and consumer-trace record), adding no representation, helper,
+   dependency or path, record an already-traced disposition naming that return.
+   Either replaces the agent; retain the disposition beside the slice in the
+   plan, or in the quick delivery boundary. Otherwise, or when unsure, spawn a fresh agent to run
    [dough-post-change-refactor](../../dough-post-change-refactor/SKILL.md).
-   Supply the execution source, execution checkout and branch, slice,
-   accepted proof with its inspected setup and observation locations, changed
-   paths and boundaries, project context, and ownership boundaries; supply the
-   plan path only when one exists. Keep
-   formatting and hook-owned lint with the coordinator. Do not
-   add instructions contradicting that skill's decide-before-testing contract;
-   explicit human verification requests remain authoritative.
+   Supply source, execution checkout/branch, slice, project context, changed paths and
+   boundaries, ownership boundaries, and accepted proof/consumer trace with inspected
+   setup/observation locations; include an existing plan's path and the
+   dispositions since the last pass. Carry the retained
+   expensive-proof decision and same-machine competing owned work. Keep formatting and
+   hook-owned lint with the coordinator; uphold decide-before-testing and explicit human verification authority.
+   A triggered pass keeps whole-product reach, never only the story's, slice's
+   or repair's files.
 2. Inspect its report, require `## REFACTOR COMPLETE`, and recheck
-   [execution decisions](execution-decisions.md). Use the reported changed paths,
+   [execution decisions](execution-decisions.md); only those two dispositions
+   replace that marker. Use the reported changed paths,
    boundaries, and proof effects to inspect only newly affected implementation
    and observation locations. Reuse accepted inspection for boundaries reported
    and confirmed unchanged; when refactoring invalidated a boundary, accept its
    rerun or replacement proof only after inspecting the new boundary and
-   observation locations under **Accept proof**. A refactor stop, missing marker,
-   contradiction, or unresolved proof gap prevents commit. Report unnecessary
+   observation locations under **Accept proof**. A refactor stop, missing marker
+   or disposition, contradiction, or unresolved proof gap prevents commit. Report unnecessary
    test runs as deviations; reuse valid evidence instead of repeating work.
 3. Run this project's generator if its trigger changed and the required output was
    not already regenerated and verified during refactoring. Fix generation at
@@ -149,9 +206,16 @@ and continue that unfinished obligation only.
    staging. Repair mechanical failures and repeat only when the repair
    invalidates preparation. Stop for semantic or design judgment.
 5. For planned execution, update the active plan and any project-required
-   summary with learnings, slice status, accepted proof needed for reuse, and
-   revised remaining slices under
-   [plan refinement](../../dough-story-refinement/references/planning.md#refine-the-active-plan).
+   summary with learnings, accepted proof needed for reuse, and revised
+   remaining slices under
+   [plan refinement](../../dough-story-refinement/references/planning.md#refine-the-active-plan);
+   ordinary guarded fresh delivery marks the selected slice `done` itself
+   ([`progress: true`](fresh-increment.md) when observation still needs the
+   published revision).
+   In Story Branch Mode, before the obligations check below, run
+   `node '<installed-execute-plan>/scripts/source-freshness.mjs' check --workspace '<execution checkout>' --identity '<identity>' --remote '<authorized remote>' --target-ref 'refs/heads/<trunk>'`;
+   continue on `unchanged`, and handle any other result under
+   [source freshness](source-freshness.md).
    Before marking the slice done or committing, run the installed
    [story-obligations script](../scripts/story-obligations.mjs):
    `node '<installed-execute-plan>/scripts/story-obligations.mjs' check --plan '<PLAN.md>' --slice N`.
@@ -167,7 +231,8 @@ and continue that unfinished obligation only.
    a plan-homed correction's plan holds both. Stop at the safe delivery boundary
    without changing other stories or the correction outcome. This plan update
    alone does not trigger another formatting pass. Record a CI repair result
-   with the interrupted slice's existing status. For quick execution, do not
+   with the interrupted slice's existing status; its guarded delivery names
+   the already `done` slice it repairs. For quick execution, do not
    create or update a plan, completion note, project summary, or substitute
    execution record; retain learnings, decisions, delivery progress, and proof
    in the conversation. An admitted story keeps only its scope.
@@ -187,46 +252,33 @@ and continue that unfinished obligation only.
    repairs invalidate preparation, rerun formatting before restaging and
    retrying.
 8. Immediately before publishing, resolve the owned unpublished suffix in the
-   execution workspace. Publish it through managed
-   [increment and repair publication](trunk-publication.md#publish-an-execution-increment-or-repair)
-   when this caller has publication authority.
-   Caller-selected current-branch work and an already-supported host-owned
-   execution stay in the recorded checkout. Create no worktree and do not
-   switch branches. Without that authority, commit there and report the
-   revision as committed and pending publication. Do not push. Remote refs
-   stay unchanged, and the checkout identity stays the recorded path.
-   With that authority, invoke the installed managed delivery entry point from
-   that same checkout, passing its `HEAD` from before this operation's first
-   commit as `--previously-published-base`. Handle an `unpublished-base` stop
-   as [current-branch publication](trunk-publication.md#publish-an-execution-increment-or-repair)
-   does.
-   The receipt is the accepted SHA, the authorized target,
-   and the observation result (attached, reused, or an explicit coverage gap).
-   Do not run a separate observer probe, start, or `register-push` for this
-   managed path, and do not copy mailbox directories by hand. A Codex
-   coordinator passes its observer note's coordinator and stream directory as
-   `--coordinator` and `--observer-directory`; that stream, armed at execution
-   start, is the observer this delivery registers on. A pending human edit on that checkout stays out of the
-   published commit.
-   When the selected checkout is the default checkout, follow its
+   execution workspace. With publication authority, publish it through managed
+   [increment and repair publication](trunk-publication.md#publish-an-execution-increment-or-repair).
+   Caller-selected current-branch and host-owned work stay in the recorded
+   checkout. Without that authority, commit there, report the revision as
+   committed and pending publication, and do not push; remote refs and the
+   recorded checkout identity stay unchanged.
+   Supply the owner inputs required
+   by [managed observation](trunk-publication.md#publish-the-candidate); Codex
+   uses its retained coordinator and exact stream directory. Pending human edits
+   stay out of the published commit.
+   On the default checkout, follow its
    [direct edit](maintain-default-checkout.md#direct-edit) checks before
-   mutating it. A local commit or a local merge stays a local
-   operation; do not report it as remote publication. Codex, Cursor, and
-   Claude keep the recorded checkout and authorized target their existing
-   adapters already supply. A rejected push follows
+   mutating it. A local commit or merge stays local; do not report it as remote
+   publication. Codex, Cursor, and Claude keep the recorded checkout and
+   authorized target their adapters supply. A rejected push follows
    [rejected-push recovery](trunk-publication.md#recover-a-rejected-push).
-   A [publication stop](trunk-publication.md#preconditions),
-   including a
+   A [publication stop](trunk-publication.md#preconditions), including a
    [rebase conflict stop](trunk-publication.md#resolve-a-publication-rebase-conflict)
    or a recovery stop, leaves that candidate unpublished and recoverable.
    A [default-checkout preservation result](maintain-default-checkout.md#preserve-pending-local-work)
    defers maintenance and does not by itself reject an accepted remote
-   candidate or block a push from a separate owned workspace. Do not register
-   a SHA the remote has not accepted, and do not treat that unpublished
-   candidate as delivered.
-   When observation is attached or reused, keep that observer running and
-   handle delivered failures through its repair protocol. An unavailable
-   bridge leaves publications unobserved: report that gap and continue.
+   candidate or block a push from a separate owned workspace. Never register
+   a SHA the remote has not accepted or treat that unpublished candidate as
+   delivered.
+   With observation attached or reused, keep that observer running and handle
+   delivered failures through its repair protocol. An unavailable bridge leaves
+   publications unobserved: report that gap and continue.
    Success completes routine delivery; a post-slice decision stop occurs after
    safe work is delivered. Never wait for CI or deployment after a normal or
    repair publication.

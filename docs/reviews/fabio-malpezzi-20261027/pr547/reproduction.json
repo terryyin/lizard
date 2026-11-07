@@ -1,0 +1,902 @@
+{
+  "target": {
+    "label": "target",
+    "paths": {
+      "lizard": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr547/target/lizard.py",
+      "typescript": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr547/target/lizard_languages/typescript.py",
+      "tsx": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr547/target/lizard_languages/tsx.py"
+    },
+    "rows": [
+      {
+        "filename": "pick.js",
+        "observed": [
+          [
+            "pick",
+            1,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "pick",
+            2,
+            3
+          ]
+        ],
+        "matches": false
+      },
+      {
+        "filename": "pick.ts",
+        "observed": [
+          [
+            "pick",
+            1,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "pick",
+            2,
+            3
+          ]
+        ],
+        "matches": false
+      },
+      {
+        "filename": "pick.jsx",
+        "observed": [
+          [
+            "pick",
+            2,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "pick",
+            2,
+            3
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "pick.tsx",
+        "observed": [
+          [
+            "pick",
+            2,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "pick",
+            2,
+            3
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "m.tsx",
+        "observed": [
+          [
+            "m",
+            3,
+            1
+          ]
+        ],
+        "expected": [
+          [
+            "m",
+            1,
+            1
+          ]
+        ],
+        "matches": false
+      },
+      {
+        "filename": "m.jsx",
+        "observed": [
+          [
+            "m",
+            3,
+            1
+          ]
+        ],
+        "expected": [
+          [
+            "m",
+            1,
+            1
+          ]
+        ],
+        "matches": false
+      },
+      {
+        "filename": "m.ts",
+        "observed": [
+          [
+            "m",
+            1,
+            1
+          ]
+        ],
+        "expected": [
+          [
+            "m",
+            1,
+            1
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "ternary-unspaced.js",
+        "observed": [
+          [
+            "f",
+            1,
+            1
+          ],
+          [
+            "g",
+            1,
+            1
+          ]
+        ],
+        "expected": [
+          [
+            "f",
+            2,
+            1
+          ],
+          [
+            "g",
+            3,
+            1
+          ]
+        ],
+        "matches": false
+      },
+      {
+        "filename": "ternary-unspaced.ts",
+        "observed": [
+          [
+            "f",
+            1,
+            1
+          ],
+          [
+            "g",
+            1,
+            1
+          ]
+        ],
+        "expected": [
+          [
+            "f",
+            2,
+            1
+          ],
+          [
+            "g",
+            3,
+            1
+          ]
+        ],
+        "matches": false
+      },
+      {
+        "filename": "ternary-unspaced.jsx",
+        "observed": [
+          [
+            "f",
+            2,
+            1
+          ],
+          [
+            "g",
+            3,
+            1
+          ]
+        ],
+        "expected": [
+          [
+            "f",
+            2,
+            1
+          ],
+          [
+            "g",
+            3,
+            1
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "ternary-unspaced.tsx",
+        "observed": [
+          [
+            "f",
+            2,
+            1
+          ],
+          [
+            "g",
+            3,
+            1
+          ]
+        ],
+        "expected": [
+          [
+            "f",
+            2,
+            1
+          ],
+          [
+            "g",
+            3,
+            1
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "optional-member.ts",
+        "observed": [
+          [
+            "m",
+            1,
+            1
+          ],
+          [
+            "f",
+            1,
+            1
+          ]
+        ],
+        "expected": [
+          [
+            "m",
+            1,
+            1
+          ],
+          [
+            "f",
+            1,
+            1
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "optional-member.tsx",
+        "observed": [
+          [
+            "m",
+            3,
+            1
+          ],
+          [
+            "f",
+            3,
+            1
+          ]
+        ],
+        "expected": [
+          [
+            "m",
+            1,
+            1
+          ],
+          [
+            "f",
+            1,
+            1
+          ]
+        ],
+        "matches": false
+      },
+      {
+        "filename": "optional-chain.js",
+        "observed": [
+          [
+            "f",
+            3,
+            4
+          ]
+        ],
+        "expected": [
+          [
+            "f",
+            3,
+            4
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "optional-chain.ts",
+        "observed": [
+          [
+            "f",
+            3,
+            4
+          ]
+        ],
+        "expected": [
+          [
+            "f",
+            3,
+            4
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "optional-chain.tsx",
+        "observed": [
+          [
+            "f",
+            3,
+            4
+          ]
+        ],
+        "expected": [
+          [
+            "f",
+            3,
+            4
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "optional-access.ts",
+        "observed": [
+          [
+            "pick",
+            3,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "pick",
+            3,
+            3
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "load.js",
+        "observed": [
+          [
+            "(anonymous)",
+            1,
+            1
+          ],
+          [
+            "load",
+            1,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "(anonymous)",
+            1,
+            1
+          ],
+          [
+            "load",
+            1,
+            3
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "load.ts",
+        "observed": [
+          [
+            "(anonymous)",
+            1,
+            1
+          ],
+          [
+            "load",
+            1,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "(anonymous)",
+            1,
+            1
+          ],
+          [
+            "load",
+            1,
+            3
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "b-story.js",
+        "observed": [
+          [
+            "b",
+            4,
+            8
+          ]
+        ],
+        "expected": [
+          [
+            "b",
+            4,
+            8
+          ]
+        ],
+        "matches": true
+      }
+    ]
+  },
+  "corrected": {
+    "label": "corrected",
+    "paths": {
+      "lizard": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr547/corrected/lizard.py",
+      "typescript": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr547/corrected/lizard_languages/typescript.py",
+      "tsx": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr547/corrected/lizard_languages/tsx.py"
+    },
+    "rows": [
+      {
+        "filename": "pick.js",
+        "observed": [
+          [
+            "pick",
+            2,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "pick",
+            2,
+            3
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "pick.ts",
+        "observed": [
+          [
+            "pick",
+            2,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "pick",
+            2,
+            3
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "pick.jsx",
+        "observed": [
+          [
+            "pick",
+            2,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "pick",
+            2,
+            3
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "pick.tsx",
+        "observed": [
+          [
+            "pick",
+            2,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "pick",
+            2,
+            3
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "m.tsx",
+        "observed": [
+          [
+            "m",
+            1,
+            1
+          ]
+        ],
+        "expected": [
+          [
+            "m",
+            1,
+            1
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "m.jsx",
+        "observed": [
+          [
+            "m",
+            1,
+            1
+          ]
+        ],
+        "expected": [
+          [
+            "m",
+            1,
+            1
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "m.ts",
+        "observed": [
+          [
+            "m",
+            1,
+            1
+          ]
+        ],
+        "expected": [
+          [
+            "m",
+            1,
+            1
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "ternary-unspaced.js",
+        "observed": [
+          [
+            "f",
+            2,
+            1
+          ],
+          [
+            "g",
+            3,
+            1
+          ]
+        ],
+        "expected": [
+          [
+            "f",
+            2,
+            1
+          ],
+          [
+            "g",
+            3,
+            1
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "ternary-unspaced.ts",
+        "observed": [
+          [
+            "f",
+            2,
+            1
+          ],
+          [
+            "g",
+            3,
+            1
+          ]
+        ],
+        "expected": [
+          [
+            "f",
+            2,
+            1
+          ],
+          [
+            "g",
+            3,
+            1
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "ternary-unspaced.jsx",
+        "observed": [
+          [
+            "f",
+            2,
+            1
+          ],
+          [
+            "g",
+            3,
+            1
+          ]
+        ],
+        "expected": [
+          [
+            "f",
+            2,
+            1
+          ],
+          [
+            "g",
+            3,
+            1
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "ternary-unspaced.tsx",
+        "observed": [
+          [
+            "f",
+            2,
+            1
+          ],
+          [
+            "g",
+            3,
+            1
+          ]
+        ],
+        "expected": [
+          [
+            "f",
+            2,
+            1
+          ],
+          [
+            "g",
+            3,
+            1
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "optional-member.ts",
+        "observed": [
+          [
+            "m",
+            1,
+            1
+          ],
+          [
+            "f",
+            1,
+            1
+          ]
+        ],
+        "expected": [
+          [
+            "m",
+            1,
+            1
+          ],
+          [
+            "f",
+            1,
+            1
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "optional-member.tsx",
+        "observed": [
+          [
+            "m",
+            1,
+            1
+          ],
+          [
+            "f",
+            1,
+            1
+          ]
+        ],
+        "expected": [
+          [
+            "m",
+            1,
+            1
+          ],
+          [
+            "f",
+            1,
+            1
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "optional-chain.js",
+        "observed": [
+          [
+            "f",
+            3,
+            4
+          ]
+        ],
+        "expected": [
+          [
+            "f",
+            3,
+            4
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "optional-chain.ts",
+        "observed": [
+          [
+            "f",
+            3,
+            4
+          ]
+        ],
+        "expected": [
+          [
+            "f",
+            3,
+            4
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "optional-chain.tsx",
+        "observed": [
+          [
+            "f",
+            3,
+            4
+          ]
+        ],
+        "expected": [
+          [
+            "f",
+            3,
+            4
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "optional-access.ts",
+        "observed": [
+          [
+            "pick",
+            3,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "pick",
+            3,
+            3
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "load.js",
+        "observed": [
+          [
+            "(anonymous)",
+            1,
+            1
+          ],
+          [
+            "load",
+            1,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "(anonymous)",
+            1,
+            1
+          ],
+          [
+            "load",
+            1,
+            3
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "load.ts",
+        "observed": [
+          [
+            "(anonymous)",
+            1,
+            1
+          ],
+          [
+            "load",
+            1,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "(anonymous)",
+            1,
+            1
+          ],
+          [
+            "load",
+            1,
+            3
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "b-story.js",
+        "observed": [
+          [
+            "b",
+            4,
+            8
+          ]
+        ],
+        "expected": [
+          [
+            "b",
+            4,
+            8
+          ]
+        ],
+        "matches": true
+      }
+    ]
+  }
+}

@@ -12,7 +12,7 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BacklogError } from "./product-backlog-refusal.mjs";
 
@@ -134,14 +134,11 @@ export function gitPath(repoRoot, name) {
   );
 }
 
-// Registers `driverScript` as the custom merge driver `name` (described by
-// `description`) for the one repository-relative `path`, for every future
-// content merge Git attempts on it in this checkout. Both the attribute and
-// the driver command are written to this checkout's own Git directory —
-// never to a file a project tracks or ships — because registering a driver
-// for every checkout a project might have, on every install, is a separate,
-// later concern; an adapter only needs the mechanism to be in effect for the
-// operation it is about to run. Git hands the driver `%O %A %B %P`.
+// Registers one repository-relative path in shared Git config and attributes,
+// without changing tracked project files. Linked checkouts share registration,
+// while Git runs drivers at the current checkout root: an installed script
+// follows that checkout, not the registering worktree. Explicit external
+// runtimes retain their absolute location.
 export function registerMergeDriver(
   repoRoot,
   path,
@@ -159,11 +156,17 @@ export function registerMergeDriver(
     writeFileSync(attributesPath, `${existing}${separator}${line}\n`, "utf8");
   }
   git(["config", `merge.${name}.name`, description], repoRoot);
+  const within = relative(repoRoot, script);
+  const location =
+    within !== ".." && !within.startsWith(`..${sep}`) && !isAbsolute(within)
+      ? `./${within}`
+      : script;
+  const quoted = (value) => `'${value.replaceAll("'", "'\\''")}'`;
   git(
     [
       "config",
       `merge.${name}.driver`,
-      `${process.execPath} ${script} %O %A %B %P`,
+      `${quoted(process.execPath)} ${quoted(location)} "%O" "%A" "%B" "%P"`,
     ],
     repoRoot,
   );

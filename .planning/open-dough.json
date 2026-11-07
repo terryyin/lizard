@@ -1,0 +1,17 @@
+{
+  "ciWorkflow": "python-app.yml",
+  "skipProcessRetrospective": false,
+  "intent": {
+    "locations": [
+      {
+        "path": "test",
+        "kind": "python",
+        "include": ["**/test*.py"]
+      },
+      {
+        "path": "website/frontend/features",
+        "kind": "gherkin"
+      }
+    ]
+  }
+}

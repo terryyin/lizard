@@ -7,7 +7,7 @@ import {
   agentIdentity,
   agentNameOf,
 } from "../../dough-product-backlog/scripts/product-backlog-agent-profile.mjs";
-import { exec, git } from "./publication-git.mjs";
+import { execWithInput, git } from "./publication-git.mjs";
 
 // "configured" when the workspace's ordinary commits can be authored through
 // per-worktree config. A bare repository's worktrees rely on `core.bare` or
@@ -108,11 +108,13 @@ async function developerCoAuthor(checkout, { agent, email }) {
 
 // Runs `git interpret-trailers` in `checkout` over `message`.
 async function interpretTrailers(checkout, message, ...args) {
-  const running = exec("git", ["interpret-trailers", ...args], {
-    cwd: checkout,
-  });
-  running.child.stdin.end(message);
-  return (await running).stdout;
+  const { stdout } = await execWithInput(
+    "git",
+    ["interpret-trailers", ...args],
+    { cwd: checkout },
+    message,
+  );
+  return stdout;
 }
 
 // Whether `message` already credits the person at `address` as a co-author,

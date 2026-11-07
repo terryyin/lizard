@@ -1,0 +1,21 @@
+{"pair": 1, "baseline": 4.9905767910000005, "candidate": 5.197452667}
+{"pair": 2, "candidate": 5.242288500000001, "baseline": 5.366476791}
+{"pair": 3, "baseline": 5.049592667000002, "candidate": 5.222095124999996}
+{"pair": 4, "candidate": 5.230592125000001, "baseline": 5.186708625000001}
+{"pair": 5, "baseline": 5.0589109579999985, "candidate": 5.260756082999997}
+{"pair": 6, "candidate": 5.286222792000004, "baseline": 5.082488499999997}
+{"pair": 7, "baseline": 5.120031374999996, "candidate": 5.2370367500000015}
+{"pair": 8, "candidate": 5.246644291999999, "baseline": 5.080763375000004}
+{"pair": 9, "baseline": 5.116456541999995, "candidate": 5.195346457999989}
+{"pair": 10, "candidate": 5.207534625000008, "baseline": 5.247709791999995}
+{"pair": 11, "baseline": 5.11282125000001, "candidate": 5.278719624999994}
+{"pair": 12, "candidate": 5.291798792000009, "baseline": 5.12619354200001}
+{"pair": 13, "baseline": 5.171888749999994, "candidate": 5.265644791}
+{"pair": 14, "candidate": 5.338039750000007, "baseline": 5.072449375000019}
+{"pair": 15, "baseline": 5.031279915999988, "candidate": 5.203696832999981}
+{"pair": 16, "candidate": 5.273447417, "baseline": 5.173817374999999}
+{"pair": 17, "baseline": 5.081678708999988, "candidate": 5.242163957999992}
+{"pair": 18, "candidate": 5.2668169160000105, "baseline": 5.163842083999981}
+{"pair": 19, "baseline": 5.077438624999985, "candidate": 5.264946417000004}
+{"pair": 20, "candidate": 5.30691620799999, "baseline": 5.164324082999997}
+{"command": ["/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr545/proof/paired.py", "--baseline", "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr545/target", "--candidate", "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr545/corrected", "--workload", "api-parameters", "--pairs", "20", "--seconds", "5.0", "--out", "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr545/incremental-api-parameters.json"], "python": "3.9.11 (main, Apr 10 2022, 22:01:55) \n[Clang 11.1.0 ]", "executable": "/Users/terryyin/git/lizard/.worktrees/conclude-the-javascript-and-typescript-lexical-a/.venv/bin/python", "host": "Territory.local", "workload": "api-parameters", "paths": ["/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr545/target", "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr545/corrected"], "pilots": [0.04793658300000003, 0.050787792], "loops": 105, "medians": {"baseline": 5.114638896000002, "candidate": 5.253700187499998}, "stdev": {"baseline": 0.08354082872216455, "candidate": 0.03788685047649209}, "median_slowdown_pct": 2.718887771505263, "paired_geometric_slowdown_pct": 2.530586230052201, "paired_95pct_ci": [1.703673886966084, 3.3642218703115123], "passes": false, "manifest_sha256": "2c788e7716ba6c3f9e85a3247396e61a768a6d418aa7f68106f93252a251b336"}

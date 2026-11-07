@@ -43,7 +43,7 @@ class TestFilesFilter(unittest.TestCase):
         files = get_all_source_files(["dir/file.log"], [], [])
         self.assertEqual(["dir/file.log"], list(files))
 
-    @patch('lizard.md5_hash_file')
+    @patch('lizard_core.file_discovery.md5_hash_file')
     @patch.object(os, "walk")
     def test_exclude_file_name(self, mock_os_walk, md5):
         mock_os_walk.return_value = (['.',
@@ -56,7 +56,7 @@ class TestFilesFilter(unittest.TestCase):
             file_names = ["./useful.cpp"]
         self.assertEqual(file_names, list(files))
 
-    @patch('lizard.md5_hash_file')
+    @patch('lizard_core.file_discovery.md5_hash_file')
     @patch.object(os, "walk")
     def test_assigned_languages(self, mock_os_walk, md5):
         mock_os_walk.return_value = (['.',
@@ -98,7 +98,7 @@ class TestFilesFilter(unittest.TestCase):
         self.assertEqual([], list(files))
 
     @patch.object(os, "walk")
-    @patch("lizard.auto_open", create=True)
+    @patch("lizard_core.file_discovery.auto_open", create=True)
     def test_duplicates(self, mock_open, mock_os_walk):
         mock_os_walk.return_value = (['.',
                                       None,
@@ -113,7 +113,7 @@ class TestFilesFilter(unittest.TestCase):
         self.assertEqual(file_names, list(files))
 
     @patch.object(os, "walk")
-    @patch("lizard.auto_open", create=True)
+    @patch("lizard_core.file_discovery.auto_open", create=True)
     def test_nonduplicates(self, mock_open, mock_os_walk):
         mock_os_walk.return_value = (['.',
                                       None,
@@ -129,7 +129,7 @@ class TestFilesFilter(unittest.TestCase):
         self.assertEqual(file_names, list(files))
 
     @patch.object(os, "walk")
-    @patch("lizard.auto_open", create=True)
+    @patch("lizard_core.file_discovery.auto_open", create=True)
     def test_fail_to_open_file_should_be_allowed(self, mock_open, mock_os_walk):
         mock_os_walk.return_value = (['.',
                                       None,
@@ -145,7 +145,7 @@ class TestFilesFilter(unittest.TestCase):
     @patch.object(os.path, "exists")
     @patch.object(os.path, "relpath")
     @patch.object(os, "walk")
-    @patch("lizard.auto_read")
+    @patch("lizard_core.file_discovery.auto_read")
     def test_gitignore_filter(self, mock_auto_read, mock_os_walk, mock_relpath, mock_exists):
         mock_os_walk.return_value = (['.',
                                     None,
@@ -163,8 +163,8 @@ class TestFilesFilter(unittest.TestCase):
     @patch.object(os.path, "exists")
     @patch.object(os.path, "relpath")
     @patch.object(os, "walk")
-    @patch("lizard.auto_read")
-    @patch('lizard.md5_hash_file')
+    @patch("lizard_core.file_discovery.auto_read")
+    @patch('lizard_core.file_discovery.md5_hash_file')
     def test_gitignore_filter_can_be_disabled(self, md5, mock_auto_read,
                                               mock_os_walk, mock_relpath,
                                               mock_exists):
@@ -188,7 +188,7 @@ class TestFilesFilter(unittest.TestCase):
     @patch.object(os.path, "exists")
     @patch.object(os.path, "relpath")
     @patch.object(os, "walk")
-    @patch("lizard.auto_read")
+    @patch("lizard_core.file_discovery.auto_read")
     def test_tolerates_invalid_windows_gitignore_pattern(self, mock_auto_read,
                                                          mock_os_walk,
                                                          mock_relpath,
@@ -209,7 +209,7 @@ class TestFilesFilter(unittest.TestCase):
     @patch.object(os.path, "exists")
     @patch.object(os.path, "relpath")
     @patch.object(os, "walk")
-    @patch("lizard.auto_read")
+    @patch("lizard_core.file_discovery.auto_read")
     def test_valid_gitignore_patterns_still_apply_with_invalid_lines(self,
                                                                      mock_auto_read,
                                                                      mock_os_walk,

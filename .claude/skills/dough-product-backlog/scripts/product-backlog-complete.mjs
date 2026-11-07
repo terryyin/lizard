@@ -8,12 +8,11 @@
 // them can make an entry removable. It never deletes a story or plan file
 // either. Closing the work's canonical homes, with its seed, plan, and proof
 // cleanup, stays with the wrap-up workflow that calls this. The other files it
-// changes sit beside the backlog: it removes the execution agent profile that
-// names the completed identity, so the name that held the work is released in
+// changes sit beside the backlog: it removes every readable agent profile that
+// names the completed identity, so the names that held the work are released in
 // the same change; for finished rather than dropped work it writes the work's
 // done record; it removes done records older than their window; and it
-// rebuilds the done catalog from the record files those changes leave. A
-// preparation assignment is never ended by completing work.
+// rebuilds the done catalog from the record files those changes leave.
 
 import {
   existsSync,
@@ -69,7 +68,7 @@ export function completeEntry(source, request) {
 }
 
 // Changes the files beside the backlog in `backlogDirectory` that the removal
-// of `entry` at `now` (a Date) closes: releases its execution agent profile,
+// of `entry` at `now` (a Date) closes: releases its agent profiles,
 // writes its done record unless the work was `dropped`, prunes expired done
 // records, and rebuilds the done catalog from the records that remain.
 // Returns the released profiles, the written record's path (undefined for
@@ -82,7 +81,9 @@ export function closeBesideBacklog(backlogDirectory, { entry, dropped, now }) {
     ? undefined
     : writeDoneRecord(backlogDirectory, {
         entry,
-        profile: released[0]?.profile,
+        profile: released.find(
+          ({ profile }) => profile.activity === "execution",
+        )?.profile,
         developer: configuredUserName(backlogDirectory),
         now,
       });
@@ -91,11 +92,10 @@ export function closeBesideBacklog(backlogDirectory, { entry, dropped, now }) {
   return { released, record, expired, catalog };
 }
 
-// Removes every readable execution agent profile beside the backlog whose
+// Removes every readable agent profile beside the backlog whose
 // identity is the completed one, and returns each removed path relative to
 // that directory with the profile it held. An unreadable profile names no
-// identity, so it is left for a person to read; a preparation profile ends
-// only through its own release.
+// identity, so it is left for a person to read.
 function releaseAgentProfiles(backlogDirectory, identity) {
   const directory = join(backlogDirectory, agentProfileDirectory);
   if (!existsSync(directory)) return [];
@@ -107,11 +107,7 @@ function releaseAgentProfiles(backlogDirectory, identity) {
     const read = parseAgentProfile(
       readFileSync(join(backlogDirectory, path), "utf8"),
     );
-    if (
-      read.ok &&
-      read.profile.activity === "execution" &&
-      read.profile.identity === identity
-    ) {
+    if (read.ok && read.profile.identity === identity) {
       rmSync(join(backlogDirectory, path));
       released.push({ path, profile: read.profile });
     }
@@ -180,6 +176,26 @@ function gitBlobHash(bytes) {
     .digest("hex");
 }
 
+// Every file in the done directory beside the backlog in `backlogDirectory`
+// whose name a done record can take, in name order, with its text and Git
+// blob hash: what the catalog is built from and checked against. No
+// directory yields no files.
+export function readDoneRecordFiles(backlogDirectory) {
+  const directory = join(backlogDirectory, doneRecordDirectory);
+  if (!existsSync(directory)) return [];
+  return readdirSync(directory)
+    .filter(isDoneRecordFileName)
+    .sort()
+    .map((fileName) => {
+      const bytes = readFileSync(join(directory, fileName));
+      return {
+        fileName,
+        text: bytes.toString("utf8"),
+        blob: gitBlobHash(bytes),
+      };
+    });
+}
+
 // Rebuilds the done catalog beside the backlog in `backlogDirectory` from the
 // record files there, changing no record. Records the caller should already
 // have made final; the catalog is only ever derived from them. Returns the
@@ -187,21 +203,8 @@ function gitBlobHash(bytes) {
 // unreadable record files it names, and whether it was "written", already
 // "unchanged", "removed" because no record file remains, or stays "absent".
 export function rebuildDoneCatalog(backlogDirectory) {
-  const directory = join(backlogDirectory, doneRecordDirectory);
   const catalogFile = join(backlogDirectory, doneCatalogPath);
-  const files = existsSync(directory)
-    ? readdirSync(directory)
-        .filter(isDoneRecordFileName)
-        .sort()
-        .map((fileName) => {
-          const bytes = readFileSync(join(directory, fileName));
-          return {
-            fileName,
-            text: bytes.toString("utf8"),
-            blob: gitBlobHash(bytes),
-          };
-        })
-    : [];
+  const files = readDoneRecordFiles(backlogDirectory);
   const path = doneCatalogPath;
   if (files.length === 0) {
     if (!existsSync(catalogFile))

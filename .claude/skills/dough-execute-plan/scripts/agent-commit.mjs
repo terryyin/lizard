@@ -7,7 +7,7 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { isDirectCliEntry } from "./ci-direct-entry.mjs";
-import { exec, git, revParse } from "./publication-git.mjs";
+import { execWithInput, git, revParse } from "./publication-git.mjs";
 import {
   creditDeveloper,
   DeveloperIdentityRefused,
@@ -39,14 +39,13 @@ export async function agentCommit(workspace, { message, amend = false }) {
     if (!(error instanceof DeveloperIdentityRefused)) throw error;
     return refused("developer-identity-refused", error.message);
   }
-  const committing = exec(
-    "git",
-    ["commit", "--quiet", ...(amend ? ["--amend"] : []), "-F", "-"],
-    { cwd: workspace },
-  );
-  committing.child.stdin.end(credited);
   try {
-    await committing;
+    await execWithInput(
+      "git",
+      ["commit", "--quiet", ...(amend ? ["--amend"] : []), "-F", "-"],
+      { cwd: workspace },
+      credited,
+    );
   } catch (error) {
     const output = `${error.stdout ?? ""}${error.stderr ?? ""}`.trim();
     return refused("commit-failed", output || error.message);

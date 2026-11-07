@@ -1,19 +1,9 @@
 import { setTimeout as pause } from "node:timers/promises";
-import {
-  createCommandFailureAcquisition,
-  createCommandRunAcquisition,
-  readCiAdapter,
-} from "./ci-command-adapter.mjs";
-import {
-  ciAttemptKey,
-  createGitHubFailureAcquisition,
-} from "./ci-failures.mjs";
-import {
-  ciWorkflowFile,
-  createGitHubRunAcquisition,
-  discoverApplicabilityCandidateRuns,
-  readGitHubActions,
-} from "./ci-runs.mjs";
+import { createCommandAcquisition } from "./ci-command-adapter.mjs";
+import { ciAttemptKey } from "./ci-failures.mjs";
+import { GitHubAcquisitionHeld } from "./ci-github-actions.mjs";
+import { createGitHubAcquisition } from "./ci-runs.mjs";
+import { readCiConfiguration } from "./ci-project-configuration.mjs";
 
 export const executionBudgetMs = 8 * 60 * 60 * 1000;
 
@@ -22,7 +12,7 @@ export async function watchCiExecution({
   repo,
   branch,
   signal,
-  gh = readGitHubActions,
+  gh,
   sleep = pause,
   emit = () => undefined,
   pollMs = 30_000,
@@ -30,6 +20,9 @@ export async function watchCiExecution({
   now = Date.now,
   root = process.cwd(),
   observeCoverage = () => [],
+  // A failed discovery withdraws locally observed progress as well as any
+  // integrated-state evidence, including without a declared policy.
+  withdrawIntegratedState = () => undefined,
   registeredRevisions = async () => [],
   // Returns a signal that aborts once a revision is registered after this
   // call; a pending recheck pause then ends at once.
@@ -43,6 +36,7 @@ export async function watchCiExecution({
       "Execution CI observation requires a finite positive budget",
     );
 
+  const { adapter, workflow, integratedPolicy } = readCiConfiguration(root);
   const observationAbort = new AbortController();
   const stopObservation = () => observationAbort.abort(signal?.reason);
   if (signal?.aborted) stopObservation();
@@ -50,46 +44,24 @@ export async function watchCiExecution({
   const observationSignal = observationAbort.signal;
   const startedAt = now();
   const reportedIncomplete = new Set();
-  const adapter = readCiAdapter(root);
-  const acquireRuns = adapter
-    ? createCommandRunAcquisition({
+  // The acquisition's history and current-attempt reads, for coverage.
+  const { acquireRuns, acquireFailure, ...coverageLookups } = adapter
+    ? createCommandAcquisition({
         command: adapter,
         repo,
         branch,
         root,
         timeoutMs: adapterTimeoutMs,
+        registeredRevisions,
       })
-    : createGitHubRunAcquisition({ repo, branch, startedAt, gh });
-  const acquireFailure = adapter
-    ? createCommandFailureAcquisition({
-        command: adapter,
+    : createGitHubAcquisition({
         repo,
         branch,
-        root,
-        timeoutMs: adapterTimeoutMs,
-      })
-    : createGitHubFailureAcquisition({ repo, gh });
-  // GitHub-only: CI-path applicability reuses a proved ancestor attempt, and
-  // that ancestor is not always among the runs the ordinary poll already
-  // surfaced (older completed runs intentionally drop out of `matching` once
-  // seen, per createGitHubRunAcquisition's own startup/observed-run pruning).
-  // A custom adapter does not own GitHub workflow-path applicability, so it
-  // gets no candidate discovery here; ci-mailbox-revision-coverage.mjs then
-  // has nothing to broaden with and an ignored-only revision simply stays
-  // undiscovered, unchanged from before this wiring existed.
-  // Deliberately left run-shaped (not flattened to bare SHAs): coverage
-  // selection reuses these same candidates to resolve a `not_required`
-  // revision's basis ancestor to its actual attempt below, so that ancestor's
-  // eventual failure stays actionable for every revision that reuses it.
-  const discoverAncestorCandidates = adapter
-    ? undefined
-    : async () =>
-        discoverApplicabilityCandidateRuns({
-          repo,
-          branch,
-          gh,
-          signal: observationSignal,
-        });
+        startedAt,
+        workflow,
+        gh,
+        signal: observationSignal,
+      });
   let consecutiveErrors = 0;
   // A failure whose diagnostic is still unavailable stays known across polls,
   // so losing observation by any path still delivers it before the loss.
@@ -99,13 +71,37 @@ export async function watchCiExecution({
     type: "CI_MONITOR_UNAVAILABLE",
     repo,
     branch,
-    ...(adapter ? {} : { workflow: ciWorkflowFile }),
+    ...(adapter ? {} : { workflow }),
     reason: String(reason).slice(0, 600),
   });
   const reportObservationLoss = async (reason) => {
     if (knownFailureEvent) await emit(knownFailureEvent);
     await emit(unavailable(reason));
   };
+
+  // A wait GitHub directed suspends acquisition until it ends, or until the
+  // budget does: reported once per suspension, it is no observation error, and
+  // a registration cannot shorten it.
+  let suspensionReported = false;
+  const suspendAcquisition = async ({ waitSeconds }) => {
+    const waitMs = waitSeconds * 1000;
+    if (!suspensionReported) {
+      suspensionReported = true;
+      await emit({
+        type: "CI_MONITOR_THROTTLED",
+        repo,
+        branch,
+        workflow,
+        waitSeconds,
+        resumesAt: new Date(now() + waitMs).toISOString(),
+      });
+    }
+    const remainingMs = maxDurationMs - (now() - startedAt);
+    await sleep(Math.max(Math.min(waitMs, remainingMs), 0), undefined, {
+      signal: observationSignal,
+    });
+  };
+  const held = (error) => error instanceof GitHubAcquisitionHeld;
 
   // Only the pause after a completed poll ends early on a registration;
   // retrying after a poll error keeps its full interval.
@@ -131,6 +127,13 @@ export async function watchCiExecution({
       try {
         matching = await acquireRuns(observationSignal);
       } catch (error) {
+        if (held(error)) {
+          await suspendAcquisition(error);
+          continue;
+        }
+        // Ending observation lists nothing: it withdraws no recorded evidence.
+        if (observationSignal.aborted) return;
+        await withdrawIntegratedState(error);
         consecutiveErrors += 1;
         if (consecutiveErrors === 3) throw error;
         await sleep(pollMs, undefined, { signal: observationSignal });
@@ -154,11 +157,18 @@ export async function watchCiExecution({
       // existing per-run/job dedup: a failure shared by several ignored-only
       // descendants is still delivered exactly once. Coverage's own events are
       // still emitted after the failure event, preserving prior ordering.
-      const coverageResult = await observeCoverage(
-        matching,
-        now(),
-        discoverAncestorCandidates,
-      );
+      let coverageResult;
+      try {
+        coverageResult = await observeCoverage(matching, now(), {
+          ...coverageLookups,
+          integratedPolicy,
+          signal: observationSignal,
+        });
+      } catch (error) {
+        if (!held(error)) throw error;
+        await suspendAcquisition(error);
+        continue;
+      }
       const coverageEvents = Array.isArray(coverageResult)
         ? coverageResult
         : (coverageResult?.events ?? []);
@@ -176,17 +186,23 @@ export async function watchCiExecution({
             ),
           ]
         : actionable;
-      const { event, observationError, deferredFailureEvent } =
-        await acquireFailure(actionableWithAncestors, observationSignal);
-      if (event) {
-        await emit(event);
-      }
-      knownFailureEvent = deferredFailureEvent;
-      if (observationError) {
-        consecutiveErrors += 1;
-        if (consecutiveErrors === 3) throw new Error(observationError);
-      } else {
-        consecutiveErrors = 0;
+      // A wait met while inspecting failures keeps what this poll already
+      // learned: its coverage and incomplete records are still emitted below.
+      let suspension;
+      try {
+        const { event, observationError, deferredFailureEvent } =
+          await acquireFailure(actionableWithAncestors, observationSignal);
+        if (event) await emit(event);
+        knownFailureEvent = deferredFailureEvent;
+        if (observationError) {
+          consecutiveErrors += 1;
+          if (consecutiveErrors === 3) throw new Error(observationError);
+        } else {
+          consecutiveErrors = 0;
+        }
+      } catch (error) {
+        if (!held(error)) throw error;
+        suspension = error;
       }
       for (const coverageEvent of coverageEvents) await emit(coverageEvent);
       const incomplete = actionable.find(
@@ -201,7 +217,7 @@ export async function watchCiExecution({
           repo,
           sha: incomplete.headSha,
           branch: incomplete.headBranch,
-          ...(adapter ? {} : { workflow: ciWorkflowFile }),
+          ...(adapter ? {} : { workflow }),
           runId: incomplete.databaseId,
           attempt: incomplete.attempt,
           conclusion: incomplete.conclusion,
@@ -211,6 +227,11 @@ export async function watchCiExecution({
           ciAttemptKey(incomplete.databaseId, incomplete.attempt),
         );
       }
+      if (suspension) {
+        await suspendAcquisition(suspension);
+        continue;
+      }
+      suspensionReported = false;
       await pauseUntilNextPoll(registration);
     }
     await reportObservationLoss(

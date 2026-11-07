@@ -21,4 +21,5 @@ report unavailable history, an unresolved log location, a refused write, or a
 stopped findings publication as attention with its next action under
 [completion attention](../../dough-land/references/completion-attention.md).
 With no supported findings, change no log and add no commit, publication, or
-wording. Otherwise the final response names the recorded finding IDs.
+wording. With supported findings, record and publish them as required, then apply
+that same completion-attention rule; their recorded IDs alone require no message.

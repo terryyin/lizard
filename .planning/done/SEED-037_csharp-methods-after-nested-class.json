@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-037#csharp-methods-after-nested-class",
+  "title": "Report C# methods after a nested class under the outer class",
+  "completedAt": "2026-11-06T00:02:23.823Z",
+  "developer": "Terry Yin",
+  "agent": "Kaoru-chan",
+  "host": "cursor",
+  "model": "Grok 4.7"
+}

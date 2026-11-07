@@ -4,10 +4,12 @@
 // title, when `complete` ran, the developer configured in that workspace, and
 // the execution agent, host, and model when the work had an execution agent
 // profile. The directory, the file name each identity takes, the spelling,
-// and the window a record stays for have one owner here. No filesystem, Git,
+// and the window a record stays for have one owner here, as does the refusal
+// of a new claim on an identity a record names. No filesystem, Git,
 // or Node-only imports, so every reader of published records shares it.
 
 import { agentHosts, agentNameOf } from "./product-backlog-agent-profile.mjs";
+import { BacklogError } from "./product-backlog-refusal.mjs";
 
 // Done records live beside the backlog, one file per completed identity.
 export const doneRecordDirectory = "done";
@@ -42,6 +44,35 @@ export function doneRecordFileName(identity) {
     })
     .join("");
   return `${spelled}.json`;
+}
+
+// The identity whose record takes `fileName`, read from the name alone (for
+// a record whose text is no longer at hand), or undefined when no identity
+// takes that name.
+export function doneRecordIdentity(fileName) {
+  if (!isDoneRecordFileName(fileName)) return undefined;
+  const bytes = [];
+  const spelled = fileName.slice(0, -".json".length);
+  for (let index = 0; index < spelled.length; index += 1) {
+    const character = spelled[index];
+    if (character === "~") {
+      const byte = Number.parseInt(spelled.slice(index + 1, index + 3), 16);
+      if (Number.isNaN(byte)) return undefined;
+      bytes.push(byte);
+      index += 2;
+    } else {
+      bytes.push(...encoder.encode(character === "_" ? "#" : character));
+    }
+  }
+  let identity;
+  try {
+    identity = new TextDecoder("utf-8", { fatal: true }).decode(
+      new Uint8Array(bytes),
+    );
+  } catch {
+    return undefined;
+  }
+  return doneRecordFileName(identity) === fileName ? identity : undefined;
 }
 
 // The record's path relative to the backlog's directory.
@@ -153,5 +184,29 @@ export function isWithinDoneWindow(completedAt, now) {
   return (
     now.getTime() - Date.parse(completedAt) <=
     doneRecordWindowDays * dayMilliseconds
+  );
+}
+
+// Refuses a new claim on `identity` while a done record names it. Records are
+// found by name: `recordText` is whatever the caller's source holds at
+// doneRecordPath(identity) beside its backlog (the working tree, or a
+// published revision), or null when that file is absent. A record there that
+// cannot be read also refuses, since nothing then shows the identity unused.
+export function requireUncompletedIdentity(identity, recordText) {
+  if (recordText === null || recordText === undefined) return;
+  const path = doneRecordPath(identity);
+  const read = parseDoneRecordFile(doneRecordFileName(identity), recordText);
+  if (!read.ok)
+    throw new BacklogError(
+      `Done record ${path} for identity "${identity}" cannot be read ` +
+        `(${read.error}), so nothing shows that identity unused. Repair the ` +
+        `record, or allocate a different identity for this work.`,
+    );
+  const { title, completedAt } = read.record;
+  throw new BacklogError(
+    `Identity "${identity}" names completed work: done record ${path} ` +
+      `records "${title}", completed at ${completedAt}. A completed ` +
+      `identity is never claimed again; allocate a different identity for ` +
+      `this work.`,
   );
 }

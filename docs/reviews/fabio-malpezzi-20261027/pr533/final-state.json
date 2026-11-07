@@ -1,0 +1,15 @@
+{
+  "head": "15423852c04aed302f684395fe9522251d88a2f2",
+  "state": "open",
+  "merged": false,
+  "base": "01afe9c228ba2a3dc5253259d8415d2ef47f0b71",
+  "target": "7ac449f59b3f155fd159ce9aad6794a422045632",
+  "disposition": "deferred",
+  "follow_up": "SEED-014#multiline-arrow-boundaries",
+  "correction_estimate_minutes": [
+    30,
+    45
+  ],
+  "product_edits": false,
+  "hosted_writes": false
+}

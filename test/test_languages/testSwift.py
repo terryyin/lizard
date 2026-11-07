@@ -1,4 +1,6 @@
 import unittest
+from lizard import FileAnalyzer, get_extensions
+from lizard_ext.lizardcognitive import LizardExtension as Cognitive
 from lizard_languages import SwiftReader
 from .swift_helpers import get_swift_function_list
 
@@ -201,3 +203,198 @@ struct S {{
                     [("init", 3)],
                     [(function.name, function.cyclomatic_complexity)
                      for function in result])
+
+
+class Test_Swift_keyword_argument_labels(unittest.TestCase):
+    """A keyword used as an argument label is not a control-flow keyword,
+    even when a declaration gives it a separate local name."""
+
+    BODY = """ -> Int {
+    switch value {
+    case 1: return enabled ? 10 : 20
+    default:
+        if enabled { return value > 0 ? 30 : 40 }
+        return 0
+    }
+}
+"""
+
+    def measure(self, code):
+        result = FileAnalyzer(get_extensions([Cognitive()])) \
+            .analyze_source_code("a.swift", code)
+        return [(f.cyclomatic_complexity, f.cognitive_complexity)
+                for f in result.function_list]
+
+    def test_unlabelled_baseline(self):
+        self.assertEqual(
+            [(5, 8)],
+            self.measure("func f(_ value: Int, enabled: Bool)" + self.BODY))
+
+    def test_keyword_label_with_local_name(self):
+        for label in ('for', 'if', 'while', 'guard', 'catch', 'case'):
+            with self.subTest(label=label):
+                self.assertEqual([(5, 8)], self.measure(
+                    "func f(%s value: Int, enabled: Bool)" % label
+                    + self.BODY))
+
+    def test_keyword_label_after_another_parameter(self):
+        self.assertEqual([(5, 8)], self.measure(
+            "func f(enabled: Bool, for value: Int)" + self.BODY))
+
+    def test_keyword_label_with_wildcard_or_backtick_name(self):
+        for name in ('_', '`default`'):
+            with self.subTest(name=name):
+                self.assertEqual([(5, 8)], self.measure(
+                    "func f(for %s: Int, enabled: Bool)" % name
+                    + self.BODY))
+
+    def test_comments_and_newlines_around_local_name(self):
+        self.assertEqual([(5, 8)], self.measure(
+            "func f(\n    for /* label */\n    value // name\n    : Int,"
+            "\n    enabled: Bool)" + self.BODY))
+
+    def test_call_labels_still_masked(self):
+        self.assertEqual([(1, 0), (2, 1)], self.measure("""
+func a() { run(for: x, if: y, case: z) }
+func b() { run(for: ok ? 1 : 2) }
+"""))
+
+    def test_real_loops_still_count(self):
+        self.assertEqual([(4, 4)], self.measure("""
+func loop(xs: [Int]) -> Int {
+    var t = 0
+    for i: Int in xs { if i > 0 { t += i } }
+    run(a, b)
+    for x in xs { t += x }
+    return t
+}
+"""))
+
+
+class TestSwiftConditionLists(unittest.TestCase):
+
+    def ccn(self, body):
+        source = "func f() -> Bool {\n" + body + "\n}\n"
+        return get_swift_function_list(source)[0].cyclomatic_complexity
+
+    def test_condition_list_commas_count_like_and(self):
+        self.assertEqual(
+            self.ccn("guard a && b && c else { return false }\nreturn true"),
+            self.ccn("guard a, b, c else { return false }\nreturn true"))
+        self.assertEqual(4, self.ccn("if a, b, c { return true }"))
+        self.assertEqual(3, self.ccn("while a, b { step() }"))
+
+    def test_optional_bindings_and_patterns_in_condition_lists(self):
+        self.assertEqual(4, self.ccn("""\
+guard let x = first,
+      var y = second,
+      x > y else { return false }"""))
+        self.assertEqual(3, self.ccn("if let a, let b { use(a, b) }"))
+        self.assertEqual(4, self.ccn(
+            "if case let (a, b) = pair, a > 0 { return true }"))
+        self.assertEqual(3, self.ccn(
+            "if #available(iOS 15, *), ok { return true }"))
+
+    def test_nested_commas_are_not_conditions(self):
+        self.assertEqual(2, self.ccn("if f(a, b) { return true }"))
+        self.assertEqual(2, self.ccn("if [a, b].contains(c) { }"))
+        self.assertEqual(2, self.ccn("if (a, b) == (c, d) { }"))
+        self.assertEqual(2, self.ccn("if xs.contains(where: { a, b in a }) { }"))
+        self.assertEqual(2, self.ccn("if let d = x as? [String: Int] { }"))
+        self.assertEqual(3, self.ccn(
+            "if x is Result<Int, Error>, y { return true }"))
+        self.assertEqual(2, self.ccn(
+            "guard let r = x as? Dictionary<String, Int> else { return false }"))
+
+    def test_comparisons_are_not_generic_arguments(self):
+        self.assertEqual(3, self.ccn("if a < b, c > d { return true }"))
+        self.assertEqual(3, self.ccn("if a < 1, b { return true }"))
+
+    def test_commas_outside_condition_lists_are_not_conditions(self):
+        self.assertEqual(3, self.ccn("""\
+repeat { step() } while a
+let x = 1, y = 2
+if ok { use(x, y) }
+var z = [1, 2]"""))
+        self.assertEqual(2, self.ccn("if ok { let p = 1, q = 2 }"))
+
+    def test_same_line_trailing_closure_keeps_the_following_comma(self):
+        self.assertEqual(3, self.ccn(
+            "if items.contains { $0 > 1 }, ready { return true }"))
+        self.assertEqual(3, self.ccn(
+            "guard items.contains { $0 > 1 }, ready else { return false }"))
+        self.assertEqual(2, self.ccn(
+            "if items.contains { $0 > 1 } { return true }"))
+        self.assertEqual(3, self.ccn(
+            "if items.filter { ($0, 1).0 > 0 }.isEmpty, ready "
+            "{ return true }"))
+
+    def test_multiline_brace_ends_the_condition_list(self):
+        self.assertEqual(2, self.ccn("""\
+if items.contains {
+    ($0, 1).0 > 0
+}, ready { return true }"""))
+        self.assertEqual(2, self.ccn("""\
+if ok {
+    let p = 1, q = 2
+}"""))
+
+    def test_trailing_closure_does_not_swallow_the_next_function(self):
+        functions = get_swift_function_list("""\
+func f(items: [Int], ready: Bool) -> Bool {
+    if items.contains { $0 > 1 }, ready { return true }
+    return false
+}
+func g() -> Int { return 1 }
+""")
+        self.assertEqual(
+            [("f", 1, 4, 3), ("g", 5, 5, 1)],
+            [(function.name, function.start_line, function.end_line,
+              function.cyclomatic_complexity) for function in functions])
+
+
+def swift_with_outside(source_code):
+    return FileAnalyzer(get_extensions(["outside"])).analyze_source_code(
+        "a.swift", source_code).function_list
+
+
+class TestSwiftEnumCaseDeclarations(unittest.TestCase):
+
+    def ccn(self, source):
+        return {function.name: function.cyclomatic_complexity
+                for function in swift_with_outside(source)}
+
+    def test_enum_case_declarations_are_not_decisions(self):
+        self.assertEqual({"*global*": 1}, self.ccn("""\
+extension Foo {
+    enum Kind { case a, b
+        case c }
+}
+indirect enum Tree<T>: Equatable where T: Hashable {
+    case leaf(T), node(Tree, Tree)
+}
+"""))
+
+    def test_switch_cases_still_count_beside_an_enum(self):
+        self.assertEqual({"*global*": 3}, self.ccn("""\
+enum Kind { case a; case b }
+switch k { case .a: print(1); case .b: print(2) }
+"""))
+
+    def test_local_enum_and_methods_inside_enum(self):
+        self.assertEqual({"f": 3, "area": 2, "*global*": 1}, self.ccn("""\
+func f(k: Kind) -> Int {
+    enum Local { case x, y; case z }
+    switch k {
+    case .a: return 1
+    case .b: return 2
+    }
+}
+enum Shape {
+    case circle, square
+    func area() -> Double {
+        switch self { case .circle: return 1
+        default: return 0 }
+    }
+}
+"""))

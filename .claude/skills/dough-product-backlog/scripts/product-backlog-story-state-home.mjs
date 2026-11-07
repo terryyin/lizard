@@ -9,6 +9,7 @@ import { splitHref } from "./product-backlog-identity.mjs";
 import { sameDocument } from "./product-backlog-plan.mjs";
 import { BacklogError } from "./product-backlog-refusal.mjs";
 import { applyToFile, readFile } from "./product-backlog-store.mjs";
+import { readStoryDependencies } from "./product-backlog-story-dependencies.mjs";
 import { preparationPayload } from "./product-backlog-story-state-preparation.mjs";
 import {
   readStoryState,
@@ -73,11 +74,23 @@ function planLoadOptions(backlogDirectory, href, approach, plan) {
   return { planSource, planIsCanonical: false };
 }
 
-// Reads preparation facts and assessment view from the canonical home a link
-// names, including the current content basis.
-export function readPreparation(backlogDirectory, href) {
+// Reads, from one read of the canonical home a link names, the preparation
+// facts and assessment view (with the current content basis) and the
+// dependency agreement. A preparation refusal throws; a dependency refusal
+// reads `{ status: "unavailable", problem }`, the shape start eligibility
+// takes for a reader that refused.
+export function readStartFacts(backlogDirectory, href) {
   const { relative, path } = homePath(backlogDirectory, href);
   const source = readFile(path, `canonical home not found: ${relative}`);
+  return {
+    preparation: readPreparation(backlogDirectory, source, href),
+    dependencies: unavailableOnRefusal(() =>
+      readStoryDependencies(source, href),
+    ),
+  };
+}
+
+function readPreparation(backlogDirectory, source, href) {
   const preview = readStoryState(source, href);
   if (preview.status === "recorded" && preview.approach.kind === "planned") {
     const options = planLoadOptions(
@@ -89,6 +102,16 @@ export function readPreparation(backlogDirectory, href) {
     return readStoryState(source, href, options);
   }
   return preview;
+}
+
+function unavailableOnRefusal(read) {
+  try {
+    return read();
+  } catch (error) {
+    if (error instanceof BacklogError)
+      return { status: "unavailable", problem: error.message };
+    throw error;
+  }
 }
 
 // Records preparation and optional assessment for one story under a

@@ -29,6 +29,7 @@ import {
   workspaceAssignment,
 } from "./preparation-assignment-ownership.mjs";
 import { requestOf } from "./preparation-assignment-request.mjs";
+import { recoverUnannounced } from "./preparation-assignment-unannounced.mjs";
 import {
   fetchQueuedTrunk,
   selectPreparationWorkspace,
@@ -70,13 +71,17 @@ async function announce(request) {
   const found = await workspaceAssignment(request, ref, recorded);
   if (request.continueOnly) {
     const facts = found.own && assignmentFields(request, found.own);
-    if (
-      found.state !== "held" ||
-      (request.expectedAllocation !== undefined &&
-        request.expectedAllocation !== facts?.allocation) ||
-      (request.expectedAgent !== undefined &&
-        request.expectedAgent !== facts?.agent)
-    )
+    const matches =
+      found.state === "held" &&
+      (request.expectedAllocation === undefined ||
+        request.expectedAllocation === facts?.allocation) &&
+      (request.expectedAgent === undefined ||
+        request.expectedAgent === facts?.agent);
+    const recovered =
+      found.state === "none" &&
+      !found.assigned &&
+      (await recoverUnannounced(request, ref, await recorded));
+    if (!matches && !recovered)
       return stop("continuation-refused", {
         workspace,
         error:

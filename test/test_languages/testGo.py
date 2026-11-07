@@ -90,17 +90,17 @@ class Test_parser_for_Go(unittest.TestCase):
                 ''')
         self.assertEqual(4, len(result))
 
-        self.assertEqual("", result[0].name)
-        self.assertEqual("", result[0].long_name)
+        self.assertEqual("anonymous__0", result[0].name)
+        self.assertEqual("anonymous__0", result[0].long_name)
         self.assertEqual(1, result[0].length)
 
-        self.assertEqual("", result[1].name)
-        self.assertEqual(" n int", result[1].long_name)
+        self.assertEqual("anonymous__1", result[1].name)
+        self.assertEqual("anonymous__1 n int", result[1].long_name)
         self.assertEqual(1, result[1].length)
         self.assertEqual(['n int'], result[1].full_parameters)
 
-        self.assertEqual("", result[2].name)
-        self.assertEqual("", result[2].long_name)
+        self.assertEqual("anonymous__2", result[2].name)
+        self.assertEqual("anonymous__2", result[2].long_name)
         self.assertEqual(3, result[2].length)
 
         self.assertEqual("sayGoodbye", result[3].name)

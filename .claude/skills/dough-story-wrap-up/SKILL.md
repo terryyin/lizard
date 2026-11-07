@@ -1,26 +1,26 @@
 ---
 name: dough-story-wrap-up
 description: >-
-  Closes one completed feature story, bounded retrospective correction, or
+  Closes one completed feature story, bounded retrospective correction or
   context-only planless execution using available execution context. Assimilates
-  lasting product knowledge, handles existing follow-ups and authorized product
-  decisions, removes that work's spent plan and history so Git can recover it,
-  and reports truthfully when required inputs are missing or unfinished. Use to
-  wrap up a story, correction, or completed contextual instruction, close
-  completed work, or delete spent plan and execution history. With
-  `--process-retrospective`, it also reviews the wrap-up's own process and
-  records supported findings in `DearDough.md`.
+  lasting product knowledge, settles existing follow-ups and authorized product
+  decisions, and removes spent plan and history with Git recovery. Reports missing
+  or unfinished inputs truthfully. Use to close completed work, delete spent
+  records, or continue settled planned execution under Execute Plan's continuation
+  rule. With `--process-retrospective`, it also reviews the wrap-up's own process
+  and records supported findings in `DearDough.md`.
 ---
 
 # Story wrap-up
 
 Close one selected feature story, bounded retrospective correction, or contextual
-instruction when the coordinator invokes wrap-up. Use available execution context
-and optional retrospective advice. Leave this project with maintained product knowledge
-and no spent source or plan history in the current snapshot. Do not invent findings,
-records, or a requirement for another conversation. With
-`--process-retrospective`, also
-[review this wrap-up's process](#review-this-wrap-ups-process).
+instruction when the coordinator invokes wrap-up explicitly or through Execute
+Plan's authorized [planned continuation](../dough-execute-plan/references/finish-or-stop.md#continue-settled-planned-work-into-wrap-up).
+That continuation retains the same execution context and publication authority,
+including local-only/no-push instructions. Use available execution context and
+optional retrospective advice. Leave maintained product knowledge without spent
+source or plan history in the current snapshot. Do not invent findings, records,
+or another-conversation requirements. With `--process-retrospective`, also [review this wrap-up's process](#review-this-wrap-ups-process).
 
 ## Resolve this project's context
 
@@ -56,10 +56,11 @@ Resolve from this project, not this skill's location:
   incoming links, and assessment records.
 
 Before deleting a plan that carries planned-execution identity, retain the
-resolved mode, checkout, branch, remote, target, and the execution checkout's
-[management context](../dough-land/SKILL.md#retire-the-worktree) in the
-coordinator's available execution context for the remaining wrap-up actions and
-report. Do not create a parallel registry. Missing identity needed by a later
+resolved mode, checkout, branch, remote, target, the execution checkout's
+[management context](../dough-land/SKILL.md#retire-the-worktree) and its pending
+[lifecycle commitments](references/lifecycle-commitments.md#carry-them-past-deletion)
+in the coordinator's available execution context for the remaining wrap-up
+actions and report. Do not create a parallel registry. Missing identity needed by a later
 action stops that action instead of reconstructing or guessing it after plan
 deletion.
 
@@ -73,7 +74,8 @@ outside it; reporting itself remains the final operation.
 
 Judge completion from the selected work and available execution evidence.
 
-- Planned work is complete when every slice is done.
+- Planned work is complete when every slice is done. Run `check --planned-completion`
+  and take its `pendingLifecycle` rows under [lifecycle commitments](references/lifecycle-commitments.md#read-them-at-completion).
 - Work without a plan, including an investigation whose approach stayed unselected, is
   complete when its story or instruction, changes, and execution results show the promised outcome, including evidenced no-change.
 - Incomplete implementation leaves the affected active work intact. Report the
@@ -98,27 +100,18 @@ as part of ordinary closure.
 When a retrospective follow-up exists, read and apply
 [follow-up disposition](references/follow-up-disposition.md) before closure:
 queue it first by default, or drop it only on explicit human instruction.
-Do not complete wrap-up with an unlisted follow-up.
+
+## Keep test optimization candidates across cleanup
+
+Before the before-cleanup commit, when the spent plan holds test-optimization findings that exist only there, or this closing work is the receiver of a transferred obligation, follow the [candidate record](../dough-test-optimization/references/candidate-record.md).
 
 ## Apply product-review decisions
 
-When product advice or additional human input is present, apply only authorized
-compatible backlog and canonical-home changes, following [dough-product-backlog](../dough-product-backlog/SKILL.md)
-queue and active-home conventions. Without retrospective advice in the
-conversation, as in a fresh session, use the plan's recorded product advice; a
-recorded skip is a skipped review. Explicit human input wins over either advice.
+When product advice or additional human input is present, apply only authorized compatible backlog and canonical-home changes, following [dough-product-backlog](../dough-product-backlog/SKILL.md) queue and active-home conventions. Without retrospective advice in the conversation, as in a fresh session, use the plan's recorded product advice; a recorded skip is a skipped review. Explicit human input wins over either advice.
 
-Supported changes: relevant reorder, queue membership, understood new-story
-addition, understood bounded-correction addition, and canonical-detail
-edits. Apply the backlog skill's canonical-home admission rules to every new
-entry. Keep existing follow-up work first unless a later explicit human
-instruction changes that priority. Preserve unrelated content, still-needed
-acceptance work, and near-future direction.
+Supported changes: relevant reorder, queue membership, understood new-story addition, understood bounded-correction addition, and canonical-detail edits. Apply the backlog skill's canonical-home admission rules to every new entry. Keep existing follow-up work first unless a later explicit human instruction changes that priority. Preserve unrelated content, still-needed acceptance work, and near-future direction.
 
-A skipped, empty, or absent product review, or absent extra human input,
-introduces no mandatory question. Ordinary closure continues using the other
-available inputs. Leave unresolved necessary context with active work and report
-the choice; do not invent scope, launch discovery, or start another review.
+A skipped, empty, or absent product review, or absent extra human input, introduces no mandatory question. Ordinary closure continues using the other available inputs. Leave unresolved necessary context with active work and report the choice; do not invent scope, launch discovery, or start another review.
 
 ## Commit closure inputs and preserve Git recovery
 
@@ -139,15 +132,23 @@ cannot be resolved, leave the material intact, report the gap, and do not claim
 closure. In Trunk Mode, publish that commit through [wrap-up closure publication](../dough-execute-plan/references/wrap-up-closure-publication.md) before deleting spent history.
 
 Before deletion, follow the shared [supplier dependency procedure](../dough-product-backlog/references/supplier-dependencies.md)
-to discover current consumers and retain recoverable completion evidence. In Trunk
-Mode, resolve and publish consumer changes after accepted before-cleanup publication
-and before `finish` can retire the workspace.
+to retain recoverable completion evidence. Completed selected work then
+[takes the current-consumer visit](../dough-product-backlog/references/supplier-dependencies.md#which-completed-work-takes-the-visit)
+after accepted integration, through Trunk Mode `finish` or Story Branch
+integration below, before final completion and retirement.
 
 ## Delete spent history, including shared records
 
 After completion and Git recovery are established — including any required Trunk
 Mode before-cleanup publication — delete the selected work's spent history under
-[wrap-up cleanup](../dough-product-backlog/references/record-preparation.md#wrap-up-cleanup):
+[wrap-up cleanup](../dough-product-backlog/references/record-preparation.md#wrap-up-cleanup).
+In Story Branch Mode, for selected work with a **Taken** entry, first run
+`node '<installed-execute-plan>/scripts/source-freshness.mjs' check` with the
+inputs in [source freshness](../dough-execute-plan/references/source-freshness.md#run-the-check);
+on `amended` or `conflict` delete nothing and follow
+[its wrap-up handling](../dough-execute-plan/references/source-freshness.md#at-wrap-ups-deletion).
+Work without a Taken entry has no story section or plan to compare. On
+`unchanged`, or for work without a Taken entry, delete:
 
 - its executable plan and owned proof, evidence, and assessment records, even
   when the plan was retained or carries its execution-complete record;
@@ -155,14 +156,14 @@ Mode before-cleanup publication — delete the selected work's spent history und
   remaining section is spent;
 - its **Taken** or **Backlog list** entry when one exists, through the
   [dough-product-backlog](../dough-product-backlog/SKILL.md) `complete` command,
-  which also deletes that work's agent profile, writes its done record,
-  removes expired done records, and rebuilds the done catalog beside them, all
+  which also deletes that work's readable preparation and execution agent
+  profiles, writes its done record, removes expired done records, and rebuilds
+  the done catalog beside them, all
   owned closure changes; and
 - links whose sole purpose is preserving that history.
 
-Also remove the owned follow-up records selected for explicit drop above, after
-their Git recovery is established, and their entry with `complete --dropped`.
-Otherwise preserve active follow-ups and their queue entries.
+Also remove follow-up records selected for explicit drop under [follow-up disposition](references/follow-up-disposition.md);
+otherwise preserve active follow-ups and their queue entries.
 
 Remove empty directories belonging to the spent work, including untracked ones.
 The current snapshot must be free of that history, both tracked and untracked,
@@ -177,18 +178,15 @@ version identity, maintained tests and documents, still-needed acceptance work,
 and active follow-ups. Shared records lose only spent portions attributable to
 the completed work; leave uncertain portions intact and report the ambiguity.
 
-Keep an active follow-up's queue link, correction input, and provenance. If its
-source locator points into deleted predecessor history, replace the locator
-with the before-cleanup commit and repository-relative path. Repair Markdown
-links broken by cleanup without recreating spent history. Repeating wrap-up
-must recognize already-completed cleanup without duplicating edits. Missing
-artifacts alone do not establish completion of another work item.
+Keep an active follow-up's [provenance](references/follow-up-disposition.md#keep-an-active-follow-ups-provenance).
+Repair Markdown links broken by cleanup without recreating spent history.
+Repeating wrap-up must recognize already-completed cleanup without duplicating
+edits. Missing artifacts alone do not establish completion of another work item.
 
 ## Review this wrap-up's process
 
 Only with `--process-retrospective`, after spent history is deleted, apply the
-shared
-[process review of a run](../dough-execution-retrospective/references/process-review-of-a-run.md)
+shared [process review of a run](../dough-execution-retrospective/references/process-review-of-a-run.md)
 once per wrap-up, with the execution checkout as the write location. Point
 evidence in deleted sources at the before-cleanup commit, as an active
 follow-up's locator does above. Recorded findings are owned closure changes for
@@ -214,41 +212,17 @@ Story Branch Mode continues with integration and resource cleanup below.
 
 ## Integrate committed Story Branch Mode closure
 
-Save the final-closure tip already published on the remote execution branch.
-Follow [Story Branch integration observation](../dough-execute-plan/references/wrap-up-closure-publication.md#observe-story-branch-integration)
-for the target transition, publication, and shared completion on the accepted
-integrated SHA. Its publication uses [Preserve published history](../dough-execute-plan/references/publish-the-candidate.md#preserve-published-history)
-from the owned execution workspace, excluding any default checkout's
-unrelated commits and pending human edit.
-
-When the merge touches the product backlog or its done records, use the owned
-workspace's installed merge adapter as that procedure requires, preserving
-[follow-up priority](references/follow-up-disposition.md#preserve-follow-up-priority-during-reconciliation).
-A stopped result stays as Git left it.
-Resolve it through [a real conflict](../dough-product-backlog/references/merge-conflicts.md#a-real-conflict-resolve-by-hand-then-continue-through-the-same-adapter).
-If the adapter and that reference are unavailable, report the gap and leave the
-conflict. Stop when no coherent resolution is justified. Selected-work cleanup
-alone does not prove a sibling backlog change survived.
-
-Require that procedure's accepted receipt before resource cleanup. The receipt
-is the accepted candidate SHA and the remote trunk ref. A superseded candidate
-is not the receipt. Unresolved integration preserves the execution resources
-and blocks completion. Do not force-push.
-
-After accepted Story Branch supplier integration, [resolve and publish consumers](../dough-product-backlog/references/supplier-dependencies.md#apply-and-publish-a-direct-resolution)
-through the same closure publication/completion procedure before retirement, using
-the resulting accepted SHA and shutdown receipt. Finish or explicitly retain
-unresolved dependency work and evidence in existing active context; report gaps.
+Read and apply [Story Branch integration](references/story-branch-integration.md)
+to the final-closure tip, passing a dashboard landing context supplied to this
+launch, and require its accepted receipt before resource cleanup.
 
 ## Remove execution resources safely
 
 Retirement removes the worktree only when its [creation record](../dough-manual-testing/references/exploration-workspace.md#close-or-retain-it)
 or another record there shows this work created it; pass Dough Land's [Retire the worktree](../dough-land/SKILL.md#retire-the-worktree) ownership facts.
-In Trunk Mode, `finish` retires the worktree and branch, never a remote execution branch, once its completion receipt confirms shutdown;
+In Trunk Mode, `finish` retires the worktree and branch, never a remote execution branch, once its completion receipt holds `success` with confirmed shutdown;
 act on its `cleanup` result there, and after an interruption rerun it as [Finish Trunk Mode closure](../dough-execute-plan/references/wrap-up-closure-publication.md#finish-trunk-mode-closure)
-says. In Story Branch Mode, retire them under that section with `--remote-branch <execution branch>` and `--contained <integrated SHA>`,
-with wrap-up's gate: a completion receipt for the integrated SHA whose shutdown is confirmed, and no
-active checkout-bound observer still hosting the worktree under [preserve pending local work](../dough-execute-plan/references/maintain-default-checkout.md#preserve-pending-local-work).
+says. In Story Branch Mode, retire them under [Story Branch retirement](references/story-branch-integration.md#retire-story-branch-resources).
 Dough Land's [refresh](../dough-land/SKILL.md#refresh-the-default-checkout) never blocks retirement. Report blocked or
 partial cleanup without repeating already-completed closure. Skip cleanup in direct-current-branch mode.
 
@@ -259,14 +233,15 @@ rule and its [final dashboard operation](../dough-land/references/dashboard-comp
 with the supplied launch context, after either closure path has settled. Keep the selected identity, mode and retained execution context,
 before-cleanup and final-closure commits, accepted publication and completion
 receipts, remaining coverage, knowledge and cleanup dispositions in their
-existing operational evidence and lasting homes. Do not produce a success recap
-solely to repeat them.
+existing operational evidence and lasting homes.
 
 When attention is needed, report the affected facts and next action. Distinguish
-accepted trunk publication from a superseded candidate, integration from refused
-cleanup, committed pending publication from an accepted receipt, and completed
-wrap-up from a refusal that left files intact. End successful closure with
-`## STORY WRAP-UP COMPLETE`. Missing context, unfinished work, unresolved
-recovery/integration, required push, unpublished Trunk Mode closure, retained
-or unconfirmed observation, or resource cleanup blocks that marker. Local-only
-current-branch pending publication is not a required push.
+accepted trunk publication from a superseded candidate, an [`integrated_state` success](../dough-execute-plan/references/ci-completion-wait.md)
+from the closure's own, integration from refused cleanup, committed pending
+publication from an accepted receipt, and completed wrap-up from a refusal that
+left files intact.
+Missing context, unfinished work, unresolved recovery/integration, required
+push, unpublished Trunk Mode closure, retained or unconfirmed observation,
+resource cleanup, or a [lifecycle commitment](references/lifecycle-commitments.md#report-the-outcome)
+without its owner's receipt prevents successful closure; name each such
+commitment and its owner. Local-only current-branch pending publication is not a required push.

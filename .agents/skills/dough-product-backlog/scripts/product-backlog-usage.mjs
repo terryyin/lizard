@@ -40,13 +40,25 @@ export const usage = `Usage: product-backlog.mjs add --identity <id> --title <ti
                               [--reason <text>...]]
                              [--file <path>]
        product-backlog.mjs read-state --link <href> [--file <path>]
+       product-backlog.mjs identity-evidence [--identity <id>] [--seeds <path>]
+                             [--file <path>]
        product-backlog.mjs read-dependencies --link <href> [--file <path>]
        product-backlog.mjs update-dependency --identity <id> --link <href>
                              --dependency-file <json-path>
                              --expect-dependencies <sha256> [--file <path>]
+       product-backlog.mjs resolve-dependency --identity <id> --link <href>
+                             --dependency-file <json-path>
+                             --expect-dependencies <sha256>
+                             --accepted-revision <sha> --remote <remote>
+                             --target <branch> [--correct-agreement]
+                             [--plan <backlog-relative-path>]
+                             [--planless-complete --completion-file <proof-path>]
+                             [--file <path>]
 
 add adds one already identified entry to "## ${queueHeading}" at the requested
-relative position. Identities are supplied, never allocated there.
+relative position. Identities are supplied, never allocated there. An
+identity a done record under ${doneRecordDirectory}/ names, or whose record there
+cannot be read, is refused: allocate a different identity for new work.
 
 place moves one listed entry to a requested position in "## ${queueHeading}",
 using the same relative destinations as add, and carries its line across
@@ -64,17 +76,19 @@ complete removes one identified entry from whichever active list holds it,
 applying a completion the caller has already decided. It never decides whether
 work is complete, and it never deletes a story or plan file: closing those
 canonical homes stays with the caller's wrap-up. Removal happens only on this
-explicit request naming the identity. It also removes the execution agent
-profile under agents/ beside the backlog that names the same identity,
-releasing that agent name, and writes the work's done record under ${doneRecordDirectory}/
+explicit request naming the identity. It also removes every readable preparation
+or execution agent profile under agents/ beside the backlog that names the same
+identity, releasing those agent names. Profiles for other work and unreadable
+profiles remain untouched. It writes the work's done record under ${doneRecordDirectory}/
 beside the backlog: its identity, title, completion time, the developer Git is
-configured with, and the released profile's agent, host, and model. Completing
+configured with, and the released execution profile's agent, host, and model
+when one existed. Preparation profiles do not supply execution credit. Completing
 the same identity again replaces its record. --dropped removes work that was
-dropped rather than finished: the entry and profile go as above and the done
+dropped rather than finished: the entry and profiles go as above and the done
 record is left out. Either way it removes done records completed
 more than ${doneRecordWindowDays} days before, then rebuilds ${doneCatalogPath} from the done
 records that remain. Include those files in the same commit as the backlog
-change. A preparation profile is left for its own release.
+change.
 
 catalog-done rebuilds ${doneCatalogPath} beside the backlog from the done records
 already there: each readable record's file name, identity, completion time, and
@@ -137,11 +151,37 @@ outside other stories' sections, and a distinct plan. Legacy absence is
 "not-recorded"; an unsupported schema version is "unsupported-version"; a
 stored assessment retains ready/not-ready and its reasons. changedSinceReview
 is true when its reviewed basis no longer matches; it informs, never writes,
-and does not independently block authorized startup.
+and does not independently block authorized startup. startEligibility is
+derived from the assessment and the dependency record: "eligible", or
+"blocked" with each unsatisfied dependency, then the assessment or an
+unreadable fact as a gap. A malformed dependency record reads as a gap, not a
+failure. Eligibility grants no permission and starts nothing.
+
+identity-evidence prints, as JSON, what the project shows about the
+identities it has already used, so a new one can be chosen above all of it.
+Each source — the seed directory (--seeds, by default seeds/ beside the
+backlog), the backlog's two lists, the done records under
+${doneRecordDirectory}/, ${doneCatalogPath}, and history (the seed and
+${doneRecordDirectory}/ files Git history reachable from HEAD shows added, at the
+revision it names, including those cleanup has since removed) — reports its
+highest seed number with the file or record behind it, and from history the
+commit that added it; highest and next name the highest number any source
+shows and the number after it. gaps names each source or file that could not
+be read, such as an absent seed directory, an unreadable record, a catalog
+that is absent or does not match the records (rebuild it with catalog-done),
+or history outside a Git work tree or in a shallow clone; a source with a gap
+is not complete evidence. --identity also reports that candidate as "active"
+with its list, "completed" with its done record's title and completion time,
+"in-history" when history alone shows its done record or its seed ID while no
+active seed carries that ID, or "unlisted", with what history shows of it
+under history. It reserves, registers, and writes nothing; the caller still
+chooses the identity.
 
 read-dependencies prints the consumer's separate, versioned dependency record,
 blocking entries, and dependency agreement basis. Absence means no blockers;
-a malformed present record is refused. Dependencies stay in the review basis.
+a malformed present record is refused. The review basis keeps each
+dependency's agreement (supplier, implementation, rationale, condition); a
+supplier's state, resolution, or decision leaves it unchanged.
 
 update-dependency upserts one supplier agreement from --dependency-file, using
 the basis returned by read-dependencies. The JSON object names supplier
@@ -155,13 +195,24 @@ decided necessary prerequisite; it never infers one from shared code or order.
 
 discover-consumers --supplier-identity <identity> reads current canonical homes
 and reports reverse agreements plus discovery problems without writing.
+visit-consumers --supplier-identity <identity> --accepted-revision <sha>
+--remote <remote> --target <branch> runs that discovery after accepted supplier
+integration from a checkout holding the fetched target: a clean checkout behind
+it fast-forwards; local changes, divergence, or a target lacking the accepted
+revision stop with nothing changed. It reports the visited revision.
 resolve-dependency records an evidenced consumer judgment with --dependency-file
 and --expect-dependencies, including waiting or decision-needed after cleanup;
 --accepted-revision <sha> --remote <remote> --target <branch> establish accepted
 supplier integration. Recoverable supplier outcome must show all planned slices
 done (optional --plan), or --planless-complete --completion-file <proof path>.
-The consumer agreement must remain unchanged. Repeats preserve existing evidence.
+The consumer agreement must remain unchanged unless --correct-agreement
+explicitly records a proved revised condition as satisfied on the same existing
+supplier identity and home. Its resolution summary must explain the proof and
+why removed obligations remain consumer work. Correction retains prior evidence,
+flags changed content since readiness review, and never completes or starts the
+consumer or renews its judgment. Repeats with the current basis preserve evidence.
 Condition satisfaction is the caller's evidenced judgment, never text matching.
+Follow the shared supplier-dependencies.md procedure for review and human choices.
 
 Paths are resolved against the current directory; --file defaults to
 ${defaultBacklogPath}. Canonical home links and planned paths are resolved

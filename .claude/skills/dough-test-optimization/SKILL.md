@@ -5,7 +5,9 @@ description: >-
   across related tests. Use to optimize slow tests or test-suite performance.
   Preserves behavioral coverage and confidence while pursuing fewer redundant
   cases, less code, and cleaner design. With --resolve, triages recorded
-  candidates without profiling or optimizing.
+  candidates without profiling or optimizing. Also makes this project's CI,
+  GitHub Actions or read through a CI adapter, publish the CI proof summary
+  that Intent's CI status tab shows.
 ---
 
 # Speed up local test feedback
@@ -22,8 +24,19 @@ test locations, runtime/service setup, applicable test and architectural rules,
 and plan conventions from that project. Name genuinely missing context and
 stop only its dependent step; do not invent paths, commands, or a test taxonomy.
 
+A request to make this project's CI publish proof for Intent's **CI status**
+tab, or a tab saying the shown run or attempt has no CI proof summary,
+follows only the [CI proof summary](references/ci-proof-summary.md) recipe:
+it edits this project's GitHub Actions workflow, or its CI job and CI
+adapter, and profiles nothing. A published summary may carry optional
+`durationMs` on present parts and entries (summed test execution time from
+outcomes times or Playwright attempt durations) and, from `fragment
+--by-file`, a per-file breakdown for Intent's entry and folder summaries;
+schema versions stay at 1.
+
 Default mode profiles, plans, experiments, and re-profiles. A profile-only request
-ends with findings. For `--resolve`, follow only
+ends with findings and records them in the
+[candidate record](references/candidate-record.md). For `--resolve`, follow only
 [candidate resolution](references/resolving-candidates.md).
 
 An independently requested pass in any mode is an accepted mission:
@@ -44,11 +57,16 @@ Apply it across the authorized optimization scope, not just the current diff.
 
 ## Establish the baseline
 
+Read this project's
+[candidate record](references/candidate-record.md) when it exists, together with
+any approved profile exclusions it or the project already records. Follow that
+reference for accepted costs and later-pass preservation. Candidate proposals
+remain eligible and normal verification coverage stays intact.
+
 Run the selected local scope. Record revision, literal command, runner mode,
 workers, filters, relevant environment/cache conditions, wall time, executed
 case count, and available test/setup timings. Keep raw profiles out of commits.
-Use only approved profile exclusions; candidate proposals remain eligible and
-normal verification coverage stays intact. Report the limits of filtered runs.
+Use only approved profile exclusions. Report the limits of filtered runs.
 
 Measure the ordinary local test mode even if profiling needs a different mode.
 A failed or incomplete run supplies diagnostics, not a successful baseline.
@@ -152,10 +170,11 @@ test/support-code simplifications, experiments rejected, delivered commits, and
 remaining candidates. Distinguish measured improvement, no demonstrated gain,
 and incomplete work. Do not claim speedup from fewer cases or lines alone.
 
-Keep candidates with locations, cost, unique protection, attempted alternatives,
-evidence, date, and needed decisions in the existing record or active plan.
-Retain that plan and evidence for retrospective and
-[story wrap-up](../dough-story-wrap-up/SKILL.md); unresolved candidates must be
-resolved or transferred to the established follow-up location before cleanup.
+Write remaining candidates to the
+[candidate record](references/candidate-record.md), including after a
+profile-only pass that ends with findings, following that reference for creation,
+disposition, and preservation rules. Retain the plan and evidence for retrospective
+and [story wrap-up](../dough-story-wrap-up/SKILL.md); unresolved candidates must
+be resolved or transferred in that record before cleanup.
 Emit `## TEST OPTIMIZATION COMPLETE` only when the pass's planned work,
 verification, measurement, and delivery are complete, stating its actual outcome.

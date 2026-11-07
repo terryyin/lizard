@@ -1,0 +1,17 @@
+timestamp: 2026-10-27T11:47:50Z
+host: Territory.local
+ncpu: 16
+19:47  up 4 days, 13:41, 4 users, load averages: 7.81 8.44 7.98
+approx_free_MB: 3127
+competing_paired: none
+candidate: 4714fc25bdddddbe243b1120128371aa608ad326
+origin_master: 901068b8ef5a3a943926d4f74b4769ebe55d8d5a
+master_tip_checkout: 901068b8ef5a3a943926d4f74b4769ebe55d8d5a
+master_tip_path: /private/tmp/lizard-perf-seed013-pr531/master-tip
+frozen_checkout: 2e21e404c1ab9f4e0b49acc80816e816629d0670
+frozen_path: /private/tmp/lizard-perf-seed013-pr531/frozen-2e21e40
+paired_sha256: 3064d8d77047db2f084ce9fd6ae09d98acf34453316b7df20fb184cbb3217bf5
+manifest_sha256: a224a3afcfa549f1d1d686be5416439d293105941894e8850a700777adb62411
+corpus_affected_count: 64
+corpus_addition: none — new testArrowObjectBoundaries cases reuse the retained 64 affected shapes; original 164-hash manifest unchanged
+import_probe: harness argv0 shape confirmed js/ts modules resolve inside each checkout (master/frozen/candidate)

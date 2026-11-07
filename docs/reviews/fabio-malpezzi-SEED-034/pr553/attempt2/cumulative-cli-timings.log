@@ -1,0 +1,2 @@
+warning: Git tree '/Users/terryyin/git/lizard/.worktrees/process-fabiomalpezzi-s-open-prs' is dirty
+{"verdict": "passes", "passes": true, "paired_95pct_ci": [-0.3498515863780453, 2.015319766247457], "out": "/Users/terryyin/git/lizard/.worktrees/process-fabiomalpezzi-s-open-prs/docs/reviews/fabio-malpezzi-SEED-034/pr553/attempt2/cumulative-cli.json"}

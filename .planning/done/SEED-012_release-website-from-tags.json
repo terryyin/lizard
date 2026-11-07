@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-012#release-website-from-tags",
+  "title": "Deploy website releases from version tags",
+  "completedAt": "2026-10-27T13:14:44.962Z",
+  "developer": "Terry Yin",
+  "agent": "Hibiki-chan",
+  "host": "codex",
+  "model": "gpt-6.1-sol"
+}

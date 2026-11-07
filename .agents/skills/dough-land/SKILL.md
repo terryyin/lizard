@@ -4,11 +4,13 @@ description: >-
   Dough Land lands everything in one reviewed checkout on the authorized remote
   trunk: commits all of its changes, reconciles and publishes them without
   force, and refreshes a supplied default checkout when safe. An owned worktree
-  is retired with its branch once trunk contains its work; the default checkout
-  stays in place.
+  is retired with its branch after completion gates hold and trunk contains its
+  work; the default checkout stays in place. Ordinary landing refuses unfinished
+  execution before commit; `--keep-worktree` selects an explicit retained increment.
   Use only on explicit invocation, such as "/dough-land", "use Dough Land",
   "land this worktree", or "land" for changes made on the default checkout, or
-  when another skill's validated keep instruction links here. A casual
+  when another skill's validated keep instruction or findings
+  maintenance handoff links here. A casual
   "keep", "looks good", or approval does not invoke it.
   Hosted merges and pull requests are out of scope. With
   `--process-retrospective`, it also reviews the landing's own process and
@@ -19,15 +21,20 @@ description: >-
 
 Land one reviewed checkout, an owned worktree or the default checkout on the
 target branch: commit everything in it, publish that onto the authorized remote
-trunk, refresh a supplied default checkout when safe, and retire the worktree
-when it is one. Apply [completion attention](#completion-attention) to the final
+trunk, refresh a supplied default checkout when safe, and retire an owned worktree
+only after completion and retirement gates hold. Apply [completion attention](#completion-attention) to the final
 response. Publication, refresh, and cleanup are separate results.
 A later step that stops or is deferred never undoes an earlier one.
 With `--process-retrospective`, also
 [review this landing's process](#review-this-landings-process).
 
 Run only when the developer explicitly invokes Dough Land, or when a calling
-skill's own validated keep instruction links here. Reviewing, approving,
+skill's own validated keep instruction links here. An explicitly invoked findings-maintenance skill may instead supply its own
+validated maintenance instruction and link here; that instruction carries its
+maintenance-only publication authority without another keep question. It supplies
+the reviewed owned result, checkout, starting revision and authorized target,
+and confirms the whole-checkout isolation required below. This handoff neither
+invokes maintenance from encountering a finding nor authorizes unrelated work. Reviewing, approving,
 pausing, or saying "keep" in passing does not start a landing. Do not open a
 pull request, request a hosted merge, or discard anything; when the developer
 wants one of those, stop and say that Dough Land does not do it.
@@ -44,7 +51,9 @@ Resolve both before any commit:
   Ownership comes from
   that context or the worktree's
   [creation record](../dough-manual-testing/references/exploration-workspace.md#close-or-retain-it);
-  do not infer it from a clean directory.
+  do not infer it from a clean directory. In an
+  [established session](../dough-execute-plan/references/established-session.md),
+  the session's block names this checkout, its role, starting revision, and target.
 - **Default checkout.** The project's established checkout for ordinary work,
   when the context supplies one; the refresh step inspects it. Landing needs no
   default checkout. When the landing checkout is a worktree, the default
@@ -60,10 +69,60 @@ Stop before committing, and name the gap, when:
 - no checkout is in context, or more than one candidate fits;
 - the named default checkout is on another branch than the target; name both
   branches;
-- the target is missing, contradictory, or not a branch on an authorized
-  remote; or
+- the target is missing, contradictory, or not a branch on an authorized remote; or
 - the checkout has an `index.lock` or an unfinished merge, rebase,
   cherry-pick, or revert. Name it; the developer resolves it, then reruns.
+
+## Establish completion before landing
+
+Before staging, committing or publication, resolve whether the checkout serves
+execution, preparation, or ordinary reviewed work from its retained context and
+this project's selected work. Taken membership alone establishes neither
+unfinished implementation nor completion. A Preparing assignment is preparation,
+not execution; completed preparation keeps its existing release and landing
+journey. Do not label ordinary reviewed work unfinished merely because it has no
+story or plan.
+
+For execution, apply wrap-up's [execution-completion judgment](../dough-story-wrap-up/SKILL.md#establish-execution-completion)
+to the selected source and available results. For a resolved executable plan,
+check its recorded slices and obligations before any Git change:
+
+```sh
+node <installed>/dough-execute-plan/scripts/story-obligations.mjs check --plan <PLAN.md> --planned-completion
+```
+
+Use this project's selected plan, never a guessed one. The command names pending
+slices, open obligations, unowned or unobserved source-review commitments, and
+unreadable or missing slice evidence. Commitments allocated to a lifecycle owner
+(`landing`, `target CI` or `reporting`) do not stop landing: the result lists
+them as `pendingLifecycle`, still owed to their owners' receipts; never mark one
+observed to land. A clear result checks those records only; judge the promised
+outcome and accepted proof too. For planless execution, judge its instruction,
+changes and results; absence of a plan is not completion evidence.
+
+On an ordinary invocation, unfinished execution or missing or ambiguous completion
+evidence stops here, before commit or publication. Keep the checkout, branches,
+index, plan and assignment unchanged; name the remaining work or exact missing
+evidence and explain `--keep-worktree` as the explicit retained-landing
+choice, never inferred from a bare request to land. A completed execution still
+Taken is not refused merely for that membership: preserve its owning completion
+and retirement gates. Landing does not perform wrap-up, release its assignment,
+or manufacture completion.
+
+On every rerun, establish completion again before commit or publication. A tip
+already accepted by trunk does not establish completion or authorize retirement.
+
+An explicit `--keep-worktree` selects a retained increment, including when
+execution is unfinished or its completion evidence is unavailable. So does a
+plan's human checkpoint that names this landing, once answered with its
+go-ahead. Carry the remaining work or evidence gap forward; it is not a
+completion result. Continue through commit, publication and optional refresh,
+then skip retirement entirely. Keep the same worktree, local branch and existing
+remote execution branches, Taken entry, agent profile, plan and session context.
+Do not release an execution assignment or change its mode, branch destination
+for later execution, or observer target. Resume its next unfinished work in that
+same workspace through its existing execution workflow; eventual closure still
+belongs to ordinary story wrap-up and its completion, CI and ownership gates.
 
 ## Commit everything in the checkout
 
@@ -91,50 +150,28 @@ never adds or removes an assignment profile.
 
 ## Publish
 
-With the original one-shot launch's supplied dashboard landing context, use the
-[launch-bound handoff](references/dashboard-completion.md#retain-the-one-shot-landing)
+With the original launch's supplied dashboard landing context, use the
+[launch-bound handoff](references/dashboard-completion.md#retain-the-launch-landing)
 for publication and resume. Record its accepted comparison before refresh or
 retirement; reporting failure leaves Git acceptance accepted and retries only evidence.
 
-Apply [publish the candidate](../dough-execute-plan/references/publish-the-candidate.md)
-from the checkout, for that suffix and target; the default checkout is the
-owned workspace when it is the one landing; do not invent a second
-sequence. The candidate's own changes must be the reviewed checkout content.
-On each fetched target, before rewriting the candidate and before the retry
-push after a rejection, run this candidate check from the landing checkout:
-
-```sh
-node <installed>/dough-land/scripts/queued-closure-check.mjs check --checkout <checkout> --remote <remote> --target-ref refs/heads/<branch>
-```
-
-The command fetches the target and checks every queued story the candidate
-closes against that tip. It identifies closures from the candidate's merge
-base with the fetched target: entries in that base's **Backlog list** that
-are in neither list at `HEAD`. It needs no retained one-shot context.
-
-| Result | Action |
-| --- | --- |
-| `clear` | Continue publication. An empty `closes` means no queued story was closed. |
-| `ownership-changed` | Push nothing; keep the checkout, branch, index, and commit. Report `ownership` and `error`, with publication, refresh, and cleanup not done. Leave the story to that owner and the developer. |
-| Other failure | Stop before pushing and report the error; preserve the checkout and Git state. |
-
-Do not resolve a backlog reconciliation conflict by removing the other side's
-entry. A rewrite onto a newer target rechecks only
-proof the combined change affects. Nothing is registered with a CI observer.
-
-A conflict, refusal, failed recheck, or second rejection stops here. Preserve
-the checkout, branch, index, and whatever state Git left. Name the conflict or
-contention, and report publication, refresh, and cleanup as not done. Do not
-loop.
+Apply [reviewed-checkout publication](references/publish-reviewed-checkout.md):
+use [publish the candidate](../dough-execute-plan/references/publish-the-candidate.md)
+for a wholly unpublished suffix, or history-preserving integration for a published
+prefix and the complete reviewed tip above it; for completed selected work, use
+their [visit forms](references/publish-reviewed-checkout.md#land-completed-selected-work). Keep the queued-closure check
+before each reconciliation and retry, and recheck affected proof before pushing.
+Preserve the state on a conflict, refusal, failed recheck or second rejection;
+report publication, refresh and cleanup as unfinished. Do not loop.
 
 ## Visit consumers of completed selected work
 
-After accepted publication and before retirement, apply the shared
-[supplier dependency procedure](../dough-product-backlog/references/supplier-dependencies.md)
-when retained context establishes a selected completed supplier. Preserve its
-recoverable outcome before cleanup, publish directly justified consumer updates
-through this authorized landing workflow, and report unresolved work. A generic
-landing or an unfinished increment establishes no supplier completion.
+Completed selected work that retained context establishes [takes the current-consumer visit](../dough-product-backlog/references/supplier-dependencies.md#which-completed-work-takes-the-visit)
+under that shared procedure: preserve its recoverable outcome before cleanup and
+publish with its [visit forms](references/publish-reviewed-checkout.md#land-completed-selected-work).
+Judge each consumer, publish directly justified consumer updates through this
+authorized landing workflow, and finish the visit or explicitly retain
+unresolved work, before refresh, retirement and the final report.
 
 ## Review this landing's process
 
@@ -166,24 +203,29 @@ publication.
 ## Retire the worktree
 
 Apply [owned worktree retirement](references/worktree-retirement.md) after
-publication and the calling workflow's completion gates. It checks recorded
+publication, the [completion judgment](#establish-completion-before-landing), and
+the calling workflow's retirement gates. It checks recorded
 ownership and target containment, preserves recoverable state on a hold, and
 keeps the default checkout in place. Retain supplied dashboard reporting context
 outside the checkout before removal; reporting remains the final operation.
+With `--keep-worktree`, do not call retirement, even when trunk already contains
+the tip. Verify the retained resources and record their disposition separately
+from publication and refresh.
 
 ## Stop, rerun, and report
 
 A stop keeps every resource recoverable (worktree, branch, commits, index, any
 default checkout, and the remote as it is) and names the exact unfinished
 step. A rerun reads real Git and remote state and continues from the first
-unfinished step:
+unfinished step, applying [completion judgment](#establish-completion-before-landing)
+before any commit, publication or retirement:
 
 | State found | Continue with |
 | --- | --- |
 | Unfinished Git operation in the checkout | Stop and name it |
 | Uncommitted changes | [Commit everything](#commit-everything-in-the-checkout) |
 | Branch tip not contained in the fetched target | [Publish](#publish), through the publisher's [resume](../dough-execute-plan/references/publish-the-candidate.md#resume-an-interrupted-publication) |
-| Tip already contained | Record it as accepted; push nothing. Then refresh, and retire a worktree |
+| Tip already contained | Record it as accepted; push nothing. Apply optional refresh, then retain with `--keep-worktree` or apply completion and retirement gates |
 | Worktree or branch already absent | Record it as already retired |
 
 Never commit the same change twice, push an already accepted candidate again,
@@ -200,3 +242,9 @@ required solely to repeat them.
 After operations settle, read and apply the shared
 [completion attention rule](references/completion-attention.md), including its
 [final dashboard operation](references/dashboard-completion.md) with supplied reporting context.
+For retained unfinished execution, state that the reviewed changes landed,
+the story remains unfinished, and its workspace and branches remain usable;
+name the next unfinished work or missing evidence. Report `unfinished` with that
+exact attention message through the supplied dashboard command. Never send quiet
+`completed`, mark the session Done, or imply story completion from publication.
+Manual session acknowledgment does not complete slices or release the assignment.

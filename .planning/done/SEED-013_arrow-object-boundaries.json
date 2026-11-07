@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-013#arrow-object-boundaries",
+  "title": "Preserve arrow object expressions and typed function bodies",
+  "completedAt": "2026-10-27T12:10:15.609Z",
+  "developer": "Terry Yin",
+  "agent": "Anri-chan",
+  "host": "cursor",
+  "model": "auto"
+}

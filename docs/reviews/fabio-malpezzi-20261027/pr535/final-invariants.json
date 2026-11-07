@@ -1,0 +1,39 @@
+{
+  "metrics_equal": true,
+  "cases": 34,
+  "broad_files": 100,
+  "broad_outputs": {
+    "target": {
+      "cli": {
+        "returncode": 1,
+        "sha256": "90b5107f7710782d21ad3b6b850be2d9ad09b2c6d7d8a672b78633cd6aae6510"
+      },
+      "cli-ns": {
+        "returncode": 1,
+        "sha256": "2b9ef5935c49b1ad2c911dd2b2fbba4e4e8357b6d88ab8e1b2d7fd60bd19374e"
+      }
+    },
+    "corrected": {
+      "cli": {
+        "returncode": 1,
+        "sha256": "90b5107f7710782d21ad3b6b850be2d9ad09b2c6d7d8a672b78633cd6aae6510"
+      },
+      "cli-ns": {
+        "returncode": 1,
+        "sha256": "2b9ef5935c49b1ad2c911dd2b2fbba4e4e8357b6d88ab8e1b2d7fd60bd19374e"
+      }
+    }
+  },
+  "unchanged_ns_owners": [
+    "lizard_core/function_info.py",
+    "lizard_core/file_analyzer.py",
+    "lizard_core/cli.py",
+    "lizard_ext/lizardns.py",
+    "lizard_languages/python.py"
+  ],
+  "ns_api_reuse": "The Python-only API corpus never enters the changed JavaScript _dec path; FunctionInfo, Python reader and NS extension match the previously measured combined candidate. CLI -ENS startup is measured directly again.",
+  "ns_fresh_interval": [
+    -1.0626525530116115,
+    1.2722936812443075
+  ]
+}

@@ -1,19 +1,58 @@
-# Keep reported gaps owned
+# Keep story gaps owned
 
 In planned execution, record every gap, loss, limitation, or interim behavior
-named in an implementation return under `## Story obligations` in the active
-plan. Read it against the selected story's goal, key examples, and exclusions;
+named in an implementation return or independently discovered during
+[acceptance](wrap-up.md#accept-proof) under `## Story obligations` in the active
+plan. Read it against the selected story's original Goal, Scope, key examples and exclusions;
 quote the clause it touches. The plan's narrower scope cannot exclude it.
 The [script](../scripts/story-obligations.mjs) checks the record's structure,
 slice ownership, and quotes in the selected story section, not whether your
 judgment satisfies the goal. Quotes match word for word after whitespace and
 Markdown emphasis normalization. Read the actual story before choosing a
-disposition; script success alone does not accept the behavior.
+disposition; script success alone does not accept the behavior. For an independently
+discovered gap, retain its discovery observation in the existing `Reported` text
+or title; do not invent an implementation report or a second record format.
+
+## Check the paths before closing a gap
+
+Before choosing `no user cost` or `proved`, connect the reported state to the
+selected story's actual promise. Inspect the relevant entry, continuation,
+failure/recovery, and handoff paths in this project's guidance and
+implementation: what can produce that state, what consumes it, and what result
+the developer receives. The return's stated cause and the current slice's
+command do not establish the only way to reach it. Follow a directed action
+through its continuation to the promised result; a passing initial guard does
+not establish what committing, rerunning, or handing work to another owner does.
+Inspect only paths relevant to this gap, without a routine path inventory.
+
+Reuse sufficient inspection and observations under
+[executable proof](../../dough-story-refinement/references/executable-proof.md).
+Check what the accepted evidence actually observes at the relevant boundary;
+do not extend a helper's passing result to an unobserved continuation. When
+reachability or the promised result remains uncertain, obtain the smallest safe
+missing observation within authority, or keep that dependent promise open and
+name its missing proof. Retain independently accepted evidence. A reachable
+contradiction returns to the current slice, unless a valid receiving or interim
+owner already owns its correction and proof under the dispositions below.
+Preserve the gap's id, original text and reporting provenance. A genuine story
+exclusion or developer-authorized changed promise retains its authority; path
+inspection does not authorize changing scope.
+
+Record the inspected path and result in the existing disposition reason or
+proof location, with ordinary acceptance evidence; add no field or entry per
+path. Close a harmless limitation as `no user cost` when its concrete reason
+holds through the relevant paths, and use `proved` when sufficient current
+evidence covers the promised result. Continue without another approval,
+unrelated obligations, or a blanket rerun of accepted observations. Reassess
+that reason or proof when a changed path invalidates it. Create no obligation
+when neither the return nor acceptance identifies a gap.
 
 ## Record format
 
 The plan's `**Source:**` link must name its selected story section. Use one
-`###` entry with a stable id per obligation and exactly these three fields:
+`###` entry with a stable id per obligation and exactly these three fields,
+plus the optional `Commitment:` field described under
+[the source review](#record-the-source-review):
 
 ```markdown
 ## Story obligations
@@ -56,12 +95,98 @@ Choose exactly one disposition:
   sufficient current proof accepting it. Once supplied, continue without
   another approval or blanket rerun.
 
-A learning or an out-of-scope remark is no disposition. Keep learnings only
-for discoveries changing remaining work. Single-slice quick execution creates
+A learning or an out-of-scope remark is no disposition. Neither is a plan
+Current decision, slice text, proof row, implementer statement or owner-decision
+label: quoting one fails `quote-not-in-story`. Keep learnings only for
+discoveries changing remaining work. Single-slice quick execution creates
 no plan: return goal-contradicting gaps to the same slice, obtain required
 observations before accepting dependent promises, and retain independently
-valid proof. If it continues as planned work, carry every reported gap into
+valid proof. If it continues as planned work, carry every reported or discovered gap into
 the new plan's entries.
+
+## Record the source review
+
+In planned execution, keep the source-only reviewer's numbered return beside
+the plan as `source-review.md`. When you retain it, link it from the plan's
+header with one line under `**Source:**` that starts with `**Source review:**`
+followed by a Markdown link to that file. Keep the launch and input
+description above one `## Commitments` table with one row per returned id: the
+id, the source text as returned, the allocated slice or lifecycle owner, and
+the observation or the obligation id that disposes it.
+Escape a `|` inside a cell as `\|`.
+
+```markdown
+## Commitments
+
+| Id | Source commitment | Slice | Observation or obligation |
+| --- | --- | --- | --- |
+| 4a.1 | Listed with its filter: outside the Area | slice 4 | observed: decision.test.py excluded list |
+| 4a.5 | Listed with its filter: already held | slice 4 | G2 |
+| 7 | Each decision has an identity | slice 7 | |
+| 8 | Final target CI is settled | target CI | |
+```
+
+- **Allocate** every id when you retain the return or replace it after a story
+  amendment, before the next `list` or `check`: each check refuses an
+  unallocated row. Give it the slice whose output owes the commitment, or an
+  obligation id when an obligation disposes it instead (receiving a later
+  slice, excluded with a story quote, or owner changed). A whole-story
+  commitment, such as the goal, belongs to the slice that completes it,
+  usually the last. Correct a wrong allocation at any later acceptance.
+- **Allocate to a lifecycle owner** a commitment that only an operation after
+  execution completion can observe. Write the owner in Slice:
+  `landing` (landing or Story Branch integration, observed by its accepted
+  integration or landing receipt), `target CI` (the success completion receipt
+  for the final accepted SHA with confirmed shutdown) or `reporting` (the final
+  dashboard operation). No other owner exists; another value is malformed.
+  Split a compound commitment first: "the dialog lists the source and the work
+  is landed normally" gives the dialog to the slice that renders it and only
+  the landing to `landing`. A commitment a slice's output owes stays with that
+  slice, and a release or other step a slice performs from trunk is slice work,
+  not a lifecycle owner.
+- **Observe** at each acceptance: for every id allocated to this slice, write
+  `observed: <product or proof location>` once inspected, or the id of the
+  obligation that owns the gap. The location must show the commitment's own
+  expected result, as the source text states it: a location showing a
+  different or narrower result, such as an item kept somewhere other than
+  where the commitment lists it, is a mismatch to record as an obligation,
+  not an observation. An observation recorded at an earlier slice
+  stays valid while its boundary is unchanged; do not rerun it for process.
+  An id allocated to a slice already done when you allocate it cites that
+  slice's earlier recorded proof as `observed:` when that proof shows the
+  result; otherwise record its obligation.
+- **Leave a lifecycle row's last cell empty.** Its owner observes it after
+  execution, when the plan and this file are gone. Never record it as observed
+  from a pending gate, current branch CI or other branch evidence, or the
+  enforcing check itself: branch CI is not the final target CI, and closure
+  must not rest on a result nobody observed. Every check refuses
+  `observed-lifecycle-commitment` for a lifecycle row carrying `observed:`.
+- **Link** an obligation back, optionally, with `Commitment: 4a.5, 4a.6` after
+  its `Disposition:`. When present, it must name exactly the rows whose last
+  cell is that obligation's id, or the check refuses `mismatched-commitment`;
+  refusals name those rows either way.
+
+A record that is no disposition is no observation or allocation reason either;
+resolve the mismatch under [accept proof](wrap-up.md#accept-proof). Every
+check refuses `unlinked-source-review` for a `source-review.md` beside the plan
+without the exact `**Source review:**` link, or a `Source review` label in any
+other form. A plan with neither keeps obligation-only checks.
+
+Settle a commitment's slice allocation, lifecycle owner, `observed:` location,
+or disposing obligation id with the same script's `record` operation rather
+than hand-built cell escaping or putting an obligation id in Slice:
+
+```sh
+node '<installed-execute-plan>/scripts/story-obligations.mjs' record --plan '<PLAN.md>' --commitment '<id>' [--slice N|"" | --lifecycle '<landing|target CI|reporting>'] [--observed '<product or proof location>' | --obligation '<id>'] [--entry-id '<id>' --title '<text>' --reported '<text>' --reported-slice N --story-clause '<text>' --disposition '<text>'] [--expected-review '<sha256>'] [--expected-plan '<sha256>']
+```
+
+It escapes `|` in written cells, keeps an obligation id out of Slice, and when
+you supply the entry fields writes the linked Story obligations
+`Reported: slice N — "…"` shape. `--lifecycle` clears the row's observation
+or obligation and takes no other cell option; `--observed` on a lifecycle row
+is refused. Unknown commitment ids and stale
+`--expected-review` / `--expected-plan` digests refuse without rewriting either
+file.
 
 ## Use the record at execution boundaries
 
@@ -74,17 +199,31 @@ node '<installed-execute-plan>/scripts/story-obligations.mjs' check --plan '<PLA
 node '<installed-execute-plan>/scripts/story-obligations.mjs' check --plan '<PLAN.md>' --completion
 ```
 
+Author Commitments with `record` under [the source review](#record-the-source-review).
 The listing returns full entries for the slice's returns, receiving
-obligations, and open interims naming it. Carry them as promises with the
-required observations before delegation. A refusal names the entry and reason
-in one JSON result and exits non-zero: correct the record or required behavior
-before the blocked delegation, slice commit/done transition, or completion
-record. `check --slice N` treats that slice as about to finish even while its
-status is `planned`. `check --completion` refuses every open return, receiving,
-or interim entry. Plans without this section have zero obligations; do not
-migrate them merely to use the script.
+obligations, and open interims naming it, and, when the plan links a source
+review, `commitments`: the rows allocated to the slice. Carry them as promises
+with the required observations before delegation. A refusal names the entry and
+reason in one JSON result and exits non-zero: correct the record or required
+behavior before the blocked delegation, slice commit/done transition, or
+completion record. `check --slice N` treats that slice as about to finish even
+while its status is `planned`. `check --completion` refuses every open return,
+receiving, or interim entry. With a linked source review, every check also
+refuses `unallocated-commitment`, `unobserved-commitment`,
+`unknown-commitment`, `observed-lifecycle-commitment`, and the
+[record's](#record-the-source-review) link refusals. A lifecycle row needs no
+observation here; each result lists it in `pendingLifecycle` with its `id`,
+`text` and `owner`, still owed to that owner. Plans without this section have zero
+obligations; do not migrate them merely to use the script.
+
+For a caller that already resolved a planned execution, `check --planned-completion`
+also requires a readable, non-empty ordered slice list with every slice done,
+then applies the same completion obligation check. It names pending or ambiguous
+slices and missing evidence; it does not discover execution identity or establish
+accepted proof. An absent plan or a planless instruction still requires the
+caller's completion judgment. This option takes neither `--slice` nor `--completion`.
 
 When replanning removes or renumbers slices, move their receiving and interim
-obligations to the remaining slices that own their behavior and proof; update
-other slice references consistently. Never drop an obligation through a plan
-rewrite. Run the check before delivery; dangling references are refused.
+obligations to the remaining slices that own their behavior and proof. Never drop
+an obligation through a plan rewrite. Run the check before delivery; dangling
+references are refused.

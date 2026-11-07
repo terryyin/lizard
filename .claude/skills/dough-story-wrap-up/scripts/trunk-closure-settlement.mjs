@@ -1,16 +1,14 @@
 // Settles the final closure for Trunk Mode `finish`. A final closure the
 // target already holds is recognized through resumeInterruptedPublication
-// without a second push, on this execution's own observer that covers it,
-// live or already ended, so completion can be reused or repeated. An
+// without a second push, on the one of this execution's own observers that
+// `closureObservers` selects, so completion can be reused or repeated. An
 // unpublished one is published once through managed delivery with the same
 // owner evidence, rebased when the target moved. A rerun with the original
 // `--final` after `finish` rebased and published it recognizes the rebased
 // closure the target holds and resumes it the same way. Once the execution
 // worktree is gone, only an accepted closure is settled, from the recorded
-// management context and the observer's checkout path.
-import { existsSync, realpathSync } from "node:fs";
-import { basename, dirname, join } from "node:path";
-import { listRegisteredRevisions } from "../../dough-execute-plan/scripts/ci-mailbox-revision-coverage.mjs";
+// management context.
+import { listRegisteredRevisions } from "../../dough-execute-plan/scripts/ci-mailbox-revision-records.mjs";
 import { deliverManagedExecutionIncrement } from "../../dough-execute-plan/scripts/execution-increment-delivery.mjs";
 import { observerAdapter } from "../../dough-execute-plan/scripts/execution-increment-resume.mjs";
 import {
@@ -27,14 +25,6 @@ const publicationRecoveries = {
   "candidate-mismatch":
     "the branch tip is not --final; commit the final closure or name the branch tip as --final, then rerun finish",
 };
-
-// The canonical checkout path an observer was started for, also after that
-// worktree was removed: its parent still resolves as it did then.
-export function observerRoot(workspace) {
-  return existsSync(workspace)
-    ? realpathSync(workspace)
-    : join(realpathSync(dirname(workspace)), basename(workspace));
-}
 
 // Recognizes the accepted final closure without pushing, registers it on
 // this execution's live observer when that lacks it, and reports that
@@ -63,7 +53,7 @@ async function resumeAcceptedClosure({
     acceptedSha: accepted,
     pushCount: resumed.pushCount,
     observation: found.directory
-      ? { state: "recovered", directory: found.directory, reused: true }
+      ? { state: "recovered", ...found, reused: true }
       : found.gap,
     startReceipt: null,
   };
@@ -80,7 +70,7 @@ async function closureIdentity(inspection, sha) {
 }
 
 // The commit `rev` names in this repository, or null when it holds none.
-async function commitOf(inspection, rev) {
+export async function commitOf(inspection, rev) {
   try {
     return (
       await git(inspection, "rev-parse", "-q", "--verify", `${rev}^{commit}`)
@@ -91,9 +81,12 @@ async function commitOf(inspection, rev) {
   }
 }
 
-// The rebased final closure the fetched target holds: the branch tip while the
-// branch exists, else a revision this execution's observers registered, whose
-// identity equals `final`'s. Null when none is recognized.
+// The rebased final closure the fetched target holds: the branch tip, or a
+// revision this execution's observers registered that the branch contains,
+// as when a consumer publication followed the closure, else once the branch
+// is gone any revision they registered, whose identity equals `final`'s.
+// A revision `final` already contains, such as an earlier closure published
+// within the same second, is never its rebase. Null when none is recognized.
 async function rebasedFinalClosure({
   inspection,
   tracking,
@@ -104,13 +97,23 @@ async function rebasedFinalClosure({
   const original = await commitOf(inspection, final);
   if (!original) return null;
   const tip = await commitOf(inspection, `refs/heads/${branch}`);
-  const candidates = tip
-    ? [tip]
-    : observers.directories.flatMap(listRegisteredRevisions);
+  const registered = observers.directories.flatMap(listRegisteredRevisions);
+  const candidates = [];
+  if (!tip) candidates.push(...registered);
+  else {
+    candidates.push(tip);
+    for (const candidate of registered)
+      if (
+        (await commitOf(inspection, candidate)) &&
+        (await isAncestor(inspection, candidate, tip))
+      )
+        candidates.push(candidate);
+  }
   const wanted = await closureIdentity(inspection, original);
   for (const candidate of new Set(candidates)) {
     // An observer may have registered a revision this repository lacks.
     if (!(await commitOf(inspection, candidate))) continue;
+    if (await isAncestor(inspection, candidate, original)) continue;
     if (!(await isAncestor(inspection, candidate, tracking))) continue;
     if ((await closureIdentity(inspection, candidate)) === wanted)
       return candidate;
@@ -153,14 +156,9 @@ async function publishFinalClosure(request) {
   };
 }
 
-// Returns the accepted final closure with its observer, or `stopped` naming
-// the unfinished step with nothing pushed or retired.
-export async function settleFinalClosure(request) {
+// Resumes the final closure the target holds on `observers`, or publishes it.
+async function acceptFinalClosure(request, observers) {
   const { workspace, inspection, tracking, final } = request;
-  const observers = await closureObservers({
-    ...request,
-    branch: targetBranchName(request.targetRef),
-  });
   if (await isAncestor(inspection, final, tracking)) {
     return resumeAcceptedClosure({ ...request, observers, accepted: final });
   }
@@ -184,4 +182,19 @@ export async function settleFinalClosure(request) {
     };
   }
   return publishFinalClosure(request);
+}
+
+// Returns the accepted final closure with its observer and
+// `observerDirectories`, this execution's own observers whose registered
+// revisions the visit's settlement reads, or `stopped` naming the unfinished
+// step with nothing pushed or retired.
+export async function settleFinalClosure(request) {
+  const observers = closureObservers({
+    ...request,
+    branch: targetBranchName(request.targetRef),
+  });
+  const settled = await acceptFinalClosure(request, observers);
+  return settled.stopped
+    ? settled
+    : { ...settled, observerDirectories: observers.directories };
 }

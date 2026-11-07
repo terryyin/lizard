@@ -4,8 +4,9 @@ description: >-
   Executes one selected story or bounded retrospective correction through an
   executable plan, or one authorized planless slice from a selected simple story or
   a contextual instruction, with independent refactoring, delivery, and asynchronous
-  CI repair. Use to execute a plan, run slices, execute a canonical story when the
-  caller explicitly skips slice planning, or execute a small instruction from
+  CI repair. Continues settled planned work into Story Wrap Up. Use to execute a
+  plan, run slices, execute a canonical story when the caller explicitly skips
+  slice planning, or execute a small instruction from
   context without a story or plan. Also admits an accepted mission that no backlog
   list holds, such as a standalone review, investigation, or maintenance request,
   into Taken before its work starts. Does not decide story scope or quick-path
@@ -17,10 +18,9 @@ description: >-
 
 # Execute planned or planless work
 
-Execute the selected work through its existing plan. An explicit current instruction
-may instead authorize one planless quick slice: an understood canonical feature story,
-or a contextual instruction with no story or plan. The coordinator owns delivery;
-implementation agents return uncommitted changes.
+Execute the selected plan or one explicitly authorized planless quick slice from an
+understood canonical feature story or contextual instruction. The coordinator owns
+delivery; implementation agents return uncommitted changes.
 
 ## Establish execution context
 
@@ -83,20 +83,31 @@ Missing context stops its affected boundary, including first-slice delegation wh
 needed there. Other invoking tools, including GSD, retain this slice delivery contract;
 a phase or task cannot replace a slice.
 
-Before first implementation delegation, read [delegation](references/delegation.md)
-and the common reassessment/human-judgment rules, [replanning
-permission](references/execution-decisions.md#choose-replanning-permission), plus
-currently triggered sections of [execution decisions](references/execution-decisions.md).
-Before accepting a return, read [proof acceptance](references/wrap-up.md#accept-proof);
-before delivery, read [delivery](references/wrap-up.md#deliver-the-change). Before
-arming observation, read [CI observation](references/ci-monitor.md) and only the
-current host's notification adapter. Arm from the execution checkout against the
-authorized target branch; do not wait for CI. On Codex, arm the yielded stream at
-execution start. Before creating the execution workspace, read [execution
-location](references/execution-location.md). Before a claim, validated increment,
-or owned repair publication, read [trunk publication](references/trunk-publication.md).
-Use [targeted retrieval and disposable research](references/disposable-research.md)
-for omitted/truncated passages or bounded investigations; another step alone needs no reload.
+## Read guidance at each boundary
+
+Read each row when its boundary is reached, never earlier, and as its own tool
+result, never combined with another row. On a host that reads this skill body as
+a tool result, the body is its own read. Each row fits one tool result; a row
+already read needs no reload while its sources stay unchanged. When a passage is
+truncated or absent, follow [targeted retrieval](references/disposable-research.md)
+for that passage alone.
+
+| Boundary | Reads |
+| --- | --- |
+| Skill body, on a host that reads it as a tool result | [this skill](SKILL.md) |
+| An established start your instruction carries | [established start](references/established-start.md) |
+| Before creating the execution workspace | [execution location](references/execution-location.md); when CI setup applies, [runtime setup](references/runtime-setup.md) |
+| On Codex, arming observation at execution start | [own one observer](references/ci-monitor.md#own-one-observer), [Codex adapter](references/ci-notify-codex.md), [runtime setup](references/runtime-setup.md) |
+| Before first implementation delegation | [delegation](references/delegation.md), [reassessment](references/execution-decisions.md#reassess-before-extending-work), [human judgment](references/execution-decisions.md#stop-for-human-judgment), [replanning permission](references/execution-decisions.md#choose-replanning-permission), [targeted retrieval](references/disposable-research.md), [story-obligation inputs](references/story-obligations.md#use-the-record-at-execution-boundaries) |
+| Before accepting a return | [proof acceptance](references/wrap-up.md#accept-proof) |
+| Before delivery, or a validated increment or owned repair publication | [delivery](references/wrap-up.md#deliver-the-change), [fresh increment](references/fresh-increment.md), [increment publication](references/trunk-publication.md#publish-an-execution-increment-or-repair), [publish the candidate](references/trunk-publication.md#publish-the-candidate), [story-obligation inputs](references/story-obligations.md#use-the-record-at-execution-boundaries) |
+| Arming observation on other hosts | [CI observation](references/ci-monitor.md), [Cursor and Claude Code adapters](references/ci-notify-hosts.md) |
+| Handling a CI notification | [handle a notification](references/ci-monitor.md#handle-a-notification), with only the current host's adapter: [Codex](references/ci-notify-codex.md) or [Cursor and Claude Code](references/ci-notify-hosts.md) |
+| Before finishing or stopping | [finish or stop](references/finish-or-stop.md), [await the applicable revision](references/ci-monitor.md#await-the-applicable-revision-at-completion), [completion mechanics](references/ci-completion-wait.md), [story-obligation inputs](references/story-obligations.md#use-the-record-at-execution-boundaries), in Story Branch Mode [source freshness](references/source-freshness.md) |
+
+Read other [execution decisions](references/execution-decisions.md) sections when
+they trigger. Arm from the execution checkout against the authorized target
+branch; do not wait for CI.
 
 ## Take or admit work
 
@@ -109,8 +120,10 @@ preconditions](references/trunk-publication.md#preconditions), including the
 authorized remote/trunk, before a Story Branch or Trunk Mode startup that publishes
 a claim. Existing current-branch and host-owned checkout restrictions still apply.
 
-When your instruction carries an established start, follow [established
-start](references/established-start.md) instead of the start command below.
+When your instruction carries an established start, follow [established start](references/established-start.md) instead of the start command below.
+When your session holds this story's Preparing workspace with unlanded preparation, first follow
+[hand off to execution in the same session](../dough-story-refinement/references/preparation-journey.md#hand-off-to-execution-in-the-same-session) before that command.
+When your session's first message carried an established session, give that command the workspace and branch [established session](references/established-session.md) decides.
 
 For authorized queued Story Branch or Trunk Mode work, invoke the installed
 `scripts/execution-start.mjs start` once with the originating integration
@@ -123,9 +136,8 @@ ID, mode (`trunk` or `story-branch`), actual remote and trunk branch, and the
 established `--push-authorized --workspace-authorized` flags. Supply your own `--host` (`claude`, `codex`, or
 `cursor`) and `--model`; omit either you cannot state rather than guess. Supply
 `--plan` as a path relative to the backlog directory when explicitly selected;
-the command also resolves the canonical published plan.
-The command fetches trunk, checks the published selected
-source and preparation, selects the workspace or reuses it under [refresh
+the command also resolves the canonical published plan. The command fetches trunk,
+checks the published selected source and preparation, selects the workspace or reuses it under [refresh
 eligibility](references/maintain-default-checkout.md#refresh-eligibility), names you as an agent,
 commits an isolated Take that publishes your agent profile, makes that agent the
 author of your workspace commits (`workspaceAuthorship: "not-configured"` means
@@ -133,29 +145,10 @@ only the Take commit names the agent), confirms publication on remote trunk,
 publishes a Story Branch Mode execution branch at that Take so the branch the
 profile names exists on the remote, and reports local refresh separately.
 
-Use its compact one-line result directly; do not filter or fetch it again.
-Values you supplied stay in your execution context and are not echoed. An
-accepted result (`ok: true`, `status` `published` or `resumed`) carries
-`publishedSha`, `startingRevision`, `candidateSha`, `created`, `agent` when the
-claim names one, `plan` or `remote` when resolved rather than supplied, and the
-default checkout's `maintenance` (`result`, plus `reason` when not refreshed).
-Retain them; the first increment's managed delivery uses `publishedSha` as its
-previously published base. `existing` (work already Taken under your claim)
-writes nothing and returns that claim's `publishedSha`. No `maintenance`
-[result](references/maintain-default-checkout.md#independent-maintenance-outcome)
-or `earlierMaintenance` issue undoes accepted publication. A refusal or
-unconfirmed result (`ok: false`, non-zero exit) stops before implementation;
-report and act on its `status`, `error`, and any `recovery` or `provenance`,
-handling `developer-identity-refused` as under [agent
-commits](references/agent-commits.md). Inspect current Git state only when a
-reported reason needs it; never repeat a mutating command to obtain diagnostics.
-If publication is interrupted, invoke the same installed command with the
-retained workspace, branch, publisher ID, identity, `--starting-revision` and
-`--candidate-sha` from the last result (or its `recovery`) or confirmed pre-push
-candidate. Use the latest candidate SHA after a replay. A `resumed` result
-confirms current ownership through remote ancestry, even when trunk has
-advanced; it may finish eligible local refresh without another Take or push. A rival or ambiguous provenance stops implementation.
-Preserve the stopped candidate and exact recovery fields on an uncertain result.
+Use the [compact start result](references/execution-location.md#read-and-recover-the-start-result)
+to retain publication, local maintenance, and recovery coordinates. An uncertain
+result stops implementation; resume that retained start rather than publishing
+another claim.
 
 Every accepted start, new or resumed, then requires this project's
 checkout-bound setup and applicable command under [execution
@@ -227,13 +220,12 @@ Missing/contradictory execution identity requires the recovery decision above.
    [oversized-slice decisions](references/oversized-slice.md).
    A no-replan return stops without planning or retry. When replanning is allowed, use
    [ordinary slice planning](../dough-slice-planning/SKILL.md) for remaining work,
-   and restart as planned execution. Before
-   delegating a change that invalidates a required
+   and restart as planned execution. Before delegating a change that invalidates a required
    pre-change observation, apply [proof ownership](../dough-story-refinement/references/planning.md#own-executable-proof):
    reuse an adequate baseline with known matching revision/environment/selection conditions,
    or obtain it first. Missing/failed prerequisites stop only dependent work. Apply on entry
-   and resume without a new startup audit or repeated recovery read. Otherwise delegate
-   under [delegation](references/delegation.md).
+   and resume without a new startup audit or repeated recovery read. Before expensive proof, apply
+   [choose expensive proof before launch](../dough-story-refinement/references/executable-proof.md#choose-expensive-proof-before-launch). Then delegate under [delegation](references/delegation.md).
 4. On return, recheck execution decisions; handle incomplete/oversized work there before
    delivery, including a no-replan overrun. Otherwise [accept proof](references/wrap-up.md#accept-proof) and confirm
    uncommitted work or an explained empty change.
@@ -245,6 +237,6 @@ Missing/contradictory execution identity requires the recovery decision above.
 
 ## Finish or stop
 
-Follow [finish or stop](references/finish-or-stop.md) for the execution-complete
-record, the completion operation, reporting and its markers, automatic
-retrospective invocation, and incomplete-work reporting.
+Follow [finish or stop](references/finish-or-stop.md) for the execution-complete record,
+completion operation, automatic retrospective, conditional planned continuation into
+Story Wrap Up, attention-only handoff reporting, and incomplete-work reporting.

@@ -16,7 +16,7 @@ class TestLanguageChooser(unittest.TestCase):
         self.assertEqual(ObjCReader, get_reader_for("a.m"))
 
     def test_c_cpp(self):
-        for name in ("a.cpp", ".cxx", ".h", ".hpp"):
+        for name in ("a.cpp", ".cxx", ".h", ".hh", ".hpp"):
             self.assertEqual(CLikeReader, get_reader_for(name),
                              "File name '%s' is not recognized as c/c++ file" % name)
 

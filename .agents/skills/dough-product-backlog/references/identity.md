@@ -47,3 +47,47 @@ written; keep that work item's identity when you write the entry out in full.
 The moved document's own recorded identity is what establishes that it is the
 same work item. Record the identity in the moved document first, then update
 the entry's link. Leave no second document recording the same identity.
+
+## Allocate a new identity
+
+Allocate only for new work. Take, resume, Preparing assignment, and moving a
+canonical home keep the identity already recorded and allocate nothing. A new
+seed number is above every seed number observed in the active seed directory,
+in the done records and catalog beside the backlog, and in the published trunk
+history of those directories. A new story anchor within an
+existing seed yields a full identity none of those sources records. Removing a
+seed file or story section never frees its identity.
+
+Read that evidence with the
+[identity-evidence operation](../SKILL.md#choose-a-new-identity) instead of
+reading filenames. It reserves nothing; the canonical home records what you
+choose.
+
+The reader preserves numeric reservations from seed metadata and filenames and
+recovers explicit identities from readable legacy homes, including old heading
+layouts and nonnumeric identities. It examines later versions of unnumbered
+historical paths so an earlier context-only version cannot hide an allocation.
+Readable context documents allocate nothing; they are not missing identities.
+Malformed identity records and unreadable evidence remain gaps. A declared
+historical story is reported under `history.story` and is already used, even
+without a done record.
+
+- Run it from a checkout current with trunk: history covers only what that
+  checkout reaches, at the `revision` the history source names.
+- Number a new seed `next` or above, which exceeds the reported `highest`.
+- Check the full candidate with `--identity <candidate>`. It is unused only
+  when `candidate.status` is `unlisted` with no `history.record`, and, for a
+  new seed number, no `history.seed`. Any other result means the identity was
+  used: choose another.
+- Treat every entry in `gaps` as unresolved before you publish a new home or
+  claim; a report with gaps is not complete evidence. Rebuild an absent or
+  mismatched catalog with `catalog-done` when done records exist, deepen a
+  shallow clone, and read or ask about an unreadable record. A gap you cannot
+  resolve stops the allocation for a person.
+- Keep the project's naming, numeric padding, and anchor conventions.
+  Renumbering a story whose identity is already published, or choosing
+  between already published conflicting identities, stays with a person.
+
+When `add` or startup admission refuses an identity because a done record
+names it, allocate a different identity under this section, record it in the
+draft, and leave the done record unchanged.

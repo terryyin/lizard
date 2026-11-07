@@ -1,42 +1,47 @@
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
+import { createGitHubFailureAcquisition } from "./ci-failures.mjs";
+import { createGitHubActions } from "./ci-github-actions.mjs";
 
-const execFileAsync = promisify(execFile);
-export const ciWorkflowFile = process.env.DOUGH_CI_WORKFLOW ?? "ci.yml";
-// Workflow identity is the `--workflow` selector every listing requests; the
-// display name is not a second, independent filter. An explicitly supplied
-// display name only confirms that selection: a selected run reporting another
-// name is inconsistent setup, rejected loudly instead of silently dropped.
+// An explicitly supplied display name only confirms the workflow the selector
+// chose: a selected run reporting another name is inconsistent setup,
+// rejected loudly instead of silently dropped.
 const expectedWorkflowName = process.env.DOUGH_CI_WORKFLOW_NAME || undefined;
 
-export async function readGitHubActions(args, signal) {
-  const { stdout } = await execFileAsync("gh", args, {
-    timeout: 20_000,
-    signal,
-    maxBuffer: 1024 * 1024,
-    env: { ...process.env, GH_PROMPT_DISABLED: "1" },
-  });
-  return JSON.parse(stdout);
-}
-
-export function matchingCiRuns(runs, { branch, sha }) {
+function assertExpectedWorkflowName(runs, workflow) {
   const misnamed = expectedWorkflowName
     ? runs.find(({ workflowName }) => workflowName !== expectedWorkflowName)
     : undefined;
   if (misnamed)
     throw new Error(
-      `DOUGH_CI_WORKFLOW_NAME ${JSON.stringify(expectedWorkflowName)} does not match ${JSON.stringify(misnamed.workflowName)}, the display name GitHub reports for runs of the selected workflow ${ciWorkflowFile}; correct or unset DOUGH_CI_WORKFLOW_NAME.`,
+      `DOUGH_CI_WORKFLOW_NAME ${JSON.stringify(expectedWorkflowName)} does not match ${JSON.stringify(misnamed.workflowName)}, the display name GitHub reports for runs of the selected workflow ${workflow}; correct or unset DOUGH_CI_WORKFLOW_NAME.`,
     );
+}
+
+// Push/workflow checks shared by observed-branch matching and all-branch
+// applicability listings; only the observed-branch filter differs.
+function matchingApplicabilityPushRuns(runs, { sha, workflow }) {
+  assertExpectedWorkflowName(runs, workflow);
   return runs.filter(
-    (run) =>
-      (!sha || run.headSha === sha) &&
-      run.headBranch === branch &&
-      run.event === "push",
+    (run) => (!sha || run.headSha === sha) && run.event === "push",
   );
 }
 
-const runFields =
-  "databaseId,attempt,headSha,headBranch,workflowName,event,status,conclusion,url";
+export function matchingCiRuns(runs, { branch, sha, workflow }) {
+  return matchingApplicabilityPushRuns(runs, { sha, workflow }).filter(
+    (run) => run.headBranch === branch,
+  );
+}
+
+function dedupeRunsByAttempt(runs) {
+  const seen = new Set();
+  const out = [];
+  for (const run of runs) {
+    const key = `${run.databaseId}\0${run.attempt}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(run);
+  }
+  return out;
+}
 
 export function startupCiRuns(runs) {
   const completedWithCreationTime = runs.filter(
@@ -78,94 +83,53 @@ export function createStartupRunFilter() {
   };
 }
 
-export function listRunsArguments({
-  repo,
-  branch,
-  sha,
-  created,
-  limit = 20,
-  includeCreatedAt = false,
-}) {
-  const args = [
-    "run",
-    "list",
-    "--repo",
-    repo,
-    "--workflow",
-    ciWorkflowFile,
-    "--branch",
-    branch,
-  ];
-  if (sha) args.push("--commit", sha);
-  if (created) args.push("--created", created);
-  return [
-    ...args,
-    "--event",
-    "push",
-    "--limit",
-    String(limit),
-    "--json",
-    includeCreatedAt ? `${runFields},createdAt` : runFields,
-  ];
-}
-
-export function viewRunArguments({ repo, runId }) {
-  return [
-    "run",
-    "view",
-    String(runId),
-    "--repo",
-    repo,
-    "--json",
-    "attempt,status,conclusion,url",
-  ];
-}
-
 // Bounded-history lookup used only to find an applicable ancestor attempt
 // for CI-path-applicability classification (ci-path-applicability.mjs via
 // ci-mailbox-revision-coverage.mjs). Distinct from the polling acquisition
 // above: it is not part of the ordinary per-poll run/failure loop and is
-// called on demand, only when a registered revision's exact-SHA classification
-// cannot find a proved ancestor among the runs already visible to that poll.
-// `limit` bounds how far back the search looks; it does not track state
-// across calls the way `createGitHubRunAcquisition` does.
-export async function discoverApplicabilityCandidateRuns({
-  repo,
+// called on demand when a revision without an exact verdict permits inherited
+// coverage. It lists the observed branch's recent push runs and, in one
+// extra listing of the same size, the selected workflow's recent push runs
+// on every branch, so an ignored-only story-branch tip can reuse a trunk
+// ancestor that never ran on the observed branch. History and current runs
+// are ranked together on each observation. `limit` bounds how far back the
+// search looks; it does not track state across calls the way
+// `createGitHubRunAcquisition` does.
+async function discoverApplicabilityCandidateRuns({
   branch,
-  gh = readGitHubActions,
+  github,
   signal,
   limit = 100,
 }) {
-  const runs = await gh(
-    listRunsArguments({ repo, branch, limit, includeCreatedAt: true }),
-    signal,
+  const observedBranchRuns = matchingCiRuns(
+    await github.listRuns({ branch, limit }, signal),
+    { branch, workflow: github.selector },
   );
-  return matchingCiRuns(runs, { branch });
+  const allBranchRuns = matchingApplicabilityPushRuns(
+    await github.listRuns({ limit }, signal),
+    { workflow: github.selector },
+  );
+  return dedupeRunsByAttempt([...observedBranchRuns, ...allBranchRuns]);
 }
 
-export function createGitHubRunAcquisition({
-  repo,
-  branch,
-  startedAt,
-  gh = readGitHubActions,
-}) {
+function createGitHubRunAcquisition({ branch, startedAt, github }) {
   const trackedRuns = new Map();
   const startupBoundary = `<=${new Date(startedAt).toISOString()}`;
   const currentRuns = createStartupRunFilter();
   let startupDiscovery = true;
 
   return async (signal) => {
-    const runs = await gh(
-      listRunsArguments({
-        repo,
+    const runs = await github.listRuns(
+      {
         branch,
         created: startupDiscovery ? startupBoundary : undefined,
         limit: startupDiscovery ? 100 : 20,
-        includeCreatedAt: true,
-      }),
+      },
       signal,
     );
-    const matching = currentRuns(matchingCiRuns(runs, { branch }));
+    const matching = currentRuns(
+      matchingCiRuns(runs, { branch, workflow: github.selector }),
+    );
     startupDiscovery = false;
 
     const visibleRunIds = new Set(matching.map((run) => run.databaseId));
@@ -177,7 +141,7 @@ export function createGitHubRunAcquisition({
       if (visibleRunIds.has(runId)) continue;
       const refreshed = {
         ...tracked,
-        ...(await gh(viewRunArguments({ repo, runId }), signal)),
+        ...(await github.viewRun(runId, signal)),
       };
       trackedRuns.set(runId, refreshed);
       matching.push(refreshed);
@@ -187,4 +151,65 @@ export function createGitHubRunAcquisition({
     }
     return matching;
   };
+}
+
+// The GitHub default as the observer reads it: runs and failures over one
+// reader of GitHub Actions, asked through `gh`. CI-path applicability reuses
+// a proved ancestor attempt, and that ancestor is not always among the runs
+// the ordinary poll already surfaced (older completed runs intentionally drop
+// out of `matching` once seen, per createGitHubRunAcquisition's own
+// startup/observed-run pruning), so `discoverAncestorCandidates` finds them
+// on the observed branch and, with one extra listing, among recent push runs
+// of the selected workflow on every branch. Its candidates are deliberately
+// left run-shaped (not flattened to bare SHAs): coverage selection reuses
+// them to resolve a `not_required` revision's basis ancestor to its actual
+// attempt, so that ancestor's eventual failure stays actionable for every
+// revision that reuses it. The same bounded lookup supplies integrated-state
+// candidates (still filtered to the observed branch when judged), whose
+// current attempt `readCurrentAttempt` reads afresh.
+export function createGitHubAcquisition({
+  repo,
+  branch,
+  startedAt,
+  workflow,
+  gh,
+  signal,
+}) {
+  const github = createGitHubActions({ repo, gh, workflow });
+  return {
+    acquireRuns: createGitHubRunAcquisition({ branch, startedAt, github }),
+    acquireFailure: createGitHubFailureAcquisition({ repo, github }),
+    discoverAncestorCandidates: async () =>
+      discoverApplicabilityCandidateRuns({ branch, github, signal }),
+    readCurrentAttempt: async (run, { jobs } = {}) =>
+      readCurrentGitHubAttempt({ github, run, jobs, signal }),
+  };
+}
+
+// One listed candidate run's current facts for integrated-state evidence:
+// its check is the selected workflow and its context the triggering event.
+// Required jobs come from that current attempt; a rerun starting while they
+// are read marks the facts contradicted.
+async function readCurrentGitHubAttempt({ github, run, jobs, signal }) {
+  const workflow = await github.workflow(signal);
+  const current = await github.viewCurrentRun(run.databaseId, signal);
+  const facts = {
+    ...current,
+    check: current.workflowId === workflow.id ? github.selector : undefined,
+    context: current.event,
+  };
+  if (!jobs?.length) return facts;
+  facts.jobs = await github.attemptJobs(
+    run.databaseId,
+    current.attempt,
+    signal,
+  );
+  const after = await github.viewRun(run.databaseId, signal);
+  if (
+    after.attempt !== current.attempt ||
+    after.status !== current.status ||
+    after.conclusion !== current.conclusion
+  )
+    facts.contradicted = true;
+  return facts;
 }

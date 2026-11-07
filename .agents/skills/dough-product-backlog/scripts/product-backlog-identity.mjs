@@ -9,6 +9,7 @@
 // identity in full rather than leaving it to be reconstructed from the link.
 
 import { BacklogError } from "./product-backlog-refusal.mjs";
+import { splitSource } from "./product-backlog-source.mjs";
 
 export const adoptionHint =
   "Identities are never allocated here; take one from the work item's " +
@@ -116,4 +117,62 @@ export function recordedFor(identity, href) {
     );
   }
   return identity;
+}
+
+// Declaration syntax is shared by canonical-home and allocation readers.
+const identityPattern = /^\*\*Identity:\*\* +(?<identity>\S.*?) *$/;
+const frontMatterIdPattern = /^id: +(?<id>\S+) *$/;
+
+export function identityLine(identity) {
+  return `**Identity:** ${identity}`;
+}
+
+export function claimsIdentityRecord(line) {
+  return line.startsWith("**Identity:**");
+}
+
+export function identityRecordIn(line) {
+  return identityPattern.exec(line)?.groups.identity;
+}
+
+function frontMatterLines(lines) {
+  if (lines[0] !== "---") return [];
+  const close = lines.findIndex((line, index) => index > 0 && line === "---");
+  return lines.slice(1, close === -1 ? lines.length : close);
+}
+
+// The immutable document ID a seed already carries. Reading never allocates.
+export function documentIdFor(lines) {
+  for (const line of frontMatterLines(lines)) {
+    const match = frontMatterIdPattern.exec(line);
+    if (match) return match.groups.id;
+  }
+  return "";
+}
+
+export function documentIdIn(source) {
+  return documentIdFor(splitSource(source).lines);
+}
+
+// Read explicit records without pretending to validate a legacy home layout.
+export function recordedIdentitiesIn(source, relative) {
+  const { lines } = splitSource(source);
+  if (
+    documentIdFor(lines) === "" &&
+    frontMatterLines(lines).some((line) => line.startsWith("id:"))
+  ) {
+    throw new BacklogError(
+      `${relative} has a malformed seed ID in its front matter.`,
+    );
+  }
+  return lines.flatMap((line, index) => {
+    if (!claimsIdentityRecord(line)) return [];
+    const identity = identityRecordIn(line);
+    if (identity === undefined) {
+      throw new BacklogError(
+        `${relative} has a malformed Identity record at line ${index + 1}.`,
+      );
+    }
+    return [identity];
+  });
 }

@@ -1,0 +1,177 @@
+{
+  "identity": "SEED-013#arrow-object-boundaries slice 3",
+  "candidate_sha": "4714fc25bdddddbe243b1120128371aa608ad326",
+  "current_target_sha": "901068b8ef5a3a943926d4f74b4769ebe55d8d5a",
+  "frozen_baseline_sha": "2e21e404c1ab9f4e0b49acc80816e816629d0670",
+  "paired_harness_sha256": "3064d8d77047db2f084ce9fd6ae09d98acf34453316b7df20fb184cbb3217bf5",
+  "manifest_sha256": "a224a3afcfa549f1d1d686be5416439d293105941894e8850a700777adb62411",
+  "corpus_addition": "none",
+  "raw_proposal_diagnosis_only_interval_pct": [
+    2.0154,
+    4.8117
+  ],
+  "gate": "every upper paired 95% slowdown bound strictly < 3%",
+  "outcome": "PASS",
+  "comparisons": [
+    {
+      "file": "corrected-vs-master-api.json",
+      "workload": "api",
+      "baseline_path": "/private/tmp/lizard-perf-seed013-pr531/master-tip",
+      "candidate_path": "/Users/terryyin/git/lizard/.worktrees/preserve-arrow-object-expressions-and-typed-func",
+      "median_slowdown_pct": -0.15728829238105257,
+      "paired_geometric_slowdown_pct": -0.09853150156935442,
+      "paired_95pct_ci": [
+        -0.6850657984844633,
+        0.4914667505325987
+      ],
+      "upper_bound_pct": 0.4914667505325987,
+      "gate_strict_lt_3": true,
+      "harness_passes": true,
+      "medians": {
+        "baseline": 1.1837473544999995,
+        "candidate": 1.1818854585000005
+      },
+      "stdev": {
+        "baseline": 0.014497993805719533,
+        "candidate": 0.01185621048801036
+      },
+      "loops": 95,
+      "manifest_sha256": "a224a3afcfa549f1d1d686be5416439d293105941894e8850a700777adb62411",
+      "command": [
+        "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr531/paired.py",
+        "--baseline",
+        "/private/tmp/lizard-perf-seed013-pr531/master-tip",
+        "--candidate",
+        "/Users/terryyin/git/lizard/.worktrees/preserve-arrow-object-expressions-and-typed-func",
+        "--workload",
+        "api",
+        "--pairs",
+        "20",
+        "--seconds",
+        "1.2",
+        "--out",
+        "/Users/terryyin/git/lizard/.worktrees/preserve-arrow-object-expressions-and-typed-func/docs/reviews/fabio-malpezzi-20261027/pr531/corrected-vs-master-api.json"
+      ]
+    },
+    {
+      "file": "corrected-vs-master-cli.json",
+      "workload": "cli",
+      "baseline_path": "/private/tmp/lizard-perf-seed013-pr531/master-tip",
+      "candidate_path": "/Users/terryyin/git/lizard/.worktrees/preserve-arrow-object-expressions-and-typed-func",
+      "median_slowdown_pct": -0.22997425901835067,
+      "paired_geometric_slowdown_pct": -0.25428271899253785,
+      "paired_95pct_ci": [
+        -1.1528595086015447,
+        0.6524626452743654
+      ],
+      "upper_bound_pct": 0.6524626452743654,
+      "gate_strict_lt_3": true,
+      "harness_passes": true,
+      "medians": {
+        "baseline": 1.3309096040000021,
+        "candidate": 1.3278488544999991
+      },
+      "stdev": {
+        "baseline": 0.03092447958479548,
+        "candidate": 0.02675856128677012
+      },
+      "loops": 8,
+      "manifest_sha256": "a224a3afcfa549f1d1d686be5416439d293105941894e8850a700777adb62411",
+      "command": [
+        "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr531/paired.py",
+        "--baseline",
+        "/private/tmp/lizard-perf-seed013-pr531/master-tip",
+        "--candidate",
+        "/Users/terryyin/git/lizard/.worktrees/preserve-arrow-object-expressions-and-typed-func",
+        "--workload",
+        "cli",
+        "--pairs",
+        "20",
+        "--seconds",
+        "1.2",
+        "--out",
+        "/Users/terryyin/git/lizard/.worktrees/preserve-arrow-object-expressions-and-typed-func/docs/reviews/fabio-malpezzi-20261027/pr531/corrected-vs-master-cli.json"
+      ]
+    },
+    {
+      "file": "corrected-vs-frozen-api.json",
+      "workload": "api",
+      "baseline_path": "/private/tmp/lizard-perf-seed013-pr531/frozen-2e21e40",
+      "candidate_path": "/Users/terryyin/git/lizard/.worktrees/preserve-arrow-object-expressions-and-typed-func",
+      "median_slowdown_pct": 0.7877553602229304,
+      "paired_geometric_slowdown_pct": 0.6661144953985509,
+      "paired_95pct_ci": [
+        -0.2377628586127889,
+        1.5781812635058845
+      ],
+      "upper_bound_pct": 1.5781812635058845,
+      "gate_strict_lt_3": true,
+      "harness_passes": true,
+      "medians": {
+        "baseline": 1.2420046875000001,
+        "candidate": 1.2517886460000014
+      },
+      "stdev": {
+        "baseline": 0.018380985930846635,
+        "candidate": 0.02220256037296496
+      },
+      "loops": 98,
+      "manifest_sha256": "a224a3afcfa549f1d1d686be5416439d293105941894e8850a700777adb62411",
+      "command": [
+        "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr531/paired.py",
+        "--baseline",
+        "/private/tmp/lizard-perf-seed013-pr531/frozen-2e21e40",
+        "--candidate",
+        "/Users/terryyin/git/lizard/.worktrees/preserve-arrow-object-expressions-and-typed-func",
+        "--workload",
+        "api",
+        "--pairs",
+        "20",
+        "--seconds",
+        "1.2",
+        "--out",
+        "/Users/terryyin/git/lizard/.worktrees/preserve-arrow-object-expressions-and-typed-func/docs/reviews/fabio-malpezzi-20261027/pr531/corrected-vs-frozen-api.json"
+      ]
+    },
+    {
+      "file": "corrected-vs-frozen-cli.json",
+      "workload": "cli",
+      "baseline_path": "/private/tmp/lizard-perf-seed013-pr531/frozen-2e21e40",
+      "candidate_path": "/Users/terryyin/git/lizard/.worktrees/preserve-arrow-object-expressions-and-typed-func",
+      "median_slowdown_pct": 0.5110401432401046,
+      "paired_geometric_slowdown_pct": 0.27966920086475167,
+      "paired_95pct_ci": [
+        -0.4382078563855085,
+        1.0027224151349934
+      ],
+      "upper_bound_pct": 1.0027224151349934,
+      "gate_strict_lt_3": true,
+      "harness_passes": true,
+      "medians": {
+        "baseline": 1.3646718545000027,
+        "candidate": 1.371645875499997
+      },
+      "stdev": {
+        "baseline": 0.03200466185311076,
+        "candidate": 0.029214108401665884
+      },
+      "loops": 8,
+      "manifest_sha256": "a224a3afcfa549f1d1d686be5416439d293105941894e8850a700777adb62411",
+      "command": [
+        "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr531/paired.py",
+        "--baseline",
+        "/private/tmp/lizard-perf-seed013-pr531/frozen-2e21e40",
+        "--candidate",
+        "/Users/terryyin/git/lizard/.worktrees/preserve-arrow-object-expressions-and-typed-func",
+        "--workload",
+        "cli",
+        "--pairs",
+        "20",
+        "--seconds",
+        "1.2",
+        "--out",
+        "/Users/terryyin/git/lizard/.worktrees/preserve-arrow-object-expressions-and-typed-func/docs/reviews/fabio-malpezzi-20261027/pr531/corrected-vs-frozen-cli.json"
+      ]
+    }
+  ]
+}

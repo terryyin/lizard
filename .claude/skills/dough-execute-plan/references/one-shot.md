@@ -36,7 +36,9 @@ These are not one-shot, even when selected:
 ## Start in an owned workspace
 
 A carried [established one-shot start](established-start.md#continue-an-established-one-shot-start)
-continues there instead of running the start command below.
+continues there instead of running the start command below. In an
+[established session](established-session.md), the start below is given that
+session's workspace and branch, and its `landing` is the landing selection.
 
 Resolve the same execution context as any Story Branch or Trunk Mode start:
 mode, the owned workspace, and the actual remote and trunk branch it starts
@@ -92,8 +94,18 @@ sits on the checkout's local trunk branch, after any earlier local commits.
 ## Verify and retain the result
 
 Work only in that workspace. Run the focused verification the outcome needs
-and the [post-change refactor](../../dough-post-change-refactor/SKILL.md) pass,
-then commit the result with plain `git commit`: the start named no agent.
+and [wrap-up's refactor step](wrap-up.md), then use [guarded fresh preparation](fresh-increment.md) with `commit: "git"`:
+the start named no agent, so ordinary Git authorship and project hooks apply.
+Resolve its project requirements and exact owned paths under this one-shot
+scope, including all checkout content when default-checkout execution was
+selected. Queued closure mutations below must finish before this fresh commit;
+retain their already-made changes in its owned staging boundary. Do not invent
+a plan for quick work. Use local-only for this fresh commit and retain its
+receipt pending publication, including when automatic landing was selected.
+The existing landing path below owns publication, closure and retirement.
+A failed preparation or commit withholds dependent remote operations and
+observation. An already-committed retained result uses the landing and recovery
+paths below without another fresh commit.
 
 Then stop for review, unless automatic landing was selected: then continue
 under [Land automatically when selected](#land-automatically-when-selected).
@@ -108,7 +120,7 @@ until the developer asks to land the result. The default checkout always stays i
 ## Land the retained result
 
 For automatic or later explicit landing with supplied dashboard context, apply
-[the original launch's landing handoff](../../dough-land/references/dashboard-completion.md#retain-the-one-shot-landing).
+[the original launch's landing handoff](../../dough-land/references/dashboard-completion.md#retain-the-launch-landing).
 
 An explicit landing request in this session, or a later one naming the workspace,
 authorizes [increment publication](trunk-publication.md#publish-an-execution-increment-or-repair)
@@ -138,8 +150,8 @@ carries `landing: "auto-land"`, and `authority-required` names missing
 publication authority before any workspace is selected. Tracked work refuses
 `--auto-land` with `invalid-request`.
 
-Land only once the focused verification passes, the post-change refactor pass
-is done, and no product, scope, or architecture decision remains open. Then
+Land only once the focused verification passes, the refactor pass or its
+[recorded disposition](wrap-up.md#deliver-the-change) is done, and no product, scope, or architecture decision remains open. Then
 deliver the committed result as [Land the retained result](#land-the-retained-result)
 describes, without waiting for a landing request: a queued story's closure
 lands in the same commit, with `--one-shot-identity`.
@@ -197,6 +209,8 @@ request has nothing to retain: retire an owned workspace.
 After a landed result's delivery and CI completion gates pass, or after an
 unlisted no-change conclusion, retire the clean workspace and its branch under
 Dough Land's [Retire the worktree](../../dough-land/SKILL.md#retire-the-worktree).
+Apply the [established session's retirement rule](established-session.md#retire-the-isolated-workspace)
+when this session carries that block.
 The default checkout is never retired. Nothing remains to wrap up: the
 delivered commit already closed any queued story.
 

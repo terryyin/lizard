@@ -3,11 +3,73 @@
 ## Unreleased
 
 ### Bug Fixes
+- Swift: count each top-level comma of an `if`, `guard` or `while` condition list as a decision, like `&&`, so `guard a, b, c else` and `guard a && b && c else` have the same CCN; commas inside brackets, closures, patterns and generic arguments, and `repeat { } while`, are not counted. A same-line trailing closure stays in the condition (`if items.contains { $0 > 1 }, ready`); a brace that continues on the next line is the body
+- Swift: do not count `case` declarations in an enum body as decisions, so enums no longer raise the CCN of the global scope (`-Eoutside`) or of a function declaring a local enum; `case` in a `switch` still counts
+- Swift: report a computed property with an implicit getter (`var body: some View { ... }`) and a property initialized by a closure (`let f: (Int) -> Int = { ... }`) as a function named after the property, so their branches no longer count in the global scope; the function starts at the property name. Accessor blocks (`get`, `set`, `willSet`, `didSet`) are still reported as their accessors, and locals inside functions stay with the function
+- Swift: count decisions inside string interpolation (`"\(a ? b : c)"`); interpolated expressions are tokenized as code, including nested strings and comments, while literal text, escapes, raw-string delimiters and multiline literals keep their meaning. A literal with interpolation is now reported as several tokens, so token counts for such strings change
+- JSX and TSX: element text is text, not code, so words such as `if`/`for` and punctuation such as `?`, `&&` or `;` in children no longer add decisions; `{...}` child and attribute expressions are still analyzed. Element text, including its tags, is reported as text tokens, so token counts for JSX children change. Spread attributes (`{...props}`), hyphenated attribute names (`data-x`, `aria-hidden`) and valueless attributes (`<Chart margin={m} accessibilityLayer>`) are read as attributes, so they no longer end an element early and move the end of the enclosing function. A slash in element text (`At 9% / 11%`) no longer opens a regular expression that runs into the next closing tag
+- Rust: read a char literal such as `'C'` as one token, not as the lifetime `'C` followed by a string that swallowed the code up to the next quote, which hid or merged the functions after it; lifetimes and labels are read as before
+- Rust: do not count the `||` of a closure without parameters (`unwrap_or_else(|| 0)`, `move || x`) as a logical or; `||` after an expression is still counted
+- TypeScript: a template literal type with `${...}` in an `interface` body or an object type alias (``interface O { kind?: Extract<string, `x-${string}`>; }``) no longer ends the declaration at the interpolation's `}`; previously the rest of the file was read as one template string, so every later function was folded into the global scope
+
+## 1.25.0
+
+### New Features
+- **Dart** — discover `.dart` files and analyze functions, methods, getters, setters, and constructors with bodies, including expression bodies and `async`/generator modifiers; handle raw and triple-quoted strings, null-safety operators, exception clauses, and switch-expression arms
+- **COBOL** — discover `.cbl`, `.cob`, and `.cobol` files in fixed format, report Procedure Division paragraphs as functions, and count core conditional, loop, and selection decisions
+
+### Bug Fixes
+- Swift: mask keyword argument labels that have a separate local name (e.g. `func f(for value: Int)`), so they are not counted as control flow (PR #555)
+- JavaScript, TypeScript, JSX, and TSX: preserve callback boundaries and CCN when call arguments or object values contain subscripts, including `e(r[0])` and `return {w: [m[n - 1]]}` (issue #524, PR #525)
+- JavaScript, TypeScript, JSX, and TSX: end expression-bodied arrows at their enclosing argument, array, or object comma so following object members retain their own functions and metrics (issue #524, PR #525)
+- JavaScript, TypeScript, JSX, and TSX: preserve runtime functions across object bodies, ternary branches, multiline expressions, and immediately invoked functions (PRs #531, #533, #534)
+- JavaScript and TypeScript: distinguish runtime labeled blocks from type annotations; keep nested type brackets, function-type fields, assertions, and enclosing runtime delimiters from swallowing or inventing functions (issue #524, PR #548)
+- JavaScript and TypeScript: preserve arrow and callback parameters, including names containing `_` or `$`, type-keyword names, and empty destructuring slots; exclude TypeScript's `this` receiver from the parameter count and use the same count in text, CSV, HTML, and Checkstyle output (PRs #532, #535, #536, #537)
+- JavaScript, TypeScript, JSX, and TSX: count conditions inside nested template interpolations and unspaced ternaries, while keeping optional parameter/member markers and keyword-named properties from adding false decisions (PRs #545, #546, #547)
+- JavaScript and TypeScript: distinguish regex literals from division after keywords and arrows, and end line comments at the newline even after a trailing backslash (PRs #528, #544)
+- Vue: preserve original source line numbers when filtering script blocks, and recognize TypeScript annotations in typed script blocks
+- Python `-ENS`: count nested control structures by indentation, including `async` statements and `match`, without treating comprehensions or conditional expressions as nested statements (PR #527)
+
+### Improvements
+- Verify Python 3.8 through 3.14 on Linux and Windows in CI and update the supported-version documentation and package classifiers
+
+## 1.24.3
+
+### Bug Fixes
+- TypeScript: preserve function boundaries and NLOC after return type annotations, including adjacent annotated functions (issue #521)
+- JavaScript, TypeScript, JSX, and TSX: use balanced scanning for nested template literals so deeper nesting, quoted delimiters, escapes, and comments do not swallow following functions (issue #521)
+- TypeScript and TSX: keep ternary colons in conditional expressions from being mistaken for type annotations, preventing crashes in conditional style arrays (issue #523)
+- Go: give anonymous function literals stable `anonymous__<n>` names while preserving names for literals assigned to variables; do not report variadic function types or receive-only channels of functions as function literals (PR #522)
+- Running `python lizard.py` with an extension that extends the core analyzer, such as `-END`, no longer fails with an `AttributeError`; it now matches the installed `lizard` command
+
+### Improvements
+- The core analyzer now lives in the internal `lizard_core` package, one module per responsibility; `lizard` still exposes every name it did before, and `lizard_core` module paths are not a supported import surface
+
+## 1.24.2
+
+### Bug Fixes
+- JavaScript, TypeScript, JSX, and TSX: count each `??` and `??=` as +1 CCN; existing scores may decrease (issue #507)
+- JavaScript, TypeScript, JSX, and TSX: count each default parameter and destructuring initializer as +1 CCN, including nested defaults; existing scores and threshold warnings may increase (issue #509)
+- TypeScript and Swift: stop counting optional chaining as a ternary operator; preserve JavaScript and TypeScript nullish coalescing and ternary metrics (PR #518)
 - Swift: stop `.init(`, `self.init(`, `.get()`, `.set(`, variables named `set`, and argument labels such as `init:` from starting phantom functions that swallowed the following functions
 - Swift: recognize argument labels such as `init:` and `for:` when a newline or comment separates them from `(` or `,`
 - Swift: tokenize `#Preview`, `#expect`, `#available` and other macros so their braces count; compiler directives stay whole lines
 - Swift: scan raw, multi-line, and interpolated string literals and nested block comments as single tokens, so braces inside them no longer shift function boundaries
 - Swift: do not treat `type` (`.type`, `type(of:)`) as a Go-style type declaration
+- Python: preserve parameter counts when defaults or annotations contain nested brackets, commas, lambdas, or f-strings (PR #501)
+- Python: parse floor division as an operator and preserve NLOC for triple-quoted string operands and expressions inside f-strings (PR #500)
+- Rust: count `let-else` toward cyclomatic complexity
+- Fortran: preserve procedure boundaries around modern language constructs
+- Go: distinguish function literals from function types, preserve following declarations, and retain declared variable names for typed function literals (PR #512)
+- C++: preserve operator names and whitelist matching, and stop `using` declarations from swallowing following functions (PR #511)
+- Parallel analysis: close worker pools after completion, failure, or cancellation, and preserve serial fallback when multiprocessing is unavailable (PR #513)
+- HTML reports: return a non-zero exit status when functions exceed warning thresholds
+
+### Improvements
+- Discover `.hh` files as C/C++ headers (PR #510)
+
+### Documentation
+- Clarify README installation, examples, and warning limits
 
 ## 1.24.1
 
@@ -173,227 +235,6 @@
 ### Documentation
 - Add contribution guidelines to README
 
-## 1.18.0
+## Earlier releases
 
-### New Features
-- Add R language support with comprehensive function parsing
-- Add Structured Text (St) language support
-- Add C++ lambda expression support for improved parsing
-- Add Nesting Depth feature for better code analysis
-
-### Improvements
-- Enhanced R function parsing for multiple assignments
-- Improved string interpolation handling in Go
-- Better function nesting detection
-- Updated documentation to include new supported languages
-
-### Bug Fixes
-- Fix nesting depth calculation issues
-- Fix function nesting problems
-- Various parsing improvements across multiple languages
-
-## 1.17.30
-
-Fix TypeScript function detection issue.
-
-## 1.17.29
-
-Fix modern PHP issues.
-
-## 1.17.28
-
-Fix Java function count issue.
-
-## 1.17.27
-
-Fix Java function count issue.
-
-## 1.17.26
-
-A blank release to fix the installation issue.
-
-## 1.17.25
-
-Bug fixes. "lizard forgive" for python
-
-## 1.17.24
-
-Added support for `#lizard forgive global` to suppress warnings for all code outside of functions, for languages like Python, Perl, etc, that allow global code.
-
-`#lizard forgive` at the global level will suppress warnings for all code after it.
-
-## 1.17.23
-
-Bug fixes.
-
-## 1.17.22
-
-Add Complete Perl support.
-
-## 1.17.21
-
-Add Perl support.
-
-## 1.17.19
-
-Bug fixes.
-
-## 1.17.18
-
-Bug fixes.
-
-## 1.17.17
-
-Bug fixes.
-
-## 1.17.16
-
-Add support for gitignore files.
-A few bug fixes.
-
-## 1.17.15
-
-Add VueJS support.
-
-## 1.17.14
-
-Add TSX support.
-
-## 1.17.13
-
-Bug fix:
-  Replace re.NOFLAG with 0 to make it compatible with Python 3.10+
-
-## 1.17.12
-
-Bug fix:
-  Fortran support for ELSEIF
-
-## 1.17.9
-
-Bug fix:
-  Java generic like List<? extends String>
-  JSX file extension
-
-
-## 1.17.8
-
-Add Fortran to the language supported
-
-
-## 1.17.7
-
-Bug fixing. `typedef` being read properly.
-
-## 1.17.6
-
-Bug fixing. `.mm` file was not recognized as object-c(++) file.
-
-## 1.17.5
-
-Bug fixing in function parameter names. Previously if the parameter has
-default value, it will take the value as the parameter name.
-
-## 1.17.3
-
-Bug fixing in Lua and Scala support
-
-## 1.17.2
-
-Fix missing file when install
-
-## 1.17.1
-
-Fix HTML Output template problem.
-
-## 1.17.0
-
-Support JavaScript with ES6 and JSX.
-Support Rust
-
-## 1.16.6
-
-Bug fixes:
-
-'for' keyword in Swift label should not be counted as ccn.
-
-'guard' keyword should be counted.
-
-'-o' or '--output_file' parameter added.
-
-
-## 1.16.3
-
-Fix the performance issue
-
-## 1.16.1
-
-Add Lua to the languages.
-
-## 1.15.7
-
-Fix a bug in MSVS format output.
-
-## 1.15.6
-
-Minor fix for the average NCSS (lines of code) in the XML output.
-Previously, the average NCSS per function included code outside any
-function. Now this is fixed.
-
-
-## 1.15.2
-
-An important new feature -- duplicate detector -- in the form of an
-extension.
-
-Usage:
-
-    lizard -Eduplicate
-
-The current version hasn't had any performance optimization yet. Yet, it
-can scan 1000 cpp files in less than 2 minutes.
-
-Code after comments containing "GENERATED CODE" will be ignored.
-
-## 1.14.10
-
-in
-
-  Class<?>[] testClasses = {String.class};
-
-The ? wouldn't be counted as CC.
-
-A minor fix for the --version option
-
-
-## 1.14.0
-
-Support CSV & HTML format output
-
-
-## 1.13.0
-
-No new feature. Just switch to new pypi server.
-
-
-### Added
-- Option to ignore any warnings with '-i -1' (negative argument for the count).
-
-## [0.12.7] - 2016-11-1
-- 2016.04.2 Support PHP.
-- 2016.03.26 Support C#.
-- 2016.02.2 Add option -EMcCabe for ignoring fall-through switch/cases, thanks to @@vicgonzalez
-- 2016.01.31 Add support for Ruby
-- 2016.01.29 Add -T option to set limit for any field
-- 2015.12.17 Add support for Swift
-- 2015.12.12 Add the -l option to filter language
-- 2015.10.22 TTCN-3 added by @gustafj
-- 2015.10.06 Add C++11 uniform constructor initialization. Thanks to @rakhimov
-- 2015.01.09 Add C preprocessor back by -Ecpre. it will ignore all the #else branch in the C/C++ code.
-- 2015.01.07 pass test for linux kernal and other popular open source C/C++ code.
-- 2014.04.07 Remove option -e (display function end line), and make it default
-- 2014.04.06 Remove option -d (ignore duplicated content), and make it default
-- 2014.04.06 Remove option -p (no preprocessor count), and a '#if' will always be counted in cyclomatic complexity
-- 2014.03.31 Support JavaScript!
-- 2014.03.22 Change the -v (--verbose) option to -V. This is because -v
-  will be used for --version.
+See [the changelog archive](docs/changelog-archive.md) for versions 1.18.0 and earlier.

@@ -8,6 +8,7 @@
 // are quoted examples, never the plan's own structure. No filesystem or
 // Node-only imports.
 
+import { readPlanCompletion } from "./product-backlog-plan-completion.mjs";
 import { splitSource } from "./product-backlog-source.mjs";
 
 const slicesSection = /^## +(?:Ordered slices|Slices) *$/i;
@@ -20,8 +21,6 @@ const acceptedLine =
 const fieldStart =
   /^(?:Type:|Status:|Proof:|Accepted:|\*\*(?:Type|Status|Proof|Accepted proof|Accepted):\*\*|Behavior:|Structure:|### |## )/;
 
-const completionSection = /^## +Execution complete *$/i;
-const adviceLine = /^Product advice: *(?<advice>.*?)\s*$/;
 const fenceOpener = /^ {0,3}(?<marker>`{3,}(?=[^`]*$)|~{3,})/;
 const fenceCloser = /^ {0,3}(?<marker>`{3,}|~{3,})\s*$/;
 
@@ -47,41 +46,6 @@ export function unfencedPlanLines(lines) {
     unfenced.push(fence === undefined);
   }
   return unfenced;
-}
-
-// The `## Execution complete` record: absent when the plan has no such
-// section, the verbatim advice (continuing until the next `## ` heading) when
-// it has a non-empty `Product advice:` entry, and a problem otherwise.
-function readCompletion(lines, unfenced) {
-  const start = lines.findIndex(
-    (line, index) => unfenced[index] && completionSection.test(line),
-  );
-  if (start === -1) {
-    return undefined;
-  }
-  const next = lines.findIndex(
-    (line, index) => index > start && unfenced[index] && /^## /.test(line),
-  );
-  const end = next === -1 ? lines.length : next;
-  const entryIndex = lines.findIndex(
-    (line, index) =>
-      index > start && index < end && unfenced[index] && adviceLine.test(line),
-  );
-  if (entryIndex !== -1) {
-    const advice = [
-      adviceLine.exec(lines[entryIndex]).groups.advice,
-      ...lines.slice(entryIndex + 1, end).map((line) => line.trimEnd()),
-    ]
-      .join("\n")
-      .trim();
-    if (advice !== "") {
-      return { advice };
-    }
-  }
-  return {
-    problem:
-      "This plan’s “## Execution complete” record has no readable “Product advice:” entry.",
-  };
 }
 
 function sectionBounds(lines, unfenced) {
@@ -132,6 +96,7 @@ function readSlice(lines, unfenced, headingIndex, until) {
   let status;
   let proof;
   let accepted;
+  let statusAt;
   let sawUnsupportedField = false;
 
   for (let index = headingIndex + 1; index < until; index += 1) {
@@ -147,6 +112,7 @@ function readSlice(lines, unfenced, headingIndex, until) {
     const stated = statusLine.exec(line);
     if (stated) {
       status = stated.groups.status;
+      statusAt = index;
       continue;
     }
     const prospective = proofLine.exec(line);
@@ -174,6 +140,7 @@ function readSlice(lines, unfenced, headingIndex, until) {
 
   return {
     ok: true,
+    statusLine: statusAt,
     slice: {
       index: Number(heading.groups.index),
       name: heading.groups.name.trim(),
@@ -185,12 +152,10 @@ function readSlice(lines, unfenced, headingIndex, until) {
   };
 }
 
-// Reads ordered slices from plan Markdown under `## Ordered slices` or
-// `## Slices`. Returns interpreted slices, an empty interpretable list, or
-// uninterpretable when the established section layout is missing or malformed.
-// Either answer carries `completion` when the plan has an `## Execution
-// complete` record: `{ advice }`, or `{ problem }` when its advice is missing.
-export function readPlanSlices(source) {
+// The reading `readPlanSlices` returns, with each interpreted slice's real
+// `Status:` line as a zero-based `statusLine` index into the source's lines
+// (as `splitSource` splits them), so a writer can change exactly that line.
+export function locatePlanSliceStatuses(source) {
   if (typeof source !== "string") {
     return {
       status: "uninterpretable",
@@ -199,7 +164,7 @@ export function readPlanSlices(source) {
   }
   const { lines } = splitSource(source);
   const unfenced = unfencedPlanLines(lines);
-  const completion = readCompletion(lines, unfenced);
+  const completion = readPlanCompletion(lines, unfenced);
   const withCompletion = (answer) =>
     completion === undefined ? answer : { ...answer, completion };
   const bounds = sectionBounds(lines, unfenced);
@@ -240,8 +205,26 @@ export function readPlanSlices(source) {
           "An ordered slice is missing a supported Type or Status: planned|done, so the plan layout cannot be interpreted.",
       });
     }
-    slices.push(read.slice);
+    slices.push({ ...read.slice, statusLine: read.statusLine });
   }
 
   return withCompletion({ status: "interpreted", slices });
+}
+
+// Reads ordered slices from plan Markdown under `## Ordered slices` or
+// `## Slices`. Returns interpreted slices, an empty interpretable list, or
+// uninterpretable when the established section layout is missing or malformed.
+// Either answer carries `completion` when the plan has an `## Execution
+// complete` record: `{ advice }`, or `{ problem }` when its advice is missing.
+export function readPlanSlices(source) {
+  const answer = locatePlanSliceStatuses(source);
+  if (answer.status !== "interpreted") return answer;
+  return {
+    ...answer,
+    slices: answer.slices.map((located) => {
+      const slice = { ...located };
+      delete slice.statusLine;
+      return slice;
+    }),
+  };
 }

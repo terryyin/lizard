@@ -1,0 +1,1 @@
+{"choice":"run-serial-nicened","incremental_api_seconds":2.0,"incremental_cli_seconds":4.0,"cumulative_cli_seconds":10.0,"reason":"Prospective longer batches from start after PR539 host-noise experience"}

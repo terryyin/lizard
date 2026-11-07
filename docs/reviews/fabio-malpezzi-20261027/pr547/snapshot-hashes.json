@@ -1,0 +1,14 @@
+[
+  {
+    "path": "lizard_languages/tsx.py",
+    "target": "1d607ff76f08bf7d919dffed74e326ca78018fb414dd3ebc7ad678de04ef43cd",
+    "corrected": "e2feedb4fd4c01e2731ce07932a9f8e35f397f9f1b70d82694d0be8c6a363c78",
+    "baseline": "2a021159330f0c28a2764893db70e4bb345acb4e3f1f253de5adc415dbe3c9b9"
+  },
+  {
+    "path": "lizard_languages/typescript.py",
+    "target": "dde0c9c9f92ba74fadf5ed61a47a98a0c559fb5ebbb50c87d30287387e2db348",
+    "corrected": "2ea3b772d877be830cd30e25a1b1f0bdc4a1ba86e489cc8f46cdd84c8c4fc2bc",
+    "baseline": "e4d0b99eb9b88a1cddfd413c7cff2377e0bb66e3085ee8391f7a21ed1bbe08ab"
+  }
+]

@@ -6,11 +6,16 @@
 // (execution-admission-reconcile.mjs).
 // Preparation is read as recorded; admission never records readiness or
 // approach of its own.
+import { posix } from "node:path";
 import {
   parseBacklog,
   queueHeading,
   requireUnlistedHome,
 } from "../../dough-product-backlog/scripts/product-backlog-document.mjs";
+import {
+  doneRecordPath,
+  requireUncompletedIdentity,
+} from "../../dough-product-backlog/scripts/product-backlog-done-record.mjs";
 import { sameDocument } from "../../dough-product-backlog/scripts/product-backlog-plan.mjs";
 import { BacklogError } from "../../dough-product-backlog/scripts/product-backlog-refusal.mjs";
 import { readStoryPurpose } from "../../dough-product-backlog/scripts/product-backlog-story-purpose.mjs";
@@ -114,9 +119,16 @@ export async function readAdmissionSource(request, remoteRef, candidateSha) {
   }
   if (entry) return { existing: entry, planTarget: entry.plan?.target };
   // The work is unlisted; its home must be too, as the Take admitting it will
-  // require. Refusing here leaves no workspace behind.
+  // require, and no done record published beside the fetched backlog may
+  // name its identity. Refusing here leaves no workspace behind.
+  const doneRecord = await show(
+    repository,
+    remoteRef,
+    posix.join(posix.dirname(backlogPath), doneRecordPath(identity)),
+  );
   try {
     requireUnlistedHome(document, link);
+    requireUncompletedIdentity(identity, doneRecord);
   } catch (error) {
     if (error instanceof BacklogError) throw refused(error.message);
     throw error;

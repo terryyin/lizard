@@ -1,0 +1,11 @@
+{
+  "tested_base": "d8e8e9af75b6d05da005e981af5f8867cced5d55",
+  "refreshed_base": "40d89f7e8e77fe62fd7a1c3c824fb746fd8e5c01",
+  "only_upstream_change": ".planning/agents/airi-chan.json (9 added lines)",
+  "runtime_tests_workflow_setup_diff": [],
+  "reuse": "All accepted behavior, full-suite, HTTP and performance proof remains valid. No runtime test rerun for an agent profile.",
+  "validation_operation": "git -C /private/tmp/lizard-pr532-validation merge --ff-only origin/master",
+  "operation_result": "Fast-forward, preserving exactly the eight owned staged product/test paths",
+  "tested_tree": "c7de325e738d18d493fe401a686fc53e3f7d4e51",
+  "anticipated_merge_tree": "eab2c48635db788e72ba142c6935d483e4a639ef"
+}

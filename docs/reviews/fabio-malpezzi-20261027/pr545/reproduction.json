@@ -1,0 +1,798 @@
+{
+  "target": {
+    "label": "target",
+    "paths": {
+      "lizard": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr545/target/lizard.py",
+      "templates": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr545/target/lizard_languages/javascript_templates.py",
+      "typescript": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr545/target/lizard_languages/typescript.py"
+    },
+    "rows": [
+      {
+        "filename": "label.js",
+        "observed": [
+          [
+            "label",
+            1,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "label",
+            3,
+            3
+          ]
+        ],
+        "matches": false
+      },
+      {
+        "filename": "label.ts",
+        "observed": [
+          [
+            "label",
+            1,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "label",
+            3,
+            3
+          ]
+        ],
+        "matches": false
+      },
+      {
+        "filename": "label.jsx",
+        "observed": [
+          [
+            "label",
+            1,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "label",
+            3,
+            3
+          ]
+        ],
+        "matches": false
+      },
+      {
+        "filename": "label.tsx",
+        "observed": [
+          [
+            "label",
+            1,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "label",
+            3,
+            3
+          ]
+        ],
+        "matches": false
+      },
+      {
+        "filename": "abc.js",
+        "observed": [
+          [
+            "a",
+            1,
+            3
+          ],
+          [
+            "b",
+            1,
+            3
+          ],
+          [
+            "c",
+            1,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "a",
+            4,
+            3
+          ],
+          [
+            "b",
+            3,
+            3
+          ],
+          [
+            "c",
+            1,
+            3
+          ]
+        ],
+        "matches": false
+      },
+      {
+        "filename": "abc.ts",
+        "observed": [
+          [
+            "a",
+            1,
+            3
+          ],
+          [
+            "b",
+            1,
+            3
+          ],
+          [
+            "c",
+            1,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "a",
+            4,
+            3
+          ],
+          [
+            "b",
+            3,
+            3
+          ],
+          [
+            "c",
+            1,
+            3
+          ]
+        ],
+        "matches": false
+      },
+      {
+        "filename": "abc.jsx",
+        "observed": [
+          [
+            "a",
+            1,
+            3
+          ],
+          [
+            "b",
+            1,
+            3
+          ],
+          [
+            "c",
+            1,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "a",
+            4,
+            3
+          ],
+          [
+            "b",
+            3,
+            3
+          ],
+          [
+            "c",
+            1,
+            3
+          ]
+        ],
+        "matches": false
+      },
+      {
+        "filename": "abc.tsx",
+        "observed": [
+          [
+            "a",
+            1,
+            3
+          ],
+          [
+            "b",
+            1,
+            3
+          ],
+          [
+            "c",
+            1,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "a",
+            4,
+            3
+          ],
+          [
+            "b",
+            3,
+            3
+          ],
+          [
+            "c",
+            1,
+            3
+          ]
+        ],
+        "matches": false
+      },
+      {
+        "filename": "outside.js",
+        "observed": [
+          [
+            "outside",
+            4,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "outside",
+            4,
+            3
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "nested-follow.js",
+        "observed": [
+          [
+            "a",
+            1,
+            3
+          ],
+          [
+            "b",
+            1,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "a",
+            2,
+            3
+          ],
+          [
+            "b",
+            1,
+            3
+          ]
+        ],
+        "matches": false
+      },
+      {
+        "filename": "literal-controls.js",
+        "observed": [
+          [
+            "a",
+            1,
+            3
+          ],
+          [
+            "b",
+            1,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "a",
+            2,
+            3
+          ],
+          [
+            "b",
+            1,
+            3
+          ]
+        ],
+        "matches": false
+      },
+      {
+        "filename": "plain-template.js",
+        "observed": [
+          [
+            "a",
+            1,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "a",
+            1,
+            3
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "regex-in-interp.js",
+        "observed": [
+          [
+            "a",
+            1,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "a",
+            2,
+            3
+          ]
+        ],
+        "matches": false
+      },
+      {
+        "filename": "line-comment-interp.js",
+        "observed": [
+          [
+            "a",
+            1,
+            4
+          ]
+        ],
+        "expected": [
+          [
+            "a",
+            2,
+            4
+          ]
+        ],
+        "matches": false
+      },
+      {
+        "filename": "b-story.js",
+        "observed": [
+          [
+            "b",
+            4,
+            8
+          ]
+        ],
+        "expected": [
+          [
+            "b",
+            4,
+            8
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "optional-access.ts",
+        "observed": [
+          [
+            "pick",
+            3,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "pick",
+            3,
+            3
+          ]
+        ],
+        "matches": true
+      }
+    ]
+  },
+  "corrected": {
+    "label": "corrected",
+    "paths": {
+      "lizard": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr545/corrected/lizard.py",
+      "templates": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr545/corrected/lizard_languages/javascript_templates.py",
+      "typescript": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr545/corrected/lizard_languages/typescript.py"
+    },
+    "rows": [
+      {
+        "filename": "label.js",
+        "observed": [
+          [
+            "label",
+            3,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "label",
+            3,
+            3
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "label.ts",
+        "observed": [
+          [
+            "label",
+            3,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "label",
+            3,
+            3
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "label.jsx",
+        "observed": [
+          [
+            "label",
+            3,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "label",
+            3,
+            3
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "label.tsx",
+        "observed": [
+          [
+            "label",
+            3,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "label",
+            3,
+            3
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "abc.js",
+        "observed": [
+          [
+            "a",
+            4,
+            3
+          ],
+          [
+            "b",
+            3,
+            3
+          ],
+          [
+            "c",
+            1,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "a",
+            4,
+            3
+          ],
+          [
+            "b",
+            3,
+            3
+          ],
+          [
+            "c",
+            1,
+            3
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "abc.ts",
+        "observed": [
+          [
+            "a",
+            4,
+            3
+          ],
+          [
+            "b",
+            3,
+            3
+          ],
+          [
+            "c",
+            1,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "a",
+            4,
+            3
+          ],
+          [
+            "b",
+            3,
+            3
+          ],
+          [
+            "c",
+            1,
+            3
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "abc.jsx",
+        "observed": [
+          [
+            "a",
+            4,
+            3
+          ],
+          [
+            "b",
+            3,
+            3
+          ],
+          [
+            "c",
+            1,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "a",
+            4,
+            3
+          ],
+          [
+            "b",
+            3,
+            3
+          ],
+          [
+            "c",
+            1,
+            3
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "abc.tsx",
+        "observed": [
+          [
+            "a",
+            4,
+            3
+          ],
+          [
+            "b",
+            3,
+            3
+          ],
+          [
+            "c",
+            1,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "a",
+            4,
+            3
+          ],
+          [
+            "b",
+            3,
+            3
+          ],
+          [
+            "c",
+            1,
+            3
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "outside.js",
+        "observed": [
+          [
+            "outside",
+            4,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "outside",
+            4,
+            3
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "nested-follow.js",
+        "observed": [
+          [
+            "a",
+            2,
+            3
+          ],
+          [
+            "b",
+            1,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "a",
+            2,
+            3
+          ],
+          [
+            "b",
+            1,
+            3
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "literal-controls.js",
+        "observed": [
+          [
+            "a",
+            2,
+            3
+          ],
+          [
+            "b",
+            1,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "a",
+            2,
+            3
+          ],
+          [
+            "b",
+            1,
+            3
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "plain-template.js",
+        "observed": [
+          [
+            "a",
+            1,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "a",
+            1,
+            3
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "regex-in-interp.js",
+        "observed": [
+          [
+            "a",
+            2,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "a",
+            2,
+            3
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "line-comment-interp.js",
+        "observed": [
+          [
+            "a",
+            2,
+            4
+          ]
+        ],
+        "expected": [
+          [
+            "a",
+            2,
+            4
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "b-story.js",
+        "observed": [
+          [
+            "b",
+            4,
+            8
+          ]
+        ],
+        "expected": [
+          [
+            "b",
+            4,
+            8
+          ]
+        ],
+        "matches": true
+      },
+      {
+        "filename": "optional-access.ts",
+        "observed": [
+          [
+            "pick",
+            3,
+            3
+          ]
+        ],
+        "expected": [
+          [
+            "pick",
+            3,
+            3
+          ]
+        ],
+        "matches": true
+      }
+    ]
+  }
+}

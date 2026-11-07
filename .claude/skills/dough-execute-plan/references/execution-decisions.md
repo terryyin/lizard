@@ -62,7 +62,8 @@ architecture, credentials or permissions, or ambiguity that could waste a
 commit. For a change to the story, correction, or instruction's beneficiary, outcome, proof
 or evaluation, scope, or story order, apply a change already authorized by the
 human; otherwise name the affected source and field, evidence, and specific
-decision needed, then wait.
+decision needed, then wait. A retained landing that the plan's human checkpoint
+names is not a separate stop: [land it under that go-ahead](#land-before-a-trunk-step-under-its-checkpoint).
 Follow [learning escalation](../../dough-story-decomposition/references/problem-decomposition.md#size-and-escalate-slices)
 before further subdivision. Use the handoff below for conflicting recorded
 direction; the executing role must not revise direction to justify its work.
@@ -71,6 +72,23 @@ Deliver completed safe work under [wrap-up](wrap-up.md) before waiting unless a
 refactor stop or unresolved proof failure prevents delivery. Resolve routine
 naming, placement, test choices, minor refactoring, and necessary defects within
 the authorized scope without another approval.
+
+## Land before a trunk step under its checkpoint
+
+When the selected slice's human checkpoint names a
+[Dough Land](../../dough-land/SKILL.md) `--keep-worktree` landing before a step
+that acts from trunk, such as a release from trunk, the developer's go-ahead for
+that checkpoint authorizes both. Deliver the slice's completed work first, then
+run Dough Land with `--keep-worktree` on this execution checkout, asking no
+separate landing question. Perform the trunk step from the landed revision only
+after Dough Land reports the landing accepted; a refused or unfinished landing
+stops that step. Resume the remaining work in the same workspace.
+
+This go-ahead covers only the checkpoint it answers. A Story Branch Mode slice
+that needs trunk without such a named landing stops for that checkpoint decision
+under [human judgment](#stop-for-human-judgment). The retained landing does not
+observe a `landing` lifecycle commitment; closure still integrates the story
+branch. The trunk step's own procedure, CI and release gates apply unchanged.
 
 ## Resolve conflicting recorded direction
 
@@ -97,17 +115,19 @@ North Star direction to work around the ADR.
 ## Resolve a disputed plan restriction
 
 Use [examples and constraints](../../dough-story-refinement/references/planning.md#examples-and-constraints)
-when a plan, quick story, or instruction requires rejection that appears supported only by
-fixture counts or arrangements. Cite the exact source contract and the
-conflicting story examples, deferred promises, or domain evidence. State what
-behavior the proposed change would alter and ask the human to resolve the
-restriction. Missing independent justification is grounds for this question,
-even when the error seems clear; it is not permission to remove the restriction.
+when a plan, quick story, or instruction imposes or preserves a restriction
+that appears supported only by scope limits, examples, or inherited code or tests.
+Restrictions include prerequisites, filters and suppressed operations. Cite the
+exact source contract and the conflicting story examples, scope limits, or
+domain evidence. State what behavior the proposed change would alter and ask the
+human to resolve the restriction. Missing independent justification is grounds
+for this question, even when the error seems clear; it is not permission to
+remove the restriction.
 
 Stop the conflicting implementation, refactor, or correction-planning path and
 leave disputed behavior unchanged. Return the evidence and decision needed in
 the execution conversation, existing handoff, or active plan. A
-behavior-preserving refactor cannot remove a contractual rejection, and passing
+behavior-preserving refactor cannot remove a contractual restriction, and passing
 tests or plan compliance do not justify it.
 Retain independently supported product constraints; a count limit is not
 accidental merely because examples also have counts. Resume the disputed path
@@ -117,11 +137,15 @@ exists.
 ## Diagnose failed proof
 
 For CI events, first use [CI observation and repair](ci-monitor.md#handle-a-notification).
-For other failures, use focused diagnosis. Discount a failure as pre-existing,
+For other failures, use focused diagnosis. Attribute a failure as pre-existing,
 unrelated, or environmental only with bounded evidence connecting its cause to
-the affected proof. Record the cause, supporting observation, affected proof,
-and remaining defect or disposition in the execution conversation, existing
-handoff, or active plan.
+the affected proof. Attribution explains the cause; it does not remove the
+failure from required proof or change who repairs it. Apply this project's
+failure policy as written. Leave a repair only when another active owner holds
+it, preserving their work and reporting that coordination boundary, or within
+the stated scope of an explicit human exception. Record the cause, supporting
+observation, affected proof, and remaining defect or disposition in the
+execution conversation, existing handoff, or active plan.
 Successful commands need no extra record.
 
 A passing retry, repeated test name, or successful cleanup does not establish

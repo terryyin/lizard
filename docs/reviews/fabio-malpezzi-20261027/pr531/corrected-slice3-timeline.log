@@ -1,0 +1,12 @@
+=== START vs-master-api 2026-10-27T11:48:00Z load=7.24 8.30 7.93 ===
+CMD: env PIP_QUIET=1 nix develop -c python /Users/terryyin/.cache/lizard-pr-reviews-20261027/pr531/paired.py --baseline /private/tmp/lizard-perf-seed013-pr531/master-tip --candidate /Users/terryyin/git/lizard/.worktrees/preserve-arrow-object-expressions-and-typed-func --workload api --pairs 20 --seconds 1.2 --out /Users/terryyin/git/lizard/.worktrees/preserve-arrow-object-expressions-and-typed-func/docs/reviews/fabio-malpezzi-20261027/pr531/corrected-vs-master-api.json
+=== END vs-master-api exit= 2026-10-27T11:48:53Z ===
+=== START vs-master-cli 2026-10-27T11:48:53Z load=4.99 7.51 7.66 ===
+CMD: env PIP_QUIET=1 nix develop -c python /Users/terryyin/.cache/lizard-pr-reviews-20261027/pr531/paired.py --baseline /private/tmp/lizard-perf-seed013-pr531/master-tip --candidate /Users/terryyin/git/lizard/.worktrees/preserve-arrow-object-expressions-and-typed-func --workload cli --pairs 20 --seconds 1.2 --out /Users/terryyin/git/lizard/.worktrees/preserve-arrow-object-expressions-and-typed-func/docs/reviews/fabio-malpezzi-20261027/pr531/corrected-vs-master-cli.json
+=== END vs-master-cli exit= 2026-10-27T11:49:51Z ===
+=== START vs-frozen-api 2026-10-27T11:49:51Z load=4.94 7.00 7.46 ===
+CMD: env PIP_QUIET=1 nix develop -c python /Users/terryyin/.cache/lizard-pr-reviews-20261027/pr531/paired.py --baseline /private/tmp/lizard-perf-seed013-pr531/frozen-2e21e40 --candidate /Users/terryyin/git/lizard/.worktrees/preserve-arrow-object-expressions-and-typed-func --workload api --pairs 20 --seconds 1.2 --out /Users/terryyin/git/lizard/.worktrees/preserve-arrow-object-expressions-and-typed-func/docs/reviews/fabio-malpezzi-20261027/pr531/corrected-vs-frozen-api.json
+=== END vs-frozen-api exit= 2026-10-27T11:50:47Z ===
+=== START vs-frozen-cli 2026-10-27T11:50:47Z load=4.48 6.51 7.24 ===
+CMD: env PIP_QUIET=1 nix develop -c python /Users/terryyin/.cache/lizard-pr-reviews-20261027/pr531/paired.py --baseline /private/tmp/lizard-perf-seed013-pr531/frozen-2e21e40 --candidate /Users/terryyin/git/lizard/.worktrees/preserve-arrow-object-expressions-and-typed-func --workload cli --pairs 20 --seconds 1.2 --out /Users/terryyin/git/lizard/.worktrees/preserve-arrow-object-expressions-and-typed-func/docs/reviews/fabio-malpezzi-20261027/pr531/corrected-vs-frozen-cli.json
+=== END vs-frozen-cli exit= 2026-10-27T11:51:47Z ===

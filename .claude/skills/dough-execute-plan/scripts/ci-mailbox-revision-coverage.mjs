@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { isFullGitRevision } from "./ci-revisions.mjs";
 import { publishJson } from "./ci-mailbox-json-file.mjs";
@@ -9,67 +9,26 @@ import {
   observedRevision,
   preferredAttempt,
 } from "./ci-revision-applicability-classification.mjs";
+import {
+  candidateLookupUnavailable,
+  integratedStateJudge,
+} from "./ci-integrated-state.mjs";
+import { queueProgressReader } from "./ci-mailbox-queue-progress.mjs";
+import {
+  effectiveRevisionState,
+  freshPendingRevision,
+  publishRevisionRecord,
+  readRevisionCoverage,
+} from "./ci-mailbox-revision-records.mjs";
 
 // States that, once recorded, are not reclassified on a later poll unless an
 // exact attempt for that revision's own SHA appears (checked first, always).
-// `not_required` joins the existing terminal verdicts here: its basis is a
-// proved fact about the registered revision's own tree, not something a
-// later poll needs to keep re-deriving.
-const terminalRevisionStates = [
-  "success",
-  "failure",
-  "incomplete",
-  "not_required",
-];
+// Inherited coverage is reclassified: a nearer ancestor may appear, or its
+// retained attempt may disappear. Only exact verdicts remain terminal.
+const terminalRevisionStates = ["success", "failure", "incomplete"];
 
 export const discoveryDelayBoundMs = 10 * 60 * 1000;
 export const discoveryAdvisoryMarkerName = "discovery-advisory.json";
-
-const revisionDirectory = (directory) => join(directory, "coverage");
-
-function revisionPath(directory, sha) {
-  if (!isFullGitRevision(sha))
-    throw new Error("Expected a full Git revision SHA");
-  return join(revisionDirectory(directory), `${sha.toLowerCase()}.json`);
-}
-
-export function registerPushedRevision(directory, sha) {
-  const path = revisionPath(directory, sha);
-  const normalized = sha.toLowerCase();
-  mkdirSync(revisionDirectory(directory), { recursive: true, mode: 0o700 });
-  if (!existsSync(path))
-    publishJson(revisionDirectory(directory), `${normalized}.json`, {
-      sha: normalized,
-      state: "undiscovered",
-    });
-  return readRevisionCoverage(directory).find(
-    (revision) => revision.sha === normalized,
-  );
-}
-
-function revisionRecordNames(directory) {
-  const coverage = revisionDirectory(directory);
-  if (!existsSync(coverage)) return [];
-  return readdirSync(coverage)
-    .filter(
-      (name) =>
-        name.toLowerCase().endsWith(".json") &&
-        isFullGitRevision(name.slice(0, -5)),
-    )
-    .sort();
-}
-
-// Registered SHAs from record names alone, cheap enough to check often.
-export function listRegisteredRevisions(directory) {
-  return revisionRecordNames(directory).map((name) => name.slice(0, -5));
-}
-
-export function readRevisionCoverage(directory) {
-  const coverage = revisionDirectory(directory);
-  return revisionRecordNames(directory).map((name) =>
-    JSON.parse(readFileSync(join(coverage, name), "utf8")),
-  );
-}
 
 function discoveryAdvisoryMarkerPath(directory) {
   return join(directory, discoveryAdvisoryMarkerName);
@@ -85,6 +44,12 @@ export function discoveryAdvisoryEmitted(directory) {
 // the run-shaped list itself so a `not_required` basis can be resolved to its
 // actual attempt for failure inspection below — the ancestor A is frequently
 // not registered in this mailbox at all (see resolveAncestorRun).
+//
+// Under a declared `integratedPolicy`, each eligible revision also records
+// `integrated`: its descendant-candidate judgement (ci-integrated-state.mjs)
+// from this poll's runs, the same bounded history lookup and
+// `readCurrentAttempt` under the observation's `signal`. It is replaced every
+// poll, never retained.
 export async function observeRevisionCoverage(
   directory,
   runs,
@@ -95,9 +60,20 @@ export async function observeRevisionCoverage(
     event = "push",
     workflowPath,
     discoverAncestorCandidates,
+    discoverQueue,
+    readCurrentAttempt,
+    integratedPolicy,
+    signal,
   } = {},
 ) {
   const events = [];
+  const queue = (await discoverQueue?.()) ?? [];
+  const queueProgress = queueProgressReader(queue, {
+    branch: request.branch,
+    integratedPolicy,
+    repoDir,
+    observedAt,
+  });
   const localCandidateShas = [
     ...new Set(
       runs
@@ -152,6 +128,18 @@ export async function observeRevisionCoverage(
     if (found) ancestorRunsBySha.set(sha, found);
     return found;
   }
+  const judgeIntegratedState = integratedStateJudge(integratedPolicy, {
+    repo: request.repo,
+    remote: request.remote,
+    branch: request.branch,
+    repoDir,
+    listCandidates: async () => [
+      ...runs,
+      ...((await getBroadenedCandidateRuns?.()) ?? []),
+    ],
+    readCurrentAttempt,
+    signal,
+  });
 
   for (const revision of readRevisionCoverage(directory)) {
     const matches = runs.filter(
@@ -191,23 +179,34 @@ export async function observeRevisionCoverage(
     }
     if (next.state === "not_required") {
       const ancestorRun = await resolveAncestorRun(next.basis?.sha);
-      // Refresh the basis's resolved state every poll (never sticky): an
-      // ancestor found pending on an earlier poll and now terminal must not
-      // keep reporting stale evidence. When the ancestor cannot currently be
-      // resolved at all, leave any previously recorded basis.state alone
-      // rather than erasing known evidence.
-      if (ancestorRun)
-        next = {
-          ...next,
-          basis: { sha: next.basis.sha, state: attemptState(ancestorRun) },
-        };
+      // Only this poll's resolved attempt can support a completion verdict.
+      next = {
+        ...next,
+        basis: {
+          sha: next.basis.sha,
+          ...(ancestorRun ? { state: attemptState(ancestorRun) } : {}),
+        },
+      };
     }
-    publishJson(revisionDirectory(directory), `${revision.sha}.json`, next);
+    next = await judgeIntegratedState(next);
+    if (next.integrated?.progress)
+      next.integrated.progress.observedAt = observedAt;
+    // Every successful poll replaces progress, including unsupported/empty
+    // queue snapshots, and renews only actual attempts observed this poll.
+    delete next.queue;
+    delete next.observedAt;
+    if (effectiveRevisionState(next) === "pending")
+      next.observedAt = observedAt;
+    const progress = await queueProgress(next);
+    if (progress) next.queue = progress;
+    publishRevisionRecord(directory, next);
   }
 
   if (!discoveryAdvisoryEmitted(directory)) {
     const undiscovered = readRevisionCoverage(directory).filter(
-      ({ state }) => state === "undiscovered",
+      (revision) =>
+        revision.state === "undiscovered" &&
+        !freshPendingRevision(revision, observedAt),
     );
     const overdue = undiscovered.some(
       ({ registeredAt }) =>
@@ -225,4 +224,21 @@ export async function observeRevisionCoverage(
     }
   }
   return { events, ancestorRuns: [...ancestorRunsBySha.values()] };
+}
+
+// A failed discovery withdraws pending progress and integrated-state evidence.
+// Actual attempt states remain recorded, but cannot explain fresh progress
+// until a later successful poll observes them again.
+export function withdrawIntegratedState(directory, error) {
+  for (const revision of readRevisionCoverage(directory)) {
+    const next = { ...revision };
+    delete next.queue;
+    delete next.observedAt;
+    if (revision.integrated)
+      next.integrated = candidateLookupUnavailable(
+        revision.integrated.policy,
+        error,
+      );
+    publishRevisionRecord(directory, next);
+  }
 }

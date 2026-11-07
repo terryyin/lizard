@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-018#repeatable-shell-entry",
+  "title": "Enter the development shell repeatedly without rebuilding its environment",
+  "completedAt": "2026-10-28T08:57:46.928Z",
+  "developer": "Terry Yin",
+  "agent": "Nao-chan",
+  "host": "cursor",
+  "model": "auto"
+}

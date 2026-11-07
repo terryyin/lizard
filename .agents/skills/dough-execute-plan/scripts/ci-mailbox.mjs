@@ -16,10 +16,14 @@ import {
   waitForTerminalResult,
 } from "./ci-mailbox-store.mjs";
 import {
-  listRegisteredRevisions,
   observeRevisionCoverage,
-  registerPushedRevision,
+  withdrawIntegratedState,
 } from "./ci-mailbox-revision-coverage.mjs";
+import {
+  listRegisteredRevisions,
+  readRevisionCoverage,
+  registerPushedRevision,
+} from "./ci-mailbox-revision-records.mjs";
 import { watchMailboxChanges } from "./ci-mailbox-change-watch.mjs";
 import {
   mailboxWorkerPath,
@@ -50,10 +54,7 @@ export {
   recordWorkerIdentity,
   workerLossReason,
 } from "./ci-mailbox-store.mjs";
-export {
-  readRevisionCoverage,
-  registerPushedRevision,
-} from "./ci-mailbox-revision-coverage.mjs";
+export { readRevisionCoverage, registerPushedRevision };
 export { mailboxWorkerLoss } from "./ci-mailbox-worker-process.mjs";
 export {
   completeRevision,
@@ -68,6 +69,8 @@ export async function runMailboxWorker(
   const request = readMailbox(directory, root, storage);
   const changes = watchMailboxChanges(directory);
   const stopped = changes.stopSignal;
+  const observeCoverage = (runs, observedAt, lookups) =>
+    observeRevisionCoverage(directory, runs, request, observedAt, lookups);
   const recordEvent = (event) => {
     const sequence = publishMailboxEvent(directory, event);
     onRecord?.({ sequence, event });
@@ -80,10 +83,9 @@ export async function runMailboxWorker(
         ...request,
         signal: stopped,
         emit: recordEvent,
-        observeCoverage: (runs, observedAt, discoverAncestorCandidates) =>
-          observeRevisionCoverage(directory, runs, request, observedAt, {
-            discoverAncestorCandidates,
-          }),
+        observeCoverage,
+        withdrawIntegratedState: (detail) =>
+          withdrawIntegratedState(directory, detail),
         registeredRevisions: async () => listRegisteredRevisions(directory),
         armRegistrationWake: changes.armRegistrationWake,
       });

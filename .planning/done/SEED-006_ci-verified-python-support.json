@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-006#ci-verified-python-support",
+  "title": "Claim support only for the Python versions CI verifies",
+  "completedAt": "2026-10-27T04:14:39.002Z",
+  "developer": "Terry Yin",
+  "agent": "Maria-chan",
+  "host": "codex",
+  "model": "gpt-6.1-sol"
+}

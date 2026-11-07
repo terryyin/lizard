@@ -237,7 +237,7 @@ class PerlStates(CodeStateMachine):
             # Colon part of ternary operator also increases complexity
             self.context.add_condition()
         elif token == 'sub':
-            # Check if it's a nested named subroutine or anonymou
+            # Check if it's a nested named subroutine or anonymous
             self.next(self._state_nested_sub_dec)
         elif token == '(':
             # Track function calls inside function body

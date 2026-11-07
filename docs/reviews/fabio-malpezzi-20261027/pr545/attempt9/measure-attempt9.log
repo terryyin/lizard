@@ -1,0 +1,75 @@
+warning: Git tree '/Users/terryyin/git/lizard/.worktrees/count-conditions-inside-template-interpolations' is dirty
+Requirement already satisfied: pytest>=7.4.0 in ./.venv/lib/python3.9/site-packages (from -r dev_requirements.txt (line 1)) (8.4.2)
+Requirement already satisfied: pytest-cov>=4.1.0 in ./.venv/lib/python3.9/site-packages (from -r dev_requirements.txt (line 2)) (7.1.0)
+Requirement already satisfied: pygments>=2.16.1 in ./.venv/lib/python3.9/site-packages (from -r dev_requirements.txt (line 3)) (2.21.0)
+Requirement already satisfied: flake8>=6.1.0 in ./.venv/lib/python3.9/site-packages (from -r dev_requirements.txt (line 4)) (7.3.0)
+Requirement already satisfied: mypy>=1.5.1 in ./.venv/lib/python3.9/site-packages (from -r dev_requirements.txt (line 5)) (1.19.1)
+Requirement already satisfied: black>=23.9.1 in ./.venv/lib/python3.9/site-packages (from -r dev_requirements.txt (line 6)) (25.11.0)
+Requirement already satisfied: isort>=5.12.0 in ./.venv/lib/python3.9/site-packages (from -r dev_requirements.txt (line 7)) (6.1.0)
+Requirement already satisfied: wheel>=0.41.2 in ./.venv/lib/python3.9/site-packages (from -r dev_requirements.txt (line 8)) (0.48.0)
+Requirement already satisfied: pylint>=2.17.5 in ./.venv/lib/python3.9/site-packages (from -r dev_requirements.txt (line 9)) (3.3.9)
+Requirement already satisfied: twine>=4.0.2 in ./.venv/lib/python3.9/site-packages (from -r dev_requirements.txt (line 10)) (6.2.0)
+Requirement already satisfied: jinja2>=3.1.2 in ./.venv/lib/python3.9/site-packages (from -r dev_requirements.txt (line 11)) (3.1.6)
+Collecting platformdirs>=3.10.0
+  Using cached platformdirs-4.4.0-py3-none-any.whl (18 kB)
+Requirement already satisfied: build>=1.0.3 in ./.venv/lib/python3.9/site-packages (from -r dev_requirements.txt (line 13)) (1.4.4)
+Requirement already satisfied: Flask<4,>=3.0.3 in ./.venv/lib/python3.9/site-packages (from -r dev_requirements.txt (line 14)) (3.1.3)
+Requirement already satisfied: PyYAML>=6.0.2 in ./.venv/lib/python3.9/site-packages (from -r dev_requirements.txt (line 15)) (6.0.3)
+Requirement already satisfied: pluggy<2,>=1.5 in ./.venv/lib/python3.9/site-packages (from pytest>=7.4.0->-r dev_requirements.txt (line 1)) (1.6.0)
+Requirement already satisfied: tomli>=1 in ./.venv/lib/python3.9/site-packages (from pytest>=7.4.0->-r dev_requirements.txt (line 1)) (2.5.0)
+Requirement already satisfied: packaging>=20 in ./.venv/lib/python3.9/site-packages (from pytest>=7.4.0->-r dev_requirements.txt (line 1)) (26.3)
+Requirement already satisfied: iniconfig>=1 in ./.venv/lib/python3.9/site-packages (from pytest>=7.4.0->-r dev_requirements.txt (line 1)) (2.1.0)
+Requirement already satisfied: exceptiongroup>=1 in ./.venv/lib/python3.9/site-packages (from pytest>=7.4.0->-r dev_requirements.txt (line 1)) (1.3.1)
+Requirement already satisfied: coverage[toml]>=7.10.6 in ./.venv/lib/python3.9/site-packages (from pytest-cov>=4.1.0->-r dev_requirements.txt (line 2)) (7.10.7)
+Requirement already satisfied: pyflakes<3.5.0,>=3.4.0 in ./.venv/lib/python3.9/site-packages (from flake8>=6.1.0->-r dev_requirements.txt (line 4)) (3.4.0)
+Requirement already satisfied: pycodestyle<2.15.0,>=2.14.0 in ./.venv/lib/python3.9/site-packages (from flake8>=6.1.0->-r dev_requirements.txt (line 4)) (2.14.0)
+Requirement already satisfied: mccabe<0.8.0,>=0.7.0 in ./.venv/lib/python3.9/site-packages (from flake8>=6.1.0->-r dev_requirements.txt (line 4)) (0.7.0)
+Requirement already satisfied: librt>=0.6.2 in ./.venv/lib/python3.9/site-packages (from mypy>=1.5.1->-r dev_requirements.txt (line 5)) (0.16.0)
+Requirement already satisfied: typing_extensions>=4.6.0 in ./.venv/lib/python3.9/site-packages (from mypy>=1.5.1->-r dev_requirements.txt (line 5)) (4.16.0)
+Requirement already satisfied: mypy_extensions>=1.0.0 in ./.venv/lib/python3.9/site-packages (from mypy>=1.5.1->-r dev_requirements.txt (line 5)) (1.1.0)
+Requirement already satisfied: pathspec>=0.9.0 in ./.venv/lib/python3.9/site-packages (from mypy>=1.5.1->-r dev_requirements.txt (line 5)) (1.1.1)
+Requirement already satisfied: click>=8.0.0 in ./.venv/lib/python3.9/site-packages (from black>=23.9.1->-r dev_requirements.txt (line 6)) (8.1.8)
+Requirement already satisfied: pytokens>=0.3.0 in ./.venv/lib/python3.9/site-packages (from black>=23.9.1->-r dev_requirements.txt (line 6)) (0.4.1)
+Requirement already satisfied: importlib-metadata>=4.6.0 in ./.venv/lib/python3.9/site-packages (from isort>=5.12.0->-r dev_requirements.txt (line 7)) (8.7.1)
+Requirement already satisfied: astroid<=3.4.0.dev0,>=3.3.8 in ./.venv/lib/python3.9/site-packages (from pylint>=2.17.5->-r dev_requirements.txt (line 9)) (3.3.11)
+Requirement already satisfied: tomlkit>=0.10.1 in ./.venv/lib/python3.9/site-packages (from pylint>=2.17.5->-r dev_requirements.txt (line 9)) (0.15.2)
+Requirement already satisfied: dill>=0.2 in ./.venv/lib/python3.9/site-packages (from pylint>=2.17.5->-r dev_requirements.txt (line 9)) (0.4.1)
+Requirement already satisfied: rich>=12.0.0 in ./.venv/lib/python3.9/site-packages (from twine>=4.0.2->-r dev_requirements.txt (line 10)) (15.0.0)
+Requirement already satisfied: keyring>=21.2.0 in ./.venv/lib/python3.9/site-packages (from twine>=4.0.2->-r dev_requirements.txt (line 10)) (25.7.0)
+Requirement already satisfied: requests>=2.20 in ./.venv/lib/python3.9/site-packages (from twine>=4.0.2->-r dev_requirements.txt (line 10)) (2.32.5)
+Requirement already satisfied: id in ./.venv/lib/python3.9/site-packages (from twine>=4.0.2->-r dev_requirements.txt (line 10)) (1.6.1)
+Requirement already satisfied: urllib3>=1.26.0 in ./.venv/lib/python3.9/site-packages (from twine>=4.0.2->-r dev_requirements.txt (line 10)) (2.6.3)
+Requirement already satisfied: requests-toolbelt!=0.9.0,>=0.8.0 in ./.venv/lib/python3.9/site-packages (from twine>=4.0.2->-r dev_requirements.txt (line 10)) (1.0.0)
+Requirement already satisfied: readme-renderer>=35.0 in ./.venv/lib/python3.9/site-packages (from twine>=4.0.2->-r dev_requirements.txt (line 10)) (44.0)
+Requirement already satisfied: rfc3986>=1.4.0 in ./.venv/lib/python3.9/site-packages (from twine>=4.0.2->-r dev_requirements.txt (line 10)) (2.0.0)
+Requirement already satisfied: MarkupSafe>=2.0 in ./.venv/lib/python3.9/site-packages (from jinja2>=3.1.2->-r dev_requirements.txt (line 11)) (3.0.4)
+Requirement already satisfied: pyproject_hooks in ./.venv/lib/python3.9/site-packages (from build>=1.0.3->-r dev_requirements.txt (line 13)) (1.3.3)
+Requirement already satisfied: blinker>=1.9.0 in ./.venv/lib/python3.9/site-packages (from Flask<4,>=3.0.3->-r dev_requirements.txt (line 14)) (1.9.0)
+Requirement already satisfied: itsdangerous>=2.2.0 in ./.venv/lib/python3.9/site-packages (from Flask<4,>=3.0.3->-r dev_requirements.txt (line 14)) (2.2.0)
+Requirement already satisfied: werkzeug>=3.1.0 in ./.venv/lib/python3.9/site-packages (from Flask<4,>=3.0.3->-r dev_requirements.txt (line 14)) (3.1.9)
+Requirement already satisfied: zipp>=3.20 in ./.venv/lib/python3.9/site-packages (from importlib-metadata>=4.6.0->isort>=5.12.0->-r dev_requirements.txt (line 7)) (3.23.1)
+Requirement already satisfied: jaraco.functools in ./.venv/lib/python3.9/site-packages (from keyring>=21.2.0->twine>=4.0.2->-r dev_requirements.txt (line 10)) (4.4.0)
+Requirement already satisfied: jaraco.classes in ./.venv/lib/python3.9/site-packages (from keyring>=21.2.0->twine>=4.0.2->-r dev_requirements.txt (line 10)) (3.4.0)
+Requirement already satisfied: jaraco.context in ./.venv/lib/python3.9/site-packages (from keyring>=21.2.0->twine>=4.0.2->-r dev_requirements.txt (line 10)) (6.1.1)
+Requirement already satisfied: docutils>=0.21.2 in ./.venv/lib/python3.9/site-packages (from readme-renderer>=35.0->twine>=4.0.2->-r dev_requirements.txt (line 10)) (0.23)
+Requirement already satisfied: nh3>=0.2.14 in ./.venv/lib/python3.9/site-packages (from readme-renderer>=35.0->twine>=4.0.2->-r dev_requirements.txt (line 10)) (0.3.7)
+Requirement already satisfied: idna<4,>=2.5 in ./.venv/lib/python3.9/site-packages (from requests>=2.20->twine>=4.0.2->-r dev_requirements.txt (line 10)) (3.20)
+Requirement already satisfied: charset_normalizer<4,>=2 in ./.venv/lib/python3.9/site-packages (from requests>=2.20->twine>=4.0.2->-r dev_requirements.txt (line 10)) (3.5.2)
+Requirement already satisfied: certifi>=2017.4.17 in ./.venv/lib/python3.9/site-packages (from requests>=2.20->twine>=4.0.2->-r dev_requirements.txt (line 10)) (2026.10.23)
+Requirement already satisfied: markdown-it-py>=2.2.0 in ./.venv/lib/python3.9/site-packages (from rich>=12.0.0->twine>=4.0.2->-r dev_requirements.txt (line 10)) (3.0.0)
+Requirement already satisfied: mdurl~=0.1 in ./.venv/lib/python3.9/site-packages (from markdown-it-py>=2.2.0->rich>=12.0.0->twine>=4.0.2->-r dev_requirements.txt (line 10)) (0.1.2)
+Requirement already satisfied: more-itertools in ./.venv/lib/python3.9/site-packages (from jaraco.classes->keyring>=21.2.0->twine>=4.0.2->-r dev_requirements.txt (line 10)) (10.8.0)
+Requirement already satisfied: backports.tarfile in ./.venv/lib/python3.9/site-packages (from jaraco.context->keyring>=21.2.0->twine>=4.0.2->-r dev_requirements.txt (line 10)) (1.2.0)
+Installing collected packages: platformdirs
+  Attempting uninstall: platformdirs
+    Found existing installation: platformdirs 2.5.1
+    Not uninstalling platformdirs at /nix/store/fyw5pc68fqxii378hxck5jbqqwc49ryi-python3.9-platformdirs-2.5.1/lib/python3.9/site-packages, outside environment /Users/terryyin/git/lizard/.worktrees/count-conditions-inside-template-interpolations/.venv
+    Can't uninstall 'platformdirs'. No files were found to uninstall.
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+virtualenv 20.13.2 requires platformdirs<3,>=2, but you have platformdirs 4.4.0 which is incompatible.
+Successfully installed platformdirs-4.4.0
+WARNING: You are using pip version 22.0.3; however, version 26.0.1 is available.
+You should consider upgrading via the '/Users/terryyin/git/lizard/.worktrees/count-conditions-inside-template-interpolations/.venv/bin/python -m pip install --upgrade pip' command.
+incremental-api 16:28:26  up 5 days 10:21,  4 users,  load average: 4.15, 4.89, 5.74
+{"workload": "api", "loops": 96, "medians": {"baseline": 17.086275395499996, "candidate": 17.715230854000012}, "median_slowdown_pct": 3.6810565435791975, "paired_95pct_ci": [1.632480558547189, 5.01688964856879], "passes": false}
+incremental-api-parameters 16:40:56  up 5 days 10:34,  4 users,  load average: 13.48, 10.56, 8.42

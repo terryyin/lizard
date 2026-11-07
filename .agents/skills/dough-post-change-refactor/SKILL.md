@@ -16,9 +16,12 @@ committing, pushing, amending, or triggering CI.
 
 ## Discover scope
 
-Run `git status`, `git diff`, and `git diff --cached`. If there is no uncommitted
-change, report empty scope and use the completion handoff below without edits
-or tests.
+Run `git status`, `git diff`, and `git diff --cached`. When the caller supplies
+refactor dispositions recorded since the last pass (`records-only` or an
+already-traced repair naming its accepted return), their committed changes are
+part of the change under review: read their diffs and include their concepts in
+this discovery. If there is no uncommitted change and no supplied disposition,
+report empty scope and use the completion handoff below without edits or tests.
 
 For a nonempty change, resolve this project's navigation, domain vocabulary,
 production subsystem boundaries and applicable architectural decisions, tooling wrapper,
@@ -44,7 +47,9 @@ through them. For each candidate, identify:
 
 Trace the concept through its representations and orchestration, including
 untouched code that repeats its knowledge or must change for coherence. Apply
-[delivery scope versus implementation reach](../dough-story-refinement/references/planning.md#examples-and-constraints):
+[consumer and old-reference tracing](../dough-story-refinement/references/executable-proof.md)
+to meaningful cross-file changes in both the incoming change and your refactor
+edits. Apply [delivery scope versus implementation reach](../dough-story-refinement/references/planning.md#examples-and-constraints):
 story membership cannot exclude a necessary edit. Dependency adjacency alone
 does not establish scope. Do not initiate unrelated cleanup discovered during
 tracing.
@@ -93,6 +98,11 @@ original command no longer applies and run a focused replacement. Without
 supplied proof, run focused tests related to the refactor edits. Use this
 project's literal commands and the shared
 [behavioral test guidance](references/refactor-checks.md#tests-as-behavioral-documentation).
+Before expensive verification, apply
+[choose expensive proof before launch](../dough-story-refinement/references/executable-proof.md#choose-expensive-proof-before-launch),
+confirming or reconsidering the caller's retained decision and known competing
+owned work on the actual target machine. A separate worktree shares that
+machine's capacity; coordinate owned heavy work through the existing handoffs.
 Do not run the full suite. Own any verification command that yields a running
 command identity through its terminal result under the shared
 [verification ownership](../dough-execute-plan/references/delegation.md#own-verification-to-its-terminal-result)
@@ -104,10 +114,17 @@ the caller; do not claim success.
 
 On completion, return a targeted report with the refactor outcome, every path
 and conceptual or product boundary changed by refactoring, and checks that
-changed code. For each relevant accepted proof, name whether its boundary and
-inspected locations stayed unchanged or which edit invalidated them. For
-invalidated or replacement proof, report the literal command, result, and
-concrete setup and assertion or signal locations. Also report files renamed,
+changed code. Include the
+[consumer-trace record](../dough-story-refinement/references/executable-proof.md#record-the-consumer-trace)
+for your refactor edits, produced by the installed
+[`consumer-trace.mjs`](../dough-execute-plan/scripts/consumer-trace.mjs) script, with
+each listed consumer's disposition and the focused proof selected or reused for
+their affected behavior; name any uncovered consumers as gaps. For each relevant accepted proof,
+name whether its boundary and inspected locations stayed unchanged or which
+edit invalidated them. For invalidated or replacement proof, report the literal
+command, result, and concrete setup and assertion or signal locations. Also
+retain the expensive-proof decision and any deferred required observation with
+its owner and next condition. Report files renamed,
 extracted, split, or deleted; unresolved gaps or contradictions; consequential
 learnings; passing test commands or `skipped — no refactor edits`; and
 approximate active elapsed time. Do not attach routine raw traces, full command

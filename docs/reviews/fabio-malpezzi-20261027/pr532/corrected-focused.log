@@ -1,0 +1,48 @@
+........................................................................ [  4%]
+........................................................................ [  9%]
+........................................................................ [ 14%]
+........................................................................ [ 19%]
+........................................................................ [ 24%]
+........................................................................ [ 29%]
+................s.s.s................................................... [ 34%]
+........................................................................ [ 39%]
+........................................................................ [ 44%]
+........................................................................ [ 48%]
+........................................................................ [ 53%]
+........................................................................ [ 58%]
+........................................................................ [ 63%]
+........................................................................ [ 68%]
+........................................................................ [ 73%]
+.................................................s....................s. [ 78%]
+........................................................................ [ 83%]
+........................................................................ [ 88%]
+........................................................................ [ 93%]
+........................................................................ [ 97%]
+..............................                                           [100%]
+=============================== warnings summary ===============================
+test/test_languages/testRuby.py:34
+  /Users/terryyin/.cache/lizard-pr-reviews-20261027/pr532/corrected/test/test_languages/testRuby.py:34: DeprecationWarning: invalid escape sequence \/
+    self.check_tokens(['/\//'], r'''/\//''')
+
+test/test_languages/testRuby.py:66
+  /Users/terryyin/.cache/lizard-pr-reviews-20261027/pr532/corrected/test/test_languages/testRuby.py:66: DeprecationWarning: invalid escape sequence \}
+    self.check_tokens(['%{\}}'], r'''%{\}}''')
+
+test/test_languages/testRuby.py:67
+  /Users/terryyin/.cache/lizard-pr-reviews-20261027/pr532/corrected/test/test_languages/testRuby.py:67: DeprecationWarning: invalid escape sequence \}
+    self.check_tokens(['%{\}}'], r'''%{\}}''')
+
+test/test_languages/testRuby.py:68
+  /Users/terryyin/.cache/lizard-pr-reviews-20261027/pr532/corrected/test/test_languages/testRuby.py:68: DeprecationWarning: invalid escape sequence \}
+    self.check_tokens(['%q{\}}'], r'''%q{\}}''')
+
+test/test_languages/testRuby.py:69
+  /Users/terryyin/.cache/lizard-pr-reviews-20261027/pr532/corrected/test/test_languages/testRuby.py:69: DeprecationWarning: invalid escape sequence \]
+    self.check_tokens(['%q[\]]'], r'''%q[\]]''')
+
+test/test_languages/testRuby.py:70
+  /Users/terryyin/.cache/lizard-pr-reviews-20261027/pr532/corrected/test/test_languages/testRuby.py:70: DeprecationWarning: invalid escape sequence \>
+    self.check_tokens(['%q<\>>'], r'''%q<\>>''')
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+1465 passed, 5 skipped, 6 warnings in 1.45s

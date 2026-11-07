@@ -1,0 +1,16 @@
+================================================
+  NLOC    CCN   token  PARAM  length  location
+------------------------------------------------
+       6      1     21      0       6 handler@2-7@/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr533/corpus/affected/async_field.js
+1 file analyzed.
+==============================================================
+NLOC    Avg.NLOC  AvgCCN  Avg.token  function_cnt    file
+--------------------------------------------------------------
+      7       6.0     1.0       21.0         1     /Users/terryyin/.cache/lizard-pr-reviews-20261027/pr533/corpus/affected/async_field.js
+
+===============================================================================================================
+No thresholds exceeded (cyclomatic_complexity > 15 or length > 1000 or nloc > 1000000 or parameter_count > 100)
+==========================================================================================
+Total nloc   Avg.NLOC  AvgCCN  Avg.token   Fun Cnt  Warning cnt   Fun Rt   nloc Rt
+------------------------------------------------------------------------------------------
+         7       6.0     1.0       21.0        1            0      0.00    0.00

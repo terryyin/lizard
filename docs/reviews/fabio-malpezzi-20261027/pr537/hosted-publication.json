@@ -1,0 +1,7 @@
+{
+  "frozen_head": "c89470c442d28195bebba45597910c7a481a5043",
+  "published_head": "9868a224b12b511eada6bdd4c9fa5a718da9258b",
+  "method": "history-preserving merge of origin/master into contributor branch; maintainerCanModify push",
+  "remote": "git@github.com:FabioMalpezzi/lizard.git",
+  "ref": "pr/js-arrow-after-a-member-access"
+}

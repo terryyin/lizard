@@ -119,8 +119,13 @@ export function assessmentFromPayload(payload) {
 
 // Read-time view retains the recorded judgment and reviewed basis. Change
 // since review is independent evidence, derived without rewriting the record.
-// Former whole-document bases stay interpretable under the same comparison.
-export function normalizeAssessmentView(recorded, currentBasis, formerBasis) {
+// Bases older records carry (dependency fence as written or unresolved,
+// whole document) stay interpretable under the same comparison.
+export function normalizeAssessmentView(
+  recorded,
+  currentBasis,
+  ...earlierBases
+) {
   if (recorded === undefined) {
     return { status: "absent" };
   }
@@ -128,9 +133,9 @@ export function normalizeAssessmentView(recorded, currentBasis, formerBasis) {
     status: recorded.status,
     reasons: recorded.reasons,
     basis: recorded.basis,
-    changedSinceReview:
-      !basesEqual(recorded.basis, currentBasis) &&
-      !basesEqual(recorded.basis, formerBasis),
+    changedSinceReview: ![currentBasis, ...earlierBases].some((basis) =>
+      basesEqual(recorded.basis, basis),
+    ),
   };
 }
 

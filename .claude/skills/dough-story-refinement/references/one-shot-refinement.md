@@ -4,7 +4,10 @@ One-shot refinement refines one story queued in the **Backlog list** without
 publishing a Preparing assignment. It works in an owned workspace at fetched
 trunk, or in the default checkout when that is selected, records the story's
 preparation facts there, and stops with the committed result retained for
-review, or lands it when automatic landing is also selected. Use it only when the developer or parent
+review, or lands it when automatic landing is also selected. It ends at that
+review or landing and no plan follows it; the
+[preparation journey](preparation-journey.md) covers refinement that continues
+into slice planning. Use it only when the developer or parent
 instruction explicitly selects one-shot (`--one-shot` or a clear equivalent)
 for refining that story; never infer it from apparent smallness. Without that
 selection, refine under
@@ -12,7 +15,10 @@ selection, refine under
 
 An instruction that carries an established preparation continues it under
 [established preparation](established-preparation.md), even when it also
-names one-shot.
+names one-shot. In an
+[established session](../../dough-execute-plan/references/established-session.md),
+the start below is given that session's workspace and branch, and its
+`landing` is the landing selection.
 
 ## Start without an assignment
 
@@ -96,13 +102,15 @@ workspace: the start named no agent.
 Unless automatic landing was selected, stop here; with it, continue under
 [Land automatically when selected](#land-automatically-when-selected).
 Report the outcome under
-[report the refinement outcome](../SKILL.md#report-the-refinement-outcome)
+[judge the refinement outcome](../SKILL.md#judge-the-refinement-outcome)
 with the workspace path and branch, the retained `startingRevision`, the
 result commit for review, and the recorded refinement, approach, and
 assessment. Say that remote trunk still lists the story in the **Backlog
 list** with no Preparing assignment, so others cannot see this refinement
 until it lands. Leave the workspace and its branch in place:
 nothing is pushed or retired, and the story is neither Taken nor completed.
+This is a result held for review under
+[finish with only what needs a response](preparation-journey.md#finish-with-only-what-needs-a-response).
 
 A later session that names the retained workspace continues there without
 running `start` again. The default checkout always stays in place.
@@ -112,7 +120,10 @@ running `start` again. The default checkout always stays in place.
 When the developer or parent instruction also selects automatic landing
 (`--auto-land` or a clear equivalent), that selection is the developer's
 advance keep instruction for this refinement's result, so it does not wait for
-review. It is independent of the workspace choice. A confirmation that
+review. This section is the one-shot entry into
+[Keep and publish the retained result](preparation-disposition.md#keep-and-publish-the-retained-result),
+with `recheck` as its candidate check and no assignment to release. The
+selection is independent of the workspace choice. A confirmation that
 existing default-checkout changes may join the result lets them be committed
 with it; it never selects automatic landing. Add `--auto-land
 --push-authorized` to the start: its `prepared` receipt then also carries
@@ -120,14 +131,16 @@ with it; it never selects automatic landing. Add `--auto-land
 authority before any workspace is selected.
 
 Land only on a ready outcome under
-[report the refinement outcome](../SKILL.md#report-the-refinement-outcome):
+[judge the refinement outcome](../SKILL.md#judge-the-refinement-outcome):
 the seed records the story's goal, scope, and key examples, its recorded
 facts and assessment are true, and no decision you need from the
 developer remains open. Then land the committed result as
 [Land or discard on request](#land-or-discard-on-request) describes for a keep,
 ownership recheck included. The story stays queued with the recorded facts:
-landing neither Takes nor completes it, and starts no CI observer. Report that
-ready outcome as landed, with its next step.
+landing neither Takes nor completes it, and starts no CI observer. Once the
+landing settles, finish under the preparation journey's
+[finish with only what needs a response](preparation-journey.md#finish-with-only-what-needs-a-response):
+a landed result with nothing requiring attention ends there.
 
 Stop instead, keeping the committed result and its workspace as they are, when
 a decision remains open (it goes to the developer), the recheck reports
@@ -139,7 +152,7 @@ committed and unlanded.
 ## Land or discard on request
 
 For automatic or later explicit landing with supplied dashboard context, apply
-[the original launch's landing handoff](../../dough-land/references/dashboard-completion.md#retain-the-one-shot-landing).
+[the original launch's landing handoff](../../dough-land/references/dashboard-completion.md#retain-the-launch-landing).
 
 The retained result follows
 [Decide what happens to the written result](preparation-disposition.md#decide-what-happens-to-the-written-result).

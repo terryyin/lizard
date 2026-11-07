@@ -1,0 +1,18 @@
+[
+  {"filename": "load.js", "source": "function load(p) {\n  return p.then(parse).catch(() => null);\n}\n", "expected": [["(anonymous)", 1, 1], ["load", 1, 3]]},
+  {"filename": "load.ts", "source": "function load(p) {\n  return p.then(parse).catch(() => null);\n}\n", "expected": [["(anonymous)", 1, 1], ["load", 1, 3]]},
+  {"filename": "load.jsx", "source": "function load(p) {\n  return p.then(parse).catch(() => null);\n}\n", "expected": [["(anonymous)", 1, 1], ["load", 1, 3]]},
+  {"filename": "load.tsx", "source": "function load(p) {\n  return p.then(parse).catch(() => null);\n}\n", "expected": [["(anonymous)", 1, 1], ["load", 1, 3]]},
+  {"filename": "members.js", "source": "function a(p, q) {\n  p.catch(() => null);\n  q?.catch(() => null).finally(() => 1);\n  return p.if + p.for + p.while + p.case;\n}\nfunction b(p) { return p.then(f).catch(g) || 0; }\n", "expected": [["(anonymous)", 1, 1], ["(anonymous)", 1, 1], ["(anonymous)", 1, 1], ["a", 1, 5], ["b", 2, 1]]},
+  {"filename": "members.ts", "source": "function a(p, q) {\n  p.catch(() => null);\n  q?.catch(() => null).finally(() => 1);\n  return p.if + p.for + p.while + p.case;\n}\nfunction b(p) { return p.then(f).catch(g) || 0; }\n", "expected": [["(anonymous)", 1, 1], ["(anonymous)", 1, 1], ["(anonymous)", 1, 1], ["a", 1, 5], ["b", 2, 1]]},
+  {"filename": "members.jsx", "source": "function a(p, q) {\n  p.catch(() => null);\n  q?.catch(() => null).finally(() => 1);\n  return p.if + p.for + p.while + p.case;\n}\nfunction b(p) { return p.then(f).catch(g) || 0; }\n", "expected": [["(anonymous)", 1, 1], ["(anonymous)", 1, 1], ["(anonymous)", 1, 1], ["a", 1, 5], ["b", 2, 1]]},
+  {"filename": "members.tsx", "source": "function a(p, q) {\n  p.catch(() => null);\n  q?.catch(() => null).finally(() => 1);\n  return p.if + p.for + p.while + p.case;\n}\nfunction b(p) { return p.then(f).catch(g) || 0; }\n", "expected": [["(anonymous)", 1, 1], ["(anonymous)", 1, 1], ["(anonymous)", 1, 1], ["a", 1, 5], ["b", 2, 1]]},
+  {"filename": "genuine-catch.js", "source": "function load(p) {\n  try { return parse(p); } catch (e) { return null; }\n}\n", "expected": [["load", 2, 3]]},
+  {"filename": "genuine-if.js", "source": "function f(x) { if (x) return 1; }\n", "expected": [["f", 2, 1]]},
+  {"filename": "genuine-for.js", "source": "function f() { for (;;); }\n", "expected": [["f", 2, 1]]},
+  {"filename": "genuine-while.js", "source": "function f(x) { while (x); }\n", "expected": [["f", 2, 1]]},
+  {"filename": "genuine-case.js", "source": "function f(x) { switch (x) { case 1: break; } }\n", "expected": [["f", 2, 1]]},
+  {"filename": "genuine-all.js", "source": "function f(x) {\n  if (x) return 1;\n  for (;;);\n  while (x);\n  switch (x) { case 1: break; }\n  try { return x; } catch (e) { return 0; }\n}\n", "expected": [["f", 6, 7]]},
+  {"filename": "b-story.js", "source": "function b(code) {\n  return (\n    code === 47 || // /\n    code === 92 || // \\\n    code === 45 || // -\n    code === 32\n  )\n}\n", "expected": [["b", 4, 8]]},
+  {"filename": "optional-access.ts", "source": "function pick(o) {\n  return o?.a ?? o?.b ?? 0;\n}\n", "expected": [["pick", 3, 3]]}
+]

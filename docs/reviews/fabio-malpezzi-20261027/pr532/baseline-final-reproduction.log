@@ -1,0 +1,28 @@
+{"module": "lizard", "path": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/baseline/lizard.py"}
+{"module": "lizard_languages", "path": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/baseline/lizard_languages/__init__.py"}
+{"module": "lizard_languages.javascript_functions", "path": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/baseline/lizard_languages/javascript_functions.py"}
+{"module": "lizard_languages.typescript_states", "path": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/baseline/lizard_languages/typescript_states.py"}
+{"module": "lizard_core.function_info", "path": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/baseline/lizard_core/function_info.py"}
+{"module": "test.test_languages.testTypeScript", "path": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/baseline/test/test_languages/testTypeScript.py"}
+{"case": "reported.ts", "expected": [["render", 3], ["round", 2]], "actual": [["render", 1], ["round", 1]], "passed": false, "parameters": [["text"], ["precision"]], "full_parameters": [["text", "", ""], [", precision"]], "ccn": [1, 1]}
+{"case": "authored.js", "expected": [["r", 4], ["s", 2]], "actual": [["r", 1], ["s", 0]], "passed": false, "parameters": [["text"], []], "full_parameters": [["text", "", "", ""], [","]], "ccn": [1, 1]}
+{"case": "authored.ts", "expected": [["round", 2], ["widest", 1], ["json", 2]], "actual": [["round", 1], ["widest", 0], ["json", 0]], "passed": false, "parameters": [["precision"], [], []], "full_parameters": [[", precision"], [], [","]], "ccn": [1, 1, 1]}
+{"case": "sigils.js", "expected": [["boundary", 9]], "actual": [["boundary", 4]], "passed": false, "parameters": [["a", "a", "x1", "caf\u00e9"]], "full_parameters": [[",", " a", " a", "", "", "", " x1", " caf\u00e9"]], "ccn": [1]}
+{"case": "keywords.ts", "expected": [["keywords", 7]], "actual": [["keywords", 0]], "passed": false, "parameters": [[]], "full_parameters": [[",", "", "", "", "", ""]], "ccn": [1]}
+{"case": "annotations.ts", "expected": [["typed", 4]], "actual": [["typed", 4]], "passed": true, "parameters": [["Map", "cb", "b", "tail"]], "full_parameters": [["value Map", " cb", " data a b", " tail"]], "ccn": [1]}
+{"case": "defaults.js", "expected": [["defaults", 3]], "actual": [["defaults", 1]], "passed": false, "parameters": [["value"]], "full_parameters": [[",", " value"]], "ccn": [5]}
+{"case": "typed_defaults.ts", "expected": [["defaults", 3]], "actual": [["defaults", 2]], "passed": false, "parameters": [["Map", "tail"]], "full_parameters": [[", Map", " tail"]], "ccn": [5]}
+{"case": "destructured.js", "expected": [["unpack", 3]], "actual": [["unpack", 3]], "passed": true, "parameters": [["other", "tail", "last"]], "full_parameters": [["key renamed other", " head tail", " last"]], "ccn": [1]}
+{"case": "quoted_binding.js", "expected": [["unpack", 2]], "actual": [["unpack", 2]], "passed": true, "parameters": [["renamed", "tail"]], "full_parameters": [["renamed", " tail"]], "ccn": [1]}
+{"case": "numeric_binding.js", "expected": [["unpack", 2]], "actual": [["unpack", 2]], "passed": true, "parameters": [["renamed", "tail"]], "full_parameters": [["renamed", " tail"]], "ccn": [1]}
+{"case": "computed_binding.js", "expected": [["unpack", 2]], "actual": [["unpack", 2]], "passed": true, "parameters": [["renamed", "tail"]], "full_parameters": [["renamed", " tail"]], "ccn": [1]}
+{"case": "plain.js", "expected": [["plain", 3], ["arrow", 2]], "actual": [["plain", 3], ["arrow", 0]], "passed": false, "parameters": [["a", "b", "rest"], []], "full_parameters": [["a", " b", " rest"], [","]], "ccn": [2, 1]}
+{"case": "render.jsx", "expected": [["render", 3]], "actual": [["render", 1]], "passed": false, "parameters": [["text"]], "full_parameters": [["text", "", ""]], "ccn": [1]}
+{"case": "render.tsx", "expected": [["render", 3]], "actual": [["render", 1]], "passed": false, "parameters": [["Element"]], "full_parameters": [[",", " Element"]], "ccn": [1]}
+{"case": "render.vue", "expected": [["render", 3]], "actual": [["render", 1]], "passed": false, "parameters": [["text"]], "full_parameters": [["text", "", ""]], "ccn": [1]}
+{"case": "control.py", "expected": [["plain", 4]], "actual": [["plain", 4]], "passed": true, "parameters": [["value", "tail", "args", "kwargs"]], "full_parameters": [["value : int = 1", " tail = None", " * args", " ** kwargs"]], "ccn": [1]}
+{"case": "control.cpp", "expected": [["plain", 2]], "actual": [["plain", 2]], "passed": true, "parameters": [["value", "tail"]], "full_parameters": [["int value", " int tail = 1"]], "ccn": [1]}
+{"case": "control.java", "expected": [["C::plain", 2]], "actual": [["C::plain", 2]], "passed": true, "parameters": [["value", "tail"]], "full_parameters": [["int value", " String tail"]], "ccn": [1]}
+{"case": "control.rb", "expected": [["plain", 2]], "actual": [["plain", 2]], "passed": true, "parameters": [["value", "tail"]], "full_parameters": [["value", " tail = 1"]], "ccn": [1]}
+{"case": "control.php", "expected": [["plain", 1]], "actual": [["plain", 1]], "passed": true, "parameters": [["value"]], "full_parameters": [["$value"]], "ccn": [1]}
+{"cases": 21, "failures": ["reported.ts", "authored.js", "authored.ts", "sigils.js", "keywords.ts", "defaults.js", "typed_defaults.ts", "plain.js", "render.jsx", "render.tsx", "render.vue"]}

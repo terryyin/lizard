@@ -58,7 +58,7 @@ void funcY(int p, int q, int r, int s, int t) { return 2; }
     def test_cross_file_duplicate_detection(self):
         ext = LizardExtension()
 
-        @patch('lizard.auto_read', create=True)
+        @patch('lizard_core.file_analyzer.auto_read')
         def run(auto_read):
             source_files = {
                 'f1.cpp': FIVE_PARAM_FUNC.format(name="A"),
