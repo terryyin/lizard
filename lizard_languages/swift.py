@@ -6,7 +6,7 @@ from .code_reader import CodeReader, CodeStateMachine
 from .clike import CCppCommentsMixin
 from .golike import GoLikeStates
 from .swift_conditions import SwiftConditionLists
-from .swift_literals import literal_spans
+from .swift_literals import literal_spans, string_parts
 from .token_pattern import compiled_token_pattern, tokens_in_span
 
 # Backtick names, failable markers, and macros. Compiler directives stay a
@@ -124,12 +124,29 @@ class SwiftReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
         pattern = compiled_token_pattern(_SWIFT_TOKEN_ADDITION + addition)
         if token_class is None and '?' in source_code:
             token_class = _swift_token
-        for is_literal, start, end in literal_spans(source_code):
-            if is_literal:
-                yield source_code[start:end]
-            else:
-                yield from tokens_in_span(
-                    pattern, source_code, start, end, token_class)
+        return _swift_tokens(
+            pattern, token_class, source_code, 0, len(source_code))
+
+
+def _swift_tokens(pattern, token_class, source, start, end):
+    for is_literal, span_start, span_end in literal_spans(source, start, end):
+        if not is_literal:
+            yield from tokens_in_span(
+                pattern, source, span_start, span_end, token_class)
+        elif source.startswith('/', span_start) or source.find(
+                '\\', span_start, span_end) < 0:
+            yield source[span_start:span_end]
+        else:
+            # Literal text stays whole. An interpolation's parentheses are
+            # code tokens, so brackets stay balanced for the scanners that
+            # track them; the pieces still join into the literal.
+            for is_code, part_start, part_end in string_parts(
+                    source, span_start, span_end):
+                if is_code:
+                    yield from _swift_tokens(
+                        pattern, token_class, source, part_start, part_end)
+                elif part_start < part_end:
+                    yield source[part_start:part_end]
 
 
 class _PropertyHeader:  # pylint: disable=R0903
