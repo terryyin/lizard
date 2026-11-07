@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-050#fix-issue-487-designated-initializer-duplicates",
+  "title": "Fix issue #487 — designated C initializer tables should not report as duplicate code",
+  "completedAt": "2026-11-07T04:57:38.013Z",
+  "developer": "Terry Yin",
+  "agent": "Nana-chan",
+  "host": "cursor",
+  "model": "composer"
+}
