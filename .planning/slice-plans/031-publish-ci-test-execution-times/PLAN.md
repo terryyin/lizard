@@ -2,6 +2,7 @@
 
 **Identity:** SEED-051#publish-ci-test-execution-times
 **Source:** [canonical story](../../seeds/SEED-051-publish-ci-test-execution-times.md#publish-ci-test-execution-times)
+**Source review:** [Isolated canonical story review](source-review.md)
 
 ## Goal and scope
 
@@ -127,6 +128,18 @@ Work:
   story; timing belongs in converters and fragment CLI flags.
 - Execution mode: Story Branch Mode; every push runs `python-app.yml`, so
   story-branch pushes give the real runs.
+- Established checkout: `/Users/terryyin/git/lizard/.worktrees/publish-lizard-test-execution-times-in-intent`,
+  existing owned workspace; execution branch `codex/publish-lizard-test-execution-times-in-intent`.
+  Integration checkout: `/Users/terryyin/git/lizard`. Authorized trunk: `origin/master`.
+  Publisher: `dashboard-territory.local-lizard`; agent: Koharu-chan.
+  Starting revision: `1ed475f48512ac26d06a89ebf8a6fc798e572a3e`.
+  Published claim (trunk and story branch) and starting candidate:
+  `1e11c01c3ef0e4d3d76232a8f920d9ac6753027e`.
+- Codex CI observer: GitHub Actions, `terryyin/lizard`, `python-app.yml`
+  (Python application), story-branch target. Key
+  `ci-watch-execution:terryyin/lizard:codex/publish-lizard-test-execution-times-in-intent:lizard-ci-times-koharu`;
+  coordinator `lizard-ci-times-koharu`, directory `/tmp/dough-ci-501/watch-d7fbF6`,
+  PID 21915, session 30703, cell `g60:6`. Trunk claim coverage is unobserved.
 - Preserve workflow shapes that `test/test_web_changes.py` and
   `test/testPythonVersionClaims.py` assert.
 
@@ -150,3 +163,61 @@ concerns.
 Remaining slice-specific concerns: none identified in this review. The
 Intent-rendering premise for timed summaries is bounded by slice 1 as the
 early probe.
+
+
+## Story obligations
+
+### G1. The shared collector drops untimed checks in a partly timed file
+Reported: slice 1 — "The slice 1 JUnit replay produced two timing lines and three outcomes for test/test_example.py. The summary preserved 375 ms and all three outcomes but reported zero untimed at the entry and part, and omitted untimed on the file row. Each should report one."
+Story clause: "Those checks count as untimed in the file breakdown"
+Disposition: proved by slice 1: /tmp/lizard-slice1-proof.PffZtQ/replay.sh now observes untimed 1 for entry, present part, and file with installed Open Dough 0.3.89
+Commitment: E15
+
+## Slice 1 execution evidence
+
+- The existing CI proof recipe's timing implementation is a blocking premise.
+  In the installed Open Dough v0.3.88 collector, the first timing line for a
+  file resets that file's whole `untimed` count. Its shared source on Open
+  Dough `main` at `cf660eed18c221f31bc89b4163298e8b47f013d6` has the same
+  blob as the installed copy. Both Lizard producer formats need a common
+  correction. The story's Scope explicitly requires byte-identical copies of
+  the installed modules and the Key examples require accurate untimed counts.
+- Replay from this checkout with
+  `nix develop -c sh /tmp/lizard-slice1-proof.PffZtQ/replay.sh`.
+  The converter preserves the failed and untimed outcomes and emits timing
+  lines for the 125 ms pass, the 250 ms failure, and the zero-duration pass
+  in a second file. The installed collector reports `(0, 0, absent)` at
+  entry, part, and file where the replay asserts `(1, 1, 1)`.
+  The report and summary are in the replay directory.
+- A disposable collector trial at
+  `/tmp/lizard-ci-collector-trial.4anSG2` counts timing lines per file,
+  subtracting that count from the file's outcomes while summing durations.
+  It passes the same replay and all 31 shared CI proof tests. The trial is
+  outside both repositories.
+- Resume after a corrected shared collector is available for installation,
+  or after the developer changes the byte-for-byte requirement in the story.
+  Slice 1 is still planned. Its converter, matching collector copies,
+  representative workflow wiring, local regression test, and temporary
+  JUnit report upload for live proof remain uncommitted. No timed CI attempt
+  was published or shown in Intent. Slice 2 has not started.
+- Focused pytest passed all 16 cases. Full `nix develop -c python -m pytest`
+  passed with 3,093 passed and 7 skipped. `nix develop -c make` passed.
+- The observer at `/tmp/dough-ci-501/watch-d7fbF6` stopped with no unread
+  events and confirmed local exit. The published claim remains the branch base.
+
+### Resume with corrected Open Dough
+
+Lizard trunk supplied Open Dough v0.3.89 in `8a0ae5775`. The story branch
+fast-forwarded locally from the published claim and kept its existing edits.
+All five collector modules match their installed sources. The same replay
+now asserts 375 ms and one untimed check at the entry, part and file while
+retaining the failure and measured zero. The earlier stop no longer applies.
+
+The restarted Codex observer uses the same coordinator and target, directory
+`/tmp/dough-ci-501/watch-ybtG4B`, PID 80988, session 43511, cell `g86:5`.
+The published branch base remains the original claim until progress delivery.
+
+Independent refactor review found no necessary edits. On the resumed candidate
+`nix develop -c python -m pytest` and `nix develop -c make` passed with
+3,093 passing tests and 7 skips. The one-day JUnit artifact on the story
+branch enables comparison with the exact GitHub runner input.

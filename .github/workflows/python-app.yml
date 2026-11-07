@@ -64,9 +64,11 @@ jobs:
     - name: Write the CI proof fragments
       if: ${{ !cancelled() && steps.pytest.outcome != 'skipped' && matrix.os == 'ubuntu-24.04' && matrix.python-version == '3.13' }}
       run: |
-        python scripts/ci-proof/junit-outcomes.py pytest-junit.xml > "${RUNNER_TEMP}/ci-proof-outcomes.tsv"
+        python scripts/ci-proof/junit-outcomes.py pytest-junit.xml \
+          "${RUNNER_TEMP}/ci-proof-times.tsv" > "${RUNNER_TEMP}/ci-proof-outcomes.tsv"
         node scripts/ci-proof/ci-proof-summary.mjs fragment \
-          --outcomes "${RUNNER_TEMP}/ci-proof-outcomes.tsv" --entry test \
+          --outcomes "${RUNNER_TEMP}/ci-proof-outcomes.tsv" \
+          --times "${RUNNER_TEMP}/ci-proof-times.tsv" --by-file --entry test \
           --part 1 --of 1 --attempt "${GITHUB_RUN_ATTEMPT}" \
           --revision "${CI_PROOF_REVISION}" --out "${RUNNER_TEMP}/ci-proof"
     - name: Keep the CI proof fragments
@@ -75,6 +77,14 @@ jobs:
       with:
         name: ci-proof-fragments-build-1-attempt-${{ github.run_attempt }}
         path: ${{ runner.temp }}/ci-proof/
+        if-no-files-found: ignore
+        retention-days: 1
+    - name: Keep the representative pytest report for timing verification
+      if: ${{ !cancelled() && steps.pytest.outcome != 'skipped' && matrix.os == 'ubuntu-24.04' && matrix.python-version == '3.13' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: ci-proof-source-pytest-attempt-${{ github.run_attempt }}
+        path: pytest-junit.xml
         if-no-files-found: ignore
         retention-days: 1
 

@@ -1,0 +1,87 @@
+# Canonical story review
+
+Fresh reviewer `/root/source_review` ran without inherited conversation.
+Its launch received only the canonical story's beneficiary, goal, scope,
+key examples and exclusions. The reviewer had no plan, product or proof
+input and made no edits. The commitments below retain its numbered return.
+
+## Commitments
+
+| Id | Source commitment | Slice | Observation or obligation |
+| --- | --- | --- | --- |
+| G01 | The beneficiary is a Lizard maintainer comparing Python and website test runtimes. | slice 2 | |
+| G02 | The maintainer views a judged `python-app.yml` attempt in Intent’s **CI status** tab. | slice 1 | |
+| G03 | Each reporting proof entry shows cumulative summed test execution time. | slice 2 | |
+| G04 | Each reporting proof entry shows per-file counts. | slice 2 | |
+| G05 | Each reporting proof entry shows per-file times. | slice 2 | |
+| G06 | The maintainer can compare `test` with `website/frontend/features` without opening job logs. | slice 2 | |
+| G07 | If `web` skips, website proof remains explicitly missing. | slice 2 | |
+| R01 | Follow the installed CI proof recipe. | slice 2 | |
+| R02 | Re-copy all five collector modules unchanged into `scripts/ci-proof/`. | slice 1 | observed: Byte comparison of each scripts/ci-proof/ci-proof-{summary,contract,figures,fragments,collect}.mjs with Open Dough v0.3.89 installed scripts, plus the diff against the old copies |
+| R03 | Include `ci-proof-figures.mjs` in that copy. | slice 1 | observed: Byte comparison of each scripts/ci-proof/ci-proof-{summary,contract,figures,fragments,collect}.mjs with Open Dough v0.3.89 installed scripts, plus the diff against the old copies |
+| R04 | Replace the older count-only copies from SEED-035. | slice 1 | observed: Byte comparison of each scripts/ci-proof/ci-proof-{summary,contract,figures,fragments,collect}.mjs with Open Dough v0.3.89 installed scripts, plus the diff against the old copies |
+| R05 | Keep schema versions at `1`. | slice 1 | observed: Mixed-duration replay asserts schemaVersion 1 in the collector output and existing contract versions in ci-proof-contract.mjs |
+| R06 | Use the recipe’s optional `durationMs` field for timings. | slice 1 | observed: Mixed-duration replay asserts 375 ms from two available durations including the failed test, on entry, part and test/test_example.py |
+| R07 | Keep the existing judged workflow, `python-app.yml`. | slice 1 | observed: Verified workflow selector python-app.yml and both existing intent.locations in .planning/open-dough.json |
+| R08 | Keep the existing Intent locations. | slice 1 | observed: Verified workflow selector python-app.yml and both existing intent.locations in .planning/open-dough.json |
+| R09 | Keep `ubuntu-24.04` / `3.13` as the representative Python matrix leg. | slice 1 | observed: Both Python fragment steps in .github/workflows/python-app.yml require ubuntu-24.04 and 3.13 and the matrix contract test passes |
+| R10 | Keep the conditional `web` job. | slice 2 | |
+| R11 | Keep the collector job. | slice 1 | observed: The ci-proof job in .github/workflows/python-app.yml collects both expected entries and uploads ci-proof-summary-attempt-<n> |
+| R12 | Keep the artifact naming pattern `ci-proof-summary-attempt-<n>`. | slice 1 | observed: The ci-proof job in .github/workflows/python-app.yml collects both expected entries and uploads ci-proof-summary-attempt-<n> |
+| R13 | Extend the pytest JUnit converter to emit a `--times` file. | slice 1 | observed: test/test_ci_proof.py verifies JUnit time strings in seconds are emitted unchanged and the count-only invocation still works |
+| R14 | Extend the Cucumber JSON converter to emit a `--times` file. | slice 2 | |
+| R15 | The specified timing record is one `<seconds>	<repository-relative check path>` line per check. The partial-report example separately qualifies how checks without a duration are counted. | slice 2 | |
+| R16 | Timing records use the same check path labels as the outcomes file. | slice 2 | |
+| R17 | Pytest’s JUnit `time` values are already in seconds. | slice 1 | observed: test/test_ci_proof.py verifies JUnit time strings in seconds are emitted unchanged and the count-only invocation still works |
+| R18 | Convert Cucumber JSON `result.duration` from nanoseconds to seconds. | slice 2 | |
+| R19 | Cucumber scenario time sums available before-hook durations. | slice 2 | |
+| R20 | The same scenario sum includes available step durations. | slice 2 | |
+| R21 | The same scenario sum includes available after-hook durations. | slice 2 | |
+| R22 | Both producer fragment steps pass `--times`. | slice 2 | |
+| R23 | Both producer fragment steps pass `--by-file`. | slice 2 | |
+| R24 | Each present part carries entry-level `durationMs` under the recipe’s optional timing contract. | slice 2 | |
+| R25 | Each present part carries a file breakdown Intent can display. | slice 2 | |
+| R26 | A run that skips `web` still publishes the summary. | slice 2 | |
+| R27 | In that summary, the website part is explicitly missing. | slice 2 | |
+| R28 | In that case, the Python part may still carry times. | slice 2 | |
+| R29 | In that case, the Python part may still carry a file breakdown. | slice 2 | |
+| R30 | Only the representative Python leg reports `test` timings. Reporting from every leg would inflate totals. | slice 1 | observed: Both Python fragment steps in .github/workflows/python-app.yml require ubuntu-24.04 and 3.13 and the matrix contract test passes |
+| R31 | Keep the existing summary schema. | slice 1 | observed: Mixed-duration replay asserts schemaVersion 1 in the collector output and existing contract versions in ci-proof-contract.mjs |
+| R32 | Keep Intent unchanged. | slice 2 | |
+| R33 | Use the existing recipe contract for `fragment --by-file`. | slice 2 | |
+| E01 | A push runs both `build` and `web`. | slice 2 | |
+| E02 | The maintainer downloads the `ci-proof-summary-attempt-<n>` artifact. | slice 2 | |
+| E03 | The maintainer views the judged attempt in Intent. | slice 2 | |
+| E04 | For both `test` and `website/frontend/features`, the downloaded summary and Intent show passed counts matching the runner reports. | slice 2 | |
+| E05 | The same two entries show matching failed counts. | slice 2 | |
+| E06 | The same two entries show matching other counts. | slice 2 | |
+| E07 | The same two entries show matching `durationMs`. | slice 2 | |
+| E08 | At least one file from each entry shows matching counts. | slice 2 | |
+| E09 | At least one file from each entry shows matching time. | slice 2 | |
+| E10 | A push skips `web`. | slice 2 | |
+| E11 | The summary and Intent show Python times in the example. | slice 2 | |
+| E12 | The summary and Intent show the Python file breakdown in the example. | slice 2 | |
+| E13 | The summary and Intent show `website/frontend/features` as missing proof. Zero duration would be a different state. | slice 2 | |
+| E14 | A report for a present part omits duration on some checks. | slice 1 | observed: Mixed-duration replay uses a JUnit report with passed, failed and skipped checks including one omitted time and observes a present part with the original counts |
+| E15 | The file breakdown counts those checks as untimed. |  | G1 |
+| E16 | The part still publishes. | slice 1 | observed: Mixed-duration replay uses a JUnit report with passed, failed and skipped checks including one omitted time and observes a present part with the original counts |
+| E17 | The part’s `durationMs` reflects only timed checks. | slice 1 | observed: Mixed-duration replay asserts 375 ms from two available durations including the failed test, on entry, part and test/test_example.py |
+| E18 | A check fails on a reporting job. | slice 1 | observed: Mixed-duration replay uses a JUnit report with passed, failed and skipped checks including one omitted time and observes a present part with the original counts |
+| E19 | The fragment still uploads under `!cancelled()`. | slice 2 | |
+| E20 | The failure appears in the counts. | slice 1 | observed: Mixed-duration replay uses a JUnit report with passed, failed and skipped checks including one omitted time and observes a present part with the original counts |
+| E21 | Available durations still contribute to entry-level `durationMs`. | slice 1 | observed: Mixed-duration replay asserts 375 ms from two available durations including the failed test, on entry, part and test/test_example.py |
+| E22 | Available durations still contribute to the file row. | slice 1 | observed: Mixed-duration replay asserts 375 ms from two available durations including the failed test, on entry, part and test/test_example.py |
+| A01 | Intent’s CI status tab already renders optional `durationMs` supplied in the summary. | slice 1 | |
+| A02 | Intent already renders supplied per-file breakdowns. The story calls for confirmation of the existing rendering on a real run during execution. | slice 1 | |
+| A03 | The developer’s `gh` can read the repository’s Actions artifacts. | slice 1 | |
+| X01 | Wall-clock job duration is outside this increment. `durationMs` is summed test execution time from runner reports. | slice 2 | |
+| X02 | Wall-clock step duration is outside this increment. | slice 2 | |
+| X03 | Timing publication from non-representative Python matrix legs is outside this increment. | slice 1 | observed: Both Python fragment steps in .github/workflows/python-app.yml require ubuntu-24.04 and 3.13 and the matrix contract test passes |
+| X04 | Publishing through a `ciAdapter` is outside this increment. The project has none. | slice 2 | |
+| X05 | Matrix changes are outside this increment. | slice 2 | |
+| X06 | Website change-detection changes are outside this increment. | slice 2 | |
+| X07 | Changes to the `web` condition are outside this increment. | slice 2 | |
+| X08 | Intent UI work beyond its existing timing and file rendering is outside this increment. | slice 2 | |
+| D01 | Cross-leg views of these timings are deferred. | slice 2 | |
+| D02 | Historical trend views are deferred. | slice 2 | |
+| D03 | Displaying separate setup/install time beside test execution time is deferred. | slice 2 | |
