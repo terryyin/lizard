@@ -359,7 +359,9 @@ even when ordinary wrap-up will remove them afterward.
 Distinct executions, original provenance, observations and qualified inferences are
 [retained at ODF-412](https://github.com/terryyin/open-dough/blob/a29f625255a3368eb721249c01df96e0f98edfd4/docs/maintainer/findings/ODF-412.md); source recovery remains in this project’s pre-compaction revision.
 
-## DD-399 — Source-only review restored formatter promises the plan proof narrowed
+## ODF-367 — Source-only review restored formatter promises the plan proof narrowed
+
+Former local code: DD-399.
 
 The story listed seven formatters whose `--compact` output must stay unchanged
 (XML, CSV, Checkstyle, HTML, clang, MSVS, extension printers). The executable
@@ -369,32 +371,8 @@ separate ids, and the coordinator added the missing observations before
 acceptance.
 
 ### Occurrences
-- Execution: SEED-030#compact-callback-report
-  - Timestamp: 2026-11-04T11:00:00+07:00 (approximate; slice 1 acceptance before d912695)
-  - Tool: Claude Code
-  - Model: claude-opus-5-5
-  - Open Dough release: 0.3.82 (installed by commit 210ae36)
-  - Evidence: plan proof item 5 at `bd4069d:.planning/slice-plans/019-compact-callback-report/PLAN.md`; review ids S9.3–S9.7 and K3 in `d912695:.planning/slice-plans/019-compact-callback-report/source-review.md`; `test_compact_leaves_other_formatters_unchanged` and `test_compact_leaves_extension_printer_unchanged` in `test/testCompactReport.py`.
-  - Observed effect: one extra test round before delivery. Five formatter commitments and the analysis-results example became observed proof instead of being accepted on the plan's narrower mapping.
-  - Inference: slice planning can collapse a listed compound scope item into "e.g." proof. The separate-ids source review is the gate that catches this. Practice confirmation, not a defect in this execution's delivery.
-
-- Execution: SEED-029#ocaml-support
-  - Timestamp: 2026-11-04 (time unknown; slice 1 acceptance before e8ecf8a)
-  - Tool: Claude Code
-  - Model: claude-opus-5-5
-  - Open Dough release: 0.3.82 (installed by commit 210ae36)
-  - Evidence: slice 1 proof row in `ba8d367:.planning/slice-plans/020-ocaml-support/PLAN.md` named only key examples 1, 2, 6, 8; obligation G1 and review ids 2.3, 2.11.3–2.11.7, 2.12, 4.5, 5.1.2, 5.1.3, 5.7.3, 6.1.2, 7.1 in `e8ecf8a:.planning/slice-plans/020-ocaml-support/source-review.md`.
-  - Observed effect: one return round on slice 1 (seven tests added, no product change) before delivery.
-  - Inference: the source review ran at first acceptance, after the slice-1 delegation, so the implementer received only the plan's example-shaped proof; obtaining the review before first delegation would have put the ids in the brief.
-
-- Execution: SEED-029#fsharp-support
-  - Timestamp: 2026-11-04 (time unknown; during slice 1 implementation before 65c552a)
-  - Tool: Claude Code
-  - Model: claude-opus-5-5
-  - Open Dough release: 0.3.82 (installed by commit 210ae36)
-  - Evidence: `65c552a:.planning/slice-plans/021-fsharp-support/source-review.md`, with the slice 1 rows for 2.3–2.5, 3.2, 4.x, 5.x, 6.x, 8.x and 9.x and E6.2 moved to slice 2.
-  - Observed effect: the coordinator again launched the source review after the slice 1 delegation. The added ids reached the implementer as a mid-flight message, not a return round, so no extra test round was needed. One allocation (E6.2, `sum` CCN 2) contradicted the plan's interim and came back as an implementer gap.
-  - Inference: this is the third occurrence in a row. Running the source review and its allocation before first delegation remains the cheaper ordering; checking allocations against named interims would have prevented the E6.2 mismatch.
+Distinct executions, original provenance, observations and qualified inferences are
+[retained at ODF-367](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-367.md); source recovery remains in this project’s pre-compaction revision.
 
 ## DD-400 — Hosted CI-proof slices published with `progress: true` until observation
 
@@ -415,7 +393,9 @@ manual commit fallback.
   - Observed effect: both hosted-proof slices published without premature `done`; real-run tab and artifact receipts were accepted afterward; no manual agent-commit workaround.
   - Inference: practice confirmation that `progress: true` is the guarded unfinished publish for hosted CI-proof slices in current guidance (addresses the ODF-275 gap for this path).
 
-## DD-401 — Fresh-increment delivery retries stumble on Darwin mktemp suffixes and git-rm staging
+## ODF-441 — Fresh-increment delivery retries stumble on Darwin mktemp suffixes and git-rm staging
+
+Former local code: DD-401.
 
 On Darwin `/usr/bin/mktemp`, a template like `/tmp/foo.XXXXXX.json` does not
 expand the `X`s (literal fixed path). The first call can create that file; an
@@ -425,16 +405,12 @@ JSON. Prefer trailing `XXXXXX` then rename (or `mktemp -t`). Separately,
 `ownedPaths`, per `fresh-increment.md`.
 
 ### Occurrences
-- Execution: SEED-036#remove-local-proof / `7d7cbabd25e0d0a61ea273d0283ec02d80e90c86`
-  - Timestamp: 2026-11-06T06:14:00+07:00 (approximate; between focused proof and published slice 1 at 06:15:13+07:00)
-  - Tool: Cursor
-  - Model: auto
-  - Open Dough release: 0.3.86
-  - Evidence: coordinator transcript `624ecd52-8c22-4f73-9e58-964f33b0d873` delivery turns: attempt 1 `mktemp …XXXXXX.json` with deleted paths in `ownedPaths`/`stagedPaths: []`; text “Deleted paths are already staged”; attempt 2 same mktemp pattern with deletions moved to `stagedPaths`; attempt 3 trailing-`XXXXXX` then `mv …json` and identical staging, published `7d7cbabd2`. Live Darwin check: second `mktemp /tmp/seed036-prep.XXXXXX.json` → `File exists`.
-  - Observed effect: three fresh-increment attempts before the slice-1 publish; attempt 2 blocked by the fixed prep path; attempt 1 failed earlier (tool stdout not retained in the Cursor transcript).
-  - Inference: attempt 2’s failure mode is the Darwin literal-`XXXXXX` collision. Attempt 1’s gate is uncertain without the delivery error text; the coordinator’s staging correction matches `fresh-increment` ownership rules for `git rm` and was present on the successful attempt.
+Distinct executions, original provenance, observations and qualified inferences are
+[retained at ODF-441](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-441.md); source recovery remains in this project’s pre-compaction revision.
 
-## DD-402 — Hosted-CI commitment marked observed before receipt or merge head
+## ODF-413 — Hosted-CI commitment marked observed before receipt or merge head
+
+Former local code: DD-402.
 
 Do not record a hosted-CI source-review commitment as observed until the
 applicable exact-head checks conclude successfully on the revision the
@@ -442,14 +418,8 @@ commitment names (the merged head when the promise is merge-gated). Local
 `pytest` / `make` alone do not close that observation.
 
 ### Occurrences
-- Execution: SEED-035#ns-member-name-performance / `30d54d6791d808ea00eae56132025c571d392147`
-  - Timestamp: 2026-11-07T01:49:14+07:00
-  - Tool: Cursor
-  - Model: auto
-  - Open Dough release: 0.3.86
-  - Evidence: source-review 4a.2 at `30d54d679:.planning/slice-plans/026-ns-member-name-performance/source-review.md` ("observed: … hosted CI on published head"); commitment text requires CI on the revision that is merged; Actions run 42274170695 on that SHA created 2026-11-06T18:49:27Z and completed 2026-11-06T18:51:52Z — after the delivery commit timestamp; 6a.1 / 6a.2 still open for land/ack.
-  - Observed effect: slice 2 Status done with 4a.2 marked observed while hosted CI receipt and merge-head identity were still open relative to the source promise.
-  - Inference: conflating the published story-branch head (and in-flight push CI) with merge-gated CI observation closes the commitment early.
+Distinct executions, original provenance, observations and qualified inferences are
+[retained at ODF-413](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-413.md); source recovery remains in this project’s pre-compaction revision.
 
 ## DD-403 — Early cost-owner performance probe avoided unnecessary NS remediation
 
@@ -471,4 +441,5 @@ historical fail as still true.
 ## Retention
 
 - Highest allocated local number: 403
+- Shared-feedback adoption and compaction recovery (2026-11-07): `7129516bc5bd9ba57f370a6353ffe0e10eb1c861:DearDough.md`; its rows are retained at the linked Open Dough finding owners (`483d3a1e8f0ea24b929675b9a195faca48ac8f47:docs/maintainer/findings/`).
 - Shared-feedback compaction recovery (2026-11-03): `4195708bad2061ebc1c829ebdff7868605b173bb:DearDough.md`; its rows are retained at the linked Open Dough finding owners.
