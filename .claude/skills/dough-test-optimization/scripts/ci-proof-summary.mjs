@@ -7,6 +7,10 @@
 //             declared entries and parts (`--expect <entry>=<parts>`) into
 //             the attempt's summary (ci-proof-collect.mjs).
 //
+// `fragment --by-file` also breaks each fragment down by test file
+// (ci-proof-figures.mjs, "File breakdown"); without it, fragments carry
+// entry totals only, as before.
+//
 // Both name the attempt: a GitHub Actions run attempt by `--attempt` (and
 // `summarize` by `--run-id`), or a CI adapter's attempt by `--attempt-id`.
 //
@@ -25,6 +29,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
 import { describeSummary, summarize } from "./ci-proof-collect.mjs";
 import {
+  SUMMARY_READ_LIMIT_BYTES,
   attemptProblems,
   entrySlug,
   fragmentProblems,
@@ -66,18 +71,19 @@ function positive(name, text) {
   return value;
 }
 
-// A command's string options: every REQUIRED one must be given, and each of
-// MULTIPLE may be given more than once.
-function options(argv, { required, optional = [], multiple = [] }) {
+// A command's options: strings, every REQUIRED one must be given, and each
+// of MULTIPLE may be given more than once; each of FLAGS is a boolean.
+function options(argv, { required, optional = [], multiple = [], flags = [] }) {
   const names = [...required, ...optional];
   const { values } = parseArgs({
     args: argv,
-    options: Object.fromEntries(
-      names.map((name) => [
+    options: Object.fromEntries([
+      ...names.map((name) => [
         name,
         { type: "string", multiple: multiple.includes(name) },
       ]),
-    ),
+      ...flags.map((name) => [name, { type: "boolean" }]),
+    ]),
   });
   for (const name of required) {
     if (values[name] === undefined || values[name] === "") {
@@ -118,9 +124,17 @@ function parseExpect(declaration) {
 function runFragment(argv) {
   const values = options(argv, {
     required: ["entry", "part", "of", "revision", "out"],
-    optional: ["attempt", "attempt-id", "playwright-record", "outcomes"],
+    optional: [
+      "attempt",
+      "attempt-id",
+      "playwright-record",
+      "outcomes",
+      "times",
+    ],
     multiple: ["entry"],
+    flags: ["by-file"],
   });
+  const byFile = { byFile: values["by-file"] === true };
   const identity = {
     entries: values.entry,
     part: positive("part", values.part),
@@ -130,13 +144,20 @@ function runFragment(argv) {
   };
   let fragments;
   if (values["playwright-record"] !== undefined) {
+    if (values.times !== undefined) {
+      throw new Error("--times applies only with --outcomes");
+    }
     const record = JSON.parse(
       readFileSync(values["playwright-record"], "utf8"),
     );
-    fragments = fragmentFromPlaywrightRecord(record, identity);
+    fragments = fragmentFromPlaywrightRecord(record, identity, byFile);
   } else if (values.outcomes !== undefined) {
     const text = readFileSync(values.outcomes, "utf8");
-    fragments = fragmentsFromOutcomes(text, identity);
+    const times =
+      values.times === undefined
+        ? undefined
+        : readFileSync(values.times, "utf8");
+    fragments = fragmentsFromOutcomes(text, identity, times, byFile);
   } else {
     throw new Error("--playwright-record or --outcomes is required");
   }
@@ -170,8 +191,15 @@ function runSummarize(argv) {
       revision: values.revision,
     },
   });
-  writeFileSync(values.out, `${JSON.stringify(summary)}\n`);
+  const text = `${JSON.stringify(summary)}\n`;
+  writeFileSync(values.out, text);
   for (const note of notes) process.stderr.write(`${note}\n`);
+  const bytes = Buffer.byteLength(text);
+  if (bytes > SUMMARY_READ_LIMIT_BYTES) {
+    process.stderr.write(
+      `the summary is ${bytes} bytes, more than the ${SUMMARY_READ_LIMIT_BYTES} a GitHub Actions summary may be read as; Intent will not show it\n`,
+    );
+  }
   for (const line of describeSummary(summary))
     process.stdout.write(`${line}\n`);
 }

@@ -3,7 +3,9 @@
 // The declaration is the expectation: fragments present never add a part. A
 // fragment from another attempt, of either identity, or another revision, or
 // for an undeclared part, is excluded; a declared part with no fragment is
-// missing, and one with more than one is ambiguous. Neither is counted. Node
+// missing, and one with more than one is ambiguous. Neither is counted. A
+// present part's file breakdown, when its fragment has one, adds to its
+// entry's per-path figures; a part without one leaves them partial. Node
 // built-ins only, like the rest of the collector (ci-proof-summary.mjs).
 import {
   COUNT_FIELDS,
@@ -13,6 +15,26 @@ import {
   summaryAttempt,
   zeroCounts,
 } from "./ci-proof-contract.mjs";
+import {
+  addedFigures,
+  breakdownOf,
+  emptyFigures,
+} from "./ci-proof-figures.mjs";
+
+// An entry's file breakdown summed over its broken-down present FRAGMENTS,
+// or nothing when none was broken down.
+function entryBreakdown(fragments) {
+  const brokenDown = fragments.filter((value) => value.files !== undefined);
+  if (brokenDown.length === 0) return {};
+  const byPath = new Map();
+  const add = (path, figures) =>
+    byPath.set(path, addedFigures(byPath.get(path) ?? emptyFigures(), figures));
+  for (const value of brokenDown) {
+    for (const { path, ...figures } of value.files) add(path, figures);
+    if (value.unassigned !== undefined) add(undefined, value.unassigned);
+  }
+  return breakdownOf(byPath);
+}
 
 // Builds the summary of RUN, the attempt collected, from the fragments read.
 // Returns the summary and a note for every fragment excluded from it.
@@ -43,6 +65,9 @@ export function summarize({ fragments, expect, run }) {
     const found = byPart.get(entry);
     const totals = zeroCounts();
     const units = new Set();
+    let durationMs;
+    let untimed;
+    const counted = [];
     const parts = [...Array(declaredParts).keys()].map((index) => {
       const part = index + 1;
       const candidates = found.get(part) ?? [];
@@ -54,14 +79,33 @@ export function summarize({ fragments, expect, run }) {
         COUNT_FIELDS.map((field) => [field, only[field]]),
       );
       for (const field of COUNT_FIELDS) totals[field] += counts[field];
-      return { part, status: "present", ...counts };
+      const present = { part, status: "present", ...counts };
+      if (only.durationMs !== undefined) {
+        present.durationMs = only.durationMs;
+        durationMs = (durationMs ?? 0) + only.durationMs;
+      }
+      if (only.untimed !== undefined) {
+        present.untimed = only.untimed;
+        untimed = (untimed ?? 0) + only.untimed;
+      }
+      if (only.files !== undefined) present.breakdown = true;
+      counted.push(only);
+      return present;
     });
     if (units.size > 1) {
       throw new Error(
         `entry ${entry} has parts counted in ${[...units].join(", ")}`,
       );
     }
-    return { path: entry, unit: [...units][0] ?? null, ...totals, parts };
+    return {
+      path: entry,
+      unit: [...units][0] ?? null,
+      ...totals,
+      ...(durationMs === undefined ? {} : { durationMs }),
+      ...(untimed === undefined ? {} : { untimed }),
+      parts,
+      ...entryBreakdown(counted),
+    };
   });
   return {
     summary: {

@@ -52,6 +52,9 @@ export function createCommandAcquisition(options) {
     // Coverage owns workflow-path applicability; candidates retain their real
     // attempt state and never enter the ordinary failure stream by themselves.
     discoverAncestorCandidates: async () => retained,
+    // Every attempt this poll's discover answered, before newest-per-check
+    // retention: CI status counts attemptId ambiguity over these.
+    discoverAnsweredAttempts: async () => polled ?? [],
     discoverQueue: async () => queue,
     readCurrentAttempt: async (run) => {
       if (!polled) throw new Error("CI adapter discovery is unavailable");

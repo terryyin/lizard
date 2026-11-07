@@ -105,7 +105,10 @@ const defined = (fields) =>
     Object.entries(fields).filter(([, value]) => value !== undefined),
   );
 
-const observedRun = (run, workflowName) =>
+// One listed run as the observer and Intent judgment share it. Start and
+// completion come from the listing (`run_started_at`, `updated_at`); wall
+// time is their difference when both are present, never summed job times.
+export const observedRun = (run, workflowName) =>
   defined({
     databaseId: run.id,
     attempt: run.run_attempt,
@@ -117,6 +120,8 @@ const observedRun = (run, workflowName) =>
     conclusion: run.conclusion,
     url: run.html_url,
     createdAt: run.created_at,
+    startedAt: run.run_started_at,
+    completedAt: run.updated_at,
   });
 
 const jobsPageSize = 100;
@@ -153,8 +158,11 @@ export function createGitHubActions({
 
     async listRuns({ branch, created, limit = 20 }, signal) {
       const { id, name } = await selectedWorkflow(signal);
+      // Omit `branch` for an all-branch listing (applicability ancestor
+      // discovery). AcquireRuns always supplies the observed branch; keep
+      // `branch` first in that query so existing route assertions stay stable.
       const query = new URLSearchParams({
-        branch,
+        ...(branch !== undefined ? { branch } : {}),
         event: "push",
         ...(created ? { created } : {}),
         per_page: String(limit),

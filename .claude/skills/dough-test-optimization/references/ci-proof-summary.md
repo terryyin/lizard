@@ -6,14 +6,16 @@ failed and other counts per location, and any part of it that did not report.
 It reads one small summary that this project's own CI writes: a GitHub Actions
 workflow publishes it as an artifact of the shown run, and a project whose CI
 is read through a `ciAdapter` serves it from that adapter for the shown
-attempt. Use this reference when the request is to make this project's CI
-publish that summary, or when the tab says the shown run or attempt has no CI
-proof summary.
+attempt. Present parts and their entries may carry optional `durationMs`
+(summed test execution time in milliseconds); a part without one carries
+none, and schema versions stay at 1. With `fragment --by-file`, each entry is
+also broken down by test file, so selecting an entry or folder in Intent
+shows that scope's figures and its immediate folders' and files'; without it,
+Intent shows entry totals and says the breakdown is unavailable. Use this reference when the request is
+to make this project's CI publish that summary, or when the tab says the
+shown run or attempt has no CI proof summary.
 
-It adds observations of ordinary CI results beside any deliberately retained
-proof (such as [Cucumber proof](cucumber-proof.md)), which it leaves
-untouched. Every change is to this project's own workflow, CI scripts or CI
-adapter.
+Every change is to this project's own workflow, CI scripts or CI adapter.
 
 ## Check the project first
 
@@ -65,12 +67,13 @@ missing and ambiguous parts the same way.
 
 ## 1. Copy the collector into this project
 
-Copy these four modules, unchanged and side by side, from this skill's
+Copy these five modules, unchanged and side by side, from this skill's
 installed `scripts/` directory into the directory this project keeps CI
 scripts in (written `<ci-scripts>` below), and commit them:
 
 - [ci-proof-summary.mjs](../scripts/ci-proof-summary.mjs), the command line;
 - [ci-proof-contract.mjs](../scripts/ci-proof-contract.mjs);
+- [ci-proof-figures.mjs](../scripts/ci-proof-figures.mjs);
 - [ci-proof-fragments.mjs](../scripts/ci-proof-fragments.mjs);
 - [ci-proof-collect.mjs](../scripts/ci-proof-collect.mjs).
 
@@ -90,189 +93,126 @@ entry once, `1` to `n`: two jobs reporting the same part make it ambiguous.
   checks. Each line counts toward the `--entry` whose path contains it (the
   longest one), so one job may report several entries. A line in no given
   entry counts toward none. Use it for any runner that can name each test's
-  file.
+  file. Optional `--times FILE` uses the same check labels with one
+  `<seconds><TAB><check path>` line per check; each matching entry's fragment
+  then carries `durationMs` as the sum of its checks' seconds in milliseconds.
+  Without `--times`, or for an entry with no times line, the fragment carries
+  no duration.
 - `--playwright-record FILE`: JSON
-  `{"schemaVersion":1,"phase":"completed","tests":[{"executions":[{"outcome":"expected"}]}]}`
-  for exactly one `--entry`. The unit is tests. A test passes when every
+  `{"schemaVersion":1,"phase":"completed","tests":[{"executions":[{"outcome":"expected"}],"attempts":[{"durationMs":42}]}]}`
+  for one or more `--entry` paths. With several entries, each test's absolute
+  `location.file`, relative to the record's `run.cwd`, counts toward the
+  longest containing entry; a test with no usable owning path counts toward
+  none. With one entry, the whole record counts toward that entry, including
+  tests with no usable file path. The unit is tests. A test passes when every
   outcome is `expected`, fails when any is `unexpected` or `flaky`, and is
   otherwise other. Any other `phase` fails the step and writes no fragment.
+  When finished attempts record `durationMs`, each fragment's `durationMs` is
+  their sum across its tests (retries included). An entry with no selected
+  tests still receives its zero-count fragment. `--times` applies only with
+  `--outcomes`.
+
+Add `--by-file` to break each fragment down by test file. Each `--outcomes`
+line's check label is then its repository path (as `tests/a.sh`); a label
+that is not a relative path inside its entry is counted as unassigned, and a
+check with no `--times` line as untimed. A `--playwright-record` test's
+file is its absolute `location.file` relative to the record's `run.cwd`, the
+directory the run started in (the repository root for `npm run`); a test
+whose file is not inside its sole entry under that directory, or that has no
+location, is counted as unassigned rather than given a path; several entries
+require a usable owning path to assign a test. A test none
+of whose attempts recorded `durationMs` is untimed. No machine path is
+published. Every count stays accounted for: files plus unassigned equal the
+fragment's counts, and `summarize` keeps each part's breakdown, or its
+absence, so Intent shows a part without one as a gap.
 
 Write the conversion from the runner's own report into `<ci-scripts>` beside
-the collector. For a JUnit XML report, such as pytest's
-`-o junit_family=xunit1 --junitxml=<file>` (whose `file` attribute names each
-test's file relative to the repository root), `<ci-scripts>/junit-outcomes.py`:
-
-```python
-import sys
-import xml.etree.ElementTree as ET
-
-for case in ET.parse(sys.argv[1]).iter("testcase"):
-    if case.get("file") is None:
-        sys.exit(f"testcase {case.get('name')} names no file")
-    failed = case.find("failure") is not None or case.find("error") is not None
-    status = "failed" if failed else "other" if case.find("skipped") is not None else "passed"
-    print(f"{status}\t{case.get('file')}")
-```
-
-For Playwright's JSON reporter (`--reporter=<existing>,json` with
-`PLAYWRIGHT_JSON_OUTPUT_NAME` set to an absolute path),
-`<ci-scripts>/playwright-record.mjs`:
-
-```js
-import { readFileSync, writeFileSync } from "node:fs";
-const [reportFile, recordFile] = process.argv.slice(2);
-const report = JSON.parse(readFileSync(reportFile, "utf8"));
-const tests = [];
-const visit = (suite) => {
-  for (const spec of suite.specs ?? [])
-    for (const test of spec.tests ?? [])
-      tests.push({ executions: [{ outcome: test.status }] });
-  (suite.suites ?? []).forEach(visit);
-};
-(report.suites ?? []).forEach(visit);
-const phase = (report.errors ?? []).length === 0 ? "completed" : "errored";
-writeFileSync(recordFile, JSON.stringify({ schemaVersion: 1, phase, tests }));
-```
-
+the collector — for example a JUnit XML `testcase` walk that prints
+`<status>\t<file>`, or a Playwright JSON walk into the record shape above.
 A run that ended with a global error, or wrote no report, gives no fragment,
 so its part shows as missing rather than as a count.
 
 ## 3. Write fragments in each producer job, after failures
 
-Name the revision once at the workflow level, so a pull request run names its
-head rather than its merge commit:
-
-```yaml
-env:
-  CI_PROOF_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
-```
-
-Give the test step an `id`, and let a sharded matrix finish every part with
-`strategy.fail-fast: false` (a cancelled part shows as missing). After the test
-step, in each producer job, `<part>` being `1` and `<parts>` `1` for a single
-job, or the matrix value and `${{ strategy.job-total }}` for a matrix:
-
-```yaml
-      - name: Write the CI proof fragments
-        if: ${{ !cancelled() && steps.<test-step-id>.outcome != 'skipped' }}
-        run: |
-          <conversion from the runner's report into <report>, if any>
-          node <ci-scripts>/ci-proof-summary.mjs fragment \
-            --outcomes <report> --entry <entry> [--entry <entry>…] \
-            --part <part> --of <parts> --attempt "${GITHUB_RUN_ATTEMPT}" \
-            --revision "${CI_PROOF_REVISION}" --out "${RUNNER_TEMP}/ci-proof"
-      - name: Keep the CI proof fragments
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: ci-proof-fragments-${{ github.job }}-<part>-attempt-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/ci-proof/
-          if-no-files-found: ignore
-          retention-days: 1
-```
-
-Use `--playwright-record <record>` and a single `--entry` in place of
-`--outcomes` for a Playwright record. The `!cancelled()` condition writes and
-keeps fragments after failing tests too; the `skipped` check leaves out a job
-whose setup failed before its tests ran, which then shows as missing. The
-artifact name stays unique per job part and per attempt, so a rerun never
-reads an earlier attempt's fragments. Keep the project's existing pins of the
-artifact actions; pattern downloads need v4 or later.
-
-## 4. Declare the expected parts and collect
-
-Add one collector job to the judged workflow. `needs` lists every producer
-job, and `if: ${{ !cancelled() }}` runs it after their failures:
-
-```yaml
-  ci-proof:
-    needs: [<producer jobs>]
-    if: ${{ !cancelled() }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: <20.12 or later, as the project pins it>
-      - uses: actions/download-artifact@v4
-        with:
-          pattern: ci-proof-fragments-*-attempt-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/ci-proof-fragments
-      - name: Summarize CI proof
-        run: |
-          mkdir -p -- "${RUNNER_TEMP}/ci-proof-fragments"
-          node <ci-scripts>/ci-proof-summary.mjs summarize \
-            --fragments "${RUNNER_TEMP}/ci-proof-fragments" \
-            --expect <entry>=<parts> [--expect <entry>=<parts>…] \
-            --repository "${GITHUB_REPOSITORY}" --run-id "${GITHUB_RUN_ID}" \
-            --attempt "${GITHUB_RUN_ATTEMPT}" --revision "${CI_PROOF_REVISION}" \
-            --out "${RUNNER_TEMP}/ci-proof-summary.json"
-      - uses: actions/upload-artifact@v4
-        with:
-          name: ci-proof-summary-attempt-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/ci-proof-summary.json
-          if-no-files-found: error
-          retention-days: <summary retention>
-```
-
-The `--expect` declarations are the expectation: list the proved entries in
-`intent.locations` order, each with its part count. Fragments present never
-add an entry or a part. Keep each count equal to its job's matrix length, for
-example with a comment beside the matrix or a project test that reads the
-workflow. The tab reads only the artifact named exactly
-`ci-proof-summary-attempt-<n>` holding the one `ci-proof-summary.json`
-(at most 1 MiB, far above a real summary). The collector's log prints one
-line per entry with its counts and gaps, and a note for each fragment it
-excluded. A failing collector job fails the run but never changes a producer
-job's result. The workflow needs no extra permission or secret.
-
-## 5. Choose retention
-
-Fragments are needed only until the collector job runs, so a day is enough.
-Keep the summary as long as developers should see proof for a shown run: an
-idle trunk or story branch may keep showing an older run, and an expired
-summary is shown as expired. For example, keep it 30 days, within the
-repository's or organization's maximum artifact retention and its Actions
-storage.
-
-## 6. Grant the dashboard's read access
-
-The tab reads with the developer's own `gh`. It must be signed in
-(`gh auth status`) as an account that can read this repository's Actions. A
-fine-grained token needs the repository's **Actions: Read** permission; for a
-private repository, a classic token needs the `repo` scope. Check it against a
-run of the judged workflow:
-
-```sh
-gh api "repos/<owner>/<repo>/actions/runs/<run-id>/artifacts?per_page=100" \
-  --jq '.artifacts[] | "\(.id) \(.name) expired=\(.expired)"'
-gh api repos/<owner>/<repo>/actions/artifacts/<artifact-id>/zip > <scratch-dir>/summary.zip
-```
-
-The listing names `ci-proof-summary-attempt-<n>`, and the archive holds only
-`ci-proof-summary.json`. Then Intent's **CI status** tab shows Proof for that
-run. When it names another revision, check `CI_PROOF_REVISION`; when a part is
-missing, check that part's fragment step and artifact, and the collector's
-exclusion notes.
-
-## Publish through a CI adapter
-
-Follow this in place of steps 3 to 6 when `ciAdapter` reads this project's
-CI. Its inputs are the attempt's identity as this project's adapter discovers
-it, the full revision the attempt checked, and the repository the dashboard
-reads this project as (`OWNER/REPO`, the `check.repo` of the adapter's
-requests). When the CI job cannot learn its own `attemptId` or full revision,
-stop and name that missing input: a summary under another identity is never
-shown.
-
-### Write the fragments and the summary in the attempt's own job
-
-After the tests run, whether they passed or failed, in the same CI job and
-with its own identity:
+Set workflow `env.CI_PROOF_REVISION` to
+`${{ github.event.pull_request.head.sha || github.sha }}` so a pull request
+names its head. Give the test step an `id`, and let a sharded matrix finish
+every part with `strategy.fail-fast: false`. After the test step, when
+`!cancelled()` and the test step was not `skipped`, convert the report if
+needed and run:
 
 ```sh
 node <ci-scripts>/ci-proof-summary.mjs fragment \
-  --outcomes <report> --entry <entry> [--entry <entry>…] \
+  --outcomes <report> [--times <times>] [--by-file] \
+  --entry <entry> [--entry <entry>…] \
+  --part <part> --of <parts> --attempt "${GITHUB_RUN_ATTEMPT}" \
+  --revision "${CI_PROOF_REVISION}" --out "${RUNNER_TEMP}/ci-proof"
+```
+
+`<part>` is `1` and `<parts>` `1` for a single job, or the matrix value and
+`${{ strategy.job-total }}` for a matrix. Use `--playwright-record <record>`
+instead of `--outcomes` for a Playwright record; name every entry the shared
+run proves. Upload
+`${{ runner.temp }}/ci-proof/` as artifact
+`ci-proof-fragments-${{ github.job }}-<part>-attempt-${{ github.run_attempt }}`
+with `if-no-files-found: ignore` and one-day retention (`!cancelled()` so
+failing tests still keep fragments). Keep the project's artifact-action pins;
+pattern downloads need v4 or later.
+
+## 4. Declare the expected parts and collect
+
+Add a collector job that `needs` every producer, runs when `!cancelled()`,
+checks out, sets up Node 20.12+, downloads
+`ci-proof-fragments-*-attempt-${{ github.run_attempt }}` into a fragments
+directory, then:
+
+```sh
+node <ci-scripts>/ci-proof-summary.mjs summarize \
+  --fragments <fragments dir> \
+  --expect <entry>=<parts> [--expect <entry>=<parts>…] \
+  --repository "${GITHUB_REPOSITORY}" --run-id "${GITHUB_RUN_ID}" \
+  --attempt "${GITHUB_RUN_ATTEMPT}" --revision "${CI_PROOF_REVISION}" \
+  --out "${RUNNER_TEMP}/ci-proof-summary.json"
+```
+
+Upload that file as `ci-proof-summary-attempt-${{ github.run_attempt }}`
+(`if-no-files-found: error`, retention from step 5). `--expect` lists proved
+entries in `intent.locations` order with part counts; fragments present never
+add an entry or part. The tab reads only that artifact name holding
+`ci-proof-summary.json`, at most 1 MiB; a file breakdown of about 1,400 test
+files measured about 170 KB. A larger summary is still written whole, never
+truncated, and the collector names its size on stderr. The collector log
+prints per-entry counts and gaps plus exclusion notes. A failing collector fails the run but not producer
+results. No extra permission or secret is required.
+
+## 5. Choose retention
+
+Fragments need only a day (until the collector runs). Keep the summary as
+long as developers should see proof for a shown run — for example 30 days,
+within the repository's or organization's maximum artifact retention.
+
+## 6. Grant the dashboard's read access
+
+The tab reads with the developer's `gh` (`gh auth status`); the account needs
+Actions read (fine-grained **Actions: Read**, or classic `repo` on a private
+repository). Confirm a judged-workflow run lists
+`ci-proof-summary-attempt-<n>` and that its zip holds only
+`ci-proof-summary.json`. Wrong revision → check `CI_PROOF_REVISION`; missing
+part → that part's fragment step, artifact, and collector exclusion notes.
+
+## Publish through a CI adapter
+
+Follow this in place of steps 3 to 6 when `ciAdapter` reads this project's CI.
+Inputs: the attempt's `attemptId` and full `sha` as `discover` returns them,
+and `OWNER/REPO` as the adapter's `check.repo`. Stop if the job cannot learn
+`attemptId` or the full revision.
+
+In the attempt's own job, after tests (pass or fail):
+
+```sh
+node <ci-scripts>/ci-proof-summary.mjs fragment \
+  --outcomes <report> [--times <times>] [--by-file] \
+  --entry <entry> [--entry <entry>…] \
   --part <part> --of <parts> --attempt-id "<attempt id>" \
   --revision "<full revision>" --out <fragments dir>
 node <ci-scripts>/ci-proof-summary.mjs summarize \
@@ -282,58 +222,15 @@ node <ci-scripts>/ci-proof-summary.mjs summarize \
   --revision "<full revision>" --out <summary file>
 ```
 
-- `<attempt id>` is exactly the `attemptId` this project's adapter returns
-  from `discover` for this attempt, as text: the tab compares the text form,
-  so a discovered `7` is written `7`.
-- `<full revision>` is the full commit SHA the attempt checked, the
-  discovered `sha`.
-- Name the attempt only by `--attempt-id`. `--run-id` and `--attempt` are a
-  GitHub Actions run's identity; naming both identities, or neither, is
-  refused.
-- `--expect` lists the proved entries in `intent.locations` order with their
-  part counts, as in step 4. A part whose tests wrote no report gives no
-  fragment and shows as missing. A fragment of another attempt or revision is
-  excluded with a note on stderr; the per-entry lines go to stdout. When an
-  entry's parts run in separate jobs, gather this attempt's fragments into
-  one directory before `summarize`, as step 4 does.
-- A proof step that fails leaves the job's own result as it is; that attempt
-  then shows no proof.
-
-The summary is labelled by the attempt that wrote it, so its counts are only
-as trustworthy as this project's CI job, the same as the verdict that job
-reports.
-
-### Keep the summary where the adapter can read it
-
-Keep `<summary file>` with the attempt, in a location this project chooses
-that the adapter can read by attempt for as long as developers should see that
-attempt's proof, such as job output this CI service retains and serves per
-attempt. Each attempt keeps its own summary; a rerun is a new attempt with a
-new one. A pruned or expired summary is answered as unavailable.
-
-### Answer the adapter's proof request
-
-Implement the adapter's `proof` operation as its
-[CI proof reads](../../dough-execute-plan/manuals/custom-ci.md#ci-proof-reads)
-contract describes, reading the attempt's retained summary. Before answering
-it, check it: `summaryProblems` from the copied `ci-proof-summary.mjs` is
-empty, and its `attemptId` and `revision` equal the attempt record's.
-Otherwise answer `unavailable` with which differs.
-
-### Check it
-
-From this project's root, ask the configured adapter for a completed
-attempt that `discover` returned:
-
-```sh
-printf '%s\n' '{"operation":"proof","check":{"repo":"<OWNER/REPO>","branch":"<branch>"},"attempt":{"runId":"<run id>","attemptId":"<attempt id>","sha":"<full revision>"}}' \
-  | <ciAdapter command and arguments>
-```
-
-It prints `{"summary": …}` naming that repository, `attemptId` and revision.
-Intent's **CI status** tab then shows Proof for that attempt, named by its
-`attemptId` and short revision. When the tab names another attempt or
-revision, check the `--attempt-id` and `--revision` values the job passed;
-when it says the attempt is ambiguous, give attempts sharing a revision their
-own `attemptId`s; when a part is missing, check that part's report and the
-collector's exclusion notes.
+Name the attempt only by `--attempt-id` (text form of discovered `attemptId`).
+An adapter's `proof` answer is read only up to 64 KiB, so add `--by-file`
+to `fragment` only after checking the summary file stays well under that;
+`summarize` keeps whatever breakdown the fragments carry. Without it, Intent
+still shows entry totals.
+`--expect` matches step 4. Keep `<summary file>` where the adapter can read it
+per attempt for as long as developers should see that proof. Implement
+`proof` per
+[CI proof reads](../../dough-execute-plan/manuals/custom-ci-proof.md):
+`summaryProblems` empty and `attemptId`/`revision` match, else `unavailable`.
+Check with a `proof` stdin request for a discovered attempt; the tab then
+shows Proof named by `attemptId` and short revision.
