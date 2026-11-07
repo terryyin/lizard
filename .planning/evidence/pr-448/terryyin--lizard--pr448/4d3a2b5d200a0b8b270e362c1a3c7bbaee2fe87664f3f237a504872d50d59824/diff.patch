@@ -1,0 +1,50 @@
+diff --git a/lizard_languages/php.py b/lizard_languages/php.py
+index 0068935b..5429ab74 100644
+--- a/lizard_languages/php.py
++++ b/lizard_languages/php.py
+@@ -192,7 +192,7 @@ def _function_body(self, token):
+             self.brace_level += 1
+         elif token == '}':
+             self.brace_level -= 1
+-            if self.brace_level == self.in_class:  # Using in_class as boolean (0/1)
++            if self.brace_level == (1 if (self.in_class or self.in_trait) else 0):
+                 # End of function
+                 if self.started_function:
+                     self.context.end_of_function()
+diff --git a/test/test_languages/testPHP.py b/test/test_languages/testPHP.py
+index d25b9190..144c6682 100644
+--- a/test/test_languages/testPHP.py
++++ b/test/test_languages/testPHP.py
+@@ -359,3 +359,32 @@ class Product {
+         # Verify cyclomatic complexity for method with conditionals
+         process_order = next(f for f in functions if f.name == 'Product::processOrder')
+         self.assertEqual(7, process_order.cyclomatic_complexity)  # Current behavior shows 7 for this method
++
++    def test_trait_with_multiple_functions(self):
++        """Test that traits with multiple functions are parsed correctly.
++
++        Bug reported in GitHub issue: traits only detected the first function
++        and treated it as spanning the entire file.
++        """
++        php_code = '''<?php
++trait A {
++    function foo() {
++        return 1;
++    }
++
++    function bar() {
++        return 2;
++    }
++}
++?>'''
++        functions = get_php_function_list(php_code)
++        self.assertEqual(2, len(functions))
++        function_names = sorted(f.name for f in functions)
++        self.assertIn('A::foo', function_names)
++        self.assertIn('A::bar', function_names)
++
++        # Verify each function has correct metrics
++        foo = next(f for f in functions if f.name == 'A::foo')
++        bar = next(f for f in functions if f.name == 'A::bar')
++        self.assertEqual(3, foo.nloc)  # 3 lines of code
++        self.assertEqual(3, bar.nloc)  # 3 lines of code
