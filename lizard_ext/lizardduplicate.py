@@ -6,6 +6,7 @@ from bisect import bisect_right
 from collections import deque
 from itertools import groupby
 from .default_ordered_dict import DefaultOrderedDict
+from .duplicate_unified_tokens import NestingStackWithUnifiedTokens
 from .extension_base import ExtensionBase
 
 
@@ -26,22 +27,6 @@ class CodeSnippet(object):
 
     def fun_yet_to_come2(self):
         pass
-
-
-class Sequence(object):
-    def __init__(self, start_line):
-        self.hash = ''
-        self.start_line = self.end_line = start_line
-
-    def append_token(self, unified_token, end_line):
-        self.hash += unified_token
-        self.end_line = end_line
-
-    def __str__(self):
-        return "<%s-%s: %s>" % (self.start_line, self.end_line, self.hash)
-
-    def __repr__(self):
-        return str(self)
 
 
 class InvolvingScope(object):
@@ -171,76 +156,6 @@ class DuplicateFinder(object):
             return self.nodes[seq[1]].hash
         except IndexError:
             return ''
-
-
-class NestingStackWithUnifiedTokens(object):
-
-    SAMPLE_SIZE = 31
-    IGNORE_CONSTANT_VALUE_COUNT = 10
-
-    def __init__(self, decorated):
-        self._decorated = decorated
-        self.token_register = {}
-        self.constant_count = 0
-        self.current_scope = set()
-        self.scope_stack = [self.current_scope]
-        self.unified_tokens = []
-        self.previous_token = None
-
-    def __getattr__(self, attr):
-        return getattr(self._decorated, attr)
-
-    def add_bare_nesting(self):
-        self.current_scope = set()
-        self.scope_stack.append(self.current_scope)
-        return self._decorated.add_bare_nesting()
-
-    def pop_nesting(self):
-        if len(self.scope_stack) > 1:
-            for token in self.scope_stack.pop():
-                del self.token_register[token]
-            self.current_scope = self.scope_stack[-1]
-        return self._decorated.pop_nesting()
-
-    @staticmethod
-    def _is_const(token):
-        return token[0].isdigit() or token[0] in ("'", '"')
-
-    def _unified_token(self, token):
-        if self.previous_token in (".", "->"):
-            return token
-        if token == '-':
-            return '+'
-        if self._is_const(token):
-            return '1'
-        if token[0].isalpha():
-            if token not in self.token_register:
-                self.token_register[token] = 'v'+str(len(self.current_scope))
-                self.current_scope.add(token)
-            return self.token_register[token]
-        return token
-
-    def enqueue_token(self, token, current_line):
-        try:
-            if self._is_const(self.unified_tokens[-self.SAMPLE_SIZE]):
-                self.constant_count -= 1
-        except IndexError:
-            pass
-        if self._is_const(token):
-            self.constant_count += 1
-        if self.constant_count <= self.SAMPLE_SIZE / 5:
-            token = self._unified_token(token)
-        self.unified_tokens.append((token, current_line,))
-        self.previous_token = token
-
-    def samples(self):
-        buf = deque()
-        for unified_token, current_line in self.unified_tokens:
-            buf.append(Sequence(current_line))
-            for code_hash in buf:
-                code_hash.append_token(unified_token, current_line)
-            if len(buf) > self.SAMPLE_SIZE:
-                yield buf.popleft()
 
 
 class LizardExtension(ExtensionBase):
