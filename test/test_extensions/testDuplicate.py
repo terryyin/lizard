@@ -1,8 +1,7 @@
 import unittest
-from unittest.mock import patch
 from ..testHelpers import get_cpp_fileinfo_with_extension
 from lizard_ext.lizardduplicate import LizardExtension as DuplicateDetector
-from lizard import analyze_files, get_extensions
+from .duplicate_c_function_builder import CFunctionBuilder
 
 
 class TestDuplicateExtension(unittest.TestCase):
@@ -165,65 +164,6 @@ class TestDuplicateExtension(unittest.TestCase):
                 )
         self.assertEqual(0, len(duplicates))
 
-    def test_repeating_patterns(self):
-        duplicates = self.detect(
-                self.builder
-                .six_line_function()
-                .six_line_function()
-                .six_line_function()
-                .six_line_function()
-                .build()
-                )
-        self.assertEqual(1, len(duplicates))
-
-    def test_repeating_patterns_multiple_matches(self):
-        duplicates = self.detect(
-                self.builder
-                .five_line_function()
-                .six_line_function()
-                .five_line_function()
-                .six_line_function()
-                .six_line_function()
-                .build()
-                )
-        self.assertEqual(2, len(duplicates))
-
-    def test_threshold(self):
-        duplicates = self.detect(
-                self.builder
-                .six_line_function()
-                .six_line_function()
-                .build(),
-                min_duplicate_tokens = 50
-                )
-        self.assertEqual(0, len(duplicates))
-
-    def test_threshold_with_too_many_repeatings(self):
-        duplicates = self.detect(
-                self.builder
-                .six_line_function()
-                .six_line_function()
-                .six_line_function()
-                .build(),
-                min_duplicate_tokens = 50
-                )
-        self.assertEqual(1, len(duplicates))
-        self.assertEqual(3, len(duplicates[0]))
-        self.assertEqual(1, duplicates[0][0].start_line)
-        self.assertEqual(6, duplicates[0][0].end_line)
-
-    def test_threshold_exceeded(self):
-        duplicates = self.detect(
-                self.builder
-                .six_line_function()
-                .five_line_function()
-                .six_line_function()
-                .five_line_function()
-                .build(),
-                min_duplicate_tokens = 50
-                )
-        self.assertEqual(1, len(duplicates))
-
     def test_identifier_after_dot_should_not_be_commonized(self):
         duplicates = self.detect(
                 self.builder
@@ -243,109 +183,3 @@ class TestDuplicateExtension(unittest.TestCase):
                 min_duplicate_tokens = 40
                 )
         self.assertEqual(0, len(duplicates))
-
-
-
-class TestDuplicateExtensionAcrossFiles(unittest.TestCase):
-
-    def setUp(self):
-        self.detector = DuplicateDetector()
-        self.builder = CFunctionBuilder()
-
-    @patch('lizard_core.file_analyzer.auto_read')
-    def detect(self, source_files, auto_read):
-        auto_read.side_effect = lambda filename: source_files[filename]
-        extensions = get_extensions([self.detector])
-        list(analyze_files(sorted(source_files.keys()), exts=extensions))
-        return list(self.detector.get_duplicates(30))
-
-    def test_basic_duplicate(self):
-        duplicates = self.detect({
-                'f1.cpp': self.builder
-                    .six_line_function()
-                    .build(),
-                'f2.cpp': self.builder
-                    .five_line_function()
-                    .six_line_function()
-                .build()
-                })
-        self.assertEqual(1, len(duplicates))
-        self.assertEqual("f1.cpp", duplicates[0][0].file_name)
-        self.assertEqual("f2.cpp", duplicates[0][1].file_name)
-        self.assertEqual(1, duplicates[0][0].start_line)
-        self.assertEqual(6, duplicates[0][0].end_line)
-        self.assertEqual(6, duplicates[0][1].start_line)
-        self.assertEqual(11, duplicates[0][1].end_line)
-        self.assertAlmostEqual(0.666666666, self.detector.duplicate_rate())
-
-    def test_more_duplicate(self):
-        duplicates = self.detect({
-                'f1.cpp': self.builder
-                    .six_line_function()
-                    .build(),
-                'f2.cpp': self.builder
-                    .six_line_function()
-                    .build(),
-                'f3.cpp': self.builder
-                    .six_line_function()
-                    .build()
-                })
-        self.assertEqual(1, len(duplicates))
-
-
-class CFunctionBuilder(object):
-    def __init__(self):
-        self.code = ''
-
-    def build(self):
-        code = self.code
-        self.code = ''
-        return code
-
-    def empty_function(self):
-        self.code += ''' void func0() {
-            }
-        '''
-        return self
-
-    def five_line_function(self, name='func6'):
-        self.code += ''' string %s(int param, T t) {
-                for (int i; i < 100; i++)
-                    result += i + i;
-                return i * 5 + 1015;
-            }
-        '''%(name)
-        return self
-
-    def six_line_function(self, name='func6', variable_name='result', number_value="10", rvalue='"abc"', operator="+"):
-        self.code += ''' void %s(int param) {
-                int %s, i = 0;
-                for (; i < %s; i++) {
-                     print(%s);%s += i %s i;
-                }
-            }
-        '''%(name, variable_name, number_value, rvalue, variable_name, operator)
-        return self
-
-    def part_of_six_line_function(self, name='func6'):
-        self.code += ''' void %s(int param) {
-                int result, i = 0;
-                for (; i < 10; i++) {
-                     print("abc");result += i + i;
-                    then = "I do something else";
-                }
-            }
-        '''%(name)
-        return self
-
-    def different_six_line_function(self, name='func6'):
-        self.code += ''' int %s(int param, int c) {
-                if (abc == def) {
-                    while(param) c=c+1;
-                }
-                return result;
-            }
-        '''%(name)
-        return self
-
-
