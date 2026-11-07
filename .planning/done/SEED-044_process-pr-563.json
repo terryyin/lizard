@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-044#process-pr-563",
+  "title": "Process PR #563 — Read Rust char literals as one token, and do not count the || of a closure without parameters",
+  "completedAt": "2026-11-07T00:17:24.190Z",
+  "developer": "Terry Yin"
+}
