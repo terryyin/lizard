@@ -98,7 +98,7 @@ show website counts without `durationMs`/breakdown.
 
 ### 2. Website scenario times, or their absence, reach Intent
 Type: Behavior
-Status: planned
+Status: done
 Proof: one real run with `web` → summary `website/frontend/features` present
 with `durationMs`, breakdown, and at least one file matching the Cucumber
 report conversion; one real run with `web` skipped → that part missing while
@@ -266,3 +266,15 @@ Website reported 16 passed and 25,474.361311 ms. Intent showed 13.3 s and
 3 checks / 803 ms, matching the raw reports at display precision.
 The next proof publication changes only planning records so the workflow
 observes the website-skip case on the same product code.
+
+Skipped-website hosted proof passed at `f2c6dc7bf687d252e442934f02205ec33a3a1fa4`,
+[run 42382720864, attempt 1](https://github.com/terryyin/lizard/actions/runs/42382720864).
+GitHub skipped `web` and passed the collector. The artifact had website
+part 1 missing and no duration, plus a present analyzer part at 14,029 ms
+with 157 file rows. Intent showed 14.0 s and website part 1 of 1 missing;
+the analyzer file row showed 4 checks / 253 ms.
+
+The two temporary runner-report uploads were removed after evidence capture.
+That removal stays inside the workflow concepts traced in the independent
+refactor return. The production fragments and summary continue to upload.
+Full Nix pytest and `make` passed again with 3,095 passing tests and 7 skips.

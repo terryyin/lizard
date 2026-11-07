@@ -79,14 +79,6 @@ jobs:
         path: ${{ runner.temp }}/ci-proof/
         if-no-files-found: ignore
         retention-days: 1
-    - name: Keep the representative pytest report for timing verification
-      if: ${{ !cancelled() && steps.pytest.outcome != 'skipped' && matrix.os == 'ubuntu-24.04' && matrix.python-version == '3.13' }}
-      uses: actions/upload-artifact@v4
-      with:
-        name: ci-proof-source-pytest-attempt-${{ github.run_attempt }}
-        path: pytest-junit.xml
-        if-no-files-found: ignore
-        retention-days: 1
 
   changes:
     runs-on: ubuntu-24.04
@@ -151,14 +143,6 @@ jobs:
       with:
         name: ci-proof-fragments-web-1-attempt-${{ github.run_attempt }}
         path: ${{ runner.temp }}/ci-proof/
-        if-no-files-found: ignore
-        retention-days: 1
-    - name: Keep the Cucumber report for timing verification
-      if: ${{ !cancelled() && steps.cucumber.outcome != 'skipped' }}
-      uses: actions/upload-artifact@v4
-      with:
-        name: ci-proof-source-cucumber-attempt-${{ github.run_attempt }}
-        path: website/frontend/reports/cucumber.json
         if-no-files-found: ignore
         retention-days: 1
 

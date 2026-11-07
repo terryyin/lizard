@@ -15,7 +15,7 @@ input and made no edits. The commitments below retain its numbered return.
 | G04 | Each reporting proof entry shows per-file counts. | slice 2 | observed: Intent branch comparison file rows on b10a6fd showed test_ci_proof.py 4 checks and 189 ms plus access.feature 3 checks and 803 ms, matching both runner reports and the summary |
 | G05 | Each reporting proof entry shows per-file times. | slice 2 | observed: Intent branch comparison file rows on b10a6fd showed test_ci_proof.py 4 checks and 189 ms plus access.feature 3 checks and 803 ms, matching both runner reports and the summary |
 | G06 | The maintainer can compare `test` with `website/frontend/features` without opening job logs. | slice 2 | observed: Intent CI status for run 42382227121 at b10a6fd showed analyzer 13.3 s and website 25.5 s, matching the exact artifact milliseconds after display rounding |
-| G07 | If `web` skips, website proof remains explicitly missing. | slice 2 | |
+| G07 | If `web` skips, website proof remains explicitly missing. | slice 2 | observed: Run 42382720864 skipped web, passed the collector, and published a summary with website part 1 missing and no duration; Intent showed part 1 of 1 missing |
 | R01 | Follow the installed CI proof recipe. | slice 2 | observed: Both producer steps in python-app.yml supply --outcomes --times --by-file to the existing installed-recipe copies and the dual-converter replay exercises these flags |
 | R02 | Re-copy all five collector modules unchanged into `scripts/ci-proof/`. | slice 1 | observed: Byte comparison of each scripts/ci-proof/ci-proof-{summary,contract,figures,fragments,collect}.mjs with Open Dough v0.3.89 installed scripts, plus the diff against the old copies |
 | R03 | Include `ci-proof-figures.mjs` in that copy. | slice 1 | observed: Byte comparison of each scripts/ci-proof/ci-proof-{summary,contract,figures,fragments,collect}.mjs with Open Dough v0.3.89 installed scripts, plus the diff against the old copies |
@@ -41,10 +41,10 @@ input and made no edits. The commitments below retain its numbered return.
 | R23 | Both producer fragment steps pass `--by-file`. | slice 2 | observed: Both producer steps in python-app.yml supply --outcomes --times --by-file to the existing installed-recipe copies and the dual-converter replay exercises these flags |
 | R24 | Each present part carries entry-level `durationMs` under the recipe’s optional timing contract. | slice 2 | observed: Intent CI status for run 42382227121 at b10a6fd showed analyzer 13.3 s and website 25.5 s, matching the exact artifact milliseconds after display rounding |
 | R25 | Each present part carries a file breakdown Intent can display. | slice 2 | observed: Intent branch comparison file rows on b10a6fd showed test_ci_proof.py 4 checks and 189 ms plus access.feature 3 checks and 803 ms, matching both runner reports and the summary |
-| R26 | A run that skips `web` still publishes the summary. | slice 2 | |
-| R27 | In that summary, the website part is explicitly missing. | slice 2 | |
-| R28 | In that case, the Python part may still carry times. | slice 2 | |
-| R29 | In that case, the Python part may still carry a file breakdown. | slice 2 | |
+| R26 | A run that skips `web` still publishes the summary. | slice 2 | observed: Run 42382720864 skipped web, passed the collector, and published a summary with website part 1 missing and no duration; Intent showed part 1 of 1 missing |
+| R27 | In that summary, the website part is explicitly missing. | slice 2 | observed: Run 42382720864 skipped web, passed the collector, and published a summary with website part 1 missing and no duration; Intent showed part 1 of 1 missing |
+| R28 | In that case, the Python part may still carry times. | slice 2 | observed: Run 42382720864 artifact retains the timed analyzer part and 157 files; Intent showed 14.0 s and test_ci_proof.py with 4 checks and 253 ms |
+| R29 | In that case, the Python part may still carry a file breakdown. | slice 2 | observed: Run 42382720864 artifact retains the timed analyzer part and 157 files; Intent showed 14.0 s and test_ci_proof.py with 4 checks and 253 ms |
 | R30 | Only the representative Python leg reports `test` timings. Reporting from every leg would inflate totals. | slice 1 | observed: Both Python fragment steps in .github/workflows/python-app.yml require ubuntu-24.04 and 3.13 and the matrix contract test passes |
 | R31 | Keep the existing summary schema. | slice 1 | observed: Mixed-duration replay asserts schemaVersion 1 in the collector output and existing contract versions in ci-proof-contract.mjs |
 | R32 | Keep Intent unchanged. | slice 2 | observed: Aggregate implementation diff from 8a0ae5775 touches only workflow, CI scripts, converter tests and planning records; Intent renderer is exercised directly |
@@ -58,10 +58,10 @@ input and made no edits. The commitments below retain its numbered return.
 | E07 | The same two entries show matching `durationMs`. | slice 2 | observed: Intent CI status for run 42382227121 at b10a6fd showed analyzer 13.3 s and website 25.5 s, matching the exact artifact milliseconds after display rounding |
 | E08 | At least one file from each entry shows matching counts. | slice 2 | observed: Intent branch comparison file rows on b10a6fd showed test_ci_proof.py 4 checks and 189 ms plus access.feature 3 checks and 803 ms, matching both runner reports and the summary |
 | E09 | At least one file from each entry shows matching time. | slice 2 | observed: Intent branch comparison file rows on b10a6fd showed test_ci_proof.py 4 checks and 189 ms plus access.feature 3 checks and 803 ms, matching both runner reports and the summary |
-| E10 | A push skips `web`. | slice 2 | |
-| E11 | The summary and Intent show Python times in the example. | slice 2 | |
-| E12 | The summary and Intent show the Python file breakdown in the example. | slice 2 | |
-| E13 | The summary and Intent show `website/frontend/features` as missing proof. Zero duration would be a different state. | slice 2 | |
+| E10 | A push skips `web`. | slice 2 | observed: Run 42382720864 skipped web, passed the collector, and published a summary with website part 1 missing and no duration; Intent showed part 1 of 1 missing |
+| E11 | The summary and Intent show Python times in the example. | slice 2 | observed: Run 42382720864 artifact retains the timed analyzer part and 157 files; Intent showed 14.0 s and test_ci_proof.py with 4 checks and 253 ms |
+| E12 | The summary and Intent show the Python file breakdown in the example. | slice 2 | observed: Run 42382720864 artifact retains the timed analyzer part and 157 files; Intent showed 14.0 s and test_ci_proof.py with 4 checks and 253 ms |
+| E13 | The summary and Intent show `website/frontend/features` as missing proof. Zero duration would be a different state. | slice 2 | observed: Run 42382720864 skipped web, passed the collector, and published a summary with website part 1 missing and no duration; Intent showed part 1 of 1 missing |
 | E14 | A report for a present part omits duration on some checks. | slice 1 | observed: Mixed-duration replay uses a JUnit report with passed, failed and skipped checks including one omitted time and observes a present part with the original counts |
 | E15 | The file breakdown counts those checks as untimed. |  | G1 |
 | E16 | The part still publishes. | slice 1 | observed: Mixed-duration replay uses a JUnit report with passed, failed and skipped checks including one omitted time and observes a present part with the original counts |
