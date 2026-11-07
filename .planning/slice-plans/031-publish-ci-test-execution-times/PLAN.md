@@ -238,3 +238,19 @@ Intent's selected story branch CI status showed that run, counts and
 12.2 s; its test-scope breakdown showed the same file with 2 checks / 40 ms.
 Website counts are present without timing in this run, the planned interim
 state addressed in slice 2.
+
+## Slice 2 execution evidence
+
+The converter retains count-only invocation and emits one optional timing
+line per scenario with any duration. It sums before hooks, steps and after
+hooks as nanoseconds before converting to seconds. The existing conditional
+website fragment uses the same timing and breakdown flags as the analyzer.
+Local Nix focused pytest passed 18 tests. The dual-converter replay
+`nix develop -c sh /tmp/lizard-slice2-proof.1FafRK/replay.sh` verified a
+present website part with 2 passed, 1 failed, 1 other, 1,000 ms and 1 untimed,
+including same-file and measured-zero cases, plus the skipped website state.
+Independent refactor review found no necessary edits.
+
+Full Nix pytest and `make` passed with 3,095 passing tests and 7 skips.
+Both temporary one-day runner reports are retained for comparison with this
+progress publication. They will be removed after the hosted observations.
