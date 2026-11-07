@@ -10,30 +10,37 @@
 - [Combining Extensions](#combining-extensions)
 - [CI/CD Integration](#cicd-integration)
 
+Metric extensions include Nesting Depth, Nested Structures, Cognitive Complexity, Halstead, McCabe, statement/exit/goto/bool counts, word count, and dependency count.
+
 ## Overview
 
-Lizard supports a powerful extension system that allows you to customize analysis, add additional metrics, modify behavior, and format output in various ways. Extensions are activated using the `-E` flag followed by the extension name (e.g., `-Eduplicate`) or specific command-line flags for certain extensions.
+Lizard supports a powerful extension system that allows you to customize analysis, add additional metrics, modify behavior, and format output in various ways. Extensions are activated using the `-E` flag followed by the extension name (e.g., `-Eduplicate`). The name is case-insensitive and maps to `lizard_ext/lizard<name>.py` (so `-EWordCount` and `-Ewordcount` both load `lizardwordcount.py`).
+
+Some extensions register their own options (such as `--ND`, `--NS`, or `--CogC`). Those options exist only after the extension is loaded with `-E`, so examples always include both the `-E` name and the threshold flag.
+
+Related narrative docs for duplicate detection, word counts, Cognitive Complexity, generated code, whitelists, and forgiveness comments also live in [`docs/extensions-and-warnings.rst`](../docs/extensions-and-warnings.rst).
 
 ## Metric Extensions
 
 ### Nesting Depth (ND)
 **File:** `lizardnd.py`
-**Flag:** `-N` or `--ND`
+**Flag:** `-END` (loads the extension); threshold `-N` / `--ND`
 **Default Threshold:** 7
 
 Measures the maximum nesting depth of control structures (if, for, while, etc.) within functions. High nesting depth can indicate complex, hard-to-understand code.
 
 **Example:**
 ```bash
-lizard --ND 5 your_code/
+lizard -END --ND 5 your_code/
 ```
 
-**Output (from lizard codebase):**
+**Output (from `lizard_ext/lizardnd.py`):**
 ```
-================================================
-  NLOC    CCN   token  PARAM  length  location
-------------------------------------------------
-     155      2    580      1     164 arg_parser@89-252@lizard.py
+======================================================
+  NLOC    CCN   token  PARAM  length   ND   location
+------------------------------------------------------
+      10      1     31      1      10     0 set_args@18-27@lizard_ext/lizardnd.py
+      64     28    464      4      76    11 __call__@29-104@lizard_ext/lizardnd.py
 ...
 ```
 
@@ -49,18 +56,42 @@ Counts the number of nested control structures within a function. Unlike nesting
 lizard -ENS --NS 2 your_code/
 ```
 
-**Output (from lizard codebase):**
+**Output (from `lizard_ext/lizardns.py`):**
 ```
 ======================================================
   NLOC    CCN   token  PARAM  length   NS   location
 ------------------------------------------------------
-       8      4     61      3       8     7 analyze_files@66-73@lizard.py
-       5      2     70      5       5     8 arg_parser.__call__@96-100@lizard.py
-     155      2    580      1     164     9 arg_parser@89-252@lizard.py
+       9      1     29      1       9     0 set_args@58-66@lizard_ext/lizardns.py
+      28     13    161      3      36     2 _indented_structures@77-112@lizard_ext/lizardns.py
 ...
 ```
 
 The NS column shows the maximum nested structures count for each function.
+
+### Cognitive Complexity
+**File:** `lizardcognitive.py`
+**Flag:** `-Ecognitive` with `--CogC` threshold
+**Default Threshold:** 15
+
+SonarSource Cognitive Complexity: how hard a function is to understand. Adds a `CogC` column and a `cognitive_complexity` field usable with `-s` and `-T`.
+
+**Example:**
+```bash
+lizard -Ecognitive --CogC 25 -s cognitive_complexity your_code/
+```
+
+See also [`docs/extensions-and-warnings.rst`](../docs/extensions-and-warnings.rst).
+
+### Halstead Metrics
+**File:** `lizardhalstead.py`
+**Flag:** `-Ehalstead`
+
+Computes Halstead volume, difficulty, and effort for each function (shown as `H-volume`, `H-diff`, `H-effort`).
+
+**Example:**
+```bash
+lizard -Ehalstead your_code/
+```
 
 ### McCabe Complexity
 **File:** `lizardmccabe.py`
@@ -193,9 +224,9 @@ Total unique rate: 45.30%
 
 ### Duplicated Parameter Lists
 **File:** `lizardduplicated_param_list.py`
-**Flag:** `-Eduplicatedparamlist`
+**Flag:** `-Eduplicated_param_list`
 
-Finds functions with identical or very similar parameter lists, which might indicate missing abstractions.
+Finds functions with identical or very similar parameter lists, which might indicate missing abstractions. The `-E` name must match the module suffix, including the underscores.
 
 ### Complex Tags Analysis
 **File:** `lizardcomplextags.py`
@@ -430,7 +461,7 @@ lizard --checkstyle your_code/ > checkstyle_report.xml
 lizard -C 10 -w your_code/
 
 # Find deeply nested functions (ND > 4)
-lizard --ND 4 your_code/
+lizard -END --ND 4 your_code/
 ```
 
 ### Duplicate Code Analysis
@@ -445,7 +476,7 @@ lizard -Eduplicate your_code/ -x "*/tests/*"
 ### Comprehensive Analysis
 ```bash
 # Multiple metrics at once
-lizard -ENS --NS 2 -C 15 --ND 5 your_code/
+lizard -ENS --NS 2 -END --ND 5 -C 15 your_code/
 ```
 
 ### Generating Reports
@@ -478,7 +509,7 @@ Extensions can be combined for powerful analysis:
 lizard -ENS --NS 2 -Eduplicate -Eoutside -H -o full_report.html your_code/
 
 # CI/CD-ready with multiple outputs
-lizard -ENS -C 15 --ND 5 --csv -o metrics.csv your_code/
+lizard -ENS -END --ND 5 -C 15 --csv -o metrics.csv your_code/
 lizard -ENS -X -o jenkins_report.xml your_code/
 
 # Modified complexity with nesting analysis
@@ -539,7 +570,7 @@ complexity_analysis:
 
 ```bash
 # Exit with error if any function exceeds thresholds
-lizard -C 15 --ND 5 -w your_code/
+lizard -C 15 -END --ND 5 -w your_code/
 
 # Count warnings and fail if too many
 lizard -i 10 your_code/  # Fail if more than 10 warnings
@@ -555,7 +586,7 @@ lizard -i 10 your_code/  # Fail if more than 10 warnings
       name: Lizard Complexity Check
       entry: lizard
       language: python
-      args: ['-C', '15', '--ND', '5', '-w']
+      args: ['-C', '15', '-END', '--ND', '5', '-w']
       pass_filenames: false
       additional_dependencies: ['lizard']
 ```

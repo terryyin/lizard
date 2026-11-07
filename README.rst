@@ -157,31 +157,6 @@ See the `command-line reference
 <https://github.com/terryyin/lizard/blob/master/docs/cli.rst>`_ for all
 options, sample reports, and threshold examples.
 
-Extensions Documentation
-------------------------
-
-Lizard supports a comprehensive extension system for additional metrics, code analysis, and output formats.
-
-For detailed documentation on all available extensions with usage examples and CI/CD integration guides, see the
-`Extensions README <lizard_ext/README.md>`_.
-
-Available extension categories:
-
-- **Metric Extensions**: Nesting Depth (ND), Nested Structures (NS), McCabe, Statement Count, Exit Count, and more
-- **Analysis Extensions**: Code duplication detection, parameter list analysis, comment extraction
-- **Behavior Modifiers**: Ignore assertions, modified CCN, C preprocessor handling, global code inclusion
-- **Output Formatters**: CSV, HTML (interactive), XML (Jenkins), Checkstyle
-
-Quick examples:
-
-::
-
-   lizard -ENS --NS 2 your_code/              # Nested structures analysis
-   lizard --csv -V your_code/ > report.csv    # CSV output
-   lizard -H -o report.html your_code/        # Interactive HTML report
-   lizard -X your_code/ > jenkins.xml         # Jenkins XML output
-
-
 Using lizard as Python module
 -----------------------------
 
@@ -217,6 +192,19 @@ See `extensions and warning controls
 <https://github.com/terryyin/lizard/blob/master/docs/extensions-and-warnings.rst>`_
 for duplicate detection, word counts, Cognitive Complexity, generated
 code, whitelists, and forgiveness comments.
+
+For the full extension catalog (metrics, modifiers, formatters, CI examples),
+see `lizard_ext/README.md <lizard_ext/README.md>`_.
+
+Quick examples:
+
+::
+
+   lizard -END --ND 5 your_code/              # Nesting depth
+   lizard -ENS --NS 2 your_code/              # Nested structures
+   lizard --csv -V your_code/ > report.csv    # CSV output
+   lizard -H -o report.html your_code/        # Interactive HTML report
+   lizard -X your_code/ > jenkins.xml         # Jenkins XML output
 
 Limitations
 -----------
