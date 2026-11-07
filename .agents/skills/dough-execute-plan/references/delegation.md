@@ -6,6 +6,13 @@ agent. Use a general-purpose agent, or `gsd-executor` when this project uses
 The coordinator retains
 [wrap-up](wrap-up.md); an execution tool does not take over that responsibility.
 
+## Obtain the source-only review
+
+Before the obligations listing below, complete
+[Obtain the source-only review](obtain-source-review.md#before-planned-delegation).
+
+## List promises and assign the agent
+
 Before planned delegation, run the installed
 [story-obligations script](../scripts/story-obligations.mjs):
 `node '<installed-execute-plan>/scripts/story-obligations.mjs' list --plan '<PLAN.md>' --slice N`.
@@ -14,10 +21,8 @@ A refusal blocks delegation until resolved. Carry the full listing as slice
 promises with their required observations, including returns, receiving
 obligations, and open interims. When the plan links a source review, the
 listing also carries the commitment ids allocated to this slice; pass each id
-with its source text as a slice promise to observe. A review retained or
-replaced since the last check is linked and allocated under
-[the source review](story-obligations.md#record-the-source-review) before
-this listing. Do not substitute a learning summary.
+with its source text as a slice promise to observe. Do not substitute a
+learning summary.
 
 Give the agent:
 
@@ -121,30 +126,8 @@ continuation or recovery.
 
 ## Retire owned watches when verification ends
 
-A watch the owning agent created to learn a delegated command's result lives
-only as long as the verification obligation. Prefer the host's existing
-completion handling — the supported continuation under
-[verification ownership](#own-verification-to-its-terminal-result) — over
-creating an extra watch for the same command.
-
-When the obligation ends — the terminal result is observed or an incomplete
-stop is returned — account for the watch's unread evidence first: read any
-pending notification or output so a delivered failure is not lost. Then
-retire the watch through the host's supported control, so no avoidable watch
-remains live for completed work. A notification already queued or in flight
-may still arrive afterward; recognize it as a stale duplicate of the
-accounted evidence, and do not restart verification or rerun the command
-for it.
-
-This decision covers only watches the owning agent created for its own
-command. Unrelated watches belong to their owners; in particular the
-coordinator's [CI observer](ci-monitor.md) keeps its own lifecycle and is
-never retired as part of command cleanup.
-
-If the host offers no supported way to retire the watch, report the
-limitation instead of claiming cleanup: name the live watch, the evidence
-already accounted for, and what remains observable. Do not modify a host
-adapter or add machinery to force cleanup.
+Follow
+[Retire owned watches when verification ends](retire-owned-watches.md#retire-owned-watches-when-verification-ends).
 
 ## Return a targeted report with focused proof
 

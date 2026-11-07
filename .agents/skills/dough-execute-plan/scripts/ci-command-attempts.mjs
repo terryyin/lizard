@@ -5,12 +5,14 @@ import { isFullGitRevision } from "./ci-revisions.mjs";
 // one naming none keeps the legacy label of the requested branch but never
 // attests it (`providerBranch` stays absent).
 export function targetCommandAttempts(attempts, branch) {
-  return attempts
-    .map((attempt) => normalizeAttempt(attempt, branch))
-    .filter(
-      ({ providerBranch }) =>
-        providerBranch === undefined || providerBranch === branch,
-    );
+  return answeredCommandAttempts(attempts, branch).filter(
+    ({ providerBranch }) =>
+      providerBranch === undefined || providerBranch === branch,
+  );
+}
+
+export function answeredCommandAttempts(attempts, branch) {
+  return attempts.map((attempt) => normalizeAttempt(attempt, branch));
 }
 
 // One snapshot's check: its SHA plus any check and context the provider names,

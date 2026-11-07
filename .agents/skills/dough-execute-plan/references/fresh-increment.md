@@ -1,5 +1,7 @@
 # Guard a fresh execution increment or owned repair
 
+## Publish
+
 Use this after accepting semantic proof and completing the independent refactor,
 or recording its disposition, for a fresh increment or owned repair. Keep the recorded execution checkout,
 branch, ownership, and project hook contract. This operation performs mechanical
@@ -105,7 +107,8 @@ publication; it does not fabricate coverage or authorize a different observer.
 
 A published success has `publication: accepted`, the original `commit.sha`,
 and `receipt.sha`, the exact remote-accepted revision after any proof-governed
-rewrite. Its observation is attached, reused, or an explicit coverage gap. A
+rewrite. Its observation is attached, reused, or an explicit coverage gap.
+`progress: true`: [observe progress proof](#observe-progress-proof). A
 local-only success has `report: committed-pending-publication`, `commit.sha`,
 `publication: pending`, and `observation: null`, with no remote acceptance.
 
@@ -139,3 +142,44 @@ is the exact publication candidate registered on the authorized observer. A
 refused hook stops the same way; an already-accepted candidate resumes without
 another commit or push. A zero-exit output consumer cannot enable withheld
 effects.
+
+## Observe progress proof
+
+After an accepted `progress: true` publication, when planned proof still needs
+hosted evidence of that revision, run this read-only observation on the
+attached observer before settling the slice:
+
+```sh
+node '<installed-execute-plan>/scripts/ci-mailbox.mjs' await-revision '<attached mailbox>' FULL_ACCEPTED_SHA
+```
+
+Use the exact target that observer already covers, the attached mailbox from
+the delivery attachment, and `receipt.sha` after any rewrite. Inspect the
+`CI_OBSERVER` receipt for the requested SHA, target, and exact attempt. Record
+attributable proof in the plan. Settle open receiving obligations for that
+evidence before ordinary guarded fresh without `progress`, which marks the
+slice `done`. Leave the observer running: the same observer covers repairs,
+later slices, and the
+[completion operation](ci-completion-wait.md). Do not invent a direct provider
+watch or use `complete-revision` here.
+
+Failed, pending, unavailable, or mismatched evidence leaves the slice
+`planned`. Owned failures use the existing
+[repair path](ci-monitor.md#handle-a-notification); observe the accepted
+repair SHA the same way before retrying ordinary done. A green ancestor or
+newer tip cannot satisfy a promise that names this published revision.
+[Applicability and repair](ci-monitor.md) still distinguish ignored-only reuse
+from a triggering change that needs its own coverage.
+
+When the plan requires an Intent CI proof summary for that attempt, use this
+project's documented
+[Intent CI status read](../manuals/custom-ci-proof.md) for the same revision
+and attempt the mailbox names.
+
+For a later records-only done delivery, follow existing CI applicability: an
+ignored-only revision may reuse its applicable basis; a triggering change needs
+its own coverage. Do not add an extra foreground watch solely for that done
+paperwork. Keep `complete-revision` at the existing execution/review completion
+boundary only. When hosted proof of the publication is optional or
+observational, omit `progress` and use ordinary delivery; the observer still
+handles delivered failures asynchronously.

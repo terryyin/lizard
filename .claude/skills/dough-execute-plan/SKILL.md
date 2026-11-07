@@ -98,9 +98,9 @@ for that passage alone.
 | An established start your instruction carries | [established start](references/established-start.md) |
 | Before creating the execution workspace | [execution location](references/execution-location.md); when CI setup applies, [runtime setup](references/runtime-setup.md) |
 | On Codex, arming observation at execution start | [own one observer](references/ci-monitor.md#own-one-observer), [Codex adapter](references/ci-notify-codex.md), [runtime setup](references/runtime-setup.md) |
-| Before first implementation delegation | [delegation](references/delegation.md), [reassessment](references/execution-decisions.md#reassess-before-extending-work), [human judgment](references/execution-decisions.md#stop-for-human-judgment), [replanning permission](references/execution-decisions.md#choose-replanning-permission), [targeted retrieval](references/disposable-research.md), [story-obligation inputs](references/story-obligations.md#use-the-record-at-execution-boundaries) |
-| Before accepting a return | [proof acceptance](references/wrap-up.md#accept-proof) |
-| Before delivery, or a validated increment or owned repair publication | [delivery](references/wrap-up.md#deliver-the-change), [fresh increment](references/fresh-increment.md), [increment publication](references/trunk-publication.md#publish-an-execution-increment-or-repair), [publish the candidate](references/trunk-publication.md#publish-the-candidate), [story-obligation inputs](references/story-obligations.md#use-the-record-at-execution-boundaries) |
+| Before first implementation delegation | [delegation](references/delegation.md), [source review](references/obtain-source-review.md#before-planned-delegation), [reassessment](references/execution-decisions.md#reassess-before-extending-work), [human judgment](references/execution-decisions.md#stop-for-human-judgment), [replanning permission](references/execution-decisions.md#choose-replanning-permission), [targeted retrieval](references/disposable-research.md), [story-obligation inputs](references/story-obligations.md#use-the-record-at-execution-boundaries) |
+| Before accepting a return | [proof acceptance](references/wrap-up.md#accept-proof), [source review at acceptance](references/obtain-source-review.md#at-acceptance) |
+| Before delivery, or a validated increment or owned repair publication | [delivery](references/deliver-the-change.md#deliver-the-change), [fresh increment](references/fresh-increment.md#publish), [increment publication](references/trunk-publication.md#publish-an-execution-increment-or-repair), [publish the candidate](references/trunk-publication.md#publish-the-candidate), [story-obligation inputs](references/story-obligations.md#use-the-record-at-execution-boundaries) |
 | Arming observation on other hosts | [CI observation](references/ci-monitor.md), [Cursor and Claude Code adapters](references/ci-notify-hosts.md) |
 | Handling a CI notification | [handle a notification](references/ci-monitor.md#handle-a-notification), with only the current host's adapter: [Codex](references/ci-notify-codex.md) or [Cursor and Claude Code](references/ci-notify-hosts.md) |
 | Before finishing or stopping | [finish or stop](references/finish-or-stop.md), [await the applicable revision](references/ci-monitor.md#await-the-applicable-revision-at-completion), [completion mechanics](references/ci-completion-wait.md), [story-obligation inputs](references/story-obligations.md#use-the-record-at-execution-boundaries), in Story Branch Mode [source freshness](references/source-freshness.md) |
@@ -229,7 +229,7 @@ Missing/contradictory execution identity requires the recovery decision above.
 4. On return, recheck execution decisions; handle incomplete/oversized work there before
    delivery, including a no-replan overrun. Otherwise [accept proof](references/wrap-up.md#accept-proof) and confirm
    uncommitted work or an explained empty change.
-5. Run [delivery](references/wrap-up.md#deliver-the-change) end to end. That
+5. Run [delivery](references/deliver-the-change.md#deliver-the-change) end to end. That
    delivery publishes through
    [increment and repair publication](references/trunk-publication.md#publish-an-execution-increment-or-repair).
    After successful delivery, restart for the next planned slice, one at a time:

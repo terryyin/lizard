@@ -68,6 +68,15 @@ function ancestorDistance(repoDir, ancestorSha, descendantSha) {
   }
 }
 
+// Parses `git diff --name-status -M` stdout into the entry rows
+// `classifyPathChanges` consumes. Empty output is an empty change set.
+export function parseDiffNameStatus(stdout) {
+  return stdout
+    .split("\n")
+    .filter((line) => line.trim() !== "")
+    .map((line) => line.split("\t"));
+}
+
 // Returns parsed `git diff --name-status` entries between two revisions, or
 // null when the comparison itself cannot be read.
 function diffNameStatus(repoDir, fromSha, toSha) {
@@ -80,10 +89,7 @@ function diffNameStatus(repoDir, fromSha, toSha) {
       fromSha,
       toSha,
     ]);
-    return out
-      .split("\n")
-      .filter((line) => line.trim() !== "")
-      .map((line) => line.split("\t"));
+    return parseDiffNameStatus(out);
   } catch {
     return null;
   }
@@ -95,8 +101,10 @@ function diffNameStatus(repoDir, fromSha, toSha) {
 // edit. A clean, unambiguous non-ignored change (not mixed with an ignored
 // one) is `required`; a mix of ignored and non-ignored changes is
 // `indeterminate` rather than an assumed `required`, since the comparison
-// basis may span more than the registered revision's own change.
-function classifyDiff(entries, pathsIgnore) {
+// basis may span more than the registered revision's own change. Callers that
+// already hold name-status rows (for example the dashboard feeding `runGit`)
+// share this rule with `classifyRevisionApplicability`.
+export function classifyPathChanges(entries, pathsIgnore) {
   if (entries === null)
     return { verdict: "indeterminate", reason: "unreadable-diff" };
 
@@ -170,7 +178,7 @@ export function classifyRevisionApplicability({
 
   const nearestSha = ancestors[0].sha;
   const entries = diffNameStatus(repoDir, nearestSha, registeredSha);
-  const classified = classifyDiff(entries, eventPolicy.pathsIgnore);
+  const classified = classifyPathChanges(entries, eventPolicy.pathsIgnore);
 
   if (classified.verdict === "not_required")
     return { result: "not_required", basis: { sha: nearestSha } };

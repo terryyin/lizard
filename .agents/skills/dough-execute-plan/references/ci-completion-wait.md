@@ -95,8 +95,8 @@ distinct from shutdown facts:
 - `shutdown.status: "unconfirmed"` returns the limitation and retains resources;
   do not treat unavailable shutdown as successful CI or as cleanup authority.
 
-The low-level `await-revision` reader remains available for its existing
-read-only purpose and does not shut down observation. Explicit cancellation and
+Progress: [`await-revision`](fresh-increment.md#observe-progress-proof)
+(read-only). Keep `complete-revision` at completion. Explicit cancellation and
 human-judgment stops still use the host adapter's stop command.
 
 Return that complete receipt to the owning procedure. Do not interpret a

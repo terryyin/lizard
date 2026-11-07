@@ -146,8 +146,8 @@ Keep execution, proof, review, and resume information:
    section have no obligations; no migration is required. Planned execution
    requires a `**Source review:**` link under `**Source:**` to the
    [source review](../../dough-execute-plan/references/story-obligations.md#record-the-source-review)
-   once acceptance retains it; acceptance adds and allocates it, and planning
-   does not write it.
+   once the first planned delegation [obtains and allocates it](../../dough-execute-plan/references/obtain-source-review.md#before-planned-delegation);
+   planning does not write it.
 
 At execution completion, the executing agent adds one more element after the
 ordered slices: the

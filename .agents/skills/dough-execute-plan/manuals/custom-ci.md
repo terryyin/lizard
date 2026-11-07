@@ -68,33 +68,33 @@ Return the service query's bounded relevant attempts newest first:
 }
 ```
 
-`runId` and `attemptId` are opaque strings or numbers. Preserve the CI service's
-identities; do not combine them or assume attempts are sequential. `sha` is the
-exact checked commit. `outcome` is one of `pending`, `success`, `failure`, or
-`incomplete`; use `incomplete` when a finished check supplies neither success nor
-failure proof, such as a cancelled check. `url` and `time` are optional;
-optional `startedAt`/`completedAt` are ISO-8601 pipeline bounds (Intent CI wall
-time when both present, else not recorded; not a `time` substitute). `branch`,
-`check` and `context` are optional nonempty strings: the branch the service
-validated for that attempt, the check's stable name, and its triggering
-context. The observer drops an attempt naming another branch, including for its
-exact SHA. Without `branch`, an attempt keeps counting for its exact SHA but
-never attests the target. When the service checks a SHA once for every branch
-that carries it, omit `branch` on an attempt it admitted for another branch so
-that the attempt still covers its exact SHA on the requested target.
+`runId` and `attemptId` are opaque strings or numbers. Preserve both as given.
+`sha` is the exact checked commit. `outcome` is `pending`, `success`, `failure`
+or `incomplete` (finished without a verdict, such as a cancelled check).
+`url` and `time` are optional. Optional ISO-8601 pipeline bounds `startedAt`
+and `completedAt` together give Intent its wall time. `time` orders attempts.
+`branch`, `check` and `context` optionally name the validated branch, stable
+check and triggering context as nonempty strings. The observer drops attempts
+naming another branch, even for the exact SHA. An omitted `branch` lets an
+attempt cover its exact SHA without attesting the target. For a SHA the service
+checked once across branches, omit `branch` on attempts it admitted elsewhere.
 
 Discovery may also return [authoritative queue facts](custom-ci-queue.md).
 
-The first discovery after the observer starts is its startup snapshot. From it
-the observer keeps unfinished attempts and only the newest completed attempt by
-`time`; older completed attempts stay outside ordinary notifications. They
-remain evidence for explicitly registered revisions and applicable ancestors.
-For attempts sharing a SHA (and any named check and context), a later `time`
-supersedes an older one for both exact and ancestor coverage. Equal or missing timestamps preserve the existing
-selection behavior; opaque identities never imply an order. A new attempt,
-including a new `attemptId` for a known `runId`, is still observed. Without `time` on completed attempts, the observer
-cannot tell history from current results and treats every returned attempt as
-current, so supply `time` when the query returns retained older attempts.
+Intent's story comparison reads retained `discover` attempts for the
+configured target and any known story branch. It matches Baseline, Branch
+or Provisional, and Landed builds by full revision across validated branches.
+Completed endpoints ask [`proof`](custom-ci-proof.md) on the listing branch.
+
+The observer's first discovery supplies its startup snapshot. It keeps
+unfinished attempts and the newest completed attempt by `time` for ordinary
+notifications. Older completed attempts remain evidence for registered
+revisions and applicable ancestors. Within a SHA, check and context, a
+later `time` supersedes earlier ones for exact and ancestor coverage. Equal
+or missing timestamps keep existing selection behavior. IDs imply no order.
+The observer sees new attempts, including a new `attemptId` for a known
+`runId`. Without `time` it treats every completed attempt as current, so
+supply `time` when returning retained older attempts.
 
 When a discovered attempt fails, the observer makes a separate diagnostic request:
 

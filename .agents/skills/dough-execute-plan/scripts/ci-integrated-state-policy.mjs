@@ -44,8 +44,16 @@ export function currentAttemptIneligibility(
   if (current.headBranch !== branch) return "different_target";
   if (current.check !== policy.check || current.context !== policy.context)
     return "context_incompatible";
-  if (pending)
-    return current.status !== "completed" ? undefined : "not_current_pending";
+  if (pending) {
+    if (current.status !== "completed") return undefined;
+    // A pending listing whose current attempt already finished failed is the
+    // same contradiction as a failed listed attempt: not a current success.
+    // Only a completed green under a stale pending listing stays
+    // `not_current_pending` (progress never comes from a finished attempt).
+    return successfulAttempt(current)
+      ? "not_current_pending"
+      : "not_current_success";
+  }
   if (!successfulAttempt(current)) return "not_current_success";
   for (const name of policy.jobs ?? []) {
     const jobs = (current.jobs ?? []).filter((job) => job.name === name);

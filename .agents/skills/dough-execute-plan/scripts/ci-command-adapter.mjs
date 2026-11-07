@@ -1,4 +1,5 @@
 import {
+  answeredCommandAttempts,
   currentCommandAttempt,
   latestCommandAttempts,
   targetCommandAttempts,
@@ -69,6 +70,7 @@ function createCommandDiscovery({
   branch,
   root,
   timeoutMs = defaultAdapterTimeoutMs,
+  includeOtherBranches = false,
 }) {
   return async (signal) => {
     const response = await runAdapter(
@@ -79,7 +81,9 @@ function createCommandDiscovery({
     if (!response || !Array.isArray(response.attempts))
       throw new Error("CI adapter discovery must return an attempts array");
     return {
-      attempts: targetCommandAttempts(response.attempts, branch),
+      attempts: (includeOtherBranches
+        ? answeredCommandAttempts
+        : targetCommandAttempts)(response.attempts, branch),
       queue: targetCommandQueue(response.queue, branch),
     };
   };

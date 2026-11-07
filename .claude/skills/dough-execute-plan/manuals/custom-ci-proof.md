@@ -1,7 +1,7 @@
 # Custom CI proof reads
 
-The Open Dough dashboard's Intent **CI status** tab can show, below an
-attempt's verdict, the CI proof summary that attempt's own CI job wrote
+The Open Dough dashboard's Intent **CI status** and story comparison can show
+the CI proof summary that a completed attempt's own CI job wrote
 ([CI proof summary](../../dough-test-optimization/references/ci-proof-summary.md#publish-through-a-ci-adapter)).
 To read it, the dashboard, not the observer, starts the configured
 [command adapter](custom-ci.md) from this project's folder with the same stdin
@@ -19,9 +19,11 @@ and stdout contract and writes:
 }
 ```
 
-The attempt is the completed one whose result the tab shows (for a running
-result, its completed ancestor), as discover returned it for `check.branch`,
-the branch whose discover listed it. Unlike `diagnose`, `runId` and
+CI status reads the completed attempt it shows (for a running result, its
+completed ancestor). The story comparison reads each completed endpoint
+attempt it finds by revision among the retained `discover` attempts. In
+both views, `check.branch` is the branch whose `discover` listed the
+attempt. Unlike `diagnose`, `runId` and
 `attemptId` always arrive as strings: a discovered `7` is asked as `"7"`.
 `sha` is the full revision.
 
@@ -57,12 +59,14 @@ not implement `proof`, such as the
 nonzero for it and shows that line; nothing is retried, and the verdict,
 `discover` and `diagnose` are unaffected.
 
-The tab shows the summary's counts only when it is a valid summary whose
+Intent shows the summary's counts only when it is a valid summary whose
 `repository` (ignoring case), `attemptId` (as text) and full `revision` equal
 the shown attempt's; otherwise it says what is invalid or which differs.
 When another attempt the adapter's `discover` answered at that revision
 names the same `attemptId` — counting every answered attempt before the
-newest per check is kept for the verdict — the tab says the attempt is
+newest per check is kept for the verdict — Intent says the attempt is
 ambiguous and asks no adapter, so give each attempt its own `attemptId`.
-Each showing of the tab, and each **Check again**, asks again; nothing is
-kept.
+The comparison keeps the build visible and shows the reason when its
+summary is missing, invalid or ambiguous. Valid summaries are remembered
+by attempt for the dashboard process. An attempt with no valid summary can
+be read again when the view next asks for its proof.

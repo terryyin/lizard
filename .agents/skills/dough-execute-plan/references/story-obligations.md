@@ -107,13 +107,15 @@ the new plan's entries.
 ## Record the source review
 
 In planned execution, keep the source-only reviewer's numbered return beside
-the plan as `source-review.md`. When you retain it, link it from the plan's
-header with one line under `**Source:**` that starts with `**Source review:**`
-followed by a Markdown link to that file. Keep the launch and input
-description above one `## Commitments` table with one row per returned id: the
-id, the source text as returned, the allocated slice or lifecycle owner, and
-the observation or the obligation id that disposes it.
-Escape a `|` inside a cell as `\|`.
+the plan as `source-review.md` after
+[obtaining it before planned delegation](obtain-source-review.md#before-planned-delegation)
+(or [at acceptance](obtain-source-review.md#at-acceptance) when none is
+retained yet). When you retain it, link it from the plan's header with one
+line under `**Source:**` that starts with `**Source review:**` followed by a
+Markdown link to that file. Keep the launch and input description above one
+`## Commitments` table with one row per returned id: the id, the source text
+as returned, the allocated slice or lifecycle owner, and the observation or
+the obligation id that disposes it. Escape a `|` inside a cell as `\|`.
 
 ```markdown
 ## Commitments
