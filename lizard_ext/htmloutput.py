@@ -18,7 +18,9 @@ def html_output(result, options, *_):
         sys.exit(2)
 
     file_list = []
+    saved_files = []
     for source_file in result:
+        saved_files.append(source_file)
         if source_file:
             source_file_dict = {"filename": source_file.filename}
             func_list = []
@@ -33,12 +35,12 @@ def html_output(result, options, *_):
             date=datetime.datetime.now().strftime('%Y-%m-%d %H:%M'),
             thresholds=options.thresholds, files=file_list)
     print(output)
-    return 0
+    from lizard import get_warnings
+    return len(list(get_warnings(saved_files, options)))
 
 
 def _create_dict(obj):
-
-    return obj.__dict__
+    return dict(obj.__dict__, parameter_count=obj.parameter_count)
 
 
 TEMPLATE = '''<!DOCTYPE HTML PUBLIC
@@ -182,10 +184,10 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
        <td class="value">{{ func.token_count }}</td>
     {% endif %}
 
-    {% if func.full_parameters|length > thresholds["parameter_count"] %}
-       <td class="greater-value">{{ func.full_parameters|length }}</td>
+    {% if func.parameter_count > thresholds["parameter_count"] %}
+       <td class="greater-value">{{ func.parameter_count }}</td>
     {% else %}
-       <td class="lesser-value">{{ func.full_parameters|length }}</td>
+       <td class="lesser-value">{{ func.parameter_count }}</td>
     {% endif %}
   </tr>
   {% endfor %}

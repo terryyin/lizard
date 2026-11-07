@@ -114,6 +114,16 @@ export async function releasePreparation(input) {
         workspace,
         error: `${ref} now holds a later allocation (${found.successor}) of ${found.own.path}; landing this workspace's removal of it would end that assignment. Take the removal out of the workspace's unpublished changes and commits before landing`,
       });
+    // Completion can end the assignment without landing this draft. A kept
+    // result's own release ended while its story was still queued instead.
+    if (
+      found.endedBy &&
+      (await storyListAt(workspace, found.endedBy, request.identity)) ===
+        undefined
+    ) {
+      const left = await storyLeftQueue(request, ref, found.own);
+      if (left) return left;
+    }
     return alreadyReleased(request, found);
   }
   if (found.state !== "held")

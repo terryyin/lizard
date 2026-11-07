@@ -1,0 +1,8 @@
+warning: Git tree '/Users/terryyin/git/lizard/.worktrees/conclude-the-javascript-and-typescript-lexical-a' is dirty
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+virtualenv 20.13.2 requires platformdirs<3,>=2, but you have platformdirs 4.4.0 which is incompatible.
+WARNING: You are using pip version 22.0.3; however, version 26.0.1 is available.
+You should consider upgrading via the '/Users/terryyin/git/lizard/.worktrees/conclude-the-javascript-and-typescript-lexical-a/.venv/bin/python -m pip install --upgrade pip' command.
+incremental-api 10:12:44  up 5 days  4:06,  4 users,  load average: 4.34, 4.87, 5.10
+{"workload": "api", "loops": 49, "medians": {"baseline": 8.22654056249998, "candidate": 8.327813291499979}, "median_slowdown_pct": 1.2310488015052412, "paired_95pct_ci": [-14.195682111195051, 12.589071949386632], "passes": false}
+incremental-api-parameters 10:46:04  up 5 days  4:39,  4 users,  load average: 4.98, 10.98, 8.74

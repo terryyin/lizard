@@ -4,8 +4,9 @@ An authorized merge, rebase, or cherry-pick that combines two sides of this
 project's product backlog (often `PRODUCT-BACKLOG.md`) across branches or
 commits is not an ordinary same-branch edit. Run it through this project's
 installed product backlog Git adapters; do not run a raw `git merge`,
-`git rebase`, or `git cherry-pick` that touches the backlog path and then
-decide what to do only if Git reports a conflict. A clean Git result can
+`git rebase`, or `git cherry-pick` that touches the backlog path, or the done
+records under `done/` beside it, and then decide what to do only if Git
+reports a conflict. A clean Git result can
 still combine the backlog wrongly — an earlier step can silently absorb a
 concurrent change that a later step then changes again, unopposed at every
 single step — so the adapters must be in the invocation path itself, not
@@ -34,7 +35,10 @@ file that adapter does not own), use
 Otherwise, run the operation actually being performed, supplying the
 backlog's real path with `--file` when it is not this project's default:
 
-- Merge: `product-backlog-git-merge.mjs merge --ref <ref> [--file <path>]`
+- Merge: `product-backlog-git-merge.mjs merge --ref <ref> [--file <path>]`.
+  A ref the current branch already contains, and is ahead of, stops as
+  `blocked` before any merge: nothing was merged or changed, and there is no
+  merge to `continue`.
 - Rebase: `product-backlog-git-rebase.mjs rebase --ref <upstream> [--onto <newbase>] [--branch <branch>] [--file <path>]`
   Without `--onto`, this rebases the current branch onto `--ref`, or the
   named `--branch` when that branch is not the one checked out. With
@@ -103,6 +107,55 @@ branch's current bytes are a backlog this tooling can read. A merge has no
 `validate` verb: a single merge's own result is already checked by its own
 gate before it is ever offered for commit, so there is no separate
 whole-operation aggregate to revisit afterward.
+
+## Done records and the done catalog beside the backlog
+
+Every adapter keeps the done catalog `done/.catalog.json` current and never
+stops on the catalog alone. When the operation changed `done/` — on either
+side of a merge, or in the replayed or picked commits — the merge commit
+carries a catalog rebuilt from the merged record files, and an accepted rebase
+or cherry-pick gains one commit at its tip changing only the catalog when the
+rebuilt catalog differs from the replayed one; that commit credits the
+developer like any other agent commit in an agent's owned workspace. A
+`conflict`, `blocked`, `refused`, `empty`, or `disputed` result rebuilds and
+commits no catalog; `continue` after the human's resolution does.
+
+Done records under `done/` beside the backlog are one file per identity, so
+combine them as ordinary files: keep each side's added, replaced, or removed
+record, and preserve a real conflict in one record for the human who owns that
+work. Resolve it, `git add` the record, and run `continue` through the same
+adapter, which then rebuilds the catalog from the resolved records. The catalog
+is derived from those records and is never combined by hand.
+
+A rebase or cherry-pick whose catalog commit cannot be made, such as in an
+agent's owned workspace whose developer credit is refused, reports
+`catalog-uncommitted`: the operation has finished and the rebuilt catalog is
+staged but not committed. Settle what the report names, then commit that
+catalog alone, crediting the developer as any other agent commit does.
+
+### Catalog representation and repair
+
+The done catalog lists each done record's file name, identity, completion time,
+and Git blob hash, ordered newest first by completion time. Unreadable record
+files have their hash and no completion time, so a reader can order the records
+and read only the ones it needs. Titles, developers, agents, hosts, and models
+stay in the records. The catalog is derived from the record files: never edit or merge it
+by hand. `complete` and the installed merge, rebase, and cherry-pick adapters
+keep it current, rebuilding it from the resulting records whenever they change.
+Rebuild with the installed `scripts/product-backlog.mjs catalog-done
+[--file <backlog>]` from the same installed skill directory and commit its result
+when:
+
+- done records exist beside the backlog with no catalog because they predate it;
+- record files changed outside `complete` and those adapters, such as by raw Git,
+  a hand edit, or an older installed copy of these scripts; or
+- raw Git reports a conflict in `done/.catalog.json`: settle the record files
+  first, then rebuild and stage the catalog.
+
+`catalog-done` changes no record and no backlog entry, prunes nothing, and
+writes no completion; with no record left it removes the catalog. Its report
+names unreadable record files, which stay for a person to read; the catalog
+never makes up completion times for them.
 
 ## Fallback domain knowledge
 

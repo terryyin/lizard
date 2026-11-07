@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-002#analyze-conditional-style-arrays",
+  "title": "Analyze TSX conditional style arrays without crashing",
+  "completedAt": "2026-10-22T07:52:25.238Z",
+  "developer": "Terry Yin",
+  "agent": "Yui-chan",
+  "host": "codex"
+}

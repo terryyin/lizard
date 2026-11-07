@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-016#arrow-parameter-bindings",
+  "title": "Report consistent JavaScript and TypeScript arrow parameters",
+  "completedAt": "2026-10-27T16:55:16.243Z",
+  "developer": "Terry Yin",
+  "agent": "Sola-chan",
+  "host": "codex",
+  "model": "gpt-6.1-sol"
+}

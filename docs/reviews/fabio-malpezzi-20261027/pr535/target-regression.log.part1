@@ -1,0 +1,230 @@
+FFFFFFFF............F.....FF                                             [100%]
+=================================== FAILURES ===================================
+_____________________ test_authored_receiver_examples[ts] ______________________
+
+extension = 'ts'
+
+    @pytest.mark.parametrize('extension', ['ts', 'tsx'])
+    def test_authored_receiver_examples(extension):
+        code = (
+            "function a(this: Window, x: number) { return x; }\n"
+            "const b = async function* (this: Reader) { yield 1; }\n"
+            "function c(this: Map<string, number>, x: number) { return x; }\n"
+        )
+        result = functions(code, extension)
+>       assert [(f.name, f.parameter_count) for f in result] == [
+            ('a', 1), ('b', 0), ('c', 1)]
+E       AssertionError: assert [('a', 2), ('b', 1), ('c', 2)] == [('a', 1), ('b', 0), ('c', 1)]
+E
+E         At index 0 diff: ('a', 2) != ('a', 1)
+E         Use -v to get more diff
+
+test/test_languages/testTypeScriptThisParameters.py:28: AssertionError
+_____________________ test_authored_receiver_examples[tsx] _____________________
+
+extension = 'tsx'
+
+    @pytest.mark.parametrize('extension', ['ts', 'tsx'])
+    def test_authored_receiver_examples(extension):
+        code = (
+            "function a(this: Window, x: number) { return x; }\n"
+            "const b = async function* (this: Reader) { yield 1; }\n"
+            "function c(this: Map<string, number>, x: number) { return x; }\n"
+        )
+        result = functions(code, extension)
+>       assert [(f.name, f.parameter_count) for f in result] == [
+            ('a', 1), ('b', 0), ('c', 1)]
+E       AssertionError: assert [('a', 2), ('b', 1), ('c', 2)] == [('a', 1), ('b', 0), ('c', 1)]
+E
+E         At index 0 diff: ('a', 2) != ('a', 1)
+E         Use -v to get more diff
+
+test/test_languages/testTypeScriptThisParameters.py:28: AssertionError
+_ test_receiver_in_functions_and_methods[function read(this: Reader, value: string) { return this.value + value; }-ts] _
+
+source = 'function read(this: Reader, value: string) { return this.value + value; }'
+extension = 'ts'
+
+    @pytest.mark.parametrize('extension', ['ts', 'tsx'])
+    @pytest.mark.parametrize('source', [
+        'function read(this: Reader, value: string) { return this.value + value; }',
+        'class Reader { read(this: Reader, value: string) '
+        '{ return this.value + value; } }',
+        'const reader = { read(this: Reader, value: string) '
+        '{ return this.value + value; } };',
+    ])
+    def test_receiver_in_functions_and_methods(source, extension):
+        function, = functions(source, extension)
+>       assert (function.name, function.parameters, function.parameter_count) == (
+            'read', ['value'], 1)
+E       AssertionError: assert ('read', ['this', 'value'], 2) == ('read', ['value'], 1)
+E
+E         At index 1 diff: ['this', 'value'] != ['value']
+E         Use -v to get more diff
+
+test/test_languages/testTypeScriptThisParameters.py:43: AssertionError
+_ test_receiver_in_functions_and_methods[function read(this: Reader, value: string) { return this.value + value; }-tsx] _
+
+source = 'function read(this: Reader, value: string) { return this.value + value; }'
+extension = 'tsx'
+
+    @pytest.mark.parametrize('extension', ['ts', 'tsx'])
+    @pytest.mark.parametrize('source', [
+        'function read(this: Reader, value: string) { return this.value + value; }',
+        'class Reader { read(this: Reader, value: string) '
+        '{ return this.value + value; } }',
+        'const reader = { read(this: Reader, value: string) '
+        '{ return this.value + value; } };',
+    ])
+    def test_receiver_in_functions_and_methods(source, extension):
+        function, = functions(source, extension)
+>       assert (function.name, function.parameters, function.parameter_count) == (
+            'read', ['value'], 1)
+E       AssertionError: assert ('read', ['this', 'value'], 2) == ('read', ['value'], 1)
+E
+E         At index 1 diff: ['this', 'value'] != ['value']
+E         Use -v to get more diff
+
+test/test_languages/testTypeScriptThisParameters.py:43: AssertionError
+_ test_receiver_in_functions_and_methods[class Reader { read(this: Reader, value: string) { return this.value + value; } }-ts] _
+
+source = 'class Reader { read(this: Reader, value: string) { return this.value + value; } }'
+extension = 'ts'
+
+    @pytest.mark.parametrize('extension', ['ts', 'tsx'])
+    @pytest.mark.parametrize('source', [
+        'function read(this: Reader, value: string) { return this.value + value; }',
+        'class Reader { read(this: Reader, value: string) '
+        '{ return this.value + value; } }',
+        'const reader = { read(this: Reader, value: string) '
+        '{ return this.value + value; } };',
+    ])
+    def test_receiver_in_functions_and_methods(source, extension):
+        function, = functions(source, extension)
+>       assert (function.name, function.parameters, function.parameter_count) == (
+            'read', ['value'], 1)
+E       AssertionError: assert ('read', ['this', 'value'], 2) == ('read', ['value'], 1)
+E
+E         At index 1 diff: ['this', 'value'] != ['value']
+E         Use -v to get more diff
+
+test/test_languages/testTypeScriptThisParameters.py:43: AssertionError
+_ test_receiver_in_functions_and_methods[class Reader { read(this: Reader, value: string) { return this.value + value; } }-tsx] _
+
+source = 'class Reader { read(this: Reader, value: string) { return this.value + value; } }'
+extension = 'tsx'
+
+    @pytest.mark.parametrize('extension', ['ts', 'tsx'])
+    @pytest.mark.parametrize('source', [
+        'function read(this: Reader, value: string) { return this.value + value; }',
+        'class Reader { read(this: Reader, value: string) '
+        '{ return this.value + value; } }',
+        'const reader = { read(this: Reader, value: string) '
+        '{ return this.value + value; } };',
+    ])
+    def test_receiver_in_functions_and_methods(source, extension):
+        function, = functions(source, extension)
+>       assert (function.name, function.parameters, function.parameter_count) == (
+            'read', ['value'], 1)
+E       AssertionError: assert ('read', ['this', 'value'], 2) == ('read', ['value'], 1)
+E
+E         At index 1 diff: ['this', 'value'] != ['value']
+E         Use -v to get more diff
+
+test/test_languages/testTypeScriptThisParameters.py:43: AssertionError
+_ test_receiver_in_functions_and_methods[const reader = { read(this: Reader, value: string) { return this.value + value; } };-ts] _
+
+source = 'const reader = { read(this: Reader, value: string) { return this.value + value; } };'
+extension = 'ts'
+
+    @pytest.mark.parametrize('extension', ['ts', 'tsx'])
+    @pytest.mark.parametrize('source', [
+        'function read(this: Reader, value: string) { return this.value + value; }',
+        'class Reader { read(this: Reader, value: string) '
+        '{ return this.value + value; } }',
+        'const reader = { read(this: Reader, value: string) '
+        '{ return this.value + value; } };',
+    ])
+    def test_receiver_in_functions_and_methods(source, extension):
+        function, = functions(source, extension)
+>       assert (function.name, function.parameters, function.parameter_count) == (
+            'read', ['value'], 1)
+E       AssertionError: assert ('read', ['this', 'value'], 2) == ('read', ['value'], 1)
+E
+E         At index 1 diff: ['this', 'value'] != ['value']
+E         Use -v to get more diff
+
+test/test_languages/testTypeScriptThisParameters.py:43: AssertionError
+_ test_receiver_in_functions_and_methods[const reader = { read(this: Reader, value: string) { return this.value + value; } };-tsx] _
+
+source = 'const reader = { read(this: Reader, value: string) { return this.value + value; } };'
+extension = 'tsx'
+
+    @pytest.mark.parametrize('extension', ['ts', 'tsx'])
+    @pytest.mark.parametrize('source', [
+        'function read(this: Reader, value: string) { return this.value + value; }',
+        'class Reader { read(this: Reader, value: string) '
+        '{ return this.value + value; } }',
+        'const reader = { read(this: Reader, value: string) '
+        '{ return this.value + value; } };',
+    ])
+    def test_receiver_in_functions_and_methods(source, extension):
+        function, = functions(source, extension)
+>       assert (function.name, function.parameters, function.parameter_count) == (
+            'read', ['value'], 1)
+E       AssertionError: assert ('read', ['this', 'value'], 2) == ('read', ['value'], 1)
+E
+E         At index 1 diff: ['this', 'value'] != ['value']
+E         Use -v to get more diff
+
+test/test_languages/testTypeScriptThisParameters.py:43: AssertionError
+________ test_receiver_does_not_hide_actual_defaults_or_body_complexity ________
+
+    def test_receiver_does_not_hide_actual_defaults_or_body_complexity():
+        function, after = functions(
+            "function defaults(this: Reader, number: number = flag ? 1 : 2, "
+            "$y: Map<string, number> = new Map(), tail: string = 'x') "
+            "{ return this.value; }\nfunction after(value) { return this.value; }")
+>       assert function.parameters == ['number', '$y', 'tail']
+E       AssertionError: assert ['this', 'num... '$y', 'tail'] == ['number', '$y', 'tail']
+E
+E         At index 0 diff: 'this' != 'number'
+E         Left contains one more item: 'tail'
+E         Use -v to get more diff
+
+test/test_languages/testTypeScriptThisParameters.py:66: AssertionError
+______________________ test_receiver_parameter_consumers _______________________
+
+capsys = <_pytest.capture.CaptureFixture object at 0x11402bee0>
+
+    def test_receiver_parameter_consumers(capsys):
+        info = analyze_file.analyze_source_code('receiver.ts',
+            'function first(this: Reader, a, b, c, d, e) {}\n'
+            'function same(a, b, c, d, e) {}')
+        extension = LizardExtension()
+        list(extension.cross_file_process([info]))
+>       assert [f.parameter_list_duplicates for f in info.function_list] == [2, 2]
+E       assert [1, 1] == [2, 2]
+E
+E         At index 0 diff: 1 != 2
+E         Use -v to get more diff
+
+test/test_languages/testTypeScriptThisParameters.py:93: AssertionError
+_____________________ test_receiver_cli_warning_threshold ______________________
+
+tmp_path = PosixPath('/private/tmp/nix-shell.6q4xOT/pytest-of-terryyin/pytest-0/test_receiver_cli_warning_thre0')
+
+    def test_receiver_cli_warning_threshold(tmp_path):
+        source = tmp_path / 'receiver.ts'
+        source.write_text('function onClick(this: HTMLElement, event: Event) {\n'
+                          '  return event;\n}\n')
+        facade = Path(__file__).resolve().parents[2] / 'lizard.py'
+        result = subprocess.run([sys.executable, str(facade), '-a', '1',
+                                 str(source)], text=True, capture_output=True)
+>       assert result.returncode == 0, result.stdout + result.stderr
+E       AssertionError: ================================================
+E           NLOC    CCN   token  PARAM  length  location
+E         ------------------------------------------------
+E                3      1     14      2       3 onClick@1-3@/private/tmp/nix-shell.6q4xOT/pytest-of-terryyin/pytest-0/test_receiver_cli_warning_thre0/receiver.ts
+E         1 file analyzed.
+E         ==============================================================

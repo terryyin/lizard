@@ -1,0 +1,76 @@
+{
+  "base": "d8e8e9af75b6d05da005e981af5f8867cced5d55",
+  "original_head": "d0713bf5b4dcf4bf24453156a3756688627abbc0",
+  "anticipated_merge_tree": "c7de325e738d18d493fe401a686fc53e3f7d4e51",
+  "changed_paths": [
+    "lizard_core/function_info.py",
+    "lizard_languages/javascript_bindings.py",
+    "lizard_languages/javascript_functions.py",
+    "lizard_languages/typescript.py",
+    "lizard_languages/tsx.py",
+    "test/test_languages/testJavaScriptParameterNames.py",
+    "test/test_languages/testJavaScriptFunctions.py",
+    "test/test_languages/testTypeScriptMetrics.py"
+  ],
+  "commands": [
+    {
+      "command": [
+        "/private/tmp/lizard-pr532-validation/.venv/bin/python",
+        "-m",
+        "pytest"
+      ],
+      "exit": 0,
+      "result": [
+        "================= 1751 passed, 7 skipped, 30 warnings in 2.97s ================="
+      ]
+    },
+    {
+      "command": [
+        "make"
+      ],
+      "exit": 0,
+      "result": [
+        "================= 1751 passed, 7 skipped, 24 warnings in 3.42s =================",
+        "Your code has been rated at 9.12/10 (previous run: 9.11/10, +0.00)"
+      ]
+    }
+  ],
+  "http": {
+    "python": "3.9.11 (main, Apr 10 2022, 22:01:55) \n[Clang 11.1.0 ]",
+    "executable": "/private/tmp/lizard-pr532-validation/.venv/bin/python",
+    "imports": {
+      "index": "/private/tmp/lizard-pr532-validation/index.py",
+      "lizard": "/private/tmp/lizard-pr532-validation/lizard.py",
+      "lizard_languages": "/private/tmp/lizard-pr532-validation/lizard_languages/__init__.py",
+      "lizard_languages.javascript_functions": "/private/tmp/lizard-pr532-validation/lizard_languages/javascript_functions.py",
+      "lizard_languages.typescript_states": "/private/tmp/lizard-pr532-validation/lizard_languages/typescript_states.py",
+      "lizard_core.function_info": "/private/tmp/lizard-pr532-validation/lizard_core/function_info.py"
+    },
+    "observations": [
+      {
+        "language": ".js",
+        "status": 200,
+        "name": "render",
+        "parameters": 3
+      },
+      {
+        "language": ".ts",
+        "status": 200,
+        "name": "round",
+        "parameters": 2
+      },
+      {
+        "language": ".js",
+        "status": 200,
+        "name": "names",
+        "parameters": 3
+      },
+      {
+        "language": ".js",
+        "status": 200,
+        "name": "unpack",
+        "parameters": 2
+      }
+    ]
+  }
+}

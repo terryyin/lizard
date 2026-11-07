@@ -24,6 +24,7 @@ export const options = {
   "expect-plan": { type: "string" },
   "dependency-file": { type: "string" },
   "expect-dependencies": { type: "string" },
+  "correct-agreement": { type: "boolean", default: false },
   "supplier-identity": { type: "string" },
   "accepted-revision": { type: "string" },
   remote: { type: "string" },
@@ -39,6 +40,7 @@ export const options = {
   return: { type: "boolean", default: false },
   all: { type: "boolean", default: false },
   dropped: { type: "boolean", default: false },
+  seeds: { type: "string" },
   file: { type: "string", default: defaultBacklogPath },
   help: { type: "boolean", default: false },
 };

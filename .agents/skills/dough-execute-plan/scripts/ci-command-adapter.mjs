@@ -1,39 +1,75 @@
-import { execFile } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import {
+  currentCommandAttempt,
+  latestCommandAttempts,
+  targetCommandAttempts,
+} from "./ci-command-attempts.mjs";
+import {
+  defaultAdapterTimeoutMs,
+  runAdapter,
+  truncateUtf8,
+} from "./ci-command-run.mjs";
 import { ciAttemptKey } from "./ci-failures.mjs";
-import { isFullGitRevision } from "./ci-revisions.mjs";
 import { createStartupRunFilter } from "./ci-runs.mjs";
+import { isFullGitRevision } from "./ci-revisions.mjs";
 
-const configurationPath = ".planning/open-dough.json";
-const defaultAdapterTimeoutMs = 20_000;
-const adapterResponseBytes = 64 * 1024;
 export const diagnosticExcerptBytes = 16 * 1024;
+const unavailableReasonBytes = 600;
 
-export function readCiAdapter(root = process.cwd()) {
-  const path = join(root, configurationPath);
-  if (!existsSync(path)) return;
-  const configuration = JSON.parse(readFileSync(path, "utf8"));
-  const command = configuration.ciAdapter;
-  if (command === undefined || (Array.isArray(command) && !command.length))
-    return;
-  if (
-    !Array.isArray(command) ||
-    !command.length ||
-    command.some((argument) => typeof argument !== "string" || !argument)
-  )
-    throw new Error("ciAdapter must be an empty or nonempty string array");
-  return command;
+const isObject = (value) =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+// Retained attempts remain evidence for registered revisions, and candidates
+// for applicable ancestors and integrated state, even when the ordinary
+// notification stream suppresses completed startup history. Integrated-state
+// facts come only from the poll's own discovery: none survive a failed one.
+export function createCommandAcquisition(options) {
+  const discover = createCommandDiscovery(options);
+  const currentRuns = createStartupRunFilter();
+  let retained = [];
+  let polled;
+  let queue;
+  return {
+    acquireRuns: async (signal) => {
+      polled = undefined;
+      queue = undefined;
+      const snapshot = await discover(signal);
+      const { attempts } = snapshot;
+      queue = snapshot.queue;
+      retained = latestCommandAttempts(attempts);
+      polled = attempts;
+      const current = currentRuns(retained);
+      const registered = new Set(
+        ((await options.registeredRevisions?.()) ?? []).map((sha) =>
+          sha.toLowerCase(),
+        ),
+      );
+      return retained.filter(
+        (run) =>
+          current.includes(run) || registered.has(run.headSha.toLowerCase()),
+      );
+    },
+    acquireFailure: createCommandFailureAcquisition(options),
+    // Coverage owns workflow-path applicability; candidates retain their real
+    // attempt state and never enter the ordinary failure stream by themselves.
+    discoverAncestorCandidates: async () => retained,
+    // Every attempt this poll's discover answered, before newest-per-check
+    // retention: CI status counts attemptId ambiguity over these.
+    discoverAnsweredAttempts: async () => polled ?? [],
+    discoverQueue: async () => queue,
+    readCurrentAttempt: async (run) => {
+      if (!polled) throw new Error("CI adapter discovery is unavailable");
+      return currentCommandAttempt(polled, run);
+    },
+  };
 }
 
-export function createCommandRunAcquisition({
+function createCommandDiscovery({
   command,
   repo,
   branch,
   root,
   timeoutMs = defaultAdapterTimeoutMs,
 }) {
-  const currentRuns = createStartupRunFilter();
   return async (signal) => {
     const response = await runAdapter(
       command,
@@ -42,13 +78,46 @@ export function createCommandRunAcquisition({
     );
     if (!response || !Array.isArray(response.attempts))
       throw new Error("CI adapter discovery must return an attempts array");
-    return currentRuns(
-      response.attempts.map((attempt) => normalizeAttempt(attempt, branch)),
-    );
+    return {
+      attempts: targetCommandAttempts(response.attempts, branch),
+      queue: targetCommandQueue(response.queue, branch),
+    };
   };
 }
 
-export function createCommandFailureAcquisition({
+// Queue progress has no attempt identity or verdict. An omitted queue means
+// unsupported; an empty array is an authoritative empty snapshot.
+function targetCommandQueue(queue, branch) {
+  if (queue === undefined) return;
+  if (!Array.isArray(queue))
+    throw new Error("CI adapter queue must be an array");
+  return queue
+    .map((entry) => {
+      if (
+        !entry ||
+        !isFullGitRevision(entry.sha) ||
+        typeof entry.branch !== "string" ||
+        !entry.branch ||
+        !["queued", "running", "retrying"].includes(entry.state) ||
+        ![entry.check, entry.context].every(
+          (value) =>
+            value === undefined ||
+            (typeof value === "string" && value.length > 0),
+        )
+      )
+        throw new Error("CI adapter returned an invalid queue entry");
+      return {
+        sha: entry.sha.toLowerCase(),
+        branch: entry.branch,
+        state: entry.state,
+        ...(entry.check === undefined ? {} : { check: entry.check }),
+        ...(entry.context === undefined ? {} : { context: entry.context }),
+      };
+    })
+    .filter((entry) => entry.branch === branch);
+}
+
+function createCommandFailureAcquisition({
   command,
   repo,
   branch,
@@ -98,61 +167,36 @@ export function createCommandFailureAcquisition({
   };
 }
 
-function runAdapter(command, request, { signal, cwd, timeoutMs }) {
-  return new Promise((resolve, reject) => {
-    const child = execFile(
-      command[0],
-      command.slice(1),
-      {
-        cwd,
-        signal,
-        timeout: timeoutMs,
-        maxBuffer: adapterResponseBytes,
-        encoding: "utf8",
+// The dashboard's proof read of one discovered attempt, asked in `cwd` under
+// the same per-invocation limits as discover and diagnose. The observer never
+// asks it. The adapter answers the attempt's CI proof summary, unchecked here,
+// or why it has none; anything else is refused.
+export async function readCommandProof(
+  command,
+  check,
+  attempt,
+  { signal, cwd, timeoutMs = defaultAdapterTimeoutMs },
+) {
+  const response = await runAdapter(
+    command,
+    {
+      operation: "proof",
+      check,
+      attempt: {
+        runId: attempt.runId,
+        attemptId: attempt.attemptId,
+        sha: attempt.sha,
       },
-      (error, stdout) => {
-        if (error) return reject(error);
-        try {
-          resolve(JSON.parse(stdout));
-        } catch (parseError) {
-          reject(
-            new Error(
-              `CI adapter returned invalid JSON: ${parseError.message}`,
-            ),
-          );
-        }
-      },
-    );
-    child.stdin.end(`${JSON.stringify(request)}\n`);
-  });
-}
-
-function normalizeAttempt(attempt, branch) {
-  if (
-    !attempt ||
-    !["string", "number"].includes(typeof attempt.runId) ||
-    !["string", "number"].includes(typeof attempt.attemptId) ||
-    !isFullGitRevision(attempt.sha) ||
-    !["pending", "success", "failure", "incomplete"].includes(attempt.outcome)
-  )
-    throw new Error("CI adapter returned an invalid attempt");
-
-  const completed = attempt.outcome !== "pending";
-  return {
-    databaseId: attempt.runId,
-    attempt: attempt.attemptId,
-    headSha: attempt.sha,
-    headBranch: branch,
-    status: completed ? "completed" : "in_progress",
-    conclusion:
-      attempt.outcome === "incomplete"
-        ? "cancelled"
-        : completed
-          ? attempt.outcome
-          : null,
-    ...(attempt.url === undefined ? {} : { url: attempt.url }),
-    ...(attempt.time === undefined ? {} : { createdAt: attempt.time }),
-  };
+    },
+    { signal, cwd, timeoutMs },
+  );
+  const { summary, unavailable } = isObject(response) ? response : {};
+  if (isObject(summary) && unavailable === undefined) return { summary };
+  if (typeof unavailable === "string" && unavailable && summary === undefined)
+    return {
+      unavailable: truncateUtf8(unavailable, unavailableReasonBytes).text,
+    };
+  throw new Error("CI adapter proof must return summary or unavailable");
 }
 
 function commandFailureEvent(repo, run, response) {
@@ -177,7 +221,7 @@ function boundedDiagnostic(response) {
   if (unavailable !== undefined) {
     if (typeof unavailable !== "string" || !unavailable)
       throw new Error("CI adapter diagnostic unavailability must be a reason");
-    const bounded = truncateUtf8(unavailable, 600);
+    const bounded = truncateUtf8(unavailable, unavailableReasonBytes);
     return {
       unavailable: bounded.text,
       truncated: bounded.truncated,
@@ -195,16 +239,4 @@ function boundedDiagnostic(response) {
     excerpt: bounded.text,
     truncated: Boolean(response.truncated) || bounded.truncated,
   };
-}
-
-function truncateUtf8(value, limit) {
-  let text = "";
-  let bytes = 0;
-  for (const character of value) {
-    const size = Buffer.byteLength(character);
-    if (bytes + size > limit) return { text, truncated: true };
-    text += character;
-    bytes += size;
-  }
-  return { text, truncated: false };
 }

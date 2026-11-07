@@ -78,11 +78,11 @@ export function readFile(path, missing) {
   }
 }
 
-// Reads any file this tool mutates, applies `change` to its current bytes, and
-// replaces it atomically under a cooperating lock beside that path. A refused
-// change leaves the file untouched. Callers supply the missing-file refusal so
-// backlog and canonical-home wording stay accurate.
-export async function applyToFile(path, change, missing) {
+// Runs `work` while holding the cooperating lock beside `path`, and returns
+// what it returns. Every change this tool makes to a file, and to the files a
+// backlog change keeps beside the backlog, happens inside one such hold, so
+// cooperating runs cannot interleave their reads and writes.
+async function holdingFileLock(path, work, missing) {
   // The lock is made beside the file, so a path that is not there at all
   // cannot be locked either. Establishing the file first keeps a mistyped path
   // an ordinary refusal instead of a failure to create its lock, and neither
@@ -96,15 +96,60 @@ export async function applyToFile(path, change, missing) {
   const lockPath = `${path}.lock`;
   await acquire(lockPath);
   try {
-    const source = readFile(path, missing);
-    replaceFile(path, change(source));
+    return await work();
   } finally {
     rmdirSync(lockPath);
   }
 }
 
+// Reads any file this tool mutates, applies `change` to its current bytes, and
+// replaces it atomically under a cooperating lock beside that path. A refused
+// change leaves the file untouched. Callers supply the missing-file refusal so
+// backlog and canonical-home wording stay accurate. `then`, when supplied,
+// runs after the replacement while the lock is still held, and its result is
+// returned.
+export async function applyToFile(path, change, missing, then = () => {}) {
+  return holdingFileLock(
+    path,
+    () => {
+      const source = readFile(path, missing);
+      replaceFile(path, change(source));
+      return then();
+    },
+    missing,
+  );
+}
+
+const missingBacklog = (path) => `Backlog file not found: ${path}`;
+
 // Reads the backlog, applies `change` to its current bytes, and replaces the
-// file atomically. A refused change leaves the file untouched.
-export async function applyToBacklog(path, change) {
-  await applyToFile(path, change, `Backlog file not found: ${path}`);
+// file atomically. A refused change leaves the file untouched. `then` closes
+// the files beside the backlog that the change leads to, inside the same hold.
+export async function applyToBacklog(path, change, then) {
+  return applyToFile(path, change, missingBacklog(path), then);
+}
+
+// Applies one backlog change whose report needs more than the published
+// bytes. `operate` returns the backlog to publish as `source` alongside what
+// it did; only those bytes reach the write boundary. `close`, when supplied,
+// receives that outcome and closes the files beside the backlog inside the
+// same hold, and what it returns joins the outcome, so the report is written
+// from changes already on disk.
+export async function applyReportedChange(path, operate, close = () => ({})) {
+  let outcome;
+  const closed = await applyToBacklog(
+    path,
+    (source) => {
+      outcome = operate(source);
+      return outcome.source;
+    },
+    () => close(outcome),
+  );
+  return { ...outcome, ...closed };
+}
+
+// Runs `work` on the files beside the backlog under the backlog's own lock,
+// without changing the backlog itself.
+export async function holdingBacklog(path, work) {
+  return holdingFileLock(path, work, missingBacklog(path));
 }

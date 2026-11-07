@@ -7,9 +7,73 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 
 const quote = (part) => `'${part.replaceAll("'", "'\\''")}'`;
+export function loopbackReportingOrigin(value) {
+  const origin = new URL(value);
+  if (
+    origin.protocol !== "http:" ||
+    !["127.0.0.1", "localhost", "[::1]"].includes(origin.hostname) ||
+    origin.origin !== value ||
+    origin.username ||
+    origin.password
+  )
+    throw new Error("The reporting origin must be a loopback HTTP origin.");
+  return origin;
+}
+
+// Both operations deliver immutable retained input and require a matching receipt.
+export async function deliverRetainedReport(
+  pending,
+  submission,
+  operation,
+  matchesReceipt,
+  retryScript = fileURLToPath(import.meta.url),
+) {
+  const origin = loopbackReportingOrigin(submission.origin);
+  const landing = operation !== "completion";
+  const endpoint = landing
+    ? `/__agent-launch/landing${operation === "landing-prepare" ? "/prepare" : ""}`
+    : "/__agent-launch/completion";
+  try {
+    const report = { ...submission };
+    delete report.origin;
+    const response = await fetch(`${origin.origin}${endpoint}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Origin: origin.origin },
+      body: JSON.stringify(report),
+      signal: AbortSignal.timeout(10000),
+    });
+    const receipt = await response.json();
+    if (!response.ok)
+      throw new Error(
+        receipt.error ??
+          (landing ? "Landing capture was refused." : "Reporting was refused."),
+      );
+    if (!matchesReceipt(receipt))
+      throw new Error(
+        `No matching ${landing ? "landing" : "completion"} receipt was received.`,
+      );
+    return receipt;
+  } catch (error) {
+    const flags = landing ? ["--operation", operation] : [];
+    const retry = [process.execPath, retryScript, ...flags, "--retry", pending]
+      .map(quote)
+      .join(" ");
+    throw new Error(
+      `${error.message}\nRetained ${landing ? "landing" : "completion"}: ${pending}\nRetry reporting only: ${retry}`,
+      { cause: error },
+    );
+  }
+}
+
 export async function reportCompletion(argv) {
   const values = {};
   const allowed = new Set([
+    "operation",
+    "base",
+    "revision",
+    "identity",
+    "remote",
+    "target",
     "origin",
     "source",
     "host",
@@ -30,6 +94,15 @@ export async function reportCompletion(argv) {
       throw new Error("Malformed reporting arguments.");
     values[name] = argv[index + 1];
   }
+  if (["landing", "landing-prepare"].includes(values.operation))
+    return (await import("./dashboard-landing.mjs")).reportLanding(values);
+  if (
+    values.operation !== undefined ||
+    ["base", "revision", "identity", "remote", "target"].some(
+      (key) => values[key] !== undefined,
+    )
+  )
+    throw new Error("Malformed reporting operation.");
   let pending;
   let submission;
   if (values.retry) {
@@ -75,15 +148,7 @@ export async function reportCompletion(argv) {
     !submission.message.trim()
   )
     throw new Error("An attention message must contain useful text.");
-  const origin = new URL(submission.origin);
-  if (
-    origin.protocol !== "http:" ||
-    !["127.0.0.1", "localhost", "[::1]"].includes(origin.hostname) ||
-    origin.origin !== submission.origin ||
-    origin.username ||
-    origin.password
-  )
-    throw new Error("The reporting origin must be a loopback HTTP origin.");
+  loopbackReportingOrigin(submission.origin);
   if (pending === undefined) {
     pending = path.join(
       path.dirname(fileURLToPath(import.meta.url)),
@@ -95,41 +160,25 @@ export async function reportCompletion(argv) {
       mode: 0o600,
     });
   }
-  try {
-    const report = { ...submission };
-    delete report.origin;
-    const response = await fetch(`${origin.origin}/__agent-launch/completion`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Origin: origin.origin },
-      body: JSON.stringify(report),
-      signal: AbortSignal.timeout(10000),
-    });
-    const receipt = await response.json();
-    if (!response.ok)
-      throw new Error(receipt.error ?? "Reporting was refused.");
-    if (
-      !receipt.receipt ||
-      receipt.delivery !== submission.delivery ||
-      receipt.reference !== submission.reference ||
-      receipt.outcome !== submission.outcome ||
-      receipt.message !== submission.message ||
-      !["recorded", "pending-native-session"].includes(receipt.state)
-    )
-      throw new Error("No matching completion receipt was received.");
-    return receipt;
-  } catch (error) {
-    throw new Error(
-      `${error.message}\nRetained completion: ${pending}\nRetry reporting only: ${[process.execPath, fileURLToPath(import.meta.url), "--retry", pending].map(quote).join(" ")}`,
-      { cause: error },
-    );
-  }
+  return deliverRetainedReport(
+    pending,
+    submission,
+    "completion",
+    (receipt) =>
+      Boolean(receipt.receipt) &&
+      receipt.delivery === submission.delivery &&
+      receipt.reference === submission.reference &&
+      receipt.outcome === submission.outcome &&
+      receipt.message === submission.message &&
+      ["recorded", "pending-native-session"].includes(receipt.state),
+  );
 }
 if (isDirectCliEntry(import.meta.url, process.argv[1])) {
   reportCompletion(process.argv.slice(2)).then(
     (receipt) => process.stdout.write(`${JSON.stringify(receipt)}\n`),
     (error) => {
       process.stderr.write(
-        `Completion delivery was not acknowledged: ${error.message}\nKeep the message and retry without repeating the work.\n`,
+        `${process.argv.includes("--operation") ? "Landing capture" : "Completion delivery"} was not acknowledged: ${error.message}\nKeep the message and retry without repeating the work.\n`,
       );
       process.exitCode = 1;
     },

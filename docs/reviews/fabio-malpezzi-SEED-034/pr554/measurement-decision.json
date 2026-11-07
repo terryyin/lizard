@@ -1,0 +1,153 @@
+{
+  "reason": "PR554 changes lizard_ext/lizardns.py nested-structure detection; public max_nested_structures is reached under -ENS. Require api + api-parameters + broad cli with --extension ns. Incremental baseline origin/master after #553 (ed78b3b1). Cumulative frozen trunk 4a05e405. Candidate = master+#554 patch only.",
+  "attempt1": {
+    "chosen_before_launch": true,
+    "justification": "Host 1-minute load under 3.5; reuse PR552 frozen corpora; 15s API / 15s api-parameters / 18s CLI, 20 pairs, 3% bound, --extension ns.",
+    "api_seconds": 15.0,
+    "api_parameters_seconds": 15.0,
+    "cli_seconds": 18.0,
+    "pairs": 20,
+    "limit_pct": 3.0,
+    "extension": "ns",
+    "load_gate": "1-minute load under 3.5 before launch",
+    "corpus": {
+      "api_cli": "pr552/proof/corpus/affected-expanded",
+      "api_parameters": "pr552/proof/corpus/consumers"
+    },
+    "baselines": {
+      "incremental": "ed78b3b13240297681f82fe6a32c84c377498114",
+      "cumulative": "4a05e4056cebb2edd75cb02b7a43e911369f4ce5"
+    },
+    "candidate": "/Users/terryyin/.cache/lizard-pr-reviews-SEED-034/pr554/candidate",
+    "incremental_api": {
+      "passes": false,
+      "verdict": "bound-not-met",
+      "paired_change_pct": 2.108779682629936,
+      "paired_95pct_ci": [
+        -4.059200386032467,
+        8.673295722229547
+      ],
+      "note": "Retained; load rose mid-run; wide CI noise, median ~2.1%"
+    },
+    "remaining": "aborted after first contaminated result; retry as attempt2"
+  },
+  "attempt2": {
+    "chosen_before_launch": true,
+    "justification": "Retry all six workloads after quieter host (load under 3.0); retain attempt1 contaminated incremental-api. Same corpora/seconds/pairs/limit/--extension ns.",
+    "api_seconds": 15.0,
+    "api_parameters_seconds": 15.0,
+    "cli_seconds": 18.0,
+    "pairs": 20,
+    "limit_pct": 3.0,
+    "extension": "ns",
+    "load_gate": "1-minute load under 3.0 before launch",
+    "incremental_api": {
+      "passes": false,
+      "verdict": "bound-not-met",
+      "paired_change_pct": 2.698377557390519,
+      "paired_95pct_ci": [
+        -8.521774106292954,
+        15.294723415114644
+      ],
+      "note": "Retained; load rose to ~5.5\u20136.4 mid-run; wide CI noise"
+    },
+    "remaining": "aborted; retry attempt3"
+  },
+  "attempt3": {
+    "chosen_before_launch": true,
+    "justification": "Attempts 1\u20132 API contaminated by mid-run load spikes. Wait for sustained 1-minute load under 2.5 (three consecutive samples), then run 25s API / 25s api-parameters / 20s CLI with --extension ns; same corpora/pairs/limit.",
+    "api_seconds": 25.0,
+    "api_parameters_seconds": 25.0,
+    "cli_seconds": 20.0,
+    "pairs": 20,
+    "limit_pct": 3.0,
+    "extension": "ns",
+    "load_gate": "three consecutive 1-minute load samples under 2.5 before launch",
+    "incremental_api": {
+      "passes": false,
+      "verdict": "setup-or-measurement-error",
+      "error": "worker timeout; inspect retained stderr",
+      "load_after": [
+        41.59033203125,
+        18.61376953125,
+        10.5078125
+      ],
+      "note": "Retained; host load spiked to ~41 mid-run (competing Playwright/dashboard agents); aborted remaining"
+    },
+    "remaining": "aborted; retry attempt4 when sustained quiet returns"
+  },
+  "attempt4": {
+    "chosen_before_launch": true,
+    "justification": "Retry after host recovers. Three consecutive load samples under 3.0; 20s API / 20s api-parameters / 18s CLI, --extension ns. Prior attempts retained as noise/timeout evidence.",
+    "api_seconds": 20.0,
+    "api_parameters_seconds": 20.0,
+    "cli_seconds": 18.0,
+    "pairs": 20,
+    "limit_pct": 3.0,
+    "extension": "ns",
+    "load_gate": "three consecutive 1-minute load samples under 3.0 before launch (relaxed from 2.0; matches successful #553 attempt2 quiet launches)",
+    "incremental_api": {
+      "passes": false,
+      "verdict": "bound-not-met",
+      "paired_change_pct": -5.23171749205867,
+      "paired_95pct_ci": [
+        -17.53012836106215,
+        8.900707507159735
+      ],
+      "medians": {
+        "baseline": 25.40790056250006,
+        "candidate": 23.938409416500008
+      },
+      "note": "Retained; pair pct stdev ~18% under --extension ns (median slightly faster). Host load stayed moderate (~3\u20134.5) but NS workload variance dominates; aborted remaining."
+    },
+    "remaining": "aborted after noisy API; retry attempt5"
+  },
+  "attempt5": {
+    "chosen_before_launch": true,
+    "justification": "Quiet window load1~1.5; max 30s batches with --extension ns after attempts 1-4 contaminated by load spikes/noise. Prior attempts retained.",
+    "api_seconds": 30.0,
+    "api_parameters_seconds": 30.0,
+    "cli_seconds": 30.0,
+    "pairs": 20,
+    "limit_pct": 3.0,
+    "extension": "ns",
+    "load_gate": "1-minute load under 2.5 before launch",
+    "cumulative_api_parameters": {
+      "passes": false,
+      "verdict": "bound-not-met",
+      "paired_change_pct": 3.637832277251863,
+      "paired_95pct_ci": [
+        2.769847743883689,
+        4.513147726902447
+      ],
+      "medians": {
+        "baseline": 34.43758052099997,
+        "candidate": 35.630063645499945
+      },
+      "load_after": [
+        2.40576171875,
+        2.39013671875,
+        2.3984375
+      ],
+      "note": "Quiet-load decisive fail: median ~3.6%, CI tight, stdev ~1.8%. Incremental api-params for #554 alone was a speedup, so cumulative overage is dominated by prior accepted set under --extension ns."
+    },
+    "cumulative_cli": {
+      "passes": false,
+      "verdict": "setup-or-measurement-error",
+      "error": "worker timeout",
+      "note": "Retained; host load spiked mid-run. Retry when quiet."
+    }
+  },
+  "attempt5-isolation": {
+    "prior_set_cumulative_api_parameters": {
+      "passes": false,
+      "verdict": "setup-or-measurement-error",
+      "error": "worker timeout; load_after ~23",
+      "note": "Contaminated; retry when quiet to confirm prior #551-#553 already exceed NS cumulative api-parameters budget."
+    }
+  },
+  "next": {
+    "chosen_before_launch": true,
+    "plan": "When three consecutive load samples <2.5: (1) isolation prior-set NS api-parameters 30s, (2) cum-cli 18s. If cum-api-params remains failed and no <15min product fix, record non-merge disposition with follow-up for cumulative NS api-parameters gate."
+  }
+}

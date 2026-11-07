@@ -12,7 +12,7 @@ import {
   prepareOneShot,
   startSource,
 } from "./execution-start-source.mjs";
-import { acceptedReceipt } from "./execution-start-receipt.mjs";
+import { finishAcceptedStart } from "./execution-start-receipt.mjs";
 import { startRequest } from "./execution-start-request.mjs";
 import { selectAgent } from "./agent-assignments.mjs";
 import {
@@ -117,8 +117,7 @@ async function startRequested(request) {
     });
   }
   if (checked.ownership === "owned" && request.retained) {
-    const afterMaintenance = await maintenance(request);
-    return acceptedReceipt(
+    return finishAcceptedStart(
       request,
       selected,
       selectedSource,
@@ -134,7 +133,6 @@ async function startRequested(request) {
         )),
       },
       beforeMaintenance,
-      afterMaintenance,
     );
   }
   if (checked.ownership !== "absent") {
@@ -232,8 +230,7 @@ async function startRequested(request) {
       error: error.stderr || error.message,
     });
   }
-  const afterMaintenance = await maintenance(request);
-  return acceptedReceipt(
+  return finishAcceptedStart(
     request,
     selected,
     selectedSource,
@@ -243,6 +240,5 @@ async function startRequested(request) {
       ...(await claimReceiptAgent(claimRequest, agent, published.publishedSha)),
     },
     beforeMaintenance,
-    afterMaintenance,
   );
 }

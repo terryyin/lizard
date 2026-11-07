@@ -1,0 +1,19 @@
+warning: Git tree '/Users/terryyin/git/lizard/.worktrees/review-correct-and-merge-fabiomalpezzi-s-open-pr' is dirty
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+virtualenv 20.13.2 requires platformdirs<3,>=2, but you have platformdirs 4.4.0 which is incompatible.
+WARNING: You are using pip version 22.0.3; however, version 26.0.1 is available.
+You should consider upgrading via the '/Users/terryyin/git/lizard/.worktrees/review-correct-and-merge-fabiomalpezzi-s-open-pr/.venv/bin/python -m pip install --upgrade pip' command.
+Traceback (most recent call last):
+  File "/Users/terryyin/git/lizard/.worktrees/review-correct-and-merge-fabiomalpezzi-s-open-pr/docs/reviews/fabio-malpezzi-20261027/pr532/profile.py", line 22, in <module>
+    assert (ROOT / (name + '.prof')).exists(), result.stderr.decode()
+AssertionError: Traceback (most recent call last):
+  File "/nix/store/1bn3i8c8xfwc77mp4q998mbkg1aqyy6b-python3-3.9.11/lib/python3.9/runpy.py", line 197, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/nix/store/1bn3i8c8xfwc77mp4q998mbkg1aqyy6b-python3-3.9.11/lib/python3.9/runpy.py", line 87, in _run_code
+    exec(code, run_globals)
+  File "/nix/store/1bn3i8c8xfwc77mp4q998mbkg1aqyy6b-python3-3.9.11/lib/python3.9/cProfile.py", line 10, in <module>
+    import profile as _pyprofile
+  File "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr532/target/profile.py", line 15
+    print s.getvalue()
+          ^
+SyntaxError: invalid syntax

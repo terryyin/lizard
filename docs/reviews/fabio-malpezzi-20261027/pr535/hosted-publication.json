@@ -1,0 +1,27 @@
+{
+  "original_head": "171079e625966ac9c17aee29a5d74256befd85ae",
+  "corrected_head": "1a44c0cad59ea3f3dcabe3c1ac601d905437a7c7",
+  "dependency_merge_parent": "3a11bc6a5452be40a32721b5f6e2ab2fa787ca83",
+  "candidate_tree": "cf67b36f7ecb3f066d72727ff9a1a5db1c6afaff",
+  "candidate_proof": "Exact complete match to current-base-proof.json; sole reader conflict resolved from validated index bytes",
+  "publication": "Agent-commit as Rio-chan; non-forced fork push171079e..1a44c0c accepted",
+  "fork_branch": "FabioMalpezzi/lizard refs/heads/pr/ts-this-parameter",
+  "refreshed_state": "open, unmerged, exact corrected head",
+  "current_base": "95d65b2d822ca3d61050521686ecaaf4e22e46a0",
+  "upstream_changes_since_full_proof": [
+    ".planning/PRODUCT-BACKLOG.md",
+    ".planning/seeds/SEED-012-website-evolution.md"
+  ],
+  "proof_reuse": "Runtime, tests, workflow and setup unchanged; transient preparation profile added then removed with identical net tree",
+  "hosted_merge_ref": "b8f22812693209c30b7eddb74243ded17562a7ba",
+  "hosted_merge_tree": "c4a174edc00c146aec4b457d403611f0f003633d",
+  "hosted_tree_proof": "Private validation fast-forwarded to explicit95d65b2, preserving staged three-file correction; write-tree exactly matches hosted merge tree",
+  "ci_run": 40472106878,
+  "ci_url": "https://github.com/terryyin/lizard/actions/runs/40472106878",
+  "ci_initial_state": "in_progress",
+  "ci_final_state": "completed, success, all14 jobs",
+  "landed_merge": "d7be8b90ac5872faf86e329e7d7249c98029f045",
+  "landed_tree": "c4a174edc00c146aec4b457d403611f0f003633d",
+  "thank_you_id": 6436990416,
+  "thank_you_url": "https://github.com/terryyin/lizard/pull/535#issuecomment-6436990416"
+}

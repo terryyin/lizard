@@ -8,7 +8,8 @@
 // addressed by profile and allocation from the integration checkout, ends a
 // lost workspace's assignment once the developer confirms it abandoned.
 // `continue` is for a retained start: verify the existing workspace/branch and
-// allocation, optionally against its saved receipt, without ever announcing.
+// allocation, optionally against its saved receipt. --recover-unannounced may
+// announce only after proving the retained start stopped before its commit.
 // `start --one-shot` establishes the workspace, or with `--default-main` takes
 // the default checkout as it is, and publishes nothing; `recheck` checks on
 // fetched trunk that no other owner has taken up its story before its result
@@ -37,7 +38,7 @@ const operations = {
 
 const usage =
   "usage: preparation-assignment.mjs start [--integration PATH] [--repository PATH] --workspace PATH [--branch NAME] --identity ID --remote NAME --target BRANCH --push-authorized [--host claude|codex|cursor] [--model TEXT]\n" +
-  "       preparation-assignment.mjs continue --workspace PATH --branch NAME --identity ID --remote NAME --target BRANCH --push-authorized [--expected-agent NAME] [--expected-allocation SHA]\n" +
+  "       preparation-assignment.mjs continue --workspace PATH --branch NAME --identity ID --remote NAME --target BRANCH --push-authorized [--expected-agent NAME] [--expected-allocation SHA] [--recover-unannounced]\n" +
   "       preparation-assignment.mjs start --one-shot [--default-main] [--integration PATH] [--repository PATH] --workspace PATH [--branch NAME] --identity ID --remote NAME --target BRANCH [--auto-land --push-authorized]\n" +
   "       preparation-assignment.mjs recheck --workspace PATH --identity ID --remote NAME --target BRANCH\n" +
   "       preparation-assignment.mjs release --workspace PATH --identity ID --remote NAME --target BRANCH\n" +
@@ -48,6 +49,7 @@ const usage =
 // developer supplied.
 const switches = {
   "--push-authorized": "pushAuthorized",
+  "--recover-unannounced": "recoverUnannounced",
   "--confirmed-abandoned": "confirmedAbandoned",
   ...sessionPolicyToggles,
 };

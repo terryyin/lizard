@@ -1,0 +1,26 @@
+{
+  "name": "lizard-website",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@11.19.0",
+  "engines": {
+    "node": ">=24 <25",
+    "npm": ">=11.19.0 <12"
+  },
+  "scripts": {
+    "build": "vite build",
+    "watch": "vite build --watch",
+    "test:e2e": "cucumber-js",
+    "test:e2e:dry": "cucumber-js --dry-run"
+  },
+  "devDependencies": {
+    "@cucumber/cucumber": "13.3.0",
+    "@vitejs/plugin-react": "6.1.2",
+    "playwright": "1.64.1",
+    "vite": "8.3.5"
+  },
+  "dependencies": {
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  }
+}

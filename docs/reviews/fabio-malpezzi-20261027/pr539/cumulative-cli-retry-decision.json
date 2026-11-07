@@ -1,0 +1,1 @@
+{"prior":"cumulative-cli 4.0s passes=false upper 3.28%","reason":"Prospective quieter longer 8.0s batches under load ~8–10; no code change","seconds":8.0}

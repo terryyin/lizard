@@ -31,6 +31,29 @@ export function reportTake(outcome, file) {
   return `"${identity}" is already in "## ${takenHeading}" in ${file}${ending}`;
 }
 
+// What a rebuild did to the done catalog, in a sentence that ends the
+// report of the operation that rebuilt it. Unreadable record files are named:
+// the catalog keeps them as gaps with no completion time.
+function catalogSentence(catalog) {
+  const unreadable =
+    catalog.unreadable.length === 0
+      ? ""
+      : ` It names ${catalog.unreadable.length} unreadable done record${
+          catalog.unreadable.length === 1 ? "" : "s"
+        } without a completion time: ${catalog.unreadable.join(", ")}.`;
+  const listed = `${catalog.records} done record${catalog.records === 1 ? "" : "s"}`;
+  switch (catalog.status) {
+    case "written":
+      return ` Rebuilt done catalog ${catalog.path} beside the backlog, listing ${listed}.${unreadable}`;
+    case "unchanged":
+      return ` Done catalog ${catalog.path} beside the backlog already listed ${listed}.${unreadable}`;
+    case "removed":
+      return ` Removed done catalog ${catalog.path} beside the backlog; no done record remains.`;
+    default:
+      return "";
+  }
+}
+
 export function reportComplete(outcome, file) {
   const { identity, list, href } = outcome.entry;
   const released = outcome.released.map(
@@ -46,8 +69,15 @@ export function reportComplete(outcome, file) {
       outcome.record === undefined
         ? " Removed it as dropped work; done records hold finished work only."
         : ` Wrote done record ${outcome.record} beside the backlog.`
-    }${expired.join("")}`
+    }${expired.join("")}${catalogSentence(outcome.catalog)}`
   );
+}
+
+export function reportCatalogDone(catalog, file) {
+  const unchanged = `${file} and its done records were not changed.`;
+  if (catalog.status === "absent")
+    return `No done record is beside ${file}, so no done catalog is published. ${unchanged}`;
+  return `${catalogSentence(catalog).trimStart()} ${unchanged}`;
 }
 
 export function reportRefresh(outcome, file) {

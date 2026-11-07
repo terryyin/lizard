@@ -1,0 +1,8 @@
+{"module": "lizard", "path": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr532/target/lizard.py"}
+{"module": "lizard_languages", "path": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr532/target/lizard_languages/__init__.py"}
+{"module": "lizard_languages.javascript_functions", "path": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr532/target/lizard_languages/javascript_functions.py"}
+{"module": "lizard_languages.typescript_states", "path": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr532/target/lizard_languages/typescript_states.py"}
+{"module": "lizard_core.function_info", "path": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr532/target/lizard_core/function_info.py"}
+{"module": "test.test_languages.testTypeScript", "path": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr532/target/test/test_languages/testTypeScript.py"}
+{"case": "generics.ts", "expected": [["generic", 3]], "actual": [], "passed": false, "parameters": [], "full_parameters": [], "ccn": []}
+{"cases": 1, "failures": ["generics.ts"]}

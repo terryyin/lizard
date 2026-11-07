@@ -1,0 +1,5 @@
+{
+  "command": "nix develop -c python -m pytest test/test_languages/testJavaScript*.py test/test_languages/testTypeScript*.py test/test_languages/testES6.py test/test_languages/testJSX.py test/test_languages/testTSX.py test/test_languages/testVue.py",
+  "result": "611 passed, 5 skipped",
+  "elapsed_s": 0.90
+}

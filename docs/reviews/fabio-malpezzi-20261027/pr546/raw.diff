@@ -1,0 +1,51 @@
+# DISPLAY ONLY: exact executable bytes in literal-git-patches.json
+diff --git a/lizard_languages/typescript.py b/lizard_languages/typescript.py
+index a63b5e4..8c6f764 100644
+--- a/lizard_languages/typescript.py
++++ b/lizard_languages/typescript.py
+@@ -68,6 +68,14 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
+     def __init__(self, context):
+         super().__init__(context)
+         self.parallel_states = [TypeScriptStates(context)]
++        self._previous_token = None
++
++    def process_token(self, token):
++        if self._previous_token in ('.', '?.') and token in self.conditions:
++            # A member named as a keyword, as in p.catch(f), is no condition.
++            self.context.add_condition(-1)
++        self._previous_token = token
++        return False
+
+     @staticmethod
+     @js_style_regex_expression
+diff --git a/test/test_languages/testJavaScript.py b/test/test_languages/testJavaScript.py
+index 0d85e2f..636c36c 100644
+--- a/test/test_languages/testJavaScript.py
++++ b/test/test_languages/testJavaScript.py
+@@ -164,6 +164,26 @@ class Test_JavaScript_nullish_coalescing(unittest.TestCase):
+                                             for f in functions])
+
+
++class Test_JavaScript_keyword_as_the_name_of_a_member(unittest.TestCase):
++    def test_keyword_after_a_dot_is_not_a_condition(self):
++        code = (
++            'function a(p, q) {\n'
++            '  p.catch(() => null);\n'
++            '  q?.catch(() => null).finally(() => 1);\n'
++            '  return p.if + p.for + p.while + p.case;\n'
++            '}\n'
++            'function b(p) { return p.then(f).catch(g) || 0; }\n'
++        )
++        expected = [('(anonymous)', 1), ('(anonymous)', 1), ('(anonymous)', 1),
++                    ('a', 1), ('b', 2)]
++        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
++            with self.subTest(filename=filename):
++                functions = analyze_file.analyze_source_code(
++                    filename, code).function_list
++                self.assertEqual(expected, [(f.name, f.cyclomatic_complexity)
++                                            for f in functions])
++
++
+ class Test_tokenizing_JavaScript(unittest.TestCase):
+
+     def check_tokens(self, expect, source):

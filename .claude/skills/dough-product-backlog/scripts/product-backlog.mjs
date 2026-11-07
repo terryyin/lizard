@@ -10,8 +10,10 @@ import { adoptIdentities } from "./product-backlog-adopt.mjs";
 import {
   closeBesideBacklog,
   completeEntry,
+  rebuildDoneCatalog,
 } from "./product-backlog-complete.mjs";
 import { setDirection } from "./product-backlog-direction.mjs";
+import { printIdentityEvidence } from "./product-backlog-identity-evidence.mjs";
 import { mergeBacklogs } from "./product-backlog-merge.mjs";
 import { placeEntry } from "./product-backlog-place.mjs";
 import { refreshEntry } from "./product-backlog-refresh.mjs";
@@ -26,6 +28,7 @@ import {
 import {
   reportAdd,
   reportAdopt,
+  reportCatalogDone,
   reportComplete,
   reportDirection,
   reportMerge,
@@ -33,7 +36,11 @@ import {
   reportRefresh,
   reportTake,
 } from "./product-backlog-report.mjs";
-import { applyToBacklog } from "./product-backlog-store.mjs";
+import {
+  applyReportedChange,
+  applyToBacklog,
+  holdingBacklog,
+} from "./product-backlog-store.mjs";
 import {
   readState,
   recordState,
@@ -43,7 +50,10 @@ import {
   readDependencies,
   updateDependency,
 } from "./product-backlog-story-dependencies-command.mjs";
-import { readConsumers } from "./product-backlog-dependency-consumers.mjs";
+import {
+  readConsumers,
+  visitConsumers,
+} from "./product-backlog-dependency-consumers.mjs";
 import { resolveDependency } from "./product-backlog-dependency-resolution.mjs";
 import { takeEntry } from "./product-backlog-take.mjs";
 import { usage } from "./product-backlog-usage.mjs";
@@ -60,19 +70,6 @@ async function add(file, values) {
   console.log(reportAdd(request.identity, values.file));
 }
 
-// Applies one change whose report needs more than the published bytes. The
-// operation returns the backlog to publish alongside what it did; only the
-// bytes reach the write boundary, and the outcome comes back here so that the
-// report is written from a change already on disk.
-async function applyReportedChange(file, operate) {
-  let outcome;
-  await applyToBacklog(file, (source) => {
-    outcome = operate(source);
-    return outcome.source;
-  });
-  return outcome;
-}
-
 async function place(file, values) {
   const request = {
     identity: values.identity,
@@ -82,7 +79,6 @@ async function place(file, values) {
   const outcome = await applyReportedChange(file, (source) =>
     placeEntry(source, request),
   );
-
   console.log(reportPlace(outcome, values.file));
 }
 
@@ -95,21 +91,32 @@ async function take(file, values) {
   const outcome = await applyReportedChange(file, (source) =>
     takeEntry(source, request),
   );
-
   console.log(reportTake(outcome, values.file));
 }
 
+// Closing the files beside the backlog inside its hold keeps a cooperating
+// completion from rebuilding the done catalog from unfinished records.
 async function complete(file, values) {
   const now = readCompletionTime();
-  const outcome = await applyReportedChange(file, (source) =>
-    completeEntry(source, { identity: values.identity }),
+  const outcome = await applyReportedChange(
+    file,
+    (source) => completeEntry(source, { identity: values.identity }),
+    ({ entry }) =>
+      closeBesideBacklog(dirname(file), {
+        entry,
+        dropped: values.dropped,
+        now,
+      }),
   );
-  const closed = closeBesideBacklog(dirname(file), {
-    entry: outcome.entry,
-    dropped: values.dropped,
-    now,
-  });
-  console.log(reportComplete({ ...outcome, ...closed }, values.file));
+  console.log(reportComplete(outcome, values.file));
+}
+
+// Rebuilds the done catalog under the backlog's lock, changing nothing else.
+async function catalogDone(file, values) {
+  const catalog = await holdingBacklog(file, () =>
+    rebuildDoneCatalog(dirname(file)),
+  );
+  console.log(reportCatalogDone(catalog, values.file));
 }
 
 // Dropping a reference is not on offer, so a caller who asks for it is told
@@ -132,7 +139,6 @@ async function refresh(file, values) {
   const outcome = await applyReportedChange(file, (source) =>
     refreshEntry(source, request),
   );
-
   console.log(reportRefresh(outcome, values.file));
 }
 
@@ -149,7 +155,6 @@ async function direction(file, values) {
   const outcome = await applyReportedChange(file, (source) =>
     setDirection(source, request),
   );
-
   console.log(reportDirection(outcome, values.file));
 }
 
@@ -163,7 +168,6 @@ async function adopt(file, values) {
   const outcome = await applyReportedChange(file, (source) =>
     adoptIdentities(source, dirname(file)),
   );
-
   console.log(reportAdopt(outcome, values.file));
 }
 
@@ -179,25 +183,33 @@ async function merge(file, values) {
       branches: values.branch?.map(resolvePath),
     }),
   );
-
   console.log(reportMerge(outcome, values.file));
 }
+
+// Operations on canonical story homes; their refusals say nothing was
+// written rather than that the backlog was unchanged.
+const preparationOperations = {
+  "record-state": recordState,
+  "read-state": readState,
+  "discover-consumers": readConsumers,
+  "visit-consumers": visitConsumers,
+  "resolve-dependency": resolveDependency,
+  "read-dependencies": readDependencies,
+  "update-dependency": updateDependency,
+};
 
 const operations = {
   add,
   place,
   take,
   complete,
+  "catalog-done": catalogDone,
   refresh,
   direction,
   adopt,
   merge,
-  "record-state": recordState,
-  "read-state": readState,
-  "discover-consumers": readConsumers,
-  "resolve-dependency": resolveDependency,
-  "read-dependencies": readDependencies,
-  "update-dependency": updateDependency,
+  "identity-evidence": printIdentityEvidence,
+  ...preparationOperations,
 };
 
 async function main(argv) {
@@ -226,15 +238,7 @@ try {
   await main(process.argv.slice(2));
 } catch (error) {
   if (error instanceof BacklogError) {
-    const named = process.argv[2];
-    const refusal = [
-      "record-state",
-      "read-state",
-      "discover-consumers",
-      "resolve-dependency",
-      "read-dependencies",
-      "update-dependency",
-    ].includes(named)
+    const refusal = Object.hasOwn(preparationOperations, process.argv[2])
       ? preparationRefusal(error)
       : error.refusal;
     console.error(refusal);

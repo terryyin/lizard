@@ -1,11 +1,20 @@
 #!/usr/bin/env node
 // Story wrap-up's Trunk Mode closure after the before-cleanup commit was
 // accepted: confirm the target holds that commit, publish the committed final
-// closure through managed delivery on the recovered or armed observer, run
-// completion once for the accepted SHA, attempt the optional default-checkout
-// refresh, and only after a receipt with confirmed shutdown retire the worktree
-// and branch through Dough Land's retirement core. Any stop preserves the
-// worktree, branch, and both closure commits and names the unfinished step.
+// closure through managed delivery on this execution's own observer, run
+// completion once for the accepted SHA there, attempt the optional
+// default-checkout refresh, and only after a `success` receipt with confirmed
+// shutdown retire the worktree and branch through Dough Land's retirement
+// core. Any stop preserves the worktree, branch, and both closure commits and
+// names the unfinished step.
+// For a selected completed supplier (`--supplier-identity`), an accepted final
+// closure first visits current consumers from the still-present worktree. A
+// clean visit, with no consumers and no discovery problems, continues in the
+// same invocation and reports the visit. Any other visit stops at
+// `step: "visit"`, before completion, refresh or retirement. Only a rerun
+// naming the last accepted SHA of that settled visit (`--visit-settled`),
+// with no later publication registered on this closure's observers,
+// completes that SHA and retires.
 // A rerun continues from the first unfinished step: an accepted final closure
 // is not pushed again, and once the worktree is gone the recorded management
 // context (`--repository`) carries completion and cleanup.
@@ -23,20 +32,22 @@ import {
 } from "../../dough-execute-plan/scripts/publication-git.mjs";
 import { retireWorktree } from "../../dough-land/scripts/worktree-retirement.mjs";
 import { isAncestor } from "../../dough-execute-plan/scripts/workspace-publication-ownership.mjs";
-import {
-  observerRoot,
-  settleFinalClosure,
-} from "./trunk-closure-settlement.mjs";
+import { observerAccess } from "./trunk-closure-observer.mjs";
+import { settleFinalClosure } from "./trunk-closure-settlement.mjs";
+import { settledVisit } from "./trunk-closure-visit.mjs";
+import { finishArguments } from "./trunk-closure-arguments.mjs";
 
+import {
+  completionRecovery,
+  receiptPermitsRetirement,
+  resourcesStay,
+} from "./trunk-closure-completion.mjs";
 const recoveries = {
   "before-cleanup":
     "publish the before-cleanup commit through deliver until it is accepted, then rerun finish",
   context:
     "rerun finish with --repository set to the management context an earlier finish result reported",
-  observation:
-    "report the lost coverage; the worktree and branch stay until a completion receipt confirms shutdown",
-  completion:
-    "report the completion receipt; the worktree and branch stay for diagnosis or a later completion",
+  observation: `follow observation.reason and rerun finish, or report the lost coverage; ${resourcesStay}`,
 };
 
 function stop(step, detail) {
@@ -47,15 +58,6 @@ function stop(step, detail) {
     recovery: recoveries[step] ?? null,
     ...detail,
   };
-}
-
-// A receipt permits retirement only when it is not a CI failure and its
-// observer shutdown is confirmed; failure and retained observation keep all.
-function receiptPermitsRetirement(completion) {
-  return (
-    completion?.verdict !== "failure" &&
-    completion?.shutdown?.status === "confirmed"
-  );
 }
 
 export async function finishTrunkClosure({
@@ -72,8 +74,13 @@ export async function finishTrunkClosure({
   identity,
   createdForWork = false,
   session,
+  coordinator,
+  observerDirectory,
   preferredAlias,
   defaultCheckout,
+  supplierIdentity,
+  visitSettled,
+  backlogPath,
   storage = mailboxRoot,
   env = process.env,
 }) {
@@ -96,7 +103,7 @@ export async function finishTrunkClosure({
       reason: `${tracking} does not contain the before-cleanup commit`,
     });
   }
-  const root = observerRoot(workspace);
+  const root = await observerAccess(workspace, repository);
   const published = await settleFinalClosure({
     workspace,
     inspection,
@@ -109,6 +116,8 @@ export async function finishTrunkClosure({
     host,
     remote,
     session,
+    coordinator,
+    observerDirectory,
     preferredAlias,
     root,
     storage,
@@ -128,10 +137,28 @@ export async function finishTrunkClosure({
     observation,
     startReceipt: published.startReceipt,
   };
+  const visited = await settledVisit({
+    workspace,
+    inspection,
+    tracking,
+    acceptedSha,
+    supplierIdentity,
+    visitSettled,
+    observerDirectories: published.observerDirectories,
+    targetRef,
+    remote,
+    backlogPath,
+  });
+  if (visited.stopped) {
+    const { stopped, ...detail } = visited;
+    return stop(stopped, { ...accepted, ...detail });
+  }
+  if (visited.visit) accepted.visit = visited.visit;
+  const completed = visited.finalSha ?? acceptedSha;
   let completion = null;
   if (observation?.directory && observation.state !== "unobserved") {
     try {
-      completion = await completeRevision(observation.directory, acceptedSha, {
+      completion = await completeRevision(observation.directory, completed, {
         root,
       });
     } catch (error) {
@@ -147,7 +174,8 @@ export async function finishTrunkClosure({
     return stop("observation", { ...accepted, completion, refresh });
   }
   if (!receiptPermitsRetirement(completion)) {
-    return stop("completion", { ...accepted, completion, refresh });
+    const recovery = completionRecovery(completion);
+    return stop("completion", { ...accepted, completion, refresh, recovery });
   }
   const cleanup = await retireWorktree({
     repository,
@@ -157,67 +185,23 @@ export async function finishTrunkClosure({
     targetRef,
     identity,
     createdForWork,
-    contained: [beforeCleanup, acceptedSha],
+    contained: [...new Set([beforeCleanup, acceptedSha, completed])],
   });
   return {
     ok: cleanup.removed === true,
     step: cleanup.removed === true ? "done" : "retire",
     ...accepted,
+    ...(visited.finalSha && { visitSettled: visited.finalSha }),
     completion,
     refresh,
     cleanup,
   };
 }
 
-const required = [
-  "workspace",
-  "branch",
-  "beforeCleanup",
-  "final",
-  "previouslyPublishedBase",
-  "targetRef",
-  "repo",
-  "host",
-];
-const usage =
-  "usage: trunk-closure.mjs finish --workspace PATH --branch NAME --before-cleanup SHA --final SHA --previously-published-base SHA --target-ref REF --repo OWNER/REPO --host cursor|claude|codex [--remote NAME] [--repository PATH] [--identity WORK] [--created-for-work] [--session-json JSON] [--preferred-alias .agents|.claude] [--default-checkout PATH]";
-
-function argumentsOf(argv) {
-  if (argv[0] !== "finish") {
-    throw new Error(usage);
-  }
-  const result = {};
-  for (let index = 1; index < argv.length; index += 1) {
-    const flag = argv[index];
-    if (flag === "--created-for-work") {
-      result.createdForWork = true;
-      continue;
-    }
-    if (!flag.startsWith("--") || index + 1 >= argv.length) {
-      throw new Error(`invalid argument ${flag}\n${usage}`);
-    }
-    const key = flag
-      .slice(2)
-      .replace(/-[a-z]/g, (match) => match[1].toUpperCase());
-    result[key] = argv[++index];
-  }
-  for (const field of required) {
-    if (!result[field]) {
-      throw new Error(`missing ${field}\n${usage}`);
-    }
-  }
-  targetBranchName(result.targetRef);
-  if (result.sessionJson) {
-    result.session = JSON.parse(result.sessionJson);
-    delete result.sessionJson;
-  }
-  return result;
-}
-
 if (isDirectCliEntry(import.meta.url, process.argv[1])) {
   let args;
   try {
-    args = argumentsOf(process.argv.slice(2));
+    args = finishArguments(process.argv.slice(2));
   } catch (error) {
     process.stderr.write(`${error.message}\n`);
     process.exitCode = 2;

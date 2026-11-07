@@ -15,7 +15,7 @@ No diagnosis, product repair, or unrequested tooling.
 
 ## Mission
 
-Resolve scope and time budget from the request: a feature, story set, recent
+Resolve scope and time budget from the request: a product intent, story set, recent
 deliveries, or change range. Recover current promises, examples, and
 constraints from this project's records or Git history, including deleted
 stories. Apply later decisions before older expectations; implementation,
@@ -41,6 +41,11 @@ Before acting, list coverage areas and journeys, risks or questions, and
 proportional split of preparation, breadth, selective depth, and
 surprise/confirmation reserve. Weight by importance and risk. Include each
 promised surface. Completing this plan is not acceptance.
+
+When a slice requires a developer-operated observation, take its question,
+rounds, and developer-performed steps from the slice and ask once for the set,
+not round by round; see
+[plan and reuse developer-operated observation](../dough-story-refinement/references/executable-proof.md#plan-and-reuse-developer-operated-observation).
 
 ## Prepare
 

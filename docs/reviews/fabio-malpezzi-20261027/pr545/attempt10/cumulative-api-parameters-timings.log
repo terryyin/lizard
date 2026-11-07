@@ -1,0 +1,21 @@
+{"pair": 1, "baseline": 17.799090292000002, "candidate": 16.051359375000004}
+{"pair": 2, "candidate": 16.260693875, "baseline": 17.694142291000006}
+{"pair": 3, "baseline": 17.90519549999999, "candidate": 16.760695291999994}
+{"pair": 4, "candidate": 16.869717707999996, "baseline": 17.824111665999993}
+{"pair": 5, "baseline": 17.687589791999983, "candidate": 16.683406125000005}
+{"pair": 6, "candidate": 16.801703290999995, "baseline": 17.991464667000002}
+{"pair": 7, "baseline": 17.939791874999997, "candidate": 16.276878916999976}
+{"pair": 8, "candidate": 16.279630124999983, "baseline": 17.32037812499999}
+{"pair": 9, "baseline": 17.158060791000025, "candidate": 15.860154875000035}
+{"pair": 10, "candidate": 16.239549416999978, "baseline": 17.026683124999977}
+{"pair": 11, "baseline": 17.007035417000054, "candidate": 15.972626542}
+{"pair": 12, "candidate": 16.358045417000028, "baseline": 16.957255375000045}
+{"pair": 13, "baseline": 16.970857459, "candidate": 16.251492749999954}
+{"pair": 14, "candidate": 17.32830124999998, "baseline": 17.723191541999995}
+{"pair": 15, "baseline": 17.781425249999984, "candidate": 16.67650520799998}
+{"pair": 16, "candidate": 16.12605595800005, "baseline": 17.13504712500003}
+{"pair": 17, "baseline": 16.884708792000083, "candidate": 16.33459012500009}
+{"pair": 18, "candidate": 16.254801166999982, "baseline": 17.189107250000006}
+{"pair": 19, "baseline": 17.107532708000008, "candidate": 16.08907124999996}
+{"pair": 20, "candidate": 16.182735707999996, "baseline": 17.39884366600006}
+{"command": ["/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr545/proof/paired.py", "--baseline", "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr545/baseline", "--candidate", "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr545/corrected", "--workload", "api-parameters", "--pairs", "20", "--seconds", "16.0", "--out", "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr545/cumulative-api-parameters.json"], "python": "3.9.11 (main, Apr 10 2022, 22:01:55) \n[Clang 11.1.0 ]", "executable": "/Users/terryyin/git/lizard/.worktrees/count-conditions-inside-template-interpolations/.venv/bin/python", "host": "Territory.local", "workload": "api-parameters", "paths": ["/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr545/baseline", "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr545/corrected"], "pilots": [0.11600908300000001, 0.10559987500000001], "loops": 152, "medians": {"baseline": 17.359610895500026, "candidate": 16.26878639599999}, "stdev": {"baseline": 0.38707731183225635, "candidate": 0.3600659273989699}, "median_slowdown_pct": -6.283692106156602, "paired_geometric_slowdown_pct": -5.98016228904068, "paired_95pct_ci": [-6.858457473984114, -5.093585059254801], "passes": true, "manifest_sha256": "28726ae72f1f42d6881ff2690b33b7f2d8514a5b44c33d3de40e0821eeb6e926"}

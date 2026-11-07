@@ -1,0 +1,15 @@
+{
+  "host": "terryyin-local-darwin",
+  "time": "2026-10-28T07:15+08:00",
+  "load_averages": "10.94 10.52 10.23",
+  "choice": "run-serial",
+  "reason": "Owned PR537 performance is required before merge; load is elevated but no other owned lizard performance job is competing in this session. Run all six incremental/cumulative workloads serially from /private/tmp. Reconsider if paired upper bound is inconclusive/noisy or host load rises further mid-run.",
+  "owner": "coordinator SEED-010#review-structural-js-prs slice 1",
+  "workloads": ["incremental-api", "incremental-api-parameters", "incremental-cli", "cumulative-api", "cumulative-api-parameters", "cumulative-cli"],
+  "pairs": 20,
+  "seconds": 1.2,
+  "target": "aa5f40638b23aa54d4724c9429c1ead2183013fd",
+  "corrected": "target + typescript_states.py sticky-dot fix",
+  "baseline": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/baseline",
+  "reconsider_when": "inconclusive noise, upper bound >=3%, or competing owned heavy work appears"
+}

@@ -73,22 +73,36 @@ now. Then choose:
 
 | Assessment | Requires |
 | --- | --- |
-| `ready` | Refinement `refined`; approach is a selected `planned` path with bounded slices, mapped proof, and decisive premises observed or bounded by an early probe slice, or an explicitly authorized `planless` path; and no blocking concern remains |
-| `not-ready` | At least one blocking reason naming what still blocks readiness |
+| `ready` | Refinement `refined`; approach is a selected `planned` path with bounded slices, mapped proof, and decisive premises settled where their plan rows record the consuming operation's result in the form and profile the slice uses, or bounded by a permitted early probe slice, or an explicitly authorized `planless` path; no blocking concern remains |
+| `not-ready` | At least one blocking reason naming what still blocks readiness; a recorded dependency is not such a reason |
 
 A remaining slice-specific concern, unresolved goal/scope/examples, missing or
 unmapped proof, an unselected approach, or a cheaply observable decisive
-premise that was not observed is a blocking reason — record `not-ready` with
-`--reason`, not `ready`. Decisive premises, their observations, and probe
-slices are defined under
+premise left unobserved blocks `ready`. A recorded
+[blocking dependency](../SKILL.md#record-a-necessary-blocking-dependency) is
+not a readiness concern: its agreement is the only record of that prerequisite,
+and it alone blocks the story's start until the supplier's outcome is published
+as satisfied. Record `ready` when goal, scope, examples, plan, proof, and
+premises are settled, even while the story waits on its suppliers. Record a
+dependency before the assessment: the agreement is part of the reviewed basis,
+so an agreement added after the assessment reports changed content since
+review. Judge decisive premises, result-bearing
+observations, and permitted early probe slices under
 [slice planning](../../dough-slice-planning/SKILL.md#write-the-plan).
 
-An observation settles a premise only as
-[slice planning](../../dough-slice-planning/SKILL.md#write-the-plan) describes:
-through the operation that consumes its result. An observation or replay that
-records part of the promised journey as not covered blocks `ready`. Clear a
-premise-based reason only with a fresh observation of that premise; citing
-earlier evidence again does not clear it. After the blocking concern is gone,
+Read the plan's
+[premise rows](../../dough-slice-planning/references/settle-decisive-premises.md).
+Presence results, observations outside the checkout the plan names, and an
+unverified input or host condition that can change its slice's outcome block
+`ready` for a premise not bounded by a permitted early probe slice. An
+observation or replay recording part of the promised journey as not covered
+also blocks `ready`. Record `not-ready` with one `--reason` per blocking premise
+naming it and its unreached operation or unverified input or host condition;
+name other blocking concerns too. Clear
+a premise-based reason only with an observation of that premise in the form
+and profile its slice uses, fresh or a matching retained one cited with its
+time or revision; citing again the evidence that left it open does not clear
+it. Once no blocking concern remains,
 re-read the current basis and record `ready` without reasons.
 
 ### Planless authority
@@ -114,9 +128,10 @@ node <installed>/scripts/product-backlog.mjs read-state --link <href>
 
 Use the returned `basis.document` and, when planned with a distinct plan file,
 `basis.plan` as the digests you actually reviewed. The basis covers the story's
-own section, the seed's shared context outside other stories' sections, and
-the distinct plan, so review those; other stories in the same seed do not
-affect it.
+own section, the seed's shared context outside other stories' sections, each
+dependency agreement (supplier, implementation, rationale, and condition), and
+the distinct plan, so review those; other stories in the same seed and a
+dependency's state, resolution, or decision do not affect it.
 
 2. Record the assessment on the same refinement and approach the review still
 supports:
@@ -137,9 +152,9 @@ Supply `--plan` and `--expect-plan` for planned work whose plan is a distinct
 file. Omit both for planless. Supply one or more `--reason` values for
 `not-ready`; omit `--reason` for `ready`.
 
-Report the recorder's result and evidence. A refusal leaves the home unchanged;
-report it and do not hand-edit a substitute assessment. Completing this step
-still does not Take the item, move the queue, or start execution.
+The caller reports the recorder's result only as needed. A refusal leaves the
+home unchanged; report it and do not hand-edit a substitute assessment. This
+step still does not Take the item, move the queue, or start execution.
 
 ## Execution and resume
 

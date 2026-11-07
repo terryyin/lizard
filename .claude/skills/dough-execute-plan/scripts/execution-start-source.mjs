@@ -2,6 +2,7 @@
 // admission of accepted work that no backlog list holds yet, or one-shot work.
 import { readAdmissionSource } from "./execution-admission-source.mjs";
 import {
+  acceptedMaintenance,
   maintenance,
   reportedMaintenance,
 } from "./execution-start-maintenance.mjs";
@@ -100,7 +101,8 @@ export function startSource(request) {
 
 // Work already Taken continues under the claim this publisher already holds:
 // an admission of it, or an ordinary start once its published preparation
-// supports execution. Any other claim is refused. Nothing is written. The
+// supports execution. Any other claim is refused. No second claim is published;
+// confirmed admission may finish local draft reconciliation and refresh. The
 // source reports the claim when it already read that provenance.
 export async function existingClaim(request, ref, source = {}) {
   const provenance =
@@ -125,6 +127,6 @@ export async function existingClaim(request, ref, source = {}) {
     created: false,
     ...(request.plan || !source.planTarget ? {} : { plan: source.planTarget }),
     ...reviewChangeReceipt(source),
-    ...reportedMaintenance(await maintenance(request)),
+    ...reportedMaintenance(await acceptedMaintenance(request, provenance.sha)),
   };
 }

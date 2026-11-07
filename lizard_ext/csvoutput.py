@@ -53,7 +53,7 @@ def csv_output(result, options):
                 source_function.nloc,
                 source_function.cyclomatic_complexity,
                 source_function.token_count,
-                len(source_function.parameters),
+                source_function.parameter_count,
                 source_function.length,
                 f'"{name}@{source_function.start_line}-'
                 f'{source_function.end_line}@{source_file.filename}"',

@@ -1,0 +1,17 @@
+[
+  {
+    "diagnostic": "reproduce-harness-api-diagnostic.log",
+    "cause": "Harness omitted required extension_names argument to get_extensions; TypeError before any case observation.",
+    "resolution": "Use get_extensions([]); rerun all cases through both APIs."
+  },
+  {
+    "diagnostic": "*-expected-token-diagnostic.log",
+    "cause": "Initial explicit inc token expectations incorrectly included two signature tokens; actual public function token convention starts with the body.",
+    "resolution": "Correct to4 with semicolon/3 without; all source bytes, other assertions and original authored test unchanged."
+  },
+  {
+    "diagnostic": "First target --suite authored selection",
+    "cause": "The target test module has no PR-introduced test class; pytest exited4, no tests ran in0.01s.",
+    "resolution": "Extract the unchanged original class into authored-tests.py; select it against each independently asserted snapshot; target5fail, raw5pass, child5pass."
+  }
+]

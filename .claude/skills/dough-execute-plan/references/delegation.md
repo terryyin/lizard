@@ -6,6 +6,19 @@ agent. Use a general-purpose agent, or `gsd-executor` when this project uses
 The coordinator retains
 [wrap-up](wrap-up.md); an execution tool does not take over that responsibility.
 
+Before planned delegation, run the installed
+[story-obligations script](../scripts/story-obligations.mjs):
+`node '<installed-execute-plan>/scripts/story-obligations.mjs' list --plan '<PLAN.md>' --slice N`.
+Resolve these inputs under [story obligations](story-obligations.md#use-the-record-at-execution-boundaries).
+A refusal blocks delegation until resolved. Carry the full listing as slice
+promises with their required observations, including returns, receiving
+obligations, and open interims. When the plan links a source review, the
+listing also carries the commitment ids allocated to this slice; pass each id
+with its source text as a slice promise to observe. A review retained or
+replaced since the last check is linked and allocated under
+[the source review](story-obligations.md#record-the-source-review) before
+this listing. Do not substitute a learning summary.
+
 Give the agent:
 
 - The selected execution checkout and branch. Pass the complete retained
@@ -29,6 +42,14 @@ Give the agent:
   it. Require the agent to return contrary evidence through [execution
   decisions](execution-decisions.md#resolve-conflicting-recorded-direction),
   without changing the topic or continuing the affected path.
+- For planned execution, the slice's
+  [premise rows](../../dough-slice-planning/references/settle-decisive-premises.md)
+  as the plan records them, including each unverified remainder. Require the
+  agent to reuse a settled result without repeating its observation, check a
+  remainder in the form the slice prescribes before work that depends on it,
+  and return a false premise through [execution
+  reassessment](execution-decisions.md#reassess-before-extending-work) rather
+  than continuing on it.
 - For planned execution continuing an oversized quick attempt, the remaining-work
   plan plus the preserved completed work and proof and any incomplete-change
   disposition needed to identify the true starting boundary. Require the agent
@@ -38,14 +59,28 @@ Give the agent:
 - [Execution decisions](execution-decisions.md), the resolved
   [replanning permission](execution-decisions.md#choose-replanning-permission), this
   project's slice budget and exceptions, workflow precedence, and literal
-  focused commands with the runtime wrapper. Proof the plan or coordinator
-  names is a minimum: require the agent still to run the consumers the change
-  reaches under [own executable proof](../../dough-story-refinement/references/planning.md#own-executable-proof),
+  focused commands with the runtime wrapper. Carry this project's failure
+  policy by link or verbatim, not as a weaker paraphrase such as "fix or
+  report"; pass a known failure's attribution as diagnosis evidence, separate
+  from the repair responsibility that policy assigns. Proof the plan or
+  coordinator names is a minimum: require the agent to trace the changed
+  effect into its consumers with the installed
+  [consumer-trace script](../scripts/consumer-trace.mjs),
+  `node '<installed-execute-plan>/scripts/consumer-trace.mjs' --checkout '<checkout>' --base <revision> [--term …]`,
+  and select sufficient proof under
+  [own executable proof](../../dough-story-refinement/references/planning.md#own-executable-proof),
   including the changed surface's suite when it runs within the slice's
   focused-check time, even when the plan says wider suites belong to CI.
   When replanning is disabled, an oversized stop returns the incomplete attempt in
   place; do not plan, retry, invent backlog work, or clean up. The coordinator
   applies the overrun branch.
+- For expensive verification, the retained decision under
+  [choose expensive proof before launch](../../dough-story-refinement/references/executable-proof.md#choose-expensive-proof-before-launch):
+  actual target host, workload, evidence and unknowns, bounded choice, command/proof
+  owner, and reconsideration condition. Include known competing owned proof,
+  including separate worktrees on that machine. Require the receiving owner to
+  confirm the basis still applies or reconsider it before launching or repeating
+  expensive proof; use existing handoffs to coordinate owned heavy work.
 - When the slice includes an authorized live action, the plan's named
   regression prerequisite and whether an accepted current observation of it
   already exists. Require the agent apply [require current regression proof
@@ -127,11 +162,15 @@ targeted return that gives the coordinator:
   or signal that exercises it — or an explicit untested / uncovered listing
   instead of verified prose;
 - when the change altered an operation or contract, a message or value, a
-  default, or rendered output: which of these kinds it made, the searches
-  (including retired literals searched for) or suites used to find consumers,
-  the consumers run, and any found consumer left unrun with its reason;
+  default, rendered output, or shared text: the changed effect and its
+  [consumer-trace record](../../dough-story-refinement/references/executable-proof.md#record-the-consumer-trace)
+  with its supplied effect terms and every listed consumer's disposition, the
+  observing assertions and setup of proof run or reused, and any affected
+  consumer still lacking proof with its reason;
 - required observations still missing or explicitly untested, named as gaps —
   a learning note alone is not acceptance evidence for those promises;
+- for expensive proof, the retained or reconsidered decision and any deferred
+  required observation with its owner and next condition;
 - uncovered promises, contradictions, and other evidence gaps; and
 - only consequential learnings that affect acceptance or remaining work.
 
@@ -187,6 +226,11 @@ supported wait facility when one exists. The delegated agent's
 [verification ownership](#own-verification-to-its-terminal-result) is
 unchanged; this decision covers only the coordinator's wait.
 
+When the expected proof window is exceeded, or remaining applicable observation
+coverage calls for a check before that coverage lapses, follow
+[Check an overdue delegated verification](overdue-delegated-verification.md#check-an-overdue-delegated-verification)
+rather than continuing an indefinite wait for completion notifications alone.
+
 If the host offers no supported way to await the pending result, report the
 exact limitation instead of inventing an API or assuming completion: name the
 missing facility, the known state of the delegated work, and what recovery
@@ -195,3 +239,9 @@ the turn or blocking indefinitely as a universal remedy.
 
 CI observation keeps its own lifecycle under
 [CI monitoring](ci-monitor.md); this decision does not change it.
+
+## Recover an interrupted delegated result
+
+When a delegated implementation or refactor call is interrupted, follow
+[Recover an interrupted delegated result](interrupted-delegation.md#recover-an-interrupted-delegated-result)
+before accepting a claim or starting a replacement writer.

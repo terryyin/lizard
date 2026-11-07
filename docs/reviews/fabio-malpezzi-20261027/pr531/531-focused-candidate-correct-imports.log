@@ -1,0 +1,7 @@
+command=['/Users/terryyin/git/lizard/.worktrees/review-correct-and-merge-fabiomalpezzi-s-open-pr/.venv/bin/python', '-c', "import sys,pathlib\nroot=pathlib.Path(sys.argv[1]);sys.path.insert(0,str(root))\nimport lizard, lizard_languages, lizard_languages.typescript_states, lizard_languages.javascript_functions\nfor name in ('lizard','lizard_languages','lizard_languages.typescript_states','lizard_languages.javascript_functions'):\n path=pathlib.Path(sys.modules[name].__file__).resolve(); assert root in path.parents, (name,str(path));print('candidate_source',name,str(path),flush=True)\nimport pytest\nfiles=sorted({str(p) for pattern in ('testJavaScript*.py','testTypeScript*.py','testES6.py','testTSX.py','testVue.py') for p in (root/'test'/'test_languages').glob(pattern)})\nraise SystemExit(pytest.main(files))\n", '/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr531-readonly']
+candidate_source lizard /Users/terryyin/.cache/lizard-pr-reviews-20261027/pr531-readonly/lizard.py
+Traceback (most recent call last):
+  File "<string>", line 5, in <module>
+AssertionError: ('lizard_languages', '/Users/terryyin/git/lizard/.worktrees/review-correct-and-merge-fabiomalpezzi-s-open-pr/lizard_languages/__init__.py')
+
+exit_code=1

@@ -1,0 +1,10 @@
+{
+  "focused": "1386 passed, 5 skipped",
+  "reproduce": {
+    "target_claim_match": false,
+    "target_control_match": true,
+    "corrected_all_match": true,
+    "raw_all_match": true
+  },
+  "refactor": "none — optional resume on existing helper; no parallel representation"
+}

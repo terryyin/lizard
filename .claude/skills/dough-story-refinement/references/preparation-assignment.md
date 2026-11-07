@@ -110,14 +110,28 @@ An explicit developer instruction not to publish or commit means: do not run
 `start`; report that no Preparing assignment was published, so others cannot
 see this preparation; continue only as that instruction allows.
 
-A pause keeps the published assignment, however long it lasts. It ends only
+A pause keeps the published assignment, however long it lasts. It ends
 when the kept result lands, under
 [Release it with the kept result](#release-it-with-the-kept-result), or on an
 explicit abandonment, under [Abandon the preparation](#abandon-the-preparation).
+Completing or dropping that story through
+[product-backlog completion](../../dough-product-backlog/SKILL.md#remove-completed-items)
+also releases its readable preparation profiles.
+
+A dashboard retry that retained only its start request uses `continue
+--recover-unannounced` in the same existing workspace and branch. A recorded
+allocation is still continued only after its exact published ownership is
+verified. Without an allocation or saved receipt, recovery may announce only
+when the workspace has no commits outside fetched trunk, no earlier announcement
+of this identity, no held assignment for this identity, and no edits except one
+canonical staged preparation profile matching the request's identity, host, and
+model. The command removes only that isolated precommit artifact, refreshes from
+trunk, and selects a currently free agent. Foreign or changed edits, missing
+workspaces, and uncertain or ended allocations stop for reconciliation.
 
 ## Release it with the kept result
 
-After a validated explicit keep instruction, per
+After a validated keep instruction, per
 [Keep and publish the retained result](preparation-disposition.md#keep-and-publish-the-retained-result),
 stage the release in the owned workspace before landing:
 

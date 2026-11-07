@@ -4,9 +4,14 @@ Follow [ci-monitor.md](ci-monitor.md) for CI selection and failure recovery.
 
 With `functions.exec`, `yield_control`, `notify`, `tools.exec_command`, and
 `tools.write_stdin`, start one yielded observer at execution start, before the
-first publication, using the authorized target as `BRANCH`. Managed delivery
-(`deliver --host codex`) reuses this stream for every increment and repair;
-without a live stream, its receipt reports an unobserved gap naming this step.
+first publication, using the authorized target as `BRANCH`. `COORDINATOR` is
+one word of letters, digits, and hyphens that names this coordinator for the
+whole execution; arming claims the stream for it. Managed delivery
+(`deliver --host codex`) registers every increment and repair on this stream
+when it receives the observer note's coordinator and directory as
+`--coordinator` and `--observer-directory`. Without both, or when that
+directory is not this coordinator's live stream of the target, its receipt
+reports an unobserved gap naming the input to supply.
 Reuse the observer note in the active plan (planned) or conversation (quick) and
 terminal `finished` entries; recover that note before replacement when handles
 are lost.
@@ -22,6 +27,7 @@ const key = 'ci-watch-execution:OWNER/REPO:BRANCH:COORDINATOR'
 if (load(key)?.status === 'finished') exit()
 const io = { yield_time_ms: 1000, max_output_tokens: 2000 }
 let tail = '', directory, pid, terminal
+let identityExposed = false
 const records = []
 const consume = (chunk) => {
   const lines = `${tail}${chunk}`.split('\n')
@@ -35,6 +41,11 @@ const consume = (chunk) => {
     }
   }
 }
+const state = (result) => ({
+  key, coordinator: 'COORDINATOR',
+  status: terminal ? terminal.status === 'stopped' ? 'stopped' : 'finished' : result.session_id ? directory && pid ? 'watching' : 'starting' : 'lost',
+  sessionId: terminal ? undefined : result.session_id, directory, pid,
+})
 const deliver = async () => {
   const notified = records.splice(0)
   for (const { event } of notified) notify(event)
@@ -48,18 +59,24 @@ const deliver = async () => {
 }
 try {
   let result = await tools.exec_command({
-    cmd: 'node /ABSOLUTE/RESOLVED/SKILL/scripts/ci-mailbox.mjs stream --execution OWNER/REPO BRANCH',
+    cmd: 'node /ABSOLUTE/RESOLVED/SKILL/scripts/ci-mailbox.mjs stream --execution OWNER/REPO BRANCH --coordinator COORDINATOR',
     workdir: '/ABSOLUTE/VERIFIED/CHECKOUT_ROOT',
-    tty: true,
+    tty: false,
     ...io,
   })
   consume(result.output)
-  text({ key, status: result.session_id ? 'watching' : 'finished', sessionId: result.session_id, directory, pid, tail, terminal })
+  const initial = state(result)
+  text({ ...initial, tail, terminal })
+  identityExposed = initial.status === 'watching'
   await yield_control()
   await deliver()
   while (result.session_id) {
     result = await tools.write_stdin({ session_id: result.session_id, chars: '', ...io })
     consume(result.output)
+    if (!identityExposed && state(result).status === 'watching') {
+      identityExposed = true
+      notify({ type: 'CI_OBSERVER_READY', ...state(result) })
+    }
     await deliver()
   }
   if (!terminal) {
@@ -79,8 +96,16 @@ so completion treats them as received. A record it never notified, or whose
 acknowledgment did not land, stays unread: completion keeps the observer and
 reports it.
 
-The first yielded output exposes session, directory, and PID. Save them with the
-cell ID, coordinator, and checkout in the observer note before the first push.
+The first yielded output reports `starting` when the complete identity has not
+arrived. A complete live identity appears either in that output or in one later
+`CI_OBSERVER_READY` notification, with key, coordinator, session, directory and
+PID. Save it with the cell ID and checkout in the observer note before the first
+push. Continue independent work after yielding; retain `starting` until that
+identity arrives. An ended or lost stream is not a usable observer. Use plain
+pipes for this machine stream; it needs no interactive terminal.
+Every `deliver --host codex` takes that note's coordinator and exact directory,
+from any worktree of the repository; another coordinator's stream of the same
+repository and target stays theirs.
 Cell `store` may stay invisible until the cell finishes; do not coordinate
 shutdown through cross-cell `load`/`store`. Continue delegation after yielding.
 `notify` arrives at the next coordinator boundary. Do not `wait`, assign a
@@ -102,10 +127,10 @@ an explicit stop — human-judgment stop, cancellation, or coordinator
 replacement — consume delivered failures first. Normal execution completion
 uses the shared
 [completion operation](ci-monitor.md#await-the-applicable-revision-at-completion)
-instead; do not run this stop binding, `write_stdin` the stream PTY, or poll a
+instead; do not run this stop binding, `write_stdin` the stream session, or poll a
 PID after that receipt. This stop binding never substitutes for that completion
 operation. Copy it with the note's exact `directory`; do not `write_stdin` the
-stream PTY. Confirm receipt and a finite local `ps` wait for the recorded PID;
+stream session. Confirm receipt and a finite local `ps` wait for the recorded PID;
 never signal it. Report unread events and any still-unobserved coverage. The
 finite process-exit check waits only for local shutdown, never for CI.
 
@@ -132,10 +157,14 @@ Without handles, recover the observer note. Match coordinator/checkout and
 `request.json` root, repository, branch, and execution mode, then evaluate the
 stop binding. Read the terminal receipt and `result.json`. Missing/mismatched
 identity means no guessed stop, newest-mailbox lookup, or replacement launch.
-Older unidentified observers cannot be recovered. Stop errors, missing terminal
+Older unidentified observers, including a stream armed without
+`--coordinator`, cannot be recovered. Stop errors, missing terminal
 evidence, or unconfirmed exit mean unresolved shutdown; never force termination
 or claim closure. Keep acknowledgment and repair unchanged. On resume, rearm
 only absent, `stopped`, or `lost` observers after the old process ended; never
 restart terminal `finished` observers. Normal and repair pushes retain the key,
-session, directory, process, and cell. Changed HEAD/SHA never requires setup
+coordinator, session, directory, process, and cell. Changed HEAD/SHA never requires setup
 again.
+
+For shared completion `pending`, retain the stream session and yielded cell with
+the resources and recovery under [completion mechanics](ci-completion-wait.md).

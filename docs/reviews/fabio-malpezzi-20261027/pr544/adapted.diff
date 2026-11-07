@@ -1,0 +1,99 @@
+# DISPLAY ONLY: exact executable bytes in literal-git-patches.json
+diff --git a/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr544/target/lizard_languages/javascript_templates.py b/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr544/corrected/lizard_languages/javascript_templates.py
+index b97886c..c40c7be 100644
+--- a/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr544/target/lizard_languages/javascript_templates.py
++++ b/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr544/corrected/lizard_languages/javascript_templates.py
+@@ -6,10 +6,11 @@ from .js_style_regex_expression import REGEX_TOKEN
+ from .token_pattern import compiled_token_pattern, tokens_in_span
+
+
+-# Skip lexical units before interpreting their quotes, backticks or braces.
+ # JavaScript line comments end at any line terminator, even after a backslash.
++LINE_COMMENT = r'//[^\r\n\u2028\u2029]*'
++# Skip lexical units before interpreting their quotes, backticks or braces.
+ _OPAQUE_CODE = (
+-    r'/\*.*?\*/|//[^\r\n\u2028\u2029]*'
++    r'/\*.*?\*/|' + LINE_COMMENT +
+     r'|"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\''
+     r'|' + REGEX_TOKEN
+ )
+diff --git a/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr544/target/lizard_languages/typescript.py b/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr544/corrected/lizard_languages/typescript.py
+index f79e13e..6af1d50 100644
+--- a/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr544/target/lizard_languages/typescript.py
++++ b/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr544/corrected/lizard_languages/typescript.py
+@@ -11,7 +11,7 @@ from .javascript_bindings import JavaScriptBindings
+ from .typescript_declarations import TypeScriptTypeAnnotationStates
+ from .typescript_states import TypeScriptStates
+ from .typescript_signatures import ReturnTypeColon, return_type_colon
+-from .javascript_templates import template_tokens
++from .javascript_templates import LINE_COMMENT, template_tokens
+
+ # One token, so each ? in ?? is not its own ternary decision.
+ NULLISH_COALESCING = r"|(?:\?\?)"
+@@ -141,8 +141,9 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
+     @staticmethod
+     @js_style_regex_expression
+     def generate_tokens(source_code, addition='', token_class=None):
+-        # Private method (#), dollar ($), optional name (?), nullish (??).
+-        addition = (addition + r"|(?:#\w+)"
++        # Line comment, private method (#), optional name (?), dollar
++        # identifiers, nullish (??).
++        addition = (addition + "|" + LINE_COMMENT + r"|(?:#\w+)"
+                     + r"|(?:\w+\?(?![?.]))" + JS_IDENTIFIER + NULLISH_COALESCING
+                     + OPTIONAL_ACCESS)
+         yield from template_tokens(source_code, addition, token_class)
+diff --git a/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr544/target/lizard_languages/tsx.py b/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr544/corrected/lizard_languages/tsx.py
+index 902b5ae..53d44a5 100644
+--- a/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr544/target/lizard_languages/tsx.py
++++ b/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr544/corrected/lizard_languages/tsx.py
+@@ -9,7 +9,7 @@ from .js_style_regex_expression import js_style_regex_expression
+ from .typescript import (
+     JS_IDENTIFIER, NULLISH_COALESCING, OPTIONAL_ACCESS, TypeScriptReader)
+ from .typescript import JSTokenizer, Tokenizer
+-from .javascript_templates import template_tokens
++from .javascript_templates import LINE_COMMENT, template_tokens
+
+
+ class TSXReader(TypeScriptReader):
+@@ -22,7 +22,7 @@ class TSXReader(TypeScriptReader):
+     @js_style_regex_expression
+     def generate_tokens(source_code, addition='', token_class=None):
+         # Add support for TypeScript type annotations in JSX
+-        addition = addition + \
++        addition = addition + "|" + LINE_COMMENT + \
+             r"|(?:<[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)*>)" + \
+             r"|(?:<\/[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)*>)" + \
+             r"|(?:#\w+)" + \
+diff --git a/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr544/target/test/test_languages/testJavaScript.py b/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr544/corrected/test/test_languages/testJavaScript.py
+index 0d85e2f..1c1c52e 100644
+--- a/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr544/target/test/test_languages/testJavaScript.py
++++ b/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr544/corrected/test/test_languages/testJavaScript.py
+@@ -164,6 +164,28 @@ class Test_JavaScript_nullish_coalescing(unittest.TestCase):
+                                             for f in functions])
+
+
++class Test_JavaScript_line_comment_ending_with_a_backslash(unittest.TestCase):
++    def test_line_comment_ends_at_its_line(self):
++        code = (
++            "function b(code) {\n"
++            "  return (\n"
++            "    code === 47 || // /\n"
++            "    code === 92 || // \\\n"
++            "    code === 45 || // -\n"
++            "    code === 32\n"
++            "  )\n"
++            "}\n"
++        )
++        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
++            with self.subTest(filename=filename):
++                functions = analyze_file.analyze_source_code(
++                    filename, code).function_list
++                self.assertEqual([('b', 1, 8, 4, 8)],
++                                 [(f.name, f.start_line, f.end_line,
++                                   f.cyclomatic_complexity, f.nloc)
++                                  for f in functions])
++
++
+ class Test_tokenizing_JavaScript(unittest.TestCase):
+
+     def check_tokens(self, expect, source):

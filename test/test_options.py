@@ -1,4 +1,5 @@
 import unittest
+import lizard
 from lizard import parse_args
 from unittest.mock import patch
 import sys
@@ -9,6 +10,9 @@ except ImportError:
 
 
 class TestOptionParsing(unittest.TestCase):
+
+    def test_help_description_is_the_lizard_module_docstring(self):
+        self.assertEqual(lizard.__doc__, lizard.arg_parser().description)
 
     def test_should_use_current_folder_as_default_path(self):
         options = parse_args(['lizard'])

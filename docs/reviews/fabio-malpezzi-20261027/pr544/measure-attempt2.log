@@ -1,0 +1,28 @@
+warning: Git tree '/Users/terryyin/git/lizard/.worktrees/conclude-the-javascript-and-typescript-lexical-a' is dirty
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+virtualenv 20.13.2 requires platformdirs<3,>=2, but you have platformdirs 4.4.0 which is incompatible.
+WARNING: You are using pip version 22.0.3; however, version 26.0.1 is available.
+You should consider upgrading via the '/Users/terryyin/git/lizard/.worktrees/conclude-the-javascript-and-typescript-lexical-a/.venv/bin/python -m pip install --upgrade pip' command.
+incremental-api 07:25:01  up 5 days  1:18,  4 users,  load average: 7.66, 9.68, 10.04
+{"workload": "api", "loops": 249, "medians": {"baseline": 2.466933354, "candidate": 2.4861154789999986}, "median_slowdown_pct": 0.7775696481178151, "paired_95pct_ci": [0.43540620058033497, 1.0133116283712829], "passes": true}
+incremental-api-parameters 07:26:46  up 5 days  1:20,  4 users,  load average: 7.76, 9.05, 9.74
+{"workload": "api-parameters", "loops": 252, "medians": {"baseline": 2.5801873959999995, "candidate": 2.5967012915000005}, "median_slowdown_pct": 0.6400269812030679, "paired_95pct_ci": [0.29947430985421963, 1.1851379702656262], "passes": true}
+incremental-cli 07:28:34  up 5 days  1:22,  4 users,  load average: 7.92, 8.76, 9.54
+{"workload": "cli", "loops": 21, "medians": {"baseline": 4.133754166500005, "candidate": 4.109061603500001}, "median_slowdown_pct": -0.5973398998932455, "paired_95pct_ci": [-1.3791463581795727, 0.6819393557136788], "passes": true}
+cumulative-api 07:31:28  up 5 days  1:24,  4 users,  load average: 9.83, 8.89, 9.42
+{"workload": "api", "loops": 249, "medians": {"baseline": 2.7904399994999984, "candidate": 2.5049747704999987}, "median_slowdown_pct": -10.23011528831118, "paired_95pct_ci": [-10.529699188515107, -9.320613646905308], "passes": true}
+cumulative-api-parameters 07:33:19  up 5 days  1:26,  4 users,  load average: 7.76, 8.48, 9.20
+{"workload": "api-parameters", "loops": 229, "medians": {"baseline": 2.6371391875000043, "candidate": 2.360882374999999}, "median_slowdown_pct": -10.475625018560175, "paired_95pct_ci": [-10.644911498008746, -9.830806998342256], "passes": true}
+cumulative-cli 07:35:05  up 5 days  1:28,  4 users,  load average: 8.99, 8.79, 9.24
+{"workload": "cli", "loops": 21, "medians": {"baseline": 4.110546833499999, "candidate": 4.120392021000001}, "median_slowdown_pct": 0.23951040819594205, "paired_95pct_ci": [-5.459123678568966, 1.6215862030860118], "passes": true}
+{
+  "all_pass": true,
+  "workloads": [
+    "incremental-api",
+    "incremental-api-parameters",
+    "incremental-cli",
+    "cumulative-api",
+    "cumulative-api-parameters",
+    "cumulative-cli"
+  ]
+}

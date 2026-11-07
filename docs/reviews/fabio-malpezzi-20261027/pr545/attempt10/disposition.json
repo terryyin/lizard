@@ -1,0 +1,10 @@
+{
+  "status": "merged-with-acknowledgement",
+  "pr": "https://github.com/terryyin/lizard/pull/545",
+  "contributor_head_before": "baa95a4df8278421bb3d3a6487516030cc03a979",
+  "published_head": "6f5638b116f783970fecaabd0efc358330e0d47d",
+  "merge_commit": "d0ecc33be16ab01a8a6ecbddf092034da40fc5af",
+  "thanks_url": "https://github.com/terryyin/lizard/pull/545#issuecomment-6483363609",
+  "six_gate": "attempt10 all_pass paired_95pct_upper max 2.449%",
+  "trim": "typescript.py __call__ after_interpolation inline"
+}

@@ -7,12 +7,12 @@ description: >-
   when a selected story is ready for implementation planning, an execution
   retrospective has one bounded correction to plan, or authorized remaining
   work from a sufficient instruction needs an ordinary plan. Stays within the
-  triggering instruction's execution authority: finish after writing and
-  reporting the plan unless that instruction explicitly also requests execution.
-  Invokes slice-plan refinement when remaining plan concerns can be resolved
-  within the understood outcome, then reports remaining concerns or a limited
-  no-concerns finding and records readiness through the shared preparation
-  procedure without granting Take or execution.
+  triggering instruction's execution authority: finish after writing the plan
+  and recording its readiness unless that instruction explicitly also requests
+  execution. Invokes slice-plan refinement when remaining plan concerns can be
+  resolved within the understood outcome, then records remaining concerns in
+  the plan and readiness through the shared preparation procedure without
+  granting Take or execution.
 ---
 
 # Slice planning
@@ -43,8 +43,8 @@ For a correction handed off by
 use its evidenced current findings, one bounded correction outcome, affected
 concepts, preserved product promises and constraints, and evaluable proof as the
 planning input. Cite the original story and reviewed commits for provenance;
-do not invent a feature promise or require the correction to fit the old
-story's implementation footprint. The retrospective owns current-truth checks,
+do not invent a promise about a product intent or require the correction to fit
+the old story's implementation footprint. The retrospective owns current-truth checks,
 constraint disputes, and whether to amend an unfinished plan or create a
 follow-up. Missing correction scope or proof stops this planning path.
 
@@ -90,7 +90,7 @@ instructions or this project's guidance require it for local work, and cite
 that requirement in the plan. Hosted CI configuration shows which checks exist
 and how to run them. Hosted CI still runs them after publication, where their
 failures stay owned, but its configuration does not by itself make each check a
-local gate for every change. Choose local proof for the affected behavior under
+local gate for every change. Choose the local checks for the affected behavior under
 [own executable proof](../dough-story-refinement/references/executable-proof.md),
 and state in the plan the reason for any broader local check, such as a changed
 fixture that distributed consumers load. Execution applies the same distinction
@@ -116,57 +116,23 @@ assumptions, and key examples without enlarging that source. Read and apply:
 
 Inspect only the code and tests needed to find the stable outside-in proof entry
 point, behavior to extend or preserve, genuine dependencies, decisive premises,
-and any Structure justified under the linked slice decomposition rules.
-
-A decisive premise is a factual claim about this project's current state that a
-slice's approach, sizing, or proof depends on: existing code and tests, host or
-environment state, fixture content, workload data, or a named proof or
-measurement command. Premises inherited from the story, such as "works as
-today", count the same as those you write.
-
-Derive premises from the key examples: trace each one from trigger to
-observable result through existing code, and every step the plan relies on as
-already behaving is a decisive premise, written down or not. That includes
-anything that can collide with an example (an overlay, a competing rule) and
-every transformation between a fixture's inputs and the operation that
-evaluates them. A helper, step, hook or test that exists, or a grep hit, is
-presence, not settling. A claim that a change fixes a reported symptom is a
-premise: reproduce the symptom before dependent work, and a remedy spec that
-already passes leaves the symptom unexplained instead of counting as the fix.
-When an existing fixture can run the journey cheaply and safely, run it instead
-of reading call sites.
-
-Before recording `ready`, establish each decisive premise with the smallest
-safe observation: reading, searching, listing, a read-only host query, or one
-unpaid, side-effect-free local run of the named command. Observe the thing the claim is about, not only where you expect it: a
-claim that something has no test, or that a named proof exercises a behavior,
-is observed by searching for the existing tests and callers of what changes,
-wherever they live. When the plan moves or relocates a function, that search
-includes every caller, including scripts and step definitions, not only tests
-that import it. If a script, command, or route reaches the moved function,
-keep searching for a feature whose steps run that script. When such a feature
-exists, name the feature and record the observation that its steps run the
-script and the script calls the function. Naming only the script does not
-settle the claim while a feature runs it, and a test that imports or calls
-the moved unit does not settle it either. Naming an entry that does not reach
-the function does not settle it. For uncertain infrastructure or storage
-behavior, the observation is one isolated representative proof against the
-relevant engine and version, unless matching evidence exists. Record each
-premise, the operation that consumes its result, the literal observation that
-reaches it, and its result in the plan. A false premise changes the plan before
-broad implementation. Do not inspect claims the approach does not depend on, and
-keep experiments off shared and production systems.
-
-When only a paid, credentialed, owner-held, or state-changing observation can
-settle a premise, observe its cheap parts now and make the remainder an early
-probe slice whose failure stops dependent slices and changes the plan. Such a
-plan can be `ready`; the probe's observation keeps its existing authority
-requirements.
+and any Structure justified under the linked slice decomposition rules. A decisive
+premise is a factual claim about this project's current state on which a slice's approach,
+sizing, or proof depends; [settle each one](references/settle-decisive-premises.md) before `ready`.
 
 During construction, apply those decomposition, cumulative design, and sizing checks: correct
-obvious defects such as an independent second outcome before reporting, and
+obvious defects such as an independent second outcome before assessing readiness, and
 preserve proof ownership and any supplied sizing constraints on every resulting
 slice.
+
+A Story Branch Mode slice that must act from trunk, such as a release from
+trunk, needs a human checkpoint before that step. Write it in the plan: it names
+the slice, the trunk step, and a
+[Dough Land](../dough-land/SKILL.md) `--keep-worktree` landing of the story
+branch before the step, so one go-ahead covers both and execution asks no
+separate landing question. Alternatively, record in Current decisions that the
+story executes in Trunk Mode (`--trunk`). The trunk step stays that slice's
+work, not a lifecycle owner, and keeps its own procedure and gates.
 
 After the plan file exists for a work item with a recorded identity, apply
 [record preparation facts](../dough-product-backlog/references/record-preparation.md)
@@ -177,22 +143,22 @@ for the planned approach (omit assessment on that write).
 When remaining concerns about slice boundaries, cumulative design, proof
 ownership, or sizing can be resolved within the understood outcome and scope,
 invoke [dough-slice-plan-refinement](../dough-slice-plan-refinement/SKILL.md)
-on the written plan before the final report and readiness assessment. This
+on the written plan before the readiness assessment. This
 refinement is part of slice planning and needs no additional instruction;
 honor an explicit instruction to leave refinement to a later step. A plan
 without such concerns needs no refinement pass.
 
 Keep unresolved source questions and human-owned decisions outside this
-handoff. Report a missing input, disputed constraint, or concern that refinement
+handoff. Handle a missing input, disputed constraint, or concern that refinement
 cannot resolve within scope under the next section; do not repeat refinement
 without new evidence or widen the outcome.
 Refinement keeps the same plan, preparation workspace, and assignment. It
-grants neither execution nor publication authority.
+grants no execution authority.
 
-## Report concern evidence and assess readiness
+## Record concern evidence and assess readiness
 
-After constructing the plan, report, then record readiness through the shared
-procedure:
+After constructing the plan, record its concern evidence in the plan, then
+record readiness through the shared procedure:
 
 - In one line, whether refinement ran, was not needed (with the reason), or
   was left to a later step as instructed.
@@ -200,15 +166,22 @@ procedure:
   (for example an integration assumption or repeated special-case design), and
   its consequence (for example uncertain sizing or duplicated domain rules),
   including concerns spanning successive slices. When this review identified
-  none, say so narrowly.
+  none, the plan says so narrowly.
 - Interim behavior that slice decomposition permits is an accepted trade-off,
   not a remaining concern, once the plan names it and its replacing slice.
   Relabeling a blocking concern, such as a proof gap, does not settle it.
 - Then apply
   [assess readiness at preparation completion](../dough-product-backlog/references/record-preparation.md#assess-readiness-at-preparation-completion):
   every remaining concern becomes a `not-ready` reason, and neither refinement
-  nor an accepted trade-off establishes readiness alone. Do not prescribe the
+  nor an accepted trade-off establishes readiness alone. A recorded blocking
+  dependency is not such a concern; its agreement alone blocks the start, so a
+  plan settled apart from waiting on its suppliers records `ready`. Do not prescribe the
   next workflow action, Take the item, or start execution from this finding.
+- A missing input, disputed constraint, or human-owned decision that refinement
+  cannot resolve needs a response: report the expected response, who can give
+  it when known, and what waits for it. A concern the plan bounds with an
+  authorized early probe slice needs none; the plan and the recorded reasons
+  carry it.
 
 The recipient chooses the next action under the triggering instruction's
 authority and project policy. The recorded assessment is agent judgment bound to
@@ -217,27 +190,28 @@ replace the triggering instruction's execution authority.
 
 ## Stay within the triggering instruction
 
-After writing and reporting the plan, the next action remains within the
-triggering human or parent-agent instruction:
+After writing the plan and recording its assessment, the next action remains
+within the triggering human or parent-agent instruction:
 
-- Planning-only request: report the plan path, ordered slices,
-  considered-but-excluded additions, the refinement decision and concern
-  report, and the recorded readiness assessment, then stop. Do
-  not implement and do not invoke execution.
-- Parent-agent delegation that asks only for slice planning: return the plan,
-  the refinement decision and concern report, and the recorded readiness
+- Planning-only request, or a continuation from story refinement: do not implement and do not invoke execution.
+  The plan and the story's record hold the slices, exclusions, refinement decision, concerns, and assessment;
+  the session finishes under the preparation journey's
+  [finish with only what needs a response](../dough-story-refinement/references/preparation-journey.md#finish-with-only-what-needs-a-response).
+- Parent-agent delegation that asks only for slice planning: return the plan
+  path, the refinement decision and concerns, and the recorded readiness
   assessment to the parent. The parent's broader implementation task
   is not an explicit execution request to this planner.
-- Explicit plan-and-execute request: after reporting, the authorized workflow
+- Explicit plan-and-execute request: once the assessment is recorded, the authorized workflow
   may continue into execution without asking again for the same authorization,
   subject to this project's gates and any unresolved concerns that still block
   progress. Prefer the project's established execution path (for example
   [dough-execute-plan](../dough-execute-plan/SKILL.md)) when that path applies.
 
-Apply [preparation workspace](../dough-story-refinement/references/preparation-workspace.md)'s
-keep or discard decision, then close or retain the workspace, when this
-session ends.
-
-After the matching case above, end with:
-
-`## SLICE PLAN WRITTEN`
+When this session ends, follow
+[land at the end of preparation](../dough-story-refinement/references/preparation-journey.md#land-at-the-end-of-preparation),
+then close or retain the workspace under
+[preparation workspace](../dough-story-refinement/references/preparation-workspace.md#close-or-retain-the-workspace).
+An execution instruction for this story that arrives while its preparation is
+unlanded follows
+[hand off to execution in the same session](../dough-story-refinement/references/preparation-journey.md#hand-off-to-execution-in-the-same-session)
+instead.

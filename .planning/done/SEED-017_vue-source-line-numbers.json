@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-017#vue-source-line-numbers",
+  "title": "Preserve original Vue line numbers when template precedes script",
+  "completedAt": "2026-10-27T23:01:34.543Z",
+  "developer": "Terry Yin",
+  "agent": "Ai-chan",
+  "host": "cursor"
+}

@@ -1,50 +1,91 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { setTimeout as pause } from "node:timers/promises";
-import { readMailbox } from "./ci-mailbox-location.mjs";
-import { readRevisionCoverage } from "./ci-mailbox-revision-coverage.mjs";
+import { readMailbox, receiptPrefix } from "./ci-mailbox-location.mjs";
+import {
+  effectiveRevisionState,
+  freshPendingRevision,
+  readRevisionCoverage,
+  revisionVerdicts,
+} from "./ci-mailbox-revision-records.mjs";
 import { readMailboxEvents, readWorkerIdentity } from "./ci-mailbox-store.mjs";
 import { checkMailboxWorkerLiveness } from "./ci-mailbox-worker-process.mjs";
 import { isFullGitRevision } from "./ci-revisions.mjs";
 
 export const revisionWaitDeadlineMs = 10 * 60 * 1000;
 
-const terminalVerdicts = new Set(["success", "failure"]);
-
-function targetOf(request) {
-  return { repo: request.repo, branch: request.branch };
-}
+const targetOf = (request) => ({ repo: request.repo, branch: request.branch });
 
 function result(requestedSha, target, effectiveEvidence, outcome) {
   return { requestedSha, target, effectiveEvidence, ...outcome };
 }
 
-function effectiveCoverage(coverage) {
+function effectiveCoverage(coverage, now) {
   if (!coverage)
     return {
       evidence: { source: "none" },
       outcome: { unresolvedReason: "missing_registration" },
     };
-  if (coverage.state !== "not_required") {
-    const evidence = { source: "exact", revision: coverage };
-    if (terminalVerdicts.has(coverage.state))
-      return { evidence, outcome: { verdict: coverage.state } };
-    if (coverage.state === "incomplete")
-      return { evidence, outcome: { unresolvedReason: "incomplete" } };
-    return { evidence };
-  }
-
-  const evidence = {
-    source: "not_required_basis",
-    revision: { sha: coverage.sha, state: coverage.state },
-    ...(coverage.basis ? { basis: coverage.basis } : {}),
-  };
-  if (terminalVerdicts.has(coverage.basis?.state))
-    return { evidence, outcome: { verdict: coverage.basis.state } };
-  if (coverage.basis?.state === "incomplete")
+  const { integrated, ...revision } = coverage;
+  // A validated descendant completes B while B retains its exact state or basis.
+  if (integrated?.state === "success")
+    return {
+      evidence: {
+        source: "integrated_state",
+        accepted: revision,
+        validated: integrated.validated,
+        policy: integrated.policy,
+        ancestry: integrated.ancestry,
+      },
+      outcome: { verdict: "success" },
+    };
+  const judged = integrated ? { integrated } : {};
+  const evidence =
+    coverage.state === "not_required"
+      ? {
+          source: "not_required_basis",
+          revision: { sha: coverage.sha, state: coverage.state },
+          ...(coverage.basis ? { basis: coverage.basis } : {}),
+          ...judged,
+        }
+      : { source: "exact", revision, ...judged };
+  const outcome = effectiveRevisionState(coverage);
+  if (revisionVerdicts.has(outcome))
+    return { evidence, outcome: { verdict: outcome } };
+  // A cancelled attempt ends the wait unless fresh queue progress explains
+  // pending work or the policy still permits integrated-state completion.
+  if (
+    outcome === "incomplete" &&
+    !integrated &&
+    !freshPendingRevision(coverage, now)
+  )
     return { evidence, outcome: { unresolvedReason: "incomplete" } };
   return { evidence };
 }
+
+const recordedCoverage = (directory, requestedSha, now = Date.now()) =>
+  effectiveCoverage(
+    readRevisionCoverage(directory).find(
+      (revision) => revision.sha === requestedSha,
+    ),
+    now,
+  );
+
+// The recorded verdict and its effective evidence, whether observation still
+// runs. Undefined while no verdict is proved, including a cancelled attempt.
+export function recordedCompletion(directory, sha) {
+  let projection;
+  try {
+    projection = recordedCoverage(directory, sha.toLowerCase());
+  } catch {
+    return undefined;
+  }
+  const { evidence, outcome } = projection;
+  return outcome?.verdict ? { verdict: outcome.verdict, evidence } : undefined;
+}
+
+export const recordedVerdict = (directory, sha) =>
+  recordedCompletion(directory, sha)?.verdict;
 
 function terminalObservation(directory) {
   const path = join(directory, "result.json");
@@ -57,10 +98,7 @@ function terminalObservation(directory) {
       terminal,
     };
   if (terminal.status === "stopped")
-    return {
-      unresolvedReason: "observation_cancelled",
-      terminal,
-    };
+    return { unresolvedReason: "observation_cancelled", terminal };
   return {
     unresolvedReason: "observation_unavailable",
     detail: "observation_ended",
@@ -116,11 +154,7 @@ export async function awaitRevision(
   while (true) {
     let projection;
     try {
-      projection = effectiveCoverage(
-        readRevisionCoverage(directory).find(
-          (revision) => revision.sha === requestedSha,
-        ),
-      );
+      projection = recordedCoverage(directory, requestedSha, now());
     } catch (error) {
       return result(
         requestedSha,
@@ -192,5 +226,23 @@ export async function awaitRevision(
         unresolvedReason: "wait_cancelled",
       });
     }
+  }
+}
+
+// Runs the revision command `run` (`awaitRevision` or `completeRevision`) so
+// that SIGINT or SIGTERM cancels it, and writes its receipt.
+export async function writeRevisionReceipt(run, directory, sha) {
+  const cancellation = new AbortController();
+  const cancel = () => cancellation.abort();
+  process.once("SIGINT", cancel);
+  process.once("SIGTERM", cancel);
+  try {
+    const result = await run(directory, sha, {
+      cancellation: cancellation.signal,
+    });
+    process.stdout.write(`${receiptPrefix}${JSON.stringify(result)}\n`);
+  } finally {
+    process.removeListener("SIGINT", cancel);
+    process.removeListener("SIGTERM", cancel);
   }
 }

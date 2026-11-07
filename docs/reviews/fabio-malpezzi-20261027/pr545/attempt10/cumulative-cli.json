@@ -1,0 +1,128 @@
+{
+  "command": [
+    "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr545/proof/paired.py",
+    "--baseline",
+    "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr545/baseline",
+    "--candidate",
+    "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr545/corrected",
+    "--workload",
+    "cli",
+    "--pairs",
+    "20",
+    "--seconds",
+    "24.0",
+    "--out",
+    "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr545/cumulative-cli.json"
+  ],
+  "python": "3.9.11 (main, Apr 10 2022, 22:01:55) \n[Clang 11.1.0 ]",
+  "executable": "/Users/terryyin/git/lizard/.worktrees/count-conditions-inside-template-interpolations/.venv/bin/python",
+  "host": "Territory.local",
+  "workload": "cli",
+  "paths": [
+    "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr545/baseline",
+    "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr545/corrected"
+  ],
+  "pilots": [
+    0.23109841599999997,
+    0.213044583
+  ],
+  "loops": 113,
+  "raw": [
+    {
+      "baseline": 21.505341834000006,
+      "candidate": 21.580624999999998
+    },
+    {
+      "candidate": 21.168588749999998,
+      "baseline": 20.919281208
+    },
+    {
+      "baseline": 21.03155687499998,
+      "candidate": 21.330045375000026
+    },
+    {
+      "candidate": 21.43900320900002,
+      "baseline": 21.233214583000006
+    },
+    {
+      "baseline": 21.65772445800002,
+      "candidate": 21.413497291
+    },
+    {
+      "candidate": 21.250808541000026,
+      "baseline": 21.76693375000002
+    },
+    {
+      "baseline": 23.53289695799998,
+      "candidate": 22.38393291700004
+    },
+    {
+      "candidate": 23.388774082999987,
+      "baseline": 21.39079379200001
+    },
+    {
+      "baseline": 20.720207750000043,
+      "candidate": 21.50300416700003
+    },
+    {
+      "candidate": 21.32824929100002,
+      "baseline": 21.365819999999985
+    },
+    {
+      "baseline": 21.752504499999986,
+      "candidate": 21.838218833999974
+    },
+    {
+      "candidate": 21.96364870800005,
+      "baseline": 21.38981766699999
+    },
+    {
+      "baseline": 21.645531249999976,
+      "candidate": 21.868024125000034
+    },
+    {
+      "candidate": 21.82669162500008,
+      "baseline": 21.688269417000015
+    },
+    {
+      "baseline": 21.83365845800006,
+      "candidate": 21.853640415999962
+    },
+    {
+      "candidate": 22.041652999999997,
+      "baseline": 21.4513262910001
+    },
+    {
+      "baseline": 21.27529012499997,
+      "candidate": 22.01344041699997
+    },
+    {
+      "candidate": 21.69244466600003,
+      "baseline": 21.628320666000036
+    },
+    {
+      "baseline": 21.681754207999916,
+      "candidate": 21.836346625000033
+    },
+    {
+      "candidate": 21.588776958999915,
+      "baseline": 21.609068167000032
+    }
+  ],
+  "medians": {
+    "baseline": 21.55720500050002,
+    "candidate": 21.759568145500054
+  },
+  "stdev": {
+    "baseline": 0.552246565476812,
+    "candidate": 0.49198757567020573
+  },
+  "median_slowdown_pct": 0.9387262634248827,
+  "paired_geometric_slowdown_pct": 0.9878192075508219,
+  "paired_95pct_ci": [
+    -0.2823202798599045,
+    2.2741369125254485
+  ],
+  "passes": true,
+  "manifest_sha256": "28726ae72f1f42d6881ff2690b33b7f2d8514a5b44c33d3de40e0821eeb6e926"
+}

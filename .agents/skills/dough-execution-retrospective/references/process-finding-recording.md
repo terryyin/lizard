@@ -71,9 +71,10 @@ corrected qualified conclusions enrich it, preserving prior notes. New execution
 
 For supported writes only, build the complete ordinary candidate, then follow
 [bounded process-log recording](bounded-process-log.md) for measurement, retention,
-warnings, writing/refusal, and recovery. Ambiguity, malformed content, unsafe retention, or write
+writing/refusal, and recovery. Ambiguity, malformed content, unsafe retention, or write
 failure leaves the log byte-identical; report limitations/findings and continue.
 
-Report path, created IDs/rows or `unchanged`/`not recorded` with reason, and required size/retention
-warnings or refusal. Claim no unsuccessful write as success. The final banner requires an evidenced
-overlooked request, decision, warning, failed verification, or Jidoka stop still needing user action.
+Retain and return the path, created IDs/rows or `unchanged`/`not recorded` with reason,
+and required size/retention refusal. Claim no unsuccessful write as success.
+Apply the [review response](../SKILL.md#report) to these recording results: a settled
+record requires no visible recap; an unresolved refusal remains actionable.

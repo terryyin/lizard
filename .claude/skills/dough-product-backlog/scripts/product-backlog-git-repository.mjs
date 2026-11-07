@@ -2,15 +2,17 @@
 // The Git repository primitives the Git-aware backlog adapters share:
 // resolving the real repository root a caller means, running real `git`
 // commands against it while collecting what Git writes to stderr for the
-// operation that ran them, and registering the shared resolver as a custom
-// merge driver for one attributed path. Nothing here knows about the
-// backlog's own content or invariants; `product-backlog-git-merge.mjs` and its
-// driver own that. A stopped rebase's or cherry-pick's own state is read in
+// operation that ran them, and registering a custom merge driver for one
+// attributed path, the shared resolver's for the backlog among them. Nothing
+// here knows about the backlog's own content or invariants;
+// `product-backlog-git-merge.mjs` and its driver own that, as
+// `product-backlog-git-done-catalog.mjs` owns the done catalog's. A stopped
+// rebase's or cherry-pick's own state is read in
 // `product-backlog-git-operation-state.mjs`.
 import { AsyncLocalStorage } from "node:async_hooks";
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BacklogError } from "./product-backlog-refusal.mjs";
 
@@ -132,16 +134,18 @@ export function gitPath(repoRoot, name) {
   );
 }
 
-// Registers this one path to be reconciled by the shared resolver for every
-// future content merge Git attempts on it in this checkout. Both the
-// attribute and the driver command are written to this checkout's own Git
-// directory — never to a file a project tracks or ships — because
-// registering the driver for every checkout a project might have, on every
-// install, is a separate, later concern; this adapter only needs the
-// mechanism to be in effect for the merge it is about to run.
-export function ensureDriverRegistered(repoRoot, file) {
+// Registers one repository-relative path in shared Git config and attributes,
+// without changing tracked project files. Linked checkouts share registration,
+// while Git runs drivers at the current checkout root: an installed script
+// follows that checkout, not the registering worktree. Explicit external
+// runtimes retain their absolute location.
+export function registerMergeDriver(
+  repoRoot,
+  path,
+  { name, description, script },
+) {
   const attributesPath = gitPath(repoRoot, "info/attributes");
-  const line = `/${file} merge=${driverName}`;
+  const line = `/${path} merge=${name}`;
   const existing = existsSync(attributesPath)
     ? readFileSync(attributesPath, "utf8")
     : "";
@@ -151,22 +155,30 @@ export function ensureDriverRegistered(repoRoot, file) {
     mkdirSync(dirname(attributesPath), { recursive: true });
     writeFileSync(attributesPath, `${existing}${separator}${line}\n`, "utf8");
   }
+  git(["config", `merge.${name}.name`, description], repoRoot);
+  const within = relative(repoRoot, script);
+  const location =
+    within !== ".." && !within.startsWith(`..${sep}`) && !isAbsolute(within)
+      ? `./${within}`
+      : script;
+  const quoted = (value) => `'${value.replaceAll("'", "'\\''")}'`;
   git(
     [
       "config",
-      `merge.${driverName}.name`,
-      "Reconcile the product backlog through its shared resolver",
+      `merge.${name}.driver`,
+      `${quoted(process.execPath)} ${quoted(location)} "%O" "%A" "%B" "%P"`,
     ],
     repoRoot,
   );
-  git(
-    [
-      "config",
-      `merge.${driverName}.driver`,
-      `${process.execPath} ${driverScript} %O %A %B %P`,
-    ],
-    repoRoot,
-  );
+}
+
+// Registers the backlog path itself to be reconciled by the shared resolver.
+export function ensureDriverRegistered(repoRoot, file) {
+  registerMergeDriver(repoRoot, file, {
+    name: driverName,
+    description: "Reconcile the product backlog through its shared resolver",
+    script: driverScript,
+  });
 }
 
 // The recoverable shape of a stop neither adapter itself decided: something

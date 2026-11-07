@@ -6,49 +6,48 @@ Refine unresolved stories in their seeds. Once goal, scope, and key examples are
 understood and planning is authorized, write/refine one active executable plan.
 A plan does not decide story scope; a seed alone does not authorize execution.
 
-An evidenced bounded retrospective correction is a work item with correction
-input instead of a refined feature story. A new correction gets a minimal story
-in a suitable seed before its plan is written: reuse the reviewed story's seed
-or another seed whose problem hosts it, and create one under the
-[seed format](../../dough-story-decomposition/references/seed-format.md) only
-when none fits. That story records its `**Identity:**`, a **Goal** naming the
-beneficiary and bounded correction outcome, the bounded **Scope**, and a link
-to the plan; it adds no feature promise. The plan records the story's identity
-under [work item identity](../../dough-product-backlog/references/identity.md)
-and holds the rest of the correction input: source and provenance, current
-findings, preserved promises and genuine constraints, observable proof
-ownership, current decisions, and executable slices.
+An evidenced bounded retrospective correction uses correction input instead of
+a refined feature story. Before planning, give a new correction a minimal story
+in the reviewed story's seed or another seed hosting the problem; create one
+under [seed format](../../dough-story-decomposition/references/seed-format.md) only when none fits.
+The story records its `**Identity:**`, allocated under
+[allocate a new identity](../../dough-product-backlog/references/identity.md#allocate-a-new-identity),
+a **Goal** naming the beneficiary and bounded correction outcome, bounded
+**Scope**, and its plan link, adding no promise about a product intent. The plan
+records the story's identity under
+[work item identity](../../dough-product-backlog/references/identity.md) and
+holds the remaining input: source and provenance, current findings, preserved
+promises and genuine constraints, observable proof ownership, current decisions,
+and executable slices.
 
-An existing correction whose plan is already its canonical home keeps that home
-and its recorded identity, with the whole correction input in that plan. Do not
-migrate it or create a seed for it. For either kind, name whichever
-required correction field is missing and stop that path; do not invent it.
-Resolve disputed product constraints through the shared
+Existing plan-homed corrections keep their home, recorded identity, and complete
+input in that plan; do not migrate them or create seeds. For either kind, name
+missing required correction fields and stop rather than inventing them. Resolve
+disputed product constraints through the shared
 [plan-conflict handoff](../../dough-execute-plan/references/execution-decisions.md#resolve-a-disputed-plan-restriction),
 leaving the decision with the human.
 
-Planning and refinement never supply execution authority. Execute only when the
-current human or invoking workflow instruction authorizes execution; a
-planning-only handoff stops before implementation even when the plan is complete.
+Planning and refinement never supply execution authority. Execute only under a
+current human or invoking-workflow instruction authorizing implementation.
 
 ## Refine story understanding
 
-Read selected stories and relevant discussion; reuse prior answers. Ask only
-questions that change understanding, with concise proposed answers, without a
-questionnaire or approval ceremony. Distinguish unresolved proposals from decisions.
+Read the selected stories and discussion; reuse prior answers and distinguish proposals from decisions.
+Ask only understanding-changing questions with concise proposed answers, without a questionnaire or approval ceremony.
 
 For each story, establish:
 
 - **Goal:** beneficiary, desired change, and contribution to the business goal.
   Keep the story's observable outcome distinct from the broader ambition.
-- **Scope:** required behavior, justified rejection constraints, deferred
-  promises, and boundary assumptions, using the distinction below.
+- **Scope:** required behavior, required restrictions, scope limits, and boundary
+  assumptions, using the distinction below.
 - **Key examples:** concrete pre-condition → trigger → result situations that
   explain the scope. Include boundaries or exceptions when they resolve
   ambiguity; do not enumerate a complete test suite.
 
 Prefer the smallest useful outcome. Clarify uncertain additions when possible;
-otherwise exclude them and report what was considered. If exclusion prevents
+otherwise exclude them and record what was considered with the story's
+deferred promises or the plan's exclusions. If exclusion prevents
 the stated goal or examples from working, resolve the question before dependent
 planning or implementation. Necessary implementation details are not extra
 product scope. Naturally general behavior need not add delivery or verification
@@ -62,17 +61,27 @@ without turning refinement into technical planning. Omit unused optional section
 
 ## Examples and constraints
 
-Examples demonstrate required behavior; their counts and arrangements do not
-forbid unlisted cases. Require an independent domain or product requirement to
-justify rejection, and cite it when recording negative acceptance. Do not invent
-that justification when it is missing; record any unresolved constraint decision.
-Deferred promises state what this delivery does not commit to build or verify,
-not what the product must reject.
+Separate **scope limits** (work this increment does not undertake) from
+**required restrictions** (product behavior limited for an independently
+justified product need). Examples demonstrate required behavior; their counts
+and arrangements do not forbid unlisted cases. Before adding a restriction or
+preserving one implicated by the change, identify its independent product need
+or actual safety/correctness risk. This includes prerequisites, filters, count
+limits, and suppressed operations. Scope limits, examples, existing code and
+tests alone do not justify a required restriction. Cite the reason when making
+a restriction an acceptance requirement; leave consequential unresolved
+restriction decisions with the human.
+
+Deferred promises limit delivery and verification commitments; they do not
+require preventing other cases. A capability may remain unimplemented, and a
+guard may protect a known implementation limitation: identify the limitation
+and risk rather than treating the delivery boundary as its justification.
 
 For example, £10 + £20 gives a £30 basket. Summing prices also handles a valid
 third item; its absence from the example justifies neither rejection nor a
-separate handler. An explicit item limit does justify rejection. Deferring discounts
-adds no discount machinery and leaves naturally supported baskets intact.
+separate handler. An independently justified item limit does justify rejection.
+Deferring discounts adds no discount machinery and leaves naturally supported
+baskets intact.
 
 Story refinement sets delivery commitments, not product implementation
 boundaries. Implementation may change any product parts needed for the promised
@@ -83,22 +92,18 @@ boundary or structure for deferred behavior.
 
 ## Update a feature story in its seed
 
-For feature stories, use this section. A correction story stays minimal under
-the correction-input contract above; findings, proof, and decisions stay in its
-plan.
+For feature stories, use this section. Correction stories stay minimal under the
+contract above, keeping findings, proof, and decisions in their plans.
 
-Follow the shared
-[seed format](../../dough-story-decomposition/references/seed-format.md) for
-seed ownership, metadata, anchors, and backlog boundaries. Expand each selected
-story section with the understanding above, replacing overlapping detail.
-Record only open questions that affect that story. When refining several
-stories, keep each outcome and boundary separate; do not merge them into one
-delivery by implication.
+Follow [seed format](../../dough-story-decomposition/references/seed-format.md)
+for ownership, metadata, anchors, and backlog boundaries. Expand each selected
+story with the understanding above, replacing overlapping detail. Record only
+its relevant open questions. Keep each story's outcome and boundary separate
+when refining several; do not merge them into one delivery by implication.
 
-If no seed exists, create one using that format. Do not invent parent-problem
-decisions to fill it; route unresolved framing or candidate selection to
-[dough-story-decomposition](../../dough-story-decomposition/SKILL.md).
-Do not create a separate refinement file.
+Create a missing seed using that format; route unresolved parent framing or
+candidate selection to [dough-story-decomposition](../../dough-story-decomposition/SKILL.md)
+rather than inventing decisions. Keep refinement in the seed.
 
 Preserve the story's anchor and recorded identity when you rename or move its
 seed, updating incoming links instead: relocating a story does not re-identify it.
@@ -134,6 +139,15 @@ Keep execution, proof, review, and resume information:
    status, and proof.
 5. **Current decisions** — only choices constraining remaining work.
 6. **Learnings** — only discoveries changing assumptions or remaining slices.
+7. **Story obligations** — during planned execution, every reported gap, loss,
+   limitation, or interim behavior uses the `## Story obligations` section and
+   [entry format and dispositions](../../dough-execute-plan/references/story-obligations.md#record-format).
+   Its `**Source:**` link names the selected story section. Plans without the
+   section have no obligations; no migration is required. Planned execution
+   requires a `**Source review:**` link under `**Source:**` to the
+   [source review](../../dough-execute-plan/references/story-obligations.md#record-the-source-review)
+   once acceptance retains it; acceptance adds and allocates it, and planning
+   does not write it.
 
 At execution completion, the executing agent adds one more element after the
 ordered slices: the
@@ -175,20 +189,24 @@ next Behavior it enables, or the directly owned retrospective correction under
 [slice decomposition](../../dough-story-decomposition/references/problem-decomposition.md#decompose-slices). Planning numbers stay in planning artifacts; product
 code, tests, and enduring documentation remain capability-named.
 
-After the plan file exists for a work item with a recorded identity, apply
-[record preparation facts](../../dough-product-backlog/references/record-preparation.md)
-for the planned approach (omit assessment on that write).
+After writing an identified work item's plan, [record preparation facts](../../dough-product-backlog/references/record-preparation.md)
+for the planned approach, omitting assessment on that write.
 
 ## Own executable proof
 
-Proof ownership for executable plans lives in
-[own executable proof](executable-proof.md).
+Follow [own executable proof](executable-proof.md) for executable plans.
 
 ## Refine the active plan
 
 Edit the same plan in place. Preserve completed slices and resume-useful history,
 replace obsolete planned detail rather than appending a competing breakdown,
 and record only learnings that affect remaining work. Apply
+[story-obligation ownership](../../dough-execute-plan/references/story-obligations.md)
+when removing or renumbering slices: move receiving and interim obligations
+and source-review allocations to their remaining owners,
+preserve reported text and provenance, and update slice references.
+Replanning never drops an obligation; the check refuses dangling references.
+Apply
 [slice decomposition](../../dough-story-decomposition/references/problem-decomposition.md#decompose-slices)
 and its cumulative design assessment, sizing, and escalation rules when changing
 remaining-slice design. After a preparation plan rewrite (slice planning or

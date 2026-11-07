@@ -1,0 +1,69 @@
+# DISPLAY ONLY: exact executable bytes in literal-git-patches.json
+diff --git a/lizard_languages/javascript_functions.py b/lizard_languages/javascript_functions.py
+index acc9ea985..afeb96c91 100644
+--- a/lizard_languages/javascript_functions.py
++++ b/lizard_languages/javascript_functions.py
+@@ -137,8 +137,9 @@ class JavaScriptFunctionsMixin:
+             return
+         if token == '<':
+             # Generic type params: function name<T>(...) — consume <...>
+-            # so function_name (already set) is preserved.
+-            self._consume_generic_type_params()
++            # so function_name (already set) is preserved and "(" still
++            # opens the parameters.
++            self._consume_generic_type_params(self._function)
+             return
+         if token.startswith('<') and token.endswith('>') and len(token) > 1:
+             # Single-token generic from TSX tokenizer (e.g., <T>, <Props>)
+diff --git a/lizard_languages/typescript_declarations.py b/lizard_languages/typescript_declarations.py
+index 92b149dab..53a89bb4e 100644
+--- a/lizard_languages/typescript_declarations.py
++++ b/lizard_languages/typescript_declarations.py
+@@ -137,9 +137,10 @@ class TypeScriptDeclarationsMixin:
+         return ((self._prev_token == '.' or token not in _EXPRESSION_PREFIXES)
+                 and (ends_expression(token) or token.isidentifier()))
+
+-    def _consume_generic_type_params(self):
++    def _consume_generic_type_params(self, resume=None):
+         """Consume <...> generic type parameters (e.g., method<T>(...))
+-        so the method name in last_tokens is preserved."""
++        so the method name in last_tokens is preserved; then continue in
++        resume (the global state by default)."""
+         depth = 1
+
+         def consume(token):
+@@ -149,7 +150,7 @@ class TypeScriptDeclarationsMixin:
+             elif token == '>':
+                 depth -= 1
+                 if depth == 0:
+-                    self.next(self._state_global)
++                    self.next(resume or self._state_global)
+         self.next(consume)
+
+     def _consume_type_annotation(self):
+diff --git a/test/test_languages/testTypeScriptFunctions.py b/test/test_languages/testTypeScriptFunctions.py
+index 915cf49fb..02c74660e 100644
+--- a/test/test_languages/testTypeScriptFunctions.py
++++ b/test/test_languages/testTypeScriptFunctions.py
+@@ -128,6 +128,21 @@ class Test_TypeScript_generic_arrow_functions(unittest.TestCase):
+         functions = get_ts_function_list(code)
+         self.assertEqual(["identity"], [f.name for f in functions])
+
++    def test_generic_function_declaration(self):
++        """function first<T>(list: T[]) {} keeps its parameters after <T>"""
++        code = '''
++            export function first<T>(list: T[]) {
++                return list[0];
++            }
++            function pair<T, U extends object>(a: T, b: U): T {
++                return a;
++            }
++        '''
++        functions = get_ts_function_list(code)
++        self.assertEqual([("first", 2, 4, ["list"]), ("pair", 5, 7, ["a", "b"])],
++                         [(f.name, f.start_line, f.end_line, f.parameters)
++                          for f in functions])
++
+
+
+ class Test_TypeScript_export_patterns(unittest.TestCase):

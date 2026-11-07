@@ -22,3 +22,24 @@ export function isDirectCliEntry(moduleUrl, argvPath) {
     return false;
   }
 }
+
+// Reads the `--flag value` pairs after a command name into camel-cased keys.
+// Every flag carries a value; a flag in a value's place is unknown.
+export function flagValues(argv, defaults = {}) {
+  const result = { ...defaults };
+  for (let index = 0; index < argv.length; index += 2) {
+    const flag = argv[index];
+    if (
+      !flag.startsWith("--") ||
+      index + 1 >= argv.length ||
+      argv[index + 1].startsWith("--")
+    ) {
+      throw new Error(`invalid argument ${flag}`);
+    }
+    const key = flag
+      .slice(2)
+      .replace(/-[a-z]/g, (match) => match[1].toUpperCase());
+    result[key] = argv[index + 1];
+  }
+  return result;
+}

@@ -1,0 +1,21 @@
+{"pair": 1, "baseline": 3.6934098330000005, "candidate": 3.6618644170000003}
+{"pair": 2, "candidate": 3.6480392089999985, "baseline": 3.698501125}
+{"pair": 3, "baseline": 3.637800792, "candidate": 3.6874569589999986}
+{"pair": 4, "candidate": 3.6968071669999993, "baseline": 3.826168666000001}
+{"pair": 5, "baseline": 3.8565338749999967, "candidate": 4.2160004169999965}
+{"pair": 6, "candidate": 3.928417707999998, "baseline": 3.8680575830000024}
+{"pair": 7, "baseline": 3.840681791999998, "candidate": 4.01837175}
+{"pair": 8, "candidate": 3.8880765830000072, "baseline": 3.7428867499999967}
+{"pair": 9, "baseline": 3.686266208999996, "candidate": 3.6564281659999978}
+{"pair": 10, "candidate": 3.604046249999996, "baseline": 3.6853057499999977}
+{"pair": 11, "baseline": 3.7272723749999983, "candidate": 3.7845327910000037}
+{"pair": 12, "candidate": 3.8857540409999984, "baseline": 3.826445165999999}
+{"pair": 13, "baseline": 3.849876957999996, "candidate": 3.7027422080000036}
+{"pair": 14, "candidate": 3.641341541999992, "baseline": 3.827477083000005}
+{"pair": 15, "baseline": 3.8750341670000097, "candidate": 3.7563761250000027}
+{"pair": 16, "candidate": 3.901135083, "baseline": 3.9291076250000003}
+{"pair": 17, "baseline": 3.8377185829999974, "candidate": 3.6395644579999953}
+{"pair": 18, "candidate": 3.632524791999998, "baseline": 3.7519001249999917}
+{"pair": 19, "baseline": 3.9194400000000087, "candidate": 3.6480244170000162}
+{"pair": 20, "candidate": 3.690996791999993, "baseline": 3.658141083000004}
+{"command": ["/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr536/proof/paired.py", "--baseline", "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr536/target", "--candidate", "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr536/adapted", "--workload", "cli", "--pairs", "20", "--seconds", "4", "--out", "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr536/adapted-cli.json"], "python": "3.9.11 (main, Apr 10 2022, 22:01:55) \n[Clang 11.1.0 ]", "executable": "/Users/terryyin/git/lizard/.worktrees/review-correct-and-merge-fabiomalpezzi-s-open-pr/.venv/bin/python", "host": "Territory.local", "workload": "cli", "paths": ["/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr536/target", "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr536/adapted"], "pilots": [0.22776104199999997, 0.184160292], "loops": 22, "medians": {"baseline": 3.826306916, "candidate": 3.693901979499996}, "stdev": {"baseline": 0.08994640032094192, "candidate": 0.16014800383393316}, "median_slowdown_pct": -3.4603846321460074, "paired_geometric_slowdown_pct": -0.6493747954727347, "paired_95pct_ci": [-2.4056958364665038, 1.1385532498997764], "passes": true, "manifest_sha256": "684120105da48ebd9dd13e06097c6d0c377d88b20d441b438987a778ad93812a"}

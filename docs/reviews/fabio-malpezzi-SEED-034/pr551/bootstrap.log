@@ -1,0 +1,15 @@
+warning: Git tree '/Users/terryyin/git/lizard/.worktrees/process-fabiomalpezzi-s-open-prs' is dirty
+{
+  "target": "4a05e4056cebb2edd75cb02b7a43e911369f4ce5",
+  "frozen_head": "a8dabb2351014cbf5164fe31a3472036877130fc",
+  "baseline": "4a05e4056cebb2edd75cb02b7a43e911369f4ce5",
+  "product": [
+    "lizard_languages/javascript_objects.py",
+    "lizard_languages/typescript_states.py",
+    "test/test_languages/testJavaScriptMembers.py",
+    "test/test_languages/testTypeScriptFields.py"
+  ],
+  "affected_count": 5,
+  "expanded_count": 19236,
+  "consumers_count": 1341
+}

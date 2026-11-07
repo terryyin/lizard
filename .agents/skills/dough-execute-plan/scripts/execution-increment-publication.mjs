@@ -1,119 +1,26 @@
-// Git mechanics for one validated execution increment or owned repair.
-// The caller supplies the owned workspace, the owned unpublished suffix,
-// the authorized remote target, and how the accepted result is registered.
-// A previously published base that no fetched remote ref holds stops at once.
-// `onFetchedTarget` may stop on each fetched target tip before anything is
-// rewritten. When another writer advances the target, only that owned suffix
-// is reconciled; a changed candidate requires applicable proof before any
-// push. One reconciliation retry recovers a racing push; conflict or a second
-// rejection preserves recoverable Git state. Stash, checkout refresh, and
-// observer startup stay with their own owners, managed observation with
-// execution-increment-delivery.mjs. Installed guidance is the agent's contract.
-import {
-  ensureApplicableProof,
-  fetchedTargetStop,
-  proofGateResult,
-  stopped,
-} from "./applicable-candidate-proof.mjs";
-import {
-  defaultBacklogPath,
-  reconcileOwnedSuffix,
-} from "./owned-suffix-reconciliation.mjs";
-import {
-  fetchedTarget,
-  git,
-  inspectDefaultCheckoutMaintenance,
-  lsRemoteSha,
-  remoteHolds,
-  revParse,
-  tryPushExactRef,
-} from "./publication-git.mjs";
-
-// Reconcile the owned suffix onto onto, then require applicable proof before
-// any push. Shared by the initial remote-advance path and the one retry.
-async function reconcileAndRequireProof({
-  workspace,
-  onto,
-  upstream,
-  branch,
-  backlogPath,
-  candidateFallback,
-  preRebaseSha,
-  previouslyPublishedBase,
-  priorSuffixBase,
-  validate,
-  validatedCandidate,
-  reconciliations,
-  retry = false,
-}) {
-  const replay = await reconcileOwnedSuffix({
-    workspace,
-    onto,
-    upstream,
-    branch,
-    backlogPath,
-  });
-  const nextReconciliations = reconciliations + 1;
-  if (!replay.ok) {
-    return {
-      ok: false,
-      result: stopped("conflict", {
-        candidate: await revParse(workspace, branch).catch(
-          () => candidateFallback,
-        ),
-        preRebaseSha,
-        remoteTip: onto,
-        previouslyPublishedBase,
-        ...(retry ? { suffixBase: priorSuffixBase } : {}),
-        reconciliations: nextReconciliations,
-        replay,
-      }),
-    };
-  }
-  const candidate = await revParse(workspace, branch);
-  if (!retry && candidate === preRebaseSha && !validatedCandidate) {
-    throw new Error("rebase left the pre-rebase SHA as the candidate");
-  }
-  // Held proof is judged only after rewrite; a further remote advance needs
-  // renewed applicable proof even when a prior validatedCandidate was supplied.
-  const gate = await ensureApplicableProof({
-    validate,
-    candidate,
-    context: {
-      preRebaseSha,
-      remoteTip: onto,
-      previouslyPublishedBase,
-      suffixBase: onto,
-      ...(retry ? { retry: true } : {}),
-    },
-    proofAlreadyHeld:
-      !retry && Boolean(validatedCandidate) && candidate === validatedCandidate,
-  });
-  if (!gate.ok) {
-    return {
-      ok: false,
-      result: proofGateResult(gate, {
-        candidate,
-        preRebaseSha,
-        remoteTip: onto,
-        previouslyPublishedBase,
-        suffixBase: onto,
-        reconciliations: nextReconciliations,
-      }),
-    };
-  }
-  return {
-    ok: true,
-    candidate,
-    suffixBase: onto,
-    reconciliations: nextReconciliations,
-  };
-}
+// Git mechanics for a validated execution increment or owned repair: owned
+// workspace/suffix, authorized target, and acceptance registration. Resolves
+// the previously published base after fetch; refuses unresolvable or
+// unpublished bases; accepts an already-held candidate; reconciles an owned
+// suffix once on a racing tip with applicable proof; transport timeouts stop
+// without rewrite. Reconciliation lives in
+// execution-increment-reconciliation.mjs; remote/accept helpers in
+// execution-increment-publication-support.mjs. Installed guidance is the
+// agent's contract.
+import { fetchedTargetStop, stopped } from "./applicable-candidate-proof.mjs";
+import { reconcileAndRequireProof } from "./execution-increment-reconciliation.mjs";
+import { retainLandingComparison } from "./dashboard-landing.mjs";
+import { executionIncrementRemoteOps } from "./execution-increment-publication-support.mjs";
+import { resolvePublicationLandingContext } from "./resolve-publication-landing-context.mjs";
+import { defaultBacklogPath } from "./owned-suffix-reconciliation.mjs";
+import { resolveCommitId, remoteHolds, revParse } from "./publication-git.mjs";
+import { isAncestor } from "./workspace-publication-ownership.mjs";
+import { completedIdentityStop } from "./publication-backlog-validation.mjs";
 
 export async function publishExecutionIncrement({
   workspace,
   branch,
-  previouslyPublishedBase,
+  previouslyPublishedBase: suppliedBase,
   targetRef,
   register,
   remote = "origin",
@@ -123,32 +30,74 @@ export async function publishExecutionIncrement({
   backlogPath = defaultBacklogPath,
   beforeRetryPush,
   beforePush,
+  landingContext: suppliedLandingContext,
   onFetchedTarget,
 }) {
-  await git(workspace, "fetch", remote);
-  let remoteTip = await fetchedTarget(workspace, targetRef, remote);
+  const landingContext = await resolvePublicationLandingContext({
+    landingContext: suppliedLandingContext,
+    workspace,
+    branch,
+    remote,
+    targetRef,
+  });
   const preRebaseSha = await revParse(workspace, branch);
+  const attempt = {
+    candidate: preRebaseSha,
+    // The supplied base until the fetch settles, then its full commit ID.
+    previouslyPublishedBase: suppliedBase,
+    suffixBase: suppliedBase,
+    reconciliations: 0,
+    remoteTip: null,
+    pushIssued: false,
+  };
+  const { fetchTarget, push, readTip, accept } = executionIncrementRemoteOps({
+    workspace,
+    targetRef,
+    remote,
+    landingContext,
+    register,
+    defaultCheckout,
+    preRebaseSha,
+    attempt,
+  });
+
+  const fetched = await fetchTarget("fetch");
+  if (fetched.stop) return fetched.stop;
+  // A full ID and its unique abbreviation must give one decision. Input that
+  // names no single commit is refused before anything is compared or written.
+  const resolved = await resolveCommitId(workspace, suppliedBase);
+  if (resolved.problem) {
+    return stopped("unresolvable-base", {
+      problem: resolved.problem,
+      candidate: preRebaseSha,
+      preRebaseSha,
+      remoteTip: attempt.remoteTip,
+      previouslyPublishedBase: suppliedBase,
+      error: `previously published base ${JSON.stringify(suppliedBase)} names no single commit (${resolved.problem}); rerun with the full commit ID from the delivery receipt`,
+    });
+  }
+  attempt.previouslyPublishedBase = resolved.commit;
+  attempt.suffixBase = resolved.commit;
   // Commits under a base the remote does not hold are not this suffix: pushing
   // would publish them and reconciling would rebase them off the branch.
-  if (!(await remoteHolds(workspace, previouslyPublishedBase, remote))) {
+  if (
+    !(await remoteHolds(workspace, attempt.previouslyPublishedBase, remote))
+  ) {
     return stopped("unpublished-base", {
       candidate: preRebaseSha,
       preRebaseSha,
-      remoteTip,
-      previouslyPublishedBase,
+      remoteTip: attempt.remoteTip,
+      previouslyPublishedBase: attempt.previouslyPublishedBase,
     });
   }
-  let candidate = preRebaseSha;
-  let suffixBase = previouslyPublishedBase;
-  let reconciliations = 0;
-  const held = (attempt) =>
-    fetchedTargetStop(onFetchedTarget, attempt, {
-      candidate,
+  const held = (n) =>
+    fetchedTargetStop(onFetchedTarget, n, {
+      candidate: attempt.candidate,
       preRebaseSha,
-      remoteTip,
-      previouslyPublishedBase,
-      suffixBase,
-      reconciliations,
+      remoteTip: attempt.remoteTip,
+      previouslyPublishedBase: attempt.previouslyPublishedBase,
+      suffixBase: attempt.suffixBase,
+      reconciliations: attempt.reconciliations,
     });
   // Reconciles, advancing this attempt's state, or returns the stop.
   const reconcileOnto = async (onto, upstream, retry = false) => {
@@ -158,17 +107,19 @@ export async function publishExecutionIncrement({
       upstream,
       branch,
       backlogPath,
-      candidateFallback: candidate,
+      candidateFallback: attempt.candidate,
       preRebaseSha,
-      previouslyPublishedBase,
-      priorSuffixBase: suffixBase,
+      previouslyPublishedBase: attempt.previouslyPublishedBase,
+      priorSuffixBase: attempt.suffixBase,
       validate,
       validatedCandidate,
-      reconciliations,
+      reconciliations: attempt.reconciliations,
       retry,
     });
     if (!rewritten.ok) return rewritten.result;
-    ({ candidate, suffixBase, reconciliations } = rewritten);
+    attempt.candidate = rewritten.candidate;
+    attempt.suffixBase = rewritten.suffixBase;
+    attempt.reconciliations = rewritten.reconciliations;
     return null;
   };
   if (validatedCandidate && preRebaseSha !== validatedCandidate) {
@@ -176,75 +127,116 @@ export async function publishExecutionIncrement({
       candidate: preRebaseSha,
       validatedCandidate,
       preRebaseSha,
-      remoteTip,
-      previouslyPublishedBase,
+      remoteTip: attempt.remoteTip,
+      previouslyPublishedBase: attempt.previouslyPublishedBase,
     });
   }
   if (validatedCandidate) {
-    candidate = validatedCandidate;
+    attempt.candidate = validatedCandidate;
   }
 
+  // As resume classifies it: the remote already holds this candidate, so this
+  // delivery only reports and registers that acceptance. An empty suffix has
+  // nothing to deliver and still moves onto the fetched tip below.
+  if (
+    attempt.remoteTip &&
+    attempt.candidate !== attempt.previouslyPublishedBase &&
+    (await isAncestor(workspace, attempt.candidate, attempt.remoteTip))
+  ) {
+    return accept(attempt.remoteTip, "already-published");
+  }
+
+  const invalidCandidate = async () => {
+    const invalid = await completedIdentityStop({
+      workspace,
+      candidate: attempt.candidate,
+      backlogPath,
+    });
+    return invalid
+      ? stopped(invalid.status, {
+          preRebaseSha,
+          remoteTip: attempt.remoteTip,
+          previouslyPublishedBase: attempt.previouslyPublishedBase,
+          suffixBase: attempt.suffixBase,
+          reconciliations: attempt.reconciliations,
+          ...invalid.fields,
+        })
+      : null;
+  };
+  const invalid = await invalidCandidate();
+  if (invalid) return invalid;
   const heldFirst = await held(0);
   if (heldFirst) return heldFirst;
   // Validated resume supplies previouslyPublishedBase as the tip the candidate
   // already extends. Only a further remote advance rewrites again.
-  if (remoteTip && remoteTip !== previouslyPublishedBase) {
-    const stop = await reconcileOnto(remoteTip, previouslyPublishedBase);
+  if (
+    attempt.remoteTip &&
+    attempt.remoteTip !== attempt.previouslyPublishedBase
+  ) {
+    const stop = await reconcileOnto(
+      attempt.remoteTip,
+      attempt.previouslyPublishedBase,
+    );
     if (stop) return stop;
   }
 
-  if (beforePush) {
-    await beforePush({ attempt: 0, candidate });
-  }
-  let push = await tryPushExactRef(workspace, candidate, remote, targetRef);
-  if (push.rejected) {
-    await git(workspace, "fetch", remote);
-    remoteTip = await fetchedTarget(workspace, targetRef, remote);
+  const preparePush = async (n) => {
+    const invalid = await invalidCandidate();
+    if (invalid) return invalid;
+    const comparison = {
+      candidate: attempt.candidate,
+      suffixBase: attempt.suffixBase,
+    };
+    if (landingContext)
+      await retainLandingComparison(landingContext, comparison, {
+        remote,
+        targetRef,
+      });
+    await beforePush?.({ attempt: n, ...comparison });
+  };
+  const firstStop = await preparePush(0);
+  if (firstStop) return firstStop;
+  let pushed = await push("push");
+  if (pushed.stop) return pushed.stop;
+  if (pushed.value.rejected) {
+    const refetched = await fetchTarget("fetch-after-rejection");
+    if (refetched.stop) return refetched.stop;
     const heldRetry = await held(1);
     if (heldRetry) return heldRetry;
-    const stop = await reconcileOnto(remoteTip, suffixBase, true);
+    const stop = await reconcileOnto(
+      attempt.remoteTip,
+      attempt.suffixBase,
+      true,
+    );
     if (stop) return stop;
 
     if (beforeRetryPush) {
       await beforeRetryPush();
     }
-    if (beforePush) {
-      await beforePush({ attempt: 1, candidate });
-    }
-    push = await tryPushExactRef(workspace, candidate, remote, targetRef);
-    if (push.rejected) {
+    const retryStop = await preparePush(1);
+    if (retryStop) return retryStop;
+    pushed = await push("retry-push");
+    if (pushed.stop) return pushed.stop;
+    if (pushed.value.rejected) {
+      const contended = await readTip("contention-tip");
+      if (contended.stop) return contended.stop;
       return stopped("persistent-contention", {
-        candidate,
+        candidate: attempt.candidate,
         preRebaseSha,
-        remoteTip: await lsRemoteSha(remote, targetRef, workspace),
-        previouslyPublishedBase,
-        suffixBase,
-        reconciliations,
+        remoteTip: contended.value,
+        previouslyPublishedBase: attempt.previouslyPublishedBase,
+        suffixBase: attempt.suffixBase,
+        reconciliations: attempt.reconciliations,
       });
     }
   }
 
-  await git(workspace, "fetch", remote);
-  const acceptedTip = await lsRemoteSha(remote, targetRef, workspace);
-  if (acceptedTip !== candidate) {
+  const confirming = await fetchTarget("confirmation-fetch");
+  if (confirming.stop) return confirming.stop;
+  const confirmed = await readTip("confirmation-tip");
+  if (confirmed.stop) return confirmed.stop;
+  if (confirmed.value !== attempt.candidate) {
     throw new Error("remote did not accept the candidate");
   }
-  const receipt = { sha: candidate, target: targetRef };
-  register?.(receipt);
-  const maintenance = await inspectDefaultCheckoutMaintenance(
-    workspace,
-    defaultCheckout,
-    remote,
-    targetRef,
-  );
-  return {
-    ok: true,
-    publication: "accepted",
-    receipt,
-    preRebaseSha,
-    remoteTip: acceptedTip,
-    suffixBase,
-    reconciliations,
-    maintenance,
-  };
+  return accept(confirmed.value);
 }
