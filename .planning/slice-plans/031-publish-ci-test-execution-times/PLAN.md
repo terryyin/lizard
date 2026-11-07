@@ -176,7 +176,7 @@ Commitment: E15
 ### G2. Website file breakdown and times are pending the website producer
 Reported: slice 1 — "Run 42381491501 shows the website job's 16 counts and one present part, with times and per-file figures still absent in Intent."
 Story clause: "each present part carries entry-level `durationMs` and a file breakdown Intent can show"
-Disposition: interim until slices 2
+Disposition: proved by slice 2: run 42382227121 artifact and Intent branch comparison at b10a6fd show website duration and access.feature breakdown
 
 ## Slice 1 execution evidence
 
@@ -254,3 +254,15 @@ Independent refactor review found no necessary edits.
 Full Nix pytest and `make` passed with 3,095 passing tests and 7 skips.
 Both temporary one-day runner reports are retained for comparison with this
 progress publication. They will be removed after the hosted observations.
+
+Website-enabled hosted proof passed at `b10a6fd1cb3aedaebfa9a71b787e7a7e9a70bd9d`,
+[run 42382227121, attempt 1](https://github.com/terryyin/lizard/actions/runs/42382227121).
+Downloaded the summary and both runner reports. Independent aggregation matched
+all 157 analyzer files and 5 website files, entry counts, durations and part
+flags. Analyzer reported 3,095 passed, 7 other and 13,324 ms.
+Website reported 16 passed and 25,474.361311 ms. Intent showed 13.3 s and
+25.5 s for that run. Its file rows showed `test/test_ci_proof.py` with
+4 checks / 189 ms and `website/frontend/features/access.feature` with
+3 checks / 803 ms, matching the raw reports at display precision.
+The next proof publication changes only planning records so the workflow
+observes the website-skip case on the same product code.

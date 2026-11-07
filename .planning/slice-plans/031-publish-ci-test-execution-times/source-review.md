@@ -9,12 +9,12 @@ input and made no edits. The commitments below retain its numbered return.
 
 | Id | Source commitment | Slice | Observation or obligation |
 | --- | --- | --- | --- |
-| G01 | The beneficiary is a Lizard maintainer comparing Python and website test runtimes. | slice 2 | |
+| G01 | The beneficiary is a Lizard maintainer comparing Python and website test runtimes. | slice 2 | observed: Intent CI status for run 42382227121 at b10a6fd showed analyzer 13.3 s and website 25.5 s, matching the exact artifact milliseconds after display rounding |
 | G02 | The maintainer views a judged `python-app.yml` attempt in Intent’s **CI status** tab. | slice 1 | observed: Intent CI status on the selected story branch showed passed run 42381491501 at 0ef4807, 3,093 passed and 7 other checks, and 12.2 s |
-| G03 | Each reporting proof entry shows cumulative summed test execution time. | slice 2 | |
-| G04 | Each reporting proof entry shows per-file counts. | slice 2 | |
-| G05 | Each reporting proof entry shows per-file times. | slice 2 | |
-| G06 | The maintainer can compare `test` with `website/frontend/features` without opening job logs. | slice 2 | |
+| G03 | Each reporting proof entry shows cumulative summed test execution time. | slice 2 | observed: Intent CI status for run 42382227121 at b10a6fd showed analyzer 13.3 s and website 25.5 s, matching the exact artifact milliseconds after display rounding |
+| G04 | Each reporting proof entry shows per-file counts. | slice 2 | observed: Intent branch comparison file rows on b10a6fd showed test_ci_proof.py 4 checks and 189 ms plus access.feature 3 checks and 803 ms, matching both runner reports and the summary |
+| G05 | Each reporting proof entry shows per-file times. | slice 2 | observed: Intent branch comparison file rows on b10a6fd showed test_ci_proof.py 4 checks and 189 ms plus access.feature 3 checks and 803 ms, matching both runner reports and the summary |
+| G06 | The maintainer can compare `test` with `website/frontend/features` without opening job logs. | slice 2 | observed: Intent CI status for run 42382227121 at b10a6fd showed analyzer 13.3 s and website 25.5 s, matching the exact artifact milliseconds after display rounding |
 | G07 | If `web` skips, website proof remains explicitly missing. | slice 2 | |
 | R01 | Follow the installed CI proof recipe. | slice 2 | observed: Both producer steps in python-app.yml supply --outcomes --times --by-file to the existing installed-recipe copies and the dual-converter replay exercises these flags |
 | R02 | Re-copy all five collector modules unchanged into `scripts/ci-proof/`. | slice 1 | observed: Byte comparison of each scripts/ci-proof/ci-proof-{summary,contract,figures,fragments,collect}.mjs with Open Dough v0.3.89 installed scripts, plus the diff against the old copies |
@@ -39,8 +39,8 @@ input and made no edits. The commitments below retain its numbered return.
 | R21 | The same scenario sum includes available after-hook durations. | slice 2 | observed: test_cucumber_outcomes_keep_failures_and_untimed_scenarios asserts the sum of before, step, and after values as 0.875 seconds and preserves zero |
 | R22 | Both producer fragment steps pass `--times`. | slice 2 | observed: Both producer steps in python-app.yml supply --outcomes --times --by-file to the existing installed-recipe copies and the dual-converter replay exercises these flags |
 | R23 | Both producer fragment steps pass `--by-file`. | slice 2 | observed: Both producer steps in python-app.yml supply --outcomes --times --by-file to the existing installed-recipe copies and the dual-converter replay exercises these flags |
-| R24 | Each present part carries entry-level `durationMs` under the recipe’s optional timing contract. | slice 2 | |
-| R25 | Each present part carries a file breakdown Intent can display. | slice 2 | |
+| R24 | Each present part carries entry-level `durationMs` under the recipe’s optional timing contract. | slice 2 | observed: Intent CI status for run 42382227121 at b10a6fd showed analyzer 13.3 s and website 25.5 s, matching the exact artifact milliseconds after display rounding |
+| R25 | Each present part carries a file breakdown Intent can display. | slice 2 | observed: Intent branch comparison file rows on b10a6fd showed test_ci_proof.py 4 checks and 189 ms plus access.feature 3 checks and 803 ms, matching both runner reports and the summary |
 | R26 | A run that skips `web` still publishes the summary. | slice 2 | |
 | R27 | In that summary, the website part is explicitly missing. | slice 2 | |
 | R28 | In that case, the Python part may still carry times. | slice 2 | |
@@ -49,15 +49,15 @@ input and made no edits. The commitments below retain its numbered return.
 | R31 | Keep the existing summary schema. | slice 1 | observed: Mixed-duration replay asserts schemaVersion 1 in the collector output and existing contract versions in ci-proof-contract.mjs |
 | R32 | Keep Intent unchanged. | slice 2 | observed: Aggregate implementation diff from 8a0ae5775 touches only workflow, CI scripts, converter tests and planning records; Intent renderer is exercised directly |
 | R33 | Use the existing recipe contract for `fragment --by-file`. | slice 2 | observed: Both producer steps in python-app.yml supply --outcomes --times --by-file to the existing installed-recipe copies and the dual-converter replay exercises these flags |
-| E01 | A push runs both `build` and `web`. | slice 2 | |
-| E02 | The maintainer downloads the `ci-proof-summary-attempt-<n>` artifact. | slice 2 | |
-| E03 | The maintainer views the judged attempt in Intent. | slice 2 | |
-| E04 | For both `test` and `website/frontend/features`, the downloaded summary and Intent show passed counts matching the runner reports. | slice 2 | |
-| E05 | The same two entries show matching failed counts. | slice 2 | |
-| E06 | The same two entries show matching other counts. | slice 2 | |
-| E07 | The same two entries show matching `durationMs`. | slice 2 | |
-| E08 | At least one file from each entry shows matching counts. | slice 2 | |
-| E09 | At least one file from each entry shows matching time. | slice 2 | |
+| E01 | A push runs both `build` and `web`. | slice 2 | observed: GitHub Actions run 42382227121 completed build, web and collector; gh run download retrieved ci-proof-summary-attempt-1 and both exact source reports |
+| E02 | The maintainer downloads the `ci-proof-summary-attempt-<n>` artifact. | slice 2 | observed: GitHub Actions run 42382227121 completed build, web and collector; gh run download retrieved ci-proof-summary-attempt-1 and both exact source reports |
+| E03 | The maintainer views the judged attempt in Intent. | slice 2 | observed: Intent CI status for run 42382227121 at b10a6fd showed analyzer 13.3 s and website 25.5 s, matching the exact artifact milliseconds after display rounding |
+| E04 | For both `test` and `website/frontend/features`, the downloaded summary and Intent show passed counts matching the runner reports. | slice 2 | observed: Run 42382227121 Intent CI status and downloaded artifact show 3,095 passed and 7 other for test and 16 passed for website, zero failures, matching independent report aggregation |
+| E05 | The same two entries show matching failed counts. | slice 2 | observed: Run 42382227121 Intent CI status and downloaded artifact show 3,095 passed and 7 other for test and 16 passed for website, zero failures, matching independent report aggregation |
+| E06 | The same two entries show matching other counts. | slice 2 | observed: Run 42382227121 Intent CI status and downloaded artifact show 3,095 passed and 7 other for test and 16 passed for website, zero failures, matching independent report aggregation |
+| E07 | The same two entries show matching `durationMs`. | slice 2 | observed: Intent CI status for run 42382227121 at b10a6fd showed analyzer 13.3 s and website 25.5 s, matching the exact artifact milliseconds after display rounding |
+| E08 | At least one file from each entry shows matching counts. | slice 2 | observed: Intent branch comparison file rows on b10a6fd showed test_ci_proof.py 4 checks and 189 ms plus access.feature 3 checks and 803 ms, matching both runner reports and the summary |
+| E09 | At least one file from each entry shows matching time. | slice 2 | observed: Intent branch comparison file rows on b10a6fd showed test_ci_proof.py 4 checks and 189 ms plus access.feature 3 checks and 803 ms, matching both runner reports and the summary |
 | E10 | A push skips `web`. | slice 2 | |
 | E11 | The summary and Intent show Python times in the example. | slice 2 | |
 | E12 | The summary and Intent show the Python file breakdown in the example. | slice 2 | |
