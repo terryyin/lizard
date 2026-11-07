@@ -119,6 +119,12 @@ Work:
   `fragment --outcomes … --times … --by-file`.
 - Observe both runs and Intent as in slice 1.
 
+## Execution complete
+
+Product advice: no change. The existing CI proof path covers both runner
+reports and the skipped-website state. Focused regressions and hosted proof
+cover the available and missing duration cases.
+
 ## Current decisions
 
 - Representative leg and workflow structure stay as SEED-035 left them
@@ -278,3 +284,22 @@ The two temporary runner-report uploads were removed after evidence capture.
 That removal stays inside the workflow concepts traced in the independent
 refactor return. The production fragments and summary continue to upload.
 Full Nix pytest and `make` passed again with 3,095 passing tests and 7 skips.
+
+## Execution retrospective
+
+Reviewed the original ready story and plan, then the five attributed
+publications `0ef4807`, `a694ab8`, `b10a6fd`, `f2c6dc7`, and
+`b32bd7d`. Trunk's `8a0ae57` supplied the dependency fix and is excluded
+from this story's implementation. The aggregate change preserves the
+existing proof boundaries and publishes no temporary runner-report artifacts.
+The two report formats justify separate converters; the vendored collector
+stays byte-identical and owns attempt and file aggregation. ADR-0000 and
+ADR-0001 add no CI constraint. The current maintenance direction supports
+using the existing pipeline.
+
+The real execution record shows that local partial-duration replay caught the
+shared defect before publication, then confirmed the released fix after trunk
+advanced. Its replay remains useful because the shared tests and both report
+converters protect different boundaries. Hosted evidence matched both source
+reports and the Intent display; final story-branch CI was pending at review.
+No unresolved product or process finding requires follow-up.
