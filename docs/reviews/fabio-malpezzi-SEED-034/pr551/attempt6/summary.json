@@ -1,0 +1,34 @@
+{
+  "all_pass": true,
+  "worst_upper_ci_pct": 0.9892708055838415,
+  "gates": {
+    "incremental-api": {
+      "passes": true,
+      "change_pct": 0.12118096041571394,
+      "ci": [
+        -0.46464100527836916,
+        0.7104508201944295
+      ],
+      "verdict": "passes"
+    },
+    "incremental-api-parameters": {
+      "passes": true,
+      "change_pct": -0.13624832764074254,
+      "ci": [
+        -1.249223620226123,
+        0.9892708055838415
+      ],
+      "verdict": "passes"
+    },
+    "incremental-cli": {
+      "passes": true,
+      "change_pct": -0.006656147107683142,
+      "ci": [
+        -0.6856642276357464,
+        0.6769942840924843
+      ],
+      "verdict": "passes"
+    }
+  },
+  "note": "cumulative mirrors incremental because frozen trunk == current target; candidate includes _in_prop_value call-site guards"
+}

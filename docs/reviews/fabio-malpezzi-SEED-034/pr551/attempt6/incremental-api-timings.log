@@ -1,0 +1,2 @@
+warning: Git tree '/Users/terryyin/git/lizard/.worktrees/process-fabiomalpezzi-s-open-prs' is dirty
+{"verdict": "passes", "passes": true, "paired_95pct_ci": [-0.46464100527836916, 0.7104508201944295], "out": "/Users/terryyin/.cache/lizard-pr-reviews-SEED-034/pr551/attempt6/incremental-api.json"}

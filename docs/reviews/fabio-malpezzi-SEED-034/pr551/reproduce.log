@@ -1,0 +1,113 @@
+warning: Git tree '/Users/terryyin/git/lizard/.worktrees/process-fabiomalpezzi-s-open-prs' is dirty
+{
+  "target": {
+    "all_match": false,
+    "claim_match": false,
+    "control_match": true,
+    "mismatches": [
+      "modifier.js",
+      "modifier.ts",
+      "contributor-js.js",
+      "contributor-ts.ts"
+    ],
+    "mismatch_detail": [
+      {
+        "filename": "modifier.js",
+        "observed": [],
+        "expected": [
+          [
+            "load",
+            3,
+            3,
+            1
+          ],
+          [
+            "create",
+            4,
+            4,
+            0
+          ],
+          [
+            "get value",
+            5,
+            5,
+            0
+          ]
+        ]
+      },
+      {
+        "filename": "modifier.ts",
+        "observed": [],
+        "expected": [
+          [
+            "create",
+            3,
+            3
+          ],
+          [
+            "load",
+            5,
+            5
+          ],
+          [
+            "get value",
+            7,
+            7
+          ]
+        ]
+      },
+      {
+        "filename": "contributor-js.js",
+        "observed": [],
+        "expected": [
+          [
+            "load",
+            3,
+            5,
+            1
+          ],
+          [
+            "create",
+            7,
+            9,
+            0
+          ],
+          [
+            "get value",
+            11,
+            13,
+            0
+          ]
+        ]
+      },
+      {
+        "filename": "contributor-ts.ts",
+        "observed": [],
+        "expected": [
+          [
+            "create",
+            3,
+            5
+          ],
+          [
+            "load",
+            7,
+            9
+          ],
+          [
+            "get value",
+            11,
+            13
+          ]
+        ]
+      }
+    ]
+  },
+  "corrected": {
+    "all_match": true,
+    "claim_match": true,
+    "control_match": true,
+    "mismatches": [],
+    "mismatch_detail": []
+  }
+}

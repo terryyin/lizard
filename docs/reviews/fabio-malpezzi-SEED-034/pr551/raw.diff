@@ -1,0 +1,130 @@
+# DISPLAY ONLY: exact executable bytes in literal-git-patches.json
+diff --git a/lizard_languages/javascript_objects.py b/lizard_languages/javascript_objects.py
+index 3421ce0..11970d1 100644
+--- a/lizard_languages/javascript_objects.py
++++ b/lizard_languages/javascript_objects.py
+@@ -1,5 +1,7 @@
+ """JavaScript object and class members, including computed method names."""
+
++from .javascript_functions import ends_expression
++
+
+ class JavaScriptObjectsMixin:
+     def _typed_class_member(self):
+@@ -12,6 +14,13 @@ class JavaScriptObjectsMixin:
+             state = state._state
+         return state._state == state._state_global and state._typed_class_member()
+
++    def _end_field_before_modifier(self):
++        """A modifier at a line start begins the next class member, so a
++        field value written without ';' ends before it, as before a name."""
++        if (self.as_class and self._in_prop_value and self.context.newline
++                and ends_expression(self.last_token)):
++            self._end_statement()
++
+     def _optional_class_member(self):
+         if not self._typed_class_member():
+             return False
+@@ -33,6 +42,7 @@ class JavaScriptObjectsMixin:
+             self.last_tokens = token
+             return True
+         if token in ('get', 'set'):
++            self._end_field_before_modifier()
+             self._getter_setter_prefix = token
+             return True
+         if self._getter_setter_prefix:
+diff --git a/lizard_languages/typescript_states.py b/lizard_languages/typescript_states.py
+index 055c0fd..68443bf 100644
+--- a/lizard_languages/typescript_states.py
++++ b/lizard_languages/typescript_states.py
+@@ -84,10 +84,12 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
+                     self._consume_type_annotation()
+                     return
+                 if token == 'static':
++                    self._end_field_before_modifier()
+                     self._static_seen = True
+                     self._prev_token = token
+                     return
+                 if token == 'async':
++                    self._end_field_before_modifier()
+                     self._async_seen = True
+                     self._prev_token = token
+                     return
+diff --git a/test/test_languages/testJavaScriptMembers.py b/test/test_languages/testJavaScriptMembers.py
+index d405be2..90b3445 100644
+--- a/test/test_languages/testJavaScriptMembers.py
++++ b/test/test_languages/testJavaScriptMembers.py
+@@ -248,3 +248,39 @@ class Test_JavaScript_array_as_a_property_value(unittest.TestCase):
+         functions = get_js_function_list(
+             "const o = { [a[0]]: 1, ['b' + 'c']() { return 1; } };")
+         self.assertEqual(['bc'], [f.name for f in functions])
++
++
++class Test_JavaScript_member_modifier_after_a_field(unittest.TestCase):
++    """A field without ';' ends at the line of the next member's modifier."""
++
++    def test_methods_with_modifiers_after_fields_without_semicolons(self):
++        code = (
++            "class A {\n"
++            "  count = 0\n"
++            "  async load(x) {\n"
++            "    return x;\n"
++            "  }\n"
++            "  total = count + 1\n"
++            "  static create() {\n"
++            "    return new A();\n"
++            "  }\n"
++            "  name = 'a'\n"
++            "  get value() {\n"
++            "    return this.count;\n"
++            "  }\n"
++            "}\n"
++        )
++        self.assertEqual(
++            [('load', 3, 5, 1), ('create', 7, 9, 0), ('get value', 11, 13, 0)],
++            [(f.name, f.start_line, f.end_line, f.parameter_count)
++             for f in get_js_function_list(code)])
++
++    def test_async_value_on_the_next_line_is_still_the_field_value(self):
++        code = (
++            "class A {\n"
++            "  handler =\n"
++            "    async () => { return 1; }\n"
++            "}\n"
++        )
++        self.assertEqual(['handler'],
++                         [f.name for f in get_js_function_list(code)])
+diff --git a/test/test_languages/testTypeScriptFields.py b/test/test_languages/testTypeScriptFields.py
+index 5464d9e..74ecd50 100644
+--- a/test/test_languages/testTypeScriptFields.py
++++ b/test/test_languages/testTypeScriptFields.py
+@@ -94,3 +94,29 @@ class Test_ts_dot_field_assignment(unittest.TestCase):
+         self.assertIn("getSettings", names)
+         self.assertIn("getMode", names)
+         self.assertIn("render", names)
++
++
++class Test_TypeScript_member_modifier_after_a_field(unittest.TestCase):
++    """A field without ';' ends at the line of the next member's modifier."""
++
++    def test_methods_with_modifiers_after_fields_without_semicolons(self):
++        code = (
++            "class Store {\n"
++            "  count = 0\n"
++            "  static create(): Store {\n"
++            "    return new Store();\n"
++            "  }\n"
++            "  limit: number = 10\n"
++            "  async load(x: number): Promise<number> {\n"
++            "    return x;\n"
++            "  }\n"
++            "  name = 'a'\n"
++            "  get value(): number {\n"
++            "    return this.count;\n"
++            "  }\n"
++            "}\n"
++        )
++        self.assertEqual(
++            [('create', 3, 5), ('load', 7, 9), ('get value', 11, 13)],
++            [(f.name, f.start_line, f.end_line)
++             for f in get_ts_function_list(code)])

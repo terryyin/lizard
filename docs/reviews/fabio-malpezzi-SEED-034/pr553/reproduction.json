@@ -1,0 +1,50 @@
+{
+  "pr": 553,
+  "head": "692a456cfa5448a9435cf4e7c43b31eba8c47701",
+  "target_baseline": "eec8c38b226b7a777d0e6d82978d618fde09a65a",
+  "claim": "quoted optional ? must not add CCN; string ternary still adds one",
+  "expected": [
+    [
+      "m",
+      1
+    ],
+    [
+      "f",
+      2
+    ],
+    [
+      "g",
+      2
+    ]
+  ],
+  "target": [
+    [
+      "m",
+      1
+    ],
+    [
+      "f",
+      4
+    ],
+    [
+      "g",
+      2
+    ]
+  ],
+  "corrected": [
+    [
+      "m",
+      1
+    ],
+    [
+      "f",
+      2
+    ],
+    [
+      "g",
+      2
+    ]
+  ],
+  "target_claim_match": false,
+  "corrected_all_match": true
+}

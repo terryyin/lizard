@@ -1,0 +1,330 @@
+{
+  "target": {
+    "label": "target",
+    "paths": {
+      "lizard": "/Users/terryyin/.cache/lizard-pr-reviews-SEED-034/pr551/target/lizard.py",
+      "javascript_objects": "/Users/terryyin/.cache/lizard-pr-reviews-SEED-034/pr551/target/lizard_languages/javascript_objects.py",
+      "typescript_states": "/Users/terryyin/.cache/lizard-pr-reviews-SEED-034/pr551/target/lizard_languages/typescript_states.py"
+    },
+    "rows": [
+      {
+        "filename": "modifier.js",
+        "observed": [],
+        "expected": [
+          [
+            "load",
+            3,
+            3,
+            1
+          ],
+          [
+            "create",
+            4,
+            4,
+            0
+          ],
+          [
+            "get value",
+            5,
+            5,
+            0
+          ]
+        ],
+        "matches": false,
+        "control": false
+      },
+      {
+        "filename": "modifier.ts",
+        "observed": [],
+        "expected": [
+          [
+            "create",
+            3,
+            3
+          ],
+          [
+            "load",
+            5,
+            5
+          ],
+          [
+            "get value",
+            7,
+            7
+          ]
+        ],
+        "matches": false,
+        "control": false
+      },
+      {
+        "filename": "handler-control.js",
+        "observed": [
+          [
+            "handler",
+            3,
+            3,
+            0
+          ]
+        ],
+        "expected": [
+          [
+            "handler",
+            3,
+            3,
+            0
+          ]
+        ],
+        "matches": true,
+        "control": true
+      },
+      {
+        "filename": "contributor-js.js",
+        "observed": [],
+        "expected": [
+          [
+            "load",
+            3,
+            5,
+            1
+          ],
+          [
+            "create",
+            7,
+            9,
+            0
+          ],
+          [
+            "get value",
+            11,
+            13,
+            0
+          ]
+        ],
+        "matches": false,
+        "control": false
+      },
+      {
+        "filename": "contributor-ts.ts",
+        "observed": [],
+        "expected": [
+          [
+            "create",
+            3,
+            5
+          ],
+          [
+            "load",
+            7,
+            9
+          ],
+          [
+            "get value",
+            11,
+            13
+          ]
+        ],
+        "matches": false,
+        "control": false
+      }
+    ]
+  },
+  "corrected": {
+    "label": "corrected",
+    "paths": {
+      "lizard": "/Users/terryyin/.cache/lizard-pr-reviews-SEED-034/pr551/corrected/lizard.py",
+      "javascript_objects": "/Users/terryyin/.cache/lizard-pr-reviews-SEED-034/pr551/corrected/lizard_languages/javascript_objects.py",
+      "typescript_states": "/Users/terryyin/.cache/lizard-pr-reviews-SEED-034/pr551/corrected/lizard_languages/typescript_states.py"
+    },
+    "rows": [
+      {
+        "filename": "modifier.js",
+        "observed": [
+          [
+            "load",
+            3,
+            3,
+            1
+          ],
+          [
+            "create",
+            4,
+            4,
+            0
+          ],
+          [
+            "get value",
+            5,
+            5,
+            0
+          ]
+        ],
+        "expected": [
+          [
+            "load",
+            3,
+            3,
+            1
+          ],
+          [
+            "create",
+            4,
+            4,
+            0
+          ],
+          [
+            "get value",
+            5,
+            5,
+            0
+          ]
+        ],
+        "matches": true,
+        "control": false
+      },
+      {
+        "filename": "modifier.ts",
+        "observed": [
+          [
+            "create",
+            3,
+            3
+          ],
+          [
+            "load",
+            5,
+            5
+          ],
+          [
+            "get value",
+            7,
+            7
+          ]
+        ],
+        "expected": [
+          [
+            "create",
+            3,
+            3
+          ],
+          [
+            "load",
+            5,
+            5
+          ],
+          [
+            "get value",
+            7,
+            7
+          ]
+        ],
+        "matches": true,
+        "control": false
+      },
+      {
+        "filename": "handler-control.js",
+        "observed": [
+          [
+            "handler",
+            3,
+            3,
+            0
+          ]
+        ],
+        "expected": [
+          [
+            "handler",
+            3,
+            3,
+            0
+          ]
+        ],
+        "matches": true,
+        "control": true
+      },
+      {
+        "filename": "contributor-js.js",
+        "observed": [
+          [
+            "load",
+            3,
+            5,
+            1
+          ],
+          [
+            "create",
+            7,
+            9,
+            0
+          ],
+          [
+            "get value",
+            11,
+            13,
+            0
+          ]
+        ],
+        "expected": [
+          [
+            "load",
+            3,
+            5,
+            1
+          ],
+          [
+            "create",
+            7,
+            9,
+            0
+          ],
+          [
+            "get value",
+            11,
+            13,
+            0
+          ]
+        ],
+        "matches": true,
+        "control": false
+      },
+      {
+        "filename": "contributor-ts.ts",
+        "observed": [
+          [
+            "create",
+            3,
+            5
+          ],
+          [
+            "load",
+            7,
+            9
+          ],
+          [
+            "get value",
+            11,
+            13
+          ]
+        ],
+        "expected": [
+          [
+            "create",
+            3,
+            5
+          ],
+          [
+            "load",
+            7,
+            9
+          ],
+          [
+            "get value",
+            11,
+            13
+          ]
+        ],
+        "matches": true,
+        "control": false
+      }
+    ]
+  }
+}

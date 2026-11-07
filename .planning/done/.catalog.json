@@ -2,6 +2,30 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-035_ns-member-name-performance.json",
+      "identity": "SEED-035#ns-member-name-performance",
+      "completedAt": "2026-11-06T18:58:46.578Z",
+      "blob": "23b5bfcc87a6cb423506187eefd6a4074d1465c5"
+    },
+    {
+      "fileName": "SEED-041_swift-computed-property-reporting.json",
+      "identity": "SEED-041#swift-computed-property-reporting",
+      "completedAt": "2026-11-06T15:43:56.611Z",
+      "blob": "a6e9d5dbaedabe8aee99b21a0f814cd7f06cd541"
+    },
+    {
+      "fileName": "SEED-042_python-inline-function-suites.json",
+      "identity": "SEED-042#python-inline-function-suites",
+      "completedAt": "2026-11-06T14:42:40.174Z",
+      "blob": "1c9407d5973a202a32303c38906b2694b41671ec"
+    },
+    {
+      "fileName": "SEED-034_process-fabio-malpezzi-prs.json",
+      "identity": "SEED-034#process-fabio-malpezzi-prs",
+      "completedAt": "2026-11-06T11:28:49.452Z",
+      "blob": "821c6193aafc3eafc5486b2b3436b8c563836e49"
+    },
+    {
       "fileName": "SEED-039_process-pr-557.json",
       "identity": "SEED-039#process-pr-557",
       "completedAt": "2026-11-06T00:25:26.440Z",
@@ -308,5 +332,10 @@
       "blob": "85482d88f73db3f9c1c8ac1e1be7f74b1c5e4bea"
     }
   ],
-  "unreadable": []
+  "unreadable": [
+    {
+      "fileName": "rio-chan.json",
+      "blob": "47a6b63aafb1a6cc4b8877e6360965e80de7ef28"
+    }
+  ]
 }

@@ -1,0 +1,56 @@
+{
+  "attempt1_incremental": {
+    "incremental-api": {
+      "passes": true,
+      "change_pct": 0.968743917429825,
+      "ci": [
+        -0.07151007845870541,
+        2.019826940924113
+      ]
+    },
+    "incremental-api-parameters": {
+      "passes": true,
+      "change_pct": 0.1672327005671885,
+      "ci": [
+        -0.4198352317080516,
+        0.7577616509870347
+      ]
+    },
+    "incremental-cli": {
+      "passes": true,
+      "change_pct": -0.1952502173779556,
+      "ci": [
+        -1.4268134262032424,
+        1.0517000149377054
+      ]
+    }
+  },
+  "attempt2_cumulative": {
+    "cumulative-api": {
+      "passes": true,
+      "change_pct": -1.0220541016017888,
+      "ci": [
+        -1.9979482431196576,
+        -0.036442108688201504
+      ]
+    },
+    "cumulative-api-parameters": {
+      "passes": true,
+      "change_pct": 0.8505445139533672,
+      "ci": [
+        0.13349282683813982,
+        1.5727309777300253
+      ]
+    },
+    "cumulative-cli": {
+      "passes": true,
+      "change_pct": 0.6386108067962115,
+      "ci": [
+        -1.6314686056278993,
+        2.9610775067569404
+      ]
+    }
+  },
+  "all_pass": true,
+  "worst_upper_ci_pct": 2.9610775067569404
+}

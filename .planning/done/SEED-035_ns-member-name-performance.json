@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-035#ns-member-name-performance",
+  "title": "Land nested-structure member-name skip under cumulative NS performance",
+  "completedAt": "2026-11-06T18:58:46.578Z",
+  "developer": "Terry Yin",
+  "agent": "Shunka-chan",
+  "host": "cursor",
+  "model": "auto"
+}
