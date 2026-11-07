@@ -76,3 +76,14 @@ Intake metadata: head `dd2f37a09ef5c96e2f1dc7fbcdf13bfdde99e906` on
 `caee1cbf243eef4a50c207ceaf9f9634f86e0a18`; `maintainer_can_modify` true;
 merge state CLEAN/MERGEABLE; evidence packet under
 `.planning/evidence/pr-446/`.
+
+**Outcome:** Merged as `d0c8bc12191944547f234091fce14ae6d48c8721` with
+contributor head `fd22403a9a27be3b766b260196c8e1974c28211b` after merging
+current master and correcting ND loading, duplicated-param-list flag spelling,
+Cognitive/Halstead coverage, and README.rst integration beside
+`docs/extensions-and-warnings.rst`. Local `pytest` / `make` green (3089 passed,
+7 skipped). Hosted checks on the final head succeeded. Acknowledgement:
+https://github.com/terryyin/lizard/pull/446#issuecomment-6702464871
+
+Performance: unaffected (documentation and images only). Disposition retained
+under `.planning/evidence/pr-446/`.
