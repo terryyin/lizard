@@ -351,6 +351,8 @@ func g() -> Int { return 1 }
             [("f", 1, 4, 3), ("g", 5, 5, 1)],
             [(function.name, function.start_line, function.end_line,
               function.cyclomatic_complexity) for function in functions])
+
+
 def swift_with_outside(source_code):
     return FileAnalyzer(get_extensions(["outside"])).analyze_source_code(
         "a.swift", source_code).function_list
