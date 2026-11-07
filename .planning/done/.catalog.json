@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-043_process-pr-558.json",
+      "identity": "SEED-043#process-pr-558",
+      "completedAt": "2026-11-07T00:13:22.379Z",
+      "blob": "3367441e1c2cb9a1475c3c82148bc04190c4f885"
+    },
+    {
       "fileName": "SEED-043_process-pr-559.json",
       "identity": "SEED-043#process-pr-559",
       "completedAt": "2026-11-07T00:10:46.217Z",
@@ -338,10 +344,5 @@
       "blob": "85482d88f73db3f9c1c8ac1e1be7f74b1c5e4bea"
     }
   ],
-  "unreadable": [
-    {
-      "fileName": "rio-chan.json",
-      "blob": "47a6b63aafb1a6cc4b8877e6360965e80de7ef28"
-    }
-  ]
+  "unreadable": []
 }
