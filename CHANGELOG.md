@@ -1,6 +1,6 @@
 # Change Log
 
-## Unreleased
+## 1.25.1
 
 ### Bug Fixes
 - Swift: count each top-level comma of an `if`, `guard` or `while` condition list as a decision, like `&&`, so `guard a, b, c else` and `guard a && b && c else` have the same CCN; commas inside brackets, closures, patterns and generic arguments, and `repeat { } while`, are not counted. A same-line trailing closure stays in the condition (`if items.contains { $0 > 1 }, ready`); a brace that continues on the next line is the body
