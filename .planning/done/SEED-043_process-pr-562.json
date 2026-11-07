@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-043#process-pr-562",
+  "title": "Process PR #562 — Keep TypeScript declarations open across template literal type interpolations",
+  "completedAt": "2026-11-07T00:22:58.298Z",
+  "developer": "Terry Yin"
+}
