@@ -58,3 +58,18 @@ class TestJavaScriptNestedStructures(unittest.TestCase):
             self.nested_structures("a.js", first))
         self.assertEqual(
             [('nested', 3)], self.nested_structures("b.jsx", self.NESTED))
+
+    def test_member_named_like_a_structure_is_not_a_structure(self):
+        code = (
+            'function load(p) {\n'
+            '  return p.then(() => 1).catch(() => null);\n'
+            '}\n'
+            'function retry(p) {\n'
+            '  p?.catch((e) => { if (e) { return 1; } });\n'
+            '  try { p.finally(); } catch (e) { return 2; }\n'
+            '}\n'
+        )
+        self.assertEqual(
+            [('(anonymous)', 0), ('(anonymous)', 0), ('load', 0),
+             ('(anonymous)', 1), ('retry', 1)],
+            self.nested_structures("a.js", code))

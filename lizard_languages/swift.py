@@ -132,6 +132,21 @@ class SwiftReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
                     pattern, source_code, start, end, token_class)
 
 
+class _PropertyHeader:  # pylint: disable=R0903
+    '''A `var` or `let` declaration read up to its body or initializer.'''
+
+    def __init__(self, keyword):
+        self.keyword = keyword
+        self.name = self.name_line = self.line = None
+        self.nloc = self.tokens = self.depth = 0
+
+    def named(self, name, context):
+        self.name = name
+        self.name_line = self.line = context.current_line
+        self.nloc = context.current_function.nloc
+        self.tokens = context.current_function.token_count
+
+
 class SwiftStates(GoLikeStates):  # pylint: disable=R0903
 
     TYPE_KEYWORD = None
@@ -141,6 +156,12 @@ class SwiftStates(GoLikeStates):  # pylint: disable=R0903
     _ACCESSORS = {'get', 'set', 'willSet', 'didSet', 'deinit'}
     _ACCESSORS_WITH_PARAMETER = {'set', 'willSet', 'didSet'}
     _GETTER_EFFECTS = {'async', 'throws'}
+    _ACCESSOR_BLOCK_STARTS = _ACCESSORS | {
+        'mutating', 'nonmutating', '_read', '_modify', 'init', '@', '}'}
+    _TYPE_CONTINUATIONS = {'{', '=', '->', '&', '.', '?', '!'}
+    # A type annotation is incomplete after these, so it continues on the
+    # next line.
+    _TYPE_OPERATORS = {':', '->', '&', '.', '<', '(', '[', ',', '@'}
 
     def __init__(self, context):
         super(SwiftStates, self).__init__(context)
@@ -148,6 +169,7 @@ class SwiftStates(GoLikeStates):  # pylint: disable=R0903
         self._accessor = None
         self._accessor_step = None
         self._accessor_tokens = []
+        self._property = None
 
     def _state_global(self, token):
         name = self._introduced_function(token)
@@ -161,6 +183,11 @@ class SwiftStates(GoLikeStates):  # pylint: disable=R0903
             self._state = self._accessor_head
         elif token == 'protocol':
             self._state = self._protocol
+        elif token in ('let', 'var') and self._previous_token != '.' \
+                and self.context.current_function is \
+                self.context.global_pseudo_function:
+            self._property = _PropertyHeader(token)
+            self._state = self._property_name
         elif token in ('let', 'var', 'case', ','):
             self._state = self._expect_declaration_name
         else:
@@ -222,6 +249,87 @@ class SwiftStates(GoLikeStates):  # pylint: disable=R0903
         self._state = self._state_global
         for token in tokens:
             self._state(token)
+
+    def _property_name(self, token):
+        # A computed property or a closure-initialized property is code
+        # that runs on access, so it is reported as a function named after
+        # the property. Locals inside functions stay with the function.
+        self._previous_token = token
+        if _is_local_name(token):
+            self._property.named(token, self.context)
+            self._state = self._property_after_name
+        else:
+            self._state = self._state_global
+
+    def _property_after_name(self, token):
+        self._previous_token = token
+        if token == ':':
+            self._property.line = self.context.current_line
+            self._state = self._property_type
+        elif token == '=':
+            self._state = self._property_initializer
+        else:
+            self.next(self._state_global, token)
+
+    def _property_type(self, token):
+        header = self._property
+        depth = header.depth
+        if depth == 0 and (token in (',', ';', '}', ')', ']') or (
+                self.context.current_line != header.line
+                and self._previous_token not in self._TYPE_OPERATORS
+                and token not in self._TYPE_CONTINUATIONS)):
+            self.next(self._state_global, token)
+        elif depth == 0 and token == '{':
+            if header.keyword != 'var':
+                self.next(self._state_global, token)
+                return
+            self._start_property_function()
+            self._state = self._computed_property_body
+        elif depth == 0 and token == '=':
+            self._state = self._property_initializer
+        else:
+            if token in ('(', '[', '<'):
+                header.depth += 1
+            elif token in (')', ']', '>'):
+                header.depth -= 1
+            header.line = self.context.current_line
+        self._previous_token = token
+
+    def _property_initializer(self, token):
+        if token == '{':
+            self._start_property_function()
+            self.next(self._function_impl, token)
+        else:
+            self.next(self._state_global, token)
+
+    def _computed_property_body(self, token):
+        if token in self._ACCESSOR_BLOCK_STARTS:
+            # `{ get ... }` or `{ didSet ... }`: the braces hold
+            # accessors, which are functions of their own.
+            self.fold_into_enclosing_function()
+            # Without a function, lines and tokens stay counted once.
+            self.context.current_function.nloc -= 1
+            self.context.current_function.token_count -= 1
+            self._state = self._state_global
+            self.sub_state(self.statemachine_clone(), None, token)
+        else:
+            self._function_impl('{')
+            self(token)
+
+    def _start_property_function(self):
+        # The function starts at the property name: lines and tokens read
+        # since then move from the enclosing scope to the function.
+        header = self._property
+        enclosing = self.context.current_function
+        nloc = enclosing.nloc - header.nloc
+        tokens = enclosing.token_count - header.tokens
+        enclosing.nloc -= nloc
+        enclosing.token_count -= tokens
+        self.context.push_new_function(header.name)
+        function = self.context.current_function
+        function.start_line = header.name_line
+        function.nloc += nloc
+        function.token_count += tokens
 
     def _expect_declaration_name(self, token):
         self._previous_token = token

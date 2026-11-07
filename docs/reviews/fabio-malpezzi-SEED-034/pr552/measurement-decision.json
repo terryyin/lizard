@@ -1,0 +1,60 @@
+{
+  "reason": "PR552 changes generic type-parameter resume after function declarations in javascript_functions/typescript_declarations; public function names/boundaries/parameters are reached, so api + api-parameters + broad cli are required. Incremental baseline is origin/master after #551 (b6b6b8c). Cumulative baseline is frozen trunk 4a05e405. Candidate trees are target+#552 only (excludes local execution-branch method relocation).",
+  "attempt1": {
+    "chosen_before_launch": true,
+    "justification": "Host 1-minute load ~4 at decision time; wait for load under 3.5 then run 15s API / 15s api-parameters / 18s CLI (same successful settings as PR551 attempt6) on rebuilt frozen corpora (~1486 expanded, ~1263 consumers).",
+    "api_seconds": 15.0,
+    "api_parameters_seconds": 15.0,
+    "cli_seconds": 18.0,
+    "pairs": 20,
+    "limit_pct": 3.0,
+    "load_gate": "1-minute load under 3.5 before launch",
+    "corpus": {
+      "api_cli": "proof/corpus/affected-expanded (~1486 files)",
+      "api_parameters": "proof/corpus/consumers (~1263 files)"
+    },
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "harness": ".agents/skills/lizard-process-pr/scripts/paired_benchmark.py"
+    },
+    "baselines": {
+      "incremental": "b6b6b8c671bab79da1a6c28c61a2076e4735998d",
+      "cumulative": "4a05e4056cebb2edd75cb02b7a43e911369f4ce5"
+    },
+    "candidate": "/Users/terryyin/.cache/lizard-pr-reviews-SEED-034/pr552/corrected",
+    "cumulative_api_result": {
+      "passes": false,
+      "verdict": "bound-not-met",
+      "paired_change_pct": 2.334812834615346,
+      "paired_95pct_ci": [
+        -0.2768571668637156,
+        5.014880401622791
+      ],
+      "load_after": [
+        10.8212890625,
+        10.0703125,
+        7.44921875
+      ],
+      "note": "Retained; host load rose to ~10 mid-run; wide CI is noise, median ~2.3%"
+    }
+  },
+  "attempt2": {
+    "chosen_before_launch": true,
+    "justification": "Attempt1 cumulative-api contaminated by load spike to ~10. Preserve attempt1. After interrupted-delegation recovery and re-established focused proof (1386 passed), re-run cumulative api/api-parameters/cli at 18/18/20s when 1-minute load under 3.0 using the same baseline vs corrected trees as attempt1. Incremental gates already passed in attempt1 and are not re-run.",
+    "api_seconds": 18.0,
+    "api_parameters_seconds": 18.0,
+    "cli_seconds": 20.0,
+    "pairs": 20,
+    "limit_pct": 3.0,
+    "same_corpus": true,
+    "load_gate": "1-minute load under 3.0 before launch",
+    "scope": "cumulative only",
+    "trees": {
+      "baseline": "proof cache baseline (frozen trunk 4a05e405)",
+      "candidate": "proof cache corrected (target+#552 product overlay)"
+    }
+  },
+  "suite": {
+    "focused_reestablished": "1386 passed, 5 skipped"
+  }
+}
