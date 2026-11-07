@@ -10,7 +10,7 @@ input and made no edits. The commitments below retain its numbered return.
 | Id | Source commitment | Slice | Observation or obligation |
 | --- | --- | --- | --- |
 | G01 | The beneficiary is a Lizard maintainer comparing Python and website test runtimes. | slice 2 | |
-| G02 | The maintainer views a judged `python-app.yml` attempt in Intent’s **CI status** tab. | slice 1 | |
+| G02 | The maintainer views a judged `python-app.yml` attempt in Intent’s **CI status** tab. | slice 1 | observed: Intent CI status on the selected story branch showed passed run 42381491501 at 0ef4807, 3,093 passed and 7 other checks, and 12.2 s |
 | G03 | Each reporting proof entry shows cumulative summed test execution time. | slice 2 | |
 | G04 | Each reporting proof entry shows per-file counts. | slice 2 | |
 | G05 | Each reporting proof entry shows per-file times. | slice 2 | |
@@ -71,9 +71,9 @@ input and made no edits. The commitments below retain its numbered return.
 | E20 | The failure appears in the counts. | slice 1 | observed: Mixed-duration replay uses a JUnit report with passed, failed and skipped checks including one omitted time and observes a present part with the original counts |
 | E21 | Available durations still contribute to entry-level `durationMs`. | slice 1 | observed: Mixed-duration replay asserts 375 ms from two available durations including the failed test, on entry, part and test/test_example.py |
 | E22 | Available durations still contribute to the file row. | slice 1 | observed: Mixed-duration replay asserts 375 ms from two available durations including the failed test, on entry, part and test/test_example.py |
-| A01 | Intent’s CI status tab already renders optional `durationMs` supplied in the summary. | slice 1 | |
-| A02 | Intent already renders supplied per-file breakdowns. The story calls for confirmation of the existing rendering on a real run during execution. | slice 1 | |
-| A03 | The developer’s `gh` can read the repository’s Actions artifacts. | slice 1 | |
+| A01 | Intent’s CI status tab already renders optional `durationMs` supplied in the summary. | slice 1 | observed: Intent CI status on the selected story branch showed passed run 42381491501 at 0ef4807, 3,093 passed and 7 other checks, and 12.2 s |
+| A02 | Intent already renders supplied per-file breakdowns. The story calls for confirmation of the existing rendering on a real run during execution. | slice 1 | observed: Intent test scope CI proof table for branch 0ef4807 showed test_ci_proof.py with 2 checks and 40 ms |
+| A03 | The developer’s `gh` can read the repository’s Actions artifacts. | slice 1 | observed: gh run download 42381491501 retrieved ci-proof-summary-attempt-1 and ci-proof-source-pytest-attempt-1, which the independent verifier read |
 | X01 | Wall-clock job duration is outside this increment. `durationMs` is summed test execution time from runner reports. | slice 2 | |
 | X02 | Wall-clock step duration is outside this increment. | slice 2 | |
 | X03 | Timing publication from non-representative Python matrix legs is outside this increment. | slice 1 | observed: Both Python fragment steps in .github/workflows/python-app.yml require ubuntu-24.04 and 3.13 and the matrix contract test passes |

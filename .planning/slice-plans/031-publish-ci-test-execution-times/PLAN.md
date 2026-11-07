@@ -59,7 +59,7 @@ replays settle converters and collector shape.
 
 ### 1. Analyzer suite times and file breakdown reach Intent
 Type: Behavior
-Status: planned
+Status: done
 Proof: a real `python-app.yml` run on the story branch publishes
 `ci-proof-summary-attempt-<n>` whose `test` part is present with
 `durationMs`, `breakdown: true`, and `files` whose counts and times match a
@@ -173,6 +173,11 @@ Story clause: "Those checks count as untimed in the file breakdown"
 Disposition: proved by slice 1: /tmp/lizard-slice1-proof.PffZtQ/replay.sh now observes untimed 1 for entry, present part, and file with installed Open Dough 0.3.89
 Commitment: E15
 
+### G2. Website file breakdown and times are pending the website producer
+Reported: slice 1 — "Run 42381491501 shows the website job's 16 counts and one present part, with times and per-file figures still absent in Intent."
+Story clause: "each present part carries entry-level `durationMs` and a file breakdown Intent can show"
+Disposition: interim until slices 2
+
 ## Slice 1 execution evidence
 
 - The existing CI proof recipe's timing implementation is a blocking premise.
@@ -221,3 +226,15 @@ Independent refactor review found no necessary edits. On the resumed candidate
 `nix develop -c python -m pytest` and `nix develop -c make` passed with
 3,093 passing tests and 7 skips. The one-day JUnit artifact on the story
 branch enables comparison with the exact GitHub runner input.
+
+Hosted proof passed on the story branch at
+`0ef480784998a9e60c30768575973ce32fe53954`,
+[run 42381491501, attempt 1](https://github.com/terryyin/lizard/actions/runs/42381491501).
+Downloaded the exact JUnit XML and `ci-proof-summary-attempt-1`; independent
+XML aggregation matched every count and duration on the 157 file rows,
+the entry, and its present part. The summary reported 3,093 passed, 7 other,
+12,179 ms total and 2 passed / 40 ms for `test/test_ci_proof.py`.
+Intent's selected story branch CI status showed that run, counts and
+12.2 s; its test-scope breakdown showed the same file with 2 checks / 40 ms.
+Website counts are present without timing in this run, the planned interim
+state addressed in slice 2.
