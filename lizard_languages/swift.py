@@ -40,6 +40,9 @@ def _swift_token(match):
     return token
 
 
+_ENUM_CASE_TOKENS = frozenset(('enum', '{', '}', 'case'))
+
+
 def _separates_label(token):
     return token == '\n' or token.startswith('//') or token.startswith('/*')
 
@@ -106,8 +109,12 @@ class SwiftReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
         super(SwiftReader, self).__init__(context)
         self.parallel_states = [SwiftStates(context)]
         self._condition_lists = SwiftConditionLists(context)
+        self._enum_braces = []
+        self._enum_header = False
 
     def process_token(self, token):
+        if token in _ENUM_CASE_TOKENS:
+            self._skip_enum_case_declaration(token)
         scanner = self._condition_lists
         # Ordinary tokens only remember the previous one. Braces, condition
         # keywords, and an already-open list do the real scan.
@@ -117,6 +124,22 @@ class SwiftReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
         else:
             scanner._previous = token
         if token is _POSTFIX_OPTIONAL:
+            self.context.add_condition(-1)
+
+    def _skip_enum_case_declaration(self, token):
+        # `case` directly in an enum body declares cases; only `case`
+        # in a switch, or a pattern, is a decision. The condition-list
+        # scanner still holds the token before this one.
+        if token == 'enum' and self._condition_lists._previous != '.':
+            self._enum_header = True
+        elif token == '{':
+            self._enum_braces.append(self._enum_header)
+            self._enum_header = False
+        elif token == '}':
+            if self._enum_braces:
+                self._enum_braces.pop()
+        elif token == 'case' and self._enum_braces \
+                and self._enum_braces[-1]:
             self.context.add_condition(-1)
 
     @staticmethod
