@@ -1,0 +1,536 @@
+diff --git a/lizard_languages/code_reader.py b/lizard_languages/code_reader.py
+index 3b0a291e..4f6bc66e 100644
+--- a/lizard_languages/code_reader.py
++++ b/lizard_languages/code_reader.py
+@@ -48,9 +48,10 @@ def sub_state(self, state, callback=None, token=None):
+     def __call__(self, token, reader=None):
+         if self._state(token):
+             self.next(self.saved_state)
+-            if self.callback:
+-                self.callback()
+-                self.callback = None
++            # A callback may start the next sub state with a callback of its own.
++            callback, self.callback = self.callback, None
++            if callback:
++                callback()
+         self.last_token = token
+         if self.to_exit:
+             return True
+diff --git a/lizard_languages/tsx.py b/lizard_languages/tsx.py
+index 88d438ee..0b9c2a0b 100644
+--- a/lizard_languages/tsx.py
++++ b/lizard_languages/tsx.py
+@@ -40,6 +40,15 @@ class TSXTokenizer(JSTokenizer):
+     def __init__(self):
+         super().__init__()
+ 
++    def __call__(self, token):
++        tag = self.sub_tokenizer
++        for tok in super().__call__(token):
++            if isinstance(tag, XMLTagWithAttrTokenizer) and tag.aborted:
++                # A tag that turned out to be a comparison or type parameter
++                # list hands its tokens back; their braces are this level's.
++                self.depth += {'{': 1, '}': -1}.get(tok, 0)
++            yield tok
++
+     def process_token(self, token):
+         if token == "<":
+             self.sub_tokenizer = XMLTagWithAttrTokenizer()
+@@ -61,6 +70,8 @@ def __init__(self):
+         self.state = self._global_state
+         self.cache = ['<']
+         self._attr_expr_active = False
++        self._has_valued_attribute = False
++        self.aborted = False
+ 
+     def __call__(self, token):
+         if self.sub_tokenizer:
+@@ -81,6 +92,13 @@ def __call__(self, token):
+             yield tok
+ 
+     def process_token(self, token):
++        if token.isspace() and '\n' in token:
++            # Attribute expressions pass through before the cached tag text,
++            # so newlines go out now to keep their lines counted in order.
++            for _ in range(token.count('\n')):
++                yield '\n'
++            self.cache.append(' ')
++            return
+         self.cache.append(token)
+         if not token.isspace():
+             result = self.state(token)
+@@ -94,6 +112,7 @@ def process_token(self, token):
+ 
+     def abort(self):
+         self.stop()
++        self.aborted = True
+         return self.cache
+ 
+     def flush(self):
+@@ -104,7 +123,30 @@ def _global_state(self, token):
+         if not isidentifier(token):
+             return self.abort()
+         self.tag = token
+-        self.state = self._after_tag
++        self.state = self._after_tag_name
++
++    def _after_tag_name(self, token):
++        if token == '.':
++            # Member tag name with attributes: <Modal.Footer className="x">
++            self.state = self._tag_name_part
++            return None
++        if token.startswith('<') and token.endswith('>') and len(token) > 2:
++            self.state = self._after_type_arguments
++            return None
++        return self._after_tag(token)
++
++    def _after_type_arguments(self, token):
++        # <ModalSetting<number> value={v} /> is an element; a generic call
++        # such as useState<Result<T>>(x) has no attribute after them.
++        if isidentifier(token) or token == '/':
++            return self._after_tag(token)
++        return self.abort()
++
++    def _tag_name_part(self, token):
++        if not isidentifier(token):
++            return self.abort()
++        self.state = self._after_tag_name
++        return None
+ 
+     def _after_tag(self, token):
+         if token == '>':
+@@ -113,8 +155,12 @@ def _after_tag(self, token):
+             self.state = self._expecting_self_closing
+         elif isidentifier(token):
+             self.state = self._expecting_equal_sign
++        elif token == "{":
++            # Spread attribute: <Collapse {...props}>
++            return self._start_expression()
+         else:
+             return self.abort()
++        return None
+ 
+     def _expecting_self_closing(self, token):
+         if token == ">":
+@@ -124,9 +170,31 @@ def _expecting_self_closing(self, token):
+ 
+     def _expecting_equal_sign(self, token):
+         if token == '=':
++            self._has_valued_attribute = True
+             self.state = self._expecting_value
++        elif token in ('-', ':'):
++            # Hyphenated or namespaced name: data-action, xlink:href
++            self.state = self._attribute_name_part
++        elif token == '/' or self._has_valued_attribute:
++            # Attribute without a value: <Icon fixedWidth />
++            return self._after_tag(token)
++        elif isidentifier(token):
++            # <Modal show onHide={f}> or <T extends U>: only an `=` after the
++            # second word shows the first was an attribute without a value.
++            self.state = self._expecting_equal_sign_after_word
+         else:
+             return self.abort()
++        return None
++
++    def _expecting_equal_sign_after_word(self, token):
++        if token == '=':
++            return self._expecting_equal_sign(token)
++        return self.abort()
++
++    def _attribute_name_part(self, token):
++        if not isidentifier(token):
++            return self.abort()
++        self.state = self._expecting_equal_sign
+ 
+     def _expecting_value(self, token):
+         if token[0] in "'\"":
+@@ -137,8 +205,20 @@ def _expecting_value(self, token):
+             # attribute (or '>') is processed correctly once the sub-
+             # tokenizer finishes.
+             self.state = self._after_tag
+-            self.sub_tokenizer = TSXTokenizer()
+             self._attr_expr_active = True
++            return self._start_expression()
++        else:
++            # `<T extends A = B>`: a type default, not an attribute value.
++            return self.abort()
++        return None
++
++    def _start_expression(self):
++        # The tag text read so far goes out before the expression, so the
++        # state machine meets `<D f={` before the expression's tokens, and
++        # an abort cannot hand back an opening '{' whose '}' the
++        # expression's tokenizer consumes.
++        self.sub_tokenizer = TSXTokenizer()
++        return self.flush()
+ 
+     def _body(self, token):
+         # Abort if token can't be JSX body content — likely a type
+diff --git a/lizard_languages/typescript.py b/lizard_languages/typescript.py
+index b658143f..3b448398 100644
+--- a/lizard_languages/typescript.py
++++ b/lizard_languages/typescript.py
+@@ -155,6 +155,8 @@ def __init__(self, context):
+         self._prev_token = ''  # Track previous token to detect method calls
+         self._in_prop_value = False  # Track if inside property value (after ':')
+         self._in_abstract_context = False  # Track abstract method declarations
++        self._expression_body = False  # Inside `=> expression`
++        self._arrow_line = None
+ 
+     def statemachine_before_return(self):
+         # Ensure the main function is closed at the end
+@@ -353,6 +355,7 @@ def skip_interface(t):
+         elif token in ('else', 'do', 'try', 'final'):
+             self.next(self._expecting_statement_or_block)
+         elif token in ('=>',):
++            self._arrow_line = self.context.current_line
+             self._state = self._arrow_function
+         elif token == '=':
+             # Only set function_name for valid identifiers
+@@ -408,8 +411,13 @@ def skip_interface(t):
+                 self._consume_type_annotation()
+                 self._prev_token = token
+                 return
+-        if self.as_object and token == ',':
+-            self._in_prop_value = False
++        if token == ',':
++            if self._expression_body:
++                # An expression-bodied arrow ends with its property or
++                # argument: `{a: () => f(), b}`, `g(() => f(), b)`.
++                self._pop_function_from_stack()
++            if self.as_object:
++                self._in_prop_value = False
+         self.last_tokens = token
+         # Don't overwrite _prev_token if it's 'new' or '.' (preserve for next token)
+         if self._prev_token not in ('new', '.'):
+@@ -462,11 +470,16 @@ def _pop_function_from_stack(self):
+         if self.started_function:
+             self.context.end_of_function()
+         self.started_function = None
++        self._expression_body = False
+         self._in_prop_value = False
+ 
+     def _arrow_function(self, token):
+         if not self.started_function:
+             self._push_function_to_stack()
++            if self.started_function:
++                # The body may start on the next line: `(e) =>\n  f(e)`.
++                self.context.current_function.start_line = self._arrow_line
++        self._expression_body = self.started_function and token != '{'
+         # Clear function_name so expression-body ( doesn't re-enter _function
+         self.function_name = ''
+         # Clear modifiers so the body's opening { isn't captured by the
+@@ -503,6 +516,10 @@ def _function(self, token):
+             self._dec(token)
+ 
+     def _field(self, token):
++        if token in ('(', '['):
++            # Optional call or index: `f?.(x)`, `a?.[i]`.
++            self.next(self._state_global, token)
++            return
+         self.last_tokens += token
+         self._state = self._state_global
+ 
+@@ -510,6 +527,9 @@ def _dec(self, token):
+         if token == ')':
+             self._state = self._expecting_func_opening_bracket
+         elif token != '(':
++            if self.last_token == '(' and self._starts_an_expression(token):
++                self._abandon_parameters(token)
++                return
+             # Filter out TypeScript type keywords and operators from parameter count
+             if token == ',':
+                 # Ignore commas inside generic type brackets: Map<K, V>
+@@ -534,6 +554,20 @@ def _dec(self, token):
+             return
+         self.context.add_to_long_function_name(" " + token)
+ 
++    @staticmethod
++    def _starts_an_expression(token):
++        # `x = (function () {...})()`, `c = (<div>...</div>)`: what looked
++        # like a parameter list is a parenthesized expression.
++        return token == 'function' or (token.startswith('<') and len(token) > 1)
++
++    def _abandon_parameters(self, token):
++        if self.started_function:
++            self.context.forgive = True
++            self.context.end_of_function()
++        self.started_function = None
++        self._state = self._state_global
++        self.sub_state(self.__class__(self.context), None, token)
++
+     def _expecting_func_opening_bracket(self, token):
+         # Do not reset started_function for arrow functions (=>)
+         if token == ':':
+@@ -590,9 +624,19 @@ def _consume_generic_type_params(self):
+         """Consume <...> generic type parameters (e.g., method<T>(...))
+         so the method name in last_tokens is preserved."""
+         depth = 1
++        braces = 0
+ 
+         def consume(token):
+-            nonlocal depth
++            nonlocal depth, braces
++            if token == '{':
++                braces += 1
++            elif token == '}' and braces:
++                braces -= 1
++            elif token in ('}', ';') and not braces:
++                # A comparison, not type parameters: `{i < n}`. Object
++                # types inside them (`Promise<{ a: T; }>`) keep their own.
++                self.next(self._state_global, token)
++                return
+             if token == '<':
+                 depth += 1
+             elif token == '>':
+diff --git a/test/test_languages/testTSX.py b/test/test_languages/testTSX.py
+index 61036ff5..070e242a 100644
+--- a/test/test_languages/testTSX.py
++++ b/test/test_languages/testTSX.py
+@@ -34,9 +34,9 @@ def test_with_attributes(self):
+         self.check_tokens(['<abc x="x">a</abc>'], '<abc x="x">a</abc>')
+ 
+     def test_with_embeded_attributes(self):
+-        # After Fix 1, attribute expressions handled by TSXTokenizer sub-tokenizer;
+-        # ';' injected on close, residual tag tokens emitted
+-        self.check_tokens(['y', ';', '<abc x={>a</abc>', '<a>', '</a>'],
++        # The tag text read so far precedes the attribute expression, which
++        # ends with an injected ';'; the rest of the tag follows
++        self.check_tokens(['<abc x={', 'y', ';', '>a</abc>', '<a>', '</a>'],
+                          '<abc x={y}>a</abc><a></a>')
+ 
+     def test_less_than(self):
+@@ -46,8 +46,8 @@ def test_with_less_than2(self):
+         self.check_tokens(['a', '<', 'b', ' ', 'and', ' ', 'c', '>', ' ', 'd'], 'a<b and c> d')
+ 
+     def test_complicated_properties(self):
+-        # After Fix 1, ';' injected when attribute expression ends
+-        self.check_tokens(['data', ' ', '=>', '(', ')', ';', '<StaticQuery render={ />'],
++        # ';' injected when attribute expression ends
++        self.check_tokens(['<StaticQuery render={', 'data', ' ', '=>', '(', ')', ';', ' ', '/>'],
+                          '<StaticQuery render={data =>()} />')
+ 
+ 
+@@ -737,3 +737,122 @@ class Card extends Component {
+         # static field names should NOT appear as functions
+         self.assertNotIn("propTypes", names)
+         self.assertNotIn("defaultProps", names)
++
++
++class Test_TSX_attribute_names(unittest.TestCase):
++    """Attribute forms the tag reader must accept without aborting the tag."""
++
++    TEMPLATE = (
++        "const C = (p) => {\n"
++        "  return (\n"
++        "    <G className={cx('a', { b: p.b })} %s>\n"
++        "      <B onClick={() => p.f()}>x</B>\n"
++        "    </G>\n"
++        "  );\n"
++        "};\n"
++        "const N = (p) => {\n"
++        "  return <C />;\n"
++        "};\n"
++    )
++
++    def spans(self, attribute):
++        return [(f.name, f.start_line, f.end_line)
++                for f in get_tsx_function_list(self.TEMPLATE % attribute)]
++
++    def test_hyphenated_attribute(self):
++        self.assertEqual(self.spans('title={p.d}'), self.spans('data-action={p.d}'))
++
++    def test_attribute_without_value(self):
++        self.assertEqual(self.spans('title={p.d}'), self.spans('title={p.d} hidden'))
++
++    def test_spread_attribute(self):
++        self.assertEqual(self.spans('title={p.d}'), self.spans('title={p.d} {...p.rest}'))
++
++    def test_attribute_without_value_before_another_attribute(self):
++        self.assertEqual(self.spans('title={p.d}'), self.spans('hidden title={p.d}'))
++
++
++class Test_TSX_lines_in_multiline_tags(unittest.TestCase):
++
++    def test_functions_after_a_multiline_tag_keep_their_lines(self):
++        code = (
++            "const C = (p) => {\n"
++            "  return (\n"
++            "    <G\n"
++            "      title={p.t}\n"
++            "      onClick={() => p.f()}\n"
++            "    >\n"
++            "      x\n"
++            "    </G>\n"
++            "  );\n"
++            "};\n"
++            "const N = (p) => {\n"
++            "  return <C />;\n"
++            "};\n"
++        )
++        self.assertEqual([('(anonymous)', 5, 5), ('C', 1, 10), ('N', 11, 13)],
++                         [(f.name, f.start_line, f.end_line)
++                          for f in get_tsx_function_list(code)])
++
++
++class Test_TSX_tag_structure(unittest.TestCase):
++    """Tag forms whose misreading moved braces and ended components early."""
++
++    def spans(self, code):
++        return [(f.name, f.start_line, f.end_line)
++                for f in get_tsx_function_list(code)]
++
++    def component(self, jsx):
++        return (
++            "const C = (p) => {\n"
++            "  return (\n"
++            "    %s\n"
++            "  );\n"
++            "};\n"
++            "const N = (p) => {\n"
++            "  return <C />;\n"
++            "};\n" % jsx)
++
++    def test_member_tag_name_with_attributes_and_a_child(self):
++        code = self.component(
++            "<M.Footer className={p.c} title={p.t}><B onClick={() => p.f()} /></M.Footer>")
++        self.assertEqual([('(anonymous)', 3, 3), ('C', 1, 5), ('N', 6, 8)],
++                         self.spans(code))
++
++    def test_type_arguments_on_an_element_with_a_child(self):
++        code = self.component(
++            "<S<number> value={p.v}><B onClick={() => p.f()} /></S>")
++        self.assertEqual([('(anonymous)', 3, 3), ('C', 1, 5), ('N', 6, 8)],
++                         self.spans(code))
++
++    def test_comparison_inside_an_expression_container(self):
++        code = self.component(
++            "<div>{p.i < p.n}{p.label}<B onClick={() => p.f()} /></div>")
++        self.assertEqual([('(anonymous)', 3, 3), ('C', 1, 5), ('N', 6, 8)],
++                         self.spans(code))
++
++    def test_type_parameter_with_object_constraint(self):
++        code = (
++            "export const L = <T extends {}>(props: P<T>) => {\n"
++            "  return 1;\n"
++            "};\n"
++            "export const C = (p) => {\n"
++            "  return 2;\n"
++            "};\n"
++        )
++        self.assertEqual([('L', 1, 3), ('C', 4, 6)], self.spans(code))
++
++    def test_parenthesized_jsx_assigned_to_a_variable(self):
++        code = (
++            "const T = () => {\n"
++            "  let c = null;\n"
++            "  if (a) {\n"
++            "    c = (\n"
++            "      <D f={(v) => g(v)} />\n"
++            "    );\n"
++            "  }\n"
++            "  return c;\n"
++            "};\n"
++        )
++        self.assertEqual([('(anonymous)', 5, 5), ('T', 1, 9)], self.spans(code))
++
+diff --git a/test/test_languages/testTypeScript.py b/test/test_languages/testTypeScript.py
+index 4ead0e13..08af4897 100644
+--- a/test/test_languages/testTypeScript.py
++++ b/test/test_languages/testTypeScript.py
+@@ -1282,3 +1282,95 @@ def test_backtick_in_string_inside_template_expression(self):
+         )
+         self.assertEqual([('a', 1, 3), ('b', 4, 4), ('c', 5, 5)],
+                          self.spans(code))
++
++
++class Test_ts_function_end_after_return_type(unittest.TestCase):
++
++    def test_simple_return_type_ends_at_closing_brace(self):
++        code = (
++            "function a(f: F): void {\n"
++            "  if (f) {\n"
++            "    return;\n"
++            "  }\n"
++            "}\n"
++            "\n"
++            "function b(): string {\n"
++            "  return '';\n"
++            "}\n"
++            "\n"
++            "const c = 1;\n"
++        )
++        self.assertEqual([('a', 1, 5), ('b', 7, 9)],
++                         [(f.name, f.start_line, f.end_line)
++                          for f in get_ts_function_list(code)])
++
++
++class Test_ts_function_end_after_optional_call(unittest.TestCase):
++
++    def spans(self, code):
++        return [(f.name, f.start_line, f.end_line)
++                for f in get_ts_function_list(code)]
++
++    def test_optional_call_and_index_keep_function_end(self):
++        code = (
++            "function h(a, g) {\n"
++            "  if (a) {\n"
++            "    g(1)?.(2);\n"
++            "  }\n"
++            "  const x = a.f?.(3) + a?.[0];\n"
++            "  return x;\n"
++            "}\n"
++            "function m() {}\n"
++        )
++        self.assertEqual([('h', 1, 7), ('m', 8, 8)], self.spans(code))
++
++
++class Test_ts_expression_bodied_arrows(unittest.TestCase):
++
++    def spans(self, code):
++        return [(f.name, f.start_line, f.end_line)
++                for f in get_ts_function_list(code)]
++
++    def test_arrow_starts_at_its_arrow_when_the_body_is_on_the_next_line(self):
++        code = (
++            "function h(xs) {\n"
++            "  return xs.map((x) =>\n"
++            "    x + 1);\n"
++            "}\n"
++        )
++        self.assertEqual([('(anonymous)', 2, 3), ('h', 1, 4)], self.spans(code))
++
++    def test_arrow_ends_at_the_comma_after_its_property_or_argument(self):
++        code = (
++            "const o = {\n"
++            "  a: () => f(1),\n"
++            "  b: 2,\n"
++            "};\n"
++            "g(\n"
++            "  () => f(2),\n"
++            "  3,\n"
++            ");\n"
++        )
++        self.assertEqual([('a', 2, 2), ('(anonymous)', 6, 6)], self.spans(code))
++
++    def test_parenthesized_function_expression_is_not_a_parameter_list(self):
++        code = (
++            "const m = (function () {\n"
++            "  function inner() { return 1; }\n"
++            "  return inner;\n"
++            "})();\n"
++            "function after() {}\n"
++        )
++        self.assertEqual(['inner', '(anonymous)', 'after'],
++                         [name for name, _, _ in self.spans(code)])
++
++    def test_object_type_in_type_arguments_keeps_the_class_body(self):
++        code = (
++            "class P {\n"
++            "  exited: Promise<{ code: number; signal: string }>;\n"
++            "  send(f: F): void {\n"
++            "    w(f);\n"
++            "  }\n"
++            "}\n"
++        )
++        self.assertEqual([('send', 3, 5)], self.spans(code))
