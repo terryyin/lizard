@@ -263,3 +263,9 @@ Contributions are welcome. Project-specific development rules are in
 ``.agents/skills/lizard-language-support/``.
 
 AI lifecycle guidance is installed under ``.agents/skills/`` and ``.claude/skills/``.
+
+Intent's **CI status** shows summed test execution time and per-file counts and
+times for each ``python-app.yml`` attempt. The analyzer figures come from the
+Ubuntu 24.04 / Python 3.13 matrix job. Website figures come from the Cucumber
+scenarios when the ``web`` job runs. When it skips, Intent marks website proof
+as missing. Select a test location in Intent to see its file breakdown.
