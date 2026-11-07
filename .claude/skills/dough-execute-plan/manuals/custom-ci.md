@@ -17,17 +17,16 @@ Create or update `.planning/open-dough.json` in this project's root:
 `ciAdapter` is an argument array, launched directly from the execution checkout
 without a shell. The first item is the executable and the rest are its arguments.
 Use project-relative arguments when appropriate. An absent setting, an absent
-configuration file, or `"ciAdapter": []` selects the GitHub Actions default.
-For another GitHub Actions workflow, use a nonempty `ciWorkflow` string such as
+configuration file, or `"ciAdapter": []` selects the GitHub Actions default. For
+another GitHub Actions workflow, use a nonempty `ciWorkflow` string such as
 `{"ciWorkflow":"checks.yaml"}` in the same project file. `DOUGH_CI_WORKFLOW`
-overrides it; without either selector the workflow is `ci.yml`.
-The observer reads the file once at startup, so restart it after changing the
-setting. Keep endpoint URLs and credentials in this project's normal environment
-or credential store, not in this file.
-
-Before starting observation, verify that the command can access the one selected
-check for the repository and branch receiving pushes. Custom mode needs Node 20+
-and the command's own runtime and credentials; it does not need `gh`.
+overrides it; without either selector the workflow is `ci.yml`. The observer
+reads the file once at startup, so restart it after changing the setting. Keep
+endpoint URLs and credentials in this project's normal environment or credential
+store, not in this file. Before starting observation, verify that the command can
+access the one selected check for the repository and branch receiving pushes.
+Custom mode needs Node 20+ and the command's own runtime and credentials; it does
+not need `gh`.
 
 ## Request and response contract
 
@@ -59,6 +58,8 @@ Return the service query's bounded relevant attempts newest first:
       "outcome": "pending",
       "url": "https://ci.example/runs/opaque-id",
       "time": "2026-09-15T10:00:00Z",
+      "startedAt": "2026-09-15T10:00:00Z",
+      "completedAt": "2026-09-15T10:03:00Z",
       "branch": "BRANCH",
       "check": "project-checks",
       "context": "push"
@@ -71,9 +72,11 @@ Return the service query's bounded relevant attempts newest first:
 identities; do not combine them or assume attempts are sequential. `sha` is the
 exact checked commit. `outcome` is one of `pending`, `success`, `failure`, or
 `incomplete`; use `incomplete` when a finished check supplies neither success nor
-failure proof, such as a cancelled check. `url` and `time` are optional.
-`branch`, `check` and `context` are optional nonempty strings: the branch the
-service validated for that attempt, the check's stable name, and its triggering
+failure proof, such as a cancelled check. `url` and `time` are optional;
+optional `startedAt`/`completedAt` are ISO-8601 pipeline bounds (Intent CI wall
+time when both present, else not recorded; not a `time` substitute). `branch`,
+`check` and `context` are optional nonempty strings: the branch the service
+validated for that attempt, the check's stable name, and its triggering
 context. The observer drops an attempt naming another branch, including for its
 exact SHA. Without `branch`, an attempt keeps counting for its exact SHA but
 never attests the target. When the service checks a SHA once for every branch
@@ -126,67 +129,13 @@ delivered; unknown fields are discarded.
 
 ## CI proof reads
 
-The Open Dough dashboard's Intent **CI status** tab can show, below an
-attempt's verdict, the CI proof summary that attempt's own CI job wrote
-([CI proof summary](../../dough-test-optimization/references/ci-proof-summary.md#publish-through-a-ci-adapter)).
-To read it, the dashboard, not the observer, starts the configured command
-from this project's folder with the same stdin and stdout contract and writes:
-
-```json
-{
-  "operation": "proof",
-  "check": { "repo": "OWNER/REPO", "branch": "BRANCH" },
-  "attempt": {
-    "runId": "pipeline/opaque-id",
-    "attemptId": "try:opaque-id",
-    "sha": "FULL_PUSHED_COMMIT_SHA"
-  }
-}
-```
-
-The attempt is the completed one whose result the tab shows (for a running
-result, its completed ancestor), as discover returned it for `check.branch`,
-the branch whose discover listed it. Unlike `diagnose`, `runId` and
-`attemptId` always arrive as strings: a discovered `7` is asked as `"7"`.
-`sha` is the full revision.
-
-Before answering, check the attempt against this CI service's own attempt
-record, as `diagnose` does: the record for `attemptId` must name this `runId`
-and `sha`, or the adapter exits nonzero with the mismatch on stderr. Then
-answer with the summary this attempt's job kept, unchanged, or with why there
-is none:
-
-```json
-{ "summary": { "schemaVersion": 1, "repository": "OWNER/REPO", "attemptId": "try:opaque-id", "revision": "FULL_PUSHED_COMMIT_SHA", "entries": [] } }
-```
-
-```json
-{ "unavailable": "no summary retained for this attempt" }
-```
-
-The `summary` value is the summary file's JSON object as the collector wrote
-it (the `entries` above are abbreviated). The `unavailable` reason is a
-nonempty string, shown to the developer as given and cut at 600 bytes; never
-answer a verdict there. Any other answer, both fields, a nonzero exit, invalid
-JSON, the 20-second timeout or more than 64 KiB of stdout is shown as the
-adapter having answered no proof read, with the adapter's last stderr line
-for a nonzero exit. An adapter that does not implement `proof`, such as the
-runnable example below, exits nonzero for it and shows that line; nothing is
-retried, and the verdict, `discover` and `diagnose` are unaffected.
-
-The tab shows the summary's counts only when it is a valid summary whose
-`repository` (ignoring case), `attemptId` (as text) and full `revision` equal
-the shown attempt's; otherwise it says what is invalid or which differs.
-When another discovered attempt names the same `attemptId` at the same
-revision, the tab says the attempt is ambiguous and asks no adapter, so give
-each attempt its own `attemptId`. Each showing of the tab, and each **Check
-again**, asks again; nothing is kept.
+See [Custom CI proof reads](custom-ci-proof.md) for the dashboard `proof` operation,
+summary validity, and attemptId ambiguity before newest-per-check retention.
 
 ## Runnable minimal adapter
 
-This example uses a local JSON fixture so its complete protocol can be tried
-without an external service. Replace the fixture read with this project's
-authenticated CI API query while preserving the request and response shapes.
+Local JSON fixture for the full protocol. Replace the fixture read with this
+project's authenticated CI API query; keep the request and response shapes.
 
 <!-- runnable-custom-ci-adapter:start -->
 ```js
@@ -267,42 +216,35 @@ it through `node` as in the configuration example. A fixture for the example is:
 
 ## Integrated-state completion
 
-When `.planning/open-dough.json` also declares `integratedStateCompletion`
-(see the runtime setup reference), a successful later snapshot on the target
-may complete an earlier accepted revision it contains. Its `check` and
-`context` must equal the attempt's own `check` and `context`; `jobs` is not
-available here, so name each separately validated check in its own attempts.
-Only an attempt naming the target `branch` counts. The current attempt of a
-snapshot's check is the first listed. When another attempt of that check has an
-equal or later `time`, or has a `time` while the first has none, the evidence
-stays unresolved. Each poll judges it afresh from that poll's discovery, so a
-failed discovery withdraws it. Without the declaration or these fields,
-completion stays exact.
+When `.planning/open-dough.json` declares `integratedStateCompletion` (see the
+runtime setup reference), a successful later target snapshot may complete an
+earlier accepted revision it contains. Matching `check` and `context` required;
+`jobs` is unavailable, so name each check in its own attempts. Only attempts
+naming the target `branch` count; the current attempt is the first listed. Equal
+or later `time` on another attempt of that check (or `time` only on the other)
+leaves evidence unresolved. Each poll rejudges from discovery; a failed discovery
+withdraws it. Without the declaration or these fields, completion stays exact.
 
 ## Runnable provider with optional reuse
 
-Follow [custom CI with validation reuse](custom-reuse-ci.md) when this project
-opts into provider-side reuse. Its runnable provider uses the shared gate and
-returns target aggregates through the adapter contract above.
+Follow [custom CI with validation reuse](custom-reuse-ci.md) for provider-side reuse:
+shared gate, target aggregates through the adapter contract above.
 
 ## Outcomes, coverage, and failures
 
 Delivery registers each successfully pushed SHA independently of discovery.
 Only an attempt with that exact SHA can move a revision from undiscovered to
-pending, success, failure, or incomplete. A green result for another SHA does
-not cover it by itself. When the candidate checkout's workflow trigger filter
-proves that only ignored paths changed since an applicable ancestor, coverage
-records `not_required` with that ancestor's actual attempt state as its basis.
-Otherwise a revision stays undiscovered until its exact attempt is found;
-there is no three-poll coverage-unavailable report. Pending and success remain quiet
-coverage state; failure and incomplete can require attention. Shutdown lists
-unproved revisions as pending, undiscovered, or incomplete, not as verdicts.
-
-Each adapter invocation has a 20-second timeout and a 64 KiB total stdout limit.
-Invalid JSON, invalid attempt fields, nonzero exit, timeout, or an oversized
-response is retried within the observer's existing bounded error policy and
-then reported as unavailable; custom mode never falls back to GitHub. If
-diagnosis fails for a known failed attempt, the failure is still reported with
-diagnostics marked unavailable. Stopping the observer cancels its current
-adapter child. Make API calls bounded, handle termination promptly, and leave
-triggering or retrying CI to this project's established delivery process.
+pending, success, failure, or incomplete; another SHA's green result does not.
+When the candidate's workflow trigger filter proves only ignored paths changed
+since an applicable ancestor, coverage records `not_required` with that
+ancestor's attempt state. Otherwise a revision stays undiscovered until its
+exact attempt is found; there is no three-poll coverage-unavailable report.
+Pending and success stay quiet; failure and incomplete can require attention.
+Shutdown lists unproved revisions as pending, undiscovered, or incomplete.
+Each adapter call has a 20-second timeout and 64 KiB stdout limit. Invalid JSON
+or attempts, nonzero exit, timeout, or oversized stdout is retried under the
+observer's bounded error policy, then unavailable; custom mode never falls back
+to GitHub. Failed diagnosis for a known failure still reports with diagnostics
+unavailable. Stopping the observer cancels its adapter child. Bound API calls,
+handle termination promptly, and leave triggering or retrying CI to this
+project's established delivery process.

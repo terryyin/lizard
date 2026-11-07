@@ -30,10 +30,7 @@ does. Do not use `wc -l` as the definition; it misses an unterminated last line.
    be formed, leave the original file unchanged and report the limitation:
    existing-violation when the existing file already exceeds 1,000, or a
    ceiling refusal for an overflowing candidate. Do not claim repair.
-5. If the existing file is already at least 500 lines and this write is
-   accepted, include a 500-line threshold warning in the recording result.
-   Below 500, do not emit that warning, even when this write will cross 500.
-6. Write the accepted candidate once. Preserve the existing file on failed
+5. Write the accepted candidate once. Preserve the existing file on failed
    validation or write; do not truncate first and reconstruct afterward.
 
 ## Retain higher-value learning
@@ -103,8 +100,7 @@ Return these facts to the calling review as evidence; its
 [response contract](../SKILL.md#report) selects visible attention or quiet completion.
 
 For an accepted ordinary write, return the canonical path, created or updated
-issue IDs with occurrence rows, the measured final size, and the 500-line
-warning when step 5 applies.
+issue IDs with occurrence rows, and the measured final size.
 
 For an accepted bounded write, return the same, plus the removals, priority
 rationale, and recovery reference.

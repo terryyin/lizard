@@ -46,9 +46,9 @@ decides recovery and any human action.
 CI observation keeps its own lifecycle under
 [CI monitoring](ci-monitor.md). If the observer reports that its budget ended
 or coverage is otherwise lost — including `CI_MONITOR_UNAVAILABLE` — report
-lost coverage and outstanding local proof separately. Preserve any accepted
+lost coverage and outstanding local verification separately. Preserve any accepted
 local evidence. Command recovery does not manufacture restored CI coverage,
-invent an observer restart, or treat lost observation as local proof success.
+invent an observer restart, or treat lost observation as local verification success.
 Do not repurpose CI worker liveness as a supervisor of the delegated local
 command.
 

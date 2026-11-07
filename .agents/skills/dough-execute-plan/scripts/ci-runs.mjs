@@ -6,7 +6,7 @@ import { createGitHubActions } from "./ci-github-actions.mjs";
 // rejected loudly instead of silently dropped.
 const expectedWorkflowName = process.env.DOUGH_CI_WORKFLOW_NAME || undefined;
 
-export function matchingCiRuns(runs, { branch, sha, workflow }) {
+function assertExpectedWorkflowName(runs, workflow) {
   const misnamed = expectedWorkflowName
     ? runs.find(({ workflowName }) => workflowName !== expectedWorkflowName)
     : undefined;
@@ -14,12 +14,33 @@ export function matchingCiRuns(runs, { branch, sha, workflow }) {
     throw new Error(
       `DOUGH_CI_WORKFLOW_NAME ${JSON.stringify(expectedWorkflowName)} does not match ${JSON.stringify(misnamed.workflowName)}, the display name GitHub reports for runs of the selected workflow ${workflow}; correct or unset DOUGH_CI_WORKFLOW_NAME.`,
     );
+}
+
+// Push/workflow checks shared by observed-branch matching and all-branch
+// applicability listings; only the observed-branch filter differs.
+function matchingApplicabilityPushRuns(runs, { sha, workflow }) {
+  assertExpectedWorkflowName(runs, workflow);
   return runs.filter(
-    (run) =>
-      (!sha || run.headSha === sha) &&
-      run.headBranch === branch &&
-      run.event === "push",
+    (run) => (!sha || run.headSha === sha) && run.event === "push",
   );
+}
+
+export function matchingCiRuns(runs, { branch, sha, workflow }) {
+  return matchingApplicabilityPushRuns(runs, { sha, workflow }).filter(
+    (run) => run.headBranch === branch,
+  );
+}
+
+function dedupeRunsByAttempt(runs) {
+  const seen = new Set();
+  const out = [];
+  for (const run of runs) {
+    const key = `${run.databaseId}\0${run.attempt}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(run);
+  }
+  return out;
 }
 
 export function startupCiRuns(runs) {
@@ -67,19 +88,28 @@ export function createStartupRunFilter() {
 // ci-mailbox-revision-coverage.mjs). Distinct from the polling acquisition
 // above: it is not part of the ordinary per-poll run/failure loop and is
 // called on demand when a revision without an exact verdict permits inherited
-// coverage. History and current runs are ranked together on each observation.
-// `limit` bounds how far back the search looks; it does not track state
-// across calls the way `createGitHubRunAcquisition` does.
+// coverage. It lists the observed branch's recent push runs and, in one
+// extra listing of the same size, the selected workflow's recent push runs
+// on every branch, so an ignored-only story-branch tip can reuse a trunk
+// ancestor that never ran on the observed branch. History and current runs
+// are ranked together on each observation. `limit` bounds how far back the
+// search looks; it does not track state across calls the way
+// `createGitHubRunAcquisition` does.
 async function discoverApplicabilityCandidateRuns({
   branch,
   github,
   signal,
   limit = 100,
 }) {
-  return matchingCiRuns(await github.listRuns({ branch, limit }, signal), {
-    branch,
-    workflow: github.selector,
-  });
+  const observedBranchRuns = matchingCiRuns(
+    await github.listRuns({ branch, limit }, signal),
+    { branch, workflow: github.selector },
+  );
+  const allBranchRuns = matchingApplicabilityPushRuns(
+    await github.listRuns({ limit }, signal),
+    { workflow: github.selector },
+  );
+  return dedupeRunsByAttempt([...observedBranchRuns, ...allBranchRuns]);
 }
 
 function createGitHubRunAcquisition({ branch, startedAt, github }) {
@@ -128,13 +158,15 @@ function createGitHubRunAcquisition({ branch, startedAt, github }) {
 // a proved ancestor attempt, and that ancestor is not always among the runs
 // the ordinary poll already surfaced (older completed runs intentionally drop
 // out of `matching` once seen, per createGitHubRunAcquisition's own
-// startup/observed-run pruning), so `discoverAncestorCandidates` finds them.
-// Its candidates are deliberately left run-shaped (not flattened to bare
-// SHAs): coverage selection reuses them to resolve a `not_required`
-// revision's basis ancestor to its actual attempt, so that ancestor's
-// eventual failure stays actionable for every revision that reuses it. The
-// same bounded lookup supplies integrated-state candidates, whose current
-// attempt `readCurrentAttempt` reads afresh.
+// startup/observed-run pruning), so `discoverAncestorCandidates` finds them
+// on the observed branch and, with one extra listing, among recent push runs
+// of the selected workflow on every branch. Its candidates are deliberately
+// left run-shaped (not flattened to bare SHAs): coverage selection reuses
+// them to resolve a `not_required` revision's basis ancestor to its actual
+// attempt, so that ancestor's eventual failure stays actionable for every
+// revision that reuses it. The same bounded lookup supplies integrated-state
+// candidates (still filtered to the observed branch when judged), whose
+// current attempt `readCurrentAttempt` reads afresh.
 export function createGitHubAcquisition({
   repo,
   branch,

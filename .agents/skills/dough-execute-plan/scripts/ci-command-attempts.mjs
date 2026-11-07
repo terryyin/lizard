@@ -93,6 +93,14 @@ function normalizeAttempt(attempt, branch) {
           : null,
     ...(attempt.url === undefined ? {} : { url: attempt.url }),
     ...(attempt.time === undefined ? {} : { createdAt: attempt.time }),
+    // Optional wall-time bounds from the adapter; absent → Intent shows CI
+    // wall time not recorded. Distinct from `time`/`createdAt` (ordering).
+    ...(attempt.startedAt === undefined
+      ? {}
+      : { startedAt: attempt.startedAt }),
+    ...(attempt.completedAt === undefined
+      ? {}
+      : { completedAt: attempt.completedAt }),
     ...(attempt.branch === undefined ? {} : { providerBranch: attempt.branch }),
     ...(attempt.check === undefined ? {} : { check: attempt.check }),
     ...(attempt.context === undefined ? {} : { context: attempt.context }),

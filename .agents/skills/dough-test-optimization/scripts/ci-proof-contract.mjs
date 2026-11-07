@@ -1,14 +1,26 @@
 // The CI proof contract: the versioned fragment and summary schemas, their
 // attempt identity, their artifact names, and their validation. Readers of a
 // fragment or summary validate it with fragmentProblems or summaryProblems.
-// Node built-ins only, like the rest of the collector (ci-proof-summary.mjs).
+// Results' figures and their file breakdown are ci-proof-figures.mjs's. Node
+// built-ins only, like the rest of the collector (ci-proof-summary.mjs).
+import {
+  addedFigures,
+  breakdownProblems,
+  emptyFigures,
+  figuresProblems,
+  isObject,
+  isText,
+} from "./ci-proof-figures.mjs";
+
+export { COUNT_FIELDS, zeroCounts } from "./ci-proof-figures.mjs";
 
 export const FRAGMENT_SCHEMA_VERSION = 1;
 export const SUMMARY_SCHEMA_VERSION = 1;
 export const PART_STATUSES = ["present", "missing", "ambiguous"];
-export const COUNT_FIELDS = ["passed", "failed", "other"];
 
-export const zeroCounts = () => ({ passed: 0, failed: 0, other: 0 });
+// The most bytes of a GitHub Actions run attempt's summary Intent reads; a
+// larger one is written whole and named, never truncated, and not shown.
+export const SUMMARY_READ_LIMIT_BYTES = 1024 * 1024;
 
 // `dashboard/tests` -> `dashboard-tests`, for fragment file names.
 export function entrySlug(entry) {
@@ -48,8 +60,11 @@ export const summaryAttempt = (run) =>
     ? { attemptId: run.attemptId }
     : { runId: run.runId, runAttempt: run.attempt };
 
-// One entry's fragment for one part of one attempt's revision.
-export function fragment(identity, entry, unit, counts) {
+// One entry's fragment for one part of one attempt's revision. EXTRAS may
+// carry optional `durationMs` (summed test execution time for this part)
+// and, for a fragment broken down by file, `untimed`, `files` and
+// `unassigned` (ci-proof-figures.mjs, "File breakdown").
+export function fragment(identity, entry, unit, counts, extras = {}) {
   return {
     schemaVersion: FRAGMENT_SCHEMA_VERSION,
     entry,
@@ -59,14 +74,11 @@ export function fragment(identity, entry, unit, counts) {
     revision: identity.revision,
     unit,
     ...counts,
+    ...extras,
   };
 }
 
-const isObject = (value) =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
-const isCount = (value) => Number.isSafeInteger(value) && value >= 0;
 export const isPositive = (value) => Number.isSafeInteger(value) && value >= 1;
-const isText = (value) => typeof value === "string" && value !== "";
 
 // Why VALUE does not name exactly one attempt identity, where GITHUB are the
 // fields of its GitHub Actions identity; empty when it names one.
@@ -84,12 +96,6 @@ export function attemptProblems(value, github) {
   return github
     .filter((field) => !isPositive(value[field]))
     .map((field) => `${field} is not a positive integer`);
-}
-
-function countProblems(value, where) {
-  return COUNT_FIELDS.filter((field) => !isCount(value[field])).map(
-    (field) => `${where}${field} is not a count`,
-  );
 }
 
 // Returns why VALUE is not a valid fragment; empty when it is one.
@@ -111,7 +117,14 @@ export function fragmentProblems(value) {
   if (isPositive(value.part) && isPositive(value.of) && value.part > value.of) {
     problems.push("part is greater than of");
   }
-  return [...problems, ...countProblems(value, "")];
+  const figures = figuresProblems(value, "");
+  return [
+    ...problems,
+    ...figures,
+    ...(figures.length > 0 || !isText(value.entry)
+      ? []
+      : breakdownProblems(value, value.entry, "", value)),
+  ];
 }
 
 function partProblems(part, index, where) {
@@ -122,9 +135,23 @@ function partProblems(part, index, where) {
   if (!PART_STATUSES.includes(part.status)) {
     problems.push(`${at}status is not ${PART_STATUSES.join(", ")}`);
   } else if (part.status === "present") {
-    problems.push(...countProblems(part, at));
+    problems.push(...figuresProblems(part, at));
+    if (part.breakdown !== undefined && part.breakdown !== true) {
+      problems.push(`${at}breakdown is not true`);
+    }
   }
   return problems;
+}
+
+// The counts and untimed of ENTRY's parts that were broken down by file.
+function brokenDownFigures(entry) {
+  const parts = entry.parts.filter(
+    (part) => part.status === "present" && part.breakdown === true,
+  );
+  const total = parts.reduce(addedFigures, emptyFigures());
+  return parts.every((part) => part.untimed !== undefined)
+    ? total
+    : { ...total, untimed: undefined };
 }
 
 function entryProblems(entry, index) {
@@ -135,14 +162,23 @@ function entryProblems(entry, index) {
   if (entry.unit !== null && !isText(entry.unit)) {
     problems.push(`${where}unit is neither a string nor null`);
   }
-  problems.push(...countProblems(entry, where));
+  problems.push(...figuresProblems(entry, where));
   if (!Array.isArray(entry.parts) || entry.parts.length === 0) {
     return [...problems, `${where}parts is not a non-empty array`];
   }
   entry.parts.forEach((part, partIndex) =>
     problems.push(...partProblems(part, partIndex, where)),
   );
-  return problems;
+  if (problems.length > 0 || !isText(entry.path)) return problems;
+  const brokenDown = entry.parts.some((part) => part.breakdown === true);
+  if (brokenDown !== (entry.files !== undefined)) {
+    return [
+      brokenDown
+        ? `${where}files is absent though a part was broken down by file`
+        : `${where}files is given though no part was broken down by file`,
+    ];
+  }
+  return breakdownProblems(entry, entry.path, where, brokenDownFigures(entry));
 }
 
 // Returns why VALUE is not a valid summary; empty when it is one.

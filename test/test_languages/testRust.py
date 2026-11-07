@@ -95,6 +95,71 @@ class TestRust(unittest.TestCase):
 
         self.assertEqual(1, len(result))
 
+    def test_char_literal_does_not_hide_the_functions_after_it(self):
+        result = get_rust_function_list('''
+        fn is_call(code: char) -> bool {
+            code == 'C'
+        }
+
+        fn either(a: bool, b: bool) -> bool {
+            if a {
+                return true;
+            }
+            a || b
+        }
+
+        fn label(code: char) -> &'static str {
+            match code {
+                'C' => "call",
+                'P' => "put",
+                _ => "",
+            }
+        }
+        ''')
+        self.assertEqual(['is_call', 'either', 'label'],
+                         [f.name for f in result])
+        self.assertEqual([1, 3, 3],
+                         [f.cyclomatic_complexity for f in result])
+
+    def test_escaped_char_literals_lifetimes_and_labels(self):
+        result = get_rust_function_list(r'''
+        fn scan<'a>(text: &'a str) -> usize {
+            let mut n = 0;
+            'outer: for c in text.chars() {
+                if c == '\'' || c == '\\' || c == '\n' {
+                    break 'outer;
+                }
+                if c == '\x41' || c == '\u{1F600}' {
+                    n += 1;
+                }
+            }
+            n
+        }
+
+        fn after() {}
+        ''')
+        self.assertEqual(['scan', 'after'], [f.name for f in result])
+        self.assertEqual(7, result[0].cyclomatic_complexity)
+
+    def test_closure_without_parameters_is_not_a_logical_or(self):
+        result = get_rust_function_list('''
+        fn closures(x: Option<i32>) -> i32 {
+            let zero = || 0;
+            let task = move || x;
+            let fs = [|| 1, || 2];
+            x.unwrap_or_else(|| zero())
+        }
+        ''')
+        self.assertEqual(1, result[0].cyclomatic_complexity)
+
+    def test_logical_or_after_an_expression_is_counted(self):
+        result = get_rust_function_list('''
+        fn either(a: bool, b: Option<i32>, c: &[i32]) -> bool {
+            a || b.is_some() || c[0] > 1 || (a) || true
+        }
+        ''')
+        self.assertEqual(5, result[0].cyclomatic_complexity)
+
     def test_case_as_identifier(self):
         """
         Test that 'case' used as an identifier doesn't add to CCN.

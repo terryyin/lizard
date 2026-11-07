@@ -90,7 +90,7 @@ instructions or this project's guidance require it for local work, and cite
 that requirement in the plan. Hosted CI configuration shows which checks exist
 and how to run them. Hosted CI still runs them after publication, where their
 failures stay owned, but its configuration does not by itself make each check a
-local gate for every change. Choose local proof for the affected behavior under
+local gate for every change. Choose the local checks for the affected behavior under
 [own executable proof](../dough-story-refinement/references/executable-proof.md),
 and state in the plan the reason for any broader local check, such as a changed
 fixture that distributed consumers load. Execution applies the same distinction
