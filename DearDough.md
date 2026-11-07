@@ -31,6 +31,8 @@ checks. No repair was adopted. Later hosted merges PR525 (`b97f795`) and PR548
 (`2416c37`) waited for all 32 exact-head check runs to succeed, so DD-014 stays
 open without a new story. No retirement, story or queue change.
 
+Local maintenance (2026-11-07) restores the `SEED-029#ocaml-support` coordinator-probe occurrence (`e1f37ed46`, whose commit message named DD-010) from DD-012 to DD-010 (`29d0f1b74cbca7c06882212196eeb4b019a4d519:DearDough.md`), and classifies DD-399 through DD-403. DD-399 (source-only review timing and plan-narrowed formatter proof), DD-401 (Darwin `mktemp` template and `git rm` `stagedPaths` in `fresh-increment`), and DD-402 (marking a merge-gated hosted-CI commitment `observed:` before the receipt/merge head) concern shared Open Dough guidance. DD-400 is a shared practice confirmation for `progress: true` on hosted-proof slices (ODF-275). DD-403 is a project-local performance-probe practice confirmation. No retirement, new local story, or queue change.
+
 <a id="dd-001--codex-stream-can-yield-before-exposing-observer-identity"></a>
 
 ## ODF-376 — Codex stream can yield before exposing observer identity
@@ -208,6 +210,15 @@ implementer's passing tests and the reproducer did not cover.
   - Observed effect: the slice 3 implementer reported `type A … and B` as "not a story example; left alone". The coordinator's probe showed a fake function `B` and a missing member `N`. Together with the same-line `[<Attr>] let` gap in slice 1, that made two return rounds, each ending in a discriminating test, before delivery.
   - Inference: an implementer's "unpromised edge" label needs a coordinator probe against the story's general clauses before it is accepted.
 
+- Execution: SEED-029#ocaml-support
+  - Timestamp: 2026-11-04 (time unknown; slice 1 and slice 3 acceptance before e8ecf8a and 59ddc71)
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.82 (installed by commit 210ae36)
+  - Evidence: `test_let_after_non_ending_tokens_is_local` in `e8ecf8a:test/test_languages/testOCaml.py` (rewritten so `then`/`else`/`->` lets sit at depth 0, not inside parentheses); `test_one_line_module_example` in `59ddc71:test/test_languages/testOCamlItemBoundaries.py`.
+  - Observed effect: a returned test that passed only through the bracket rule, and the story's literal one-line module example, were caught by coordinator probes and pinned; the product needed no change.
+  - Inference: the probes caught tests that did not discriminate, not product gaps; a test whose setup satisfies a second rule cannot observe the first.
+
 ## DD-011 — Integrity checks must separate measured inputs from acceptance records
 
 A post-measurement integrity checker asserted an entirely clean tracked tree,
@@ -240,15 +251,6 @@ new outputs; use exact prefix correspondence only to explain historical bytes.
   - Evidence: final-setup-failure.json and final-performance.md at737aeaf; G8; root-freeze.json/root-performance.md retain the later prospective protocol and actual outputs.
   - Observed effect: the first ec2 freeze exited1 before any timing because a historical CLI hash embedded seed015-optimized-8dac7b80/corpus. Exact old/new prefix substitution explained the discrepancy; setup2 retained all three actual new byte-identical outputs. Failed setup/source hashes remained held; source/corpus/expected metrics were not normalized or weakened.
   - Inference: output fixtures that include paths need explicit argument correspondence before a timing launch. A path-only mismatch proves neither a product regression nor a performance result.
-
-- Execution: SEED-029#ocaml-support
-  - Timestamp: 2026-11-04 (time unknown; slice 1 and slice 3 acceptance before e8ecf8a and 59ddc71)
-  - Tool: Claude Code
-  - Model: claude-opus-5-5
-  - Open Dough release: 0.3.82 (installed by commit 210ae36)
-  - Evidence: `test_let_after_non_ending_tokens_is_local` in `e8ecf8a:test/test_languages/testOCaml.py` (rewritten so `then`/`else`/`->` lets sit at depth 0, not inside parentheses); `test_one_line_module_example` in `59ddc71:test/test_languages/testOCamlItemBoundaries.py`.
-  - Observed effect: a returned test that passed only through the bracket rule, and the story's literal one-line module example, were caught by coordinator probes and pinned; the product needed no change.
-  - Inference: the probes caught tests that did not discriminate, not product gaps; a test whose setup satisfies a second rule cannot observe the first.
 
 ## ODF-264 — Unbounded discovery and CI payloads waste coordinator context
 
