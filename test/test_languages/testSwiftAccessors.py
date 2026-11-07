@@ -1,4 +1,5 @@
 import unittest
+from lizard import FileAnalyzer, analyze_file, get_extensions
 from .swift_helpers import get_swift_function_list, swift_function_spans
 
 
@@ -239,3 +240,130 @@ struct T {
             [("init", 4, 4)],
             [(function.name, function.start_line, function.end_line)
              for function in result])
+
+
+class TestSwiftPropertyFunctions(unittest.TestCase):
+
+    def assert_functions(self, source, expected):
+        self.assertEqual(expected, swift_function_spans(source))
+
+    def test_implicit_getter_is_a_function(self):
+        self.assert_functions("""\
+struct V {
+    var body: some View {
+        Text("hi")
+    }
+    var score: Int {
+        if flag { return 1 }
+        return 0
+    }
+    var table: [String: Int]
+    {
+        return [:]
+    }
+    var pair: Result<Int, Error> { .success(1) }
+}
+""", [("body", 2, 4, 1), ("score", 5, 8, 2), ("table", 9, 12, 1),
+      ("pair", 13, 13, 1)])
+
+    def test_closure_initializer_is_a_function(self):
+        self.assert_functions("""\
+struct V {
+    let handler: (Int) -> Int = { x in
+        if x > 0 { return 1 }
+        return 0
+    }
+    lazy var label: String = {
+        return flag ? "a" : "b"
+    }()
+}
+""", [("handler", 2, 5, 2), ("label", 6, 8, 2)])
+
+    def test_accessor_blocks_keep_their_accessor_functions(self):
+        self.assert_functions("""\
+struct V {
+    var a: Int {
+        get { if x { return 1 }; return 0 }
+        set { }
+    }
+    var b: Int {
+        mutating get { return 1 }
+    }
+    var c: Int = 0 {
+        didSet { if c > 1 { print(c) } }
+    }
+}
+protocol P {
+    var area: Double { get set }
+}
+""", [("get", 3, 3, 2), ("set", 4, 4, 1), ("get", 7, 7, 1),
+      ("didSet", 10, 10, 2)])
+
+    def test_stored_properties_and_locals_are_not_functions(self):
+        self.assert_functions("""\
+struct V {
+    @State private var x: Int = 0
+    var y: Int
+    var fn: (Int) -> Void
+    func f() -> Int {
+        var local: Int { 3 }
+        let c = { if x { } }
+        return 1
+    }
+}
+let typed: Int = 5
+if let z = w { print(z) }
+""", [("f", 5, 9, 2)])
+
+    def test_property_function_lines_and_tokens_stay_with_file(self):
+        source = """\
+var score: Int {
+    if flag { return 1 }
+    return 0
+}
+"""
+        result = analyze_file.analyze_source_code("a.swift", source)
+        self.assertEqual(4, result.nloc)
+        self.assertEqual(4, result.function_list[0].nloc)
+
+    def test_type_annotation_may_continue_on_the_next_line(self):
+        self.assert_functions("""\
+let flag = true
+struct V { var score:
+ Int { if flag { return 1 }; return 0 } }
+""", [("score", 2, 3, 2)])
+
+    def test_multiline_header_lines_belong_to_the_function(self):
+        functions = get_swift_function_list("""\
+struct V {
+    var score: Int
+    {
+        if flag { return 1 }
+        return 0
+    }
+    var handler: (Int)
+        -> Int = { x in
+        x
+    }
+}
+""")
+        self.assertEqual([("score", 2, 6, 5), ("handler", 7, 10, 4)],
+                         [(f.name, f.start_line, f.end_line, f.nloc)
+                          for f in functions])
+
+    def test_accessor_blocks_leave_global_counts_unchanged(self):
+        source = """\
+struct V {
+    var a: Int {
+        get { 1 }
+        set { }
+    }
+    var c: Int = 0 {
+        didSet { }
+    }
+}
+"""
+        functions = FileAnalyzer(get_extensions(["outside"])) \
+            .analyze_source_code("a.swift", source).function_list
+        outside = [f for f in functions if f.name == "*global*"][0]
+        self.assertEqual((10, 25), (outside.nloc, outside.token_count))

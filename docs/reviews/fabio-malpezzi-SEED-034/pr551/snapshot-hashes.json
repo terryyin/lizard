@@ -1,0 +1,14 @@
+[
+  {
+    "path": "lizard_languages/javascript_objects.py",
+    "target": "56768b7f64ec099c4641116918e2c40fef3fd93cff3a01776b1eaa0ec4a22e0f",
+    "corrected": "e04660723c8709ac05eb618654f4a56f11828e959347ce9b55a0b7727f93128f",
+    "baseline": "56768b7f64ec099c4641116918e2c40fef3fd93cff3a01776b1eaa0ec4a22e0f"
+  },
+  {
+    "path": "lizard_languages/typescript_states.py",
+    "target": "1da8d8c00d75e42611f3032673b01b56c56d9885f6249cb9acdb7a8b0224b1df",
+    "corrected": "6eadccab5d1db86d21de879958b8d471f82935d42a96b28ba019df200b335e5a",
+    "baseline": "1da8d8c00d75e42611f3032673b01b56c56d9885f6249cb9acdb7a8b0224b1df"
+  }
+]

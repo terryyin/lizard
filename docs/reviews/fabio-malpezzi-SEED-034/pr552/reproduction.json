@@ -1,0 +1,505 @@
+{
+  "target": {
+    "label": "target",
+    "paths": {
+      "lizard": "/Users/terryyin/.cache/lizard-pr-reviews-SEED-034/pr552/target/lizard.py",
+      "javascript_functions": "/Users/terryyin/.cache/lizard-pr-reviews-SEED-034/pr552/target/lizard_languages/javascript_functions.py",
+      "typescript_declarations": "/Users/terryyin/.cache/lizard-pr-reviews-SEED-034/pr552/target/lizard_languages/typescript_declarations.py"
+    },
+    "rows": [
+      {
+        "filename": "first.ts",
+        "observed": [],
+        "expected": [
+          [
+            "first",
+            1,
+            3,
+            [
+              "list"
+            ]
+          ]
+        ],
+        "matches": false,
+        "control": false
+      },
+      {
+        "filename": "pair.ts",
+        "observed": [],
+        "expected": [
+          [
+            "pair",
+            1,
+            3,
+            [
+              "a",
+              "b"
+            ]
+          ]
+        ],
+        "matches": false,
+        "control": false
+      },
+      {
+        "filename": "contributor.ts",
+        "observed": [],
+        "expected": [
+          [
+            "first",
+            1,
+            3,
+            [
+              "list"
+            ]
+          ],
+          [
+            "pair",
+            4,
+            6,
+            [
+              "a",
+              "b"
+            ]
+          ]
+        ],
+        "matches": false,
+        "control": false
+      },
+      {
+        "filename": "generic-method-control.ts",
+        "observed": [
+          [
+            "identity",
+            2,
+            4,
+            [
+              "value"
+            ]
+          ]
+        ],
+        "expected": [
+          [
+            "identity",
+            2,
+            4,
+            [
+              "value"
+            ]
+          ]
+        ],
+        "matches": true,
+        "control": true
+      },
+      {
+        "filename": "generic-arrow-control.ts",
+        "observed": [
+          [
+            "identity",
+            1,
+            1,
+            [
+              "x"
+            ]
+          ]
+        ],
+        "expected": [
+          [
+            "identity",
+            1,
+            1,
+            [
+              "x"
+            ]
+          ]
+        ],
+        "matches": true,
+        "control": true
+      },
+      {
+        "filename": "generic-arrow-extends-control.ts",
+        "observed": [
+          [
+            "fn",
+            1,
+            1,
+            [
+              "x"
+            ]
+          ]
+        ],
+        "expected": [
+          [
+            "fn",
+            1,
+            1,
+            [
+              "x"
+            ]
+          ]
+        ],
+        "matches": true,
+        "control": true
+      }
+    ]
+  },
+  "corrected": {
+    "label": "corrected",
+    "paths": {
+      "lizard": "/Users/terryyin/.cache/lizard-pr-reviews-SEED-034/pr552/corrected/lizard.py",
+      "javascript_functions": "/Users/terryyin/.cache/lizard-pr-reviews-SEED-034/pr552/corrected/lizard_languages/javascript_functions.py",
+      "typescript_declarations": "/Users/terryyin/.cache/lizard-pr-reviews-SEED-034/pr552/corrected/lizard_languages/typescript_declarations.py"
+    },
+    "rows": [
+      {
+        "filename": "first.ts",
+        "observed": [
+          [
+            "first",
+            1,
+            3,
+            [
+              "list"
+            ]
+          ]
+        ],
+        "expected": [
+          [
+            "first",
+            1,
+            3,
+            [
+              "list"
+            ]
+          ]
+        ],
+        "matches": true,
+        "control": false
+      },
+      {
+        "filename": "pair.ts",
+        "observed": [
+          [
+            "pair",
+            1,
+            3,
+            [
+              "a",
+              "b"
+            ]
+          ]
+        ],
+        "expected": [
+          [
+            "pair",
+            1,
+            3,
+            [
+              "a",
+              "b"
+            ]
+          ]
+        ],
+        "matches": true,
+        "control": false
+      },
+      {
+        "filename": "contributor.ts",
+        "observed": [
+          [
+            "first",
+            1,
+            3,
+            [
+              "list"
+            ]
+          ],
+          [
+            "pair",
+            4,
+            6,
+            [
+              "a",
+              "b"
+            ]
+          ]
+        ],
+        "expected": [
+          [
+            "first",
+            1,
+            3,
+            [
+              "list"
+            ]
+          ],
+          [
+            "pair",
+            4,
+            6,
+            [
+              "a",
+              "b"
+            ]
+          ]
+        ],
+        "matches": true,
+        "control": false
+      },
+      {
+        "filename": "generic-method-control.ts",
+        "observed": [
+          [
+            "identity",
+            2,
+            4,
+            [
+              "value"
+            ]
+          ]
+        ],
+        "expected": [
+          [
+            "identity",
+            2,
+            4,
+            [
+              "value"
+            ]
+          ]
+        ],
+        "matches": true,
+        "control": true
+      },
+      {
+        "filename": "generic-arrow-control.ts",
+        "observed": [
+          [
+            "identity",
+            1,
+            1,
+            [
+              "x"
+            ]
+          ]
+        ],
+        "expected": [
+          [
+            "identity",
+            1,
+            1,
+            [
+              "x"
+            ]
+          ]
+        ],
+        "matches": true,
+        "control": true
+      },
+      {
+        "filename": "generic-arrow-extends-control.ts",
+        "observed": [
+          [
+            "fn",
+            1,
+            1,
+            [
+              "x"
+            ]
+          ]
+        ],
+        "expected": [
+          [
+            "fn",
+            1,
+            1,
+            [
+              "x"
+            ]
+          ]
+        ],
+        "matches": true,
+        "control": true
+      }
+    ]
+  },
+  "raw": {
+    "label": "raw",
+    "paths": {
+      "lizard": "/Users/terryyin/.cache/lizard-pr-reviews-SEED-034/pr552/raw/lizard.py",
+      "javascript_functions": "/Users/terryyin/.cache/lizard-pr-reviews-SEED-034/pr552/raw/lizard_languages/javascript_functions.py",
+      "typescript_declarations": "/Users/terryyin/.cache/lizard-pr-reviews-SEED-034/pr552/raw/lizard_languages/typescript_declarations.py"
+    },
+    "rows": [
+      {
+        "filename": "first.ts",
+        "observed": [
+          [
+            "first",
+            1,
+            3,
+            [
+              "list"
+            ]
+          ]
+        ],
+        "expected": [
+          [
+            "first",
+            1,
+            3,
+            [
+              "list"
+            ]
+          ]
+        ],
+        "matches": true,
+        "control": false
+      },
+      {
+        "filename": "pair.ts",
+        "observed": [
+          [
+            "pair",
+            1,
+            3,
+            [
+              "a",
+              "b"
+            ]
+          ]
+        ],
+        "expected": [
+          [
+            "pair",
+            1,
+            3,
+            [
+              "a",
+              "b"
+            ]
+          ]
+        ],
+        "matches": true,
+        "control": false
+      },
+      {
+        "filename": "contributor.ts",
+        "observed": [
+          [
+            "first",
+            1,
+            3,
+            [
+              "list"
+            ]
+          ],
+          [
+            "pair",
+            4,
+            6,
+            [
+              "a",
+              "b"
+            ]
+          ]
+        ],
+        "expected": [
+          [
+            "first",
+            1,
+            3,
+            [
+              "list"
+            ]
+          ],
+          [
+            "pair",
+            4,
+            6,
+            [
+              "a",
+              "b"
+            ]
+          ]
+        ],
+        "matches": true,
+        "control": false
+      },
+      {
+        "filename": "generic-method-control.ts",
+        "observed": [
+          [
+            "identity",
+            2,
+            4,
+            [
+              "value"
+            ]
+          ]
+        ],
+        "expected": [
+          [
+            "identity",
+            2,
+            4,
+            [
+              "value"
+            ]
+          ]
+        ],
+        "matches": true,
+        "control": true
+      },
+      {
+        "filename": "generic-arrow-control.ts",
+        "observed": [
+          [
+            "identity",
+            1,
+            1,
+            [
+              "x"
+            ]
+          ]
+        ],
+        "expected": [
+          [
+            "identity",
+            1,
+            1,
+            [
+              "x"
+            ]
+          ]
+        ],
+        "matches": true,
+        "control": true
+      },
+      {
+        "filename": "generic-arrow-extends-control.ts",
+        "observed": [
+          [
+            "fn",
+            1,
+            1,
+            [
+              "x"
+            ]
+          ]
+        ],
+        "expected": [
+          [
+            "fn",
+            1,
+            1,
+            [
+              "x"
+            ]
+          ]
+        ],
+        "matches": true,
+        "control": true
+      }
+    ]
+  }
+}

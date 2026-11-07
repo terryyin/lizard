@@ -1,0 +1,21 @@
+{
+  "pr": 553,
+  "disposition": "merged",
+  "head": "692a456cfa5448a9435cf4e7c43b31eba8c47701",
+  "incremental_baseline": "eec8c38b226b7a777d0e6d82978d618fde09a65a",
+  "cumulative_baseline": "4a05e4056cebb2edd75cb02b7a43e911369f4ce5",
+  "gates": {
+    "focused": "1385 passed, 5 skipped",
+    "full_pytest": "3024 passed, 7 skipped",
+    "make": "exit 0",
+    "ci": "all required builds pass on head 692a456c",
+    "performance": {
+      "incremental_api": "attempt1 pass upper 2.586%",
+      "incremental_api_parameters": "attempt1 pass upper 1.288%",
+      "incremental_cli": "attempt2 pass upper 0.932% (attempt1 retained noise fail)",
+      "cumulative_api": "attempt2 pass upper 2.334%",
+      "cumulative_api_parameters": "attempt2 pass upper 1.994%",
+      "cumulative_cli": "attempt2 pass upper 2.015%"
+    }
+  }
+}

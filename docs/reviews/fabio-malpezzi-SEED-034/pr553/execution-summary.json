@@ -1,0 +1,12 @@
+{
+  "pr": 553,
+  "disposition": "merged",
+  "corrected_head": "692a456cfa5448a9435cf4e7c43b31eba8c47701",
+  "contributor_head": "692a456cfa5448a9435cf4e7c43b31eba8c47701",
+  "adaptation": "as-authored",
+  "correction_minutes": 0,
+  "merge_guard": "exact-head 692a456cfa5448a9435cf4e7c43b31eba8c47701",
+  "evidence": "docs/reviews/fabio-malpezzi-SEED-034/pr553",
+  "merge_commit": "ed78b3b13240297681f82fe6a32c84c377498114",
+  "thanks": "https://github.com/terryyin/lizard/pull/553#issuecomment-6664584813"
+}

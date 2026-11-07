@@ -1,0 +1,48 @@
+[
+  {
+    "filename": "modifier.js",
+    "source": "class Store {\n  count = 0\n  async load(x) { return x; }\n  static create() { return new Store(); }\n  get value() { return this.count; }\n}\n",
+    "expected": [
+      ["load", 3, 3, 1],
+      ["create", 4, 4, 0],
+      ["get value", 5, 5, 0]
+    ]
+  },
+  {
+    "filename": "modifier.ts",
+    "source": "class Store {\n  count = 0\n  static create(): Store { return new Store(); }\n  limit: number = 10\n  async load(x: number): Promise<number> { return x; }\n  name = 'a'\n  get value(): number { return this.count; }\n}\n",
+    "expected": [
+      ["create", 3, 3],
+      ["load", 5, 5],
+      ["get value", 7, 7]
+    ],
+    "observe": "name_start_end"
+  },
+  {
+    "filename": "handler-control.js",
+    "source": "class A {\n  handler =\n    async () => { return 1; }\n}\n",
+    "expected": [
+      ["handler", 3, 3, 0]
+    ],
+    "control": true
+  },
+  {
+    "filename": "contributor-js.js",
+    "source": "class A {\n  count = 0\n  async load(x) {\n    return x;\n  }\n  total = count + 1\n  static create() {\n    return new A();\n  }\n  name = 'a'\n  get value() {\n    return this.count;\n  }\n}\n",
+    "expected": [
+      ["load", 3, 5, 1],
+      ["create", 7, 9, 0],
+      ["get value", 11, 13, 0]
+    ]
+  },
+  {
+    "filename": "contributor-ts.ts",
+    "source": "class Store {\n  count = 0\n  static create(): Store {\n    return new Store();\n  }\n  limit: number = 10\n  async load(x: number): Promise<number> {\n    return x;\n  }\n  name = 'a'\n  get value(): number {\n    return this.count;\n  }\n}\n",
+    "expected": [
+      ["create", 3, 5],
+      ["load", 7, 9],
+      ["get value", 11, 13]
+    ],
+    "observe": "name_start_end"
+  }
+]
