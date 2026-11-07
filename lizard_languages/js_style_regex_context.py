@@ -16,6 +16,18 @@ REGEX_TOKEN = (
 )
 # When nothing was marked, keep the trunk pattern bytes exactly.
 REGEX_TOKEN_PUNCT = _PUNCT_OPEN + r"\s*" + REGEX_LITERAL
+# JSX text is not code: a slash in it (`9% / 11%</p>`) must not open a
+# literal that ends in the next closing tag. In JSX/TSX a literal may not end
+# with an unescaped `<` whose slash starts closing-tag syntax (`</p>`, `</>`);
+# `/</g` stays a literal.
+_JSX_LITERAL = REGEX_LITERAL.replace(
+    "+/[a-z]*",
+    r"+(?:(?<!(?<!\\)<)|(?!/(?:[A-Za-z][\w.:-]*\s*)?>))/[a-z]*")
+REGEX_TOKEN_JSX = (
+    _PUNCT_OPEN + r"\s*" + _JSX_LITERAL
+    + r"|" + r"\s*" + REGEX_START_MARKER + _JSX_LITERAL[1:]
+)
+REGEX_TOKEN_PUNCT_JSX = _PUNCT_OPEN + r"\s*" + _JSX_LITERAL
 _REGEX_LITERAL_RE = re.compile(REGEX_LITERAL)
 _EXPRESSION_KEYWORDS = frozenset({
     'return', 'typeof', 'instanceof', 'in', 'new', 'delete', 'void',

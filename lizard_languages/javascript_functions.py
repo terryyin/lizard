@@ -16,8 +16,8 @@ def ends_expression(token):
         return token not in OPERAND_WORDS
     return (token in (')', ']', '}', '++', '--')
             or (first == '/' and len(token) > 2)  # regular expression literal
-            or (first == '<' and (token.startswith('</')  # JSX element end
-                                  or token.endswith('/>'))))
+            or (first == '<' and token.endswith('>')  # JSX element end
+                and ('</' in token or token.endswith('/>'))))
 
 
 def starts_statement(token):
