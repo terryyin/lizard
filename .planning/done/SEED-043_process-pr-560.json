@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-043#process-pr-560",
+  "title": "Process PR #560 — Treat JSX element text as text, not code",
+  "completedAt": "2026-11-07T00:33:27.742Z",
+  "developer": "Terry Yin"
+}
