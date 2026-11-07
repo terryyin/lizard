@@ -1,0 +1,135 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 97278940..f0ec0c79 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -3,6 +3,8 @@
+ ## Unreleased
+ 
+ ### Bug Fixes
++- Rust: read a char literal such as `'C'` as one token, not as the lifetime `'C` followed by a string that swallowed the code up to the next quote, which hid or merged the functions after it; lifetimes and labels are read as before
++- Rust: do not count the `||` of a closure without parameters (`unwrap_or_else(|| 0)`, `move || x`) as a logical or; `||` after an expression is still counted
+ - Swift: count each top-level comma of an `if`, `guard` or `while` condition list as a decision, like `&&`, so `guard a, b, c else` and `guard a && b && c else` have the same CCN; commas inside brackets, closures, patterns and generic arguments, and `repeat { } while`, are not counted. A same-line trailing closure stays in the condition (`if items.contains { $0 > 1 }, ready`); a brace that continues on the next line is the body
+ - Swift: report a computed property with an implicit getter (`var body: some View { ... }`) and a property initialized by a closure (`let f: (Int) -> Int = { ... }`) as a function named after the property, so their branches no longer count in the global scope; the function starts at the property name. Accessor blocks (`get`, `set`, `willSet`, `didSet`) are still reported as their accessors, and locals inside functions stay with the function
+ 
+diff --git a/lizard_languages/rust.py b/lizard_languages/rust.py
+index 65db054d..4dbc65e1 100644
+--- a/lizard_languages/rust.py
++++ b/lizard_languages/rust.py
+@@ -20,15 +20,40 @@ class RustReader(CodeReader, CCppCommentsMixin):
+     # Note: '?' in Rust is the error propagation operator, not ternary
+     _ternary_operators = {'?'}
+ 
++    # After one of these, `||` opens a closure without parameters.
++    _CLOSURE_OPENERS = {'(', '[', '{', ',', ';', ':', '=', '=>', '->',
++                        '&&', '||', '|', 'move', 'async', 'return'}
++
+     def __init__(self, context):
+         super().__init__(context)
+         self.parallel_states = [RustStates(context)]
+ 
+     @staticmethod
+     def generate_tokens(source_code, addition='', token_class=None):
+-        addition = r"|(?:'\w+\b)"  # lifetimes, labels
++        addition = (
++            # char literals, before lifetimes, which also start with `'`
++            r"|(?:'(?:\\(?:x[0-9a-fA-F]{2}|u\{[0-9a-fA-F]+\}|.)|[^'\\\n])')"
++            r"|(?:'\w+\b)")  # lifetimes, labels
+         return CodeReader.generate_tokens(source_code, addition, token_class)
+ 
++    def preprocess(self, tokens):
++        """Split the `||` of a closure without parameters, `|| x`, into two
++        `|`, as `|a| x` has, so that it is not counted as a logical or."""
++        openers = self._CLOSURE_OPENERS
++        last = None
++        for token in tokens:
++            if token.isspace():
++                if token == '\n':
++                    yield token
++                continue
++            if token == '||' and last in openers:
++                yield '|'
++                yield '|'
++            else:
++                yield token
++            if token[0] != '/':  # comments do not end an expression
++                last = token
++
+ 
+ class RustStates(GoLikeStates):  # pylint: disable=R0903
+     FUNC_KEYWORD = 'fn'
+diff --git a/test/test_languages/testRust.py b/test/test_languages/testRust.py
+index 676b869e..9e805d66 100644
+--- a/test/test_languages/testRust.py
++++ b/test/test_languages/testRust.py
+@@ -95,6 +95,71 @@ def test_lifetime(self):
+ 
+         self.assertEqual(1, len(result))
+ 
++    def test_char_literal_does_not_hide_the_functions_after_it(self):
++        result = get_rust_function_list('''
++        fn is_call(code: char) -> bool {
++            code == 'C'
++        }
++
++        fn either(a: bool, b: bool) -> bool {
++            if a {
++                return true;
++            }
++            a || b
++        }
++
++        fn label(code: char) -> &'static str {
++            match code {
++                'C' => "call",
++                'P' => "put",
++                _ => "",
++            }
++        }
++        ''')
++        self.assertEqual(['is_call', 'either', 'label'],
++                         [f.name for f in result])
++        self.assertEqual([1, 3, 3],
++                         [f.cyclomatic_complexity for f in result])
++
++    def test_escaped_char_literals_lifetimes_and_labels(self):
++        result = get_rust_function_list(r'''
++        fn scan<'a>(text: &'a str) -> usize {
++            let mut n = 0;
++            'outer: for c in text.chars() {
++                if c == '\'' || c == '\\' || c == '\n' {
++                    break 'outer;
++                }
++                if c == '\x41' || c == '\u{1F600}' {
++                    n += 1;
++                }
++            }
++            n
++        }
++
++        fn after() {}
++        ''')
++        self.assertEqual(['scan', 'after'], [f.name for f in result])
++        self.assertEqual(7, result[0].cyclomatic_complexity)
++
++    def test_closure_without_parameters_is_not_a_logical_or(self):
++        result = get_rust_function_list('''
++        fn closures(x: Option<i32>) -> i32 {
++            let zero = || 0;
++            let task = move || x;
++            let fs = [|| 1, || 2];
++            x.unwrap_or_else(|| zero())
++        }
++        ''')
++        self.assertEqual(1, result[0].cyclomatic_complexity)
++
++    def test_logical_or_after_an_expression_is_counted(self):
++        result = get_rust_function_list('''
++        fn either(a: bool, b: Option<i32>, c: &[i32]) -> bool {
++            a || b.is_some() || c[0] > 1 || (a) || true
++        }
++        ''')
++        self.assertEqual(5, result[0].cyclomatic_complexity)
++
+     def test_case_as_identifier(self):
+         """
+         Test that 'case' used as an identifier doesn't add to CCN.
