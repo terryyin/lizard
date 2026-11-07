@@ -193,6 +193,19 @@ See `extensions and warning controls
 for duplicate detection, word counts, Cognitive Complexity, generated
 code, whitelists, and forgiveness comments.
 
+For the full extension catalog (metrics, modifiers, formatters, CI examples),
+see `lizard_ext/README.md <lizard_ext/README.md>`_.
+
+Quick examples:
+
+::
+
+   lizard -END --ND 5 your_code/              # Nesting depth
+   lizard -ENS --NS 2 your_code/              # Nested structures
+   lizard --csv -V your_code/ > report.csv    # CSV output
+   lizard -H -o report.html your_code/        # Interactive HTML report
+   lizard -X your_code/ > jenkins.xml         # Jenkins XML output
+
 Limitations
 -----------
 
