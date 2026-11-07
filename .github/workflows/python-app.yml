@@ -5,9 +5,8 @@ name: Python application
 
 on:
   push:
-      branches:
-      - master
-      - 'feature/**'
+    branches:
+      - '**'
   pull_request:
       branches:
       - master
@@ -16,16 +15,25 @@ on:
 permissions:
   contents: read
 
+env:
+  CI_PROOF_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
+
 jobs:
   build:
     strategy:
       matrix:
         os:
-          - ubuntu-latest
+          # Pinned for Python 3.8/3.9 interpreter availability.
+          - ubuntu-24.04
           - windows-latest
         python-version:
           - "3.8"
+          - "3.9"
           - "3.10"
+          - "3.11"
+          - "3.12"
+          - "3.13"
+          - "3.14"
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v3
@@ -40,4 +48,125 @@ jobs:
 
     - name: build and Install
       run: |
-        python setup.py build install
+        python -m pip install .
+
+    - name: Run tests
+      id: pytest
+      run: |
+        python -m pytest -o junit_family=xunit1 --junitxml=pytest-junit.xml
+
+    # Representative leg: ubuntu-24.04 / 3.13 writes the analyzer suite fragment.
+    - name: Set up Node for CI proof
+      if: ${{ !cancelled() && steps.pytest.outcome != 'skipped' && matrix.os == 'ubuntu-24.04' && matrix.python-version == '3.13' }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: 24
+    - name: Write the CI proof fragments
+      if: ${{ !cancelled() && steps.pytest.outcome != 'skipped' && matrix.os == 'ubuntu-24.04' && matrix.python-version == '3.13' }}
+      run: |
+        python scripts/ci-proof/junit-outcomes.py pytest-junit.xml > "${RUNNER_TEMP}/ci-proof-outcomes.tsv"
+        node scripts/ci-proof/ci-proof-summary.mjs fragment \
+          --outcomes "${RUNNER_TEMP}/ci-proof-outcomes.tsv" --entry test \
+          --part 1 --of 1 --attempt "${GITHUB_RUN_ATTEMPT}" \
+          --revision "${CI_PROOF_REVISION}" --out "${RUNNER_TEMP}/ci-proof"
+    - name: Keep the CI proof fragments
+      if: ${{ !cancelled() && steps.pytest.outcome != 'skipped' && matrix.os == 'ubuntu-24.04' && matrix.python-version == '3.13' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: ci-proof-fragments-build-1-attempt-${{ github.run_attempt }}
+        path: ${{ runner.temp }}/ci-proof/
+        if-no-files-found: ignore
+        retention-days: 1
+
+  changes:
+    runs-on: ubuntu-24.04
+    outputs:
+      web: ${{ steps.detect.outputs.web }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Detect web changes
+      id: detect
+      env:
+        EVENT: ${{ github.event_name }}
+        BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        HEAD: ${{ github.event.pull_request.head.sha || github.event.after }}
+        DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+      run: python3 scripts/web_changes.py "$EVENT" "$BASE" "$HEAD" --default-branch "$DEFAULT_BRANCH"
+
+  web:
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: website/frontend/package.json
+    - name: Use the declared npm
+      run: npm install -g "$(node -p "require('./website/frontend/package.json').packageManager")"
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.13"
+    - name: Install dependencies
+      run: |
+        python -m pip install -r requirements.txt
+        npm --prefix website/frontend ci
+        npm --prefix website/frontend exec -- playwright install --with-deps chromium
+    - name: Build
+      run: npm --prefix website/frontend run build
+    - name: Browser tests
+      id: cucumber
+      run: npm --prefix website/frontend run test:e2e -- --format json:reports/cucumber.json
+    - name: Keep browser test reports
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: browser-reports
+        path: website/frontend/reports/
+    - name: Write the CI proof fragments
+      if: ${{ !cancelled() && steps.cucumber.outcome != 'skipped' }}
+      run: |
+        node scripts/ci-proof/cucumber-outcomes.mjs website/frontend/reports/cucumber.json > "${RUNNER_TEMP}/ci-proof-outcomes.tsv"
+        node scripts/ci-proof/ci-proof-summary.mjs fragment \
+          --outcomes "${RUNNER_TEMP}/ci-proof-outcomes.tsv" --entry website/frontend/features \
+          --part 1 --of 1 --attempt "${GITHUB_RUN_ATTEMPT}" \
+          --revision "${CI_PROOF_REVISION}" --out "${RUNNER_TEMP}/ci-proof"
+    - name: Keep the CI proof fragments
+      if: ${{ !cancelled() && steps.cucumber.outcome != 'skipped' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: ci-proof-fragments-web-1-attempt-${{ github.run_attempt }}
+        path: ${{ runner.temp }}/ci-proof/
+        if-no-files-found: ignore
+        retention-days: 1
+
+  ci-proof:
+    needs: [build, web]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: ci-proof-fragments-*-attempt-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/ci-proof-fragments
+      - name: Summarize CI proof
+        run: |
+          mkdir -p -- "${RUNNER_TEMP}/ci-proof-fragments"
+          node scripts/ci-proof/ci-proof-summary.mjs summarize \
+            --fragments "${RUNNER_TEMP}/ci-proof-fragments" \
+            --expect test=1 --expect website/frontend/features=1 \
+            --repository "${GITHUB_REPOSITORY}" --run-id "${GITHUB_RUN_ID}" \
+            --attempt "${GITHUB_RUN_ATTEMPT}" --revision "${CI_PROOF_REVISION}" \
+            --out "${RUNNER_TEMP}/ci-proof-summary.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ci-proof-summary-attempt-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/ci-proof-summary.json
+          if-no-files-found: error
+          retention-days: 30

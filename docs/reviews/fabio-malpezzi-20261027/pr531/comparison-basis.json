@@ -1,0 +1,34 @@
+{
+  "start": "2e21e404c1ab9f4e0b49acc80816e816629d0670",
+  "target": "7ac449f59b3f155fd159ce9aad6794a422045632",
+  "candidate": "47aa35735cccba962e507edb179eae1154ab6ad2",
+  "compared_python_source_files": 100,
+  "differences": [
+    {
+      "path": "lizard_languages/javascript_functions.py",
+      "target_vs_start": false,
+      "candidate_vs_start": true,
+      "target_sha256": "19c8a0c978bd374a7e5c622013110d3ef7e874411dfeb36c95eef3af9dd6abe7",
+      "start_sha256": "19c8a0c978bd374a7e5c622013110d3ef7e874411dfeb36c95eef3af9dd6abe7",
+      "candidate_sha256": "38bff989aa229a92ab860042a2bb97a4d98f5cf1de65b4af508eb445f9c8c448"
+    },
+    {
+      "path": "lizard_languages/typescript_states.py",
+      "target_vs_start": false,
+      "candidate_vs_start": true,
+      "target_sha256": "63a6c103cbe5a4a8e9168a9f239d97b6a1c3c86276776fb7476b2a45f2bda19f",
+      "start_sha256": "63a6c103cbe5a4a8e9168a9f239d97b6a1c3c86276776fb7476b2a45f2bda19f",
+      "candidate_sha256": "bde847649fdf8c2cde6047e2b3fa8fed98463ca60e087c8c5ffec40cc40b932e"
+    },
+    {
+      "path": "lizard_ext/lizardns.py",
+      "target_vs_start": true,
+      "candidate_vs_start": false,
+      "target_sha256": "1bf9ca4a8c6e571fb61873ab7ca4861c88c4c50a5f4a553b237dbdc4215ee25a",
+      "start_sha256": "dcf609ad765e163cc59dba2d20d6419be307792f0c43154db6440977f4b97d80",
+      "candidate_sha256": "dcf609ad765e163cc59dba2d20d6419be307792f0c43154db6440977f4b97d80"
+    }
+  ],
+  "rationale": "Only target-vs-start product difference is lizardns.py methods used by ENS. API harness imports that module on both sides; its FunctionInfo initialization wrapper is byte-identical. NS is disabled and changed methods are never called. Default CLI does not import NS.",
+  "ns_extension_enabled": false
+}

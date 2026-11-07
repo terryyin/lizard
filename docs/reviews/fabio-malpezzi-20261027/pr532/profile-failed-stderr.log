@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "/nix/store/1bn3i8c8xfwc77mp4q998mbkg1aqyy6b-python3-3.9.11/lib/python3.9/runpy.py", line 197, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/nix/store/1bn3i8c8xfwc77mp4q998mbkg1aqyy6b-python3-3.9.11/lib/python3.9/runpy.py", line 87, in _run_code
+    exec(code, run_globals)
+  File "/nix/store/1bn3i8c8xfwc77mp4q998mbkg1aqyy6b-python3-3.9.11/lib/python3.9/cProfile.py", line 10, in <module>
+    import profile as _pyprofile
+  File "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr532/target/profile.py", line 15
+    print s.getvalue()
+          ^
+SyntaxError: invalid syntax

@@ -1,0 +1,210 @@
+{"imports": {"facade": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr533/target/lizard.py", "registry": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr533/target/lizard_languages/__init__.py", "functions": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr533/target/lizard_languages/javascript_functions.py", "states": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr533/target/lizard_languages/typescript_states.py", "helper": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr533/target/test/test_languages/testES6.py"}}
+FFFFF                                                                    [100%]
+=================================== FAILURES ===================================
+_ Test_ES6_arrow_function_without_braces_on_many_lines.test_case_and_closing_brace_go_to_the_function_around _
+
+self = <authored-tests.Test_ES6_arrow_function_without_braces_on_many_lines testMethod=test_case_and_closing_brace_go_to_the_function_around>
+
+    def test_case_and_closing_brace_go_to_the_function_around(self):
+        code = (
+            "function m(key, cursor) {\n"
+            "  switch (true) {\n"
+            "    case key.left && key.ctrl:\n"
+            "      return () => cursor.prevWord()\n"
+            "    case key.right:\n"
+            "      return () => cursor.nextWord()\n"
+            "  }\n"
+            "}\n"
+            "export function register(fn) {\n"
+            "  add(fn)\n"
+            "  return () => remove(fn)\n"
+            "}\n"
+        )
+>       self.assertEqual(
+            [('(anonymous)', 4, 4, 1, 1), ('(anonymous)', 6, 6, 1, 1),
+             ('m', 1, 8, 4, 8), ('(anonymous)', 11, 11, 1, 1),
+             ('register', 9, 12, 1, 4)],
+            self.summary(code))
+E       AssertionError: Lists differ: [('(anonymous)', 4, 4, 1, 1), ('(anonymous)', 6, 6, 1, 1), ('[69 chars], 4)] != [('(anonymous)', 4, 5, 2, 2), ('(anonymous)', 6, 7, 1, 2), ('[69 chars], 3)]
+E
+E       First differing element 0:
+E       ('(anonymous)', 4, 4, 1, 1)
+E       ('(anonymous)', 4, 5, 2, 2)
+E
+E       - [('(anonymous)', 4, 4, 1, 1),
+E       ?                     ^  ^  ^
+E
+E       + [('(anonymous)', 4, 5, 2, 2),
+E       ?                     ^  ^  ^
+E
+E       -  ('(anonymous)', 6, 6, 1, 1),
+E       ?                     ^     ^
+E
+E       +  ('(anonymous)', 6, 7, 1, 2),
+E       ?                     ^     ^
+E
+E       -  ('m', 1, 8, 4, 8),
+E       ?              ^  ^
+E
+E       +  ('m', 1, 8, 3, 6),
+E       ?              ^  ^
+E
+E       -  ('(anonymous)', 11, 11, 1, 1),
+E       ?                          ^^^^
+E
+E       +  ('(anonymous)', 11, 12, 1, 2),
+E       ?                       +++   ^
+E
+E       -  ('register', 9, 12, 1, 4)]
+E       ?                   ---   ^
+E
+E       +  ('register', 9, 11, 1, 3)]
+E       ?                      ^^^^
+
+../authored-tests.py:73: AssertionError
+_ Test_ES6_arrow_function_without_braces_on_many_lines.test_ended_by_a_closing_bracket_on_the_next_line _
+
+self = <authored-tests.Test_ES6_arrow_function_without_braces_on_many_lines testMethod=test_ended_by_a_closing_bracket_on_the_next_line>
+
+    def test_ended_by_a_closing_bracket_on_the_next_line(self):
+        code = (
+            "run(\n"
+            "  x => x + 1\n"
+            ")\n"
+            "const rules = {\n"
+            "  find: text => text.match(/a/g)\n"
+            "}\n"
+            "function after() { return 1; }\n"
+        )
+>       self.assertEqual([('(anonymous)', 2, 2, 1, 1), ('find', 5, 5, 1, 1),
+                          ('after', 7, 7, 1, 1)],
+                         self.summary(code))
+E       AssertionError: Lists differ: [('(anonymous)', 2, 2, 1, 1), ('find', 5, 5, 1, 1), ('after', 7, 7, 1, 1)] != [('(anonymous)', 2, 3, 1, 2), ('find', 5, 6, 1, 2), ('after', 7, 7, 1, 1)]
+E
+E       First differing element 0:
+E       ('(anonymous)', 2, 2, 1, 1)
+E       ('(anonymous)', 2, 3, 1, 2)
+E
+E       - [('(anonymous)', 2, 2, 1, 1), ('find', 5, 5, 1, 1), ('after', 7, 7, 1, 1)]
+E       ?                     ^     ^               ^     ^
+E
+E       + [('(anonymous)', 2, 3, 1, 2), ('find', 5, 6, 1, 2), ('after', 7, 7, 1, 1)]
+E       ?                     ^     ^               ^     ^
+
+../authored-tests.py:36: AssertionError
+_ Test_ES6_arrow_function_without_braces_on_many_lines.test_expression_that_goes_on_at_the_next_lines _
+
+self = <authored-tests.Test_ES6_arrow_function_without_braces_on_many_lines testMethod=test_expression_that_goes_on_at_the_next_lines>
+
+    def test_expression_that_goes_on_at_the_next_lines(self):
+        code = (
+            "const pick = (a, b) => a && b\n"
+            "    ? a\n"
+            "    : b || 0;\n"
+            "const row = item => '<td>' + item.name\n"
+            "  + (item.on ? 'on' : 'off') +\n"
+            "  '</td>';\n"
+            "const names = list => list\n"
+            "  .map(x => x.name)\n"
+            "  .join(', ')\n"
+            "function after() { return 1; }\n"
+        )
+>       self.assertEqual(
+            [('pick', 1, 3, 4, 3), ('row', 4, 6, 2, 3),
+             ('(anonymous)', 8, 8, 1, 1), ('names', 7, 9, 1, 3),
+             ('after', 10, 10, 1, 1)],
+            self.summary(code))
+E       AssertionError: Lists differ: [('pick', 1, 3, 4, 3), ('row', 4, 6, 2, 3), ('(anonymo[61 chars], 1)] != [('pick', 1, 2, 3, 2), ('row', 4, 5, 1, 2), ('(anonymo[62 chars], 1)]
+E
+E       First differing element 0:
+E       ('pick', 1, 3, 4, 3)
+E       ('pick', 1, 2, 3, 2)
+E
+E       - [('pick', 1, 3, 4, 3),
+E       ?                 ^^^^
+E
+E       + [('pick', 1, 2, 3, 2),
+E       ?              +++   ^
+E
+E       -  ('row', 4, 6, 2, 3),
+E       ?             ^   ---
+E
+E       +  ('row', 4, 5, 1, 2),
+E       ?             ^  +++
+E
+E          ('(anonymous)', 8, 8, 1, 1),
+E       -  ('names', 7, 9, 1, 3),
+E       ?               ^     ^
+E
+E       +  ('names', 7, 10, 1, 4),
+E       ?               ^^     ^
+E
+E          ('after', 10, 10, 1, 1)]
+
+../authored-tests.py:92: AssertionError
+_ Test_ES6_arrow_function_without_braces_on_many_lines.test_lines_and_tokens_are_the_same_with_and_without_a_semicolon _
+
+self = <authored-tests.Test_ES6_arrow_function_without_braces_on_many_lines testMethod=test_lines_and_tokens_are_the_same_with_and_without_a_semicolon>
+
+    def test_lines_and_tokens_are_the_same_with_and_without_a_semicolon(self):
+        with_semicolon = get_js_function_list(
+            "const inc = x => x + 1;\nlet a\n")[0]
+        without = get_js_function_list("const inc = x => x + 1\nlet a\n")[0]
+>       self.assertEqual(
+            (1, 1, with_semicolon.token_count - 1),
+            (without.end_line, without.nloc, without.token_count))
+E       AssertionError: Tuples differ: (1, 1, 3) != (2, 2, 4)
+E
+E       First differing element 0:
+E       1
+E       2
+E
+E       - (1, 1, 3)
+E       + (2, 2, 4)
+
+../authored-tests.py:22: AssertionError
+_ Test_ES6_arrow_function_without_braces_on_many_lines.test_statements_and_members_on_the_next_lines _
+
+self = <authored-tests.Test_ES6_arrow_function_without_braces_on_many_lines testMethod=test_statements_and_members_on_the_next_lines>
+
+    def test_statements_and_members_on_the_next_lines(self):
+        code = (
+            "const inc = x => x + 1\n"
+            "const dec = x => x - 1\n"
+            "if (a) { b() }\n"
+            "class A {\n"
+            "  handler = () => 1\n"
+            "  async load() {\n"
+            "    return 1;\n"
+            "  }\n"
+            "}\n"
+        )
+        for filename in ("a.js", "a.ts", "a.tsx"):
+>           self.assertEqual(
+                [('inc', 1, 1, 1, 1), ('dec', 2, 2, 1, 1),
+                 ('handler', 5, 5, 1, 1), ('load', 6, 8, 1, 3)],
+                self.summary(code, filename), filename)
+E           AssertionError: Lists differ: [('inc', 1, 1, 1, 1), ('dec', 2, 2, 1, 1), ('handler'[31 chars], 3)] != [('inc', 1, 2, 1, 2), ('dec', 2, 4, 2, 3)]
+E
+E           First differing element 0:
+E           ('inc', 1, 1, 1, 1)
+E           ('inc', 1, 2, 1, 2)
+E
+E           First list contains 2 additional elements.
+E           First extra element 2:
+E           ('handler', 5, 5, 1, 1)
+E
+E           + [('inc', 1, 2, 1, 2), ('dec', 2, 4, 2, 3)]
+E           - [('inc', 1, 1, 1, 1),
+E           -  ('dec', 2, 2, 1, 1),
+E           -  ('handler', 5, 5, 1, 1),
+E           -  ('load', 6, 8, 1, 3)] : a.js
+
+../authored-tests.py:53: AssertionError
+=========================== short test summary info ============================
+FAILED ../authored-tests.py::Test_ES6_arrow_function_without_braces_on_many_lines::test_case_and_closing_brace_go_to_the_function_around
+FAILED ../authored-tests.py::Test_ES6_arrow_function_without_braces_on_many_lines::test_ended_by_a_closing_bracket_on_the_next_line
+FAILED ../authored-tests.py::Test_ES6_arrow_function_without_braces_on_many_lines::test_expression_that_goes_on_at_the_next_lines
+FAILED ../authored-tests.py::Test_ES6_arrow_function_without_braces_on_many_lines::test_lines_and_tokens_are_the_same_with_and_without_a_semicolon
+FAILED ../authored-tests.py::Test_ES6_arrow_function_without_braces_on_many_lines::test_statements_and_members_on_the_next_lines
+5 failed in 0.03s

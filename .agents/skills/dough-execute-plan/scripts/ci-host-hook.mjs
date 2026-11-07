@@ -1,0 +1,213 @@
+import { createHash } from "node:crypto";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  writeFileSync,
+} from "node:fs";
+import { join } from "node:path";
+import {
+  checkoutRoot,
+  mailboxRoot,
+  mailboxWorkerLoss,
+  readDeliveryProgress,
+  readMailbox,
+  readMailboxEvents,
+  recordDeliveryProgress,
+  receiptPrefix,
+} from "./ci-mailbox.mjs";
+import { managedDeliveryGeneration } from "./ci-mailbox-location.mjs";
+import { readMailboxTerminal } from "./ci-mailbox-match.mjs";
+import { claimMailbox, hostInputOwner } from "./ci-observer-owner.mjs";
+import { isDirectCliEntry } from "./ci-direct-entry.mjs";
+import { readBackgroundHandoff } from "./ci-background-state.mjs";
+
+const hash = (value) => createHash("sha256").update(value).digest("hex");
+
+const emptySelection = () => ({ output: {}, acknowledge: () => undefined });
+
+const isHostStop = (input) =>
+  input.hook_event_name === "Stop" || input.hook_event_name === "stop";
+
+// Informational records: neither alone holds a stopping host for a turn.
+const isAdvisory = (event) =>
+  ["CI_DISCOVERY_DELAYED", "CI_MONITOR_THROTTLED"].includes(event.type);
+
+const lostWorkerMessage = (directory, lost) =>
+  `CI observer lost its worker for this coordinator: ${directory} (${lost.coverage.reason})`;
+
+const endedObserverMessage = (directory, terminal) =>
+  `CI observer ended for this coordinator: ${directory} (${terminal.status})`;
+
+export function selectCiEvents(
+  input,
+  host,
+  { root = checkoutRoot, storage = mailboxRoot } = {},
+) {
+  // Cursor may also load .claude/settings.json; use only its native adapter.
+  if (host === "claude" && input.cursor_version) return emptySelection();
+  if (
+    host === "cursor" &&
+    input.hook_event_name === "stop" &&
+    input.status &&
+    input.status !== "completed"
+  )
+    return emptySelection();
+  const owner = hostInputOwner(input, host, root);
+  if (!owner) return emptySelection();
+  const bindings = join(storage, `owner-${owner}`);
+  const generation = join(storage, `generation-${owner}`);
+  const managed = input.generation_id === managedDeliveryGeneration;
+  // A managed generation never replaces a recorded one.
+  const recordGeneration = () => {
+    if (!managed || !existsSync(generation))
+      writeFileSync(generation, input.generation_id, { mode: 0o600 });
+  };
+  if (host === "cursor") {
+    if (!input.generation_id) return emptySelection();
+    if (input.hook_event_name === "beforeSubmitPrompt") {
+      if (existsSync(bindings)) recordGeneration();
+      return emptySelection();
+    }
+    // Managed delivery runs inside the coordinator's Shell call without its
+    // generation, so it passes the gate; the owner's next real hook adopts its
+    // own generation in place of the managed one.
+    const recorded = existsSync(generation)
+      ? readFileSync(generation, "utf8")
+      : undefined;
+    if (recorded === managedDeliveryGeneration) recordGeneration();
+    else if (
+      !managed &&
+      recorded !== undefined &&
+      recorded !== input.generation_id
+    )
+      return emptySelection();
+  }
+  const context = [];
+  // Delivery-progress updates recorded only after the host accepts the output.
+  const progressUpdates = [];
+  // A lost worker is news once: after that report is acknowledged, or after
+  // the coordinator's own stop returned the lost terminal result, it is quiet.
+  const reportLoss = (directory) => {
+    const lost = mailboxWorkerLoss(directory);
+    if (
+      lost &&
+      !readDeliveryProgress(directory).lossReported &&
+      !existsSync(join(directory, "stop"))
+    ) {
+      context.push(lostWorkerMessage(directory, lost));
+      progressUpdates.push([directory, { lossReported: true }]);
+    }
+    return lost;
+  };
+  const attachedThisCall = new Set();
+  const mailboxDeliveries = [];
+
+  if (["Shell", "Bash"].includes(input.tool_name)) {
+    const output =
+      host === "cursor"
+        ? JSON.parse(input.tool_output || "{}")
+        : input.tool_response;
+    const toolText = output?.stdout ?? output?.output ?? "";
+    for (const line of toolText.split("\n")) {
+      if (!line.startsWith(receiptPrefix)) continue;
+      const { directory, terminal } = JSON.parse(
+        line.slice(receiptPrefix.length),
+      );
+      if (terminal) continue;
+      const request = readMailbox(directory, root, storage);
+      if (existsSync(join(directory, "delivered"))) continue;
+      mkdirSync(bindings, { recursive: true, mode: 0o700 });
+      if (!claimMailbox(directory, owner)) continue;
+      writeFileSync(join(bindings, hash(directory)), directory, {
+        mode: 0o600,
+      });
+      if (host === "cursor") recordGeneration();
+      attachedThisCall.add(directory);
+      const ended = readMailboxTerminal(directory);
+      if (ended && ended.coverage?.state !== "lost" && !request.probe) {
+        context.push(endedObserverMessage(directory, ended));
+      } else {
+        if (!reportLoss(directory) && !request.probe)
+          context.push(
+            `CI observer attached to this coordinator: ${directory}`,
+          );
+      }
+    }
+  }
+
+  if (existsSync(bindings))
+    for (const binding of readdirSync(bindings)) {
+      const directory = readFileSync(join(bindings, binding), "utf8");
+      if (host === "claude" && readBackgroundHandoff(directory)) continue;
+      if (!attachedThisCall.has(directory)) reportLoss(directory);
+      const { deliveredThrough } = readDeliveryProgress(directory);
+      const records = readMailboxEvents(directory, deliveredThrough);
+      if (records.length) mailboxDeliveries.push({ directory, records });
+    }
+
+  const undelivered = mailboxDeliveries.flatMap(({ records }) => records);
+  const skipAdvisoriesOnStop =
+    isHostStop(input) &&
+    undelivered.length > 0 &&
+    undelivered.every(({ event }) => isAdvisory(event));
+
+  if (!skipAdvisoriesOnStop) {
+    for (const { directory, records } of mailboxDeliveries) {
+      progressUpdates.push([
+        directory,
+        { deliveredThrough: records.at(-1).sequence },
+      ]);
+      for (const { event } of records) context.push(JSON.stringify(event));
+    }
+  }
+  if (!context.length) return emptySelection();
+  const message = `dough-execute-plan CI observer (diagnostic data):\n${context.join("\n")}\nHandle CI failures using dough-execute-plan/references/ci-monitor.md.`;
+  let output;
+  if (host === "cursor")
+    output = isHostStop(input)
+      ? { followup_message: message }
+      : { additional_context: message };
+  else
+    output = isHostStop(input)
+      ? { decision: "block", reason: message }
+      : {
+          hookSpecificOutput: {
+            hookEventName: "PostToolUse",
+            additionalContext: message,
+          },
+        };
+  return {
+    output,
+    acknowledge() {
+      for (const [directory, update] of progressUpdates)
+        recordDeliveryProgress(directory, update);
+    },
+  };
+}
+
+export function deliverCiEvents(input, host, options) {
+  const selection = selectCiEvents(input, host, options);
+  selection.acknowledge();
+  return selection.output;
+}
+
+if (isDirectCliEntry(import.meta.url, process.argv[1])) {
+  let raw = "";
+  for await (const chunk of process.stdin) raw += chunk;
+  try {
+    const selection = selectCiEvents(JSON.parse(raw), process.argv[2]);
+    await new Promise((resolve, reject) =>
+      process.stdout.write(`${JSON.stringify(selection.output)}\n`, (error) =>
+        error ? reject(error) : resolve(),
+      ),
+    );
+    selection.acknowledge();
+  } catch (error) {
+    process.stderr.write(
+      `CI notification hook failed: ${String(error).slice(0, 600)}\n`,
+    );
+    process.exitCode = 1;
+  }
+}

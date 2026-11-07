@@ -11,7 +11,7 @@ class SolidityReader(CodeReader, CCppCommentsMixin):
 
     ext = ['sol']
     language_names = ['solidity']
-    
+
     # Separated condition categories
     _control_flow_keywords = {'if', 'for', 'while'}
     _logical_operators = {'&&', '||'}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-012#regex-literal-context",
+  "title": "Recognize regex literals without consuming division expressions",
+  "completedAt": "2026-10-27T12:45:16.453Z",
+  "developer": "Terry Yin",
+  "agent": "Nana-chan",
+  "host": "cursor",
+  "model": "auto"
+}

@@ -16,16 +16,16 @@ class Test_tokenizing_TSX(unittest.TestCase):
         self.check_tokens(['<abc />'], '<abc />')
 
     def test_simple_open_closing(self):
-        self.check_tokens(['<abc>', '</abc>'], '<abc></abc>')
+        self.check_tokens(['<abc></abc>'], '<abc></abc>')
 
     def test_open_closing_with_content(self):
-        self.check_tokens(['(', '<abc>', 'xxx', '  ', '+', 'yyy', '</abc>', ')'], '(<abc>xxx  +yyy</abc>)')
+        self.check_tokens(['(', '<abc>xxx  +yyy</abc>', ')'], '(<abc>xxx  +yyy</abc>)')
 
     def test_nested(self):
-        self.check_tokens(['(', '<abc>', '<b>', 'xxx', '</b>', '</abc>', ')'], '(<abc><b>xxx</b></abc>)')
+        self.check_tokens(['(', '<abc>', '<b>xxx</b>', '</abc>', ')'], '(<abc><b>xxx</b></abc>)')
 
     def test_nested_save_tag(self):
-        self.check_tokens(['(', '<b>', '<b>', 'xxx', '</b>', '</b>', ')'], '(<b><b>xxx</b></b>)')
+        self.check_tokens(['(', '<b>', '<b>xxx</b>', '</b>', ')'], '(<b><b>xxx</b></b>)')
 
     def test_with_embeded_code(self):
         self.check_tokens(['<abc>', '{', 'x', '}', '</abc>'], '<abc>{x}</abc>')
@@ -34,7 +34,10 @@ class Test_tokenizing_TSX(unittest.TestCase):
         self.check_tokens(['<abc x="x">a</abc>'], '<abc x="x">a</abc>')
 
     def test_with_embeded_attributes(self):
-        self.check_tokens(['y'], '<abc x={y}>a</abc><a></a>')
+        # The tag text read so far precedes the attribute expression, which
+        # ends with an injected ';'; the rest of the tag follows
+        self.check_tokens(['<abc x={', 'y', ';', '>a</abc>', '<a>', '</a>'],
+                         '<abc x={y}>a</abc><a></a>')
 
     def test_less_than(self):
         self.check_tokens(['a', '<', '3', ' ', 'x', '>'], 'a<3 x>')
@@ -43,7 +46,9 @@ class Test_tokenizing_TSX(unittest.TestCase):
         self.check_tokens(['a', '<', 'b', ' ', 'and', ' ', 'c', '>', ' ', 'd'], 'a<b and c> d')
 
     def test_complicated_properties(self):
-        self.check_tokens(['data', ' ', '=>', '(', ')'], '<StaticQuery render={data =>()} />')
+        # ';' injected when attribute expression ends
+        self.check_tokens(['<StaticQuery render={', 'data', ' ', '=>', '(', ')', ';', ' />'],
+                         '<StaticQuery render={data =>()} />')
 
 
 class Test_parser_for_TypeScript_X(unittest.TestCase):
@@ -396,7 +401,7 @@ class Test_parser_for_TypeScript_X(unittest.TestCase):
         
         # ErrorBoundary should have conditional complexity
         error_boundary = next(f for f in functions if f.name == "ErrorBoundary")
-        self.assertEqual(3, error_boundary.cyclomatic_complexity)  # Actual value from our implementation
+        self.assertEqual(2, error_boundary.cyclomatic_complexity)
 
     def test_complex_typescript_patterns(self):
         """Test complex TypeScript patterns with mapped types and utilities"""
@@ -437,7 +442,537 @@ class Test_parser_for_TypeScript_X(unittest.TestCase):
         functions = get_tsx_function_list(code)
         function_names = [f.name for f in functions]
         self.assertIn("FormValidator", function_names)
-        
-        # Should have anonymous functions for the returned object methods
-        anonymous_count = sum(1 for f in functions if f.name == "(anonymous)")
-        self.assertGreater(anonymous_count, 0)
+
+        # The generic arrow methods in the return object are detected by name
+        # (validateField, processForm) rather than as anonymous
+        self.assertIn("validateField", function_names)
+        self.assertIn("processForm", function_names)
+
+
+class Test_TSX_jsx_attribute_handlers(unittest.TestCase):
+    """Tests that JSX attribute arrow handlers are correctly detected (Fix 1)."""
+
+    def test_multi_handler_on_single_element(self):
+        """Multiple arrow handlers on one element should all be detected"""
+        code = '''
+          const Form = () => {
+            return (
+              <form>
+                <input
+                  onChange={(e) => setVal(e.target.value)}
+                  onFocus={() => setFocused(true)}
+                  onBlur={() => setFocused(false)}
+                />
+                <button onClick={() => submit()}>Go</button>
+              </form>
+            );
+          }
+        '''
+        functions = get_tsx_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("Form", names)
+        anon_count = sum(1 for n in names if n == "(anonymous)")
+        self.assertGreaterEqual(anon_count, 4)  # 3 input handlers + 1 button handler
+
+    def test_inline_conditional_handler(self):
+        """Arrow handler with conditional body should be detected"""
+        code = '''
+          const Toggle = ({enabled, onToggle}) => {
+            return (
+              <button
+                onClick={() => onToggle(!enabled)}
+                className={enabled ? "active" : "inactive"}
+              >
+                {enabled ? "ON" : "OFF"}
+              </button>
+            );
+          }
+        '''
+        functions = get_tsx_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("Toggle", names)
+        self.assertIn("(anonymous)", names)
+
+    def test_map_callback_in_jsx(self):
+        """Array.map callback inside JSX should detect both component and callback"""
+        code = '''
+          const List = ({items}) => {
+            return (
+              <ul>
+                {items.map((item, i) => (
+                  <li key={i}>{item.name}</li>
+                ))}
+              </ul>
+            );
+          }
+        '''
+        functions = get_tsx_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("List", names)
+        self.assertIn("(anonymous)", names)
+
+    def test_map_with_click_handler(self):
+        """Map callback + onClick handler in list items"""
+        code = '''
+          const TodoList = ({todos}) => {
+            return (
+              <ul>
+                {todos.map(todo => (
+                  <li key={todo.id} onClick={() => toggle(todo.id)}>
+                    {todo.text}
+                  </li>
+                ))}
+              </ul>
+            );
+          }
+        '''
+        functions = get_tsx_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("TodoList", names)
+        anon_count = sum(1 for n in names if n == "(anonymous)")
+        self.assertGreaterEqual(anon_count, 2)  # map callback + onClick
+
+
+class Test_TSX_component_patterns(unittest.TestCase):
+    """Tests various React component patterns in TSX."""
+
+    def test_conditional_rendering(self):
+        """Conditional rendering with && and ternary"""
+        code = '''
+          const View = ({show, data}) => {
+            return (
+              <div>
+                {show && <span>visible</span>}
+                {data ? <Data items={data} /> : <Empty />}
+              </div>
+            );
+          }
+        '''
+        functions = get_tsx_function_list(code)
+        self.assertEqual(["View"], [f.name for f in functions])
+
+    def test_forwardref(self):
+        """React.forwardRef wrapping an arrow function"""
+        code = '''
+          const Input = React.forwardRef((props, ref) => {
+            return <input ref={ref} value={props.value} />;
+          });
+        '''
+        functions = get_tsx_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("(anonymous)", names)
+
+    def test_memo(self):
+        """React.memo wrapping a component"""
+        code = '''
+          const Memoized = React.memo((props) => {
+            return <div>{props.value}</div>;
+          });
+        '''
+        functions = get_tsx_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("(anonymous)", names)
+
+    def test_usecallback_hook(self):
+        """useCallback hook should detect both component and callback"""
+        code = '''
+          const App = () => {
+            const handleClick = useCallback(() => {
+              doSomething();
+            }, []);
+            return <button onClick={handleClick}>click</button>;
+          }
+        '''
+        functions = get_tsx_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("App", names)
+        self.assertIn("(anonymous)", names)
+
+    def test_context_provider(self):
+        """Context provider component"""
+        code = '''
+          const ThemeProvider = ({children}) => {
+            const [theme, setTheme] = useState("light");
+            return (
+              <ThemeContext.Provider value={{theme, setTheme}}>
+                {children}
+              </ThemeContext.Provider>
+            );
+          }
+        '''
+        functions = get_tsx_function_list(code)
+        self.assertEqual(["ThemeProvider"], [f.name for f in functions])
+
+    def test_render_prop(self):
+        """Render prop pattern should detect both provider and consumer components"""
+        code = '''
+          const DataFetcher = ({render}) => {
+            const [data, setData] = useState(null);
+            return render(data);
+          }
+          const App = () => {
+            return <DataFetcher render={(data) => <Display data={data} />} />;
+          }
+        '''
+        functions = get_tsx_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("DataFetcher", names)
+        self.assertIn("App", names)
+        self.assertIn("(anonymous)", names)  # render prop callback
+
+    def test_fragment(self):
+        """Fragment component should be detected"""
+        code = '''
+          const Multi = () => {
+            return (
+              <>
+                <First />
+                <Second />
+              </>
+            );
+          }
+        '''
+        functions = get_tsx_function_list(code)
+        self.assertEqual(["Multi"], [f.name for f in functions])
+
+    def test_nested_ternary(self):
+        """Nested ternary in JSX"""
+        code = '''
+          const Status = ({code}) => {
+            return (
+              <div>
+                {code === 200 ? <Ok /> : code === 404 ? <NotFound /> : <Error />}
+              </div>
+            );
+          }
+        '''
+        functions = get_tsx_function_list(code)
+        self.assertEqual(["Status"], [f.name for f in functions])
+
+    def test_children_function_pattern(self):
+        """Children-as-function pattern"""
+        code = '''
+          const Wrapper = ({children}) => {
+            return <div className="wrapper">{children}</div>;
+          }
+          const App = () => {
+            return (
+              <Wrapper>
+                {(data) => <span>{data}</span>}
+              </Wrapper>
+            );
+          }
+        '''
+        functions = get_tsx_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("Wrapper", names)
+        self.assertIn("App", names)
+        self.assertIn("(anonymous)", names)
+
+    def test_spread_attrs(self):
+        """Spread attributes should not break detection"""
+        code = '''
+          const Wrapper = (props) => {
+            return <Inner {...props} extra="val" />;
+          }
+        '''
+        functions = get_tsx_function_list(code)
+        self.assertEqual(["Wrapper"], [f.name for f in functions])
+
+
+class Test_TSX_style_objects_no_fp(unittest.TestCase):
+    """Tests that inline style objects in JSX do NOT produce false positives."""
+
+    def test_style_object_no_fp(self):
+        """style={{...}} should not create function FPs"""
+        code = '''
+          const Styled = () => {
+            return (
+              <div style={{
+                backgroundColor: "red",
+                fontSize: 14,
+                padding: "10px"
+              }}>
+                content
+              </div>
+            );
+          }
+        '''
+        functions = get_tsx_function_list(code)
+        names = [f.name for f in functions]
+        self.assertEqual(["Styled"], names)
+
+
+class Test_TSX_class_with_static_fields(unittest.TestCase):
+    """Tests class components with static fields don't lose method detection (Fix 4)."""
+
+    def test_static_proptypes_then_methods(self):
+        """Methods after static propTypes = {...} should be detected"""
+        code = '''
+          class Card extends Component {
+            static propTypes = {
+              title: PropTypes.string,
+              onClick: PropTypes.func
+            };
+            static defaultProps = {
+              title: "Default"
+            };
+            constructor(props) {
+              super(props);
+              this.state = {};
+            }
+            handleClick() {
+              this.props.onClick();
+            }
+            render() {
+              return <div onClick={() => this.handleClick()}>{this.props.title}</div>;
+            }
+          }
+        '''
+        functions = get_tsx_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("constructor", names)
+        self.assertIn("handleClick", names)
+        self.assertIn("render", names)
+        # static field names should NOT appear as functions
+        self.assertNotIn("propTypes", names)
+        self.assertNotIn("defaultProps", names)
+
+
+def jsx_and_tsx_functions(source_code):
+    return {ext: [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                  for f in analyze_file.analyze_source_code(
+                      "a." + ext, source_code).function_list]
+            for ext in ("jsx", "tsx")}
+
+
+class Test_JSX_text_is_not_code(unittest.TestCase):
+
+    def assert_both(self, expected, source_code):
+        self.assertEqual({"jsx": expected, "tsx": expected},
+                         jsx_and_tsx_functions(source_code))
+
+    def test_words_and_punctuation_in_text_are_not_decisions(self):
+        self.assert_both([("Banner", 1, 1, 1), ("Hello", 2, 2, 1)], '''\
+function Banner() { return <p>What if we wait for it?</p>; }
+function Hello() { return <p>Hello</p>; }
+''')
+
+    def test_text_with_operators_in_nested_tags_and_fragments(self):
+        self.assert_both([("Page", 1, 10, 1), ("after", 11, 11, 2)], '''\
+function Page() {
+  return (
+    <section>
+      <h1>Case: while (x) = y; a && b || c ? d : e</h1>
+      <p>
+        for each catch
+      </p>
+      <>if not now</>
+    </section>);
+}
+function after(x) { if (x) { return 1 } }
+''')
+
+    def test_expressions_in_children_and_attributes_still_count(self):
+        self.assert_both([("(anonymous)", 6, 6, 2), ("List", 1, 8, 3)], '''\
+function List({ items, flag, a, b }) {
+  return (
+    <div>
+      {flag ? <b>on</b> : <i>off</i>}
+      <span>{a && b}</span>
+      <ul>{items.map(i => <li>{i > 1 || i}</li>)}</ul>
+    </div>);
+}
+''')
+
+    def test_spread_and_hyphenated_attributes_keep_function_bounds(self):
+        self.assert_both([("Row", 1, 3, 1), ("Grid", 4, 11, 3),
+                          ("Card", 12, 14, 2), ("after", 15, 15, 2)], '''\
+function Row(props) {
+  return <i {...props} />;
+}
+function Grid({ rows, extra, open, k }) {
+  return (
+    <div>
+      <Row {...extra} />
+      <Row {...(open ? extra : rows)} />
+      <table><tbody><tr><td key={k} data-state={open && 'on'}>x</td></tr></tbody></table>
+    </div>);
+}
+function Card({ r, href }) {
+  return <ul>{r ? <li><a href={href}>Open the result <span aria-hidden="true">\u2197</span></a></li> : null}</ul>;
+}
+function after(x) { if (x) { return 1 } return 2; }
+''')
+
+    def test_valueless_attributes_keep_function_bounds(self):
+        self.assert_both([("Chart", 1, 9, 2), ("after", 10, 10, 2)], '''\
+function Chart({ data, wide }) {
+  return (
+    <div>
+      <chart margin={{ top: 6 }} accessibilityLayer>
+        <axis data={data} hide />
+      </chart>
+      <label x={1} flag>{wide ? 'wide' : 'narrow'}</label>
+    </div>);
+}
+function after(x) { if (x) { return 1 } return 2; }
+''')
+
+    def test_slash_in_text_does_not_open_a_regex(self):
+        # `for` anywhere switches regex detection to a forward scan; a
+        # slash in element text must not read as a literal up to `</th>`.
+        source = '''\
+function Rates({ rows }) {
+  return (
+    <table>
+      <thead><tr><th>At 9% / 11%</th><th>Share (/ total)</th><th>like-for-like</th></tr></thead>
+      <tbody>{rows.map(r => <tr key={r.id}><td>{r.ok ? 'yes' : 'no'}</td></tr>)}</tbody>
+    </table>);
+}
+function escape(s) { return s.replace(/</g, '&lt;').replace(/>/g, s && '&gt;'); }
+function after(x) { if (x) { return 1 } return 2; }
+'''
+        expected = [("(anonymous)", 5, 5, 1, 5), ("Rates", 1, 7, 2, 47),
+                     ("escape", 8, 8, 2, 24), ("after", 9, 9, 2, 16)]
+        for ext in ("jsx", "tsx"):
+            with self.subTest(ext=ext):
+                self.assertEqual(expected, [
+                    (f.name, f.start_line, f.end_line,
+                     f.cyclomatic_complexity, f.token_count)
+                    for f in analyze_file.analyze_source_code(
+                        "a." + ext, source).function_list])
+
+    def test_type_parameter_with_extends_is_not_an_element(self):
+        self.assertEqual(
+            [("pick", 1, 1, 2), ("after", 2, 2, 2)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+             for f in get_tsx_function_list('''\
+const pick = <T extends unknown>(x: T, y: T) => x ? x : y;
+function after(x: number) { if (x) { return 1 } return 2; }
+''')])
+
+    def test_comparisons_and_type_arguments_are_not_elements(self):
+        self.assert_both([("cmp", 1, 1, 2), ("g", 2, 2, 1)], '''\
+const cmp = (a, b) => a < b && b > 0;
+function g(x) { return useState<string>(x); }
+''')
+
+
+class Test_TSX_attribute_names(unittest.TestCase):
+    """Attribute forms the tag reader must accept without aborting the tag."""
+
+    TEMPLATE = (
+        "const C = (p) => {\n"
+        "  return (\n"
+        "    <G className={cx('a', { b: p.b })} %s>\n"
+        "      <B onClick={() => p.f()}>x</B>\n"
+        "    </G>\n"
+        "  );\n"
+        "};\n"
+        "const N = (p) => {\n"
+        "  return <C />;\n"
+        "};\n"
+    )
+
+    def spans(self, attribute):
+        return [(f.name, f.start_line, f.end_line)
+                for f in get_tsx_function_list(self.TEMPLATE % attribute)]
+
+    def test_hyphenated_attribute(self):
+        self.assertEqual(self.spans('title={p.d}'), self.spans('data-action={p.d}'))
+
+    def test_attribute_without_value(self):
+        self.assertEqual(self.spans('title={p.d}'), self.spans('title={p.d} hidden'))
+
+    def test_spread_attribute(self):
+        self.assertEqual(self.spans('title={p.d}'), self.spans('title={p.d} {...p.rest}'))
+
+
+class Test_TSX_lines_in_multiline_tags(unittest.TestCase):
+
+    def test_functions_after_a_multiline_tag_keep_their_lines(self):
+        code = (
+            "const C = (p) => {\n"
+            "  return (\n"
+            "    <G\n"
+            "      title={p.t}\n"
+            "      onClick={() => p.f()}\n"
+            "    >\n"
+            "      x\n"
+            "    </G>\n"
+            "  );\n"
+            "};\n"
+            "const N = (p) => {\n"
+            "  return <C />;\n"
+            "};\n"
+        )
+        self.assertEqual([('(anonymous)', 5, 5), ('C', 1, 10), ('N', 11, 13)],
+                         [(f.name, f.start_line, f.end_line)
+                          for f in get_tsx_function_list(code)])
+
+
+class Test_TSX_tag_structure(unittest.TestCase):
+    """Tag forms whose misreading moved braces and ended components early."""
+
+    def spans(self, code):
+        return [(f.name, f.start_line, f.end_line)
+                for f in get_tsx_function_list(code)]
+
+    def component(self, jsx):
+        return (
+            "const C = (p) => {\n"
+            "  return (\n"
+            "    %s\n"
+            "  );\n"
+            "};\n"
+            "const N = (p) => {\n"
+            "  return <C />;\n"
+            "};\n" % jsx)
+
+    def test_member_tag_name_with_attributes_and_a_child(self):
+        code = self.component(
+            "<M.Footer className={p.c} title={p.t}><B onClick={() => p.f()} /></M.Footer>")
+        self.assertEqual([('(anonymous)', 3, 3), ('C', 1, 5), ('N', 6, 8)],
+                         self.spans(code))
+
+    def test_type_arguments_on_an_element_with_a_child(self):
+        code = self.component(
+            "<S<number> value={p.v}><B onClick={() => p.f()} /></S>")
+        self.assertEqual([('(anonymous)', 3, 3), ('C', 1, 5), ('N', 6, 8)],
+                         self.spans(code))
+
+    def test_comparison_inside_an_expression_container(self):
+        code = self.component(
+            "<div>{p.i < p.n}{p.label}<B onClick={() => p.f()} /></div>")
+        self.assertEqual([('(anonymous)', 3, 3), ('C', 1, 5), ('N', 6, 8)],
+                         self.spans(code))
+
+    def test_comparison_in_attribute_keeps_enclosing_component(self):
+        code = (
+            "const C = (p) => {\n"
+            "  const e = <D visible={p.i < p.n} />;\n"
+            "  if (p.x) {\n"
+            "    return 1;\n"
+            "  }\n"
+            "  return e;\n"
+            "};\n"
+        )
+        functions = get_tsx_function_list(code)
+        self.assertEqual([('C', 1, 7)],
+                         [(f.name, f.start_line, f.end_line) for f in functions])
+        self.assertEqual(2, functions[0].cyclomatic_complexity)
+
+    def test_parenthesized_jsx_assigned_to_a_variable(self):
+        code = (
+            "const T = () => {\n"
+            "  let c = null;\n"
+            "  if (a) {\n"
+            "    c = (\n"
+            "      <D f={(v) => g(v)} />\n"
+            "    );\n"
+            "  }\n"
+            "  return c;\n"
+            "};\n"
+        )
+        self.assertEqual([('(anonymous)', 5, 5), ('T', 1, 9)], self.spans(code))

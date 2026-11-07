@@ -49,7 +49,7 @@ class LanguageReader(CodeReader):
 
 ### How CCN is Calculated
 
-**Location**: `lizard.py:condition_counter()`
+**Location**: `lizard_core/file_analyzer.py:condition_counter()`
 
 ```python
 def condition_counter(tokens, reader):

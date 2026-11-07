@@ -1,0 +1,1 @@
+{"choice":"run-serial","incremental_seconds":1.2,"cumulative_cli_seconds":4.0,"pairs":20,"reason":"Required PR539 pre-merge performance; serial; cumulative-cli 4.0s per PR537/538 precedent"}

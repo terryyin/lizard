@@ -1,13 +1,7 @@
 import unittest
 
-from lizard import analyze_file
 from lizard_languages import KotlinReader
-
-
-def get_kotlin_function_list(source_code):
-    return analyze_file.analyze_source_code(
-        "a.kt", source_code
-    ).function_list
+from .kotlin_helpers import get_kotlin_function_list
 
 
 class Test_tokenizing_Kotlin(unittest.TestCase):
@@ -104,50 +98,6 @@ class Test_parser_for_Kotlin(unittest.TestCase):
             class c { }
                 ''')
         self.assertEqual(0, len(result))
-
-    def test_getter(self):
-        result = get_kotlin_function_list('''
-            class Time
-            {
-                var seconds: Double = 17.0
-                var minutes: Double
-                    get() = seconds / 60
-            }
-                ''')
-        self.assertEqual("get", result[0].name)
-
-    def test_getter_setter(self):
-        result = get_kotlin_function_list('''
-            class Time
-            {
-                var seconds: Double = 17.0
-                var minutes: Double
-                    get() = seconds / 60
-                    set(newValue) {
-                        this.seconds = (newValue * 60)
-                    }
-            }
-                ''')
-        self.assertEqual("get", result[1].name)
-        self.assertEqual("set", result[0].name)
-
-    # https://docs.kotlin.org/kotlin-book/LanguageGuide/Properties.html#ID259
-    def test_explicit_getter_setter(self):
-        result = get_kotlin_function_list('''
-            var center: Point
-                get() = {
-                    val centerX = origin.x + (size.width / 2)
-                    val centerY = origin.y + (size.height / 2)
-                    return Point(x: centerX, y: centerY)
-                }
-                set(newCenter) {
-                    origin.x = newCenter.x - (size.width / 2)
-                    origin.y = newCenter.y - (size.height / 2)
-                }
-            }
-                ''')
-        self.assertEqual("set", result[0].name)
-        self.assertEqual("get", result[1].name)
 
     def test_when_cases(self):
         result = get_kotlin_function_list('''

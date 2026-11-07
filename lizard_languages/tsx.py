@@ -1,12 +1,16 @@
 '''
-Language parser for TSX
+Language parser for TSX/JSX
+
+Uses TypeScriptStates (from typescript.py) for function detection.
+Only overrides tokenization to handle JSX-specific syntax (<Component>, {expressions}).
 '''
 
-from .code_reader import CodeStateMachine
-from .code_reader import CodeReader
 from .js_style_regex_expression import js_style_regex_expression
-from .typescript import TypeScriptReader
-from .typescript import JSTokenizer, Tokenizer, TypeScriptStates
+from .typescript import (
+    JS_IDENTIFIER, NULLISH_COALESCING, OPTIONAL_ACCESS, OPTIONAL_NAME,
+    TypeScriptReader)
+from .typescript import JSTokenizer, Tokenizer
+from .javascript_templates import LINE_COMMENT, template_tokens
 
 
 class TSXReader(TypeScriptReader):
@@ -14,338 +18,70 @@ class TSXReader(TypeScriptReader):
 
     ext = ['tsx', 'jsx']
     language_names = ['tsx', 'jsx']
+    _scan_atomic_templates = True
+
+    def __init__(self, context):
+        super().__init__(context)
+        context.class_field_annotations = context.fileinfo.filename.lower().endswith(
+            ".tsx")
 
     @staticmethod
-    @js_style_regex_expression
+    @js_style_regex_expression(language='jsx')
     def generate_tokens(source_code, addition='', token_class=None):
         # Add support for TypeScript type annotations in JSX
-        addition = addition + \
+        addition = addition + "|" + LINE_COMMENT + \
             r"|(?:<[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)*>)" + \
             r"|(?:<\/[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)*>)" + \
-            r"|(?:\$\w+)" + \
+            r"|(?:#\w+)" + \
+            OPTIONAL_NAME + \
+            JS_IDENTIFIER + \
+            NULLISH_COALESCING + \
+            OPTIONAL_ACCESS + \
             r"|(?:<\/\w+>)" + \
-            r"|(?:=>)" + \
-            r"|`.*?`"
+            r"|(?:<\/?>)" + \
+            r"|(?:=>)"
         js_tokenizer = TSXTokenizer()
-        for token in CodeReader.generate_tokens(
-                source_code, addition, token_class):
+        for token in template_tokens(
+                source_code, addition, token_class, split=False):
             for tok in js_tokenizer(token):
                 yield tok
 
-    def __init__(self, context):
-        super(TSXReader, self).__init__(context)
-        # Use JSXTypeScriptStates for better handling of TSX specific features
-        self.parallel_states = [JSXTypeScriptStates(context)]
+
+# Tokens after which a JSX element can start an expression. After a name,
+# `)` or `]`, an angle bracket is a comparison or type arguments instead.
+# `}` and `>` keep sibling elements after a child expression or prior tag.
+_BEFORE_EXPRESSION = {
+    None, '(', '[', '{', '}', '>', ',', '=', '=>', 'return', '?', ':',
+    '&&', '||', '??', '!', 'yield', 'default', 'case', ';'}
 
 
-class JSXTypeScriptStates(CodeStateMachine):
-    """State machine for JSX/TSX files using composition with TypeScriptStates"""
-
-    def __init__(self, context, inside_function=False):
-        super().__init__(context)
-        self.last_token = ''
-        self.function_name = ''
-        self.started_function = None
-        self.pending_function_name = ''
-        self._ts_declare = False
-        # Note: Condition categories come from TypeScriptReader class level,
-        # no need to define instance-level duplicates
-        self.inside_function = inside_function  # Track if we're already inside a function
-
-    def statemachine_before_return(self):
-        # Ensure any pending function is closed - this should make the main function appear first
-        if self.started_function:
-            self._pop_function_from_stack()
-
-    def _state_global(self, token):
-        # Handle TypeScript declare keyword
-        if token == 'declare':
-            self._ts_declare = True
-            return
-        if token == 'function' and self._ts_declare:
-            # Skip declared functions
-            self._ts_declare = False
-            self.next(self._skip_until_semicolon)
-            return
-        self._ts_declare = False
-
-        # Handle function keyword
-        if token == 'function':
-            self.next(self._function_name_state)
-            return
-
-        # Handle arrow functions: look for =>
-        if token == '=>':
-            # Start arrow function with pending name or anonymous
-            self._start_arrow_function()
-            return
-
-        # Handle control flow for cyclomatic complexity
-        if token in ('if', 'switch', 'for', 'while', 'catch'):
-            if self.started_function or self.inside_function:
-                self.context.add_condition()
-            self.next(self._expecting_condition_and_statement)
-            return
-        elif token in ('else', 'do', 'try', 'finally'):
-            self.next(self._expecting_statement_or_block)
-            return
-        elif token in ('&&', '||', '?'):
-            if self.started_function or self.inside_function:
-                self.context.add_condition()
-            return
-        elif token == 'case':
-            if self.started_function or self.inside_function:
-                self.context.add_condition()
-            return
-
-        # Handle assignment for function names - only if not inside a function
-        if token == '=' and not self.inside_function:
-            # If we don't have a pending name yet, use the last token
-            if not self.pending_function_name:
-                self.pending_function_name = self.last_token
-            return
-
-        # Handle type annotations
-        if token == ':' and not self.inside_function:
-            # This could be a type annotation before assignment (e.g., const name: Type = ...)
-            # Store the current token as potential function name and consume the type
-            if not self.pending_function_name:
-                self.pending_function_name = self.last_token
-            self._consume_type_annotation()
-            return
-
-        # Handle braces
-        if token == '{':
-            if self.started_function or self.inside_function:
-                # Function body - stay in current function
-                nested_state = self.__class__(self.context, inside_function=True)
-                self.sub_state(nested_state)
-            else:
-                # Object or block
-                self.sub_state(self.__class__(self.context))
-            return
-        elif token == '}':
-            self.statemachine_return()
-            return
-
-        # Handle parentheses - be careful with arrow function parameters
-        if token == '(':
-            if self.pending_function_name:
-                # This might be arrow function parameters, handle in-line
-                self.next(self._arrow_function_params)
-            else:
-                # Regular parentheses grouping or function call
-                nested_state = self.__class__(self.context, inside_function=self.inside_function)
-                self.sub_state(nested_state)
-            return
-        elif token == ')':
-            self.statemachine_return()
-            return
-
-        # Handle end of statement
-        if token == ';' or self.context.newline:
-            if not self.inside_function:
-                self.pending_function_name = ''
-            self._pop_function_from_stack()
-
-        self.last_token = token
-
-    def _function_name_state(self, token):
-        """Handle function name after 'function' keyword"""
-        if token == '(':
-            # Anonymous function
-            self._start_function('(anonymous)')
-            self.next(self._function_parameters, token)
-        else:
-            # Named function
-            self._start_function(token)
-            self.next(self._expecting_function_params)
-
-    def _expecting_function_params(self, token):
-        """Expect opening parenthesis for function parameters"""
-        if token == '(':
-            self.next(self._function_parameters, token)
-        else:
-            # Not a function, return to global state
-            self.next(self._state_global, token)
-
-    def _function_parameters(self, token):
-        """Handle function parameters"""
-        if token == ')':
-            self.next(self._expecting_function_body)
-        elif token == '(':
-            # Nested parentheses in parameters
-            self.sub_state(self.__class__(self.context))
-        else:
-            # Parameter token
-            if token not in (',', ':', '=', '?', '...') and token.isalnum():
-                self.context.parameter(token)
-
-    def _expecting_function_body(self, token):
-        """Expect function body (could be block or expression for arrow functions)"""
-        if token == '{':
-            # Block body - create new scope but stay in current function
-            def callback():
-                self.next(self._state_global)
-            nested_state = self.__class__(self.context, inside_function=True)
-            # Don't start a new function in the nested state
-            self.sub_state(nested_state, callback)
-        elif token == ':':
-            # Type annotation for return type
-            self._consume_type_annotation()
-        else:
-            # Expression body or other tokens - continue in global state
-            self.next(self._state_global, token)
-
-    def _start_arrow_function(self):
-        """Start an arrow function with pending name or anonymous"""
-        name = self.pending_function_name or '(anonymous)'
-
-        if self.inside_function:
-            # For nested functions, create and immediately close them
-            # This ensures they're detected but don't interfere with the main function
-            self.context.push_new_function(name)
-            self.context.end_of_function()
-        else:
-            # For top-level functions, use normal processing
-            self._start_function(name)
-
-        self.pending_function_name = ''
-
-    def _start_function(self, name):
-        """Start a new function"""
-        # Always start a new function - nested functions are separate functions
-        self.context.push_new_function(name)
-        # Track that we started a function for proper cleanup
-        self.started_function = True
-        self.function_name = name
-
-    def _pop_function_from_stack(self):
-        """End current function"""
-        if self.started_function:
-            self.context.end_of_function()
-            self.started_function = None
-            self.function_name = ''
-
-    def _expecting_condition_and_statement(self, token):
-        """Handle conditional statements with conditions"""
-        if token == '(':
-            # Condition in parentheses
-            def callback():
-                self.next(self._expecting_statement_or_block)
-            nested_state = self.__class__(self.context, inside_function=self.inside_function)
-            self.sub_state(nested_state, callback)
-        else:
-            # No parentheses, go directly to statement
-            self.next(self._state_global, token)
-
-    def _expecting_statement_or_block(self, token):
-        """Handle statement or block after control flow"""
-        if token == '{':
-            # Block statement
-            def callback():
-                self.next(self._state_global)
-            nested_state = self.__class__(self.context, inside_function=self.inside_function)
-            self.sub_state(nested_state, callback)
-        else:
-            # Single statement
-            self.next(self._state_global, token)
-
-    def _consume_type_annotation(self):
-        """Handle TypeScript type annotations"""
-        def callback():
-            # Continue with any saved token from the type annotation handler
-            type_handler = self.sub_state_instance
-            if hasattr(type_handler, 'saved_token') and type_handler.saved_token:
-                self.next(self._state_global, type_handler.saved_token)
-            else:
-                self.next(self._state_global)
-
-        type_handler = JSXTypeAnnotationHandler(self.context)
-        self.sub_state_instance = type_handler  # Store reference to access saved_token
-        self.sub_state(type_handler, callback)
-
-    def _skip_until_semicolon(self, token):
-        """Skip tokens until semicolon or newline (for declare statements)"""
-        if token == ';' or self.context.newline:
-            self.next(self._state_global)
-
-    def _arrow_function_params(self, token):
-        """Handle arrow function parameters without losing function name"""
-        if token == ')':
-            # End of parameters, expect => next
-            self.next(self._expecting_arrow)
-        elif token == '(':
-            # Nested parentheses in parameters
-            nested_state = self.__class__(self.context, inside_function=self.inside_function)
-            self.sub_state(nested_state)
-        else:
-            # Parameter token - add to context if it's a valid parameter
-            if token not in (',', ':', '=', '?', '...') and token.isalnum():
-                # Don't add parameters yet, wait for arrow to confirm it's a function
-                pass
-
-    def _expecting_arrow(self, token):
-        """Expect => after arrow function parameters"""
-        if token == '=>':
-            # Confirmed arrow function, start it now
-            self._start_arrow_function()
-        elif token == ':':
-            # Type annotation for return type
-            self._consume_type_annotation()
-        else:
-            # Not an arrow function, return to global state
-            self.pending_function_name = ''
-            self.next(self._state_global, token)
-
-
-class JSXTypeAnnotationHandler(CodeStateMachine):
-    """Handle TypeScript type annotations in JSX/TSX"""
-
-    def __init__(self, context):
-        super().__init__(context)
-        self.depth = 0
-        self.saved_token = None
-
-    def _state_global(self, token):
-        if token == '<':
-            # Generic type
-            self.depth += 1
-        elif token == '>':
-            self.depth -= 1
-            if self.depth < 0:
-                # End of type annotation
-                self.saved_token = token
-                self.statemachine_return()
-        elif token in ('=', ';', ')', '}', '=>') and self.depth == 0:
-            # End of type annotation
-            self.saved_token = token
-            self.statemachine_return()
-        elif token == '{':
-            # Object type annotation
-            self.next(self._object_type)
-        elif token == '(':
-            # Function type annotation
-            self.next(self._function_type)
-
-    def _object_type(self, token):
-        """Handle object type annotations like { width: string }"""
-        if token == '}':
-            self.next(self._state_global)
-
-    def _function_type(self, token):
-        """Handle function type annotations like (param: Type) => ReturnType"""
-        if token == ')':
-            self.next(self._state_global)
+def _is_opening_tag(token):
+    """`<p>` or `<Foo.Bar>`, which the tokenizer reads as one token."""
+    return token.startswith('<') and token.endswith('>') and (
+        token == '<>' or (len(token) > 2 and token[1] not in '/='))
 
 
 class TSXTokenizer(JSTokenizer):
     def __init__(self):
         super().__init__()
+        self._previous = None
 
     def process_token(self, token):
+        previous = self._previous
+        if not token.isspace():
+            self._previous = token
         if token == "<":
-            self.sub_tokenizer = XMLTagWithAttrTokenizer()
+            if previous in _BEFORE_EXPRESSION:
+                self.sub_tokenizer = XMLTagWithAttrTokenizer(True)
+            else:
+                # Comparison or type arguments: `i < n`, `f<T>()`. Starting
+                # a tag and aborting would hand `}` to brace counting and
+                # end the enclosing expression too early.
+                yield token
+            return
+        if _is_opening_tag(token) and previous in _BEFORE_EXPRESSION:
+            # The children of an element are text except for {...}.
+            self.sub_tokenizer = XMLTagWithAttrTokenizer.children_of(token)
             return
 
         if token == "=>":
@@ -358,15 +94,56 @@ class TSXTokenizer(JSTokenizer):
 
 
 class XMLTagWithAttrTokenizer(Tokenizer):
-    def __init__(self):
+    def __init__(self, in_expression=False):
         super(XMLTagWithAttrTokenizer, self).__init__()
         self.tag = None
+        self._attribute = None
         self.state = self._global_state
         self.cache = ['<']
-        self.brace_count = 0  # Track nested braces for complex expressions
-        self.arrow_function_detected = False  # Track if we've detected an arrow function
+        # Token emitted when an embedded {expression} ends, if any.
+        self._expression_end = None
+        # Tag text flushed before an attribute expression starts.
+        self._pending_flush = None
+        # Where an expression is expected, `<` can only open an element,
+        # so its children are text even when they hold `=`, `;` or `)`.
+        self._in_expression = in_expression
+
+    @classmethod
+    def children_of(cls, opening_tag):
+        tokenizer = cls(True)
+        tokenizer.cache = [opening_tag]
+        tokenizer.state = tokenizer._body
+        return tokenizer
+
+    def __call__(self, token):
+        if self._pending_flush:
+            for tok in self._pending_flush:
+                yield tok
+            self._pending_flush = None
+        if self.sub_tokenizer:
+            for tok in self.sub_tokenizer(token):
+                yield tok
+            if self.sub_tokenizer._ended:
+                self.sub_tokenizer = None
+                # The TSXTokenizer consumed the closing '}'. After an
+                # attribute expression, ';' closes any expression-body
+                # arrow opened inside it (onClick={() => handler()}); a
+                # child expression gets its '}' back.
+                if self._expression_end:
+                    yield self._expression_end
+                    self._expression_end = None
+            return
+        for tok in self.process_token(token):
+            yield tok
 
     def process_token(self, token):
+        if token.isspace() and '\n' in token:
+            # Attribute expressions pass through before the cached tag
+            # text, so newlines go out now to keep their lines in order.
+            for _ in range(token.count('\n')):
+                yield '\n'
+            self.cache.append(' ')
+            return
         self.cache.append(token)
         if not token.isspace():
             result = self.state(token)
@@ -379,25 +156,59 @@ class XMLTagWithAttrTokenizer(Tokenizer):
         return ()
 
     def abort(self):
+        self._aborted = True
         self.stop()
         return self.cache
 
     def flush(self):
         tmp, self.cache = self.cache, []
-        return [''.join(tmp)]
+        text = ''.join(tmp)
+        if text.isspace():
+            # Readers drop whitespace tokens other than a bare newline.
+            return ['\n'] * text.count('\n')
+        return [text]
 
     def _global_state(self, token):
+        if token == '>' and self._in_expression:
+            self.state = self._body  # fragment: <>...</>
+            return None
         if not isidentifier(token):
             return self.abort()
         self.tag = token
-        self.state = self._after_tag
+        self.state = self._after_tag_name
+
+    def _after_tag_name(self, token):
+        if token == '.':
+            # Member tag name with attributes: <Modal.Footer className="x">
+            self.state = self._tag_name_part
+            return None
+        if token.startswith('<') and token.endswith('>') and len(token) > 2:
+            self.state = self._after_type_arguments
+            return None
+        return self._after_tag(token)
+
+    def _after_type_arguments(self, token):
+        # <Select<number> value={v} /> is an element; a generic call such
+        # as useState<Result<T>>(x) has no attribute after them.
+        if isidentifier(token) or token == '/':
+            return self._after_tag(token)
+        return self.abort()
+
+    def _tag_name_part(self, token):
+        if not isidentifier(token):
+            return self.abort()
+        self.state = self._after_tag_name
+        return None
 
     def _after_tag(self, token):
         if token == '>':
             self.state = self._body
         elif token == "/":
             self.state = self._expecting_self_closing
+        elif token == "{":
+            self._attribute_expression()  # spread: <L {...props} />
         elif isidentifier(token):
+            self._attribute = token
             self.state = self._expecting_equal_sign
         else:
             return self.abort()
@@ -411,6 +222,18 @@ class XMLTagWithAttrTokenizer(Tokenizer):
     def _expecting_equal_sign(self, token):
         if token == '=':
             self.state = self._expecting_value
+        elif token == '-':
+            self.state = self._attribute_name_part  # data-x, aria-hidden
+        elif self._in_expression and self._attribute != 'extends':
+            # A valueless attribute (<A x={1} flag>); `<T extends U>` is
+            # a TypeScript type parameter instead.
+            return self._after_tag(token)
+        else:
+            return self.abort()
+
+    def _attribute_name_part(self, token):
+        if isidentifier(token):
+            self.state = self._expecting_equal_sign
         else:
             return self.abort()
 
@@ -418,39 +241,30 @@ class XMLTagWithAttrTokenizer(Tokenizer):
         if token[0] in "'\"":
             self.state = self._after_tag
         elif token == "{":
-            self.brace_count = 1  # Start counting braces
-            self.state = self._jsx_expression
-            # Don't add the closing brace automatically
-            # self.cache.append("}")
-            self.sub_tokenizer = TSXTokenizer()
+            self.state = self._after_tag
+            self._attribute_expression()
 
-    def _jsx_expression(self, token):
-        # Handle nested braces in expressions
-        if token == "{":
-            self.brace_count += 1
-        elif token == "}":
-            self.brace_count -= 1
-            if self.brace_count == 0:
-                # We've found the matching closing brace
-                self.state = self._after_tag
-                return
-
-        # Handle arrow functions in JSX attributes
-        if token == "=>":
-            self.arrow_function_detected = True
-            # Explicitly yield the arrow token to ensure it's processed
-            return ["=>"]
-
-        # Handle type annotations in JSX attributes
-        if token == "<":
-            # This might be a TypeScript generic type annotation
-            # We'll continue in the current state and let the tokenizer handle it
-            pass
+    def _attribute_expression(self):
+        # Emit the tag text read so far before the expression so the state
+        # machine meets `<D f={` before the expression's tokens, and an
+        # abort cannot hand back an opening '{' whose '}' the expression
+        # tokenizer consumes.
+        self._pending_flush = self.flush()
+        self.sub_tokenizer = TSXTokenizer()
+        self._expression_end = ';'
 
     def _body(self, token):
-        if token == "<":
-            self.sub_tokenizer = XMLTagWithAttrTokenizer()
+        # Abort if token can't be JSX body content — likely a type
+        # annotation close: React.FC<Props> = (...) => {
+        if token in ('=', '=>', ';', ')') and not self._in_expression:
+            return self.abort()
+
+        if token == "<" or _is_opening_tag(token):
             self.cache.pop()
+            if token == "<":
+                self.sub_tokenizer = XMLTagWithAttrTokenizer(True)
+            else:
+                self.sub_tokenizer = self.children_of(token)
             return self.flush()
 
         if token.startswith("</"):
@@ -458,8 +272,12 @@ class XMLTagWithAttrTokenizer(Tokenizer):
             return self.flush()
 
         if token == '{':
+            # The braces of a child expression stay visible, so the
+            # expression reads as code between its own `{` and `}`.
             self.sub_tokenizer = TSXTokenizer()
-            return self.flush()
+            self._expression_end = '}'
+            self.cache.pop()
+            return [tok for tok in self.flush() if tok] + ['{']
 
 
 def isidentifier(token):

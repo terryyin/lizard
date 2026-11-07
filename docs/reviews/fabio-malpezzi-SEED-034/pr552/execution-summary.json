@@ -1,0 +1,31 @@
+{
+  "identity": "SEED-034#process-fabio-malpezzi-prs slice 2",
+  "pr": 552,
+  "frozen_head": "c58534ac54c1f3edbe0fe009322170c4831fcf9f",
+  "corrected_head": "c58534ac54c1f3edbe0fe009322170c4831fcf9f",
+  "target": "b6b6b8c671bab79da1a6c28c61a2076e4735998d",
+  "baseline": "4a05e4056cebb2edd75cb02b7a43e911369f4ce5",
+  "disposition": "merged",
+  "merge_commit": "eec8c38b226b7a777d0e6d82978d618fde09a65a",
+  "thanks": "https://github.com/terryyin/lizard/pull/552#issuecomment-6660813658",
+  "ci_run": "https://github.com/terryyin/lizard/actions/runs/41789806795",
+  "value": "TypeScript generic function declarations must be reported with parameters and end lines",
+  "adaptation": "contributor patch as-is: optional resume on _consume_generic_type_params",
+  "product_files": [
+    "lizard_languages/javascript_functions.py",
+    "lizard_languages/typescript_declarations.py",
+    "test/test_languages/testTypeScriptFunctions.py"
+  ],
+  "proof": {
+    "reproduce": {"target_claim_match": false, "corrected_all_match": true},
+    "focused": "1386 passed, 5 skipped",
+    "full_pytest": "3022 passed, 7 skipped",
+    "make": "exit 0"
+  },
+  "performance": {
+    "attempt": 2,
+    "all_gates_pass": true,
+    "worst_upper_ci_pct": 2.9610775067569404
+  },
+  "refactor": "none"
+}

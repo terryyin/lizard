@@ -1,5 +1,5 @@
 import unittest
-from mock import patch
+from unittest.mock import patch
 from ..testHelpers import get_cpp_fileinfo_with_extension
 from lizard_ext.lizardduplicate import LizardExtension as DuplicateDetector
 from lizard import analyze_files, get_extensions
@@ -252,7 +252,7 @@ class TestDuplicateExtensionAcrossFiles(unittest.TestCase):
         self.detector = DuplicateDetector()
         self.builder = CFunctionBuilder()
 
-    @patch('lizard.auto_read', create=True)
+    @patch('lizard_core.file_analyzer.auto_read')
     def detect(self, source_files, auto_read):
         auto_read.side_effect = lambda filename: source_files[filename]
         extensions = get_extensions([self.detector])

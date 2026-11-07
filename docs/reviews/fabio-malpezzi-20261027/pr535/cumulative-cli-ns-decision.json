@@ -1,0 +1,13 @@
+{
+  "host": "Territory.local",
+  "headroom": {
+    "uptime": " 15:46:05  up 4 days  9:39,  4 users,  load average: 8.99, 9.40, 11.59\n",
+    "memory": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    12207.\nPages active:                                 608297.\nPages inactive:                               600470.\nPages speculative:                              6605.\nPages throttled:                                   0.\nPages wired down:                             338217.\nPages purgeable:                                   6.\n\"Translation faults\":                    13657346530.\nPages copy-on-write:                      1185140092.\nPages zero filled:                        7473193756.\nPages reactivated:                         338012241.\nPages purged:                              104428145.\nFile-backed pages:                            438091.\nAnonymous pages:                              777281.\nPages stored in compressor:                  3923888.\nPages occupied by compressor:                1519815.\nDecompressions:                            330276176.\nCompressions:                              399948601.\nPageins:                                   266495821.\nPageouts:                                    6595998.\nSwapins:                                    10015597.\nSwapouts:                                   12228929.\n",
+    "logical_cpus": "16\n"
+  },
+  "workload": "20 alternating calibrated >=1.2s cumulative cli-ns pairs",
+  "expected_cost": "about one minute, following the six terminal paired runs",
+  "concurrency": "one measured CLI at a time; coordinator keeps owned host-heavy work idle",
+  "choice": "run sequentially; retain interval and reconsider if confidence crosses3% or actual batches fall below1s",
+  "owner": "review_535 implementation agent"
+}

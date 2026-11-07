@@ -1,5 +1,5 @@
 import unittest
-from mock import Mock, patch
+from unittest.mock import Mock, patch
 from lizard import get_extensions, FileAnalyzer
 from lizard_ext.lizardio import LizardExtension as FanInOut
 from lizard import OutputScheme, FileInformation, FunctionInfo

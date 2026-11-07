@@ -159,3 +159,420 @@ class Test_parser_for_JavaScript_ES6(unittest.TestCase):
         self.assertEqual('a', functions[0].name)
 
     # TBD: Method Properties
+
+
+class Test_ES6_unparenthesized_arrow_params(unittest.TestCase):
+    """Tests class field arrows with unparenthesized single parameter."""
+
+    def test_async_unparenthesized_arrow(self):
+        """field = async x => {} should detect field and not break subsequent methods"""
+        code = '''
+        class Foo {
+            before() { return 1; }
+            handler = async x => { return x; };
+            after() { return 2; }
+        }
+        '''
+        functions = get_js_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("before", names)
+        self.assertIn("after", names)
+
+    def test_unparenthesized_arrow_no_async(self):
+        """field = x => {} should detect field and not break subsequent methods"""
+        code = '''
+        class Foo {
+            before() { return 1; }
+            transform = x => x * 2;
+            after() { return 2; }
+        }
+        '''
+        functions = get_js_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("before", names)
+        self.assertIn("after", names)
+
+    def test_async_unparenthesized_arrow_complex_body(self):
+        """async field arrow with complex body should not corrupt parser state"""
+        code = '''
+        class Service {
+            extractRules() { return {}; }
+            runExternal = async recordIds => {
+                if (recordIds.length > 0) {
+                    await this.doSomething();
+                }
+                return true;
+            };
+            runReset(record) {
+                if (typeof this.reset === "function") { this.reset(record); }
+            }
+            get tableClass() { return "test"; }
+            deleteRecord(isDeleted, itemIndex) {
+                try { this.records.splice(itemIndex, 1); } catch (err) { console.error(err); }
+            }
+        }
+        '''
+        functions = get_js_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("extractRules", names)
+        self.assertIn("runReset", names)
+        self.assertIn("get tableClass", names)
+        self.assertIn("deleteRecord", names)
+        self.assertNotIn("if", names)
+
+
+class Test_ES6_dot_field_assignment(unittest.TestCase):
+    """Tests that field = OBJ.PROP does not break subsequent method detection."""
+
+    def test_dot_field_assignment(self):
+        """field = A.B; should not swallow the next method"""
+        code = 'class C { x = A.B; m1() {} m2() {} }'
+        functions = get_js_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("m1", names)
+        self.assertIn("m2", names)
+
+    def test_chained_dot_field_assignment(self):
+        """field = A.B.C; should not swallow the next method"""
+        code = 'class C { x = A.B.C; m1() {} m2() {} }'
+        functions = get_js_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("m1", names)
+        self.assertIn("m2", names)
+
+    def test_multiple_dot_field_assignments(self):
+        """Multiple field = OBJ.PROP should not swallow methods"""
+        code = '''
+        class C {
+            x = A.B;
+            y = C.D;
+            m1() { return 1; }
+            m2() { return 2; }
+        }
+        '''
+        functions = get_js_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("m1", names)
+        self.assertIn("m2", names)
+
+
+class Test_ES6_destructuring_params(unittest.TestCase):
+    """Tests arrow functions with destructuring parameters."""
+
+    def test_object_destructuring(self):
+        functions = get_js_function_list("const process = ({name, age}) => name + age;")
+        self.assertEqual(["process"], [f.name for f in functions])
+
+    def test_array_destructuring(self):
+        functions = get_js_function_list("const first = ([head, ...tail]) => head;")
+        self.assertEqual(["first"], [f.name for f in functions])
+
+    def test_nested_destructuring(self):
+        code = '''
+        const extract = ({user: {name, address: {city}}}) => {
+            return name + " from " + city;
+        }
+        '''
+        functions = get_js_function_list(code)
+        self.assertEqual(["extract"], [f.name for f in functions])
+
+    def test_default_values_in_destructuring(self):
+        code = '''
+        const configure = ({host = "localhost", port = 3000, debug = false}) => {
+            return {host, port, debug};
+        }
+        '''
+        functions = get_js_function_list(code)
+        self.assertEqual(["configure"], [f.name for f in functions])
+
+
+class Test_ES6_default_params(unittest.TestCase):
+    """Tests arrow functions with default parameters."""
+
+    def test_default_params(self):
+        code = 'const greet = (name = "world", greeting = "Hello") => greeting + " " + name;'
+        functions = get_js_function_list(code)
+        self.assertEqual(["greet"], [f.name for f in functions])
+
+    def test_default_param_function(self):
+        code = '''
+        function createEl(tag = "div", content = "") {
+            const el = document.createElement(tag);
+            el.textContent = content;
+            return el;
+        }
+        '''
+        functions = get_js_function_list(code)
+        self.assertEqual(["createEl"], [f.name for f in functions])
+
+
+class Test_ES6_class_field_arrows(unittest.TestCase):
+    """Tests class field arrow functions."""
+
+    def test_class_arrow_fields(self):
+        """Arrow functions as class fields should use the field name"""
+        code = '''
+        class Btn {
+            handleClick = () => { this.setState({clicked: true}); };
+            handleHover = (e) => { console.log(e); };
+            render() { return null; }
+        }
+        '''
+        functions = get_js_function_list(code)
+        self.assertEqual(
+            ["handleClick", "handleHover", "render"],
+            [f.name for f in functions])
+
+    def test_class_field_then_method(self):
+        """Regular class method after arrow field should be detected"""
+        code = '''
+        class Timer {
+            tick = () => { this.count++; };
+            reset() { this.count = 0; }
+            getCount() { return this.count; }
+        }
+        '''
+        functions = get_js_function_list(code)
+        self.assertEqual(
+            ["tick", "reset", "getCount"],
+            [f.name for f in functions])
+
+    def test_field_arrow_with_params(self):
+        """Field arrow with parameters should use the field name"""
+        code = '''
+        class EventBus {
+            emit = (event, data) => { this.listeners[event](data); };
+            on = (event, cb) => { this.listeners[event] = cb; };
+        }
+        '''
+        functions = get_js_function_list(code)
+        self.assertEqual(
+            ["emit", "on"],
+            [f.name for f in functions])
+
+    def test_field_arrow_block_body(self):
+        """Field arrow with block body and complexity"""
+        code = '''
+        class Validator {
+            validate = (value) => {
+                if (!value) return false;
+                if (value.length < 3) return false;
+                return true;
+            };
+        }
+        '''
+        functions = get_js_function_list(code)
+        self.assertEqual(["validate"], [f.name for f in functions])
+        self.assertGreater(functions[0].cyclomatic_complexity, 1)
+
+
+class Test_ES6_optional_chaining_no_fp(unittest.TestCase):
+    """Tests that optional chaining does not produce false positives."""
+
+    def test_optional_chain_call(self):
+        """obj?.method() should not produce FP for method"""
+        code = '''
+        function safe(obj) {
+            return obj?.method();
+        }
+        '''
+        functions = get_js_function_list(code)
+        self.assertEqual(["safe"], [f.name for f in functions])
+
+    def test_nullish_coalescing(self):
+        """Nullish coalescing should not produce FP"""
+        code = '''
+        function getVal(cfg) {
+            const val = cfg?.setting ?? "default";
+            return val;
+        }
+        '''
+        functions = get_js_function_list(code)
+        self.assertEqual(["getVal"], [f.name for f in functions])
+
+
+class Test_ES6_private_class_fields(unittest.TestCase):
+    """Tests private class field methods."""
+
+    def test_private_field_methods(self):
+        code = '''
+        class Counter {
+            #count = 0;
+            increment() { this.#count++; }
+            getCount() { return this.#count; }
+        }
+        '''
+        functions = get_js_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("increment", names)
+        self.assertIn("getCount", names)
+
+
+class Test_ES6_computed_property_methods(unittest.TestCase):
+    """Tests computed property name methods."""
+
+    def test_computed_key_methods(self):
+        code = '''
+        const key = "method";
+        const obj = {
+            [key]() { return 1; },
+            ["static" + "Key"]() { return 2; }
+        };
+        '''
+        functions = get_js_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("key", names)
+        self.assertIn("staticKey", names)
+
+    def test_symbol_iterator(self):
+        code = '''
+        class Iterable {
+            [Symbol.iterator]() {
+                let i = 0;
+                return { next: () => ({value: i++, done: i > 10}) };
+            }
+        }
+        '''
+        functions = get_js_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("symbol.iterator", names)
+
+
+class Test_ES6_for_loops_with_functions(unittest.TestCase):
+    """Tests function detection inside for loops."""
+
+    def test_for_of_body(self):
+        code = '''
+        function processAll(items) {
+            for (const item of items) {
+                if (item.active) { handle(item); }
+            }
+        }
+        '''
+        functions = get_js_function_list(code)
+        self.assertEqual(["processAll"], [f.name for f in functions])
+
+    def test_forEach_callback(self):
+        code = '''
+        function logAll(items) {
+            items.forEach((item) => {
+                console.log(item.name);
+            });
+        }
+        '''
+        functions = get_js_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("logAll", names)
+        self.assertIn("(anonymous)", names)
+
+
+class Test_ES6_multiple_arrow_patterns(unittest.TestCase):
+    """Tests various arrow function declaration patterns."""
+
+    def test_arrow_returning_object(self):
+        """Arrow returning object literal in parens"""
+        code = "const make = (x) => ({value: x, label: String(x)});"
+        functions = get_js_function_list(code)
+        self.assertEqual(["make"], [f.name for f in functions])
+
+    def test_chained_arrow_filter_map(self):
+        """Filter + map chain with arrow callbacks"""
+        code = '''
+        const result = items
+            .filter(x => x > 0)
+            .map(x => x * 2);
+        '''
+        functions = get_js_function_list(code)
+        names = [f.name for f in functions]
+        anon_count = sum(1 for n in names if n == "(anonymous)")
+        self.assertEqual(2, anon_count)
+
+    def test_nested_arrows(self):
+        """Curried function pattern — outer arrow detected"""
+        code = '''
+        const add = (a) => (b) => a + b;
+        '''
+        functions = get_js_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("add", names)
+        # Expression-body arrow: inner (b) => a + b is the body expression,
+        # only the outer arrow is detected as a function
+        self.assertEqual(1, len(functions))
+
+    def test_arrow_with_block_and_return(self):
+        """Arrow with block body and explicit return"""
+        code = '''
+        const validate = (value) => {
+            if (!value) return false;
+            if (value.length < 3) return false;
+            return true;
+        };
+        '''
+        functions = get_js_function_list(code)
+        self.assertEqual(["validate"], [f.name for f in functions])
+        self.assertGreater(functions[0].cyclomatic_complexity, 1)
+
+
+class Test_ES6_arrow_function_after_a_member_access(unittest.TestCase):
+
+    def summary(self, code):
+        return [(f.name, f.parameter_count, f.cyclomatic_complexity)
+                for f in get_js_function_list(code)]
+
+    def test_arrow_function_assigned_to_a_member(self):
+        code = "a.b = (x, y) => { return x || y; };"
+        self.assertEqual([('a.b', 2, 2)], self.summary(code))
+
+    def test_arrow_function_after_a_member_access_on_the_same_line(self):
+        code = (
+            "const o = {status: r.status, add: (a, b) => { return a; }};\n"
+            "const v = r.status, f = (a, b, c) => { return a; };\n"
+        )
+        self.assertEqual([('add', 2, 1), ('f', 3, 1)], self.summary(code))
+
+
+class Test_ES6_parenthesized_expression_after_an_assignment(unittest.TestCase):
+    """"name = (" may start an arrow function or a parenthesized expression."""
+
+    def test_conditions_tokens_and_lines_stay_with_the_function(self):
+        code = (
+            "function f(a, b) {\n"
+            "  const ok = (a &&\n"
+            "    b) || a;\n"
+            "  return ok;\n"
+            "}\n"
+        )
+        same_on_one_line = (
+            "function f(a, b) {\n"
+            "  const ok = a &&\n"
+            "    b || a;\n"
+            "  return ok;\n"
+            "}\n"
+        )
+        for filename in ("a.js", "a.ts"):
+            expected = analyze_file.analyze_source_code(
+                filename, same_on_one_line).function_list[0]
+            function = analyze_file.analyze_source_code(
+                filename, code).function_list[0]
+            self.assertEqual(
+                (3, 5, expected.token_count + 2),
+                (function.cyclomatic_complexity, function.nloc,
+                 function.token_count), filename)
+
+    def test_call_spread_in_an_object(self):
+        code = (
+            "function merge(m, i) {\n"
+            "  return { ...g(i ? 1 : 2), u: m || 0 };\n"
+            "}\n"
+        )
+        self.assertEqual([('merge', 3)],
+                         [(f.name, f.cyclomatic_complexity)
+                          for f in get_js_function_list(code)])
+
+    def test_real_arrow_keeps_defaults_and_body_ccn(self):
+        # default `=` + `||` in the default + body `?` stay on the arrow
+        code = "const f = (a = x || y, b) => a ? b : 0;"
+        functions = get_js_function_list(code)
+        self.assertEqual([('f', 2, 4)],
+                         [(fn.name, fn.parameter_count, fn.cyclomatic_complexity)
+                          for fn in functions])

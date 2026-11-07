@@ -1,0 +1,11 @@
+{
+  "time": 1793090255.772557,
+  "pid": 38078,
+  "raw": "parent01afe9c versus full authored92fff8a; no accepted-set dependency assumed",
+  "adapted": "corrected current targetd7be8b9 versus only actual PR536 patch",
+  "api": "20 alternating warmed pairs calibrated to1.2s; all65 fixed inputs",
+  "api-parameters": "same corpus; explicit public names/count properties observed",
+  "cli": "20 alternating warmed pairs calibrated to4s on original100 Python files; longer batches chosen prospectively after535 CLI noise",
+  "retry": "No invalid-proposal retry to hunt a pass. Failure/noise is retained.",
+  "cumulative": "No536 code is to land: accepted535 cumulative proof remains valid unchanged; raw/adapted measurements characterize deferred proposal only."
+}

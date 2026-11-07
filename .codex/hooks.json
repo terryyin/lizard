@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "apply_patch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/.agents/skills/dough-product-backlog/scripts/product-backlog-guard-hook.mjs\" \"$(git rev-parse --show-toplevel)\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

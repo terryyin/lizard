@@ -1,0 +1,150 @@
+diff --git a/lizard_languages/objc.py b/lizard_languages/objc.py
+index 184b4b57..51f4092f 100644
+--- a/lizard_languages/objc.py
++++ b/lizard_languages/objc.py
+@@ -23,17 +23,56 @@ def useless_and_fake(self):
+ 
+ 
+ class ObjCStates(CLikeStates):  # pylint: disable=R0903
++    # @interface and @protocol declare an API; a body may only appear in
++    # @implementation. Their contents must not reach the C-like states, where
++    # "Name () { ivars }" of a class extension looks like a function definition
++    # and is reported as one (issue #305).
+     def __init__(self, context):
+         super(ObjCStates, self).__init__(context)
+         self._objc_param_paren_depth = 0
++        self._objc_after_at = False
+ 
+     def _state_global(self, token):
++        if self._objc_after_at:
++            self._objc_after_at = False
++            if token == 'interface':
++                self._state = self._state_objc_declaration
++                return
++            if token == 'protocol':
++                self._state = self._state_objc_protocol_header
++                return
++        if token == '@':
++            self._objc_after_at = True
+         super(ObjCStates, self)._state_global(token)
+         if token == 'typedef':
+             self.next(self._typedef, token)
+         elif token == '(':
+             self.next(self._state_dec, token)
+ 
++    def _state_objc_declaration(self, token):
++        """Skip an @interface / @protocol section up to its @end."""
++        if self._objc_after_at:
++            self._objc_after_at = False
++            if token == 'end':
++                self._state = self._state_global
++                return
++        if token == '@':
++            self._objc_after_at = True
++
++    def _state_objc_protocol_header(self, token):
++        """Distinguish definitions from forward declarations and expressions."""
++        if token == '(':
++            self._state = self._state_objc_protocol_expression
++        elif token == ';':
++            self._state = self._state_global
++        elif token == '\n':
++            self._state = self._state_objc_declaration
++
++    def _state_objc_protocol_expression(self, token):
++        """Skip the argument of a file-scope @protocol(Name) expression."""
++        if token == ')':
++            self._state = self._state_global
++
+     def _state_dec_to_imp(self, token):
+         if token in ("+", "-"):
+             self._state = self._state_global
+diff --git a/test/test_languages/testObjC.py b/test/test_languages/testObjC.py
+index 3fb5d15a..6b1f3061 100644
+--- a/test/test_languages/testObjC.py
++++ b/test/test_languages/testObjC.py
+@@ -148,4 +148,82 @@ def test_objective_cpp_function_parsing(self):
+         result = analyze_file.analyze_source_code("test.mm", code)
+         self.assertEqual(1, len(result.function_list))
+         self.assertEqual("application: willFinishLaunchingWithOptions:", result.function_list[0].name)
+-        self.assertNotEqual("if", result.function_list[0].name)  # Should not show "if" as function name
+\ No newline at end of file
++        self.assertNotEqual("if", result.function_list[0].name)  # Should not show "if" as function name
++
++class Test_objc_interface(unittest.TestCase):
++    """@interface / @protocol are declarations: they contain no implementation."""
++
++    def create_objc_lizard(self, source_code):
++        return analyze_file.analyze_source_code("a.m", source_code).function_list
++
++    def test_class_extension_with_instance_variables(self):
++        result = self.create_objc_lizard(
++            "@interface Foo ()\n"
++            "{\n"
++            "    int a;\n"
++            "}\n"
++            "@end\n")
++        self.assertEqual([], [f.name for f in result])
++
++    def test_category_with_instance_variables(self):
++        result = self.create_objc_lizard(
++            "@interface Foo (Private)\n"
++            "{\n"
++            "    int a;\n"
++            "}\n"
++            "@end\n")
++        self.assertEqual([], [f.name for f in result])
++
++    def test_issue_305_only_the_methods_are_counted(self):
++        result = self.create_objc_lizard(
++            '#import "OCCFile.h"\n'
++            "\n"
++            "@interface OCCFile ()\n"
++            "{\n"
++            "    CppFile* mCppFile;\n"
++            "}\n"
++            "\n"
++            "@end\n"
++            "\n"
++            "@implementation OCCFile\n"
++            "\n"
++            "- (id)init\n"
++            "{\n"
++            "    if (self == [super init])\n"
++            "    {\n"
++            '        printf("hi");\n'
++            "    }\n"
++            "    return self;\n"
++            "}\n"
++            "\n"
++            "-(void)dealloc\n"
++            "{\n"
++            "    delete mCppFile;\n"
++            "}\n"
++            "\n"
++            "@end\n")
++        self.assertEqual(["init", "dealloc"], [f.name for f in result])
++
++    def test_protocol_declaration_is_not_a_function(self):
++        result = self.create_objc_lizard(
++            "@protocol Bar\n"
++            "- (void)doIt;\n"
++            "@end\n"
++            "@implementation Foo\n"
++            "- (void)doIt { }\n"
++            "@end\n")
++        self.assertEqual(["doIt"], [f.name for f in result])
++
++    def test_protocol_forward_declaration_does_not_hide_implementation(self):
++        result = self.create_objc_lizard(
++            "@protocol Foo;\n"
++            "@implementation Bar\n"
++            "- (void)doIt { }\n"
++            "@end\n")
++        self.assertEqual(["doIt"], [f.name for f in result])
++
++    def test_protocol_expression_does_not_hide_following_function(self):
++        result = self.create_objc_lizard(
++            "@protocol(NSObject)\n"
++            "void f() { }\n")
++        self.assertEqual(["f"], [f.name for f in result])

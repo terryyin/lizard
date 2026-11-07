@@ -1,0 +1,230 @@
+lizard_languages/rubylike.py                       79      0   100%
+lizard_languages/rust.py                           76      0   100%
+lizard_languages/scala.py                          31      0   100%
+lizard_languages/script_language.py                15      0   100%
+lizard_languages/solidity.py                       15      0   100%
+lizard_languages/st.py                             78      7    91%   89-90, 92, 115-117, 120
+lizard_languages/swift.py                         150      2    99%   52, 77
+lizard_languages/swift_literals.py                 69      6    91%   46, 58, 69, 80, 90-91
+lizard_languages/tnsdl.py                          74     74     0%   5-97
+lizard_languages/token_pattern.py                  40      0   100%
+lizard_languages/tsx.py                           109      5    95%   94, 125, 149, 168-169
+lizard_languages/ttcn.py                           41      2    95%   47-48
+lizard_languages/typescript.py                     55      1    98%   39
+lizard_languages/typescript_declarations.py       127     10    92%   37-40, 47-49, 57, 61, 113
+lizard_languages/typescript_states.py             151      3    98%   83, 171-172
+lizard_languages/vue.py                            21      0   100%
+lizard_languages/zig.py                            17      0   100%
+-----------------------------------------------------------------------------
+TOTAL                                            6653    366    94%
+pycodestyle lizard.py lizard_ext lizard_languages lizard_core
+pylint --exit-zero --rcfile pylintrc lizard.py lizard_ext lizard_languages lizard_core
+pylint: Command line or configuration file:1: UserWarning: 'Exception' is not a proper value for the 'overgeneral-exceptions' option. Use fully qualified name (maybe 'builtins.Exception' ?) instead. This will cease to be checked at runtime when the configuration upgrader is released.
+[7;33m************* Module lizard[0m
+lizard.py:37:8: C0103: [1mVariable name "d" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard.py:43:8: C0103: [1mVariable name "d" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard.py:68:0: C0413: [1mImport "from lizard_core.file_discovery import md5_hash_file, _build_gitignore_spec, get_all_source_files" should be placed at the top of the module[0m ([1mwrong-import-position[0m)
+lizard.py:70:0: C0413: [1mImport "from lizard_core.function_info import Nesting, BARE_NESTING, Namespace, FunctionInfo, FileInformation, AllResult" should be placed at the top of the module[0m ([1mwrong-import-position[0m)
+lizard.py:73:0: C0413: [1mImport "from lizard_core.file_info_builder import NestingStack, FileInfoBuilder" should be placed at the top of the module[0m ([1mwrong-import-position[0m)
+lizard.py:75:0: C0413: [1mImport "from lizard_core.file_analyzer import preprocessing, comment_counter, line_counter, token_counter, condition_counter, FileAnalyzer" should be placed at the top of the module[0m ([1mwrong-import-position[0m)
+lizard.py:78:0: C0413: [1mImport "from lizard_core.extensions import get_extensions, print_extension_results" should be placed at the top of the module[0m ([1mwrong-import-position[0m)
+lizard.py:80:0: C0413: [1mImport "from lizard_core.analysis import analyze, analyze_files, map_files_to_analyzer, _map_in_pool, analyze_file" should be placed at the top of the module[0m ([1mwrong-import-position[0m)
+lizard.py:83:0: C0413: [1mImport "from lizard_core.warning_filter import DEFAULT_WHITELIST, warning_filter, whitelist_filter, get_warnings" should be placed at the top of the module[0m ([1mwrong-import-position[0m)
+lizard.py:85:0: C0413: [1mImport "from lizard_core.output_scheme import OutputScheme" should be placed at the top of the module[0m ([1mwrong-import-position[0m)
+lizard.py:86:0: C0413: [1mImport "from lizard_core.text_output import print_warnings, print_no_warnings, print_total, print_and_save_modules, print_result, silent_printer, print_clang_style_warning, print_msvs_style_warning" should be placed at the top of the module[0m ([1mwrong-import-position[0m)
+lizard.py:90:0: C0413: [1mImport "from lizard_core.options import DEFAULT_CCN_THRESHOLD, DEFAULT_MAX_FUNC_LENGTH, _extension_arg, arg_parser, parse_args, infer_printer_from_file_ext" should be placed at the top of the module[0m ([1mwrong-import-position[0m)
+lizard.py:93:0: C0413: [1mImport "from lizard_core.cli import open_output_file, main" should be placed at the top of the module[0m ([1mwrong-import-position[0m)
+[7;33m************* Module lizard_ext[0m
+lizard_ext/__init__.py:23:4: C0415: [1mImport outside toplevel (sys)[0m ([1mimport-outside-toplevel[0m)
+[7;33m************* Module lizard_ext.lizardmccabe[0m
+lizard_ext/lizardmccabe.py:41:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+[7;33m************* Module lizard_ext.lizardnonstrict[0m
+lizard_ext/lizardnonstrict.py:8:0: R0205: [1;3;35mClass 'LizardExtension' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+[7;33m************* Module lizard_ext.lizardio[0m
+lizard_ext/lizardio.py:50:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_ext/lizardio.py:54:51: R1734: [1;3;35mConsider using [] instead of list()[0m ([1;3;35muse-list-literal[0m)
+[7;33m************* Module lizard_ext.lizardns[0m
+lizard_ext/lizardns.py:61:17: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+lizard_ext/lizardns.py:69:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_ext/lizardns.py:75:15: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_ext/lizardns.py:121:8: R1731: [1;3;35mConsider using 'function.max_nested_structures = max(function.max_nested_structures, len(levels))' instead of unnecessary if block[0m ([1;3;35mconsider-using-max-builtin[0m)
+lizard_ext/lizardns.py:139:4: C0103: [1mMethod name "_reset_or_decrement_current_scope" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard_ext/lizardns.py:155:8: R1731: [1;3;35mConsider using 'self.context.current_function.max_nested_structures = max(self.context.current_function.max_nested_structures, cur_level)' instead of unnecessary if block[0m ([1;3;35mconsider-using-max-builtin[0m)
+[7;33m************* Module lizard_ext.lizardboolcount[0m
+lizard_ext/lizardboolcount.py:6:0: R0205: [1;3;35mClass 'LizardExtension' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+[7;33m************* Module lizard_ext.cognitive_indent[0m
+lizard_ext/cognitive_indent.py:12:0: R0903: [1;3;35mToo few public methods (1/2)[0m ([1;3;35mtoo-few-public-methods[0m)
+[7;33m************* Module lizard_ext.lizarddumpcomments[0m
+lizard_ext/lizarddumpcomments.py:10:0: R0205: [1;3;35mClass 'LizardExtension' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+[7;33m************* Module lizard_ext.lizardmodified[0m
+lizard_ext/lizardmodified.py:8:0: R0205: [1;3;35mClass 'LizardExtension' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+[7;33m************* Module lizard_ext.lizardnd[0m
+lizard_ext/lizardnd.py:10:0: R0205: [1;3;35mClass 'LizardExtension' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_ext/lizardnd.py:21:17: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+lizard_ext/lizardnd.py:52:17: R1714: [1;3;35mConsider merging these comparisons with 'in' by using 'token in (loop_indicator, indent_indicator)'. Use a set instead if elements are hashable.[0m ([1;3;35mconsider-using-in[0m)
+lizard_ext/lizardnd.py:29:4: R0915: [1;3;35mToo many statements (61/50)[0m ([1;3;35mtoo-many-statements[0m)
+lizard_ext/lizardnd.py:107:32: W0613: [35mUnused argument 'l_depth'[0m ([35munused-argument[0m)
+lizard_ext/lizardnd.py:118:8: R1731: [1;3;35mConsider using 'self.current_function.max_nesting_depth = max(self.current_function.max_nesting_depth, nd_tmp)' instead of unnecessary if block[0m ([1;3;35mconsider-using-max-builtin[0m)
+[7;33m************* Module lizard_ext.lizarddependencycount[0m
+lizard_ext/lizarddependencycount.py:7:0: R0205: [1;3;35mClass 'LizardExtension' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_ext/lizarddependencycount.py:27:19: C1803: [1m"import_as_list != []" can be simplified to "import_as_list", if it is strictly a sequence, as an empty list is falsey[0m ([1muse-implicit-booleaness-not-comparison[0m)
+[7;33m************* Module lizard_ext.checkstyleoutput[0m
+lizard_ext/checkstyleoutput.py:8:4: C0415: [1mImport outside toplevel (xml.etree.ElementTree)[0m ([1mimport-outside-toplevel[0m)
+lizard_ext/checkstyleoutput.py:30:4: C0415: [1mImport outside toplevel (xml.dom.minidom)[0m ([1mimport-outside-toplevel[0m)
+lizard_ext/checkstyleoutput.py:6:34: W0613: [35mUnused argument 'verbose'[0m ([35munused-argument[0m)
+[7;33m************* Module lizard_ext.lizardwordcount[0m
+lizard_ext/lizardwordcount.py:14:0: R0205: [1;3;35mClass 'LizardExtension' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_ext/lizardwordcount.py:48:13: W1514: [35mUsing open without explicitly specifying an encoding[0m ([35munspecified-encoding[0m)
+[7;33m************* Module lizard_ext.htmloutput[0m
+lizard_ext/htmloutput.py:14:8: C0415: [1mImport outside toplevel (jinja2.Template)[0m ([1mimport-outside-toplevel[0m)
+lizard_ext/htmloutput.py:38:4: C0415: [1mImport outside toplevel (lizard.get_warnings)[0m ([1mimport-outside-toplevel[0m)
+[7;33m************* Module lizard_ext.auto_open[0m
+lizard_ext/auto_open.py:25:19: W1514: [35mUsing open without explicitly specifying an encoding[0m ([35munspecified-encoding[0m)
+lizard_ext/auto_open.py:26:11: W1514: [35mUsing open without explicitly specifying an encoding[0m ([35munspecified-encoding[0m)
+[7;33m************* Module lizard_ext.lizardcpre[0m
+lizard_ext/lizardcpre.py:9:0: R0205: [1;3;35mClass 'LizardExtension' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+[7;33m************* Module lizard_ext.lizardcomplextags[0m
+lizard_ext/lizardcomplextags.py:7:0: R0205: [1;3;35mClass 'LizardExtension' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+[7;33m************* Module lizard_ext.cognitive_counter[0m
+lizard_ext/cognitive_counter.py:14:0: R0205: [1;3;35mClass '_Frame' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_ext/cognitive_counter.py:20:4: R0913: [1;3;35mToo many arguments (6/5)[0m ([1;3;35mtoo-many-arguments[0m)
+lizard_ext/cognitive_counter.py:20:4: R0917: [1;3;35mToo many positional arguments (6/5)[0m ([1;3;35mtoo-many-positional-arguments[0m)
+lizard_ext/cognitive_counter.py:30:0: R0205: [1;3;35mClass '_FunctionState' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_ext/cognitive_counter.py:62:0: R0205: [1;3;35mClass '_Counter' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_ext/cognitive_counter.py:62:0: R0902: [1;3;35mToo many instance attributes (8/7)[0m ([1;3;35mtoo-many-instance-attributes[0m)
+lizard_ext/cognitive_counter.py:62:0: R0903: [1;3;35mToo few public methods (1/2)[0m ([1;3;35mtoo-few-public-methods[0m)
+[7;33m************* Module lizard_ext.lizardduplicate[0m
+lizard_ext/lizardduplicate.py:12:0: R0205: [1;3;35mClass 'CodeSnippet' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_ext/lizardduplicate.py:19:15: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+lizard_ext/lizardduplicate.py:31:0: R0205: [1;3;35mClass 'Sequence' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_ext/lizardduplicate.py:41:15: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+lizard_ext/lizardduplicate.py:47:0: R0205: [1;3;35mClass 'InvolvingScope' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_ext/lizardduplicate.py:94:0: R0205: [1;3;35mClass 'DuplicateFinder' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_ext/lizardduplicate.py:94:0: R0902: [1;3;35mToo many instance attributes (8/7)[0m ([1;3;35mtoo-many-instance-attributes[0m)
+lizard_ext/lizardduplicate.py:108:32: E0606: [1;31mPossibly using variable 'recent' before assignment[0m ([1;31mpossibly-used-before-assignment[0m)
+lizard_ext/lizardduplicate.py:118:23: E0606: [1;31mPossibly using variable 'scope' before assignment[0m ([1;31mpossibly-used-before-assignment[0m)
+lizard_ext/lizardduplicate.py:176:0: R0205: [1;3;35mClass 'NestingStackWithUnifiedTokens' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_ext/lizardduplicate.py:253:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_ext/lizardduplicate.py:255:4: W0222: [35mSignature differs from overridden '__call__' method[0m ([35msignature-differs[0m)
+lizard_ext/lizardduplicate.py:313:14: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+lizard_ext/lizardduplicate.py:314:14: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+[7;33m************* Module lizard_ext.halstead_metrics[0m
+lizard_ext/halstead_metrics.py:7:0: R0205: [1;3;35mClass 'HalsteadMetrics' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+[7;33m************* Module lizard_ext.halstead_classifier[0m
+lizard_ext/halstead_classifier.py:6:0: R0205: [1;3;35mClass 'HalsteadClassifier' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_ext/halstead_classifier.py:60:40: W0613: [35mUnused argument 'next_token'[0m ([35munused-argument[0m)
+lizard_ext/halstead_classifier.py:69:31: W0613: [35mUnused argument 'token'[0m ([35munused-argument[0m)
+[7;33m************* Module lizard_ext.cognitive_brace[0m
+lizard_ext/cognitive_brace.py:19:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_ext/cognitive_brace.py:25:4: R0912: [1;3;35mToo many branches (21/12)[0m ([1;3;35mtoo-many-branches[0m)
+lizard_ext/cognitive_brace.py:9:0: R0903: [1;3;35mToo few public methods (1/2)[0m ([1;3;35mtoo-few-public-methods[0m)
+[7;33m************* Module lizard_ext.lizardduplicated_param_list[0m
+lizard_ext/lizardduplicated_param_list.py:24:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+[7;33m************* Module lizard_ext.lizardoutside[0m
+lizard_ext/lizardoutside.py:6:0: R0205: [1;3;35mClass 'LizardExtension' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_ext/lizardoutside.py:9:8: R1737: [1;3;35mUse 'yield from' directly instead of yielding each element one by one[0m ([1;3;35muse-yield-from[0m)
+[7;33m************* Module lizard_ext.xmloutput[0m
+lizard_ext/xmloutput.py:10:4: C0415: [1mImport outside toplevel (xml.dom.minidom)[0m ([1mimport-outside-toplevel[0m)
+lizard_ext/xmloutput.py:120:20: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+lizard_ext/xmloutput.py:124:20: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+[7;33m************* Module lizard_ext.cognitive_profile[0m
+lizard_ext/cognitive_profile.py:23:0: R0205: [1;3;35mClass '_Profile' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_ext/cognitive_profile.py:27:4: R0917: [1;3;35mToo many positional arguments (18/5)[0m ([1;3;35mtoo-many-positional-arguments[0m)
+[7;33m************* Module lizard_ext.lizardhalstead[0m
+lizard_ext/lizardhalstead.py:132:0: R0205: [1;3;35mClass 'LizardExtension' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_ext/lizardhalstead.py:173:16: W0212: [35mAccess to a protected member _halstead_operands of a client class[0m ([35mprotected-access[0m)
+lizard_ext/lizardhalstead.py:178:16: W0212: [35mAccess to a protected member _halstead_operands of a client class[0m ([35mprotected-access[0m)
+[7;33m************* Module lizard_ext.lizardignoreassert[0m
+lizard_ext/lizardignoreassert.py:12:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_ext/lizardignoreassert.py:17:15: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+[7;33m************* Module lizard_ext.cognitive_actions[0m
+lizard_ext/cognitive_actions.py:9:0: R0205: [1;3;35mClass '_BraceActions' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_ext/cognitive_actions.py:13:24: E1101: [1;31mInstance of '_BraceActions' has no '_open_block' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:13:47: E1101: [1;31mInstance of '_BraceActions' has no '_close_block' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:14:24: E1101: [1;31mInstance of '_BraceActions' has no '_semicolon' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:21:47: E1101: [1;31mInstance of '_BraceActions' has no '_fundamental' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:29:8: E1101: [1;31mInstance of '_BraceActions' has no '_structural' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:30:8: E1101: [1;31mInstance of '_BraceActions' has no '_push' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:33:8: E1101: [1;31mInstance of '_BraceActions' has no '_hybrid' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:34:8: E1101: [1;31mInstance of '_BraceActions' has no '_push' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:37:11: E1101: [1;31mInstance of '_BraceActions' has no '_in_switch_body' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:39:17: E1101: [1;31mInstance of '_BraceActions' has no 'state' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:46:8: E1101: [1;31mInstance of '_BraceActions' has no '_hybrid' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:47:8: E1101: [1;31mInstance of '_BraceActions' has no '_push' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:50:11: E1101: [1;31mInstance of '_BraceActions' has no 'state' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:51:12: E1101: [1;31mInstance of '_BraceActions' has no 'state' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:53:12: E1101: [1;31mInstance of '_BraceActions' has no '_structural' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:54:12: E1101: [1;31mInstance of '_BraceActions' has no '_push' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:57:8: E1101: [1;31mInstance of '_BraceActions' has no '_structural' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:58:8: E1101: [1;31mInstance of '_BraceActions' has no '_push' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:61:8: E1101: [1;31mInstance of '_BraceActions' has no '_structural' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:62:8: E1101: [1;31mInstance of '_BraceActions' has no '_push' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:65:8: E1101: [1;31mInstance of '_BraceActions' has no '_structural' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:66:8: E1101: [1;31mInstance of '_BraceActions' has no '_push' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:69:16: E1101: [1;31mInstance of '_BraceActions' has no 'state' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:72:41: E1101: [1;31mInstance of '_BraceActions' has no 'context' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:77:16: E1101: [1;31mInstance of '_BraceActions' has no 'state' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:82:15: E1101: [1;31mInstance of '_BraceActions' has no 'profile' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:83:19: E1101: [1;31mInstance of '_BraceActions' has no 'context' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:92:8: E1101: [1;31mInstance of '_BraceActions' has no '_structural' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:93:8: E1101: [1;31mInstance of '_BraceActions' has no '_push' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:97:16: E1101: [1;31mInstance of '_BraceActions' has no 'state' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:104:12: E1101: [1;31mInstance of '_BraceActions' has no '_logical_operator' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:110:16: E1101: [1;31mInstance of '_BraceActions' has no 'state' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:114:21: E1101: [1;31mInstance of '_BraceActions' has no '_in_switch_body' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:108:4: R0911: [1;3;35mToo many return statements (7/6)[0m ([1;3;35mtoo-many-return-statements[0m)
+lizard_ext/cognitive_actions.py:141:8: E1101: [1;31mInstance of '_BraceActions' has no '_open_braced_body' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:141:31: E1101: [1;31mInstance of '_BraceActions' has no '_push' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:146:16: E1101: [1;31mInstance of '_BraceActions' has no 'state' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:147:18: E1101: [1;31mInstance of '_BraceActions' has no 'profile' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:149:12: E1101: [1;31mInstance of '_BraceActions' has no '_resolve_pending' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:151:12: E1101: [1;31mInstance of '_BraceActions' has no '_arm_word' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:152:20: E1101: [1;31mInstance of '_BraceActions' has no 'logical_ops' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:153:12: E1101: [1;31mInstance of '_BraceActions' has no '_logical_operator' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:157:12: E1101: [1;31mInstance of '_BraceActions' has no '_open_bracket' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:159:12: E1101: [1;31mInstance of '_BraceActions' has no '_close_bracket' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:163:16: E1101: [1;31mInstance of '_BraceActions' has no '_structural' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:166:16: E1101: [1;31mInstance of '_BraceActions' has no '_structural' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:167:13: R0916: [1;3;35mToo many boolean expressions in if statement (6/5)[0m ([1;3;35mtoo-many-boolean-expressions[0m)
+lizard_ext/cognitive_actions.py:170:12: E1101: [1;31mInstance of '_BraceActions' has no '_structural' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:172:12: E1101: [1;31mInstance of '_BraceActions' has no '_fundamental' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:145:4: R0912: [1;3;35mToo many branches (13/12)[0m ([1;3;35mtoo-many-branches[0m)
+lizard_ext/cognitive_actions.py:9:0: R0903: [1;3;35mToo few public methods (0/2)[0m ([1;3;35mtoo-few-public-methods[0m)
+[7;33m************* Module lizard_ext.lizardcognitive[0m
+lizard_ext/lizardcognitive.py:45:0: R0205: [1;3;35mClass 'LizardExtension' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_ext/lizardcognitive.py:56:17: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+[7;33m************* Module lizard_languages.lua[0m
+lizard_languages/lua.py:23:4: W0221: [35mNumber of parameters was 1 in 'ScriptLanguageMixIn.get_comment_from_token' and is now 2 in overriding 'LuaReader.get_comment_from_token' method[0m ([35marguments-differ[0m)
+lizard_languages/lua.py:28:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/lua.py:36:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/lua.py:44:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+[7;33m************* Module lizard_languages.fortran_states[0m
+lizard_languages/fortran_states.py:13:33: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+lizard_languages/fortran_states.py:45:4: R0912: [1;3;35mToo many branches (20/12)[0m ([1;3;35mtoo-many-branches[0m)
+lizard_languages/fortran_states.py:215:26: W0613: [35mUnused argument 'token'[0m ([35munused-argument[0m)
+lizard_languages/fortran_states.py:170:12: W0201: [35mAttribute 'type_name' defined outside __init__[0m ([35mattribute-defined-outside-init[0m)
+lizard_languages/fortran_states.py:216:8: W0201: [35mAttribute 'where_mask_line' defined outside __init__[0m ([35mattribute-defined-outside-init[0m)
+lizard_languages/fortran_states.py:217:8: W0201: [35mAttribute 'where_continued' defined outside __init__[0m ([35mattribute-defined-outside-init[0m)
+lizard_languages/fortran_states.py:221:12: W0201: [35mAttribute 'where_continued' defined outside __init__[0m ([35mattribute-defined-outside-init[0m)
+[7;33m************* Module lizard_languages.java[0m
+lizard_languages/java.py:27:0: C0103: [1mFunction name "_java_record_begins_type_declaration" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard_languages/java.py:27:0: R0911: [1;3;35mToo many return statements (9/6)[0m ([1;3;35mtoo-many-return-statements[0m)
+lizard_languages/java.py:55:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/java.py:70:8: C0103: [1mAttribute name "_java_after_unqualified_annotation" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard_languages/java.py:61:0: R0902: [1;3;35mToo many instance attributes (9/7)[0m ([1;3;35mtoo-many-instance-attributes[0m)
+lizard_languages/java.py:63:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/java.py:152:12: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/java.py:160:8: W0107: [35mUnnecessary pass statement[0m ([35munnecessary-pass[0m)
+lizard_languages/java.py:187:4: C0103: [1mMethod name "_state_record_compact_constructor" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard_languages/java.py:199:25: W0613: [35mUnused argument 'token'[0m ([35munused-argument[0m)
+[7;33m************* Module lizard_languages.ttcn[0m
+lizard_languages/ttcn.py:20:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+[7;33m************* Module lizard_languages.erlang[0m
+lizard_languages/erlang.py:27:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/erlang.py:51:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/erlang.py:62:13: R1714: [1;3;35mConsider merging these comparisons with 'in' by using 'token in ('.', ';')'. Use a set instead if elements are hashable.[0m ([1;3;35mconsider-using-in[0m)
+lizard_languages/erlang.py:107:11: R1714: [1;3;35mConsider merging these comparisons with 'in' by using 'token in ('.', ',')'. Use a set instead if elements are hashable.[0m ([1;3;35mconsider-using-in[0m)
+lizard_languages/erlang.py:71:12: W0201: [35mAttribute 'lbr' defined outside __init__[0m ([35mattribute-defined-outside-init[0m)
+lizard_languages/erlang.py:72:12: W0201: [35mAttribute 'rbr' defined outside __init__[0m ([35mattribute-defined-outside-init[0m)
+lizard_languages/erlang.py:7:0: C0411: [1mthird party import "pygments.token" should be placed before first party import "lizard_languages.code_reader.CodeReader" [0m ([1mwrong-import-order[0m)
+lizard_languages/erlang.py:8:0: C0411: [1mthird party import "pygments.lex" should be placed before first party import "lizard_languages.code_reader.CodeReader" [0m ([1mwrong-import-order[0m)

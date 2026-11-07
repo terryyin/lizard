@@ -74,10 +74,10 @@ class Test_parser_for_JavaScript_X(unittest.TestCase):
 
     def test_function_expressions(self):
         """Test function expressions and declarations"""
-        # Function expression - our implementation treats this as anonymous
+        # Function expression assigned to const — detected with the variable name
         functions = get_jsx_function_list("const myFunc = function() { return 1; }")
-        self.assertEqual("(anonymous)", functions[0].name)  # Function expressions are anonymous in our implementation
-        
+        self.assertEqual("myFunc", functions[0].name)
+
         # Function declaration
         functions = get_jsx_function_list("function namedFunc() { return 2; }")
         self.assertEqual("namedFunc", functions[0].name)
@@ -95,8 +95,8 @@ class Test_parser_for_JavaScript_X(unittest.TestCase):
         '''
         functions = get_jsx_function_list(code)
         self.assertEqual("checkValue", functions[0].name)
-        self.assertEqual(3, functions[0].cyclomatic_complexity)  # Actual value from our implementation
-        
+        self.assertEqual(2, functions[0].cyclomatic_complexity)
+
         # Multiple conditions
         code = '''
           const complexCheck = (x, y) => {
@@ -110,7 +110,7 @@ class Test_parser_for_JavaScript_X(unittest.TestCase):
         '''
         functions = get_jsx_function_list(code)
         self.assertEqual("complexCheck", functions[0].name)
-        self.assertEqual(9, functions[0].cyclomatic_complexity)  # Actual value from our implementation
+        self.assertEqual(5, functions[0].cyclomatic_complexity)
 
     def test_jsx_conditional_rendering(self):
         """Test JSX with conditional rendering"""
@@ -138,7 +138,7 @@ class Test_parser_for_JavaScript_X(unittest.TestCase):
         self.assertIn("(anonymous)", function_names)  # map callback
         
         main_component = next(f for f in functions if f.name == "ConditionalComponent")
-        self.assertEqual(5, main_component.cyclomatic_complexity)  # Actual value from our implementation
+        self.assertEqual(3, main_component.cyclomatic_complexity)
 
     def test_nested_jsx_components(self):
         """Test nested JSX components with multiple event handlers"""
@@ -195,7 +195,7 @@ class Test_parser_for_JavaScript_X(unittest.TestCase):
         
         # StatusComponent should have complexity for switch cases
         status_component = next(f for f in functions if f.name == "StatusComponent")
-        self.assertEqual(8, status_component.cyclomatic_complexity)  # Actual value from our implementation
+        self.assertEqual(4, status_component.cyclomatic_complexity)
 
     def test_jsx_fragments_and_loops(self):
         """Test JSX fragments with loops"""
@@ -272,4 +272,163 @@ class Test_parser_for_JavaScript_X(unittest.TestCase):
         
         # Should have at least 2 functions (main component + async callback)
         self.assertGreaterEqual(len(functions), 2)
+
+
+class Test_JSX_class_components(unittest.TestCase):
+    """Tests class-based React components in JSX."""
+
+    def test_class_with_lifecycle(self):
+        """Class component with constructor and lifecycle methods"""
+        code = '''
+          class App extends Component {
+            constructor(props) {
+              super(props);
+              this.state = { count: 0 };
+            }
+            componentDidMount() {
+              this.fetchData();
+            }
+            render() {
+              return <div>{this.state.count}</div>;
+            }
+          }
+        '''
+        functions = get_jsx_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("constructor", names)
+        self.assertIn("componentDidMount", names)
+        self.assertIn("render", names)
+
+    def test_static_fields_then_methods(self):
+        """Class with static fields followed by methods (Fix 4 for JSX)"""
+        code = '''
+          class Nav extends Component {
+            static displayName = "Nav";
+            static propTypes = { items: PropTypes.array };
+            constructor(props) {
+              super(props);
+            }
+            toggle() { this.setState({open: !this.state.open}); }
+            render() {
+              return <nav>{this.props.items.map(i => <a key={i}>{i}</a>)}</nav>;
+            }
+          }
+        '''
+        functions = get_jsx_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("constructor", names)
+        self.assertIn("toggle", names)
+        self.assertIn("render", names)
+        # static fields should NOT be FPs
+        self.assertNotIn("displayName", names)
+        self.assertNotIn("propTypes", names)
+
+
+class Test_JSX_higher_order_components(unittest.TestCase):
+    """Tests HOC and wrapper patterns."""
+
+    def test_hoc_pattern(self):
+        """HOC wrapping a component"""
+        code = '''
+          const withLogger = (Comp) => {
+            return (props) => {
+              console.log("render");
+              return <Comp {...props} />;
+            };
+          }
+        '''
+        functions = get_jsx_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("withLogger", names)
+        self.assertIn("(anonymous)", names)
+        self.assertGreaterEqual(len(functions), 2)
+
+    def test_double_hoc(self):
+        """Nested HOCs — at least one outer + inner functions detected"""
+        code = '''
+          const withAuth = (Comp) => {
+            return (props) => {
+              if (!props.user) return <Login />;
+              return <Comp {...props} />;
+            };
+          }
+          const withTheme = (Comp) => {
+            return (props) => {
+              return <Comp {...props} theme="dark" />;
+            };
+          }
+        '''
+        functions = get_jsx_function_list(code)
+        names = [f.name for f in functions]
+        # At least one HOC outer function and inner anonymous functions detected
+        self.assertIn("withTheme", names)
+        anon_count = sum(1 for n in names if n == "(anonymous)")
+        self.assertGreaterEqual(anon_count, 2)
+
+
+class Test_JSX_multiple_exports(unittest.TestCase):
+    """Tests files with multiple exported components."""
+
+    def test_multiple_exported_components(self):
+        code = '''
+          export const Button = ({label, onClick}) => {
+            return <button onClick={onClick}>{label}</button>;
+          }
+          export const Input = ({value, onChange}) => {
+            return <input value={value} onChange={onChange} />;
+          }
+          export default function Form() {
+            return <form><Button label="ok" /><Input /></form>;
+          }
+        '''
+        functions = get_jsx_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("Button", names)
+        self.assertIn("Input", names)
+        self.assertIn("Form", names)
+        self.assertEqual(3, len(functions))
+
+
+class Test_JSX_event_handler_patterns(unittest.TestCase):
+    """Tests various event handler patterns in JSX."""
+
+    def test_multiple_handlers_on_form(self):
+        """Multiple event handlers on different form elements"""
+        code = '''
+          const SearchForm = ({onSearch}) => {
+            return (
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                onSearch(e.target.value);
+              }}>
+                <input
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") clear();
+                  }}
+                />
+                <button type="submit">Search</button>
+              </form>
+            );
+          }
+        '''
+        functions = get_jsx_function_list(code)
+        names = [f.name for f in functions]
+        self.assertIn("SearchForm", names)
+        anon_count = sum(1 for n in names if n == "(anonymous)")
+        self.assertGreaterEqual(anon_count, 2)
+
+    def test_ternary_rendering(self):
+        """Ternary expressions in JSX should not produce FPs"""
+        code = '''
+          const Badge = ({count}) => {
+            return (
+              <span className={count > 0 ? "active" : "empty"}>
+                {count > 99 ? "99+" : count}
+              </span>
+            );
+          }
+        '''
+        functions = get_jsx_function_list(code)
+        self.assertEqual(["Badge"], [f.name for f in functions])
 

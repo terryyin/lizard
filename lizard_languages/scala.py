@@ -12,7 +12,7 @@ class ScalaReader(CodeReader, CCppCommentsMixin):
 
     ext = ['scala']
     language_names = ['scala']
-    
+
     # Separated condition categories
     _control_flow_keywords = {'if', 'for', 'while', 'catch', 'do'}
     _logical_operators = {'&&', '||'}

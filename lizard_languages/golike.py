@@ -8,12 +8,13 @@ from .code_reader import CodeStateMachine
 class GoLikeStates(CodeStateMachine):  # pylint: disable=R0903
 
     FUNC_KEYWORD = 'func'
+    TYPE_KEYWORD = 'type'
 
     def _state_global(self, token):
         if token == self.FUNC_KEYWORD:
             self._state = self._function_name
             self.context.push_new_function('')
-        elif token == 'type':
+        elif token == self.TYPE_KEYWORD:
             self._state = self._type_definition
         elif token in '{':
             self.sub_state(self.statemachine_clone())
@@ -55,14 +56,23 @@ class GoLikeStates(CodeStateMachine):  # pylint: disable=R0903
     def _expect_function_dec(self, token):
         if token == '(':
             self.next(self._function_dec, token)
-        elif token == "<":
-            self.next(self._generalize, token)
+        elif token in ('<', '['):
+            # Skip type-parameter lists: Rust/Kotlin/Swift `foo<T>(...)`,
+            # Go/Scala `foo[T](...)` / `foo[T any](...)`.
+            self.next(self._skip_type_parameters, token)
         else:
             self._state = self._state_global
 
-    @CodeStateMachine.read_inside_brackets_then("<>", "_expect_function_dec")
-    def _generalize(self, tokens):
-        pass
+    def _skip_type_parameters(self, token):
+        if self.br_count == 0:
+            self._type_param_open = token
+            self._type_param_close = '>' if token == '<' else ']'
+        self.br_count += {
+            self._type_param_open: 1,
+            self._type_param_close: -1,
+        }.get(token, 0)
+        if self.br_count == 0:
+            self.next(self._expect_function_dec)
 
     @CodeStateMachine.read_inside_brackets_then("()", '_function_name')
     def _member_function(self, tokens):

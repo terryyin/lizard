@@ -1,0 +1,862 @@
+warning: Git tree '/Users/terryyin/git/lizard/.worktrees/conclude-the-javascript-and-typescript-lexical-a' is dirty
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+virtualenv 20.13.2 requires platformdirs<3,>=2, but you have platformdirs 4.4.0 which is incompatible.
+WARNING: You are using pip version 22.0.3; however, version 26.0.1 is available.
+You should consider upgrading via the '/Users/terryyin/git/lizard/.worktrees/conclude-the-javascript-and-typescript-lexical-a/.venv/bin/python -m pip install --upgrade pip' command.
+coverage run --source=lizard.py,lizard_ext,lizard_languages,lizard_core -m pytest test
+============================= test session starts ==============================
+platform darwin -- Python 3.9.11, pytest-8.4.2, pluggy-1.6.0
+rootdir: /Users/terryyin/git/lizard/.worktrees/conclude-the-javascript-and-typescript-lexical-a
+configfile: setup.cfg
+plugins: cov-7.1.0
+collected 2136 items
+
+test/testApplication.py ..........                                       [  0%]
+test/testAssertionExtension.py ....                                      [  0%]
+test/testBasicFunctionInfo.py .......................                    [  1%]
+test/testCOutsideComplexity.py ...                                       [  1%]
+test/testCPreprocessorExtension.py ..........                            [  2%]
+test/testCommentOptions.py .......                                       [  2%]
+test/testCyclomaticComplexity.py ...............                         [  3%]
+test/testExtension.py .....                                              [  3%]
+test/testFilesFilter.py ...............                                  [  4%]
+test/testFunctionDependencyCount.py ...                                  [  4%]
+test/testFunctionExitCount.py ....                                       [  4%]
+test/testFunctionGotoCount.py ...                                        [  4%]
+test/testFunctionStatementCount.py .......                               [  5%]
+test/testJavaScriptNestedStructures.py ...                               [  5%]
+test/testLanguages.py ............                                       [  5%]
+test/testMcCabe.py ...                                                   [  5%]
+test/testNestedStructureScopes.py ..........ss                           [  6%]
+test/testNestedStructures.py ....................                        [  7%]
+test/testNestingDepth.py ....................                            [  8%]
+test/testOutput.py ........................                              [  9%]
+test/testOutputCSV.py .......                                            [  9%]
+test/testOutputFile.py ...............                                   [ 10%]
+test/testOutputHTML.py ...                                               [ 10%]
+test/testPythonNestedStructures.py ......................                [ 11%]
+test/testPythonVersionClaims.py .                                        [ 11%]
+test/testTokenizer.py ........................                           [ 12%]
+test/test_analyzer.py ......................                             [ 13%]
+test/test_auto_open.py .....                                             [ 14%]
+test/test_extensions/testBoolCount.py .........                          [ 14%]
+test/test_extensions/testCognitiveComplexity.py ........................ [ 15%]
+.........................................................                [ 18%]
+test/test_extensions/testComplexityTags.py ...                           [ 18%]
+test/test_extensions/testDefaultOrderedDict.py ......                    [ 18%]
+test/test_extensions/testDumpComments.py .......                         [ 19%]
+test/test_extensions/testDuplicate.py .........................          [ 20%]
+test/test_extensions/testDuplicateFinder.py ...........                  [ 20%]
+test/test_extensions/testDuplicatedParamList.py ......                   [ 21%]
+test/test_extensions/testFanInFanOut.py ..................               [ 21%]
+test/test_extensions/testHalstead.py ..............................      [ 23%]
+test/test_extensions/testHalsteadClassifier.py ..............            [ 23%]
+test/test_extensions/testHalsteadMetrics.py ..                           [ 24%]
+test/test_extensions/testNonStrict.py ..                                 [ 24%]
+test/test_extensions/testWordCountPlugin.py .........                    [ 24%]
+test/test_languages/testArrowObjectBoundaries.py ......                  [ 24%]
+test/test_languages/testCAndCPP.py ..................................... [ 26%]
+........................................................................ [ 29%]
+..                                                                       [ 30%]
+test/test_languages/testCppOperatorDeclarations.py ....                  [ 30%]
+test/test_languages/testCsharp.py .......                                [ 30%]
+test/test_languages/testES6.py ......................................... [ 32%]
+.....                                                                    [ 32%]
+test/test_languages/testErlang.py ........                               [ 33%]
+test/test_languages/testFortran.py ...............................       [ 34%]
+test/test_languages/testFortranProcedureBoundaries.py .........          [ 34%]
+test/test_languages/testGDScript.py ...                                  [ 35%]
+test/test_languages/testGo.py ...................                        [ 36%]
+test/test_languages/testGoDeclarations.py .......                        [ 36%]
+test/test_languages/testGoFunctionLiterals.py .......                    [ 36%]
+test/test_languages/testGoFunctionTypes.py ...........................   [ 37%]
+test/test_languages/testJSX.py .....................                     [ 38%]
+test/test_languages/testJava.py ...................                      [ 39%]
+test/test_languages/testJavaClassBody.py .........                       [ 40%]
+test/test_languages/testJavaComplexSamples.py .....                      [ 40%]
+test/test_languages/testJavaModernFeatures.py ............               [ 41%]
+test/test_languages/testJavaScript.py ..........................         [ 42%]
+test/test_languages/testJavaScriptArrowBoundaries.py ................... [ 43%]
+....                                                                     [ 43%]
+test/test_languages/testJavaScriptArrowLines.py .....                    [ 43%]
+test/test_languages/testJavaScriptArrowParameters.py ................... [ 44%]
+..                                                                       [ 44%]
+test/test_languages/testJavaScriptFalsePositives.py ....                 [ 44%]
+test/test_languages/testJavaScriptFormalSlots.py .....................   [ 45%]
+test/test_languages/testJavaScriptFunctions.py ........................  [ 46%]
+test/test_languages/testJavaScriptMembers.py .............               [ 47%]
+test/test_languages/testJavaScriptParameterNames.py .................... [ 48%]
+..............                                                           [ 49%]
+test/test_languages/testJavaScriptRegex.py ..............                [ 49%]
+test/test_languages/testJavaScriptTernaryArrows.py ..................... [ 50%]
+........................................................................ [ 54%]
+.....................................................................    [ 57%]
+test/test_languages/testJavaScriptWidgets.py s.s.s                       [ 57%]
+test/test_languages/testKotlin.py .....................                  [ 58%]
+test/test_languages/testKotlinExpressionBody.py ....                     [ 58%]
+test/test_languages/testLua.py ..................                        [ 59%]
+test/test_languages/testObjC.py ...............                          [ 60%]
+test/test_languages/testOptionalOperators.py ........................... [ 61%]
+.....                                                                    [ 61%]
+test/test_languages/testPHP.py .............................             [ 63%]
+test/test_languages/testPHPFunctionRecognition.py ............           [ 63%]
+test/test_languages/testPHPModernFeatures.py ...                         [ 63%]
+test/test_languages/testPLSQL.py ....................................... [ 65%]
+.....                                                                    [ 65%]
+test/test_languages/testPerl.py .......................................  [ 67%]
+test/test_languages/testPython.py .............                          [ 68%]
+test/test_languages/testPythonForgive.py ...                             [ 68%]
+test/test_languages/testPythonFstrings.py ...............                [ 69%]
+test/test_languages/testPythonMatchCase.py ............                  [ 69%]
+test/test_languages/testPythonNloc.py .........                          [ 70%]
+test/test_languages/testPythonParameters.py ...........                  [ 70%]
+test/test_languages/testPythonSoftKeywords.py ..............             [ 71%]
+test/test_languages/testPythonStructure.py ................              [ 72%]
+test/test_languages/testPythonTokenizer.py ........                      [ 72%]
+test/test_languages/testPythonTypeParameters.py ..............           [ 73%]
+test/test_languages/testR.py .............................               [ 74%]
+test/test_languages/testRuby.py ......................                   [ 75%]
+test/test_languages/testRubyControlFlow.py .............                 [ 76%]
+test/test_languages/testRubyParser.py ...............                    [ 76%]
+test/test_languages/testRubyRegex.py ...                                 [ 76%]
+test/test_languages/testRust.py .............                            [ 77%]
+test/test_languages/testRustLetElse.py ........                          [ 77%]
+test/test_languages/testScala.py ..............                          [ 78%]
+test/test_languages/testSolidity.py ..                                   [ 78%]
+test/test_languages/testSt.py ......................                     [ 79%]
+test/test_languages/testSwift.py .....................                   [ 80%]
+test/test_languages/testSwiftAccessors.py ...............                [ 81%]
+test/test_languages/testSwiftTokens.py .........                         [ 81%]
+test/test_languages/testTSX.py ......................................... [ 83%]
+...                                                                      [ 83%]
+test/test_languages/testTTCN.py ................................         [ 85%]
+test/test_languages/testTypeScript.py ...................                [ 86%]
+test/test_languages/testTypeScriptArrowFields.py ..........              [ 86%]
+test/test_languages/testTypeScriptDeclarations.py .................      [ 87%]
+test/test_languages/testTypeScriptFalsePositives.py .............        [ 88%]
+test/test_languages/testTypeScriptFields.py ......                       [ 88%]
+test/test_languages/testTypeScriptFunctions.py ....................      [ 89%]
+test/test_languages/testTypeScriptMembers.py s............               [ 89%]
+test/test_languages/testTypeScriptMetrics.py .........                   [ 90%]
+test/test_languages/testTypeScriptReaderDispatch.py ............         [ 90%]
+test/test_languages/testTypeScriptThisParameters.py .................... [ 91%]
+........                                                                 [ 92%]
+test/test_languages/testTypeScriptWidgets.py .s                          [ 92%]
+test/test_languages/testVue.py ....                                      [ 92%]
+test/test_languages/testVueSourceLineNumbers.py ........                 [ 92%]
+test/test_languages/testZig.py ...................                       [ 93%]
+test/test_languages/test_perl_func_names.py .                            [ 93%]
+test/test_options.py .................                                   [ 94%]
+test/test_parallel_analysis.py ...............                           [ 95%]
+test/test_web_changes.py .............                                   [ 95%]
+test/test_website.py ..............................                      [ 97%]
+test/test_website_publication.py ...............                         [ 97%]
+test/test_website_release.py ................................            [ 99%]
+test/test_website_smoke.py ...........                                   [100%]
+
+=============================== warnings summary ===============================
+test/testFilesFilter.py: 12 warnings
+  /Users/terryyin/git/lizard/.worktrees/conclude-the-javascript-and-typescript-lexical-a/.venv/lib/python3.9/site-packages/pathspec/pathspec.py:326: DeprecationWarning: GitWildMatchPattern ('gitwildmatch') is deprecated. Use 'gitignore' for GitIgnoreBasicPattern or GitIgnoreSpecPattern instead.
+    patterns = [use_factory(__line) for __line in lines if __line]  # type: ignore[arg-type]
+
+test/testFilesFilter.py: 12 warnings
+  /Users/terryyin/git/lizard/.worktrees/conclude-the-javascript-and-typescript-lexical-a/.venv/lib/python3.9/site-packages/pathspec/pattern.py:125: DeprecationWarning: GitWildMatchPattern ('gitwildmatch') is deprecated. Use 'gitignore' for GitIgnoreBasicPattern or GitIgnoreSpecPattern instead.
+    raw_regex, include = self.pattern_to_regex(pattern)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================ 2129 passed, 7 skipped, 24 warnings in 13.66s =================
+/Users/terryyin/git/lizard/.worktrees/conclude-the-javascript-and-typescript-lexical-a/.venv/lib/python3.9/site-packages/coverage/inorout.py:521: CoverageWarning: Module lizard.py was never imported. (module-not-imported); see https://coverage.readthedocs.io/en/7.10.7/messages.html#warning-module-not-imported
+  self.warn(f"Module {pkg} was never imported.", slug="module-not-imported")
+coverage report -m
+Name                                              Stmts   Miss  Cover   Missing
+-------------------------------------------------------------------------------
+lizard_core/__init__.py                               0      0   100%
+lizard_core/analysis.py                              39      0   100%
+lizard_core/cli.py                                   46      7    85%   19-22, 35, 38, 60
+lizard_core/extensions.py                            13      0   100%
+lizard_core/file_analyzer.py                         80      6    92%   83, 88-91, 103-104
+lizard_core/file_discovery.py                        72      5    93%   22-23, 35-36, 45
+lizard_core/file_info_builder.py                     87      0   100%
+lizard_core/function_info.py                         90      0   100%
+lizard_core/options.py                              107      2    98%   51, 239
+lizard_core/output_scheme.py                         39      1    97%   107
+lizard_core/text_output.py                           63     10    84%   58-59, 87-89, 101-105
+lizard_core/warning_filter.py                        45      0   100%
+lizard_ext/__init__.py                               23      2    91%   26, 29
+lizard_ext/auto_open.py                              17      0   100%
+lizard_ext/checkstyleoutput.py                       13      0   100%
+lizard_ext/cognitive_actions.py                     133     11    92%   41, 84, 124-125, 137, 149, 161-163, 172, 174
+lizard_ext/cognitive_brace.py                       189      2    99%   97, 132
+lizard_ext/cognitive_counter.py                     115      2    98%   86, 101
+lizard_ext/cognitive_indent.py                       84      2    98%   67, 92
+lizard_ext/cognitive_profile.py                      43      1    98%   65
+lizard_ext/csvoutput.py                              26      2    92%   46, 49
+lizard_ext/default_ordered_dict.py                   20      0   100%
+lizard_ext/extension_base.py                          7      0   100%
+lizard_ext/halstead_classifier.py                    50      0   100%
+lizard_ext/halstead_metrics.py                       48      0   100%
+lizard_ext/htmloutput.py                             29      3    90%   15-18
+lizard_ext/keywords.py                                1      0   100%
+lizard_ext/lizardboolcount.py                        22      0   100%
+lizard_ext/lizardcognitive.py                        25      1    96%   93
+lizard_ext/lizardcomplextags.py                      10      0   100%
+lizard_ext/lizardcpre.py                             26      0   100%
+lizard_ext/lizarddependencycount.py                  40      3    92%   28, 32-33
+lizard_ext/lizarddumpcomments.py                     17      0   100%
+lizard_ext/lizardduplicate.py                       237     22    91%   19, 22, 25, 28, 41, 44, 63, 143, 172-173, 285, 304-314
+lizard_ext/lizardduplicated_param_list.py            29      0   100%
+lizard_ext/lizardexitcount.py                        13      0   100%
+lizard_ext/lizardgotocount.py                         9      0   100%
+lizard_ext/lizardhalstead.py                         59      4    93%   147-150
+lizard_ext/lizardignoreassert.py                     16      0   100%
+lizard_ext/lizardio.py                               48      0   100%
+lizard_ext/lizardmccabe.py                           17      0   100%
+lizard_ext/lizardmodified.py                         22      0   100%
+lizard_ext/lizardnd.py                              140      7    95%   40, 44, 76-77, 83-84, 185
+lizard_ext/lizardnonstrict.py                         4      0   100%
+lizard_ext/lizardns.py                               99      7    93%   59, 98, 136, 142-143, 154, 161
+lizard_ext/lizardoutside.py                           5      0   100%
+lizard_ext/lizardstatementcount.py                   19      0   100%
+lizard_ext/lizardwordcount.py                        33      0   100%
+lizard_ext/version.py                                 1      0   100%
+lizard_ext/xmloutput.py                             108      1    99%   123
+lizard_languages/__init__.py                         33      0   100%
+lizard_languages/clike.py                            86      0   100%
+lizard_languages/clike_states.py                    186     14    92%   74, 141-143, 203-204, 209, 217, 219, 221, 229-232, 237
+lizard_languages/code_reader.py                     109      3    97%   35-37
+lizard_languages/csharp.py                           50      0   100%
+lizard_languages/erlang.py                           85      7    92%   61, 107-113, 122
+lizard_languages/fortran.py                          47      0   100%
+lizard_languages/fortran_states.py                  177     13    93%   38-40, 43, 153, 159-166, 179, 212, 230
+lizard_languages/gdscript.py                         15      0   100%
+lizard_languages/go.py                               90      0   100%
+lizard_languages/go_function.py                     107      5    95%   47, 68-70, 75-76
+lizard_languages/golike.py                           66      4    94%   18, 33, 48, 52
+lizard_languages/java.py                            165     12    93%   29, 33, 35, 37, 40, 43-45, 91-92, 191-192
+lizard_languages/java_body_states.py                 76      6    92%   28-29, 33-34, 48, 74
+lizard_languages/javascript.py                        6      0   100%
+lizard_languages/javascript_bindings.py             145      1    99%   145
+lizard_languages/javascript_functions.py            109      9    92%   79, 90, 114-115, 118, 163-166
+lizard_languages/javascript_objects.py               73      1    99%   111
+lizard_languages/javascript_templates.py             84      1    99%   94
+lizard_languages/js_style_regex_context.py           73      2    97%   98, 100
+lizard_languages/js_style_regex_expression.py        41     11    73%   24-32, 57-58
+lizard_languages/js_style_regex_forward_scan.py     194     16    92%   39-40, 45, 55-57, 73, 83, 133-137, 163-165
+lizard_languages/js_style_regex_keyword_scan.py     119     22    82%   47, 87-88, 97-110, 116-118, 140, 142
+lizard_languages/kotlin.py                           96      0   100%
+lizard_languages/lua.py                              35      2    94%   54-55
+lizard_languages/objc.py                             60      4    93%   19, 22, 53, 61
+lizard_languages/perl.py                            262     16    94%   12-14, 38-43, 45, 49, 52-55, 223, 324
+lizard_languages/php.py                              30      0   100%
+lizard_languages/php_states.py                      182      3    98%   140, 142, 159
+lizard_languages/plsql.py                           216     25    88%   176-177, 179-180, 207, 217-218, 220, 222-223, 227-228, 245-246, 252, 321, 343-348, 377-378, 380-381
+lizard_languages/python.py                          100      0   100%
+lizard_languages/python_structure.py                 95      1    99%   128
+lizard_languages/python_tokens.py                    91     17    81%   62, 69-78, 84-85, 89-90, 103, 149
+lizard_languages/r.py                               154     10    94%   97, 128, 139-140, 153-154, 214, 284-286
+lizard_languages/ruby.py                             41      0   100%
+lizard_languages/rubylike.py                         79      0   100%
+lizard_languages/rust.py                             76      0   100%
+lizard_languages/scala.py                            31      0   100%
+lizard_languages/script_language.py                  15      0   100%
+lizard_languages/solidity.py                         15      0   100%
+lizard_languages/st.py                               78      7    91%   89-90, 92, 115-117, 120
+lizard_languages/swift.py                           150      2    99%   52, 77
+lizard_languages/swift_literals.py                   69      6    91%   46, 58, 69, 80, 90-91
+lizard_languages/tnsdl.py                            74     74     0%   5-97
+lizard_languages/token_pattern.py                    40      0   100%
+lizard_languages/tsx.py                             109      5    95%   94, 125, 149, 168-169
+lizard_languages/ttcn.py                             41      2    95%   47-48
+lizard_languages/typescript.py                      114      2    98%   42, 81
+lizard_languages/typescript_declarations.py         142     11    92%   42-45, 52-54, 62, 66, 118, 179
+lizard_languages/typescript_signatures.py            50      5    90%   17, 25, 31, 47, 65
+lizard_languages/typescript_states.py               175      3    98%   114, 213-214
+lizard_languages/vue.py                              24      0   100%
+lizard_languages/zig.py                              17      0   100%
+-------------------------------------------------------------------------------
+TOTAL                                              7275    423    94%
+pycodestyle lizard.py lizard_ext lizard_languages lizard_core
+pylint --exit-zero --rcfile pylintrc lizard.py lizard_ext lizard_languages lizard_core
+pylint: Command line or configuration file:1: UserWarning: 'Exception' is not a proper value for the 'overgeneral-exceptions' option. Use fully qualified name (maybe 'builtins.Exception' ?) instead. This will cease to be checked at runtime when the configuration upgrader is released.
+[7;33m************* Module lizard[0m
+lizard.py:37:8: C0103: [1mVariable name "d" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard.py:43:8: C0103: [1mVariable name "d" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard.py:68:0: C0413: [1mImport "from lizard_core.file_discovery import md5_hash_file, _build_gitignore_spec, get_all_source_files" should be placed at the top of the module[0m ([1mwrong-import-position[0m)
+lizard.py:70:0: C0413: [1mImport "from lizard_core.function_info import Nesting, BARE_NESTING, Namespace, FunctionInfo, FileInformation, AllResult" should be placed at the top of the module[0m ([1mwrong-import-position[0m)
+lizard.py:73:0: C0413: [1mImport "from lizard_core.file_info_builder import NestingStack, FileInfoBuilder" should be placed at the top of the module[0m ([1mwrong-import-position[0m)
+lizard.py:75:0: C0413: [1mImport "from lizard_core.file_analyzer import preprocessing, comment_counter, line_counter, token_counter, condition_counter, FileAnalyzer" should be placed at the top of the module[0m ([1mwrong-import-position[0m)
+lizard.py:78:0: C0413: [1mImport "from lizard_core.extensions import get_extensions, print_extension_results" should be placed at the top of the module[0m ([1mwrong-import-position[0m)
+lizard.py:80:0: C0413: [1mImport "from lizard_core.analysis import analyze, analyze_files, map_files_to_analyzer, _map_in_pool, analyze_file" should be placed at the top of the module[0m ([1mwrong-import-position[0m)
+lizard.py:83:0: C0413: [1mImport "from lizard_core.warning_filter import DEFAULT_WHITELIST, warning_filter, whitelist_filter, get_warnings" should be placed at the top of the module[0m ([1mwrong-import-position[0m)
+lizard.py:85:0: C0413: [1mImport "from lizard_core.output_scheme import OutputScheme" should be placed at the top of the module[0m ([1mwrong-import-position[0m)
+lizard.py:86:0: C0413: [1mImport "from lizard_core.text_output import print_warnings, print_no_warnings, print_total, print_and_save_modules, print_result, silent_printer, print_clang_style_warning, print_msvs_style_warning" should be placed at the top of the module[0m ([1mwrong-import-position[0m)
+lizard.py:90:0: C0413: [1mImport "from lizard_core.options import DEFAULT_CCN_THRESHOLD, DEFAULT_MAX_FUNC_LENGTH, _extension_arg, arg_parser, parse_args, infer_printer_from_file_ext" should be placed at the top of the module[0m ([1mwrong-import-position[0m)
+lizard.py:93:0: C0413: [1mImport "from lizard_core.cli import open_output_file, main" should be placed at the top of the module[0m ([1mwrong-import-position[0m)
+[7;33m************* Module lizard_ext[0m
+lizard_ext/__init__.py:23:4: C0415: [1mImport outside toplevel (sys)[0m ([1mimport-outside-toplevel[0m)
+[7;33m************* Module lizard_ext.lizardmccabe[0m
+lizard_ext/lizardmccabe.py:41:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+[7;33m************* Module lizard_ext.lizardnonstrict[0m
+lizard_ext/lizardnonstrict.py:8:0: R0205: [1;3;35mClass 'LizardExtension' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+[7;33m************* Module lizard_ext.lizardio[0m
+lizard_ext/lizardio.py:50:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_ext/lizardio.py:54:51: R1734: [1;3;35mConsider using [] instead of list()[0m ([1;3;35muse-list-literal[0m)
+[7;33m************* Module lizard_ext.lizardns[0m
+lizard_ext/lizardns.py:61:17: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+lizard_ext/lizardns.py:69:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_ext/lizardns.py:75:15: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_ext/lizardns.py:121:8: R1731: [1;3;35mConsider using 'function.max_nested_structures = max(function.max_nested_structures, len(levels))' instead of unnecessary if block[0m ([1;3;35mconsider-using-max-builtin[0m)
+lizard_ext/lizardns.py:139:4: C0103: [1mMethod name "_reset_or_decrement_current_scope" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard_ext/lizardns.py:155:8: R1731: [1;3;35mConsider using 'self.context.current_function.max_nested_structures = max(self.context.current_function.max_nested_structures, cur_level)' instead of unnecessary if block[0m ([1;3;35mconsider-using-max-builtin[0m)
+[7;33m************* Module lizard_ext.lizardboolcount[0m
+lizard_ext/lizardboolcount.py:6:0: R0205: [1;3;35mClass 'LizardExtension' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+[7;33m************* Module lizard_ext.cognitive_indent[0m
+lizard_ext/cognitive_indent.py:12:0: R0903: [1;3;35mToo few public methods (1/2)[0m ([1;3;35mtoo-few-public-methods[0m)
+[7;33m************* Module lizard_ext.lizarddumpcomments[0m
+lizard_ext/lizarddumpcomments.py:10:0: R0205: [1;3;35mClass 'LizardExtension' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+[7;33m************* Module lizard_ext.lizardmodified[0m
+lizard_ext/lizardmodified.py:8:0: R0205: [1;3;35mClass 'LizardExtension' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+[7;33m************* Module lizard_ext.lizardnd[0m
+lizard_ext/lizardnd.py:10:0: R0205: [1;3;35mClass 'LizardExtension' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_ext/lizardnd.py:21:17: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+lizard_ext/lizardnd.py:52:17: R1714: [1;3;35mConsider merging these comparisons with 'in' by using 'token in (loop_indicator, indent_indicator)'. Use a set instead if elements are hashable.[0m ([1;3;35mconsider-using-in[0m)
+lizard_ext/lizardnd.py:29:4: R0915: [1;3;35mToo many statements (61/50)[0m ([1;3;35mtoo-many-statements[0m)
+lizard_ext/lizardnd.py:107:32: W0613: [35mUnused argument 'l_depth'[0m ([35munused-argument[0m)
+lizard_ext/lizardnd.py:118:8: R1731: [1;3;35mConsider using 'self.current_function.max_nesting_depth = max(self.current_function.max_nesting_depth, nd_tmp)' instead of unnecessary if block[0m ([1;3;35mconsider-using-max-builtin[0m)
+[7;33m************* Module lizard_ext.lizarddependencycount[0m
+lizard_ext/lizarddependencycount.py:7:0: R0205: [1;3;35mClass 'LizardExtension' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_ext/lizarddependencycount.py:27:19: C1803: [1m"import_as_list != []" can be simplified to "import_as_list", if it is strictly a sequence, as an empty list is falsey[0m ([1muse-implicit-booleaness-not-comparison[0m)
+[7;33m************* Module lizard_ext.checkstyleoutput[0m
+lizard_ext/checkstyleoutput.py:8:4: C0415: [1mImport outside toplevel (xml.etree.ElementTree)[0m ([1mimport-outside-toplevel[0m)
+lizard_ext/checkstyleoutput.py:30:4: C0415: [1mImport outside toplevel (xml.dom.minidom)[0m ([1mimport-outside-toplevel[0m)
+lizard_ext/checkstyleoutput.py:6:34: W0613: [35mUnused argument 'verbose'[0m ([35munused-argument[0m)
+[7;33m************* Module lizard_ext.lizardwordcount[0m
+lizard_ext/lizardwordcount.py:14:0: R0205: [1;3;35mClass 'LizardExtension' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_ext/lizardwordcount.py:48:13: W1514: [35mUsing open without explicitly specifying an encoding[0m ([35munspecified-encoding[0m)
+[7;33m************* Module lizard_ext.htmloutput[0m
+lizard_ext/htmloutput.py:14:8: C0415: [1mImport outside toplevel (jinja2.Template)[0m ([1mimport-outside-toplevel[0m)
+lizard_ext/htmloutput.py:38:4: C0415: [1mImport outside toplevel (lizard.get_warnings)[0m ([1mimport-outside-toplevel[0m)
+[7;33m************* Module lizard_ext.auto_open[0m
+lizard_ext/auto_open.py:25:19: W1514: [35mUsing open without explicitly specifying an encoding[0m ([35munspecified-encoding[0m)
+lizard_ext/auto_open.py:26:11: W1514: [35mUsing open without explicitly specifying an encoding[0m ([35munspecified-encoding[0m)
+[7;33m************* Module lizard_ext.lizardcpre[0m
+lizard_ext/lizardcpre.py:9:0: R0205: [1;3;35mClass 'LizardExtension' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+[7;33m************* Module lizard_ext.lizardcomplextags[0m
+lizard_ext/lizardcomplextags.py:7:0: R0205: [1;3;35mClass 'LizardExtension' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+[7;33m************* Module lizard_ext.cognitive_counter[0m
+lizard_ext/cognitive_counter.py:14:0: R0205: [1;3;35mClass '_Frame' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_ext/cognitive_counter.py:20:4: R0913: [1;3;35mToo many arguments (6/5)[0m ([1;3;35mtoo-many-arguments[0m)
+lizard_ext/cognitive_counter.py:20:4: R0917: [1;3;35mToo many positional arguments (6/5)[0m ([1;3;35mtoo-many-positional-arguments[0m)
+lizard_ext/cognitive_counter.py:30:0: R0205: [1;3;35mClass '_FunctionState' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_ext/cognitive_counter.py:62:0: R0205: [1;3;35mClass '_Counter' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_ext/cognitive_counter.py:62:0: R0902: [1;3;35mToo many instance attributes (8/7)[0m ([1;3;35mtoo-many-instance-attributes[0m)
+lizard_ext/cognitive_counter.py:62:0: R0903: [1;3;35mToo few public methods (1/2)[0m ([1;3;35mtoo-few-public-methods[0m)
+[7;33m************* Module lizard_ext.lizardduplicate[0m
+lizard_ext/lizardduplicate.py:12:0: R0205: [1;3;35mClass 'CodeSnippet' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_ext/lizardduplicate.py:19:15: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+lizard_ext/lizardduplicate.py:31:0: R0205: [1;3;35mClass 'Sequence' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_ext/lizardduplicate.py:41:15: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+lizard_ext/lizardduplicate.py:47:0: R0205: [1;3;35mClass 'InvolvingScope' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_ext/lizardduplicate.py:94:0: R0205: [1;3;35mClass 'DuplicateFinder' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_ext/lizardduplicate.py:94:0: R0902: [1;3;35mToo many instance attributes (8/7)[0m ([1;3;35mtoo-many-instance-attributes[0m)
+lizard_ext/lizardduplicate.py:108:32: E0606: [1;31mPossibly using variable 'recent' before assignment[0m ([1;31mpossibly-used-before-assignment[0m)
+lizard_ext/lizardduplicate.py:118:23: E0606: [1;31mPossibly using variable 'scope' before assignment[0m ([1;31mpossibly-used-before-assignment[0m)
+lizard_ext/lizardduplicate.py:176:0: R0205: [1;3;35mClass 'NestingStackWithUnifiedTokens' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_ext/lizardduplicate.py:253:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_ext/lizardduplicate.py:255:4: W0222: [35mSignature differs from overridden '__call__' method[0m ([35msignature-differs[0m)
+lizard_ext/lizardduplicate.py:313:14: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+lizard_ext/lizardduplicate.py:314:14: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+[7;33m************* Module lizard_ext.halstead_metrics[0m
+lizard_ext/halstead_metrics.py:7:0: R0205: [1;3;35mClass 'HalsteadMetrics' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+[7;33m************* Module lizard_ext.halstead_classifier[0m
+lizard_ext/halstead_classifier.py:6:0: R0205: [1;3;35mClass 'HalsteadClassifier' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_ext/halstead_classifier.py:60:40: W0613: [35mUnused argument 'next_token'[0m ([35munused-argument[0m)
+lizard_ext/halstead_classifier.py:69:31: W0613: [35mUnused argument 'token'[0m ([35munused-argument[0m)
+[7;33m************* Module lizard_ext.cognitive_brace[0m
+lizard_ext/cognitive_brace.py:19:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_ext/cognitive_brace.py:25:4: R0912: [1;3;35mToo many branches (21/12)[0m ([1;3;35mtoo-many-branches[0m)
+lizard_ext/cognitive_brace.py:9:0: R0903: [1;3;35mToo few public methods (1/2)[0m ([1;3;35mtoo-few-public-methods[0m)
+[7;33m************* Module lizard_ext.lizardduplicated_param_list[0m
+lizard_ext/lizardduplicated_param_list.py:24:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+[7;33m************* Module lizard_ext.lizardoutside[0m
+lizard_ext/lizardoutside.py:6:0: R0205: [1;3;35mClass 'LizardExtension' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_ext/lizardoutside.py:9:8: R1737: [1;3;35mUse 'yield from' directly instead of yielding each element one by one[0m ([1;3;35muse-yield-from[0m)
+[7;33m************* Module lizard_ext.xmloutput[0m
+lizard_ext/xmloutput.py:10:4: C0415: [1mImport outside toplevel (xml.dom.minidom)[0m ([1mimport-outside-toplevel[0m)
+lizard_ext/xmloutput.py:120:20: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+lizard_ext/xmloutput.py:124:20: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+[7;33m************* Module lizard_ext.cognitive_profile[0m
+lizard_ext/cognitive_profile.py:23:0: R0205: [1;3;35mClass '_Profile' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_ext/cognitive_profile.py:27:4: R0917: [1;3;35mToo many positional arguments (18/5)[0m ([1;3;35mtoo-many-positional-arguments[0m)
+[7;33m************* Module lizard_ext.lizardhalstead[0m
+lizard_ext/lizardhalstead.py:132:0: R0205: [1;3;35mClass 'LizardExtension' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_ext/lizardhalstead.py:173:16: W0212: [35mAccess to a protected member _halstead_operands of a client class[0m ([35mprotected-access[0m)
+lizard_ext/lizardhalstead.py:178:16: W0212: [35mAccess to a protected member _halstead_operands of a client class[0m ([35mprotected-access[0m)
+[7;33m************* Module lizard_ext.lizardignoreassert[0m
+lizard_ext/lizardignoreassert.py:12:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_ext/lizardignoreassert.py:17:15: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+[7;33m************* Module lizard_ext.cognitive_actions[0m
+lizard_ext/cognitive_actions.py:9:0: R0205: [1;3;35mClass '_BraceActions' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_ext/cognitive_actions.py:13:24: E1101: [1;31mInstance of '_BraceActions' has no '_open_block' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:13:47: E1101: [1;31mInstance of '_BraceActions' has no '_close_block' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:14:24: E1101: [1;31mInstance of '_BraceActions' has no '_semicolon' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:21:47: E1101: [1;31mInstance of '_BraceActions' has no '_fundamental' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:29:8: E1101: [1;31mInstance of '_BraceActions' has no '_structural' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:30:8: E1101: [1;31mInstance of '_BraceActions' has no '_push' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:33:8: E1101: [1;31mInstance of '_BraceActions' has no '_hybrid' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:34:8: E1101: [1;31mInstance of '_BraceActions' has no '_push' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:37:11: E1101: [1;31mInstance of '_BraceActions' has no '_in_switch_body' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:39:17: E1101: [1;31mInstance of '_BraceActions' has no 'state' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:46:8: E1101: [1;31mInstance of '_BraceActions' has no '_hybrid' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:47:8: E1101: [1;31mInstance of '_BraceActions' has no '_push' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:50:11: E1101: [1;31mInstance of '_BraceActions' has no 'state' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:51:12: E1101: [1;31mInstance of '_BraceActions' has no 'state' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:53:12: E1101: [1;31mInstance of '_BraceActions' has no '_structural' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:54:12: E1101: [1;31mInstance of '_BraceActions' has no '_push' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:57:8: E1101: [1;31mInstance of '_BraceActions' has no '_structural' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:58:8: E1101: [1;31mInstance of '_BraceActions' has no '_push' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:61:8: E1101: [1;31mInstance of '_BraceActions' has no '_structural' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:62:8: E1101: [1;31mInstance of '_BraceActions' has no '_push' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:65:8: E1101: [1;31mInstance of '_BraceActions' has no '_structural' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:66:8: E1101: [1;31mInstance of '_BraceActions' has no '_push' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:69:16: E1101: [1;31mInstance of '_BraceActions' has no 'state' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:72:41: E1101: [1;31mInstance of '_BraceActions' has no 'context' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:77:16: E1101: [1;31mInstance of '_BraceActions' has no 'state' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:82:15: E1101: [1;31mInstance of '_BraceActions' has no 'profile' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:83:19: E1101: [1;31mInstance of '_BraceActions' has no 'context' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:92:8: E1101: [1;31mInstance of '_BraceActions' has no '_structural' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:93:8: E1101: [1;31mInstance of '_BraceActions' has no '_push' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:97:16: E1101: [1;31mInstance of '_BraceActions' has no 'state' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:104:12: E1101: [1;31mInstance of '_BraceActions' has no '_logical_operator' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:110:16: E1101: [1;31mInstance of '_BraceActions' has no 'state' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:114:21: E1101: [1;31mInstance of '_BraceActions' has no '_in_switch_body' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:108:4: R0911: [1;3;35mToo many return statements (7/6)[0m ([1;3;35mtoo-many-return-statements[0m)
+lizard_ext/cognitive_actions.py:141:8: E1101: [1;31mInstance of '_BraceActions' has no '_open_braced_body' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:141:31: E1101: [1;31mInstance of '_BraceActions' has no '_push' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:146:16: E1101: [1;31mInstance of '_BraceActions' has no 'state' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:147:18: E1101: [1;31mInstance of '_BraceActions' has no 'profile' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:149:12: E1101: [1;31mInstance of '_BraceActions' has no '_resolve_pending' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:151:12: E1101: [1;31mInstance of '_BraceActions' has no '_arm_word' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:152:20: E1101: [1;31mInstance of '_BraceActions' has no 'logical_ops' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:153:12: E1101: [1;31mInstance of '_BraceActions' has no '_logical_operator' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:157:12: E1101: [1;31mInstance of '_BraceActions' has no '_open_bracket' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:159:12: E1101: [1;31mInstance of '_BraceActions' has no '_close_bracket' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:163:16: E1101: [1;31mInstance of '_BraceActions' has no '_structural' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:166:16: E1101: [1;31mInstance of '_BraceActions' has no '_structural' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:167:13: R0916: [1;3;35mToo many boolean expressions in if statement (6/5)[0m ([1;3;35mtoo-many-boolean-expressions[0m)
+lizard_ext/cognitive_actions.py:170:12: E1101: [1;31mInstance of '_BraceActions' has no '_structural' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:172:12: E1101: [1;31mInstance of '_BraceActions' has no '_fundamental' member[0m ([1;31mno-member[0m)
+lizard_ext/cognitive_actions.py:145:4: R0912: [1;3;35mToo many branches (13/12)[0m ([1;3;35mtoo-many-branches[0m)
+lizard_ext/cognitive_actions.py:9:0: R0903: [1;3;35mToo few public methods (0/2)[0m ([1;3;35mtoo-few-public-methods[0m)
+[7;33m************* Module lizard_ext.lizardcognitive[0m
+lizard_ext/lizardcognitive.py:45:0: R0205: [1;3;35mClass 'LizardExtension' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_ext/lizardcognitive.py:56:17: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+[7;33m************* Module lizard_languages.lua[0m
+lizard_languages/lua.py:23:4: W0221: [35mNumber of parameters was 1 in 'ScriptLanguageMixIn.get_comment_from_token' and is now 2 in overriding 'LuaReader.get_comment_from_token' method[0m ([35marguments-differ[0m)
+lizard_languages/lua.py:28:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/lua.py:36:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/lua.py:44:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+[7;33m************* Module lizard_languages.fortran_states[0m
+lizard_languages/fortran_states.py:13:33: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+lizard_languages/fortran_states.py:45:4: R0912: [1;3;35mToo many branches (20/12)[0m ([1;3;35mtoo-many-branches[0m)
+lizard_languages/fortran_states.py:215:26: W0613: [35mUnused argument 'token'[0m ([35munused-argument[0m)
+lizard_languages/fortran_states.py:170:12: W0201: [35mAttribute 'type_name' defined outside __init__[0m ([35mattribute-defined-outside-init[0m)
+lizard_languages/fortran_states.py:216:8: W0201: [35mAttribute 'where_mask_line' defined outside __init__[0m ([35mattribute-defined-outside-init[0m)
+lizard_languages/fortran_states.py:217:8: W0201: [35mAttribute 'where_continued' defined outside __init__[0m ([35mattribute-defined-outside-init[0m)
+lizard_languages/fortran_states.py:221:12: W0201: [35mAttribute 'where_continued' defined outside __init__[0m ([35mattribute-defined-outside-init[0m)
+[7;33m************* Module lizard_languages.java[0m
+lizard_languages/java.py:27:0: C0103: [1mFunction name "_java_record_begins_type_declaration" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard_languages/java.py:27:0: R0911: [1;3;35mToo many return statements (9/6)[0m ([1;3;35mtoo-many-return-statements[0m)
+lizard_languages/java.py:55:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/java.py:70:8: C0103: [1mAttribute name "_java_after_unqualified_annotation" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard_languages/java.py:61:0: R0902: [1;3;35mToo many instance attributes (9/7)[0m ([1;3;35mtoo-many-instance-attributes[0m)
+lizard_languages/java.py:63:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/java.py:152:12: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/java.py:160:8: W0107: [35mUnnecessary pass statement[0m ([35munnecessary-pass[0m)
+lizard_languages/java.py:187:4: C0103: [1mMethod name "_state_record_compact_constructor" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard_languages/java.py:199:25: W0613: [35mUnused argument 'token'[0m ([35munused-argument[0m)
+[7;33m************* Module lizard_languages.ttcn[0m
+lizard_languages/ttcn.py:20:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+[7;33m************* Module lizard_languages.erlang[0m
+lizard_languages/erlang.py:27:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/erlang.py:51:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/erlang.py:62:13: R1714: [1;3;35mConsider merging these comparisons with 'in' by using 'token in ('.', ';')'. Use a set instead if elements are hashable.[0m ([1;3;35mconsider-using-in[0m)
+lizard_languages/erlang.py:107:11: R1714: [1;3;35mConsider merging these comparisons with 'in' by using 'token in ('.', ',')'. Use a set instead if elements are hashable.[0m ([1;3;35mconsider-using-in[0m)
+lizard_languages/erlang.py:71:12: W0201: [35mAttribute 'lbr' defined outside __init__[0m ([35mattribute-defined-outside-init[0m)
+lizard_languages/erlang.py:72:12: W0201: [35mAttribute 'rbr' defined outside __init__[0m ([35mattribute-defined-outside-init[0m)
+lizard_languages/erlang.py:7:0: C0411: [1mthird party import "pygments.token" should be placed before first party import "lizard_languages.code_reader.CodeReader" [0m ([1mwrong-import-order[0m)
+lizard_languages/erlang.py:8:0: C0411: [1mthird party import "pygments.lex" should be placed before first party import "lizard_languages.code_reader.CodeReader" [0m ([1mwrong-import-order[0m)
+[7;33m************* Module lizard_languages.php_states[0m
+lizard_languages/php_states.py:8:0: R0902: [1;3;35mToo many instance attributes (17/7)[0m ([1;3;35mtoo-many-instance-attributes[0m)
+lizard_languages/php_states.py:15:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/php_states.py:32:4: R0912: [1;3;35mToo many branches (22/12)[0m ([1;3;35mtoo-many-branches[0m)
+lizard_languages/php_states.py:136:12: W0201: [35mAttribute 'short_function_name' defined outside __init__[0m ([35mattribute-defined-outside-init[0m)
+[7;33m************* Module lizard_languages.r[0m
+lizard_languages/r.py:26:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/r.py:31:8: R1737: [1;3;35mUse 'yield from' directly instead of yielding each element one by one[0m ([1;3;35muse-yield-from[0m)
+lizard_languages/r.py:58:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/r.py:241:4: C0103: [1mMethod name "_finalize_function_with_multiple_assignments" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+[7;33m************* Module lizard_languages.solidity[0m
+lizard_languages/solidity.py:22:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+[7;33m************* Module lizard_languages.tsx[0m
+lizard_languages/tsx.py:37:12: R1737: [1;3;35mUse 'yield from' directly instead of yielding each element one by one[0m ([1;3;35muse-yield-from[0m)
+lizard_languages/tsx.py:42:4: W0246: [35mUseless parent or super() delegation in method '__init__'[0m ([35museless-parent-delegation[0m)
+lizard_languages/tsx.py:55:8: R1737: [1;3;35mUse 'yield from' directly instead of yielding each element one by one[0m ([1;3;35muse-yield-from[0m)
+lizard_languages/tsx.py:61:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/tsx.py:69:12: R1737: [1;3;35mUse 'yield from' directly instead of yielding each element one by one[0m ([1;3;35muse-yield-from[0m)
+lizard_languages/tsx.py:82:8: R1737: [1;3;35mUse 'yield from' directly instead of yielding each element one by one[0m ([1;3;35muse-yield-from[0m)
+lizard_languages/tsx.py:91:20: R1737: [1;3;35mUse 'yield from' directly instead of yielding each element one by one[0m ([1;3;35muse-yield-from[0m)
+[7;33m************* Module lizard_languages.typescript[0m
+lizard_languages/typescript.py:23:0: R0205: [1;3;35mClass 'Tokenizer' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_languages/typescript.py:30:23: E1102: [1;31mself.sub_tokenizer is not callable[0m ([1;31mnot-callable[0m)
+lizard_languages/typescript.py:30:12: R1737: [1;3;35mUse 'yield from' directly instead of yielding each element one by one[0m ([1;3;35muse-yield-from[0m)
+lizard_languages/typescript.py:35:8: R1737: [1;3;35mUse 'yield from' directly instead of yielding each element one by one[0m ([1;3;35muse-yield-from[0m)
+lizard_languages/typescript.py:93:12: R0916: [1;3;35mToo many boolean expressions in if statement (6/5)[0m ([1;3;35mtoo-many-boolean-expressions[0m)
+lizard_languages/typescript.py:94:19: C0123: [1mUse isinstance() rather than type() for a typecheck.[0m ([1munidiomatic-typecheck[0m)
+lizard_languages/typescript.py:104:18: E1120: [1;31mNo value for argument 'token' in method call[0m ([1;31mno-value-for-parameter[0m)
+lizard_languages/typescript.py:104:18: E1120: [1;31mNo value for argument 'reader' in method call[0m ([1;31mno-value-for-parameter[0m)
+lizard_languages/typescript.py:104:18: E1120: [1;31mNo value for argument 'type' in method call[0m ([1;31mno-value-for-parameter[0m)
+lizard_languages/typescript.py:128:8: R1702: [1;3;35mToo many nested blocks (7/5)[0m ([1;3;35mtoo-many-nested-blocks[0m)
+lizard_languages/typescript.py:10:0: W0611: [35mUnused JavaScriptBindings imported from javascript_bindings[0m ([35munused-import[0m)
+lizard_languages/typescript.py:11:0: W0611: [35mUnused TypeScriptTypeAnnotationStates imported from typescript_declarations[0m ([35munused-import[0m)
+[7;33m************* Module lizard_languages.js_style_regex_keyword_scan[0m
+lizard_languages/js_style_regex_keyword_scan.py:14:0: R0914: [1;3;35mToo many local variables (16/15)[0m ([1;3;35mtoo-many-locals[0m)
+lizard_languages/js_style_regex_keyword_scan.py:20:4: C0103: [1mVariable name "n" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard_languages/js_style_regex_keyword_scan.py:32:8: C0103: [1mVariable name "ch" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard_languages/js_style_regex_keyword_scan.py:33:11: R1714: [1;3;35mConsider merging these comparisons with 'in' by using 'ch in ('"', "'")'. Use a set instead if elements are hashable.[0m ([1;3;35mconsider-using-in[0m)
+lizard_languages/js_style_regex_keyword_scan.py:37:16: C0103: [1mVariable name "c" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard_languages/js_style_regex_keyword_scan.py:14:0: R0912: [1;3;35mToo many branches (13/12)[0m ([1;3;35mtoo-many-branches[0m)
+lizard_languages/js_style_regex_keyword_scan.py:81:30: C0103: [1mArgument name "n" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard_languages/js_style_regex_keyword_scan.py:81:0: R0913: [1;3;35mToo many arguments (6/5)[0m ([1;3;35mtoo-many-arguments[0m)
+lizard_languages/js_style_regex_keyword_scan.py:81:0: R0917: [1;3;35mToo many positional arguments (6/5)[0m ([1;3;35mtoo-many-positional-arguments[0m)
+lizard_languages/js_style_regex_keyword_scan.py:85:8: C0103: [1mVariable name "c" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard_languages/js_style_regex_keyword_scan.py:95:16: C0103: [1mVariable name "ch" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard_languages/js_style_regex_keyword_scan.py:96:19: R1714: [1;3;35mConsider merging these comparisons with 'in' by using 'ch in ('"', "'")'. Use a set instead if elements are hashable.[0m ([1;3;35mconsider-using-in[0m)
+lizard_languages/js_style_regex_keyword_scan.py:100:24: C0103: [1mVariable name "x" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard_languages/js_style_regex_keyword_scan.py:84:4: R1702: [1;3;35mToo many nested blocks (6/5)[0m ([1;3;35mtoo-many-nested-blocks[0m)
+lizard_languages/js_style_regex_keyword_scan.py:84:4: R1702: [1;3;35mToo many nested blocks (6/5)[0m ([1;3;35mtoo-many-nested-blocks[0m)
+lizard_languages/js_style_regex_keyword_scan.py:81:0: R0912: [1;3;35mToo many branches (19/12)[0m ([1;3;35mtoo-many-branches[0m)
+lizard_languages/js_style_regex_keyword_scan.py:81:0: R0915: [1;3;35mToo many statements (52/50)[0m ([1;3;35mtoo-many-statements[0m)
+[7;33m************* Module lizard_languages.javascript_objects[0m
+lizard_languages/javascript_objects.py:4:0: R0902: [1;3;35mToo many instance attributes (8/7)[0m ([1;3;35mtoo-many-instance-attributes[0m)
+lizard_languages/javascript_objects.py:19:8: R1705: [1;3;35mUnnecessary "elif" after "return", remove the leading "el" from "elif"[0m ([1;3;35mno-else-return[0m)
+lizard_languages/javascript_objects.py:35:15: R1714: [1;3;35mConsider merging these comparisons with 'in' by using 'self._prev_token in ('.', 'new')'. Use a set instead if elements are hashable.[0m ([1;3;35mconsider-using-in[0m)
+lizard_languages/javascript_objects.py:5:4: R0911: [1;3;35mToo many return statements (10/6)[0m ([1;3;35mtoo-many-return-statements[0m)
+lizard_languages/javascript_objects.py:5:4: R0912: [1;3;35mToo many branches (16/12)[0m ([1;3;35mtoo-many-branches[0m)
+lizard_languages/javascript_objects.py:81:8: W0212: [35mAccess to a protected member _static_seen of a client class[0m ([35mprotected-access[0m)
+lizard_languages/javascript_objects.py:82:8: W0212: [35mAccess to a protected member _async_seen of a client class[0m ([35mprotected-access[0m)
+lizard_languages/javascript_objects.py:105:29: C0103: [1mArgument name "s" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard_languages/javascript_objects.py:4:0: R0903: [1;3;35mToo few public methods (1/2)[0m ([1;3;35mtoo-few-public-methods[0m)
+[7;33m************* Module lizard_languages.java_body_states[0m
+lizard_languages/java_body_states.py:11:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/java_body_states.py:39:16: C0103: [1mVariable name "d" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard_languages/java_body_states.py:53:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/java_body_states.py:98:8: C0103: [1mVariable name "d" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+[7;33m************* Module lizard_languages.st[0m
+lizard_languages/st.py:10:0: R0205: [1;3;35mClass 'StCommentsMixin' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_languages/st.py:55:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/st.py:125:26: W0212: [35mAccess to a protected member _functions of a client class[0m ([35mprotected-access[0m)
+lizard_languages/st.py:127:28: W0212: [35mAccess to a protected member _blocks of a client class[0m ([35mprotected-access[0m)
+lizard_languages/st.py:129:22: W0212: [35mAccess to a protected member _ends of a client class[0m ([35mprotected-access[0m)
+[7;33m************* Module lizard_languages.javascript_functions[0m
+lizard_languages/javascript_functions.py:38:0: R0902: [1;3;35mToo many instance attributes (10/7)[0m ([1;3;35mtoo-many-instance-attributes[0m)
+lizard_languages/javascript_functions.py:42:25: W0212: [35mAccess to a protected member _state of a client class[0m ([35mprotected-access[0m)
+lizard_languages/javascript_functions.py:43:20: W0212: [35mAccess to a protected member _state of a client class[0m ([35mprotected-access[0m)
+lizard_languages/javascript_functions.py:45:12: W0143: [35mComparing against a callable, did you omit the parenthesis?[0m ([35mcomparison-with-callable[0m)
+lizard_languages/javascript_functions.py:45:12: W0212: [35mAccess to a protected member _state of a client class[0m ([35mprotected-access[0m)
+lizard_languages/javascript_functions.py:45:28: W0212: [35mAccess to a protected member _state_global of a client class[0m ([35mprotected-access[0m)
+lizard_languages/javascript_functions.py:45:28: E1101: [1;31mMethod '_expecting_func_opening_bracket' has no '_state_global' member[0m ([1;31mno-member[0m)
+lizard_languages/javascript_functions.py:45:28: E1101: [1;31mMethod '_dec' has no '_state_global' member[0m ([1;31mno-member[0m)
+lizard_languages/javascript_functions.py:45:52: E1101: [1;31mMethod '_expecting_func_opening_bracket' has no 'last_token' member[0m ([1;31mno-member[0m)
+lizard_languages/javascript_functions.py:45:52: E1101: [1;31mMethod '_dec' has no 'last_token' member[0m ([1;31mno-member[0m)
+lizard_languages/javascript_functions.py:46:58: W0212: [35mAccess to a protected member _parenthesis_prefix of a client class[0m ([35mprotected-access[0m)
+lizard_languages/javascript_functions.py:46:58: E1101: [1;31mMethod '_expecting_func_opening_bracket' has no '_parenthesis_prefix' member[0m ([1;31mno-member[0m)
+lizard_languages/javascript_functions.py:46:58: E1101: [1;31mMethod '_dec' has no '_parenthesis_prefix' member[0m ([1;31mno-member[0m)
+lizard_languages/javascript_functions.py:47:20: W0212: [35mAccess to a protected member _ternary_depth of a client class[0m ([35mprotected-access[0m)
+lizard_languages/javascript_functions.py:47:20: E1101: [1;31mMethod '_expecting_func_opening_bracket' has no '_ternary_depth' member[0m ([1;31mno-member[0m)
+lizard_languages/javascript_functions.py:47:20: E1101: [1;31mMethod '_dec' has no '_ternary_depth' member[0m ([1;31mno-member[0m)
+lizard_languages/javascript_functions.py:48:20: W0212: [35mAccess to a protected member _empty_parenthesis of a client class[0m ([35mprotected-access[0m)
+lizard_languages/javascript_functions.py:68:12: W0143: [35mComparing against a callable, did you omit the parenthesis?[0m ([35mcomparison-with-callable[0m)
+lizard_languages/javascript_functions.py:157:8: R1705: [1;3;35mUnnecessary "elif" after "return", remove the leading "el" from "elif"[0m ([1;3;35mno-else-return[0m)
+lizard_languages/javascript_functions.py:167:13: R1714: [1;3;35mConsider merging these comparisons with 'in' by using 'token not in ('{', '=>')'. Use a set instead if elements are hashable.[0m ([1;3;35mconsider-using-in[0m)
+[7;33m************* Module lizard_languages.perl[0m
+lizard_languages/perl.py:9:0: R0205: [1;3;35mClass 'PerlCommentsMixin' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_languages/perl.py:9:0: R0903: [1;3;35mToo few public methods (1/2)[0m ([1;3;35mtoo-few-public-methods[0m)
+lizard_languages/perl.py:31:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/perl.py:72:0: R0902: [1;3;35mToo many instance attributes (8/7)[0m ([1;3;35mtoo-many-instance-attributes[0m)
+lizard_languages/perl.py:76:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/perl.py:160:4: R0912: [1;3;35mToo many branches (13/12)[0m ([1;3;35mtoo-many-branches[0m)
+lizard_languages/perl.py:271:4: C0103: [1mMethod name "_state_nested_named_sub_brace_search" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+[7;33m************* Module lizard_languages.gdscript[0m
+lizard_languages/gdscript.py:20:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+[7;33m************* Module lizard_languages.script_language[0m
+lizard_languages/script_language.py:17:12: R1705: [1;3;35mUnnecessary "elif" after "return", remove the leading "el" from "elif"[0m ([1;3;35mno-else-return[0m)
+[7;33m************* Module lizard_languages.ruby[0m
+lizard_languages/ruby.py:16:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+[7;33m************* Module lizard_languages.rubylike[0m
+lizard_languages/rubylike.py:18:4: W0246: [35mUseless parent or super() delegation in method '__init__'[0m ([35museless-parent-delegation[0m)
+lizard_languages/rubylike.py:19:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/rubylike.py:108:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+[7;33m************* Module lizard_languages.js_style_regex_forward_scan[0m
+lizard_languages/js_style_regex_forward_scan.py:214:0: C0325: [1mUnnecessary parens after '=' keyword[0m ([1msuperfluous-parens[0m)
+lizard_languages/js_style_regex_forward_scan.py:11:0: R0914: [1;3;35mToo many local variables (22/15)[0m ([1;3;35mtoo-many-locals[0m)
+lizard_languages/js_style_regex_forward_scan.py:13:4: C0103: [1mVariable name "n" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard_languages/js_style_regex_forward_scan.py:37:12: C0103: [1mVariable name "ch" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard_languages/js_style_regex_forward_scan.py:53:12: C0103: [1mVariable name "ch" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard_languages/js_style_regex_forward_scan.py:71:12: C0103: [1mVariable name "ch" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard_languages/js_style_regex_forward_scan.py:122:8: C0103: [1mVariable name "ch" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard_languages/js_style_regex_forward_scan.py:119:4: R0911: [1;3;35mToo many return statements (19/6)[0m ([1;3;35mtoo-many-return-statements[0m)
+lizard_languages/js_style_regex_forward_scan.py:119:4: R0912: [1;3;35mToo many branches (28/12)[0m ([1;3;35mtoo-many-branches[0m)
+lizard_languages/js_style_regex_forward_scan.py:119:4: R0915: [1;3;35mToo many statements (78/50)[0m ([1;3;35mtoo-many-statements[0m)
+lizard_languages/js_style_regex_forward_scan.py:11:0: R0915: [1;3;35mToo many statements (162/50)[0m ([1;3;35mtoo-many-statements[0m)
+[7;33m************* Module lizard_languages.python_tokens[0m
+lizard_languages/python_tokens.py:50:16: R1737: [1;3;35mUse 'yield from' directly instead of yielding each element one by one[0m ([1;3;35muse-yield-from[0m)
+lizard_languages/python_tokens.py:67:4: C0103: [1mVariable name "n" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard_languages/python_tokens.py:97:4: C0103: [1mVariable name "n" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard_languages/python_tokens.py:123:7: C0103: [1mVariable name "n" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard_languages/python_tokens.py:150:4: R1737: [1;3;35mUse 'yield from' directly instead of yielding each element one by one[0m ([1;3;35muse-yield-from[0m)
+[7;33m************* Module lizard_languages.javascript_bindings[0m
+lizard_languages/javascript_bindings.py:18:0: R0903: [1;3;35mToo few public methods (0/2)[0m ([1;3;35mtoo-few-public-methods[0m)
+lizard_languages/javascript_bindings.py:24:0: R0902: [1;3;35mToo many instance attributes (8/7)[0m ([1;3;35mtoo-many-instance-attributes[0m)
+lizard_languages/javascript_bindings.py:57:4: R0912: [1;3;35mToo many branches (15/12)[0m ([1;3;35mtoo-many-branches[0m)
+lizard_languages/javascript_bindings.py:161:8: W0212: [35mAccess to a protected member _binding_candidate of a client class[0m ([35mprotected-access[0m)
+lizard_languages/javascript_bindings.py:168:16: W0212: [35mAccess to a protected member _binding_candidate of a client class[0m ([35mprotected-access[0m)
+lizard_languages/javascript_bindings.py:170:16: W0212: [35mAccess to a protected member _confirmed_binding_defaults of a client class[0m ([35mprotected-access[0m)
+lizard_languages/javascript_bindings.py:131:0: R0903: [1;3;35mToo few public methods (0/2)[0m ([1;3;35mtoo-few-public-methods[0m)
+[7;33m************* Module lizard_languages.csharp[0m
+lizard_languages/csharp.py:21:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/csharp.py:35:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/csharp.py:41:12: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/csharp.py:52:12: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/csharp.py:66:12: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+[7;33m************* Module lizard_languages.clike[0m
+lizard_languages/clike.py:16:0: R0205: [1;3;35mClass 'CCppCommentsMixin' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_languages/clike.py:33:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/clike.py:143:8: W0107: [35mUnnecessary pass statement[0m ([35munnecessary-pass[0m)
+lizard_languages/clike.py:148:8: W0107: [35mUnnecessary pass statement[0m ([35munnecessary-pass[0m)
+[7;33m************* Module lizard_languages.objc[0m
+lizard_languages/objc.py:13:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/objc.py:27:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/objc.py:31:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/objc.py:41:12: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/objc.py:85:26: W0613: [35mUnused argument 'tokens'[0m ([35munused-argument[0m)
+[7;33m************* Module lizard_languages.clike_states[0m
+lizard_languages/clike_states.py:13:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/clike_states.py:181:8: W0107: [35mUnnecessary pass statement[0m ([35munnecessary-pass[0m)
+[7;33m************* Module lizard_languages.swift[0m
+lizard_languages/swift.py:60:29: E1101: [1;31mInstance of 'SwiftReplaceLabel' has no 'conditions' member[0m ([1;31mno-member[0m)
+lizard_languages/swift.py:55:0: R0903: [1;3;35mToo few public methods (1/2)[0m ([1;3;35mtoo-few-public-methods[0m)
+lizard_languages/swift.py:96:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/swift.py:127:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/swift.py:148:12: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+[7;33m************* Module lizard_languages.python[0m
+lizard_languages/python.py:43:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/python.py:79:28: W0212: [35mAccess to a protected member _state of a client class[0m ([35mprotected-access[0m)
+lizard_languages/python.py:82:32: W0212: [35mAccess to a protected member _state_first_line of a client class[0m ([35mprotected-access[0m)
+lizard_languages/python.py:128:20: C0103: [1mVariable name "t" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard_languages/python.py:146:24: C0103: [1mVariable name "t" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard_languages/python.py:165:20: C0103: [1mVariable name "t" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard_languages/python.py:165:16: R1737: [1;3;35mUse 'yield from' directly instead of yielding each element one by one[0m ([1;3;35muse-yield-from[0m)
+lizard_languages/python.py:97:4: R0912: [1;3;35mToo many branches (20/12)[0m ([1;3;35mtoo-many-branches[0m)
+lizard_languages/python.py:180:8: R1702: [1;3;35mToo many nested blocks (6/5)[0m ([1;3;35mtoo-many-nested-blocks[0m)
+[7;33m************* Module lizard_languages.js_style_regex_expression[0m
+lizard_languages/js_style_regex_expression.py:27:7: C0123: [1mUse isinstance() rather than type() for a typecheck.[0m ([1munidiomatic-typecheck[0m)
+[7;33m************* Module lizard_languages.go[0m
+lizard_languages/go.py:20:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/go.py:62:12: W0201: [35mAttribute '_var_name' defined outside __init__[0m ([35mattribute-defined-outside-init[0m)
+lizard_languages/go.py:62:28: W0201: [35mAttribute '_signature_tokens' defined outside __init__[0m ([35mattribute-defined-outside-init[0m)
+lizard_languages/go.py:77:12: W0201: [35mAttribute '_signature_tokens' defined outside __init__[0m ([35mattribute-defined-outside-init[0m)
+lizard_languages/go.py:87:12: W0201: [35mAttribute '_signature_tokens' defined outside __init__[0m ([35mattribute-defined-outside-init[0m)
+lizard_languages/go.py:88:12: W0201: [35mAttribute '_parameter_tokens' defined outside __init__[0m ([35mattribute-defined-outside-init[0m)
+[7;33m************* Module lizard_languages.typescript_declarations[0m
+lizard_languages/typescript_declarations.py:21:39: C0103: [1mArgument name "t" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard_languages/typescript_declarations.py:37:34: C0103: [1mArgument name "t" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard_languages/typescript_declarations.py:37:12: R0912: [1;3;35mToo many branches (19/12)[0m ([1;3;35mtoo-many-branches[0m)
+lizard_languages/typescript_declarations.py:89:31: C0103: [1mArgument name "t" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard_languages/typescript_declarations.py:12:4: R0915: [1;3;35mToo many statements (65/50)[0m ([1;3;35mtoo-many-statements[0m)
+lizard_languages/typescript_declarations.py:126:8: C0103: [1mVariable name "typeStates" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard_languages/typescript_declarations.py:11:0: R0903: [1;3;35mToo few public methods (0/2)[0m ([1;3;35mtoo-few-public-methods[0m)
+lizard_languages/typescript_declarations.py:165:34: W0613: [35mUnused argument 'token'[0m ([35munused-argument[0m)
+lizard_languages/typescript_declarations.py:171:12: W0201: [35mAttribute '_grouped_type' defined outside __init__[0m ([35mattribute-defined-outside-init[0m)
+lizard_languages/typescript_declarations.py:175:12: W0201: [35mAttribute '_grouped_type' defined outside __init__[0m ([35mattribute-defined-outside-init[0m)
+[7;33m************* Module lizard_languages.go_function[0m
+lizard_languages/go_function.py:101:4: R0912: [1;3;35mToo many branches (14/12)[0m ([1;3;35mtoo-many-branches[0m)
+[7;33m************* Module lizard_languages.kotlin[0m
+lizard_languages/kotlin.py:24:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/kotlin.py:62:30: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/kotlin.py:70:12: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/kotlin.py:72:39: W0613: [35mUnused argument 'token'[0m ([35munused-argument[0m)
+lizard_languages/kotlin.py:125:19: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+[7;33m************* Module lizard_languages.php[0m
+lizard_languages/php.py:37:12: R1737: [1;3;35mUse 'yield from' directly instead of yielding each element one by one[0m ([1;3;35muse-yield-from[0m)
+lizard_languages/php.py:45:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+[7;33m************* Module lizard_languages.code_reader[0m
+lizard_languages/code_reader.py:161:28: W0613: [35mUnused argument 'token'[0m ([35munused-argument[0m)
+[7;33m************* Module lizard_languages.golike[0m
+lizard_languages/golike.py:24:31: W0613: [35mUnused argument 'token'[0m ([35munused-argument[0m)
+lizard_languages/golike.py:46:16: R1705: [1;3;35mUnnecessary "else" after "return", remove the "else" and de-indent the code inside it[0m ([1;3;35mno-else-return[0m)
+lizard_languages/golike.py:68:12: W0201: [35mAttribute '_type_param_open' defined outside __init__[0m ([35mattribute-defined-outside-init[0m)
+lizard_languages/golike.py:69:12: W0201: [35mAttribute '_type_param_close' defined outside __init__[0m ([35mattribute-defined-outside-init[0m)
+[7;33m************* Module lizard_languages.typescript_states[0m
+lizard_languages/typescript_states.py:16:0: R0902: [1;3;35mToo many instance attributes (20/7)[0m ([1;3;35mtoo-many-instance-attributes[0m)
+lizard_languages/typescript_states.py:135:15: R1714: [1;3;35mConsider merging these comparisons with 'in' by using 'self._prev_token in ('.', 'new')'. Use a set instead if elements are hashable.[0m ([1;3;35mconsider-using-in[0m)
+lizard_languages/typescript_states.py:177:13: R0916: [1;3;35mToo many boolean expressions in if statement (7/5)[0m ([1;3;35mtoo-many-boolean-expressions[0m)
+lizard_languages/typescript_states.py:63:4: R0911: [1;3;35mToo many return statements (9/6)[0m ([1;3;35mtoo-many-return-statements[0m)
+lizard_languages/typescript_states.py:63:4: R0912: [1;3;35mToo many branches (44/12)[0m ([1;3;35mtoo-many-branches[0m)
+lizard_languages/typescript_states.py:63:4: R0915: [1;3;35mToo many statements (95/50)[0m ([1;3;35mtoo-many-statements[0m)
+lizard_languages/typescript_states.py:205:4: C0103: [1mMethod name "_expecting_condition_and_statement_block" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard_languages/typescript_states.py:133:12: W0201: [35mAttribute '_parenthesis_prefix' defined outside __init__[0m ([35mattribute-defined-outside-init[0m)
+lizard_languages/typescript_states.py:155:12: W0201: [35mAttribute '_parenthesis_group' defined outside __init__[0m ([35mattribute-defined-outside-init[0m)
+lizard_languages/typescript_states.py:175:12: W0201: [35mAttribute '_empty_parenthesis' defined outside __init__[0m ([35mattribute-defined-outside-init[0m)
+lizard_languages/typescript_states.py:194:20: W0201: [35mAttribute '_typed_parameters' defined outside __init__[0m ([35mattribute-defined-outside-init[0m)
+[7;33m************* Module lizard_languages.fortran[0m
+lizard_languages/fortran.py:10:0: R0903: [1;3;35mToo few public methods (1/2)[0m ([1;3;35mtoo-few-public-methods[0m)
+[7;33m************* Module lizard_languages.javascript[0m
+lizard_languages/javascript.py:14:4: W0246: [35mUseless parent or super() delegation in method '__init__'[0m ([35museless-parent-delegation[0m)
+lizard_languages/javascript.py:15:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+[7;33m************* Module lizard_languages.plsql[0m
+lizard_languages/plsql.py:58:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/plsql.py:103:16: R1737: [1;3;35mUse 'yield from' directly instead of yielding each element one by one[0m ([1;3;35muse-yield-from[0m)
+lizard_languages/plsql.py:116:8: R1737: [1;3;35mUse 'yield from' directly instead of yielding each element one by one[0m ([1;3;35muse-yield-from[0m)
+lizard_languages/plsql.py:133:4: W0221: [35mNumber of parameters was 1 in 'CCppCommentsMixin.get_comment_from_token' and is now 2 in overriding 'PLSQLReader.get_comment_from_token' method[0m ([35marguments-differ[0m)
+lizard_languages/plsql.py:153:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/plsql.py:335:8: R1705: [1;3;35mUnnecessary "elif" after "return", remove the leading "el" from "elif"[0m ([1;3;35mno-else-return[0m)
+lizard_languages/plsql.py:376:8: R1705: [1;3;35mUnnecessary "elif" after "return", remove the leading "el" from "elif"[0m ([1;3;35mno-else-return[0m)
+lizard_languages/plsql.py:404:12: R1705: [1;3;35mUnnecessary "else" after "return", remove the "else" and de-indent the code inside it[0m ([1;3;35mno-else-return[0m)
+lizard_languages/plsql.py:291:8: W0201: [35mAttribute 'seen_trigger_name_token' defined outside __init__[0m ([35mattribute-defined-outside-init[0m)
+lizard_languages/plsql.py:307:12: W0201: [35mAttribute 'seen_trigger_name_token' defined outside __init__[0m ([35mattribute-defined-outside-init[0m)
+lizard_languages/plsql.py:324:8: W0201: [35mAttribute 'seen_trigger_name_token' defined outside __init__[0m ([35mattribute-defined-outside-init[0m)
+lizard_languages/plsql.py:339:16: W0201: [35mAttribute 'nested_br_level' defined outside __init__[0m ([35mattribute-defined-outside-init[0m)
+lizard_languages/plsql.py:346:16: W0201: [35mAttribute 'nested_br_level' defined outside __init__[0m ([35mattribute-defined-outside-init[0m)
+[7;33m************* Module lizard_languages.js_style_regex_context[0m
+lizard_languages/js_style_regex_context.py:60:8: C0415: [1mImport outside toplevel (js_style_regex_forward_scan.mark_forward)[0m ([1mimport-outside-toplevel[0m)
+lizard_languages/js_style_regex_context.py:63:8: C0415: [1mImport outside toplevel (js_style_regex_forward_scan.mark_forward)[0m ([1mimport-outside-toplevel[0m)
+lizard_languages/js_style_regex_context.py:67:4: C0415: [1mImport outside toplevel (js_style_regex_keyword_scan.mark_keyword_slashes)[0m ([1mimport-outside-toplevel[0m)
+lizard_languages/js_style_regex_context.py:87:8: C0103: [1mVariable name "ch" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+[7;33m************* Module lizard_languages.python_structure[0m
+lizard_languages/python_structure.py:30:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/python_structure.py:124:4: C0103: [1mMethod name "_state_parameterized_type_annotation" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard_languages/python_structure.py:77:12: W0201: [35mAttribute 'lambda_heads' defined outside __init__[0m ([35mattribute-defined-outside-init[0m)
+[7;33m************* Module lizard_languages.vue[0m
+lizard_languages/vue.py:15:4: W0246: [35mUseless parent or super() delegation in method '__init__'[0m ([35museless-parent-delegation[0m)
+lizard_languages/vue.py:16:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/vue.py:5:0: W0611: [35mUnused CodeReader imported from code_reader[0m ([35munused-import[0m)
+lizard_languages/vue.py:5:0: W0611: [35mUnused CodeStateMachine imported from code_reader[0m ([35munused-import[0m)
+[7;33m************* Module lizard_languages.scala[0m
+lizard_languages/scala.py:23:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/scala.py:31:4: W0246: [35mUseless parent or super() delegation in method '_state_global'[0m ([35museless-parent-delegation[0m)
+lizard_languages/scala.py:32:8: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_languages/scala.py:38:12: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+[7;33m************* Module lizard_core.output_scheme[0m
+lizard_core/output_scheme.py:8:0: R0205: [1;3;35mClass 'OutputScheme' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_core/output_scheme.py:96:12: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+lizard_core/output_scheme.py:110:16: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+[7;33m************* Module lizard_core.options[0m
+lizard_core/options.py:43:4: C0415: [1mImport outside toplevel (argparse.ArgumentParser, argparse.Action, argparse.ArgumentError)[0m ([1mimport-outside-toplevel[0m)
+lizard_core/options.py:47:12: R1725: [1;3;35mConsider using Python 3 style super() without arguments[0m ([1;3;35msuper-with-arguments[0m)
+lizard_core/options.py:74:29: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+lizard_core/options.py:94:29: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+lizard_core/options.py:215:8: C0415: [1mImport outside toplevel (argparse.ArgumentParser)[0m ([1mimport-outside-toplevel[0m)
+lizard_core/options.py:230:24: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+lizard_core/options.py:213:0: R0912: [1;3;35mToo many branches (13/12)[0m ([1;3;35mtoo-many-branches[0m)
+[7;33m************* Module lizard_core.file_discovery[0m
+lizard_core/file_discovery.py:33:8: C0415: [1mImport outside toplevel (pathspec)[0m ([1mimport-outside-toplevel[0m)
+lizard_core/file_discovery.py:34:8: C0415: [1mImport outside toplevel (pathspec.patterns.gitwildmatch.GitWildMatchPatternError)[0m ([1mimport-outside-toplevel[0m)
+[7;33m************* Module lizard_core.analysis[0m
+lizard_core/analysis.py:11:0: R0917: [1;3;35mToo many positional arguments (6/5)[0m ([1;3;35mtoo-many-positional-arguments[0m)
+lizard_core/analysis.py:45:8: C0415: [1mImport outside toplevel (multiprocessing)[0m ([1mimport-outside-toplevel[0m)
+lizard_core/analysis.py:51:8: R1737: [1;3;35mUse 'yield from' directly instead of yielding each element one by one[0m ([1;3;35muse-yield-from[0m)
+lizard_core/analysis.py:46:15: R1732: [1;3;35mConsider using 'with' for resource-allocating operations[0m ([1;3;35mconsider-using-with[0m)
+[7;33m************* Module lizard_core.extensions[0m
+lizard_core/extensions.py:10:4: C0415: [1mImport outside toplevel (importlib.import_module)[0m ([1mimport-outside-toplevel[0m)
+[7;33m************* Module lizard_core.function_info[0m
+lizard_core/function_info.py:12:0: R0205: [1;3;35mClass 'Nesting' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_core/function_info.py:115:0: R0205: [1;3;35mClass 'FileInformation' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_core/function_info.py:140:0: R0205: [1;3;35mClass 'AllResult' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_core/function_info.py:150:15: R1728: [1;3;35mConsider using a generator instead 'sum(f.nloc for f in self.all_fun)'[0m ([1;3;35mconsider-using-generator[0m)
+lizard_core/function_info.py:155:20: R1728: [1;3;35mConsider using a generator instead 'sum(f.nloc for f in self.result)'[0m ([1;3;35mconsider-using-generator[0m)
+[7;33m************* Module lizard_core.cli[0m
+lizard_core/cli.py:20:14: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+[7;33m************* Module lizard_core.file_analyzer[0m
+lizard_core/file_analyzer.py:73:0: R0205: [1;3;35mClass 'FileAnalyzer' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_core/file_analyzer.py:83:29: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+lizard_core/file_analyzer.py:86:29: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+lizard_core/file_analyzer.py:89:29: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+lizard_core/file_analyzer.py:103:8: C0103: [1mVariable name "e" doesn't conform to '[a-z_][a-z0-9_]{2,30}$' pattern[0m ([1minvalid-name[0m)
+lizard_core/file_analyzer.py:105:16: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+[7;33m************* Module lizard_core.text_output[0m
+lizard_core/text_output.py:46:0: C0325: [1mUnnecessary parens after '=' keyword[0m ([1msuperfluous-parens[0m)
+lizard_core/text_output.py:10:15: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+lizard_core/text_output.py:11:20: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+lizard_core/text_output.py:26:15: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+lizard_core/text_output.py:27:20: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+lizard_core/text_output.py:60:10: C0209: [1mFormatting a regular string which could be an f-string[0m ([1mconsider-using-f-string[0m)
+[7;33m************* Module lizard_core.file_info_builder[0m
+lizard_core/file_info_builder.py:9:0: R0205: [1;3;35mClass 'NestingStack' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_core/file_info_builder.py:50:0: R0205: [1;3;35mClass 'FileInfoBuilder' inherits from object, can be safely removed from bases in python3[0m ([1;3;35museless-object-inheritance[0m)
+lizard_core/file_info_builder.py:50:0: R0902: [1;3;35mToo many instance attributes (9/7)[0m ([1;3;35mtoo-many-instance-attributes[0m)
+lizard_core/file_info_builder.py:1:0: R0801: [1;3;35mSimilar lines in 2 files
+==lizard_languages.java:[138:148]
+==lizard_languages.java_body_states:[21:31]
+        if self._consume_java_expression_tokens(token):
+            return
+        use_after_annotation = self._java_after_unqualified_annotation
+        if token != "record":
+            self._java_after_unqualified_annotation = False
+        if token == '@':
+            self._state = self._state_decorator
+            return
+        if self._try_start_a_class(token, use_after_annotation):
+            return[0m ([1;3;35mduplicate-code[0m)
+lizard_core/file_info_builder.py:1:0: R0801: [1;3;35mSimilar lines in 2 files
+==lizard_languages.fortran_states:[36:46]
+==lizard_languages.st:[113:124]
+        if self._state(token):
+            self.next(self.saved_state)
+            if self.callback:
+                self.callback()
+        self.last_token = token
+        if self.to_exit:
+            return True
+
+    def _state_global(self, token):
+        token_upper = token.upper()
+[0m ([1;3;35mduplicate-code[0m)
+lizard_core/file_info_builder.py:1:0: R0801: [1;3;35mSimilar lines in 2 files
+==lizard_ext.cognitive_actions:[152:159]
+==lizard_ext.cognitive_brace:[50:57]
+            self._logical_operator(token)
+        elif token in _EXPRESSION_BREAKERS:
+            state.logical.pop(state.pdepth, None)
+        if token in ('(', '['):
+            self._open_bracket()
+        elif token in (')', ']'):
+            self._close_bracket()[0m ([1;3;35mduplicate-code[0m)
+lizard_core/file_info_builder.py:1:0: R0801: [1;3;35mSimilar lines in 2 files
+==lizard_ext.cognitive_actions:[147:153]
+==lizard_ext.cognitive_indent:[21:27]
+        if state.pending:
+            self._resolve_pending(token)
+        if _is_word(token):
+            self._arm_word(token)
+        if token in self.logical_ops:
+            self._logical_operator(token)[0m ([1;3;35mduplicate-code[0m)
+lizard_core/file_info_builder.py:1:0: R0801: [1;3;35mSimilar lines in 2 files
+==lizard_languages.js_style_regex_forward_scan:[2:7]
+==lizard_languages.js_style_regex_keyword_scan:[2:7]
+from .js_style_regex_context import (
+    _EXPRESSION_KEYWORDS,
+    _LINE_ENDS,
+    _REGEX_LITERAL_RE,
+    _apply_marks,[0m ([1;3;35mduplicate-code[0m)
+lizard_core/file_info_builder.py:1:0: R0801: [1;3;35mSimilar lines in 2 files
+==lizard_languages.tsx:[67:72]
+==lizard_languages.typescript:[28:33]
+        if self.sub_tokenizer:
+            for tok in self.sub_tokenizer(token):
+                yield tok
+            if self.sub_tokenizer._ended:
+                self.sub_tokenizer = None[0m ([1;3;35mduplicate-code[0m)
+
+------------------------------------------------------------------
+Your code has been rated at 9.04/10 (previous run: 9.08/10, -0.03)

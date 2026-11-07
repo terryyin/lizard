@@ -1,0 +1,36 @@
+{"checkout": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr535/raw", "facade": "/Users/terryyin/.cache/lizard-pr-reviews-20261027/pr535/raw/lizard.py"}
+{"case": "this-reported.ts", "expected": [["onClick", 1]], "actual": [["onClick", 1]], "parameters": [["event"]], "passed": true, "metrics": [[1, 3, 14, 1, 3]]}
+{"case": "this-authored.ts", "expected": [["a", 1], ["b", 0], ["c", 1]], "actual": [["a", 1], ["b", 0], ["c", 1]], "parameters": [["x"], [], ["x"]], "passed": true, "metrics": [[1, 1, 14, 1, 1], [1, 1, 10, 2, 2], [1, 1, 19, 3, 3]]}
+{"case": "this-only.ts", "expected": [["receiver", 0], ["after", 1]], "actual": [["receiver", 0], ["after", 1]], "parameters": [[], ["value"]], "passed": true, "metrics": [[1, 1, 12, 1, 1], [1, 1, 8, 2, 2]]}
+{"case": "this-typed-defaults.ts", "expected": [["defaults", 3]], "actual": [["defaults", 3]], "parameters": [["number", "y", "tail"]], "passed": false, "metrics": [[5, 1, 42, 1, 1]]}
+{"case": "this-method.ts", "expected": [["read", 1]], "actual": [["read", 1]], "parameters": [["value"]], "passed": true, "metrics": [[1, 1, 18, 1, 1]]}
+{"case": "this-object.ts", "expected": [["read", 1]], "actual": [["read", 1]], "parameters": [["value"]], "passed": true, "metrics": [[1, 1, 18, 1, 1]]}
+{"case": "this-render.tsx", "expected": [["render", 1]], "actual": [["render", 1]], "parameters": [["value"]], "passed": true, "metrics": [[1, 1, 23, 1, 1]]}
+{"case": "this-binding.ts", "expected": [["unpack", 2]], "actual": [["unpack", 2]], "parameters": [["first", "tail"]], "passed": false, "metrics": [[1, 1, 18, 1, 1]]}
+{"case": "this-binding.js", "expected": [["unpack", 2]], "actual": [["unpack", 2]], "parameters": [["first", "tail"]], "passed": false, "metrics": [[1, 1, 18, 1, 1]]}
+{"case": "this-binding.jsx", "expected": [["unpack", 2]], "actual": [["unpack", 2]], "parameters": [["first", "tail"]], "passed": false, "metrics": [[1, 1, 22, 1, 1]]}
+{"case": "this-binding.tsx", "expected": [["unpack", 2]], "actual": [["unpack", 2]], "parameters": [["first", "tail"]], "passed": false, "metrics": [[1, 1, 22, 1, 1]]}
+{"case": "this-initializer.js", "expected": [["defaults", 2]], "actual": [["defaults", 2]], "parameters": [["value", "tail"]], "passed": true, "metrics": [[3, 1, 25, 1, 1]]}
+{"case": "this-nested-default.ts", "expected": [["unpack", 2]], "actual": [["unpack", 2]], "parameters": [["this", "tail"]], "passed": false, "metrics": [[3, 1, 22, 1, 1]]}
+{"case": "reported.ts", "expected": [["render", 3], ["round", 2]], "actual": [["render", 3], ["round", 2]], "parameters": [["text", "_key", "el"], ["number", "precision"]], "passed": true, "metrics": [[1, 1, 12, 1, 1], [1, 1, 16, 2, 2]]}
+{"case": "authored.js", "expected": [["r", 4], ["s", 2]], "actual": [["r", 4], ["s", 2]], "parameters": [["text", "_a", "b", "_"], ["_x", "y"]], "passed": true, "metrics": [[1, 1, 14, 1, 1], [1, 1, 11, 2, 2]]}
+{"case": "authored.ts", "expected": [["round", 2], ["widest", 1], ["json", 2]], "actual": [["round", 2], ["widest", 1], ["json", 2]], "parameters": [["number", "precision"], ["string"], ["object", "_"]], "passed": true, "metrics": [[1, 1, 14, 1, 1], [1, 1, 12, 2, 2], [1, 1, 16, 3, 3]]}
+{"case": "sigils.js", "expected": [["boundary", 9]], "actual": [["boundary", 6]], "parameters": [["b", "_", "_x", "x", "x1", "caf\u00e9"]], "passed": false, "metrics": [[1, 1, 27, 1, 1]]}
+{"case": "keywords.ts", "expected": [["keywords", 7]], "actual": [["keywords", 7]], "parameters": [["string", "number", "boolean", "any", "object", "unknown", "never"]], "passed": true, "metrics": [[1, 1, 34, 1, 1]]}
+{"case": "annotations.ts", "expected": [["typed", 4]], "actual": [["typed", 4]], "parameters": [["value", "cb", "data", "tail"]], "passed": true, "metrics": [[1, 1, 45, 1, 1]]}
+{"case": "defaults.js", "expected": [["defaults", 3]], "actual": [["defaults", 3]], "parameters": [["_x", "y", "value"]], "passed": true, "metrics": [[5, 1, 35, 1, 1]]}
+{"case": "typed_defaults.ts", "expected": [["defaults", 3]], "actual": [["defaults", 3]], "parameters": [["number", "y", "tail"]], "passed": true, "metrics": [[5, 1, 36, 1, 1]]}
+{"case": "destructured.js", "expected": [["unpack", 3]], "actual": [["unpack", 3]], "parameters": [["key", "tail", "last"]], "passed": true, "metrics": [[1, 1, 23, 1, 1]]}
+{"case": "quoted_binding.js", "expected": [["unpack", 2]], "actual": [["unpack", 1]], "parameters": [["tail"]], "passed": false, "metrics": [[1, 1, 14, 1, 1]]}
+{"case": "numeric_binding.js", "expected": [["unpack", 2]], "actual": [["unpack", 1]], "parameters": [["tail"]], "passed": false, "metrics": [[1, 1, 14, 1, 1]]}
+{"case": "computed_binding.js", "expected": [["unpack", 2]], "actual": [["unpack", 1]], "parameters": [["tail"]], "passed": false, "metrics": [[1, 1, 16, 1, 1]]}
+{"case": "plain.js", "expected": [["plain", 3], ["arrow", 2]], "actual": [["plain", 3], ["arrow", 2]], "parameters": [["a", "b", "rest"], ["_a", "b"]], "passed": true, "metrics": [[2, 1, 15, 1, 1], [1, 1, 11, 2, 2]]}
+{"case": "render.jsx", "expected": [["render", 3]], "actual": [["render", 3]], "parameters": [["text", "_key", "el"]], "passed": true, "metrics": [[1, 1, 16, 1, 1]]}
+{"case": "render.tsx", "expected": [["render", 3]], "actual": [["render", 3]], "parameters": [["number", "_key", "el"]], "passed": true, "metrics": [[1, 1, 22, 1, 1]]}
+{"case": "render.vue", "expected": [["render", 3]], "actual": [["render", 3]], "parameters": [["text", "_key", "el"]], "passed": true, "metrics": [[1, 1, 12, 2, 2]]}
+{"case": "control.py", "expected": [["plain", 4]], "actual": [["plain", 4]], "parameters": [["value", "tail", "args", "kwargs"]], "passed": true, "metrics": [[1, 2, 21, 1, 2]]}
+{"case": "control.cpp", "expected": [["plain", 2]], "actual": [["plain", 2]], "parameters": [["value", "tail"]], "passed": true, "metrics": [[1, 1, 15, 1, 1]]}
+{"case": "control.java", "expected": [["C::plain", 2]], "actual": [["C::plain", 2]], "parameters": [["value", "tail"]], "passed": true, "metrics": [[1, 1, 13, 1, 1]]}
+{"case": "control.rb", "expected": [["plain", 2]], "actual": [["plain", 2]], "parameters": [["value", "tail"]], "passed": true, "metrics": [[1, 3, 10, 1, 3]]}
+{"case": "control.php", "expected": [["plain", 1]], "actual": [["plain", 1]], "parameters": [["value"]], "passed": true, "metrics": [[1, 1, 8, 1, 1]]}
+{"cases": 34, "failures": ["this-typed-defaults.ts", "this-binding.ts", "this-binding.js", "this-binding.jsx", "this-binding.tsx", "this-nested-default.ts", "sigils.js", "quoted_binding.js", "numeric_binding.js", "computed_binding.js"]}

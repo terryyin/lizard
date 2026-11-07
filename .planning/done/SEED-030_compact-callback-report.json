@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-030#compact-callback-report",
+  "title": "Show a compact JavaScript complexity report",
+  "completedAt": "2026-11-04T04:15:21.598Z",
+  "developer": "Terry Yin",
+  "agent": "Koharu-chan",
+  "host": "claude",
+  "model": "opus"
+}

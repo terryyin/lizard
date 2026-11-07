@@ -1,27 +1,46 @@
 '''
-Language parser for JavaScript
+Language parser for TypeScript
 '''
 
-import re
+from itertools import tee
+
 from .code_reader import CodeReader, CodeStateMachine
 from .clike import CCppCommentsMixin
 from .js_style_regex_expression import js_style_regex_expression
+from .javascript_bindings import JavaScriptBindings
+from .typescript_type_annotation import TypeScriptTypeAnnotationStates
+from .typescript_states import TypeScriptStates
+from .typescript_signatures import ReturnTypeColon, return_type_colon
+from .javascript_templates import LINE_COMMENT, interpolation_code, template_tokens
+
+# One token, so each ? in ?? is not its own ternary decision.
+NULLISH_COALESCING = r"|(?:\?\?)"
+OPTIONAL_ACCESS = r"|(?:\?\.(?!\d))"
+# An optional member or parameter, "name?: T", "'a-b'?: T" or "f(a?)"; in
+# "x?y:0" the "?" opens a ternary.
+OPTIONAL_NAME = (r"|(?:(?:\w+|\"(?:\\.|[^\"\\])*\"|\'(?:\\.|[^\'\\])*\')"
+                 r"\?(?=\s*(?:[:,)]|\Z)))")
+# JavaScript identifiers can contain dollar signs as well as word characters.
+JS_IDENTIFIER = r"|(?:[\w$]+)"
 
 
 class Tokenizer(object):
     def __init__(self):
         self.sub_tokenizer = None
         self._ended = False
+        self._aborted = False
 
     def __call__(self, token):
         if self.sub_tokenizer:
-            for tok in self.sub_tokenizer(token):
-                yield tok
+            yield from self._sub_tokens(token)
             if self.sub_tokenizer._ended:
                 self.sub_tokenizer = None
             return
         for tok in self.process_token(token):
             yield tok
+
+    def _sub_tokens(self, token):
+        yield from self.sub_tokenizer(token)
 
     def stop(self):
         self._ended = True
@@ -35,6 +54,15 @@ class JSTokenizer(Tokenizer):
         super().__init__()
         self.depth = 1
 
+    def _sub_tokens(self, token):
+        for tok in self.sub_tokenizer(token):
+            if self.sub_tokenizer._aborted:
+                # An aborted JSX candidate is ordinary JavaScript. Its
+                # emitted braces still belong to this tokenizer.
+                yield from JSTokenizer.process_token(self, tok)
+            else:
+                yield tok
+
     def process_token(self, token):
         if token == "{":
             self.depth += 1
@@ -46,384 +74,170 @@ class JSTokenizer(Tokenizer):
         yield token
 
 
+class _OptionalMemberQuestion(str):
+    """A class member marker excluded by optional-aware metric consumers."""
+
+    is_optional = True
+
+
+_OPTIONAL_MEMBER_QUESTION = _OptionalMemberQuestion('?')
+_ANNOTATION_PUNCTUATION = frozenset(('?', ':'))
+
+
 class TypeScriptReader(CodeReader, CCppCommentsMixin):
     # pylint: disable=R0903
 
     ext = ['ts']
     language_names = ['typescript', 'ts']
-    
+    # JS/TS split templates into '${' + expression tokens; only TSX/JSX keep
+    # atomic templates that need a backtick scan on the fast path.
+    _scan_atomic_templates = False
+    _class_field_annotations = True
+
     # Separated condition categories
     _control_flow_keywords = {'if', 'elseif', 'for', 'while', 'catch'}
-    _logical_operators = {'&&', '||'}
+    _logical_operators = {'&&', '||', '??'}
     _case_keywords = {'case'}
     _ternary_operators = {'?'}
 
     def __init__(self, context):
         super().__init__(context)
+        self.context.class_field_annotations = self._class_field_annotations
         self.parallel_states = [TypeScriptStates(context)]
+        self._previous_token = None
+
+    def _count_interpolation_conditions(self, token, in_expression):
+        # Re-tokenize opaque interpolation spans; keyword members stay non-
+        # conditions the same way as on the outer token stream (#546).
+        conditions = self.conditions
+        previous = None
+        for start, end in interpolation_code(token, in_expression):
+            for inner in self.generate_tokens(token[start:end]):
+                if (inner in conditions
+                        and previous not in ('.', '?.')):
+                    self.context.add_condition()
+                previous = inner
+
+    def _count_conditions_from_token(self, previous, token):
+        # Split JS/TS exposes '${' then the expression; atomic TSX/JSX
+        # templates keep the whole backtick token.
+        if previous == '${':
+            self._count_interpolation_conditions(token, True)
+        elif (type(self)._scan_atomic_templates
+                and token[:1] == '`' and '${' in token):
+            self._count_interpolation_conditions(token, False)
+
+    def process_token(self, token):
+        # Undo keyword member names (#546) and count conditions written
+        # inside template interpolations (opaque to the outer stream).
+        previous = self._previous_token
+        self._previous_token = token
+        if previous in ('.', '?.') and token in self.conditions:
+            self.context.add_condition(-1)
+        self._count_conditions_from_token(previous, token)
+        return False
+
+    def __call__(self, tokens, reader):
+        # Custom hooks and state configurations retain the generic protocol.
+        # TypeScriptReader.process_token only undoes keyword members / adds
+        # interpolation conditions and always returns False, so the fast path
+        # may keep calling it. Instance or subclass hooks still fall back to
+        # CodeReader.__call__.
+        states = self.parallel_states
+        allowed_process = (
+            CodeReader.process_token, TypeScriptReader.process_token)
+        if (type(states) not in (list, tuple) or len(states) != 1
+                or type(states[0]) is not TypeScriptStates
+                or getattr(states[0], '_binding_candidate', False) is not None
+                or type(self).process_token not in allowed_process
+                or getattr(self.process_token, '__func__', None)
+                not in allowed_process):
+            yield from CodeReader.__call__(self, tokens, reader)
+            return
+        self.context = reader.context
+        state = states[0]
+        # Binding candidates are children and retain their own wrapper.
+        consume = CodeStateMachine.__call__.__get__(state)
+        previous = self._previous_token
+        conditions = self.conditions
+        # Bind once on this hot path: ordinary JS/TS tokens pay only the
+        # after_interpolation / '${' checks (no per-token helper call).
+        # TSX/JSX keep the atomic backtick scan on the rare path.
+        after_interpolation = previous == '${'
+        scan_atomic = type(self)._scan_atomic_templates
+        for token in tokens:
+            if previous in ('.', '?.') and token in conditions:
+                self.context.add_condition(-1)
+            if after_interpolation:
+                self._count_interpolation_conditions(token, True)
+                after_interpolation = False
+            elif token == '${':
+                after_interpolation = True
+            elif scan_atomic and token[:1] == '`' and '${' in token:
+                self._count_interpolation_conditions(token, False)
+            previous = token
+            consume(token)
+            yield token
+        self._previous_token = previous
+        state.statemachine_before_return()
+        self.eof()
+
+    def preprocess(self, tokens):
+        """Drop spaces, and offer each line's first code token to the
+        innermost open expression arrow before any counter charges it.
+
+        A '\n' is consumed by line_counter, and comments by comment_counter,
+        before the state machine sees them, so expression_arrows cannot
+        change between a newline and the next code token."""
+        arrows = self.context.expression_arrows = []
+        line_start = False
+        state = self.parallel_states[0]
+        annotation_punctuation = _ANNOTATION_PUNCTUATION
+        tokens = iter(self.code_tokens(tokens))
+        while True:
+            for token in tokens:
+                if not token.isspace():
+                    if line_start and not token.startswith(('//', '/*')):
+                        line_start = False
+                        arrows[-1].end_expression_before(token)
+                    if token in annotation_punctuation:
+                        if token == '?':
+                            if (self.context.class_field_annotations
+                                    and state.optional_member_context()):
+                                token = _OPTIONAL_MEMBER_QUESTION
+                        elif state.last_token == ')':
+                            annotation = state.return_annotation_context()
+                            if annotation is not None:
+                                depth, unambiguous_signature = annotation
+                                if unambiguous_signature:
+                                    token = ReturnTypeColon(token)
+                                else:
+                                    tokens, lookahead = tee(tokens)
+                                    if return_type_colon(lookahead, depth):
+                                        token = ReturnTypeColon(token)
+                                    del lookahead
+                                    yield token
+                                    # Resume with the buffered iterator.
+                                    break
+                    yield token
+                elif token == '\n':
+                    if arrows:
+                        line_start = True
+                    yield token
+            else:
+                return
+
+    @staticmethod
+    def code_tokens(tokens):
+        """The tokens that are code; embedding readers (Vue) narrow them."""
+        return tokens
 
     @staticmethod
     @js_style_regex_expression
     def generate_tokens(source_code, addition='', token_class=None):
-        def split_template_literal(token, quote):
-            content = token[1:-1]
-
-            # Always yield opening quote
-            yield quote
-
-            # If no expressions, yield content as-is with quotes and closing quote
-            if '${' not in content:
-                if content:
-                    yield quote + content + quote
-                yield quote
-                return
-
-            # Handle expressions
-            i = 0
-            while i < len(content):
-                idx = content.find('${', i)
-                if idx == -1:
-                    if i < len(content):
-                        yield quote + content[i:] + quote
-                    break
-                if idx > i:
-                    yield quote + content[i:idx] + quote
-                yield '${'
-                i = idx + 2
-                expr_start = i
-                brace_count = 1
-                while i < len(content) and brace_count > 0:
-                    if content[i] == '{':
-                        brace_count += 1
-                    elif content[i] == '}':
-                        brace_count -= 1
-                    i += 1
-                expr = content[expr_start:i-1]
-                yield expr
-                yield '}'
-                content = content[i:]
-                i = 0
-
-            # Always yield closing quote
-            yield quote
-
-        # Restore original addition pattern for template literals
-        addition = addition + r"|(?:\$\w+)" + r"|(?:\w+\?)" + r"|`.*?`"
-        for token in CodeReader.generate_tokens(source_code, addition, token_class):
-            if (
-                isinstance(token, str)
-                and token.startswith('`')
-                and token.endswith('`')
-                and len(token) > 1
-            ):
-                for t in split_template_literal(token, '`'):
-                    yield t
-                continue
-            yield token
-
-
-class TypeScriptStates(CodeStateMachine):
-    def __init__(self, context):
-        super().__init__(context)
-        self.last_tokens = ''
-        self.function_name = ''
-        self.started_function = None
-        self.as_object = False
-        self._getter_setter_prefix = None
-        self.arrow_function_pending = False
-        self._ts_declare = False  # Track if 'declare' was seen
-        self._static_seen = False  # Track if 'static' was seen
-        self._async_seen = False  # Track if 'async' was seen
-        self._prev_token = ''  # Track previous token to detect method calls
-
-    def statemachine_before_return(self):
-        # Ensure the main function is closed at the end
-        if self.started_function:
-            self._pop_function_from_stack()
-
-    def _state_global(self, token):
-        if token == 'declare':
-            self._ts_declare = True
-            return
-        if token == 'function' and getattr(self, '_ts_declare', False):
-            # Skip declared function
-            self._ts_declare = False
-            # Skip tokens until semicolon or newline
-
-            def skip_declared_function(t):
-                if t == ';' or self.context.newline:
-                    self.next(self._state_global)
-                    return True
-                return False
-            self.next(skip_declared_function)
-            return
-        self._ts_declare = False
-
-        # Track static and async modifiers
-        if token == 'static':
-            self._static_seen = True
-            self._prev_token = token
-            return
-        if token == 'async':
-            self._async_seen = True
-            self._prev_token = token
-            return
-        if token == 'new':
-            # Track 'new' keyword to avoid treating constructors as functions
-            self._prev_token = token
-            return
-
-        if self.as_object:
-            # Support for getter/setter: look for 'get' or 'set' before method name
-            if token in ('get', 'set'):
-                self._getter_setter_prefix = token
-                return
-            if hasattr(self, '_getter_setter_prefix') and self._getter_setter_prefix:
-                # Next token is the property name
-                self.last_tokens = f"{self._getter_setter_prefix} {token}"
-                self._getter_setter_prefix = None
-                return
-            if token == '[':
-                self._collect_computed_name()
-                return
-            if token == ':':
-                self.function_name = self.last_tokens
-                return
-            elif token == '(':
-                # Check if this is a method call (previous token was . or this/identifier)
-                if self._prev_token == '.' or self._prev_token == 'new':
-                    # This is a method call, not a function definition
-                    self._prev_token = token
-                    return
-                if not self.started_function:
-                    self.arrow_function_pending = True
-                    self._function(self.last_tokens)
-                self.next(self._function, token)
-                return
-            # If we've seen async/static and this is an identifier, it's likely a method name
-            elif (self._async_seen or self._static_seen) and token not in ('*', 'function'):
-                # This is a method name after async/static
-                self.last_tokens = token
-                return
-
-        if token in '.':
-            self._state = self._field
-            self.last_tokens += token
-            self._prev_token = token
-            return
-        if token == 'function':
-            self._state = self._function
-        elif token in ('if', 'switch', 'for', 'while', 'catch'):
-            self.next(self._expecting_condition_and_statement_block)
-        elif token in ('else', 'do', 'try', 'final'):
-            self.next(self._expecting_statement_or_block)
-        elif token in ('=>',):
-            # Only handle arrow function body, do not push function here
-            self._state = self._arrow_function
-        elif token == '=':
-            self.function_name = self.last_tokens
-        elif token == "(":
-            # Check if this is a method call or constructor
-            if self._prev_token == '.' or self._prev_token == 'new':
-                # This is a method call or constructor, not a function definition
-                self.sub_state(
-                    self.__class__(self.context))
-            else:
-                self.sub_state(
-                    self.__class__(self.context))
-        elif token in '{':
-            if self.started_function:
-                self.sub_state(
-                    self.__class__(self.context),
-                    self._pop_function_from_stack)
-            else:
-                self.read_object()
-        elif token in ('}', ')'):
-            self.statemachine_return()
-        elif self.context.newline or token == ';':
-            self.function_name = ''
-            self._pop_function_from_stack()
-            # Reset modifiers on newline/semicolon
-            self._static_seen = False
-            self._async_seen = False
-
-        if token == '`':
-            self.next(self._state_template_literal)
-        if not self.as_object:
-            if token == ':':
-                self._consume_type_annotation()
-                self._prev_token = token
-                return
-        self.last_tokens = token
-        # Don't overwrite _prev_token if it's 'new' or '.' (preserve for next token)
-        if self._prev_token not in ('new', '.'):
-            self._prev_token = token
-
-    def read_object(self):
-        def callback():
-            self.next(self._state_global)
-
-        object_reader = self.__class__(self.context)
-        object_reader.as_object = True
-        # Pass along the modifier flags
-        object_reader._static_seen = self._static_seen
-        object_reader._async_seen = self._async_seen
-        self.sub_state(object_reader, callback)
-        # Reset modifiers after entering object
-        self._static_seen = False
-        self._async_seen = False
-
-    def _expecting_condition_and_statement_block(self, token):
-        def callback():
-            self.next(self._expecting_statement_or_block)
-
-        if token == "await":
-            return
-
-        if token != '(':
-            self.next(self._state_global, token)
-            return
-
-        self.sub_state(
-            self.__class__(self.context), callback)
-
-    def _expecting_statement_or_block(self, token):
-        def callback():
-            self.next(self._state_global)
-        if token == "{":
-            self.sub_state(
-                self.__class__(self.context), callback)
-        else:
-            self.next(self._state_global, token)
-
-    def _push_function_to_stack(self):
-        self.started_function = True
-        self.context.push_new_function(self.function_name or '(anonymous)')
-
-    def _pop_function_from_stack(self):
-        if self.started_function:
-            self.context.end_of_function()
-        self.started_function = None
-
-    def _arrow_function(self, token):
-        self._push_function_to_stack()
-        # Handle arrow function body
-        if token == '{':
-            # Block body
-            self.next(self._state_global, token)
-        else:
-            # Expression body
-            self.next(self._state_global, token)
-
-    def _function(self, token):
-        if token == '*':
-            return
-        if token != '(':
-            self.function_name = token
-            # Reset modifiers after setting function name
-            self._static_seen = False
-            self._async_seen = False
-        else:
-            if not self.started_function:
-                self._push_function_to_stack()
-            self.arrow_function_pending = False
-            self._state = self._dec
-            if token == '(':
-                self._dec(token)
-
-    def _field(self, token):
-        self.last_tokens += token
-        self._state = self._state_global
-
-    def _dec(self, token):
-        if token == ')':
-            self._state = self._expecting_func_opening_bracket
-        elif token != '(':
-            self.context.parameter(token)
-            return
-        self.context.add_to_long_function_name(" " + token)
-
-    def _expecting_func_opening_bracket(self, token):
-        # Do not reset started_function for arrow functions (=>)
-        if token == ':':
-            self._consume_type_annotation()
-        elif token != '{' and token != '=>':
-            self.started_function = None
-        self.next(self._state_global, token)
-
-    def _state_template_literal(self, token):
-        if token == '`':
-            self.next(self._state_global)
-
-    def _collect_computed_name(self):
-        # Collect tokens between [ and ]
-        tokens = []
-
-        def collect(token):
-            if token == ']':
-                # Try to join tokens and camelCase if possible
-                name = ''.join(tokens)
-                # Remove quotes and pluses for simple cases
-                name = name.replace("'", '').replace('"', '').replace('+', '').replace(' ', '')
-                # Lowercase first char, uppercase next word's first char
-                name = self._to_camel_case(name)
-                self.last_tokens = name
-                self.next(self._state_global)
-                return True
-            tokens.append(token)
-            return False
-        self.next(collect)
-
-    def _to_camel_case(self, s):
-        # Simple camelCase conversion for test case
-        if not s:
-            return s
-        parts = s.split()
-        if not parts:
-            return s
-        return parts[0][0].lower() + parts[0][1:] + ''.join(p.capitalize() for p in parts[1:])
-
-    def _consume_type_annotation(self):
-        typeStates = TypeScriptTypeAnnotationStates(self.context)
-
-        def callback():
-            if typeStates.saved_token:
-                self(typeStates.saved_token)
-        self.sub_state(typeStates, callback)
-
-
-class TypeScriptTypeAnnotationStates(CodeStateMachine):
-    def __init__(self, context):
-        super().__init__(context)
-        self.saved_token = None
-
-    def _state_global(self, token):
-        if token == '{':
-            self.next(self._inline_type_annotation, token)
-        else:
-            self.next(self._state_simple_type, token)
-
-    def _state_simple_type(self, token):
-        if token == '<':
-            self.next(self._state_generic_type, token)
-        elif token in '{=;)':
-            self.saved_token = token
-            self.statemachine_return()
-        elif token == '(':
-            self.next(self._function_type_annotation, token)
-        elif token == '=>':
-            # Handle arrow function after type annotation
-            self.saved_token = token
-            self.statemachine_return()
-
-    @CodeStateMachine.read_inside_brackets_then("{}")
-    def _inline_type_annotation(self, _):
-        self.statemachine_return()
-
-    @CodeStateMachine.read_inside_brackets_then("<>")
-    def _state_generic_type(self, token):
-        self.statemachine_return()
-
-    @CodeStateMachine.read_inside_brackets_then("()")
-    def _function_type_annotation(self, _):
-        self.statemachine_return()
+        # Line comment, private method (#), optional name (?), dollar
+        # identifiers, nullish (??).
+        addition = (addition + "|" + LINE_COMMENT + r"|(?:#\w+)"
+                    + OPTIONAL_NAME + JS_IDENTIFIER + NULLISH_COALESCING
+                    + OPTIONAL_ACCESS)
+        yield from template_tokens(source_code, addition, token_class)

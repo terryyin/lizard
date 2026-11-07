@@ -53,6 +53,26 @@ class TestFileOutputIntegration(unittest.TestCase):
         header = "<!DOCTYPE HTML PUBLIC"
         self.output_test("test.html", header)
 
+    def test_html_exits_nonzero_when_thresholds_are_exceeded(self):
+        source = join(self.tmp_dir, "warn.cpp")
+        with open(source, "w", encoding="utf-8") as handle:
+            handle.write("void foo() { if (1) {} }\n")
+        html_path = join(self.tmp_dir, "analysis.html")
+        text_path = join(self.tmp_dir, "analysis.txt")
+        args = [
+            "lizard", "-l", "cpp", source,
+            "-Tnloc=0", "-Tcyclomatic_complexity=0", "-o",
+        ]
+        self.assertEqual(1, main(args + [text_path]))
+        self.assertEqual(1, main(args + [html_path]))
+
+    def test_html_exits_zero_when_thresholds_are_met(self):
+        source = join(self.tmp_dir, "ok.cpp")
+        with open(source, "w", encoding="utf-8") as handle:
+            handle.write("void foo() {}\n")
+        html_path = join(self.tmp_dir, "analysis.html")
+        self.assertEqual(0, main(["lizard", "-l", "cpp", source, "-o", html_path]))
+
     def test_xml(self):
         header = "<?xml version=\"1.0\" ?>"
         self.output_test("test.xml", header)

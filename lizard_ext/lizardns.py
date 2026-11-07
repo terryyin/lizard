@@ -67,10 +67,87 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
 
     def __init__(self):
         super(LizardExtension, self).__init__(None)
-        self.structure_piles = [0]
+        self.structure_piles = [0]  # Invariant: must always have at least one element
+
+    def __call__(self, tokens, reader=None):
+        if 'python' in getattr(reader, 'language_names', ()):
+            return self._indented_structures(tokens, reader)
+        return super(LizardExtension, self).__call__(tokens, reader)
+
+    def _indented_structures(self, tokens, reader):
+        """Python has no braces: a structure is a statement that starts a
+        line, and its depth comes from the indentation, which the Python
+        reader keeps as the nesting level of the context.
+
+        For each function, the levels of the structures still open are kept
+        in a list: a structure closes the open ones at its level or deeper.
+        Structures inside brackets (comprehensions) or after the start of a
+        statement (ternary 'x if c else y') are not structures here."""
+        self.context = reader.context
+        open_levels = {}
+        brackets = 0
+        last_line = None
+        statement_start = True
+        for token in tokens:
+            line = self.context.current_line
+            if line != last_line and brackets == 0:
+                statement_start = True
+            last_line = line
+            if not hasattr(self.context.current_function,
+                           "max_nested_structures"):
+                self.context.current_function.max_nested_structures = 0
+            if statement_start and token == 'async':
+                yield token
+                continue
+            if statement_start and (
+                    token in self.structures or
+                    (token == 'match' and
+                     getattr(reader, '_keyword_match', False))):
+                self._open_indented_structure(open_levels)
+            if token in ('(', '[', '{'):
+                brackets += 1
+            elif token in (')', ']', '}'):
+                brackets = max(brackets - 1, 0)
+            statement_start = False
+            yield token
+
+    def _open_indented_structure(self, open_levels):
+        function = self.context.current_function
+        level = self.context.current_nesting_level
+        levels = open_levels.setdefault(id(function), [])
+        while levels and levels[-1] >= level:
+            levels.pop()
+        levels.append(level)
+        if function.max_nested_structures < len(levels):
+            function.max_nested_structures = len(levels)
+
+    def _push_scope(self):
+        """Push a new scope level. Safe to call anytime."""
+        self.structure_piles.append(0)
+
+    def _pop_scope(self):
+        """Pop a scope level. Maintains invariant of at least one element."""
+        if len(self.structure_piles) > 1:
+            self.structure_piles.pop()
+
+    def _increment_current_scope(self):
+        """Increment structure count in current scope. Safe even if piles corrupted."""
+        if not self.structure_piles:
+            self.structure_piles = [0]  # Restore invariant
+        self.structure_piles[-1] += 1
+
+    def _reset_or_decrement_current_scope(self, decrement=False):
+        """Reset or decrement current scope counter. Safe even if piles corrupted."""
+        if not self.structure_piles:
+            self.structure_piles = [0]  # Restore invariant
+            return
+        if decrement:
+            self.structure_piles[-1] -= 1
+        else:
+            self.structure_piles[-1] = 0
 
     def pile_up_within_block(self):
-        self.structure_piles[-1] += 1
+        self._increment_current_scope()
         cur_level = sum(self.structure_piles)
         # Is there a path around _state_global?
         if not hasattr(self.context.current_function, "max_nested_structures"):
@@ -83,13 +160,21 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
         if not hasattr(self.context.current_function, "max_nested_structures"):
             self.context.current_function.max_nested_structures = 0
         if token == '{':
-            self.structure_piles.append(0)
+            self._push_scope()
         elif token in ';}':
             if token == '}':
-                self.structure_piles.pop()
+                self._pop_scope()
             self._state = self._block_ending
         elif token in self.structures:
             self._state = self._in_structure_head
+        elif token in ('.', '?.'):
+            self._state = self._member_name
+
+    def _member_name(self, token):
+        """A member named like a structure, promise.catch(f), is not one."""
+        self._state = self._state_global
+        if token not in self.structures:
+            self._state(token)
 
     @CodeStateMachine.read_inside_brackets_then("()")
     def _in_structure_head(self, token):
@@ -98,10 +183,8 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
         self._state(token)
 
     def _block_ending(self, token):
-        if token in self.matching_structures:
-            self.structure_piles[-1] -= 1
-        else:
-            self.structure_piles[-1] = 0
+        decrement = token in self.matching_structures
+        self._reset_or_decrement_current_scope(decrement=decrement)
         self._state = self._state_global
         self._state(token)
 

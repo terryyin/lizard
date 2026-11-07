@@ -1,12 +1,27 @@
 import unittest
 import platform
-from mock import patch
+from unittest.mock import patch
 from lizard import get_all_source_files
 import os
 
 
 def which_system():
     return platform.system()
+
+
+def _wire_gitignore_fs_mocks(mock_exists, mock_relpath):
+    '''Makes os.path.exists/relpath behave as if only a .gitignore exists
+    on disk, so gitignore-matching tests don't need real filesystem access.
+    '''
+    def exists_side_effect(path):
+        return path.endswith('.gitignore')
+    mock_exists.side_effect = exists_side_effect
+
+    def relpath_side_effect(path, start):
+        if path.startswith('./'):
+            path = path[2:]
+        return path.replace(os.sep, '/')
+    mock_relpath.side_effect = relpath_side_effect
 
 
 class TestFilesFilter(unittest.TestCase):
@@ -28,7 +43,7 @@ class TestFilesFilter(unittest.TestCase):
         files = get_all_source_files(["dir/file.log"], [], [])
         self.assertEqual(["dir/file.log"], list(files))
 
-    @patch('lizard.md5_hash_file')
+    @patch('lizard_core.file_discovery.md5_hash_file')
     @patch.object(os, "walk")
     def test_exclude_file_name(self, mock_os_walk, md5):
         mock_os_walk.return_value = (['.',
@@ -41,7 +56,7 @@ class TestFilesFilter(unittest.TestCase):
             file_names = ["./useful.cpp"]
         self.assertEqual(file_names, list(files))
 
-    @patch('lizard.md5_hash_file')
+    @patch('lizard_core.file_discovery.md5_hash_file')
     @patch.object(os, "walk")
     def test_assigned_languages(self, mock_os_walk, md5):
         mock_os_walk.return_value = (['.',
@@ -83,7 +98,7 @@ class TestFilesFilter(unittest.TestCase):
         self.assertEqual([], list(files))
 
     @patch.object(os, "walk")
-    @patch("lizard.auto_open", create=True)
+    @patch("lizard_core.file_discovery.auto_open", create=True)
     def test_duplicates(self, mock_open, mock_os_walk):
         mock_os_walk.return_value = (['.',
                                       None,
@@ -98,7 +113,7 @@ class TestFilesFilter(unittest.TestCase):
         self.assertEqual(file_names, list(files))
 
     @patch.object(os, "walk")
-    @patch("lizard.auto_open", create=True)
+    @patch("lizard_core.file_discovery.auto_open", create=True)
     def test_nonduplicates(self, mock_open, mock_os_walk):
         mock_os_walk.return_value = (['.',
                                       None,
@@ -114,7 +129,7 @@ class TestFilesFilter(unittest.TestCase):
         self.assertEqual(file_names, list(files))
 
     @patch.object(os, "walk")
-    @patch("lizard.auto_open", create=True)
+    @patch("lizard_core.file_discovery.auto_open", create=True)
     def test_fail_to_open_file_should_be_allowed(self, mock_open, mock_os_walk):
         mock_os_walk.return_value = (['.',
                                       None,
@@ -130,23 +145,12 @@ class TestFilesFilter(unittest.TestCase):
     @patch.object(os.path, "exists")
     @patch.object(os.path, "relpath")
     @patch.object(os, "walk")
-    @patch("lizard.auto_read")
+    @patch("lizard_core.file_discovery.auto_read")
     def test_gitignore_filter(self, mock_auto_read, mock_os_walk, mock_relpath, mock_exists):
         mock_os_walk.return_value = (['.',
                                     None,
                                     ['temp.c', 'node_modules/file.js', 'useful.cpp']], )
-        
-        def exists_side_effect(path):
-            return path.endswith('.gitignore')
-        mock_exists.side_effect = exists_side_effect
-        
-        def relpath_side_effect(path, start):
-            # Return paths in a normalized format
-            if path.startswith('./'):
-                path = path[2:]
-            return path.replace(os.sep, '/')
-        mock_relpath.side_effect = relpath_side_effect
-        
+        _wire_gitignore_fs_mocks(mock_exists, mock_relpath)
         mock_auto_read.return_value = "node_modules/\n*.c\n"
         
         files = get_all_source_files(["dir"], [], [])
@@ -154,4 +158,72 @@ class TestFilesFilter(unittest.TestCase):
             file_names = [".\\useful.cpp"]
         else:
             file_names = ["./useful.cpp"]
+        self.assertEqual(file_names, list(files))
+
+    @patch.object(os.path, "exists")
+    @patch.object(os.path, "relpath")
+    @patch.object(os, "walk")
+    @patch("lizard_core.file_discovery.auto_read")
+    @patch('lizard_core.file_discovery.md5_hash_file')
+    def test_gitignore_filter_can_be_disabled(self, md5, mock_auto_read,
+                                              mock_os_walk, mock_relpath,
+                                              mock_exists):
+        mock_os_walk.return_value = (['.',
+                                    None,
+                                    ['temp.c', 'node_modules/file.js', 'useful.cpp']], )
+        md5.side_effect = [1, 2, 3]
+        mock_exists.return_value = True
+        mock_relpath.side_effect = AssertionError(
+            "gitignore matching should not run")
+        mock_auto_read.side_effect = AssertionError(
+            ".gitignore should not be read")
+
+        files = get_all_source_files(["dir"], [], [], use_gitignore=False)
+        if which_system() == "Windows":
+            file_names = [".\\temp.c", ".\\node_modules/file.js", ".\\useful.cpp"]
+        else:
+            file_names = ["./temp.c", "./node_modules/file.js", "./useful.cpp"]
+        self.assertEqual(file_names, list(files))
+
+    @patch.object(os.path, "exists")
+    @patch.object(os.path, "relpath")
+    @patch.object(os, "walk")
+    @patch("lizard_core.file_discovery.auto_read")
+    def test_tolerates_invalid_windows_gitignore_pattern(self, mock_auto_read,
+                                                         mock_os_walk,
+                                                         mock_relpath,
+                                                         mock_exists):
+        mock_os_walk.return_value = (['.',
+                                    None,
+                                    ['useful.cpp']], )
+        _wire_gitignore_fs_mocks(mock_exists, mock_relpath)
+        mock_auto_read.return_value = "bin\\Debug\\\n"
+
+        files = get_all_source_files(["dir"], [], [])
+        if which_system() == "Windows":
+            file_names = [".\\useful.cpp"]
+        else:
+            file_names = ["./useful.cpp"]
+        self.assertEqual(file_names, list(files))
+
+    @patch.object(os.path, "exists")
+    @patch.object(os.path, "relpath")
+    @patch.object(os, "walk")
+    @patch("lizard_core.file_discovery.auto_read")
+    def test_valid_gitignore_patterns_still_apply_with_invalid_lines(self,
+                                                                     mock_auto_read,
+                                                                     mock_os_walk,
+                                                                     mock_relpath,
+                                                                     mock_exists):
+        mock_os_walk.return_value = (['.',
+                                    None,
+                                    ['temp.c', 'node_modules/file.js', 'useful.cpp']], )
+        _wire_gitignore_fs_mocks(mock_exists, mock_relpath)
+        mock_auto_read.return_value = "node_modules/\nbin\\Debug\\\n"
+
+        files = get_all_source_files(["dir"], [], [])
+        if which_system() == "Windows":
+            file_names = [".\\temp.c", ".\\useful.cpp"]
+        else:
+            file_names = ["./temp.c", "./useful.cpp"]
         self.assertEqual(file_names, list(files))

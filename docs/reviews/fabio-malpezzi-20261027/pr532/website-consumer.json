@@ -1,0 +1,13 @@
+{
+  "observed": false,
+  "interpreter": "/private/tmp/lizard-website-revival/.venv/bin/python",
+  "error": "[Errno 2] No such file or directory: '/private/tmp/lizard-website-revival/.venv/bin/python'",
+  "product_hashes": {
+    "lizard_core/function_info.py": "067da87377da79303cd947e2078ed0ced8f206c0cd0fd600119b360f69482d90",
+    "lizard_languages/javascript_bindings.py": "45b7e6e395b122d3b410325dcc0a83f9f16bde6c462580c7ac75579222d26047",
+    "lizard_languages/javascript_functions.py": "0e539a410afc35b7d0a81bb458e691550924b2d1d90a5b985a54983e9efdffd9",
+    "lizard_languages/typescript.py": "74146767409186ca9cadcc0175f1e72ab58e089c10999553fee4d0fe11f9784f",
+    "lizard_languages/tsx.py": "8f9cc3b04b0e537a41ac1724ae3d6146e8d99e39617baf34ad17deca789074c4"
+  },
+  "gap": "Website runtime was retired; Flask is absent from selected/default checkout environments. HTTP observation remains pending integration."
+}

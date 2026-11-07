@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-021#dart-support",
+  "title": "Support Dart analysis",
+  "completedAt": "2026-10-29T03:39:56.213Z",
+  "developer": "Terry Yin",
+  "agent": "Aino-chan",
+  "host": "cursor",
+  "model": "auto"
+}

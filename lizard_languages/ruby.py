@@ -24,16 +24,16 @@ class RubyReader(RubylikeReader):
     language_names = ['ruby']
 
     @staticmethod
-    @js_style_regex_expression
+    @js_style_regex_expression(language='ruby')
     def generate_tokens(source_code, addition='', token_class=None):
         def process_source(source, _, matcher):
             return ScriptLanguageMixIn.generate_common_tokens(
                 source,
                 r"|^\=begin|^\=end" +
-                r"|\%[qQrw]?\{(?:\\.|[^\}\\])*?\}" +
-                r"|\%[qQrw]?\[(?:\\.|[^\]\\])*?\]" +
-                r"|\%[qQrw]?\<(?:\\.|[^\>\\])*?\>" +
-                r"|\%[qQrw]?\((?:\\.|[^\>\\])*?\)" +
+                r"|\%[qQrwiI]?\{(?:\\.|[^\}\\])*?\}" +
+                r"|\%[qQrwiI]?\[(?:\\.|[^\]\\])*?\]" +
+                r"|\%[qQrwiI]?\<(?:\\.|[^\>\\])*?\>" +
+                r"|\%[qQrwiI]?\((?:\\.|[^\>\\])*?\)" +
                 r"|\w+:" +
                 r"|\$\w+" +
                 r"|\.+" +

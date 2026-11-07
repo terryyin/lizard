@@ -1,0 +1,1 @@
+[{"filename":"generics.ts","source":"function generic<T>(value: Map<string, Array<T>>, _tail: T, $last: T) { return value; }","expected":[["generic",3]]}]

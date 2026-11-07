@@ -1,22 +1,18 @@
-<!DOCTYPE html>
-{% autoescape true %}
-<html>
-  <body>
-
-    <form action="{{ url_for('analyse') }}" method="post">
-      <div><textarea name="content" rows="30" cols="60"></textarea></div>
-      <div><input type="submit" value="Analyse"></div>
-    </form>
-
-{% if info %}
-  <ul class=entries>
-  {% for f in info.function_list %}
-    <li><h2>{{ f.name }}</h2>{{ f.nloc }}
-  {% else %}
-    <li><em>Unbelievable.  No entries here so far</em>
-  {% endfor %}
-  </ul>
- {% endif %}
-  </body>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Understand your code with Lizard, the open source complexity analyzer. Try function metrics online or install the command-line tool.">
+  <link rel="canonical" href="https://www.lizard.ws/">
+  <link rel="icon" href="/website/static/favicon.ico">
+  {% for href in styles %}<link rel="stylesheet" href="{{ href }}">
+  {% endfor %}<script type="module" src="{{ script }}"></script>
+  <title>Lizard — understand your code</title>
+</head>
+<body>
+  <div id="root"></div>
+  <noscript><p class="source-note wrap">The Lizard website needs JavaScript. You can still <a href="https://github.com/terryyin/lizard/blob/master/docs/cli.rst">use the command-line tool</a>: <code>pip install lizard</code>.</p></noscript>
+  <script type="application/json" id="lizard-config">{{ config | tojson }}</script>
+</body>
 </html>
-{% endautoescape %}

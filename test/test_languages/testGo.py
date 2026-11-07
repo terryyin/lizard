@@ -90,17 +90,17 @@ class Test_parser_for_Go(unittest.TestCase):
                 ''')
         self.assertEqual(4, len(result))
 
-        self.assertEqual("", result[0].name)
-        self.assertEqual("", result[0].long_name)
+        self.assertEqual("anonymous__0", result[0].name)
+        self.assertEqual("anonymous__0", result[0].long_name)
         self.assertEqual(1, result[0].length)
 
-        self.assertEqual("", result[1].name)
-        self.assertEqual(" n int", result[1].long_name)
+        self.assertEqual("anonymous__1", result[1].name)
+        self.assertEqual("anonymous__1 n int", result[1].long_name)
         self.assertEqual(1, result[1].length)
         self.assertEqual(['n int'], result[1].full_parameters)
 
-        self.assertEqual("", result[2].name)
-        self.assertEqual("", result[2].long_name)
+        self.assertEqual("anonymous__2", result[2].name)
+        self.assertEqual("anonymous__2", result[2].long_name)
         self.assertEqual(3, result[2].length)
 
         self.assertEqual("sayGoodbye", result[3].name)
@@ -166,3 +166,35 @@ class Test_parser_for_Go(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual("getQuery", result[0].name)
         self.assertEqual(1, result[0].cyclomatic_complexity)
+
+    def test_generic_function_with_type_param(self):
+        result = get_go_function_list('''
+            func Map[T any](x T) T { return x }
+                ''')
+        self.assertEqual(1, len(result))
+        self.assertEqual("Map", result[0].name)
+        self.assertEqual(1, result[0].parameter_count)
+
+    def test_generic_function_with_multiple_type_params(self):
+        result = get_go_function_list('''
+            func Reduce[T any, U any](xs []T, acc U) U { return acc }
+                ''')
+        self.assertEqual(1, len(result))
+        self.assertEqual("Reduce", result[0].name)
+        self.assertEqual(2, result[0].parameter_count)
+
+    def test_generic_function_with_nested_slice_constraint(self):
+        result = get_go_function_list('''
+            func Clone[S ~[]E, E any](s S) S { return s }
+                ''')
+        self.assertEqual(1, len(result))
+        self.assertEqual("Clone", result[0].name)
+        self.assertEqual(1, result[0].parameter_count)
+
+    def test_generic_method_with_receiver(self):
+        result = get_go_function_list('''
+            func (r *Box) Get[T any](x T) T { return x }
+                ''')
+        self.assertEqual(1, len(result))
+        self.assertEqual("Get", result[0].name)
+        self.assertEqual(1, result[0].parameter_count)

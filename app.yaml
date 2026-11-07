@@ -1,19 +1,20 @@
-runtime: python27
-api_version: 1
-threadsafe: true
+runtime: python313
+entrypoint: gunicorn --bind :$PORT --workers 1 --worker-class sync --timeout 15 index:app
+instance_class: F1
+
+automatic_scaling:
+  min_instances: 0
+  max_instances: 2
+  max_concurrent_requests: 1
 
 handlers:
 - url: /favicon\.ico
   static_files: website/static/favicon.ico
   upload: website/static/favicon\.ico
-- url: /
-  static_files: index.html
-  upload: index.html
+  secure: always
 - url: /website/static
   static_dir: website/static
+  secure: always
 - url: /.*
-  script: website.application
-
-libraries:
-- name: webapp2
-  version: latest
+  script: auto
+  secure: always

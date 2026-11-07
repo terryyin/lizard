@@ -4,8 +4,8 @@ Language parser for erlang
 
 import re
 from lizard_languages.code_reader import CodeReader, CodeStateMachine
-import pygments.token as py_token
-from pygments import lex, lexers
+from lizard_languages.pygments_fragments import join_fragments, \
+    lex_keeping_newlines
 
 
 class ErlangReader(CodeReader):
@@ -13,7 +13,7 @@ class ErlangReader(CodeReader):
 
     ext = ['erl', 'hrl', 'es', 'escript']
     language_names = ['erlang']
-    
+
     # Separated condition categories
     _control_flow_keywords = {'if', 'catch', 'when'}  # when is used in guards
     _logical_operators = {'and', 'or', 'not'}
@@ -34,12 +34,7 @@ class ErlangReader(CodeReader):
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
-        lexer = lexers.get_lexer_by_name('erlang')
-        tokens = lex(source_code, lexer=lexer)
-        return map(
-            lambda x: x[1],
-            filter(lambda x: x[0] != py_token.Whitespace, tokens)
-        )
+        return join_fragments(lex_keeping_newlines(source_code, 'erlang'))
 
 
 class ErlangStates(CodeStateMachine):

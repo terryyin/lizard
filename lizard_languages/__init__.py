@@ -1,6 +1,6 @@
 ''' programming languages of lizard '''
 
-from lizard_languages.zig import ZigReader
+from .zig import ZigReader
 from .clike import CLikeReader
 from .erlang import ErlangReader
 from .java import JavaReader
@@ -12,6 +12,7 @@ from .ttcn import TTCNReader
 from .swift import SwiftReader
 from .ruby import RubyReader
 from .csharp import CSharpReader
+from .dart import DartReader
 from .php import PHPReader
 from .scala import ScalaReader
 from .gdscript import GDScriptReader
@@ -27,6 +28,9 @@ from .perl import PerlReader
 from .st import StReader
 from .r import RReader
 from .plsql import PLSQLReader
+from .cobol import CobolReader
+from .ocaml import OCamlReader
+from .fsharp import FSharpReader
 
 
 def languages():
@@ -58,6 +62,10 @@ def languages():
         StReader,
         RReader,
         PLSQLReader,
+        CobolReader,
+        DartReader,
+        OCamlReader,
+        FSharpReader,
     ]
 
 

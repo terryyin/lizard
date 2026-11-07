@@ -4,17 +4,17 @@ all: extensive pylint
 extensive: tests pep8
 
 tests:
-	coverage run --source=lizard.py,lizard_ext,lizard_language -m pytest test
+	coverage run --source=lizard.py,lizard_ext,lizard_languages,lizard_core -m pytest test
 	coverage report -m
 
 tests3:
 	python3 -m unittest test
 
 pep8:
-	pycodestyle lizard.py lizard_ext lizard_languages
+	pycodestyle lizard.py lizard_ext lizard_languages lizard_core
 
 pylint:
-	pylint --exit-zero --rcfile pylintrc lizard.py lizard_ext lizard_languages
+	pylint --exit-zero --rcfile pylintrc lizard.py lizard_ext lizard_languages lizard_core
 
 deps:
 	pip3 install --user -r dev_requirements.txt

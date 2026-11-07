@@ -4,50 +4,70 @@ generate token with javascript style regular expression.
 
 import re
 
+from .js_style_regex_context import (
+    REGEX_LITERAL,
+    REGEX_START_MARKER,
+    REGEX_TOKEN,
+    REGEX_TOKEN_JSX,
+    REGEX_TOKEN_PUNCT,
+    REGEX_TOKEN_PUNCT_JSX,
+    mark_regex_literal_starts,
+)
 
-def js_style_regex_expression(func):
-    def generate_tokens_with_regex(source_code, addition='', token_class=None):
-        regx_regx = r"\/(\S*?[^\s\\]\/)+?(igm)*"
-        regx_pattern = re.compile(regx_regx)
-        tokens = list(func(source_code, addition, token_class))
-        result = []
-        i = 0
-        while i < len(tokens):
-            token = tokens[i]
-            if token == '/':
-                # Check if this could be a regex pattern
-                is_regex = False
-                if i == 0:
-                    is_regex = True
-                elif i > 0:
-                    prev_token = tokens[i-1].strip()
-                    if prev_token and prev_token[-1] in '=,({[?:!&|;':
-                        is_regex = True
+__all__ = (
+    'REGEX_LITERAL',
+    'REGEX_TOKEN',
+    'js_style_regex_expression',
+    'mark_regex_literal_starts',
+)
 
-                if is_regex:
-                    # This is likely a regex pattern start
-                    regex_tokens = [token]
-                    i += 1
-                    while i < len(tokens) and not tokens[i].endswith('/'):
-                        regex_tokens.append(tokens[i])
-                        i += 1
-                    if i < len(tokens):
-                        regex_tokens.append(tokens[i])
-                        i += 1
-                        # Check for regex flags
-                        if i < len(tokens) and re.match(r'^[igm]+$', tokens[i]):
-                            regex_tokens.append(tokens[i])
-                            i += 1
-                    combined = ''.join(regex_tokens)
-                    if regx_pattern.match(combined):
-                        result.append(combined)
-                    else:
-                        result.extend(regex_tokens)
-                else:
-                    # This is a division operator
-                    result.append(token)
-            else:
-                result.append(token)
-            i += 1
-        return result
-    return generate_tokens_with_regex
+
+def _unmark_regex_token(token):
+    if REGEX_START_MARKER not in token:
+        return token
+    cleaned = token.replace(REGEX_START_MARKER, '/')
+    if type(token) is str:
+        return cleaned
+    begin = getattr(token, 'begin', 0)
+    replacement = type(token)(cleaned)
+    replacement.begin = begin
+    return replacement
+
+
+def js_style_regex_expression(func=None, *, language='js'):
+    jsx = language == 'jsx'
+    token_punct = REGEX_TOKEN_PUNCT_JSX if jsx else REGEX_TOKEN_PUNCT
+    token = REGEX_TOKEN_JSX if jsx else REGEX_TOKEN
+
+    def decorator(generate_tokens):
+        def generate_tokens_with_regex(source_code, addition='', token_class=None):
+            # Recognize literals before strings or JSX can consume their contents.
+            marked = mark_regex_literal_starts(source_code, language=language)
+            if marked is source_code:
+                addition += r"|" + token_punct
+                return generate_tokens(marked, addition, token_class)
+            addition += r"|" + token
+            return _yield_unmarked(generate_tokens(marked, addition, token_class))
+        return generate_tokens_with_regex
+
+    if func is not None:
+        return decorator(func)
+    return decorator
+
+
+def _yield_unmarked(tokens):
+    marker = REGEX_START_MARKER
+    findall = re.findall
+    for token in tokens:
+        if not isinstance(token, str):
+            yield _unmark_regex_token(token)
+            continue
+        if marker in token:
+            token = token.replace(marker, '/')
+        stripped = token.lstrip()
+        if stripped.startswith('/') and not token.startswith('/'):
+            prefix = token[:len(token) - len(stripped)]
+            yield from findall(r"\n|[^\S\n]+", prefix)
+            yield stripped
+        else:
+            yield token

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-019#dedupe-template-interpolation-tests",
+  "title": "Remove the duplicate template-interpolation CCN test on trunk",
+  "completedAt": "2026-10-29T00:05:59.172Z",
+  "developer": "Terry Yin",
+  "agent": "Maria-chan",
+  "host": "cursor",
+  "model": "auto"
+}

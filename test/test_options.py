@@ -1,6 +1,7 @@
 import unittest
+import lizard
 from lizard import parse_args
-from mock import patch
+from unittest.mock import patch
 import sys
 try:
     from StringIO import StringIO
@@ -10,6 +11,9 @@ except ImportError:
 
 class TestOptionParsing(unittest.TestCase):
 
+    def test_help_description_is_the_lizard_module_docstring(self):
+        self.assertEqual(lizard.__doc__, lizard.arg_parser().description)
+
     def test_should_use_current_folder_as_default_path(self):
         options = parse_args(['lizard'])
         self.assertEqual(['.'], options.paths)
@@ -17,6 +21,14 @@ class TestOptionParsing(unittest.TestCase):
     def test_default_sorting(self):
         options = parse_args(['lizard'])
         self.assertEqual(0, len(options.sorting))
+
+    def test_uses_gitignore_by_default(self):
+        options = parse_args(['lizard'])
+        self.assertTrue(options.use_gitignore)
+
+    def test_can_disable_gitignore(self):
+        options = parse_args(['lizard', '--no-gitignore'])
+        self.assertFalse(options.use_gitignore)
 
     def test_sorting_factor(self):
         options = parse_args(['lizard', '-snloc'])

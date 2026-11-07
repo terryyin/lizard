@@ -69,11 +69,11 @@ TypeScript is a super set of JavaScript, right? If so,
 
 Tests in @testJavaScript.pyand @testES6.py  works fine if the `self.parallel_states = [JavaScriptStyleLanguageStates(context)]` in @javascript.py . However, if it is removed and just use the parallel_states from TypescriptReader from @typescript.py , some of the test will fail.
 
-The TypeScriptStates from @typescript.py extends JavaScriptStyleLanguageStates from @js_style_language_states.py . But it seems instead of extending it, it also changed it's behavoir, which cause the tests to fail. This is considered a bug, as @typescript.py should be able to process JavaScript code as well.
+The TypeScriptStates from @typescript.py extends JavaScriptStyleLanguageStates from @js_style_language_states.py . But it seems instead of extending it, it also changed it's behavior, which cause the tests to fail. This is considered a bug, as @typescript.py should be able to process JavaScript code as well.
 
 please make @typescript.py extend JavaScriptStyleLanguageStates from @js_style_language_states.py instead of modify it. And the tests should pass. 
 
-for the failure like `AssertionError: 'x' != '(anonymous)'` let's make the function name x intead of (anaymous) when there is an assignment.
+for the failure like `AssertionError: 'x' != '(anonymous)'` let's make the function name x instead of (anaymous) when there is an assignment.
 
 run `python -m pytest test/test_languages/testES6.py` to check if the test pass.
 

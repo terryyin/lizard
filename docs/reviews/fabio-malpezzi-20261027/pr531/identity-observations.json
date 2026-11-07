@@ -1,0 +1,24 @@
+{
+  "recorded_from": "read-only identity-evidence results observed before writing canonical SEED-013; summary rather than a reconstructed raw report",
+  "candidate": "SEED-013#arrow-object-boundaries",
+  "execution": {
+    "revision": "16eed2248cf873d4b7bec42792198378a4e73ad8",
+    "highest": "SEED-012",
+    "next": "SEED-013",
+    "candidate_status": "unlisted",
+    "history_record": null,
+    "history_seed": null,
+    "gaps": []
+  },
+  "trunk": {
+    "checkout": "/private/tmp/lizard-review-trunk-evidence",
+    "revision": "7ac449f59b3f155fd159ce9aad6794a422045632",
+    "highest": "SEED-011",
+    "next": "SEED-012",
+    "candidate_status": "unlisted",
+    "history_record": null,
+    "history_seed": null,
+    "gaps": []
+  },
+  "decision": "Allocate013 above both observed maxima. Append after regex012 under maintenance direction; do not take or plan this new feature story."
+}

@@ -1,0 +1,170 @@
+# Codex CI notification adapter
+
+Follow [ci-monitor.md](ci-monitor.md) for CI selection and failure recovery.
+
+With `functions.exec`, `yield_control`, `notify`, `tools.exec_command`, and
+`tools.write_stdin`, start one yielded observer at execution start, before the
+first publication, using the authorized target as `BRANCH`. `COORDINATOR` is
+one word of letters, digits, and hyphens that names this coordinator for the
+whole execution; arming claims the stream for it. Managed delivery
+(`deliver --host codex`) registers every increment and repair on this stream
+when it receives the observer note's coordinator and directory as
+`--coordinator` and `--observer-directory`. Without both, or when that
+directory is not this coordinator's live stream of the target, its receipt
+reports an unobserved gap naming the input to supply.
+Reuse the observer note in the active plan (planned) or conversation (quick) and
+terminal `finished` entries; recover that note before replacement when handles
+are lost.
+Resolve `/ABSOLUTE/RESOLVED/SKILL` inside `/ABSOLUTE/VERIFIED/CHECKOUT_ROOT` with
+[runtime setup](runtime-setup.md). Do not arm when setup stops.
+
+This isolate cannot import Node modules. Do not reconstruct parsing or extra
+readers. Copy this host binding with verified repository, checkout, and
+coordinator; do not add parser branches.
+
+```js
+const key = 'ci-watch-execution:OWNER/REPO:BRANCH:COORDINATOR'
+if (load(key)?.status === 'finished') exit()
+const io = { yield_time_ms: 1000, max_output_tokens: 2000 }
+let tail = '', directory, pid, terminal
+let identityExposed = false
+const records = []
+const consume = (chunk) => {
+  const lines = `${tail}${chunk}`.split('\n')
+  tail = lines.pop()
+  for (const line of lines) {
+    if (line.startsWith('CI_OBSERVER_RESULT ')) terminal = JSON.parse(line.slice('CI_OBSERVER_RESULT '.length)).terminal
+    else if (line.startsWith('CI_OBSERVER ')) ({ directory, pid } = JSON.parse(line.slice('CI_OBSERVER '.length)))
+    else if (line.startsWith('{')) {
+      const record = JSON.parse(line)
+      if (record.event?.type?.startsWith('CI_')) records.push(record)
+    }
+  }
+}
+const state = (result) => ({
+  key, coordinator: 'COORDINATOR',
+  status: terminal ? terminal.status === 'stopped' ? 'stopped' : 'finished' : result.session_id ? directory && pid ? 'watching' : 'starting' : 'lost',
+  sessionId: terminal ? undefined : result.session_id, directory, pid,
+})
+const deliver = async () => {
+  const notified = records.splice(0)
+  for (const { event } of notified) notify(event)
+  if (!notified.length || !directory) return
+  await tools.exec_command({
+    cmd: `node /ABSOLUTE/RESOLVED/SKILL/scripts/ci-mailbox.mjs acknowledge ${directory} ${notified.at(-1).sequence}`,
+    workdir: '/ABSOLUTE/VERIFIED/CHECKOUT_ROOT',
+    yield_time_ms: 10000,
+    max_output_tokens: 2000,
+  }).catch(() => {})
+}
+try {
+  let result = await tools.exec_command({
+    cmd: 'node /ABSOLUTE/RESOLVED/SKILL/scripts/ci-mailbox.mjs stream --execution OWNER/REPO BRANCH --coordinator COORDINATOR',
+    workdir: '/ABSOLUTE/VERIFIED/CHECKOUT_ROOT',
+    tty: false,
+    ...io,
+  })
+  consume(result.output)
+  const initial = state(result)
+  text({ ...initial, tail, terminal })
+  identityExposed = initial.status === 'watching'
+  await yield_control()
+  await deliver()
+  while (result.session_id) {
+    result = await tools.write_stdin({ session_id: result.session_id, chars: '', ...io })
+    consume(result.output)
+    if (!identityExposed && state(result).status === 'watching') {
+      identityExposed = true
+      notify({ type: 'CI_OBSERVER_READY', ...state(result) })
+    }
+    await deliver()
+  }
+  if (!terminal) {
+    store(key, { status: 'lost', sessionId: undefined, directory, pid, tail })
+    notify({ type: 'CI_MONITOR_UNAVAILABLE', key, reason: 'observer stream ended without a terminal result' })
+  } else {
+    store(key, { status: terminal.status === 'stopped' ? 'stopped' : 'finished', sessionId: undefined, directory, pid, tail, terminal })
+  }
+} catch (error) {
+  store(key, { status: 'lost' })
+  notify({ type: 'CI_MONITOR_UNAVAILABLE', key, reason: String(error).slice(-1000) })
+}
+```
+
+After notifying records, the binding acknowledges them through `acknowledge`,
+so completion treats them as received. A record it never notified, or whose
+acknowledgment did not land, stays unread: completion keeps the observer and
+reports it.
+
+The first yielded output reports `starting` when the complete identity has not
+arrived. A complete live identity appears either in that output or in one later
+`CI_OBSERVER_READY` notification, with key, coordinator, session, directory and
+PID. Save it with the cell ID and checkout in the observer note before the first
+push. Continue independent work after yielding; retain `starting` until that
+identity arrives. An ended or lost stream is not a usable observer. Use plain
+pipes for this machine stream; it needs no interactive terminal.
+Every `deliver --host codex` takes that note's coordinator and exact directory,
+from any worktree of the repository; another coordinator's stream of the same
+repository and target stays theirs.
+Cell `store` may stay invisible until the cell finishes; do not coordinate
+shutdown through cross-cell `load`/`store`. Continue delegation after yielding.
+`notify` arrives at the next coordinator boundary. Do not `wait`, assign a
+watching agent, or broaden ordinary permissions.
+
+When the stream ends without ever parsing a `CI_OBSERVER_RESULT` line, no
+terminal evidence exists: store `lost`, not `finished`, and send
+`CI_MONITOR_UNAVAILABLE` so the coordinator does not treat the stream's end as
+closure. A parsed terminal result keeps its actual meaning (`stopped` or
+`finished`); do not relabel a valid stop as loss, and never claim `finished`
+from a missing or partial terminal record.
+
+Without those host tools, report monitoring unavailable once and continue; never
+poll or claim notifications from a background shell or file. Use another native
+bridge only when its delivery contract is independently verified for this host.
+
+When the shared [observer lifecycle](ci-monitor.md#own-one-observer) calls for
+an explicit stop — human-judgment stop, cancellation, or coordinator
+replacement — consume delivered failures first. Normal execution completion
+uses the shared
+[completion operation](ci-monitor.md#await-the-applicable-revision-at-completion)
+instead; do not run this stop binding, `write_stdin` the stream session, or poll a
+PID after that receipt. This stop binding never substitutes for that completion
+operation. Copy it with the note's exact `directory`; do not `write_stdin` the
+stream session. Confirm receipt and a finite local `ps` wait for the recorded PID;
+never signal it. Report unread events and any still-unobserved coverage. The
+finite process-exit check waits only for local shutdown, never for CI.
+
+```js
+const key = 'ci-watch-execution:OWNER/REPO:BRANCH:COORDINATOR'
+try {
+  const stop = await tools.exec_command({
+    cmd: `node /ABSOLUTE/RESOLVED/SKILL/scripts/ci-mailbox.mjs stop ${directory}`,
+    workdir: '/ABSOLUTE/VERIFIED/CHECKOUT_ROOT',
+    yield_time_ms: 10000,
+    max_output_tokens: 2000,
+  })
+  if (stop.session_id) throw new Error('observer stop still running')
+  const line = String(stop.output).split('\n').find((row) => row.startsWith('CI_OBSERVER '))
+  const receipt = JSON.parse(line.slice('CI_OBSERVER '.length))
+  if (receipt.directory !== directory || receipt.terminal?.status !== 'stopped') throw new Error('observer stop did not confirm')
+  text({ key, status: 'stopped', directory, terminal: receipt.terminal, pendingCi: receipt.terminal.coverage?.pendingCi ?? 'unobserved' })
+} catch (error) {
+  notify({ type: 'CI_MONITOR_UNAVAILABLE', key, reason: String(error).slice(-1000) })
+}
+```
+
+Without handles, recover the observer note. Match coordinator/checkout and
+`request.json` root, repository, branch, and execution mode, then evaluate the
+stop binding. Read the terminal receipt and `result.json`. Missing/mismatched
+identity means no guessed stop, newest-mailbox lookup, or replacement launch.
+Older unidentified observers, including a stream armed without
+`--coordinator`, cannot be recovered. Stop errors, missing terminal
+evidence, or unconfirmed exit mean unresolved shutdown; never force termination
+or claim closure. Keep acknowledgment and repair unchanged. On resume, rearm
+only absent, `stopped`, or `lost` observers after the old process ended; never
+restart terminal `finished` observers. Normal and repair pushes retain the key,
+coordinator, session, directory, process, and cell. Changed HEAD/SHA never requires setup
+again.
+
+For shared completion `pending`, retain the stream session and yielded cell with
+the resources and recovery under [completion mechanics](ci-completion-wait.md).

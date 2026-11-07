@@ -1,0 +1,9 @@
+{
+  "host": "terryyin-local-darwin",
+  "choice": "run-serial",
+  "reason": "Required pre-merge PR538 performance; load ~8.5; serial six workloads; start cumulative-cli at 4.0s given PR537 noise precedent",
+  "pairs": 20,
+  "incremental_seconds": 1.2,
+  "cumulative_cli_seconds": 4.0,
+  "other_cumulative_seconds": 1.2
+}

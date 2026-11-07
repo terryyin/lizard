@@ -1,0 +1,90 @@
+[
+  {
+    "filename": "test_no_structures.py",
+    "source": "def fun():\n pass"
+  },
+  {
+    "filename": "test_if_structure.py",
+    "source": "def fun():\n if a:\n  return"
+  },
+  {
+    "filename": "test_for_structure.py",
+    "source": "def fun():\n for a in b:\n  foo()"
+  },
+  {
+    "filename": "test_condition_in_if_structure.py",
+    "source": "def fun():\n if a and b:\n  return"
+  },
+  {
+    "filename": "test_elif.py",
+    "source": "\n        def c():\n          if a:\n            baz()\n          elif c:\n            foo()\n        "
+  },
+  {
+    "filename": "test_nested_if_structures.py",
+    "source": "\n        def c():\n          if a:\n            if b:\n              baz()\n          else:\n            foo()\n        "
+  },
+  {
+    "filename": "test_equal_metric_structures.py",
+    "source": "\n        def c():\n          if a:\n            if b:\n              baz()\n          else:\n            foo()\n\n          for a in b:\n            if c:\n              bar()\n        "
+  },
+  {
+    "filename": "test_while.py",
+    "source": "\n        def c():\n          while a:\n            baz()\n        "
+  },
+  {
+    "filename": "test_try_except.py",
+    "source": "\n        def c():\n          try:\n            f.open()\n          except Exception as err:\n            print(err)\n          finally:\n            f.close()\n        "
+  },
+  {
+    "filename": "test_two_functions.py",
+    "source": "\n        def c():\n          try:\n            if a:\n              foo()\n          except Exception as err:\n            print(err)\n\n        def d():\n          for a in b:\n            for x in y:\n              if i:\n                return j\n        "
+  },
+  {
+    "filename": "test_nested_functions.py",
+    "source": "\n        def c():\n            def d():\n                for a in b:\n                    for x in y:\n                        if i:\n                            return j\n            try:\n                if a:\n                    foo()\n            except Exception as err:\n                print(err)\n\n        "
+  },
+  {
+    "filename": "test_ternary_and_comprehension_are_not_structures.py",
+    "source": "\n        def c(items):\n            chosen = [x for x in items if x]\n            return chosen if chosen else None\n        "
+  },
+  {
+    "filename": "test_structures_do_not_pile_up_from_one_function_to_the_next.py",
+    "source": "\n        def a(x):\n            if x:\n                return 1\n            return 0\n\n        def b(x):\n            if x:\n                return 1\n            return 0\n        "
+  },
+  {
+    "filename": "test_match_is_a_structure_and_its_cases_are_not.py",
+    "source": "\n        def c(code):\n            match code:\n                case 1:\n                    return \"one\"\n                case _:\n                    if code:\n                        return \"other\"\n        "
+  },
+  {
+    "filename": "test_async_for_and_async_with.py",
+    "source": "\n        async def c(source):\n            async with source:\n                async for item in source:\n                    if item:\n                        return item\n        "
+  },
+  {
+    "filename": "test_structure_on_a_continuation_line_is_not_nested.py",
+    "source": "\n        def c(items):\n            total = sum(x\n                        for x in items)\n            if total:\n                return total\n        "
+  },
+  {
+    "filename": "test_nested_function_restores_outer_structures.py",
+    "source": "\n        def outer(x):\n            if x:\n                def inner(y):\n                    if y:\n                        return y\n                if x > 1:\n                    return inner(x)\n            return x\n        "
+  },
+  {
+    "filename": "test_match_variable_is_not_a_structure.py",
+    "source": "\n        def use(match):\n            match = 1\n            match.group()\n            match(1)\n            match[0]\n            if match:\n                return match\n        "
+  },
+  {
+    "filename": "test_with_structure.py",
+    "source": "\n        def c():\n            with open(f) as input_file:\n                foo(f)\n        "
+  },
+  {
+    "filename": "test_for_else.py",
+    "source": "\n        def c():\n            for i in range(10):\n                break\n            else:\n                for j in range(i):\n                    print(j)\n        "
+  },
+  {
+    "filename": "test_while_else.py",
+    "source": "\n        def c(i):\n            while i < 10:\n                break\n            else:\n                for j in range(i):\n                    print(j)\n        "
+  },
+  {
+    "filename": "class-methods.py",
+    "source": "class A:\n    def a(self,x):\n        if x:\n            return x\n    def b(self,x):\n        if x:\n            return x\n"
+  }
+]

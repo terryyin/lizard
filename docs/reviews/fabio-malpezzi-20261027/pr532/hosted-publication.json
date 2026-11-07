@@ -1,0 +1,23 @@
+{
+  "original_head": "d0713bf5b4dcf4bf24453156a3756688627abbc0",
+  "corrected_head": "2a8af8acea20c53a0c57c75ff5d179d2db8a2eff",
+  "commit_helper_result": "committed; agent Rio-chan",
+  "publication": "Non-forced push to FabioMalpezzi/lizard refs/heads/pr/js-parameter-names",
+  "push_result": "d0713bf..2a8af8a accepted",
+  "refreshed_state": "open, unmerged, exact corrected head",
+  "hosted_merge_ref": "c2c46ce6fe47b016c9190c0bf262fda61d62841b",
+  "hosted_merge_tree": "eab2c48635db788e72ba142c6935d483e4a639ef",
+  "hosted_merge_parents": [
+    "40d89f7e8e77fe62fd7a1c3c824fb746fd8e5c01",
+    "2a8af8acea20c53a0c57c75ff5d179d2db8a2eff"
+  ],
+  "tree_proof": "Exact match with current-base-refresh.json anticipated tree; full-suite/make/HTTP proof remains applicable",
+  "ci_run": 40466422315,
+  "ci_url": "https://github.com/terryyin/lizard/actions/runs/40466422315",
+  "ci_initial_state": "queued",
+  "ci_final_state": "completed, success, all14 jobs",
+  "landed_merge": "9bc44563aad42b780ff0264aa5a3a972a583b423",
+  "landed_tree": "eab2c48635db788e72ba142c6935d483e4a639ef",
+  "thank_you_id": 6436143243,
+  "thank_you_url": "https://github.com/terryyin/lizard/pull/532#issuecomment-6436143243"
+}

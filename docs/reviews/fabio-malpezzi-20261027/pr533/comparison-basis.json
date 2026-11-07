@@ -1,0 +1,15 @@
+{
+  "target": "7ac449f59b3f155fd159ce9aad6794a422045632",
+  "baseline": "2e21e404c1ab9f4e0b49acc80816e816629d0670",
+  "changed_analyzer_files": [
+    "lizard_ext/lizardns.py"
+  ],
+  "default_api_cases": 150,
+  "default_api_equal": true,
+  "broad_cli_output_equal": true,
+  "broad_cli_sha256": "4686c3d1e1bf18b073ea30f94a03e4900cea6d997ea612439aebfb574cf61632",
+  "broad_cli_exit": 1,
+  "ns_initializer_unchanged": true,
+  "default_extensions_unchanged": true,
+  "ens_measured": false
+}

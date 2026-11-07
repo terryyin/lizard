@@ -1,8 +1,6 @@
 |Web Site| Lizard
 =================
 
-.. image:: https://travis-ci.org/terryyin/lizard.png?branch=master
-    :target: https://travis-ci.org/terryyin/lizard
 .. image:: https://badge.fury.io/py/lizard.svg
     :target: https://badge.fury.io/py/lizard
 .. |Web Site| image:: http://www.lizard.ws/website/static/img/logo-small.png
@@ -19,7 +17,10 @@ A list of supported languages:
 
 -  C# (C Sharp)
 -  C/C++ (works with C++14)
+-  COBOL
+-  Dart
 -  Erlang
+-  F# (see `F# analysis <docs/fsharp-analysis.md>`_)
 -  Fortran
 -  GDScript
 -  Golang
@@ -28,6 +29,7 @@ A list of supported languages:
 -  Kotlin
 -  Lua
 -  Objective-C
+-  OCaml (see `OCaml analysis <docs/ocaml-analysis.md>`_)
 -  Perl
 -  PHP
 -  PL/SQL
@@ -52,12 +54,12 @@ It counts
 
 -  the nloc (lines of code without comments),
 -  CCN (cyclomatic complexity number),
--  token count of functions.
+-  token count of functions,
 -  parameter count of functions.
 
-You can set limitation for CCN (-C), the number of parameters (-a).
-Functions that exceed these limitations will generate warnings. The exit
-code of lizard will be none-Zero if there are warnings.
+You can set limits for CCN (-C) and the number of parameters (-a).
+Functions that exceed these limits will generate warnings. The exit
+code of lizard will be non-zero if there are warnings.
 
 This tool actually calculates how complex the code 'looks' rather than
 how complex the code really 'is'. People will need this tool because it's
@@ -65,12 +67,35 @@ often very hard to get all the included folders and files right when
 they are complicated. But we don't really need that kind of accuracy for
 cyclomatic complexity.
 
-It requires python3.8 or above (early versions are not verified).
+It requires Python 3.8 or above. The test suite runs on Python 3.8, 3.9, 3.10,
+3.11, 3.12, 3.13 and 3.14, on Linux and Windows, in continuous integration;
+other versions are not verified.
+
+JavaScript and TypeScript parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Named and anonymous arrows report the same formal parameter counts and binding
+names. Empty object and array patterns each occupy a parameter slot without
+adding a name to the API's ``parameters`` list; ``({}, [], tail) => tail`` has
+``parameter_count`` 3 and ``parameters`` ``['tail']``. Trailing commas and
+TypeScript receiver declarations add no slots. Callback types add no functions.
+
+Each default parameter or destructuring initializer adds 1 to CCN, because
+the initializer runs only when the supplied value is ``undefined``. For example,
+``function f(a = 1, b = a + 1) { return a + b; }`` has CCN 3: the base
+complexity of 1 plus two defaults. Defaults in object and array destructuring
+also count, including nested defaults and destructuring inside a function body.
+Explicit decisions within an initializer, such as a ternary expression or
+``&&`` / ``||``, contribute separately.
+
+This also applies to JSX and TSX. Defaults may increase CCN above a configured
+threshold. See `arrow boundaries <docs/javascript-arrow-boundaries.md>`_ for
+ternary branches, type annotations and the existing curried-arrow convention.
 
 Installation
 ------------
 
-lizard.py can be used as a stand alone Python script, most
+lizard.py can be used as a standalone Python script, most
 functionalities are there. You can always use it without any
 installation. To acquire all the functionalities of lizard, you will
 need a proper install.
@@ -116,153 +141,21 @@ Use .gitignore file:
 
     lizard mySource/
 
-If there is a .gitignore file in the given path, lizard will automatically use it as an additional filter to exclude files that match the gitignore patterns. This is useful when you want to analyze only the tracked files in your git repository.
-
-Options
-~~~~~~~
+If there is a .gitignore file in the given path, lizard will automatically use it as an additional filter to exclude files that match the gitignore patterns. This is useful when you want to analyze only the tracked files in your git repository. To analyze all discovered source files regardless of .gitignore, use --no-gitignore:
 
 ::
 
-  -h, --help            show this help message and exit
-  --version             show program's version number and exit
-  -l LANGUAGES, --languages LANGUAGES
-                        List the programming languages you want to analyze. if left empty, it'll
-                        search for all languages it knows. `lizard -l cpp -l java`searches for
-                        C++ and Java code. The available languages are: cpp, java, csharp,
-                        javascript, python, objectivec, ttcn, ruby, php, swift, scala, GDScript,
-                        go, lua, rust, typescript, plsql
-  -V, --verbose         Output in verbose mode (long function name)
-  -C CCN, --CCN CCN     Threshold for cyclomatic complexity number warning. The default value is
-                        15. Functions with CCN bigger than it will generate warning
-  -f INPUT_FILE, --input_file INPUT_FILE
-                        get a list of filenames from the given file
-  -o OUTPUT_FILE, --output_file OUTPUT_FILE
-                        Output file. The output format is inferred from the file extension (e.g.
-                        .html), unless it is explicitly specified (e.g. using --xml).
-  -L LENGTH, --length LENGTH
-                        Threshold for maximum function length warning. The default value is 1000.
-                        Functions length bigger than it will generate warning
-  -a ARGUMENTS, --arguments ARGUMENTS
-                        Limit for number of parameters
-  -w, --warnings_only   Show warnings only, using clang/gcc's warning format for printing
-                        warnings. http://clang.llvm.org/docs/UsersManual.html#cmdoption-
-                        fdiagnostics-format
-  --warning-msvs        Show warnings only, using Visual Studio's warning format for printing
-                        warnings. https://msdn.microsoft.com/en-us/library/yxkt8b26.aspx
-  -i NUMBER, --ignore_warnings NUMBER
-                        If the number of warnings is equal or less than the number, the tool will
-                        exit normally; otherwise, it will generate error. If the number is
-                        negative, the tool exits normally regardless of the number of warnings.
-                        Useful in makefile for legacy code.
-  -x EXCLUDE, --exclude EXCLUDE
-                        Exclude files that match the pattern. * matches everything, ? matches any
-                        single character, "./folder/*" exclude everything in the folder
-                        recursively. Multiple patterns can be specified. Don't forget to add ""
-                        around the pattern.
-  -t WORKING_THREADS, --working_threads WORKING_THREADS
-                        number of working threads. The default value is 1. Using a bigger number
-                        can fully utilize the CPU and often faster.
-  -X, --xml             Generate XML in cppncss style instead of the tabular output. Useful to
-                        generate report in Jenkins server
-  --csv                 Generate CSV output as a transform of the default output
-  -H, --html            Output HTML report with interactive DataTables (sortable, searchable, filterable)
-  --checkstyle          Generate Checkstyle XML output for integration with Jenkins and other tools
-  -m, --modified        Calculate modified cyclomatic complexity number , which count a
-                        switch/case with multiple cases as one CCN.
-  -E EXTENSIONS, --extension EXTENSIONS
-                        User the extensions. The available extensions are: -Ecpre: it will ignore
-                        code in the #else branch. -Ewordcount: count word frequencies and
-                        generate tag cloud. -Eoutside: include the global code as one function.
-                        -EIgnoreAssert: to ignore all code in assert. -ENS: count nested control
-                        structures.
-  -s SORTING, --sort SORTING
-                        Sort the warning with field. The field can be nloc,
-                        cyclomatic_complexity, token_count, parameter_count, etc. Or an customized field.
-  -T THRESHOLDS, --Threshold THRESHOLDS
-                        Set the limit for a field. The field can be nloc, cyclomatic_complexity,
-                        token_count, parameter_count, etc. Or an customized file. Lizard will
-                        report warning if a function exceed the limit
-  -W WHITELIST, --whitelist WHITELIST
-                        The path and file name to the whitelist file. It's './whitelizard.txt' by
-                        default. Find more information in README.
+    lizard --no-gitignore mySource/
 
+.. _options:
+.. _example-use:
 
-Example use
------------
+Command-line reference
+~~~~~~~~~~~~~~~~~~~~~~
 
-Analyze a folder recursively: lizard mahjong\_game/src
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-::
-
-   ==============================================================
-     NLOC    CCN  token  param    function@line@file
-   --------------------------------------------------------------
-       10      2     29      2    start_new_player@26@./html_game.c
-      ...
-        6      1      3      0    set_shutdown_flag@449@./httpd.c
-       24      3     61      1    server_main@454@./httpd.c
-   --------------------------------------------------------------
-   2 file analyzed.
-   ==============================================================
-   LOC    Avg.NLOC AvgCCN Avg.ttoken  function_cnt    file
-   --------------------------------------------------------------
-       191     15      3        51        12     ./html_game.c
-       363     24      4        86        15     ./httpd.c
-
-   ======================================
-   !!!! Warnings (CCN > 15) !!!!
-   ======================================
-       66     19    247      1    accept_request@64@./httpd.c
-   =================================================================================
-   Total NLOC  Avg.NLOC  Avg CCN  Avg token  Fun Cnt  Warning cnt   Fun Rt   NLOC Rt
-   --------------------------------------------------------------------------------
-          554        20     4.07      71.15       27            1      0.04    0.12
-
-Warnings only (in clang/gcc formation):lizard -w mahjong\_game
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-::
-
-   ./src/html_ui/httpd.c:64: warning: accept_request has 19 CCN and 1 params (66 NLOC, 247 tokens)
-   ./src/mahjong_game/mj_table.c:109: warning: mj_table_update_state has 20 CCN and 1 params (72 NLOC, 255 tokens)
-
-
-Set warning threshold for any field:lizard -T nloc=25
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The option `-Tcyclomatic_complexity=10` is equal to `-C10`.
-The option `-Tlength=10` is equal to `-L10`.
-The option `-Tparameter_count=10` is equal to `-a10`.
-
-You can also do `-Tnloc=10` to set the limit of the NLOC. Any function that
-has NLOC greater than 10 will generate a warning.
-
-Generated code
------------------------------
-
-Lizard has a simple solution with generated code. Any code in a source file that is following
-a comment containing "GENERATED CODE" will be ignored completely. The ignored code will not
-generate any data, except the file counting.
-
-
-Code Duplicate Detector
------------------------------
-
-::
-
-   lizard -Eduplicate <path to your code>
-
-
-Generate A Tag Cloud For Your Code
-----------------------------------
-
-You can generate a "Tag cloud" of your code by the following command. It counts the identifiers in your code (ignoring the comments).
-
-::
-
-   lizard -EWordCount <path to your code>
-
+See the `command-line reference
+<https://github.com/terryyin/lizard/blob/master/docs/cli.rst>`_ for all
+options, sample reports, and threshold examples.
 
 Extensions Documentation
 ------------------------
@@ -298,9 +191,9 @@ You can also use lizard as a Python module in your code:
 
     >>> import lizard
     >>> i = lizard.analyze_file("../cpputest/tests/AllTests.cpp")
-    >>> print i.__dict__
+    >>> print(i.__dict__)
     {'nloc': 9, 'function_list': [<lizard.FunctionInfo object at 0x10bf7af10>], 'filename': '../cpputest/tests/AllTests.cpp'}
-    >>> print i.function_list[0].__dict__
+    >>> print(i.function_list[0].__dict__)
     {'cyclomatic_complexity': 1, 'token_count': 22, 'name': 'main', 'parameter_count': 2, 'nloc': 3, 'long_name': 'main( int ac , const char ** av )', 'start_line': 30}
 
 You can also use source code string instead of file. But you need to
@@ -310,53 +203,20 @@ provide a file name (to identify the language).
 
     >>> i = lizard.analyze_file.analyze_source_code("AllTests.cpp", "int foo(){}")
 
-Whitelist
----------
+.. _generated-code:
+.. _code-duplicate-detector:
+.. _generate-a-tag-cloud-for-your-code:
+.. _cognitive-complexity:
+.. _whitelist:
+.. _options-in-comments:
 
-If for some reason you would like to ignore the warnings, you can use
-the whitelist. Add 'whitelizard.txt' to the current folder (or use -W to point to the whitelist file), then the
-functions defined in the file will be ignored. Please notice that if you assign the file pathname, it needs to
-be exactly the same relative path as Lizard to find the file. An easy way to get the file pathname is to copy it from
-the Lizard warning output.
-This is an example whitelist:
+Extensions and warning controls
+-------------------------------
 
-::
-
-   #whitelizard.txt
-   #The file name can only be whitelizard.txt and put it in the current folder.
-   #You may have commented lines begin with #.
-   function_name1, function_name2 # list function names in multiple lines or split with comma.
-   file/path/name:function1, function2  # you can also specify the filename
-
-Options in Comments
--------------------
-
-You can use options in the comments of the source code to change the
-behavior of lizard. There are two types of forgiveness comments:
-
-1. Function forgiveness: Put "#lizard forgives" inside a function or before a function to suppress warnings for that function.
-
-::
-
-   int foo() {
-       // #lizard forgives
-       ...
-   }
-
-2. Global code forgiveness: Put "#lizard forgive global" before global code to suppress warnings for all code outside of functions.
-
-::
-
-   // #lizard forgive global
-   int global_var = 0;
-   if (condition) {  // This complexity won't be counted
-       ...
-   }
-
-   int foo() {  // Functions are still counted normally
-       ...
-   }
-
+See `extensions and warning controls
+<https://github.com/terryyin/lizard/blob/master/docs/extensions-and-warnings.rst>`_
+for duplicate detection, word counts, Cognitive Complexity, generated
+code, whitelists, and forgiveness comments.
 
 Limitations
 -----------
@@ -391,11 +251,10 @@ Lizard may choose not to deal with some advanced or complicated language feature
   and processing less-than ``<`` or more-than ``>`` operators
   inside of template arguments.
 
+Literature Referring to Lizard
+------------------------------
 
-Literatures Referring to Lizard
--------------------------------
-
-Lizard is often used in software related researches. If you used it to support your work, you may contact the lizard author to add your work in the following list.
+Lizard is often used in software-related research. If you used it to support your work, you may contact the lizard author to add your work in the following list.
 
 - Software Quality in the ATLAS experiment at CERN, which refers to Lizard as one of the tools, has been published in the Journal of Physics: http://iopscience.iop.org/article/10.1088/1742-6596/898/7/072011
 
@@ -411,9 +270,8 @@ Lizard is also used as a plugin for fastlane to help check code complexity and s
 How To Contribute
 -----------------
 
-Contributions are welcome. Please refer to the rules and development workflow in:
+Contributions are welcome. Project-specific development rules are in
+``AGENTS.md``. Adding a language reader uses
+``.agents/skills/lizard-language-support/``.
 
-- https://github.com/terryyin/lizard/tree/master/.cursor/rules
-
-These guidelines are usable by both AI assistants and human contributors — what works for AI works for "I" as well — to keep changes cohesive, simple, and well-tested.
-
+AI lifecycle guidance is installed under ``.agents/skills/`` and ``.claude/skills/``.

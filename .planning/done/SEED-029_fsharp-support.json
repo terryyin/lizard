@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-029#fsharp-support",
+  "title": "Support F# analysis",
+  "completedAt": "2026-11-04T08:54:44.499Z",
+  "developer": "Terry Yin",
+  "agent": "Yuma-chan",
+  "host": "claude",
+  "model": "opus"
+}
