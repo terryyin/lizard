@@ -148,7 +148,7 @@ class Test_Python_function_structure(unittest.TestCase):
         self.assertEqual("function1", functions[1].name)
         self.assertEqual(4, functions[1].end_line)
 
-    def xtest_one_line_functions(self):
+    def test_one_line_functions(self):
         class namespace8:
             def a(): pass
 
