@@ -1,0 +1,42 @@
+diff --git a/lizard_ext/lizardns.py b/lizard_ext/lizardns.py
+index 33f05de6..3d0d052f 100644
+--- a/lizard_ext/lizardns.py
++++ b/lizard_ext/lizardns.py
+@@ -167,6 +167,14 @@ def _state_global(self, token):
+             self._state = self._block_ending
+         elif token in self.structures:
+             self._state = self._in_structure_head
++        elif token in ('.', '?.'):
++            self._state = self._member_name
++
++    def _member_name(self, token):
++        """A member named like a structure, promise.catch(f), is not one."""
++        self._state = self._state_global
++        if token not in self.structures:
++            self._state(token)
+
+     @CodeStateMachine.read_inside_brackets_then("()")
+     def _in_structure_head(self, token):
+diff --git a/test/testJavaScriptNestedStructures.py b/test/testJavaScriptNestedStructures.py
+index f0395b84..c3d6073f 100644
+--- a/test/testJavaScriptNestedStructures.py
++++ b/test/testJavaScriptNestedStructures.py
+@@ -58,3 +58,18 @@ def test_return_regex_then_nested_on_same_analyzer(self):
+             self.nested_structures("a.js", first))
+         self.assertEqual(
+             [('nested', 3)], self.nested_structures("b.jsx", self.NESTED))
++
++    def test_member_named_like_a_structure_is_not_a_structure(self):
++        code = (
++            'function load(p) {\n'
++            '  return p.then(() => 1).catch(() => null);\n'
++            '}\n'
++            'function retry(p) {\n'
++            '  p?.catch((e) => { if (e) { return 1; } });\n'
++            '  try { p.finally(); } catch (e) { return 2; }\n'
++            '}\n'
++        )
++        self.assertEqual(
++            [('(anonymous)', 0), ('(anonymous)', 0), ('load', 0),
++             ('(anonymous)', 1), ('retry', 1)],
++            self.nested_structures("a.js", code))

@@ -1,0 +1,48 @@
+[
+  {
+    "filename": "first.ts",
+    "source": "export function first<T>(list: T[]) {\n  return list[0];\n}\n",
+    "expected": [
+      ["first", 1, 3, ["list"]]
+    ]
+  },
+  {
+    "filename": "pair.ts",
+    "source": "function pair<T, U extends object>(a: T, b: U): T {\n  return a;\n}\n",
+    "expected": [
+      ["pair", 1, 3, ["a", "b"]]
+    ]
+  },
+  {
+    "filename": "contributor.ts",
+    "source": "export function first<T>(list: T[]) {\n    return list[0];\n}\nfunction pair<T, U extends object>(a: T, b: U): T {\n    return a;\n}\n",
+    "expected": [
+      ["first", 1, 3, ["list"]],
+      ["pair", 4, 6, ["a", "b"]]
+    ]
+  },
+  {
+    "filename": "generic-method-control.ts",
+    "source": "class Box {\n  identity<T>(value: T): T {\n    return value;\n  }\n}\n",
+    "expected": [
+      ["identity", 2, 4, ["value"]]
+    ],
+    "control": true
+  },
+  {
+    "filename": "generic-arrow-control.ts",
+    "source": "const identity = <T>(x: T): T => x;\n",
+    "expected": [
+      ["identity", 1, 1, ["x"]]
+    ],
+    "control": true
+  },
+  {
+    "filename": "generic-arrow-extends-control.ts",
+    "source": "const fn = <T extends Foo>(x: T) => x;\n",
+    "expected": [
+      ["fn", 1, 1, ["x"]]
+    ],
+    "control": true
+  }
+]

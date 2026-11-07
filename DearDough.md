@@ -432,7 +432,41 @@ JSON. Prefer trailing `XXXXXX` then rename (or `mktemp -t`). Separately,
   - Observed effect: three fresh-increment attempts before the slice-1 publish; attempt 2 blocked by the fixed prep path; attempt 1 failed earlier (tool stdout not retained in the Cursor transcript).
   - Inference: attempt 2’s failure mode is the Darwin literal-`XXXXXX` collision. Attempt 1’s gate is uncertain without the delivery error text; the coordinator’s staging correction matches `fresh-increment` ownership rules for `git rm` and was present on the successful attempt.
 
+## DD-402 — Hosted-CI commitment marked observed before receipt or merge head
+
+Do not record a hosted-CI source-review commitment as observed until the
+applicable exact-head checks conclude successfully on the revision the
+commitment names (the merged head when the promise is merge-gated). Local
+`pytest` / `make` alone do not close that observation.
+
+### Occurrences
+- Execution: SEED-035#ns-member-name-performance / `30d54d6791d808ea00eae56132025c571d392147`
+  - Timestamp: 2026-11-07T01:49:14+07:00
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.86
+  - Evidence: source-review 4a.2 at `30d54d679:.planning/slice-plans/026-ns-member-name-performance/source-review.md` ("observed: … hosted CI on published head"); commitment text requires CI on the revision that is merged; Actions run 42274170695 on that SHA created 2026-11-06T18:49:27Z and completed 2026-11-06T18:51:52Z — after the delivery commit timestamp; 6a.1 / 6a.2 still open for land/ack.
+  - Observed effect: slice 2 Status done with 4a.2 marked observed while hosted CI receipt and merge-head identity were still open relative to the source promise.
+  - Inference: conflating the published story-branch head (and in-flight push CI) with merge-gated CI observation closes the commitment early.
+
+## DD-403 — Early cost-owner performance probe avoided unnecessary NS remediation
+
+When cumulative gate ownership is unsettled, run a quiet-load prior-set versus
+full-candidate probe before changing product owners. Remeasure on the current
+target when the baseline/candidate window moved rather than treating a
+historical fail as still true.
+
+### Occurrences
+- Execution: SEED-035#ns-member-name-performance / `43a07aafa2e1d7e28955ba554ced3263baca1874`
+  - Timestamp: 2026-11-06T21:25:18+07:00
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.86
+  - Evidence: plan early-probe slice 1; attempt5 cumulative api-parameters fail CI upper ~4.51%; slice1 prior-set CI upper ~0.98% and full-candidate ~1.41% both pass (`docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice1/`); slice 2 landed as-authored `_member_name` only with all six gates under 3% (`seed035-slice2/`).
+  - Observed effect: no trunk NS performance remediation; as-authored patch cleared the required paired gates on refreshed master.
+  - Inference: practice confirmation that an early cost-owner probe can retire a false “must rewrite NS for the gate” premise when trunk and quiet-load conditions change.
+
 ## Retention
 
-- Highest allocated local number: 401
+- Highest allocated local number: 403
 - Shared-feedback compaction recovery (2026-11-03): `4195708bad2061ebc1c829ebdff7868605b173bb:DearDough.md`; its rows are retained at the linked Open Dough finding owners.

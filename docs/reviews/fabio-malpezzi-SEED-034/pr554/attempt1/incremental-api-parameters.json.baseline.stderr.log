@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/Users/terryyin/git/lizard/.worktrees/process-fabiomalpezzi-s-open-prs/.agents/skills/lizard-process-pr/scripts/lizard_measurement.py", line 145, in <module>
+    run(json.loads(Path(sys.argv[1]).read_text()))
+  File "/Users/terryyin/git/lizard/.worktrees/process-fabiomalpezzi-s-open-prs/.agents/skills/lizard-process-pr/scripts/lizard_measurement.py", line 141, in run
+    print(json.dumps({"seconds": time.perf_counter() - start}), flush=True)
+BrokenPipeError: [Errno 32] Broken pipe
+Exception ignored in: <_io.TextIOWrapper name='<stdout>' mode='w' encoding='utf-8'>
+BrokenPipeError: [Errno 32] Broken pipe
