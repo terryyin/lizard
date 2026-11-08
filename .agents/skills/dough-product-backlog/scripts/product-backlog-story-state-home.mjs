@@ -114,12 +114,25 @@ function unavailableOnRefusal(read) {
   }
 }
 
+/**
+ * @typedef {object} StoryPreparationRequest
+ * @property {string} identity
+ * @property {string} href
+ * @property {"not-refined" | "refined"} refinement
+ * @property {"unselected" | "planless" | "planned"} approach
+ * @property {string} [plan]
+ * @property {"ready" | "not-ready"} [assessment]
+ * @property {readonly string[]} [reasons]
+ * @property {{document?: string, plan?: string}} [expectedBasis]
+ */
+
 // Records preparation and optional assessment for one story under a
 // cooperating per-file lock. Other stories in the same seed, identity lines,
 // and the backlog file are left untouched. A planned approach must resolve
 // beside the canonical file; planless needs no plan file. `confirm`, when
 // given, sees the validated outcome before the home is written and refuses by
 // throwing, so a refusal it raises leaves the home unchanged.
+/** @param {StoryPreparationRequest} request */
 export async function recordPreparation(
   backlogDirectory,
   request,

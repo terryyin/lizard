@@ -26,6 +26,7 @@ export function ambiguousHome(reason) {
 // records an identity takes a link apart here. The path is the file a Markdown
 // renderer opens, so percent-encoding such as `%20` is decoded; the anchor
 // stays as written because identities are composed from it.
+/** @param {string} href */
 export function splitHref(href) {
   const marker = href.indexOf("#");
   return marker === -1
@@ -37,6 +38,7 @@ export function splitHref(href) {
 }
 
 // A path whose percent signs are not valid escapes names a file literally.
+/** @param {string} path */
 function decodePath(path) {
   try {
     return decodeURIComponent(path);

@@ -56,16 +56,16 @@ Without publication authority, select local-only and retain its receipt.
    affected components, including a planning-only no-op. Require success before
    staging. Repair mechanical failures and repeat only when the repair
    invalidates preparation. Stop for semantic or design judgment.
-5. For planned execution, update the active plan and any project-required
-   summary with learnings, accepted proof needed for reuse, and revised
-   remaining slices under
-   [plan refinement](../../dough-story-refinement/references/planning.md#refine-the-active-plan);
-   ordinary guarded fresh delivery marks the selected slice `done` itself
-   ([`progress: true`](fresh-increment.md#observe-progress-proof) when observation still needs the
-   published revision).
-   In Story Branch Mode, before the obligations check below, run
-   `node '<installed-execute-plan>/scripts/source-freshness.mjs' check --workspace '<execution checkout>' --identity '<identity>' --remote '<authorized remote>' --target-ref 'refs/heads/<trunk>'`;
-   continue on `unchanged`, and handle any other result under
+5. For planned execution, record learnings, reusable proof, and revised slices
+   in the plan and any required summary under
+   [plan refinement](../../dough-story-refinement/references/planning.md#refine-the-active-plan).
+   Guarded fresh delivery marks the slice `done`. Use
+   [`progress: true`](fresh-increment.md#observe-progress-proof) when proof needs
+   the published revision.
+   In Story Branch Mode, run
+   `node '<installed-execute-plan>/scripts/source-freshness.mjs' check --workspace '<execution checkout>' --identity '<identity>' --remote '<authorized remote>' --target-ref 'refs/heads/<trunk>'`.
+   On `unchanged`, [check named siblings](#check-named-siblings) if the selected
+   story or plan names any for coordination. Handle any other result under
    [source freshness](source-freshness.md).
    Before marking the slice done or committing, run the installed
    [story-obligations script](../scripts/story-obligations.mjs):
@@ -133,3 +133,36 @@ Without publication authority, select local-only and retain its receipt.
    Success completes routine delivery; a post-slice decision stop occurs after
    safe work is delivered. Never wait for CI or deployment after a normal or
    repair publication.
+
+## Check named siblings
+
+For planned Story Branch delivery after source freshness returns `unchanged`,
+resolve each named sibling's story identity from its coordination reference.
+Use the freshness result's merge `base` to locate incoming changes on the
+pinned `trunkRevision`. For example, find the first-parent integration that
+adds the sibling's canonical done record and inspect its diff against its
+first parent. When the integration bundles work or closure and the product
+change landed separately, trace the specific change to evidence that links
+it to the named sibling. A done record shows closure. A broad branch-to-trunk
+diff can locate paths.
+
+Compare the attributed behavior on pinned trunk with the slice's behavior
+and proof, including behavior it relies on from earlier slices. A shared
+path is a lead for inspection. Absorbing an amended source link settles
+the source comparison and leaves this product decision open.
+
+If the slice still relies on the earlier behavior, surface the sibling
+identity, fetched trunk revision, attributable revision when different,
+affected slice, and shared paths or behavior. Keep the working changes,
+local HEAD, and published story branch recoverable. Withhold the affected
+done mark, commit, and push until you reconcile the affected work and recheck
+its proof. Distinguish material uncertainty about attribution or impact from
+a confirmed overlap. Use
+[execution decisions](execution-decisions.md#reassess-before-extending-work)
+to resolve that uncertainty and
+[stop for human judgment](execution-decisions.md#stop-for-human-judgment)
+when a consequential choice remains.
+
+Continue to the obligations check when no accepted sibling change affects
+the slice or the slice already accounts for the change. An unrelated landing
+adds no hold here.

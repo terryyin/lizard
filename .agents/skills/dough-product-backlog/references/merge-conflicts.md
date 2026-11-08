@@ -127,6 +127,16 @@ work. Resolve it, `git add` the record, and run `continue` through the same
 adapter, which then rebuilds the catalog from the resolved records. The catalog
 is derived from those records and is never combined by hand.
 
+Agent profiles stay in `agents/` beside the backlog; none belongs in `done/`.
+When a resolution leaves an agent profile staged under `done/` — for example
+by accepting Git's suggestion to move a live profile there after the other
+side released the last profile in `agents/` — the merge adapter's `continue`
+answers `refused` and leaves the merge uncommitted, naming each misplaced path
+and the `agents/` path it belongs at. Move each profile back to that path,
+`git add` both paths, and run `continue` again. Publication holds a candidate
+that commits a profile under `done/` the same way, naming the same paths and
+pushing nothing.
+
 A rebase or cherry-pick whose catalog commit cannot be made, such as in an
 agent's owned workspace whose developer credit is refused, reports
 `catalog-uncommitted`: the operation has finished and the rebuilt catalog is

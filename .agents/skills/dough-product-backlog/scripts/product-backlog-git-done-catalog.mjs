@@ -17,6 +17,10 @@ import { rebuildDoneCatalog } from "./product-backlog-complete.mjs";
 import { doneCatalogPath } from "./product-backlog-done-catalog.mjs";
 import { doneRecordDirectory } from "./product-backlog-done-record.mjs";
 import {
+  hasAgentProfileFileName,
+  misplacedAgentProfiles,
+} from "./product-backlog-misplaced-agent-profile.mjs";
+import {
   git,
   gitLine,
   gitOutcome,
@@ -57,6 +61,32 @@ export function doneDirectoryChanged(repoRoot, file, base, sides) {
         repoRoot,
       ) !== "",
   );
+}
+
+// The agent profiles misplaced among the done records staged beside `file`,
+// as misplacedAgentProfiles reports them. Reads only resolved index entries
+// named as profiles.
+export function stagedMisplacedAgentProfiles(repoRoot, file) {
+  const directory = doneDirectoryBeside(file);
+  const files = git(["ls-files", "-s", "-z", "--", directory], repoRoot)
+    .split("\0")
+    .filter((line) => line !== "")
+    .map((line) => {
+      const [meta, path] = line.split("\t");
+      const [, blob, stage] = meta.split(" ");
+      return { path, blob, stage, fileName: posix.basename(path) };
+    })
+    .filter(
+      ({ path, stage, fileName }) =>
+        stage === "0" &&
+        posix.dirname(path) === directory &&
+        hasAgentProfileFileName(fileName),
+    )
+    .map(({ blob, fileName }) => ({
+      fileName,
+      text: git(["cat-file", "blob", blob], repoRoot),
+    }));
+  return misplacedAgentProfiles(posix.dirname(file), files);
 }
 
 // Rebuilds the catalog beside `file` from the record files in the worktree

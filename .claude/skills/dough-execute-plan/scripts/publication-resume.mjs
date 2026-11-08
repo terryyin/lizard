@@ -26,7 +26,7 @@ import {
   registerIfBound,
   remainingAfter,
 } from "./publication-resume-support.mjs";
-import { completedIdentityStop } from "./publication-backlog-validation.mjs";
+import { doneRecordsStop } from "./publication-backlog-validation.mjs";
 
 const defaultTargetRef = "refs/heads/main";
 
@@ -107,7 +107,7 @@ export async function resumeInterruptedPublication({
         ...comparison,
         held,
       };
-    const invalid = await completedIdentityStop({
+    const invalid = await doneRecordsStop({
       workspace: ownedWorkspace,
       candidate: candidateSha,
       backlogPath,

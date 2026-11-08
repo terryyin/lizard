@@ -15,7 +15,7 @@ import { resolvePublicationLandingContext } from "./resolve-publication-landing-
 import { defaultBacklogPath } from "./owned-suffix-reconciliation.mjs";
 import { resolveCommitId, remoteHolds, revParse } from "./publication-git.mjs";
 import { isAncestor } from "./workspace-publication-ownership.mjs";
-import { completedIdentityStop } from "./publication-backlog-validation.mjs";
+import { doneRecordsStop } from "./publication-backlog-validation.mjs";
 
 export async function publishExecutionIncrement({
   workspace,
@@ -147,7 +147,7 @@ export async function publishExecutionIncrement({
   }
 
   const invalidCandidate = async () => {
-    const invalid = await completedIdentityStop({
+    const invalid = await doneRecordsStop({
       workspace,
       candidate: attempt.candidate,
       backlogPath,

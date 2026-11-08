@@ -219,6 +219,9 @@ export function renderBacklog(document) {
   return joinSource(document);
 }
 
+/**
+ * @param {{ identity: string, title: string, href: string, plan?: { label: string, target: string } }} entry
+ */
 export function renderEntry({ identity, title, href, plan }) {
   requireField(identity, "identity", ` ${adoptionHint}`);
   requireField(title, "title");

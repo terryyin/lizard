@@ -24,7 +24,7 @@ import {
   revParse,
 } from "./publication-git.mjs";
 import { isAncestor } from "./workspace-publication-ownership.mjs";
-import { completedIdentityStop } from "./publication-backlog-validation.mjs";
+import { doneRecordsStop } from "./publication-backlog-validation.mjs";
 
 export const trunkTarget = "refs/heads/main";
 
@@ -153,7 +153,7 @@ export async function publishHistoryPreservingCandidate({
         receipt: null,
       };
     }
-    const invalid = await completedIdentityStop({
+    const invalid = await doneRecordsStop({
       workspace: ownedWorkspace,
       candidate: prepared.sha,
       backlogPath,

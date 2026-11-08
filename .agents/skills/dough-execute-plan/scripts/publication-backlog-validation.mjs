@@ -1,10 +1,11 @@
-// Validate the candidate’s current backlog against its own completion records.
+// Validate the candidate’s current backlog against its own completion records,
+// and hold a candidate holding an agent profile among those records.
 // Publication never repairs either file or scans earlier history for completion.
 import { posix, relative, resolve, sep } from "node:path";
 import { defaultBacklogPath } from "./owned-suffix-reconciliation.mjs";
 import { git } from "./publication-git.mjs";
 
-export async function completedIdentityStop({
+export async function doneRecordsStop({
   workspace,
   candidate,
   backlogPath: suppliedBacklogPath = defaultBacklogPath,
@@ -36,33 +37,56 @@ export async function completedIdentityStop({
       isDoneRecordFileName,
       requireUncompletedIdentity,
     },
+    {
+      describeMisplacedAgentProfiles,
+      hasAgentProfileFileName,
+      misplacedAgentProfiles,
+    },
     { BacklogError },
   ] = await Promise.all([
     import("../../dough-product-backlog/scripts/product-backlog-document.mjs"),
     import("../../dough-product-backlog/scripts/product-backlog-done-record.mjs"),
+    import("../../dough-product-backlog/scripts/product-backlog-misplaced-agent-profile.mjs"),
     import("../../dough-product-backlog/scripts/product-backlog-refusal.mjs"),
   ]);
   const directory = posix.dirname(backlogPath);
   const recordDirectory = posix.join(directory, doneRecordDirectory);
-  const files = new Set(
-    (
-      await git(
-        workspace,
-        "ls-tree",
-        "-r",
-        "--name-only",
-        "-z",
+  const listed = (
+    await git(
+      workspace,
+      "ls-tree",
+      "-r",
+      "--name-only",
+      "-z",
+      candidate,
+      "--",
+      recordDirectory,
+    )
+  ).stdout
+    .split("\0")
+    .filter((file) => posix.dirname(file) === recordDirectory);
+  const profileNamed = await Promise.all(
+    listed
+      .filter((file) => hasAgentProfileFileName(posix.basename(file)))
+      .map(async (file) => ({
+        fileName: posix.basename(file),
+        text: (await git(workspace, "show", `${candidate}:${file}`)).stdout,
+      })),
+  );
+  const misplaced = misplacedAgentProfiles(directory, profileNamed);
+  if (misplaced.length > 0) {
+    return {
+      status: "misplaced-agent-profile",
+      fields: {
         candidate,
-        "--",
-        recordDirectory,
-      )
-    ).stdout
-      .split("\0")
-      .filter(
-        (file) =>
-          posix.dirname(file) === recordDirectory &&
-          isDoneRecordFileName(posix.basename(file)),
-      ),
+        backlogPath,
+        misplaced,
+        error: `Cannot publish candidate ${candidate}: it holds an agent profile among the done records beside ${backlogPath}. Move each profile back to the path named below and commit that, then publish again.\n${describeMisplacedAgentProfiles(misplaced)}`,
+      },
+    };
+  }
+  const files = new Set(
+    listed.filter((file) => isDoneRecordFileName(posix.basename(file))),
   );
   if (files.size === 0) return null;
   const source = (await git(workspace, "show", `${candidate}:${backlogPath}`))

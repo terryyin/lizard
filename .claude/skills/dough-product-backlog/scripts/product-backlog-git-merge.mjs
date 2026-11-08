@@ -29,7 +29,9 @@ import {
   doneDirectoryChanged,
   ensureDoneCatalogDriverRegistered,
   stageRebuiltDoneCatalog,
+  stagedMisplacedAgentProfiles,
 } from "./product-backlog-git-done-catalog.mjs";
+import { describeMisplacedAgentProfiles } from "./product-backlog-misplaced-agent-profile.mjs";
 import {
   ensureDriverRegistered,
   git,
@@ -132,7 +134,21 @@ export async function mergeOperation({ repoRoot, file, ref }) {
 
   ensureDriverRegistered(repoRoot, file);
   ensureDoneCatalogDriverRegistered(repoRoot, file);
-  gitOutcome(["merge", "--no-commit", "--no-ff", ref], repoRoot);
+  // Directory-rename inference is off for this merge only: when one side
+  // replaces the last profiles in `agents/` with done records, Git would
+  // otherwise read `agents/` as moved into `done/` and carry the other side's
+  // live profile along. Ordinary file renames are still detected.
+  gitOutcome(
+    [
+      "-c",
+      "merge.directoryRenames=false",
+      "merge",
+      "--no-commit",
+      "--no-ff",
+      ref,
+    ],
+    repoRoot,
+  );
 
   const unresolved = gitLine(["ls-files", "-u", "--", file], repoRoot);
   if (unresolved !== "") {
@@ -163,8 +179,9 @@ export async function mergeOperation({ repoRoot, file, ref }) {
 // resolution: validates what is actually staged for this path — never
 // re-running the reconciliation the human's decision may deliberately
 // differ from — and only then commits. An unresolved path, a staged
-// candidate that fails this tool's invariants, or one that does not match
-// the working tree all stay stopped exactly where they were.
+// candidate that fails this tool's invariants, one that does not match the
+// working tree, or a result holding an agent profile among the done records
+// all stay stopped exactly where they were.
 export async function continueOperation({ repoRoot, file }) {
   if (!existsSync(gitPath(repoRoot, "MERGE_HEAD"))) {
     throw new BacklogError(`No merge is in progress in ${repoRoot}.`);
@@ -179,6 +196,17 @@ export async function continueOperation({ repoRoot, file }) {
   const outcome = acceptStaged(repoRoot, file);
   if (!outcome.valid) {
     return { status: "refused", message: outcome.reason };
+  }
+  const misplaced = stagedMisplacedAgentProfiles(repoRoot, file);
+  if (misplaced.length > 0) {
+    return {
+      status: "refused",
+      message:
+        `The staged result holds an agent profile among the done records ` +
+        `beside ${file}, so the merge stays uncommitted. Move each profile ` +
+        `back to the path named below, then run \`continue\` for this same ` +
+        `merge.\n${describeMisplacedAgentProfiles(misplaced)}`,
+    };
   }
   return commitAcceptedMerge(repoRoot, file, "staged candidate");
 }

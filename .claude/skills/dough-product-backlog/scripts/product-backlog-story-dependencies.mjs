@@ -34,6 +34,18 @@ function supplierOf(value) {
   return { identity, href };
 }
 
+/**
+ * @typedef {object} StoryDependency
+ * @property {{identity: string, href: string}} supplier
+ * @property {string} implementation
+ * @property {string} rationale
+ * @property {string} condition
+ * @property {"waiting" | "satisfied" | "decision-needed"} state
+ * @property {string} [decision]
+ * @property {{revision: string, path: string, summary: string}} [resolution]
+ */
+
+/** @returns {StoryDependency} */
 export function normalizeStoryDependency(value, consumerIdentity) {
   if (!value || typeof value !== "object" || Array.isArray(value))
     refuse("each dependency must be one object.");
