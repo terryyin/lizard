@@ -18,8 +18,9 @@ export const FRAGMENT_SCHEMA_VERSION = 1;
 export const SUMMARY_SCHEMA_VERSION = 1;
 export const PART_STATUSES = ["present", "missing", "ambiguous"];
 
-// The most bytes of a GitHub Actions run attempt's summary Intent reads; a
-// larger one is written whole and named, never truncated, and not shown.
+// The most bytes of a CI proof summary Intent reads, from either proof
+// source; a larger one is written whole and named, never truncated, and
+// not shown.
 export const SUMMARY_READ_LIMIT_BYTES = 1024 * 1024;
 
 // `dashboard/tests` -> `dashboard-tests`, for fragment file names.

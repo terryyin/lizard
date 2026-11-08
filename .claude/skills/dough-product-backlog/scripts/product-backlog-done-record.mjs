@@ -3,10 +3,10 @@
 // deleted. It holds only facts that outlive cleanup: the work's identity and
 // title, when `complete` ran, the developer configured in that workspace, and
 // the execution agent, host, and model when the work had an execution agent
-// profile. The directory, the file name each identity takes, the spelling,
-// and the window a record stays for have one owner here, as does the refusal
-// of a new claim on an identity a record names. No filesystem, Git,
-// or Node-only imports, so every reader of published records shares it.
+// profile, plus any recorded Intent Coverage result. The directory, file name,
+// spelling, and retention window have one owner here, as does the refusal of a
+// new claim on a completed identity. No filesystem, Git, or Node-only imports,
+// so every reader of published records shares it.
 
 import { agentHosts, agentNameOf } from "./product-backlog-agent-profile.mjs";
 import { BacklogError } from "./product-backlog-refusal.mjs";
@@ -88,6 +88,29 @@ export function isDoneRecordFileName(fileName) {
 
 const nonEmptyText = (value) => typeof value === "string" && value !== "";
 
+/** @typedef {{ report: string } | { unavailable: string }} IntentCoverage */
+
+/**
+ * A record can hold a verbatim report or the reason it is unavailable.
+ * @param {unknown} result
+ */
+export function intentCoverageError(result) {
+  if (result === undefined) return undefined;
+  if (result !== null && typeof result === "object") {
+    const entries = Object.entries(result);
+    if (entries.length === 1) {
+      const [[kind, text]] = entries;
+      if (
+        (kind === "report" || kind === "unavailable") &&
+        typeof text === "string" &&
+        text.trim() !== ""
+      )
+        return undefined;
+    }
+  }
+  return "intentCoverage requires one non-empty report or unavailable reason";
+}
+
 // Whether `value` is a completion time as records spell it: a UTC ISO time
 // in exactly the form Date#toISOString writes.
 export function isCompletionTime(value) {
@@ -106,6 +129,7 @@ function recordFactsError({
   agent,
   host,
   model,
+  intentCoverage,
 }) {
   if (!nonEmptyText(identity)) return "done record requires an identity";
   if (!nonEmptyText(title)) return "done record requires a title";
@@ -121,20 +145,21 @@ function recordFactsError({
     return `host must be one of ${agentHosts.join(", ")}`;
   if (model !== undefined && !nonEmptyText(model))
     return "model must be non-empty text when recorded";
-  return undefined;
+  return intentCoverageError(intentCoverage);
 }
 
-/**
- * @param {{ identity: string, title: string, completedAt: string,
- *   developer?: string | undefined, agent?: string | undefined,
- *   host?: string | undefined, model?: string | undefined }} facts
- */
-export function renderDoneRecord(facts) {
-  const error = recordFactsError(facts);
-  if (error) throw new Error(error);
-  const { identity, title, completedAt, developer, agent, host, model } = facts;
-  const record = {
-    schemaVersion: 1,
+// Selects the supported facts for both writing and reading a published record.
+function doneRecordFacts({
+  identity,
+  title,
+  completedAt,
+  developer,
+  agent,
+  host,
+  model,
+  intentCoverage,
+}) {
+  return {
     identity,
     title,
     completedAt,
@@ -142,7 +167,20 @@ export function renderDoneRecord(facts) {
     ...(agent === undefined ? {} : { agent }),
     ...(host === undefined ? {} : { host }),
     ...(model === undefined ? {} : { model }),
+    ...(intentCoverage === undefined ? {} : { intentCoverage }),
   };
+}
+
+/**
+ * @param {{ identity: string, title: string, completedAt: string,
+ *   developer?: string | undefined, agent?: string | undefined,
+ *   host?: string | undefined, model?: string | undefined,
+ *   intentCoverage?: IntentCoverage | undefined }} facts
+ */
+export function renderDoneRecord(facts) {
+  const error = recordFactsError(facts);
+  if (error) throw new Error(error);
+  const record = { schemaVersion: 1, ...doneRecordFacts(facts) };
   return `${JSON.stringify(record, null, 2)}\n`;
 }
 
@@ -157,16 +195,9 @@ export function parseDoneRecord(text) {
   }
   if (data === null || typeof data !== "object" || data.schemaVersion !== 1)
     return { ok: false, error: "done record schemaVersion must be 1" };
-  const { identity, title, completedAt, developer, agent, host, model } = data;
-  const facts = { identity, title, completedAt, developer, agent, host, model };
-  const error = recordFactsError(facts);
+  const error = recordFactsError(data);
   if (error) return { ok: false, error };
-  return {
-    ok: true,
-    record: Object.fromEntries(
-      Object.entries(facts).filter(([, value]) => value !== undefined),
-    ),
-  };
+  return { ok: true, record: doneRecordFacts(data) };
 }
 
 // Reads the record published as `fileName` as parseDoneRecord does, and also

@@ -7,6 +7,7 @@ import {
 import {
   defaultAdapterTimeoutMs,
   runAdapter,
+  runAdapterForAttempt,
   truncateUtf8,
 } from "./ci-command-run.mjs";
 import { ciAttemptKey } from "./ci-failures.mjs";
@@ -141,16 +142,14 @@ function createCommandFailureAcquisition({
       );
     if (!failed) return {};
     try {
-      const response = await runAdapter(
+      const response = await runAdapterForAttempt(
         command,
+        "diagnose",
+        { repo, branch },
         {
-          operation: "diagnose",
-          check: { repo, branch },
-          attempt: {
-            runId: failed.databaseId,
-            attemptId: failed.attempt,
-            sha: failed.headSha,
-          },
+          runId: failed.databaseId,
+          attemptId: failed.attempt,
+          sha: failed.headSha,
         },
         { signal, cwd: root, timeoutMs },
       );
@@ -171,28 +170,18 @@ function createCommandFailureAcquisition({
   };
 }
 
-// The dashboard's proof read of one discovered attempt, asked in `cwd` under
-// the same per-invocation limits as discover and diagnose. The observer never
-// asks it. The adapter answers the attempt's CI proof summary, unchecked here,
-// or why it has none; anything else is refused.
-export async function readCommandProof(
-  command,
-  check,
-  attempt,
-  { signal, cwd, timeoutMs = defaultAdapterTimeoutMs },
-) {
-  const response = await runAdapter(
+// The dashboard reads proof or jobs only for a selected attempt. This
+// boundary checks the response envelope. Intent validates the contents.
+// `options.answerBytes` defaults with every other adapter call to 64 KiB;
+// the dashboard's proof read passes the collector contract's summary read
+// limit.
+export async function readCommandProof(command, check, attempt, options) {
+  const response = await runAdapterForAttempt(
     command,
-    {
-      operation: "proof",
-      check,
-      attempt: {
-        runId: attempt.runId,
-        attemptId: attempt.attemptId,
-        sha: attempt.sha,
-      },
-    },
-    { signal, cwd, timeoutMs },
+    "proof",
+    check,
+    attempt,
+    options,
   );
   const { summary, unavailable } = isObject(response) ? response : {};
   if (isObject(summary) && unavailable === undefined) return { summary };
@@ -201,6 +190,23 @@ export async function readCommandProof(
       unavailable: truncateUtf8(unavailable, unavailableReasonBytes).text,
     };
   throw new Error("CI adapter proof must return summary or unavailable");
+}
+
+export async function readCommandJobs(command, check, attempt, options) {
+  const response = await runAdapterForAttempt(
+    command,
+    "jobs",
+    check,
+    attempt,
+    options,
+  );
+  const { jobs, unavailable } = isObject(response) ? response : {};
+  if (Array.isArray(jobs) && unavailable === undefined) return { jobs };
+  if (typeof unavailable === "string" && unavailable && jobs === undefined)
+    return {
+      unavailable: truncateUtf8(unavailable, unavailableReasonBytes).text,
+    };
+  throw new Error("CI adapter jobs must return jobs or unavailable");
 }
 
 function commandFailureEvent(repo, run, response) {

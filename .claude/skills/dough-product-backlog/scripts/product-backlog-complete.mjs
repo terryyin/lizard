@@ -75,7 +75,10 @@ export function completeEntry(source, request) {
 // dropped work), the expired records' paths, and the catalog outcome. The
 // caller holds the backlog's lock, so cooperating completions rebuild the
 // catalog one after another from each other's final records.
-export function closeBesideBacklog(backlogDirectory, { entry, dropped, now }) {
+export function closeBesideBacklog(
+  backlogDirectory,
+  { entry, dropped, now, intentCoverage },
+) {
   const released = releaseAgentProfiles(backlogDirectory, entry.identity);
   const record = dropped
     ? undefined
@@ -86,6 +89,7 @@ export function closeBesideBacklog(backlogDirectory, { entry, dropped, now }) {
         )?.profile,
         developer: configuredUserName(backlogDirectory),
         now,
+        intentCoverage,
       });
   const expired = pruneDoneRecords(backlogDirectory, now);
   const catalog = rebuildDoneCatalog(backlogDirectory);
@@ -120,7 +124,10 @@ function releaseAgentProfiles(backlogDirectory, identity) {
 // host, and model of the execution `profile` it held, if any. Returns the
 // record's path relative to the backlog directory. A record already written
 // for the same identity is replaced.
-function writeDoneRecord(backlogDirectory, { entry, profile, developer, now }) {
+function writeDoneRecord(
+  backlogDirectory,
+  { entry, profile, developer, now, intentCoverage },
+) {
   const path = doneRecordPath(entry.identity);
   mkdirSync(join(backlogDirectory, doneRecordDirectory), { recursive: true });
   writeFileSync(
@@ -130,6 +137,7 @@ function writeDoneRecord(backlogDirectory, { entry, profile, developer, now }) {
       title: entry.title,
       completedAt: now.toISOString(),
       developer,
+      intentCoverage,
       ...(profile === undefined
         ? {}
         : {

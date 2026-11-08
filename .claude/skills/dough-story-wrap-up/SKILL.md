@@ -13,74 +13,78 @@ description: >-
 
 # Story wrap-up
 
-Close one selected feature story, bounded retrospective correction, or contextual
-instruction when the coordinator invokes wrap-up explicitly or through Execute
-Plan's authorized [planned continuation](../dough-execute-plan/references/finish-or-stop.md#continue-settled-planned-work-into-wrap-up).
-That continuation retains the same execution context and publication authority,
-including local-only/no-push instructions. Use available execution context and
-optional retrospective advice. Leave maintained product knowledge without spent
-source or plan history in the current snapshot. Do not invent findings, records,
-or another-conversation requirements. With `--process-retrospective`, also [review this wrap-up's process](#review-this-wrap-ups-process).
+Close one work item when the coordinator invokes wrap-up explicitly or through Execute
+Plan's authorized [planned continuation](../dough-execute-plan/references/finish-or-stop.md#continue-settled-planned-work-into-wrap-up),
+which retains the same execution context and publication authority, including local-only
+or no-push instructions. Use available context and optional retrospective advice.
+Preserve lasting product knowledge and keep spent history recoverable through Git.
+With `--process-retrospective`, also [review this wrap-up's process](#review-this-wrap-ups-process).
 
 ## Resolve this project's context
 
-Require one selected work identity. Use a canonical story — a feature story, or
-a correction's minimal story linked to its plan — when it is that work's active
-home. A plan-homed correction uses its plan when it satisfies the correction-input
-contract in [planning scope and lifecycle](../dough-story-refinement/references/planning.md#choose-the-planning-level);
-do not require or create a seed for it. When the source is neither
-a story nor a correction plan, use a contextual instruction with retained
-execution identity, changes, and proof; do not require or create a story, plan,
-or queue entry. Name any missing required field, leave the affected work intact,
-and stop before closure. Do not invent conventions, artifacts, another review, or
-claim closure.
+Require one selected work identity. Use its canonical feature story, a
+correction's minimal story linked to its plan, or its qualifying plan for a
+plan-homed correction under [planning scope and lifecycle](../dough-story-refinement/references/planning.md#choose-the-planning-level).
+For contextual work, the instruction, retained identity, changes, and proof
+supply the context without a story, plan, or queue entry. If required context
+is missing, name it, leave the work intact, and stop before closure.
 
 Resolve from this project, not this skill's location:
 
 - repository root and Git working tree;
-- canonical seed location, story identity, heading or stable-anchor conventions
-  for a selected feature story;
-- for planned work: executable-plan location, status vocabulary, and the
-  selected work's plan identity;
-- for planless work: the supplied story or instruction, its changes, available
-  execution results, and retained execution identity;
+- feature story's canonical seed location, identity, and heading or anchor conventions;
+- planned work's plan location, status vocabulary, and identity;
+- planless work's source, changes, available results, and retained identity;
 - optional retrospective advice when present, including an empty result, and
   the product advice in the plan's [execution-complete record](../dough-execute-plan/references/finish-or-stop.md#record-execution-completion);
 - Git commit conventions used to preserve a recoverable revision;
-- selected mode, execution checkout and branch, authorized remote and target
-  branch, and an originating or default checkout only when one is available;
-- the product backlog path when a **Taken** or **Backlog list** entry points
-  at the selected work; and
-- shared records that name the selected work: its seed when applicable, process
-  log (`DearDough.md` unless this project sets another canonical location),
-  incoming links, and assessment records.
+- selected mode, execution checkout and branch, authorized remote and target,
+  and any originating or default checkout;
+- product backlog path when the work has a **Taken** or **Backlog list** entry;
+- shared seed, incoming links, assessment records, and process log
+  (`DearDough.md` unless this project sets another canonical location).
 
 Before deleting a plan that carries planned-execution identity, retain the
 resolved mode, checkout, branch, remote, target, the execution checkout's
 [management context](../dough-land/SKILL.md#retire-the-worktree) and its pending
 [lifecycle commitments](references/lifecycle-commitments.md#carry-them-past-deletion)
-in the coordinator's available execution context for the remaining wrap-up
-actions and report. Do not create a parallel registry. Missing identity needed by a later
-action stops that action instead of reconstructing or guessing it after plan
-deletion.
+in the coordinator's execution context. Do not create a parallel registry.
+If required identity is missing, stop the action that needs it.
 
 With supplied dashboard reporting context, read and retain
 [dashboard completion](../dough-land/references/dashboard-completion.md), its
-command and a surviving working directory now, before either Trunk Mode `finish`
+command and a surviving working directory before either Trunk Mode `finish`
 or Story Branch retirement can remove the checkout. Prepare any attention file
-outside it; reporting itself remains the final operation.
+outside it. Reporting is the final operation.
 
 ## Establish execution completion
-
-Judge completion from the selected work and available execution evidence.
 
 - Planned work is complete when every slice is done. Run `check --planned-completion`
   and take its `pendingLifecycle` rows under [lifecycle commitments](references/lifecycle-commitments.md#read-them-at-completion).
 - Work without a plan, including an investigation whose approach stayed unselected, is
   complete when its story or instruction, changes, and execution results show the promised outcome, including evidenced no-change.
-- Incomplete implementation leaves the affected active work intact. Report the
-  unfinished implementation and stop. Do not delete an unfinished correction
-  plan to manufacture a wrap-up.
+- If implementation is unfinished, report it, leave active work intact, and stop.
+
+## Assess intent coverage
+
+After execution completion and before the before-cleanup commit, assess only
+feature stories, planned or planless. Corrections and contextual work proceed
+to knowledge assimilation. Preserve any existing result in this story's
+published done record beside the backlog, or its committed local record for
+local-only closure. Otherwise explicitly request one check from the installed
+[Dough Intent Coverage](../dough-intent-coverage/SKILL.md) skill on behalf of
+wrap-up, supplying the story section, its plan when present, and the completed
+work's revision. Prefer a plausible protection gap for an important promise
+raised by the retrospective or another review. Otherwise let the skill choose
+the most important promise from the story's key examples. It owns scratch
+checkout setup and restoration.
+
+Continue follow-up, cleanup, and integration decisions while the check runs.
+Save any returned report verbatim outside the checkout, including **Insufficient
+evidence** and unavailable costs with their reasons. When ready to complete,
+pass the saved file or the concrete reason no report is available to the
+[completion command](../dough-product-backlog/SKILL.md#remove-completed-items)
+and continue closure without waiting or retrying.
 
 ## Assimilate lasting knowledge
 
@@ -156,10 +160,9 @@ Work without a Taken entry has no story section or plan to compare. On
   remaining section is spent;
 - its **Taken** or **Backlog list** entry when one exists, through the
   [dough-product-backlog](../dough-product-backlog/SKILL.md) `complete` command,
-  which also deletes that work's readable preparation and execution agent
-  profiles, writes its done record, removes expired done records, and rebuilds
-  the done catalog beside them, all
-  owned closure changes; and
+  passing any saved Intent Coverage file or unavailable reason. Include its
+  agent profile removals, done record, expiry removals, and catalog changes in
+  the closure; and
 - links whose sole purpose is preserving that history.
 
 Also remove follow-up records selected for explicit drop under [follow-up disposition](references/follow-up-disposition.md);

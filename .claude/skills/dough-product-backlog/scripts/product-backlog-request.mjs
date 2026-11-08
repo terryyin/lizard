@@ -4,8 +4,9 @@
 // needs; what that decision means to the backlog belongs with the operation.
 
 import { resolve } from "node:path";
+import { intentCoverageError } from "./product-backlog-done-record.mjs";
 import { BacklogError } from "./product-backlog-refusal.mjs";
-import { defaultBacklogPath } from "./product-backlog-store.mjs";
+import { defaultBacklogPath, readFile } from "./product-backlog-store.mjs";
 
 export const options = {
   identity: { type: "string" },
@@ -40,6 +41,8 @@ export const options = {
   return: { type: "boolean", default: false },
   all: { type: "boolean", default: false },
   dropped: { type: "boolean", default: false },
+  "intent-coverage": { type: "string" },
+  "intent-coverage-unavailable": { type: "string" },
   seeds: { type: "string" },
   file: { type: "string", default: defaultBacklogPath },
   help: { type: "boolean", default: false },
@@ -99,6 +102,33 @@ export function readCompletionTime() {
     );
   }
   return time;
+}
+
+// Resolve and validate completion input before applying any backlog change.
+export function readIntentCoverage(values) {
+  const path = resolvePath(values["intent-coverage"]);
+  const reason = values["intent-coverage-unavailable"];
+  if (path === undefined && reason === undefined) return undefined;
+  if (path !== undefined && reason !== undefined) {
+    throw new BacklogError(
+      "Supply only one of --intent-coverage or --intent-coverage-unavailable.",
+    );
+  }
+  if (values.dropped) {
+    throw new BacklogError("Intent Coverage requires finished work.");
+  }
+  const result =
+    path === undefined
+      ? { unavailable: reason }
+      : {
+          report: readFile(
+            path,
+            `Could not find the Intent Coverage report file at ${path}.`,
+          ),
+        };
+  const error = intentCoverageError(result);
+  if (error) throw new BacklogError(error);
+  return result;
 }
 
 // The basis a preparation record was read from, when the caller states one.

@@ -223,10 +223,13 @@ node <ci-scripts>/ci-proof-summary.mjs summarize \
 ```
 
 Name the attempt only by `--attempt-id` (text form of discovered `attemptId`).
-An adapter's `proof` answer is read only up to 64 KiB, so add `--by-file`
-to `fragment` only after checking the summary file stays well under that;
-`summarize` keeps whatever breakdown the fragments carry. Without it, Intent
-still shows entry totals.
+An adapter's `proof` answer is read up to 1 MiB (the same summary read limit
+Intent already uses for GitHub Actions summaries), so add `--by-file` to
+`fragment` freely while the summary stays within that limit; `summarize`
+keeps whatever breakdown the fragments carry. A successful `proof` answer
+carries the complete summary as the collector wrote it — never trimmed or
+replaced by `unavailable` for size. Without `--by-file`, Intent still shows
+entry totals.
 `--expect` matches step 4. Keep `<summary file>` where the adapter can read it
 per attempt for as long as developers should see that proof. Implement
 `proof` per

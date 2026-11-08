@@ -20,7 +20,9 @@ export const usage = `Usage: product-backlog.mjs add --identity <id> --title <ti
                              [--return] [--file <path>]
        product-backlog.mjs take --identity <id> (--plan <path> | --no-plan)
                              [--file <path>]
-       product-backlog.mjs complete --identity <id> [--dropped] [--file <path>]
+       product-backlog.mjs complete --identity <id> [--file <path>]
+                             [--dropped | --intent-coverage <path> |
+                              --intent-coverage-unavailable <reason>]
        product-backlog.mjs catalog-done [--file <path>]
        product-backlog.mjs refresh --identity <id>
                              [--title <title>] [--link <href>] [--plan <path>]
@@ -82,10 +84,13 @@ identity, releasing those agent names. Profiles for other work and unreadable
 profiles remain untouched. It writes the work's done record under ${doneRecordDirectory}/
 beside the backlog: its identity, title, completion time, the developer Git is
 configured with, and the released execution profile's agent, host, and model
-when one existed. Preparation profiles do not supply execution credit. Completing
-the same identity again replaces its record. --dropped removes work that was
+when one existed. Preparation profiles do not supply execution credit.
+Repeating completion after the identity leaves the backlog is refused and
+leaves the record intact. --dropped removes work that was
 dropped rather than finished: the entry and profiles go as above and the done
-record is left out. Either way it removes done records completed
+record is left out. For finished work, --intent-coverage records the report
+file's exact text, or --intent-coverage-unavailable records a reason the
+report is unavailable. Either way it removes done records completed
 more than ${doneRecordWindowDays} days before, then rebuilds ${doneCatalogPath} from the done
 records that remain. Include those files in the same commit as the backlog
 change.

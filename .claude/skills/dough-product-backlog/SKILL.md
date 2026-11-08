@@ -182,22 +182,21 @@ requires a developer decision; it does not interrupt that execution automaticall
 
 ## Remove completed items
 
-- Route completed story or correction closure through
-  [dough-story-wrap-up](../dough-story-wrap-up/SKILL.md). It removes the entry
-  from its active list and owns applicable seed, plan, and proof cleanup.
-- Standalone maintenance may remove a completed item from either active list
-  when the human asks only for backlog maintenance. The applicable seed, plan,
-  and proof remain available for later story wrap-up.
-- Remove human-dropped work with `complete --dropped`: release its entry and
-  profiles as below, leaving done records to finished work.
+- Route story or correction closure through [dough-story-wrap-up](../dough-story-wrap-up/SKILL.md).
+  It owns entry removal and applicable seed, plan, and proof cleanup.
+- On a human's backlog-only maintenance request, remove a completed entry from
+  either list. Preserve its seed, plan, and proof for later wrap-up.
+- Use `complete --dropped` to remove human-dropped work and release its profiles.
+  Done records are for finished work.
 
-Either path uses installed `scripts/product-backlog.mjs complete`. It removes
-the entry and every readable preparation or execution profile under `agents/`
-beside the backlog naming that identity, releasing those agent names. The done
-record under `done/` beside the backlog holds its identity, title, completion
-time, this workspace's configured Git developer, and the execution profile's
-agent, host, and model when one existed. Preparation profiles supply no execution
-credit. Other work's and unreadable profiles remain untouched.
+Use the installed `scripts/product-backlog.mjs complete`. It removes the entry
+and readable matching profiles in `agents/` beside the backlog, releasing their
+agent names. The record in `done/` beside the backlog holds identity, title,
+completion time, the workspace's Git developer, and agent, host, and model from
+the execution profile when present. Preserve unrelated and unreadable profiles.
+For finished work, use `--intent-coverage <file>` to store the report verbatim
+or `--intent-coverage-unavailable <reason>` if no report returned. Supply at most
+one option. Without either, the record has no assessment.
 The same run removes records completed more than 30 days before and rebuilds
 `done/.catalog.json` from those remaining, reporting every file written or
 removed. Commit them with the backlog; the done record remains in the project
@@ -247,4 +246,4 @@ conflict and report the missing guidance.
   authorize a commit or push.
 
 Landing or wrap-up of completed selected work uses the shared [completion and consumer-resolution procedure](references/supplier-dependencies.md#which-completed-work-takes-the-visit).
-The generic `complete` command changes queue membership only.
+The generic `complete` command records closure without running a supplier visit.

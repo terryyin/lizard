@@ -197,7 +197,7 @@ function runSummarize(argv) {
   const bytes = Buffer.byteLength(text);
   if (bytes > SUMMARY_READ_LIMIT_BYTES) {
     process.stderr.write(
-      `the summary is ${bytes} bytes, more than the ${SUMMARY_READ_LIMIT_BYTES} a GitHub Actions summary may be read as; Intent will not show it\n`,
+      `the summary is ${bytes} bytes, more than the ${SUMMARY_READ_LIMIT_BYTES} Intent may read as a CI proof summary; Intent will not show it\n`,
     );
   }
   for (const line of describeSummary(summary))

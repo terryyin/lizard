@@ -21,6 +21,7 @@ import { BacklogError } from "./product-backlog-refusal.mjs";
 import {
   options,
   readCompletionTime,
+  readIntentCoverage,
   readPlacement,
   readPlan,
   resolvePath,
@@ -94,10 +95,10 @@ async function take(file, values) {
   console.log(reportTake(outcome, values.file));
 }
 
-// Closing the files beside the backlog inside its hold keeps a cooperating
-// completion from rebuilding the done catalog from unfinished records.
+// Keep the backlog hold through record writes and the catalog rebuild.
 async function complete(file, values) {
   const now = readCompletionTime();
+  const intentCoverage = readIntentCoverage(values);
   const outcome = await applyReportedChange(
     file,
     (source) => completeEntry(source, { identity: values.identity }),
@@ -106,6 +107,7 @@ async function complete(file, values) {
         entry,
         dropped: values.dropped,
         now,
+        intentCoverage,
       }),
   );
   console.log(reportComplete(outcome, values.file));
