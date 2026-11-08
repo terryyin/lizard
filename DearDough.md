@@ -33,6 +33,8 @@ open without a new story. No retirement, story or queue change.
 
 Local maintenance (2026-11-07) restores the `SEED-029#ocaml-support` coordinator-probe occurrence (`e1f37ed46`, whose commit message named DD-010) from DD-012 to DD-010 (`29d0f1b74cbca7c06882212196eeb4b019a4d519:DearDough.md`), and classifies DD-399 through DD-403. DD-399 (source-only review timing and plan-narrowed formatter proof), DD-401 (Darwin `mktemp` template and `git rm` `stagedPaths` in `fresh-increment`), and DD-402 (marking a merge-gated hosted-CI commitment `observed:` before the receipt/merge head) concern shared Open Dough guidance. DD-400 is a shared practice confirmation for `progress: true` on hosted-proof slices (ODF-275). DD-403 is a project-local performance-probe practice confirmation. No retirement, new local story, or queue change.
 
+Local evidence compaction recovery: `6cd0c9531a3428fc922d5a58b9b3e3299a01b16a:DearDough.md` preserves all original occurrence rows and assessment history.
+
 <a id="dd-001--codex-stream-can-yield-before-exposing-observer-identity"></a>
 
 ## ODF-376 — Codex stream can yield before exposing observer identity
@@ -68,17 +70,7 @@ Distinct executions, original timestamps/releases/tools, observed effects and qu
 
 ## DD-004 — PR merge preceded a missing affected-workload performance gate
 
-Complete the source's relevant workload selection before the exact-head merge.
-A later passing measurement repairs confidence but cannot repair the ordering.
-
-### Occurrences
-- Execution: SEED-010#review-fabio-malpezzi-prs
-  - Timestamp: unknown
-  - Tool: Codex
-  - Open Dough release: unknown; installed guidance at execution baseline 2e21e404
-  - Evidence: PR527 merge e871ae448d16893301856b41124aba34496e9536; execution-branch revision af27c910, .planning/slice-plans/004-fabio-malpezzi-pr-reviews/527-review.md and PLAN.md obligation G1; docs/reviews/fabio-malpezzi-20261027/controls/.
-  - Observed effect: the coordinator merged before resolving the independent refactor's omitted nested-function, async, match, continuation and class timing controls. The later expanded 22-control corpus passed with upper 95% slowdown bound -0.6803%; the temporal deviation remains.
-  - Inference: a passing broad benchmark and original reported example did not establish that the affected corpus covered the accepted contract.
+Apply the affected-workload gate before exact-head merge. For `SEED-010#review-fabio-malpezzi-prs` (Codex, execution time/release unknown, guidance baseline `2e21e404`), PR527 merged at `e871ae448` before the nested-function, async, match, continuation and class controls in `af27c910:.planning/slice-plans/004-fabio-malpezzi-pr-reviews/527-review.md` and plan obligation G1 were settled. The later 22 controls passed (upper 95% slowdown bound −0.6803%, `docs/reviews/fabio-malpezzi-20261027/controls/`). The project's workload-selection gap preceded merge and remains a distinct, qualified finding.
 
 ## ODF-397 — Native Git bypassed the installed backlog merge adapter
 
@@ -93,67 +85,15 @@ Distinct executions, original provenance, observations and qualified inferences 
 
 ## DD-006 — `python -c` import probes contaminate via argv0
 
-Do not use `python -c` to verify checkout-isolated imports for Lizard performance
-or multi-checkout work. Prefer a script whose `sys.argv[0]` matches the real
-harness worker (or another real file path under the intended checkout).
-
-### Occurrences
-- Execution: SEED-013#arrow-object-boundaries
-  - Timestamp: unknown
-  - Tool: Cursor
-  - Model: auto
-  - Open Dough release: 0.3.71
-  - Evidence: slice 3 performance agent
-    `89783fe2-57ff-41aa-b641-0cef9d98622b`; diagnosis that
-    `lizard.py` uses `abspath(sys.argv[0])` so `python -c` becomes
-    `abspath('-c')` and contaminates toward cwd; corrected harness-shaped
-    `/tmp/probe-paired-imports.py`;
-    `docs/reviews/fabio-malpezzi-20261027/pr531/corrected-slice3-prelaunch.txt`
-    (2026-10-27T11:47:50Z) and gaps/learnings in that agent's return.
-  - Observed effect: false import-path failures during pre-measurement probes;
-    real `paired.py` workers were fine. Extra diagnosis before timing.
-  - Inference: probe argv0 must match the harness, not `-c`; this is a
-    project-local import bootstrap trap rather than a failing harness.
+Use a real script for checkout-isolated import probes. In `SEED-013#arrow-object-boundaries` (Cursor auto, 0.3.71, event time unknown), `lizard.py` resolved `abspath(sys.argv[0])` against cwd under `python -c`, causing false import-path failures. The harness's real `paired.py` workers were sound. See agent `89783fe2-57ff-41aa-b641-0cef9d98622b` and `docs/reviews/fabio-malpezzi-20261027/pr531/corrected-slice3-prelaunch.txt` (2026-10-27T11:47:50Z).
 
 ## DD-007 — Expression-body flag gated on “newly created” missed paren-param arrows
 
-When setting runtime-arrow expression-body context, derive it from the body
-token for every path that reaches `_arrow_function`, including arrows already
-pushed from `(...)` parameters. Do not gate the flag on “newly created.”
-
-### Occurrences
-- Execution: SEED-013#arrow-object-boundaries
-  - Timestamp: unknown
-  - Tool: Cursor
-  - Model: auto
-  - Open Dough release: 0.3.71
-  - Evidence: independent refactor agent
-    `c1df6a2a-bff5-455b-a7a1-638d227d1f52` (“Confirmed an incomplete rule:
-    `if created:` skips `_expression_body` when params already pushed”);
-    plan slice 2 learning in
-    `.planning/slice-plans/009-arrow-object-boundaries/PLAN.md`; fixture in
-    `test/test_languages/testArrowObjectBoundaries.py` uses paren-param
-    ternary objects.
-  - Observed effect: first slice-2 implementation left paren-param ternary
-    object arrows wrong until the refactor pass cohered ownership and reran
-    proof (6 / 363 / reproduce 64).
-  - Inference: multiple push paths for the same runtime arrow make
-    creation-gated flags incomplete; body-token ownership is the coherent rule.
+Derive arrow expression-body context from the body token on every `_arrow_function` path. In `SEED-013#arrow-object-boundaries` (Cursor auto, 0.3.71, event time unknown), `if created:` skipped arrows already pushed for `(...)` parameters. Refactor agent `c1df6a2a-bff5-455b-a7a1-638d227d1f52` fixed it before delivery (plan 009 slice 2, `testArrowObjectBoundaries.py` paren-param ternaries, proof 6/363 and reproducer 64).
 
 ## DD-008 — Fork `push:false` alone is not a contributor-route refusal
 
-When probing a fork PR for maintainer correction, treat API `push: false` as
-incomplete. Combine `maintainer_can_modify` with a non-mutating divergent-SHA
-dry-run push preview before refusing the route.
-
-### Occurrences
-- Execution: SEED-012#regex-literal-context
-  - Timestamp: 2026-10-27T18:40:00+08:00
-  - Tool: Cursor
-  - Open Dough release: 0.3.71 (installed by commit 01afe9c)
-  - Evidence: slice 1 agent 7093d051-eac5-4592-b08e-cdb07e4ea249; plan accepted proof under `.planning/slice-plans/008-regex-literal-context/PLAN.md` slice 1; PR528 `maintainer_can_modify: true`, fork `push: false`, divergent dry-run accepted.
-  - Observed effect: same-SHA dry-run looked up-to-date; only the divergent preview proved the MCM write path. Route stayed viable without a false human disposition stop.
-  - Inference: collaborator-permission and no-op dry-run signals understate MCM delivery; divergent preview is the discriminating probe.
+Combine `maintainer_can_modify` and a divergent-SHA dry-run push before rejecting a fork route. For `SEED-012#regex-literal-context` (2026-10-27T18:40:00+08:00, Cursor auto, 0.3.71 via `01afe9c`), PR528's fork said `push:false`, MCM was true and only the divergent dry-run proved access. No false delivery stop followed. See agent `7093d051-eac5-4592-b08e-cdb07e4ea249`, plan 008 slice 1.
 
 ## DD-009 — Plan-authorized contributor writes refused by host permission classifier
 
@@ -177,80 +117,20 @@ rule), so the slice does not stop twice mid-delivery.
 
 ## DD-010 — Coordinator base-versus-candidate ambiguity probes caught gaps green tests missed
 
-Before accepting a parser slice, the coordinator ran a small probe script over
-ambiguous forms (split generics, argument lists, one-line object members,
-curried arrows) against both a base export and the candidate. It exposed a
-valid-continuation regression and a missing same-line member that the
-implementer's passing tests and the reproducer did not cover.
+Coordinator base/candidate probes found gaps that green parser tests missed. Keep directed opposite-role controls through semantic acceptance before expensive qualification.
 
-### Occurrences
-- Execution: SEED-014#multiline-arrow-boundaries
-  - Timestamp: unknown (2026-10-27, slice 2 acceptance before 822bd05)
-  - Tool: Claude Code
-  - Model: claude-opus-5-5
-  - Open Dough release: 0.3.71 (installed by commit 01afe9c)
-  - Evidence: plan `.planning/slice-plans/010-multiline-arrow-boundaries/PLAN.md` at `3cdc283`, slice 2 acceptance ("generic-split comma regression and a missing same-line object member; both corrected and tested"); tests `test_generic_arguments_split_after_comma_keep_their_line`, `test_same_line_object_members_stay_separate` in `test/test_languages/testJavaScriptArrowBoundaries.py`.
-  - Observed effect: two return rounds before delivery instead of a later regression; both became discriminating tests.
-  - Inference: a practice worth keeping for grammar heuristics where examples are not exhaustive.
-
-- Execution: SEED-024#resolve-issue524-label-types
-  - Timestamp: unknown (2026-11-02 UTC, before implementation publication 7fac94f)
-  - Tool: Codex
-  - Open Dough release: 0.3.80 during probes at a10a744;0.3.81 after 0e352b7 reconciliation before publication.
-  - Evidence: 61e23de:.planning/slice-plans/016-issue524-label-types/PLAN.md G14–G17;7fac94f:test/test_languages/testTypeScriptAssertionRoles.py; retained root baseline/candidate and official-parser observations.
-  - Observed effect: contextual identifier calls, runtime operator handoff and export-default callbacks lost under the first annotation heuristic became discriminating public regressions before merge. The final490 cases preserve the earlier200; qualified timing for superseded bytes was retained and not reused.
-  - Inference: directed opposite-role controls should finish with semantic acceptance before expensive qualification; this records caught gaps and repetition, not measured review-time savings.
-
-- Execution: SEED-029#fsharp-support
-  - Timestamp: 2026-11-04 (time unknown; slice 1 and slice 3 acceptance before 65c552a and a20ab79)
-  - Tool: Claude Code
-  - Model: claude-opus-5-5
-  - Open Dough release: 0.3.82 (installed by commit 210ae36)
-  - Evidence: `test_attribute_on_the_binding_line_belongs_to_no_function` in `65c552a:test/test_languages/testFSharp.py`; `test_and_continuing_a_type_group_is_a_type` in `a20ab79:test/test_languages/testFSharpMembers.py`; story clauses on `type` items and type members in `b0c42aa:.planning/seeds/SEED-029-ocaml-fsharp-support.md` (`#fsharp-support`).
-  - Observed effect: the slice 3 implementer reported `type A … and B` as "not a story example; left alone". The coordinator's probe showed a fake function `B` and a missing member `N`. Together with the same-line `[<Attr>] let` gap in slice 1, that made two return rounds, each ending in a discriminating test, before delivery.
-  - Inference: an implementer's "unpromised edge" label needs a coordinator probe against the story's general clauses before it is accepted.
-
-- Execution: SEED-029#ocaml-support
-  - Timestamp: 2026-11-04 (time unknown; slice 1 and slice 3 acceptance before e8ecf8a and 59ddc71)
-  - Tool: Claude Code
-  - Model: claude-opus-5-5
-  - Open Dough release: 0.3.82 (installed by commit 210ae36)
-  - Evidence: `test_let_after_non_ending_tokens_is_local` in `e8ecf8a:test/test_languages/testOCaml.py` (rewritten so `then`/`else`/`->` lets sit at depth 0, not inside parentheses); `test_one_line_module_example` in `59ddc71:test/test_languages/testOCamlItemBoundaries.py`.
-  - Observed effect: a returned test that passed only through the bracket rule, and the story's literal one-line module example, were caught by coordinator probes and pinned; the product needed no change.
-  - Inference: the probes caught tests that did not discriminate, not product gaps; a test whose setup satisfies a second rule cannot observe the first.
+- `SEED-014#multiline-arrow-boundaries` (2026-10-27, time unknown, Claude Code Opus 5.5, 0.3.71 via `01afe9c`): generic comma continuations and one-line object members prompted two return rounds and discriminating tests before `822bd05` (`3cdc283`, plan 010 slice 2; `testJavaScriptArrowBoundaries.py`).
+- `SEED-024#resolve-issue524-label-types` (2026-11-02 UTC, time unknown, Codex, 0.3.80 at `a10a744`, 0.3.81 after `0e352b7`): contextual calls, operator handoff and export-default callbacks became regressions before merge (`61e23de`, plan 016 G14–G17; `7fac94f:test/test_languages/testTypeScriptAssertionRoles.py`). Final 490 cases preserved 200 earlier cases, with old timing retained only for its own bytes.
+- `SEED-029#fsharp-support` (2026-11-04, time unknown, Claude Code Opus 5.5, 0.3.82 via `210ae36`): same-line attributes and `type A … and B` false function/missing member needed two discriminating test rounds before `65c552a`/`a20ab79`. Story clauses at `b0c42aa` covered the latter even without a literal example.
+- `SEED-029#ocaml-support` (2026-11-04, time unknown, same tool/release as F#): depth-zero `then`/`else`/`->` and literal one-line module examples corrected proof at `e8ecf8a`/`59ddc71` without product edits. The original depth-nested test also satisfied the bracket rule.
 
 ## DD-011 — Integrity checks must separate measured inputs from acceptance records
 
-A post-measurement integrity checker asserted an entirely clean tracked tree,
-although the coordinator still needed to write accepted PLAN evidence. It also
-included its own previous generated manifest among hashed inputs. Keep measured
-product/corpus/harness invariants separate from owned acceptance records and
-exclude an output manifest from its own input map.
-
-### Occurrences
-- Execution: SEED-015#ternary-arrow-boundaries
-  - Timestamp: unknown (2026-10-27T19:07–19:12 UTC observation window)
-  - Tool: Codex
-  - Open Dough release: unknown; installed guidance retained from established claim6f506711
-  - Evidence: qualification9_refactor return; root-performance.md and root-qualification-integrity.py at e3956fa; cache seed015-root-737aeaf7/refactor-pre-integrity.json preserves the previous manifest.
-  - Observed effect: independent refactor found the zero-tracked-diff/self-output mismatch before evidence delivery. It permitted only the owned PLAN path, kept product/tests unchanged, excluded its own output and regenerated integrity successfully. Four frozen drivers,120 timing pairs and public observations were unchanged; no tests or timing repeated.
-  - Inference: distinguish evolving proof records from immutable measured inputs rather than weakening either check. This records the observed seam, not a measurement failure or new benchmark framework.
+Separate measured-input invariants from evolving acceptance records and exclude output manifests from their own inputs. During `SEED-015#ternary-arrow-boundaries` (Codex, release unknown, guidance at `6f506711`, 2026-10-27T19:07–19:12Z observation window), qualification9_refactor found both integrity-check mistakes and fixed them before delivery. Only the owned PLAN path was permitted. Four frozen drivers, 120 timing pairs and observations stayed intact without reruns. See `e3956fa` root-performance/integrity and cache `seed015-root-737aeaf7/refactor-pre-integrity.json`.
 
 ## DD-012 — Absolute CLI corpus paths bind historical output hashes
 
-The broad CLI includes source paths in its output. A hash from an earlier
-absolute corpus directory cannot directly validate the same immutable inputs
-copied to a new directory. Freeze literal new arguments and compare all actual
-new outputs; use exact prefix correspondence only to explain historical bytes.
-
-### Occurrences
-- Execution: SEED-015#ternary-arrow-boundaries
-  - Timestamp: unknown (2026-10-27 UTC / 2026-10-28 Singapore execution)
-  - Tool: Codex
-  - Open Dough release: unknown; installed guidance retained from established claim6f506711
-  - Evidence: final-setup-failure.json and final-performance.md at737aeaf; G8; root-freeze.json/root-performance.md retain the later prospective protocol and actual outputs.
-  - Observed effect: the first ec2 freeze exited1 before any timing because a historical CLI hash embedded seed015-optimized-8dac7b80/corpus. Exact old/new prefix substitution explained the discrepancy; setup2 retained all three actual new byte-identical outputs. Failed setup/source hashes remained held; source/corpus/expected metrics were not normalized or weakened.
-  - Inference: output fixtures that include paths need explicit argument correspondence before a timing launch. A path-only mismatch proves neither a product regression nor a performance result.
+Freeze literal CLI arguments and compare actual outputs before timing a relocated corpus. In `SEED-015#ternary-arrow-boundaries` (Codex, release unknown, guidance at `6f506711`, 2026-10-27 UTC/28 Singapore), the first EC2 freeze exited 1 before timing because the older hash embedded `seed015-optimized-8dac7b80/corpus`. Exact prefix correspondence explained the old bytes. Setup2 compared three actual identical outputs and retained failed setup/source hashes without weakening metrics. See `737aeaf` final-setup-failure/final-performance, G8, and later root-freeze/root-performance.
 
 ## ODF-264 — Unbounded discovery and CI payloads waste coordinator context
 
@@ -266,19 +146,9 @@ Distinct executions, original provenance, observations and qualified inferences 
 
 ## DD-014 — Empty `gh pr checks` is not a green merge gate
 
-After pushing a corrected contributor head, do not treat `gh pr checks --watch`
-reporting "no checks reported" as passage. Wait until the new head's required
-workflow run is visible and successful before the exact-head merge; postpone
-thanks until that run succeeds if a merge already happened.
+An empty `gh pr checks --watch` list after a push leaves the exact-head gate open. In `SEED-010#review-lexical-js-prs` (2026-10-28T05:56:52Z, Cursor, 0.3.71), PR546 merged at `559b8c8` for corrected head `395ae04` before the 14-job matrix appeared. Thanks waited for green run 40640907400 (conversation `9e3d53de-1aaa-43d4-a4c0-161f4d937215`, segment_000, turns ~224–230).
 
-### Occurrences
-- Execution: SEED-010#review-lexical-js-prs
-  - Timestamp: 2026-10-28T05:56:52Z
-  - Tool: Cursor
-  - Open Dough release: 0.3.71
-  - Evidence: conversation 9e3d53de-1aaa-43d4-a4c0-161f4d937215 compaction segment_000 turns ~224–230; `gh pr checks 546 --watch` printed `no checks reported on the 'pr/js-keyword-as-a-member-name' branch` then `gh pr merge 546 --match-head-commit 395ae04…` at mergedAt 2026-10-28T05:56:52Z; head check-runs were still queued; coordinator then watched run 40640907400 to success before thanks. Distinct from DD-004 (missing performance corpus before merge).
-  - Observed effect: PR #546 merged while the corrected-head fourteen-job matrix was not yet visible; merge commit `559b8c8` preceded green checks; thanks waited for run success.
-  - Inference: empty check listing is an absent gate, not a pass; race after push can hide the new run from `gh pr checks`.
+Project guidance `lizard-process-pr` §5 already required checks at `f0887ec`, so no repair was adopted. Later PR525 (`b97f795`) and PR548 (`2416c37`) waited for all 32 exact-head checks. Keep the application lapse open without new work.
 
 ## DD-015 — Interrupted Task recovery by inspecting uncommitted checkout
 
@@ -315,20 +185,7 @@ claim, and resume only remaining work without marking done on the interrupt.
 
 ## DD-016 — Post-change hot-path collapse reintroduced gated per-token dispatch
 
-On a path under a paired performance gate, do not collapse duplicated hot-path
-dispatch into a per-token method call without measuring first. Prefer keeping
-the already-qualified inline shape (or an explicit Structure slice that owns a
-new six-gate pass) when the contract cares about that loop.
-
-### Occurrences
-- Execution: SEED-019#template-interpolation-conditions
-  - Timestamp: 2026-10-28T16:41:29+08:00
-  - Tool: Cursor
-  - Model: auto
-  - Open Dough release: 0.3.73
-  - Evidence: slice-1 refactor agent 5dbb84bb-1fe7-4bb6-b359-cb3585c88194 extracted `_count_conditions_from_token` and bound `count_from = self._count_conditions_from_token` inside `TypeScriptReader.__call__`; attempt9 `measurement-summary.json` failed incremental-api (paired 95% upper +5.02%); slice-2 agent restored attempt8-style `after_interpolation` inline; attempt10 all six gates passed (max upper +2.449%); plan Learnings warn against reintroducing per-token method dispatch on `__call__` without a new six-gate pass.
-  - Observed effect: one eligible ≤15-minute trim and a full remeasure were required before merge; semantics were already correct after slice 1.
-  - Inference: duplication collapse on a measured hot path can recreate the cost the gate rejects; the contract's trim budget absorbed it here, but the refactor rule did not account for the gate.
+Measure before consolidating dispatch on a performance-gated path. In `SEED-019#template-interpolation-conditions` (2026-10-28T16:41:29+08:00, Cursor auto, 0.3.73), refactor `5dbb84bb-1fe7-4bb6-b359-cb3585c88194` extracted per-token dispatch in `TypeScriptReader.__call__`. Attempt9 failed incremental API (95% upper +5.02%) despite correct semantics. Restoring inline `after_interpolation` cost one eligible trim and remeasurement; attempt10 passed six gates (max upper +2.449%). Plan Learnings retain the guard.
 
 ## ODF-378 — First-landing expectation blocks story-branch increment publish
 
@@ -423,20 +280,7 @@ Distinct executions, original provenance, observations and qualified inferences 
 
 ## DD-403 — Early cost-owner performance probe avoided unnecessary NS remediation
 
-When cumulative gate ownership is unsettled, run a quiet-load prior-set versus
-full-candidate probe before changing product owners. Remeasure on the current
-target when the baseline/candidate window moved rather than treating a
-historical fail as still true.
-
-### Occurrences
-- Execution: SEED-035#ns-member-name-performance / `43a07aafa2e1d7e28955ba554ced3263baca1874`
-  - Timestamp: 2026-11-06T21:25:18+07:00
-  - Tool: Cursor
-  - Model: auto
-  - Open Dough release: 0.3.86
-  - Evidence: plan early-probe slice 1; attempt5 cumulative api-parameters fail CI upper ~4.51%; slice1 prior-set CI upper ~0.98% and full-candidate ~1.41% both pass (`docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice1/`); slice 2 landed as-authored `_member_name` only with all six gates under 3% (`seed035-slice2/`).
-  - Observed effect: no trunk NS performance remediation; as-authored patch cleared the required paired gates on refreshed master.
-  - Inference: practice confirmation that an early cost-owner probe can retire a false “must rewrite NS for the gate” premise when trunk and quiet-load conditions change.
+Probe cost ownership under quiet load before changing a product owner. For `SEED-035#ns-member-name-performance` at `43a07aafa2e1d7e28955ba554ced3263baca1874` (2026-11-06T21:25:18+07:00, Cursor auto, 0.3.86), attempt5 cumulative API parameters failed at ~+4.51% upper. On the refreshed target the prior set (~+0.98%) and full candidate (~+1.41%) passed, so the as-authored `_member_name` landed with six gates under 3% and no NS remediation. See `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice1/` and `seed035-slice2/`.
 
 ## Retention
 
