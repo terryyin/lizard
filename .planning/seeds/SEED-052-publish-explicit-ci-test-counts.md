@@ -23,11 +23,24 @@ scenarios the selected CI attempt recorded in Intent.
 analyzer pytest leg and the website Cucumber job. Preserve suite locations,
 outcomes, file breakdowns, and available execution times.
 
-Adopt once Open Dough publishes the explicit test case and test file units
-and Intent can read the new format. See the [Open Dough protocol story](https://github.com/terryyin/open-dough/blob/b8fdb3a361899488e12828383afdea02cb545fda/.planning/seeds/SEED-281-distinguish-test-cases-and-files-in-ci-proof.md#distinguish-test-cases-and-files-in-ci-proof).
+Open Dough 0.3.93 publishes these units. Update Open Dough guidance to
+0.3.93 or later with `dough-update`, then copy all seven `ci-proof-*.mjs`
+collector modules into `scripts/ci-proof/` through the CI proof copy recipe
+(`ci-proof-evidence.mjs` and `ci-proof-options.mjs` are new). In
+`.github/workflows/python-app.yml`, pass `--unit case` to both `fragment`
+steps and declare `--expect test=1:case --expect
+website/frontend/features=1:case`. A job that wrote no report stays a
+missing part. Until both compared builds declare matching units, Intent
+reads unit-less results as legacy test results and shows no count or time
+difference.
 
 **Key examples.**
 
 - The new summary reports one test case per pytest result or Cucumber
   scenario result. For the same CI attempt, Intent and both runner reports
   agree on the case totals and outcomes.
+- The `junit-outcomes.py` lines from the ubuntu-24.04 / Python 3.13 leg's
+  `pytest-junit.xml` count as test cases of `test`, and the
+  `cucumber-outcomes.mjs` scenario lines count as test cases of
+  `website/frontend/features`; comparing two migrated builds shows each
+  location's case count difference.
