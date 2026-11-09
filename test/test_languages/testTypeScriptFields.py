@@ -120,3 +120,46 @@ class Test_TypeScript_member_modifier_after_a_field(unittest.TestCase):
             [('create', 3, 5), ('load', 7, 9), ('get value', 11, 13)],
             [(f.name, f.start_line, f.end_line)
              for f in get_ts_function_list(code)])
+
+
+class Test_TypeScript_modifier_named_object_keys(unittest.TestCase):
+    """`static`/`async` used as object keys are names, not modifiers; read
+    as modifiers they swallowed the object's '}' and hid later callbacks."""
+
+    def assert_functions(self, code, expected):
+        self.assertEqual(
+            expected,
+            [(f.name, f.cyclomatic_complexity, f.start_line, f.end_line)
+             for f in get_ts_function_list(code)])
+
+    def test_static_key_then_callback_argument(self):
+        self.assert_functions(
+            "const a = { static: 1 };\n"
+            "const b = g();\n"
+            "const d = g(\n"
+            "  x,\n"
+            "  (arg) => {\n"
+            "    if (arg) {\n"
+            "    }\n"
+            "  },\n"
+            ");\n",
+            [('(anonymous)', 2, 5, 8)])
+
+    def test_modifier_keys_inside_arrow_body(self):
+        for key in ('static', 'async'):
+            with self.subTest(key=key):
+                self.assert_functions(
+                    "const s = f(() => {\n"
+                    "  return { %s: p[x] };\n"
+                    "});\n"
+                    "const u = g(`x`, (arg) => {\n"
+                    "  if (arg) {}\n"
+                    "});\n" % key,
+                    [('(anonymous)', 1, 1, 3), ('(anonymous)', 2, 4, 6)])
+
+    def test_shorthand_modifier_keys(self):
+        self.assert_functions(
+            "const a = { x, async, static };\n"
+            "const b = g();\n"
+            "function h() { if (x) {} }\n",
+            [('h', 2, 3, 3)])

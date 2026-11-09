@@ -132,13 +132,17 @@ def interpolation_code(source, in_expression=False):
         yield code, len(source)
 
 
-def template_tokens(source, addition='', token_class=None, split=True):
-    """Tokenize ordinary spans normally; TSX retains atomic template tokens."""
+def template_tokens(source, addition='', token_class=None, split=True,
+                    macros=True):
+    """Tokenize ordinary spans normally; TSX retains atomic template tokens.
+    JSX text such as `<>#{tag}</>` passes macros=False: its '#' is text,
+    not a preprocessor line swallowing the rest of the line."""
     pattern = compiled_token_pattern(addition)
     pos = 0
     if '`' in source:
         for start, end, expressions in _template_spans(source):
-            yield from tokens_in_span(pattern, source, pos, start, token_class)
+            yield from tokens_in_span(pattern, source, pos, start, token_class,
+                                      macros)
             if split and expressions is not None and token_class is None:
                 yield from _split_template(source, start, end, expressions)
             elif token_class is None:
@@ -147,4 +151,5 @@ def template_tokens(source, addition='', token_class=None, split=True):
                 yield from _converted_template(
                     source, start, end, token_class, split)
             pos = end
-    yield from tokens_in_span(pattern, source, pos, len(source), token_class)
+    yield from tokens_in_span(pattern, source, pos, len(source), token_class,
+                              macros)

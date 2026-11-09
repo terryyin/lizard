@@ -2,6 +2,8 @@
 Language parser for Rust lang
 '''
 
+import re
+
 from .code_reader import CodeReader
 from .clike import CCppCommentsMixin
 from .golike import GoLikeStates
@@ -34,7 +36,8 @@ class RustReader(CodeReader, CCppCommentsMixin):
             # char literals, before lifetimes, which also start with `'`
             r"|(?:'(?:\\(?:x[0-9a-fA-F]{2}|u\{[0-9a-fA-F]+\}|.)|[^'\\\n])')"
             r"|(?:'\w+\b)")  # lifetimes, labels
-        return CodeReader.generate_tokens(source_code, addition, token_class)
+        return CodeReader.generate_tokens(
+            _flatten_nested_comments(source_code), addition, token_class)
 
     def preprocess(self, tokens):
         """Split the `||` of a closure without parameters, `|| x`, into two
@@ -130,3 +133,64 @@ class RustStates(GoLikeStates):  # pylint: disable=R0903
 
     def _end_match(self):
         self.next(self._state_global)
+
+
+_CHAR_LITERAL = re.compile(
+    r"'(?:\\(?:x[0-9a-fA-F]{2}|u\{[0-9a-fA-F]+\}|.)|[^'\\\n])'")
+_RAW_STRING = re.compile(r'b?r(#*)"')
+
+
+def _flatten_nested_comments(source):
+    """Rust block comments nest: `/* a /* b */ c */` is one comment.
+    The shared tokenizer ends a block comment at its first `*/`, so a nested
+    one (e.g. `src/**/foo.rs` in a doc comment) leaks the rest of the comment
+    into the code. Break the inner `*/`s so the comment is read whole.
+    Strings, raw strings, char literals and line comments are skipped, so a
+    `/*` inside them does not open a comment."""
+    if '/*' not in source:
+        return source
+    out = []
+    i, n = 0, len(source)
+    while i < n:
+        two = source[i:i + 2]
+        if two == '//':
+            end = source.find('\n', i)
+            end = n if end < 0 else end
+        elif two == '/*':
+            depth, j = 1, i + 2
+            while j < n and depth:
+                if source.startswith('/*', j):
+                    depth, j = depth + 1, j + 2
+                elif source.startswith('*/', j):
+                    depth, j = depth - 1, j + 2
+                else:
+                    j += 1
+            if depth:  # unterminated: leave it to the tokenizer
+                out.append(source[i:])
+                break
+            inner = source[i + 2:j - 2]
+            out.append('/*' + inner.replace('*/', '* /') + '*/')
+            i = j
+            continue
+        elif source[i] == '"' or (
+                source[i] in 'br' and (i == 0 or not (
+                    source[i - 1].isalnum() or source[i - 1] == '_'))
+                and _RAW_STRING.match(source, i)):
+            raw = _RAW_STRING.match(source, i) if source[i] != '"' else None
+            if raw:
+                close = '"' + raw.group(1)
+                end = source.find(close, raw.end())
+                end = n if end < 0 else end + len(close)
+            else:
+                j = i + 1
+                while j < n and source[j] != '"':
+                    j += 2 if source[j] == '\\' else 1
+                end = min(j + 1, n)
+        elif source[i] == "'":
+            match = _CHAR_LITERAL.match(source, i)
+            end = match.end() if match else i + 1
+        else:
+            end = i + 1
+        out.append(source[i:end])
+        i = end
+    return ''.join(out)
