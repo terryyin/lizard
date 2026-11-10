@@ -18,8 +18,18 @@ diagnosis or repair, test profiling or optimization, exploratory or manual
 testing, a standalone review, a direct maintenance or contextual
 instruction, or a retrospective's follow-up correction accepted for execution.
 Admit it once the developer or parent instruction accepts it, before
-diagnosis, profiling, exploration, review, or edits. The label of the
-request does not decide this; the acceptance does.
+diagnosis, exploration, review, or edits. The label of the request does not
+decide this; the acceptance does.
+
+Test profiling and optimization are admitted at their first edit instead.
+Their discovery publishes no admission: reading retained evidence and related
+test code, timing unmodified tests of a chosen lead, and a fresh test
+profiling run the developer explicitly requested. A stop at discovery leaves
+no story, Taken entry, or wrap-up. A request to optimize tests is explicit
+planless authority for each independent bounded experiment it reaches: on
+reaching an experiment's first edit, admit it `planless` before making the
+edit. When the evidence calls for a plan instead, admit it `unselected` before
+planning.
 
 These are not new missions and publish no admission:
 
@@ -104,8 +114,8 @@ link its preparation declares (record the planned approach again with
 ## Finish the mission
 
 A supported no-change conclusion, such as behavior that already matches its
-intent, a profile with no worthwhile change, or observation with no findings,
-completes the mission; close it through ordinary
+intent, an optimization experiment with no worthwhile change, or observation
+with no findings, completes the mission; close it through ordinary
 [story wrap-up](../../dough-story-wrap-up/SKILL.md). Uncertainty alone is not
 completion: unfinished or inconclusive work stays Taken until it completes or
 an explicit disposition returns or abandons it.

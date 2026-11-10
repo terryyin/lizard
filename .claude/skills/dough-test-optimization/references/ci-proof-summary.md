@@ -1,21 +1,32 @@
 # CI proof summary
 
 Intent's **CI status** tab can show, below the verdict of the shown CI
-result, which of this project's Intent locations that result proved: passed,
-failed and other counts per location, and any part of it that did not report.
-It reads one small summary that this project's own CI writes: a GitHub Actions
-workflow publishes it as an artifact of the shown run, and a project whose CI
-is read through a `ciAdapter` serves it from that adapter for the shown
-attempt. Present parts and their entries may carry optional `durationMs`
-(summed test execution time in milliseconds); a part without one carries
-none, and schema versions stay at 1. With `fragment --by-file`, each entry is
-also broken down by test file, so selecting an entry or folder in Intent
-shows that scope's figures and its immediate folders' and files'; without it,
-Intent shows entry totals and says the breakdown is unavailable. Use this reference when the request is
-to make this project's CI publish that summary, or when the tab says the
-shown run or attempt has no CI proof summary.
+result, which of this project's Intent locations that result proved: each
+location's passed, failed and other counts in each unit it reported, and any
+part that did not report. This project's own CI writes that summary with the
+collector below: a GitHub Actions workflow publishes it as an artifact of
+the shown run, and a `ciAdapter` serves it for the shown attempt. Use this
+reference when the request is to make this project's CI publish that
+summary, or when the tab says the shown run or attempt has no CI proof
+summary.
 
 Every change is to this project's own workflow, CI scripts or CI adapter.
+
+## Units
+
+Every result is counted in one unit: a **test case** is one case outcome a
+runner reported, and a **test file** is one aggregate outcome for running one
+file, however many cases it holds. A Playwright record's tests are test
+cases; an outcomes report's lines are in the unit you declare. One location,
+even one path, may carry both: a Playwright spec reporting five cases gives
+five test cases and a Node test file run as one job one test file, shown
+apart, never as six results. Never split a file's outcome into cases, make a
+file outcome from case results, or count matched paths as test files. Each
+unit keeps its own counts, summed test execution time (`durationMs`),
+untimed results and missing or ambiguous parts, and Intent compares counts
+only within one unit. Outcomes published without `--unit`, and earlier
+collectors' schema version 1 summaries, stay readable as **legacy test
+results**, never read as either unit or compared by count.
 
 ## Check the project first
 
@@ -35,11 +46,13 @@ Resolve these from this project before editing its CI:
   Actions and no `ciAdapter` reads it, stop and say the tab cannot show proof
   for it until the project reads its CI through a
   [CI command adapter](../../dough-execute-plan/manuals/custom-ci.md).
-- **Per-test results.** For each entry, the CI job and test command that run
-  its tests, and a report file that command can write with one result per test
-  or check. An exit status alone proves nothing per test: name that entry as
-  not provable by its current command and leave it out, or stop for the
-  developer when no entry is provable.
+- **Per-test results and their unit.** For each entry, the CI job and test
+  command that run its tests, and a report file it can write with one result
+  per test case or per test file. An exit status alone proves nothing per
+  test: name that entry as not provable by its current command and leave it
+  out, or stop for the developer when no entry is provable. When the runner
+  does not establish whether a result is one case or one file's aggregate
+  outcome, stop for the developer naming that report; never guess the unit.
 - **Node.js 20.12 or later** wherever the collector runs (on GitHub
   Actions, `actions/setup-node` on the producer and collector runners). The
   collector uses only Node built-ins.
@@ -49,88 +62,83 @@ Resolve these from this project before editing its CI:
 On GitHub Actions:
 
 1. Each job part that runs an entry's tests converts its report into one
-   **fragment** per entry and keeps them as an artifact named for its job,
-   part and run attempt.
+   **fragment** per entry, in the report's unit, and keeps them as an
+   artifact named for its job, part and run attempt.
 2. One **collector** job, after those jobs end however they ended, compares
-   this attempt's fragments with the declared entries and part counts and keeps
-   the summary as `ci-proof-summary-attempt-<n>`.
+   this attempt's fragments with the declared entries, units and part counts
+   and keeps the summary as `ci-proof-summary-attempt-<n>`.
 3. The tab downloads that artifact with the developer's `gh`. It uses the
    summary only when its repository, run id, attempt and revision equal the
-   shown run's. A declared part without a fragment is shown as missing, a part
-   reported twice as ambiguous, and neither is counted.
+   shown run's. A declared part without a fragment of its unit is shown as
+   missing in that unit, a part reported twice as ambiguous, and neither is
+   counted.
 
-Through a CI adapter, the attempt's own CI job writes the fragments and the
-summary, named by the adapter's `attemptId`, and the adapter answers the
-tab's `proof` request with that summary. The tab uses it only when its
-repository, `attemptId` and revision equal the shown attempt's, and shows
-missing and ambiguous parts the same way.
+Through a CI adapter, the attempt's own job runs the same collector, and the
+adapter answers the tab's `proof` request with that summary, used only when
+its repository, `attemptId` and revision equal the shown attempt's.
 
 ## 1. Copy the collector into this project
 
-Copy these five modules, unchanged and side by side, from this skill's
+Copy these seven modules, unchanged and side by side, from this skill's
 installed `scripts/` directory into the directory this project keeps CI
 scripts in (written `<ci-scripts>` below), and commit them:
-
-- [ci-proof-summary.mjs](../scripts/ci-proof-summary.mjs), the command line;
-- [ci-proof-contract.mjs](../scripts/ci-proof-contract.mjs);
-- [ci-proof-figures.mjs](../scripts/ci-proof-figures.mjs);
-- [ci-proof-fragments.mjs](../scripts/ci-proof-fragments.mjs);
-- [ci-proof-collect.mjs](../scripts/ci-proof-collect.mjs).
-
-The CI job runs these copies, never a path inside the installed skill. When
-a later guidance update changes them, copy them again.
+[ci-proof-summary.mjs](../scripts/ci-proof-summary.mjs) (the command line),
+[ci-proof-options.mjs](../scripts/ci-proof-options.mjs),
+[ci-proof-contract.mjs](../scripts/ci-proof-contract.mjs),
+[ci-proof-evidence.mjs](../scripts/ci-proof-evidence.mjs),
+[ci-proof-figures.mjs](../scripts/ci-proof-figures.mjs),
+[ci-proof-fragments.mjs](../scripts/ci-proof-fragments.mjs) and
+[ci-proof-collect.mjs](../scripts/ci-proof-collect.mjs). The CI job runs
+these copies, never a path inside the installed skill. When a later guidance
+update changes them, copy them again.
 
 ## 2. Map test commands to entries
 
-For each entry, record the job that runs its tests and its **parts**: 1 for a
-single job, the matrix length for a matrix of shards. Number every part of an
-entry once, `1` to `n`: two jobs reporting the same part make it ambiguous.
+For each entry, record each job that runs its tests, the unit its report
+gives, and that unit's **parts**: 1 for a single job, the matrix length for
+a matrix of shards. Number every part of an entry's unit once, `1` to `n`:
+two jobs reporting the same part in one unit make it ambiguous. An entry
+reported in both units numbers each unit's parts separately.
 
 `fragment` reads one of two report formats:
 
-- `--outcomes FILE`: one `<status><TAB><check path>` line per test or check,
-  status `passed`, `failed` or anything else (counted as other). The unit is
-  checks. Each line counts toward the `--entry` whose path contains it (the
-  longest one), so one job may report several entries. A line in no given
-  entry counts toward none. Use it for any runner that can name each test's
-  file. Optional `--times FILE` uses the same check labels with one
-  `<seconds><TAB><check path>` line per check; each matching entry's fragment
-  then carries `durationMs` as the sum of its checks' seconds in milliseconds.
-  Without `--times`, or for an entry with no times line, the fragment carries
-  no duration.
+- `--outcomes FILE --unit case|file`: one `<status><TAB><check path>` line
+  per result, status `passed`, `failed` or anything else (counted as other):
+  `--unit file` when each line is one file's aggregate outcome, as from a
+  runner that runs each test file as one job, `--unit case` when each is one
+  test case; without `--unit`, legacy test results. Each line counts toward
+  the `--entry` whose path contains it (the longest), so one job may report
+  several entries, and toward none outside them. Optional `--times FILE`, one
+  `<seconds><TAB><check path>` line per check, gives each matching entry's
+  fragment `durationMs`, its checks' summed seconds in milliseconds.
 - `--playwright-record FILE`: JSON
   `{"schemaVersion":1,"phase":"completed","tests":[{"executions":[{"outcome":"expected"}],"attempts":[{"durationMs":42}]}]}`
-  for one or more `--entry` paths. With several entries, each test's absolute
-  `location.file`, relative to the record's `run.cwd`, counts toward the
-  longest containing entry; a test with no usable owning path counts toward
-  none. With one entry, the whole record counts toward that entry, including
-  tests with no usable file path. The unit is tests. A test passes when every
-  outcome is `expected`, fails when any is `unexpected` or `flaky`, and is
-  otherwise other. Any other `phase` fails the step and writes no fragment.
-  When finished attempts record `durationMs`, each fragment's `durationMs` is
-  their sum across its tests (retries included). An entry with no selected
-  tests still receives its zero-count fragment. `--times` applies only with
-  `--outcomes`.
+  for one or more `--entry` paths, each test it lists one test case
+  (`--unit` and `--times` are refused). With several entries, each test's
+  absolute `location.file`, relative to the record's `run.cwd`, counts
+  toward the longest containing entry, and a test with no usable owning path
+  toward none; with one entry, the whole record counts toward it. A test
+  passes when every outcome is `expected`, fails when any is `unexpected`
+  or `flaky`, and is otherwise other. Any other `phase` fails the step and
+  writes no fragment. When finished attempts record `durationMs`, the
+  fragment's `durationMs` is their sum (retries included). An entry with no
+  selected tests still receives its zero-count fragment.
 
-Add `--by-file` to break each fragment down by test file. Each `--outcomes`
-line's check label is then its repository path (as `tests/a.sh`); a label
-that is not a relative path inside its entry is counted as unassigned, and a
-check with no `--times` line as untimed. A `--playwright-record` test's
-file is its absolute `location.file` relative to the record's `run.cwd`, the
-directory the run started in (the repository root for `npm run`); a test
-whose file is not inside its sole entry under that directory, or that has no
-location, is counted as unassigned rather than given a path; several entries
-require a usable owning path to assign a test. A test none
-of whose attempts recorded `durationMs` is untimed. No machine path is
-published. Every count stays accounted for: files plus unassigned equal the
-fragment's counts, and `summarize` keeps each part's breakdown, or its
-absence, so Intent shows a part without one as a gap.
+Add `--by-file` to break each fragment down by test file: an `--outcomes`
+label is its repository path (as `tests/a.sh`), a `--playwright-record`
+test's file its `location.file` relative to `run.cwd` (the repository root
+for `npm run`). A counted result without a path inside its entry is
+unassigned; a check with no `--times` line, or a test with no attempt
+`durationMs`, is untimed. No machine path is published. Files plus
+unassigned equal the fragment's counts in its unit, and `summarize` keeps
+each part's breakdown or its absence, which Intent shows as a gap. Without
+`--by-file`, Intent shows entry totals and says the breakdown is unavailable.
 
 Write the conversion from the runner's own report into `<ci-scripts>` beside
 the collector — for example a JUnit XML `testcase` walk that prints
-`<status>\t<file>`, or a Playwright JSON walk into the record shape above.
-A run that ended with a global error, or wrote no report, gives no fragment,
-so its part shows as missing rather than as a count.
+`<status>\t<file>` per case (`--unit case`), or a Playwright JSON walk into
+the record shape above. A run that ended with a global error, or wrote no
+report, gives no fragment, so that part stays missing in its unit, uncounted.
 
 ## 3. Write fragments in each producer job, after failures
 
@@ -143,16 +151,17 @@ needed and run:
 
 ```sh
 node <ci-scripts>/ci-proof-summary.mjs fragment \
-  --outcomes <report> [--times <times>] [--by-file] \
+  --outcomes <report> --unit <case|file> [--times <times>] [--by-file] \
   --entry <entry> [--entry <entry>…] \
   --part <part> --of <parts> --attempt "${GITHUB_RUN_ATTEMPT}" \
   --revision "${CI_PROOF_REVISION}" --out "${RUNNER_TEMP}/ci-proof"
 ```
 
 `<part>` is `1` and `<parts>` `1` for a single job, or the matrix value and
-`${{ strategy.job-total }}` for a matrix. Use `--playwright-record <record>`
-instead of `--outcomes` for a Playwright record; name every entry the shared
-run proves. Upload
+`${{ strategy.job-total }}` for a matrix. For a Playwright record, use
+`--playwright-record <record>` in place of the `--outcomes` and `--unit`
+options, naming every entry the shared run proves; a job with both reports
+runs `fragment` for each into the same directory. Upload
 `${{ runner.temp }}/ci-proof/` as artifact
 `ci-proof-fragments-${{ github.job }}-<part>-attempt-${{ github.run_attempt }}`
 with `if-no-files-found: ignore` and one-day retention (`!cancelled()` so
@@ -169,7 +178,7 @@ directory, then:
 ```sh
 node <ci-scripts>/ci-proof-summary.mjs summarize \
   --fragments <fragments dir> \
-  --expect <entry>=<parts> [--expect <entry>=<parts>…] \
+  --expect <entry>=<parts>:<unit> [--expect <entry>=<parts>:<unit>…] \
   --repository "${GITHUB_REPOSITORY}" --run-id "${GITHUB_RUN_ID}" \
   --attempt "${GITHUB_RUN_ATTEMPT}" --revision "${CI_PROOF_REVISION}" \
   --out "${RUNNER_TEMP}/ci-proof-summary.json"
@@ -177,13 +186,21 @@ node <ci-scripts>/ci-proof-summary.mjs summarize \
 
 Upload that file as `ci-proof-summary-attempt-${{ github.run_attempt }}`
 (`if-no-files-found: error`, retention from step 5). `--expect` lists proved
-entries in `intent.locations` order with part counts; fragments present never
-add an entry or part. The tab reads only that artifact name holding
-`ci-proof-summary.json`, at most 1 MiB; a file breakdown of about 1,400 test
-files measured about 170 KB. A larger summary is still written whole, never
-truncated, and the collector names its size on stderr. The collector log
-prints per-entry counts and gaps plus exclusion notes. A failing collector fails the run but not producer
-results. No extra permission or secret is required.
+entries in `intent.locations` order, once per unit (`case` or `file`) their
+reports give, with that unit's part count; fragments present never add an
+entry, unit or part. A `tests` location whose Playwright specs run in one
+job and whose Node test files run one job per file across a three-part
+matrix declares `--expect tests=1:case --expect tests=3:file`. A fragment of
+an undeclared unit is excluded with a note, and a declared unit no fragment
+reached is missing in every part. Declare the unit: a declaration without
+`:<unit>` takes whichever one unit its entry's fragments report.
+
+The tab reads only that artifact name holding `ci-proof-summary.json`, at
+most 1 MiB; a file breakdown of about 1,400 test files measured about
+170 KB. A larger summary is still written whole, never truncated, and the
+collector names its size on stderr. The collector log prints each entry's
+counts and gaps per unit, plus exclusion notes. A failing collector fails
+the run but not producer results. No extra permission or secret is required.
 
 ## 5. Choose retention
 
@@ -198,7 +215,8 @@ Actions read (fine-grained **Actions: Read**, or classic `repo` on a private
 repository). Confirm a judged-workflow run lists
 `ci-proof-summary-attempt-<n>` and that its zip holds only
 `ci-proof-summary.json`. Wrong revision → check `CI_PROOF_REVISION`; missing
-part → that part's fragment step, artifact, and collector exclusion notes.
+part → that part's fragment step, artifact, and collector exclusion notes;
+a unit missing or excluded → that report's `--unit` against its `--expect`.
 
 ## Publish through a CI adapter
 
@@ -207,32 +225,25 @@ Inputs: the attempt's `attemptId` and full `sha` as `discover` returns them,
 and `OWNER/REPO` as the adapter's `check.repo`. Stop if the job cannot learn
 `attemptId` or the full revision.
 
-In the attempt's own job, after tests (pass or fail):
+In the attempt's own job, after tests (pass or fail), run steps 3 and 4's
+commands with the same reports, units and declarations, naming the attempt
+only by `--attempt-id` (the text form of the discovered `attemptId`):
 
 ```sh
-node <ci-scripts>/ci-proof-summary.mjs fragment \
-  --outcomes <report> [--times <times>] [--by-file] \
-  --entry <entry> [--entry <entry>…] \
-  --part <part> --of <parts> --attempt-id "<attempt id>" \
-  --revision "<full revision>" --out <fragments dir>
-node <ci-scripts>/ci-proof-summary.mjs summarize \
-  --fragments <fragments dir> \
-  --expect <entry>=<parts> [--expect <entry>=<parts>…] \
+node <ci-scripts>/ci-proof-summary.mjs fragment <report options as in step 3> \
+  --entry <entry> [--entry <entry>…] --part <part> --of <parts> \
+  --attempt-id "<attempt id>" --revision "<full revision>" --out <fragments dir>
+node <ci-scripts>/ci-proof-summary.mjs summarize --fragments <fragments dir> \
+  --expect <entry>=<parts>:<unit> [--expect <entry>=<parts>:<unit>…] \
   --repository "<OWNER/REPO>" --attempt-id "<attempt id>" \
   --revision "<full revision>" --out <summary file>
 ```
 
-Name the attempt only by `--attempt-id` (text form of discovered `attemptId`).
-An adapter's `proof` answer is read up to 1 MiB (the same summary read limit
-Intent already uses for GitHub Actions summaries), so add `--by-file` to
-`fragment` freely while the summary stays within that limit; `summarize`
-keeps whatever breakdown the fragments carry. A successful `proof` answer
-carries the complete summary as the collector wrote it — never trimmed or
-replaced by `unavailable` for size. Without `--by-file`, Intent still shows
-entry totals.
-`--expect` matches step 4. Keep `<summary file>` where the adapter can read it
-per attempt for as long as developers should see that proof. Implement
-`proof` per
+A `proof` answer is read up to the same 1 MiB limit, so add `--by-file`
+freely while the summary stays within it, and answer the complete summary as
+the collector wrote it, never trimmed or replaced by `unavailable` for size.
+Keep `<summary file>` where the adapter can read it per attempt for as long
+as developers should see that proof. Implement `proof` per
 [CI proof reads](../../dough-execute-plan/manuals/custom-ci-proof.md):
 `summaryProblems` empty and `attemptId`/`revision` match, else `unavailable`.
 Check with a `proof` stdin request for a discovered attempt; the tab then

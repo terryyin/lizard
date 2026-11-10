@@ -1,22 +1,25 @@
 // The figures of CI proof results (ci-proof-contract.mjs): counts, optional
 // summed test execution time `durationMs` and `untimed`, how they add up,
-// and their file breakdown. Node built-ins only, like the rest of the
-// collector (ci-proof-summary.mjs).
+// and their file breakdown, all within one unit's results. Node built-ins
+// only, like the rest of the collector (ci-proof-summary.mjs).
 //
-// File breakdown (optional and additive, schema versions stay 1). A fragment,
-// a present summary part and a summary entry may carry `untimed`: how many of
-// their counted tests or checks recorded no duration, so a sum over the rest
-// is known to be partial; without it, only `durationMs` presence says whether
-// time was recorded. A fragment broken down by file also carries `files`,
-// one aggregate per repository path inside its entry
-// (`{path, passed, failed, other, durationMs?, untimed?}`, `untimed` absent
-// when 0), and `unassigned`, the same figures without a path, for counted
-// results its report could not place in a file of the entry. Together they
-// account for every count of the fragment. A summary part whose fragment was
-// broken down says `breakdown: true`; its entry carries the files and
-// unassigned figures summed over those parts, which together account for
-// exactly those parts' counts. A path is relative, `/`-separated, and never
-// names `.` or `..`; machine-absolute paths are never published.
+// File breakdown (optional; additive since schema version 1). A fragment, a
+// present summary part and a summary entry's evidence (a version 1 entry)
+// may carry `untimed`: how many of their counted results recorded no
+// duration, so a sum over the rest is known to be partial; without it, only
+// `durationMs` presence says whether time was recorded. A fragment broken
+// down by file also carries `files`, one aggregate per repository path
+// inside its entry (`{path, passed, failed, other, durationMs?, untimed?}`,
+// `untimed` absent when 0), and `unassigned`, the same figures without a
+// path, for counted results its report could not place in a file of the
+// entry. Together they account for every count of the fragment. A file
+// breakdown groups results by path; it never changes their unit, and how
+// many paths it names is no count of test files. A summary part whose
+// fragment was broken down says `breakdown: true`; its evidence carries the
+// files and unassigned figures summed over those parts, which together
+// account for exactly those parts' counts. A path is relative,
+// `/`-separated, and never names `.` or `..`; machine-absolute paths are
+// never published.
 
 export const COUNT_FIELDS = ["passed", "failed", "other"];
 

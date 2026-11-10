@@ -171,10 +171,8 @@ function createCommandFailureAcquisition({
 }
 
 // The dashboard reads proof or jobs only for a selected attempt. This
-// boundary checks the response envelope. Intent validates the contents.
-// `options.answerBytes` defaults with every other adapter call to 64 KiB;
-// the dashboard's proof read passes the collector contract's summary read
-// limit.
+// boundary checks the response envelope; the CI proof read checks a proof's
+// contents (`../../dough-test-optimization/scripts/ci-proof-read.mjs`).
 export async function readCommandProof(command, check, attempt, options) {
   const response = await runAdapterForAttempt(
     command,

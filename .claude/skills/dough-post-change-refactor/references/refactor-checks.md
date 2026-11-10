@@ -131,3 +131,13 @@ refactoring complete.
 - Split along **cohesive seams** — one concept per module, not arbitrary line
   cuts.
 - Update imports. Keep the public API stable for callers outside the change.
+- When the caller supplied a reorganization decision for an already-oversized
+  file this change edits, check that the delivered structure matches that
+  decision and preserves the stated behavior and proof. A fulfilled planned
+  reorganization for that file completes this check without another exception
+  question. A missing, contradicted, or undelivered decision — including a plan
+  mention without the delivered seams — is not a clean result: return through
+  the skill's existing decision stop with the file, current size, missing or
+  contrary evidence, and affected work. Do not treat a mechanical line cut as
+  the design, and do not grant an automatic exception from a short diff, a
+  prior exception, or a plan mention alone.

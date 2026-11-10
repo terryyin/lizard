@@ -34,7 +34,7 @@ answer with the summary this attempt's job kept, unchanged, or with why there
 is none:
 
 ```json
-{ "summary": { "schemaVersion": 1, "repository": "OWNER/REPO", "attemptId": "try:opaque-id", "revision": "FULL_PUSHED_COMMIT_SHA", "entries": [] } }
+{ "summary": { "schemaVersion": 2, "repository": "OWNER/REPO", "attemptId": "try:opaque-id", "revision": "FULL_PUSHED_COMMIT_SHA", "entries": [] } }
 ```
 
 ```json
@@ -44,13 +44,15 @@ is none:
 The `summary` value is the summary file's JSON object as the collector wrote
 it (the `entries` above are abbreviated). A successful answer carries that
 complete summary; never trim entries or breakdowns for size, and never
-substitute `unavailable` because the summary is large. Present parts and
-their entries may carry optional `durationMs`: the summed test execution
-time in milliseconds for that part, and the sum of present parts that
-recorded one for the entry. A part written without a duration carries none;
-schema versions stay at 1. A summary collected from fragments written with
-`--by-file` also carries each entry's file breakdown, which the tab uses
-for a selected entry's or folder's figures; keep it unchanged too. Intent
+substitute `unavailable` because the summary is large. The collector writes
+schema version 2: each entry's `evidence` keeps one unit's results (test
+cases, test files, or legacy results reported without a unit) apart, with
+that unit's own counts, parts, optional `durationMs` (summed test execution
+time in milliseconds of the present parts that recorded one) and, from
+fragments written with `--by-file`, file breakdown, which the tab uses for
+a selected entry's or folder's figures. Answer a summary an earlier
+collector wrote (schema version 1) unchanged too; Intent reads its results
+as legacy test results, never as test cases or test files. Intent
 reads a `proof` answer up to 1 MiB (the collector contract's summary read
 limit). When the summary is larger than that limit, still answer it whole so
 Intent can report the size failure: under Proof it shows a problem line that
