@@ -134,6 +134,68 @@ public class LizardTest {
         result = get_java_function_list("@a.b() class funxx{ }")
         self.assertEqual(0, len(result))
 
+    def test_class_with_annotation_arguments_after_another_annotation(self):
+        result = get_java_function_list("@A @B(1) class X { int f() { return 1; } }")
+        self.assertEqual(["X::f"], [f.name for f in result])
+
+    def test_jpa_entity_with_table_annotation(self):
+        code = """
+@Entity
+@Table(name = "vets")
+public class Vet extends Person {
+    @ManyToMany(fetch = FetchType.EAGER)
+    private Set<Specialty> specialties;
+
+    protected Set<Specialty> getSpecialtiesInternal() {
+        if (this.specialties == null) {
+            this.specialties = new HashSet<>();
+        }
+        return this.specialties;
+    }
+
+    public int getNrOfSpecialties() {
+        return getSpecialtiesInternal().size();
+    }
+}
+"""
+        result = get_java_function_list(code)
+        self.assertEqual(
+            ["Vet::getSpecialtiesInternal", "Vet::getNrOfSpecialties"],
+            [f.name for f in result])
+        self.assertEqual(2, result[0].cyclomatic_complexity)
+
+    def test_spring_controller_with_request_mapping(self):
+        result = get_java_function_list("""
+@RestController @RequestMapping("/x") class A {
+    @GetMapping String f() { return "a"; }
+}
+""")
+        self.assertEqual(["A::f"], [f.name for f in result])
+
+    def test_class_annotations_that_already_worked(self):
+        for annotations in ('@Table(name = "v")', '@Table', '@A @B',
+                            '@A(1) @B', '@A(1) @B(2)'):
+            with self.subTest(annotations=annotations):
+                result = get_java_function_list(
+                    annotations + " class X { int f() { return 1; } }")
+                self.assertEqual(["X::f"], [f.name for f in result])
+
+    def test_record_with_annotation_arguments(self):
+        for annotations in ('@A', '@A(1)', '@A @B(1)', '@A(1) @B'):
+            with self.subTest(annotations=annotations):
+                result = get_java_function_list(
+                    annotations + " record R(int x) { int f() { return x; } }")
+                self.assertEqual(["R::f"], [f.name for f in result])
+
+    def test_annotated_members_named_record(self):
+        result = get_java_function_list("""
+@A @B(1) class X {
+    @Nullable String record;
+    @Override public String record() { return record; }
+}
+""")
+        self.assertEqual(["X::record"], [f.name for f in result])
+
     def test_class_name_with_extends(self):
         result = get_java_function_list("class A extends B { void f(){}}")
         self.assertEqual('A::f', result[0].name)

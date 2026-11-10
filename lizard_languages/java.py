@@ -168,6 +168,7 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
             # @SimpleName without (...) — the name is not a method/class, e.g. @Deprecated before record/void
             self._java_after_unqualified_annotation = True
             self._state = self._state_global
+            self._state(token)
 
     def _state_class_declaration(self, token):
         if token == '{':
