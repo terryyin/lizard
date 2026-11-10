@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-053#process-pr-564",
+  "title": "Process PR #564 — Fix lost functions in JS/TS/JSX and Rust parsing",
+  "completedAt": "2026-11-10T09:16:36.078Z",
+  "developer": "Terry Yin",
+  "intentCoverage": {
+    "report": "# Dough Intent Coverage\n\n**Story:** SEED-053#process-pr-564\n**Revision:** f4c7f72883da56538298332647d4c342292ada42\n**Promise:** Nested Rust block comments containing `*/` (e.g. `src/**/foo.rs` in docs) keep following functions reported and do not surface `fn` examples from inside the comment.\n**Fault:** Reverted `RustReader.generate_tokens` to tokenize without `_flatten_nested_comments`.\n**Fixture/assertion:** `test_nested_block_comment_keeps_following_functions` and `test_nested_block_comment_hides_inner_fn_examples` in `test/test_languages/testRust.py`.\n**Outcome:** Caught. Baseline green (2 passed); with the fault both tests failed on the changed function lists (`real` lost / `example` leaked); restoration returned green and a clean scratch tree.\n\n## Costs\n\n- **Test runtime.** Measured: focused pytest about 0.09s baseline, 0.04s fault, 0.05s restore.\n- **Human effort.** Unavailable: no separate human effort measure in this session.\n- **Agent effort.** Unavailable: no separate agent-effort meter in this session.\n\n- **Invocation-to-report elapsed.** Measured: about 60s wall clock for lookup, scratch setup, three focused runs, and restore.\n"
+  }
+}
