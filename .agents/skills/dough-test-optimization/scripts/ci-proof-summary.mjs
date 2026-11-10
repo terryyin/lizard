@@ -1,21 +1,19 @@
 // CI proof summary: the collector's command line, importing only Node and its
-// sibling ci-proof-*.mjs modules, that CI jobs run in two steps.
+// sibling ci-proof-*.mjs modules, that CI jobs run in two steps, each naming
+// a GitHub Actions run attempt or a CI adapter's attempt.
 //
 //   fragment  converts one job's test report into one fragment per proof
-//             entry it ran (ci-proof-fragments.mjs).
+//             entry it ran, in the report's unit (ci-proof-fragments.mjs),
+//             and with `--by-file` breaks each down by test file
+//             (ci-proof-figures.mjs, "File breakdown").
 //   summarize collects the current attempt's fragments against the
-//             declared entries and parts (`--expect <entry>=<parts>`) into
-//             the attempt's summary (ci-proof-collect.mjs).
+//             declared entries, parts and units into the attempt's summary
+//             (ci-proof-collect.mjs).
 //
-// `fragment --by-file` also breaks each fragment down by test file
-// (ci-proof-figures.mjs, "File breakdown"); without it, fragments carry
-// entry totals only, as before.
-//
-// Both name the attempt: a GitHub Actions run attempt by `--attempt` (and
-// `summarize` by `--run-id`), or a CI adapter's attempt by `--attempt-id`.
-//
-// The versioned schemas are in ci-proof-contract.mjs; this module re-exports
-// the collector's whole API.
+// USAGE below states both steps' options and the unit of each report and
+// declaration. Their options are read by ci-proof-options.mjs. The versioned
+// schemas are in ci-proof-contract.mjs; this module re-exports the
+// collector's whole API.
 import {
   existsSync,
   mkdirSync,
@@ -26,23 +24,41 @@ import {
 } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { parseArgs } from "node:util";
 import { describeSummary, summarize } from "./ci-proof-collect.mjs";
 import {
   SUMMARY_READ_LIMIT_BYTES,
-  attemptProblems,
   entrySlug,
   fragmentProblems,
-  isPositive,
 } from "./ci-proof-contract.mjs";
 import {
   fragmentFromPlaywrightRecord,
   fragmentsFromOutcomes,
 } from "./ci-proof-fragments.mjs";
+import {
+  attemptIdentity,
+  declaredUnit,
+  options,
+  parseExpect,
+  positive,
+} from "./ci-proof-options.mjs";
 
 export * from "./ci-proof-collect.mjs";
 export * from "./ci-proof-contract.mjs";
 export * from "./ci-proof-fragments.mjs";
+
+// What the command line says when given no command it knows.
+const USAGE = `usage: ci-proof-summary.mjs fragment
+         (--outcomes <report> --unit case|file [--times <times>] | --playwright-record <record>)
+         [--by-file] --entry <entry>... --part <part> --of <parts>
+         (--attempt <run attempt> | --attempt-id <attempt id>) --revision <revision> --out <dir>
+       ci-proof-summary.mjs summarize --fragments <dir> --expect <entry>=<parts>:case|file...
+         --repository <owner/repo> (--run-id <run id> --attempt <run attempt> | --attempt-id <attempt id>)
+         --revision <revision> --out <summary file>
+A Playwright record's tests are test cases. --unit file counts each outcomes line as one
+test file's aggregate outcome, however many cases the file holds; --unit case as one test
+case. Declare each entry once per unit it reports, with that unit's part count. Outcomes
+without --unit are legacy test results; a declaration without :<unit> takes whichever
+one unit its entry's fragments report.`;
 
 function jsonFiles(directory) {
   return readdirSync(directory, { recursive: true, withFileTypes: true })
@@ -63,64 +79,6 @@ function readFragments(directory) {
   });
 }
 
-function positive(name, text) {
-  const value = Number(text);
-  if (!/^[0-9]+$/.test(text ?? "") || !isPositive(value)) {
-    throw new Error(`--${name} ${text} is not a positive integer`);
-  }
-  return value;
-}
-
-// A command's options: strings, every REQUIRED one must be given, and each
-// of MULTIPLE may be given more than once; each of FLAGS is a boolean.
-function options(argv, { required, optional = [], multiple = [], flags = [] }) {
-  const names = [...required, ...optional];
-  const { values } = parseArgs({
-    args: argv,
-    options: Object.fromEntries([
-      ...names.map((name) => [
-        name,
-        { type: "string", multiple: multiple.includes(name) },
-      ]),
-      ...flags.map((name) => [name, { type: "boolean" }]),
-    ]),
-  });
-  for (const name of required) {
-    if (values[name] === undefined || values[name] === "") {
-      throw new Error(`--${name} is required`);
-    }
-  }
-  return values;
-}
-
-// The attempt that VALUES name for a COMMAND: `--attempt-id`, or the
-// integer options GITHUB maps to their identity fields.
-function attemptIdentity(command, values, github) {
-  const identity = {};
-  for (const [name, field] of Object.entries(github)) {
-    if (values[name] !== undefined) {
-      identity[field] = positive(name, values[name]);
-    }
-  }
-  if (values["attempt-id"] !== undefined) {
-    identity.attemptId = values["attempt-id"];
-  }
-  const problems = attemptProblems(identity, Object.values(github));
-  if (problems.length > 0) {
-    throw new Error(`${command} ${problems.join("; ")}`);
-  }
-  return identity;
-}
-
-function parseExpect(declaration) {
-  const equals = declaration.lastIndexOf("=");
-  const entry = declaration.slice(0, equals);
-  if (equals <= 0) {
-    throw new Error(`--expect ${declaration} is not <entry>=<parts>`);
-  }
-  return { entry, parts: positive("expect", declaration.slice(equals + 1)) };
-}
-
 function runFragment(argv) {
   const values = options(argv, {
     required: ["entry", "part", "of", "revision", "out"],
@@ -130,6 +88,7 @@ function runFragment(argv) {
       "playwright-record",
       "outcomes",
       "times",
+      "unit",
     ],
     multiple: ["entry"],
     flags: ["by-file"],
@@ -144,8 +103,10 @@ function runFragment(argv) {
   };
   let fragments;
   if (values["playwright-record"] !== undefined) {
-    if (values.times !== undefined) {
-      throw new Error("--times applies only with --outcomes");
+    for (const name of ["times", "unit"]) {
+      if (values[name] !== undefined) {
+        throw new Error(`--${name} applies only with --outcomes`);
+      }
     }
     const record = JSON.parse(
       readFileSync(values["playwright-record"], "utf8"),
@@ -157,7 +118,12 @@ function runFragment(argv) {
       values.times === undefined
         ? undefined
         : readFileSync(values.times, "utf8");
-    fragments = fragmentsFromOutcomes(text, identity, times, byFile);
+    fragments = fragmentsFromOutcomes(text, identity, times, {
+      ...byFile,
+      ...(values.unit === undefined
+        ? {}
+        : { unit: declaredUnit("unit", values.unit) }),
+    });
   } else {
     throw new Error("--playwright-record or --outcomes is required");
   }
@@ -167,7 +133,7 @@ function runFragment(argv) {
     if (problems.length > 0) throw new Error(problems.join("; "));
     const file = join(
       values.out,
-      `${entrySlug(value.entry)}-${value.part}.json`,
+      `${entrySlug(value.entry)}-${value.unit}-${value.part}.json`,
     );
     writeFileSync(file, `${JSON.stringify(value)}\n`);
   }
@@ -224,10 +190,7 @@ if (isDirectEntry()) {
   try {
     if (command === "fragment") runFragment(argv);
     else if (command === "summarize") runSummarize(argv);
-    else
-      throw new Error(
-        "usage: ci-proof-summary.mjs fragment|summarize [options]",
-      );
+    else throw new Error(USAGE);
   } catch (error) {
     process.stderr.write(`ci-proof-summary: ${error.message}\n`);
     process.exitCode = 1;

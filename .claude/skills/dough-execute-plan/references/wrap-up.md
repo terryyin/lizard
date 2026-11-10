@@ -4,6 +4,7 @@ The coordinator runs this sequence after implementation, including owned CI repa
 
 ## Accept proof
 
+For planned Story Branch work, first [settle freshness](deliver-the-change.md#settle-freshness-before-dependent-work).
 Apply [proof ownership](../../dough-story-refinement/references/planning.md#own-executable-proof).
 Complete [source-only review at acceptance](obtain-source-review.md#at-acceptance)
 before comparing the return.

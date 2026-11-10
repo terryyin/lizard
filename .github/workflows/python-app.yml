@@ -68,7 +68,8 @@ jobs:
           "${RUNNER_TEMP}/ci-proof-times.tsv" > "${RUNNER_TEMP}/ci-proof-outcomes.tsv"
         node scripts/ci-proof/ci-proof-summary.mjs fragment \
           --outcomes "${RUNNER_TEMP}/ci-proof-outcomes.tsv" \
-          --times "${RUNNER_TEMP}/ci-proof-times.tsv" --by-file --entry test \
+          --times "${RUNNER_TEMP}/ci-proof-times.tsv" --by-file --unit case \
+          --entry test \
           --part 1 --of 1 --attempt "${GITHUB_RUN_ATTEMPT}" \
           --revision "${CI_PROOF_REVISION}" --out "${RUNNER_TEMP}/ci-proof"
     - name: Keep the CI proof fragments
@@ -134,7 +135,8 @@ jobs:
           "${RUNNER_TEMP}/ci-proof-times.tsv" > "${RUNNER_TEMP}/ci-proof-outcomes.tsv"
         node scripts/ci-proof/ci-proof-summary.mjs fragment \
           --outcomes "${RUNNER_TEMP}/ci-proof-outcomes.tsv" \
-          --times "${RUNNER_TEMP}/ci-proof-times.tsv" --by-file --entry website/frontend/features \
+          --times "${RUNNER_TEMP}/ci-proof-times.tsv" --by-file --unit case \
+          --entry website/frontend/features \
           --part 1 --of 1 --attempt "${GITHUB_RUN_ATTEMPT}" \
           --revision "${CI_PROOF_REVISION}" --out "${RUNNER_TEMP}/ci-proof"
     - name: Keep the CI proof fragments
@@ -164,7 +166,7 @@ jobs:
           mkdir -p -- "${RUNNER_TEMP}/ci-proof-fragments"
           node scripts/ci-proof/ci-proof-summary.mjs summarize \
             --fragments "${RUNNER_TEMP}/ci-proof-fragments" \
-            --expect test=1 --expect website/frontend/features=1 \
+            --expect test=1:case --expect website/frontend/features=1:case \
             --repository "${GITHUB_REPOSITORY}" --run-id "${GITHUB_RUN_ID}" \
             --attempt "${GITHUB_RUN_ATTEMPT}" --revision "${CI_PROOF_REVISION}" \
             --out "${RUNNER_TEMP}/ci-proof-summary.json"

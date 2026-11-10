@@ -9,8 +9,9 @@ export const adapterResponseBytes = 64 * 1024;
 // Answers the adapter's parsed JSON answer; a failed run rejects with the
 // child-process error, which keeps what the adapter wrote to stderr.
 // `answerBytes` is how much stdout this call may keep (default 64 KiB);
-// only the dashboard's proof read raises it to the collector contract's
-// summary read limit.
+// only the CI proof read
+// (`../../dough-test-optimization/scripts/ci-proof-read.mjs`) raises it to
+// the collector contract's summary read limit.
 export function runAdapter(
   command,
   request,

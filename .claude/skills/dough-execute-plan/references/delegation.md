@@ -55,6 +55,16 @@ Give the agent:
   and return a false premise through [execution
   reassessment](execution-decisions.md#reassess-before-extending-work) rather
   than continuing on it.
+- When the delegated work expects to edit a file already over this project's
+  [file-size check](../../dough-post-change-refactor/references/refactor-checks.md#file-size),
+  including a comment-only change, carry the settled reorganization decision:
+  file and current size, cohesive responsibilities and seams, owning slice or
+  work, affected callers, preserved proof, and any precisely scoped developer
+  decision. Pass that same substance for an authorized quick brief without
+  fabricating a plan. Require the agent to deliver that reorganization before
+  or with the edit, and to return a newly discovered oversized edit through
+  [execution reassessment](execution-decisions.md#reassess-before-extending-work)
+  before dependent work rather than editing first and asking for an exception.
 - For planned execution continuing an oversized quick attempt, the remaining-work
   plan plus the preserved completed work and proof and any incomplete-change
   disposition needed to identify the true starting boundary. Require the agent

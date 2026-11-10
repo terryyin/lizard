@@ -1,13 +1,16 @@
 ---
 name: dough-test-optimization
 description: >-
-  Speeds up local test feedback through profiling and measured experiments
-  across related tests. Use to optimize slow tests or test-suite performance.
-  Preserves behavioral coverage and confidence while pursuing fewer redundant
-  cases, less code, and cleaner design. With --resolve, triages recorded
-  candidates without profiling or optimizing. Also makes this project's CI,
-  GitHub Actions or read through a CI adapter, publish the CI proof summary
-  that Intent's CI status tab shows.
+  Speeds up local test feedback, starting from the CI test proof this project
+  already retains: ranks removable costs, states the saving worth keeping, and
+  reaches a measured keep or an evidenced stop through bounded experiments
+  across related tests. Use to optimize slow tests or test-suite performance,
+  or to profile tests on explicit request. Preserves behavioral coverage and
+  confidence while pursuing fewer redundant cases, less code, and cleaner
+  design. With --resolve, triages recorded candidates without profiling or
+  optimizing. Also makes this project's CI, GitHub Actions or read through a
+  CI adapter, publish the CI proof summary that Intent's CI status tab and
+  this skill read.
 ---
 
 # Speed up local test feedback
@@ -19,35 +22,38 @@ substitutes for a measured speedup. Preserve behavioral coverage and confidence.
 
 ## Establish context and mode
 
-Use the task's project. Resolve the selected local test command and scope,
-test locations, runtime/service setup, applicable test and architectural rules,
-and plan conventions from that project. Name genuinely missing context and
-stop only its dependent step; do not invent paths, commands, or a test taxonomy.
+Use the task's project. Resolve the requested scope, its test locations and
+local test commands, this project's CI (`ciWorkflow` or `ciAdapter` in
+`.planning/open-dough.json`), runtime/service setup, applicable test and
+architectural rules, and plan conventions from that project. Name genuinely
+missing context and stop only its dependent step; do not invent paths,
+commands, or a test taxonomy.
 
 A request to make this project's CI publish proof for Intent's **CI status**
-tab, or a tab saying the shown run or attempt has no CI proof summary,
-follows only the [CI proof summary](references/ci-proof-summary.md) recipe:
-it edits this project's GitHub Actions workflow, or its CI job and CI
-adapter, and profiles nothing. A published summary may carry optional
-`durationMs` on present parts and entries (summed test execution time from
-outcomes times or Playwright attempt durations) and, from `fragment
---by-file`, a per-file breakdown for Intent's entry and folder summaries;
-schema versions stay at 1.
+tab or for this skill, or a tab saying the shown run or attempt has no CI
+proof summary, follows only the [CI proof summary](references/ci-proof-summary.md)
+recipe: it edits this project's GitHub Actions workflow, or its CI job and CI
+adapter, and profiles nothing. The summary keeps each location's test cases
+and test files apart, each with its own outcomes, timing and gaps, in the
+units this project's reports give.
 
-Default mode profiles, plans, experiments, and re-profiles. A profile-only request
-ends with findings and records them in the
-[candidate record](references/candidate-record.md). For `--resolve`, follow only
+An ordinary optimization request starts from the evidence this project already
+retains and runs no fresh profiling run;
+[profile afresh](references/evidence-and-leads.md#profile-afresh-only-on-request)
+only when the developer explicitly asks. A request for findings only ends with
+discovery's report, as a [stop](#decide-stop-experiment-or-plan) does. For
+`--resolve`, follow only
 [candidate resolution](references/resolving-candidates.md).
 
-An independently requested pass in any mode is an accepted mission:
-[admit it](../dough-execute-plan/references/admit-accepted-work.md) before
-profiling or triage, with its story in a relevant existing seed when one fits
-and approach `unselected`. A pass explicitly selected as
+An independently requested pass is admitted at its first edit, as
+[admit accepted work](../dough-execute-plan/references/admit-accepted-work.md#decide-whether-a-mission-was-accepted)
+says, with its story in a relevant existing seed when one fits. A `--resolve`
+pass is admitted before its triage. A pass explicitly selected as
 [one-shot work](../dough-execute-plan/references/one-shot.md) follows that
-instead. A pass requested as a step of an active story
-continues under that story. Findings with no worthwhile change, in profiling
-or resolve-only triage,
-[finish the mission](../dough-execute-plan/references/admit-accepted-work.md#finish-the-mission),
+instead. A pass requested as a step of an active story continues under that
+story. An admitted experiment or resolve-only triage that ends with no
+worthwhile change
+[finishes the mission](../dough-execute-plan/references/admit-accepted-work.md#finish-the-mission),
 or under one-shot its
 [no-change finish](../dough-execute-plan/references/one-shot.md#finish-with-no-change).
 
@@ -58,29 +64,25 @@ Apply it across the authorized optimization scope, not just the current diff.
 ## Establish the baseline
 
 Read this project's
-[candidate record](references/candidate-record.md) when it exists, together with
-any approved profile exclusions it or the project already records. Follow that
-reference for accepted costs and later-pass preservation. Candidate proposals
-remain eligible and normal verification coverage stays intact.
+[candidate record](references/candidate-record.md) when it exists. Follow that
+reference for live candidates, for
+[accepted costs beside their tests](references/candidate-record.md#keep-accepted-cost-beside-its-test)
+and the existing tags and markers, and for later-pass preservation.
 
-Run the selected local scope. Record revision, literal command, runner mode,
-workers, filters, relevant environment/cache conditions, wall time, executed
-case count, and available test/setup timings. Keep raw profiles out of commits.
-Use only approved profile exclusions. Report the limits of filtered runs.
-
-Measure the ordinary local test mode even if profiling needs a different mode.
-A failed or incomplete run supplies diagnostics, not a successful baseline.
-Do not blindly trust timings: startup, caches, and machine load can dominate.
-Compare like conditions; repeat doubtful comparisons or report them inconclusive.
-Summed test durations are neither wall time nor measured CPU time.
+Then discover from retained evidence through
+[evidence and leads](references/evidence-and-leads.md): read the requested
+scope's CI proof through the lead reader, name its attempt, selection, and
+gaps, extract any runner output a lead needs, and state the smallest saving
+worth keeping. Discovery edits nothing, the candidate record included.
 
 ## Investigate a useful test family
 
-Use slow tests and aggregate setup costs to seed a hypothesis about wasted time.
-Prioritize work that shortens the selected local feedback path. Look across
-files and test layers for related behavior, variants, fixtures, and consumers,
-including fast siblings; neither a percentile nor a file limits investigation.
-Keep edits within authorized scope.
+Rank leads by [removable cost](references/evidence-and-leads.md#rank-removable-causes),
+and use them to seed a hypothesis about wasted time. Prioritize work that
+shortens the requested local feedback path. Look across files and test layers
+for related behavior, variants, fixtures, and consumers, including fast
+siblings; neither a percentile nor a file limits investigation. Keep edits
+within authorized scope.
 
 Group by a behavioral responsibility or evidenced shared cost, never by timing
 rank or fixed batch size. Assign shared helper changes once with their consumers
@@ -88,20 +90,41 @@ and dependencies; do not merge unrelated behavior scenarios or count savings twi
 
 Stop expanding discovery when further inspection no longer changes the proposed
 experiment or its proof obligations. Reopen it when results expose a missing
-cause or variant. Carry the family analysis into smaller execution slices so
-local edits retain the broader opportunities and surviving proof.
+cause or variant. Carry the family analysis into the experiment, or into a
+plan's slices, so local edits retain the broader opportunities and surviving
+proof.
+
+## Decide: stop, experiment, or plan
+
+- **Stop** when the remaining credible opportunities fall below the stated
+  saving, cannot justify the effort, or cannot plausibly reach the agreed
+  target: the developer's target, otherwise the stated saving. A stop at
+  discovery reports why, with its evidence: the leads, the stated saving, and
+  the gaps.
+- **Experiment** on the most promising avoidable cost with the smallest
+  meaningful change. Admit the pass at that first edit and run it as one
+  bounded planless execution under the ordinary request's authority, through
+  [experiment, learn, and reassess](#experiment-learn-and-reassess).
+- **Plan** when the evidence calls for dependent experiments, a shared harness
+  redesign, or a consequential change in where behavior is proved: admit the
+  pass and [record the optimization plan](#record-the-optimization-plan).
+
+Bring the developer only consequential questions. An unresolved product,
+architectural, or confidence trade-off stops that path for a human decision.
 
 ## Record the optimization plan
 
 Use one plan in the project's established location and the shared
 [executable plan format](../dough-story-refinement/references/planning.md#write-an-executable-plan).
-Record the request and profiling evidence, developer outcome, scope, preserved
-promises, baseline, family analysis, hypotheses, and proof. For each experiment,
-name the expected saving, smallest meaningful change, surviving proof for any
-removed cases, and focused verification/timing command. Include final re-profiling.
+Record the request and its evidence (the attempt read, its selection, and its
+gaps), developer outcome, scope, preserved promises, the stated saving worth
+keeping, family analysis, hypotheses, and proof. For each experiment, name the
+expected saving, smallest meaningful change, surviving proof for any removed
+cases, and focused verification/timing command.
 
-In resolve-only mode, reuse recorded evidence and plan any missing baseline as a
-prerequisite for later execution; do not run it now.
+In resolve-only mode, reuse recorded and retained evidence and plan any
+missing focused baseline as a prerequisite for later execution; do not run it
+now.
 
 For an admitted pass, this plan attaches to the same story: record and publish
 its preparation and continue that claim as
@@ -111,22 +134,33 @@ created plan continues into execution.
 
 ## Experiment, learn, and reassess
 
-Execute through [dough-execute-plan](../dough-execute-plan/SKILL.md), keeping its
-implementation/refactor ownership, delivery, and normal retrospective. That
-delivery publishes through
+Execute through [dough-execute-plan](../dough-execute-plan/SKILL.md): one
+bounded experiment as one planless contextual instruction, or a planned pass's
+experiment slices, keeping its implementation/refactor ownership, delivery,
+and normal retrospective. That delivery is this project's existing delivery,
+published through
 [increment and repair publication](../dough-execute-plan/references/trunk-publication.md#publish-an-execution-increment-or-repair).
-Make the following loop explicit in the plan and each experiment slice:
+A planless instruction carries the lead and its evidence, the stated saving
+and its measure, the protection to keep, and the focused timing command. Make
+the following loop explicit in that instruction, or in the plan and each
+experiment slice:
 
 1. **Hypothesize:** read [optimization tactics](references/optimization-tactics.md)
    and choose a promising way to remove cost across the family. Challenge the
    current test design; do not stop at the first convenient micro-fix.
-2. **Try and measure:** capture a comparable focused baseline, make the smallest
-   meaningful change, verify behavioral proof, and measure again before delivery.
+2. **Try and measure:** time the chosen lead's family before and after the
+   smallest meaningful change under
+   [comparable conditions](references/evidence-and-leads.md#measure-like-for-like),
+   and verify behavioral proof before delivery.
 3. **Decide:** retain a supported improvement; revise or undo this experiment's
    ineffective/regressing edits while preserving others' work. Record the
    finding rather than deliver a change merely because its tests pass.
-4. **Reassess:** use the result to reconsider the family's bottleneck and strategy.
-   When a time target is supplied, compare the remaining gap with realistically
+4. **Reassess:** use the result to reconsider the family's bottleneck and
+   strategy. After a kept change, rank again, using the delivered
+   revision's CI proof once normal delivery has produced it. Take an
+   independent next lead the same way, plan experiments that depend on the
+   kept change, or [stop](#decide-stop-experiment-or-plan). When a time
+   target is supplied, compare the remaining gap with realistically
    removable cost. A checkpoint whose recorded remaining experiments still offer a
    plausible route to the target continues to the next experiment without an extra
    record; do not invent a stop merely because a target exists.
@@ -146,35 +180,32 @@ Make the following loop explicit in the plan and each experiment slice:
    decisions](../dough-execute-plan/references/execution-decisions.md#reassess-before-extending-work)
    must honor it before selecting another dependent experiment slice.
 
-Stop experimenting when no credible further saving remains within scope; record
-what was tried and the remaining cost as a candidate. An unresolved product,
-architectural, or confidence trade-off stops that path for a human decision.
-
 ## Verify and close
 
-Establish replacement proof before removing or narrowing its predecessor. Verify
-the changed family in normal test mode, widening to affected consumers for shared
-changes. Fix flakiness at its cause; do not mask it with retries, sleeps, or skips.
-For changed asynchronous/E2E synchronization, require three consecutive focused
-passes or stronger project-required evidence; repetition alone proves no fix.
-Commit no focus/only markers.
+Establish replacement proof before removing or narrowing its predecessor. Run
+this project's ordinary verification for the affected behavior, widening to
+affected consumers for shared changes, and reuse comparable proof from CI
+produced by normal delivery. Follow this project's failing and flaky test
+policy: fix flakiness at its cause; do not mask it with retries, sleeps, or
+skips. For changed asynchronous/E2E synchronization, require three consecutive
+focused passes or stronger project-required evidence; repetition alone proves
+no fix. Commit no focus/only markers.
 
-Re-run the selected local command under comparable conditions after the
-experiments. Include replacement tests' cost when proof moved across boundaries.
-If the local run did not improve, revisit the cost hypothesis before declaring
-success; a faster isolated test is insufficient. A failed re-profile leaves
-measurement incomplete; focused timings or CI cannot replace it.
+Report each measured gain in its
+[measure and scope](references/evidence-and-leads.md#measure-like-for-like),
+the protection retained, and any unresolved measurement. Also report
+test/support-code simplifications, experiments rejected, delivered commits,
+and remaining candidates. Distinguish measured improvement, no demonstrated
+gain, and incomplete work. Do not claim speedup from fewer cases or lines
+alone.
 
-Report local wall time and executed cases before/after, retained behavioral proof,
-test/support-code simplifications, experiments rejected, delivered commits, and
-remaining candidates. Distinguish measured improvement, no demonstrated gain,
-and incomplete work. Do not claim speedup from fewer cases or lines alone.
-
-Write remaining candidates to the
-[candidate record](references/candidate-record.md), including after a
-profile-only pass that ends with findings, following that reference for creation,
-disposition, and preservation rules. Retain the plan and evidence for retrospective
-and [story wrap-up](../dough-story-wrap-up/SKILL.md); unresolved candidates must
-be resolved or transferred in that record before cleanup.
-Emit `## TEST OPTIMIZATION COMPLETE` only when the pass's planned work,
-verification, measurement, and delivery are complete, stating its actual outcome.
+An admitted pass writes the candidates that remain live, with what was tried,
+to the [candidate record](references/candidate-record.md), and puts each cost
+it accepts [beside its test](references/candidate-record.md#keep-accepted-cost-beside-its-test),
+following that reference for what stays live and for creation, conversion,
+preservation, and cleanup.
+Retain a planned pass's plan and evidence for retrospective and
+[story wrap-up](../dough-story-wrap-up/SKILL.md).
+Emit `## TEST OPTIMIZATION COMPLETE` only when the pass's stop, or its
+experiments' verification, measurement, and delivery, are complete, stating
+its actual outcome.

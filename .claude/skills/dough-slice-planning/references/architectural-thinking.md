@@ -77,6 +77,34 @@ Place it immediately before the Behavior it enables and prove preserved external
 behavior. Do not add structure, topics, or flexibility solely for hypothetical
 later stories.
 
+### Decide cohesive reorganization for already-oversized expected edits
+
+When expected edits touch a file already over this project's
+[file-size check](../../dough-post-change-refactor/references/refactor-checks.md#file-size),
+including a comment-only change, settle that file's cohesive reorganization
+before implementation. For each such expected edit, record in the plan:
+
+- the file and its current size;
+- cohesive responsibilities and seams for the reorganization;
+- affected callers and preserved proof; and
+- which slice owns the reorganization.
+
+Assign necessary reorganization within the Behavior it enables or in an
+immediately preceding Structure slice. Do not invent a repository-wide size
+inventory or a parallel size policy; inspect only the files this work expects
+to edit. Keep the existing numeric check and cohesive-seam requirement: a short
+diff, a prior exception, or naming the file in the plan does not waive them.
+
+When the reorganization cannot fit the current outcome under
+[slice sizing](../../dough-story-decomposition/references/problem-decomposition.md#size-and-escalate-slices),
+use that escalation and replanning path rather than compressing evidence or
+cutting arbitrarily. When it conflicts with an Accepted ADR, needs unapproved
+cross-subsystem work, or otherwise requires human judgment, stop the dependent
+planning path with the conflict and the exact decision needed; continue only
+independent work whose direction remains supported. A precisely scoped
+developer decision recorded for that file, work, and conditions may authorize
+the affected path; it does not become a standing waiver.
+
 ## Retire temporary direction during ordinary wrap-up
 
 During ordinary story wrap-up, inspect the North Star topics that the completed

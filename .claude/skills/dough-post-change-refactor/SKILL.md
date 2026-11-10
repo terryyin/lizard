@@ -33,7 +33,14 @@ Use the caller's active plan and current slice when supplied. Code may be
 justified by the current change or the immediate next slice in that plan;
 without a plan, only the current change supplies justification. Later slices
 cannot justify speculative code. The next slice can justify retaining code but
-cannot independently trigger refactoring.
+cannot independently trigger refactoring. When the caller supplies a
+reorganization decision for an already-oversized file in the change, treat that
+decision as required context for the
+[file-size check](references/refactor-checks.md#file-size): validate the
+delivered seams rather than rediscovering the size cost. When the change edits
+an oversized file without that decision, or the delivered structure contradicts
+it, stop through the decision handoff below before claiming the size check
+satisfied.
 
 ## Decide before editing
 
@@ -141,3 +148,11 @@ incomplete, expected risk and focused validation, and elapsed time. Ask the huma
 to authorize the refactoring, defer it, or approve a described narrow exception.
 End with `## REFACTOR JIDOKA STOP`. The caller must resolve this decision before
 considering refactoring complete or committing.
+
+When the [file-size check](references/refactor-checks.md#file-size) stops on a
+missing, contradicted, or undelivered reorganization decision, report the file,
+current size, the missing or contrary decision evidence, and the affected work.
+Do not present a mechanical split as the solution or treat a plan mention as
+completion. End with `## REFACTOR JIDOKA STOP`. A fulfilled planned
+reorganization that already matches the supplied decision does not require
+another exception question for that file.

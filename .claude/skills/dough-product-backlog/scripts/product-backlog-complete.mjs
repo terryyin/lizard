@@ -177,31 +177,48 @@ function pruneDoneRecords(backlogDirectory, now) {
 // The Git blob hash of `bytes`: the name Git gives that exact content, so a
 // published listing of the record files can be compared with the catalog
 // without reading each record.
-function gitBlobHash(bytes) {
+/** @param {Uint8Array} bytes */
+export function gitBlobHash(bytes) {
   return createHash("sha1")
     .update(`blob ${bytes.length}\0`)
     .update(bytes)
     .digest("hex");
 }
 
+// Of the named files in `entries`, each whose name a done record can take, in
+// name order, with its text and Git blob hash: what the catalog is built from
+// and checked against, however the bytes were read.
+/**
+ * @param {Iterable<{ fileName: string, bytes: Buffer }>} entries
+ * @returns {{ fileName: string, text: string, blob: string }[]}
+ */
+export function doneRecordFilesOf(entries) {
+  return [...entries]
+    .filter(({ fileName }) => isDoneRecordFileName(fileName))
+    .sort((a, b) =>
+      a.fileName === b.fileName ? 0 : a.fileName < b.fileName ? -1 : 1,
+    )
+    .map(({ fileName, bytes }) => ({
+      fileName,
+      text: bytes.toString("utf8"),
+      blob: gitBlobHash(bytes),
+    }));
+}
+
 // Every file in the done directory beside the backlog in `backlogDirectory`
-// whose name a done record can take, in name order, with its text and Git
-// blob hash: what the catalog is built from and checked against. No
+// whose name a done record can take, read as doneRecordFilesOf reads them. No
 // directory yields no files.
 export function readDoneRecordFiles(backlogDirectory) {
   const directory = join(backlogDirectory, doneRecordDirectory);
   if (!existsSync(directory)) return [];
-  return readdirSync(directory)
-    .filter(isDoneRecordFileName)
-    .sort()
-    .map((fileName) => {
-      const bytes = readFileSync(join(directory, fileName));
-      return {
+  return doneRecordFilesOf(
+    readdirSync(directory)
+      .filter(isDoneRecordFileName)
+      .map((fileName) => ({
         fileName,
-        text: bytes.toString("utf8"),
-        blob: gitBlobHash(bytes),
-      };
-    });
+        bytes: readFileSync(join(directory, fileName)),
+      })),
+  );
 }
 
 // Rebuilds the done catalog beside the backlog in `backlogDirectory` from the
