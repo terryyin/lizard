@@ -143,6 +143,18 @@ class Test_TypeScript_generic_arrow_functions(unittest.TestCase):
                          [(f.name, f.start_line, f.end_line, f.parameters)
                           for f in functions])
 
+    def test_generic_call_is_not_a_generic_arrow(self):
+        # `f<S>(...)` after a callee is a call, not `= <S>(...) =>`.
+        # Misreading it as a generic arrow dropped the callback and later fn.
+        code = (
+            "const r = f<S>(i, (b) => { if (b) {} });\n"
+            "function g() { return 1; }\n"
+        )
+        self.assertEqual(
+            [('(anonymous)', 1, 1, 2), ('g', 2, 2, 1)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+             for f in get_ts_function_list(code)])
+
 
 
 class Test_TypeScript_export_patterns(unittest.TestCase):

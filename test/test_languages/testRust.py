@@ -278,3 +278,35 @@ class TestRust(unittest.TestCase):
         }
         ''')
         self.assertEqual(3, result[0].cyclomatic_complexity)
+
+    def test_nested_block_comment_keeps_following_functions(self):
+        # Rust block comments nest. A path like `src/**/foo.rs` contains `*/`,
+        # so ending the comment there used to parse the rest as code and could
+        # hide later functions (ripgrep globset docs: 86 → 0 on master).
+        result = get_rust_function_list('''
+        /*! Paths `src/**/foo.rs`.
+         Nesting `{...}` is not currently allowed.
+         `[ab]` matches `a` or `b`.
+         `[!ab]` to match any character except for `a` and `b`.
+         Metacharacters `*` and `?` can be escaped with character class.
+         A `GlobBuilder` configures match semantics.
+        */
+        fn real() { if true {} }
+        fn also() {}
+        ''')
+        self.assertEqual(
+            [('real', 9, 9, 2), ('also', 10, 10, 1)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+             for f in result])
+
+    def test_nested_block_comment_hides_inner_fn_examples(self):
+        result = get_rust_function_list('''
+        /*!
+        See `src/**/foo.rs` for:
+          fn example() { }
+        */
+        pub fn real() {}
+        ''')
+        self.assertEqual(
+            [('real', 6, 6)],
+            [(f.name, f.start_line, f.end_line) for f in result])
