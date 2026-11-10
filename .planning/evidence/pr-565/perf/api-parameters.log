@@ -1,0 +1,2 @@
+warning: Git tree '/Users/terryyin/git/lizard' is dirty
+{"verdict": "bound-not-met", "passes": false, "paired_95pct_ci": [6.692708600882794, 19.39777619450761], "out": "/Users/terryyin/git/lizard/.planning/evidence/pr-565/perf/api-parameters.json"}

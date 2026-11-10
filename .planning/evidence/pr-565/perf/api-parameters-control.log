@@ -1,0 +1,2 @@
+warning: Git tree '/Users/terryyin/git/lizard' is dirty
+{"verdict": "inconclusive-short-batches", "passes": false, "paired_95pct_ci": [-2.579312544561483, 7.378852469543797], "out": "/Users/terryyin/git/lizard/.planning/evidence/pr-565/perf/api-parameters-control.json"}
