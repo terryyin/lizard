@@ -3,7 +3,7 @@
 **Identity:** SEED-052#publish-explicit-ci-test-counts
 **Source:** [See Lizard test case counts in Intent](../../seeds/SEED-052-publish-explicit-ci-test-counts.md#publish-explicit-ci-test-counts)
 **Source review:** [source-review.md](./source-review.md)
-**Status:** In progress; Slice 1 proof retained, Slice 2 next.
+**Status:** Execution complete; both slices done.
 
 ## Goal and scope
 
@@ -248,5 +248,12 @@ No additional boundary, cumulative-design, or sizing concerns were identified.
 The deployed consumer premise remains explicitly unobserved until Slice 1;
 the early probe may stop execution, and grants no upstream change authority.
 
-Preparation only: this plan grants neither Take nor execution. No source review,
-execution-complete record, or completed slices are claimed by this preparation.
+## Execution complete
+
+Product advice: Land as-is. Publisher and Intent route match the story: case
+units on both producers, collector byte-identical to 0.3.94, hosted
+`42745089766` @ `a3ec770a` shows `3101/0/7` cases at `test` with website
+missing when skipped, same-unit +1 and legacy-vs-case suppression hold on the
+Slice 1 reader. Live master Intent stays legacy until land — expected, not a
+defect. After land, confirm Intent CI status reads test cases for a trunk
+attempt.

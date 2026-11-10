@@ -109,7 +109,23 @@ The plan named XML or CSV proof for a seven-formatter promise. Source review rec
 
 ## DD-400 — Hosted CI-proof slices published with `progress: true` until observation
 
-Guarded `progress: true` kept two Lizard hosted-proof slices unfinished until CI was observed. `SEED-035#publish-lizard-ci-proof` (2026-11-05T18:06:32+07:00, Cursor auto, 0.3.86) published `c7643ce7e` and `15dc13b8d`, observed runs 42016250359, 42017933530 and 42018498291, then recorded done observations. The artifact receipts were accepted without a manual agent-commit fallback. [ODF-275 evidence](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-275.md#odf-275)
+Guarded `progress: true` keeps Lizard hosted-proof slices unfinished until CI and Intent observation finish, without a manual agent-commit fallback. [ODF-275 evidence](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-275.md#odf-275)
+
+### Occurrences
+- Execution: SEED-035#publish-lizard-ci-proof
+  - Timestamp: 2026-11-05T18:06:32+07:00
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.86
+  - Evidence: published `c7643ce7e` and `15dc13b8d`; runs 42016250359, 42017933530, 42018498291
+  - Observed effect: progress stayed unfinished until hosted receipts were observed, then done without manual agent-commit fallback
+- Execution: SEED-052#publish-explicit-ci-test-counts
+  - Timestamp: 2026-11-10T10:17:15+08:00
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.94
+  - Evidence: published `80626248` with progress pending; green run `42745089766` @ `a3ec770a`; Intent route observation retained in plan `610dd01b`; agent `7e6abf9f-f542-48a9-a60a-b0c609641336`
+  - Observed effect: Slice 2 stayed unfinished through shallow-clone and Windows CRLF repairs until hosted case totals and Intent reader/comparison were retained, then marked done
 
 ## ODF-441 — Fresh-increment delivery retries stumble on Darwin mktemp suffixes and git-rm staging
 
@@ -127,8 +143,36 @@ A merge-gated hosted commitment was marked observed before exact-head checks on 
 
 Probe cost ownership under quiet load before changing a product owner. For `SEED-035#ns-member-name-performance` at `43a07aafa2e1d7e28955ba554ced3263baca1874` (2026-11-06T21:25:18+07:00, Cursor auto, 0.3.86), attempt5 cumulative API parameters failed at ~+4.51% upper. On the refreshed target the prior set (~+0.98%) and full candidate (~+1.41%) passed, so the as-authored `_member_name` landed with six gates under 3% and no NS remediation. See `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice1/` and `seed035-slice2/`.
 
+## DD-404 — Absolute-SHA `git show` discriminators fail on shallow matrix checkouts
+
+Prefer in-repo fixtures over `git show` of absolute historical SHAs for CI contract discriminators. The build matrix uses default shallow `actions/checkout@v3`; only the `changes` job sets `fetch-depth: 0`.
+
+### Occurrences
+- Execution: SEED-052#publish-explicit-ci-test-counts
+  - Timestamp: 2026-11-10T10:22:00+08:00
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.94
+  - Evidence: run `42741720254` failed `test_old_collector_rejects_unit_flag` on `build (ubuntu-24.04, 3.12)` via missing SHA `e057eb2d`; repair `dde1a337` replaced it with `test/fixtures/ci-proof-old-collector/ci-proof-summary.mjs`; transcript `7e6abf9f-f542-48a9-a60a-b0c609641336`
+  - Observed effect: first hosted case-publisher attempt red for history depth, not publisher behavior; `ci-proof` itself had already published case evidence
+  - Inference: shallow-clone matrix legs cannot recover arbitrary parent SHAs without explicit fetch depth
+
+## DD-405 — Windows CI-proof TSV newlines needed successive write-boundary repairs
+
+When Node fragment CLI consumes TSV paths on Windows, force LF at every write boundary in one diagnosis (converter file open, helper `Path.write_text`, and captured stdout) rather than repairing one layer per red CI.
+
+### Occurrences
+- Execution: SEED-052#publish-explicit-ci-test-counts
+  - Timestamp: 2026-11-10T10:29:20+08:00
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.94
+  - Evidence: three repairs `a6fa1479` (normalize captured stdout / split oversized proof), `e22e93c4` (junit `newline="\n"`), `a3ec770a` (`write_tsv` open with `newline="\n"` after `Path.write_text` retranslated); green only at run `42745089766`; transcript turns diagnosing Windows path `\r` between 10:29 and 10:46 +08:00
+  - Observed effect: two additional red Windows matrix cycles after the shallow-clone repair before LF held end-to-end
+  - Inference: each boundary independently reintroduced CR; fixing outcomes stdout alone left converter times and helper rewrites unclean
+
 ## Retention
 
-- Highest allocated local number: 403
+- Highest allocated local number: 405
 - Shared-feedback adoption and compaction recovery (2026-11-07): `7129516bc5bd9ba57f370a6353ffe0e10eb1c861:DearDough.md`; its rows are retained at the linked Open Dough finding owners (`483d3a1e8f0ea24b929675b9a195faca48ac8f47:docs/maintainer/findings/`).
 - Shared-feedback compaction recovery (2026-11-03): `4195708bad2061ebc1c829ebdff7868605b173bb:DearDough.md`; its rows are retained at the linked Open Dough finding owners.
