@@ -2,7 +2,8 @@
 
 **Identity:** SEED-052#publish-explicit-ci-test-counts
 **Source:** [See Lizard test case counts in Intent](../../seeds/SEED-052-publish-explicit-ci-test-counts.md#publish-explicit-ci-test-counts)
-**Status:** Planned; implementation has not started.
+**Source review:** [source-review.md](./source-review.md)
+**Status:** In progress; Slice 1 proof retained, Slice 2 next.
 
 ## Goal and scope
 
@@ -79,7 +80,7 @@ Temporary files were under `.planning/` and removed before recording this plan.
 ### 1. Establish the deployed Intent proof route
 
 **Type:** Behavior — bounded infrastructure probe.
-**Status:** Pending.
+**Status:** done.
 
 **Question:** Does the actual Intent instance used for Lizard support declared
 case evidence and the legacy comparison boundary, and what repeatable route
@@ -110,10 +111,50 @@ Intent under this story. Reassess readiness on that evidence before continuing.
 The unpaid prefix (page and GitHub artifact reads) is already observed; the
 authenticated deployed integration is deliberately the early probe.
 
+**Accepted proof:** Deployed Intent **0.3.94** at
+`/Users/terryyin/.open-dough/dashboard/deployments/a36e5bcf5395-qhVyNw`
+(`vite preview` on `http://127.0.0.1:4173`) supports case evidence and the
+legacy comparison boundary for Lizard.
+
+Live Lizard Intent CI status (authenticated, no settings change):
+`?project=lizard&perspective=intent`, CI status tab. Shown run
+`42739727768` attempt 1, revision `1140217` (Take queued work:
+SEED-052#publish-explicit-ci-test-counts). Settings from
+`.planning/open-dough.json`: locations `test` and
+`website/frontend/features`. Proof table:
+`test` → `3095 passed and 7 other legacy test results` / `16.6 s`;
+`website/frontend/features` → `nothing counted` / `Part 1 missing`.
+
+Isolated route (same deployment's reader + comparison surface, lizard-shaped
+summaries generated with installed 0.3.94 collector
+`.claude/skills/dough-test-optimization/scripts/ci-proof-summary.mjs`, then
+`checkedRetainedSummary` → `ciProofSchema` →
+`overallCountsWords` / `comparisonEntriesOf` /
+`ciProofCellsOf` from that deployment):
+
+- Case baseline (4 at `test`, 3 at website) vs case branch (5 and 4): overall
+  `7 → 9 test cases (+2)`; entry rows `test` `4 → 5 test cases (+1)`,
+  `website/frontend/features` `3 → 4 test cases (+1)`.
+- Schema-1 legacy (3102 labelled `tests`, website part missing) vs case
+  branch: overall
+  `3,102 legacy test results → 9 test cases (legacy unit unknown)` with cue
+  `no overall count`; entry `test`
+  `3,102 legacy test results → 5 test cases (legacy unit unknown)` with cue
+  `units not comparable` (no invented count or comparable time delta).
+- Reader unit fixtures also pass:
+  `node --test tests/support/dashboard-ci-proof-units-read.test.mjs
+  tests/support/intent-ci-comparison-overall-counts.test.mjs` (7/7) from the
+  deployment root.
+
+Repeatable Slice 2 Intent route: live CI status URL above for the published
+attempt's artifact, plus the same collector → deployed reader/comparison
+commands with Lizard CLI-produced summaries for same-unit +1 and
+legacy-vs-case no-delta. Stop conditions did not trigger.
+
 ### 2. Publish case evidence for both existing runner reports
 
 **Type:** Behavior.
-**Status:** Pending.
+**Status:** planned.
 
 **Precondition:** Slice 1 has established the consuming Intent profile/route.
 **Trigger:** The judged CI workflow publishes proof for a selected attempt.
