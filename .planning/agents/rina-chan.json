@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "agent": "Rina-chan",
-  "email": "rina-chan@example.org",
-  "activity": "preparation",
-  "identity": "SEED-052#publish-explicit-ci-test-counts",
-  "host": "codex",
-  "model": "gpt-6.1-sol"
-}
