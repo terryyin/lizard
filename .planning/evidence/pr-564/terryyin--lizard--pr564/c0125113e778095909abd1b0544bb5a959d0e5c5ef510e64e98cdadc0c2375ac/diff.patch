@@ -1,0 +1,659 @@
+diff --git a/lizard_languages/javascript_functions.py b/lizard_languages/javascript_functions.py
+index 2590c679..9dc031b8 100644
+--- a/lizard_languages/javascript_functions.py
++++ b/lizard_languages/javascript_functions.py
+@@ -9,6 +9,11 @@
+     'of', 'as', 'satisfies', 'keyof'))
+ 
+ 
++class JSXChildBrace(str):
++    """The '{' of a JSX child expression, `<p>{x && <a/>}</p>`: an
++    expression container, never an object literal or a block."""
++
++
+ def ends_expression(token):
+     """Whether an expression may end with this token (JavaScript ASI)."""
+     first = token[:1]
+@@ -163,6 +168,7 @@ def _function(self, token):
+                 self._push_function_to_stack()
+             self._parameter_bindings = JavaScriptBindings(
+                 ')', self.context.current_function)
++            self._decorated_parameters = False
+             self._state = self._dec
+             self.context.add_to_long_function_name(" " + token)
+ 
+@@ -173,6 +179,24 @@ def _dec(self, token):
+             self.next(self._state_global)
+             self._read_binding_candidate(')')
+             return
++        if (token == 'async' and self._parameter_bindings.at_start
++                and self.last_token == '('):
++            # A grouped async arrow, `x = (async () => f())`, rather than
++            # parameters; keep the open "(" as for an arrow IIFE.
++            self._abandon_optimistic_parameter_group()
++            self.next(self._state_global, token)
++            return
++        if token == '@':
++            self._decorated_parameters = True  # constructor(@Inject(T) x)
++        elif self._expression_operand(token):
++            # `x = (items.map(f))`, `x = (g(y))`: a call or member access at
++            # the root of the group, so an expression; read it as one so the
++            # arrows in it are found. Re-read the name before this token.
++            name = self.last_token
++            self._abandon_optimistic_parameter_group()
++            self.next(self._state_global, name)
++            self.next(self._state_global, token)
++            return
+         if token == 'function' and not self._parameter_bindings.defaults:
+             # The optimistic named-arrow signature is an IIFE expression.
+             self._abandon_optimistic_parameter_group()
+@@ -191,6 +215,15 @@ def _dec(self, token):
+             return
+         self.context.add_to_long_function_name(" " + token)
+ 
++    def _expression_operand(self, token):
++        bindings = self._parameter_bindings
++        name = self.last_token
++        return (token in ('.', '?.', '(') and not self._decorated_parameters
++                and bindings.at_root and not bindings.in_expression
++                and not bindings._in_parameter_type
++                and name == bindings.previous and name not in ('this', 'new')
++                and (name[0].isalpha() or name[0] in ('_', '$')))
++
+     def _expecting_func_opening_bracket(self, token):
+         # Do not reset started_function for arrow functions (=>)
+         if token == ':':
+diff --git a/lizard_languages/javascript_objects.py b/lizard_languages/javascript_objects.py
+index da057929..3cdb1a17 100644
+--- a/lizard_languages/javascript_objects.py
++++ b/lizard_languages/javascript_objects.py
+@@ -29,6 +29,12 @@ def _optional_class_member(self):
+ 
+     def _handle_object_member(self, token):
+         """Called for tokens in an object literal or class body (as_object)."""
++        if (self._async_seen or self._static_seen) and token in (
++                ':', ',', '}', ';'):
++            # `{async: v}`, `{static, x}`: the word is a property name,
++            # not a modifier waiting for a method name.
++            self.last_tokens = 'async' if self._async_seen else 'static'
++            self._async_seen = self._static_seen = False
+         if token == '=' and self.as_class:
+             self._in_prop_value = True
+         if (self.as_class and token.endswith('?')
+diff --git a/lizard_languages/javascript_templates.py b/lizard_languages/javascript_templates.py
+index 39a74a2c..7cbe9cc1 100644
+--- a/lizard_languages/javascript_templates.py
++++ b/lizard_languages/javascript_templates.py
+@@ -132,13 +132,17 @@ def interpolation_code(source, in_expression=False):
+         yield code, len(source)
+ 
+ 
+-def template_tokens(source, addition='', token_class=None, split=True):
+-    """Tokenize ordinary spans normally; TSX retains atomic template tokens."""
++def template_tokens(source, addition='', token_class=None, split=True,
++                    macros=True):
++    """Tokenize ordinary spans normally; TSX retains atomic template tokens.
++    JSX text such as `<>#{tag}</>` passes macros=False: its '#' is text,
++    not a preprocessor line swallowing the rest of the line."""
+     pattern = compiled_token_pattern(addition)
+     pos = 0
+     if '`' in source:
+         for start, end, expressions in _template_spans(source):
+-            yield from tokens_in_span(pattern, source, pos, start, token_class)
++            yield from tokens_in_span(pattern, source, pos, start, token_class,
++                                      macros)
+             if split and expressions is not None and token_class is None:
+                 yield from _split_template(source, start, end, expressions)
+             elif token_class is None:
+@@ -147,4 +151,5 @@ def template_tokens(source, addition='', token_class=None, split=True):
+                 yield from _converted_template(
+                     source, start, end, token_class, split)
+             pos = end
+-    yield from tokens_in_span(pattern, source, pos, len(source), token_class)
++    yield from tokens_in_span(pattern, source, pos, len(source), token_class,
++                              macros)
+diff --git a/lizard_languages/rust.py b/lizard_languages/rust.py
+index 4dbc65e1..f70b068a 100644
+--- a/lizard_languages/rust.py
++++ b/lizard_languages/rust.py
+@@ -2,6 +2,8 @@
+ Language parser for Rust lang
+ '''
+ 
++import re
++
+ from .code_reader import CodeReader
+ from .clike import CCppCommentsMixin
+ from .golike import GoLikeStates
+@@ -34,7 +36,8 @@ def generate_tokens(source_code, addition='', token_class=None):
+             # char literals, before lifetimes, which also start with `'`
+             r"|(?:'(?:\\(?:x[0-9a-fA-F]{2}|u\{[0-9a-fA-F]+\}|.)|[^'\\\n])')"
+             r"|(?:'\w+\b)")  # lifetimes, labels
+-        return CodeReader.generate_tokens(source_code, addition, token_class)
++        return CodeReader.generate_tokens(
++            _flatten_nested_comments(source_code), addition, token_class)
+ 
+     def preprocess(self, tokens):
+         """Split the `||` of a closure without parameters, `|| x`, into two
+@@ -130,3 +133,64 @@ def _match_subject(self, token):
+ 
+     def _end_match(self):
+         self.next(self._state_global)
++
++
++_CHAR_LITERAL = re.compile(
++    r"'(?:\\(?:x[0-9a-fA-F]{2}|u\{[0-9a-fA-F]+\}|.)|[^'\\\n])'")
++_RAW_STRING = re.compile(r'b?r(#*)"')
++
++
++def _flatten_nested_comments(source):
++    """Rust block comments nest: `/* a /* b */ c */` is one comment.
++    The shared tokenizer ends a block comment at its first `*/`, so a nested
++    one (e.g. `src/**/foo.rs` in a doc comment) leaks the rest of the comment
++    into the code. Break the inner `*/`s so the comment is read whole.
++    Strings, raw strings, char literals and line comments are skipped, so a
++    `/*` inside them does not open a comment."""
++    if '/*' not in source:
++        return source
++    out = []
++    i, n = 0, len(source)
++    while i < n:
++        two = source[i:i + 2]
++        if two == '//':
++            end = source.find('\n', i)
++            end = n if end < 0 else end
++        elif two == '/*':
++            depth, j = 1, i + 2
++            while j < n and depth:
++                if source.startswith('/*', j):
++                    depth, j = depth + 1, j + 2
++                elif source.startswith('*/', j):
++                    depth, j = depth - 1, j + 2
++                else:
++                    j += 1
++            if depth:  # unterminated: leave it to the tokenizer
++                out.append(source[i:])
++                break
++            inner = source[i + 2:j - 2]
++            out.append('/*' + inner.replace('*/', '* /') + '*/')
++            i = j
++            continue
++        elif source[i] == '"' or (
++                source[i] in 'br' and (i == 0 or not (
++                    source[i - 1].isalnum() or source[i - 1] == '_'))
++                and _RAW_STRING.match(source, i)):
++            raw = _RAW_STRING.match(source, i) if source[i] != '"' else None
++            if raw:
++                close = '"' + raw.group(1)
++                end = source.find(close, raw.end())
++                end = n if end < 0 else end + len(close)
++            else:
++                j = i + 1
++                while j < n and source[j] != '"':
++                    j += 2 if source[j] == '\\' else 1
++                end = min(j + 1, n)
++        elif source[i] == "'":
++            match = _CHAR_LITERAL.match(source, i)
++            end = match.end() if match else i + 1
++        else:
++            end = i + 1
++        out.append(source[i:end])
++        i = end
++    return ''.join(out)
+diff --git a/lizard_languages/token_pattern.py b/lizard_languages/token_pattern.py
+index 4f94e169..d8d9d9e4 100644
+--- a/lizard_languages/token_pattern.py
++++ b/lizard_languages/token_pattern.py
+@@ -72,7 +72,10 @@ def _token_text(match):
+     return match.group(0)
+ 
+ 
+-def tokens_in_span(pattern, source, start, end, token_class=None):
++def tokens_in_span(pattern, source, start, end, token_class=None,
++                   macros=True):
++    """With `macros`, a lone '#' starts a preprocessor line kept as one
++    token; languages without a preprocessor keep '#' as its own token."""
+     if token_class is None:
+         token_class = _token_text
+     macro = ""
+@@ -85,7 +88,7 @@ def tokens_in_span(pattern, source, start, end, token_class=None):
+                 yield macro
+                 yield token
+                 macro = ""
+-        elif token == "#":
++        elif token == "#" and macros:
+             macro = token
+         else:
+             yield token
+diff --git a/lizard_languages/tsx.py b/lizard_languages/tsx.py
+index 5ef47628..b9c82c9d 100644
+--- a/lizard_languages/tsx.py
++++ b/lizard_languages/tsx.py
+@@ -11,6 +11,7 @@
+     TypeScriptReader)
+ from .typescript import JSTokenizer, Tokenizer
+ from .javascript_templates import LINE_COMMENT, template_tokens
++from .javascript_functions import JSXChildBrace
+ 
+ 
+ class TSXReader(TypeScriptReader):
+@@ -42,7 +43,8 @@ def generate_tokens(source_code, addition='', token_class=None):
+             r"|(?:=>)"
+         js_tokenizer = TSXTokenizer()
+         for token in template_tokens(
+-                source_code, addition, token_class, split=False):
++                source_code, addition, token_class, split=False,
++                macros=False):
+             for tok in js_tokenizer(token):
+                 yield tok
+ 
+@@ -277,7 +279,7 @@ def _body(self, token):
+             self.sub_tokenizer = TSXTokenizer()
+             self._expression_end = '}'
+             self.cache.pop()
+-            return [tok for tok in self.flush() if tok] + ['{']
++            return [tok for tok in self.flush() if tok] + [JSXChildBrace('{')]
+ 
+ 
+ def isidentifier(token):
+diff --git a/lizard_languages/typescript_declarations.py b/lizard_languages/typescript_declarations.py
+index 7e881e13..154815ca 100644
+--- a/lizard_languages/typescript_declarations.py
++++ b/lizard_languages/typescript_declarations.py
+@@ -52,10 +52,12 @@ def skip_declared_function(t):
+             phase = [0]        # 0=expect name, 1=expect =, 2=after =
+             brace_count = [0]
+             generic_depth = [0]
++            name = ['']
+ 
+             def handle_type_alias(t):
+                 if phase[0] == 0:
+                     if t and t[0].isalpha():
++                        name[0] = t
+                         phase[0] = 1
+                     else:
+                         self.last_tokens = 'type'
+@@ -71,6 +73,14 @@ def handle_type_alias(t):
+                     elif t == ';':
+                         self.next(self._state_global)
+                         return True
++                    else:
++                        # `type` was a value, e.g. `f(type as string)`:
++                        # an alias name is followed only by '<' or '='.
++                        self.last_tokens = 'type'
++                        self.next(self._state_global)
++                        self._state_global(name[0])
++                        self._state_global(t)
++                        return True
+                 elif phase[0] == 2:
+                     if t == '{':
+                         brace_count[0] = 1
+diff --git a/lizard_languages/typescript_states.py b/lizard_languages/typescript_states.py
+index 331e899b..0f8774e1 100644
+--- a/lizard_languages/typescript_states.py
++++ b/lizard_languages/typescript_states.py
+@@ -2,7 +2,7 @@
+ 
+ from .code_reader import CodeStateMachine
+ from .javascript_bindings import BindingSummary, JavaScriptBindingsMixin
+-from .javascript_functions import JavaScriptFunctionsMixin
++from .javascript_functions import JavaScriptFunctionsMixin, JSXChildBrace
+ from .javascript_objects import JavaScriptObjectsMixin
+ from .typescript_signatures import ReturnTypeColon
+ from .typescript_declarations import (
+@@ -32,6 +32,9 @@ def __init__(self, context):
+         self._static_seen = False  # Track if 'static' was seen
+         self._async_seen = False  # Track if 'async' was seen
+         self._prev_token = ''  # Track previous token to detect method calls
++        # Token before the last '<': a generic arrow `x = <T>(...)` follows
++        # '=' or 'async'; a generic call `x = f<T>(...)` follows a callee.
++        self._generic_prefix = ''
+         self._in_prop_value = False  # Track if inside property value (after ':')
+         self._in_abstract_context = False  # Track abstract method declarations
+         self._condition_kind = None
+@@ -40,6 +43,7 @@ def __init__(self, context):
+         self._arrow_line = None  # Line of `=>` for expression-body start
+         self._call_group = False  # Argument commas end expression arrows
+         self._open_groups = 0  # "(" of a group read as parameters
++        self._in_condition = False  # Inside `if (...)` / `for (...)`
+ 
+     def __call__(self, token, reader=None):
+         if self._binding_candidate:
+@@ -157,7 +161,9 @@ def _state_global(self, token):
+                 self._read_parenthesis_group()
+             elif (self.function_name
+                   and (self.last_tokens == self.function_name
+-                       or self._prev_token in ('=', 'async', '>'))):
++                       or self._prev_token in ('=', 'async')
++                       or self._prev_token == '>'
++                       and self._generic_prefix in ('=', 'async'))):
+                 if not self.started_function:
+                     self._function(self.function_name)
+                 self.next(self._function, token)
+@@ -173,6 +179,13 @@ def _state_global(self, token):
+             if (not operand or previous in
+                     ('const', 'let', 'var', 'return', 'throw', 'yield', 'await')):
+                 self._read_binding_candidate(']')
++        elif type(token) is JSXChildBrace:
++            # Read a JSX child expression like a parenthesized one, so
++            # `{(p) => (<a/>)}` and `{c && <a onClick={() => f()}/>}` keep
++            # their arrows instead of being taken for an object literal.
++            group = self.__class__(self.context)
++            group._call_group = True
++            self.sub_state(group)
+         elif token == '{':
+             # Expression arrows read object operands; block bodies and typed
+             # signatures awaiting a real body still open a nested function.
+@@ -180,6 +193,10 @@ def _state_global(self, token):
+                 self.sub_state(
+                     self.__class__(self.context),
+                     self._pop_function_from_stack)
++            elif self._statement_block_start():
++                # A block statement, `{ const r = f(() => 1); }`, holds
++                # statements rather than object members.
++                self._expecting_statement_or_block(token)
+             else:
+                 self.read_object()
+         elif token == ')' and self._open_groups:
+@@ -218,11 +235,23 @@ def _state_global(self, token):
+                     self._declaration_binding = True
+                 if self.as_object:
+                     self._in_prop_value = False
++        if token == '<':
++            self._generic_prefix = self._prev_token
+         self.last_tokens = token
+         # Don't overwrite _prev_token if it's 'new' (preserve for next token)
+         if self._prev_token != 'new':
+             self._prev_token = token
+ 
++    def _statement_block_start(self):
++        """Whether a '{' here starts a statement: right after a ';' or at
++        the start of a function body or block, outside any expression."""
++        return (self._prev_token in ('', ';') and not self.started_function
++                and not self.as_object and not self._binding_candidate
++                and not self._call_group and not self._open_groups
++                and not self._in_condition
++                and not self._pending_bindings
++                and self.last_tokens in ('', ';', '{'))
++
+     def _expecting_condition_and_statement_block(self, token):
+         def callback():
+             self.next(self._expecting_statement_or_block)
+@@ -242,8 +271,9 @@ def catch_callback(summary):
+             self._read_binding_candidate(')', catch_callback, track_complexity=False)
+             return
+ 
+-        self.sub_state(
+-            self.__class__(self.context), callback)
++        condition = self.__class__(self.context)
++        condition._in_condition = True  # `for ({a = 1} of b)`: no block
++        self.sub_state(condition, callback)
+ 
+     def _expecting_statement_or_block(self, token):
+         def callback():
+diff --git a/test/test_languages/testJSXChildExpressions.py b/test/test_languages/testJSXChildExpressions.py
+new file mode 100644
+index 00000000..1b4d0f01
+--- /dev/null
++++ b/test/test_languages/testJSXChildExpressions.py
+@@ -0,0 +1,71 @@
++"""Functions inside JSX child expressions, `<p>{...}</p>`: the braces hold an
++expression, never an object literal, and the text around them is not code."""
++
++import unittest
++
++from lizard import analyze_file
++
++
++def summary(filename, code):
++    return [(f.name, f.start_line, f.end_line)
++            for f in analyze_file.analyze_source_code(
++                filename, code).function_list]
++
++
++class Test_JSX_child_expressions(unittest.TestCase):
++
++    def check(self, code, expected):
++        for filename in ("a.tsx", "a.jsx"):
++            with self.subTest(filename=filename):
++                self.assertEqual(expected, summary(filename, code))
++
++    def test_render_prop_with_parenthesized_body(self):
++        code = (
++            "const A = () => (\n"
++            "  <Field>\n"
++            "    {(inputProps) => (\n"
++            "      <Input {...inputProps} />\n"
++            "    )}\n"
++            "  </Field>\n"
++            ");\n"
++            "function g() { return 1; }\n"
++        )
++        self.check(code, [('(anonymous)', 3, 5), ('A', 1, 7), ('g', 8, 8)])
++
++    def test_render_prop_with_bare_parameter(self):
++        code = (
++            "const A = () => (\n"
++            "  <Bundle>\n"
++            "    {Component => (\n"
++            "      <Component />\n"
++            "    )}\n"
++            "  </Bundle>\n"
++            ");\n"
++        )
++        self.check(code, [('(anonymous)', 3, 5), ('A', 1, 7)])
++
++    def test_attribute_arrow_inside_conditional_element(self):
++        code = (
++            "const A = () => (\n"
++            "  <div>\n"
++            "    {open && (\n"
++            "      <button onClick={() => close(m)}>x</button>\n"
++            "    )}\n"
++            "    {open ? <i onClick={() => close(m)}>x</i> : null}\n"
++            "  </div>\n"
++            ");\n"
++        )
++        self.check(code, [('(anonymous)', 4, 4), ('(anonymous)', 6, 6),
++                          ('A', 1, 8)])
++
++    def test_hash_in_element_text_is_text(self):
++        code = (
++            "class A {\n"
++            "  render() {\n"
++            "    const title = <>#{this.title()}</>;\n"
++            "    return <p># {x}</p>;\n"
++            "  }\n"
++            "  other() { return 2; }\n"
++            "}\n"
++        )
++        self.check(code, [('render', 2, 5), ('other', 6, 6)])
+diff --git a/test/test_languages/testJavaScriptExpressionGroups.py b/test/test_languages/testJavaScriptExpressionGroups.py
+new file mode 100644
+index 00000000..82893ceb
+--- /dev/null
++++ b/test/test_languages/testJavaScriptExpressionGroups.py
+@@ -0,0 +1,89 @@
++"""A "(" after `name =` is read optimistically as arrow parameters. When the
++group turns out to be an expression, the functions inside it still count;
++likewise for `async`/`static` used as property names and for block
++statements, whose braces hold statements rather than object members."""
++
++import unittest
++
++from lizard import analyze_file
++
++
++def summary(filename, code):
++    return [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
++            for f in analyze_file.analyze_source_code(
++                filename, code).function_list]
++
++
++class Test_JavaScript_expression_groups(unittest.TestCase):
++
++    def check(self, code, expected):
++        for filename in ("a.js", "a.ts", "a.tsx"):
++            with self.subTest(filename=filename):
++                self.assertEqual(expected, summary(filename, code))
++
++    def test_grouped_async_arrow(self):
++        code = (
++            "x = (async () => h());\n"
++            "const o = {\n"
++            "  b: (async () => { if (a) { return 1; } }),\n"
++            "};\n"
++            "function g() { return 1; }\n"
++        )
++        self.check(code, [('x', 1, 1, 1), ('b', 3, 3, 2), ('g', 5, 5, 1)])
++
++    def test_async_parameter_name_still_a_parameter(self):
++        code = "const w = (async) => async + 1;\n"
++        self.check(code, [('w', 1, 1, 1)])
++
++    def test_call_in_group_keeps_its_callbacks(self):
++        code = (
++            "function f() {\n"
++            "  const d = (\n"
++            "    items.map((item) => {\n"
++            "      return item || 0;\n"
++            "    })\n"
++            "  );\n"
++            "  const e = (g((item) => item && 1));\n"
++            "  return d;\n"
++            "}\n"
++            "function g() { return 1; }\n"
++        )
++        self.check(code, [('(anonymous)', 3, 5, 2), ('(anonymous)', 7, 7, 2),
++                          ('f', 1, 9, 1), ('g', 10, 10, 1)])
++
++    def test_member_types_and_decorators_stay_parameters(self):
++        code = (
++            "const n = (a: T.U, b = c.d()) => { return 1; };\n"
++            "class C {\n"
++            "  constructor(@Inject(T) private x: X, y) { }\n"
++            "}\n"
++        )
++        self.assertEqual([('n', 1, 1, 2), ('constructor', 3, 3, 1)],
++                         summary("a.ts", code))
++
++    def test_modifier_words_as_property_names(self):
++        code = (
++            "class X {\n"
++            "  a() {\n"
++            "    x({ async: v, static: 1 });\n"
++            "  }\n"
++            "  b() { return 1; }\n"
++            "  static async c() { return 1; }\n"
++            "}\n"
++            "const o = { async: true, f() { return 1; } };\n"
++        )
++        self.check(code, [('a', 2, 4, 1), ('b', 5, 5, 1), ('c', 6, 6, 1),
++                          ('f', 8, 8, 1)])
++
++    def test_block_statement_holds_statements(self):
++        code = (
++            "function t() {\n"
++            "  {\n"
++            "    const r = find(xs, (v) => {\n"
++            "      return v ? 1 : 0;\n"
++            "    });\n"
++            "  }\n"
++            "  for ({a = 1} of values) {}\n"
++            "}\n"
++        )
++        self.check(code, [('(anonymous)', 3, 5, 2), ('t', 1, 8, 3)])
+diff --git a/test/test_languages/testTypeScriptFields.py b/test/test_languages/testTypeScriptFields.py
+index 74ecd501..bc13b7b4 100644
+--- a/test/test_languages/testTypeScriptFields.py
++++ b/test/test_languages/testTypeScriptFields.py
+@@ -120,3 +120,46 @@ def test_methods_with_modifiers_after_fields_without_semicolons(self):
+             [('create', 3, 5), ('load', 7, 9), ('get value', 11, 13)],
+             [(f.name, f.start_line, f.end_line)
+              for f in get_ts_function_list(code)])
++
++
++class Test_TypeScript_modifier_named_object_keys(unittest.TestCase):
++    """`static`/`async` used as object keys are names, not modifiers; read
++    as modifiers they swallowed the object's '}' and hid later callbacks."""
++
++    def assert_functions(self, code, expected):
++        self.assertEqual(
++            expected,
++            [(f.name, f.cyclomatic_complexity, f.start_line, f.end_line)
++             for f in get_ts_function_list(code)])
++
++    def test_static_key_then_callback_argument(self):
++        self.assert_functions(
++            "const a = { static: 1 };\n"
++            "const b = g();\n"
++            "const d = g(\n"
++            "  x,\n"
++            "  (arg) => {\n"
++            "    if (arg) {\n"
++            "    }\n"
++            "  },\n"
++            ");\n",
++            [('(anonymous)', 2, 5, 8)])
++
++    def test_modifier_keys_inside_arrow_body(self):
++        for key in ('static', 'async'):
++            with self.subTest(key=key):
++                self.assert_functions(
++                    "const s = f(() => {\n"
++                    "  return { %s: p[x] };\n"
++                    "});\n"
++                    "const u = g(`x`, (arg) => {\n"
++                    "  if (arg) {}\n"
++                    "});\n" % key,
++                    [('(anonymous)', 1, 1, 3), ('(anonymous)', 2, 4, 6)])
++
++    def test_shorthand_modifier_keys(self):
++        self.assert_functions(
++            "const a = { x, async, static };\n"
++            "const b = g();\n"
++            "function h() { if (x) {} }\n",
++            [('h', 2, 3, 3)])
+diff --git a/test/test_languages/testTypeScriptTypeIdentifier.py b/test/test_languages/testTypeScriptTypeIdentifier.py
+new file mode 100644
+index 00000000..0b9a3840
+--- /dev/null
++++ b/test/test_languages/testTypeScriptTypeIdentifier.py
+@@ -0,0 +1,37 @@
++"""`type` starts a type alias only when a name and then '<' or '=' follow.
++Used as a value, e.g. `f(type as string)`, it must not swallow the code
++up to the next ';'."""
++
++import unittest
++
++from lizard import analyze_file
++
++
++def summary(filename, code):
++    return [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
++            for f in analyze_file.analyze_source_code(
++                filename, code).function_list]
++
++
++class Test_TypeScript_type_identifier(unittest.TestCase):
++
++    def test_type_used_as_value_with_cast(self):
++        code = (
++            "function a() {\n"
++            "  if (k.includes(type as string)) {\n"
++            "  }\n"
++            "}\n"
++            "function z(x) { if (x) {} }\n"
++        )
++        for filename in ("a.ts", "a.tsx"):
++            with self.subTest(filename=filename):
++                self.assertEqual([('a', 1, 4, 2), ('z', 5, 5, 2)],
++                                 summary(filename, code))
++
++    def test_type_alias_still_skipped(self):
++        code = (
++            "type Fn = (a: number) => void;\n"
++            "export type G<T> = { f: () => T };\n"
++            "function z(x) { if (x) {} }\n"
++        )
++        self.assertEqual([('z', 3, 3, 2)], summary("a.ts", code))
