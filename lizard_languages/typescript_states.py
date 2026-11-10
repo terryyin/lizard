@@ -2,7 +2,7 @@
 
 from .code_reader import CodeStateMachine
 from .javascript_bindings import BindingSummary, JavaScriptBindingsMixin
-from .javascript_functions import JavaScriptFunctionsMixin
+from .javascript_functions import JavaScriptFunctionsMixin, JSXChildBrace
 from .javascript_objects import JavaScriptObjectsMixin
 from .typescript_signatures import ReturnTypeColon
 from .typescript_declarations import (
@@ -32,6 +32,9 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         self._static_seen = False  # Track if 'static' was seen
         self._async_seen = False  # Track if 'async' was seen
         self._prev_token = ''  # Track previous token to detect method calls
+        # Token before the last '<': a generic arrow `x = <T>(...)` follows
+        # '=' or 'async'; a generic call `x = f<T>(...)` follows a callee.
+        self._generic_prefix = ''
         self._in_prop_value = False  # Track if inside property value (after ':')
         self._in_abstract_context = False  # Track abstract method declarations
         self._condition_kind = None
@@ -40,6 +43,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         self._arrow_line = None  # Line of `=>` for expression-body start
         self._call_group = False  # Argument commas end expression arrows
         self._open_groups = 0  # "(" of a group read as parameters
+        self._in_condition = False  # Inside `if (...)` / `for (...)`
 
     def __call__(self, token, reader=None):
         if self._binding_candidate:
@@ -157,7 +161,9 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                 self._read_parenthesis_group()
             elif (self.function_name
                   and (self.last_tokens == self.function_name
-                       or self._prev_token in ('=', 'async', '>'))):
+                       or self._prev_token in ('=', 'async')
+                       or self._prev_token == '>'
+                       and self._generic_prefix in ('=', 'async'))):
                 if not self.started_function:
                     self._function(self.function_name)
                 self.next(self._function, token)
@@ -173,6 +179,13 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             if (not operand or previous in
                     ('const', 'let', 'var', 'return', 'throw', 'yield', 'await')):
                 self._read_binding_candidate(']')
+        elif type(token) is JSXChildBrace:
+            # Read a JSX child expression like a parenthesized one, so
+            # `{(p) => (<a/>)}` and `{c && <a onClick={() => f()}/>}` keep
+            # their arrows instead of being taken for an object literal.
+            group = self.__class__(self.context)
+            group._call_group = True
+            self.sub_state(group)
         elif token == '{':
             # Expression arrows read object operands; block bodies and typed
             # signatures awaiting a real body still open a nested function.
@@ -180,6 +193,10 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                 self.sub_state(
                     self.__class__(self.context),
                     self._pop_function_from_stack)
+            elif self._statement_block_start():
+                # A block statement, `{ const r = f(() => 1); }`, holds
+                # statements rather than object members.
+                self._expecting_statement_or_block(token)
             else:
                 self.read_object()
         elif token == ')' and self._open_groups:
@@ -218,10 +235,22 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                     self._declaration_binding = True
                 if self.as_object:
                     self._in_prop_value = False
+        if token == '<':
+            self._generic_prefix = self._prev_token
         self.last_tokens = token
         # Don't overwrite _prev_token if it's 'new' (preserve for next token)
         if self._prev_token != 'new':
             self._prev_token = token
+
+    def _statement_block_start(self):
+        """Whether a '{' here starts a statement: right after a ';' or at
+        the start of a function body or block, outside any expression."""
+        return (self._prev_token in ('', ';') and not self.started_function
+                and not self.as_object and not self._binding_candidate
+                and not self._call_group and not self._open_groups
+                and not self._in_condition
+                and not self._pending_bindings
+                and self.last_tokens in ('', ';', '{'))
 
     def _expecting_condition_and_statement_block(self, token):
         def callback():
@@ -242,8 +271,9 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             self._read_binding_candidate(')', catch_callback, track_complexity=False)
             return
 
-        self.sub_state(
-            self.__class__(self.context), callback)
+        condition = self.__class__(self.context)
+        condition._in_condition = True  # `for ({a = 1} of b)`: no block
+        self.sub_state(condition, callback)
 
     def _expecting_statement_or_block(self, token):
         def callback():

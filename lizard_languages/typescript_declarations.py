@@ -52,10 +52,12 @@ class TypeScriptDeclarationsMixin:
             phase = [0]        # 0=expect name, 1=expect =, 2=after =
             brace_count = [0]
             generic_depth = [0]
+            name = ['']
 
             def handle_type_alias(t):
                 if phase[0] == 0:
                     if t and t[0].isalpha():
+                        name[0] = t
                         phase[0] = 1
                     else:
                         self.last_tokens = 'type'
@@ -70,6 +72,14 @@ class TypeScriptDeclarationsMixin:
                         phase[0] = 2
                     elif t == ';':
                         self.next(self._state_global)
+                        return True
+                    else:
+                        # `type` was a value, e.g. `f(type as string)`:
+                        # an alias name is followed only by '<' or '='.
+                        self.last_tokens = 'type'
+                        self.next(self._state_global)
+                        self._state_global(name[0])
+                        self._state_global(t)
                         return True
                 elif phase[0] == 2:
                     if t == '{':

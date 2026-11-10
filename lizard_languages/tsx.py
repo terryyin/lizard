@@ -11,6 +11,7 @@ from .typescript import (
     TypeScriptReader)
 from .typescript import JSTokenizer, Tokenizer
 from .javascript_templates import LINE_COMMENT, template_tokens
+from .javascript_functions import JSXChildBrace
 
 
 class TSXReader(TypeScriptReader):
@@ -42,7 +43,8 @@ class TSXReader(TypeScriptReader):
             r"|(?:=>)"
         js_tokenizer = TSXTokenizer()
         for token in template_tokens(
-                source_code, addition, token_class, split=False):
+                source_code, addition, token_class, split=False,
+                macros=False):
             for tok in js_tokenizer(token):
                 yield tok
 
@@ -277,7 +279,7 @@ class XMLTagWithAttrTokenizer(Tokenizer):
             self.sub_tokenizer = TSXTokenizer()
             self._expression_end = '}'
             self.cache.pop()
-            return [tok for tok in self.flush() if tok] + ['{']
+            return [tok for tok in self.flush() if tok] + [JSXChildBrace('{')]
 
 
 def isidentifier(token):

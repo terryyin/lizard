@@ -9,6 +9,11 @@ OPERAND_WORDS = frozenset((
     'of', 'as', 'satisfies', 'keyof'))
 
 
+class JSXChildBrace(str):
+    """The '{' of a JSX child expression, `<p>{x && <a/>}</p>`: an
+    expression container, never an object literal or a block."""
+
+
 def ends_expression(token):
     """Whether an expression may end with this token (JavaScript ASI)."""
     first = token[:1]
@@ -163,6 +168,7 @@ class JavaScriptFunctionsMixin:
                 self._push_function_to_stack()
             self._parameter_bindings = JavaScriptBindings(
                 ')', self.context.current_function)
+            self._decorated_parameters = False
             self._state = self._dec
             self.context.add_to_long_function_name(" " + token)
 
@@ -172,6 +178,24 @@ class JavaScriptFunctionsMixin:
             self._abandon_optimistic_parameter_group()
             self.next(self._state_global)
             self._read_binding_candidate(')')
+            return
+        if (token == 'async' and self._parameter_bindings.at_start
+                and self.last_token == '('):
+            # A grouped async arrow, `x = (async () => f())`, rather than
+            # parameters; keep the open "(" as for an arrow IIFE.
+            self._abandon_optimistic_parameter_group()
+            self.next(self._state_global, token)
+            return
+        if token == '@':
+            self._decorated_parameters = True  # constructor(@Inject(T) x)
+        elif self._expression_operand(token):
+            # `x = (items.map(f))`, `x = (g(y))`: a call or member access at
+            # the root of the group, so an expression; read it as one so the
+            # arrows in it are found. Re-read the name before this token.
+            name = self.last_token
+            self._abandon_optimistic_parameter_group()
+            self.next(self._state_global, name)
+            self.next(self._state_global, token)
             return
         if token == 'function' and not self._parameter_bindings.defaults:
             # The optimistic named-arrow signature is an IIFE expression.
@@ -190,6 +214,15 @@ class JavaScriptFunctionsMixin:
         elif (not event.in_expression or event.root_separator) and token != '(':
             return
         self.context.add_to_long_function_name(" " + token)
+
+    def _expression_operand(self, token):
+        bindings = self._parameter_bindings
+        name = self.last_token
+        return (token in ('.', '?.', '(') and not self._decorated_parameters
+                and bindings.at_root and not bindings.in_expression
+                and not bindings._in_parameter_type
+                and name == bindings.previous and name not in ('this', 'new')
+                and (name[0].isalpha() or name[0] in ('_', '$')))
 
     def _expecting_func_opening_bracket(self, token):
         # Do not reset started_function for arrow functions (=>)

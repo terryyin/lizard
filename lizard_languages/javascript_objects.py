@@ -29,6 +29,12 @@ class JavaScriptObjectsMixin:
 
     def _handle_object_member(self, token):
         """Called for tokens in an object literal or class body (as_object)."""
+        if (self._async_seen or self._static_seen) and token in (
+                ':', ',', '}', ';'):
+            # `{async: v}`, `{static, x}`: the word is a property name,
+            # not a modifier waiting for a method name.
+            self.last_tokens = 'async' if self._async_seen else 'static'
+            self._async_seen = self._static_seen = False
         if token == '=' and self.as_class:
             self._in_prop_value = True
         if (self.as_class and token.endswith('?')
