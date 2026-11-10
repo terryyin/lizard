@@ -11,8 +11,8 @@ numbered commitments with compound items split.
 
 | Id | Source commitment | Slice | Observation or obligation |
 | --- | --- | --- | --- |
-| 1 | Lizard maintainers can see how many analyzer test cases and website scenarios the selected CI attempt recorded in Intent. | slice 2 |  |
-| 2 | Maintainers can compare case counts between builds that both declare the case unit. | slice 2 |  |
+| 1 | Lizard maintainers can see how many analyzer test cases and website scenarios the selected CI attempt recorded in Intent. | slice 2 | observed: hosted a3ec770 summary via deployed ciProofCellsOf: 3101 passed and 7 other test cases at test; Slice 1 Intent route |
+| 2 | Maintainers can compare case counts between builds that both declare the case unit. | slice 2 | observed: copied CLI 4→5/3→4 through deployed comparisonEntriesOf shows +1 case each location |
 | 3 | Adopt explicit test case units in the existing CI proof publisher for the representative ubuntu-24.04 / Python 3.13 analyzer pytest leg and the website Cucumber job. | slice 2 | observed: workflow --unit case on both producers + expect :case; pipeline summary schema 2 |
 | 3a | Explicit case units for the representative ubuntu-24.04 / Python 3.13 analyzer pytest leg. | slice 2 | observed: analyzer fragment --unit case; test_workflow_wires + pipeline proof |
 | 3b | Explicit case units for the website Cucumber job. | slice 2 | observed: website fragment --unit case; test_workflow_wires + pipeline proof |
@@ -57,7 +57,7 @@ numbered commitments with compound items split.
 | 23.1 | Three cases at `website/frontend/features` for three scenarios; outcomes 1 passed / 1 failed / 1 other. | slice 2 | observed: website evidence 1 passed 1 failed 1 other |
 | 23.2 | The background and individual steps are not additional cases. | slice 2 | observed: background excluded from case count |
 | 23.3 | Available hook and step times remain part of each scenario’s execution time. | slice 2 | observed: hook/step durations in scenario execution time (1000 ms) |
-| 24 | Given both reports for one attempt, its summary and Intent agree with the runner case totals and outcomes for both locations. | slice 2 |  |
+| 24 | Given both reports for one attempt, its summary and Intent agree with the runner case totals and outcomes for both locations. | slice 2 | observed: hosted case totals at test agree with runner; website missing when web skipped; Intent reader wording matches |
 | 25 | A missing report leaves that location’s declared case part missing and uncounted. | slice 2 | observed: missing website fragment keeps declared case part missing |
-| 26 | Given two migrated builds whose case totals change from 4 to 5 and from 3 to 4, their Intent comparison shows +1 case at each location. | slice 2 |  |
+| 26 | Given two migrated builds whose case totals change from 4 to 5 and from 3 to 4, their Intent comparison shows +1 case at each location. | slice 2 | observed: deployed comparison: test 4→5 (+1), website 3→4 (+1) from Lizard copied collector summaries |
 | 27 | Given an older unit-less build and a migrated build, the older results remain legacy results and neither a count nor a test execution time difference is shown across the incompatible units. | slice 1 | observed: legacy schema-1 vs case branch: overall and entry rows keep legacy labelling and suppress count/time deltas (PLAN Slice 1 Accepted proof) |

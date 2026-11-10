@@ -154,7 +154,7 @@ legacy-vs-case no-delta. Stop conditions did not trigger.
 ### 2. Publish case evidence for both existing runner reports
 
 **Type:** Behavior.
-**Status:** planned.
+**Status:** done.
 
 **Precondition:** Slice 1 has established the consuming Intent profile/route.
 **Trigger:** The judged CI workflow publishes proof for a selected attempt.
@@ -220,12 +220,24 @@ in-repo fixture `test/fixtures/ci-proof-old-collector/ci-proof-summary.mjs`
 that still emits `Unknown option '--unit'`. Focused suite 10 passed; refactor
 none — already clean.
 
-**CI repair (run 42742548910 / 42743119692):** Windows failed when TSV newlines
-left `\r` on fragment paths (outcomes stdout and converter-written times).
-Normalize both TSVs in pipeline helpers; write junit times with `newline="\n"`.
-Split oversized pipeline proof into helpers + gaps. Hosted artifacts already
-showed `test` case totals present (e.g. 3101/0/7) with website missing when
-web skipped. Run 42744754900 still failed until `write_tsv` forced `newline="\n"` (Windows `write_text` reintroduced CRLF).
+**CI repair (runs 42742548910–42744754900):** Windows TSV CRLF left `\r` on
+fragment paths. Fixed junit `newline="\n"`, helpers `write_tsv` with forced LF,
+and pipeline/gaps split. Green attempt: run `42745089766` SHA `a3ec770a`
+attempt 1 — `test` case 3101 passed / 0 failed / 7 other / 17767 ms / 160
+files; `website/frontend/features` case part missing (web skipped). Earlier
+migration run `42741720254` had website case 16 present when web ran.
+
+**Hosted + Intent (Slice 1 route):** Deployed Intent 0.3.94
+(`83fdfec494d8-oDeg04` on `:4173`). Hosted summary through
+`checkedRetainedSummary`/`ciProofSchema`/`ciProofCellsOf` reads
+`3101 passed and 7 other test cases` (not legacy) and website
+`nothing counted as test cases` / Part 1 missing. Copied Lizard CLI
+summaries (4→5 / 3→4 fixtures): overall `7 → 9 test cases (+2)`; entry rows
+`test` `4 → 5 test cases (+1)`, website `3 → 4 test cases (+1)`. Legacy
+schema-1 vs case: overall `legacy unit unknown` / entry cue
+`units not comparable` (no invented count delta). Live project Intent CI
+status still shows pre-land master Take as legacy until trunk lands this
+publisher. Full suite: `nix develop -c python -m pytest` → 3101 passed.
 
 ## Plan review
 
