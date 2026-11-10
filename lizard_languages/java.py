@@ -63,6 +63,7 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
         super(JavaStates, self).__init__(context)
         self.class_name = None
         self.is_record = False
+        self.is_enum = False
         self.in_record_constructor = False
         self.in_method_body = False
         self.handling_dot_class = False
@@ -91,6 +92,17 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
         if token == '{':
             self._state_dec_to_imp(token)
 
+    def _state_dec_to_imp(self, token):
+        if token == 'default':
+            # Annotation type element, e.g. `String value() default "m";`, has no body
+            self._state = self._state_element_default
+            return
+        super()._state_dec_to_imp(token)
+
+    @CodeStateMachine.read_until_then(';')
+    def _state_element_default(self, _token, _tokens):
+        self._state = self._state_global
+
     def _state_imp(self, token):
         # When entering a function implementation, set the flag
         self.in_method_body = True
@@ -107,22 +119,27 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
             self.in_record_constructor = True
             self._state = self._state_record_compact_constructor
             return
+        self._start_function(name)
+
+    def _start_function(self, name):
         self.context.try_new_function(name)
         self._state = self._state_function
         if self.class_name and self.context.current_function:
             self.context.current_function.name = f"{self.class_name}::{name}"
 
     def _try_start_a_class(self, token, after_unqualified_annotation=False):
-        if token in ("class", "enum"):
+        if token in ("class", "enum", "interface"):
             self._java_after_unqualified_annotation = False
             self.class_name = None
             self.is_record = False
+            self.is_enum = token == "enum"
             self.in_record_constructor = False
             self._state = self._state_class_declaration
             return True
         if token == "record":
             if self.in_method_body:
-                return False
+                self._state = self._state_local_record_name
+                return True
             if not _java_record_begins_type_declaration(
                     self.last_token, after_unqualified_annotation):
                 self._java_after_unqualified_annotation = False
@@ -130,10 +147,23 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
             self._java_after_unqualified_annotation = False
             self.class_name = None
             self.is_record = True
+            self.is_enum = False
             self.in_record_constructor = False
             self._state = self._state_class_declaration
             return True
         return False
+
+    def _state_local_record_name(self, token):
+        """In a method body, `record` declares a local record only when a name follows."""
+        if token != 'instanceof' and (token[0].isalpha() or token[0] == '_'):
+            self.class_name = None
+            self.is_record = True
+            self.is_enum = False
+            self.in_record_constructor = False
+            self._state = self._state_class_declaration
+        else:
+            self._state = self._state_global
+        self._state(token)
 
     def _state_global(self, token):
         if self._consume_java_expression_tokens(token):
@@ -173,13 +203,18 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
     def _state_class_declaration(self, token):
         if token == '{':
             def callback():
+                self._end_of_nested_type()
                 self._state = self._state_global
-            self.sub_state(JavaClassBodyStates(self.class_name, self.is_record, self.context), callback, token)
+            body = JavaClassBodyStates(self.class_name, self.is_record, self.context, self.is_enum)
+            self.sub_state(body, callback, token)
         elif token == '(':  # Record parameters
             self._state = self._state_record_parameters
         elif token[0].isalpha():
             if not self.class_name:  # Only set class name if not already set
                 self.class_name = token
+
+    def _end_of_nested_type(self):
+        pass
 
     def _state_record_parameters(self, token):
         if token == ')':
@@ -189,7 +224,12 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
         if token == '{':
             self._state = self._state_record_constructor_body
             return
-        self._state = self._state_global
+        self.in_record_constructor = False
+        if token == '(':
+            # Name(...) is an explicit constructor, reported like a class constructor
+            self._start_function(self.class_name)
+        else:
+            self._state = self._state_global
         self._state(token)
 
     def _state_record_constructor_body(self, token):

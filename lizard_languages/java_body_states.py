@@ -46,14 +46,28 @@ class JavaFunctionBodyStates(JavaStates):
 
 
 class JavaClassBodyStates(JavaStates):
-    def __init__(self, class_name, is_record, context):
+    def __init__(self, class_name, is_record, context, is_enum=False):
         super(JavaClassBodyStates, self).__init__(context)
-        self.class_name = class_name
-        self.is_record = is_record
+        self.class_name = self._own_class_name = class_name
+        self.is_record = self._own_is_record = is_record
         self._after_static_keyword = False
         # { } that reach this state machine, plus 1 for static/instance blocks whose
         # bodies are a sub_state (} not seen at this level, balanced in callback).
         self._class_body_brace = 0
+        # An enum body starts with its constants, up to the first ';'.
+        self._in_enum_constants = is_enum
+
+    def _end_of_nested_type(self):
+        # A nested class, enum or record has ended; later members belong to this class again.
+        self.class_name = self._own_class_name
+        self.is_record = self._own_is_record
+
+    def try_new_function(self, name):
+        if self._in_enum_constants and self._class_body_brace == 1:
+            # An enum constant, e.g. GREEN(2) { ... }, is not a method; its
+            # arguments and body are read like the enum body.
+            return
+        super().try_new_function(name)
 
     def _state_global(self, token):
         if self._after_static_keyword:
@@ -70,6 +84,9 @@ class JavaClassBodyStates(JavaStates):
             if token == '}' and self._class_body_brace == 0:
                 self.statemachine_return()
             return
+
+        if token == ';' and self._class_body_brace == 1:
+            self._in_enum_constants = False
 
         if token == 'static':
             self._after_static_keyword = True

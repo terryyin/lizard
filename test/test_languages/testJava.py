@@ -216,6 +216,73 @@ class A {
         self.assertEqual(["(anonymous)::g", "A::f"], [f.name for f in result])
         self.assertEqual(16, result[1].token_count)
 
+    def test_record_with_explicit_constructor(self):
+        result = get_java_function_list("""
+record R(int x, int y) {
+    R(int x) { this(x, 0); }
+    int f() { return x; }
+}
+""")
+        self.assertEqual(["R::R", "R::f"], [f.name for f in result])
+
+    def test_annotation_type_element_default_is_not_a_method(self):
+        result = get_java_function_list("""
+@interface M {
+    String value() default "m";
+    int[] nums() default {1, 2};
+}
+class A { void f() {} }
+""")
+        self.assertEqual(["A::f"], [f.name for f in result])
+
+    def test_enum_constants_with_arguments_and_bodies(self):
+        result = get_java_function_list("""
+enum Op {
+    PLUS("+") { int apply(int a, int b) { return a + b; } },
+    @Deprecated MINUS("-") { int apply(int a, int b) { return a - b; } },
+    TIMES(new Helper() { void help() {} }) { int apply(int a, int b) { return a * b; } };
+    Op(String s) {}
+    Op(Helper h) {}
+}
+""")
+        self.assertEqual(
+            ["Op::apply", "Op::apply", "(anonymous)::help", "Op::apply", "Op::Op", "Op::Op"],
+            [f.name for f in result])
+
+    def test_local_record_in_method_body(self):
+        result = get_java_function_list("""
+class A {
+    void f() {
+        record P(int a) { int sum() { return a; } }
+        int record = 1;
+        record++;
+    }
+    void g() {}
+}
+""")
+        self.assertEqual(["P::sum", "A::f", "A::g"], [f.name for f in result])
+
+    def test_methods_after_nested_type_belong_to_outer_class(self):
+        result = get_java_function_list("""
+class A {
+    @Nested class B { void f() {} }
+    void g() {}
+    record R(int x) { void r() {} }
+    void R() {}
+}
+""")
+        self.assertEqual(["B::f", "A::g", "R::r", "A::R"], [f.name for f in result])
+
+    def test_interface_methods_with_bodies(self):
+        result = get_java_function_list("""
+interface I {
+    default int a() { return 1; }
+    int b();
+    static I of() { return null; }
+}
+""")
+        self.assertEqual(["I::a", "I::of"], [f.name for f in result])
+
     def test_class_name_with_extends(self):
         result = get_java_function_list("class A extends B { void f(){}}")
         self.assertEqual('A::f', result[0].name)
