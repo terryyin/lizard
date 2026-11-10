@@ -24,9 +24,6 @@ class JavaFunctionBodyStates(JavaStates):
         use_after_annotation = self._java_after_unqualified_annotation
         if token != "record":
             self._java_after_unqualified_annotation = False
-        if token == '@':
-            self._state = self._state_decorator
-            return
         if self._try_start_a_class(token, use_after_annotation):
             return
         if self.ignore_tokens:

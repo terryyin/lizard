@@ -196,6 +196,26 @@ public class Vet extends Person {
 """)
         self.assertEqual(["X::record"], [f.name for f in result])
 
+    def test_annotation_with_arguments_inside_method_body(self):
+        result = get_java_function_list("""
+class A {
+    void f() {
+        @SuppressWarnings("unchecked") List<String> x = (List<String>) o;
+    }
+    void g() {}
+}
+""")
+        self.assertEqual(["A::f", "A::g"], [f.name for f in result])
+
+    def test_annotation_in_anonymous_class_is_not_counted_twice(self):
+        result = get_java_function_list("""
+class A {
+    Object f() { return new B() { @Override public int g() { return 1; } }; }
+}
+""")
+        self.assertEqual(["(anonymous)::g", "A::f"], [f.name for f in result])
+        self.assertEqual(16, result[1].token_count)
+
     def test_class_name_with_extends(self):
         result = get_java_function_list("class A extends B { void f(){}}")
         self.assertEqual('A::f', result[0].name)
