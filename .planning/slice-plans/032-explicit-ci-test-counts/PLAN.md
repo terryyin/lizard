@@ -201,6 +201,19 @@ requires an upstream scope or credential decision.
 loop. Collector replacement, two producer flags, declarations and regression
 proof ship together; no intermediate incompatible publisher is delivered.
 
+**Accepted local proof (hosted/Intent pending):** Seven collector modules are
+byte-identical to installed 0.3.94
+`.claude/skills/dough-test-optimization/scripts/`. Workflow adds `--unit case`
+on both producers and `--expect test=1:case --expect
+website/frontend/features=1:case`. Converters unchanged.
+`nix develop -c python -m pytest test/test_ci_proof.py
+test/test_ci_proof_pipeline.py test/test_ci_proof_publisher_contract.py -v`
+→ 10 passed (pipeline: analyzer 2/1/1 case 375 ms two files; website 1/1/1
+case; missing website part; old collector rejects `--unit`; omitted unit is
+legacy; workflow wiring preserved). Post-change refactor: none — already
+clean (`## REFACTOR COMPLETE`). Hosted artifact + Slice 1 Intent route remain
+for progress observation after publication.
+
 ## Plan review
 
 Slice-plan refinement was not needed: the initial deployed-reader probe bounds

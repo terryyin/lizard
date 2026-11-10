@@ -1,7 +1,14 @@
 // A job's test report as CI proof fragments, one per proof entry it ran (an
-// entry is a configured Intent location path). Node built-ins only, like the
-// rest of the collector (ci-proof-summary.mjs).
-import { fragment, zeroCounts } from "./ci-proof-contract.mjs";
+// entry is a configured Intent location path), counted in the unit the
+// report establishes or its publisher declares (ci-proof-evidence.mjs,
+// "Units"). Node built-ins only, like the rest of the collector
+// (ci-proof-summary.mjs).
+import {
+  DECLARED_UNITS,
+  LEGACY_UNIT,
+  fragment,
+  zeroCounts,
+} from "./ci-proof-contract.mjs";
 import {
   breakdownExtras,
   emptyFigures,
@@ -59,7 +66,8 @@ function repositoryPathOf(record, test, entries) {
 }
 
 // A dashboard proof record (OPEN_DOUGH_DASHBOARD_PROOF_RECORD) as one fragment
-// per entry; counted unit: tests. Multiple entries partition tests by their
+// per entry; each test it lists is one test case outcome, so the unit is
+// `case`. Multiple entries partition tests by their
 // most specific owning repository path, like an outcomes report. A single
 // entry keeps whole-record totals, including results without usable paths.
 // A record that did not complete a run gives no fragment, so its part stays
@@ -110,7 +118,7 @@ export function fragmentFromPlaywrightRecord(
       }
     }
     const durationMs = playwrightDurationMs(tests);
-    return fragment(identity, entry, "tests", counts, {
+    return fragment(identity, entry, { unit: "case" }, counts, {
       ...(durationMs === undefined ? {} : { durationMs }),
       ...(byFile ? breakdownExtras(breakdown) : {}),
     });
@@ -171,7 +179,11 @@ function durationsOf(times, entries) {
 }
 
 // An outcomes file, one `<status><TAB><check path>` line per check, as one
-// fragment per entry; counted unit: checks. Each check counts toward the entry
+// fragment per entry. The format does not say what a line's outcome is, so
+// UNIT declares it: `case` when each line is one test case's outcome, `file`
+// when each is one file's aggregate outcome. Without UNIT the results are
+// legacy, labelled `checks` as before units were declared, and never read as
+// either. Each check counts toward the entry
 // whose path contains it: status `passed` and `failed` as such, any other as
 // other. A check in no entry proves no entry, so it counts toward none.
 // Optional TIMES text, same labels as outcomes, sets each matching entry's
@@ -184,8 +196,15 @@ export function fragmentsFromOutcomes(
   text,
   identity,
   timesText,
-  { byFile = false } = {},
+  { byFile = false, unit } = {},
 ) {
+  if (unit !== undefined && !DECLARED_UNITS.includes(unit)) {
+    throw new Error(
+      `the outcomes unit ${unit} is not ${DECLARED_UNITS.join(" or ")}`,
+    );
+  }
+  const counted =
+    unit === undefined ? { unit: LEGACY_UNIT, label: "checks" } : { unit };
   const counts = new Map(
     identity.entries.map((entry) => [entry, zeroCounts()]),
   );
@@ -225,6 +244,6 @@ export function fragmentsFromOutcomes(
         : {}),
       ...(byFile ? breakdownExtras(breakdowns.get(entry)) : {}),
     };
-    return fragment(identity, entry, "checks", counts.get(entry), extras);
+    return fragment(identity, entry, counted, counts.get(entry), extras);
   });
 }
