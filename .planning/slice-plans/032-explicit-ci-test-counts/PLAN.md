@@ -220,11 +220,12 @@ in-repo fixture `test/fixtures/ci-proof-old-collector/ci-proof-summary.mjs`
 that still emits `Unknown option '--unit'`. Focused suite 10 passed; refactor
 none — already clean.
 
-**CI repair (run 42742548910 attempt 1):** Windows failed when converter stdout
-kept `\r` in outcome paths. Normalize captured TSV newlines in pipeline
-helpers; split oversized pipeline proof into helpers + gaps module. Hosted
-artifact on that run already showed `test` case 3101/0/7 present and website
-case part missing (web job skipped).
+**CI repair (run 42742548910 / 42743119692):** Windows failed when TSV newlines
+left `\r` on fragment paths (outcomes stdout and converter-written times).
+Normalize both TSVs in pipeline helpers; write junit times with `newline="\n"`.
+Split oversized pipeline proof into helpers + gaps. Hosted artifacts already
+showed `test` case totals present (e.g. 3101/0/7) with website missing when
+web skipped.
 
 ## Plan review
 

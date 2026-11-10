@@ -116,6 +116,9 @@ def convert_junit(report, outcomes, times):
         check=True,
     )
     write_tsv(outcomes, result.stdout)
+    # Converter may write times with OS newlines before newline="\n" fixes land.
+    if times.exists():
+        write_tsv(times, times.read_text(encoding="utf-8"))
 
 
 def convert_cucumber(report, outcomes, times):
@@ -124,6 +127,8 @@ def convert_cucumber(report, outcomes, times):
         check=True,
     )
     write_tsv(outcomes, result.stdout)
+    if times.exists():
+        write_tsv(times, times.read_text(encoding="utf-8"))
 
 
 def fragment(outcomes, times, entry, fragments):
