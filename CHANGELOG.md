@@ -1,5 +1,14 @@
 # Change Log
 
+## 1.26.0
+
+### Bug Fixes
+- Java: detect methods in classes with multiple annotations and after annotations with arguments inside a method body. Preserve method and constructor names and scopes in records, nested types, enums, and interfaces (PR #565)
+- JavaScript and TypeScript: preserve grouped async arrows and callbacks inside grouped calls and statement blocks. Keep keyword-named object properties and decorated or typed parameters from hiding functions (PR #564)
+- TypeScript: distinguish generic calls from generic arrow declarations and recognize a variable named `type` in value expressions (PR #564)
+- JSX and TSX: detect arrow functions in render props, children, and attributes. Preserve expressions that follow `#` in element text (PR #564)
+- Rust: handle nested block comments so commented-out code stays hidden and following functions are detected (PR #564)
+
 ## 1.25.1
 
 ### Bug Fixes
