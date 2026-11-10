@@ -11,13 +11,8 @@ ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / "scripts" / "ci-proof"
 WORKFLOW = ROOT / ".github" / "workflows" / "python-app.yml"
 SUMMARY = SCRIPTS / "ci-proof-summary.mjs"
-BASE = "e057eb2d31decb4c7e895d39bd126e49190f77b0"
-OLD_COLLECTOR_MODULES = (
-    "ci-proof-summary.mjs",
-    "ci-proof-collect.mjs",
-    "ci-proof-contract.mjs",
-    "ci-proof-figures.mjs",
-    "ci-proof-fragments.mjs",
+OLD_COLLECTOR = (
+    ROOT / "test" / "fixtures" / "ci-proof-old-collector" / "ci-proof-summary.mjs"
 )
 NODE = shutil.which("node")
 pytestmark = pytest.mark.skipif(NODE is None, reason="CI proof collector needs Node.js")
@@ -28,40 +23,30 @@ def _run(command, **kwargs):
 
 
 def test_old_collector_rejects_unit_flag(tmp_path):
-    old = tmp_path / "old-collector"
-    old.mkdir()
-    for name in OLD_COLLECTOR_MODULES:
-        text = _run(
-            ["git", "show", f"{BASE}:scripts/ci-proof/{name}"],
-            check=True,
-            cwd=ROOT,
-        ).stdout
-        (old / name).write_text(text, encoding="utf-8")
     outcomes = tmp_path / "outcomes.tsv"
     outcomes.write_text("passed\ttest/a.py\n", encoding="utf-8")
-    result = _run(
-        [
-            NODE,
-            str(old / "ci-proof-summary.mjs"),
-            "fragment",
-            "--outcomes",
-            str(outcomes),
-            "--unit",
-            "case",
-            "--entry",
-            "test",
-            "--part",
-            "1",
-            "--of",
-            "1",
-            "--attempt",
-            "1",
-            "--revision",
-            "abc",
-            "--out",
-            str(tmp_path / "frags"),
-        ]
-    )
+    argv = [
+        "fragment",
+        "--outcomes",
+        str(outcomes),
+        "--unit",
+        "case",
+        "--entry",
+        "test",
+        "--part",
+        "1",
+        "--of",
+        "1",
+        "--attempt",
+        "1",
+        "--revision",
+        "abc",
+        "--out",
+        str(tmp_path / "frags"),
+    ]
+    # Discriminator: today's collector accepts --unit; the fixture must not.
+    assert _run([NODE, str(SUMMARY), *argv]).returncode == 0
+    result = _run([NODE, str(OLD_COLLECTOR), *argv])
     assert result.returncode != 0
     assert "Unknown option '--unit'" in result.stderr
 

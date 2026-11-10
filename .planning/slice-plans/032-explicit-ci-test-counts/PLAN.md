@@ -214,6 +214,12 @@ legacy; workflow wiring preserved). Post-change refactor: none — already
 clean (`## REFACTOR COMPLETE`). Hosted artifact + Slice 1 Intent route remain
 for progress observation after publication.
 
+**CI repair (run 42741720254 attempt 1):** `test_old_collector_rejects_unit_flag`
+failed on shallow clone `git show` of absolute SHA `e057eb2d…`. Replaced with
+in-repo fixture `test/fixtures/ci-proof-old-collector/ci-proof-summary.mjs`
+that still emits `Unknown option '--unit'`. Focused suite 10 passed; refactor
+none — already clean.
+
 ## Plan review
 
 Slice-plan refinement was not needed: the initial deployed-reader probe bounds
