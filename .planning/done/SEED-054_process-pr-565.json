@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-054#process-pr-565",
+  "title": "Process PR #565 — Fix Java methods lost, invented or misnamed",
+  "completedAt": "2026-11-10T13:28:52.581Z",
+  "developer": "Terry Yin",
+  "intentCoverage": {
+    "report": "# Dough Intent Coverage\n\n**Story:** SEED-054#process-pr-565\n**Revision:** b676d6f224491aa45578f8493e6aee38c340e6ff\n**Promise:** A class with a second annotation that has arguments (e.g. `@Entity @Table(name = \"vets\") class Vet`) still reports its methods rather than losing them.\n**Fault:** Removed the `self._state(token)` pass-through in `JavaStates._state_post_decorator` after an unqualified annotation, restoring the ceb899aa token-drop behavior.\n**Fixture/assertion:** `test_jpa_entity_with_table_annotation` and `test_class_with_annotation_arguments_after_another_annotation` in `test/test_languages/testJava.py`.\n**Outcome:** Caught. Baseline green (2 passed); with the fault both tests failed on empty function lists; restoration returned green and a clean scratch tree.\n\n## Costs\n\n- **Test runtime.** Measured: focused pytest about 0.07s baseline, 0.03s fault, 0.03s restore.\n- **Human effort.** Unavailable: no separate human effort measure in this session.\n- **Agent effort.** Unavailable: no separate agent-effort meter in this session.\n\n\n- **Invocation-to-report elapsed.** 22589 ms (measured), from 1794317295221 to 1794317317810 in Unix epoch ms. The end clock was sampled after writing the prepared report body.\n"
+  }
+}
