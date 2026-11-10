@@ -134,6 +134,155 @@ public class LizardTest {
         result = get_java_function_list("@a.b() class funxx{ }")
         self.assertEqual(0, len(result))
 
+    def test_class_with_annotation_arguments_after_another_annotation(self):
+        result = get_java_function_list("@A @B(1) class X { int f() { return 1; } }")
+        self.assertEqual(["X::f"], [f.name for f in result])
+
+    def test_jpa_entity_with_table_annotation(self):
+        code = """
+@Entity
+@Table(name = "vets")
+public class Vet extends Person {
+    @ManyToMany(fetch = FetchType.EAGER)
+    private Set<Specialty> specialties;
+
+    protected Set<Specialty> getSpecialtiesInternal() {
+        if (this.specialties == null) {
+            this.specialties = new HashSet<>();
+        }
+        return this.specialties;
+    }
+
+    public int getNrOfSpecialties() {
+        return getSpecialtiesInternal().size();
+    }
+}
+"""
+        result = get_java_function_list(code)
+        self.assertEqual(
+            ["Vet::getSpecialtiesInternal", "Vet::getNrOfSpecialties"],
+            [f.name for f in result])
+        self.assertEqual(2, result[0].cyclomatic_complexity)
+
+    def test_spring_controller_with_request_mapping(self):
+        result = get_java_function_list("""
+@RestController @RequestMapping("/x") class A {
+    @GetMapping String f() { return "a"; }
+}
+""")
+        self.assertEqual(["A::f"], [f.name for f in result])
+
+    def test_class_annotations_that_already_worked(self):
+        for annotations in ('@Table(name = "v")', '@Table', '@A @B',
+                            '@A(1) @B', '@A(1) @B(2)'):
+            with self.subTest(annotations=annotations):
+                result = get_java_function_list(
+                    annotations + " class X { int f() { return 1; } }")
+                self.assertEqual(["X::f"], [f.name for f in result])
+
+    def test_record_with_annotation_arguments(self):
+        for annotations in ('@A', '@A(1)', '@A @B(1)', '@A(1) @B'):
+            with self.subTest(annotations=annotations):
+                result = get_java_function_list(
+                    annotations + " record R(int x) { int f() { return x; } }")
+                self.assertEqual(["R::f"], [f.name for f in result])
+
+    def test_annotated_members_named_record(self):
+        result = get_java_function_list("""
+@A @B(1) class X {
+    @Nullable String record;
+    @Override public String record() { return record; }
+}
+""")
+        self.assertEqual(["X::record"], [f.name for f in result])
+
+    def test_annotation_with_arguments_inside_method_body(self):
+        result = get_java_function_list("""
+class A {
+    void f() {
+        @SuppressWarnings("unchecked") List<String> x = (List<String>) o;
+    }
+    void g() {}
+}
+""")
+        self.assertEqual(["A::f", "A::g"], [f.name for f in result])
+
+    def test_annotation_in_anonymous_class_is_not_counted_twice(self):
+        result = get_java_function_list("""
+class A {
+    Object f() { return new B() { @Override public int g() { return 1; } }; }
+}
+""")
+        self.assertEqual(["(anonymous)::g", "A::f"], [f.name for f in result])
+        self.assertEqual(16, result[1].token_count)
+
+    def test_record_with_explicit_constructor(self):
+        result = get_java_function_list("""
+record R(int x, int y) {
+    R(int x) { this(x, 0); }
+    int f() { return x; }
+}
+""")
+        self.assertEqual(["R::R", "R::f"], [f.name for f in result])
+
+    def test_annotation_type_element_default_is_not_a_method(self):
+        result = get_java_function_list("""
+@interface M {
+    String value() default "m";
+    int[] nums() default {1, 2};
+}
+class A { void f() {} }
+""")
+        self.assertEqual(["A::f"], [f.name for f in result])
+
+    def test_enum_constants_with_arguments_and_bodies(self):
+        result = get_java_function_list("""
+enum Op {
+    PLUS("+") { int apply(int a, int b) { return a + b; } },
+    @Deprecated MINUS("-") { int apply(int a, int b) { return a - b; } },
+    TIMES(new Helper() { void help() {} }) { int apply(int a, int b) { return a * b; } };
+    Op(String s) {}
+    Op(Helper h) {}
+}
+""")
+        self.assertEqual(
+            ["Op::apply", "Op::apply", "(anonymous)::help", "Op::apply", "Op::Op", "Op::Op"],
+            [f.name for f in result])
+
+    def test_local_record_in_method_body(self):
+        result = get_java_function_list("""
+class A {
+    void f() {
+        record P(int a) { int sum() { return a; } }
+        int record = 1;
+        record++;
+    }
+    void g() {}
+}
+""")
+        self.assertEqual(["P::sum", "A::f", "A::g"], [f.name for f in result])
+
+    def test_methods_after_nested_type_belong_to_outer_class(self):
+        result = get_java_function_list("""
+class A {
+    @Nested class B { void f() {} }
+    void g() {}
+    record R(int x) { void r() {} }
+    void R() {}
+}
+""")
+        self.assertEqual(["B::f", "A::g", "R::r", "A::R"], [f.name for f in result])
+
+    def test_interface_methods_with_bodies(self):
+        result = get_java_function_list("""
+interface I {
+    default int a() { return 1; }
+    int b();
+    static I of() { return null; }
+}
+""")
+        self.assertEqual(["I::a", "I::of"], [f.name for f in result])
+
     def test_class_name_with_extends(self):
         result = get_java_function_list("class A extends B { void f(){}}")
         self.assertEqual('A::f', result[0].name)
