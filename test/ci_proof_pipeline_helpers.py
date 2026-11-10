@@ -24,9 +24,12 @@ def run(command, **kwargs):
 
 
 def write_tsv(path, text):
-    # Subprocess text mode on Windows can leave CR in captured stdout; the
-    # fragment CLI would otherwise publish paths ending in "\r".
-    path.write_text(text.replace("\r\n", "\n").replace("\r", "\n"), encoding="utf-8")
+    # Subprocess text mode on Windows can leave CR in captured stdout, and
+    # Path.write_text would translate "\n" back to CRLF there; force LF so the
+    # fragment CLI does not publish paths ending in "\r".
+    normalized = text.replace("\r\n", "\n").replace("\r", "\n")
+    with path.open("w", encoding="utf-8", newline="\n") as handle:
+        handle.write(normalized)
 
 
 def write_junit(path):

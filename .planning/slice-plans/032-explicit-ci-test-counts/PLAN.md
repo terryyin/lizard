@@ -225,7 +225,7 @@ left `\r` on fragment paths (outcomes stdout and converter-written times).
 Normalize both TSVs in pipeline helpers; write junit times with `newline="\n"`.
 Split oversized pipeline proof into helpers + gaps. Hosted artifacts already
 showed `test` case totals present (e.g. 3101/0/7) with website missing when
-web skipped.
+web skipped. Run 42744754900 still failed until `write_tsv` forced `newline="\n"` (Windows `write_text` reintroduced CRLF).
 
 ## Plan review
 

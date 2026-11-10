@@ -70,10 +70,11 @@ def test_pipeline_publishes_explicit_case_evidence_for_both_producers(tmp_path):
     assert (analyzer["passed"], analyzer["failed"], analyzer["other"]) == (2, 1, 1)
     assert analyzer["durationMs"] == 375
     assert analyzer["untimed"] == 1
-    assert [file["path"] for file in analyzer["files"]] == [
+    assert [file["path"].rstrip("\r") for file in analyzer["files"]] == [
         "test/test_example.py",
         "test/test_other.py",
     ]
+    assert all("\r" not in file["path"] for file in analyzer["files"])
     assert analyzer["parts"][0]["status"] == "present"
     assert analyzer["passed"] + analyzer["failed"] + analyzer["other"] == 4
     assert len(analyzer["files"]) == 2
