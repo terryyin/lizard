@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-055_gherkin-support.json",
+      "identity": "SEED-055#gherkin-support",
+      "completedAt": "2026-11-11T01:32:59.060Z",
+      "blob": "c538775065afe1a8fa340a9ef6b76a0ee2e7a046"
+    },
+    {
       "fileName": "SEED-054_process-pr-565.json",
       "identity": "SEED-054#process-pr-565",
       "completedAt": "2026-11-10T13:28:52.581Z",
