@@ -1,17 +1,19 @@
-// The `gh` calls one request owner (`./github-request-owner.mjs`) has
-// outstanding for every Open Dough consumer of its API host and login: one
-// `gh api` call run with GitHub's status line and headers included, read once
-// (`./github-request-answer.mjs`) -- a rate limit and the wait GitHub
-// directed, whichever request met it -- one call shared by every requester
-// asking it while it is outstanding (`./github-request-outstanding.mjs`),
-// admitted once for all of them (`./github-request-admission.mjs`) and
-// taking one of the owner's turns at GitHub. Each call has a fixed argument
-// array -- never a shell string.
+// One request owner's fixed-argument gh calls, each with included status and
+// headers. Reads share outstanding calls; explicit full-workflow repeats
+// bypass sharing and never retry. Every call is admitted once and shares
+// the owner's turns and retained rate-limit wait.
 
 import { execFile } from "node:child_process";
 import { endedAtBound, GhFailure, unasked } from "./github-request-answer.mjs";
-import { OutstandingReads } from "./github-request-outstanding.mjs";
-import { printedAnswer, readRoutes } from "./github-request-owner-wire.mjs";
+import {
+  atRequestBound,
+  OutstandingReads,
+} from "./github-request-outstanding.mjs";
+import {
+  printedAnswer,
+  readRoutes,
+  workflowRerunOperation,
+} from "./github-request-owner-wire.mjs";
 
 /** @import { GhAnswer } from "./github-request-answer.mjs" */
 /** @import { KeptAdmissions } from "./github-request-kept-admissions.mjs" */
@@ -95,12 +97,16 @@ export class AdmittedCalls {
   /**
    * @param {readonly string[]} args
    * @param {AbortSignal} signal
-   * @param {CallBounds & { readonly scope: string }} bounds
+   * @param {CallBounds & { readonly scope: string; readonly operation?: string }} bounds
    * @returns {Promise<GhAnswer>}
    */
-  request(args, signal, { boundMs, maxBufferBytes, scope }) {
+  request(args, signal, { boundMs, maxBufferBytes, scope, operation }) {
     const asked = includedArgs(args);
     const resource = resourceOf(args);
+    if (operation === workflowRerunOperation)
+      return atRequestBound(signal, boundMs, (bounded) =>
+        this.#spawned(asked, bounded, maxBufferBytes, resource),
+      );
     return this.#outstanding.waitFor(
       JSON.stringify([scope, asked, maxBufferBytes]),
       signal,

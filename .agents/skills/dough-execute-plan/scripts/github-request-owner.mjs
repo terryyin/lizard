@@ -1,17 +1,10 @@
-// One owner of this user's GitHub requests per API host/login, started by
-// the consumer that finds none, with shared allowance and outstanding calls.
-// It runs in its own process group using that consumer's gh environment.
-// Separate scopes share no requests. Its highest-generation record is in the
-// endpoint directory (`./github-request-owner-endpoint.mjs`), asking nothing
-// once it is not, and ends once no consumer is connected and no rate limit's
-// wait stands for `DOUGH_GITHUB_REQUEST_OWNER_IDLE_MS` (five seconds), or
-// ten seconds after its start when no consumer ever reached it. While its
-// own `gh` asks with another login than its endpoint's it asks GitHub
-// nothing, and stays only for a rate limit's wait. An owner that replaces
-// one that was killed begins with the waits that one kept
-// (`./github-request-kept-admissions.mjs`), and asks GitHub nothing before
-// each `gh` that one left running is ended or counted as a turn of its own
-// (`./github-request-owned-calls.mjs`).
+// One detached request owner per API host/login. Reads share outstanding calls;
+// explicit full-workflow repeats share admission turns but never their calls.
+// Its highest generation fences earlier owners, and its own login must stand.
+// It ends after five idle seconds (DOUGH_GITHUB_REQUEST_OWNER_IDLE_MS), or ten
+// seconds without its first consumer, unless a retained rate-limit wait stands.
+// Replacements restore kept admission and end or account for predecessor calls
+// before asking GitHub (github-request-kept-admissions / -owned-calls).
 //
 // Usage: node github-request-owner.mjs <endpoint directory> <backoff base ms>
 import { randomBytes, timingSafeEqual } from "node:crypto";
@@ -38,11 +31,12 @@ import {
   scopeOf,
 } from "./github-request-owner-endpoint-connection.mjs";
 import {
-  fixedRequest,
+  fixedOperation,
   protocol,
   receive,
   send,
   wireAnswer,
+  workflowRerunOperation,
 } from "./github-request-owner-wire.mjs";
 
 const directory = process.argv[2] ?? "";
@@ -88,10 +82,8 @@ const requesters = new Set();
 const left = new Error("The requester left.");
 let ending = false;
 
-// One consumer process: greeted with this owner's token, then asking the one
-// fixed operation or ending a wait it began. Its disconnection ends its own
-// waits only. An owner already ending greets nobody, so the consumer finds or
-// starts the next one.
+// A greeted consumer asks a fixed read or full-workflow repeat, or ends its
+// own wait. An ending owner greets nobody; consumers find the next one.
 function serve(socket) {
   if (ending) {
     socket.destroy();
@@ -121,7 +113,10 @@ function serve(socket) {
         else {
           welcomed = true;
           clearTimeout(greeting);
-          send(socket, { welcome: protocol });
+          send(socket, {
+            welcome: protocol,
+            operations: [workflowRerunOperation],
+          });
         }
         return;
       }
@@ -135,7 +130,7 @@ function serve(socket) {
           );
       else if (request === undefined || waits.has(id))
         refuse("unknown operation");
-      else ask(socket, waits, id, fixedRequest(request));
+      else ask(socket, waits, id, fixedOperation(request));
     },
     messageBytesLimit,
   );

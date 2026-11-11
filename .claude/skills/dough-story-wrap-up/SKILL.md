@@ -7,18 +7,17 @@ description: >-
   decisions, and removes spent plan and history with Git recovery. Reports missing
   or unfinished inputs truthfully. Use to close completed work, delete spent
   records, or continue settled planned execution under Execute Plan's continuation
-  rule. With `--process-retrospective`, it also reviews the wrap-up's own process
-  and records supported findings in `DearDough.md`.
+  rule. When continuation carries a selected deferred process review, completes
+  that review after Intent Coverage report and dispositions.
 ---
 
 # Story wrap-up
 
 Close one work item when the coordinator invokes wrap-up explicitly or through Execute
-Plan's authorized [planned continuation](../dough-execute-plan/references/finish-or-stop.md#continue-settled-planned-work-into-wrap-up),
-which retains the same execution context and publication authority, including local-only
-or no-push instructions. Use available context and optional retrospective advice.
-Preserve lasting product knowledge and keep spent history recoverable through Git.
-With `--process-retrospective`, also [review this wrap-up's process](#review-this-wrap-ups-process).
+Plan's authorized [planned continuation](../dough-execute-plan/references/finish-or-stop.md#continue-settled-planned-work-into-wrap-up), retaining the same execution context and publication authority, including local-only/no-push instructions.
+Use available context and optional retrospective advice; preserve lasting product knowledge and Git recovery.
+When continuation carries a selected deferred process review, also
+[complete that deferred process review](#complete-a-deferred-process-review).
 
 ## Resolve this project's context
 
@@ -67,24 +66,43 @@ outside it. Reporting is the final operation.
 
 ## Assess intent coverage
 
-After execution completion and before the before-cleanup commit, assess only
-feature stories, planned or planless. Corrections and contextual work proceed
-to knowledge assimilation. Preserve any existing result in this story's
-published done record beside the backlog, or its committed local record for
-local-only closure. Otherwise explicitly request one check from the installed
-[Dough Intent Coverage](../dough-intent-coverage/SKILL.md) skill on behalf of
-wrap-up, supplying the story section, its plan when present, and the completed
-work's revision. Prefer a plausible protection gap for an important promise
-raised by the retrospective or another review. Otherwise let the skill choose
-the most important promise from the story's key examples. It owns scratch
-checkout setup and restoration.
+After execution completion and before the before-cleanup commit, assess only planned
+or planless feature stories. Corrections and contextual work proceed to knowledge
+assimilation. Preserve any published Done result for this story; do not repeat the
+check or migrate historical results.
 
-Continue follow-up, cleanup, and integration decisions while the check runs.
-Save any returned report verbatim outside the checkout, including **Insufficient
-evidence** and unavailable costs with their reasons. When ready to complete,
-pass the saved file or the concrete reason no report is available to the
-[completion command](../dough-product-backlog/SKILL.md#remove-completed-items)
-and continue closure without waiting or retrying.
+Read this project's optional `.planning/open-dough.json` as a JSON object. Only boolean
+`intentCoverage: true` opts in; missing file/key or `false` skips the automatic check.
+Ignore unrelated keys. For unreadable, malformed or non-object JSON, or a non-boolean
+`intentCoverage`, report the file/key error, skip checking, and continue independent closure.
+Never coerce values or create, rewrite or repair configuration. Explicit developer
+review requests remain available regardless of this preference.
+
+When enabled and no published result exists, request one check from the installed
+[Dough Intent Coverage](../dough-intent-coverage/SKILL.md) for the completed
+implementation revision, supplying the story section, plan when present, and any
+already available promise, plausible fault, focused command, fixture, or assertion
+from review or execution. Prefer a plausible protection gap for an important
+promise raised by review; otherwise let the skill choose from the key examples.
+Pass hints as suggestions only; do not rediscover missing ones or move probe
+mechanics here. Explicit manual requests remain valid without hints. It owns
+scratch setup and restoration. Continue independent wrap-up while it runs. Retain
+story, checked revision, worker continuation, saved report, and completed
+dispositions in existing resumable closure context; keep the report outside
+checkout cleanup.
+
+Join before Done publication, spent-history deletion, or retirement of resume context.
+Worker failure or an applicable deadline without a report leaves closure unfinished with
+recovery surfaced and active sources preserved; do not manufacture a report or treat that
+gap as Insufficient evidence. **Insufficient evidence** is a report; ordinary restoration
+and cleanup gates still apply. Dispose findings under
+[Intent Coverage findings](references/follow-up-disposition.md#dispose-intent-coverage-findings)
+before the before-cleanup commit. Save the worker report verbatim, append a separately
+identified wrap-up disposition section (checked revision, evidence, decision, canonical
+follow-up links), and pass that combined text to
+[completion](../dough-product-backlog/SKILL.md#remove-completed-items) with
+`--intent-coverage`. If skipped with no supplied result, complete without coverage input.
+No temporary file is the only home of the final result.
 
 ## Assimilate lasting knowledge
 
@@ -94,16 +112,16 @@ impact chronology, story or plan identity, or retrospective judgments. Preserve
 existing product tests and documents that already state current behavior. Do not
 invent product knowledge. Before this closure deletes any spent record,
 [preserve its lasting rules](../dough-slice-planning/references/architectural-thinking.md#preserve-lasting-rules-before-deletion).
-
 For North Star topics cited, added, or revised by the completed work, apply the
 shared [topic-retirement instructions](../dough-slice-planning/references/architectural-thinking.md#retire-temporary-direction-during-ordinary-wrap-up)
 as part of ordinary closure.
 
 ## Settle an existing follow-up plan
 
-When a retrospective follow-up exists, read and apply
-[follow-up disposition](references/follow-up-disposition.md) before closure:
-queue it first by default, or drop it only on explicit human instruction.
+When a retrospective follow-up exists or Intent Coverage findings need disposition,
+read and apply [follow-up disposition](references/follow-up-disposition.md) before
+closure: queue the retrospective follow-up first by default (with justified coverage
+exceptions there), or drop it only on explicit human instruction.
 
 ## Keep test optimization candidates across cleanup
 
@@ -113,19 +131,31 @@ Before the before-cleanup commit, when the spent plan holds test-optimization fi
 
 When product advice or additional human input is present, apply only authorized compatible backlog and canonical-home changes, following [dough-product-backlog](../dough-product-backlog/SKILL.md) queue and active-home conventions. Without retrospective advice in the conversation, as in a fresh session, use the plan's recorded product advice; a recorded skip is a skipped review. Explicit human input wins over either advice.
 
-Supported changes: relevant reorder, queue membership, understood new-story addition, understood bounded-correction addition, and canonical-detail edits. Apply the backlog skill's canonical-home admission rules to every new entry. Keep existing follow-up work first unless a later explicit human instruction changes that priority. Preserve unrelated content, still-needed acceptance work, and near-future direction.
+Supported changes: relevant reorder, queue membership, understood new-story addition, understood bounded-correction addition, and canonical-detail edits. Apply the backlog skill's canonical-home admission rules to every new entry. Keep existing follow-up work first under [follow-up priority](references/follow-up-disposition.md#preserve-follow-up-priority-during-reconciliation) unless a justified coverage exception or later explicit human instruction changes that priority. Preserve unrelated content, still-needed acceptance work, and near-future direction.
 
 A skipped, empty, or absent product review, or absent extra human input, introduces no mandatory question. Ordinary closure continues using the other available inputs. Leave unresolved necessary context with active work and report the choice; do not invent scope, launch discovery, or start another review.
 
+## Complete a deferred process review
+
+When continuation carries a selected deferred process review, complete that one
+review under
+[Deferred process review into wrap-up](../dough-execute-plan/references/deferred-process-review.md)
+and
+[review process only from a real record](../dough-execution-retrospective/SKILL.md#review-process-only-from-a-real-record)
+before the before-cleanup commit. Supply the Intent Coverage report, wrap-up
+dispositions, follow-up decision, available run history, elapsed time and
+setup/waiting problems. Do not re-enter Select reviews or invent a
+wrap-up-only process review.
+
 ## Commit closure inputs and preserve Git recovery
 
-After supported follow-up queue changes and before deleting anything, make the
-current revision recoverable with this project's ordinary Git conventions.
-Commit all uncommitted owned review and closure-input changes in that revision:
-applicable retrospective edits to the process log in the execution checkout,
+After supported follow-up queue changes, any deferred process review that was
+due, and before deleting anything, make the current revision recoverable with
+this project's ordinary Git conventions. Commit all uncommitted owned review and closure-input changes in that revision: applicable retrospective edits to the
+process log in the execution checkout (including deferred process findings),
 uncommitted follow-up records (including an explicitly dropped follow-up before
-its deletion) and queue edits, assimilated product
-knowledge, and the spent material. Records the execution already committed in its
+its deletion) and queue edits, assimilated product knowledge, and the spent
+material. Records the execution already committed in its
 [completion commit](../dough-execute-plan/references/finish-or-stop.md#record-execution-completion)
 need no second commit. Preserve unrelated changes and include only files or
 portions whose ownership is unambiguous. Resolve ownership of the
@@ -160,9 +190,10 @@ Work without a Taken entry has no story section or plan to compare. On
   remaining section is spent;
 - its **Taken** or **Backlog list** entry when one exists, through the
   [dough-product-backlog](../dough-product-backlog/SKILL.md) `complete` command,
-  passing any saved Intent Coverage file or unavailable reason. Include its
-  agent profile removals, done record, expiry removals, and catalog changes in
-  the closure; and
+  passing the combined Intent Coverage report only after a returned check was
+  disposed; otherwise, when no check was requested or opt-in skipped, complete
+  without coverage input. Include agent profile removals, done record, expiry
+  removals, and catalog changes; and
 - links whose sole purpose is preserving that history.
 
 Also remove follow-up records selected for explicit drop under [follow-up disposition](references/follow-up-disposition.md);
@@ -186,16 +217,6 @@ Repair Markdown links broken by cleanup without recreating spent history.
 Repeating wrap-up must recognize already-completed cleanup without duplicating
 edits. Missing artifacts alone do not establish completion of another work item.
 
-## Review this wrap-up's process
-
-Only with `--process-retrospective`, after spent history is deleted, apply the
-shared [process review of a run](../dough-execution-retrospective/references/process-review-of-a-run.md)
-once per wrap-up, with the execution checkout as the write location. Point
-evidence in deleted sources at the before-cleanup commit, as an active
-follow-up's locator does above. Recorded findings are owned closure changes for
-[Commit final closure](#commit-final-closure) and travel with that commit. A
-rerun that finds the final closure already committed does not review again.
-
 ## Commit final closure
 
 Review and commit the owned closure changes using this project's Git conventions,
@@ -205,13 +226,7 @@ closure must be committed in either execution mode, as
 reference applies; uncommitted cleanup is not completion. Report unresolved
 ownership or commit failures without claiming closure.
 
-Direct-current-branch mode stays in the recorded checkout and creates no
-worktree. Local-only closure commits there and reports that revision as
-committed and pending publication; it does not push. Publish-authorized
-closure uses [wrap-up closure publication](../dough-execute-plan/references/wrap-up-closure-publication.md)
-from that checkout; the receipt is the accepted SHA and the authorized target.
-Trunk Mode publishes the final-closure commit through [`finish`](../dough-execute-plan/references/wrap-up-closure-publication.md#finish-trunk-mode-closure);
-Story Branch Mode continues with integration and resource cleanup below.
+Direct-current-branch mode stays in the recorded checkout and creates no worktree. Local-only closure commits there and reports that revision as committed and pending publication; it does not push. Publish-authorized closure uses [wrap-up closure publication](../dough-execute-plan/references/wrap-up-closure-publication.md) from that checkout; the receipt is the accepted SHA and the authorized target. Trunk Mode publishes the final-closure commit through [`finish`](../dough-execute-plan/references/wrap-up-closure-publication.md#finish-trunk-mode-closure); Story Branch Mode continues with integration and resource cleanup below.
 
 ## Integrate committed Story Branch Mode closure
 
@@ -226,25 +241,13 @@ or another record there shows this work created it; pass Dough Land's [Retire th
 In Trunk Mode, `finish` retires the worktree and branch, never a remote execution branch, once its completion receipt holds `success` with confirmed shutdown;
 act on its `cleanup` result there, and after an interruption rerun it as [Finish Trunk Mode closure](../dough-execute-plan/references/wrap-up-closure-publication.md#finish-trunk-mode-closure)
 says. In Story Branch Mode, retire them under [Story Branch retirement](references/story-branch-integration.md#retire-story-branch-resources).
-Dough Land's [refresh](../dough-land/SKILL.md#refresh-the-default-checkout) never blocks retirement. Report blocked or
-partial cleanup without repeating already-completed closure. Skip cleanup in direct-current-branch mode.
+Dough Land's [refresh](../dough-land/SKILL.md#refresh-the-default-checkout) never blocks retirement. Report blocked or partial cleanup without repeating already-completed closure. Skip cleanup in direct-current-branch mode.
 
 ## Report
 
 Apply Dough Land's shared [completion attention](../dough-land/SKILL.md#completion-attention)
 rule and its [final dashboard operation](../dough-land/references/dashboard-completion.md)
-with the supplied launch context, after either closure path has settled. Keep the selected identity, mode and retained execution context,
-before-cleanup and final-closure commits, accepted publication and completion
-receipts, remaining coverage, knowledge and cleanup dispositions in their
-existing operational evidence and lasting homes.
+with the supplied launch context, after either closure path has settled. Keep the selected identity, mode and retained execution context, before-cleanup and final-closure commits, accepted publication and completion receipts, remaining coverage, knowledge and cleanup dispositions in their existing operational evidence and lasting homes.
 
-When attention is needed, report the affected facts and next action. Distinguish
-accepted trunk publication from a superseded candidate, an [`integrated_state` success](../dough-execute-plan/references/ci-completion-wait.md)
-from the closure's own, integration from refused cleanup, committed pending
-publication from an accepted receipt, and completed wrap-up from a refusal that
-left files intact.
-Missing context, unfinished work, unresolved recovery/integration, required
-push, unpublished Trunk Mode closure, retained or unconfirmed observation,
-resource cleanup, or a [lifecycle commitment](references/lifecycle-commitments.md#report-the-outcome)
-without its owner's receipt prevents successful closure; name each such
-commitment and its owner. Local-only current-branch pending publication is not a required push.
+When attention is needed, report the affected facts and next action. Distinguish accepted trunk publication from a superseded candidate, an [`integrated_state` success](../dough-execute-plan/references/ci-completion-wait.md) from the closure's own, integration from refused cleanup, committed pending publication from an accepted receipt, and completed wrap-up from a refusal that left files intact.
+Missing context, unfinished work, unresolved recovery/integration, required push, unpublished Trunk Mode closure, retained or unconfirmed observation, resource cleanup, or a [lifecycle commitment](references/lifecycle-commitments.md#report-the-outcome) without its owner's receipt prevents successful closure; name each such commitment and its owner. Local-only current-branch pending publication is not a required push.

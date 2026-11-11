@@ -13,6 +13,8 @@ const explanations = {
   // Raised only by the reader's own link, for a request already sent when
   // the owner's connection ended; the owner never sends it.
   "connection-lost": "its local connection was lost",
+  "operation-unavailable":
+    "its welcome does not support full-workflow repeats; no action was sent",
   incompatible: "it explicitly refused the protocol",
   unauthenticated: "it explicitly refused this caller",
   unknown: "it gave no usable answer",

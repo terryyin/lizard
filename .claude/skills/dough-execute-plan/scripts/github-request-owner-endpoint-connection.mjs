@@ -6,7 +6,17 @@ import { connect } from "node:net";
 import { basename, dirname } from "node:path";
 import { OwnerUnavailable } from "./github-request-owner-failure.mjs";
 import { shownProcessSync } from "./process-table.mjs";
-import { protocol, receive, send } from "./github-request-owner-wire.mjs";
+import {
+  protocol,
+  receive,
+  send,
+  workflowRerunOperation,
+} from "./github-request-owner-wire.mjs";
+
+const workflowRerunSockets = new WeakSet();
+// A legacy owner's welcome lacks this explicit capability; reads still work.
+export const supportsWorkflowRerun = (socket) =>
+  workflowRerunSockets.has(socket);
 
 // How long a greeting may take, for the owner awaiting it and for the
 // consumer awaiting its welcome, before either ends the connection.
@@ -86,6 +96,11 @@ export function greeted(
       clearTimeout(limit);
       socket.off("close", gone);
       if (message?.welcome === protocol) {
+        if (
+          Array.isArray(message.operations) &&
+          message.operations.includes(workflowRerunOperation)
+        )
+          workflowRerunSockets.add(socket);
         welcomed = true;
         resolve(socket);
         return;

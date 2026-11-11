@@ -5,7 +5,7 @@
 // failure, and otherwise the failure is classified from what `gh` printed.
 // Failures expose fixed categories and HTTP statuses, never raw stderr.
 
-import { ReadBoundReached } from "./github-request-outstanding.mjs";
+import { RequestBoundReached } from "./github-request-outstanding.mjs";
 import { longestDirectedWaitSeconds } from "./github-request-rules.mjs";
 /** @import { OwnerUnavailableFailure } from "./github-request-owner-failure.mjs" */
 
@@ -95,12 +95,12 @@ export function unasked(failure, askedAt = new Date().toISOString()) {
   return { status: undefined, headers: new Map(), body: "", failure, askedAt };
 }
 
-// The shared call's own bound (`ReadBoundReached`) or a waiter's own bound
+// The call's own bound (`RequestBoundReached`) or a waiter's own bound
 // ended it -- not ordinary departure or shutdown.
 /** @param {AbortSignal} signal */
 export function endedAtBound(signal) {
   return (
-    signal.reason instanceof ReadBoundReached ||
+    signal.reason instanceof RequestBoundReached ||
     (signal.reason instanceof GhFailure &&
       signal.reason.reason.kind === "timed-out")
   );

@@ -112,7 +112,7 @@ export const SUMMARY_FILE_NAME = "ci-proof-summary.json";
  * itself.
  * @typedef {{
  *   readonly readGitHubActions: typeof readGitHubActions;
- *   readonly askGitHubArchive: typeof askGitHubArchive;
+ *   readonly askGitHubArchive: (args: string[], signal: AbortSignal) => Promise<Buffer>;
  * }} GitHubAsks
  */
 
@@ -213,6 +213,7 @@ const isMaxBuffer = (error) =>
  * @param {string} repository
  * @param {AdapterAttempt} attempt
  * @param {{ readonly signal: AbortSignal; readonly cwd: string; readonly timeoutMs?: number }} options
+ * @param {typeof readCommandProof} [commandProof]
  * @returns {Promise<CiAdapterSummaryRead>}
  */
 export async function readCiAdapterSummary(
@@ -220,10 +221,11 @@ export async function readCiAdapterSummary(
   repository,
   attempt,
   options,
+  commandProof = readCommandProof,
 ) {
   let answer;
   try {
-    answer = await readCommandProof(
+    answer = await commandProof(
       adapter,
       { repo: repository, branch: attempt.branch },
       {

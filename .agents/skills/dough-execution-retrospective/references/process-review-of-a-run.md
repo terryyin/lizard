@@ -1,9 +1,10 @@
 # Process review of a run
 
-Apply this when Dough Land or Story Wrap Up is invoked with
-`--process-retrospective`. The flag alone selects the review: do not read
+Apply this when Dough Land is invoked with `--process-retrospective`.
+The flag alone selects the review: do not read
 `open-dough.json` or its `skipProcessRetrospective` for it. Without the flag,
-run no process review and do not read the process log for one.
+run no process review and do not read the process log for one. Story Wrap Up
+does not use this flag or this caller path.
 
 At the caller's review point, review this run's own process so far under
 [review process only from a real record](../SKILL.md#review-process-only-from-a-real-record),

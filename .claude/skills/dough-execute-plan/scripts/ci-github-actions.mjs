@@ -18,6 +18,17 @@ const requests = new GitHubRequests({
   maxBufferBytes: 16 * 1024 * 1024,
 });
 
+// Explicit action on an already selected original run; no adapter mutation.
+/**
+ * @param {{ readonly repository: string; readonly runId: number }} original
+ * @param {AbortSignal} [signal]
+ * @returns {Promise<import("./github-requests.mjs").WorkflowRepeatSubmission>}
+ */
+export const repeatGitHubWorkflow = (
+  { repository, runId },
+  signal = new AbortController().signal,
+) => requests.repeatWorkflow(repository, runId, signal);
+
 // GitHub directed a wait, or one it directed earlier still stands: nothing
 // more is asked of GitHub for `waitSeconds`. Not a failed observation.
 export class GitHubAcquisitionHeld extends Error {

@@ -1,9 +1,9 @@
 // What a consumer process and this machine's GitHub request owner
 // (`./github-request-owner.mjs`) say to each other over its private endpoint
 // (`./github-request-owner-endpoint.mjs`): one JSON message a line. A
-// consumer greets with the protocol and the owner's caller token, then asks
-// the one fixed operation -- a numbered `gh api` read -- or ends a wait it
-// began; the owner answers each numbered read once. Each read names the API
+// consumer greets with the protocol and caller token, then asks a fixed read
+// or, after an explicit capability welcome, one full-workflow repeat. The
+// owner answers each numbered operation once. Each request names the API
 // host and login it is asked under as its endpoint directory is named. No
 // credential, command or path is ever said.
 
@@ -15,6 +15,7 @@ import { safeOwnerCause } from "./github-request-owner-failure.mjs";
 
 // What an owner and its consumers must agree on to be spoken to at all.
 export const protocol = 2;
+export const workflowRerunOperation = "rerun-workflow";
 
 // The most one answer may print, and the longest one call may run.
 const answerBytesLimit = 64 * 1024 * 1024;
@@ -148,6 +149,7 @@ export function readRoutes(args) {
 export function fixedRequest(request) {
   const { args, boundMs, maxBufferBytes, scope } = request ?? {};
   if (
+    request?.operation !== undefined ||
     typeof scope !== "string" ||
     !Array.isArray(args) ||
     args.length > 64 ||
@@ -166,3 +168,39 @@ export function fixedRequest(request) {
     return undefined;
   return { args, boundMs, maxBufferBytes, scope };
 }
+
+// An explicit full-workflow repeat, never caller-supplied arguments or route.
+export function fixedWorkflowRerun(request) {
+  const { operation, repository, runId, boundMs, maxBufferBytes, scope } =
+    request ?? {};
+  if (
+    operation !== workflowRerunOperation ||
+    request.args !== undefined ||
+    typeof scope !== "string" ||
+    typeof repository !== "string" ||
+    !/^[\w.-]+\/[\w.-]+$/.test(repository) ||
+    repository.split("/").some((part) => part === "." || part === "..") ||
+    !Number.isSafeInteger(runId) ||
+    runId <= 0 ||
+    !bounded(boundMs, callBoundLimitMs) ||
+    !bounded(maxBufferBytes, answerBytesLimit)
+  )
+    return undefined;
+  return {
+    operation,
+    scope,
+    boundMs,
+    maxBufferBytes,
+    args: [
+      "api",
+      "--method",
+      "POST",
+      `repos/${repository}/actions/runs/${runId}/rerun`,
+    ],
+  };
+}
+
+export const fixedOperation = (request) =>
+  request?.operation === undefined
+    ? fixedRequest(request)
+    : fixedWorkflowRerun(request);

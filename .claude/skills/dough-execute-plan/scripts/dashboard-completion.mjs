@@ -36,11 +36,14 @@ export async function deliverRetainedReport(
   try {
     const report = { ...submission };
     delete report.origin;
+    // Align with launchLandingGit's per-op budget: under contested CI CPU a
+    // prepare/pin path can exceed the former 10s client bound while the server
+    // is still verifying. SEED-287 removes load-driven reporting allowances.
     const response = await fetch(`${origin.origin}${endpoint}`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Origin: origin.origin },
       body: JSON.stringify(report),
-      signal: AbortSignal.timeout(10000),
+      signal: AbortSignal.timeout(30_000),
     });
     const receipt = await response.json();
     if (!response.ok)

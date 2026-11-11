@@ -8,11 +8,37 @@
 // its waiters (`waitFor`): it ends once no requester waits for it, and an
 // owner that closes ends it by ending every requester that waits.
 
-// Why a read was aborted at its own bound, rather than because nobody waits
+// Why a request was aborted at its own bound, rather than because nobody waits
 // or its owner closed.
-export class ReadBoundReached extends Error {
+export class RequestBoundReached extends Error {
   constructor() {
+    // Keep existing read diagnostics stable; action results expose no error text.
     super("The read reached its own bound.");
+  }
+}
+
+// One independent request under a finite bound, without a sharing key or retry.
+/**
+ * @template T
+ * @param {AbortSignal} waiter
+ * @param {number} boundMs
+ * @param {(signal: AbortSignal) => Promise<T>} start
+ * @returns {Promise<T>}
+ */
+export async function atRequestBound(waiter, boundMs, start) {
+  const controller = new AbortController();
+  const leave = () => controller.abort(waiter.reason);
+  if (waiter.aborted) leave();
+  else waiter.addEventListener("abort", leave, { once: true });
+  const timer = setTimeout(
+    () => controller.abort(new RequestBoundReached()),
+    boundMs,
+  );
+  try {
+    return await start(controller.signal);
+  } finally {
+    clearTimeout(timer);
+    waiter.removeEventListener("abort", leave);
   }
 }
 
@@ -24,7 +50,7 @@ export class OutstandingReads {
   #boundMs;
 
   // `boundMs` is how long one read may run from its start before it is
-  // aborted with `ReadBoundReached`, unless its first requester names its
+  // aborted with `RequestBoundReached`, unless its first requester names its
   // own.
   /** @param {number} boundMs */
   constructor(boundMs) {
@@ -97,7 +123,7 @@ export class OutstandingReads {
     const controller = new AbortController();
     const timer = setTimeout(() => {
       this.#ended(key, outstanding);
-      controller.abort(new ReadBoundReached());
+      controller.abort(new RequestBoundReached());
     }, boundMs);
     const outstanding = {
       read: start(controller.signal).finally(() => {
