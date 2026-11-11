@@ -2,6 +2,7 @@
 
 **Identity:** SEED-055#gherkin-support
 **Source:** [Report line counts for Gherkin feature files](../../seeds/SEED-055-gherkin-support.md#gherkin-support)
+**Source review:** [source-review.md](source-review.md)
 
 ## Goal and scope
 
@@ -112,7 +113,7 @@ requires an early probe or pre-Take human decision.
 ### 1. Report written Gherkin blocks through ordinary analysis
 
 Type: Behavior
-Status: planned
+Status: done
 
 **Pre-condition:** A team has English `.feature` source containing scenarios,
 shared setup, outline data, comments, tags and multiline step arguments.
@@ -162,16 +163,13 @@ evidence invalidates it, replan within the story or surface changed scope.
 
 ## Current decisions
 
-- Preparation only: the invocation authorizes refinement, planning and landing
-  these records. It does not authorize execution, Take, or product changes.
 - Use the English source boundary already represented by the seed's keywords;
   aliases follow their documented Gherkin equivalence. Localization is deferred
   and no unsupported-language rejection is introduced.
 - Reuse the existing result/counter/report model; keep new domain recognition
   in the reader. No runtime step dependency or syntax-validator contract.
-- The preparation workspace/branch and established assignment are reused.
-  Plan number 033 follows the highest historical allocation, 032, despite
-  cleanup having removed the current slice-plan directory.
+- Execution identity: story-branch `cursor/report-line-counts-for-gherkin-feature-files`,
+  published claim base `2686957cf3c66ebc8280717b52848b0623ab43af`, agent Yuma-chan.
 
 ## Learnings
 
@@ -180,6 +178,27 @@ evidence invalidates it, replan within the story or surface changed scope.
   restored the expected counts without changing shared counters.
 - `.feature` files are absent from directory discovery until reader registration;
   API-only parsing proof would miss this user path, so CLI proof is mandatory.
+- Pending tags must be flushed through counters on `*global*` before
+  `restart_new_function`; opening the next block first attributed scenario tags
+  to the successor.
+
+## Accepted proof (slice 1)
+
+```
+proof:
+  command: nix develop -c python -m pytest test/test_languages/testGherkin.py test/testGherkinCLI.py test/testLanguages.py
+  covers: written-block NLOC/CCN/locations, opacity, aliases, CLI discovery/filter/warnings, registry
+  boundary: analyze_file.analyze_source_code / analyze_file / lizard.py subprocess
+  observations:
+    - test/test_languages/testGherkin.py TestGherkinSeedExample1: NLOC 2/3/7 CCN 1 ranges 2–3/5–7/9–15
+    - test/test_languages/testGherkin.py ownership cases: Background isolation, tagged Examples, opacity, Rule/EOF/aliases
+    - test/testGherkinCLI.py directory CSV, -l gherkin, -T nloc warning threshold
+    - test/testLanguages.py .feature → GherkinReader
+  setup: inline SEED_EXAMPLE_1 and temporary directory fixtures in tests
+  result: pass (23 passed; coordinator and post-refactor re-verified)
+```
+
+Full suite evidence from implementation: `nix develop -c make` → 3144 passed, 7 skipped; pylint 9.20/10.
 
 ## Plan review
 

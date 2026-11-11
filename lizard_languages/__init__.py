@@ -31,6 +31,7 @@ from .plsql import PLSQLReader
 from .cobol import CobolReader
 from .ocaml import OCamlReader
 from .fsharp import FSharpReader
+from .gherkin import GherkinReader
 
 
 def languages():
@@ -66,6 +67,7 @@ def languages():
         DartReader,
         OCamlReader,
         FSharpReader,
+        GherkinReader,
     ]
 
 

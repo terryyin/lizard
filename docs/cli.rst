@@ -15,7 +15,7 @@ Options
                         search for all languages it knows. `lizard -l cpp -l java`searches for
                         C++ and Java code. The available languages are: cpp, java, csharp,
                         javascript, python, objectivec, ttcn, ruby, php, swift, scala, GDScript,
-                        go, lua, rust, typescript, plsql
+                        go, lua, rust, typescript, plsql, gherkin
   -V, --verbose         Output in verbose mode (long function name)
   -C CCN, --CCN CCN     Threshold for cyclomatic complexity number warning. The default value is
                         15. Functions with CCN bigger than it will generate warning
@@ -126,3 +126,28 @@ The option `-Tparameter_count=10` is equal to `-a10`.
 
 You can also do `-Tnloc=10` to set the limit of the NLOC. Any function that
 has NLOC greater than 10 will generate a warning.
+
+
+Gherkin feature files
+---------------------
+
+Lizard discovers English ``.feature`` files through the ordinary language
+reader registry. Select them explicitly with ``-l gherkin``.
+
+Each written ``Background``, ``Scenario`` / ``Example``, or
+``Scenario Outline`` / ``Scenario Template`` is reported as one function.
+``Feature`` and ``Rule`` are containers only. NLOC counts the declaration and
+the block's nonblank, non-comment contents (steps, descriptions, doc strings,
+tables, and attached ``Examples`` / ``Scenarios`` sections). Every Gherkin
+function has CCN ``1``: prose, table values, and example-row counts are not
+control flow. A ``Background`` is never copied into scenarios; an outline owns
+its example tables once.
+
+Example::
+
+   lizard specs --csv
+   lizard -l gherkin specs -T nloc=20
+
+English keywords are the working boundary for this reader. Localized dialects,
+AST validation, outline expansion, and step-definition resolution are not
+part of the current Gherkin support.
