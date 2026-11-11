@@ -8,3 +8,4 @@ Maintenance, bug fixing, and PR reviews.
 
 ## Backlog list
 
+- [Report line counts for Gherkin feature files](seeds/SEED-055-gherkin-support.md#gherkin-support) — SEED-055#gherkin-support
