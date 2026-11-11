@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "agent": "Akiho-chan",
+  "email": "akiho-chan@example.org",
+  "activity": "preparation",
+  "identity": "SEED-055#gherkin-support",
+  "host": "codex",
+  "model": "gpt-6.1-sol"
+}
