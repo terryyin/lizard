@@ -15,8 +15,10 @@ recorded decisions, as that reference requires.
 For each candidate, inspect its related test family and surviving proof
 across boundaries, including referenced replacement tests. Separate
 unavoidable cost of the protected behavior from repeated setup, live external
-calls, and redundant proof. Consider whether a cheaper design preserves both
-fault detection and user-value clarity before calling the cost inherent.
+calls, and redundant proof. Use the
+[optimization approaches](optimization-tactics.md) to assess whether a cheaper
+design preserves fault detection and user-value clarity before calling the cost
+inherent.
 
 Resolve each candidate into one of these outcomes:
 

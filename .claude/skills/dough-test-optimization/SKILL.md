@@ -88,6 +88,10 @@ Group by a behavioral responsibility or evidenced shared cost, never by timing
 rank or fixed batch size. Assign shared helper changes once with their consumers
 and dependencies; do not merge unrelated behavior scenarios or count savings twice.
 
+When choosing how to remove a cost, read the
+[optimization approaches](references/optimization-tactics.md) before proposing
+an experiment or writing its plan.
+
 Stop expanding discovery when further inspection no longer changes the proposed
 experiment or its proof obligations. Reopen it when results expose a missing
 cause or variant. Carry the family analysis into the experiment, or into a
@@ -145,9 +149,9 @@ and its measure, the protection to keep, and the focused timing command. Make
 the following loop explicit in that instruction, or in the plan and each
 experiment slice:
 
-1. **Hypothesize:** read [optimization tactics](references/optimization-tactics.md)
-   and choose a promising way to remove cost across the family. Challenge the
-   current test design; do not stop at the first convenient micro-fix.
+1. **Hypothesize:** use the
+   [optimization approaches](references/optimization-tactics.md) to choose or
+   revise how to remove cost across the family.
 2. **Try and measure:** time the chosen lead's family before and after the
    smallest meaningful change under
    [comparable conditions](references/evidence-and-leads.md#measure-like-for-like),
