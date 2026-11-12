@@ -9,7 +9,7 @@
 //   `ci-proof-summary.json` extracted within the summary read limit
 //   (./ci-proof-archive.mjs).
 // - A CI adapter's attempt's summary is the adapter's `proof` answer
-//   (../../dough-execute-plan/scripts/ci-command-adapter.mjs), asked with
+//   (../../dough-execute-plan/scripts/ci-command-attempt.mjs), asked with
 //   the summary read limit as its answer limit.
 //
 // Either summary is then checked (./ci-proof-check.mjs): valid by the
@@ -21,7 +21,7 @@
 //
 // A project's CI never copies this module with the collector beside it: it
 // asks through the installed skills.
-import { readCommandProof } from "../../dough-execute-plan/scripts/ci-command-adapter.mjs";
+import { readCommandProof } from "../../dough-execute-plan/scripts/ci-command-attempt.mjs";
 import {
   askGitHubArchive,
   readGitHubActions,

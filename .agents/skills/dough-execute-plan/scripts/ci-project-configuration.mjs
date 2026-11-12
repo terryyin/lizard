@@ -34,6 +34,19 @@ export function readCiConfiguration(root = process.cwd()) {
       `ciAdapter in ${path} must be an empty or nonempty string array`,
     );
   const adapter = command?.length ? command : undefined;
+  const rebuildCommand = configuration.ciRebuild;
+  if (
+    rebuildCommand !== undefined &&
+    (!Array.isArray(rebuildCommand) ||
+      rebuildCommand.some(
+        (argument) => typeof argument !== "string" || !argument,
+      ))
+  )
+    throw new Error(
+      `ciRebuild in ${path} must be an empty or nonempty string array`,
+    );
+  const rebuild =
+    adapter && rebuildCommand?.length ? rebuildCommand : undefined;
   const workflow = adapter ? undefined : configuration.ciWorkflow;
   if (
     workflow !== undefined &&
@@ -44,6 +57,7 @@ export function readCiConfiguration(root = process.cwd()) {
     );
   return {
     adapter,
+    rebuild,
     workflow: process.env.DOUGH_CI_WORKFLOW ?? workflow ?? "ci.yml",
     integratedPolicy: integratedStatePolicy(configuration),
   };

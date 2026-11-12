@@ -10,6 +10,7 @@ const intentSourceKinds = {
   gherkin: { extensions: [".feature"] },
   typescript: { extensions: [".ts", ".tsx"] },
   javascript: { extensions: [".js", ".mjs", ".cjs"] },
+  java: { extensions: [".java"] },
   python: { extensions: [".py"] },
   shell: { extensions: [".sh", ".bash"] },
 };

@@ -3,8 +3,6 @@
 // be asked again after a login change. An action requires the owner's
 // explicit capability and is never resent. Unreachable or incompatible
 // owners leave requests unanswered, never run through a fallback process.
-import { spawn } from "node:child_process";
-import { fileURLToPath } from "node:url";
 import {
   EndpointBinding,
   standingRecord,
@@ -12,6 +10,7 @@ import {
 import {
   greeted,
   scopeOf,
+  startOwnerProcess,
   supportsWorkflowRerun,
 } from "./github-request-owner-endpoint-connection.mjs";
 import { send } from "./github-request-owner-wire.mjs";
@@ -21,10 +20,6 @@ import {
 } from "./github-request-owner-failure.mjs";
 
 /** @import { Socket } from "node:net" */
-
-const ownerEntry = fileURLToPath(
-  new URL("./github-request-owner.mjs", import.meta.url),
-);
 
 // How long finding or starting the owner may take before the requests
 // still waiting for it go unanswered -- each gives up at its own bound
@@ -66,7 +61,7 @@ export class OwnerLink {
 
   // The connection to the owner this process last asked, and each request
   // still waiting for that owner's reply, by its number.
-  /** @type {{ readonly directory: string; connecting?: Promise<Socket>; owner?: OwnerIdentity; readonly waiting: Map<number, (reply: OwnerReply) => void> } | undefined} */
+  /** @type {{ readonly directory: string; connecting?: Promise<Socket>; socket?: Socket; owner?: OwnerIdentity; readonly waiting: Map<number, (reply: OwnerReply) => void> } | undefined} */
   #link;
 
   #asked = 0;
@@ -85,6 +80,18 @@ export class OwnerLink {
   async scope() {
     const directory = await this.#binding.directory().catch(() => undefined);
     return directory && scopeOf(directory);
+  }
+
+  // Ends this consumer's waits together at the owner, without ending another
+  // consumer's shared calls. A later request establishes a new connection.
+  disconnect() {
+    const link = this.#link;
+    this.#link = undefined;
+    link?.socket?.destroy();
+    void link?.connecting?.then(
+      (socket) => socket.destroy(),
+      () => undefined,
+    );
   }
 
   // The owner's reply to one request: its `answer`, and whether the call
@@ -171,20 +178,19 @@ export class OwnerLink {
   // without a reply.
   #linked(directory) {
     if (this.#link?.directory !== directory) {
-      this.#link?.connecting?.then(
-        (socket) => socket.destroy(),
-        () => undefined,
-      );
+      this.disconnect();
       this.#link = { directory, waiting: new Map() };
     }
     return this.#link;
   }
 
-  // The standing owner's connection, shared by this process's requests.
+  // The connection of the link to the owner standing in `directory`, made
+  // once for every request asked over it.
   #connected(directory) {
     const link = this.#linked(directory);
     link.connecting ??= this.#connect(link).then(
       ({ socket, record: { pid, generation, protocol } }) => {
+        link.socket = socket;
         link.owner = { pid, generation, protocol };
         socket.unref();
         socket.once("close", () => {
@@ -225,26 +231,8 @@ export class OwnerLink {
         throw new OwnerUnavailable("start-failed");
       if (Date.now() > deadline) throw new OwnerUnavailable("unknown");
       if (starting === undefined || starting.process.exitCode !== null)
-        starting = this.#started(directory);
+        starting = startOwnerProcess(directory, this.#backoffBaseMs);
       await pause(20);
     }
-  }
-
-  // A detached owner runs only its installed sibling, without this process's
-  // output or Node options.
-  #started(directory) {
-    const env = { ...process.env };
-    delete env.NODE_OPTIONS;
-    const owner = spawn(
-      process.execPath,
-      [ownerEntry, directory, String(this.#backoffBaseMs)],
-      { cwd: directory, env, detached: true, stdio: "ignore" },
-    );
-    const started = { process: owner, failure: undefined };
-    owner.on("error", () => {
-      started.failure = new OwnerUnavailable("start-failed");
-    });
-    owner.unref();
-    return started;
   }
 }

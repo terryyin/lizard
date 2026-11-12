@@ -142,11 +142,14 @@ export class AdmittedCalls {
       .then((turnEnds) => gone.finally(turnEnds));
   }
 
-  // Runs `gh` once, recorded while it runs; a process that cannot be
-  // recorded is ended at once, and its call fails.
+  // Runs `gh` once, recorded until its process is gone and answered only
+  // then: execFile answers a call `signal` ends as it signals that process,
+  // which may still be exiting. One that cannot be recorded is ended at once,
+  // and its call fails.
   #ran(args, signal, maxBufferBytes, resource) {
     return new Promise((resolve) => {
       let gone = () => undefined;
+      let exited = Promise.resolve();
       const child = execFile(
         "gh",
         [...args],
@@ -156,12 +159,12 @@ export class AdmittedCalls {
           encoding: "buffer",
           env: { ...process.env, GH_PROMPT_DISABLED: "1" },
         },
-        (...ended) => {
-          gone();
-          resolve(ended);
-        },
+        (...ended) => resolve(exited.then(() => ended)),
       );
       if (child.pid === undefined) return;
+      exited = new Promise((exit) => child.once("exit", exit)).then(() =>
+        gone(),
+      );
       try {
         gone = this.#owned.started(child.pid, args, resource);
       } catch {

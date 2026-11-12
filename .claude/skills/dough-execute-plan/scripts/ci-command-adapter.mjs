@@ -17,9 +17,6 @@ import { isFullGitRevision } from "./ci-revisions.mjs";
 export const diagnosticExcerptBytes = 16 * 1024;
 const unavailableReasonBytes = 600;
 
-const isObject = (value) =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
-
 // Retained attempts remain evidence for registered revisions, and candidates
 // for applicable ancestors and integrated state, even when the ordinary
 // notification stream suppresses completed startup history. Integrated-state
@@ -168,43 +165,6 @@ function createCommandFailureAcquisition({
       };
     }
   };
-}
-
-// The dashboard reads proof or jobs only for a selected attempt. This
-// boundary checks the response envelope; the CI proof read checks a proof's
-// contents (`../../dough-test-optimization/scripts/ci-proof-read.mjs`).
-export async function readCommandProof(command, check, attempt, options) {
-  const response = await runAdapterForAttempt(
-    command,
-    "proof",
-    check,
-    attempt,
-    options,
-  );
-  const { summary, unavailable } = isObject(response) ? response : {};
-  if (isObject(summary) && unavailable === undefined) return { summary };
-  if (typeof unavailable === "string" && unavailable && summary === undefined)
-    return {
-      unavailable: truncateUtf8(unavailable, unavailableReasonBytes).text,
-    };
-  throw new Error("CI adapter proof must return summary or unavailable");
-}
-
-export async function readCommandJobs(command, check, attempt, options) {
-  const response = await runAdapterForAttempt(
-    command,
-    "jobs",
-    check,
-    attempt,
-    options,
-  );
-  const { jobs, unavailable } = isObject(response) ? response : {};
-  if (Array.isArray(jobs) && unavailable === undefined) return { jobs };
-  if (typeof unavailable === "string" && unavailable && jobs === undefined)
-    return {
-      unavailable: truncateUtf8(unavailable, unavailableReasonBytes).text,
-    };
-  throw new Error("CI adapter jobs must return jobs or unavailable");
 }
 
 function commandFailureEvent(repo, run, response) {

@@ -126,11 +126,11 @@ event and marks further truncation, but adapters should filter and bound their
 own response first. Never return raw logs in extra fields expecting them to be
 delivered; unknown fields are discarded.
 
-## CI proof reads
+## Dashboard operations
 
-See [Custom CI proof reads](custom-ci-proof.md) for the dashboard `proof` operation,
-summary validity, and attemptId ambiguity before newest-per-check retention.
-The same manual documents the optional [job graph read](custom-ci-proof.md#job-graph-reads).
+See [proof and job reads](custom-ci-proof.md) for summary validity and attemptId
+ambiguity, and [the rebuild trigger](custom-ci-rebuild.md) for a separate
+production-dashboard command. The observer remains read-only.
 
 ## Runnable minimal adapter
 

@@ -94,6 +94,12 @@ export class GitHubRequests {
     return this.#owner.scope();
   }
 
+  // Disconnect before ending all this consumer's waits, so cancellation is
+  // atomic at the owner rather than freeing turns between cancel messages.
+  disconnect() {
+    this.#owner.disconnect();
+  }
+
   // One `gh api` answer, settled whatever its exit: `gh` prints GitHub's
   // status line on stdout even when it exits non-zero, so a caller can decide
   // from that status before treating the exit as a failure. `signal` ends
