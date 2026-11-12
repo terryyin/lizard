@@ -2,8 +2,13 @@
 // changes against a base revision, the identifiers its changed lines declare,
 // each changed module's import-path forms and the literals its removed lines
 // held. Derivation is lexical; behavior the diff cannot carry stays supplied.
-import { readFileSync } from "node:fs";
-import { basename, dirname, extname, resolve } from "node:path";
+import { basename, dirname, extname } from "node:path";
+
+export {
+  changedAgainst,
+  readText,
+  repositoryChangePaths,
+} from "./git-changes.mjs";
 
 // Prose lines hold `Word:` labels and sentences, not declarations.
 const PROSE = /\.(md|markdown|txt|rst)$/i;
@@ -62,76 +67,6 @@ export function importPathForms(path) {
     return directory === "." ? [] : [directory, basename(directory)];
   }
   return [bare, basename(bare)];
-}
-
-function hunkLines(patch) {
-  const lines = [];
-  let removed = 0;
-  for (const line of patch.split("\n")) {
-    const header = line.match(/^@@ -(\d+)(?:,\d+)? \+\d+(?:,\d+)? @@/);
-    if (header) removed = Number(header[1]);
-    else if (line.startsWith("-") && !line.startsWith("--- "))
-      lines.push({ side: "removed", line: removed++, text: line.slice(1) });
-    else if (line.startsWith("+") && !line.startsWith("+++ "))
-      lines.push({ side: "added", text: line.slice(1) });
-  }
-  return lines;
-}
-
-// The checkout's text at `path`, or undefined when it is unreadable or binary.
-export function readText(root, path) {
-  let content;
-  try {
-    content = readFileSync(resolve(root, path));
-  } catch {
-    return undefined;
-  }
-  return content.subarray(0, 8000).includes(0)
-    ? undefined
-    : content.toString("utf8");
-}
-
-// Each patch section is assigned by its own `a/<path> b/<path>` header, since
-// a type change (a file replaced by a symlink) yields two sections for one
-// name; a header Git had to quote derives no lines.
-function patchLines(names, patch) {
-  const byHeader = new Map(names.map((path) => [`a/${path} b/${path}`, path]));
-  const lines = new Map(names.map((path) => [path, []]));
-  for (const section of patch.split(/^diff --git /m).slice(1)) {
-    const path = byHeader.get(section.slice(0, section.indexOf("\n")));
-    if (path) lines.get(path).push(...hunkLines(section));
-  }
-  return lines;
-}
-
-// Every file the working tree changes against `base`, staged or not, with
-// its changed lines; untracked non-ignored files count as added whole.
-export function changedAgainst(git, root, base) {
-  const diff = ["-c", "core.quotePath=false", "diff", "--no-renames"];
-  const names = git(root, [...diff, "--name-only", "-z", base])
-    .split("\0")
-    .filter(Boolean);
-  const lines = patchLines(
-    names,
-    git(root, [...diff, "--no-ext-diff", "--no-color", "-U0", base]),
-  );
-  const changes = names.map((path) => ({ path, lines: lines.get(path) }));
-  const untracked = git(root, [
-    "ls-files",
-    "-z",
-    "--others",
-    "--exclude-standard",
-  ])
-    .split("\0")
-    .filter(Boolean);
-  for (const path of untracked) {
-    const text = readText(root, path) ?? "";
-    const added = text
-      .split(/\r?\n/)
-      .map((line) => ({ side: "added", text: line }));
-    changes.push({ path, lines: added });
-  }
-  return changes;
 }
 
 export function derivedTerms(changes) {

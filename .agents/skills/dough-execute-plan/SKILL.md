@@ -203,6 +203,10 @@ Missing/contradictory execution identity requires the recovery decision above.
 
 ## Execute the next slice
 
+Follow [shared test-entry selection](references/test-entry-rules.md) for planned
+or quick test work once intended source paths are known. Carry selected
+conventions and new-path checks into delegation.
+
 1. In the execution checkout, use the plan's current statuses, decisions, learnings,
    proof, and selected existing-solution finding/evidence when present. Read retained state
    on initial entry/recovery; reuse valid readings during continuation. For quick work,

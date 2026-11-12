@@ -66,43 +66,40 @@ outside it. Reporting is the final operation.
 
 ## Assess intent coverage
 
-After execution completion and before the before-cleanup commit, assess only planned
-or planless feature stories. Corrections and contextual work proceed to knowledge
-assimilation. Preserve any published Done result for this story; do not repeat the
-check or migrate historical results.
+Assess completed planned or planless feature stories before the before-cleanup commit.
+Corrections and contextual work proceed to knowledge assimilation. Preserve published Done results.
 
-Read this project's optional `.planning/open-dough.json` as a JSON object. Only boolean
-`intentCoverage: true` opts in; missing file/key or `false` skips the automatic check.
-Ignore unrelated keys. For unreadable, malformed or non-object JSON, or a non-boolean
-`intentCoverage`, report the file/key error, skip checking, and continue independent closure.
-Never coerce values or create, rewrite or repair configuration. Explicit developer
-review requests remain available regardless of this preference.
+Only boolean `intentCoverage: true` in this project's optional `.planning/open-dough.json`
+object enables the automatic check. Missing file/key or `false` skips it. Ignore unrelated
+keys. For unreadable, malformed or non-object JSON, or a non-boolean value, report the
+file/key error and continue closure without the check. Leave configuration as found.
+Explicit developer review requests remain available without configuration or hints.
 
-When enabled and no published result exists, request one check from the installed
-[Dough Intent Coverage](../dough-intent-coverage/SKILL.md) for the completed
-implementation revision, supplying the story section, plan when present, and any
-already available promise, plausible fault, focused command, fixture, or assertion
-from review or execution. Prefer a plausible protection gap for an important
-promise raised by review; otherwise let the skill choose from the key examples.
-Pass hints as suggestions only; do not rediscover missing ones or move probe
-mechanics here. Explicit manual requests remain valid without hints. It owns
-scratch setup and restoration. Continue independent wrap-up while it runs. Retain
-story, checked revision, worker continuation, saved report, and completed
-dispositions in existing resumable closure context; keep the report outside
-checkout cleanup.
+When enabled and no published result exists, request one [Dough Intent Coverage](../dough-intent-coverage/SKILL.md)
+check with the completed implementation revision, story section, and plan when present.
+Suggest any available promise, plausible fault, focused command, fixture, or assertion from
+review or execution. Prefer a plausible protection gap for an important promise raised in review.
+The worker chooses from the key examples when needed and owns scratch setup and restoration.
 
-Join before Done publication, spent-history deletion, or retirement of resume context.
-Worker failure or an applicable deadline without a report leaves closure unfinished with
-recovery surfaced and active sources preserved; do not manufacture a report or treat that
-gap as Insufficient evidence. **Insufficient evidence** is a report; ordinary restoration
-and cleanup gates still apply. Dispose findings under
-[Intent Coverage findings](references/follow-up-disposition.md#dispose-intent-coverage-findings)
-before the before-cleanup commit. Save the worker report verbatim, append a separately
-identified wrap-up disposition section (checked revision, evidence, decision, canonical
-follow-up links), and pass that combined text to
-[completion](../dough-product-backlog/SKILL.md#remove-completed-items) with
-`--intent-coverage`. If skipped with no supplied result, complete without coverage input.
-No temporary file is the only home of the final result.
+Continue independent wrap-up and use the worker's completion notification when available.
+If the report is still pending when independent work ends, [await the delegated result](../dough-execute-plan/references/delegation.md#await-delegated-results-without-empty-calls)
+with a supported wait bounded by the expected proof window and any earlier observation
+deadline. If worker messages wake that wait, ask at dispatch for interim messages only
+when the coordinator needs to act. After an early wake, handle the event and use the
+remaining window if the report is still pending.
+
+Retain story, checked revision, worker continuation, report, and dispositions in existing
+resumable closure context. Keep the report outside checkout cleanup. Join before Done
+publication, spent-history deletion, or retirement of resume context. Worker failure or a
+closure deadline without a report leaves closure unfinished. Surface recovery and preserve
+active sources without inventing a verdict. A returned **Insufficient evidence** report
+follows ordinary restoration and cleanup gates.
+
+[Dispose findings](references/follow-up-disposition.md#dispose-intent-coverage-findings)
+before the before-cleanup commit. Save the report verbatim with a separate wrap-up
+disposition (checked revision, evidence, decision, canonical follow-up links). Pass the combined
+text to [completion](../dough-product-backlog/SKILL.md#remove-completed-items) with `--intent-coverage`.
+If skipped with no supplied result, complete without coverage input. Keep a durable final result.
 
 ## Assimilate lasting knowledge
 

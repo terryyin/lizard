@@ -23,6 +23,12 @@ part of the change under review: read their diffs and include their concepts in
 this discovery. If there is no uncommitted change and no supplied disposition,
 report empty scope and use the completion handoff below without edits or tests.
 
+For nonempty scope, use [shared test-entry selection](../dough-execute-plan/references/test-entry-rules.md#select-implicated-tests-for-refactoring)
+before reviewing or changing tests. It discovers staged, unstaged, untracked and
+supplied committed sources and loads each selected convention once. Apply it only
+to implicated tests within this refactor's authority; preserve independent proof
+and caller intent. Recheck applicability if refactoring extends the scope.
+
 For a nonempty change, resolve this project's navigation, domain vocabulary,
 production subsystem boundaries and applicable architectural decisions, tooling wrapper,
 whitespace check with generated-artifact exclusions, and focused test commands.

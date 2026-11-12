@@ -13,6 +13,10 @@ Before the obligations listing below, complete
 
 ## List promises and assign the agent
 
+Before planned or planless test-authoring delegation, follow
+[shared test-entry selection](test-entry-rules.md). Carry its paths and selected
+conventions, including checks the author must perform for newly identified tests.
+
 Before planned delegation, run the installed
 [story-obligations script](../scripts/story-obligations.mjs):
 `node '<installed-execute-plan>/scripts/story-obligations.mjs' list --plan '<PLAN.md>' --slice N`.
