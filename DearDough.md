@@ -113,23 +113,7 @@ The plan named XML or CSV proof for a seven-formatter promise. Source review rec
 
 ## DD-400 — Hosted CI-proof slices published with `progress: true` until observation
 
-Guarded `progress: true` keeps Lizard hosted-proof slices unfinished until CI and Intent observation finish, without a manual agent-commit fallback. [ODF-275 evidence](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-275.md#odf-275)
-
-### Occurrences
-- Execution: SEED-035#publish-lizard-ci-proof
-  - Timestamp: 2026-11-05T18:06:32+07:00
-  - Tool: Cursor
-  - Model: auto
-  - Open Dough release: 0.3.86
-  - Evidence: published `c7643ce7e` and `15dc13b8d`; runs 42016250359, 42017933530, 42018498291
-  - Observed effect: progress stayed unfinished until hosted receipts were observed, then done without manual agent-commit fallback
-- Execution: SEED-052#publish-explicit-ci-test-counts
-  - Timestamp: 2026-11-10T10:17:15+08:00
-  - Tool: Cursor
-  - Model: auto
-  - Open Dough release: 0.3.94
-  - Evidence: published `80626248` with progress pending; green run `42745089766` @ `a3ec770a`; Intent route observation retained in plan `610dd01b`; agent `7e6abf9f-f542-48a9-a60a-b0c609641336`
-  - Observed effect: Slice 2 stayed unfinished through shallow-clone and Windows CRLF repairs until hosted case totals and Intent reader/comparison were retained, then marked done
+Guarded progress kept two Cursor executions unfinished until hosted proof was accepted, with ordinary done delivery and no manual agent-commit fallback. `SEED-035#publish-lizard-ci-proof` (0.3.86) retained three hosted receipts. `SEED-052#publish-explicit-ci-test-counts` (0.3.94) retained run `42745089766` and the Intent result after repairing the Windows and shallow-checkout failures. [ODF-275 evidence](https://github.com/terryyin/open-dough/blob/96e641815b9b7d957d97e03c612034d1c4093734/docs/maintainer/findings/ODF-275.md#odf-275). Full source rows: `09b475de260bd478059de2473c3898ed62a65eec:DearDough.md#dd-400--hosted-ci-proof-slices-published-with-progress-true-until-observation`.
 
 ## ODF-441 — Fresh-increment delivery retries stumble on Darwin mktemp suffixes and git-rm staging
 
@@ -147,21 +131,13 @@ A merge-gated hosted commitment was marked observed before exact-head checks on 
 
 Probe cost ownership under quiet load before changing a product owner. For `SEED-035#ns-member-name-performance` at `43a07aafa2e1d7e28955ba554ced3263baca1874` (2026-11-06T21:25:18+07:00, Cursor auto, 0.3.86), attempt5 cumulative API parameters failed at ~+4.51% upper. On the refreshed target the prior set (~+0.98%) and full candidate (~+1.41%) passed, so the as-authored `_member_name` landed with six gates under 3% and no NS remediation. See `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice1/` and `seed035-slice2/`.
 
-## DD-405 — Windows CI-proof TSV newlines needed successive write-boundary repairs
+<a id="dd-405--windows-ci-proof-tsv-newlines-needed-successive-write-boundary-repairs"></a>
 
-When Node fragment CLI consumes TSV paths on Windows, force LF at every write boundary in one diagnosis (converter file open, helper `Path.write_text`, and captured stdout) rather than repairing one layer per red CI.
+## ODF-488 — Windows CI-proof TSV newlines needed successive write-boundary repairs
 
-Local repair confirmed by the Windows jobs in [CI run 42745089766](https://github.com/terryyin/lizard/actions/runs/42745089766) on `a3ec770a`. The published proof producer runs on Ubuntu, while the Windows failure exercised the collector through Lizard's pipeline tests. The shared collector splits records on LF and leaves a preceding CR in the path. The published TSV recipe describes one line per record and leaves the line-ending requirement implicit. The shared contract question remains open.
+Former local code: DD-405.
 
-### Occurrences
-- Execution: SEED-052#publish-explicit-ci-test-counts
-  - Timestamp: 2026-11-10T10:29:20+08:00
-  - Tool: Cursor
-  - Model: auto
-  - Open Dough release: 0.3.94
-  - Evidence: three repairs `a6fa1479` (normalize captured stdout / split oversized proof), `e22e93c4` (junit `newline="\n"`), `a3ec770a` (`write_tsv` open with `newline="\n"` after `Path.write_text` retranslated); green only at run `42745089766`; transcript turns diagnosing Windows path `\r` between 10:29 and 10:46 +08:00
-  - Observed effect: two additional red Windows matrix cycles after the shallow-clone repair before LF held end-to-end
-  - Inference: each boundary independently reintroduced CR; fixing outcomes stdout alone left converter times and helper rewrites unclean
+Lizard's Windows pipeline tests passed after `a6fa1479`, `e22e93c4` and `a3ec770a` normalized captured stdout and forced LF at the converter and helper write boundaries. [CI run 42745089766](https://github.com/terryyin/lizard/actions/runs/42745089766) verified the local repair on `a3ec770a`. The shared TSV contract remains open. [ODF-488 evidence](https://github.com/terryyin/open-dough/blob/96e641815b9b7d957d97e03c612034d1c4093734/docs/maintainer/findings/ODF-488.md#odf-488).
 
 ## Retention
 
