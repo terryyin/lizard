@@ -4,6 +4,10 @@ Shared evidence lives in the linked Open Dough records. Project-owned findings a
 
 DD-003 retired after `be8d3c273fd475a0cedc4d1e9da58ff596c6db0c` adopted a dependency stamp and cold, warm, overlapping, changed-input and failure runs confirmed the behavior. The eight original executions and assessments are recoverable at `eebecc3e196a26f6f6b6a41df66ef97025a3361a:DearDough.md`.
 
+<a id="dd-404--absolute-sha-git-show-discriminators-fail-on-shallow-matrix-checkouts"></a>
+
+DD-404 retired after `dde1a337` replaced Lizard's historical Git lookup with an in-repo fixture and [CI run 42745089766](https://github.com/terryyin/lizard/actions/runs/42745089766) on `a3ec770a` passed the shallow Ubuntu and Windows build matrix. The original `SEED-052#publish-explicit-ci-test-counts` occurrence and assessment are recoverable at `7b7bb72d0d4edac878272201f9591bbb18e83a4a:DearDough.md#dd-404--absolute-sha-git-show-discriminators-fail-on-shallow-matrix-checkouts`.
+
 Local compaction recovery: `6cd0c9531a3428fc922d5a58b9b3e3299a01b16a:DearDough.md`. Shared compaction recovery: `d1ffc74062ccf1e94dff1f45e96a4d1de07e1520:DearDough.md`; earlier full source at `1fab8f40c7577f53b7736c79ea3f91b67a1fd0ca:DearDough.md`. DD-010's OCaml occurrence was restored from DD-012 by `7129516bc5bd9ba57f370a6353ffe0e10eb1c861`.
 
 <a id="dd-001--codex-stream-can-yield-before-exposing-observer-identity"></a>
@@ -143,23 +147,11 @@ A merge-gated hosted commitment was marked observed before exact-head checks on 
 
 Probe cost ownership under quiet load before changing a product owner. For `SEED-035#ns-member-name-performance` at `43a07aafa2e1d7e28955ba554ced3263baca1874` (2026-11-06T21:25:18+07:00, Cursor auto, 0.3.86), attempt5 cumulative API parameters failed at ~+4.51% upper. On the refreshed target the prior set (~+0.98%) and full candidate (~+1.41%) passed, so the as-authored `_member_name` landed with six gates under 3% and no NS remediation. See `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice1/` and `seed035-slice2/`.
 
-## DD-404 — Absolute-SHA `git show` discriminators fail on shallow matrix checkouts
-
-Prefer in-repo fixtures over `git show` of absolute historical SHAs for CI contract discriminators. The build matrix uses default shallow `actions/checkout@v3`; only the `changes` job sets `fetch-depth: 0`.
-
-### Occurrences
-- Execution: SEED-052#publish-explicit-ci-test-counts
-  - Timestamp: 2026-11-10T10:22:00+08:00
-  - Tool: Cursor
-  - Model: auto
-  - Open Dough release: 0.3.94
-  - Evidence: run `42741720254` failed `test_old_collector_rejects_unit_flag` on `build (ubuntu-24.04, 3.12)` via missing SHA `e057eb2d`; repair `dde1a337` replaced it with `test/fixtures/ci-proof-old-collector/ci-proof-summary.mjs`; transcript `7e6abf9f-f542-48a9-a60a-b0c609641336`
-  - Observed effect: first hosted case-publisher attempt red for history depth, not publisher behavior; `ci-proof` itself had already published case evidence
-  - Inference: shallow-clone matrix legs cannot recover arbitrary parent SHAs without explicit fetch depth
-
 ## DD-405 — Windows CI-proof TSV newlines needed successive write-boundary repairs
 
 When Node fragment CLI consumes TSV paths on Windows, force LF at every write boundary in one diagnosis (converter file open, helper `Path.write_text`, and captured stdout) rather than repairing one layer per red CI.
+
+Local repair confirmed by the Windows jobs in [CI run 42745089766](https://github.com/terryyin/lizard/actions/runs/42745089766) on `a3ec770a`. The published proof producer runs on Ubuntu, while the Windows failure exercised the collector through Lizard's pipeline tests. The shared collector splits records on LF and leaves a preceding CR in the path. The published TSV recipe describes one line per record and leaves the line-ending requirement implicit. The shared contract question remains open.
 
 ### Occurrences
 - Execution: SEED-052#publish-explicit-ci-test-counts
