@@ -82,6 +82,52 @@ class TestPHPOperatorNestingDepth(unittest.TestCase):
 
 class Test_parser_for_PHP(unittest.TestCase):
 
+    def test_closing_tag_in_string_preserves_later_methods(self):
+        for literal in ('"?>"', "'?>'", r'"escaped \" ?>"', "\"first\n?>last\""):
+            with self.subTest(literal=literal):
+                source = '''<?php
+class Example {
+    function first() {
+        return 1;
+    }
+
+    function second() {
+        $text = LITERAL;
+        return $text;
+    }
+
+    function third() {
+        return 3;
+    }
+
+    function fourth() {
+        return 4;
+    }
+}
+'''.replace('LITERAL', literal)
+                functions = get_php_function_list(source)
+                offset = literal.count('\n')
+                self.assertEqual([
+                    ('Example::first', 3, 5, 1),
+                    ('Example::second', 7, 10 + offset, 1),
+                    ('Example::third', 12 + offset, 14 + offset, 1),
+                    ('Example::fourth', 16 + offset, 18 + offset, 1),
+                ], [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                    for f in functions])
+
+    def test_real_closing_tag_still_separates_php_from_html(self):
+        for closing in ('?>', '// ?>', '# ?>', '/* ?> */ ?>', 'echo $x < 1 ?>'):
+            with self.subTest(closing=closing):
+                source = '''<p title="unclosed quote>
+<?php function first() { return "?>"; } CLOSING
+function ignored() {}
+<?php function second() { if ($x) { return 2; } } ?>
+'''.replace('CLOSING', closing)
+                functions = get_php_function_list(source)
+                self.assertEqual([('first', 2, 2, 1), ('second', 4, 4, 2)],
+                                 [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                                  for f in functions])
+
     def test_simple_function(self):
         functions = get_php_function_list("<?php function foo(){} ?>")
         self.assertEqual("foo", functions[0].name)

@@ -6,6 +6,7 @@ import re
 from .code_reader import CodeReader
 from .clike import CCppCommentsMixin
 from .php_states import PHPLanguageStates
+from .token_pattern import compiled_token_pattern
 
 
 class PHPReader(CodeReader, CCppCommentsMixin):
@@ -27,17 +28,23 @@ class PHPReader(CodeReader, CCppCommentsMixin):
         addition += r"|(?:\$\w+)"
         addition += r"|(?:\<{3}(?P<quote>\w+).*?(?P=quote))"
         addition += PHPReader._non_ternary_question_operators
+        # PHP comparisons must not use the shared generic angle-bracket rule.
+        addition += r"|<<=|<=|<"
+        # A closing tag ends a line comment, but not a string or block comment.
+        addition += r"|(?://|\#)[^\n]*?(?=\?>|\n|\Z)|\?>"
+        pattern = compiled_token_pattern(addition)
         current_pos = 0
-        code_block_pattern = re.compile(
-                r"\<\?(?:php)?(.*?)(?:(\?\>)|\Z)",
-                re.M | re.S)
-        for match in code_block_pattern.finditer(source_code):
+        opening_tag = re.compile(r"\<\?(?:php)?")
+        while match := opening_tag.search(source_code, current_pos):
             if source_code[current_pos:match.start()]:
                 yield '"' + source_code[current_pos:match.start()] + '"'
-            for token in CodeReader.generate_tokens(
-                    match.group(1), addition, token_class):
-                yield token
-            current_pos = match.end()
+            for token_match in pattern.finditer(source_code, match.end()):
+                if token_match.group(0) == '?>':
+                    current_pos = token_match.end()
+                    break
+                yield token_class(token_match) if token_class else token_match.group(0)
+            else:
+                return
         if source_code[current_pos:]:
             yield '"' + source_code[current_pos:] + '"'
 
