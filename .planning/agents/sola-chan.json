@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "agent": "Sola-chan",
-  "email": "sola-chan@example.org",
-  "identity": "SEED-056#php-string-close-tags",
-  "mode": "story-branch",
-  "branch": "codex/lizard-process-issue-https-github-com-terryyin-l-2",
-  "host": "codex"
-}
