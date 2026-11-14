@@ -27,6 +27,14 @@ class Test_tokenizing_TSX(unittest.TestCase):
     def test_nested_save_tag(self):
         self.check_tokens(['(', '<b>', '<b>xxx</b>', '</b>', ')'], '(<b><b>xxx</b></b>)')
 
+    def test_element_right_after_a_child_element(self):
+        # No empty text token between the two children: the duplicate
+        # extension reads the first character of every token.
+        self.check_tokens(['<div>', '<div>x</div>', '<B />', '</div>'],
+                          '<div><div>x</div><B /></div>')
+        self.check_tokens(['<div>', '<p>x</p>', '<p>y</p>', '</div>'],
+                          '<div><p>x</p><p>y</p></div>')
+
     def test_with_embeded_code(self):
         self.check_tokens(['<abc>', '{', 'x', '}', '</abc>'], '<abc>{x}</abc>')
 
@@ -833,7 +841,7 @@ function Rates({ rows }) {
 function escape(s) { return s.replace(/</g, '&lt;').replace(/>/g, s && '&gt;'); }
 function after(x) { if (x) { return 1 } return 2; }
 '''
-        expected = [("(anonymous)", 5, 5, 1, 5), ("Rates", 1, 7, 2, 47),
+        expected = [("(anonymous)", 5, 5, 1, 5), ("Rates", 1, 7, 2, 45),
                      ("escape", 8, 8, 2, 24), ("after", 9, 9, 2, 16)]
         for ext in ("jsx", "tsx"):
             with self.subTest(ext=ext):
