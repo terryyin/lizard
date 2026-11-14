@@ -95,6 +95,27 @@ class Test_Python_nloc(unittest.TestCase):
                     self.assertEqual(expected_nloc, result.nloc)
                     self.assertEqual(expected_nloc, result.function_list[0].nloc)
 
+    def test_prefixed_triple_quoted_string_in_expression_counted_in_nloc(self):
+        # The reader splits a prefixed literal into the prefix and the string: the prefix must not
+        # make the string look like a standalone comment, whose lines are subtracted.
+        bodies = (
+            'return {p}{q}first line\n\nsecond {{a}}\nthird{q}',
+            'x = {p}{q}first line\n\nsecond line{q}\n    return x',
+            'return call(\n        {p}{q}first line\n\nsecond line{q})',
+        )
+        for prefix in ('f', 'r', 'b', 'u', 'rb', 'Rb', 'fr', 'F'):
+            for quote in ('"""', "'''"):
+                for body in bodies:
+                    with self.subTest(prefix=prefix, quote=quote, body=body):
+                        plain = 'def f(a):\n    ' + body.format(p='', q=quote) + '\n'
+                        prefixed = 'def f(a):\n    ' + body.format(p=prefix, q=quote) + '\n'
+                        expected = get_python_function_list(plain)[0].nloc
+                        self.assertEqual(expected, get_python_function_list(prefixed)[0].nloc)
+
+    def test_prefixed_triple_quoted_string_as_comment_not_counted_in_nloc(self):
+        code = 'def f():\n    x = 1\n    r"""A raw comment.\n    Second line."""\n    return x\n'
+        self.assertEqual(3, get_python_function_list(code)[0].nloc)
+
 
 class Test_Python_issue_317_comment_backslash(unittest.TestCase):
     """#317: backslash at end of comment must not swallow the next line."""

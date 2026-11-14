@@ -7,6 +7,11 @@ class FStringExpressionToken(str):
     '''An f-string token whose delimiters belong to the interpolation.'''
 
 
+class FStringLiteralToken(str):
+    '''A literal chunk of an f-string split by its interpolations: part of
+    the f-string expression, never a standalone string.'''
+
+
 # Triple-quoted string patterns for the common tokenizer, so a whole
 # triple-quoted string is matched as a single token.
 _PY_TRIPLE_QUOTE = (
@@ -129,7 +134,7 @@ def _tokenize_fstring_body(token, token_class):
         if body[i] == '{':
             j = _find_interpolation_end(body, i)
             if literal:
-                produced.append(quote + ''.join(literal) + quote)
+                produced.append(FStringLiteralToken(quote + ''.join(literal) + quote))
                 literal = []
             # The interpolation is Python code: tokenize it as such, which
             # also expands any nested f-string (recursion terminates on the
@@ -146,6 +151,6 @@ def _tokenize_fstring_body(token, token_class):
         yield token  # no interpolation; leave the string token untouched
         return
     if literal:
-        produced.append(quote + ''.join(literal) + quote)
+        produced.append(FStringLiteralToken(quote + ''.join(literal) + quote))
     for tok in produced:
         yield tok
