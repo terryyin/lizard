@@ -39,9 +39,13 @@ class RustReader(CodeReader, CCppCommentsMixin):
         return CodeReader.generate_tokens(
             _flatten_nested_comments(source_code), addition, token_class)
 
+    # The `||` of a closure without parameters, `|| x`: one token of the
+    # source, as it is, but not the logical or.
+    EMPTY_CLOSURE_PARAMETERS = '| |'
+
     def preprocess(self, tokens):
-        """Split the `||` of a closure without parameters, `|| x`, into two
-        `|`, as `|a| x` has, so that it is not counted as a logical or."""
+        """Give the `||` of a closure without parameters, `|| x`, as one
+        token that is not a logical or."""
         openers = self._CLOSURE_OPENERS
         last = None
         for token in tokens:
@@ -50,8 +54,7 @@ class RustReader(CodeReader, CCppCommentsMixin):
                     yield token
                 continue
             if token == '||' and last in openers:
-                yield '|'
-                yield '|'
+                yield self.EMPTY_CLOSURE_PARAMETERS
             else:
                 yield token
             if token[0] != '/':  # comments do not end an expression
