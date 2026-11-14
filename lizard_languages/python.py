@@ -3,7 +3,7 @@
 from .code_reader import CodeReader
 from .script_language import ScriptLanguageMixIn
 from .python_structure import PythonIndents, PythonStates, count_spaces
-from .python_tokens import generate_tokens as generate_python_tokens
+from .python_tokens import FStringLiteralToken, generate_tokens as generate_python_tokens
 
 
 class PythonReader(CodeReader, ScriptLanguageMixIn):
@@ -38,11 +38,14 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
         '=', '+=', '-=', '*=', '/=', '%=', '//=', '**=', '&=', '|=', '^=',
         '<<=', '>>=', '(', 'return', ',', '[', '+', '-', '*', '/', '//', '%',
     ))
+    # String prefixes that the tokenizer emits apart from the string they prefix.
+    _STRING_PREFIXES = frozenset(('r', 'u', 'b', 'f', 't', 'br', 'rb', 'fr', 'rf', 'tr', 'rt'))
 
     def __init__(self, context):
         super(PythonReader, self).__init__(context)
         self.parallel_states = [PythonStates(context, self)]
         self._last_meaningful_token = None  # Track the last meaningful token
+        self._token_before_last = None  # and the one before it, for a string prefix
         self._keyword_case = False   # set by _soft_keyword_lookahead: True when 'case' is a soft keyword
         self._keyword_match = False  # set by _soft_keyword_lookahead: True when 'match' is a soft keyword
 
@@ -81,7 +84,13 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
             # If we're not in the first line state, check if this is a standalone string
             if current_state != current_state.__self__._state_first_line:
                 # Check if the immediate previous meaningful token suggests this is part of an expression
-                is_part_of_expression = self._last_meaningful_token in self._EXPRESSION_PRECEDING_TOKENS
+                # A prefixed string (f"""...""") arrives as the prefix and then the string:
+                # what decides is the token before the prefix.
+                preceding = self._last_meaningful_token
+                if preceding is not None and preceding.lower() in self._STRING_PREFIXES:
+                    preceding = self._token_before_last
+                is_part_of_expression = preceding in self._EXPRESSION_PRECEDING_TOKENS or \
+                    isinstance(token, FStringLiteralToken)
 
                 # Only treat as comment if it's NOT part of an expression
                 if not is_part_of_expression:
@@ -90,6 +99,7 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
 
         # Update last meaningful token (ignore whitespace and newlines)
         if token not in ['\n', ' ', '\t'] and not token.isspace():
+            self._token_before_last = self._last_meaningful_token
             self._last_meaningful_token = token
 
         return False  # Continue with normal processing
