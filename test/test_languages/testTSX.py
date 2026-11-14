@@ -758,6 +758,22 @@ function Banner() { return <p>What if we wait for it?</p>; }
 function Hello() { return <p>Hello</p>; }
 ''')
 
+    def test_double_slash_in_text_is_not_a_comment(self):
+        # A URL in element text: "//" there does not start a line comment that
+        # would hide the closing tag and swallow the functions after it.
+        self.assert_both([("Visit", 1, 3, 1), ("Link", 4, 6, 1),
+                          ("after", 7, 9, 1)], '''\
+function Visit() {
+  return <p>Visit https://example.com today</p>;
+}
+function Link() {
+  return <p>See http://a.b/c?x=1 and // more</p>;
+}
+function after(a) {
+  return a; // a real comment
+}
+''')
+
     def test_text_with_operators_in_nested_tags_and_fragments(self):
         self.assert_both([("Page", 1, 10, 1), ("after", 11, 11, 2)], '''\
 function Page() {
