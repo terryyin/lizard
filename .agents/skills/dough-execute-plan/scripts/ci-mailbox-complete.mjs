@@ -25,6 +25,7 @@ import {
   checkMailboxWorkerLiveness,
   terminateMailboxWorker,
 } from "./ci-mailbox-worker-process.mjs";
+import { observationChain } from "./ci-mailbox-predecessors.mjs";
 
 export function requestMailboxStop(directory, options = {}) {
   readMailbox(directory, options.root, options.storage);
@@ -76,7 +77,9 @@ export async function stopMailbox(directory, options = {}) {
   }
   if (terminal) {
     try {
-      await awaitMailboxWorkerExit(readWorkerIdentity(directory), directory);
+      await awaitMailboxWorkerExit(readWorkerIdentity(directory), directory, {
+        readCommand,
+      });
     } catch (error) {
       if (error.code !== "ENOENT") throw error;
     }
@@ -94,17 +97,20 @@ export async function stopMailbox(directory, options = {}) {
 }
 
 function unreadActionableFailures(directory) {
-  const { deliveredThrough } = readDeliveryProgress(directory);
-  return readMailboxEvents(directory, deliveredThrough)
-    .map((record) => record.event)
-    .filter((event) => event?.type === "CI_FAILURE");
+  return observationChain(directory).flatMap((observer) => {
+    const { deliveredThrough } = readDeliveryProgress(observer);
+    return readMailboxEvents(observer, deliveredThrough)
+      .map((record) => record.event)
+      .filter((event) => event?.type === "CI_FAILURE");
+  });
 }
 
-function shutdownConfirmed(directory, terminal) {
+function shutdownConfirmed(directory, terminal, { readCommand } = {}) {
   try {
     const liveness = checkMailboxWorkerLiveness(
       readWorkerIdentity(directory),
       directory,
+      { readCommand },
     );
     if (liveness !== "dead")
       return {
@@ -192,7 +198,10 @@ export async function completeRevision(directory, sha, options = {}) {
 
   try {
     const terminal = await stopMailbox(directory, options);
-    return { ...awaited, shutdown: shutdownConfirmed(directory, terminal) };
+    return {
+      ...awaited,
+      shutdown: shutdownConfirmed(directory, terminal, options),
+    };
   } catch (error) {
     return {
       ...awaited,

@@ -20,11 +20,13 @@ Resolve `/ABSOLUTE/RESOLVED/SKILL` inside `/ABSOLUTE/VERIFIED/CHECKOUT_ROOT` wit
 
 This isolate cannot import Node modules. Do not reconstruct parsing or extra
 readers. Copy this host binding with verified repository, checkout, and
-coordinator; do not add parser branches.
+coordinator. Set `completionRecovery` to `true` only when the saved observer
+has finished and this coordinator still lacks a receipt for the accepted SHA.
 
 ```js
 const key = 'ci-watch-execution:OWNER/REPO:BRANCH:COORDINATOR'
-if (load(key)?.status === 'finished') exit()
+const completionRecovery = false
+if (load(key)?.status === 'finished' && !completionRecovery) exit()
 const io = { yield_time_ms: 1000, max_output_tokens: 2000 }
 let tail = '', directory, pid, terminal
 let identityExposed = false
@@ -81,13 +83,13 @@ try {
   }
   if (!terminal) {
     store(key, { status: 'lost', sessionId: undefined, directory, pid, tail })
-    notify({ type: 'CI_MONITOR_UNAVAILABLE', key, reason: 'observer stream ended without a terminal result' })
+    notify({ type: 'CI_MONITOR_UNAVAILABLE', key, reason: 'observer stream ended without a terminal result', cause: 'observation_error' })
   } else {
     store(key, { status: terminal.status === 'stopped' ? 'stopped' : 'finished', sessionId: undefined, directory, pid, tail, terminal })
   }
 } catch (error) {
   store(key, { status: 'lost' })
-  notify({ type: 'CI_MONITOR_UNAVAILABLE', key, reason: String(error).slice(-1000) })
+  notify({ type: 'CI_MONITOR_UNAVAILABLE', key, reason: String(error).slice(-1000), cause: 'observation_error' })
 }
 ```
 
@@ -126,7 +128,7 @@ When the shared [observer lifecycle](ci-monitor.md#own-one-observer) calls for
 an explicit stop — human-judgment stop, cancellation, or coordinator
 replacement — consume delivered failures first. Normal execution completion
 uses the shared
-[completion operation](ci-monitor.md#await-the-applicable-revision-at-completion)
+[completion operation](ci-completion-wait.md#await-the-applicable-revision-at-completion)
 instead; do not run this stop binding, `write_stdin` the stream session, or poll a
 PID after that receipt. This stop binding never substitutes for that completion
 operation. Copy it with the note's exact `directory`; do not `write_stdin` the
@@ -149,7 +151,7 @@ try {
   if (receipt.directory !== directory || receipt.terminal?.status !== 'stopped') throw new Error('observer stop did not confirm')
   text({ key, status: 'stopped', directory, terminal: receipt.terminal, pendingCi: receipt.terminal.coverage?.pendingCi ?? 'unobserved' })
 } catch (error) {
-  notify({ type: 'CI_MONITOR_UNAVAILABLE', key, reason: String(error).slice(-1000) })
+  notify({ type: 'CI_MONITOR_UNAVAILABLE', key, reason: String(error).slice(-1000), cause: 'observation_error' })
 }
 ```
 
@@ -162,9 +164,14 @@ Older unidentified observers, including a stream armed without
 evidence, or unconfirmed exit mean unresolved shutdown; never force termination
 or claim closure. Keep acknowledgment and repair unchanged. On resume, rearm
 only absent, `stopped`, or `lost` observers after the old process ended; never
-restart terminal `finished` observers. Normal and repair pushes retain the key,
-coordinator, session, directory, process, and cell. Changed HEAD/SHA never requires setup
-again.
+restart terminal `finished` observers. At completion recovery only — when this
+coordinator's stream `finished` (including by budget) before the accepted SHA
+has a receipt — arm a **fresh** stream for the same target and coordinator;
+never restart the finished directory. Pass that new stream to
+`execution-completion-recovery.mjs complete` as `--coordinator` and
+`--observer-directory`. Ordinary resume and mid-story rearm keep the rule
+above. Normal and repair pushes retain the key, coordinator, session,
+directory, process, and cell. Changed HEAD/SHA never requires setup again.
 
 For shared completion `pending`, retain the stream session and yielded cell with
-the resources and recovery under [completion mechanics](ci-completion-wait.md).
+the resources and recovery under [completion mechanics](ci-completion-wait.md#completion-command-and-receipt-mechanics).

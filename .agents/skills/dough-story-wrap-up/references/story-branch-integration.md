@@ -3,7 +3,11 @@
 Save the final-closure tip already published on the remote execution branch.
 Follow [Story Branch integration observation](../../dough-execute-plan/references/wrap-up-closure-publication.md#observe-story-branch-integration)
 for the target transition, publication, and shared completion on the final
-accepted SHA: the integrated SHA, or the last consumer publication. Its
+accepted SHA: the integrated SHA, or the last consumer publication. When an
+observer for the execution-branch tip or the trunk-integrated SHA has ended
+before that SHA has a completion receipt, that procedure names
+`execution-completion-recovery.mjs complete` for the branch tip and for the
+integrated SHA; do not poll either target by hand. Its
 publication uses [Preserve published history](../../dough-execute-plan/references/preserve-published-history.md)
 from the owned execution workspace, excluding any default checkout's
 unrelated commits and pending human edit.

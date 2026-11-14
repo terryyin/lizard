@@ -35,7 +35,7 @@ result is the most severe state:
 - `conflict` (exit 2) — trunk's change overlaps the branch's edits, or would
   change or remove a slice the branch marked `done`; the record carries its
   `reason`, `branchText` and `trunkText`, and for a done slice its `slices`.
-  Follow [Stop on a conflict](#stop-on-a-conflict).
+  Follow [Resolve a conflict](#resolve-a-conflict).
 
 A refusal exits 3 with a `reason` and message, such as a failed fetch, an
 identity not Taken on trunk or at the Take, or an absent record. It accepts no
@@ -64,23 +64,31 @@ command commits, pushes, or writes to trunk.
    once that work is done.
 5. Rerun `check` until it reports `unchanged`, then continue the boundary.
 
-## Stop on a conflict
+## Resolve a conflict
 
-Record `awaiting story review`, or `awaiting correction review` for a
-correction, as for stale understanding in
-[Deliver the change](wrap-up.md#deliver-the-change) step 5, naming the
-conflicting record, its `branchText` and `trunkText`, and the `trunkRevision`.
-Deliver nothing that depends on the conflicting text; delivered slices and
-their accepted proof stay, and independent safe work is delivered under
-[human judgment](execution-decisions.md#stop-for-human-judgment). Resolve
-nothing without the developer's decision and write nothing to trunk. When the
-decision keeps trunk's text, write it into the branch copy in the increment,
-reopening a done slice under plan refinement when the decision reopens it; when
-it keeps the branch's text, the developer changes trunk. Then rerun `check` at
-the stopped boundary and continue only on `unchanged`.
+Compare `branchText` with `trunkText` from `trunkRevision`. Reconcile in the
+branch copy when you can carry trunk's amendment and preserve the agreed
+requirements and their accepted proof. For example, move a branch proof note
+away from the trunk edit so both can stand. For a changed or removed `done`
+slice, verify that its proof still covers the agreed behavior or reopen it
+under plan refinement when already authorized.
+
+When scope, expected behavior, or what counts as done still needs a developer
+decision, record `awaiting story review` or `awaiting correction review` under
+[delivery step 5](deliver-the-change.md#deliver-the-change). Name the record,
+both texts, the trunk revision, and the decision needed. Hold dependent work
+and deliver independent safe work under
+[human judgment](execution-decisions.md#stop-for-human-judgment). If the
+decision keeps trunk's text, apply it to the branch copy. If it keeps the
+branch's text, the developer changes trunk.
+
+Carry reconciled records and settle their amendments under
+[Absorb an amendment](#absorb-an-amendment) steps 3–4. Rerun `check` at the
+blocked boundary on the reconciled working copy with its proof in place.
+Continue only on `unchanged`.
 
 ## At wrap-up's deletion
 
 On `amended` or `conflict`, wrap-up deletes nothing. Return to execution in
-the same session to absorb the amendment or stop on the conflict, then
+the same session to absorb the amendment or handle the conflict, then
 re-enter wrap-up, which deletes only on `unchanged`.

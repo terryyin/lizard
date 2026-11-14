@@ -1,16 +1,15 @@
 ---
 name: dough-makeme
 description: >-
-  Checks whether test sources select the shared MakeMe convention and applies
-  it when authoring, extending or refactoring tests. Use for ordinary test work
-  as well as Dough execution; only configured entries with makeMe enabled
-  receive the convention.
+  Selects and applies the shared MakeMe convention when writing or refactoring
+  tests or their data builders. Only test sources in configured entries with
+  makeMe enabled select the convention.
 ---
 
 # Apply MakeMe to selected tests
 
-Use the project established by the task. Before arranging test data, identify
-each test source path, including an intended path for a new test.
+Use the project established by the task. Identify the test source paths in scope,
+including intended paths for new tests and the consuming tests for builder changes.
 
 Follow [shared test-entry selection](../dough-execute-plan/references/test-entry-rules.md)
 to resolve each source before loading [the shared convention](references/convention.md).

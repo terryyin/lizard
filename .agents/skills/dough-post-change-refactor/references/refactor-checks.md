@@ -64,25 +64,30 @@ unspecified future need.
 
 ## Tests as behavioral documentation
 
-Assess coverage at observable boundaries and its execution cost. Retain E2E
-scenarios that document important user journeys and prove integration; neither
-newness nor age is a reason to remove a test. Move detailed rule variations to
-black-box unit coverage when they do not need the integrated path. Consolidate
-overlapping scenarios, including unit tests, only when their meaningful behavior
-coverage and important integration proof survive at lower cost.
+### Choose the test boundary
 
-Use this project's preferred test style when supplied. Otherwise assert
-observable black-box behavior in the following "small test" style. Small means
-fast, focused proof through a stable boundary, not one isolated test per class:
+Maintain exactly two layers of automated behavioral tests, end-to-end (E2E)
+and unit. Use this project's test conventions for the tests in scope.
 
-- Drive the public surface or an intentional domain-stable contract, such as a
-  mounted component, command entry, controller, or independent algorithm.
-  Exercise real lower-level production code with crafted preconditions. Do not
-  widen exports for tests or create thin tests for each internal collaborator.
-- Mock true external dependencies relative to that boundary, not internal
-  collaborators. Prefer real persistence and rendering when they are part of
-  the behavior being proved; apply the project's explicit exceptions. A mocked
-  service response cannot also prove that service or its transport works.
+- **E2E.** Keep a few representative workflows. Start at a supported product
+  entry point and use the real services whose interaction is needed to prove
+  the observable outcome.
+- **Unit.** Put cases that one service can prove in unit tests. Start
+  at that service's highest practical entry point for the behavior, such as its
+  UI, API, or command, and exercise its real lower-level code. Use a lower-level
+  entry point only when it exposes a stable, domain-meaningful contract that
+  can prove the behavior, such as a pricing rule. Keep private helpers behind
+  their production callers.
+- **Mocks.** Keep unit tests independent of other live services. Substitute an
+  external dependency only when needed and only at its service boundary, such
+  as a backend response consumed by the frontend. Use real collaborators within
+  the service, including persistence or rendering when the behavior depends on
+  them. Limit proof claims to what the real code in the test establishes.
+
+### Write observable cases
+
+Use this project's test style and assert observable behavior.
+
 - Give each test one behavior and a descriptive name. Assert the canonical
   result shape once; sibling cases assert their distinguishing outcome. Omit a
   repeated assertion only when it is independent of the changed precondition.
@@ -106,16 +111,11 @@ fast, focused proof through a stable boundary, not one isolated test per class:
   target record proves selection, not the effects on related records. Minimal
   setup must not erase this protection.
 
-An E2E test is not automatically a better boundary than a unit test. Replace
-tests of internal structure with behavioral coverage, not merely fewer
-assertions. Scenarios should show precondition, trigger, and observable result;
-setup must not supply the very outcome the test claims the product establishes.
-
-Identify the surviving proof for each proposed consolidation and establish
-replacement unit coverage before removing or narrowing detailed E2E cases.
-Apply the invoking workflow's scope and authority: post-change refactoring owns
-tests implicated by its change; an implementation retrospective assesses the
-whole suite and plans corrections without implementing them.
+Show the precondition, trigger, and observable result. Use setup to supply
+preconditions and let the product establish the outcome. Consolidate cases only
+when meaningful behavior and integration proof survive at lower cost. Identify
+the surviving proof and establish replacement unit coverage before narrowing or
+removing detailed E2E cases. Follow the invoking workflow's scope and authority.
 
 ## File size
 

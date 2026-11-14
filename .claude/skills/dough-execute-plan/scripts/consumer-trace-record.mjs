@@ -18,7 +18,7 @@ const TEST_DIRECTORY = /(^|\/)(tests?|[^/]*_test)\//i;
 
 // A hint for inspection, one kind per file. The first rule that holds wins:
 // journey, test file name, stand-in, test directory, Markdown, production.
-// So `tests/support/x.ts` is a stand-in, `support/x.test.mjs` is a test and
+// So `Distribution/tests/support/x.ts` is a stand-in, `support/x.test.mjs` is a test and
 // `e2e_test/step_definitions/x.ts` is a journey.
 export function consumerKind(path) {
   if (JOURNEY.test(path)) return "journey";

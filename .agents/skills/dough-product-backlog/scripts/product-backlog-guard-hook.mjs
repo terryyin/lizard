@@ -14,7 +14,7 @@
 // fragment; that path no-ops when cursor_version is present so only the
 // native Cursor preToolUse fragment decides.
 //
-// Delivered through src/install/open-dough-register-hooks.mjs, the same safe
+// Delivered through Distribution/src/install/open-dough-register-hooks.mjs, the same safe
 // JSON merge mechanism dough-execute-plan's own CI hooks already use.
 
 import { realpathSync } from "node:fs";

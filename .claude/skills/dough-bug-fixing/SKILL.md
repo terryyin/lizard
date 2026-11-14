@@ -109,14 +109,9 @@ The contextual instruction must require:
    test confirms it. Write the minimum test or smallest addition that reproduces
    the discrepancy. Prefer updating an overlapping or contradictory test over
    adding duplicate coverage.
-2. **Stable observable boundary.** If the report matches an existing E2E
-   scenario's feature and user interaction, extend or add that E2E test.
-   Otherwise write a small test through a stable boundary such as a controller,
-   mounted component, CLI entry point, or deliberate domain API. Exercise real
-   lower layers with crafted data and this project's fixture helpers; mock only
-   external dependencies, subject to this project's testing exceptions. Do not
-   test internal helpers when a stable boundary is available or widen exports
-   solely for tests.
+2. **Regression test boundary.** Apply [the test boundary rule](../dough-post-change-refactor/references/refactor-checks.md#choose-the-test-boundary)
+   to the failing behavior. An existing E2E scenario covering the same feature
+   is a reuse candidate when the regression needs that workflow to reproduce.
 3. **Useful expected-versus-actual assertion.** Assert observable output such as
    the response, rendered text, terminal output, or exit code. Prefer
    expected-versus-actual assertions to boolean checks so the diff identifies

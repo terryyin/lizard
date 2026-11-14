@@ -4,6 +4,10 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { readMailbox } from "./ci-mailbox-location.mjs";
 import { publishJsonExclusively } from "./ci-mailbox-json-file.mjs";
+import {
+  earliestCompletionHandoff,
+  observationChain,
+} from "./ci-mailbox-predecessors.mjs";
 import { isFullGitRevision } from "./ci-revisions.mjs";
 
 export const completionBudgetMs = 60 * 60 * 1000;
@@ -27,7 +31,8 @@ function successfulEvidenceIdentity({ revision, accepted, ...evidence }) {
 }
 
 // The exclusive first record survives caller exit and cannot be renewed by a
-// resume, concurrent completion, or a coalesced descendant's progress.
+// resume, concurrent completion, or a coalesced descendant's progress. A
+// replacement observer inherits the earliest start for this SHA in its chain.
 export function completionState(directory, sha, options = {}) {
   if (!isFullGitRevision(sha))
     throw new Error("Expected a full Git revision SHA");
@@ -36,7 +41,12 @@ export function completionState(directory, sha, options = {}) {
   const records = join(directory, "completion");
   mkdirSync(records, { recursive: true, mode: 0o700 });
   const record = join(records, `${normalized}.json`);
-  const startedAt = (options.now ?? Date.now)();
+  const inherited = earliestCompletionHandoff(
+    observationChain(directory).slice(1),
+    normalized,
+  );
+  const startedAt = inherited?.startedAt ?? (options.now ?? Date.now)();
+  const deadline = inherited?.deadline ?? startedAt + completionBudgetMs;
   const launcher = join(
     dirname(fileURLToPath(import.meta.url)),
     "ci-mailbox.mjs",
@@ -47,7 +57,7 @@ export function completionState(directory, sha, options = {}) {
     target: { repo: request.repo, branch: request.branch },
     pendingReceipt: join(records, `${normalized}.pending.json`),
     startedAt,
-    deadline: startedAt + completionBudgetMs,
+    deadline,
     record,
     command: `${shellQuote(process.execPath)} ${shellQuote(launcher)} complete-revision ${shellQuote(directory)} ${normalized}`,
   });
@@ -81,6 +91,17 @@ export function completionState(directory, sha, options = {}) {
   };
 }
 
+// Maps a CI_MONITOR_UNAVAILABLE event onto the completion/await observation
+// shape, preserving an additive cause when the event named one.
+export function monitorUnavailableObservation(event) {
+  return {
+    unresolvedReason: "observation_unavailable",
+    detail: "monitor_unavailable",
+    ...(event.cause ? { cause: event.cause } : {}),
+    event,
+  };
+}
+
 export function completionExpired(awaited) {
   const unresolved = { ...awaited };
   delete unresolved.verdict;
@@ -90,6 +111,7 @@ export function completionExpired(awaited) {
       ? {
           unresolvedReason: awaited.unresolvedReason,
           ...(awaited.detail ? { detail: awaited.detail } : {}),
+          ...(awaited.cause ? { cause: awaited.cause } : {}),
         }
       : undefined;
   return {

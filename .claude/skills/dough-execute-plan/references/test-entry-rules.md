@@ -1,8 +1,10 @@
 # Select shared conventions before test work
 
-Use the project established by the task. Before authoring or changing tests,
-identify their project-relative source paths, including intended paths for new
-tests. Run the shared selector from this installation:
+Use the project established by the task. When choosing or changing a test's
+scope, apply [the test boundary rule](../../dough-post-change-refactor/references/refactor-checks.md#choose-the-test-boundary).
+Before authoring or changing tests, identify their project-relative source
+paths, including intended paths for new tests. Run the shared selector from
+this installation:
 
 ```sh
 node '<installed-execute-plan>/scripts/test-entry-rules.mjs' \
@@ -33,9 +35,11 @@ configuration means off; malformed or unreadable configuration returns
 changes that depend on the unresolved selection. Do not label it successful opt-out.
 
 For planned and planless execution, run this check before test-authoring
-delegation and carry source paths, selected conventions and unresolved checks in
-the brief. If exact new test paths emerge during implementation, require the
-author to check them before authoring. Recheck when paths or scope change.
+delegation. Carry source paths, selected conventions and unresolved checks in
+the brief. For new tests or changed boundaries, include the intended layer,
+entry point and any necessary service substitute. If exact new test paths
+emerge during implementation, require the author to check them before
+authoring. Recheck when paths or scope change.
 Selection adds no authority to convert unrelated tests and imposes no browser
 abstraction on non-browser work.
 

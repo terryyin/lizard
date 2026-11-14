@@ -1,16 +1,49 @@
-# Completion command and receipt mechanics
+# Await the applicable revision at completion
 
-[CI observation and repair](ci-monitor.md#await-the-applicable-revision-at-completion)
-owns when this single completion operation is required — including
-execution/review handoff and wrap-up closure or trunk integration — and how its
-outcome affects those procedures. This reference supplies only the local
-command and receipt mechanics.
+This reference owns when the single completion operation is required — including
+execution/review handoff and wrap-up closure or trunk integration — how its
+outcome affects those procedures, and the local command and receipt mechanics.
+[CI observation and repair](ci-monitor.md) owns the observer, notification
+handling, and the writer pause.
+
+The coordinator owns one bounded completion operation whenever applicable CI
+evidence is required: execution/review handoff, wrap-up closure on the authorized
+target, and Story Branch trunk integration.
+Use that target's observer and last accepted registered SHA; exclude newer tips,
+other writers' revisions, unpublished candidates and other targets' green. Coverage follows ignored-only revisions to their basis.
+Local-only work and intermediate closure publications create no wait; report unavailable bridges.
+
+When automatic retrospective is enabled, begin it as soon as implementation is
+delivered, even with applicable CI pending. Supply observer, target, accepted SHA
+and pending state. After review — or with `--skip-retro` or another explicit
+review omission — publish the plan's [execution-complete record](finish-or-stop.md#record-execution-completion),
+then invoke exactly one completion action. Wrap-up uses it after registering the
+final accepted SHA: the closure or integrated SHA, or the last consumer
+publication. Follow [completion mechanics](#completion-command-and-receipt-mechanics),
+including its live-Claude Story Branch background handoff; handle delivered failures at safe boundaries.
+
+Success with confirmed shutdown ends observation; report `integrated_state` under
+[completion mechanics](#completion-command-and-receipt-mechanics).
+Another writer's failure creates no repair obligation. Success completes only once
+every actionable failure delivered for this execution is repaired, proved infrastructure,
+held by a reported active owner or explicitly excepted; no passing rerun or later green tip settles one.
+Failure retains the observer and returns to [Handle a notification](ci-monitor.md#handle-a-notification);
+never retries until green. Missing repair authority, ownership or a required
+decision leaves incomplete work with failed revision and partial review preserved,
+with no completion marker. An unresolved receipt establishes no success: report
+its reason, effective evidence and shutdown. Pending or unconfirmed shutdown
+retains resources; follow [completion mechanics](#completion-command-and-receipt-mechanics)
+for recovery or expiry. Observation cancellation is not execution or wrap-up cancellation.
+Authorized repair uses publish/register and invalidates only affected review conclusions;
+complete its new accepted revision at a later boundary. The retrospective gains
+no repair, commit, push, backlog or observer authority.
+
+## Completion command and receipt mechanics
 
 At a final managed Story Branch execution/review handoff, the same live
-interactive Claude coordinator may explicitly choose the bounded
-[background handoff](ci-background-handoff.md) and end its coding turn with CI
-pending. Its command verifies that route. All other completion paths below
-retain this operation.
+interactive Claude coordinator may choose the bounded
+[background handoff](ci-background-handoff.md). All other completion paths
+below retain this operation.
 
 Invoke the completion action with the exact retained mailbox and accepted
 revision:
@@ -18,6 +51,9 @@ revision:
 ```sh
 node '/ABSOLUTE/RESOLVED/SKILL/scripts/ci-mailbox.mjs' complete-revision '/EXACT/RECORDED/MAILBOX' FULL_ACCEPTED_SHA
 ```
+
+When the observer ended before a receipt, follow
+[managed completion recovery](ci-completion-recovery.md).
 
 The command stays silent while waiting and keeps its ten-minute foreground bound.
 Before waiting it exclusively records the first completion start and a sixty-minute

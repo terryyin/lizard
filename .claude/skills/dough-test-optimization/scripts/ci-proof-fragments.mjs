@@ -65,7 +65,7 @@ function repositoryPathOf(record, test, entries) {
   return entries.some((entry) => isPathIn(path, entry)) ? path : undefined;
 }
 
-// A dashboard proof record (OPEN_DOUGH_DASHBOARD_PROOF_RECORD) as one fragment
+// A Playwright proof record (`--playwright-record`) as one fragment
 // per entry; each test it lists is one test case outcome, so the unit is
 // `case`. Multiple entries partition tests by their
 // most specific owning repository path, like an outcomes report. A single

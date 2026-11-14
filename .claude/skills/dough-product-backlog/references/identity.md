@@ -20,7 +20,10 @@ uses it. Do not restate a competing allocation rule elsewhere.
 3. **The link is navigation, not identity.** It says where the canonical home
    is now. Renaming the file, moving it to another directory, or changing the
    story anchor is a reference change: the recorded identity carries across
-   unchanged, and the work item is still the same work item.
+   unchanged, and the work item is still the same work item. Label story links
+   with their titles and point them at their anchors (whole seeds with seed
+   titles); link removed sections at a revision retaining them, and resolve
+   unclear targets from evidence or flag them.
 4. **A recorded value is never reallocated.** Repeating or resuming an
    operation reuses the identity that is already recorded. Two work items never
    share an identity, and one canonical home is never listed twice.

@@ -68,18 +68,15 @@ Ordinary Open Dough release updates remain available from the recorded source.
    b. `git init` the work directory, `git fetch --depth 1 <source-url>
       <commit>`, and check out that commit detached. Confirm
       `git rev-parse HEAD` equals the peeled commit.
-   c. Inspect that snapshot's `src/install/open-dough-release.sh`,
-      `src/install/open-dough-release-apply.sh`, `install.sh`,
-      `src/install/open-dough-install-payload.sh`, the helpers they
-      source or run (including `src/install/open-dough-payload-bytes.mjs`,
-      `src/install/open-dough-register-hooks.sh`,
-      `src/install/open-dough-register-hooks.mjs`,
-      `src/install/open-dough-register-hooks-merge.mjs`, and
-      `src/install/open-dough-register-hooks-fragments.mjs` when present), and
-      every release payload source they declare under `src/skills/`.
+   c. Read the pinned snapshot's root `install.sh` to locate its source tree
+      (`Distribution/src/` in current releases, `src/` in older ones). Inspect
+      `install/open-dough-release.sh`, `install/open-dough-release-apply.sh`,
+      `install/open-dough-install-payload.sh`, and every helper they source or
+      run, including payload-byte and hook-registration helpers when present.
+      Inspect every payload file the snapshot declares under `skills/`.
    d. Run the inspected helper, quoting paths. Codex may omit `--platform`.
       For an ordinary update of a recorded installation, run
-      `bash <snapshot>/src/install/open-dough-release.sh apply --target
+      `bash <source-tree>/install/open-dough-release.sh apply --target
       <captured-project> --platform <tool> --checkout <snapshot>` and do not
       pass `--url`; the helper reads `SOURCE`. For a first installation, also
       pass `--url <source-url>`. Pass `--force` only when the user explicitly

@@ -110,8 +110,8 @@ async function waitOnMailbox(directory, owner) {
         );
         return;
       }
-      // File changes deliver events promptly. The bounded fallback detects a
-      // departed process and tolerates a missed filesystem notification.
+      // Mailbox changes wake this wait promptly. The bounded fallback detects
+      // a departed process.
       try {
         await pause(
           Math.min(1000, Math.max(1, handoff.deadlineAt - Date.now())),

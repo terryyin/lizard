@@ -38,9 +38,9 @@ reveals a different cost.
    replacement coverage is uncertain.
 6. **Use a few full journeys for critical wiring.** After simplifying the
    expensive path, aim for one or two real end-to-end checks that cover its
-   critical wiring. Move detailed variants to the cheapest real boundary that
-   can catch their failures. Keep additional journeys for distinct outcomes that
-   require them.
+   critical wiring. Use [the test boundary rule](../../dough-post-change-refactor/references/refactor-checks.md#choose-the-test-boundary)
+   to place detailed variants. Keep additional journeys for distinct outcomes
+   that require them.
 7. **Keep the intent visible.** Use shared builders for recurring domain
    setup and, where the project uses them, page objects for repeated browser
    interactions. Keep the facts that drive the case and the expected outcome

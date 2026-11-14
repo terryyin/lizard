@@ -25,7 +25,7 @@ completion prerequisite. Review the delivered implementation while observation
 continues and state which conclusions remain conditional on unresolved CI. Do
 not invoke the CI wait, stop or replace its observer, acknowledge its events, or
 claim final execution/review handoff; the invoking execution owns those actions
-through its [completion operation](../dough-execute-plan/references/ci-monitor.md#await-the-applicable-revision-at-completion).
+through its [completion operation](../dough-execute-plan/references/ci-completion-wait.md#await-the-applicable-revision-at-completion).
 
 ## Select reviews
 
@@ -131,7 +131,7 @@ Older weaknesses may need correction; only provenance establishes an execution r
 Identify whether E2E tests drove development, then assess the whole suite, including older tests
 and executions adding no E2E tests, under [behavioral test guidance](../dough-post-change-refactor/references/refactor-checks.md#tests-as-behavioral-documentation).
 Ground retention, detail downgrades, and consolidation in coverage/cost; preserve journey
-information and integration proof. Use project testing guidance or the shared black-box fallback.
+information and integration proof.
 Whole-suite assessment needs no full run; use focused read-only checks to confirm/dismiss findings.
 
 Inspect worked-around/replaced branches, flags, callers, fixtures, compatibility paths, overlapping/

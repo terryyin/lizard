@@ -11,7 +11,11 @@ incomplete. Preserve completed evidence unless a changed boundary invalidates
 what it covers. For interim replacements, align affected callers, fixtures,
 assertions, and documentation with the final success and rejection behavior.
 
-Choose the smallest sufficient proof at the stable boundary of the promise.
+When choosing or accepting automated tests, apply
+[the test boundary rule](../../dough-post-change-refactor/references/refactor-checks.md#choose-the-test-boundary).
+Before accepting a new test or a changed boundary, check the layer, entry
+point, and need for each substituted dependency. Return any mismatch for
+correction.
 Inspect assertions and setup: distinguish starting preconditions from behavior
 the product promises to establish. A fixture or seam supplying that behavior
 leaves it unproved; keep the evidence for what it actually observes. An inner
@@ -94,13 +98,11 @@ work; if unavailable, report what is covered and the specific unproved promise.
 That promise remains incomplete; reporting the gap does not fulfill or remove
 it. Limit success claims to the observed cases.
 
-| Situation | Proof |
-| --- | --- |
-| Main user behavior | Targeted end-to-end check or another real high-level boundary |
-| Edge, error, or pure contract | Focused unit proof |
-| Existing untested behavior | Regression proof before changing it |
-| Structure slice | Existing external behavior remains green |
-| Interim behavior | Name the later slice that removes or replaces it |
+| Situation                  | Proof                                            |
+| -------------------------- | ------------------------------------------------ |
+| Existing untested behavior | Regression proof before changing it              |
+| Structure slice            | Existing external behavior remains green         |
+| Interim behavior           | Name the later slice that removes or replaces it |
 
 Run focused relevant checks, including the consumers above, at slice boundaries.
 Run every suite only when this project's workflow or user requires it. When

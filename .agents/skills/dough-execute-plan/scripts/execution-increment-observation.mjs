@@ -41,14 +41,24 @@ function observationAttached(directory, { reused = false, notifies } = {}) {
   };
 }
 
-// `deliver`, `resume`, and `finish` never start, adopt, or replace a Codex
-// observer: the stream this coordinator armed and retained is the only one
-// any of them registers on. Each gap names the input that recovers observation.
+// `deliver`, `resume`, `finish`, and `complete` never start, adopt, or replace
+// a Codex observer: the stream this coordinator armed and retained is the only
+// one any of them registers on. Each gap names the input that recovers
+// observation. Completion recovery names a fresh stream; it never restarts a
+// finished directory.
 function codexArming({ repo, branch }, command) {
+  if (command === "complete") {
+    return `arm a fresh \`ci-mailbox.mjs stream --execution ${repo} ${branch} --coordinator <value>\` in a yielded cell as references/ci-notify-codex.md describes for completion recovery, never restart a finished stream, retain its receipt directory, and pass --coordinator and --observer-directory to complete`;
+  }
   return `arm \`ci-mailbox.mjs stream --execution ${repo} ${branch} --coordinator <value>\` in a yielded cell as references/ci-notify-codex.md describes, retain its receipt directory in the observer note, and the next ${command} registers on it`;
 }
 
-const activities = { deliver: "delivery", resume: "resume", finish: "closure" };
+const activities = {
+  deliver: "delivery",
+  resume: "resume",
+  finish: "closure",
+  complete: "completion recovery",
+};
 
 const retainedStreamGaps = {
   missing: (directory) => `${directory} is not a CI observer`,
@@ -136,6 +146,7 @@ export async function establishObservation({
   env,
   root,
   storage,
+  command = "deliver",
 }) {
   if (host === "codex") {
     return {
@@ -146,6 +157,7 @@ export async function establishObservation({
         observerDirectory,
         root,
         storage,
+        command,
       }),
       startReceipt: null,
     };

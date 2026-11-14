@@ -176,6 +176,18 @@ export function mailboxWorkerLoss(directory) {
   return recordLostTerminalResult(directory, workerLossReason);
 }
 
+// A verified worker can exit before its signal, as one ending just after its
+// terminal result does; that worker is gone, which is what the signal sought.
+function signalWorker(pid, signal) {
+  try {
+    process.kill(pid, signal);
+    return true;
+  } catch (error) {
+    if (error.code === "ESRCH") return false;
+    throw error;
+  }
+}
+
 export async function terminateMailboxWorker(
   identity,
   directory,
@@ -186,10 +198,10 @@ export async function terminateMailboxWorker(
     throw new Error("CI mailbox contains an invalid worker identity");
   if (!workerIsRunning(pid)) return;
   if (!verifyMailboxWorker(identity, directory, readCommand)) return;
-  process.kill(pid, "SIGTERM");
+  if (!signalWorker(pid, "SIGTERM")) return;
   if (await waitForWorkerExit(pid)) return;
   if (!verifyMailboxWorker(identity, directory, readCommand)) return;
-  process.kill(pid, "SIGKILL");
+  if (!signalWorker(pid, "SIGKILL")) return;
   if (!(await waitForWorkerExit(pid)))
     throw new Error(`CI observer worker ${pid} did not terminate`);
 }
@@ -199,11 +211,18 @@ export async function terminateMailboxWorker(
 // Unknown identity is never signaled, but still gets the bounded wait: a
 // worker exiting after its publication can show a transient command, such as
 // `[node]`, before it stops running.
-export async function awaitMailboxWorkerExit(identity, directory) {
+export async function awaitMailboxWorkerExit(
+  identity,
+  directory,
+  { readCommand } = {},
+) {
   const { pid } = identity ?? {};
   if (!(Number.isSafeInteger(pid) && pid > 0)) return;
-  const liveness = checkMailboxWorkerLiveness(identity, directory);
+  const liveness = checkMailboxWorkerLiveness(identity, directory, {
+    readCommand,
+  });
   if (liveness === "dead") return;
   if (await waitForWorkerExit(pid)) return;
-  if (liveness === "alive") await terminateMailboxWorker(identity, directory);
+  if (liveness === "alive")
+    await terminateMailboxWorker(identity, directory, { readCommand });
 }

@@ -20,7 +20,6 @@
 // context (`--repository`) carries completion and cleanup.
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
-import { completeRevision } from "../../dough-execute-plan/scripts/ci-mailbox-complete.mjs";
 import { mailboxRoot } from "../../dough-execute-plan/scripts/ci-mailbox-location.mjs";
 import { isDirectCliEntry } from "../../dough-execute-plan/scripts/ci-direct-entry.mjs";
 import { refreshDefaultCheckout } from "../../dough-execute-plan/scripts/maintain-default-checkout.mjs";
@@ -38,10 +37,12 @@ import { settledVisit } from "./trunk-closure-visit.mjs";
 import { finishArguments } from "./trunk-closure-arguments.mjs";
 
 import {
+  completeFinalClosure,
   completionRecovery,
   receiptPermitsRetirement,
   resourcesStay,
 } from "./trunk-closure-completion.mjs";
+
 const recoveries = {
   "before-cleanup":
     "publish the before-cleanup commit through deliver until it is accepted, then rerun finish",
@@ -155,16 +156,23 @@ export async function finishTrunkClosure({
   }
   if (visited.visit) accepted.visit = visited.visit;
   const completed = visited.finalSha ?? acceptedSha;
-  let completion = null;
-  if (observation?.directory && observation.state !== "unobserved") {
-    try {
-      completion = await completeRevision(observation.directory, completed, {
-        root,
-      });
-    } catch (error) {
-      completion = { error: String(error.message ?? error).slice(0, 600) };
-    }
-  }
+  const { observation: completedObservation, completion } =
+    await completeFinalClosure({
+      observation,
+      sha: completed,
+      workspace,
+      root,
+      targetRef,
+      repo,
+      host,
+      session,
+      coordinator,
+      observerDirectory,
+      preferredAlias,
+      env,
+      storage,
+    });
+  accepted.observation = completedObservation;
   const refresh = await refreshDefaultCheckout({
     checkout: defaultCheckout,
     remote,

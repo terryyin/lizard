@@ -9,8 +9,12 @@ import {
 import { basename, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
+const sourceRoot = new URL("../../../", import.meta.url);
 export const checkoutRoot = fileURLToPath(
-  new URL("../../../../", import.meta.url),
+  new URL(
+    sourceRoot.pathname.endsWith("/Distribution/src/") ? "../../" : "../",
+    sourceRoot,
+  ),
 );
 // Native hooks and Nix launchers share this directory; it must not follow TMPDIR.
 export const mailboxRoot =

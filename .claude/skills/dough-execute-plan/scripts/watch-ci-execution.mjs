@@ -1,8 +1,12 @@
 import { setTimeout as pause } from "node:timers/promises";
 import { createCommandAcquisition } from "./ci-command-adapter.mjs";
 import { ciAttemptKey } from "./ci-failures.mjs";
-import { GitHubAcquisitionHeld } from "./ci-github-actions.mjs";
 import { createGitHubAcquisition } from "./ci-runs.mjs";
+import {
+  monitorUnavailableEvent,
+  observationCause,
+} from "./ci-monitor-unavailable.mjs";
+import { createAcquisitionSuspension } from "./ci-observation-throttle.mjs";
 import { readCiConfiguration } from "./ci-project-configuration.mjs";
 
 export const executionBudgetMs = 8 * 60 * 60 * 1000;
@@ -67,41 +71,34 @@ export async function watchCiExecution({
   // so losing observation by any path still delivers it before the loss.
   let knownFailureEvent;
 
-  const unavailable = (reason) => ({
-    type: "CI_MONITOR_UNAVAILABLE",
-    repo,
-    branch,
-    ...(adapter ? {} : { workflow }),
-    reason: String(reason).slice(0, 600),
-  });
-  const reportObservationLoss = async (reason) => {
+  const reportObservationLoss = async (reason, cause) => {
     if (knownFailureEvent) await emit(knownFailureEvent);
-    await emit(unavailable(reason));
-  };
-
-  // A wait GitHub directed suspends acquisition until it ends, or until the
-  // budget does: reported once per suspension, it is no observation error, and
-  // a registration cannot shorten it.
-  let suspensionReported = false;
-  const suspendAcquisition = async ({ waitSeconds }) => {
-    const waitMs = waitSeconds * 1000;
-    if (!suspensionReported) {
-      suspensionReported = true;
-      await emit({
-        type: "CI_MONITOR_THROTTLED",
+    await emit(
+      monitorUnavailableEvent({
         repo,
         branch,
-        workflow,
-        waitSeconds,
-        resumesAt: new Date(now() + waitMs).toISOString(),
-      });
-    }
-    const remainingMs = maxDurationMs - (now() - startedAt);
-    await sleep(Math.max(Math.min(waitMs, remainingMs), 0), undefined, {
-      signal: observationSignal,
-    });
+        ...(adapter ? {} : { workflow }),
+        reason,
+        cause,
+      }),
+    );
   };
-  const held = (error) => error instanceof GitHubAcquisitionHeld;
+
+  const {
+    held,
+    clearReport: clearSuspensionReport,
+    suspend: suspendAcquisition,
+  } = createAcquisitionSuspension({
+    emit,
+    repo,
+    branch,
+    workflow,
+    now,
+    sleep,
+    maxDurationMs,
+    startedAt,
+    observationSignal,
+  });
 
   // Only the pause after a completed poll ends early on a registration;
   // retrying after a poll error keeps its full interval.
@@ -231,15 +228,19 @@ export async function watchCiExecution({
         await suspendAcquisition(suspension);
         continue;
       }
-      suspensionReported = false;
+      clearSuspensionReport();
       await pauseUntilNextPoll(registration);
     }
     await reportObservationLoss(
       `Execution observation budget expired after ${maxDurationMs} ms.`,
+      observationCause.budgetExpired,
     );
   } catch (error) {
     if (observationSignal.aborted) return;
-    await reportObservationLoss(error instanceof Error ? error.message : error);
+    await reportObservationLoss(
+      error instanceof Error ? error.message : error,
+      observationCause.observationError,
+    );
   } finally {
     signal?.removeEventListener("abort", stopObservation);
     observationAbort.abort();

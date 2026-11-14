@@ -106,7 +106,7 @@ resume handles to follow the shared [pause contract](ci-monitor.md#pause-and-res
 When the shared lifecycle calls for an explicit stop — human-judgment stop,
 cancellation, or coordinator replacement — consume delivered failures first,
 then stop using the exact saved directory. Normal execution completion uses the
-shared [completion operation](ci-monitor.md#await-the-applicable-revision-at-completion)
+shared [completion operation](ci-completion-wait.md#await-the-applicable-revision-at-completion)
 instead; do not run this stop, a process poll, or a terminal-report read after
 that receipt — this stop command never substitutes for that completion operation.
 
@@ -115,9 +115,9 @@ node '/ABSOLUTE/RESOLVED/SKILL/scripts/ci-mailbox.mjs' stop '/EXACT/RECORDED/MAI
 ```
 
 This signals cancellation, including an outstanding GitHub request or polling
-timer. Its terminal wait is finite and checks authoritative `result.json` when
-the file notification is missed; it ends early once the recorded worker no
-longer runs, since only that worker publishes the result. If no terminal result
+timer. Its terminal wait is finite and polls authoritative `result.json`; it
+ends early once the recorded worker no longer runs, since only that worker
+publishes the result. If no terminal result
 arrives by then or by the lifecycle deadline, the stop command reads the
 mailbox's recorded worker PID, validates that it still runs the exact Node
 worker command for this mailbox, and targets only that process; it revalidates

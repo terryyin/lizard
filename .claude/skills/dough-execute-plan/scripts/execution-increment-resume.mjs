@@ -11,18 +11,12 @@ import {
   readRevisionCoverage,
   registerPushedRevision,
 } from "./ci-mailbox.mjs";
+import { listRegisteredRevisions } from "./ci-mailbox-revision-records.mjs";
 import { isDirectCliEntry } from "./ci-direct-entry.mjs";
 import { recoverObservationForResume } from "./execution-increment-observation-recovery.mjs";
 import { stopped } from "./applicable-candidate-proof.mjs";
 import { resumeInterruptedPublication } from "./publication-resume.mjs";
 import { targetBranchName } from "./publication-git.mjs";
-
-function hasCoverage(directory, sha) {
-  const normalized = sha.toLowerCase();
-  return readRevisionCoverage(directory).some(
-    (entry) => entry.sha === normalized,
-  );
-}
 
 export function observerAdapter(directory, targetRef) {
   const receipts = readRevisionCoverage(directory).map((entry) => ({
@@ -154,7 +148,12 @@ export async function resumeManagedExecutionIncrement(request) {
 
   // Ensure the accepted SHA is on the recovered live owner when resume's
   // classification completed registration or coverage was already present.
-  if (liveDirectory && !hasCoverage(liveDirectory, published.acceptedSha)) {
+  if (
+    liveDirectory &&
+    !listRegisteredRevisions(liveDirectory).includes(
+      published.acceptedSha.toLowerCase(),
+    )
+  ) {
     registerPushedRevision(liveDirectory, published.acceptedSha);
   }
 

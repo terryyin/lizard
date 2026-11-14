@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { setTimeout as pause } from "node:timers/promises";
+import { monitorUnavailableObservation } from "./ci-mailbox-completion-state.mjs";
 import { readMailbox, receiptPrefix } from "./ci-mailbox-location.mjs";
 import {
   effectiveRevisionState,
@@ -8,7 +9,10 @@ import {
   readRevisionCoverage,
   revisionVerdicts,
 } from "./ci-mailbox-revision-records.mjs";
-import { readMailboxEvents, readWorkerIdentity } from "./ci-mailbox-store.mjs";
+import {
+  lastMonitorUnavailableEvent,
+  readWorkerIdentity,
+} from "./ci-mailbox-store.mjs";
 import { checkMailboxWorkerLiveness } from "./ci-mailbox-worker-process.mjs";
 import { isFullGitRevision } from "./ci-revisions.mjs";
 
@@ -107,16 +111,8 @@ function terminalObservation(directory) {
 }
 
 function unavailableObservation(directory) {
-  const event = readMailboxEvents(directory)
-    .map((record) => record.event)
-    .findLast(({ type }) => type === "CI_MONITOR_UNAVAILABLE");
-  return event
-    ? {
-        unresolvedReason: "observation_unavailable",
-        detail: "monitor_unavailable",
-        event,
-      }
-    : undefined;
+  const event = lastMonitorUnavailableEvent(directory);
+  return event ? monitorUnavailableObservation(event) : undefined;
 }
 
 function observerLiveness(directory) {

@@ -16,8 +16,8 @@ Receive and inspect the terminal result in a separate tool-result boundary befor
 launching dependent work. A shell chain, parallel check and delivery, or sequential
 awaited calls inside one uninspected orchestration do not establish this boundary.
 On `amended`, `conflict` or refusal, follow [source freshness](source-freshness.md):
-absorb amendments, handle promises and source review, recheck until `unchanged`;
-retain conflict and refusal stops.
+absorb amendments or reconcile conflicts, handle promises and source review,
+then recheck until `unchanged` or stop as directed.
 
 On `unchanged`, [check named siblings](#check-named-siblings) if the story or plan
 names any for coordination. Receive and inspect that result before dependent work

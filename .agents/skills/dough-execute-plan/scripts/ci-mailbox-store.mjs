@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, readdirSync, rmSync, watch } from "node:fs";
+import { existsSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { publishJson } from "./ci-mailbox-json-file.mjs";
 import {
@@ -9,6 +9,7 @@ import {
 
 const eventFilePattern = /^(\d{12})\.json$/;
 const defaultTerminalResultDeadlineMs = 5_000;
+const terminalResultPollMs = 20;
 export const terminalResultDeadlineCode = "CI_OBSERVER_TERMINAL_DEADLINE";
 export const terminalResultDeadlineReason =
   "CI observer terminal result was not published before its lifecycle deadline";
@@ -99,9 +100,21 @@ function unresolvedRevisions(directory) {
     );
 }
 
+// Latest CI_MONITOR_UNAVAILABLE on this mailbox, when observation ended that way.
+export function lastMonitorUnavailableEvent(directory) {
+  return readMailboxEvents(directory)
+    .map((record) => record.event)
+    .findLast((event) => event?.type === "CI_MONITOR_UNAVAILABLE");
+}
+
 function terminalResult(directory, request, status) {
-  if (!(request.mode === "execution" && status === "stopped"))
-    return { status };
+  if (!(request.mode === "execution" && status === "stopped")) {
+    const cause =
+      status === "finished"
+        ? lastMonitorUnavailableEvent(directory)?.cause
+        : undefined;
+    return cause ? { status, cause } : { status };
+  }
   const unproved = unresolvedRevisions(directory);
   return {
     status,
@@ -165,7 +178,7 @@ export async function waitForTerminalResult(
       const close = () => {
         if (settled) return false;
         settled = true;
-        subscription?.close();
+        clearInterval(poll);
         deadline.removeEventListener("abort", atDeadline);
         return true;
       };
@@ -185,8 +198,10 @@ export async function waitForTerminalResult(
         error.code = terminalResultDeadlineCode;
         reject(error);
       };
+      // Polled, not watched: on macOS a busy fseventsd can hold a directory
+      // notification for seconds, and closing the watch blocks this process.
+      const poll = setInterval(finished, terminalResultPollMs);
       deadline.addEventListener("abort", atDeadline, { once: true });
-      const subscription = watch(directory, finished);
       if (deadline.aborted) atDeadline();
       finished();
     });

@@ -3,19 +3,19 @@
 On a human-judgment stop or cancellation, handle delivered failures, then close
 the observer through the current host adapter without waiting for CI and report
 pending CI as unobserved. On normal completion, use
-[the one bounded completion operation](ci-monitor.md#await-the-applicable-revision-at-completion)
+[the one bounded completion operation](ci-completion-wait.md#await-the-applicable-revision-at-completion)
 and handle its combined CI and shutdown receipt before considering continuation.
 
 At the final execution/review handoff, the supported live-Claude Story Branch
 coordinator may instead choose the explicit background alternative in
-[completion mechanics](ci-completion-wait.md), after any required review and
+[completion mechanics](ci-completion-wait.md#completion-command-and-receipt-mechanics), after any required review and
 execution-complete record publication below. That alternative satisfies the
 completion operation below: report its CI pending receipt and retained session,
 observer and resources instead of a successful shutdown. While this explicit
 background handoff's required CI/shutdown remains pending, retain that handoff;
 do not automatically continue into wrap-up. Shared completion `pending` or
 `completion_expired` likewise stops dependent continuation and cleanup on every
-host; retain and recover it under [completion mechanics](ci-completion-wait.md).
+host; retain and recover it under [completion mechanics](ci-completion-wait.md#completion-command-and-receipt-mechanics).
 
 After all planned slices satisfy proof/delivery, `--skip-retro` skips only this
 execution's automatic retrospective; it changes no preferences or
@@ -128,7 +128,7 @@ handoff. Combine overlapping review items once; neither a later successful check
 nor `Product advice: no change` settles an unresolved item. Remove an item only
 after its evidenced, authorized disposition. Preserve that evidence in its
 existing records and receipts, including accurate `integrated_state` evidence
-under [completion mechanics](ci-completion-wait.md). Retain the completed plan,
+under [completion mechanics](ci-completion-wait.md#completion-command-and-receipt-mechanics). Retain the completed plan,
 proof decisions, execution checkout, branch, worktree and terminal continuation
 needed to resume. When attention remains, begin with
 `DEVELOPER ATTENTION REQUIRED`, followed by the issue, consequence, next action
