@@ -165,8 +165,10 @@ class XMLTagWithAttrTokenizer(Tokenizer):
     def flush(self):
         tmp, self.cache = self.cache, []
         text = ''.join(tmp)
-        if text.isspace():
-            # Readers drop whitespace tokens other than a bare newline.
+        if not text or text.isspace():
+            # Readers drop whitespace tokens other than a bare newline. An
+            # element right after a child element has no text before it:
+            # an empty token would reach the extensions, which read token[0].
             return ['\n'] * text.count('\n')
         return [text]
 
