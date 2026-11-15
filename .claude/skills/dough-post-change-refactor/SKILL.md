@@ -1,11 +1,9 @@
 ---
 name: dough-post-change-refactor
 description: >-
-  Refactors concepts implicated by the current uncommitted change before commit.
-  Includes untouched representations and orchestration needed for coherence,
-  stops before unapproved cross-subsystem refactoring or disputed plan behavior,
-  and tests only after edits. Use after a slice, for post-change refactoring,
-  or to clean up the current change.
+  Refactors concepts implicated by the current uncommitted change before commit
+  and tests only after edits. Use after a slice, for post-change refactoring, or
+  to clean up the current change.
 ---
 
 # Refactor the current change

@@ -88,11 +88,22 @@ and unit. Use this project's test conventions for the tests in scope.
 
 Use this project's test style and assert observable behavior.
 
+- Before adding or changing a test, name a concrete regression its assertions
+  would catch, and assert the observable result of exercising the code or
+  workflow. Do not assert values that merely restate configuration, constants,
+  fixture data, or builder output, such as an exact internal worker count. When
+  such a value produces worthwhile behavior, assert that effect and read the
+  expected value from its configuration rather than copying it into the test.
+  A check that two settings or sources agree is not a restatement; keep it.
+  When reviewing a test diff, remove assertions that would catch no such
+  regression.
 - Give each test one behavior and a descriptive name. Assert the canonical
   result shape once; sibling cases assert their distinguishing outcome. Omit a
   repeated assertion only when it is independent of the changed precondition.
   Prefer a positive distinguishing signal when sufficient; retain absence or
   negative assertions when absence is the actual promise.
+- Synchronize on an observable event or advance a controlled clock. Never
+  sleep or wait for wall-clock time to pass.
 - Assert the result of a loop, retry, or threshold scenario without repeatedly
   checking unrelated intermediate state. Keep intermediate observations when
   ordering, progress, or transient behavior is itself the contract.

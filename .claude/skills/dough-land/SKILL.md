@@ -1,20 +1,10 @@
 ---
 name: dough-land
 description: >-
-  Dough Land lands everything in one reviewed checkout on the authorized remote
-  trunk: commits all of its changes, reconciles and publishes them without
-  force, and refreshes a supplied default checkout when safe. An owned worktree
-  is retired with its branch after completion gates hold and trunk contains its
-  work; the default checkout stays in place. Ordinary landing refuses unfinished
-  execution before commit; `--keep-worktree` selects an explicit retained increment.
-  Use only on explicit invocation, such as "/dough-land", "use Dough Land",
-  "land this worktree", or "land" for changes made on the default checkout, or
-  when another skill's validated keep instruction or findings
-  maintenance handoff links here. A casual
-  "keep", "looks good", or approval does not invoke it.
-  Hosted merges and pull requests are out of scope. With
-  `--process-retrospective`, it also reviews the landing's own process and
-  records supported findings in `DearDough.md`.
+  Dough Land commits, publishes and lands one reviewed checkout on the
+  authorized remote trunk, then retires an owned worktree. Use only on explicit
+  invocation such as "/dough-land", "use Dough Land", "land this worktree" or
+  "land"; a casual "keep" or approval does not invoke it.
 ---
 
 # Dough Land

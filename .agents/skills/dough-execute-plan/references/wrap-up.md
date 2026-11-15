@@ -72,7 +72,7 @@ one left unrun for CI: obtain the missing observation or
 return the slice for it. Preserve sufficient reused or equivalent-purpose proof
 and accepted evidence for unrelated consumers and unchanged boundaries. Require
 the changed surface's suite when it runs within the slice's focused-check time,
-not every suite. A discovered failure keeps the project's failure policy and
+not every suite. A discovered failure keeps the [failure policy](failure-policy.md) and
 the consumer's legitimate promise; passing by supplying the outcome in setup or
 weakening the assertion is not sufficient proof.
 

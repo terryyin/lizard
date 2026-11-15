@@ -1,16 +1,10 @@
 ---
 name: dough-test-optimization
 description: >-
-  Speeds up local test feedback, starting from the CI test proof this project
-  already retains: ranks removable costs, states the saving worth keeping, and
-  reaches a measured keep or an evidenced stop through bounded experiments
-  across related tests. Use to optimize slow tests or test-suite performance,
-  or to profile tests on explicit request. Preserves behavioral coverage and
-  confidence while pursuing fewer redundant cases, less code, and cleaner
-  design. With --resolve, triages recorded candidates without profiling or
-  optimizing. Also makes this project's CI, GitHub Actions or read through a
-  CI adapter, publish the CI proof summary that Intent's CI status tab and
-  this skill read.
+  Speeds up slow tests and test-suite feedback through measured, bounded
+  experiments that keep behavioral coverage, starting from this project's CI
+  test proof. Use to optimize or profile tests, or to make CI publish its proof
+  summary.
 ---
 
 # Speed up local test feedback

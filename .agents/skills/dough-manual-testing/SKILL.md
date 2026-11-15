@@ -1,11 +1,8 @@
 ---
 name: dough-manual-testing
 description: >-
-  Plans bounded manual or exploratory observation of requested product
-  behavior when the developer explicitly requests manual testing, exploratory
-  testing, or an active plan slice requires it. Covers web, CLI, API, desktop,
-  or combined surfaces. Does not run proactively or replace required automated
-  tests.
+  Plans bounded manual or exploratory observation of product behavior when the
+  developer explicitly requests it or an active plan slice requires it.
 ---
 
 # Observe requested behavior

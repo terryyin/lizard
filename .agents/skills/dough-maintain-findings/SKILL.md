@@ -2,10 +2,8 @@
 name: dough-maintain-findings
 description: >-
   Adopts supplied, approved DD-NNN to ODF-NNN finding-name mappings in this
-  project's DearDough.md while preserving evidence and former-code traceability.
-  Use only on explicit skill invocation or an explicit request to adopt or rename
-  finding codes; encountering findings or mapping recommendations does not
-  authorize maintenance. Other finding cleanup and status changes are out of scope.
+  project's DearDough.md. Use only on explicit invocation.
+disable-model-invocation: true
 ---
 
 # Maintain finding names

@@ -1,14 +1,9 @@
 ---
 name: dough-story-wrap-up
 description: >-
-  Closes one completed feature story, bounded retrospective correction or
-  context-only planless execution using available execution context. Assimilates
-  lasting product knowledge, settles existing follow-ups and authorized product
-  decisions, and removes spent plan and history with Git recovery. Reports missing
-  or unfinished inputs truthfully. Use to close completed work, delete spent
-  records, or continue settled planned execution under Execute Plan's continuation
-  rule. When continuation carries a selected deferred process review, completes
-  that review after Intent Coverage report and dispositions.
+  Closes a completed story, bounded correction or planless execution: keeps
+  lasting product knowledge, settles follow-ups and removes spent plan and
+  history. Use to close completed work or continue execution into wrap-up.
 ---
 
 # Story wrap-up
@@ -75,11 +70,11 @@ keys. For unreadable, malformed or non-object JSON, or a non-boolean value, repo
 file/key error and continue closure without the check. Leave configuration as found.
 Explicit developer review requests remain available without configuration or hints.
 
-When enabled and no published result exists, request one [Dough Intent Coverage](../dough-intent-coverage/SKILL.md)
-check with the completed implementation revision, story section, and plan when present.
-Suggest any available promise, plausible fault, focused command, fixture, or assertion from
-review or execution. Prefer a plausible protection gap for an important promise raised in review.
-The worker chooses from the key examples when needed and owns scratch setup and restoration.
+When enabled and no published result exists, check only a protection risk: the work removed, relocated,
+consolidated or rewrote existing tests, assertions or test discovery, or review or execution questioned
+an important promise's proof that no observed planned fault settles. Otherwise complete without the check.
+For a risk, request one [Dough Intent Coverage](../dough-intent-coverage/SKILL.md) check with the completed revision, story section, plan when present,
+the risky promise, and any fault, command, fixture, or assertion from review or execution; the worker owns scratch setup.
 
 Continue independent wrap-up and use the worker's completion notification when available.
 If the report is still pending when independent work ends, [await the delegated result](../dough-execute-plan/references/delegation.md#await-delegated-results-without-empty-calls)
@@ -95,11 +90,11 @@ closure deadline without a report leaves closure unfinished. Surface recovery an
 active sources without inventing a verdict. A returned **Insufficient evidence** report
 follows ordinary restoration and cleanup gates.
 
-[Dispose findings](references/follow-up-disposition.md#dispose-intent-coverage-findings)
-before the before-cleanup commit. Save the report verbatim with a separate wrap-up
-disposition (checked revision, evidence, decision, canonical follow-up links). Pass the combined
-text to [completion](../dough-product-backlog/SKILL.md#remove-completed-items) with `--intent-coverage`.
-If skipped with no supplied result, complete without coverage input. Keep a durable final result.
+Before the before-cleanup commit, save the report verbatim with a separate wrap-up disposition: one
+line (checked revision, verdict, no follow-up) when its next proof action needs no new or stronger
+proof; otherwise [dispose findings](references/follow-up-disposition.md#dispose-intent-coverage-findings) with checked revision, evidence, decision, canonical follow-up links.
+Pass the combined text to [completion](../dough-product-backlog/SKILL.md#remove-completed-items) with `--intent-coverage`;
+when skipped with no supplied result, complete without it. Keep a durable final result.
 
 ## Assimilate lasting knowledge
 

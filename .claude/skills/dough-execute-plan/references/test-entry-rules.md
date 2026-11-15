@@ -2,6 +2,8 @@
 
 Use the project established by the task. When choosing or changing a test's
 scope, apply [the test boundary rule](../../dough-post-change-refactor/references/refactor-checks.md#choose-the-test-boundary).
+When writing or changing its assertions or synchronization, apply
+[observable cases](../../dough-post-change-refactor/references/refactor-checks.md#write-observable-cases).
 Before authoring or changing tests, identify their project-relative source
 paths, including intended paths for new tests. Run the shared selector from
 this installation:
@@ -17,7 +19,9 @@ reads that project's `.planning/open-dough.json` and applies the same
 `intent.locations` declarations and file membership as Intent. Folder containment
 alone does not establish membership. It accepts intended paths before files exist.
 
-For each source, load only its selected conventions. `pageObjects: true` loads
+For each source, load only its selected conventions. A builder, helper,
+fixture or page object follows the conventions selected for the tests that
+consume it, whatever its own path. `pageObjects: true` loads
 [the page-object convention](../../dough-page-objects/references/convention.md)
 when the task concerns browser tests. `makeMe: true` independently loads
 [the MakeMe convention](../../dough-makeme/references/convention.md).
@@ -62,7 +66,8 @@ and unstaged changes independently, untracked non-ignored files, and both sides
 of moves. Selection then uses existing source files, following source symlinks,
 at their current paths and the same entry membership above. Missing or deleted
 sources and missing symlink targets require no conversion;
-a destination outside selected membership receives no page-object rule.
+a test moved outside selected membership receives no page-object rule, while a
+support source keeps the conventions of the tests that consume it.
 Production-only changes select no testing convention merely by folder proximity.
 
 Load each selected convention once, including the same references above.

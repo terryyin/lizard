@@ -1,12 +1,9 @@
 ---
 name: dough-slice-plan-refinement
 description: >-
-  Refines an executable plan in place into proportionate, proof-owned
-  Behavior/Structure slices. Use during or after dough-slice-planning when boundaries
-  fragment cohesive work, combine independent concerns, accumulate special cases,
-  or overrun. Creates no new plan and preserves the selected story or bounded
-  correction outcome. After rewriting the plan, reassess readiness through the
-  shared preparation procedure without granting Take or execution.
+  Refines an existing executable plan's slices in place when boundaries fragment
+  cohesive work, combine independent concerns, accumulate special cases or
+  overrun. Use during or after slice planning.
 ---
 
 # Slice-plan refinement

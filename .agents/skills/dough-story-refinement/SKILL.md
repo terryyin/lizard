@@ -1,15 +1,9 @@
 ---
 name: dough-story-refinement
 description: >-
-  Clarifies selected stories before execution planning by establishing goal,
-  scope, and key examples in each story's seed, distinguishing promises from
-  rejection constraints. Adds UI or architectural
-  detail only when needed. Continues a ready story into slice planning in the
-  same workspace; `--refine-only` stops at the refined story. `--one-shot`
-  refines a queued story without publishing an assignment and keeps the result
-  for review, or lands it with `--auto-land`. Use for
-  selected-story refinement, not broad problem decomposition, candidate
-  selection, or slice sizing.
+  Clarifies a selected story's goal, scope and key examples in its seed, then
+  continues into slice planning. Use for selected-story refinement, not broad
+  decomposition, candidate selection or slice sizing.
 ---
 
 # Story refinement

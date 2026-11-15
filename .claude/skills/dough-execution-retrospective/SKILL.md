@@ -1,15 +1,9 @@
 ---
 name: dough-execution-retrospective
 description: >-
-  Reviews planned, completed planless quick, or quick-to-planned execution against
-  original intent, aggregate commits, current whole-product architecture, and tests,
-  including after cleanup. Process review is opt-in: it runs only when the project sets
-  `skipProcessRetrospective: false` or the request asks to include it, and needs available
-  agent history. Use for execution retrospective, product review, or backlog
-  recommendations from current/supplied history. Supports `--skip-process` and `--skip-product`.
-  May plan corrections, record process findings in `DearDough.md` (1,000-line
-  ceiling, recoverable lower-priority replacement on overflow), and recommend product work.
-  Finishes quietly when settled, surfaces unresolved attention, and never implements findings.
+  Reviews a delivered execution against its intent, commits, architecture and
+  tests, and may plan corrections or record process findings. Use for an
+  execution retrospective or product review; never implements findings.
 ---
 
 # Review an execution
@@ -128,11 +122,13 @@ divergent rules or coordinated edits. Delivery sequence cannot justify boundarie
 cannot prove cohesion. Apply [ADR awareness](../dough-adr-awareness/SKILL.md) with human-owned conflicts.
 Older weaknesses may need correction; only provenance establishes an execution regression.
 
-Identify whether E2E tests drove development, then assess the whole suite, including older tests
-and executions adding no E2E tests, under [behavioral test guidance](../dough-post-change-refactor/references/refactor-checks.md#tests-as-behavioral-documentation).
-Ground retention, detail downgrades, and consolidation in coverage/cost; preserve journey
-information and integration proof.
-Whole-suite assessment needs no full run; use focused read-only checks to confirm/dismiss findings.
+Record whether E2E tests drove development. Apply the shared
+[test boundary rule](../dough-post-change-refactor/references/refactor-checks.md#choose-the-test-boundary)
+across the suite, including older tests and executions that added no E2E tests.
+Identify representative E2E workflows that prove real service interactions,
+detailed E2E cases a single service can prove in unit tests, and redundant cases
+at either layer. Use focused read-only checks to establish what the cases prove,
+what would survive a proposed change, and whether the saving justifies it.
 
 Inspect worked-around/replaced branches, flags, callers, fixtures, compatibility paths, overlapping/
 obsolete-internal tests, and historical documentation. Removed temporary behavior warrants negative
@@ -150,9 +146,13 @@ cause. Current evidence bounds corrections, including beyond the old footprint, 
 No findings means unchanged plans; broader review grants no new promises about
 product intents.
 
-Give suite cleanup explicit correction ownership, including older redundant tests. For consolidation,
-name surviving meaningful coverage/integration proof (retained E2E may suffice). For detail downgrades,
-require replacement unit coverage before narrowing/removing E2E tests. Plan cleanup; do not perform it.
+Give supported test cleanup an explicit correction owner. Name the behavior,
+the surviving or replacement tests, and the expected saving. For an E2E-to-unit
+move, require the correction to establish replacement unit coverage before
+narrowing or removing the E2E case. Preserve the workflow observations that
+depend on real service interactions. For redundant cases, name the surviving
+tests that catch the same regressions. Plan the cleanup under the correction
+rules below.
 
 - **Unfinished plan:** amend in place; retain completed evidence/resume history and numbering.
   Put corrections before remaining work, revise overlapping slices instead of duplicating them,

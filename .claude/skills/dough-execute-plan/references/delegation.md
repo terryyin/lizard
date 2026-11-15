@@ -78,8 +78,8 @@ Give the agent:
 - [Execution decisions](execution-decisions.md), the resolved
   [replanning permission](execution-decisions.md#choose-replanning-permission), this
   project's slice budget and exceptions, workflow precedence, and literal
-  focused commands with the runtime wrapper. Carry this project's failure
-  policy by link or verbatim, not as a weaker paraphrase such as "fix or
+  focused commands with the runtime wrapper. Carry the
+  [failure policy](failure-policy.md) and this project's additions by link or verbatim, not as a weaker paraphrase such as "fix or
   report"; pass a known failure's attribution as diagnosis evidence, separate
   from the repair responsibility that policy assigns. Proof the plan or
   coordinator names is a minimum: require the agent to trace the changed

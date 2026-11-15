@@ -1,10 +1,9 @@
 ---
 name: dough-page-objects
 description: >-
-  Checks per-entry page-object guidance when authoring or changing browser tests,
-  including end-to-end tests and page/component objects. Applies the shared
-  convention only to test sources selected by pageObjects: true in the
-  project's intent.locations configuration; other entries keep their practice.
+  Applies the shared page-object convention when authoring or changing browser
+  or end-to-end tests and their page objects, for test sources selected by
+  pageObjects: true in intent.locations.
 ---
 
 # Check the test entry before browser test work

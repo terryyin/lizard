@@ -1,13 +1,11 @@
 ---
 name: dough-triage-project-findings
 description: >-
-  Maintains this project's retrospective findings, separates project and shared
-  responsibility, follows adopted fixes through observation and recurrence, and
-  queues zero to three supported new leading improvement stories, then commits
-  and synchronizes the maintenance result. Use only on
-  explicit invocation or as an expressly named phase of a user-invoked combined
-  cycle for its selected project set. Reading findings or completing a
-  retrospective does not invoke it. Does not implement the improvements.
+  Maintains this project's retrospective findings and queues up to three
+  supported improvement stories, then commits and synchronizes the result. Use
+  only on explicit invocation or as a named phase of a user-invoked combined
+  cycle.
+disable-model-invocation: true
 ---
 
 # Triage this project's findings

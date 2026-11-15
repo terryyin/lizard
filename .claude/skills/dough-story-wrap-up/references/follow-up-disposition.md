@@ -53,6 +53,9 @@ alone is not evidence of an actual delivered defect.
 
 Compatible gaps:
 
+- When the fault already fails this project's ordinary test entry or CI, the
+  gap only moves detection earlier. Record it in the disposition and queue
+  nothing.
 - When a gap's outcome fits the existing retrospective follow-up, extend that
   follow-up's plan and proof within the same outcome, record preparation
   reassessment through the established workflow, keep one queue entry, and

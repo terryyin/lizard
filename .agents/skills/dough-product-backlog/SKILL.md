@@ -1,6 +1,6 @@
 ---
 name: dough-product-backlog
-description: Maintains and reprioritizes a product backlog list of canonical story or bounded-correction references, and records necessary blocking story dependencies in canonical homes. Use to add, take, reorder, or complete backlog items, adopt or repair the done catalog beside them, report which story identities are already used before allocating a new one, record or inspect a justified prerequisite, correct an evidenced supplier agreement after cleanup, or resolve product backlog merge conflicts. Excludes classroom and workshop exercise backlogs.
+description: Maintains and reprioritizes this project's product backlog of story and correction references and records blocking story dependencies. Use to add, take, reorder or complete backlog items, check used story identities, repair the done catalog, record prerequisites, or resolve backlog merge conflicts; not for exercise backlogs.
 ---
 
 # Product backlog

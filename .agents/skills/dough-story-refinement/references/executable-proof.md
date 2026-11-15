@@ -72,10 +72,10 @@ focused proof. For unresolved domain purpose, ask precisely about that consumer'
 requirement and stop its dependent obligation until answered rather than guessing
 policy.
 Discovering a failing assertion does not authorize weakening its promise; align
-behavior and proof under the project's existing failure policy. A plan may
+behavior and proof under the [failure policy](../../dough-execute-plan/references/failure-policy.md). A plan may
 record that a known failure predates the story; that attribution is diagnosis
 evidence, not an exclusion from proof or repair, and the plan carries the
-project's policy rather than an instruction to report the failure and continue.
+policy rather than an instruction to report the failure and continue.
 
 For artifact-preservation promises, identify installation, physical store, and
 predecessor using project-supplied identities/scope. Same-store continuity proves no
@@ -214,7 +214,7 @@ until green do not establish it.
 Preserve strict verdicts and sufficient accepted unchanged proof. A focused pass
 observes its own boundary and cannot erase a failed required broad verdict.
 Host pressure does not dispose of an independent fixture or behavior defect;
-diagnose and repair it through the existing failure policy. A headroom decision
+diagnose and repair it through the [failure policy](../../dough-execute-plan/references/failure-policy.md). A headroom decision
 does not itself authorize relaxed timeouts, reduced proof obligations or changed
 scope. Leave changes to coverage, scope or authority with their existing human
 owner, and report missing proof instead of declaring success.

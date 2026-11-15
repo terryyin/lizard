@@ -1,13 +1,11 @@
 ---
 name: dough-bug-fixing
 description: >-
-  Resolves a reported discrepancy, defect, or regression by gathering expected
-  versus actual behavior and passing the report into bounded shared execution,
-  or by placing known larger or inconclusive work first in this project's
-  product backlog. Use for a bug report, defect, regression, broken or
-  unexpected behavior, a mismatch between intended and actual results, or a
-  larger or inconclusive bug that needs a first-priority story. Do not use for
-  the word "fix" alone, a reporting-only request, or refinement-only work.
+  Resolves a reported bug, defect or regression by gathering expected versus
+  actual behavior and passing it into bounded execution, or by queuing larger or
+  inconclusive work first in the backlog. Use for a bug report or broken or
+  unexpected behavior; not for the word "fix" alone, reporting only, or
+  refinement only.
 ---
 
 # Resolve a reported discrepancy

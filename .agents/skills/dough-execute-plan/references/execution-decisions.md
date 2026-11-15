@@ -140,8 +140,8 @@ For CI events, first use [CI observation and repair](ci-monitor.md#handle-a-noti
 For other failures, use focused diagnosis. Attribute a failure as pre-existing,
 unrelated, or environmental only with bounded evidence connecting its cause to
 the affected proof. Attribution explains the cause; it does not remove the
-failure from required proof or change who repairs it. Apply this project's
-failure policy as written. Leave a repair only when another active owner holds
+failure from required proof or change who repairs it. Apply the
+[failure policy](failure-policy.md) and this project's additions as written. Leave a repair only when another active owner holds
 it, preserving their work and reporting that coordination boundary, or within
 the stated scope of an explicit human exception. Record the cause, supporting
 observation, affected proof, and remaining defect or disposition in the

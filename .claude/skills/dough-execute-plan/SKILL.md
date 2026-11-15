@@ -1,19 +1,10 @@
 ---
 name: dough-execute-plan
 description: >-
-  Executes one selected story or bounded retrospective correction through an
-  executable plan, or one authorized planless slice from a selected simple story or
-  a contextual instruction, with independent refactoring, delivery, and asynchronous
-  CI repair. Continues settled planned work into Story Wrap Up. Use to execute a
-  plan, run slices, execute a canonical story when the caller explicitly skips
-  slice planning, or execute a small instruction from
-  context without a story or plan. Also admits an accepted mission that no backlog
-  list holds, such as a standalone review, investigation, or maintenance request,
-  into Taken before its work starts. Does not decide story scope or quick-path
-  eligibility. `--trunk` selects Trunk Mode; omitted mode keeps Story Branch Mode.
-  `--one-shot` keeps selected trivial work's result for review; `--auto-land` lands it.
-  `--skip-retro` skips the automatic planned-execution retrospective. `--replan` and
-  `--no-replan` choose whether an oversized attempt may continue through planning.
+  Executes a selected story's plan, a bounded correction, or an authorized
+  planless slice, with independent refactoring, delivery, CI repair and
+  continuation into wrap-up. Use to execute a plan, run slices, or execute a
+  small instruction without a plan.
 ---
 
 # Execute planned or planless work
@@ -21,6 +12,12 @@ description: >-
 Execute the selected plan or one explicitly authorized planless quick slice from an
 understood canonical feature story or contextual instruction. The coordinator owns
 delivery; implementation agents return uncommitted changes.
+
+Options: `--trunk` selects Trunk Mode; omitted mode keeps Story Branch Mode.
+`--one-shot` keeps selected trivial work's result for review; `--auto-land`
+lands it. `--skip-retro` skips the automatic planned-execution retrospective.
+`--replan` and `--no-replan` choose whether an oversized attempt may continue
+through planning.
 
 ## Establish execution context
 

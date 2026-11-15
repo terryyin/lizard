@@ -2,9 +2,7 @@
 name: dough-intent-coverage
 description: >-
   Runs one targeted scratch break check when a developer explicitly requests
-  Dough Intent Coverage during review. Reports whether maintained proof catches
-  one plausible fault in an important story promise, and names the next proof
-  action the evidence supports.
+  Dough Intent Coverage during review.
 ---
 
 # Check one story promise

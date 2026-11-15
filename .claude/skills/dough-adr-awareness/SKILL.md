@@ -1,11 +1,10 @@
 ---
 name: dough-adr-awareness
 description: >-
-  Use and cite this project's current Accepted Architectural Decision Records
-  for architecture-shaped work, follow supersession, surface conflicts instead
-  of silently drifting, and preserve human ownership of decisions and
-  exceptions. Use when a task mentions ADRs or architectural constraints, may
-  reverse an existing decision, or crosses architecture areas defined by this project.
+  Applies and cites this project's Accepted Architectural Decision Records,
+  follows supersession and surfaces conflicts for human decision. Use when a
+  task mentions ADRs or architectural constraints, may reverse a decision, or
+  crosses architecture areas.
 ---
 
 # ADR awareness

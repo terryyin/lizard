@@ -1,18 +1,9 @@
 ---
 name: dough-slice-planning
 description: >-
-  Plans one understood, bounded story, retrospective correction, or remaining
-  work from an understood instruction as an executable sequence of
-  Behavior/Structure slices with outside-in proof and safe stopping points. Use
-  when a selected story is ready for implementation planning, an execution
-  retrospective has one bounded correction to plan, or authorized remaining
-  work from a sufficient instruction needs an ordinary plan. Stays within the
-  triggering instruction's execution authority: finish after writing the plan
-  and recording its readiness unless that instruction explicitly also requests
-  execution. Invokes slice-plan refinement when remaining plan concerns can be
-  resolved within the understood outcome, then records remaining concerns in
-  the plan and readiness through the shared preparation procedure without
-  granting Take or execution.
+  Plans one understood story, bounded correction or remaining work as executable
+  Behavior/Structure slices with outside-in proof. Use when selected work is
+  ready for implementation planning; planning grants no execution.
 ---
 
 # Slice planning
