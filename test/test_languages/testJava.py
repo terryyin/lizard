@@ -319,6 +319,17 @@ interface I {
         self.assertEqual("A", result[0].name)
         self.assertEqual(1, result[0].cyclomatic_complexity)
 
+    def test_ternary_between_comparisons_counts(self):
+        result = get_java_function_list(
+            "int f(int a, int b, int c, int d) { return a < b ? c > d ? 1 : 2 : 3; }")
+        self.assertEqual(3, result[0].cyclomatic_complexity)
+
+    def test_wildcards_and_ternary_in_one_function(self):
+        result = get_java_function_list(
+            "int f(Map<String, ? super Integer> m, List<?> l) { return m.size() < l.size() ? 1 : 0; }")
+        self.assertEqual(2, result[0].cyclomatic_complexity)
+        self.assertEqual(2, result[0].parameter_count)
+
     def test_many_question_marks_after_less_than_no_freeze(self):
         """Multiple ? after < must not cause catastrophic backtracking."""
         code = """
