@@ -76,9 +76,10 @@ now. Then choose:
 | `ready` | Refinement `refined`; approach is a selected `planned` path with bounded slices, mapped proof, and decisive premises settled where their plan rows record the consuming operation's result in the form and profile the slice uses, or bounded by a permitted early probe slice, or an explicitly authorized `planless` path; no blocking concern remains |
 | `not-ready` | At least one blocking reason naming what still blocks readiness; a recorded dependency is not such a reason |
 
-A remaining slice-specific concern, unresolved goal/scope/examples, missing or
-unmapped proof, an unselected approach, or a cheaply observable decisive
-premise left unobserved blocks `ready`. A recorded
+A plan over the [slice limit](../../dough-story-decomposition/references/problem-decomposition.md#limit-slices-per-plan),
+a remaining slice-specific concern, unresolved goal/scope/examples, missing or
+unmapped proof, an unselected approach, or an unobserved decisive premise that
+is cheap to check blocks `ready`. A recorded
 [blocking dependency](../SKILL.md#record-a-necessary-blocking-dependency) is
 not a readiness concern: its agreement is the only record of that prerequisite,
 and it alone blocks the story's start until the supplier's outcome is published

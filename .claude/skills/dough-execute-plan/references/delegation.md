@@ -76,8 +76,10 @@ Give the agent:
   quick attempt and planned continuation as one execution, not two handoffs with
   independent histories.
 - [Execution decisions](execution-decisions.md), the resolved
-  [replanning permission](execution-decisions.md#choose-replanning-permission), this
-  project's slice budget and exceptions, workflow precedence, and literal
+  [replanning permission](execution-decisions.md#choose-replanning-permission),
+  the [remaining active time](oversized-slice.md#track-active-time), any
+  proof deadline and [how to wait for proof](wait-for-proof.md), workflow
+  precedence, and literal
   focused commands with the runtime wrapper. Carry the
   [failure policy](failure-policy.md) and this project's additions by link or verbatim, not as a weaker paraphrase such as "fix or
   report"; pass a known failure's attribution as diagnosis evidence, separate
@@ -90,9 +92,9 @@ Give the agent:
   [own executable proof](../../dough-story-refinement/references/planning.md#own-executable-proof),
   including the changed surface's suite when it runs within the slice's
   focused-check time, even when the plan says wider suites belong to CI.
-  When replanning is disabled, an oversized stop returns the incomplete attempt in
-  place; do not plan, retry, invent backlog work, or clean up. The coordinator
-  applies the overrun branch.
+  At the active limit, return unfinished work and elapsed active time. With
+  replanning disabled, leave the incomplete attempt in place for the coordinator's
+  overrun handling.
 - For expensive verification, the retained decision under
   [choose expensive proof before launch](../../dough-story-refinement/references/executable-proof.md#choose-expensive-proof-before-launch):
   actual target host, workload, evidence and unknowns, bounded choice, command/proof

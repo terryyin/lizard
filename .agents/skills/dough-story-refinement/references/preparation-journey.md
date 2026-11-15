@@ -70,9 +70,10 @@ for its completed result. Enter
 which confirms the workspace holds only this preparation's result, with every
 scratch observation edit reverted, then
 [Keep and publish the retained result](preparation-disposition.md#keep-and-publish-the-retained-result):
-stage `release` and land through Dough Land. Seed, plan, recorded facts, and
-the assignment's end publish in one snapshot. The announcement's publication
-authority (`--push-authorized`) covers landing to the same remote target.
+stage `release` and land through Dough Land. The preparation result and
+assignment release publish together, including any settled resplit. The
+announcement's publication authority (`--push-authorized`) covers the same
+remote target.
 
 The recorded assessment does not gate landing. A `ready` or `not-ready` plan
 whose reasons, early probe slices, or pre-Take decisions the plan already
@@ -87,8 +88,7 @@ result is complete:
 
 - a Needs human engagement refinement outcome;
 - missing required context;
-- a disputed constraint or an Escalate finding;
-- a story-resplit recommendation; or
+- a disputed constraint or an Escalate finding; or
 - a stopped write or recording.
 
 Any of these stops landing: report the expected response, keep the draft and

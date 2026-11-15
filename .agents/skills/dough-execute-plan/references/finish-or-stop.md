@@ -1,8 +1,8 @@
 # Finish or stop
 
-On a human-judgment stop or cancellation, handle delivered failures, then close
-the observer through the current host adapter without waiting for CI and report
-pending CI as unobserved. On normal completion, use
+When ending unfinished for risk, human judgment or cancellation, handle
+delivered failures, close the observer through the current host adapter without
+waiting, and report pending CI as unobserved. On normal completion, use
 [the one bounded completion operation](ci-completion-wait.md#await-the-applicable-revision-at-completion)
 and handle its combined CI and shutdown receipt before considering continuation.
 

@@ -231,8 +231,7 @@ human-decision procedure; independently supported remaining work may continue.
 After an execution overrun, record elapsed time, completed evidence, the failure
 or thrash point, and the sizing assumption that proved false. Replace slices
 only when learning escalation permits, and change later slices only when the
-same disproved assumption applies. Preserve a stated focused-test or
-external-wait exception that decomposition cannot reduce.
+same disproved assumption applies.
 
 ## Clean up after implementation
 

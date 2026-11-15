@@ -42,9 +42,8 @@ and stop this delegation.
 ## At acceptance
 
 Before comparing a slice's return, have a source-only review of its unchanged
-source. For planned execution, reuse the retained review while the source text
-is unchanged; do not launch another reviewer. When none is retained, obtain one
-under the rules above, then retain, link, and
+source. Reuse the retained review while its source is unchanged. If it is
+missing or the source changed, obtain a fresh one, then retain, link, and
 [allocate](#retain-link-and-allocate) every id before the next obligations
 listing or check. If isolation or that evidence is unavailable, name the
 missing review and stop dependent acceptance.

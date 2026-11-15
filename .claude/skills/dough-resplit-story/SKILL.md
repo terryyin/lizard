@@ -1,25 +1,28 @@
 ---
 name: dough-resplit-story
 description: >-
-  Resplits a large story into smaller stories and mapped slice plans after
-  slice-plan refinement. Use when resplitting is requested, including after a
-  more-than-15-slices recommendation.
+  Resplits feature stories and maps their slice plans. Use on request, for an
+  over-limit plan, or when execution risk calls for closing a delivered outcome.
 ---
 
 # Resplit story
 
-Replace one large story with smaller stories and partition its refined slice
-plan to match. A recommendation from slice-plan refinement alone does not
-authorize this workflow. Do not implement product code.
+Resplit within the authorized outcome. During execution, go directly to
+[split at a delivered slice boundary](#split-at-a-delivered-slice-boundary).
 
 ## Resolve context
 
-Require the original story and seed, its refined slice plan, and this project's
-seed, anchor, plan-location, and lifecycle conventions. Identify
-completed work, evidence, current decisions, and any existing backlog entry.
-Resolve backlog context when the original is queued or queueing is requested.
-If required context or a linked skill is unavailable, name what is missing and
-stop the affected activity before writing.
+Require a feature story, its seed and plan, project record conventions, and
+backlog context when queueing applies. Identify delivered work, proof and open
+decisions. Stop before writing if context is missing. For a correction,
+keep its [canonical home](../dough-story-refinement/references/planning.md#choose-the-planning-level)
+and return the decision needed to bound its outcome.
+
+## Resplit before readiness
+
+Resplit an over-limit feature plan in the same preparation. Keep the Preparing
+identity on the first outcome and return the replacements' assessments. If a
+split is blocked or refinement is deferred, return the reason for `not-ready`.
 
 ## Establish smaller stories
 
@@ -48,42 +51,50 @@ locations. Reuse the original plan for the first story where the lifecycle
 allows; otherwise retain a replacement trace and retire the competing plan.
 Link every plan to its canonical story and account for every original slice.
 
-For the first story in the resolved order:
+### Prepare the first outcome
 
-- Use [dough-story-refinement](../dough-story-refinement/SKILL.md) to establish
-  its Goal, Scope, and Key examples, reusing compatible prior refinement.
-- Realign its plan to that understanding and apply
-  [dough-slice-plan-refinement](../dough-slice-plan-refinement/SKILL.md).
-  Resolve scope, proof ownership, sizing, and dependencies on deferred work
-  before reporting it as a refined plan. It must deliver its own outcome if
-  later stories are deferred.
-- Leave the story and plan as refined as if refined individually. If unresolved
-  decisions prevent that result, report the resplit as incomplete rather than
-  giving the first plan inherited readiness.
+[Refine the first story](../dough-story-refinement/SKILL.md) and
+[realign its plan](../dough-slice-plan-refinement/SKILL.md). Check proof,
+sizing, and dependencies. The first story must deliver its outcome even if
+later stories are deferred. Return unresolved decisions as readiness blockers.
 
-For every later story, retain the mapped slices as provisional planning input.
-Mark its plan explicitly: `awaiting story refinement — not ready for slice-plan
-refinement or execution`, using equivalent project status fields where supplied.
-Record that resumption requires `dough-story-refinement` to clarify the mapped
-story's goal, scope, and examples, followed by plan realignment before slice-plan
-refinement or execution. Old slice readiness does not override this hold.
+Keep every later story's mapped slices as provisional input and mark its plan
+`awaiting story refinement — not ready for slice-plan refinement or execution`,
+or the project's equivalent status. It resumes through `dough-story-refinement`
+and plan realignment; old slice readiness does not lift this hold.
+
+## Split at a delivered slice boundary
+
+Use the last delivered boundary only if it fits the [slice limit](../dough-story-decomposition/references/problem-decomposition.md#limit-slices-per-plan)
+and yields a useful outcome with proof independent of the remaining slices.
+If the cut needs a human decision or leaves required proof open, return the
+blocker before rewriting either story.
+
+- Keep the original Taken identity. Narrow its source to the delivered outcome,
+  [refresh its source review](../dough-execute-plan/references/obtain-source-review.md#at-acceptance),
+  and check its retained proof and obligations before closure.
+- Give the remainder a new identity and plan. [Map every slice and promise](#map-and-realign-plans),
+  preserve compatible evidence, and resplit an oversized remainder as preparation.
+- If the remainder needs the original's integrated outcome, [record a blocking dependency](../dough-product-backlog/SKILL.md#record-a-necessary-blocking-dependency).
+  Then assess readiness and queue it first under [backlog ordering](../dough-product-backlog/SKILL.md#maintain-the-backlog-list).
+  Record the original identity on the remainder for recovery after cleanup.
+
+Deliver the split sources, plans and backlog changes together.
 
 ## Reconsider backlog placement
 
-If the original story is queued, use
-[dough-product-backlog](../dough-product-backlog/SKILL.md) to replace its entry
-and reassess the selected smaller stories against the whole backlog. The
-highest-priority replacement may retain the original position when justified.
-Other replacements do not inherit that position or automatically follow it;
-apply the backlog skill's ranking rules individually. Leave unselected
-candidates in their seed and explain placement or deferral. If the original
-was not queued, do not queue replacements unless requested.
+If the original story is queued, replace its entry through
+[dough-product-backlog](../dough-product-backlog/SKILL.md) and rank each
+selected replacement under its rules; only the highest-priority one may keep
+the original position, when justified. Leave unselected candidates in their
+seed and explain placement or deferral. Queue replacements of an unqueued
+original only on request.
 
 ## Report
 
 Report the replacement story links, original-to-new slice mapping, first plan's
 refinement and readiness result, later plans' holds and resumption steps, backlog
-placement rationale, and unresolved decisions. Resplitting does not authorize
-execution, commit, or push. End a completed resplit with:
+placement rationale, and unresolved decisions. Resplitting grants no execution,
+commit, or push; an invoking execution delivers its records. End a completed resplit with:
 
 `## STORY RESPLIT`

@@ -1,10 +1,17 @@
 # Refine an oversized slice
 
-Use this project's target, hard limit, exceptions, and repeated-overrun threshold
-under [slice sizing](../../dough-story-decomposition/references/problem-decomposition.md#size-and-escalate-slices).
-Track elapsed implementation, focused testing, and slice-local cleanup with the
-host clock; exclude explicit CI repair pauses. Lack of one coherent behavior or
-failure to converge also calls for refinement.
+## Track active time
+
+Each slice gets the [15 active minutes](../../dough-story-decomposition/references/problem-decomposition.md#size-and-escalate-slices).
+Count implementation, diagnosis, proof setup, and cleanup with the host clock,
+and carry elapsed active time across handbacks and resumes. Do not count the
+refactor pass, CI repair, or time inside a running command such as a test,
+build, measurement, or CI run; [wait for it without polling](wait-for-proof.md).
+Set an experiment's trial limit and decision criterion before it starts. At
+the limit, stop unfinished work. Lack of one coherent behavior or failure to
+converge also calls for refinement.
+
+## Handle the overrun
 
 Inventory tracked and untracked changes owned by the attempt and preserve
 pre-existing work. Never use broad `git checkout .` or `git clean -fd`. Unclear
@@ -26,13 +33,14 @@ Preserve unrelated work and earlier delivered slices; do not undo delivered
 work. Existing Taken entries stay Taken; invent no story, plan, or backlog
 entry. Report the stop under [Finish or stop](../SKILL.md#finish-or-stop).
 
-When replanning is allowed, continue as follows. For planned execution, safely park or revert
-only attempt-owned changes, then record elapsed time, completed proof, and the
+When replanning is allowed, planned execution parks or reverts only unfinished
+attempt-owned changes and records elapsed time, completed proof, and the
 failed sizing assumption in the same plan. Invoke
 [dough-slice-plan-refinement](../../dough-slice-plan-refinement/SKILL.md) only
-when learning escalation permits slice refinement. The coordinator commits and
-pushes the updated plan. Report `reverted and refined`, elapsed time, and
-whether the hard limit applied, then restart from the plan on disk.
+when learning escalation permits it. If refinement cannot produce a bounded
+next slice within the cap, [stop or split](execution-decisions.md#stop-or-split-before-more-work).
+Otherwise the coordinator delivers the revised plan, reports `reverted and refined`
+with elapsed active time, and restarts from the plan on disk.
 
 For quick execution, first make a safe stop in the conversation. Identify the
 source, elapsed time, the failed sizing assumption, completed compatible

@@ -1,20 +1,24 @@
 # Execution decisions
 
-Apply these decisions before delegation and after implementation and refactoring,
-even when tests pass.
+Apply these decisions before delegation, on implementation or refactor return,
+and when a wait or retry can no longer advance the work.
 
 ## Reassess before extending work
 
-When corrections accumulate, evidence challenges the premise, or the owner asks
-for simplification, reassess whether the remaining work is necessary before
-adding implementation or slices. State the smallest authorized, evaluable
-outcome and compare the strongest relevant simpler choice. Reuse available
-evidence. For a decisive uncertainty, retrieve only the missing authoritative
-passage or run a decision-bounded investigation under [targeted retrieval and
-disposable research](disposable-research.md). State the question it answers and
-what it leaves unproved; necessary investigation is not forbidden merely
-because its evidence is unusually large. Refresh only knowledge whose source or
-applicable assumption the new observation calls into question.
+On entry, resume, and after plan changes, check the [slice limit](../../dough-story-decomposition/references/problem-decomposition.md#limit-slices-per-plan)
+before dispatch. For an over-limit current or proposed plan, [stop or split](#stop-or-split-before-more-work).
+Apply the [active-time limit](oversized-slice.md#track-active-time) before
+dispatch and [handle an overrun](oversized-slice.md#handle-the-overrun) before
+more work.
+
+When a decisive premise fails, corrections or overruns recur, the owner asks
+for simplification, or the next step depends on a paused supplier, unavailable
+proof, or a human decision, hold affected work. Compare the remaining work
+with the smallest authorized outcome worth delivering. Reuse evidence or run a
+[bounded check](disposable-research.md) that can settle the decision. If the
+blocker remains and no independent authorized work can advance the outcome,
+[stop or split](#stop-or-split-before-more-work)
+before waiting or retrying. Refresh only knowledge the observation invalidates.
 
 When an observation invalidates an assumption for remaining work, identify the
 observation and its source location, the affected assumption, the consequences
@@ -53,6 +57,19 @@ unrelated cleanup or a broader outcome. If the resulting decision changes story
 scope or conflicts with an Accepted ADR, keep only the affected path stopped
 under the human-judgment and recorded-direction procedures below; do not erase
 the observation or revise the remaining plan around the unresolved dispute.
+
+## Stop or split before more work
+
+Stop the affected attempt. Preserve evidence and park or revert only its
+unfinished changes under the [ownership rules](oversized-slice.md). Honor
+[replanning permission](#choose-replanning-permission)
+and [human-judgment stops](#stop-for-human-judgment).
+When authorized, [split at a safe delivered boundary](../../dough-resplit-story/SKILL.md#split-at-a-delivered-slice-boundary)
+and close the retained outcome through ordinary proof, delivery, CI, review and
+wrap-up. The remainder awaits its own authorized start.
+
+If the split is blocked, keep the Taken entry and delivered history. Record the
+resume condition, close observation as in [finish or stop](finish-or-stop.md) and [report an unfinished stop](other-completion-paths.md).
 
 ## Stop for human judgment
 
@@ -149,9 +166,10 @@ execution conversation, existing handoff, or active plan.
 Successful commands need no extra record.
 
 A passing retry, repeated test name, or successful cleanup does not establish
-cause or repair. Use a targeted retry only to test a stated explanation. On
-recurrence, compare current conditions with the recorded cause; reuse evidence
-when applicable while retaining any remaining defect. Stop diagnosis once the
+cause or repair. Retry once to test a stated explanation. If the same required
+check fails again under comparable conditions, hold that repair loop and
+[reassess](#reassess-before-extending-work) before another attempt. Reuse
+applicable evidence and retain repair ownership. Stop diagnosis once the
 evidence justifies a disposition. If uncertainty remains, report it and stop
 for human judgment. A recorded explanation never waives required proof or the
 CI repair protocol; an infrastructure finding cannot excuse a separate assertion

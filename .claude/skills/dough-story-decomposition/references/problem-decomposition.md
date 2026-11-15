@@ -166,30 +166,32 @@ changes. Passing each slice's proof does not answer this design question.
 
 Rework boundaries when slices fragment one result or combine independent
 postconditions, proof loops, hidden preparation, credible execution or
-integration risk, or a supplied hard-limit concern. Consolidate, split, or
+integration risk, or a sizing concern. Consolidate, split, or
 retain accordingly. Keep a multi-beat outside-in scenario unfinished until
 green; never deliver a CI-breaking state.
 
+## Limit slices per plan
+
+Set slice boundaries by the rules above, then count. A plan holds at most
+eight slices; a larger count means the story is too large, so resplit the
+story and keep the slice boundaries. Count completed slices and omit replaced
+ones. Apply the limit [before readiness](../../dough-resplit-story/SKILL.md#resplit-before-readiness)
+and [before dispatch](../../dough-execute-plan/references/execution-decisions.md#reassess-before-extending-work).
+During execution, splitting the slice in progress may take the plan, and a
+story split from it at a delivered boundary, to ten slices; no other change
+may exceed eight.
+
 ## Size and escalate slices
 
-Use this project's slice target, hard limit, exceptions, and
-repeated-overrun threshold when they are supplied. Include implementation,
-focused verification, and slice-local cleanup in the sizing hypothesis. Without
-a numeric target or hard limit, judge boundedness through the Behavior/Structure
-gate, one proof loop, and concrete execution or integration concerns; do not
-invent a timing policy or treat its absence as a refinement or readiness block.
-
-At a supplied target, check for independent outcomes or hidden preparation and
-split when found. At a supplied hard limit, stop unless a stated focused-test or
-external-wait exception applies. Preserve the learning and safely park or revert
-only attempt-owned work; preserve developer and unrelated work, and stop for
-human judgment when ownership is unclear. Renaming, retrying, or splitting a
-slice does not erase an overrun.
+A slice gets **15 active minutes**; time inside running commands does not
+count. Plan each slice to fit, and split it when it holds independent outcomes
+or hidden preparation. [Track the time during execution](../../dough-execute-plan/references/oversized-slice.md#track-active-time).
+Retain overrun history across renames, retries, and splits.
 
 After a completed slice, update the same plan when evidence changes only its
 remaining slices. When evidence changes the story's goal, examples, scope, or
-sibling order, record the affected story and stop for human review. When the
-project's repeated-overrun threshold is reached, reassess the story boundary
-before another slice-only refinement. Record delivered value, remaining scope,
+sibling order, record the affected story and stop for human review. When a
+second slice of the same story overruns, reassess the story boundary before
+another slice-only refinement. Record delivered value, remaining scope,
 and a concrete sizing reason for continuing. Preserve compatible work and proof;
 discard them only for stated incompatibility or safety.

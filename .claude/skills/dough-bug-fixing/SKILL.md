@@ -77,7 +77,7 @@ any workspace this investigation created safely and return an
 explained-no-change disposition. Create no plan or further workspace for that
 result. If the report is known larger, or investigation is incomplete or
 inconclusive, use [Route remaining work](#route-remaining-work). If a repair is
-supported within the ten-minute attempt, first remove owned temporary
+supported within one slice's active time, first remove owned temporary
 investigation artifacts and safely close any workspace this investigation
 created, then invoke shared execution. Report a repair the instruction did not
 authorize with its evidence instead. If the lifecycle cannot close safely,
@@ -93,8 +93,8 @@ branch and worktree; never reuse or nest an exploration workspace this
 investigation created. For an admitted story, execution continues under its
 claim in the story's owned checkout. If the established checkout already
 belongs to an active execute-plan repair, return the evidence to that owning
-execution instead of invoking a nested one. Pass `--no-replan` and a ten-minute
-hard limit. Carry the gathered expectation, actual behavior, evidence, and gaps.
+execution instead of invoking a nested one. Pass `--no-replan`. Carry the
+gathered expectation, actual behavior, evidence, and gaps.
 Do not plan, invent another story, or start a local implement-and-refactor
 loop. That execution publishes the validated repair through [increment and repair
 publication](../dough-execute-plan/references/trunk-publication.md#publish-an-execution-increment-or-repair).

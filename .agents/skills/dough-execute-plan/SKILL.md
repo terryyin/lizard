@@ -57,7 +57,7 @@ At startup, obtain enough authoritative context to select and delegate the first
 Reuse instructions while their sources and applicability assumptions remain unchanged.
 Resolve project context at the first boundary that needs it:
 
-- execution-source kind, slice target, hard limit, and exceptions;
+- execution-source kind;
   [replanning permission](references/execution-decisions.md#choose-replanning-permission);
   integration checkout, when one exists, and branch for a claim, using the project's configured integration branch or `main` when none is supplied;
   execution mode and location: default Story Branch Mode; `--trunk` or a clear
@@ -210,12 +210,14 @@ delegation.
    reread the source and conversation's scope, decisions, progress, proof, and remaining
    uncertainty; it is the only slice, with no separate state artifact. Confirm current
    execution authority. Recover an existing CI observer before considering a new one.
-2. Select the next unfinished planned slice in plan order, or the one quick slice. Apply
-   [execution decisions](references/execution-decisions.md); for behavior/state removal or
-   disablement, also run the [destructive later-outcome check](references/destructive-later-outcome-check.md).
+2. Before selecting the next unfinished slice, apply
+   [execution decisions](references/execution-decisions.md), including the limit
+   and risk check. Select in plan order, or use the one quick slice. For
+   behavior/state removal or disablement, run the
+   [destructive later-outcome check](references/destructive-later-outcome-check.md).
 3. When planned refinement is needed and learning escalation permits, invoke
-   [slice-plan refinement](../dough-slice-plan-refinement/SKILL.md) in place, then restart
-   at step 1, unless replanning is disabled; then apply
+   [slice-plan refinement](../dough-slice-plan-refinement/SKILL.md) in place.
+   Restart at step 1 after an in-limit refinement. With replanning disabled, apply
    [oversized-slice decisions](references/oversized-slice.md)
    and stop without retry. If quick work no longer fits one coherent slice, apply
    [oversized-slice decisions](references/oversized-slice.md).
