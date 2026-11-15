@@ -40,10 +40,6 @@ Native Git bypassed the installed backlog merge adapter, including for apparentl
 
 Use a real script for checkout-isolated import probes. In `SEED-013#arrow-object-boundaries` (Cursor auto, 0.3.71, event time unknown), `lizard.py` resolved `abspath(sys.argv[0])` against cwd under `python -c`, causing false import-path failures. The harness's real `paired.py` workers were sound. See agent `89783fe2-57ff-41aa-b641-0cef9d98622b` and `docs/reviews/fabio-malpezzi-20261027/pr531/corrected-slice3-prelaunch.txt` (2026-10-27T11:47:50Z).
 
-## DD-007 — Expression-body flag gated on “newly created” missed paren-param arrows
-
-Derive arrow expression-body context from the body token on every `_arrow_function` path. In `SEED-013#arrow-object-boundaries` (Cursor auto, 0.3.71, event time unknown), `if created:` skipped arrows already pushed for `(...)` parameters. Refactor agent `c1df6a2a-bff5-455b-a7a1-638d227d1f52` fixed it before delivery (plan 009 slice 2, `testArrowObjectBoundaries.py` paren-param ternaries, proof 6/363 and reproducer 64).
-
 ## DD-008 — Fork `push:false` alone is not a contributor-route refusal
 
 Combine `maintainer_can_modify` and a divergent-SHA dry-run push before rejecting a fork route. For `SEED-012#regex-literal-context` (2026-10-27T18:40:00+08:00, Cursor auto, 0.3.71 via `01afe9c`), PR528's fork said `push:false`, MCM was true and only the divergent dry-run proved access. No false delivery stop followed. See agent `7093d051-eac5-4592-b08e-cdb07e4ea249`, plan 008 slice 1.
@@ -60,10 +56,6 @@ Coordinator base/candidate probes found gaps that green parser tests missed. Kee
 - `SEED-024#resolve-issue524-label-types` (2026-11-02 UTC, time unknown, Codex, 0.3.80 at `a10a744`, 0.3.81 after `0e352b7`): contextual calls, operator handoff and export-default callbacks became regressions before merge (`61e23de`, plan 016 G14–G17; `7fac94f:test/test_languages/testTypeScriptAssertionRoles.py`). Final 490 cases preserved 200 earlier cases, with old timing retained only for its own bytes.
 - `SEED-029#fsharp-support` (2026-11-04, time unknown, Claude Code Opus 5.5, 0.3.82 via `210ae36`): same-line attributes and `type A … and B` false function/missing member needed two discriminating test rounds before `65c552a`/`a20ab79`. Story clauses at `b0c42aa` covered the latter even without a literal example.
 - `SEED-029#ocaml-support` (2026-11-04, time unknown, same tool/release as F#): depth-zero `then`/`else`/`->` and literal one-line module examples corrected proof at `e8ecf8a`/`59ddc71` without product edits. The original depth-nested test also satisfied the bracket rule.
-
-## DD-011 — Integrity checks must separate measured inputs from acceptance records
-
-Separate measured-input invariants from evolving acceptance records and exclude output manifests from their own inputs. During `SEED-015#ternary-arrow-boundaries` (Codex, release unknown, guidance at `6f506711`, 2026-10-27T19:07–19:12Z observation window), qualification9_refactor found both integrity-check mistakes and fixed them before delivery. Only the owned PLAN path was permitted. Four frozen drivers, 120 timing pairs and observations stayed intact without reruns. See `e3956fa` root-performance/integrity and cache `seed015-root-737aeaf7/refactor-pre-integrity.json`.
 
 ## DD-012 — Absolute CLI corpus paths bind historical output hashes
 
@@ -88,10 +80,6 @@ Interrupted Tasks left recoverable checkout evidence, which the coordinator insp
 - `SEED-010#review-lexical-js-prs` (2026-10-28, time unknown, Cursor, 0.3.71): two interruptions left uncommitted product/evidence and no commits. Slice 2 ended in an evidenced non-merge (conversation `9e3d53de-1aaa-43d4-a4c0-161f4d937215`, segment_000).
 - `SEED-019#template-interpolation-conditions` (2026-10-29T06:47:00+08:00, Cursor auto, 0.3.73): resumed the two outstanding attempt10 gates without retiming the other four, then merged PR545 (conversation `b6ecc26c-f7f1-4c5f-a3aa-2a2ccfa36047` L60).
 - `SEED-021#dart-support` (2026-10-29T11:20:00+08:00, Cursor auto, 0.3.74): reviewed interrupted slice-6 refactor changes and tests, reran only the refactor, and delivered `7a5b0d7` (conversation `5ae6ce13-8910-4941-95bc-b0a708f808f0`).
-
-## DD-016 — Post-change hot-path collapse reintroduced gated per-token dispatch
-
-Measure before consolidating dispatch on a performance-gated path. In `SEED-019#template-interpolation-conditions` (2026-10-28T16:41:29+08:00, Cursor auto, 0.3.73), refactor `5dbb84bb-1fe7-4bb6-b359-cb3585c88194` extracted per-token dispatch in `TypeScriptReader.__call__`. Attempt9 failed incremental API (95% upper +5.02%) despite correct semantics. Restoring inline `after_interpolation` cost one eligible trim and remeasurement; attempt10 passed six gates (max upper +2.449%). Plan Learnings retain the guard.
 
 ## ODF-378 — First-landing expectation blocks story-branch increment publish
 
