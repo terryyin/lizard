@@ -116,6 +116,15 @@ class Test_Python_nloc(unittest.TestCase):
         code = 'def f():\n    x = 1\n    r"""A raw comment.\n    Second line."""\n    return x\n'
         self.assertEqual(3, get_python_function_list(code)[0].nloc)
 
+    def test_variable_named_like_prefix_before_comment_string_not_counted_in_nloc(self):
+        # Only a prefix written directly against the string is a prefix: a variable named f, r or b
+        # ending the previous statement leaves the next standalone string a comment.
+        for name in ('f', 'r', 'b', 'u', 'rb'):
+            with self.subTest(name=name):
+                code = ('def g(%s):\n    x = %s\n    """comment\n    line2"""\n'
+                        '    return x\n' % (name, name))
+                self.assertEqual(3, get_python_function_list(code)[0].nloc)
+
 
 class Test_Python_issue_317_comment_backslash(unittest.TestCase):
     """#317: backslash at end of comment must not swallow the next line."""

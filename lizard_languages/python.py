@@ -3,7 +3,8 @@
 from .code_reader import CodeReader
 from .script_language import ScriptLanguageMixIn
 from .python_structure import PythonIndents, PythonStates, count_spaces
-from .python_tokens import FStringLiteralToken, generate_tokens as generate_python_tokens
+from .python_tokens import FStringLiteralToken, PrefixedStringToken, \
+    generate_tokens as generate_python_tokens
 
 
 class PythonReader(CodeReader, ScriptLanguageMixIn):
@@ -38,8 +39,6 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
         '=', '+=', '-=', '*=', '/=', '%=', '//=', '**=', '&=', '|=', '^=',
         '<<=', '>>=', '(', 'return', ',', '[', '+', '-', '*', '/', '//', '%',
     ))
-    # String prefixes that the tokenizer emits apart from the string they prefix.
-    _STRING_PREFIXES = frozenset(('r', 'u', 'b', 'f', 't', 'br', 'rb', 'fr', 'rf', 'tr', 'rt'))
 
     def __init__(self, context):
         super(PythonReader, self).__init__(context)
@@ -87,7 +86,7 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
                 # A prefixed string (f"""...""") arrives as the prefix and then the string:
                 # what decides is the token before the prefix.
                 preceding = self._last_meaningful_token
-                if preceding is not None and preceding.lower() in self._STRING_PREFIXES:
+                if isinstance(token, PrefixedStringToken):
                     preceding = self._token_before_last
                 is_part_of_expression = preceding in self._EXPRESSION_PRECEDING_TOKENS or \
                     isinstance(token, FStringLiteralToken)

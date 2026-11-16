@@ -7,6 +7,10 @@ class FStringExpressionToken(str):
     '''An f-string token whose delimiters belong to the interpolation.'''
 
 
+class PrefixedStringToken(str):
+    '''A string written directly after its prefix token (f, r, b, ...).'''
+
+
 class FStringLiteralToken(str):
     '''A literal chunk of an f-string split by its interpolations: part of
     the f-string expression, never a standalone string.'''
@@ -22,6 +26,9 @@ _PY_TRIPLE_QUOTE = (
 
 # str/bytes f-string prefixes (any case). Excludes bare b/rb (not f-strings).
 _FSTRING_PREFIXES = frozenset(('f', 'rf', 'fr', 'bf', 'fb'))
+# All string prefixes (any case), which the tokenizer emits apart from the string.
+_STRING_PREFIXES = _FSTRING_PREFIXES | frozenset((
+    'r', 'u', 'b', 't', 'br', 'rb', 'tr', 'rt'))
 
 
 def generate_tokens(source_code, addition='', token_class=None):
@@ -42,9 +49,9 @@ def _expand_fstring_interpolations(tokens, token_class):
     Addresses GitHub issue #317: control flow inside interpolations was
     invisible to the tokenizer when the f-string was one opaque string token.
 
-    The tokenizer emits the f-string prefix ('f', 'rf', ...) as its own
-    token right before the string body, so an f-string is a prefix token
-    immediately followed by a string token.
+    The tokenizer emits a string prefix ('f', 'rb', ...) as its own token
+    right before the string body, so a prefixed string is a prefix token
+    immediately followed by a string token, marked as a PrefixedStringToken.
     """
     prefix = None
     for token in tokens:
@@ -52,14 +59,17 @@ def _expand_fstring_interpolations(tokens, token_class):
             held, prefix = prefix, None
             if isinstance(token, str) and token[:1] in ('"', "'"):
                 yield held
-                for inner in _tokenize_fstring_body(
-                        token, token_class):
-                    yield inner
+                string = PrefixedStringToken(token)
+                if held.lower() in _FSTRING_PREFIXES:
+                    for inner in _tokenize_fstring_body(string, token_class):
+                        yield inner
+                else:
+                    yield string
                 continue
             yield held
             # not a string after all; fall through to classify this token
         if isinstance(token, str) and \
-                token.lower() in _FSTRING_PREFIXES:
+                token.lower() in _STRING_PREFIXES:
             prefix = token
             continue
         yield token
