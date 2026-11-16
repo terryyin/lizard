@@ -1,5 +1,15 @@
 # Change Log
 
+## 1.26.1
+
+### Bug Fixes
+- C/C++, Java, C#, JavaScript, and TypeScript: count the `?` of a ternary between comparisons (`a < b ? c > d : e`); it was read as part of a type argument list, so the CCN was one too low (PR #572)
+- Python: count the lines of prefixed triple-quoted strings (`return f"""..."""`) and of f-string literal chunks in NLOC instead of reading them as comments, which could make NLOC negative; a variable named `f`, `r` or `b` before a standalone docstring no longer makes it look prefixed (PR #568)
+- JSX and TSX: `//` in element text (`<p>Visit https://example.com</p>`) no longer swallows the closing tag and the functions after it (PR #567)
+- JSX and TSX: no empty text token between two adjacent child elements, which crashed `-Eduplicate` with `IndexError` (PR #571)
+- Rust: the `||` of a closure without parameters is one token again (PR #569)
+- API: `FunctionInfo.cognitive_complexity` is present as `0` for functions without cognitive complexity, matching the CLI (issue #570)
+
 ## 1.26.0
 
 ### Bug Fixes
