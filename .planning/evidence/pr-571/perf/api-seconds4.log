@@ -1,0 +1,2 @@
+warning: Git tree '/Users/terryyin/git/lizard/.worktrees/lizard-process-pr-https-github-com-terryyin-liza-3' is dirty
+{"verdict": "passes", "passes": true, "paired_95pct_ci": [-6.113267170147286, 2.427364632709893], "out": "/Users/terryyin/git/lizard/.worktrees/lizard-process-pr-https-github-com-terryyin-liza-3/.planning/evidence/pr-571/perf/api-seconds4.json"}
