@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-059#process-pr-572",
+  "title": "Process PR #572 — Count a ternary between comparisons (`a < b ? c > d : e`)",
+  "completedAt": "2026-11-16T01:20:46.507Z",
+  "developer": "Terry Yin",
+  "agent": "Mana-chan",
+  "host": "claude",
+  "model": "claude-fable-5-2"
+}

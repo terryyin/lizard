@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/Users/terryyin/git/lizard/.worktrees/lizard-process-pr-https-github-com-terryyin-liza-4/.agents/skills/lizard-process-pr/scripts/lizard_measurement.py", line 145, in <module>
+    run(json.loads(Path(sys.argv[1]).read_text()))
+  File "/Users/terryyin/git/lizard/.worktrees/lizard-process-pr-https-github-com-terryyin-liza-4/.agents/skills/lizard-process-pr/scripts/lizard_measurement.py", line 83, in run
+    cases = [
+  File "/Users/terryyin/git/lizard/.worktrees/lizard-process-pr-https-github-com-terryyin-liza-4/.agents/skills/lizard-process-pr/scripts/lizard_measurement.py", line 84, in <listcomp>
+    (str(p), p.read_text(encoding="utf-8"))
+  File "/nix/store/1bn3i8c8xfwc77mp4q998mbkg1aqyy6b-python3-3.9.11/lib/python3.9/pathlib.py", line 1267, in read_text
+    return f.read()
+  File "/nix/store/1bn3i8c8xfwc77mp4q998mbkg1aqyy6b-python3-3.9.11/lib/python3.9/codecs.py", line 322, in decode
+    (result, consumed) = self._buffer_decode(data, self.errors, final)
+UnicodeDecodeError: 'utf-8' codec can't decode byte 0x89 in position 0: invalid start byte
