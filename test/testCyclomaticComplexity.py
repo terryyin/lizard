@@ -7,6 +7,7 @@ import pytest
     [("no condition", "int fun() {}", [1]),
      ("one condition", "int fun(){if(a){xx;}}", [2]),
      ("ternary operator", "int fun(){return (a)?b:c;}", [2]),
+     ("ternary between comparisons", "int fun(){return a < b ? c > d : e;}", [2]),
      ("forever_loop", "int fun(){for(;;){dosomething();}}", [2]),
      ("and operator", "int fun(){if(a&&b){xx;}}", [3]),
      ("if-else-if", "int fun(){if(a)b;else if (c) d;}", [3]),

@@ -10,6 +10,13 @@ from operator import or_
 
 
 _COMPILED_PATTERNS = {}
+# A type argument list holding a `?` (`<?>`, `<? extends T>`, `Map<K, ? super V>`, `List<int?>`) is one
+# token, so its `?` is not read as a conditional. Each `?` must sit where a type argument can hold one:
+# a wildcard, or a nullable mark right after its type. `a < b ? c > d` is a comparison and a ternary.
+_TYPE = r"(?:(?:in|out)\s+)?[\w.]+\??"
+_TYPE_ARGUMENT = r"\s*(?:\?|" + _TYPE + r")(?:\s+(?:extends|super)\s+" + _TYPE + r")?\s*"
+_WILDCARD_ARGUMENTS = r"\<(?=[^<>]*\?)" + _TYPE_ARGUMENT + r"(?:," + _TYPE_ARGUMENT + r")*\>"
+
 _FLAG_PATTERN = re.compile(r'\(\?[aiLmsux]+\)')
 _FLAG_VALUES = {
     'a': re.A,  # ASCII-only matching
@@ -60,7 +67,7 @@ def _compile_token_pattern(addition, flags):
         r"|\/\/" + until_end +
         r"|\#" +
         r"|:=|::|\*\*" +
-        r"|\<(?=(?:[^<>?]*\?)+[^<>]*\>)(?:[\w\s,.?]|(?:extends))+\>" +
+        r"|" + _WILDCARD_ARGUMENTS +
         r"|" + r"|".join(re.escape(s) for s in combined_symbols) +
         r"|\\\n" +
         r"|\n" +

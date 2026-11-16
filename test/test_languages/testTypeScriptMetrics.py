@@ -106,3 +106,15 @@ class Test_ts_function_end_after_literals(unittest.TestCase):
         )
         self.assertEqual([('a', 1, 3), ('b', 4, 4), ('c', 5, 5)],
                          self.spans(code))
+
+
+class Test_ts_ternary_between_comparisons(unittest.TestCase):
+    """`a < b ? c > d : e` is a comparison and a ternary, not a type argument list."""
+
+    def test_ternary_counts(self):
+        code = 'function f(a: number, b: number, c: number, d: number) { return a < b ? c > d : false; }'
+        self.assertEqual(2, get_ts_function_list(code)[0].cyclomatic_complexity)
+
+    def test_nullable_type_argument_is_no_branch(self):
+        code = 'function f(m: Map<string, number?>) { return m.size; }'
+        self.assertEqual(1, get_ts_function_list(code)[0].cyclomatic_complexity)
