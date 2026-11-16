@@ -74,6 +74,16 @@ head/base and frozen starting baseline; expected/actual behavior; shared consume
 correction route and estimate; proof paths and applicability; next action/disposition.
 Recover this small context on resume before searching raw history again.
 
+### Keep evidence local
+
+Write packets, benchmark output, logs and other raw proof only under the
+checkout's Git-ignored `.planning/evidence/<pr-or-owner>/` or a path outside the
+repository. Never stage or commit them, and write no `disposition.md`. The
+lasting record is the story/plan proof summary Open Dough commits before cleanup,
+the PR review or acknowledgement comment, commit messages and the final report.
+Local paths in those records are working references, not durable evidence.
+Keep local evidence while a later slice or resume still consumes it.
+
 ## 3. Decide what the contribution needs
 
 ### Compare behavior and consumers
@@ -140,7 +150,8 @@ affected workload, refactor or required check remains unresolved.
 Post comments/thanks only when authorized. After a confirmed merge, acknowledge
 material corrections and retain one comment URL; check for an existing acknowledgement
 before retrying. Close the owner through the normal wrap-up only when its scope is
-complete. Keep evidence still consumed by another active story.
+complete. During wrap-up, delete the owner's local evidence directory unless
+another active story still consumes it.
 
 Report one of: review completed within requested scope; merged (with acknowledgement
 state); unnecessary/already fixed with evidence; real defect deferred to a linked

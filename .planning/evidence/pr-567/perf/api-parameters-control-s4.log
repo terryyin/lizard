@@ -1,1 +1,0 @@
-{"verdict": "bound-not-met", "passes": false, "paired_95pct_ci": [-0.5419949068943912, 7.847177628213804], "out": "/Users/terryyin/git/lizard/.worktrees/lizard-process-pr-567/.planning/evidence/pr-567/perf/api-parameters-control-s4.json"}

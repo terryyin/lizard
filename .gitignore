@@ -51,3 +51,6 @@ website/static/dist/
 # Ephemeral credential files produced by google-github-actions/auth.
 gha-creds-*.json
 release-evidence/
+
+# Local PR/issue process evidence; never committed (see lizard-process-pr)
+.planning/evidence/

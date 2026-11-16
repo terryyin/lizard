@@ -16,13 +16,14 @@ Nix environment on Linux or macOS.
 
 Prepare independent baseline/candidate source checkouts and a fixed directory
 containing only source inputs. Historical corpora can be reconstructed with the
-retained cohort README and manifests. Keep outputs outside that directory.
+retained cohort README and manifests. Keep outputs outside that directory, in
+uncommitted [local evidence](../SKILL.md#keep-evidence-local).
 
 ```sh
 nix develop -c python .agents/skills/lizard-process-pr/scripts/paired_benchmark.py \
   --baseline /absolute/target --candidate /absolute/candidate \
   --corpus /absolute/frozen-corpus --workload api-parameters \
-  --out /absolute/evidence/api-parameters.json
+  --out /absolute/checkout/.planning/evidence/pr-123/api-parameters.json
 ```
 
 Modes: `api` analyzes preloaded sources, `api-parameters` also consumes public
