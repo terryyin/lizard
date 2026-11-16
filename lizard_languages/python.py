@@ -97,7 +97,7 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
                     self.context.add_nloc(-(token.count('\n') + 1))
 
         # Update last meaningful token (ignore whitespace and newlines)
-        if token not in ['\n', ' ', '\t'] and not token.isspace():
+        if not token.isspace():
             self._token_before_last = self._last_meaningful_token
             self._last_meaningful_token = token
 
