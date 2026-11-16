@@ -1,4 +1,4 @@
-"""Paired Lizard measurements; derived from the retained cohort paired.py protocol."""
+"""Paired Lizard measurements; derived from the Fabio cohort paired.py protocol."""
 
 import argparse
 import hashlib

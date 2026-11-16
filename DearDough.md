@@ -28,7 +28,7 @@ Guarded publication used to require marking the slice done before the hosted pro
 
 ## DD-004 — PR merge preceded a missing affected-workload performance gate
 
-Apply the affected-workload gate before exact-head merge. For `SEED-010#review-fabio-malpezzi-prs` (Codex, execution time/release unknown, guidance baseline `2e21e404`), PR527 merged at `e871ae448` before the nested-function, async, match, continuation and class controls in `af27c910:.planning/slice-plans/004-fabio-malpezzi-pr-reviews/527-review.md` and plan obligation G1 were settled. The later 22 controls passed (upper 95% slowdown bound −0.6803%, `docs/reviews/fabio-malpezzi-20261027/controls/`). The project's workload-selection gap preceded merge and remains a distinct, qualified finding.
+Apply the affected-workload gate before exact-head merge. For `SEED-010#review-fabio-malpezzi-prs` (Codex, execution time/release unknown, guidance baseline `2e21e404`), PR527 merged at `e871ae448` before the nested-function, async, match, continuation and class controls in `af27c910:.planning/slice-plans/004-fabio-malpezzi-pr-reviews/527-review.md` and plan obligation G1 were settled. The later 22 controls passed (upper 95% slowdown bound −0.6803%, `ad1f9aa1:docs/reviews/fabio-malpezzi-20261027/controls/`). The project's workload-selection gap preceded merge and remains a distinct, qualified finding.
 
 ## ODF-397 — Native Git bypassed the installed backlog merge adapter
 
@@ -38,7 +38,7 @@ Native Git bypassed the installed backlog merge adapter, including for apparentl
 
 ## DD-006 — `python -c` import probes contaminate via argv0
 
-Use a real script for checkout-isolated import probes. In `SEED-013#arrow-object-boundaries` (Cursor auto, 0.3.71, event time unknown), `lizard.py` resolved `abspath(sys.argv[0])` against cwd under `python -c`, causing false import-path failures. The harness's real `paired.py` workers were sound. See agent `89783fe2-57ff-41aa-b641-0cef9d98622b` and `docs/reviews/fabio-malpezzi-20261027/pr531/corrected-slice3-prelaunch.txt` (2026-10-27T11:47:50Z).
+Use a real script for checkout-isolated import probes. In `SEED-013#arrow-object-boundaries` (Cursor auto, 0.3.71, event time unknown), `lizard.py` resolved `abspath(sys.argv[0])` against cwd under `python -c`, causing false import-path failures. The harness's real `paired.py` workers were sound. See agent `89783fe2-57ff-41aa-b641-0cef9d98622b` and `ad1f9aa1:docs/reviews/fabio-malpezzi-20261027/pr531/corrected-slice3-prelaunch.txt` (2026-10-27T11:47:50Z).
 
 ## DD-008 — Fork `push:false` alone is not a contributor-route refusal
 
@@ -126,7 +126,7 @@ A merge-gated hosted commitment was marked observed before exact-head checks on 
 
 ## DD-403 — Early cost-owner performance probe avoided unnecessary NS remediation
 
-Probe cost ownership under quiet load before changing a product owner. For `SEED-035#ns-member-name-performance` at `43a07aafa2e1d7e28955ba554ced3263baca1874` (2026-11-06T21:25:18+07:00, Cursor auto, 0.3.86), attempt5 cumulative API parameters failed at ~+4.51% upper. On the refreshed target the prior set (~+0.98%) and full candidate (~+1.41%) passed, so the as-authored `_member_name` landed with six gates under 3% and no NS remediation. See `docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice1/` and `seed035-slice2/`.
+Probe cost ownership under quiet load before changing a product owner. For `SEED-035#ns-member-name-performance` at `43a07aafa2e1d7e28955ba554ced3263baca1874` (2026-11-06T21:25:18+07:00, Cursor auto, 0.3.86), attempt5 cumulative API parameters failed at ~+4.51% upper. On the refreshed target the prior set (~+0.98%) and full candidate (~+1.41%) passed, so the as-authored `_member_name` landed with six gates under 3% and no NS remediation. See `ad1f9aa1:docs/reviews/fabio-malpezzi-SEED-034/pr554/seed035-slice1/` and `seed035-slice2/`.
 
 <a id="dd-405--windows-ci-proof-tsv-newlines-needed-successive-write-boundary-repairs"></a>
 

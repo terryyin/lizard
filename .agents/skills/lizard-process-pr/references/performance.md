@@ -8,7 +8,8 @@ record it rather than silently generalizing old constraints.
 
 ## Reuse the runner
 
-`scripts/paired_benchmark.py` generalizes the retained cohort `paired.py` protocol.
+`scripts/paired_benchmark.py` generalizes the Fabio cohort `paired.py` protocol
+(`git show ad1f9aa1:docs/reviews/fabio-malpezzi-20261027/paired.py`).
 It does not edit historical evidence or decide whether the candidate is correct.
 Run semantic regressions first; a stable wrong output is still wrong.
 The runner uses POSIX pipes and host-load observations; run it in the project's
@@ -16,7 +17,7 @@ Nix environment on Linux or macOS.
 
 Prepare independent baseline/candidate source checkouts and a fixed directory
 containing only source inputs. Historical corpora can be reconstructed with the
-retained cohort README and manifests. Keep outputs outside that directory, in
+cohort README and manifests from that revision. Keep outputs outside that directory, in
 uncommitted [local evidence](../SKILL.md#keep-evidence-local).
 
 ```sh

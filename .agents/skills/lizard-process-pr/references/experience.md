@@ -6,7 +6,8 @@ does not replace current story contracts or certify an active PR's state.
 ## Evidence recovered and limits
 
 - Repository Git history, including merged PRs and removed story/plan records.
-- The retained `docs/reviews/fabio-malpezzi-20261027/` cohort: 19 frozen PRs,
+- The former `docs/reviews/fabio-malpezzi-20261027/` cohort (removed; recover
+  with `git show ad1f9aa1:<path>`): 19 frozen PRs,
   report/authored examples, original and corrected proposals, consumer traces,
   literal harnesses, source/corpus manifests, raw timings and dispositions.
 - All 75 available main Cursor transcript files under the local Lizard project
@@ -74,7 +75,8 @@ Its chat shows review, correction, merge and posting were separately authorized;
 an incoming PR link alone never supplied permission for every outward action.
 The larger Fabio cohort then made exact revisions, paired uncertainty bounds,
 incremental/cumulative workloads, contributor publication and acknowledgement
-explicit. Its [complete-cycle contract](../../../../docs/reviews/fabio-malpezzi-20261027/REVIEW-CONTRACT.md)
+explicit. Its complete-cycle contract
+(`git show ad1f9aa1:docs/reviews/fabio-malpezzi-20261027/REVIEW-CONTRACT.md`)
 is the source of its strict <3% upper bound and >15-minute correction deferral.
 These historical policies are not evidence that every earlier PR met them.
 
