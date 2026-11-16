@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-059#process-pr-571-jsx-empty-text-token",
+  "title": "Process PR #571 — Fix the empty JSX text token between two child elements",
+  "completedAt": "2026-11-16T00:49:05.345Z",
+  "developer": "Terry Yin",
+  "intentCoverage": {
+    "report": "# Dough Intent Coverage\n\n**Story:** SEED-059#process-pr-571-jsx-empty-text-token\n**Revision:** 60b2fb5933112ddab2bd540cd29236cd5ec3951b\n**Promise:** Adjacent JSX child elements emit no empty text token, so `-Eduplicate` does not raise `IndexError` and token counts stay correct.\n**Fault:** Reverted `XMLTagWithAttrTokenizer.flush` to treat only whitespace (`text.isspace()`), restoring empty-string token emission between sibling elements.\n**Fixture/assertion:** `test_element_right_after_a_child_element` and `test_slash_in_text_does_not_open_a_regex` in `test/test_languages/testTSX.py`.\n**Outcome:** Caught. Baseline green (2 passed); with the fault both tests failed (empty `''` token / Rates token count 47 vs 45); CLI `-Eduplicate` on `panel.tsx` raised `IndexError`; restoration returned green and a clean scratch tree.\n\n## Costs\n\n- **Test runtime.** Measured: focused pytest about 0.04s baseline, 0.04s fault, 0.04s restore.\n- **Human effort.** Unavailable: no separate human effort measure in this session.\n- **Agent effort.** Unavailable: no separate agent-effort meter in this session.\n\n\n\n- **Invocation-to-report elapsed.** 30730 ms (measured), from 1794790074820 to 1794790105550 in Unix epoch ms. The end clock was sampled after writing the prepared report body.\n"
+  }
+}
