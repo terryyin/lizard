@@ -40,8 +40,7 @@ class RustReader(CodeReader, CCppCommentsMixin):
             _flatten_nested_comments(source_code), addition, token_class)
 
     def preprocess(self, tokens):
-        """Split the `||` of a closure without parameters, `|| x`, into two
-        `|`, as `|a| x` has, so that it is not counted as a logical or."""
+        """Normalize an empty closure's `||` to one non-logical pipe token."""
         openers = self._CLOSURE_OPENERS
         last = None
         for token in tokens:
@@ -50,7 +49,6 @@ class RustReader(CodeReader, CCppCommentsMixin):
                     yield token
                 continue
             if token == '||' and last in openers:
-                yield '|'
                 yield '|'
             else:
                 yield token
