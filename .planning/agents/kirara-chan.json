@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "agent": "Kirara-chan",
+  "email": "kirara-chan@example.org",
+  "identity": "SEED-058#process-pr-569",
+  "mode": "story-branch",
+  "branch": "codex/lizard-process-pr-https-github-com-terryyin-liza-2",
+  "host": "codex"
+}
