@@ -65,3 +65,9 @@ Intake metadata: head `7d449349c96df49b87850ff6694ef0b0563fc62d` on
 `FabioMalpezzi:fix/jsx-url-in-element-text`; base `master`;
 `maintainer_can_modify` true; merge state MERGEABLE/CLEAN; evidence under
 `.planning/evidence/pr-567/`.
+
+**Outcome:** Merged. Final contributor head
+`7d449349c96df49b87850ff6694ef0b0563fc62d` landed as merge commit
+`967fda152a52cb0f6f8a4df4b7577ec20dab857e`. Acknowledgement:
+https://github.com/terryyin/lizard/pull/567#issuecomment-6904054746.
+
