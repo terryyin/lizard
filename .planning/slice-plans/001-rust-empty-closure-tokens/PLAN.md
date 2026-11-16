@@ -67,3 +67,10 @@ Disposition: proved by slice 1: testRustTokens.py::test_empty_closure_does_not_a
 ## Execution complete
 
 Product advice: No additional product changes recommended. Exact contributor91603058 CI run43781573967 passed all14 matrix jobs plus changes/ci-proof; web skipped as applicable. Required hosted merge remains landing-owned.
+
+## Closure evidence
+- Hosted mergecf064ade5a9788cf3aa8b74f3cb9a464c50fae5e accepted with exact head91603058. Material correction acknowledged once: https://github.com/terryyin/lizard/pull/569#issuecomment-6904202063.
+- Execution branch036951858ac5cbc0e6c6f8c4a809568684851902 completed exact CI run43782141571 attempt1; shutdown confirmed,unread0.
+- Latest accepted target60b2fb59 carried one more independent TSX change; adapter merge preserved it. Final combined local pytest3156 passed,7 skipped; makeexit0 (closure-{pytest,make}.log). Rust changes remain byte-identical to the qualified contributor; no extra product/refactor finding.
+- Initial closure freshness check chose contributor91603058 and refused not-taken-at-base; target sync restored unique base60b2fb59 and returned unchanged. Process review amended with DD-489; no product follow-up or deferred review.
+- Contextual/correction Intent Coverage selection remains inapplicable. Lasting knowledge lives in Rust reader and public analyzer tests. No follow-ups need queueing.

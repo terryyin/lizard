@@ -136,8 +136,21 @@ Former local code: DD-405.
 
 Lizard's Windows pipeline tests passed after `a6fa1479`, `e22e93c4` and `a3ec770a` normalized captured stdout and forced LF at the converter and helper write boundaries. [CI run 42745089766](https://github.com/terryyin/lizard/actions/runs/42745089766) verified the local repair on `a3ec770a`. The shared TSV contract remains open. [ODF-488 evidence](https://github.com/terryyin/open-dough/blob/96e641815b9b7d957d97e03c612034d1c4093734/docs/maintainer/findings/ODF-488.md#odf-488).
 
+## DD-489 — Source freshness can select a contributor merge base without the claim
+
+After an externally guarded PR merge,the story branch and trunk had two histories in common. The freshness check selected the contributor head91603058 as its base and refused `not-taken-at-base`,although claimc0d8eec4 and current trunk still held the same Taken work. Merging the already accepted trunk into the owned branch restored an unambiguous base and the normal check returned unchanged. This is a qualified PR-delivery interaction; no product defect was observed.
+
+### Occurrences
+- Execution: SEED-058#process-pr-569; first implementation24caf4571caadaa318a14069cd02c5800b69baa2
+  - Timestamp: unknown
+  - Tool: Codex
+  - Open Dough release: unknown; loaded guidance at00310c5d
+  - Evidence: launch834371e2-24b8-4643-9410-7e1bf2c66020; source-freshness refusal named base91603058; accepted PR mergecf064ade; target60b2fb59; subsequent adapter merge and freshness result unchanged.
+  - Observed effect: closure paused for publication-context reconciliation,then continued in the same worktree without a second claim or human decision.
+  - Inference: selecting a single merge base rather than the retained claim can produce a false claim-absence refusal on this history shape; general recurrence is unmeasured.
+
 ## Retention
 
-- Highest allocated local number: 405
+- Highest allocated local number: 489
 - Shared-feedback adoption and compaction recovery (2026-11-07): `7129516bc5bd9ba57f370a6353ffe0e10eb1c861:DearDough.md`; its rows are retained at the linked Open Dough finding owners (`483d3a1e8f0ea24b929675b9a195faca48ac8f47:docs/maintainer/findings/`).
 - Shared-feedback compaction recovery (2026-11-03): `4195708bad2061ebc1c829ebdff7868605b173bb:DearDough.md`; its rows are retained at the linked Open Dough finding owners.
