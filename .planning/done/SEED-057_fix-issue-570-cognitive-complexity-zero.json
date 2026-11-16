@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-057#fix-issue-570-cognitive-complexity-zero",
+  "title": "Fix issue #570 — cognitive_complexity present when score is 0",
+  "completedAt": "2026-11-16T00:20:09.221Z",
+  "developer": "Terry Yin",
+  "agent": "Yua-chan",
+  "host": "cursor",
+  "model": "composer"
+}
