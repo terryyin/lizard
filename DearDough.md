@@ -67,6 +67,15 @@ Former local code: DD-013.
 
 Project discovery and check-run payloads repeated unnecessary detail and forced narrower retrieval. The existing ignore rule already covers the website reports facet. [ODF-264 evidence](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-264.md#odf-264)
 
+### Occurrences
+- Execution: SEED-058#process-pr-569; first implementation24caf4571caadaa318a14069cd02c5800b69baa2
+  - Timestamp: unknown
+  - Tool: Codex
+  - Open Dough release: unknown; loaded guidance at00310c5d
+  - Evidence: launch834371e2-24b8-4643-9410-7e1bf2c66020; initial parallel skill reads produced truncated tool output; workflow43781573967 job read returned nested steps for17 jobs.
+  - Observed effect: the coordinator repeatedly narrowed/retrieved guidance and printed check metadata beyond the needed revision,state and job counts. Later reads used compact summaries.
+  - Inference: avoidable context expansion; token/time cost was not measured. Keep bounded read packets and reduce connected results before printing.
+
 ## DD-014 — Empty `gh pr checks` is not a green merge gate
 
 An empty `gh pr checks --watch` list after a push leaves the exact-head gate open. In `SEED-010#review-lexical-js-prs` (2026-10-28T05:56:52Z, Cursor, 0.3.71), PR546 merged at `559b8c8` for corrected head `395ae04` before the 14-job matrix appeared. Thanks waited for green run 40640907400 (conversation `9e3d53de-1aaa-43d4-a4c0-161f4d937215`, segment_000, turns ~224–230).

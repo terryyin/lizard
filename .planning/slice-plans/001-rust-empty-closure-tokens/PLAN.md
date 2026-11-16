@@ -56,3 +56,14 @@ Disposition: proved by slice 1: testRustTokens.py::test_empty_closure_does_not_a
 | Test discovery/helpers | All20 old methods AST-preserved;215/157-line cohesive split;3152 full suite discovers added cases. |
 | Website analyzer | Shared public analyzer consumer; website API tests included in full suite. No frontend/assets change. |
 | Historical/planning/doc trace matches | Raw /Users/terryyin/.cache/lizard-pr569/consumer-trace.md retained; these mentions do not consume the live token stream. No runtime effect or stale live reference. |
+
+## Integration and retrospective
+- Current targete12c55f8 includes separately owned JSX and cognitive-dict fixes. Preserved them through adapter merge290641fe; integrated `python -m pytest`:3155 passed,7 skipped; integrated make:exit0. Logs integrated-{pytest,make}.log outside cleanup.
+- Contributor correction91603058 is a child of original733b99a4 with only product/test paths; all runtime files equal the fully timed/tested24caf457 tree. Merge639c5386 preserves that exact contributor head in execution history. Its complete runtime/test bytes equal GitHub test merge79e57374 (parentse12c55f8,91603058). Thus local integrated proof applies to the hosted merge candidate; original timing remains exact-contributor evidence. TSX generate_tokens and cognitive extension initialization are independent target changes,with no new module-level execution or reached Rust/wordcount path in the timed inputs.
+- Delivered branch639c53862445684d002772be777f716ba7b402df; observer /tmp/dough-ci-501/watch-YCG2tS owned bycodex-pr569-834371e2;branchCI pending. Claim trunkc0d8eec4 had no matching trunk observer and remains explicitly unobserved,not registered on this branch observer.
+- Automatic retrospective: original contextual review→same-source bounded planned correction reviewed as one execution. Attributable733b99a4,24caf457,91603058; merge3ce37329 imports proposal,290641fe imports unrelated target fixes,639c5386 imports equivalent corrected contributor history. No new product/correctness/refactor findings; no further product changes recommended. Unit tests drove the reader/extension correction through real public analyzer collaborators; no live-service E2E interaction exists in this slice. Existing CLI and website API workflows pass in full suite.
+- Process review enabled byskipProcessRetrospective:false. Updated existing ODF-264 with observed unbounded payload/retrieval occurrence; no guidance changes or product follow-up. This is contextual PR qualification/bounded correction,so automatic feature-story Intent Coverage is inapplicable; the original20 assertions were AST-preserved and wordcount red/green observed. No deferred process review remains.
+
+## Execution complete
+
+Product advice: No additional product changes recommended. Exact contributor91603058 CI run43781573967 passed all14 matrix jobs plus changes/ci-proof; web skipped as applicable. Required hosted merge remains landing-owned.
