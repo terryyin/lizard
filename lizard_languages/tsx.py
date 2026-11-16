@@ -42,11 +42,26 @@ class TSXReader(TypeScriptReader):
             r"|(?:<\/?>)" + \
             r"|(?:=>)"
         js_tokenizer = TSXTokenizer()
-        for token in template_tokens(
-                source_code, addition, token_class, split=False,
-                macros=False):
-            for tok in js_tokenizer(token):
-                yield tok
+
+        def read(source):
+            for token in template_tokens(
+                    source, addition, token_class, split=False,
+                    macros=False):
+                if token.startswith('//') and js_tokenizer.in_element_text():
+                    # In element text "//" is text, as in a URL: the rest
+                    # of the line is read again, so that a closing tag on
+                    # it is seen and the element ends where it should.
+                    for tok in js_tokenizer('/'):
+                        yield tok
+                    for tok in js_tokenizer('/'):
+                        yield tok
+                    for tok in read(token[2:]):
+                        yield tok
+                    continue
+                for tok in js_tokenizer(token):
+                    yield tok
+        for tok in read(source_code):
+            yield tok
 
 
 # Tokens after which a JSX element can start an expression. After a name,
@@ -67,6 +82,18 @@ class TSXTokenizer(JSTokenizer):
     def __init__(self):
         super().__init__()
         self._previous = None
+
+    def in_element_text(self):
+        """True while the innermost tokenizer reads the children of a JSX
+        element as text, outside any {...} child expression."""
+        tokenizer = self.sub_tokenizer
+        while tokenizer is not None:
+            inner = getattr(tokenizer, 'sub_tokenizer', None)
+            if inner is None:
+                return isinstance(tokenizer, XMLTagWithAttrTokenizer) and \
+                    tokenizer.state == tokenizer._body
+            tokenizer = inner
+        return False
 
     def process_token(self, token):
         previous = self._previous
