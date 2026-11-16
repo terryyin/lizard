@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "agent": "Mana-chan",
+  "email": "mana-chan@example.org",
+  "identity": "SEED-059#process-pr-572",
+  "mode": "story-branch",
+  "branch": "claude/lizard-process-pr-https-github-com-terryyin-liza-4",
+  "host": "claude",
+  "model": "claude-fable-5-2"
+}
