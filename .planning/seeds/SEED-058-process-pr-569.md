@@ -12,7 +12,7 @@ planted: 2026-11-16
 
 **Identity:** SEED-058#process-pr-569
 ```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planless"}
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/001-rust-empty-closure-tokens/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"4550dd731f5562c125f510f5486ee75aca5da07c6226f88f8f07b1d11fe2d6cf","plan":"86b8cd92b446ad2b4a85afdf05f968e5673376cad46d2e1d972d57084c60c308"}}
 ```
 
 **Goal:** Give Lizard Rust users accurate token counts for parameterless closures by reaching an evidence-based disposition of [PR #569](https://github.com/terryyin/lizard/pull/569).
