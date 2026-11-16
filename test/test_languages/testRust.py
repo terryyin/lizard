@@ -12,6 +12,15 @@ def get_rust_function_list(source_code):
 
 class TestRust(unittest.TestCase):
 
+    def test_closure_without_parameters_is_one_token(self):
+        # `||` of a closure without parameters is one token of the source,
+        # and not a logical or.
+        empty, named = (get_rust_function_list(
+            'fn f(v: Option<i32>) -> i32 {\n    v.unwrap_or_else(%s 0)\n}\n' % bars)[0]
+            for bars in ('||', '|_|'))
+        self.assertEqual(named.token_count - 2, empty.token_count)
+        self.assertEqual(1, empty.cyclomatic_complexity)
+
     def test_main(self):
         result = get_rust_function_list('''
         fn main() {
