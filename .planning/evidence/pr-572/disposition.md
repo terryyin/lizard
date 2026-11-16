@@ -1,21 +1,19 @@
 # PR #572 disposition
 
-- **Decision:** pending — reviewed and locally qualified; not merged.
+- **Decision:** merged
+- **Merge:** `1ad4b1333c0b209bd45bed943ad0715189a23445` (2026-11-16)
+- **Final head:** `0555c57345a5aa62118c8fa1fa2bcffb6463e749`
+  (`ssenge:fix-ternary-between-comparisons`); PR base `153d629f`.
 - **Owner:** SEED-059#process-pr-572
-- **Head:** `0555c57345a5aa62118c8fa1fa2bcffb6463e749`
-  (`ssenge:fix-ternary-between-comparisons`); PR base `153d629f`; verified
-  merged onto trunk `d36ec0c5` (clean merge, no conflicts).
 - **Corrections on contributor branch:** none.
-
-## Unmet gates
-
-1. **Hosted CI has not run.** The PR's "Python application" run
-   (https://github.com/terryyin/lizard/actions/runs/43744401205) is
-   `action_required`: a maintainer must approve the fork workflow. The agent's
-   approval call was refused by its permission policy. Merge needs a green run
-   on the exact head above.
-2. **Performance bound not established.** See below; a maintainer decision or
-   a quiet-machine rerun is needed before accepting.
+- **Hosted CI:** "Python application" success on the final head after
+  maintainer approval of the fork workflow
+  (https://github.com/terryyin/lizard/actions/runs/43744401205): 16 build
+  jobs (ubuntu-24.04 and windows-latest, Python 3.8–3.14), `changes` and
+  `ci-proof` green; `web` skipped as not applicable.
+- **Performance decision:** the maintainer accepted the result below as not
+  material (2026-11-16); the strict 3% bound was not demonstrated.
+- **Acknowledgement:** none posted (no corrections were made).
 
 ## Review
 
@@ -46,7 +44,7 @@
 
 - PR head: full pytest 3151 passed / 7 skipped; `make` exit 0.
 - PR merged onto trunk `d36ec0c5`: full pytest 3161 passed / 7 skipped;
-  `make` exit 0.
+  `make` exit 0. Trunk code was unchanged between that tree and the merge.
 
 ## Performance
 
