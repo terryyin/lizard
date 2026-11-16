@@ -60,7 +60,10 @@ a record with a listed consumer lacking a disposition, or with an exclusion the
 effect reaches. Inspect discovered consumers, including
 unchanged tests and fixtures, then follow the changed effect through the reported
 surface or entry points and compare the reached consumers with the return's
-selection and proof.
+selection and proof. Apply the common record rule to each affected purpose's
+boundary, proof type and actual observation or gap; a `run` label alone does not
+settle it. Name the consumer and missing proof type when obtaining or returning
+an observation before dependent acceptance.
 A return that stops at file, selector, or helper matches leaves that trace
 incomplete: inspect the enclosing observations or caller scenarios and their
 setup before accepting it. Confirm sufficient current observations for the

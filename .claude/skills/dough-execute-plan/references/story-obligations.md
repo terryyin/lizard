@@ -112,10 +112,13 @@ the plan as `source-review.md` after
 (or [at acceptance](obtain-source-review.md#at-acceptance) when none is
 retained yet). When you retain it, link it from the plan's header with one
 line under `**Source:**` that starts with `**Source review:**` followed by a
-Markdown link to that file. Keep the launch and input description above one
-`## Commitments` table with one row per returned id: the id, the source text
-as returned, the allocated slice or lifecycle owner, and the observation or
-the obligation id that disposes it. Escape a `|` inside a cell as `\|`.
+Markdown link to that file. Follow the reviewer's
+[promise boundaries](obtain-source-review.md): retain every returned id and its
+qualified source text and provenance, with unnumbered context still available.
+Keep the launch and input description above one `## Commitments` table with
+one row per returned id: the id, the source text as returned, the allocated
+slice or lifecycle owner, and the observation or obligation id that disposes it.
+Do not silently discard or regroup returned ids. Escape a `|` inside a cell as `\|`.
 
 ```markdown
 ## Commitments
@@ -149,8 +152,10 @@ the obligation id that disposes it. Escape a `|` inside a cell as `\|`.
 - **Observe** at each acceptance: for every id allocated to this slice, write
   `observed: <product or proof location>` once inspected, or the id of the
   obligation that owns the gap. The location must show the commitment's own
-  expected result, as the source text states it: a location showing a
-  different or narrower result, such as an item kept somewhere other than
+  full expected result under its retained source conditions and qualifications.
+  Several descriptions of that same qualified result need one sufficient
+  observation; shared proof alone does not settle another returned id.
+  A location showing a different or narrower result, such as an item kept somewhere other than
   where the commitment lists it, is a mismatch to record as an obligation,
   not an observation. An observation recorded at an earlier slice
   stays valid while its boundary is unchanged; do not rerun it for process.

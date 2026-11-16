@@ -8,13 +8,20 @@ complete correction input, or authorized quick instruction. Give no plan,
 return, product, proof, suspected omission or current-slice scope. For a
 plan-homed correction, send its original correction input, not its slicing.
 Tell the reviewer: use only these inputs, read no other project files, change
-nothing; return source clauses with individual commitments, qualifications,
-trigger/journey examples and exclusions. Number every commitment, and give each
-item of a listed compound commitment its own id (for example `4a.1`–`4a.6` for
-six listed filters). Separate compound promises; preserve alternatives without
-turning examples into rejection rules. Derive promises, not slice ownership or
-acceptance. Use supported fresh-context delegation or a separate new session
-with these limits. Retain the actual reviewer launch/input and returned
+nothing; number independently observable promises, one id per expected result
+under its source conditions. Group repeated statements and clauses describing
+the same result under one id, retaining their source text or locations,
+qualifications, triggers and journey examples so one sufficient observation can
+cover that promise. Separate results that can fail independently, including
+alternatives and genuine rejection restrictions; sharing a proof command or
+location does not make them one promise. Keep reasons, settled baselines,
+effort hypotheses, proof-method explanations and delivery deferrals available
+as unnumbered source context unless they also promise an independently
+checkable result. Keep scope limits and exclusions as context unless they
+promise such a result; do not turn them or examples into new rejection rules.
+Derive promises, not slice ownership or acceptance. Use supported fresh-context
+delegation or a separate new session with these limits. Retain the actual
+reviewer launch/input and returned
 commitments, or their inspectable locations, in existing acceptance evidence; a
 coordinator's assertion is insufficient.
 

@@ -17,8 +17,9 @@ proof, or a human decision, hold affected work. Compare the remaining work
 with the smallest authorized outcome worth delivering. Reuse evidence or run a
 [bounded check](disposable-research.md) that can settle the decision. If the
 blocker remains and no independent authorized work can advance the outcome,
-[stop or split](#stop-or-split-before-more-work)
-before waiting or retrying. Refresh only knowledge the observation invalidates.
+[stop or split](#stop-or-split-before-more-work) before waiting or retrying, or
+[watch a paused supplier](wait-for-proof.md#watch-a-paused-supplier) first when
+the developer asks. Refresh only knowledge the observation invalidates.
 
 When an observation invalidates an assumption for remaining work, identify the
 observation and its source location, the affected assumption, the consequences

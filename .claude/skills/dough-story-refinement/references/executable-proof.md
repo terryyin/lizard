@@ -130,6 +130,28 @@ until the journeys and callers using it are listed. Give every listed consumer
 a disposition: `run`, `reused`, or `excluded: <reason the effect does not reach
 its boundary>`. A record with every kind empty keeps the slice's focused proof.
 
+For each affected consumer purpose, connect the changed effect and reached
+boundary to the relevant proof type and actual observation or named gap. Inspect
+how the consumer uses the effect and how its assertions or signals observe it,
+including indirect callers and enclosing observations. Distinguish behavior,
+static checks, and layout or contract observations when those boundaries are
+affected; file kind, a re-export, a file-level `run`, or one passing proof type
+cannot settle another affected purpose. Select proof from that purpose, not a
+fixed list of check types for every file. Equivalent purposes may share one
+sufficient check; independent purposes need their own sufficient observations.
+
+Annotate the existing disposition or link to the return's evidence: identify the
+literal command or observation steps, inspected setup and observing assertion or
+signal, result, and any outstanding consumer/proof-type gap. This is substantive
+evidence, not a new schema or a second record. Keep the full discovery record
+available. For reuse, show why the observation still applies to the effect,
+boundary, implementation and conditions; for exclusion, explain why the effect
+does not reach that boundary. Preserve sufficient independent proof and unchanged
+boundaries while obtaining or returning another purpose's missing proof. Before
+dependent acceptance or publication, obtain the missing observation or return the
+slice naming its consumer, proof type and gap. Leaving it for CI does not settle
+it. A failed check keeps the failure policy; nearby green proof cannot erase it.
+
 ## Accept a repair on its affected behavior
 
 A repair, including a CI repair, is accepted on the diagnosed cause's affected

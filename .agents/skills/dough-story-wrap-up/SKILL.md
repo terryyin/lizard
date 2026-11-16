@@ -178,8 +178,9 @@ Work without a Taken entry has no story section or plan to compare. On
 
 - its executable plan and owned proof, evidence, and assessment records, even
   when the plan was retained or carries its execution-complete record;
-- its canonical story section when one exists, and its seed only when every
-  remaining section is spent;
+- its canonical story section when one exists, after queuing its deferred
+  promises as one new story unless the developer drops them, and its seed only
+  when every remaining section is spent;
 - its **Taken** or **Backlog list** entry when one exists, through the
   [dough-product-backlog](../dough-product-backlog/SKILL.md) `complete` command,
   passing the combined Intent Coverage report only after a returned check was

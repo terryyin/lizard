@@ -163,9 +163,9 @@ targeted return that gives the coordinator:
 - when the change altered an operation or contract, a message or value, a
   default, rendered output, or shared text: the changed effect and its
   [consumer-trace record](../../dough-story-refinement/references/executable-proof.md#record-the-consumer-trace)
-  with its supplied effect terms and every listed consumer's disposition, the
-  observing assertions and setup of proof run or reused, and any affected
-  consumer still lacking proof with its reason;
+  with its supplied effect terms and each affected purpose's boundary, proof
+  type, observation or gap under that common rule; link the inspected setup and
+  observing assertions for proof run or reused, and support exclusions;
 - required observations still missing or explicitly untested, named as gaps —
   a learning note alone is not acceptance evidence for those promises;
 - for expensive proof, the retained or reconsidered decision and any deferred

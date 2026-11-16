@@ -37,3 +37,26 @@ reaches its deadline.
   ```
 
 Use the blocking wait on any host whose own facility is unavailable.
+
+## Watch a paused supplier
+
+Start the installed [publication wait](../scripts/wait-for-publication.mjs)
+once from the execution checkout and await it as a long proof run on this host:
+
+```sh
+node '<installed-execute-plan>/scripts/wait-for-publication.mjs' --remote '<authorized remote>' \
+  --ref '<target branch>:<supplier story home>' \
+  --ref '<target branch>:<home recording this dependency agreement>' \
+  --ref '<supplier branch>'
+```
+
+Name the supplier's branch only when the remote holds one, and add
+`--duration-minutes` when the developer named how long to watch. The command
+prints nothing until it ends itself with one result, which carries its
+deadline:
+
+- `publication`: judge the supplier against the exact agreement, as at any
+  hold. When the hold lifts, continue the execution. When it stays, keep the
+  hold and partial work and start the command again with the same refs and
+  `--deadline` set to the returned deadline.
+- `deadline`: [stop with the recorded resume condition](execution-decisions.md#stop-or-split-before-more-work).
