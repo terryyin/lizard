@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "agent": "Tsubomi-chan",
+  "email": "tsubomi-chan@example.org",
+  "identity": "SEED-061#fix-issues-573-574-nesting-depth",
+  "mode": "story-branch",
+  "branch": "claude/seed-061-nesting-depth",
+  "host": "claude",
+  "model": "claude-opus-5-5"
+}
