@@ -401,4 +401,4 @@ class Test_st_nesting_level(unittest.TestCase):
             '''
         )
         self.assertEqual(0, result[0].top_nesting_level)
-        self.assertEqual(4, result[0].max_nesting_depth)
+        self.assertEqual(5, result[0].max_nesting_depth)  # FOR > CASE > IF > IF > IF

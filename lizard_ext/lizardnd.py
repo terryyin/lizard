@@ -32,25 +32,21 @@ class LizardExtension(object):  # pylint: disable=R0903
         else:
             loops = set(['if', 'foreach', 'for', 'while', '&&', '||',
                          '?', 'catch', 'case', 'try', 'def'])
-        if hasattr(reader, "bracket"):
-            bracket = reader.bracket
-        else:
-            bracket = '}'
-        if hasattr(reader, "loop_indicator"):
-            loop_indicator = reader.loop_indicator
-        else:
-            loop_indicator = '{'
+        block_ends = getattr(reader, "block_ends", ('}',))
+        block_starts = getattr(reader, "block_starts", ('{',))
         if hasattr(reader, "indent_indicator"):
             indent_indicator = reader.indent_indicator
         else:
             indent_indicator = ';'
         for token in tokens:
+            if token in block_ends:
+                l_depth = reader.context.close_block()
+            if token in block_starts or token == indent_indicator:
+                reader.context.clear_prev_was_else()
             # Don't add nesting for "if" when it immediately follows "else" (else if)
             # Syntactically else if is equivalent to else {if} but should not increase depth
             if token == 'else':
                 reader.context.set_prev_was_else(True)
-            elif token == loop_indicator or token == indent_indicator:
-                reader.context.clear_prev_was_else()
             elif token == 'if' and token in loops and reader.context.get_prev_was_else():
                 reader.context.clear_prev_was_else()
             # Handle opening parenthesis - start of condition
@@ -71,43 +67,26 @@ class LizardExtension(object):  # pylint: disable=R0903
                     # Only add nesting depth for the first logical operator in a condition
                     # Subsequent && or || operators in the same condition don't add depth
                     if not reader.context.get_logical_operator_added():
-                        l_depth = reader.context.add_nd_condition()
-                        if not reader.context.get_loop_status():
-                            reader.context.add_hidden_bracket_condition()
-                            reader.context.loop_bracket_status()
+                        l_depth = reader.context.open_level()
                         reader.context.set_logical_operator_added(True)
                 else:
                     # Not in a condition, treat as regular nesting
-                    l_depth = reader.context.add_nd_condition()
-                    if not reader.context.get_loop_status():
-                        reader.context.add_hidden_bracket_condition()
-                        reader.context.loop_bracket_status()
+                    l_depth = reader.context.open_level()
 
             # Handle other loop keywords (if, for, while, etc.)
             elif token in loops and token not in ('&&', '||') \
                     and not getattr(token, 'is_optional', False):
-                l_depth = reader.context.add_nd_condition()
-                if not reader.context.get_loop_status():
-                    reader.context.add_hidden_bracket_condition()
-                    reader.context.loop_bracket_status()
+                l_depth = reader.context.open_level()
 
-            if token == loop_indicator:
-                reader.context.loop_bracket_status()
-            if token == bracket:
-                l_depth = reader.context.add_nd_condition(-1)
-            if token == indent_indicator:
-                hidden_brackets = reader.context.get_hidden_bracket()
-                check_loop_brackets(reader, l_depth, hidden_brackets)
+            if token in block_starts:
+                reader.context.open_block()
+            if token == indent_indicator and \
+                    reader.context.get_condition_depth() == 0:
+                l_depth = reader.context.end_statement()
             if l_depth < 0:
                 l_depth = 0
                 reader.context.reset_nd_complexity()
             yield token
-
-
-def check_loop_brackets(reader, l_depth, hidden_brackets):
-    if hidden_brackets > 0:
-        reader.context.add_hidden_bracket_condition(-1)
-        l_depth = reader.context.add_nd_condition(-1)
 
 
 class NDFileInfoAddition(FileInfoBuilder):
@@ -121,23 +100,32 @@ class NDFileInfoAddition(FileInfoBuilder):
 
     def reset_nd_complexity(self):
         self.current_function.nesting_depth = 0
-        self.current_function.hidden_bracket = 0
-        self.current_function.bracket_loop = False
+        self.current_function.levels_awaiting_body = 0
+        self.current_function.block_levels = []
         self.current_function.prev_was_else = False
         self.reset_condition_tracking()
 
-    def add_hidden_bracket_condition(self, inc=1):
-        self.current_function.hidden_bracket += inc
+    def open_level(self):
+        """A structure opens a level that its body will close."""
+        self.current_function.levels_awaiting_body += 1
+        return self.add_nd_condition()
 
-    def get_hidden_bracket(self):
-        return self.current_function.hidden_bracket
+    def open_block(self):
+        """The block takes over the levels awaiting their body."""
+        function = self.current_function
+        function.block_levels.append(function.levels_awaiting_body)
+        function.levels_awaiting_body = 0
 
-    def loop_bracket_status(self):
-        tmp_bracket_loop = self.current_function.bracket_loop
-        self.current_function.bracket_loop = not tmp_bracket_loop
+    def close_block(self):
+        """A block end releases the levels its block took over."""
+        levels = self.current_function.block_levels
+        return self.add_nd_condition(-(levels.pop() if levels else 1))
 
-    def get_loop_status(self):
-        return self.current_function.bracket_loop
+    def end_statement(self):
+        """A statement ends the levels of a braceless body."""
+        levels = self.current_function.levels_awaiting_body
+        self.current_function.levels_awaiting_body = 0
+        return self.add_nd_condition(-levels)
 
     def set_in_condition(self, in_condition):
         self.current_function.in_condition = in_condition
@@ -204,8 +192,8 @@ def patch_append_method(frm, accept_class, method_name):
 def _init_nesting_depth_data(self, *_):
     self.nesting_depth = 0
     self.max_nesting_depth = 0
-    self.hidden_bracket = 0
-    self.bracket_loop = False
+    self.levels_awaiting_body = 0  # structure levels closed by their body
+    self.block_levels = []  # structure levels each open block will close
     self.in_condition = False  # Track if we're inside a condition
     self.condition_depth = 0   # Track nesting depth within conditions
     self.logical_operator_added = False  # Track if we've added nesting for logical operators in current condition

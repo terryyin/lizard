@@ -1,4 +1,5 @@
 import unittest
+from lizard import FileAnalyzer, get_extensions
 from .testHelpers import get_cpp_function_list_with_extension
 from lizard_ext.lizardnd import LizardExtension as NestDepth
 
@@ -207,3 +208,41 @@ class TestCppNestingDepth(unittest.TestCase):
         """)
         self.assertEqual(2, result[0].max_nesting_depth)
 
+
+    def test_sibling_braceless_ifs_do_not_nest(self):
+        """Issue #573: consecutive braceless ifs are siblings, not nested"""
+        result = get_cpp_with_nestdepth("""
+        int braceless(int a, int b, int c, int d) {
+          if (a) f(1);
+          if (b) f(2);
+          if (c) f(3);
+          if (d) f(4);
+          return 0;
+        }
+        """)
+        self.assertEqual(1, result[0].max_nesting_depth)
+
+    def test_sibling_braceless_ifs_inside_a_loop(self):
+        result = get_cpp_with_nestdepth("""
+        void f(int b) {
+          for (;;) { if (b) g(); if (b) g(); if (b) g(); }
+        }
+        """)
+        self.assertEqual(2, result[0].max_nesting_depth)
+
+
+class TestJavaScriptNestingDepth(unittest.TestCase):
+
+    def test_sibling_braceless_ifs_do_not_nest(self):
+        """Issue #573: consecutive braceless ifs are siblings, not nested"""
+        result = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
+            "a.js", """
+        function braceless(a, b, c, d) {
+          if (a) console.log(1);
+          if (b) console.log(2);
+          if (c) console.log(3);
+          if (d) console.log(4);
+          return 0;
+        }
+        """).function_list
+        self.assertEqual(1, result[0].max_nesting_depth)

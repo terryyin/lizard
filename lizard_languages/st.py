@@ -47,9 +47,14 @@ class StReader(CodeReader, StCommentsMixin):
     # Nesting Depth
     loops = [
         'if', 'case', 'for', 'while', 'repeat',
-        'IF', 'CASE', 'FOR', 'WHILE', 'REPEAT'
+        'IF', 'CASE', 'FOR', 'WHILE', 'REPEAT',
+        'elsif', 'ELSIF'
     ]
-    bracket = 'END'
+    block_starts = set([
+        'then', 'do', 'of', 'repeat',
+        'THEN', 'DO', 'OF', 'REPEAT'
+    ])
+    block_ends = set(['END', 'elsif', 'ELSIF'])
 
     def __init__(self, context):
         super(StReader, self).__init__(context)

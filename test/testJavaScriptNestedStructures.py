@@ -73,3 +73,14 @@ class TestJavaScriptNestedStructures(unittest.TestCase):
             [('(anonymous)', 0), ('(anonymous)', 0), ('load', 0),
              ('(anonymous)', 1), ('retry', 1)],
             self.nested_structures("a.js", code))
+
+    def test_else_if_chain_is_one_structure(self):
+        """Issue #574: an `else if` chain does not add nesting"""
+        code = (
+            'function chain(a) {\n'
+            '  if (a === 1) { return 1; } else if (a === 2) { return 2; }'
+            ' else if (a === 3) { return 3; } else { return 4; }\n'
+            '}\n'
+        )
+        self.assertEqual(
+            [('chain', 1)], self.nested_structures("a.js", code))

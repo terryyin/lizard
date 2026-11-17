@@ -165,6 +165,8 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
             if token == '}':
                 self._pop_scope()
             self._state = self._block_ending
+        elif token == 'else':
+            self._state = self._after_else
         elif token in self.structures:
             self._state = self._in_structure_head
         elif token in ('.', '?.'):
@@ -174,6 +176,12 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
         """A member named like a structure, promise.catch(f), is not one."""
         self._state = self._state_global
         if token not in self.structures:
+            self._state(token)
+
+    def _after_else(self, token):
+        """An `else if` continues its chain as one structure."""
+        self._state = self._in_structure_head
+        if token != 'if':
             self._state(token)
 
     @CodeStateMachine.read_inside_brackets_then("()")

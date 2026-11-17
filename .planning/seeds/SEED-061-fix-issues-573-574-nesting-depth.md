@@ -48,5 +48,10 @@ Deferred: other nesting changes, other metrics, and output formats.
 
 **Starting revision:** `3feeac98` on `master`.
 
+**Direction decision (2026-11-17):** #574 changes NS counting that
+`test_else_if` had asserted since NS was first implemented, so it was unclear
+under the near-future direction; the developer approved proceeding with it in
+this repair.
+
 **Qualification:** After the shared refactor and before delivery or wrap-up,
 qualify the entire repair with `lizard-process-pr --local-change`.

@@ -36,12 +36,30 @@ class TestCppNestedStructures(unittest.TestCase):
         self.assertEqual(1, result[0].max_nested_structures)
 
     def test_else_if(self):
+        """Issue #574: an `else if` chain does not add nesting"""
         result = process_cpp("""
         x c() {
           if (a && b)
             baz();
           else if (c)
             foo();
+        }
+        """)
+        self.assertEqual(1, result[0].max_nested_structures)
+
+    def test_else_if_chain_with_blocks(self):
+        result = process_cpp("""
+        int chain(int x) {
+          if (x == 1) { f(); } else if (x == 2) { g(); } else { h(); }
+          return 0;
+        }
+        """)
+        self.assertEqual(1, result[0].max_nested_structures)
+
+    def test_structure_nested_in_else_if_branch(self):
+        result = process_cpp("""
+        int chain(int x) {
+          if (x == 1) { f(); } else if (x == 2) { if (y) g(); }
         }
         """)
         self.assertEqual(2, result[0].max_nested_structures)
