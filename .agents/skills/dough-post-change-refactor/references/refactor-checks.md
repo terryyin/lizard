@@ -41,9 +41,11 @@ Edit only after its scope and subsystem gates permit the candidates.
 - Give shared knowledge **one** authoritative home across the concept's
   representations and orchestration. The next rule change should not require
   parallel updates to handlers for successive delivery examples.
-- Acceptable extra touchpoints: tests that assert the concept, and generated
-  code derived from it. Do not hardcode the same value in product paths,
-  fixtures, E2E config, and feature files in parallel.
+- Acceptable extra touchpoints: tests whose subject is the concept, and
+  generated code derived from it. A test edited for a change it is not about
+  has this smell: loosen what it observes rather than update its value. Do not
+  hardcode the same value in product paths, fixtures, E2E config, and feature
+  files in parallel.
 - **Action:** consolidate now behind one seam (one constant, config, or module).
   Leave only low-likelihood one-offs unabstracted.
 
@@ -97,21 +99,30 @@ Use this project's test style and assert observable behavior.
   A check that two settings or sources agree is not a restatement; keep it.
   When reviewing a test diff, remove assertions that would catch no such
   regression.
-- Give each test one behavior and a descriptive name. Assert the canonical
-  result shape once; sibling cases assert their distinguishing outcome. Omit a
-  repeated assertion only when it is independent of the changed precondition.
-  Prefer a positive distinguishing signal when sufficient; retain absence or
-  negative assertions when absence is the actual promise.
+- Give each test one behavior and a descriptive name, and assert what that
+  name promises: an assertion fails only for a change the test is about. In a
+  test about one part of an output, a fixed position, a count, whole-list or
+  whole-object equality, or a full-string match is too strict; observe that
+  part. Assert the whole shape in the one test whose subject is the shape, and
+  a default's value in the one test about that default. Omit a repeated
+  assertion only when it is independent of the changed precondition. Prefer a
+  positive distinguishing signal when sufficient; retain absence or negative
+  assertions when absence is the actual promise.
+- When several tests observe the same output, give test support one
+  domain-named reader for it, such as the value of a command's option.
 - Synchronize on an observable event or advance a controlled clock. Never
   sleep or wait for wall-clock time to pass.
 - Assert the result of a loop, retry, or threshold scenario without repeatedly
   checking unrelated intermediate state. Keep intermediate observations when
   ordering, progress, or transient behavior is itself the contract.
 - Parameterize cases when only data changes and the behavior and assertion
-  focus stay the same. Keep distinct behaviors visible; do not turn unrelated
-  tests into a branching scenario or one long journey to reduce the test count.
-- Use the project's builders and meaningful defaults for concise fixtures.
-  Specify only data affecting the behavior or observation. Prefer builder
+  focus stay the same. A body that branches on its case parameter holds
+  separate tests: write each one, sharing setup through a builder or helper.
+  Keep distinct behaviors visible; do not turn unrelated tests into a
+  branching scenario or one long journey to reduce the test count.
+- Use the project's builders and meaningful defaults for concise fixtures,
+  and give shared test entry points the same defaults. Specify only data
+  affecting the behavior or observation. Prefer builder
   operations to post-construction mutation and domain-shaped helpers to repeated
   field lists. Extend an existing builder for recurring setup rather than
   introducing a parallel fixture framework. Share construction, not mutable

@@ -185,6 +185,10 @@ After interruption or a changed observation from Git, agents, or observer covera
 execution identity first and reconcile only affected worktree/index, branch/commits,
 implementation/refactor return, and exact observer identity. Preserve unrelated or ambiguously
 owned work. Reuse proof only while promise, boundary, implementation, setup, and observations match.
+In a new coordinator session, give the first slice-clock `start`
+`--after-ended-session`, whether resuming the same slice or starting another.
+Follow [track active time](references/oversized-slice.md#track-active-time) for
+settlement and the stop-time `pause` rule.
 
 Resume at the first delivery obligation not established by evidence. An incomplete
 or oversized return still needs [oversized-slice handling](references/oversized-slice.md)

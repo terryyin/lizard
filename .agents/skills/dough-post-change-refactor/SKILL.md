@@ -93,7 +93,11 @@ cross-subsystem edit and reverse only this agent's edits for that candidate.
 Preserve others' changes and return the decision handoff below. Do not substitute
 a partial refactor or proceed with other candidates while the gate is unresolved.
 
-With no candidates, report `none — already clean` and complete without tests.
+A candidate too large for this pass, such as many tests observing one output
+too strictly, is not clean: fix what fits and return the rest as a named
+follow-up with the smell, concept, affected file count and representative
+files. With no candidates, report `none — already clean` and complete without
+tests.
 Otherwise edit in refactor-check order, without repeating broad discovery.
 Use this project's whitespace check. Regenerate affected artifacts through their
 source generator and validate consumers; never manually repair generated output.
@@ -136,8 +140,8 @@ edit invalidated them. For invalidated or replacement proof, report the literal
 command, result, and concrete setup and assertion or signal locations. Also
 retain the expensive-proof decision and any deferred required observation with
 its owner and next condition. Report files renamed,
-extracted, split, or deleted; unresolved gaps or contradictions; consequential
-learnings; passing test commands or `skipped — no refactor edits`; and
+extracted, split, or deleted; unresolved gaps or contradictions; named
+follow-ups; consequential learnings; passing test commands or `skipped — no refactor edits`; and
 approximate active elapsed time. Do not attach routine raw traces, full command
 logs, or a duplicate full diff; the caller inspects the reported locations. End
 with `## REFACTOR COMPLETE`.

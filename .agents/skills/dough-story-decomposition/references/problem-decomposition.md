@@ -183,8 +183,8 @@ may exceed eight.
 
 ## Size and escalate slices
 
-A slice gets **15 active minutes**; time inside running commands does not
-count. Plan each slice to fit, and split it when it holds independent outcomes
+A slice gets **15 active minutes**; time inside commands run through the
+slice clock does not count. Plan each slice to fit, and split it when it holds independent outcomes
 or hidden preparation. [Track the time during execution](../../dough-execute-plan/references/oversized-slice.md#track-active-time).
 Retain overrun history across renames, retries, and splits.
 

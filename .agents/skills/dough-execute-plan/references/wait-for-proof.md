@@ -9,9 +9,11 @@ reaches its deadline.
 - Before launch, set the deadline from the
   [expensive-proof decision](../../dough-story-refinement/references/executable-proof.md#choose-expensive-proof-before-launch)
   or the command's known duration.
-- Write the command's output to a log and its exit status to an exit file when
-  it ends. Wait on the exit file, never on a process listing: `pgrep -f` can
-  match the wait itself.
+- Start the command through the
+  [slice clock's `run`](oversized-slice.md#track-active-time), which writes
+  the command's output to the log and, when it ends, its exit status to the
+  exit file. Wait on that exit file, never on a process listing: `pgrep -f`
+  can match the wait itself.
 - While it runs, make no `sleep`, log, or status calls, and do no other
   checks.
 - At the deadline, apply

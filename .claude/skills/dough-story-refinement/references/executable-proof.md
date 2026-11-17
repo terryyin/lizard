@@ -71,6 +71,9 @@ file with no shared contract, text, value, default, or rendered output, keeps
 focused proof. For unresolved domain purpose, ask precisely about that consumer's
 requirement and stop its dependent obligation until answered rather than guessing
 policy.
+Many consumers failing on an effect that is not their subject observe it too
+strictly: plan a Structure slice ahead of the change that narrows them to
+their own promise, rather than budgeting their updates as mechanical.
 Discovering a failing assertion does not authorize weakening its promise; align
 behavior and proof under the [failure policy](../../dough-execute-plan/references/failure-policy.md). A plan may
 record that a known failure predates the story; that attribution is diagnosis
@@ -180,7 +183,7 @@ the developer carries all of them, rather than discovering them round by round.
 
 Whether a retained native baseline still covers the changed candidate follows
 the correspondence rule in
-[require current regression proof before a live action](../../dough-execute-plan/references/execution-decisions.md#require-current-regression-proof-before-a-live-action).
+[require current regression proof before a live action](../../dough-execute-plan/references/live-action-regression-proof.md).
 A change to text or another detail the observed path renders unchanged keeps
 it: reuse the baseline and prove the changed detail with a regression at the
 emitted source. The acceptance record names the reused baseline and that

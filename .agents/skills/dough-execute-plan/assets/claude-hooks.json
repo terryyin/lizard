@@ -9,6 +9,15 @@
             "timeout": 5
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/skills/dough-execute-plan/scripts/slice-clock-hook.mjs\" claude",
+            "timeout": 5
+          }
+        ]
       }
     ],
     "Stop": [

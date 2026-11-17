@@ -176,6 +176,8 @@ until that missing history is accounted for.
    minimal observable test failing for the right reason, repairs the cause, proves it under
    [repair acceptance](../../dough-story-refinement/references/executable-proof.md#accept-a-repair-on-its-affected-behavior)
    and returns uncommitted changes with [implementation proof](delegation.md).
+   An unknown cause is diagnosed in [rounds](diagnosis-rounds.md), with the
+   record [the brief carries](delegation.md#list-promises-and-assign-the-agent).
    For expensive reproduction or proof, carry the [pre-launch decision](../../dough-story-refinement/references/executable-proof.md#choose-expensive-proof-before-launch).
    Include known competing owners on the actual host, across worktrees; the repair
    owner confirms or reconsiders before launch or repeat and coordinates owned heavy
@@ -205,12 +207,14 @@ until that missing history is accounted for.
    `missing` (entry gone), `unapplied`, `ambiguous`, or `mismatch` (Git dropped
    another writer's entry, recoverable by `droppedOid`), report OIDs and stop.
 
-On an unresolved repair, decision stop, or push failure, keep the stash entry
-and record file and report the exact state. Restore original work only without
-mixing or losing unfinished repair edits; otherwise keep agents paused with both
-sets of work preserved. Never silently resume with missing changes or pretend
-the failure was repaired. Ordinary CI defects, flaky tests included, use this
-flow; only unresolved value, design, or credential decisions need the developer.
+On an unresolved repair, decision stop, or push failure, keep the stash entry,
+its record file, any diagnosis record and the owed repair, and report the
+exact state. Restore original work only without mixing or losing unfinished
+repair edits; otherwise keep agents paused with both sets of work preserved.
+Never silently resume with missing changes or pretend the failure was
+repaired. Ordinary CI defects, flaky tests included, use this flow; only a
+[diagnosis stop](diagnosis-rounds.md#stop-for-a-human) or unresolved value,
+design, or credential decisions need the developer.
 ## Pause and resume writers
 On a CI pause, stop editing; finish or terminate write-capable commands. Return
 `## PAUSED FOR CI` with the slice, changed/untracked paths, exact completed proof,
@@ -218,4 +222,5 @@ incomplete commands, next action and retained expensive-proof decision. Stay idl
 until explicitly resumed; the coordinator waits for commands to permit safe handoff.
 On resume, reread repair/conflict-affected files and rerun only invalidated proof.
 Before heavy verification, confirm or reconsider the retained decision. Resume the
-same slice, excluding repair pause from its elapsed budget; unowned work from humans or other sessions is preserved.
+same slice with the remaining time of its [slice clock](oversized-slice.md#track-active-time),
+which the coordinator pauses for the repair. Unowned work from humans or other sessions is preserved.
