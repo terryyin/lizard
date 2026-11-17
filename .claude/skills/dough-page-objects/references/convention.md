@@ -7,9 +7,25 @@ shared browser mechanics one focused page or component owner.
 Find and reuse an existing owner before introducing one. Extend it with
 operations named for the domain action or observation: `openItem(title)`,
 `followRelatedItem()`, `showsItem(expectedTitle)`. Keep scoped locators, clicks,
-keyboard interactions, and waits for observable UI state there. An assertion may
-live in an object while its expected value remains a caller-supplied argument.
-A failed observation must retain meaningful expected and actual context.
+keyboard interactions, and waits for observable UI state there.
+
+Express each meaningful user action as one Gherkin step or page-object call.
+Group the UI interactions that carry out the action inside the object. For
+example, `When I add the note "Call back Friday"` can call
+`notes.addNote("Call back Friday")`. The operation opens the dialog, clears and
+fills the field, clicks Save, and asserts that the dialog closes.
+
+Name harness and builder helpers the same way when they express a scenario
+step: the call states the domain action or precondition; encoding, wire-format,
+locator, and byte mechanics stay inside the helper.
+
+Inside an action, assert only the specific UI state it needs to proceed or finish.
+Make the behavior under proof an explicit observation in the scenario. A
+scenario about saving a note explicitly checks for the saved text. For a
+scenario about dialog closure, use a Save operation that leaves the closure
+check to the scenario. The object can implement an explicit observation while
+the caller supplies the expected value where applicable. A failed observation
+must retain meaningful expected and actual context.
 
 For example, in language-neutral pseudocode:
 
