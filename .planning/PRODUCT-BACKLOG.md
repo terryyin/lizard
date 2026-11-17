@@ -6,7 +6,5 @@ Maintenance, bug fixing, and PR reviews. We accept PRs and issues that fix or im
 
 ## Taken
 
-- [Fix issues #573 and #574 — braceless if siblings and else-if chains do not add nesting](seeds/SEED-061-fix-issues-573-574-nesting-depth.md#fix-issues-573-574-nesting-depth) — SEED-061#fix-issues-573-574-nesting-depth
-
 ## Backlog list
 

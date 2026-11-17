@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-061_fix-issues-573-574-nesting-depth.json",
+      "identity": "SEED-061#fix-issues-573-574-nesting-depth",
+      "completedAt": "2026-11-17T12:08:47.443Z",
+      "blob": "4a49652e626d9189266c5ba6b9a03704c459ed0e"
+    },
+    {
       "fileName": "SEED-060_process-pr-568.json",
       "identity": "SEED-060#process-pr-568",
       "completedAt": "2026-11-16T02:10:01.967Z",
