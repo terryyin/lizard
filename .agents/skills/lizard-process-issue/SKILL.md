@@ -30,6 +30,15 @@ existing exception to admission. A feature request without a discrepancy
 belongs in the product backlog and refinement when authorized. A reporting-only
 request stays within the requested investigation or report.
 
+## Check the near-future direction
+
+Before the bug-fixing handoff, apply the shared
+[near-future direction check](../lizard-process-pr/references/direction-scope.md)
+to what the issue asks for. Within the direction, proceed automatically and
+carry the verdict into the handoff; beyond it or unclear, pause and ask the
+developers for approval with the reason and a proceed/do-not-proceed
+recommendation before diagnosis turns into repair.
+
 ## Carry the qualification requirement into execution
 
 At the bug-fixing handoff, tell the execution coordinator to qualify the entire

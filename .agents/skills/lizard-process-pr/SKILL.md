@@ -86,6 +86,14 @@ Keep local evidence while a later slice or resume still consumes it.
 
 ## 3. Decide what the contribution needs
 
+### Check the near-future direction
+
+Once the packet shows what the PR changes, apply the
+[near-future direction check](references/direction-scope.md). Within the
+direction, proceed automatically; beyond it or unclear, pause and ask the
+developers for approval with the reason and a proceed/do-not-proceed
+recommendation before any correction or delivery.
+
 ### Compare behavior and consumers
 
 Reproduce on the current target through `analyze_file` or the CLI. Distinguish a real
@@ -155,7 +163,8 @@ another active story still consumes it.
 
 Report one of: review completed within requested scope; merged (with acknowledgement
 state); unnecessary/already fixed with evidence; real defect deferred to a linked
-correction; or blocked/pending with the precise unmet gate. A review, deferral or
+correction; paused for developer approval beyond the near-future direction;
+or blocked/pending with the precise unmet gate. A review, deferral or
 closed PR is never labelled merged. A batch's final report accounts for every frozen
 member; later arrivals require their own intake.
 
