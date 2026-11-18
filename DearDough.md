@@ -1,14 +1,15 @@
 # DearDough Process Findings
 
-Shared evidence lives in the linked Open Dough records. Project-owned findings and qualified practice observations keep their original identities here.
 
-DD-003 retired after `be8d3c273fd475a0cedc4d1e9da58ff596c6db0c` adopted a dependency stamp and cold, warm, overlapping, changed-input and failure runs confirmed the behavior. The eight original executions and assessments are recoverable at `eebecc3e196a26f6f6b6a41df66ef97025a3361a:DearDough.md`.
+Shared evidence lives in the linked Open Dough records. Project-owned findings and qualified practices keep their original identities here.
+
+- DD-003 retired after `be8d3c273fd475a0cedc4d1e9da58ff596c6db0c` introduced a dependency stamp. Cold, warm, overlapping, changed-input and failure runs confirmed it. Eight executions are recoverable at `eebecc3e196a26f6f6b6a41df66ef97025a3361a:DearDough.md`.
 
 <a id="dd-404--absolute-sha-git-show-discriminators-fail-on-shallow-matrix-checkouts"></a>
 
-DD-404 retired after `dde1a337` replaced Lizard's historical Git lookup with an in-repo fixture and [CI run 42745089766](https://github.com/terryyin/lizard/actions/runs/42745089766) on `a3ec770a` passed the shallow Ubuntu and Windows build matrix. The original `SEED-052#publish-explicit-ci-test-counts` occurrence and assessment are recoverable at `7b7bb72d0d4edac878272201f9591bbb18e83a4a:DearDough.md#dd-404--absolute-sha-git-show-discriminators-fail-on-shallow-matrix-checkouts`.
+- DD-404 retired after `dde1a337` replaced historical Git lookup with an in-repo fixture. [CI 42745089766](https://github.com/terryyin/lizard/actions/runs/42745089766) passed the shallow Ubuntu and Windows matrix on `a3ec770a`. Recover the SEED-052 occurrence at `7b7bb72d0d4edac878272201f9591bbb18e83a4a:DearDough.md#dd-404--absolute-sha-git-show-discriminators-fail-on-shallow-matrix-checkouts`.
 
-Local compaction recovery: `6cd0c9531a3428fc922d5a58b9b3e3299a01b16a:DearDough.md`. Shared compaction recovery: `d1ffc74062ccf1e94dff1f45e96a4d1de07e1520:DearDough.md`; earlier full source at `1fab8f40c7577f53b7736c79ea3f91b67a1fd0ca:DearDough.md`. DD-010's OCaml occurrence was restored from DD-012 by `7129516bc5bd9ba57f370a6353ffe0e10eb1c861`.
+Earlier local and shared compaction: `6cd0c9531a3428fc922d5a58b9b3e3299a01b16a`, `d1ffc74062ccf1e94dff1f45e96a4d1de07e1520` and `1fab8f40c7577f53b7736c79ea3f91b67a1fd0ca` (all `DearDough.md`). `7129516bc5bd9ba57f370a6353ffe0e10eb1c861` restored DD-010’s OCaml occurrence from DD-012.
 
 <a id="dd-001--codex-stream-can-yield-before-exposing-observer-identity"></a>
 
@@ -78,9 +79,8 @@ Project discovery and check-run payloads repeated unnecessary detail and forced 
 
 ## DD-014 — Empty `gh pr checks` is not a green merge gate
 
-An empty `gh pr checks --watch` list after a push leaves the exact-head gate open. In `SEED-010#review-lexical-js-prs` (2026-10-28T05:56:52Z, Cursor, 0.3.71), PR546 merged at `559b8c8` for corrected head `395ae04` before the 14-job matrix appeared. Thanks waited for green run 40640907400 (conversation `9e3d53de-1aaa-43d4-a4c0-161f4d937215`, segment_000, turns ~224–230).
 
-Project guidance `lizard-process-pr` §5 already required checks at `f0887ec`, so no repair was adopted. Later PR525 (`b97f795`) and PR548 (`2416c37`) waited for all 32 exact-head checks. Keep the application lapse open without new work.
+In `SEED-010#review-lexical-js-prs` (2026-10-28T05:56:52Z, Cursor, 0.3.71), `gh pr checks --watch` returned no checks for `395ae04`. PR546 merged at `559b8c8` before the 14-job matrix appeared. Thanks followed green run 40640907400 (conversation `9e3d53de-1aaa-43d4-a4c0-161f4d937215`, segment_000, turns ~224–230). Lizard's own guidance already required the gate (`f0887ec`, §5). Later PR525/548 waited for all 32 exact-head checks on `b97f795` and `2416c37`. Keep the application lapse open.
 
 ## DD-015 — Interrupted Task recovery by inspecting uncommitted checkout
 
