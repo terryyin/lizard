@@ -15,17 +15,13 @@ Earlier local and shared compaction: `6cd0c9531a3428fc922d5a58b9b3e3299a01b16a`,
 
 ## ODF-376 — Codex stream can yield before exposing observer identity
 
-Former local code: DD-001.
-
-A delayed Codex stream can yield before publishing the CI observer identity. The later parsed identity was invisible to the coordinator. [ODF-376 evidence](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-376.md#odf-376)
+Former local code: DD-001. A delayed Codex stream can yield before publishing the CI observer identity. The later parsed identity was invisible to the coordinator. [ODF-376 evidence](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-376.md#odf-376)
 
 <a id="dd-002--hosted-proof-slices-have-no-guarded-increment-that-stays-unfinished"></a>
 
 ## ODF-275 — Hosted-proof slices have no guarded increment that stays unfinished
 
-Former local code: DD-002.
-
-Guarded publication used to require marking the slice done before the hosted proof could arrive. The coordinator used a manual commit and a later records-only transition. See DD-400 for successful later use of the guarded progress route. [ODF-275 evidence](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-275.md#odf-275)
+Former local code: DD-002. Guarded publication used to require marking the slice done before the hosted proof could arrive. The coordinator used a manual commit and a later records-only transition. See DD-400 for successful later use of the guarded progress route. [ODF-275 evidence](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-275.md#odf-275)
 
 ## DD-004 — PR merge preceded a missing affected-workload performance gate
 
@@ -33,9 +29,7 @@ Apply the affected-workload gate before exact-head merge. For `SEED-010#review-f
 
 ## ODF-397 — Native Git bypassed the installed backlog merge adapter
 
-Former local code: DD-005.
-
-Native Git bypassed the installed backlog merge adapter, including for apparently clean integrations. [ODF-397 evidence](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-397.md#odf-397)
+Former local code: DD-005. Native Git bypassed the installed backlog merge adapter, including for apparently clean integrations. [ODF-397 evidence](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-397.md#odf-397)
 
 ## DD-006 — `python -c` import probes contaminate via argv0
 
@@ -64,18 +58,9 @@ Freeze literal CLI arguments and compare actual outputs before timing a relocate
 
 ## ODF-264 — Unbounded discovery and CI payloads waste coordinator context
 
-Former local code: DD-013.
+Former local code: DD-013. Project discovery and check-run payloads repeated unnecessary detail and forced narrower retrieval. The existing ignore rule already covers the website reports facet. [ODF-264 evidence](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-264.md#odf-264)
 
-Project discovery and check-run payloads repeated unnecessary detail and forced narrower retrieval. The existing ignore rule already covers the website reports facet. [ODF-264 evidence](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-264.md#odf-264)
-
-### Occurrences
-- Execution: SEED-058#process-pr-569; first implementation24caf4571caadaa318a14069cd02c5800b69baa2
-  - Timestamp: unknown
-  - Tool: Codex
-  - Open Dough release: unknown; loaded guidance at00310c5d
-  - Evidence: launch834371e2-24b8-4643-9410-7e1bf2c66020; initial parallel skill reads produced truncated tool output; workflow43781573967 job read returned nested steps for17 jobs.
-  - Observed effect: the coordinator repeatedly narrowed/retrieved guidance and printed check metadata beyond the needed revision,state and job counts. Later reads used compact summaries.
-  - Inference: avoidable context expansion; token/time cost was not measured. Keep bounded read packets and reduce connected results before printing.
+PR 569 also required narrower guidance and job reads. [Retained execution](https://github.com/terryyin/open-dough/blob/286c5e0dec58e72e9328b7dec4a1ab52e88710b1/docs/maintainer/findings/ODF-264.md#lizard--odf-264).
 
 ## DD-014 — Empty `gh pr checks` is not a green merge gate
 
@@ -92,21 +77,15 @@ Interrupted Tasks left recoverable checkout evidence, which the coordinator insp
 
 ## ODF-378 — First-landing expectation blocks story-branch increment publish
 
-Former local code: DD-017.
-
-A first-trunk landing expectation incorrectly bound an intermediate story-branch delivery, causing a target mismatch before push. [ODF-378 evidence](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-378.md#odf-378)
+Former local code: DD-017. A first-trunk landing expectation incorrectly bound an intermediate story-branch delivery, causing a target mismatch before push. [ODF-378 evidence](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-378.md#odf-378)
 
 ## ODF-412 — Contributor publication carries spent qualification evidence
 
-Former local code: DD-398.
-
-Publishing the entire execution branch put spent qualification evidence in the contributor review. PR548 selective staging was an execution-specific mitigation. [ODF-412 evidence](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-412.md#odf-412)
+Former local code: DD-398. Publishing the entire execution branch put spent qualification evidence in the contributor review. PR548 selective staging was an execution-specific mitigation. [ODF-412 evidence](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-412.md#odf-412)
 
 ## ODF-367 — Source-only review restored formatter promises the plan proof narrowed
 
-Former local code: DD-399.
-
-The plan named XML or CSV proof for a seven-formatter promise. Source review recovered XML, CSV, Checkstyle, HTML, clang, MSVS and extension-printer commitments before acceptance. [ODF-367 evidence](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-367.md#odf-367)
+Former local code: DD-399. The plan named XML or CSV proof for a seven-formatter promise. Source review recovered XML, CSV, Checkstyle, HTML, clang, MSVS and extension-printer commitments before acceptance. [ODF-367 evidence](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-367.md#odf-367)
 
 ## DD-400 — Hosted CI-proof slices published with `progress: true` until observation
 
@@ -114,15 +93,11 @@ Guarded progress kept two Cursor executions unfinished until hosted proof was ac
 
 ## ODF-441 — Fresh-increment delivery retries stumble on Darwin mktemp suffixes and git-rm staging
 
-Former local code: DD-401.
-
-Darwin mktemp requires trailing placeholders. Fresh-increment must put deletions already staged by git rm in stagedPaths. [ODF-441 evidence](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-441.md#odf-441)
+Former local code: DD-401. Darwin mktemp requires trailing placeholders. Fresh-increment must put deletions already staged by git rm in stagedPaths. [ODF-441 evidence](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-441.md#odf-441)
 
 ## ODF-413 — Hosted-CI commitment marked observed before receipt or merge head
 
-Former local code: DD-402.
-
-A merge-gated hosted commitment was marked observed before exact-head checks on the promised merged revision finished. [ODF-413 evidence](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-413.md#odf-413)
+Former local code: DD-402. A merge-gated hosted commitment was marked observed before exact-head checks on the promised merged revision finished. [ODF-413 evidence](https://github.com/terryyin/open-dough/blob/483d3a1e8f0ea24b929675b9a195faca48ac8f47/docs/maintainer/findings/ODF-413.md#odf-413)
 
 ## DD-403 — Early cost-owner performance probe avoided unnecessary NS remediation
 
@@ -132,22 +107,13 @@ Probe cost ownership under quiet load before changing a product owner. For `SEED
 
 ## ODF-488 — Windows CI-proof TSV newlines needed successive write-boundary repairs
 
-Former local code: DD-405.
+Former local code: DD-405. Lizard's Windows pipeline tests passed after `a6fa1479`, `e22e93c4` and `a3ec770a` normalized captured stdout and forced LF at the converter and helper write boundaries. [CI run 42745089766](https://github.com/terryyin/lizard/actions/runs/42745089766) verified the local repair on `a3ec770a`. The shared TSV contract remains open. [ODF-488 evidence](https://github.com/terryyin/open-dough/blob/96e641815b9b7d957d97e03c612034d1c4093734/docs/maintainer/findings/ODF-488.md#odf-488).
 
-Lizard's Windows pipeline tests passed after `a6fa1479`, `e22e93c4` and `a3ec770a` normalized captured stdout and forced LF at the converter and helper write boundaries. [CI run 42745089766](https://github.com/terryyin/lizard/actions/runs/42745089766) verified the local repair on `a3ec770a`. The shared TSV contract remains open. [ODF-488 evidence](https://github.com/terryyin/open-dough/blob/96e641815b9b7d957d97e03c612034d1c4093734/docs/maintainer/findings/ODF-488.md#odf-488).
+## ODF-482 — Source freshness can select a contributor merge base without the claim
 
-## DD-489 — Source freshness can select a contributor merge base without the claim
+<a id="dd-489--source-freshness-can-select-a-contributor-merge-base-without-the-claim"></a>
 
-After an externally guarded PR merge,the story branch and trunk had two histories in common. The freshness check selected the contributor head91603058 as its base and refused `not-taken-at-base`,although claimc0d8eec4 and current trunk still held the same Taken work. Merging the already accepted trunk into the owned branch restored an unambiguous base and the normal check returned unchanged. This is a qualified PR-delivery interaction; no product defect was observed.
-
-### Occurrences
-- Execution: SEED-058#process-pr-569; first implementation24caf4571caadaa318a14069cd02c5800b69baa2
-  - Timestamp: unknown
-  - Tool: Codex
-  - Open Dough release: unknown; loaded guidance at00310c5d
-  - Evidence: launch834371e2-24b8-4643-9410-7e1bf2c66020; source-freshness refusal named base91603058; accepted PR mergecf064ade; target60b2fb59; subsequent adapter merge and freshness result unchanged.
-  - Observed effect: closure paused for publication-context reconciliation,then continued in the same worktree without a second claim or human decision.
-  - Inference: selecting a single merge base rather than the retained claim can produce a false claim-absence refusal on this history shape; general recurrence is unmeasured.
+Former local code: DD-489. After PR 569’s guarded merge, one of two best bases lacked the claim. Integrating the accepted target restored the normal check. [Retained evidence](https://github.com/terryyin/open-dough/blob/286c5e0dec58e72e9328b7dec4a1ab52e88710b1/docs/maintainer/findings/ODF-482.md#lizard--dd-489).
 
 ## Retention
 
