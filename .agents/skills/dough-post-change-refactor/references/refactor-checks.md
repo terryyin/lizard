@@ -92,13 +92,11 @@ Use this project's test style and assert observable behavior.
 
 - Before adding or changing a test, name a concrete regression its assertions
   would catch, and assert the observable result of exercising the code or
-  workflow. Do not assert values that merely restate configuration, constants,
-  fixture data, or builder output, such as an exact internal worker count. When
-  such a value produces worthwhile behavior, assert that effect and read the
-  expected value from its configuration rather than copying it into the test.
-  A check that two settings or sources agree is not a restatement; keep it.
-  When reviewing a test diff, remove assertions that would catch no such
-  regression.
+  workflow. Do not restate configuration, constants, fixture data, builder
+  output, or a guidance file's own wording. Assert the effect, reading the
+  expected value from its source. Keep an agreement between two settings or
+  executed results. When reviewing a test diff, remove assertions that would
+  catch no such regression.
 - Give each test one behavior; its subject is what its own name promises,
   not its file, header or plan row. Give a promise the change adds its own
   test, sharing setup; do not add it to another behavior's test or widen that
