@@ -79,8 +79,9 @@ Give the agent:
   [replanning permission](execution-decisions.md#choose-replanning-permission),
   the remaining time and literal `run` form of the
   [slice clock](oversized-slice.md#track-active-time), any proof deadline and
-  [how to wait for proof](wait-for-proof.md), workflow precedence, and literal
-  focused commands with the runtime wrapper, each run through that `run` form. Carry the
+  [how to wait for proof](wait-for-proof.md), workflow precedence, the
+  [proof evidence contract](proof-evidence.md), and literal focused commands
+  with the runtime wrapper, each run through that `run` form. Carry the
   [failure policy](failure-policy.md) and this project's additions by link or verbatim, not as a weaker paraphrase such as "fix or
   report"; pass a known failure's attribution as diagnosis evidence, separate
   from the repair responsibility that policy assigns. For a diagnosis in
@@ -92,8 +93,8 @@ Give the agent:
   `node '<installed-execute-plan>/scripts/consumer-trace.mjs' --checkout '<checkout>' --base <revision> [--term …]`,
   and select sufficient proof under
   [own executable proof](../../dough-story-refinement/references/planning.md#own-executable-proof),
-  including the changed surface's suite when it runs within the slice's
-  focused-check time, even when the plan says wider suites belong to CI.
+  including every suite it selects, even when the plan says wider suites
+  belong to CI.
   At a reported overrun, return unfinished work and the clock's elapsed time. With
   replanning disabled, leave the incomplete attempt in place for the coordinator's
   overrun handling.
@@ -149,68 +150,9 @@ Follow
 
 ## Return a targeted report with focused proof
 
-Require uncommitted changes with passing focused proof, a stop requiring human
-judgment, or an oversized-slice report under execution decisions. Require a
-targeted return that gives the coordinator:
-
-- the implemented outcome mapped to the slice promises;
-- owned changed paths and the product or behavior boundaries they change;
-- literal proof commands and concrete observation locations, including the
-  relevant setup and assertions or signals;
-- when filtered proof was used, which tests or observations were actually
-  selected versus the promises claimed as covered;
-- for each behavior presented as verified or covered, the observing assertion
-  or signal that exercises it — or an explicit untested / uncovered listing
-  instead of verified prose;
-- when the change altered an operation or contract, a message or value, a
-  default, rendered output, or shared text: the changed effect and its
-  [consumer-trace record](../../dough-story-refinement/references/executable-proof.md#record-the-consumer-trace)
-  with its supplied effect terms and each affected purpose's boundary, proof
-  type, observation or gap under that common rule; link the inspected setup and
-  observing assertions for proof run or reused, and support exclusions;
-- required observations still missing or explicitly untested, named as gaps —
-  a learning note alone is not acceptance evidence for those promises;
-- for expensive proof, the retained or reconsidered decision and any deferred
-  required observation with its owner and next condition;
-- uncovered promises, contradictions, and other evidence gaps; and
-- only consequential learnings that affect acceptance or remaining work.
-
-Use source paths plus named tests, symbols, assertions, or signals as locations;
-include a bounded excerpt only when the location cannot expose the decisive
-evidence. The coordinator inspects the returned work and decides slice completion
-under [proof acceptance](wrap-up.md#accept-proof).
-
-For each passing focused command, use:
-
-```text
-proof:
-  command: <literal complete focused command>
-  covers: <observable behavior or paths covered>
-  boundary: <product boundary exercised>
-  observations:
-    - <source/test path and named assertion or signal>: <what it observes>
-  setup: <source/test path and setup supplying only the starting precondition>
-  result: pass
-```
-
-Connect proof to the planned slice's, quick story's, or instruction's promises. Placeholders,
-abbreviations, and paraphrases are ambiguous evidence. When no setup is needed,
-say `none`; do not omit the field or mistake behavior supplied by a fixture for
-product behavior. Report uncovered behavior as incomplete implementation; the
-refactor pass must not supply missing behavior.
-
-The `proof:` block is an example representation, not a required schema. An
-equivalent layout that carries the same substantive evidence — the literal
-complete command, what it covers, the boundary exercised, concrete observation
-locations with their setup, and the result — is a complete report. Headings,
-key casing, and field arrangement may vary; the substance may not. A report
-missing that substance, or contradicting observed evidence, is incomplete
-however closely it matches the example. The coordinator's
-[proof acceptance](wrap-up.md#accept-proof) applies the same substance test.
-
-Explicit completion markers with a separate workflow contract — such as
-`## REFACTOR COMPLETE` and `## PAUSED FOR CI` — are not report formatting;
-return them verbatim.
+Follow [the return contract](return-report.md): write the full report in the
+evidence location and return a short verdict pointing to it. The contract owns
+the required proof detail, promise coverage and completion markers.
 
 ## Await delegated results without empty calls
 

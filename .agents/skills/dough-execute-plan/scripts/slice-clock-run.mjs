@@ -1,7 +1,8 @@
 // Runs one command through the slice clock: its time is excluded from the
 // slice or diagnosis round running when it starts, its output goes to a log,
-// and its exit status goes to an exit file once the run is recorded.
-import { spawn } from "node:child_process";
+// and its command, checkout and result stay beside the log. Its exit status
+// goes to an exit file only after that run record is complete.
+import { execFileSync, spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { closeSync, openSync, writeFileSync } from "node:fs";
 import { constants } from "node:os";
@@ -35,6 +36,21 @@ function runToEnd(command, args, log) {
 // The run's report; the caller has checked its flags.
 export async function runThroughClock(file, { command, args, log, exitFile }) {
   const id = randomUUID();
+  const runRecord = resolve(`${log}.run.json`);
+  const git = (...args) =>
+    execFileSync("git", args, {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    }).trim();
+  const evidence = {
+    command: [command, ...args],
+    revision: git("rev-parse", "HEAD"),
+    uncommittedChanges: git("status", "--porcelain") !== "",
+    startedAt: currentTime(),
+    log: resolve(log),
+    exitFile: resolve(exitFile),
+  };
+  writeWhole(runRecord, `${JSON.stringify(evidence)}\n`);
   // The slice or round running when the command starts owns its interval,
   // even when it is paused before the command ends.
   const named = updateRecord(file, (record) => {
@@ -59,6 +75,10 @@ export async function runThroughClock(file, { command, args, log, exitFile }) {
     command.endedAt ??= now;
     return sliceReport(record, named, now);
   });
+  writeWhole(
+    runRecord,
+    `${JSON.stringify({ ...evidence, endedAt: currentTime(), exitStatus })}\n`,
+  );
   // Written last, so whoever waits on it reads a finished run.
   writeWhole(exitFile, `${exitStatus}\n`);
   return {
@@ -66,6 +86,7 @@ export async function runThroughClock(file, { command, args, log, exitFile }) {
     exitStatus,
     log: resolve(log),
     exitFile: resolve(exitFile),
+    runRecord,
     ...report,
   };
 }

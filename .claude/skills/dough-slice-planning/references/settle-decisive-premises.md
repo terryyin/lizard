@@ -40,7 +40,9 @@ Reading, searching, listing, and read-only host queries locate it; presence cann
   asserts or relies on it. Search tests and all callers, including scripts, step definitions,
   and specs that drive HTTP sequences, rather than only names or direct imports.
   With a cheap local suite, the smallest complete observation is one scratch application
-  of the planned change, one relevant test run, and a revert; failures identify consumers.
+  of the planned change, a run of the suites that
+  [executable proof](../../dough-story-refinement/references/executable-proof.md)
+  selects, and a revert; failures identify consumers.
   For a moved function reached through a script, run the product intent's script
   steps with a scratch failure in the function; record that step's failure.
   Caller traces or unit imports do not settle it.

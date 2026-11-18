@@ -9,6 +9,12 @@ Apply [proof ownership](../../dough-story-refinement/references/planning.md#own-
 Complete [source-only review at acceptance](obtain-source-review.md#at-acceptance)
 before comparing the return.
 
+Use the short verdict to locate the full report and [run records](proof-evidence.md#read-the-run-record).
+A promise absent from the verdict, or a referenced report or run record missing
+from disk, is incomplete proof: return the slice naming the missing promise,
+report or record. Read from the report and logs only the parts the comparison
+below needs, under [targeted retrieval](disposable-research.md).
+
 Compare that independent return with the source, then the plan, implementation
 return, actual product and proof. In existing plan or acceptance evidence compare,
 in any equivalent layout: applicable original trigger/setup → source-expected
@@ -20,7 +26,12 @@ Return it to the slice when this slice's output already owes it; when the plan
 claims a reason the story does not record, stop for human judgment.
 Include each qualification and journey example; a heading, count or plan list
 cannot stand for a compound promise. Return a concrete expected/actual mismatch
-unless a real human amendment changes it. Broad accuracy or compatibility claims
+unless a real human amendment changes it. Accept the slice and start the
+refactor pass once each source promise, affected consumer and required gate
+has a decisive observation, the story obligations are recorded, and no
+expected/actual mismatch remains unresolved. Further inspection needs a named
+expected/actual mismatch or a specific evidence gap: a promise, consumer or
+gate without a sufficient observation. Broad accuracy or compatibility claims
 cannot replace an explicit journey's expected result. Check source completeness before reuse.
 When a slice's proof includes a developer-operated observation, accept it under
 [developer-operated observation](../../dough-story-refinement/references/executable-proof.md#plan-and-reuse-developer-operated-observation).
@@ -74,10 +85,12 @@ consumers and any other known affected consumer ran or was reused, including
 one left unrun for CI: obtain the missing observation or
 return the slice for it. Preserve sufficient reused or equivalent-purpose proof
 and accepted evidence for unrelated consumers and unchanged boundaries. Require
-the changed surface's suite when it runs within the slice's focused-check time,
-not every suite. A discovered failure keeps the [failure policy](failure-policy.md) and
-the consumer's legitimate promise; passing by supplying the outcome in setup or
-weakening the assertion is not sufficient proof.
+the suites that
+[executable proof](../../dough-story-refinement/references/executable-proof.md)
+selects, not every suite. A discovered failure keeps the
+[failure policy](failure-policy.md) and the consumer's legitimate promise;
+passing by supplying the outcome in setup or weakening the assertion is not
+sufficient proof.
 
 For a required behavior or observation missing from the product or return, obtain
 it within authority or return it for correction before dependent acceptance. If
@@ -96,21 +109,25 @@ execution, apply that reference's same-slice rule without creating a plan.
 
 Read fixture or setup changes that turn a failing scenario green against the
 story's examples. Check a reshaped example in its real shape, file or input;
-green on a different fixture does not accept it. Examine a limit that could lose
-the only copy of paused or saved work for that consequence; guidance for a
-neighbouring case does not authorize it.
+green on a different fixture does not accept it. A neighbouring case's guidance
+does not authorize a different promised consequence.
 
 Retain the promise, accepted boundary, consumer trace, inspected setup/assertion
-locations, results and literal commands for refactoring. When a location is missing,
-the boundary unclear or evidence contradictory, inspect the smallest relevant
-callers or implementation. Return incomplete or contradictory evidence with the
+locations, results and literal commands for refactoring. When a named mismatch
+or evidence gap remains, inspect the smallest relevant callers or
+implementation for that gap. Return incomplete or contradictory evidence with the
 promise, inspected locations and gap; refactoring cannot supply missing behavior.
 
-Judge substance under [the return contract](delegation.md#return-a-targeted-report-with-focused-proof).
+Judge substance under [the return contract](return-report.md).
 Equivalent layouts carrying literal commands, results, owned changes, promise
 coverage, boundaries, setup and observation locations need no report-only resend
 or formatting retry. Missing terminal results or contradictions remain incomplete.
 Explicit completion markers such as `## REFACTOR COMPLETE` stay verbatim.
+
+Compare each run record's `revision` and `uncommittedChanges` with the candidate
+checkout. Proof from before a later checkout edit covers the earlier state;
+obtain only the observation that edit affects, preserving unaffected accepted
+evidence.
 
 Reuse accepted inspection only while its promise, boundary, implementation, setup
 and observations match. Recover literal commands from the original handoff; rerun

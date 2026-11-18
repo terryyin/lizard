@@ -54,7 +54,8 @@ The coordinator owns `start` and `pause`:
   to stop.
 
 The implementer runs each proof command (test, build, measurement) through
-`run` and [waits on its exit file without polling](wait-for-proof.md). Time
+`run`, keeping its outputs and decisive artifacts under
+[proof evidence](proof-evidence.md), and [waits on its exit file without polling](wait-for-proof.md). Time
 inside `run` is not counted. Implementation, diagnosis, proof setup, cleanup
 and any command started outside the clock count as active time. `status`
 gives the remaining time.

@@ -59,15 +59,17 @@ invokes or imitates a changed contract, including untouched ones. Account for th
 and the observing proof in the [consumer-trace record](#record-the-consumer-trace).
 Derive obligations from each consumer's actual purpose, not its method name or
 dominant use. Exclude a consumer only when the effect does not reach its boundary;
-retain sufficient current proof for unchanged boundaries. A prior
+one that still reads the changed output is reached even when it asserts another
+subject. Retain sufficient current proof for unchanged boundaries. A prior
 unaffected-suite or unused-consumer exclusion is invalid when this change still
 reaches that consumer: reassess current consumers before relying on it.
 Incompatible purposes each need an observation; equivalent purposes may share
-sufficient proof. When the change has such consumers and the suite covering the
-changed surface runs within the slice's focused-check time, run that suite instead
-of hand-picking the consumers it contains; run consumers outside it as well. A
-change nothing else observes, such as renaming a helper used only within one
-file with no shared contract, text, value, default, or rendered output, keeps
+sufficient proof. When the change has such consumers, run every suite whose tests
+read the changed output where it is observed (its stand-in, recorder, reader, or
+rendered surface, supplied to the trace as `--term`), including unchanged tests
+and helpers: whole when it runs within the slice's focused-check time, otherwise
+its reading consumers. A change nothing else observes, such as renaming a helper
+used only within one file with no shared contract, text, value, default, or rendered output, keeps
 focused proof. For unresolved domain purpose, ask precisely about that consumer's
 requirement and stop its dependent obligation until answered rather than guessing
 policy.
@@ -99,7 +101,9 @@ without benchmarking every story or delaying independent work/setup.
 Reuse sufficient evidence. Obtain only missing observations within authorized
 work; if unavailable, report what is covered and the specific unproved promise.
 That promise remains incomplete; reporting the gap does not fulfill or remove
-it. Limit success claims to the observed cases.
+it. Limit success claims to the observed cases: name the variants a filtered run
+executed, list unrun readers of the changed output as unverified, and give a
+count only with its unit and matching the retained observation.
 
 | Situation                  | Proof                                            |
 | -------------------------- | ------------------------------------------------ |
@@ -120,28 +124,29 @@ The consumer-trace record is the evidence of the trace above, and the installed
 [consumer-trace script](../../dough-execute-plan/scripts/consumer-trace.mjs)
 produces it:
 `node '<installed-execute-plan>/scripts/consumer-trace.mjs' --checkout '<checkout>' --base <revision> [--term '<text>']…`,
-with `--base HEAD` for an uncommitted change. It searches the whole checkout
-for the changed files' paths and basenames, identifiers declared in changed
-hunks, changed modules' import paths, and removed literals, and lists the
-located consumers by kind, naming kinds with no match. Supply as `--term` the
-effect the diff cannot carry: retired behavior and altered preconditions, in
-the words their observers use. A derived term marked too broad lists no
-consumers; when it names the changed contract, resupply it as `--term`. When
-the record lists a step definition, page object, helper, or stand-in, add its
-step phrases or exported names that reach the effect as `--term` and rerun
-until the journeys and callers using it are listed. Give every listed consumer
+with `--base HEAD` for an uncommitted change. It searches the whole checkout for the changed files'
+paths and basenames, identifiers declared in changed hunks, changed modules' import paths, and
+removed literals, and lists the located consumers by kind, naming kinds with no match. Supply as
+`--term` the effect the diff cannot carry: retired behavior and altered preconditions, in the words
+their observers use. A derived term marked too broad lists no consumers; when it names the changed
+contract, resupply it as `--term`. When the record lists a step definition, page object, helper, or
+stand-in, add its step phrases or exported names that reach the effect as `--term` and rerun until
+the journeys and callers using it are listed. Give every listed consumer
 a disposition: `run`, `reused`, or `excluded: <reason the effect does not reach
-its boundary>`. A record with every kind empty keeps the slice's focused proof.
+its boundary>`. A named group of generic or historical matches—done records,
+retired plans, changelog entries, or unrelated text matches—may share one
+`excluded: <reason>` disposition; inspect only the relevant consumers. Every
+listed consumer still gets a disposition. A record with every kind empty keeps
+the slice's focused proof.
 
-For each affected consumer purpose, connect the changed effect and reached
-boundary to the relevant proof type and actual observation or named gap. Inspect
-how the consumer uses the effect and how its assertions or signals observe it,
-including indirect callers and enclosing observations. Distinguish behavior,
-static checks, and layout or contract observations when those boundaries are
-affected; file kind, a re-export, a file-level `run`, or one passing proof type
-cannot settle another affected purpose. Select proof from that purpose, not a
-fixed list of check types for every file. Equivalent purposes may share one
-sufficient check; independent purposes need their own sufficient observations.
+For each affected consumer purpose, connect the changed effect and reached boundary to the
+relevant proof type and actual observation or named gap. Inspect how the consumer uses the
+effect and how its assertions or signals observe it, including indirect callers and enclosing
+observations. Distinguish behavior, static checks, and layout or contract observations when
+those boundaries are affected; file kind, a re-export, a file-level `run`, or one passing proof
+type cannot settle another affected purpose. Select proof from that purpose, not a fixed list of
+check types for every file. Equivalent purposes may share one sufficient check; independent
+purposes need their own sufficient observations.
 
 Annotate the existing disposition or link to the return's evidence: identify the
 literal command or observation steps, inspected setup and observing assertion or
@@ -223,9 +228,9 @@ duration cutoff or routine human approval is required. Coordinate only owned
 work through existing handoffs and pause/resume rules. Separate worktrees can
 share the same machine; leave unrelated processes with their owners.
 
-Retain the host, workload, evidence and unknowns, choice, command/proof owner,
-and reconsideration condition in the existing plan, handoff or execution
-conversation. Keep this concise enough for the decision; create no host registry.
+Retain host, workload, evidence and unknowns, choice, command/proof owner and
+reconsideration condition in the existing plan, handoff or execution conversation;
+keep it concise, create no host registry, and apply the [artifact survival check](../../dough-execute-plan/references/proof-evidence.md#preserve-decisive-artifacts).
 A deferral leaves the exact required observation outstanding with its owner and
 next condition. The command owner remains responsible through its terminal
 result under the existing workflow.

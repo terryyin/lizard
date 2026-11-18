@@ -12,7 +12,8 @@ reaches its deadline.
 - Start the command through the
   [slice clock's `run`](oversized-slice.md#track-active-time), which writes
   the command's output to the log and, when it ends, its exit status to the
-  exit file. Wait on that exit file, never on a process listing: `pgrep -f`
+  exit file. Keep those outputs and the [run record](proof-evidence.md) in the
+  evidence location. Wait on that exit file, never on a process listing: `pgrep -f`
   can match the wait itself.
 - While it runs, make no `sleep`, log, or status calls, and do no other
   checks.

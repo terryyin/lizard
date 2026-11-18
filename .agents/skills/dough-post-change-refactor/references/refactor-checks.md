@@ -41,9 +41,9 @@ Edit only after its scope and subsystem gates permit the candidates.
 - Give shared knowledge **one** authoritative home across the concept's
   representations and orchestration. The next rule change should not require
   parallel updates to handlers for successive delivery examples.
-- Acceptable extra touchpoints: tests whose subject is the concept, and
-  generated code derived from it. A test edited for a change it is not about
-  has this smell: loosen what it observes rather than update its value. Do not
+- Acceptable extra touchpoints: tests whose own names promise the concept,
+  and generated code derived from it. A test edited for a change it is not
+  about has this smell: loosen what it observes rather than update its value. Do not
   hardcode the same value in product paths, fixtures, E2E config, and feature
   files in parallel.
 - **Action:** consolidate now behind one seam (one constant, config, or module).
@@ -99,11 +99,13 @@ Use this project's test style and assert observable behavior.
   A check that two settings or sources agree is not a restatement; keep it.
   When reviewing a test diff, remove assertions that would catch no such
   regression.
-- Give each test one behavior and a descriptive name, and assert what that
-  name promises: an assertion fails only for a change the test is about. In a
-  test about one part of an output, a fixed position, a count, whole-list or
-  whole-object equality, or a full-string match is too strict; observe that
-  part. Assert the whole shape in the one test whose subject is the shape, and
+- Give each test one behavior; its subject is what its own name promises,
+  not its file, header or plan row. Give a promise the change adds its own
+  test, sharing setup; do not add it to another behavior's test or widen that
+  test's name or header. An assertion fails only for a change that test is
+  about. In a test about one part of an output, a fixed position, a count,
+  whole-list or whole-object equality, or a full-string match is too strict;
+  observe that part. Assert the whole shape in the one test whose subject is the shape, and
   a default's value in the one test about that default. Omit a repeated
   assertion only when it is independent of the changed precondition. Prefer a
   positive distinguishing signal when sufficient; retain absence or negative

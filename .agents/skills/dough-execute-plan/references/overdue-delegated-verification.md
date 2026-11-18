@@ -18,9 +18,16 @@ or a second process supervisor.
 
 With the check, retain the command identity, owning actor, host/checkout,
 process or supported continuation handle, last meaningful progress, and
-applicable CI observer identity and coverage. Queue state, live progress, a
-supported yield, and a suspected stall are observations that inform the same
-next action — not independent handlers or hard-coded duration tiers:
+applicable CI observer identity and coverage. For proof started through `run`,
+use the [run record](proof-evidence.md#read-the-run-record) as the retained
+command identity. Read its command and revision, the log so far, and whether
+`exitStatus` is present. Use that identity to continue the same command through
+its supported continuation, rather than starting another solely because no
+terminal status is recorded.
+
+Queue state, live progress, a supported yield, and a suspected stall are
+observations that inform the same next action — not independent handlers or
+hard-coded duration tiers:
 
 - **Queued.** Queue evidence exists but no process has started. Record the queue
   state and the next bounded check or owner. Do not classify an absent process
