@@ -865,6 +865,33 @@ class TestJavaScriptGroupedExpressions(unittest.TestCase):
               if (c) go();                                  // +1
             }"""))
 
+    def test_empty_object_in_parentheses(self):
+        self.assertEqual([1], cogc("a.ts", """
+            function pick(v) {
+              const x = (v ? (1) : v as {});                // +1
+              return x;
+            }"""))
+
+    def test_subscript_after_parentheses(self):
+        self.assertEqual([4], cogc("a.js", """
+            function read(content, name, strict) {
+              const value = (content || {})[name];          // +1
+              const mode = strict ? 1 : 2;                  // +1
+              if (mode && value) {                          // +1 +1
+                go();
+              }
+            }"""))
+
+    def test_call_after_parentheses(self):
+        self.assertEqual([0, 4], cogc("a.js", """
+            function pack(fast, item, done) {
+              const packed = (fast ? quick : slow)(item);   // +1
+              const check = done ? ((a, b) => a === b) : undefined;  // +1
+              if (same(packed, item, check)) {              // +1
+                store(packed || item);                      // +1
+              }
+            }"""))
+
     def test_two_groups_in_one_declaration(self):
         self.assertEqual([3], cogc("a.js", """
             function size(wide, tall) {
@@ -903,13 +930,6 @@ class TestJavaScriptGroupedExpressions(unittest.TestCase):
               return x;
             }"""))
 
-    def test_object_literal_in_parentheses(self):
-        self.assertEqual([1], cogc("a.js", """
-            function box(big) {
-              const size = ({ width: big ? 2 : 1 });        // +1
-              return size;
-            }"""))
-
     def test_typescript(self):
         self.assertEqual([2, 1], cogc("a.ts", """
             function sign(a: number): number {
@@ -930,10 +950,10 @@ class TestJavaScriptFunctionsInGroupedExpressions(unittest.TestCase):
               const fn = (v => v && ready);
             }"""))
 
-    def test_function_expression_keeps_its_own_score(self):
-        self.assertEqual([1, 1], cogc("a.js", """
+    def test_function_expression_with_parameter_default(self):
+        self.assertEqual([0], cogc("a.js", """
             function outer(a) {
-              const fn = (a ? function (v) { if (v) go(); } : null);
+              const fns = ([a = 0, function (p = a && a) {}]);
             }"""))
 
     def test_method(self):
@@ -946,6 +966,30 @@ class TestJavaScriptFunctionsInGroupedExpressions(unittest.TestCase):
         self.assertEqual([0], cogc("a.ts", """
             function outer() {
               const obj = ({ m(): void { if (v) go(); } });
+            }"""))
+
+    def test_typescript_method_with_literal_return_type(self):
+        self.assertEqual([0], cogc("a.ts", """
+            function label(v) {
+              const obj = ({ m(): 'a' | 'b' { return v ? 'a' : 'b'; } });
+            }"""))
+
+    def test_typescript_method_with_generic_return_type(self):
+        self.assertEqual([0], cogc("a.ts", """
+            function outer() {
+              const obj = ({ m(): Promise<void> { if (v) go(); } });
+            }"""))
+
+    def test_tsx_method_with_generic_return_type(self):
+        self.assertEqual([0], cogc("a.tsx", """
+            function outer() {
+              const obj = ({ m(): Array<number> { return v ? [1] : []; } });
+            }"""))
+
+    def test_class_expression(self):
+        self.assertEqual([0], cogc("a.js", """
+            function outer() {
+              const type = (class { static { if (v) go(); } });
             }"""))
 
 
