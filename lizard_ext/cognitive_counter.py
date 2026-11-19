@@ -180,7 +180,8 @@ class _Counter(object):  # pylint: disable=R0902
         stacked = context.stacked_functions
         if self.previous == '(' and stacked and \
                 stacked[-1] is self.previous_function and \
-                context.current_function is not self.previous_function:
+                context.current_function is not self.previous_function and \
+                getattr(context.current_function, 'optimistic', False):
             candidates.append(_Candidate(
                 context.current_function, stacked[-1], len(self.openers)))
 

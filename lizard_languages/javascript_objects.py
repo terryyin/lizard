@@ -103,6 +103,9 @@ class JavaScriptObjectsMixin:
                 self._read_parenthesis_group()
                 self._prev_token = token
                 return True
+            # Only "field = (" and "key: (" can open a group; a "(" after
+            # a member name opens parameters.
+            self._signature = self.last_token not in ('=', ':')
             if not self.started_function:
                 # When last_tokens is '=' we're in a field assignment
                 # pattern (field = () => {}), so use function_name which
@@ -111,9 +114,6 @@ class JavaScriptObjectsMixin:
                     self._function(self.function_name)
                 else:
                     self._function(self.last_tokens)
-            # Only "field = (" and "key: (" can open a group; a "(" after
-            # a member name opens parameters.
-            self._signature = self.last_token not in ('=', ':')
             self.next(self._function, token)
             return True
         # If we've seen async/static and this is an identifier, it's likely a method name
