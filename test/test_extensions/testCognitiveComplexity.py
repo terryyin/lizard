@@ -743,6 +743,31 @@ class TestJavaScriptNestedFunctions(unittest.TestCase):
               }
             }"""))
 
+    def test_template_literal_after_callback(self):
+        self.assertEqual([0, 3], cogc("a.js", """
+            function label(items) {
+              if (items.length) {                  // +1
+                items.forEach(item => {});
+                log(`${items.length}`);
+                if (items.sorted) {                // +2 (nesting 1)
+                  items.done = true;
+                }
+              }
+            }"""))
+
+    def test_parenthesis_in_jsx_text(self):
+        self.assertEqual([0, 2], cogc("a.jsx", """
+            function Page(props) {
+              if (props.ready) {                   // +1
+                render(function () {
+                  return <p>{props.name}({props.count})</p>;
+                });
+              }
+              if (props.wide) {                    // +1
+                props.expand();
+              }
+            }"""))
+
     def test_bracket_in_jsx_text(self):
         self.assertEqual([0, 3], cogc("a.jsx", """
             function Page(props) {
