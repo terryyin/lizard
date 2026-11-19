@@ -55,10 +55,10 @@ The coordinator owns `start` and `pause`:
 
 The implementer runs each proof command (test, build, measurement) through
 `run`, keeping its outputs and decisive artifacts under
-[proof evidence](proof-evidence.md), and [waits on its exit file without polling](wait-for-proof.md). Time
-inside `run` is not counted. Implementation, diagnosis, proof setup, cleanup
-and any command started outside the clock count as active time. `status`
-gives the remaining time.
+[proof evidence](proof-evidence.md), and follows the
+[host's proof wait](wait-for-proof.md). Time inside `run` is not counted.
+Implementation, diagnosis, proof setup, cleanup and any command started
+outside the clock count as active time. `status` gives the remaining time.
 
 At the limit, a clock command's report carries `overrun: true` and the elapsed
 minutes. On Claude Code and Cursor the installed hook also tells the agent

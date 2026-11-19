@@ -15,7 +15,7 @@ observer and resources instead of a successful shutdown. While this explicit
 background handoff's required CI/shutdown remains pending, retain that handoff;
 do not automatically continue into wrap-up. Shared completion `pending` or
 `completion_expired` likewise stops dependent continuation and cleanup on every
-host; retain and recover it under [completion mechanics](ci-completion-wait.md#completion-command-and-receipt-mechanics).
+host; retain and recover it under completion mechanics.
 
 After all planned slices satisfy proof/delivery, `--skip-retro` skips only this
 execution's automatic retrospective; it changes no preferences or
@@ -116,7 +116,7 @@ substitutes for required trunk-integration observation.
 
 If closure fails or is held, preserve the workspace, resumable session, proof and
 active records and any partial deferred process review state still needed.
-Successful execution is not successful closure. Resume at the first unfinished operation without repeating accepted publication, completed product or proof review or settled dispositions, including an already queued canonical correction.
+Resume at the first unfinished operation without repeating accepted publication, completed product or proof review or settled dispositions, including an already queued canonical correction.
 Apply wrap-up's attention/reporting handling to its actual unfinished step;
 retirement cannot erase resources needed by an unresolved choice.
 
@@ -171,8 +171,7 @@ declare the story complete, or invoke Dough Land or Story Wrap Up.
 ## Record execution completion
 
 After the retrospective returns, or is skipped, in Story Branch Mode first run
-`node '<installed-execute-plan>/scripts/source-freshness.mjs' check` with the
-inputs in [source freshness](source-freshness.md#run-the-check) and handle its
+the [source freshness](source-freshness.md#run-the-check) check and handle its
 result there. Then run
 `node '<installed-execute-plan>/scripts/story-obligations.mjs' check --plan '<PLAN.md>' --completion`
 with the [resolved inputs](story-obligations.md#use-the-record-at-execution-boundaries).

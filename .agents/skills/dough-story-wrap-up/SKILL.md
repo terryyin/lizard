@@ -169,9 +169,8 @@ After completion and Git recovery are established — including any required Tru
 Mode before-cleanup publication — delete the selected work's spent history under
 [wrap-up cleanup](../dough-product-backlog/references/record-preparation.md#wrap-up-cleanup).
 In Story Branch Mode, for selected work with a **Taken** entry, first run
-`node '<installed-execute-plan>/scripts/source-freshness.mjs' check` with the
-inputs in [source freshness](../dough-execute-plan/references/source-freshness.md#run-the-check);
-on `amended` or `conflict` delete nothing and follow
+the [source freshness](../dough-execute-plan/references/source-freshness.md#run-the-check)
+check; on `amended` or `conflict` delete nothing and follow
 [its wrap-up handling](../dough-execute-plan/references/source-freshness.md#at-wrap-ups-deletion).
 Work without a Taken entry has no story section or plan to compare. On
 `unchanged`, or for work without a Taken entry, delete:

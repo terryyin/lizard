@@ -9,10 +9,10 @@ operations named for the domain action or observation: `openItem(title)`,
 `followRelatedItem()`, `showsItem(expectedTitle)`. Keep scoped locators, clicks,
 keyboard interactions, and waits for observable UI state there.
 
-Express each meaningful user action as one Gherkin step or page-object call
-that groups its UI interactions inside the object. `When I add the note "Call
-back Friday"` can call `notes.addNote("Call back Friday")`, which opens the
-dialog, clears and fills the field, clicks Save, and asserts the dialog closes.
+Group the interactions for one user action behind one domain call.
+For example, the step `When I add the note "Call back Friday"` calls
+`notes.addNote("Call back Friday")`. The notes page object opens the dialog,
+fills the field, and saves.
 
 Name harness and builder helpers the same way when they express a scenario
 step: the call states the domain action or precondition; encoding, wire-format,

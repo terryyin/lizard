@@ -139,6 +139,17 @@ when meaningful behavior and integration proof survive at lower cost. Identify
 the surviving proof and establish replacement unit coverage before narrowing or
 removing detailed E2E cases. Follow the invoking workflow's scope and authority.
 
+In Cucumber scenarios and Playwright step titles, express one domain intent
+per step. `Given` declares the starting state, `When` names the action in active
+voice, `Then` asserts an observable result, and `And` continues the preceding
+keyword's role. A Playwright test body contains only named `test.step(...)`
+calls. Put all setup, actions, and assertions inside them.
+
+Prefer one statement per Cucumber step definition or Playwright step callback.
+Each body has at most three statements and ten nonblank lines of code, excluding
+the step declaration and closing delimiter. Count a fluent chain as one
+statement even when wrapped or split by `await` to use the returned object.
+
 ## File size
 
 For every file in the current diff and every file proposed for editing:

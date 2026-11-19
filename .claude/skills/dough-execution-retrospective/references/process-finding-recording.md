@@ -15,7 +15,23 @@ Reuse logged execution identity, else canonical plan/story plus first related im
 or a stable execution-record reference if no commit exists. Later commits/reviews/dates create no
 identity. Missing/conflicting identity permits findings but no countable row or invented tracking.
 
-For a new log, assign `DD-001` upward in supported-finding order using:
+When the log is missing, use this project's Git history to establish first use or recreation
+before allocating. Run `git log --name-status --follow -- <log path>`, follow renames to former
+paths, and read each earlier version with `git show <revision>:<path>`. Recovered DD/adopted-ODF
+headings, aliases, and `Highest allocated local number` count as current content for matching and
+numbering below. Cite recovered findings as `<revision>:<path> <ID>` so older findings sharing a
+number stay distinguishable by revision.
+
+- Complete history without an earlier log is first use.
+- Recreation carries the recovered floor in the `## Retention` metadata of
+  [bounded process-log recording](bounded-process-log.md#retain-higher-value-learning), with
+  `Recovery: <revision>:<path>` of the version read.
+- Shallow (`git rev-parse --is-shallow-repository` prints `true`) or otherwise incomplete
+  history without an earlier log stops allocation: leave the log absent and name the missing
+  evidence, such as full history of the log path and its former paths.
+
+A new log assigns `DD-001` upward in supported-finding order, or continues above a recovered
+floor, using:
 
 ```markdown
 # DearDough Process Findings
@@ -56,15 +72,17 @@ release rows, and unrelated content; make the smallest supported edit. Migration
 reordering, deletion, or merging requires bounded retention below.
 
 Match the same concrete problem/practice by decisive evidence, not wording/symptoms; reuse its code.
-Recover history only for consequential identity/match questions, reusing established removed IDs.
+Recover history for a missing log or consequential identity/match questions, reusing established
+removed IDs; a verified recurrence keeps its recovered heading code and any former alias.
 Missing history that prevents safe identity resolution stops allocation. Otherwise an unmatched/
 uncertain finding gets the next unused `DD-NNN`, with matching uncertainty stated when relevant.
 Never renumber to fill gaps or restore a pruned occurrence on identical rereview.
 
-Next DD number is one above the greater of all current DD/adopted-ODF heading numbers and
-retention metadata's highest allocated local number. Never reuse removed IDs or collide across
-prefixes (`ODF-001` reserves 1). Update existing high-water metadata on every allocation, even
-without pruning. Uncertain historical gaps cannot be filled; report inability to allocate safely.
+Next DD number is one above the greatest of all current or recovered DD/adopted-ODF heading
+numbers, their aliases, and retention metadata's highest allocated local number. Never reuse
+removed IDs or collide across prefixes (`ODF-001` reserves 1). Update existing high-water metadata
+on every allocation, even without pruning. Uncertain historical gaps cannot be filled; report
+inability to allocate safely.
 
 One execution means one row: identical/pruned rereview makes no edit; decisive new evidence or
 corrected qualified conclusions enrich it, preserving prior notes. New executions add rows, symptoms do not.

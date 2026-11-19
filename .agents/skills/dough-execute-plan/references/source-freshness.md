@@ -8,23 +8,24 @@ Trunk Mode does not use this check.
 
 ## Run the check
 
-Resolve `<installed-execute-plan>` to the installed execution skill directory,
-`<execution checkout>` to the owned workspace, `<identity>` to the Taken work's
-identity, and the authorized remote and trunk from the established publication
-context. Run from the execution checkout:
+Run from the execution checkout, with `<installed-execute-plan>` as the
+installed execution skill directory, `<identity>` as the Taken work's identity,
+and the authorized remote and trunk from the established publication context:
 
 ```sh
 node '<installed-execute-plan>/scripts/source-freshness.mjs' check --workspace '<execution checkout>' --identity '<identity>' --remote '<authorized remote>' --target-ref 'refs/heads/<trunk>'
 ```
 
-It fetches the remote, takes the branch's fork from fetched trunk as the Take,
-and reads the Taken entry on fetched trunk for the records: with a plan link,
-the story section and the linked plan; for a plan-homed correction, its plan;
-otherwise the story section alone, as for a quick story or a plan linked only
-on the branch. It compares each record on trunk with the working tree (an
-uncommitted plan edit counts) from its `from` base: the newest trunk revision
-since the Take whose text the branch copy contains, or the Take. It prints one
-JSON line with the `result`, `trunkRevision`, and each record's `state`; the
+It fetches the remote, takes as the Take the base the branch shares with
+fetched trunk that holds the Taken entry (a merged sibling or contributor
+history can add a shared base without it), and reads the Taken entry on
+fetched trunk for the records: with a plan link, the story section and the
+linked plan; for a plan-homed correction, its plan; otherwise the story
+section alone, as for a quick story or a plan linked only on the branch. It
+compares each record on trunk with the working tree (an uncommitted plan edit
+counts) from its `from` base: the newest trunk revision since the Take whose
+text the branch copy contains, or the Take. It prints one JSON line with the
+`result`, `trunkRevision`, the Take as `base`, and each record's `state`; the
 result is the most severe state:
 
 - `unchanged` (exit 0) — the branch copy contains trunk's change to each
@@ -38,10 +39,14 @@ result is the most severe state:
   Follow [Resolve a conflict](#resolve-a-conflict).
 
 A refusal exits 3 with a `reason` and message, such as a failed fetch, an
-identity not Taken on trunk or at the Take, or an absent record. It accepts no
-boundary: correct the input or publication context and rerun, or stop under
-[human judgment](execution-decisions.md#stop-for-human-judgment). Neither
-command commits, pushes, or writes to trunk.
+absent record, an identity not Taken on trunk (`not-taken`) or at any shared
+base (`not-taken-at-base`, naming the bases), or a record that differs between
+shared bases that hold the Taken entry (`ambiguous-base`, naming the bases and
+the record). It accepts no boundary: correct the input or publication context
+and rerun, or stop under
+[human judgment](execution-decisions.md#stop-for-human-judgment). For
+`ambiguous-base`, integrate fetched trunk into the branch, which leaves one
+shared base, and rerun. Neither command commits, pushes, or writes to trunk.
 
 ## Absorb an amendment
 
@@ -82,13 +87,12 @@ and deliver independent safe work under
 decision keeps trunk's text, apply it to the branch copy. If it keeps the
 branch's text, the developer changes trunk.
 
-Carry reconciled records and settle their amendments under
-[Absorb an amendment](#absorb-an-amendment) steps 3–4. Rerun `check` at the
-blocked boundary on the reconciled working copy with its proof in place.
-Continue only on `unchanged`.
+Carry reconciled records, settle their amendments, and rerun `check` with
+their proof in place under [Absorb an amendment](#absorb-an-amendment) steps
+3–5.
 
 ## At wrap-up's deletion
 
-On `amended` or `conflict`, wrap-up deletes nothing. Return to execution in
-the same session to absorb the amendment or handle the conflict, then
-re-enter wrap-up, which deletes only on `unchanged`.
+Wrap-up deletes only on `unchanged`. On `amended` or `conflict`, return to
+execution in the same session to absorb the amendment or resolve the conflict,
+then re-enter wrap-up.

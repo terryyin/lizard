@@ -1,7 +1,6 @@
 # Await the applicable revision at completion
 
-This reference owns when the single completion operation is required — including
-execution/review handoff and wrap-up closure or trunk integration — how its
+This reference owns when the single completion operation is required, how its
 outcome affects those procedures, and the local command and receipt mechanics.
 [CI observation and repair](ci-monitor.md) owns the observer, notification
 handling, and the writer pause.
@@ -23,7 +22,7 @@ publication. Follow [completion mechanics](#completion-command-and-receipt-mecha
 including its live-Claude Story Branch background handoff; handle delivered failures at safe boundaries.
 
 Success with confirmed shutdown ends observation; report `integrated_state` under
-[completion mechanics](#completion-command-and-receipt-mechanics).
+completion mechanics.
 Another writer's failure creates no repair obligation. Success completes only once
 every actionable failure delivered for this execution is repaired, proved infrastructure,
 held by a reported active owner or explicitly excepted; no passing rerun or later green tip settles one.
@@ -32,7 +31,7 @@ never retries until green. Missing repair authority, ownership or a required
 decision leaves incomplete work with failed revision and partial review preserved,
 with no completion marker. An unresolved receipt establishes no success: report
 its reason, effective evidence and shutdown. Pending or unconfirmed shutdown
-retains resources; follow [completion mechanics](#completion-command-and-receipt-mechanics)
+retains resources; follow completion mechanics
 for recovery or expiry. Observation cancellation is not execution or wrap-up cancellation.
 Authorized repair uses publish/register and invalidates only affected review conclusions;
 complete its new accepted revision at a later boundary. The retrospective gains
@@ -54,6 +53,9 @@ node '/ABSOLUTE/RESOLVED/SKILL/scripts/ci-mailbox.mjs' complete-revision '/EXACT
 
 When the observer ended before a receipt, follow
 [managed completion recovery](ci-completion-recovery.md).
+
+On Codex, await the original command through the
+[foreground wait](wait-for-proof.md#codex-foreground-waits).
 
 The command stays silent while waiting and keeps its ten-minute foreground bound.
 Before waiting it exclusively records the first completion start and a sixty-minute
@@ -124,7 +126,7 @@ distinct from shutdown facts:
   `missing_registration`. Stale, withdrawn, unsupported, foreign or unreadable
   evidence cannot justify pending.
   Except `wait_cancelled` and `pending`, a bounded unresolved result
-  ends the wait and includes shutdown evidence; it never establishes success.
+  ends the wait and includes shutdown evidence.
 - `shutdown.status: "retained"` with `reason: "unread_actionable_failure"` keeps
   observation when unread `CI_FAILURE` evidence remains; that evidence is not
   acknowledged or erased by a later green revision.
