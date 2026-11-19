@@ -1014,6 +1014,33 @@ class TestTypeScriptSignatures(unittest.TestCase):
               }
             }"""))
 
+    def test_function_overload_after_new(self):
+        self.assertEqual([0, 0], cogc("a.ts", """
+            function outer() {
+              new Date()
+              function inner(x: 0 extends 1 ? 2 : 3);
+              function inner() {}
+            }"""))
+
+    def test_overload_of_method_named_equals(self):
+        self.assertEqual([0, 0], cogc("a.ts", """
+            function outer() {
+              class Shape {
+                ['='](x: 0 extends 1 ? 2 : 3);
+                ['=']() {}
+              }
+            }"""))
+
+    def test_static_overload_after_field_in_derived_class(self):
+        self.assertEqual([0, 0], cogc("a.ts", """
+            function outer() {
+              class Shape extends class {} {
+                m: number
+                static m(x: 0 extends 1 ? 2 : 3);
+                static m() {}
+              }
+            }"""))
+
     def test_field_value_in_derived_class(self):
         self.assertEqual([1], cogc("a.ts", """
             function outer(big) {
