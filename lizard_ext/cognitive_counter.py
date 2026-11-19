@@ -102,8 +102,8 @@ class _Counter(object):
         two (``if (list.some(item => item.ok))``); the enclosing function
         would otherwise never see its bracket close.
 
-        The ``${`` and ``}`` of a template interpolation count as ``(`` and
-        ``)``: they group an expression and are no block."""
+        The ``}`` of a template interpolation ends no block.  It ends the
+        sequence of logical operators before it, so it counts as ``,``."""
         function = self.context.current_function
         if not self.profile.nested_functions:
             return function, token
@@ -111,13 +111,11 @@ class _Counter(object):
         if token in _CLOSER_OF:
             if not _is_markup(token):
                 openers.append((token, function))
-                if token == '${':
-                    token = '('
         elif openers and _CLOSER_OF[openers[-1][0]] == token and \
                 not _is_markup(token):
             opener, function = openers.pop()
             if opener == '${':
-                token = ')'
+                token = ','
         return function, token
 
     def _switch_function(self, function):
