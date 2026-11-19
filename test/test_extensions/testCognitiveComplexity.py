@@ -732,6 +732,30 @@ class TestJavaScriptNestedFunctions(unittest.TestCase):
               }
             }"""))
 
+    def test_template_literal_in_callback(self):
+        self.assertEqual([0, 3], cogc("a.js", """
+            function label(items) {
+              if (items.length) {                  // +1
+                items.map(item => `${item.name}`);
+                if (items.sorted) {                // +2 (nesting 1)
+                  items.done = true;
+                }
+              }
+            }"""))
+
+    def test_bracket_in_jsx_text(self):
+        self.assertEqual([0, 3], cogc("a.jsx", """
+            function Page(props) {
+              if (props.ready) {                   // +1
+                function Row() {
+                  return <p>{props.a}]{props.b}</p>;
+                }
+                if (props.wide) {                  // +2 (nesting 1)
+                  props.expand();
+                }
+              }
+            }"""))
+
     def test_typescript(self):
         self.assertEqual([0, 2, 0, 2], cogc("a.ts", """
             function activate(user: User): void {
