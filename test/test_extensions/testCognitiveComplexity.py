@@ -831,6 +831,145 @@ class TestJavaScriptTemplateLiterals(unittest.TestCase):
             }"""))
 
 
+class TestJavaScriptGroupedExpressions(unittest.TestCase):
+    """The reader takes ``x = (`` as the possible start of an arrow function
+    and discards that function when no ``=>`` follows.  The expression then
+    counts for the function around it."""
+
+    def test_ternary_in_parentheses(self):
+        self.assertEqual([1], cogc("a.js", """
+            function path(prefix, name) {
+              const key = (prefix ? prefix + name : name);  // +1
+              return key;
+            }"""))
+
+    def test_ternary_in_parentheses_keeps_nesting(self):
+        self.assertEqual([3], cogc("a.js", """
+            function pick(active, admin) {
+              if (active) {                                 // +1
+                role = (admin ? 'admin' : 'user');          // +2 (nesting 1)
+              }
+            }"""))
+
+    def test_logical_operators_in_and_after_parentheses(self):
+        self.assertEqual([2], cogc("a.js", """
+            function allowed(active, verified, guest) {
+              const ok = (active && verified) || guest;     // +1 +1
+              return ok;
+            }"""))
+
+    def test_statement_after_parentheses_on_same_line(self):
+        self.assertEqual([3], cogc("a.js", """
+            function sync(a, b, c) {
+              if (a) x = (b); if (c) go();                  // +1 +1
+              if (c) go();                                  // +1
+            }"""))
+
+    def test_two_groups_in_one_declaration(self):
+        self.assertEqual([3], cogc("a.js", """
+            function size(wide, tall) {
+              const w = (wide ? 2 : 1), h = (tall ? 2 : 1);  // +1 +1
+              if (w > h) {                                  // +1
+                rotate();
+              }
+            }"""))
+
+    def test_real_arrow_function_keeps_its_own_score(self):
+        self.assertEqual([1, 0], cogc("a.js", """
+            function sign(value) {
+              const x = ((n) => n ? 1 : 2)(value);          // +1 for the arrow
+              return x;
+            }"""))
+
+    def test_forgiven_nested_function_is_not_counted_in_outer(self):
+        self.assertEqual([1], cogc("a.js", """
+            function outer(a, b) {
+              function inner() {  // #lizard forgives
+                if (a) { go(); }
+              }
+              if (b) { go(); }                              // +1
+            }"""))
+
+    def test_forgiven_arrow_function_is_not_counted_in_outer(self):
+        self.assertEqual([0], cogc("a.js", """
+            function outer() {
+              const inner = a => a && b /* #lizard forgives */
+            }"""))
+
+    def test_forgive_comment_in_parentheses(self):
+        self.assertEqual([1], cogc("a.js", """
+            function pick(a, b, c) {
+              const x = (/* #lizard forgives */ a ? b : c);  // +1
+              return x;
+            }"""))
+
+    def test_object_literal_in_parentheses(self):
+        self.assertEqual([1], cogc("a.js", """
+            function box(big) {
+              const size = ({ width: big ? 2 : 1 });        // +1
+              return size;
+            }"""))
+
+    def test_typescript(self):
+        self.assertEqual([2, 1], cogc("a.ts", """
+            function sign(a: number): number {
+              const x: number = (a ? 1 : 2);                // +1
+              const g = (p: number): number => p && a ? 1 : 2;  // +2, arrow
+              return x;
+            }"""))
+
+
+class TestJavaScriptFunctionsInGroupedExpressions(unittest.TestCase):
+    """The reader does not list a function that it meets in the parameters of
+    a possible arrow function.  The function around the expression does not
+    get its score."""
+
+    def test_arrow_function(self):
+        self.assertEqual([0], cogc("a.js", """
+            function outer() {
+              const fn = (v => v && ready);
+            }"""))
+
+    def test_function_expression_keeps_its_own_score(self):
+        self.assertEqual([1, 1], cogc("a.js", """
+            function outer(a) {
+              const fn = (a ? function (v) { if (v) go(); } : null);
+            }"""))
+
+    def test_method(self):
+        self.assertEqual([0], cogc("a.js", """
+            function outer() {
+              const obj = ({ m() { if (v) go(); } });
+            }"""))
+
+    def test_typescript_method_with_return_type(self):
+        self.assertEqual([0], cogc("a.ts", """
+            function outer() {
+              const obj = ({ m(): void { if (v) go(); } });
+            }"""))
+
+
+class TestJavaScriptReaderFailure(unittest.TestCase):
+    """The reader stops at code that nests too deep.  The functions that
+    ended before it keep their score."""
+
+    DEEP = "g(" * 1200 + ")" * 1200
+
+    def test_function_after_grouped_expression(self):
+        self.assertEqual([1], cogc("a.js", """
+            function outer() {
+              const x = (get());
+              function done() { if (v) use(v); }            // +1
+              return %s;
+            }""" % self.DEEP))
+
+    def test_function_in_parameter_default(self):
+        self.assertEqual([1], cogc("a.js", """
+            function outer(
+              first = function done() { if (v) use(v); },   // +1
+              next = %s) {}""" % self.DEEP))
+
+
 class TestFlatLanguages(unittest.TestCase):
     """Blocks are not brace-delimited: increments without nesting penalty."""
 
