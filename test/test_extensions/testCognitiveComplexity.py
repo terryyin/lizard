@@ -993,10 +993,34 @@ class TestJavaScriptFunctionsInGroupedExpressions(unittest.TestCase):
             }"""))
 
 
-class TestTypeScriptClassMembers(unittest.TestCase):
+class TestTypeScriptSignatures(unittest.TestCase):
     """The reader also discards the function of an overload signature.  That
     is no expression, so its tokens do not count for the function around
-    the class."""
+    it."""
+
+    def test_function_overload(self):
+        self.assertEqual([0, 0], cogc("a.ts", """
+            function outer() {
+              function inner(x: 0 extends 1 ? 2 : 3);
+              function inner() {}
+            }"""))
+
+    def test_constructor_overload_in_derived_class(self):
+        self.assertEqual([0, 0], cogc("a.ts", """
+            function outer() {
+              class Shape extends class {} {
+                constructor(x: 0 extends 1 ? 2 : 3);
+                constructor() { super(); }
+              }
+            }"""))
+
+    def test_field_value_in_derived_class(self):
+        self.assertEqual([1], cogc("a.ts", """
+            function outer(big) {
+              class Shape extends class {} {
+                size = (big ? 2 : 1);                       // +1
+              }
+            }"""))
 
     def test_constructor_overload(self):
         self.assertEqual([0, 0], cogc("a.ts", """
