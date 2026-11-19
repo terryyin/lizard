@@ -8,8 +8,7 @@ from .cognitive_profile import (
 HEAD, PAREN_HEAD, BRACE_HEAD, BODY_PENDING, BODY = range(5)
 
 _IF_LIKE = ('if', 'else if')
-_OPENING_BRACKETS = frozenset(('(', '[', '{'))
-_CLOSING_BRACKETS = frozenset((')', ']', '}'))
+_CLOSER_OF = {'(': ')', '[': ']', '{': '}', '${': '}'}
 _EXPRESSION_FRAMES = ('ternary', 'lambda')
 
 
@@ -74,7 +73,7 @@ class _Counter(object):
         self.states = WeakKeyDictionary()
         self.function = None
         self.state = None
-        self.openers = []       # the function that counted each open bracket
+        self.openers = []       # (closer, function) of each open bracket
 
     def process(self, token):
         function = self._function_of(token)
@@ -83,12 +82,8 @@ class _Counter(object):
         state = self.state
         if self.gated and not state.body_started:
             if not self._in_body(function):
-                if token in _OPENING_BRACKETS:
-                    self.openers.append(None)
                 return
             state.body_started = True
-        if token in _OPENING_BRACKETS:
-            self.openers.append(function)
         if self.profile.case_insensitive:
             token = token.lower()
         self._process(token)
@@ -99,9 +94,15 @@ class _Counter(object):
         bracket.  The reader can enter or leave a nested function between the
         two (``if (list.some(item => item.ok))``); the enclosing function
         would otherwise never see its bracket close."""
-        if token in _CLOSING_BRACKETS and self.openers:
-            return self.openers.pop() or self.context.current_function
-        return self.context.current_function
+        function = self.context.current_function
+        if not self.profile.nested_functions:
+            return function
+        openers = self.openers
+        if token in _CLOSER_OF:
+            openers.append((_CLOSER_OF[token], function))
+        elif openers and openers[-1][0] == token:
+            function = openers.pop()[1]
+        return function
 
     def _switch_function(self, function):
         self.function = function

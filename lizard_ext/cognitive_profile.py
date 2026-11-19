@@ -29,7 +29,8 @@ class _Profile(object):  # pylint: disable=R0902,R0903
                  jumps=('break', 'continue'), ternary=True,
                  paren_heads=True, newline_ends_statement=False,
                  nullable_types=False, rvalue_refs=False, lambda_style=None,
-                 case_insensitive=False, nesting=True):
+                 case_insensitive=False, nesting=True,
+                 nested_functions=False):
         # Structures the reader does not list; completed in ``for_reader``.
         self.ifs = frozenset(ifs)
         self.else_ifs = frozenset(else_ifs)
@@ -57,6 +58,9 @@ class _Profile(object):  # pylint: disable=R0902,R0903
         self.case_insensitive = case_insensitive
         # False: blocks are not brace-delimited, nesting is not tracked.
         self.nesting = nesting
+        # The reader starts a nested function in the middle of an expression
+        # of the enclosing one (JavaScript callbacks).
+        self.nested_functions = nested_functions
 
     def for_reader(self, reader):
         """A copy with the roles of the reader's control-flow keywords added."""
@@ -74,6 +78,8 @@ _C_LIKE = {'switches': ('switch',), 'do_likes': ('do',), 'gotos': ('goto',)}
 # Blocks are not brace-delimited: increments without nesting penalty.
 _FLAT = {'nesting': False, 'ternary': False, 'jumps': ()}
 
+_JS_LIKE = dict(_C_LIKE, newline_ends_statement=True, nested_functions=True)
+
 _PROFILES = {
     'cpp': _Profile(loops=('foreach',),         # Qt
                     rvalue_refs=True, lambda_style='cpp', **_C_LIKE),
@@ -81,10 +87,10 @@ _PROFILES = {
     'java': _Profile(lambda_style='arrow', **_C_LIKE),
     'csharp': _Profile(loops=('foreach',), lambda_style='arrow',
                        nullable_types=True, **_C_LIKE),
-    'javascript': _Profile(newline_ends_statement=True, **_C_LIKE),
-    'typescript': _Profile(newline_ends_statement=True, **_C_LIKE),
-    'tsx': _Profile(newline_ends_statement=True, **_C_LIKE),
-    'vue': _Profile(newline_ends_statement=True, **_C_LIKE),
+    'javascript': _Profile(**_JS_LIKE),
+    'typescript': _Profile(**_JS_LIKE),
+    'tsx': _Profile(**_JS_LIKE),
+    'vue': _Profile(**_JS_LIKE),
     'php': _Profile(**_C_LIKE),
     'ttcn': _Profile(**_C_LIKE),
     'solidity': _Profile(catches=('catch',), **_C_LIKE),
