@@ -22,6 +22,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         self.last_tokens = ''
         self.function_name = ''
         self.started_function = None
+        self._signature = False     # started_function is no expression
         self.as_object = False
         self.as_class = False
         self._class_body_pending = False

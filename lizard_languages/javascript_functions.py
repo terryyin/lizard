@@ -93,7 +93,7 @@ class JavaScriptFunctionsMixin:
 
     def _abandon_function(self, expression=True):
         """Discard an optimistic signature that proved to be an expression,
-        or a class member that has no body."""
+        or a signature that has no body."""
         function = self.context.current_function
         function.abandoned = expression     # for the extensions
         expression = function
@@ -175,6 +175,10 @@ class JavaScriptFunctionsMixin:
             self._async_seen = False
         else:
             if not self.started_function:
+                # A function declaration or a member, not "name = (".
+                self._signature = (
+                    self._prev_token == 'function' or self.as_object
+                    and not self._in_prop_value and self.last_tokens != '=')
                 self._push_function_to_stack()
             self._parameter_bindings = JavaScriptBindings(
                 ')', self.context.current_function)
@@ -248,8 +252,7 @@ class JavaScriptFunctionsMixin:
             self.next(self._state_global)
         elif token != '{' and token != '=>':
             if self.started_function:
-                self._abandon_function(
-                    expression=not self.as_class or self._in_prop_value)
+                self._abandon_function(expression=not self._signature)
         self.next(self._state_global, token)
 
     def _field(self, token):
