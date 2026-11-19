@@ -91,10 +91,12 @@ class JavaScriptFunctionsMixin:
                 and starts_statement(token)):
             self._end_statement()
 
-    def _abandon_function(self):
-        """Discard an optimistic signature that proved to be an expression."""
-        expression = self.context.current_function
-        expression.abandoned = True     # for the extensions
+    def _abandon_function(self, expression=True):
+        """Discard an optimistic signature that proved to be an expression,
+        or a class member that has no body."""
+        function = self.context.current_function
+        function.abandoned = expression     # for the extensions
+        expression = function
         self.context.forgive = True
         self.context.end_of_function()
         self.started_function = None
@@ -246,7 +248,8 @@ class JavaScriptFunctionsMixin:
             self.next(self._state_global)
         elif token != '{' and token != '=>':
             if self.started_function:
-                self._abandon_function()
+                self._abandon_function(
+                    expression=not self.as_class or self._in_prop_value)
         self.next(self._state_global, token)
 
     def _field(self, token):
