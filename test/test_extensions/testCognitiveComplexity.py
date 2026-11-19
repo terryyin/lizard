@@ -803,6 +803,34 @@ class TestJavaScriptNestedFunctions(unittest.TestCase):
             }"""))
 
 
+class TestJavaScriptTemplateLiterals(unittest.TestCase):
+    """The ``}`` of an interpolation ends no block."""
+
+    def test_interpolation_in_block(self):
+        self.assertEqual([3], cogc("a.js", """
+            function label(item) {
+              if (item.name) {                     // +1
+                const text = `${item.name}`;
+                if (item.bold) {                   // +2 (nesting 1)
+                  mark(text);
+                }
+              }
+            }"""))
+
+    def test_logical_operators_in_and_around_interpolation(self):
+        self.assertEqual([2], cogc("a.js", """
+            function label(a, b, c, d) {
+              return a && `${b && c}` && d;        // +1 +1
+            }"""))
+
+    def test_logical_operators_in_statements_without_semicolons(self):
+        self.assertEqual([2], cogc("a.js", """
+            function label(a, b, c) {
+              a && tag`${b}`                       // +1
+              c && go()                            // +1
+            }"""))
+
+
 class TestFlatLanguages(unittest.TestCase):
     """Blocks are not brace-delimited: increments without nesting penalty."""
 
