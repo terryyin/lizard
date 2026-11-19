@@ -12,6 +12,11 @@ _CLOSER_OF = {'(': ')', '[': ']', '{': '}', '${': '}'}
 _EXPRESSION_FRAMES = ('ternary', 'lambda')
 
 
+def _is_markup(token):
+    """JSX text is no code: ``<p>{name}({count})</p>``."""
+    return getattr(token, 'is_jsx_markup', False)
+
+
 class _Frame(object):  # pylint: disable=R0903
     """An open control structure (or lambda / ternary) nesting its body."""
 
@@ -73,10 +78,10 @@ class _Counter(object):
         self.states = WeakKeyDictionary()
         self.function = None
         self.state = None
-        self.openers = []       # (closer, function) of each open bracket
+        self.openers = []       # (bracket, function) of each open bracket
 
     def process(self, token):
-        function = self._function_of(token)
+        function, token = self._route(token)
         if function is not self.function:
             self._switch_function(function)
         state = self.state
@@ -89,20 +94,31 @@ class _Counter(object):
         self._process(token)
         state.prev2, state.prev = state.prev, token
 
-    def _function_of(self, token):
-        """A closing bracket belongs to the function that counted its opening
+    def _route(self, token):
+        """The function that counts the token, and the token to count.
+
+        A closing bracket belongs to the function that counted its opening
         bracket.  The reader can enter or leave a nested function between the
         two (``if (list.some(item => item.ok))``); the enclosing function
-        would otherwise never see its bracket close."""
+        would otherwise never see its bracket close.
+
+        The ``${`` and ``}`` of a template interpolation count as ``(`` and
+        ``)``: they group an expression and are no block."""
         function = self.context.current_function
         if not self.profile.nested_functions:
-            return function
+            return function, token
         openers = self.openers
         if token in _CLOSER_OF:
-            openers.append((_CLOSER_OF[token], function))
-        elif openers and openers[-1][0] == token:
-            function = openers.pop()[1]
-        return function
+            if not _is_markup(token):
+                openers.append((token, function))
+                if token == '${':
+                    token = '('
+        elif openers and _CLOSER_OF[openers[-1][0]] == token and \
+                not _is_markup(token):
+            opener, function = openers.pop()
+            if opener == '${':
+                token = ')'
+        return function, token
 
     def _switch_function(self, function):
         self.function = function
