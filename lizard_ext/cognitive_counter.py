@@ -8,6 +8,8 @@ from .cognitive_profile import (
 HEAD, PAREN_HEAD, BRACE_HEAD, BODY_PENDING, BODY = range(5)
 
 _IF_LIKE = ('if', 'else if')
+_OPENING_BRACKETS = frozenset(('(', '[', '{'))
+_CLOSING_BRACKETS = frozenset((')', ']', '}'))
 _EXPRESSION_FRAMES = ('ternary', 'lambda')
 
 
@@ -72,20 +74,34 @@ class _Counter(object):
         self.states = WeakKeyDictionary()
         self.function = None
         self.state = None
+        self.openers = []       # the function that counted each open bracket
 
     def process(self, token):
-        function = self.context.current_function
+        function = self._function_of(token)
         if function is not self.function:
             self._switch_function(function)
         state = self.state
         if self.gated and not state.body_started:
             if not self._in_body(function):
+                if token in _OPENING_BRACKETS:
+                    self.openers.append(None)
                 return
             state.body_started = True
+        if token in _OPENING_BRACKETS:
+            self.openers.append(function)
         if self.profile.case_insensitive:
             token = token.lower()
         self._process(token)
         state.prev2, state.prev = state.prev, token
+
+    def _function_of(self, token):
+        """A closing bracket belongs to the function that counted its opening
+        bracket.  The reader can enter or leave a nested function between the
+        two (``if (list.some(item => item.ok))``); the enclosing function
+        would otherwise never see its bracket close."""
+        if token in _CLOSING_BRACKETS and self.openers:
+            return self.openers.pop() or self.context.current_function
+        return self.context.current_function
 
     def _switch_function(self, function):
         self.function = function
