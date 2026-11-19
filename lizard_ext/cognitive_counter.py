@@ -1,5 +1,6 @@
 """Per-function cognitive-complexity state and shared increments."""
 
+from itertools import chain
 from weakref import WeakKeyDictionary
 
 from .cognitive_profile import (
@@ -17,22 +18,15 @@ def _is_markup(token):
     return getattr(token, 'is_jsx_markup', False)
 
 
-def _ends_operand(token):
-    """A ``{`` after an operand opens the body of a method or of a class."""
-    return token[:1].isalnum() or token[:1] in ('_', '$') or \
-        token in (')', ']', '}', '>')
-
-
 class _Candidate(object):  # pylint: disable=R0903
     """A function that the reader started at a ``(`` and can still abandon."""
 
-    __slots__ = ('function', 'parent', 'depth', 'plain')
+    __slots__ = ('function', 'parent', 'depth')
 
     def __init__(self, function, parent, depth):
         self.function = function
         self.parent = parent    # the function around it
         self.depth = depth      # open brackets, with the ``(`` it started at
-        self.plain = True       # no function in its brackets so far
 
 
 class _Frame(object):  # pylint: disable=R0903
@@ -101,8 +95,8 @@ class _Counter(object):  # pylint: disable=R0902
         self.previous = None    # the token before this one
         self.previous_function = None   # and the function it arrived in
         self.candidates = []    # functions the reader can still abandon
-        self.held = []          # their tokens: (token, line, function)
-        self.merged = {}        # abandoned function -> the one around it
+        self.held = {}          # function -> lists of (order, token, line)
+        self.order = 0          # number of tokens held so far
 
     def process(self, token):
         context = self.context
@@ -115,14 +109,11 @@ class _Counter(object):  # pylint: disable=R0902
                        len(self.openers) >= candidates[-1].depth)
         function, counted = self._route(token)
         if candidates and self._involved(function):
-            self.held.append((counted, context.current_line, function))
-            if function is candidates[-1].function:
-                if in_brackets:
-                    if self._starts_function(token):
-                        candidates[-1].plain = False
-                elif token in ('=>', '{'):
-                    candidates.pop()    # the reader keeps this function
-                    self._release()
+            self._hold(function, counted)
+            top = candidates[-1]
+            if self._keeps_tokens(top, in_brackets, function, token):
+                candidates.pop()
+                self._release(top.function, top.parent)
         else:
             self._count(counted, context.current_line, function)
         self.previous = token
@@ -133,7 +124,7 @@ class _Counter(object):  # pylint: disable=R0902
         if self.held:
             self._settle()
             del self.candidates[:]
-            self._release()
+            self._release(*list(self.held))
 
     def _count(self, token, line, function):
         if function is not self.function:
@@ -177,16 +168,15 @@ class _Counter(object):  # pylint: disable=R0902
         """The reader takes ``x = (`` as the possible start of an arrow
         function, and abandons that function when no ``=>`` follows.  Its
         tokens then count for the function around it.  So the tokens of both
-        functions are held from the ``(`` until the reader keeps or abandons
-        the function."""
+        functions are held from the ``(`` until it is known which function
+        counts them."""
         context = self.context
         candidates = self.candidates
-        if candidates and self._ended(candidates[-1].function):
-            while candidates and self._ended(candidates[-1].function):
-                ended = candidates.pop()
-                if ended.plain and getattr(ended.function, 'abandoned', False):
-                    self._merge(ended.function, ended.parent)
-            self._release()
+        while candidates and self._ended(candidates[-1].function):
+            ended = candidates.pop()
+            if getattr(ended.function, 'abandoned', False):
+                self._merge(ended)
+            self._release(ended.function, ended.parent)
         stacked = context.stacked_functions
         if self.previous == '(' and stacked and \
                 stacked[-1] is self.previous_function and \
@@ -194,12 +184,18 @@ class _Counter(object):  # pylint: disable=R0902
             candidates.append(_Candidate(
                 context.current_function, stacked[-1], len(self.openers)))
 
-    def _starts_function(self, token):
-        """The reader can miss an arrow function or a method in the brackets
-        of a candidate (``fn = (v => v && ok)``).  The tokens of such a
+    def _keeps_tokens(self, candidate, in_brackets, function, token):
+        """Whether it is now known that the candidate counts its own tokens.
+
+        After its brackets, ``=>`` or ``{`` starts its body: the reader keeps
+        it.  In its brackets, ``=>``, ``function`` or a ``{`` that is not
+        empty can be an arrow function, a function, a method or a class that
+        the reader misses (``fn = (v => v && ok)``).  The tokens of such a
         function do not belong to the function around the candidate."""
-        return token == '=>' or \
-            (token == '{' and _ends_operand(self.previous))
+        if in_brackets:
+            return token in ('=>', 'function') or \
+                (self.previous == '{' and token != '}')
+        return token in ('=>', '{') and function is candidate.function
 
     def _ended(self, function):
         context = self.context
@@ -213,23 +209,35 @@ class _Counter(object):  # pylint: disable=R0902
                    function is candidate.parent
                    for candidate in self.candidates)
 
-    def _merge(self, function, parent):
-        self.merged[function] = parent
-        self.openers = [(bracket, parent if owner is function else owner)
-                        for bracket, owner in self.openers]
+    def _hold(self, function, token):
+        self.order += 1
+        if function not in self.held:
+            self.held[function] = [[]]
+        self.held[function][0].append(
+            (self.order, token, self.context.current_line))
 
-    def _release(self):
+    def _merge(self, candidate):
+        function, parent = candidate.function, candidate.parent
+        lists = self.held.pop(function, None)
+        if lists:
+            self.held.setdefault(parent, [[]]).extend(lists)
+        # The brackets that the function opened: the ones above the ``(``
+        # it started at, or in the place of that ``(`` after its ``)``.
+        openers = self.openers
+        for index in range(candidate.depth - 1, len(openers)):
+            if openers[index][1] is function:
+                openers[index] = (openers[index][0], parent)
+
+    def _release(self, *functions):
         """Count the held tokens of the functions that no candidate involves
-        any more.  The other tokens stay held."""
-        held, merged = self.held, self.merged
-        self.held, self.merged = [], {}
-        for token, line, function in held:
-            while function in merged:
-                function = merged[function]
-            if self._involved(function):
-                self.held.append((token, line, function))
-            else:
-                self._count(token, line, function)
+        any more, in the order in which they were read."""
+        for function in functions:
+            if function in self.held and not self._involved(function):
+                lists = self.held.pop(function)
+                tokens = lists[0] if len(lists) == 1 else \
+                    sorted(chain.from_iterable(lists))
+                for _, token, line in tokens:
+                    self._count(token, line, function)
 
     def _switch_function(self, function):
         self.function = function
