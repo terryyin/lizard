@@ -94,6 +94,7 @@ class JavaScriptFunctionsMixin:
     def _abandon_function(self):
         """Discard an optimistic signature that proved to be an expression."""
         expression = self.context.current_function
+        expression.abandoned = True     # for the extensions
         self.context.forgive = True
         self.context.end_of_function()
         self.started_function = None

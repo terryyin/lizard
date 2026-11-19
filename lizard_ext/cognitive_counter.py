@@ -17,6 +17,24 @@ def _is_markup(token):
     return getattr(token, 'is_jsx_markup', False)
 
 
+def _ends_operand(token):
+    """A ``{`` after an operand opens the body of a method or of a class."""
+    return token[:1].isalnum() or token[:1] in ('_', '$') or \
+        token in (')', ']', '}', '>')
+
+
+class _Candidate(object):  # pylint: disable=R0903
+    """A function that the reader started at a ``(`` and can still abandon."""
+
+    __slots__ = ('function', 'parent', 'depth', 'plain')
+
+    def __init__(self, function, parent, depth):
+        self.function = function
+        self.parent = parent    # the function around it
+        self.depth = depth      # open brackets, with the ``(`` it started at
+        self.plain = True       # no function in its brackets so far
+
+
 class _Frame(object):  # pylint: disable=R0903
     """An open control structure (or lambda / ternary) nesting its body."""
 
@@ -65,7 +83,7 @@ class _FunctionState(object):  # pylint: disable=R0902,R0903
 # Counters
 # ---------------------------------------------------------------------------
 
-class _Counter(object):
+class _Counter(object):  # pylint: disable=R0902
     """Bookkeeping per function plus the rules shared by all engines."""
 
     def __init__(self, reader, profile, gated):
@@ -78,12 +96,49 @@ class _Counter(object):
         self.states = WeakKeyDictionary()
         self.function = None
         self.state = None
+        self.line = None
         self.openers = []       # (bracket, function) of each open bracket
+        self.previous = None    # the token before this one
+        self.previous_function = None   # and the function it arrived in
+        self.candidates = []    # functions the reader can still abandon
+        self.held = []          # their tokens: (token, line, function)
+        self.merged = {}        # abandoned function -> the one around it
 
     def process(self, token):
-        function, token = self._route(token)
+        context = self.context
+        if not self.profile.nested_functions:
+            self._count(token, context.current_line, context.current_function)
+            return
+        self._settle()
+        candidates = self.candidates
+        in_brackets = (candidates and
+                       len(self.openers) >= candidates[-1].depth)
+        function, counted = self._route(token)
+        if candidates and self._involved(function):
+            self.held.append((counted, context.current_line, function))
+            if function is candidates[-1].function:
+                if in_brackets:
+                    if self._starts_function(token):
+                        candidates[-1].plain = False
+                elif token in ('=>', '{'):
+                    candidates.pop()    # the reader keeps this function
+                    self._release()
+        else:
+            self._count(counted, context.current_line, function)
+        self.previous = token
+        self.previous_function = context.current_function
+
+    def finish(self):
+        """The end of the file: count what is still held."""
+        if self.held:
+            self._settle()
+            del self.candidates[:]
+            self._release()
+
+    def _count(self, token, line, function):
         if function is not self.function:
             self._switch_function(function)
+        self.line = line
         state = self.state
         if self.gated and not state.body_started:
             if not self._in_body(function):
@@ -105,8 +160,6 @@ class _Counter(object):
         The ``}`` of a template interpolation ends no block.  It ends the
         sequence of logical operators before it, so it counts as ``,``."""
         function = self.context.current_function
-        if not self.profile.nested_functions:
-            return function, token
         openers = self.openers
         if token in _CLOSER_OF:
             if not _is_markup(token):
@@ -117,6 +170,66 @@ class _Counter(object):
             if opener == '${':
                 token = ','
         return function, token
+
+    # -- functions the reader abandons ----------------------------------------
+
+    def _settle(self):
+        """The reader takes ``x = (`` as the possible start of an arrow
+        function, and abandons that function when no ``=>`` follows.  Its
+        tokens then count for the function around it.  So the tokens of both
+        functions are held from the ``(`` until the reader keeps or abandons
+        the function."""
+        context = self.context
+        candidates = self.candidates
+        if candidates and self._ended(candidates[-1].function):
+            while candidates and self._ended(candidates[-1].function):
+                ended = candidates.pop()
+                if ended.plain and getattr(ended.function, 'abandoned', False):
+                    self._merge(ended.function, ended.parent)
+            self._release()
+        stacked = context.stacked_functions
+        if self.previous == '(' and stacked and \
+                stacked[-1] is self.previous_function and \
+                context.current_function is not self.previous_function:
+            candidates.append(_Candidate(
+                context.current_function, stacked[-1], len(self.openers)))
+
+    def _starts_function(self, token):
+        """The reader can miss an arrow function or a method in the brackets
+        of a candidate (``fn = (v => v && ok)``).  The tokens of such a
+        function do not belong to the function around the candidate."""
+        return token == '=>' or \
+            (token == '{' and _ends_operand(self.previous))
+
+    def _ended(self, function):
+        context = self.context
+        if function is context.current_function:
+            return False
+        return not any(function is stacked
+                       for stacked in context.stacked_functions)
+
+    def _involved(self, function):
+        return any(function is candidate.function or
+                   function is candidate.parent
+                   for candidate in self.candidates)
+
+    def _merge(self, function, parent):
+        self.merged[function] = parent
+        self.openers = [(bracket, parent if owner is function else owner)
+                        for bracket, owner in self.openers]
+
+    def _release(self):
+        """Count the held tokens of the functions that no candidate involves
+        any more.  The other tokens stay held."""
+        held, merged = self.held, self.merged
+        self.held, self.merged = [], {}
+        for token, line, function in held:
+            while function in merged:
+                function = merged[function]
+            if self._involved(function):
+                self.held.append((token, line, function))
+            else:
+                self._count(token, line, function)
 
     def _switch_function(self, function):
         self.function = function
@@ -180,7 +293,7 @@ class _Counter(object):
             state.pending_call = True
             state.pending += 1
         if token in self.profile.jumps:
-            state.pending_jump_line = self.context.current_line
+            state.pending_jump_line = self.line
             state.pending += 1
 
     def _resolve_pending(self, token):
@@ -193,7 +306,7 @@ class _Counter(object):
                 self._fundamental()
         if state.pending_jump_line is not None:
             if token not in (';', '}') and \
-                    self.context.current_line == state.pending_jump_line:
+                    self.line == state.pending_jump_line:
                 self._fundamental()
             state.pending_jump_line = None
             state.pending -= 1
