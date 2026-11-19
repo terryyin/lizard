@@ -993,6 +993,31 @@ class TestJavaScriptFunctionsInGroupedExpressions(unittest.TestCase):
             }"""))
 
 
+class TestTypeScriptClassMembers(unittest.TestCase):
+    """The reader also discards the function of an overload signature.  That
+    is no expression, so its tokens do not count for the function around
+    the class."""
+
+    def test_constructor_overload(self):
+        self.assertEqual([0, 0], cogc("a.ts", """
+            function outer() {
+              const Shape = class {
+                constructor(x: 0 extends 1 ? 2 : 3);
+                constructor() {}
+              };
+            }"""))
+
+    def test_field_value_in_parentheses(self):
+        self.assertEqual([0, 2], cogc("a.ts", """
+            function outer(big) {
+              class Box {
+                size = (big ? 2 : 1);                       // +1
+                static wide = (big && big);                 // +1
+                open() {}
+              }
+            }"""))
+
+
 class TestJavaScriptReaderFailure(unittest.TestCase):
     """The reader stops at code that nests too deep.  The functions that
     ended before it keep their score."""
