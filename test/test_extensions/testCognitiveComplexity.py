@@ -1041,6 +1041,26 @@ class TestTypeScriptSignatures(unittest.TestCase):
               }
             }"""))
 
+    def test_overload_of_method_named_parenthesis(self):
+        self.assertEqual([0, 0], cogc("a.ts", """
+            function outer() {
+              class Shape {
+                ['('](x: 0 extends 1 ? 2 : 3);
+                ['(']() {}
+              }
+            }"""))
+
+    def test_method_overload_after_static_block(self):
+        outer = cogc("a.ts", """
+            function outer() {
+              const Shape = class {
+                static {}
+                async(x: 0 extends 1 ? 2 : 3);
+                async() {}
+              };
+            }""")[-1]
+        self.assertEqual(0, outer)
+
     def test_field_value_in_derived_class(self):
         self.assertEqual([1], cogc("a.ts", """
             function outer(big) {
@@ -1067,6 +1087,18 @@ class TestTypeScriptSignatures(unittest.TestCase):
                 open() {}
               }
             }"""))
+
+
+class TestJavaScriptArrowBodyInParentheses(unittest.TestCase):
+    """The reader starts an arrow function at the ``(`` of its body.  That
+    function is no grouped expression, also when the reader discards it."""
+
+    def test_group_after_assignment_in_arrow_body(self):
+        outer = cogc("a.js", """
+            function outer() {
+              return v => (v) ? 1 : v = (0);
+            }""")[-1]
+        self.assertEqual(0, outer)
 
 
 class TestJavaScriptReaderFailure(unittest.TestCase):
