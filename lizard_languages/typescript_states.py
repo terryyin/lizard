@@ -166,10 +166,8 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                        or self._prev_token in ('=', 'async')
                        or self._prev_token == '>'
                        and self._generic_prefix in ('=', 'async'))):
-                # Only "name = (" and "name = <T>(" can open a group.
-                self._signature = not (
-                    self.last_token == '=' or self.last_token == '>'
-                    and self._generic_prefix == '=')
+                # Only "name = (" can open a group.
+                self._signature = self.last_token != '='
                 if not self.started_function:
                     self._function(self.function_name)
                 self.next(self._function, token)
