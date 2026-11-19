@@ -1050,6 +1050,17 @@ class TestTypeScriptSignatures(unittest.TestCase):
               }
             }"""))
 
+    def test_generic_overload_after_static_block(self):
+        outer = cogc("a.ts", """
+            function outer() {
+              class Shape {
+                static {}
+                m<T = <U>() => {}, V = 0>([x = true && false]: boolean[]);
+                m() {}
+              }
+            }""")[-1]
+        self.assertEqual(0, outer)
+
     def test_method_overload_after_static_block(self):
         outer = cogc("a.ts", """
             function outer() {
