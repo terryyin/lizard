@@ -112,7 +112,7 @@ Users own constraint/outcome changes. Historical contracts stand; later directio
 ## Review the outcome
 
 Compare original intent, boundaries, approved changes, and promised proof to aggregate code,
-tests, docs, and proof. Assess only completed slices of unfinished plans; unexecuted work is not
+tests, and proof. Assess only completed slices of unfinished plans; unexecuted work is not
 missing behavior, nor its temporary predecessor obsolete. Findings need evidence and plausible
 impact: bugs, regressions, drift/disputes, refactoring residue, architecture, or test coverage/cost.
 
@@ -132,7 +132,7 @@ what would survive a proposed change, and whether the saving justifies it.
 
 Inspect worked-around/replaced branches, flags, callers, fixtures, compatibility paths, overlapping/
 obsolete-internal tests, and historical documentation. Removed temporary behavior warrants negative
-proof/docs only when absence remains required. Exclude cosmetic/speculative/unsupported findings,
+proof only when absence remains required. Exclude cosmetic/speculative/unsupported findings,
 duplicate symptoms, and approved decisions mislabelled as drift. Before planning removal of a
 disputed restriction, use [plan-conflict handoff](../dough-execute-plan/references/execution-decisions.md#resolve-a-disputed-plan-restriction).
 Preserve genuine constraints; await human resolution of disputed corrections while independent

@@ -169,11 +169,9 @@ landing, follow [workspace retirement](#retire-the-workspace).
 ## Complete a queued story in the same commit
 
 For a queued story, the result commit also closes the story, so remote trunk
-never shows it Taken. Before committing, and after moving any lasting product
-knowledge into maintained code, tests, or documentation as
-[story wrap-up](../../dough-story-wrap-up/SKILL.md#assimilate-lasting-knowledge)
-requires, apply its
-[spent-history deletion](../../dough-story-wrap-up/SKILL.md#delete-spent-history-including-shared-records)
+never shows it Taken. Before committing, apply story wrap-up's
+[temporary-direction retirement](../../dough-story-wrap-up/SKILL.md#retire-realized-temporary-direction)
+and [spent-history deletion](../../dough-story-wrap-up/SKILL.md#delete-spent-history-including-shared-records)
 to this story: remove its entry with the product-backlog `complete` command,
 its story section (its seed only when every remaining section is spent), and
 its plan. Sibling stories and other entries stay as they are. `complete` also

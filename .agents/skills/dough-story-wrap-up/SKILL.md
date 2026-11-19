@@ -1,8 +1,8 @@
 ---
 name: dough-story-wrap-up
 description: >-
-  Closes a completed story, bounded correction or planless execution: keeps
-  lasting product knowledge, settles follow-ups and removes spent plan and
+  Closes a completed story, bounded correction or planless execution: retires
+  realized temporary direction, settles follow-ups and removes spent plan and
   history. Use to close completed work or continue execution into wrap-up.
 ---
 
@@ -10,7 +10,7 @@ description: >-
 
 Close one work item when the coordinator invokes wrap-up explicitly or through Execute
 Plan's authorized [planned continuation](../dough-execute-plan/references/finish-or-stop.md#continue-settled-planned-work-into-wrap-up), retaining the same execution context and publication authority, including local-only/no-push instructions.
-Use available context and optional retrospective advice; preserve lasting product knowledge and Git recovery.
+Use available context and optional retrospective advice; preserve Git recovery.
 When continuation carries a selected deferred process review, also
 [complete that deferred process review](#complete-a-deferred-process-review).
 
@@ -96,14 +96,9 @@ proof; otherwise [dispose findings](references/follow-up-disposition.md#dispose-
 Pass the combined text to [completion](../dough-product-backlog/SKILL.md#remove-completed-items) with `--intent-coverage`;
 when skipped with no supplied result, complete without it. Keep a durable final result.
 
-## Assimilate lasting knowledge
+## Retire realized temporary direction
 
-Move lasting behavior and design into this project's maintained code, tests,
-and documentation. Describe the current product without execution narration,
-impact chronology, story or plan identity, or retrospective judgments. Preserve
-existing product tests and documents that already state current behavior. Do not
-invent product knowledge. Before this closure deletes any spent record,
-[preserve its lasting rules](../dough-slice-planning/references/architectural-thinking.md#preserve-lasting-rules-before-deletion).
+Follow [where enduring knowledge lives](../dough-slice-planning/references/architectural-thinking.md#where-enduring-knowledge-lives).
 For North Star topics cited, added, or revised by the completed work, apply the
 shared [topic-retirement instructions](../dough-slice-planning/references/architectural-thinking.md#retire-temporary-direction-during-ordinary-wrap-up)
 as part of ordinary closure.
@@ -146,7 +141,7 @@ due, and before deleting anything, make the current revision recoverable with
 this project's ordinary Git conventions. Commit all uncommitted owned review and closure-input changes in that revision: applicable retrospective edits to the
 process log in the execution checkout (including deferred process findings),
 uncommitted follow-up records (including an explicitly dropped follow-up before
-its deletion) and queue edits, assimilated product knowledge, and the spent
+its deletion) and queue edits, and the spent
 material. Records the execution already committed in its
 [completion commit](../dough-execute-plan/references/finish-or-stop.md#record-execution-completion)
 need no second commit. Preserve unrelated changes and include only files or
@@ -200,7 +195,7 @@ Preserve process findings, occurrence facts, and unresolved judgments under
 Keep findings understandable when removing their spent sources.
 
 Preserve unrelated human text, sibling stories and log entries, product and
-version identity, maintained tests and documents, still-needed acceptance work,
+version identity, maintained code and tests, still-needed acceptance work,
 and active follow-ups. Shared records lose only spent portions attributable to
 the completed work; leave uncertain portions intact and report the ambiguity.
 
@@ -239,7 +234,7 @@ Dough Land's [refresh](../dough-land/SKILL.md#refresh-the-default-checkout) neve
 
 Apply Dough Land's shared [completion attention](../dough-land/SKILL.md#completion-attention)
 rule and its [final dashboard operation](../dough-land/references/dashboard-completion.md)
-with the supplied launch context, after either closure path has settled. Keep the selected identity, mode and retained execution context, before-cleanup and final-closure commits, accepted publication and completion receipts, remaining coverage, knowledge and cleanup dispositions in their existing operational evidence and lasting homes.
+with the supplied launch context, after either closure path has settled. Keep the selected identity, mode and retained execution context, before-cleanup and final-closure commits, accepted publication and completion receipts, remaining coverage and cleanup dispositions in their existing operational evidence.
 
 When attention is needed, report the affected facts and next action. Distinguish accepted trunk publication from a superseded candidate, an [`integrated_state` success](../dough-execute-plan/references/ci-completion-wait.md) from the closure's own, integration from refused cleanup, committed pending publication from an accepted receipt, and completed wrap-up from a refusal that left files intact.
 Missing context, unfinished work, unresolved recovery/integration, required push, unpublished Trunk Mode closure, retained or unconfirmed observation, resource cleanup, or a [lifecycle commitment](references/lifecycle-commitments.md#report-the-outcome) without its owner's receipt prevents successful closure; name each such commitment and its owner. Local-only current-branch pending publication is not a required push.

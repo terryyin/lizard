@@ -9,7 +9,7 @@ Preserve mappings through refinement, replacement, and resume. Repoint promises
 before declaring replacement slices ready; orphaned promises leave the plan
 incomplete. Preserve completed evidence unless a changed boundary invalidates
 what it covers. For interim replacements, align affected callers, fixtures,
-assertions, and documentation with the final success and rejection behavior.
+and assertions with the final success and rejection behavior.
 
 When choosing or accepting automated tests, apply
 [the test boundary rule](../../dough-post-change-refactor/references/refactor-checks.md#choose-the-test-boundary).

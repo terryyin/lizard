@@ -117,8 +117,8 @@ When evidence invalidates the parent outcome, story boundary, or ordering, stop
 at a safe boundary and revisit the highest affected resolution with the human.
 Use [dough-story-refinement](../../dough-story-refinement/SKILL.md) for changes
 to selected-story goal, scope, or examples. Do not silently cancel remaining
-scope or rewrite siblings. Keep stories as planning input; enduring behavior
-belongs in executable examples and product documentation.
+scope or rewrite siblings. Keep stories as planning input;
+[automated tests document enduring behavior](../../dough-slice-planning/references/architectural-thinking.md#where-enduring-knowledge-lives).
 
 ## Decompose slices
 

@@ -3,8 +3,9 @@
 A running test, build, measurement, or CI run spends no model tokens, and its
 time does not count toward the
 [slice's active time](oversized-slice.md#track-active-time). Checking on it
-does both. Keep the wait in the host's blocking tool until the command
-finishes, its deadline procedure applies, or the host hands control back.
+does both. Start the command once. If the host returns control early,
+resume the same wait against the original deadline. Act on the command's
+output, exit status, and any workflow receipt as soon as it finishes.
 
 - Before launch, set the deadline from the
   [expensive-proof decision](../../dough-story-refinement/references/executable-proof.md#choose-expensive-proof-before-launch)
@@ -18,8 +19,10 @@ finishes, its deadline procedure applies, or the host hands control back.
   itself.
 - While it runs, make no `sleep`, log, or status calls, and do no other
   checks.
-- At the deadline, apply
-  [overdue delegated verification](overdue-delegated-verification.md).
+- If the caller owns the deadline, bound each wait by the time left and
+  follow the workflow's deadline procedure at expiry (for delegated proof,
+  [overdue delegated verification](overdue-delegated-verification.md)).
+  If the command owns the deadline, await its terminal receipt.
 
 ## By host
 
@@ -30,7 +33,8 @@ finishes, its deadline procedure applies, or the host hands control back.
 - **Cursor:** no notification arrives. Run the command in the foreground when
   it fits the terminal tool's time limit. Otherwise start it in the background
   and wait in one blocking command that ends at the exit file or the deadline;
-  repeat that wait only when the tool ends the call first:
+  repeat that wait only when the tool ends the call first. Set
+  `DEADLINE_SECONDS` to the time left before each call:
 
   ```sh
   end=$(( $(date +%s) + DEADLINE_SECONDS ))
@@ -42,33 +46,18 @@ Use the blocking wait on any host whose own facility is unavailable.
 
 ### Codex foreground waits
 
-With `functions.exec` and `functions.wait`, launch the command once inside
-one cell. Set the outer launch pragma to
-`// @exec: {"yield_time_ms": 300000}` where supported. Use a shorter value if
-the host requires it or a caller-side deadline leaves less time. In that
-cell, call `tools.exec_command` and wait on any returned shell session with empty
-`tools.write_stdin` calls. Set a long inner `yield_time_ms` as well and keep
-waiting inside the cell if an inner call returns the session again. Retain
-the command's output, exit status, and any workflow receipt.
+1. Start the `functions.exec` cell with `// @exec: {"yield_time_ms": 300000}`.
+   Inside it, launch with `tools.exec_command`. While the result carries a
+   shell session ID, await `tools.write_stdin` on that ID with empty input
+   inside the cell. Use the longest supported shell yield within any remaining
+   caller deadline. Return the accumulated output and final exit status.
+2. Whenever Codex returns a running cell ID, resume it with `functions.wait`
+   and `yield_time_ms: 300000`. Shorten either outer wait for a nearer
+   caller deadline. If a duration is rejected, use a shorter supported wait
+   on the same handle. Retry launch only on confirmation it never started.
 
-If the outer call returns a running cell, pass its cell ID to
-`functions.wait` with a long `yield_time_ms` (typically `300000` where
-supported). Repeat only when the host hands the same live cell back. Use
-the longest supported wait within any remaining caller-side deadline. If
-the host rejects a duration, use a supported shorter duration on the same
-cell or shell session. Retry a launch only when the refusal confirms the
-command never started.
-
-Use the original workflow deadline throughout. On a host handback, resume
-the pending wait while that deadline still allows it. Apply the workflow's
-deadline procedure when its caller-side deadline is reached. When the
-command owns the deadline, wait for its terminal receipt and follow the
-outcome it reports. An outer yield only hands control back.
-
-With direct shell tools, start with `exec_command` and continue any
-returned shell session with empty `write_stdin` calls, using the longest
-supported yield within the remaining caller-side deadline. Use the
-[blocking exit-file wait](#by-host) when those tools are unavailable.
+With direct shell tools, use the same `exec_command` and empty `write_stdin`
+loop. If unavailable, use the [blocking exit-file wait](#by-host).
 
 ## Watch a paused supplier
 

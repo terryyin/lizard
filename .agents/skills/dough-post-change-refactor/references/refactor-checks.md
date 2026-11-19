@@ -34,6 +34,17 @@ Edit only after its scope and subsystem gates permit the candidates.
   when their responsibilities still encode delivery groupings; check whether
   independent domain reasons justify the structure.
 
+## Direct domain mapping
+
+- Map persistence, implementation, APIs, UI, and tests directly to the domain's
+  concepts and meanings, with the minimum necessary translation. When a system
+  boundary requires a transfer shape carrying a subset of domain data, preserve
+  domain concepts and share or generate one typed contract across internal
+  callers rather than translating by hand on each side.
+- **Action:** collapse unnecessary mapping layers, parallel handwritten payload
+  shapes, and domain rules trapped inside untyped transport or command adapters
+  behind the typed boundary that owns the concept.
+
 ## Shotgun surgery
 
 - Shotgun surgery: **one logical concept** (e.g. a version string) forces edits
@@ -74,17 +85,23 @@ and unit. Use this project's test conventions for the tests in scope.
 - **E2E.** Keep a few representative workflows. Start at a supported product
   entry point and use the real services whose interaction is needed to prove
   the observable outcome.
-- **Unit.** Put cases that one service can prove in unit tests. Start
-  at that service's highest practical entry point for the behavior, such as its
-  UI, API, or command, and exercise its real lower-level code. Use a lower-level
-  entry point only when it exposes a stable, domain-meaningful contract that
-  can prove the behavior, such as a pricing rule. Keep private helpers behind
-  their production callers.
+- **Unit.** Put cases that one service can prove in unit tests, exercising its
+  real collaborators and persistence:
+  - **Backend / API:** Keep wire transport thin and start at the highest
+    strongly typed handler or controller behind it; test the wire directly only
+    when wire behavior itself is under test.
+  - **UI:** Start at the smallest rendered component or view that owns the
+    interaction under test, keeping hooks and state behind rendered UI.
+  - **CLI / scripts:** Keep untyped command surfaces thin over typed or domain
+    modules where practical; otherwise start at the command or exported module
+    contract.
+  - Use a lower-level function only when it exposes a stable, domain-meaningful
+    contract that alone proves the behavior, such as a pricing rule. Keep
+    private helpers behind their production callers.
 - **Mocks.** Keep unit tests independent of other live services. Substitute an
-  external dependency only when needed and only at its service boundary, such
-  as a backend response consumed by the frontend. Use real collaborators within
-  the service, including persistence or rendering when the behavior depends on
-  them. Limit proof claims to what the real code in the test establishes.
+  external dependency only when needed and only at its service boundary,
+  through a shared or generated typed contract rather than handwritten URLs or
+  payloads. Limit proof claims to what the real code in the test establishes.
 
 ### Write observable cases
 

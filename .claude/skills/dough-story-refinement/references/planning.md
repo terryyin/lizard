@@ -116,7 +116,7 @@ any active plan aligned; discovery alone does not authorize expansion. Do not
 silently cancel remaining scope or change siblings. Preserve compatible work
 and evidence when revising boundaries. Use the project's own locations and
 workflows for executable plans, phase artifacts, and project memory. Keep
-planning-only numbering out of product code, tests, and permanent documentation.
+planning-only numbering out of product code and tests.
 
 ## Write an executable plan
 
@@ -187,7 +187,7 @@ Behavior: <pre-condition → trigger → externally observable postcondition>
 For Structure, replace `Behavior` with the internal change and the immediate
 next Behavior it enables, or the directly owned retrospective correction under
 [slice decomposition](../../dough-story-decomposition/references/problem-decomposition.md#decompose-slices). Planning numbers stay in planning artifacts; product
-code, tests, and enduring documentation remain capability-named.
+code and tests remain capability-named.
 
 After writing an identified work item's plan, [record preparation facts](../../dough-product-backlog/references/record-preparation.md)
 for the planned approach, omitting assessment on that write.
@@ -235,10 +235,10 @@ same disproved assumption applies.
 
 ## Clean up after implementation
 
-Keep enduring behavior in tests and product documentation, and enduring design
-in code and ADRs. Once that knowledge is captured, reduce each implemented
-feature story's refinement detail to Goal and Scope, including exclusions,
-while the plan and review evidence still exist. A correction story is already
+Once an implemented feature story's behavior and architecture are in automated
+tests and code ([where enduring knowledge lives](../../dough-slice-planning/references/architectural-thinking.md#where-enduring-knowledge-lives)),
+reduce its refinement detail to Goal and Scope, including exclusions, while the
+plan and review evidence still exist. A correction story is already
 minimal, and a plan-homed correction stays in its plan; do not create a seed as
 cleanup ceremony. Retain unfinished siblings and correction plans.
 
