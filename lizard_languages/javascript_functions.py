@@ -175,10 +175,6 @@ class JavaScriptFunctionsMixin:
             self._async_seen = False
         else:
             if not self.started_function:
-                # A function declaration or a member, not "name = (".
-                self._signature = (
-                    self._prev_token == 'function' or self.as_object
-                    and not self._in_prop_value and self.last_tokens != '=')
                 self._push_function_to_stack()
             self._parameter_bindings = JavaScriptBindings(
                 ')', self.context.current_function)
