@@ -69,7 +69,7 @@ class _BraceActions(object):
         state = self.state
         if state.prev not in ('<', ',', '?'):
             state.pending_ternary = 1
-            state.pending_ternary_line = self.context.current_line
+            state.pending_ternary_line = self.line
 
     # -- one and two token lookaheads ----------------------------------------------
 
@@ -80,7 +80,7 @@ class _BraceActions(object):
             if token in _NOT_TERNARY_NEXT:
                 return
             if self.profile.nullable_types:
-                if self.context.current_line != state.pending_ternary_line:
+                if self.line != state.pending_ternary_line:
                     return
                 if _is_word(token):     # ``T? x`` or ``c ? x : y``
                     state.pending_ternary = 2
