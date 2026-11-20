@@ -33,6 +33,7 @@ class TSXReader(TypeScriptReader):
         addition = addition + "|" + LINE_COMMENT + \
             r"|(?:<[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)*>)" + \
             r"|(?:<\/[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)*>)" + \
+            r"|(?:<\/\w+:\w+>)" + \
             r"|(?:#\w+)" + \
             OPTIONAL_NAME + \
             JS_IDENTIFIER + \
@@ -136,6 +137,8 @@ class XMLTagWithAttrTokenizer(Tokenizer):
         # Where an expression is expected, `<` can only open an element,
         # so its children are text even when they hold `=`, `;` or `)`.
         self._in_expression = in_expression
+        # `<svg:text>`: the tag name follows the `<` with no space.
+        self._joined_name = True
 
     @classmethod
     def children_of(cls, opening_tag):
@@ -206,11 +209,13 @@ class XMLTagWithAttrTokenizer(Tokenizer):
         if not isidentifier(token):
             return self.abort()
         self.tag = token
+        self._joined_name = not self.cache[-2].isspace()
         self.state = self._after_tag_name
 
     def _after_tag_name(self, token):
-        if token == '.':
-            # Member tag name with attributes: <Modal.Footer className="x">
+        if token == '.' or (token == ':' and self._joined()):
+            # Member tag name with attributes: <Modal.Footer className="x">;
+            # namespaced: <svg:text>
             self.state = self._tag_name_part
             return None
         if token.startswith('<') and token.endswith('>') and len(token) > 2:
@@ -253,14 +258,21 @@ class XMLTagWithAttrTokenizer(Tokenizer):
     def _expecting_equal_sign(self, token):
         if token == '=':
             self.state = self._expecting_value
-        elif token == '-':
-            self.state = self._attribute_name_part  # data-x, aria-hidden
+        elif token == '-' or (token == ':' and self._joined()):
+            # data-x, aria-hidden; namespaced: xml:lang, on:click
+            self.state = self._attribute_name_part
         elif self._in_expression and self._attribute != 'extends':
             # A valueless attribute (<A x={1} flag>); `<T extends U>` is
             # a TypeScript type parameter instead.
             return self._after_tag(token)
         else:
             return self.abort()
+
+    def _joined(self):
+        """`<svg:text>` and `<p xml:lang="en">` have a namespace.  In
+        `f ? a! < b:c > d` and `f ? a! < b : c > d` the `:` belongs to a
+        ternary: a space follows the `<` or comes before the `:`."""
+        return self._joined_name and not self.cache[-2].isspace()
 
     def _attribute_name_part(self, token):
         if isidentifier(token):
