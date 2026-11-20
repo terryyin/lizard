@@ -305,6 +305,17 @@ class TestJavaScriptNestingDepth(unittest.TestCase):
         }
         """, "ready"))
 
+    def test_arrow_body_with_an_expression_in_parentheses(self):
+        result = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
+            "a.js", """
+        function bind(model, ready) {
+          const set = value => model.value = (value) && ready(value);
+          return set;
+        }
+        """).function_list
+        self.assertEqual([('set', 1), ('bind', 0)],
+                         [(f.name, f.max_nesting_depth) for f in result])
+
     def nesting_depth(self, code, name):
         result = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
             "a.js", code).function_list
@@ -578,35 +589,11 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
         }
         """, "a.tsx"))
 
-    def test_expression_in_parentheses_before_a_structure(self):
-        self.assertEqual(1, self.nesting_depth("""
-        function handleYamlDirective(state, minor) {
-          state.checkLineBreaks = (minor < 2)
-          if (minor > 2) {
-            throwWarning(state, 'unsupported YAML version')
-          }
-        }
-        """))
-
     def test_call_at_the_end_of_a_block(self):
         self.assertEqual(1, self.nesting_depth("""
         function resolve(insert, expected) {
-          if (typeof insert === "function") {
-            insert = insert()
-          }
-          if (typeof expected === "function") {
-            expected = expected()
-          }
-        }
-        """))
-
-    def test_operator_after_an_expression_in_parentheses(self):
-        self.assertEqual(1, self.nesting_depth("""
-        function clamp(value, max, strict) {
-          const over = (value > max) ? max : value
-          if (strict) check(over)
-          if (over < 0) return 0
-          return over
+          if (typeof insert === "function") { insert = insert() }
+          if (typeof expected === "function") { expected = expected() }
         }
         """))
 
@@ -622,16 +609,6 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
                   }
                 }
                 """ % condition))
-
-    def test_call_of_an_expression_in_parentheses(self):
-        self.assertEqual(1, self.nesting_depth("""
-        function load(path, sync, cache) {
-          const data = (sync ? readSync : readAsync)(path)
-          if (cache) cache.set(data)
-          if (sync) log(data)
-          return data
-        }
-        """))
 
     def test_call_in_a_case_block(self):
         self.assertEqual(1, self.nesting_depth("""

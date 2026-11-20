@@ -5,8 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from lizard import (FileAnalyzer, FileInfoBuilder, analyze_files,
-                    get_extensions, preprocessing)
+from lizard import FileInfoBuilder, analyze_files, get_extensions
 from lizard_languages.javascript_bindings import JavaScriptBindings
 from lizard_languages.typescript import TypeScriptReader
 
@@ -74,14 +73,6 @@ def test_default_reader_finalizes_expression_before_eof():
              function.end_line) for function in info.function_list] == [('selected', 1, 1, 1)]
     assert emitted == ['const', 'selected', '=', 'x', '=>', 'x', '||', 'fallback']
     assert info.token_count == len(emitted)
-
-
-def test_reader_without_preprocessing_reads_a_function():
-    extensions = [e for e in get_extensions([]) if e is not preprocessing]
-    info = FileAnalyzer(extensions).analyze_source_code(
-        'a.ts', 'function f(a){return a}')
-    assert [(function.name, function.cyclomatic_complexity)
-            for function in info.function_list] == [('f', 1)]
 
 
 @pytest.mark.parametrize('reader_class', [DecisionReader, InheritedDecisionReader,

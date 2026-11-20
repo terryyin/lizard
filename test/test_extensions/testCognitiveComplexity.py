@@ -950,6 +950,13 @@ class TestJavaScriptGroupedExpressions(unittest.TestCase):
               return x;
             }"""))
 
+    def test_arrow_body_with_an_expression_in_parentheses(self):
+        self.assertEqual([1, 0], cogc("a.js", """
+            function bind(model, ready) {
+              const set = value => model.value = (value) && ready(value);  // +1
+              return set;
+            }"""))
+
 
 class TestJavaScriptCallsInCaseBlocks(unittest.TestCase):
 
