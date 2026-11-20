@@ -2,6 +2,7 @@
 
 **Identity:** SEED-067#cognitive-comma-ends-ternary
 **Source:** [A comma ends a ternary in cognitive complexity](../../seeds/SEED-067-cognitive-comma-ends-ternary.md#cognitive-comma-ends-ternary)
+**Source review:** [source-review.md](source-review.md)
 
 ## Goal and scope
 
@@ -63,7 +64,7 @@ No early probe or pre-Take human decision.
 ### 1. Peer commas end open ternaries for `-Ecognitive`
 
 Type: Behavior
-Status: planned
+Status: done
 
 **Pre-condition:** Source with two or more `?`/`:` ternaries separated by `,` as
 peers in a call, list, or equivalent, and a nested ternary control.
@@ -73,13 +74,27 @@ CCN and other metrics for those snippets are unchanged.
 
 Extend the brace counter's ternary end tokens so `,` at the open ternary's
 bracket depth pops the frame (same ownership as `_pop_expression_frames`).
-Add discriminating cases to `test/test_extensions/testCognitiveComplexity.py`
-covering the source examples (JS siblings, template form, array peers, nested
-preserve, and one non-JS ternary profile). Focused verification:
-`nix develop -c python -m pytest -q test/test_extensions/testCognitiveComplexity.py`.
+Add discriminating cases covering the source examples (JS siblings, template
+form, array peers, nested preserve, and one non-JS ternary profile). Focused
+verification:
+`nix develop -c python -m pytest -q test/test_extensions/testCognitiveComplexity.py test/test_extensions/testCognitivePeerCommaEndsTernary.py`.
+
+**Accepted proof (Slice 1):** Peer call/template/array and C++ siblings → cog 2;
+nested control → cog 3; CCN/NLOC unchanged on those snippets. Observations in
+`test/test_extensions/testCognitivePeerCommaEndsTernary.py` (extracted from the
+oversized cognitive suite under the authorized reorganization). Production:
+`lizard_ext/cognitive_brace.py` peer-`,` pop at equal bracket depth.
 
 ## Refinement and concerns
 
 Slice-plan refinement: not needed — one Behavior slice, one end-token rule,
 proof mapped, premises settled, under the eight-slice limit.
 Remaining slice-specific concerns: none identified.
+
+## Learnings
+
+- Peer `,` at the ternary frame's bracket depth ends the frame in
+  `_BraceCounter._pop_expression_frames`; same ownership as closing brackets.
+- Human authorized extracting peer-comma proof into
+  `testCognitivePeerCommaEndsTernary.py` (file-size seam); further splits of
+  the remaining oversized `testCognitiveComplexity.py` are out of this story.
