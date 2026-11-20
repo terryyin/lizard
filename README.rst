@@ -40,6 +40,7 @@ A list of supported languages:
 -  Scala
 -  Solidity
 -  Structured Text (St)
+-  Svelte
 -  Swift
 -  TTCN-3
 -  TypeScript (With TSX)

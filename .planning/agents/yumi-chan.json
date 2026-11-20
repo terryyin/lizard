@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "agent": "Yumi-chan",
+  "email": "yumi-chan@example.org",
+  "identity": "SEED-066#land-hafez-js-prs-under-performance",
+  "mode": "story-branch",
+  "branch": "claude/land-hafez-js-cognitive-nesting-prs-under-perfor",
+  "host": "claude"
+}

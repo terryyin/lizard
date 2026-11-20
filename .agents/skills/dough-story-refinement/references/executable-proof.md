@@ -1,250 +1,199 @@
 # Own executable proof
 
-Map every checkable final-state promise in the plan's source and current
-decisions to an owning slice and observable proof. Inline links or a compact table
-are sufficient. Include applicable promises, not broader aspirations. Passing
-commands without the promised observation does not establish completion.
+Map each applicable, checkable final-state promise from the plan's source and
+current decisions to an owning slice and observable proof. Use inline links or
+a compact table. A passing command must produce the promised observation.
+Keep the map through refinement and resume. Before replacement slices are
+ready, reassign the promises of the slices they replace, retain still-valid
+proof, and align callers, fixtures, and assertions with the final success
+and rejection behavior.
 
-Preserve mappings through refinement, replacement, and resume. Repoint promises
-before declaring replacement slices ready; orphaned promises leave the plan
-incomplete. Preserve completed evidence unless a changed boundary invalidates
-what it covers. For interim replacements, align affected callers, fixtures,
-and assertions with the final success and rejection behavior.
+Apply [the test boundary rule](../../dough-post-change-refactor/references/refactor-checks.md#choose-the-test-boundary)
+when choosing or accepting automated tests. For a new test or changed
+boundary, check the layer, production entry point, and need for each
+substitute. In a plan, name the typed inputs and collaborators for each
+contract variant the unit cases exercise. If setup needs unrelated data or
+services, [narrow the production contract](../../dough-post-change-refactor/references/refactor-checks.md#design-production-code-for-testability)
+in the plan before accepting its proof design.
 
-When choosing or accepting automated tests, apply
-[the test boundary rule](../../dough-post-change-refactor/references/refactor-checks.md#choose-the-test-boundary).
-Before accepting a new test or a changed boundary, check the layer, entry
-point, and need for each substituted dependency. Return any mismatch for
-correction.
-Inspect assertions and setup: distinguish starting preconditions from behavior
-the product promises to establish. A fixture or seam supplying that behavior
-leaves it unproved; keep the evidence for what it actually observes. An inner
-operation finishing does not prove completion for its caller.
+Inspect setup and assertions. Setup supplies preconditions. An outcome
+supplied by setup is unproved. Retain independent observations. Completion
+inside an operation leaves its caller's completion unproved.
 
-Before changing an operation, contract, message, value, default, or rendered
-output, or choosing proof for that change, identify its effect: what can now be
-observed differently, where it appears, or which operation preconditions now
-apply. Trace that effect to its consumers in production and test support. Changed
-files, selectors, helper references, literals, and the plan's named proof locate
-starting points; they do not bound what observes or relies on the effect.
+Before editing or selecting proof, identify the changed behavior, output,
+default, or precondition. Follow it through production, tests, and fixtures,
+including unchanged files. Start with the diff, selectors, helpers, and
+planned checks. Search for retired messages, statuses, labels, and values,
+then inspect the enclosing observations and caller setup.
 
-For output, follow it into enclosing surfaces and inspect how they are observed,
-including aggregate text, counts, roles, and keyboard order. A whole-container
-assertion may include hidden content and text boundaries without naming the
-changed component. For an operation or default, follow the entry points,
-continuations, and recovery paths that reach it, then inspect their scenarios
-and setup. Moving an operation out of a conditional path can make its resources
-necessary for callers that previously bypassed it; include scenarios that omit
-those resources. A helper check or setup supplying the newly required resource
-does not prove those callers still work. For shared layout, input composition,
-or read infrastructure, the consumers are the journeys that pass through it
-under the conditions it changes: for example short, narrow or zoomed views with
-focus return, exact composed input and keyboard order, or response consumers
-with caching and refusal contracts, not only tests naming the changed component.
+- For output changes, inspect enclosing surfaces and their aggregate text,
+  counts, roles, and keyboard order. Whole-container assertions can observe
+  hidden content and text boundaries without naming the changed component.
+- For operation or default changes, follow entry points, continuations, and
+  recovery paths. Include callers that rely on the old default and cases that
+  omit resources a previously conditional operation now needs. A fixture
+  that supplies the resource cannot prove those callers still work.
+- For shared layout, input composition, or read infrastructure, follow the
+  journeys under the conditions that change, such as narrow or zoomed views
+  with focus return, exact composed input and keyboard order, or readers with
+  caching and refusal contracts.
+- For cross-file renames, removals, relocations, or callable-contract changes,
+  search old symbols, module paths, and call forms, including private symbols
+  used across files. Follow fixtures, stand-ins, and harness helpers that
+  invoke or imitate the contract.
 
-For removals, renames, or relocations of symbols or modules, or changes to callable
-contracts, search production code, tests, and fixtures for old symbol names,
-module paths, and call forms, including in unchanged files. Include private
-symbols used across files. Keep this targeted to meaningful cross-file changes,
-not every local variable.
+Use the [consumer-trace record](#record-the-consumer-trace) to account for
+what the effect reaches. If many tests fail on an incidental effect, plan a
+preceding Structure slice that narrows their assertions to their promises.
+Apply the [failure policy](../../dough-execute-plan/references/failure-policy.md)
+to every failure, including known pre-existing failures. Record that
+attribution for diagnosis and preserve the failing assertion's promise.
 
-Reuse applicable searches, extending matches to the enclosing observation or
-entry-point scenario and its support. Inspect actual assertions and setup before
-selecting focused proof for affected consumers' behavior; a list of matches alone
-does not establish the affected boundary. Filename patterns and passing test
-counts alone do not establish coverage. Include retired literals and values
-(message text, status code, label, output form), callers relying on a changed
-default by not overriding it, and every fixture, stand-in, or harness helper that
-invokes or imitates a changed contract, including untouched ones. Account for the trace
-and the observing proof in the [consumer-trace record](#record-the-consumer-trace).
-Derive obligations from each consumer's actual purpose, not its method name or
-dominant use. Exclude a consumer only when the effect does not reach its boundary;
-one that still reads the changed output is reached even when it asserts another
-subject. Retain sufficient current proof for unchanged boundaries. A prior
-unaffected-suite or unused-consumer exclusion is invalid when this change still
-reaches that consumer: reassess current consumers before relying on it.
-Incompatible purposes each need an observation; equivalent purposes may share
-sufficient proof. When the change has such consumers, run every suite whose tests
-read the changed output where it is observed (its stand-in, recorder, reader, or
-rendered surface, supplied to the trace as `--term`), including unchanged tests
-and helpers: whole when it runs within the slice's focused-check time, otherwise
-its reading consumers. A change nothing else observes, such as renaming a helper
-used only within one file with no shared contract, text, value, default, or rendered output, keeps
-focused proof. For unresolved domain purpose, ask precisely about that consumer's
-requirement and stop its dependent obligation until answered rather than guessing
-policy.
-Many consumers failing on an effect that is not their subject observe it too
-strictly: plan a Structure slice ahead of the change that narrows them to
-their own promise, rather than budgeting their updates as mechanical.
-Discovering a failing assertion does not authorize weakening its promise; align
-behavior and proof under the [failure policy](../../dough-execute-plan/references/failure-policy.md). A plan may
-record that a known failure predates the story; that attribution is diagnosis
-evidence, not an exclusion from proof or repair, and the plan carries the
-policy rather than an instruction to report the failure and continue.
+For artifact preservation, use project-supplied identities and scope to name
+the installation, physical store, and predecessor where applicable. Surface
+target conflicts before dependent work, such as a Docker volume being proposed
+for data held in a native installation. Match ordinary continuity proof to the
+same store. A transfer needs migration authority and observed transfer proof,
+and remains incomplete while deferred.
 
-For artifact-preservation promises, identify installation, physical store, and
-predecessor using project-supplied identities/scope. Same-store continuity proves no
-transfer from another store. Surface target/scope conflicts before dependent work
-(e.g. preserving a Docker volume while the owner's native data lives elsewhere).
-Migration needs authority and proof; deferred migration is not completed. Ordinary
-single-store continuity reuses matching evidence without inventing a predecessor or
-migration task. Apply conditionally, not as a mandatory story section.
+Obtain any required pre-change baseline before dispatching the change.
+Reuse evidence with a known matching revision and relevant environment and
+selection. If the original baseline is lost, label the reconstruction and
+show comparable revisions and conditions before relying on it. A missing or
+failed prerequisite stops its dependent work. Name the gap and continue
+independent work.
 
-When acceptance needs a pre-change observation, obtain it before dispatching the
-change that would invalidate it. Reuse adequate baselines with known matching revision
-and relevant environment/selection conditions. Missing/failed prerequisites stop only
-the dependent path; name the gap and continue unrelated work. If the original baseline
-is unrecoverable, label a reconstructed comparison and prove revision/conditions
-comparable; otherwise its claim (e.g. speedup) remains unproved. Apply conditionally,
-without benchmarking every story or delaying independent work/setup.
+| Situation | Proof |
+| --- | --- |
+| Existing untested behavior | Establish regression proof before changing it |
+| Structure slice | Keep external behavior green |
+| Interim behavior | Name the later slice that removes or replaces it |
 
-Reuse sufficient evidence. Obtain only missing observations within authorized
-work; if unavailable, report what is covered and the specific unproved promise.
-That promise remains incomplete; reporting the gap does not fulfill or remove
-it. Limit success claims to the observed cases: name the variants a filtered run
-executed, list unrun readers of the changed output as unverified, and give a
-count only with its unit and matching the retained observation.
+Run focused checks at slice boundaries. Run every suite only when the project
+workflow or user requires it. If asynchronous ownership changes, observe the
+named lifecycle owner detecting background failure in time and cleaning up as
+applicable after failure or shutdown. Use the lifecycle contract for timing.
+An awaited exception alone proves neither obligation.
 
-| Situation                  | Proof                                            |
-| -------------------------- | ------------------------------------------------ |
-| Existing untested behavior | Regression proof before changing it              |
-| Structure slice            | Existing external behavior remains green         |
-| Interim behavior           | Name the later slice that removes or replaces it |
-
-Run focused relevant checks, including the consumers above, at slice boundaries.
-Run every suite only when this project's workflow or user requires it. When
-asynchronous ownership changes, prove that the named lifecycle owner observes
-background failure in time and performs applicable cleanup after failure or
-shutdown; an awaited exception alone proves neither. Derive timing from the
-selected lifecycle contract rather than an arbitrary timeout.
+Obtain only missing observations within authority. If one is unavailable,
+report the covered cases and the exact promise that remains incomplete. For
+filtered runs, name observed variants and list unrun readers as unverified.
+Give counts with the unit and matching retained observation.
 
 ## Record the consumer trace
 
-The consumer-trace record is the evidence of the trace above, and the installed
-[consumer-trace script](../../dough-execute-plan/scripts/consumer-trace.mjs)
-produces it:
-`node '<installed-execute-plan>/scripts/consumer-trace.mjs' --checkout '<checkout>' --base <revision> [--term '<text>']…`,
-with `--base HEAD` for an uncommitted change. It searches the whole checkout for the changed files'
-paths and basenames, identifiers declared in changed hunks, changed modules' import paths, and
-removed literals, and lists the located consumers by kind, naming kinds with no match. Supply as
-`--term` the effect the diff cannot carry: retired behavior and altered preconditions, in the words
-their observers use. A derived term marked too broad lists no consumers; when it names the changed
-contract, resupply it as `--term`. When the record lists a step definition, page object, helper, or
-stand-in, add its step phrases or exported names that reach the effect as `--term` and rerun until
-the journeys and callers using it are listed. Give every listed consumer
-a disposition: `run`, `reused`, or `excluded: <reason the effect does not reach
-its boundary>`. A named group of generic or historical matches—done records,
-retired plans, changelog entries, or unrelated text matches—may share one
-`excluded: <reason>` disposition; inspect only the relevant consumers. Every
-listed consumer still gets a disposition. A record with every kind empty keeps
-the slice's focused proof.
+Run the installed [consumer-trace script](../../dough-execute-plan/scripts/consumer-trace.mjs)
+against the checkout. Use `--base HEAD` for uncommitted changes.
 
-For each affected consumer purpose, connect the changed effect and reached boundary to the
-relevant proof type and actual observation or named gap. Inspect how the consumer uses the
-effect and how its assertions or signals observe it, including indirect callers and enclosing
-observations. Distinguish behavior, static checks, and layout or contract observations when
-those boundaries are affected; file kind, a re-export, a file-level `run`, or one passing proof
-type cannot settle another affected purpose. Select proof from that purpose, not a fixed list of
-check types for every file. Equivalent purposes may share one sufficient check; independent
-purposes need their own sufficient observations.
+```sh
+node '<installed-execute-plan>/scripts/consumer-trace.mjs' --checkout '<checkout>' --base <revision> [--term '<text>']…
+```
 
-Annotate the existing disposition or link to the return's evidence: identify the
-literal command or observation steps, inspected setup and observing assertion or
-signal, result, and any outstanding consumer/proof-type gap. This is substantive
-evidence, not a new schema or a second record. Keep the full discovery record
-available. For reuse, show why the observation still applies to the effect,
-boundary, implementation and conditions; for exclusion, explain why the effect
-does not reach that boundary. Preserve sufficient independent proof and unchanged
-boundaries while obtaining or returning another purpose's missing proof. Before
-dependent acceptance or publication, obtain the missing observation or return the
-slice naming its consumer, proof type and gap. Leaving it for CI does not settle
-it. A failed check keeps the failure policy; nearby green proof cannot erase it.
+The script searches the whole checkout using changed paths, basenames,
+declarations, import paths, and removed literals. It lists consumers by kind,
+including empty kinds. Supply `--term` for effects the diff may miss, such as
+retired behavior and altered preconditions, in the words observers use.
+Resupply a derived term marked too broad when it names the changed contract.
+For matched step definitions, page objects, helpers, and stand-ins, add the
+relevant step phrases or exports and rerun until their journeys and callers appear.
+
+Give each listed consumer `run`, `reused`, or `excluded: <reason>`. Exclude
+only when the effect does not reach its boundary. Name groups of generic or
+historical matches together when one reason covers them. Reassess earlier
+exclusions against the current effect. A consumer that reads changed output
+is reached even if it asserts another subject.
+
+For each reached purpose, inspect the actual setup and observing assertion or
+signal. Select proof by what the consumer uses, including indirect callers
+and enclosing observations. Equivalent purposes can share sufficient proof.
+Independent behavior, static, layout, and contract obligations each need
+their own observation. A match, passing count, re-export, or file-level
+`run` alone is insufficient proof.
+
+Supply the observed surface as a trace term, such as a stand-in, recorder,
+reader, or rendered output. Run each suite that reads the changed output,
+including readers in untouched tests and helpers. Run the whole suite if it
+fits the slice's focused-check time, otherwise run the affected readers. If
+the trace and inspection find no affected consumers, keep focused proof.
+Ask for the specific unresolved domain requirement and stop only the proof
+that depends on the answer.
+
+Keep the full discovery record. For each affected consumer purpose, connect
+the changed effect and reached boundary to the proof type and observation or
+gap. In its disposition, record or link the literal command or steps, setup,
+assertion or signal, and result. For reused proof, record why it still
+applies to the effect, boundary, implementation, and conditions. Preserve
+independent proof and evidence for unchanged boundaries. Before dependent
+acceptance or publication, obtain each missing observation or return the
+slice with its consumer, proof type, and gap. Leaving it to CI or passing
+nearby checks does not settle it. Apply the failure policy to failed checks.
 
 ## Accept a repair on its affected behavior
 
-A repair, including a CI repair, is accepted on the diagnosed cause's affected
-behavior, not on the line that failed. Cover every failure the diagnosis lists,
-then replay the whole journey the cause reaches, with the transitions
-before and after the failing step (for example opening, operating, dismissing,
-focus return and navigation), plus the consumers of the repair's own changed
-effect. Several failures in one surface need one combined check, not a
-publication per assertion. Removing or loosening the only assertion that
-distinguishes a promise leaves that promise unproved: restore an equivalent
-observation, or report the promise incomplete.
+Cover every failure the diagnosis names, including CI failures. Replay the
+whole journey the cause reaches, including transitions before and after
+the failing step, such as opening, operating, dismissing, focus return, and
+navigation. Also prove the consumers of the repair's own changed effect.
+Combine failures on one surface in one check. If the repair removes or
+loosens the only assertion that distinguishes a promise, restore an
+equivalent observation or report that promise incomplete.
 
 ## Plan and reuse developer-operated observation
 
-Some proof needs an observation only the developer can perform, such as a
-native dialog, notification, or click your tools cannot reach or operate.
-Request a developer round only for a question the plan or acceptance still
-holds open; an answered question is reused, not asked again.
+Request developer action only when an open proof question requires a step
+your tools cannot perform or an observation they cannot make. The probe
+slice names each question, the rounds that answer it
+(such as refusal and retry per supported browser), and the steps the developer
+must do, such as authenticating locally or operating a native dialog.
+Include all of them in the first request.
 
-A probe slice for such an observation names the question each round answers,
-the rounds that answer it (for example, one refusal and one retry per supported
-browser), and the steps the developer performs themselves because your tools
-cannot, such as local authentication, opening a system panel a chat reply
-dismisses, or reading a native dialog the tool refuses. The first request to
-the developer carries all of them, rather than discovering them round by round.
+Judge baseline reuse by
+[correspondence to the candidate and conditions](../../dough-execute-plan/references/live-action-regression-proof.md).
+If text or another detail changes while the observed path stays the same,
+reuse the baseline and prove the change with a regression check at the
+emitted source. Cite both in acceptance. If the path changes what it consults
+or does, such as checking a different permission or using a different sender
+or click mechanism,
+request one fresh observation for that path and reuse the rest. A promise
+the baseline never observed remains unproved.
 
-Whether a retained native baseline still covers the changed candidate follows
-the correspondence rule in
-[require current regression proof before a live action](../../dough-execute-plan/references/live-action-regression-proof.md).
-A change to text or another detail the observed path renders unchanged keeps
-it: reuse the baseline and prove the changed detail with a regression at the
-emitted source. The acceptance record names the reused baseline and that
-regression, and no developer round is requested.
-
-A change to what the observed path consults or does, such as a permission row,
-the posting process or sender identity, or the click mechanism, reopens only
-that path's question: request one fresh observation bounded to it. The
-baseline stays reused for what it still covers. A promise the baseline never
-observed stays reported as the same unproved promise, not a reason to replay
-the baseline.
-
-Retain a native baseline in the plan's
-[retained-proof fields](planning.md#write-an-executable-plan): promise, covered
-boundary, inspected setup with the revision and settings it observed under,
-observation locations, literal command or the steps the developer performed,
-and result, so later reuse is judged from the plan. Use no other evidence
-format.
+Use the plan's [retained-proof fields](planning.md#write-an-executable-plan)
+for the native baseline. Record the promise, covered boundary, inspected setup
+with revision and settings, observation locations, literal command or
+developer steps, and result.
 
 ## Choose expensive proof before launch
 
-Before long, repeated, or resource-intensive verification, make a proportionate
-decision about the machine that will actually run the command. Identify the
-planned scope and concurrency, available duration or cost evidence, current
-load and memory evidence, and known competing work on that machine. Attribute
-observations to their host and relevant conditions; qualify missing, stale or
-inaccessible evidence. Your local machine's measurements say nothing about an
-unobserved remote runner's headroom. Evidence obtained only after a failure
-informs the next decision; do not backdate it to the launch.
+Before long, repeated, or resource-intensive verification, assess the target
+host using available evidence about workload, concurrency, duration or cost,
+load, memory, and competing work. Name the host and conditions, and flag
+missing, stale, or inaccessible observations.
+Local measurements cover the local host. Evidence gathered after failure
+informs the next attempt.
 
-Apply the project's proof policy when supplied. Otherwise make an explicit,
-bounded choice within existing authority: run, reduce concurrency while
-preserving required coverage, sequence owned heavy work, or defer the expensive
-proof while useful independent work continues. A healthy target host with a
-credible workload can proceed after a brief inspection; no universal load or
-duration cutoff or routine human approval is required. Coordinate only owned
-work through existing handoffs and pause/resume rules. Separate worktrees can
-share the same machine; leave unrelated processes with their owners.
+Apply the project's proof policy, including any thresholds or approval
+requirements. Within existing authority, choose to run, reduce concurrency
+while preserving coverage, sequence owned heavy work, or defer while
+independent work continues. A healthy host with a credible workload can
+proceed after a brief inspection. Coordinate owned work through existing
+handoffs and pause/resume rules, including across worktrees on the same host.
+Leave unrelated processes with their owners.
 
-Retain host, workload, evidence and unknowns, choice, command/proof owner and
-reconsideration condition in the existing plan, handoff or execution conversation;
-keep it concise, create no host registry, and apply the [artifact survival check](../../dough-execute-plan/references/proof-evidence.md#preserve-decisive-artifacts).
-A deferral leaves the exact required observation outstanding with its owner and
-next condition. The command owner remains responsible through its terminal
-result under the existing workflow.
+Record the host, workload, evidence and unknowns, decision, command and proof
+owner, and reconsideration condition in the existing plan, handoff, or
+conversation. Apply the [artifact survival check](../../dough-execute-plan/references/proof-evidence.md#preserve-decisive-artifacts).
+For a deferral, name the outstanding observation, owner, and next condition.
+The command owner follows a run through its terminal result.
 
-Reconsider before another expensive attempt when failures, contention, changed
-workloads or stale observations remove the previous basis. Do not repeat an
-unchanged overloaded attempt without changed conditions or another supported
-basis. A bounded diagnostic retry tests a stated explanation; repeated runs
-until green do not establish it.
+Before repeating, reassess if failure, contention, workload changes, or stale
+evidence invalidates the prior decision. Repeat an overloaded run only with
+changed conditions or a supported basis. Use a bounded diagnostic retry to
+test a stated explanation.
 
-Preserve strict verdicts and sufficient accepted unchanged proof. A focused pass
-observes its own boundary and cannot erase a failed required broad verdict.
-Host pressure does not dispose of an independent fixture or behavior defect;
-diagnose and repair it through the [failure policy](../../dough-execute-plan/references/failure-policy.md). A headroom decision
-does not itself authorize relaxed timeouts, reduced proof obligations or changed
-scope. Leave changes to coverage, scope or authority with their existing human
-owner, and report missing proof instead of declaring success.
+Keep required verdicts and accepted unchanged proof. A focused pass covers its
+own boundary and leaves a failed required broad verdict open. Diagnose
+independent fixture and behavior defects under the
+[failure policy](../../dough-execute-plan/references/failure-policy.md).
+A headroom decision leaves timeouts, coverage, scope, and authority with
+their existing human owners. Report missing proof and keep the affected
+promise incomplete.

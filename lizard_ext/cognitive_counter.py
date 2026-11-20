@@ -10,6 +10,7 @@ HEAD, PAREN_HEAD, BRACE_HEAD, BODY_PENDING, BODY = range(5)
 
 _IF_LIKE = ('if', 'else if')
 _CLOSER_OF = {'(': ')', '[': ']', '{': '}', '${': '}'}
+_BRACKETS = frozenset(_CLOSER_OF) | frozenset(_CLOSER_OF.values())
 _EXPRESSION_FRAMES = ('ternary', 'lambda')
 
 
@@ -103,11 +104,14 @@ class _Counter(object):  # pylint: disable=R0902
         if not self.profile.nested_functions:
             self._count(token, context.current_line, context.current_function)
             return
-        self._settle()
         candidates = self.candidates
+        if candidates or self.previous == '(':
+            self._settle()
         in_brackets = (candidates and
                        len(self.openers) >= candidates[-1].depth)
-        function, counted = self._route(token)
+        function, counted = context.current_function, token
+        if token in _BRACKETS:
+            function, counted = self._route(function, token)
         if candidates and self._involved(function):
             self._hold(function, counted)
             top = candidates[-1]
@@ -140,8 +144,8 @@ class _Counter(object):  # pylint: disable=R0902
         self._process(token)
         state.prev2, state.prev = state.prev, token
 
-    def _route(self, token):
-        """The function that counts the token, and the token to count.
+    def _route(self, function, token):
+        """The function that counts the bracket, and the token to count.
 
         A closing bracket belongs to the function that counted its opening
         bracket.  The reader can enter or leave a nested function between the
@@ -150,7 +154,6 @@ class _Counter(object):  # pylint: disable=R0902
 
         The ``}`` of a template interpolation ends no block.  It ends the
         sequence of logical operators before it, so it counts as ``,``."""
-        function = self.context.current_function
         openers = self.openers
         if token in _CLOSER_OF:
             if not _is_markup(token):
