@@ -22,9 +22,9 @@ NOT_VALUES = RESTRICTED | UNFINISHED | {'throw'}
 MEMBER_ACCESS = ('.', '?.')
 # Words with a value after them, so a "{" after them opens an object.
 VALUE_WORDS = frozenset(('return', 'throw', 'default', 'var', 'let', 'const'))
-# A "{" after these opens a block, although they do not end an expression:
-# `() => {`, and the TypeScript return types `Promise<void> {` and `void {`.
-BLOCK_PREFIXES = frozenset((';', '{', '=>', '>', 'void'))
+# A "{" after these opens a block, although they do not end an expression.
+# So does a "{" after a ">": `() => {`, `Promise<void> {`.
+BLOCK_PREFIXES = frozenset((';', '{', 'void'))
 # TypeScript: these words are a complete type after `as`, `pair as const`.
 ASSERTIONS = ('as', 'satisfies')
 ASSERTED_TYPES = ('const', 'void')
@@ -140,7 +140,8 @@ class ImpliedSemicolons:
             return block.groups > 0
         if previous in VALUE_WORDS:
             return line == self._line       # not `return` + line break
-        return not (previous in BLOCK_PREFIXES or ends_expression(previous))
+        return not (previous in BLOCK_PREFIXES or previous.endswith('>')
+                    or ends_expression(previous))
 
     def _close_group(self, block):
         if block.groups:
