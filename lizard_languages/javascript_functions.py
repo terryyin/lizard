@@ -76,8 +76,10 @@ class JavaScriptFunctionsMixin:
         """The signature was an expression, `x = (a) && b`: discard the
         function that its "(" started.  In an arrow's expression body,
         `v => o.x = (v) && b`, the "(" started none, so the arrow goes on
-        without the parameter defaults, `(last = v)`."""
+        with its own signature and without the parameter defaults."""
         if self._expression_body:
+            function = self.context.current_function
+            function.long_name, function.full_parameters = self._arrow_signature
             self.context.add_condition(-self._parameter_bindings.defaults)
         elif self.started_function:
             self._abandon_function()
@@ -164,6 +166,10 @@ class JavaScriptFunctionsMixin:
             self._static_seen = False
             self._async_seen = False
         else:
+            if self._expression_body:
+                function = self.context.current_function
+                self._arrow_signature = (
+                    function.long_name, list(function.full_parameters))
             if not self.started_function:
                 self._push_function_to_stack()
                 if self.started_function and not self._signature:
