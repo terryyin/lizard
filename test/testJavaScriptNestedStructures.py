@@ -84,3 +84,103 @@ class TestJavaScriptNestedStructures(unittest.TestCase):
         )
         self.assertEqual(
             [('chain', 1)], self.nested_structures("a.js", code))
+
+
+class TestJavaScriptNestedStructuresWithoutSemicolons(unittest.TestCase):
+    """A statement that ends at a line break closes its structures,
+    as a statement that ends with ';' does."""
+
+    def test_sibling_braceless_ifs_do_not_nest(self):
+        self.assertEqual(1, self.nested_structures("""
+        function role(user) {
+          if (user.banned) return 'banned'
+          if (user.admin) return 'admin'
+          if (user.staff) return 'staff'
+          return 'user'
+        }
+        """))
+
+    def test_braceless_body_on_the_next_line(self):
+        self.assertEqual(1, self.nested_structures("""
+        function role(user) {
+          if (user.banned)
+            return 'banned'
+          if (user.admin)
+            return 'admin'
+          if (user.staff)
+            return 'staff'
+          return 'user'
+        }
+        """))
+
+    def test_nested_braceless_structures_still_nest(self):
+        self.assertEqual(3, self.nested_structures("""
+        function notify(user, devices) {
+          if (user.active)
+            for (const device of devices)
+              if (device.online) device.push(user)
+          if (user.email) send(user.email)
+        }
+        """))
+
+    def test_braceless_else_on_the_next_line(self):
+        self.assertEqual(1, self.nested_structures("""
+        function notify(user) {
+          if (user.email) send(user.email)
+          else log(user)
+          if (user.phone)
+            call(user.phone)
+          else
+            log(user)
+          if (user.admin) audit(user)
+        }
+        """))
+
+    def test_braceless_else_if_chain(self):
+        self.assertEqual(1, self.nested_structures("""
+        function role(user) {
+          if (user.banned) return 'banned'
+          else if (user.admin) return 'admin'
+          else if (user.staff) return 'staff'
+          else return 'user'
+        }
+        """))
+
+    def test_do_while_loop(self):
+        self.assertEqual(1, self.nested_structures("""
+        function drain(queue, log) {
+          do {
+            queue.pop()
+          } while (queue.length)
+          if (log) log.flush()
+          if (queue.closed) return 1
+          return 0
+        }
+        """))
+
+    def test_braces_on_their_own_line(self):
+        self.assertEqual(2, self.nested_structures("""
+        function notify(user, devices)
+        {
+          if (user.active)
+          {
+            for (const device of devices)
+            {
+              device.push(user)
+            }
+          }
+          try
+          {
+            send(user.email)
+          }
+          catch (error)
+          {
+            report(error)
+          }
+        }
+        """))
+
+    def nested_structures(self, code):
+        analyzer = FileAnalyzer(get_extensions([NestedStructure()]))
+        functions = analyzer.analyze_source_code("a.js", code).function_list
+        return functions[0].max_nested_structures

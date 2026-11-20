@@ -246,3 +246,112 @@ class TestJavaScriptNestingDepth(unittest.TestCase):
         }
         """).function_list
         self.assertEqual(1, result[0].max_nesting_depth)
+
+
+class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
+    """A statement that ends at a line break closes its levels,
+    as a statement that ends with ';' does."""
+
+    def test_sibling_braceless_ifs_do_not_nest(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function role(user) {
+          if (user.banned) return 'banned'
+          if (user.admin) return 'admin'
+          if (user.staff) return 'staff'
+          return 'user'
+        }
+        """))
+
+    def test_braceless_body_on_the_next_line(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function role(user) {
+          if (user.banned)
+            return 'banned'
+          if (user.admin)
+            return 'admin'
+          if (user.staff)
+            return 'staff'
+          return 'user'
+        }
+        """))
+
+    def test_nested_braceless_structures_still_nest(self):
+        self.assertEqual(3, self.nesting_depth("""
+        function notify(user, devices) {
+          if (user.active)
+            for (const device of devices)
+              if (device.online) device.push(user)
+          if (user.email) send(user.email)
+        }
+        """))
+
+    def test_expression_continues_on_the_next_line(self):
+        self.assertEqual(2, self.nesting_depth("""
+        function price(order, member) {
+          if (order.total) discount = member
+            ? 10
+            : 0
+          if (order.coupon) return order.coupon
+          return discount
+        }
+        """))
+
+    def test_statements_with_logical_operators(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function settings(user, team) {
+          const theme = user.theme || team.theme
+          const locale = user.locale || team.locale
+          const admin = user.admin && team.active
+          return { theme, locale, admin }
+        }
+        """))
+
+    def test_braceless_if_at_the_end_of_a_block(self):
+        self.assertEqual(2, self.nesting_depth("""
+        function count(users) {
+          let active = 0
+          for (const user of users) { if (user.active) active++ }
+          for (const user of users) { if (user.banned) active-- }
+          if (active) return active
+          return 0
+        }
+        """))
+
+    def test_do_while_loop(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function drain(queue, log) {
+          do {
+            queue.pop()
+          } while (queue.length)
+          if (log) log.flush()
+          if (queue.closed) return 1
+          return 0
+        }
+        """))
+
+    def test_braces_on_their_own_line(self):
+        self.assertEqual(2, self.nesting_depth("""
+        function notify(user, devices)
+        {
+          if (user.active)
+          {
+            for (const device of devices)
+            {
+              device.push(user)
+            }
+          }
+          try
+          {
+            send(user.email)
+          }
+          catch (error)
+          {
+            report(error)
+          }
+        }
+        """))
+
+    def nesting_depth(self, code):
+        result = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
+            "a.js", code).function_list
+        return result[0].max_nesting_depth
