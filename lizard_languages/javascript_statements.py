@@ -10,9 +10,7 @@ OPENERS = frozenset(('(', '['))
 CLOSERS = frozenset((')', ']'))
 # Operators that can come after their operand: `count++`, `item!`.
 POSTFIX = frozenset(('++', '--', '!'))
-# TypeScript words with a type after them: `pair as const`.
-ASSERTIONS = frozenset(('as', 'satisfies'))
-TRACKED = (HEADED | UNHEADED | OPENERS | CLOSERS | POSTFIX | ASSERTIONS
+TRACKED = (HEADED | UNHEADED | OPENERS | CLOSERS | POSTFIX
            | {'{', '${', '}', 'await'})
 # Words that a line break after them always ends: `return` + line break.
 RESTRICTED = frozenset(('return', 'break', 'continue', 'yield'))
@@ -24,10 +22,12 @@ NOT_VALUES = RESTRICTED | UNFINISHED | {'throw'}
 MEMBER_ACCESS = ('.', '?.')
 # Words with a value after them, so a "{" after them opens an object.
 VALUE_WORDS = frozenset(('return', 'throw', 'default', 'var', 'let', 'const'))
-# A "{" after these opens a block, although they do not end an expression.
-BLOCK_PREFIXES = frozenset((';', '{', '=>', '>'))
-# The last token of a type assertion: `as const`, `as Box<string>`.
-ASSERTION_ENDS = ('const', 'void', '>')
+# A "{" after these opens a block, although they do not end an expression:
+# `() => {`, and the TypeScript return types `Promise<void> {` and `void {`.
+BLOCK_PREFIXES = frozenset((';', '{', '=>', '>', 'void'))
+# TypeScript: these words are a complete type after `as`, `pair as const`.
+ASSERTIONS = ('as', 'satisfies')
+ASSERTED_TYPES = ('const', 'void')
 
 
 class ImpliedSemicolons:
@@ -50,7 +50,6 @@ class ImpliedSemicolons:
         self._label_starts = False      # the body may start with a label
         self._postfix = False           # the last "!", "++" or "--" is postfix
         self._object_ended = False      # the last "}" closed an object literal
-        self._assertion_line = None     # the line of the last "as"
         self._loop_ended = False        # the ")" of "do … while (…)"
 
     def before(self, token):
@@ -88,7 +87,7 @@ class ImpliedSemicolons:
             return True
         if previous in POSTFIX:
             return self._postfix
-        if previous in ASSERTION_ENDS and self._assertion_line == self._line:
+        if previous in ASSERTED_TYPES and self._before_previous in ASSERTIONS:
             return True
         return previous not in UNFINISHED and ends_expression(previous)
 
@@ -122,9 +121,6 @@ class ImpliedSemicolons:
         elif token in ('{', '${'):
             self._blocks.append(
                 _Block(token, self._object_starts(token, block, line)))
-        elif token in ASSERTIONS:
-            if self._previous not in MEMBER_ACCESS:
-                self._assertion_line = line
         elif token in POSTFIX:
             self._postfix = (line == self._line and self._value_ended()
                              and not (head_starts or body_starts))
