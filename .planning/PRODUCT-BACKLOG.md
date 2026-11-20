@@ -6,8 +6,6 @@ Maintenance, bug fixing, and PR reviews. We accept PRs and issues that fix or im
 
 ## Taken
 
-- [Land Hafez JS cognitive/nesting PRs under performance gates](seeds/SEED-066-land-hafez-js-prs-under-performance.md#land-hafez-js-prs-under-performance) — SEED-066#land-hafez-js-prs-under-performance
-
 ## Backlog list
 
 - [A comma ends a ternary in cognitive complexity](seeds/SEED-067-cognitive-comma-ends-ternary.md#cognitive-comma-ends-ternary) — SEED-067#cognitive-comma-ends-ternary
