@@ -216,6 +216,19 @@ class Test_JavaScript_keyword_as_the_name_of_a_member(unittest.TestCase):
                                  [(f.name, f.cyclomatic_complexity)
                                   for f in functions])
 
+    def test_ternary_after_a_decimal_point_is_a_condition(self):
+        code = (
+            'function a(c) { return 1. ? c : 0; }\n'
+            'function b(c) { return `${1. ? c : 0}`; }\n'
+        )
+        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+            with self.subTest(filename=filename):
+                functions = analyze_file.analyze_source_code(
+                    filename, code).function_list
+                self.assertEqual([('a', 2), ('b', 2)],
+                                 [(f.name, f.cyclomatic_complexity)
+                                  for f in functions])
+
     def test_keyword_after_a_dot_is_no_case_or_switch(self):
         code = (
             'function pick(list, key) {\n'
