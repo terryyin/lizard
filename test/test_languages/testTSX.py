@@ -806,6 +806,12 @@ function Root() { return <svg:text>Root: /</ svg :text>; }
 function after(a) { return a ? 1 : 2; }
 ''')
 
+    def test_an_unfinished_namespaced_tag_in_text_keeps_the_closing_tag(self):
+        self.assert_both([("Note", 1, 1, 1), ("after", 2, 2, 2)], '''\
+function Note() { return <p>Use <b:</p>; }
+function after(a) { return a ? 1 : 2; }
+''')
+
     def test_a_namespaced_name_has_no_member(self):
         # `<a:b.c>` is no JSX element name, and the closing tag pattern
         # does not end it either.
