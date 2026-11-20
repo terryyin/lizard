@@ -10,7 +10,9 @@ OPENERS = frozenset(('(', '['))
 CLOSERS = frozenset((')', ']'))
 # Operators that can come after their operand: `count++`, `item!`.
 POSTFIX = frozenset(('++', '--', '!'))
-TRACKED = (HEADED | UNHEADED | OPENERS | CLOSERS | POSTFIX
+# TypeScript words with a type after them: `pair as const`.
+ASSERTIONS = frozenset(('as', 'satisfies'))
+TRACKED = (HEADED | UNHEADED | OPENERS | CLOSERS | POSTFIX | ASSERTIONS
            | {'{', '${', '}', 'await'})
 # Words that a line break after them always ends: `return` + line break.
 RESTRICTED = frozenset(('return', 'break', 'continue', 'yield'))
@@ -20,15 +22,22 @@ UNFINISHED = frozenset((
 # Words that are not a value, so a "!" or a "++" after them is a prefix.
 NOT_VALUES = RESTRICTED | UNFINISHED | {'throw'}
 MEMBER_ACCESS = ('.', '?.')
+# Words with a value after them, so a "{" after them opens an object.
+VALUE_WORDS = frozenset(('return', 'throw', 'default', 'var', 'let', 'const'))
+# A "{" after these opens a block, although they do not end an expression.
+BLOCK_PREFIXES = frozenset((';', '{', '=>', '>'))
+# The last token of a type assertion: `as const`, `as Box<string>`.
+ASSERTION_ENDS = ('const', 'void', '>')
 
 
 class ImpliedSemicolons:
     """Finds the places where a statement ends without a ';'.
 
     Ask before(token) once for each token, in order.  A statement ends
-    before a '}' and at a line break that the next token cannot continue.
-    It does not end inside parentheses or brackets, or while a structure
-    waits for its head or its body, `if (ready)` + line break + `run()`."""
+    before the '}' of a block and at a line break that the next token
+    cannot continue.  It does not end inside parentheses, brackets or an
+    object literal, or while a structure waits for its head or its body,
+    `if (ready)` + line break + `run()`."""
 
     def __init__(self, context):
         self._context = context
@@ -40,6 +49,8 @@ class ImpliedSemicolons:
         self._body_starts = False       # a structure waits for its body
         self._label_starts = False      # the body may start with a label
         self._postfix = False           # the last "!", "++" or "--" is postfix
+        self._object_ended = False      # the last "}" closed an object literal
+        self._assertion_line = None     # the line of the last "as"
         self._loop_ended = False        # the ")" of "do … while (…)"
 
     def before(self, token):
@@ -56,9 +67,10 @@ class ImpliedSemicolons:
         return implied
 
     def _statement_ends(self, token, line):
+        if self._head_starts or self._body_starts or self._blocks[-1].groups:
+            return False
         # A block end has ended its statement already.
-        if (self._head_starts or self._body_starts
-                or self._blocks[-1].groups or self._previous == '}'):
+        if self._previous == '}' and not self._object_ended:
             return False
         if token != '}':
             if (line - token.count('\n') == self._line
@@ -76,6 +88,8 @@ class ImpliedSemicolons:
             return True
         if previous in POSTFIX:
             return self._postfix
+        if previous in ASSERTION_ENDS and self._assertion_line == self._line:
+            return True
         return previous not in UNFINISHED and ends_expression(previous)
 
     def _value_ended(self):
@@ -103,10 +117,14 @@ class ImpliedSemicolons:
         elif token in CLOSERS:
             self._close_group(block)
         elif token == '}':
-            if len(self._blocks) > 1:
-                self._blocks.pop()
+            self._object_ended = (len(self._blocks) > 1
+                                  and self._blocks.pop().is_object)
         elif token in ('{', '${'):
-            self._blocks.append(_Block(token))
+            self._blocks.append(
+                _Block(token, self._object_starts(token, block, line)))
+        elif token in ASSERTIONS:
+            if self._previous not in MEMBER_ACCESS:
+                self._assertion_line = line
         elif token in POSTFIX:
             self._postfix = (line == self._line and self._value_ended()
                              and not (head_starts or body_starts))
@@ -116,6 +134,17 @@ class ImpliedSemicolons:
             self._label_starts = True
         elif label_starts and token == ':':  # `do retry: while (…) …`
             self._body_starts = True
+
+    def _object_starts(self, token, block, line):
+        previous = self._previous
+        if token != '{' or isinstance(token, JSXChildBrace):
+            return False
+        if previous == ':':
+            # A property value or a branch of "?:", not a `case` or a label.
+            return block.groups > 0
+        if previous in VALUE_WORDS:
+            return line == self._line       # not `return` + line break
+        return not (previous in BLOCK_PREFIXES or ends_expression(previous))
 
     def _close_group(self, block):
         if block.groups:
@@ -144,12 +173,14 @@ class ImpliedSemicolons:
 class _Block:
     """What is open between a '{' and its '}'."""
 
-    __slots__ = ('groups', 'head', 'open_loops', 'loop_ends')
+    __slots__ = ('groups', 'head', 'open_loops', 'loop_ends', 'is_object')
 
-    def __init__(self, opener='{'):
-        # The braces of a JSX child or a template interpolation hold an
-        # expression, as parentheses do.
-        expression = opener == '${' or isinstance(opener, JSXChildBrace)
+    def __init__(self, opener='{', is_object=False):
+        # The braces of an object literal, a JSX child or a template
+        # interpolation hold an expression, as parentheses do.
+        expression = (is_object or opener == '${'
+                      or isinstance(opener, JSXChildBrace))
+        self.is_object = is_object
         self.groups = 1 if expression else 0    # open "(" and "["
         self.head = None        # the groups around an open structure head
         self.open_loops = 0     # "do" bodies that wait for their "while"
