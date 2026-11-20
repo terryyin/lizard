@@ -796,6 +796,16 @@ function Footer() {
 function after(a) { return a ? 1 : 2; }
 ''')
 
+    def test_slash_in_text_before_a_spaced_namespaced_closing_tag(self):
+        # The `/` in the text does not start a regular expression that
+        # runs to the `/` of the closing tag.
+        self.assert_both([("Path", 1, 1, 1), ("Root", 2, 2, 1),
+                          ("after", 3, 3, 2)], '''\
+function Path() { return <svg:text>Path: /home</svg: text>; }
+function Root() { return <svg:text>Root: /</ svg :text>; }
+function after(a) { return a ? 1 : 2; }
+''')
+
     def test_a_namespaced_name_has_no_member(self):
         # `<a:b.c>` is no JSX element name, and the closing tag pattern
         # does not end it either.
@@ -810,7 +820,9 @@ function after(a) { return a ? 1 : 2; }
         # `< b:c >` here is a comparison in each branch of a ternary.
         for ternary in ("f ? a! < b : c > d", "f ? a! < b:c > d",
                         "f ? a! < b as boolean:c > d", "f ? {} < b:c > d",
-                        "f ? a! <b: c > d", "f ? a! <b x: y > d"):
+                        "f ? a! <b: c > d", "f ? a! <b x: y > d",
+                        "f ? a! <b: (<p>?</p>)", "f ? a!<b:(<p>?</p>)",
+                        "f ? a! <b x: (<p>?</p>)"):
             with self.subTest(ternary):
                 self.assertEqual([("compare", 2), ("after", 1)], [
                     (f.name, f.cyclomatic_complexity)
