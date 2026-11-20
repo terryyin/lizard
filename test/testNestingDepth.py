@@ -460,8 +460,43 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
     def test_typescript_non_null_assertion_after_a_property(self):
         self.assertEqual(1, self.nesting_depth("""
         function scope(first: Token | null, second: Token | null) {
-          if (first) return first.in!
           if (second) return second.of!!
+          if (first) return first.in!
+          return null
+        }
+        """, "a.ts"))
+
+    def test_object_literals_stay_in_their_statement(self):
+        self.assertEqual(2, self.nesting_depth("""
+        function flags(user, post) {
+          return [{ ok: user.admin && user.active }, { ok: post.open && post.shared }];
+        }
+        """))
+
+    def test_object_literal_at_the_end_of_a_statement(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function configure(app, debug) {
+          if (debug) app.log = {
+            level: 'debug'
+          }
+          if (app.ready) app.start()
+        }
+        """))
+
+    def test_typescript_const_assertion_at_a_line_end(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function side(left: Side | null, right: Side | null) {
+          if (left) return [left, 'left'] as const
+          if (right) return [right, 'right'] as const
+          return null
+        }
+        """, "a.ts"))
+
+    def test_typescript_generic_type_assertion_at_a_line_end(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function box(cached: unknown, raw: unknown) {
+          if (cached) return cached as Box<string>
+          if (raw) return raw as Box<string>
           return null
         }
         """, "a.ts"))

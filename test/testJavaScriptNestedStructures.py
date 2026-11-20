@@ -251,8 +251,26 @@ class TestJavaScriptNestedStructuresWithoutSemicolons(unittest.TestCase):
     def test_typescript_non_null_assertion_after_a_property(self):
         self.assertEqual(1, self.nested_structures("""
         function scope(first: Token | null, second: Token | null) {
-          if (first) return first.in!
           if (second) return second.of!!
+          if (first) return first.in!
+          return null
+        }
+        """, "a.ts"))
+
+    def test_typescript_const_assertion_at_a_line_end(self):
+        self.assertEqual(1, self.nested_structures("""
+        function side(left: Side | null, right: Side | null) {
+          if (left) return [left, 'left'] as const
+          if (right) return [right, 'right'] as const
+          return null
+        }
+        """, "a.ts"))
+
+    def test_typescript_generic_type_assertion_at_a_line_end(self):
+        self.assertEqual(1, self.nested_structures("""
+        function box(cached: unknown, raw: unknown) {
+          if (cached) return cached as Box<string>
+          if (raw) return raw as Box<string>
           return null
         }
         """, "a.ts"))
