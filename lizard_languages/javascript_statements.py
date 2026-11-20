@@ -1,6 +1,6 @@
 """Where JavaScript ends a statement without a ';'."""
 
-from .javascript_functions import JSXChildBrace, ends_expression, starts_statement
+from .javascript_expression import JSXChildBrace, ends_expression, starts_statement
 
 # Structures with a head in parentheses before their body.
 HEADED = frozenset(('if', 'for', 'while', 'with', 'switch', 'catch'))

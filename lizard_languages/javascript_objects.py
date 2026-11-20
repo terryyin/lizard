@@ -1,6 +1,6 @@
 """JavaScript object and class members, including computed method names."""
 
-from .javascript_functions import ends_expression
+from .javascript_expression import active_js_state, ends_expression
 
 
 class JavaScriptObjectsMixin:
@@ -9,9 +9,7 @@ class JavaScriptObjectsMixin:
                 and self.context.class_field_annotations)
 
     def optional_member_context(self):
-        state = self
-        while isinstance(state._state, self.__class__):
-            state = state._state
+        state = active_js_state(self)
         return state._state == state._state_global and state._typed_class_member()
 
     def _end_field_before_modifier(self):
