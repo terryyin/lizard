@@ -515,6 +515,22 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
         }
         """, "a.tsx"))
 
+    def test_typescript_return_type_that_ends_in_an_operator_word(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function factory(source: Source, single: boolean): typeof Array.of {
+          if (single) return source.one
+          if (source.many) return source.all
+        }
+        """, "a.ts"))
+
+    def test_typescript_return_type_that_ends_in_a_value_word(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function theme(dark: boolean, saved: Theme | null): typeof themes.default {
+          if (saved) return saved
+          if (dark) return themes.dark
+        }
+        """, "a.ts"))
+
     def nesting_depth(self, code, filename="a.js"):
         result = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
             filename, code).function_list
