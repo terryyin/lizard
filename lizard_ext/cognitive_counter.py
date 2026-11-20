@@ -9,6 +9,7 @@ HEAD, PAREN_HEAD, BRACE_HEAD, BODY_PENDING, BODY = range(5)
 
 _IF_LIKE = ('if', 'else if')
 _CLOSER_OF = {'(': ')', '[': ']', '{': '}', '${': '}'}
+_BRACKETS = frozenset(_CLOSER_OF) | frozenset(_CLOSER_OF.values())
 _EXPRESSION_FRAMES = ('ternary', 'lambda')
 
 
@@ -78,10 +79,14 @@ class _Counter(object):
         self.states = WeakKeyDictionary()
         self.function = None
         self.state = None
-        self.openers = []       # (bracket, function) of each open bracket
+        # (bracket, function) of each open bracket, when the reader starts
+        # functions in the middle of an expression.
+        self.openers = [] if profile.nested_functions else None
 
     def process(self, token):
-        function, token = self._route(token)
+        function = self.context.current_function
+        if self.openers is not None and token in _BRACKETS:
+            function, token = self._route(function, token)
         if function is not self.function:
             self._switch_function(function)
         state = self.state
@@ -94,8 +99,8 @@ class _Counter(object):
         self._process(token)
         state.prev2, state.prev = state.prev, token
 
-    def _route(self, token):
-        """The function that counts the token, and the token to count.
+    def _route(self, function, token):
+        """The function that counts the bracket, and the token to count.
 
         A closing bracket belongs to the function that counted its opening
         bracket.  The reader can enter or leave a nested function between the
@@ -104,9 +109,6 @@ class _Counter(object):
 
         The ``}`` of a template interpolation ends no block.  It ends the
         sequence of logical operators before it, so it counts as ``,``."""
-        function = self.context.current_function
-        if not self.profile.nested_functions:
-            return function, token
         openers = self.openers
         if token in _CLOSER_OF:
             if not _is_markup(token):
