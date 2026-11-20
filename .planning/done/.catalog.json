@@ -2,6 +2,18 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-068_js-asi-parenthesized-assignment.json",
+      "identity": "SEED-068#js-asi-parenthesized-assignment",
+      "completedAt": "2026-11-20T16:21:49.473Z",
+      "blob": "00dc3c76f45bb9c6ce566edf62277b0198441fa1"
+    },
+    {
+      "fileName": "SEED-067_cognitive-comma-ends-ternary.json",
+      "identity": "SEED-067#cognitive-comma-ends-ternary",
+      "completedAt": "2026-11-20T15:33:20.899Z",
+      "blob": "f5b4c0446c0ea7aac3b7724d6c9437bbf4fde4c1"
+    },
+    {
       "fileName": "SEED-066_land-hafez-js-prs-under-performance.json",
       "identity": "SEED-066#land-hafez-js-prs-under-performance",
       "completedAt": "2026-11-20T07:21:46.339Z",

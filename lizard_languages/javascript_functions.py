@@ -2,49 +2,14 @@
 and where an expression-bodied arrow ends."""
 
 from .javascript_bindings import JavaScriptBindings
+from .javascript_expression import (
+    JSXChildBrace, JSXMarkup, OPERAND_WORDS, active_js_state, ends_expression,
+    parameter_group, starts_statement)
 
-# Words that still need an operand, so a line break after them continues.
-OPERAND_WORDS = frozenset((
-    'in', 'instanceof', 'typeof', 'new', 'await', 'void', 'delete', 'yield',
-    'of', 'as', 'satisfies', 'keyof'))
-
-
-class JSXChildBrace(str):
-    """The '{' of a JSX child expression, `<p>{x && <a/>}</p>`: an
-    expression container, never an object literal or a block."""
-
-
-class JSXMarkup(str):
-    """The tags and the text of a JSX element, `<p>{name}({count})</p>`:
-    never code, also when the text is a bracket or a keyword."""
-
-    is_jsx_markup = True
-
-
-def ends_expression(token):
-    """Whether an expression may end with this token (JavaScript ASI)."""
-    first = token[:1]
-    if first.isalnum() or first in ('_', '$', '#', "'", '"', '`'):
-        return token not in OPERAND_WORDS
-    return (token in (')', ']', '}', '++', '--')
-            or (first == '/' and len(token) > 2)  # regular expression literal
-            or (first == '<' and token.endswith('>')  # JSX element end
-                and ('</' in token or token.endswith('/>'))))
-
-
-def starts_statement(token):
-    """Whether this line-start token cannot continue the previous line."""
-    first = token[0]
-    if first.isalnum() or first in ('_', '$', '#', "'", '"'):
-        # TypeScript reads `as`/`satisfies` after a line break as a statement.
-        return token not in ('in', 'instanceof')
-    # Restricted ++/--, prefix-only operators, blocks, decorators and closers.
-    return token in ('++', '--', '!', '~', '{', '@', '}', ')', ']')
-
-
-def parameter_group(prefix):
-    return (prefix is None or prefix in ('return', 'yield', 'await', 'async')
-            or (not ends_expression(prefix) and prefix not in ('.', '?.', 'new')))
+# Public API kept stable for external callers.
+__all__ = (
+    'OPERAND_WORDS', 'JSXChildBrace', 'JSXMarkup', 'ends_expression',
+    'starts_statement', 'parameter_group', 'JavaScriptFunctionsMixin')
 
 
 class JavaScriptFunctionsMixin:
@@ -59,9 +24,7 @@ class JavaScriptFunctionsMixin:
 
     def return_annotation_context(self):
         """Return ternary depth and whether the completed group proves a signature."""
-        state = self
-        while isinstance(state._state, self.__class__):
-            state = state._state
+        state = active_js_state(self)
         group = getattr(state, '_parenthesis_group', None)
         if (state._state == state._state_global and state.last_token == ')'
                 and group is not None and parameter_group(state._parenthesis_prefix)):
@@ -85,7 +48,14 @@ class JavaScriptFunctionsMixin:
 
     def end_expression_before(self, token):
         """Called by the reader with a line's first token before it is
-        counted, so an ended arrow keeps none of the next statement."""
+        counted, so an ended arrow or abandoned signature keeps none of it."""
+        if (self._state == self._expecting_func_opening_bracket
+                and self.started_function and starts_statement(token)
+                and token != '{'):
+            # A line break after ")" ends the statement unless "{" opens the
+            # body (`function f()\n{`). A line break before "=>" is invalid.
+            self._abandon_function()
+            return
         if (self._state == self._state_global
                 and ends_expression(self.last_token)
                 and starts_statement(token)):
@@ -278,41 +248,3 @@ class JavaScriptFunctionsMixin:
             return
         self.last_tokens += token
         self._state = self._state_global
-
-    def _expecting_condition_and_statement_block(self, token):
-        def callback():
-            self.next(self._expecting_statement_or_block)
-
-        if token == "await":
-            return
-
-        if token != '(':
-            self.next(self._state_global, token)
-            return
-
-        if self._condition_kind == 'catch':
-            def catch_callback(summary):
-                self.context.add_condition(summary.defaults)
-                callback()
-
-            self._read_binding_candidate(
-                ')', catch_callback, track_complexity=False)
-            return
-
-        self.sub_state(
-            self.__class__(self.context), callback)
-
-    def _expecting_statement_or_block(self, token):
-        def callback():
-            self._prev_token = ''
-            self.next(self._state_global)
-        if token == "{":
-            self.sub_state(
-                self.__class__(self.context), callback)
-        else:
-            self._prev_token = ''
-            self.next(self._state_global, token)
-
-    def _state_template_literal(self, token):
-        if token == '`':
-            self.next(self._state_global)
