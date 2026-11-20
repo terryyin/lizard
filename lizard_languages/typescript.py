@@ -93,10 +93,11 @@ class _MemberName(str):
 
 
 _MEMBER_ACCESS = ('.', '?.')
-# The keywords that a metric counts as a structure, a case or a jump.
+_COMMENT_STARTS = ('//', '/*')
+# With the reader's conditions: the keywords that a metric counts as a
+# structure or a jump.
 _STRUCTURE_KEYWORDS = frozenset((
-    'if', 'else', 'for', 'while', 'do', 'switch', 'case', 'try', 'catch',
-    'finally', 'break', 'continue'))
+    'else', 'do', 'switch', 'try', 'finally', 'break', 'continue'))
 
 
 class TypeScriptReader(CodeReader, CCppCommentsMixin):
@@ -206,19 +207,21 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         state = self.parallel_states[0]
         annotation_punctuation = _ANNOTATION_PUNCTUATION
         member_access_tokens = _MEMBER_ACCESS
-        structure_keywords = _STRUCTURE_KEYWORDS
+        structure_keywords = (_STRUCTURE_KEYWORDS | self.control_flow_keywords
+                              | self.case_keywords)
         member_access = False
         tokens = iter(self.code_tokens(tokens))
         while True:
             for token in tokens:
                 if not token.isspace():
-                    if line_start and not token.startswith(('//', '/*')):
+                    if line_start and not token.startswith(_COMMENT_STARTS):
                         line_start = False
                         arrows[-1].end_expression_before(token)
                     if member_access:
-                        member_access = False
                         if token in structure_keywords:
                             token = _MemberName(token)
+                        # `p./* note */catch`: a comment names no member.
+                        member_access = token.startswith(_COMMENT_STARTS)
                     elif token in member_access_tokens:
                         member_access = True
                     if token in annotation_punctuation:
