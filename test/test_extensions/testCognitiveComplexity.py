@@ -357,6 +357,14 @@ class TestTernaryEnds(unittest.TestCase):
             function Label({ local, on }) {
               return local ? null : <p xml:lang="en">{on ? 'on' : 'off'}</p>;  // +1 +2
             }"""))
+        self.assertEqual([6], cogc("a.tsx", """
+            function Label({ shown, local, on }) {
+              return shown ? local ? null : <p xml:lang="en">{on ? 'on' : 'off'}</p> : null;  // +1 +2 +3
+            }"""))
+        self.assertEqual([6], cogc("a.tsx", """
+            function Label({ shown, local, on }) {
+              return shown ? local ? null : <svg:text>{on ? 'on' : 'off'}</svg:text> : null;  // +1 +2 +3
+            }"""))
 
     def test_nested_ternaries_stay_nested(self):
         self.assertEqual([3], cpp("int f() { return a ? (b ? 1 : 2) : 3; }"))
