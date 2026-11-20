@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-064#process-pr-577",
+  "title": "Process PR #577 — Fix cognitive complexity of JS/TS expressions in parentheses after =",
+  "completedAt": "2026-11-20T04:32:44.922Z",
+  "developer": "Terry Yin"
+}
