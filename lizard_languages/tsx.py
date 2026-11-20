@@ -11,7 +11,7 @@ from .typescript import (
     TypeScriptReader)
 from .typescript import JSTokenizer, Tokenizer
 from .javascript_templates import LINE_COMMENT, template_tokens
-from .javascript_functions import JSXChildBrace, JSXMarkup
+from .javascript_expression import JSXChildBrace, JSXMarkup
 
 
 class TSXReader(TypeScriptReader):

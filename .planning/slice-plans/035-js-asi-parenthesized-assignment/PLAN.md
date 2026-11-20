@@ -2,6 +2,7 @@
 
 **Identity:** SEED-068#js-asi-parenthesized-assignment
 **Source:** [Parenthesized assignment without `;` hides the next `if`](../../seeds/SEED-068-js-asi-parenthesized-assignment.md#js-asi-parenthesized-assignment)
+**Source review:** [source-review.md](source-review.md)
 
 ## Goal and scope
 
@@ -88,7 +89,7 @@ No paid, credentialed or external premise; no early probe slice needed.
 ### 1. Structure after a parenthesized assignment keeps its nesting level
 
 Type: Behavior
-Status: planned
+Status: done
 
 **Pre-condition:** A no-semicolon JS/TS function contains `name = (expr)`
 ending at a line break, then a structure keyword on the next line.
@@ -113,6 +114,14 @@ style checks. Hosted CI stays with execution's CI ownership.
 fix needs changes beyond the optimistic-signature/ND seam, such as reworking
 the shared implied-semicolon scan (SEED-069's area), stop and replan.
 
+**Accepted proof (coordinator):** Seam chosen — end optimistic signature at
+line-start via `end_expression_before` / `end_before_line_token` before
+NestDepth credits the next token; do not abandon before `{`. New module
+`test/test_js_asi_parenthesized_assignment_nd.py`. Expression helpers in
+`lizard_languages/javascript_expression.py`. Focused recovery proof
+`recovery-focused-proof` (1331 passed); earlier `make-full` green on the
+same seam. Source commitments 1–4 observed in `source-review.md`.
+
 ## Current decisions
 
 - Correct ND by giving the level to the function that is current once the
@@ -122,6 +131,18 @@ the shared implied-semicolon scan (SEED-069's area), stop and replan.
   ND/NS get implied statement ends, which may touch the same extension code.
   Neither story depends on the other. Whichever lands second rebases onto the
   other and keeps both proofs green.
+- Fix seam: abandon optimistic signature at implied line-break statement end
+  before extensions credit the next token; keep `{` as a valid body opener.
+- Project selective formatting: check-only `pycodestyle` via `make`/hooks;
+  do not run Black (double-quote rewrite) as the formatter.
+
+## Learnings
+
+- Abandoning before `{` breaks braces-on-own-line function bodies; exclude `{`.
+- Duplicate mixin statement methods already live on `TypeScriptStates`; safe to
+  drop from `javascript_functions` for the file-size seam.
+- Named follow-up (refactor): pre-existing oversize `typescript_states.py` /
+  `tsx.py` (import-only in this change) deferred.
 
 ## Concern evidence
 

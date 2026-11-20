@@ -2,7 +2,8 @@
 
 from .code_reader import CodeStateMachine
 from .javascript_bindings import BindingSummary, JavaScriptBindingsMixin
-from .javascript_functions import JavaScriptFunctionsMixin, JSXChildBrace
+from .javascript_expression import JSXChildBrace
+from .javascript_functions import JavaScriptFunctionsMixin
 from .javascript_objects import JavaScriptObjectsMixin
 from .typescript_signatures import ReturnTypeColon
 from .typescript_declarations import (
