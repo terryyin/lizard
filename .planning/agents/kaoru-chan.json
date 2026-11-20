@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "agent": "Kaoru-chan",
+  "email": "kaoru-chan@example.org",
+  "activity": "preparation",
+  "identity": "SEED-069#shared-implied-semicolons-scan",
+  "host": "codex",
+  "model": "gpt-6.2-sol"
+}
