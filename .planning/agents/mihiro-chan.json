@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "agent": "Mihiro-chan",
+  "email": "mihiro-chan@example.org",
+  "identity": "SEED-069#shared-implied-semicolons-scan",
+  "mode": "story-branch",
+  "branch": "cursor/cheaper-implied-semicolon-scan-for-nd-ns",
+  "host": "cursor",
+  "model": "auto"
+}

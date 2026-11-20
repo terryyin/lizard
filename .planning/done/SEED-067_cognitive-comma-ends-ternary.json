@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-067#cognitive-comma-ends-ternary",
+  "title": "A comma ends a ternary in cognitive complexity",
+  "completedAt": "2026-11-20T15:33:20.899Z",
+  "developer": "Terry Yin",
+  "agent": "Nao-chan",
+  "host": "cursor",
+  "model": "auto"
+}
