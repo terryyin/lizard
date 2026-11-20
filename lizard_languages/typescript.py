@@ -136,15 +136,19 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         # Re-tokenize opaque interpolation spans; keyword members stay non-
         # conditions the same way as on the outer token stream (#546).
         conditions = self.conditions
-        previous = None
+        earlier = previous = None
         for start, end in interpolation_code(token, in_expression):
             for inner in self.generate_tokens(token[start:end]):
                 # A word after a dot names a member; `1. ? a : b` is a ternary.
                 if (inner in conditions and (previous not in _MEMBER_ACCESS
                                              or not inner[0].isalpha())):
                     self.context.add_condition()
-                if not (inner.isspace() or inner.startswith(_COMMENT_STARTS)):
-                    previous = inner
+                if (inner == '\n' and previous == '.'
+                        and _ends_a_number(earlier)):
+                    previous = inner    # the same rule as in preprocess
+                elif not (inner.isspace()
+                          or inner.startswith(_COMMENT_STARTS)):
+                    earlier, previous = previous, inner
 
     def _count_conditions_from_token(self, previous, token):
         # Split JS/TS exposes '${' then the expression; atomic TSX/JSX
