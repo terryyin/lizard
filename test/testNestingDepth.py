@@ -610,6 +610,19 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
         }
         """))
 
+    def test_ternary_after_an_expression_in_parentheses(self):
+        for condition in ("(current > start)", "current > start"):
+            with self.subTest(condition=condition):
+                self.assertEqual(3, self.nesting_depth("""
+                function fold(next, start, current, width) {
+                  while (next) {
+                    if (next - start > width) {
+                      end = %s ? current : next
+                    }
+                  }
+                }
+                """ % condition))
+
     def test_call_of_an_expression_in_parentheses(self):
         self.assertEqual(1, self.nesting_depth("""
         function load(path, sync, cache) {

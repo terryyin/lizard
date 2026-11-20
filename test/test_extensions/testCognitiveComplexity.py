@@ -951,6 +951,20 @@ class TestJavaScriptGroupedExpressions(unittest.TestCase):
             }"""))
 
 
+class TestJavaScriptCallsInCaseBlocks(unittest.TestCase):
+
+    def test_ternary_after_a_call_in_a_case_block(self):
+        self.assertEqual([3], cogc("a.js", """
+            function increment(release, identifier) {
+              switch (release) {                            // +1
+                case 'pre': {
+                  const base = Number(identifier) ? 1 : 0;  // +2
+                  return base;
+                }
+              }
+            }"""))
+
+
 class TestJavaScriptFunctionsInGroupedExpressions(unittest.TestCase):
     """The reader does not list a function that it meets in the parameters of
     a possible arrow function.  The function around the expression does not
