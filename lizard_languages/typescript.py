@@ -133,8 +133,9 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         previous = None
         for start, end in interpolation_code(token, in_expression):
             for inner in self.generate_tokens(token[start:end]):
-                if (inner in conditions
-                        and previous not in _MEMBER_ACCESS):
+                # A word after a dot names a member; `1. ? a : b` is a ternary.
+                if (inner in conditions and (previous not in _MEMBER_ACCESS
+                                             or not inner[0].isalpha())):
                     self.context.add_condition()
                 if not (inner.isspace() or inner.startswith(_COMMENT_STARTS)):
                     previous = inner
@@ -220,20 +221,17 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                     if line_start and not token.startswith(_COMMENT_STARTS):
                         line_start = False
                         arrows[-1].end_expression_before(token)
-                    if member_access:
-                        if token in structure_keywords:
-                            token = _MemberName(token)
-                        # A dot or a comment: the name is still to come,
-                        # `1..catch`, `p./* note */catch`.
-                        member_access = token[0] in './?'
+                    if member_access and token in structure_keywords:
+                        token = _MemberName(token)
+                        member_access = False
                     elif token in marked_punctuation:
-                        if token in member_access_tokens:
-                            member_access = True
-                        elif token == '?':
+                        # `1..catch`: the number and each dot are tokens.
+                        member_access = token in member_access_tokens
+                        if token == '?':
                             if (self.context.class_field_annotations
                                     and state.optional_member_context()):
                                 token = _OPTIONAL_MEMBER_QUESTION
-                        elif state.last_token == ')':
+                        elif token == ':' and state.last_token == ')':
                             annotation = state.return_annotation_context()
                             if annotation is not None:
                                 depth, unambiguous_signature = annotation
@@ -247,6 +245,9 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                                     yield token
                                     # Resume with the buffered iterator.
                                     break
+                    elif member_access and not token.startswith(
+                            _COMMENT_STARTS):   # `p./* note */catch`
+                        member_access = False
                     yield token
                 elif token == '\n':
                     if arrows:
