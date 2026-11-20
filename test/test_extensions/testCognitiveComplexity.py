@@ -352,6 +352,12 @@ class TestTernaryEnds(unittest.TestCase):
               return label;
             }"""))
 
+    def test_jsx_namespace_colon_does_not_end_a_ternary(self):
+        self.assertEqual([3], cogc("a.tsx", """
+            function Label({ local, on }) {
+              return local ? null : <p xml:lang="en">{on ? 'on' : 'off'}</p>;  // +1 +2
+            }"""))
+
     def test_nested_ternaries_stay_nested(self):
         self.assertEqual([3], cpp("int f() { return a ? (b ? 1 : 2) : 3; }"))
         self.assertEqual([3], cpp("int f() { return a ? b ? 1 : 2 : 3; }"))
@@ -367,6 +373,80 @@ class TestTernaryEnds(unittest.TestCase):
               return enabled                                           // +1
                   ? new HashMap<String, Integer>(large ? 1024 : 16)    // +2 (nesting=1)
                   : null;
+            }"""))
+
+    def test_generic_arguments_in_the_alternative_do_not_end_it(self):
+        self.assertEqual([3], java("""
+            Map<String, Integer> cache(boolean enabled, boolean large) {
+              return enabled ? null                                    // +1
+                  : new HashMap<String, Integer>(large ? 1024 : 16);   // +2 (nesting=1)
+            }"""))
+        self.assertEqual([3], cpp("""
+            std::pair<int, int> span(bool empty, bool wide) {
+              return empty ? std::pair<int, int>()                     // +1
+                  : std::make_pair<int, int>(0, wide ? 80 : 40);       // +2 (nesting=1)
+            }"""))
+        self.assertEqual([3], java("""
+            Map<List<String>, Integer> index(boolean empty, boolean large) {
+              return empty ? null                                            // +1
+                  : new HashMap<List<String>, Integer>(large ? 1024 : 16);   // +2 (nesting=1)
+            }"""))
+
+    def test_generic_arguments_in_the_alternative_stay_generic_after_the_call(self):
+        self.assertEqual([3], cogc("a.ts", """
+            function fits(empty: boolean, large: boolean) {
+              return check(empty ? false :                             // +1
+                           limit<number, string>() < (large ? 1024 : 16));   // +2 (nesting=1)
+            }"""))
+        self.assertEqual([3], cogc("a.ts", """
+            function size(empty: boolean) {
+              return check(empty ? 0 :                                 // +1
+                           ready<number, string>() ? 1024 : 16);       // +2 (nesting=1)
+            }"""))
+        self.assertEqual([3], java("""
+            boolean fits(boolean empty, boolean large) {
+              return empty ? false :                                   // +1
+                  Sizes.<Long, String>limit() < (large ? 1024 : 16);   // +2 (nesting=1)
+            }"""))
+
+    def test_type_arguments_after_a_comparison_or_before_an_operator(self):
+        self.assertEqual([3], cogc("a.ts", """
+            function fits(empty: boolean, large: boolean, size: number) {
+              return check(empty ? false :                             // +1
+                           size < limit<number, string>(large ? 1 : 2));   // +2 (nesting=1)
+            }"""))
+        self.assertEqual([4], cpp("""
+            bool same(bool a, bool b, bool x, bool y) {
+              return a ? true                                          // +1
+                  : std::is_same_v<int, long> || (b ? x : y);          // +1 ||, +2 (nesting=1)
+            }"""))
+        self.assertEqual([3], java("""
+            Object make(boolean empty, boolean large) {
+              return empty ? null                                      // +1
+                  : new <Long, String> Box(large ? 1 : 2);             // +2 (nesting=1)
+            }"""))
+
+    def test_operator_names_do_not_end_or_close_anything(self):
+        self.assertEqual([3], cpp("""
+            int pick(bool a, bool b, X x) {
+              return a ? 0 : x.operator,(b ? 1 : 2);   // +1, +2 (nesting=1)
+            }"""))
+        self.assertEqual([3], cpp("""
+            int pick(bool a, bool b) {
+              return a ? 0 : get<&operator>, 0>(b ? 1 : 2);   // +1, +2 (nesting=1)
+            }"""))
+
+    def test_a_variable_named_operator_is_no_operator_name(self):
+        self.assertEqual([2], cogc("a.js", """
+            function pair(a, b, operator) {
+              return [a ? 0 : operator, b ? 1 : 2];   // +1, +1
+            }"""))
+
+    def test_gnu_elvis_colon_does_not_start_the_alternative(self):
+        self.assertEqual([3], cpp("""
+            int pick(int a, int b, int c) {
+              return a ? b ?: 1                // +1
+                       : (c ? 2 : 3);          // +2 (nesting=1)
             }"""))
 
     def test_nested_ternary_in_the_middle_ends_at_the_outer_colon(self):
