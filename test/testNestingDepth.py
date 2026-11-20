@@ -351,7 +351,89 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
         }
         """))
 
-    def nesting_depth(self, code):
+    def test_catch_without_a_binding_before_its_block(self):
+        self.assertEqual(2, self.nesting_depth("""
+        function load(file) {
+          try {
+            open(file);
+          } catch
+          {
+            if (file.optional) skip();
+          }
+        }
+        """))
+
+    def test_line_break_before_the_await_of_a_for_loop(self):
+        self.assertEqual(3, self.nesting_depth("""
+        async function send(batch, rows) {
+          if (batch.open) for
+            await (const row of rows) if (row.ready) batch.add(row);
+        }
+        """))
+
+    def test_line_break_inside_a_declaration(self):
+        self.assertEqual(2, self.nesting_depth("""
+        function price(order, member) {
+          if (order.paid) var
+            discount = member && order.coupon;
+          return discount;
+        }
+        """))
+
+    def test_line_break_after_case(self):
+        self.assertEqual(2, self.nesting_depth("""
+        function notify(user) {
+          switch (user.role) {
+            case
+              'admin': if (user.active) alert(user);
+          }
+        }
+        """))
+
+    def test_while_loop_as_the_body_of_a_do_loop(self):
+        self.assertEqual(2, self.nesting_depth("""
+        function drain(queue, log) {
+          do while (queue.busy) if (log) log.wait(); while (queue.length);
+        }
+        """))
+
+    def test_return_ends_its_statement_at_a_line_break(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function refresh(cache, force) {
+          if (!force) return
+          (cache.pending || cache.loaded).clear()
+        }
+        """))
+
+    def test_break_ends_its_statement_at_a_line_break(self):
+        self.assertEqual(2, self.nesting_depth("""
+        function stop(jobs, done) {
+          while (jobs.length) {
+            if (done) break
+            [jobs.first || jobs.last].forEach(run)
+          }
+        }
+        """))
+
+    def test_property_with_the_name_of_an_operator(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function scope(token, list) {
+          if (token) return token.in
+          if (list) return list.of
+          return null
+        }
+        """))
+
+    def test_typescript_non_null_assertion_at_a_line_end(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function owner(first: Item | null, second: Item | null) {
+          if (first) return first.owner!
+          if (second) return second.owner!
+          return null
+        }
+        """, "a.ts"))
+
+    def nesting_depth(self, code, filename="a.js"):
         result = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
-            "a.js", code).function_list
+            filename, code).function_list
         return result[0].max_nesting_depth

@@ -180,7 +180,52 @@ class TestJavaScriptNestedStructuresWithoutSemicolons(unittest.TestCase):
         }
         """))
 
-    def nested_structures(self, code):
+    def test_catch_without_a_binding_before_its_block(self):
+        self.assertEqual(2, self.nested_structures("""
+        function load(file) {
+          try {
+            open(file);
+          } catch
+          {
+            if (file.optional) skip();
+          }
+        }
+        """))
+
+    def test_line_break_before_the_await_of_a_for_loop(self):
+        self.assertEqual(3, self.nested_structures("""
+        async function send(batch, rows) {
+          if (batch.open) for
+            await (const row of rows) if (row.ready) batch.add(row);
+        }
+        """))
+
+    def test_while_loop_as_the_body_of_a_do_loop(self):
+        self.assertEqual(3, self.nested_structures("""
+        function drain(queue, log) {
+          do while (queue.busy) if (log) log.wait(); while (queue.length);
+        }
+        """))
+
+    def test_property_with_the_name_of_an_operator(self):
+        self.assertEqual(1, self.nested_structures("""
+        function scope(token, list) {
+          if (token) return token.in
+          if (list) return list.of
+          return null
+        }
+        """))
+
+    def test_typescript_non_null_assertion_at_a_line_end(self):
+        self.assertEqual(1, self.nested_structures("""
+        function owner(first: Item | null, second: Item | null) {
+          if (first) return first.owner!
+          if (second) return second.owner!
+          return null
+        }
+        """, "a.ts"))
+
+    def nested_structures(self, code, filename="a.js"):
         analyzer = FileAnalyzer(get_extensions([NestedStructure()]))
-        functions = analyzer.analyze_source_code("a.js", code).function_list
+        functions = analyzer.analyze_source_code(filename, code).function_list
         return functions[0].max_nested_structures
