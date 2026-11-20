@@ -131,11 +131,14 @@ _GATED_LANGUAGES = frozenset(('cpp', 'java', 'csharp', 'objectivec', 'ttcn'))
 _UNARY_OR_COALESCING = frozenset((
     'not', '!', 'orelse', '.NOT.', '.not.', '??'))
 
+# The ``}`` of a JavaScript template interpolation; no reader emits it.
+_INTERPOLATION_END = '${}'
+
 # After these the memory of the current logical operator sequence is
 # dropped, so that ``a && b; c && d`` counts as two sequences.
 _EXPRESSION_BREAKERS = frozenset((
     ';', ',', '{', '}', '?', ':', '=', '+=', '-=', '*=', '/=', '%=',
-    '&=', '|=', '^=', '<<=', '>>=', 'return', 'yield'))
+    '&=', '|=', '^=', '<<=', '>>=', 'return', 'yield', _INTERPOLATION_END))
 
 # ``?`` followed by one of these is not a ternary operator: ``?.``, ``??``,
 # ``?:``, nullable types ``T?)``, Rust's ``foo()?;``, Java's ``? extends``.

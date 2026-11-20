@@ -4,7 +4,7 @@ from itertools import chain
 from weakref import WeakKeyDictionary
 
 from .cognitive_profile import (
-    _MEMBER_ACCESS, _SELF_REFERENCES, _UNARY_OR_COALESCING)
+    _INTERPOLATION_END, _MEMBER_ACCESS, _SELF_REFERENCES, _UNARY_OR_COALESCING)
 
 HEAD, PAREN_HEAD, BRACE_HEAD, BODY_PENDING, BODY = range(5)
 
@@ -30,11 +30,11 @@ class _Candidate(object):  # pylint: disable=R0903
         self.depth = depth      # open brackets, with the ``(`` it started at
 
 
-class _Frame(object):  # pylint: disable=R0903
+class _Frame(object):  # pylint: disable=R0902,R0903
     """An open control structure (or lambda / ternary) nesting its body."""
 
     __slots__ = ('kind', 'phase', 'braced', 'depth', 'pdepth', 'level',
-                 'closing')
+                 'closing', 'alternative')
 
     def __init__(self, kind, phase, depth=0, pdepth=0, level=0):
         self.kind = kind
@@ -44,6 +44,7 @@ class _Frame(object):  # pylint: disable=R0903
         self.pdepth = pdepth    # bracket depth where the frame was opened
         self.level = level      # lizard nesting level (indentation engine)
         self.closing = False    # body finished; waiting for else/catch/...
+        self.alternative = False    # ternary: its ``:`` is read
 
 
 class _FunctionState(object):  # pylint: disable=R0902,R0903
@@ -154,7 +155,7 @@ class _Counter(object):  # pylint: disable=R0902
         would otherwise never see its bracket close.
 
         The ``}`` of a template interpolation ends no block.  It ends the
-        sequence of logical operators before it, so it counts as ``,``."""
+        sequence of logical operators before it, like ``,``, but no ternary."""
         openers = self.openers
         if token in _CLOSER_OF:
             if not _is_markup(token):
@@ -163,7 +164,7 @@ class _Counter(object):  # pylint: disable=R0902
                 not _is_markup(token):
             opener, function = openers.pop()
             if opener == '${':
-                token = ','
+                token = _INTERPOLATION_END
         return function, token
 
     # -- functions the reader abandons ----------------------------------------

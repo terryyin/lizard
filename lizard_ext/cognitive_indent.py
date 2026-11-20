@@ -27,6 +27,8 @@ class _IndentCounter(_Counter):
             self._logical_operator(token)
         elif token in _EXPRESSION_BREAKERS or token in ('if', 'else', 'lambda'):
             state.logical.pop(state.pdepth, None)
+            if token == ',':
+                self._end_ternaries()
         if token in ('(', '[', '{'):
             self._open_bracket()
         elif token in (')', ']', '}'):
@@ -41,6 +43,15 @@ class _IndentCounter(_Counter):
             self._statement_keyword(token)
         else:
             self._expression_keyword(token)
+
+    def _end_ternaries(self):
+        """A ``,`` ends the conditional expressions at its own depth:
+        ``go(1 if a else 2, 3 if b else 4)``."""
+        state = self.state
+        frames = state.frames
+        while frames and frames[-1].kind == 'ternary' and \
+                frames[-1].pdepth == state.pdepth:
+            frames.pop()
 
     def _track_newline(self):
         """Close the blocks the indentation closed; True at a statement start."""

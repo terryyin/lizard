@@ -2,8 +2,10 @@
 
 from .cognitive_actions import _BraceActions
 from .cognitive_counter import (
-    BODY, BODY_PENDING, BRACE_HEAD, HEAD, PAREN_HEAD, _Counter, _Frame, _IF_LIKE)
-from .cognitive_profile import _EXPRESSION_BREAKERS, _LAMBDA_TRIGGERS, _is_word
+    BODY, BODY_PENDING, BRACE_HEAD, HEAD, PAREN_HEAD, _Counter, _Frame, _IF_LIKE,
+    _is_markup)
+from .cognitive_profile import (
+    _EXPRESSION_BREAKERS, _INTERPOLATION_END, _LAMBDA_TRIGGERS, _is_word)
 
 
 class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
@@ -51,6 +53,9 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
             self._logical_operator(token)
         elif token in _EXPRESSION_BREAKERS:
             state.logical.pop(state.pdepth, None)
+            if token in (',', ':') and frames and \
+                    frames[-1].kind == 'ternary' and not _is_markup(token):
+                self._end_ternaries(token)
         if token in ('(', '['):
             self._open_bracket()
         elif token in (')', ']'):
@@ -73,10 +78,12 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
     # -- statement boundaries ---------------------------------------------------
 
     def _new_line(self, line):
+        """A new line can end a statement, but not after a ``,`` or after the
+        ``}`` of a template interpolation."""
         state = self.state
         state.line = line
         if not self.profile.newline_ends_statement or state.pdepth or \
-                state.prev == ',':
+                state.prev in (',', _INTERPOLATION_END):
             return
         if state.frames and not state.frames[-1].closing:
             top = state.frames[-1]
@@ -94,6 +101,24 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         frames = self.state.frames
         while frames and frames[-1].kind == 'ternary' and \
                 frames[-1].pdepth > self.state.pdepth:
+            frames.pop()
+
+    def _end_ternaries(self, token):
+        """The alternative of a ternary ends at a ``,`` or ``:`` at its own
+        depth: ``go(a ? b : c, d ? e : f)``.  A ``:`` then starts the
+        alternative of the ternary below: ``a ? b ? 1 : 2 : 3``.  A ``,``
+        before the ``:`` is C's comma operator or in ``Map<K, V>``."""
+        state = self.state
+        frames = state.frames
+        while frames:
+            top = frames[-1]
+            if top.kind != 'ternary' or top.pdepth != state.pdepth or \
+                    top.depth != state.depth:
+                return
+            if not top.alternative:
+                if token == ':':
+                    top.alternative = True
+                return
             frames.pop()
 
     def _statement_end(self):
