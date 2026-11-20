@@ -1,6 +1,8 @@
 import unittest
 
-from lizard import analyze_file
+from lizard import FileAnalyzer, analyze_file, get_extensions
+from lizard_ext.lizardcomplextags import LizardExtension as ComplexTags
+from lizard_ext.lizardmodified import LizardExtension as Modified
 from lizard_languages import TypeScriptReader
 
 
@@ -182,6 +184,25 @@ class Test_JavaScript_keyword_as_the_name_of_a_member(unittest.TestCase):
                     filename, code).function_list
                 self.assertEqual(expected, [(f.name, f.cyclomatic_complexity)
                                             for f in functions])
+
+    def test_keyword_after_a_dot_is_no_case_or_switch(self):
+        code = (
+            'function pick(list, key) {\n'
+            '  return list.switch(key);\n'
+            '}\n'
+            'function label() {\n'
+            '  return this.case;\n'
+            '}\n'
+            'function load(p) {\n'
+            '  if (p) { p.catch(f); }\n'
+            '}\n'
+        )
+        analyzer = FileAnalyzer(get_extensions([Modified(), ComplexTags()]))
+        functions = analyzer.analyze_source_code('a.js', code).function_list
+        self.assertEqual([('pick', 1, []), ('label', 1, []),
+                          ('load', 2, [['if', 8]])],
+                         [(f.name, f.cyclomatic_complexity, f.complex_tags)
+                          for f in functions])
 
 
 class Test_JavaScript_line_comment_ending_with_a_backslash(unittest.TestCase):
