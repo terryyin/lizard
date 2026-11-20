@@ -38,7 +38,15 @@ class LizardExtension(object):  # pylint: disable=R0903
             indent_indicator = reader.indent_indicator
         else:
             indent_indicator = ';'
+        implied_semicolons = getattr(reader, "implied_semicolons", None)
+        if implied_semicolons:
+            implied_semicolon_before = implied_semicolons(reader.context).before
         for token in tokens:
+            if implied_semicolons and implied_semicolon_before(token):
+                # The statement ends here as it does at a ";".
+                reader.context.clear_prev_was_else()
+                if reader.context.get_condition_depth() == 0:
+                    l_depth = reader.context.end_statement()
             if token in block_ends:
                 l_depth = reader.context.close_block()
             if token in block_starts or token == indent_indicator:
