@@ -6,8 +6,9 @@ Maintenance, bug fixing, and PR reviews. We accept PRs and issues that fix or im
 
 ## Taken
 
+- [A comma ends a ternary in cognitive complexity](seeds/SEED-067-cognitive-comma-ends-ternary.md#cognitive-comma-ends-ternary) — SEED-067#cognitive-comma-ends-ternary ([plan](slice-plans/034-cognitive-comma-ends-ternary/PLAN.md))
+
 ## Backlog list
 
-- [A comma ends a ternary in cognitive complexity](seeds/SEED-067-cognitive-comma-ends-ternary.md#cognitive-comma-ends-ternary) — SEED-067#cognitive-comma-ends-ternary
 - [Parenthesized assignment without `;` hides the next `if`](seeds/SEED-068-js-asi-parenthesized-assignment.md#js-asi-parenthesized-assignment) — SEED-068#js-asi-parenthesized-assignment
 - [Cheaper implied-semicolon scan for ND/NS](seeds/SEED-069-shared-implied-semicolons-scan.md#shared-implied-semicolons-scan) — SEED-069#shared-implied-semicolons-scan
