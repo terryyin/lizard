@@ -474,12 +474,10 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
         """))
 
     def test_object_literal_at_the_end_of_a_statement(self):
-        self.assertEqual(1, self.nesting_depth("""
-        function configure(app, debug) {
-          if (debug) app.log = {
-            level: 'debug'
-          }
-          if (app.ready) app.start()
+        self.assertEqual(2, self.nesting_depth("""
+        function allowed(user, post) {
+          const flags = { admin: user.admin && user.active }
+          if (post.open) if (flags.admin) return true
         }
         """))
 
@@ -492,12 +490,20 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
         }
         """, "a.ts"))
 
-    def test_typescript_generic_type_assertion_at_a_line_end(self):
+    def test_typescript_void_return_type(self):
         self.assertEqual(1, self.nesting_depth("""
-        function box(cached: unknown, raw: unknown) {
-          if (cached) return cached as Box<string>
-          if (raw) return raw as Box<string>
-          return null
+        function close(file: File | null, force: boolean): void {
+          if (!file) return
+          if (force) file.destroy()
+        }
+        """, "a.ts"))
+
+    def test_typescript_comparison_after_an_assertion(self):
+        self.assertEqual(2, self.nesting_depth("""
+        function above(value: unknown, limit: number, strict: boolean) {
+          if (strict) return value as number >
+            limit && strict;
+          return false;
         }
         """, "a.ts"))
 

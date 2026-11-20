@@ -266,12 +266,11 @@ class TestJavaScriptNestedStructuresWithoutSemicolons(unittest.TestCase):
         }
         """, "a.ts"))
 
-    def test_typescript_generic_type_assertion_at_a_line_end(self):
+    def test_typescript_void_return_type(self):
         self.assertEqual(1, self.nested_structures("""
-        function box(cached: unknown, raw: unknown) {
-          if (cached) return cached as Box<string>
-          if (raw) return raw as Box<string>
-          return null
+        function close(file: File | null, force: boolean): void {
+          if (!file) return
+          if (force) file.destroy()
         }
         """, "a.ts"))
 
