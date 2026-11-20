@@ -202,6 +202,20 @@ class Test_JavaScript_keyword_as_the_name_of_a_member(unittest.TestCase):
                                  [(f.name, f.cyclomatic_complexity)
                                   for f in functions])
 
+    def test_keyword_after_a_number_and_a_dot(self):
+        code = (
+            'function a() { return 1..catch(g); }\n'
+            'function b(o) { return `${o. /* note */ catch(g)}`; }\n'
+            'function c(o) { return `${o?.\n  catch(g)}`; }\n'
+        )
+        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+            with self.subTest(filename=filename):
+                functions = analyze_file.analyze_source_code(
+                    filename, code).function_list
+                self.assertEqual([('a', 1), ('b', 1), ('c', 1)],
+                                 [(f.name, f.cyclomatic_complexity)
+                                  for f in functions])
+
     def test_keyword_after_a_dot_is_no_case_or_switch(self):
         code = (
             'function pick(list, key) {\n'
