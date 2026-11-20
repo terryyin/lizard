@@ -9,6 +9,12 @@ UNHEADED = frozenset(('else', 'do', 'try', 'finally'))
 OPENERS = frozenset(('(', '['))
 CLOSERS = frozenset((')', ']'))
 TRACKED = HEADED | UNHEADED | OPENERS | CLOSERS | {'{', '${', '}', 'await'}
+# Words that a line break after them always ends: `return` + line break.
+RESTRICTED = frozenset(('return', 'break', 'continue'))
+# Words that need more after them, so a line break after them continues.
+UNFINISHED = frozenset((
+    'var', 'let', 'const', 'case', 'function', 'class', 'extends'))
+MEMBER_ACCESS = ('.', '?.')
 
 
 class ImpliedSemicolons:
@@ -17,12 +23,13 @@ class ImpliedSemicolons:
     Ask before(token) once for each token, in order.  A statement ends
     before a '}' and at a line break that the next token cannot continue.
     It does not end inside parentheses or brackets, or while a structure
-    waits for its body, `if (ready)` + line break + `run()`."""
+    waits for its head or its body, `if (ready)` + line break + `run()`."""
 
     def __init__(self, context):
         self._context = context
         self._blocks = [_Block()]
         self._previous = ';'
+        self._before_previous = ';'
         self._line = 0
         self._head_starts = False       # the next "(" opens a structure head
         self._body_starts = False       # a structure waits for its body
@@ -36,24 +43,42 @@ class ImpliedSemicolons:
         if (token in TRACKED or self._head_starts or self._body_starts
                 or self._loop_ended):
             self._read(token)
+        self._before_previous = self._previous
         self._previous = token
         self._line = line
         return implied
 
     def _statement_ends(self, token, line):
-        if token != '}' and (line - token.count('\n') == self._line
-                             or not starts_statement(token)
-                             or isinstance(token, JSXChildBrace)):
-            return False
-        previous = self._previous
         # A block end has ended its statement already.
-        return not (self._body_starts or self._blocks[-1].groups
-                    or previous == '}' or not ends_expression(previous))
+        if (self._head_starts or self._body_starts
+                or self._blocks[-1].groups or self._previous == '}'):
+            return False
+        if token != '}':
+            if (line - token.count('\n') == self._line
+                    or isinstance(token, JSXChildBrace)):
+                return False
+            if self._previous in RESTRICTED and not self._after_member_access():
+                return True
+            if not starts_statement(token):
+                return False
+        return self._expression_ended()
+
+    def _expression_ended(self):
+        previous = self._previous
+        if self._after_member_access():     # a property name: `token.in`
+            return True
+        if previous == '!':                 # TypeScript: `item.owner!`
+            return ends_expression(self._before_previous)
+        return previous not in UNFINISHED and ends_expression(previous)
+
+    def _after_member_access(self):
+        return self._before_previous in MEMBER_ACCESS
 
     def _read(self, token):
         block = self._blocks[-1]
         head_starts, self._head_starts = self._head_starts, False
-        self._body_starts = self._loop_ended = False
+        body_starts, self._body_starts = self._body_starts, False
+        self._loop_ended = False
         if token in OPENERS:
             if head_starts and token == '(':
                 block.head = block.groups
@@ -65,8 +90,8 @@ class ImpliedSemicolons:
                 self._blocks.pop()
         elif token in ('{', '${'):
             self._blocks.append(_Block(token))
-        elif token in TRACKED and self._previous not in ('.', '?.'):
-            self._read_word(token, block, head_starts)
+        elif token in TRACKED and self._previous not in MEMBER_ACCESS:
+            self._read_word(token, block, head_starts, body_starts)
 
     def _close_group(self, block):
         if block.groups:
@@ -77,10 +102,11 @@ class ImpliedSemicolons:
             self._body_starts = not block.loop_ends
             block.loop_ends = False
 
-    def _read_word(self, token, block, head_starts):
+    def _read_word(self, token, block, head_starts, body_starts):
         if token in HEADED:
             self._head_starts = True
-            if token == 'while' and block.open_loops:
+            # In `do while (a) run(); while (b)` the first "while" is the body.
+            if token == 'while' and block.open_loops and not body_starts:
                 block.open_loops -= 1
                 block.loop_ends = True
         elif token in UNHEADED:
