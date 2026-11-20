@@ -8,12 +8,17 @@ HEADED = frozenset(('if', 'for', 'while', 'with', 'switch', 'catch'))
 UNHEADED = frozenset(('else', 'do', 'try', 'finally'))
 OPENERS = frozenset(('(', '['))
 CLOSERS = frozenset((')', ']'))
-TRACKED = HEADED | UNHEADED | OPENERS | CLOSERS | {'{', '${', '}', 'await'}
+# Operators that can come after their operand: `count++`, `item!`.
+POSTFIX = frozenset(('++', '--', '!'))
+TRACKED = (HEADED | UNHEADED | OPENERS | CLOSERS | POSTFIX
+           | {'{', '${', '}', 'await'})
 # Words that a line break after them always ends: `return` + line break.
-RESTRICTED = frozenset(('return', 'break', 'continue'))
+RESTRICTED = frozenset(('return', 'break', 'continue', 'yield'))
 # Words that need more after them, so a line break after them continues.
 UNFINISHED = frozenset((
     'var', 'let', 'const', 'case', 'function', 'class', 'extends'))
+# Words that are not a value, so a "!" or a "++" after them is a prefix.
+NOT_VALUES = RESTRICTED | UNFINISHED | {'throw'}
 MEMBER_ACCESS = ('.', '?.')
 
 
@@ -33,6 +38,8 @@ class ImpliedSemicolons:
         self._line = 0
         self._head_starts = False       # the next "(" opens a structure head
         self._body_starts = False       # a structure waits for its body
+        self._label_starts = False      # the body may start with a label
+        self._postfix = False           # the last "!", "++" or "--" is postfix
         self._loop_ended = False        # the ")" of "do … while (…)"
 
     def before(self, token):
@@ -41,8 +48,8 @@ class ImpliedSemicolons:
             (token == '}' or line != self._line)
             and self._statement_ends(token, line))
         if (token in TRACKED or self._head_starts or self._body_starts
-                or self._loop_ended):
-            self._read(token)
+                or self._label_starts or self._loop_ended):
+            self._read(token, line)
         self._before_previous = self._previous
         self._previous = token
         self._line = line
@@ -58,7 +65,7 @@ class ImpliedSemicolons:
                     or isinstance(token, JSXChildBrace)):
                 return False
             if self._previous in RESTRICTED and not self._after_member_access():
-                return True
+                return token != ';'
             if not starts_statement(token):
                 return False
         return self._expression_ended()
@@ -67,17 +74,27 @@ class ImpliedSemicolons:
         previous = self._previous
         if self._after_member_access():     # a property name: `token.in`
             return True
-        if previous == '!':                 # TypeScript: `item.owner!`
-            return ends_expression(self._before_previous)
+        if previous in POSTFIX:
+            return self._postfix
         return previous not in UNFINISHED and ends_expression(previous)
+
+    def _value_ended(self):
+        """Whether an operator after the previous token is a postfix one."""
+        previous = self._previous
+        if previous in POSTFIX:             # TypeScript: `item.owner!!`
+            return self._postfix
+        return self._after_member_access() or (
+            previous != '}' and previous not in NOT_VALUES
+            and ends_expression(previous))
 
     def _after_member_access(self):
         return self._before_previous in MEMBER_ACCESS
 
-    def _read(self, token):
+    def _read(self, token, line):
         block = self._blocks[-1]
         head_starts, self._head_starts = self._head_starts, False
         body_starts, self._body_starts = self._body_starts, False
+        label_starts, self._label_starts = self._label_starts, False
         self._loop_ended = False
         if token in OPENERS:
             if head_starts and token == '(':
@@ -90,8 +107,15 @@ class ImpliedSemicolons:
                 self._blocks.pop()
         elif token in ('{', '${'):
             self._blocks.append(_Block(token))
+        elif token in POSTFIX:
+            self._postfix = (line == self._line and self._value_ended()
+                             and not (head_starts or body_starts))
         elif token in TRACKED and self._previous not in MEMBER_ACCESS:
             self._read_word(token, block, head_starts, body_starts)
+        elif body_starts:
+            self._label_starts = True
+        elif label_starts and token == ':':  # `do retry: while (…) …`
+            self._body_starts = True
 
     def _close_group(self, block):
         if block.groups:
