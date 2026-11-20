@@ -11,7 +11,7 @@ from .typescript import (
     TypeScriptReader)
 from .typescript import JSTokenizer, Tokenizer
 from .javascript_templates import LINE_COMMENT, template_tokens
-from .javascript_functions import JSXChildBrace
+from .javascript_functions import JSXChildBrace, JSXMarkup
 
 
 class TSXReader(TypeScriptReader):
@@ -197,7 +197,7 @@ class XMLTagWithAttrTokenizer(Tokenizer):
             # element right after a child element has no text before it:
             # an empty token would reach the extensions, which read token[0].
             return ['\n'] * text.count('\n')
-        return [text]
+        return [JSXMarkup(text)]
 
     def _global_state(self, token):
         if token == '>' and self._in_expression:

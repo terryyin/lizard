@@ -26,7 +26,7 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         if token == '?' and getattr(token, 'is_optional', False):
             return
         state = self.state
-        line = self.context.current_line
+        line = self.line
         if line != state.line:
             self._new_line(line)
         if state.pending:

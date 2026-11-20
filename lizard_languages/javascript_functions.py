@@ -14,6 +14,13 @@ class JSXChildBrace(str):
     expression container, never an object literal or a block."""
 
 
+class JSXMarkup(str):
+    """The tags and the text of a JSX element, `<p>{name}({count})</p>`:
+    never code, also when the text is a bracket or a keyword."""
+
+    is_jsx_markup = True
+
+
 def ends_expression(token):
     """Whether an expression may end with this token (JavaScript ASI)."""
     first = token[:1]
@@ -87,6 +94,7 @@ class JavaScriptFunctionsMixin:
     def _abandon_function(self):
         """Discard an optimistic signature that proved to be an expression."""
         expression = self.context.current_function
+        expression.abandoned = True     # for the extensions
         self.context.forgive = True
         self.context.end_of_function()
         self.started_function = None
@@ -166,6 +174,9 @@ class JavaScriptFunctionsMixin:
         else:
             if not self.started_function:
                 self._push_function_to_stack()
+                if self.started_function and not self._signature:
+                    # For the extensions: this "(" can open a group.
+                    self.context.current_function.optimistic = True
             self._parameter_bindings = JavaScriptBindings(
                 ')', self.context.current_function)
             self._decorated_parameters = False

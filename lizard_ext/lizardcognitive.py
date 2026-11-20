@@ -67,6 +67,7 @@ class LizardExtension(object):  # pylint: disable=R0903
         for token in tokens:
             counter.process(token)
             yield token
+        counter.finish()
 
 
 def _add_default_field(function_info_class):

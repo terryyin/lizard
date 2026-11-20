@@ -638,6 +638,513 @@ class TestOtherBraceLanguages(unittest.TestCase):
             }"""))
 
 
+class TestJavaScriptNestedFunctions(unittest.TestCase):
+    """A nested function is measured on its own.  Its brackets must not
+    change how the rest of the enclosing function is counted."""
+
+    def test_arrow_callback_in_if_condition(self):
+        self.assertEqual([0, 3], cogc("a.js", """
+            function activate(user) {
+              if (user.roles.some(role => role.admin)) {   // +1
+                user.admin = true;
+              }
+              if (user.email) {                            // +1
+                user.verified = true;
+              }
+              if (user.banned) {                           // +1
+                user.active = false;
+              }
+            }"""))
+
+    def test_function_expression_in_if_condition(self):
+        self.assertEqual([0, 2], cogc("a.js", """
+            function activate(user) {
+              if (user.roles.some(function(role) { return role.admin; })) {  // +1
+                user.admin = true;
+              }
+              if (user.email) {                                              // +1
+                user.verified = true;
+              }
+            }"""))
+
+    def test_arrow_callback_in_loop_condition(self):
+        self.assertEqual([0, 2], cogc("a.js", """
+            function drain(queue) {
+              while (queue.jobs.some(job => job.pending)) {  // +1
+                queue.run();
+              }
+              if (queue.failed) {                            // +1
+                queue.retry();
+              }
+            }"""))
+
+    def test_callback_in_condition_keeps_nesting(self):
+        self.assertEqual([0, 3], cogc("a.js", """
+            function activate(user) {
+              if (user.roles.some(role => role.admin)) {   // +1
+                if (user.email) {                          // +2 (nesting=1)
+                  user.verified = true;
+                }
+              }
+            }"""))
+
+    def test_code_after_nested_function_declaration_is_not_nested(self):
+        self.assertEqual([0, 3], cogc("a.js", """
+            function price(order) {
+              function round(amount) {
+                return Math.round(amount);
+              }
+              const tax = order.taxFree ? 0 : 0.2;         // +1
+              const shipping = order.pickup ? 0 : 5;       // +1
+              if (order.coupon) {                          // +1
+                order.total -= round(order.coupon);
+              }
+            }"""))
+
+    def test_code_after_arrow_function_with_block_body_is_not_nested(self):
+        self.assertEqual([0, 3], cogc("a.js", """
+            function price(order) {
+              const round = (amount) => {
+                return Math.round(amount);
+              };
+              const tax = order.taxFree ? 0 : 0.2;         // +1
+              const shipping = order.pickup ? 0 : 5;       // +1
+              if (order.coupon) {                          // +1
+                order.total -= round(order.coupon);
+              }
+            }"""))
+
+    def test_code_after_callback_in_if_body_is_not_nested(self):
+        self.assertEqual([0, 2], cogc("a.js", """
+            function report(errors) {
+              if (errors.length > 0) {                     // +1
+                errors.sort((first, second) => {
+                  return first.index - second.index;
+                });
+              }
+              if (errors.fatal) {                          // +1
+                throw errors.fatal;
+              }
+            }"""))
+
+    def test_nested_function_keeps_its_own_score(self):
+        self.assertEqual([3, 2], cogc("a.js", """
+            function report(errors) {
+              if (errors.length > 0) {                     // +1
+                errors.forEach((error) => {
+                  if (error.fatal) {                       // +1 (callback)
+                    for (const hook of error.hooks) {      // +2 (callback, nesting=1)
+                      hook(error);
+                    }
+                  }
+                });
+              }
+              if (errors.fatal) {                          // +1
+                throw errors.fatal;
+              }
+            }"""))
+
+    def test_template_literal_in_callback(self):
+        self.assertEqual([0, 3], cogc("a.js", """
+            function label(items) {
+              if (items.length) {                  // +1
+                items.map(item => `${item.name}`);
+                if (items.sorted) {                // +2 (nesting 1)
+                  items.done = true;
+                }
+              }
+            }"""))
+
+    def test_template_literal_after_callback(self):
+        self.assertEqual([0, 3], cogc("a.js", """
+            function label(items) {
+              if (items.length) {                  // +1
+                items.forEach(item => {});
+                log(`${items.length}`);
+                if (items.sorted) {                // +2 (nesting 1)
+                  items.done = true;
+                }
+              }
+            }"""))
+
+    def test_parenthesis_in_jsx_text(self):
+        self.assertEqual([0, 2], cogc("a.jsx", """
+            function Page(props) {
+              if (props.ready) {                   // +1
+                render(function () {
+                  return <p>{props.name}({props.count})</p>;
+                });
+              }
+              if (props.wide) {                    // +1
+                props.expand();
+              }
+            }"""))
+
+    def test_bracket_in_jsx_text(self):
+        self.assertEqual([0, 3], cogc("a.jsx", """
+            function Page(props) {
+              if (props.ready) {                   // +1
+                function Row() {
+                  return <p>{props.a}]{props.b}</p>;
+                }
+                if (props.wide) {                  // +2 (nesting 1)
+                  props.expand();
+                }
+              }
+            }"""))
+
+    def test_typescript(self):
+        self.assertEqual([0, 2, 0, 2], cogc("a.ts", """
+            function activate(user: User): void {
+              if (user.roles.some((role: Role) => role.admin)) {  // +1
+                user.admin = true;
+              }
+              if (user.email) {                                   // +1
+                user.verified = true;
+              }
+            }
+            function report(errors: Failure[]): void {
+              if (errors.length > 0) {                            // +1
+                errors.sort((first: Failure, second: Failure) => {
+                  return first.index - second.index;
+                });
+              }
+              if (errors[0]) {                                    // +1
+                throw errors[0];
+              }
+            }"""))
+
+
+class TestJavaScriptTemplateLiterals(unittest.TestCase):
+    """The ``}`` of an interpolation ends no block."""
+
+    def test_interpolation_in_block(self):
+        self.assertEqual([3], cogc("a.js", """
+            function label(item) {
+              if (item.name) {                     // +1
+                const text = `${item.name}`;
+                if (item.bold) {                   // +2 (nesting 1)
+                  mark(text);
+                }
+              }
+            }"""))
+
+    def test_logical_operators_in_and_around_interpolation(self):
+        self.assertEqual([2], cogc("a.js", """
+            function label(a, b, c, d) {
+              return a && `${b && c}` && d;        // +1 +1
+            }"""))
+
+    def test_logical_operators_in_statements_without_semicolons(self):
+        self.assertEqual([2], cogc("a.js", """
+            function label(a, b, c) {
+              a && tag`${b}`                       // +1
+              c && go()                            // +1
+            }"""))
+
+
+class TestJavaScriptGroupedExpressions(unittest.TestCase):
+    """The reader takes ``x = (`` as the possible start of an arrow function
+    and discards that function when no ``=>`` follows.  The expression then
+    counts for the function around it."""
+
+    def test_ternary_in_parentheses(self):
+        self.assertEqual([1], cogc("a.js", """
+            function path(prefix, name) {
+              const key = (prefix ? prefix + name : name);  // +1
+              return key;
+            }"""))
+
+    def test_ternary_in_parentheses_keeps_nesting(self):
+        self.assertEqual([3], cogc("a.js", """
+            function pick(active, admin) {
+              if (active) {                                 // +1
+                role = (admin ? 'admin' : 'user');          // +2 (nesting 1)
+              }
+            }"""))
+
+    def test_logical_operators_in_and_after_parentheses(self):
+        self.assertEqual([2], cogc("a.js", """
+            function allowed(active, verified, guest) {
+              const ok = (active && verified) || guest;     // +1 +1
+              return ok;
+            }"""))
+
+    def test_statement_after_parentheses_on_same_line(self):
+        self.assertEqual([3], cogc("a.js", """
+            function sync(a, b, c) {
+              if (a) x = (b); if (c) go();                  // +1 +1
+              if (c) go();                                  // +1
+            }"""))
+
+    def test_empty_object_in_parentheses(self):
+        self.assertEqual([1], cogc("a.ts", """
+            function pick(v) {
+              const x = (v ? (1) : v as {});                // +1
+              return x;
+            }"""))
+
+    def test_subscript_after_parentheses(self):
+        self.assertEqual([4], cogc("a.js", """
+            function read(content, name, strict) {
+              const value = (content || {})[name];          // +1
+              const mode = strict ? 1 : 2;                  // +1
+              if (mode && value) {                          // +1 +1
+                go();
+              }
+            }"""))
+
+    def test_call_after_parentheses(self):
+        self.assertEqual([0, 4], cogc("a.js", """
+            function pack(fast, item, done) {
+              const packed = (fast ? quick : slow)(item);   // +1
+              const check = done ? ((a, b) => a === b) : undefined;  // +1
+              if (same(packed, item, check)) {              // +1
+                store(packed || item);                      // +1
+              }
+            }"""))
+
+    def test_two_groups_in_one_declaration(self):
+        self.assertEqual([3], cogc("a.js", """
+            function size(wide, tall) {
+              const w = (wide ? 2 : 1), h = (tall ? 2 : 1);  // +1 +1
+              if (w > h) {                                  // +1
+                rotate();
+              }
+            }"""))
+
+    def test_real_arrow_function_keeps_its_own_score(self):
+        self.assertEqual([1, 0], cogc("a.js", """
+            function sign(value) {
+              const x = ((n) => n ? 1 : 2)(value);          // +1 for the arrow
+              return x;
+            }"""))
+
+    def test_forgiven_nested_function_is_not_counted_in_outer(self):
+        self.assertEqual([1], cogc("a.js", """
+            function outer(a, b) {
+              function inner() {  // #lizard forgives
+                if (a) { go(); }
+              }
+              if (b) { go(); }                              // +1
+            }"""))
+
+    def test_forgiven_arrow_function_is_not_counted_in_outer(self):
+        self.assertEqual([0], cogc("a.js", """
+            function outer() {
+              const inner = a => a && b /* #lizard forgives */
+            }"""))
+
+    def test_forgive_comment_in_parentheses(self):
+        self.assertEqual([1], cogc("a.js", """
+            function pick(a, b, c) {
+              const x = (/* #lizard forgives */ a ? b : c);  // +1
+              return x;
+            }"""))
+
+    def test_typescript(self):
+        self.assertEqual([2, 1], cogc("a.ts", """
+            function sign(a: number): number {
+              const x: number = (a ? 1 : 2);                // +1
+              const g = (p: number): number => p && a ? 1 : 2;  // +2, arrow
+              return x;
+            }"""))
+
+
+class TestJavaScriptFunctionsInGroupedExpressions(unittest.TestCase):
+    """The reader does not list a function that it meets in the parameters of
+    a possible arrow function.  The function around the expression does not
+    get its score."""
+
+    def test_arrow_function(self):
+        self.assertEqual([0], cogc("a.js", """
+            function outer() {
+              const fn = (v => v && ready);
+            }"""))
+
+    def test_function_expression_with_parameter_default(self):
+        self.assertEqual([0], cogc("a.js", """
+            function outer(a) {
+              const fns = ([a = 0, function (p = a && a) {}]);
+            }"""))
+
+    def test_method(self):
+        self.assertEqual([0], cogc("a.js", """
+            function outer() {
+              const obj = ({ m() { if (v) go(); } });
+            }"""))
+
+    def test_typescript_method_with_return_type(self):
+        self.assertEqual([0], cogc("a.ts", """
+            function outer() {
+              const obj = ({ m(): void { if (v) go(); } });
+            }"""))
+
+    def test_typescript_method_with_literal_return_type(self):
+        self.assertEqual([0], cogc("a.ts", """
+            function label(v) {
+              const obj = ({ m(): 'a' | 'b' { return v ? 'a' : 'b'; } });
+            }"""))
+
+    def test_typescript_method_with_generic_return_type(self):
+        self.assertEqual([0], cogc("a.ts", """
+            function outer() {
+              const obj = ({ m(): Promise<void> { if (v) go(); } });
+            }"""))
+
+    def test_tsx_method_with_generic_return_type(self):
+        self.assertEqual([0], cogc("a.tsx", """
+            function outer() {
+              const obj = ({ m(): Array<number> { return v ? [1] : []; } });
+            }"""))
+
+    def test_class_expression(self):
+        self.assertEqual([0], cogc("a.js", """
+            function outer() {
+              const type = (class { static { if (v) go(); } });
+            }"""))
+
+
+class TestTypeScriptSignatures(unittest.TestCase):
+    """The reader also discards the function of an overload signature.  That
+    is no expression, so its tokens do not count for the function around
+    it."""
+
+    def test_function_overload(self):
+        self.assertEqual([0, 0], cogc("a.ts", """
+            function outer() {
+              function inner(x: 0 extends 1 ? 2 : 3);
+              function inner() {}
+            }"""))
+
+    def test_constructor_overload_in_derived_class(self):
+        self.assertEqual([0, 0], cogc("a.ts", """
+            function outer() {
+              class Shape extends class {} {
+                constructor(x: 0 extends 1 ? 2 : 3);
+                constructor() { super(); }
+              }
+            }"""))
+
+    def test_function_overload_after_new(self):
+        self.assertEqual([0, 0], cogc("a.ts", """
+            function outer() {
+              new Date()
+              function inner(x: 0 extends 1 ? 2 : 3);
+              function inner() {}
+            }"""))
+
+    def test_overload_of_method_named_equals(self):
+        self.assertEqual([0, 0], cogc("a.ts", """
+            function outer() {
+              class Shape {
+                ['='](x: 0 extends 1 ? 2 : 3);
+                ['=']() {}
+              }
+            }"""))
+
+    def test_static_overload_after_field_in_derived_class(self):
+        self.assertEqual([0, 0], cogc("a.ts", """
+            function outer() {
+              class Shape extends class {} {
+                m: number
+                static m(x: 0 extends 1 ? 2 : 3);
+                static m() {}
+              }
+            }"""))
+
+    def test_overload_of_method_named_parenthesis(self):
+        self.assertEqual([0, 0], cogc("a.ts", """
+            function outer() {
+              class Shape {
+                ['('](x: 0 extends 1 ? 2 : 3);
+                ['(']() {}
+              }
+            }"""))
+
+    def test_generic_overload_after_static_block(self):
+        outer = cogc("a.ts", """
+            function outer() {
+              class Shape {
+                static {}
+                m<T = <U>() => {}, V = 0>([x = true && false]: boolean[]);
+                m() {}
+              }
+            }""")[-1]
+        self.assertEqual(0, outer)
+
+    def test_method_overload_after_static_block(self):
+        outer = cogc("a.ts", """
+            function outer() {
+              const Shape = class {
+                static {}
+                async(x: 0 extends 1 ? 2 : 3);
+                async() {}
+              };
+            }""")[-1]
+        self.assertEqual(0, outer)
+
+    def test_field_value_in_derived_class(self):
+        self.assertEqual([1], cogc("a.ts", """
+            function outer(big) {
+              class Shape extends class {} {
+                size = (big ? 2 : 1);                       // +1
+              }
+            }"""))
+
+    def test_constructor_overload(self):
+        self.assertEqual([0, 0], cogc("a.ts", """
+            function outer() {
+              const Shape = class {
+                constructor(x: 0 extends 1 ? 2 : 3);
+                constructor() {}
+              };
+            }"""))
+
+    def test_field_value_in_parentheses(self):
+        self.assertEqual([0, 2], cogc("a.ts", """
+            function outer(big) {
+              class Box {
+                size = (big ? 2 : 1);                       // +1
+                static wide = (big && big);                 // +1
+                open() {}
+              }
+            }"""))
+
+
+class TestJavaScriptArrowBodyInParentheses(unittest.TestCase):
+    """The reader starts an arrow function at the ``(`` of its body.  That
+    function is no grouped expression, also when the reader discards it."""
+
+    def test_group_after_assignment_in_arrow_body(self):
+        outer = cogc("a.js", """
+            function outer() {
+              return v => (v) ? 1 : v = (0);
+            }""")[-1]
+        self.assertEqual(0, outer)
+
+
+class TestJavaScriptReaderFailure(unittest.TestCase):
+    """The reader stops at code that nests too deep.  The functions that
+    ended before it keep their score."""
+
+    DEEP = "g(" * 1200 + ")" * 1200
+
+    def test_function_after_grouped_expression(self):
+        self.assertEqual([1], cogc("a.js", """
+            function outer() {
+              const x = (get());
+              function done() { if (v) use(v); }            // +1
+              return %s;
+            }""" % self.DEEP))
+
+    def test_function_in_parameter_default(self):
+        self.assertEqual([1], cogc("a.js", """
+            function outer(
+              first = function done() { if (v) use(v); },   // +1
+              next = %s) {}""" % self.DEEP))
+
+
 class TestFlatLanguages(unittest.TestCase):
     """Blocks are not brace-delimited: increments without nesting penalty."""
 

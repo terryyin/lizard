@@ -22,6 +22,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         self.last_tokens = ''
         self.function_name = ''
         self.started_function = None
+        self._signature = False     # the "(" of _function can't open a group
         self.as_object = False
         self.as_class = False
         self._class_body_pending = False
@@ -132,6 +133,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         if token == 'function':
             if self.started_function and not self.as_object:
                 self._pop_function_from_stack()
+            self._signature = True
             self._state = self._function
         elif token in ('if', 'switch', 'for', 'while', 'catch'):
             self._condition_kind = token
@@ -164,6 +166,8 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                        or self._prev_token in ('=', 'async')
                        or self._prev_token == '>'
                        and self._generic_prefix in ('=', 'async'))):
+                # Only "name = (" can open a group.
+                self._signature = self.last_token != '='
                 if not self.started_function:
                     self._function(self.function_name)
                 self.next(self._function, token)
