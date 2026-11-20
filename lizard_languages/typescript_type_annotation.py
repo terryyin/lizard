@@ -1,7 +1,7 @@
 """Consume type-owned brackets and return enclosing runtime delimiters."""
 
 from .code_reader import CodeStateMachine
-from .javascript_functions import starts_statement
+from .javascript_expression import starts_statement
 
 
 class TypeScriptTypeAnnotationStates(CodeStateMachine):

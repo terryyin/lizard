@@ -115,8 +115,35 @@ Former local code: DD-405. Lizard's Windows pipeline tests passed after `a6fa147
 
 Former local code: DD-489. After PR 569’s guarded merge, one of two best bases lacked the claim. Integrating the accepted target restored the normal check. [Retained evidence](https://github.com/terryyin/open-dough/blob/286c5e0dec58e72e9328b7dec4a1ab52e88710b1/docs/maintainer/findings/ODF-482.md#lizard--dd-489).
 
+## DD-490 — Planned proof home was already oversized without a reorganization decision
+
+When slice planning names an already-oversized suite as the only proof home and supplies no extract seam or size exception, post-change refactor correctly stops on the file-size gate and delivery waits on a human reorganization choice. Prefer naming the cohesive extract (or an authorized exception) in the plan before execution when the suite is known to exceed 250 lines.
+
+### Occurrences
+- Execution: SEED-067#cognitive-comma-ends-ternary
+  - Timestamp: 2026-11-20T23:13:00+08:00
+  - Tool: Cursor
+  - Open Dough release: 0.3.109
+  - Evidence: plan 034 outside-in proof named `testCognitiveComplexity.py` (~1377 lines); conversation `708d604e-26b6-4ae7-94ff-9212fda6318d` refactor stop then human chose option 1; delivered extract `test/test_extensions/testCognitivePeerCommaEndsTernary.py` at `579fd508`
+  - Observed effect: Slice 1 product/proof were accepted before commit; delivery paused until extract authorization; extract completed and increment published
+  - Inference: The Jidoka stop matched the file-size rule; avoidable cost was the mid-delivery human decision that planning could have pre-settled
+
+## DD-491 — Black assumed as selective formatter, then `git checkout` wiped the slice
+
+Lizard’s delivery path is check-only `pycodestyle` via `make`/hooks, not an autoformatter. Invoking Black as “selective formatting” rewrote single-quote style (including import-only touchpoints); undoing with `git checkout HEAD --` on tracked paths erased the uncommitted Behavior change and forced a recovery re-apply plus focused re-proof before publish.
+
+### Occurrences
+- Execution: SEED-068#js-asi-parenthesized-assignment
+  - Timestamp: 2026-11-21T00:07:10+08:00
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.109
+  - Evidence: coordinator transcript `51d6175b-e986-46af-bcfe-b3c4b397fcd5` (Black on owned paths → checkout wipe → recovery Task); `open-dough/evidence/recovery-note.txt`; `recovery-focused-proof` (1331 passed); plan Current decisions now record check-only pycodestyle / do not run Black; increment `3dd86338` used `formatting.notRequired`
+  - Observed effect: Tracked slice edits wiped after Black; recovery restored seam and proof; delivery completed without autoformat
+  - Inference: Resolve this project’s selective-format identity before naming a tool; do not use destructive checkout to reverse formatter noise on uncommitted owned work
+
 ## Retention
 
-- Highest allocated local number: 489
+- Highest allocated local number: 491
 - Shared-feedback adoption and compaction recovery (2026-11-07): `7129516bc5bd9ba57f370a6353ffe0e10eb1c861:DearDough.md`; its rows are retained at the linked Open Dough finding owners (`483d3a1e8f0ea24b929675b9a195faca48ac8f47:docs/maintainer/findings/`).
 - Shared-feedback compaction recovery (2026-11-03): `4195708bad2061ebc1c829ebdff7868605b173bb:DearDough.md`; its rows are retained at the linked Open Dough finding owners.

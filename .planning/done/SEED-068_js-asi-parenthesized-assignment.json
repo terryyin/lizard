@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-068#js-asi-parenthesized-assignment",
+  "title": "Parenthesized assignment without `;` hides the next `if`",
+  "completedAt": "2026-11-20T16:21:49.473Z",
+  "developer": "Terry Yin",
+  "agent": "Maria-chan",
+  "host": "cursor",
+  "model": "auto"
+}

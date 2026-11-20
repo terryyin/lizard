@@ -12,6 +12,7 @@ from .typescript_type_annotation import TypeScriptTypeAnnotationStates
 from .typescript_states import TypeScriptStates
 from .typescript_signatures import ReturnTypeColon, return_type_colon
 from .javascript_templates import LINE_COMMENT, interpolation_code, template_tokens
+from .javascript_expression import awaiting_function_body, end_before_line_token
 from .javascript_statements import ImpliedSemicolons
 
 # One token, so each ? in ?? is not its own ternary decision.
@@ -187,7 +188,8 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
 
     def preprocess(self, tokens):
         """Drop spaces, and offer each line's first code token to the
-        innermost open expression arrow before any counter charges it.
+        innermost open expression arrow (or optimistic signature) before
+        any counter charges it.
 
         A '\n' is consumed by line_counter, and comments by comment_counter,
         before the state machine sees them, so expression_arrows cannot
@@ -202,7 +204,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                 if not token.isspace():
                     if line_start and not token.startswith(('//', '/*')):
                         line_start = False
-                        arrows[-1].end_expression_before(token)
+                        end_before_line_token(state, arrows, token)
                     if token in annotation_punctuation:
                         if token == '?':
                             if (self.context.class_field_annotations
@@ -224,7 +226,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                                     break
                     yield token
                 elif token == '\n':
-                    if arrows:
+                    if arrows or awaiting_function_body(state):
                         line_start = True
                     yield token
             else:
