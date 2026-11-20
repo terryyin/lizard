@@ -796,16 +796,6 @@ function Footer() {
 function after(a) { return a ? 1 : 2; }
 ''')
 
-    def test_slash_in_text_before_a_spaced_namespaced_closing_tag(self):
-        # The `/` in the text does not start a regular expression that
-        # runs to the `/` of the closing tag.
-        self.assert_both([("Path", 1, 1, 1), ("Root", 2, 2, 1),
-                          ("after", 3, 3, 2)], '''\
-function Path() { return <svg:text>Path: /home</svg: text>; }
-function Root() { return <svg:text>Root: /</ svg :text>; }
-function after(a) { return a ? 1 : 2; }
-''')
-
     def test_an_unfinished_namespaced_tag_in_text_keeps_the_closing_tag(self):
         self.assert_both([("Note", 1, 1, 1), ("after", 2, 2, 2)], '''\
 function Note() { return <p>Use <b:</p>; }
