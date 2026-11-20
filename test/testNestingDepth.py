@@ -247,6 +247,69 @@ class TestJavaScriptNestingDepth(unittest.TestCase):
         """).function_list
         self.assertEqual(1, result[0].max_nesting_depth)
 
+    def test_braceless_ifs_after_a_nested_function(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function render(items, empty) {
+          function label(item) { return item.name; }
+          if (empty) return '';
+          if (!items.length) return '';
+          return items.map(label).join(', ');
+        }
+        """, "render"))
+
+    def test_braceless_ifs_after_an_arrow_function(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function total(orders, strict) {
+          const amount = (order) => { return order.amount; };
+          if (strict) check(orders);
+          if (!orders.length) return 0;
+          return orders.map(amount).reduce(add);
+        }
+        """, "total"))
+
+    def test_braceless_ifs_after_an_expression_in_parentheses(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function limit(value, max) {
+          const over = (value > max);
+          if (over) warn(value);
+          if (value < 0) return 0;
+          return over ? max : value;
+        }
+        """, "limit"))
+
+    def test_braceless_ifs_after_an_arrow_function_argument(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function names(users, strict) {
+          const ids = users.map(user => user.id);
+          if (strict) check(ids);
+          if (!ids.length) return [];
+          return ids;
+        }
+        """, "names"))
+
+    def test_braceless_ifs_after_an_arrow_function_argument_with_an_object(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function rows(users, strict) {
+          const entries = users.map(user => ({ id: user.id }));
+          if (strict) check(entries);
+          if (!entries.length) return [];
+          return entries;
+        }
+        """, "rows"))
+
+    def test_logical_operators_in_parentheses_after_a_member(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function ready(config, user, flag) {
+          const enabled = (config.on && user && flag);
+          return enabled;
+        }
+        """, "ready"))
+
+    def nesting_depth(self, code, name):
+        result = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
+            "a.js", code).function_list
+        return next(f.max_nesting_depth for f in result if f.name == name)
+
 
 class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
     """A statement that ends at a line break closes its levels,
