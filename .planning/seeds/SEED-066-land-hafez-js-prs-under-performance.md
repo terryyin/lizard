@@ -30,4 +30,6 @@ scope: land Hafez JS cognitive/nesting PRs under performance gates
 - ASI braceless sibling `if`s report ND/NS 1 after #578 lands.
 - Required paired screens pass the bound recorded for this story, or an explicit developer-approved bound is recorded before merge.
 
+**Approved performance bounds (developer, 2026-11-20):** the default 3% paired gate is replaced for this story by: #576 + #577 cumulative paired median ≤15% on `-Ecognitive` JS/TS-like workloads only; #578 paired median ≤25% on `-END`/`-ENS` JS/TS-like workloads only. Runs without these extensions keep the 3% gate. Quiet-host paired API evidence (40 pairs, 2 s batches; no-op control CI −2.5…+3.2%): #576 +8.6% [5.4, 11.8] nested-callback corpus, +5.0% [0.7, 9.5] mixed; #576+#577 +13.2% [10.0, 16.6] / +13.1% [10.4, 15.9]; #578 ND +21.8% [17.4, 26.4], NS +21.3% [17.5, 25.3], plain +0.2% [−1.6, 2.0]. Maintainer corrections: #576 bracket-only `_route`; #577 counting folded into `process` (no extra per-token call). A gated `ImpliedSemicolons` scan gave no measurable gain and was not kept. The bounds are on the paired median because the developer approved them with these intervals shown (upper limits 16.6% and 26.4%).
+
 **Source:** Deferred from SEED-062/063/064 process-PR dispositions on 2026-11-20.
