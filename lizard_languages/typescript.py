@@ -188,11 +188,13 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
     def preprocess(self, tokens):
         """Drop spaces, and offer each line's first code token to the
         innermost open expression arrow before any counter charges it.
+        Offer the code token after a signature to its state in the same way.
 
         A '\n' is consumed by line_counter, and comments by comment_counter,
         before the state machine sees them, so expression_arrows cannot
         change between a newline and the next code token."""
         arrows = self.context.expression_arrows = []
+        signatures = self.context.ended_signatures = []
         line_start = False
         state = self.parallel_states[0]
         annotation_punctuation = _ANNOTATION_PUNCTUATION
@@ -203,6 +205,8 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                     if line_start and not token.startswith(('//', '/*')):
                         line_start = False
                         arrows[-1].end_expression_before(token)
+                    if signatures and not token.startswith(('//', '/*')):
+                        signatures.pop().end_signature_before(token)
                     if token in annotation_punctuation:
                         if token == '?':
                             if (self.context.class_field_annotations

@@ -91,6 +91,18 @@ class JavaScriptFunctionsMixin:
                 and starts_statement(token)):
             self._end_statement()
 
+    def end_signature_before(self, token):
+        """Called by the reader with the token after a signature's ")"
+        before it is counted.  A token that cannot start the body shows that
+        the signature was an expression, `x = (a)` + `if (b)`: the function
+        is discarded now, so the token counts for the function around it."""
+        if token in ('{', '=>', ':') or (
+                token == ';' and self.as_object and self._in_abstract_context):
+            return      # for _expecting_func_opening_bracket
+        if self.started_function:
+            self._abandon_function()
+        self._state = self._state_global
+
     def _abandon_function(self):
         """Discard an optimistic signature that proved to be an expression."""
         expression = self.context.current_function
@@ -222,6 +234,10 @@ class JavaScriptFunctionsMixin:
         event = self._read_parameter_binding(token)
         if event.ended:
             self._state = self._expecting_func_opening_bracket
+            # Without the reader's preprocess, the state handles the token.
+            signatures = getattr(self.context, 'ended_signatures', None)
+            if signatures is not None:
+                signatures.append(self)
         elif (not event.in_expression or event.root_separator) and token != '(':
             return
         self.context.add_to_long_function_name(" " + token)
