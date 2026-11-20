@@ -33,7 +33,7 @@ class TSXReader(TypeScriptReader):
         addition = addition + "|" + LINE_COMMENT + \
             r"|(?:<[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)*>)" + \
             r"|(?:<\/[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)*>)" + \
-            r"|(?:<\/\w+:\w+>)" + \
+            r"|(?:<\/\s*\w+\s*:\s*\w+\s*>)" + \
             r"|(?:#\w+)" + \
             OPTIONAL_NAME + \
             JS_IDENTIFIER + \
@@ -210,12 +210,17 @@ class XMLTagWithAttrTokenizer(Tokenizer):
             return self.abort()
         self.tag = token
         self._joined_name = not self.cache[-2].isspace()
-        self.state = self._after_tag_name
+        self.state = self._after_first_name
+
+    def _after_first_name(self, token):
+        if token == ':' and self._joined():
+            self.state = self._tag_namespace_part  # <svg:text>
+            return None
+        return self._after_tag_name(token)
 
     def _after_tag_name(self, token):
-        if token == '.' or (token == ':' and self._joined()):
-            # Member tag name with attributes: <Modal.Footer className="x">;
-            # namespaced: <svg:text>
+        if token == '.':
+            # Member tag name with attributes: <Modal.Footer className="x">
             self.state = self._tag_name_part
             return None
         if token.startswith('<') and token.endswith('>') and len(token) > 2:
@@ -229,6 +234,13 @@ class XMLTagWithAttrTokenizer(Tokenizer):
         if isidentifier(token) or token == '/':
             return self._after_tag(token)
         return self.abort()
+
+    def _tag_namespace_part(self, token):
+        # A namespaced name has one `:` and no `.`, as its closing tag does.
+        if not (self._joined() and isidentifier(token)):
+            return self.abort()
+        self.state = self._after_tag
+        return None
 
     def _tag_name_part(self, token):
         if not isidentifier(token):
@@ -258,9 +270,10 @@ class XMLTagWithAttrTokenizer(Tokenizer):
     def _expecting_equal_sign(self, token):
         if token == '=':
             self.state = self._expecting_value
-        elif token == '-' or (token == ':' and self._joined()):
-            # data-x, aria-hidden; namespaced: xml:lang, on:click
-            self.state = self._attribute_name_part
+        elif token == '-':
+            self.state = self._attribute_name_part  # data-x, aria-hidden
+        elif token == ':' and self._joined():
+            self.state = self._attribute_namespace_part  # xml:lang, on:click
         elif self._in_expression and self._attribute != 'extends':
             # A valueless attribute (<A x={1} flag>); `<T extends U>` is
             # a TypeScript type parameter instead.
@@ -269,10 +282,16 @@ class XMLTagWithAttrTokenizer(Tokenizer):
             return self.abort()
 
     def _joined(self):
-        """`<svg:text>` and `<p xml:lang="en">` have a namespace.  In
-        `f ? a! < b:c > d` and `f ? a! < b : c > d` the `:` belongs to a
-        ternary: a space follows the `<` or comes before the `:`."""
+        """`<svg:text>` and `<p xml:lang="en">` have a namespace: the `:` is
+        joined to the name on both sides.  In `f ? a! < b:c > d` and
+        `f ? a! <b: c > d` the `:` belongs to a ternary: a space follows
+        the `<` or comes before or after the `:`."""
         return self._joined_name and not self.cache[-2].isspace()
+
+    def _attribute_namespace_part(self, token):
+        if not self._joined():
+            return self.abort()
+        return self._attribute_name_part(token)
 
     def _attribute_name_part(self, token):
         if isidentifier(token):
