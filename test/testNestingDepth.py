@@ -531,6 +531,13 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
         }
         """, "a.ts"))
 
+    def test_object_in_an_optional_computed_member_stays_an_object(self):
+        self.assertEqual(2, self.nesting_depth("""
+        function label(user) {
+          return user?.[{ id: user && 1 }, user && 'name']
+        }
+        """))
+
     def nesting_depth(self, code, filename="a.js"):
         result = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
             filename, code).function_list
