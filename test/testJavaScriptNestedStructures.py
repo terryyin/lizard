@@ -225,6 +225,38 @@ class TestJavaScriptNestedStructuresWithoutSemicolons(unittest.TestCase):
         }
         """, "a.ts"))
 
+    def test_semicolon_on_the_line_after_return(self):
+        self.assertEqual(2, self.nested_structures("""
+        function next(queue, retry) {
+          if (queue.empty) return
+          ; else if (retry) if (queue.failed) queue.restart();
+        }
+        """))
+
+    def test_label_before_the_body_of_a_do_loop(self):
+        self.assertEqual(3, self.nested_structures("""
+        function drain(queue, log) {
+          do retry: while (queue.busy) if (log) log.wait(); while (queue.length);
+        }
+        """))
+
+    def test_yield_ends_its_statement_at_a_line_break(self):
+        self.assertEqual(1, self.nested_structures("""
+        function* pages(book, cover) {
+          if (cover) yield
+          if (book.open) yield book.page
+        }
+        """))
+
+    def test_typescript_non_null_assertion_after_a_property(self):
+        self.assertEqual(1, self.nested_structures("""
+        function scope(first: Token | null, second: Token | null) {
+          if (first) return first.in!
+          if (second) return second.of!!
+          return null
+        }
+        """, "a.ts"))
+
     def nested_structures(self, code, filename="a.js"):
         analyzer = FileAnalyzer(get_extensions([NestedStructure()]))
         functions = analyzer.analyze_source_code(filename, code).function_list

@@ -433,6 +433,39 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
         }
         """, "a.ts"))
 
+    def test_line_break_after_a_prefix_operator(self):
+        self.assertEqual(2, self.nesting_depth("""
+        function hidden(item, user) {
+          if (item.draft) return !
+            user.admin && item.locked;
+          return false;
+        }
+        """))
+
+    def test_label_before_the_body_of_a_do_loop(self):
+        self.assertEqual(2, self.nesting_depth("""
+        function drain(queue, log) {
+          do retry: while (queue.busy) if (log) log.wait(); while (queue.length);
+        }
+        """))
+
+    def test_yield_ends_its_statement_at_a_line_break(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function* pages(book, cover) {
+          if (cover) yield
+          if (book.open) yield book.page
+        }
+        """))
+
+    def test_typescript_non_null_assertion_after_a_property(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function scope(first: Token | null, second: Token | null) {
+          if (first) return first.in!
+          if (second) return second.of!!
+          return null
+        }
+        """, "a.ts"))
+
     def nesting_depth(self, code, filename="a.js"):
         result = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
             filename, code).function_list
