@@ -94,6 +94,8 @@ class _MemberName(str):
 
 _MEMBER_ACCESS = ('.', '?.')
 _COMMENT_STARTS = ('//', '/*')
+# The tokens that preprocess looks at, in one set for the hot loop.
+_MARKED_PUNCTUATION = _ANNOTATION_PUNCTUATION | frozenset(_MEMBER_ACCESS)
 # With the reader's conditions: the keywords that a metric counts as a
 # structure or a jump.
 _STRUCTURE_KEYWORDS = frozenset((
@@ -206,7 +208,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         arrows = self.context.expression_arrows = []
         line_start = False
         state = self.parallel_states[0]
-        annotation_punctuation = _ANNOTATION_PUNCTUATION
+        marked_punctuation = _MARKED_PUNCTUATION
         member_access_tokens = _MEMBER_ACCESS
         structure_keywords = (_STRUCTURE_KEYWORDS | self.control_flow_keywords
                               | self.case_keywords)
@@ -221,14 +223,13 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                     if member_access:
                         if token in structure_keywords:
                             token = _MemberName(token)
-                        # The name is still to come: `p./* note */catch`,
-                        # `1..catch` (the number and each dot are tokens).
-                        member_access = (token in member_access_tokens
-                                         or token.startswith(_COMMENT_STARTS))
-                    elif token in member_access_tokens:
-                        member_access = True
-                    if token in annotation_punctuation:
-                        if token == '?':
+                        # A dot or a comment: the name is still to come,
+                        # `1..catch`, `p./* note */catch`.
+                        member_access = token[0] in './?'
+                    elif token in marked_punctuation:
+                        if token in member_access_tokens:
+                            member_access = True
+                        elif token == '?':
                             if (self.context.class_field_annotations
                                     and state.optional_member_context()):
                                 token = _OPTIONAL_MEMBER_QUESTION
