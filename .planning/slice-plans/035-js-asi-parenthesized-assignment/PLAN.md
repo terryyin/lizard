@@ -149,3 +149,11 @@ same seam. Source commitments 1–4 observed in `source-review.md`.
 Slice-plan refinement not needed: one Behavior slice with one cohesive proof
 loop and no boundary concern. This review found no remaining slice-specific
 concerns.
+
+## Execution complete
+
+Product advice: no backlog reorder; keep SEED-069 independent; no new story
+required from this review. Deferred refactor note for pre-existing oversize
+`typescript_states.py` / `tsx.py` stays a named non-product follow-up only.
+Process finding DD-491 recorded (Black is not this project's selective
+formatter; do not wipe uncommitted work with checkout).
