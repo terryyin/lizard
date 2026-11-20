@@ -102,6 +102,12 @@ _STRUCTURE_KEYWORDS = frozenset((
     'else', 'do', 'switch', 'try', 'finally', 'break', 'continue'))
 
 
+def _ends_a_number(token):
+    """Whether a '.' after this token is a decimal point, `1_000.`."""
+    return bool(token) and token[0].isdigit() and token.replace(
+        '_', '').isdigit()
+
+
 class TypeScriptReader(CodeReader, CCppCommentsMixin):
     # pylint: disable=R0903
 
@@ -214,6 +220,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         structure_keywords = (_STRUCTURE_KEYWORDS | self.control_flow_keywords
                               | self.case_keywords)
         member_access = False
+        before_dot = ''
         tokens = iter(self.code_tokens(tokens))
         while True:
             for token in tokens:
@@ -245,11 +252,17 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                                     yield token
                                     # Resume with the buffered iterator.
                                     break
+                        elif member_access:
+                            before_dot = token == '.' and state.last_token
                     elif member_access and not token.startswith(
                             _COMMENT_STARTS):   # `p./* note */catch`
                         member_access = False
                     yield token
                 elif token == '\n':
+                    if member_access and _ends_a_number(before_dot):
+                        # `1.` before a line break ends a number. On one
+                        # line, `1 .if` and `1.5.if` name a member.
+                        member_access = False
                     if arrows:
                         line_start = True
                     yield token
