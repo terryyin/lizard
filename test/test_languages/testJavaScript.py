@@ -249,6 +249,20 @@ class Test_JavaScript_keyword_as_the_name_of_a_member(unittest.TestCase):
                       f.max_nesting_depth, f.complex_tags)
                      for f in functions])
 
+    def test_keyword_after_a_decimal_point_in_a_template_is_a_condition(self):
+        code = (
+            'function a(x) { return `${(() => { 1.\n'
+            'if (x) g(); })()}`; }\n'
+            'function b(p) { return `${p && 1.5.catch(g)}`; }\n'
+        )
+        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+            with self.subTest(filename=filename):
+                functions = analyze_file.analyze_source_code(
+                    filename, code).function_list
+                self.assertEqual([('a', 2), ('b', 2)],
+                                 [(f.name, f.cyclomatic_complexity)
+                                  for f in functions])
+
     def test_keyword_after_a_dot_is_no_case_or_switch(self):
         code = (
             'function pick(list, key) {\n'
