@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-068_js-asi-parenthesized-assignment.json",
+      "identity": "SEED-068#js-asi-parenthesized-assignment",
+      "completedAt": "2026-11-20T16:21:49.473Z",
+      "blob": "00dc3c76f45bb9c6ce566edf62277b0198441fa1"
+    },
+    {
       "fileName": "SEED-067_cognitive-comma-ends-ternary.json",
       "identity": "SEED-067#cognitive-comma-ends-ternary",
       "completedAt": "2026-11-20T15:33:20.899Z",
