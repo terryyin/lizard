@@ -134,7 +134,8 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                 if (inner in conditions
                         and previous not in _MEMBER_ACCESS):
                     self.context.add_condition()
-                previous = inner
+                if not (inner.isspace() or inner.startswith(_COMMENT_STARTS)):
+                    previous = inner
 
     def _count_conditions_from_token(self, previous, token):
         # Split JS/TS exposes '${' then the expression; atomic TSX/JSX
@@ -220,8 +221,10 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                     if member_access:
                         if token in structure_keywords:
                             token = _MemberName(token)
-                        # `p./* note */catch`: a comment names no member.
-                        member_access = token.startswith(_COMMENT_STARTS)
+                        # The name is still to come: `p./* note */catch`,
+                        # `1..catch` (the number and each dot are tokens).
+                        member_access = (token in member_access_tokens
+                                         or token.startswith(_COMMENT_STARTS))
                     elif token in member_access_tokens:
                         member_access = True
                     if token in annotation_punctuation:
