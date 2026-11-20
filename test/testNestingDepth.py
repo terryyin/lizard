@@ -507,6 +507,14 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
         }
         """, "a.ts"))
 
+    def test_tsx_generic_return_type(self):
+        self.assertEqual(1, self.nesting_depth("""
+        async function refresh(cached: boolean, offline: boolean): Promise<void> {
+          if (cached) return
+          if (offline) return
+        }
+        """, "a.tsx"))
+
     def nesting_depth(self, code, filename="a.js"):
         result = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
             filename, code).function_list

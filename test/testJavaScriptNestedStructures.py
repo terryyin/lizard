@@ -274,6 +274,14 @@ class TestJavaScriptNestedStructuresWithoutSemicolons(unittest.TestCase):
         }
         """, "a.ts"))
 
+    def test_tsx_generic_return_type(self):
+        self.assertEqual(1, self.nested_structures("""
+        async function refresh(cached: boolean, offline: boolean): Promise<void> {
+          if (cached) return
+          if (offline) return
+        }
+        """, "a.tsx"))
+
     def nested_structures(self, code, filename="a.js"):
         analyzer = FileAnalyzer(get_extensions([NestedStructure()]))
         functions = analyzer.analyze_source_code(filename, code).function_list
