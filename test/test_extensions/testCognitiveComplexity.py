@@ -282,6 +282,97 @@ class TestCppNesting(unittest.TestCase):
         self.assertEqual([1], cpp("int f(int a = b ? 1 : 2) { if (a) return 1; return 0; }"))
 
 
+class TestTernaryEnds(unittest.TestCase):
+    """A ``,`` or ``:`` after its alternative started ends a ternary at its own
+    bracket depth, so the next ternary in the list is not nested in it."""
+
+    def test_ternaries_in_arguments(self):
+        self.assertEqual([2], cpp("""
+            void draw(const Shape& shape, bool selected, bool hovered) {
+              paint(shape, selected ? kHighlight : kNormal,   // +1
+                    hovered ? kHoverBorder : kBorder);        // +1
+            }"""))
+
+    def test_ternaries_in_declarators(self):
+        self.assertEqual([2], cpp("""
+            void layout(bool wide, bool tall) {
+              int width = wide ? 80 : 40, height = tall ? 50 : 25;   // +1 +1
+              resize(width, height);
+            }"""))
+
+    def test_ternaries_in_java_arguments(self):
+        self.assertEqual([2], java("""
+            String describe(Order order) {
+              return String.format("%s %s",
+                  order.isPaid() ? "paid" : "open",        // +1
+                  order.isShipped() ? "shipped" : "new");  // +1
+            }"""))
+
+    def test_ternaries_in_csharp_and_php_arguments(self):
+        self.assertEqual([2], cogc("a.cs", """
+            class A {
+              string Label(bool a, bool b) {
+                return Join(a ? "on" : "off", b ? "up" : "down");   // +1 +1
+              }
+            }"""))
+        self.assertEqual([2], cogc("a.php", """<?php
+            function label($a, $b) {
+              return join($a ? 'on' : 'off', $b ? 'up' : 'down');   // +1 +1
+            }"""))
+
+    def test_ternaries_in_objective_c_message_arguments(self):
+        self.assertEqual([2], cogc("a.m", """
+            - (void)update:(BOOL)hidden animated:(BOOL)animated {
+              [self.view setHidden:hidden ? YES : NO        // +1
+                          animated:animated ? YES : NO];    // +1
+            }"""))
+
+    def test_ternaries_in_javascript_arguments_elements_and_properties(self):
+        self.assertEqual([2], cogc("a.js", """
+            function f(a, b) {
+              go(a ? x : b, b ? 1 : 2);                    // +1 +1
+            }"""))
+        self.assertEqual([2], cogc("a.js", """
+            function columns(compact, sorted) {
+              return [compact ? 'id' : 'identifier',       // +1
+                      sorted ? 'name desc' : 'name'];       // +1
+            }"""))
+        self.assertEqual([2], cogc("a.ts", """
+            function style(active: boolean, wide: boolean) {
+              return {
+                color: active ? 'red' : 'gray',             // +1
+                width: wide ? 200 : 100,                    // +1
+              }
+            }"""))
+
+    def test_jsx_text_does_not_end_a_ternary(self):
+        self.assertEqual([3], cogc("a.tsx", """
+            function Total({ items, unit }) {
+              const label = <p>{items ? 'none' : <i><b>Total</b>,{unit ? unit : 'pcs'}</i>}</p>;  // +1 +2
+              return label;
+            }"""))
+
+    def test_nested_ternaries_stay_nested(self):
+        self.assertEqual([3], cpp("int f() { return a ? (b ? 1 : 2) : 3; }"))
+        self.assertEqual([3], cpp("int f() { return a ? b ? 1 : 2 : 3; }"))
+        self.assertEqual([3], cpp("int f() { return a ? g(x, b ? 1 : 2) : 3; }"))
+        self.assertEqual([3], cpp("int f() { return a ? (x, b ? 1 : 2) : 3; }"))
+
+    def test_comma_operator_in_the_middle_operand_does_not_end_it(self):
+        self.assertEqual([3], cpp("int f() { return a ? x++, b ? 1 : 2 : 3; }"))
+
+    def test_generic_arguments_in_the_middle_operand_do_not_end_it(self):
+        self.assertEqual([3], java("""
+            Map<String, Integer> cache(boolean enabled, boolean large) {
+              return enabled                                           // +1
+                  ? new HashMap<String, Integer>(large ? 1024 : 16)    // +2 (nesting=1)
+                  : null;
+            }"""))
+
+    def test_nested_ternary_in_the_middle_ends_at_the_outer_colon(self):
+        self.assertEqual([5], cpp("int f() { return a ? b ? 1 : 2 : c ? 3 : 4; }"))
+
+
 class TestSpecificationAppendixCExamples(unittest.TestCase):
     """Appendix C of the white paper, verbatim (Java)."""
 
@@ -485,6 +576,20 @@ def f(a):
         self.assertEqual([1], py("def f(a):\n    return 1 if a else 2\n"))
         self.assertEqual([3], py("def f(a):\n    return 1 if a else 2 if b else 3\n"))
         self.assertEqual([1], py("def f(a):\n    return g(1 if a else 2)\n"))
+
+    def test_comma_ends_conditional_expression(self):
+        self.assertEqual([2], py("""
+def label(paid, shipped):
+    return describe("paid" if paid else "open",          # +1
+                    "shipped" if shipped else "new")     # +1
+"""))
+        self.assertEqual([2], py("""
+def size(wide, tall):
+    return 80 if wide else 40, 50 if tall else 25        # +1 +1
+"""))
+
+    def test_conditional_expression_in_a_call_in_the_alternative_stays_nested(self):
+        self.assertEqual([3], py("def f(a, b):\n    return g(1 if a else h(x, 2 if b else 3))\n"))
 
     def test_comprehension_filter_is_not_a_condition(self):
         self.assertEqual([0], py("def f(xs):\n    return [x for x in xs if x]\n"))
@@ -833,6 +938,27 @@ class TestJavaScriptTemplateLiterals(unittest.TestCase):
         self.assertEqual([2], cogc("a.js", """
             function label(a, b, c, d) {
               return a && `${b && c}` && d;        // +1 +1
+            }"""))
+
+    def test_interpolation_in_ternary_before_another_argument(self):
+        self.assertEqual([2], cogc("a.js", """
+            function label(name, bold) {
+              return format(name ? `${name}:` : 'none',    // +1
+                            bold ? 'b' : 'n');               // +1
+            }"""))
+
+    def test_interpolation_does_not_end_the_alternative(self):
+        self.assertEqual([3], cogc("a.js", """
+            function label(name, bold) {
+              return format(name ? 'none' :                 // +1
+                            `${name}` + (bold ? '!' : ''));  // +2 (nesting=1)
+            }"""))
+
+    def test_multiline_template_in_the_alternative_does_not_end_it(self):
+        self.assertEqual([3], cogc("a.js", """
+            function label(name, bold) {
+              return name ? 'none' : `${name}                 // +1
+            ` + (bold ? '!' : '');                            // +2 (nesting=1)
             }"""))
 
     def test_logical_operators_in_statements_without_semicolons(self):
