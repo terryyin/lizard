@@ -274,6 +274,20 @@ class TestJavaScriptNestingDepth(unittest.TestCase):
                     [('(anonymous)', 0), ('on', 1), ('drain', 1)],
                     [(f.name, f.max_nesting_depth) for f in functions])
 
+    def test_keyword_after_a_dot_and_a_comment_names_a_member(self):
+        code = """
+        function load(p) {
+          if (p) p./* retry */catch(fail);
+        }
+        function pick(o) {
+          if (o.else) if (o.ready) run(o);
+        }
+        """
+        functions = FileAnalyzer(get_extensions(
+            [NestDepth()])).analyze_source_code("a.js", code).function_list
+        self.assertEqual([('load', 1), ('pick', 2)],
+                         [(f.name, f.max_nesting_depth) for f in functions])
+
 
 class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
     """A statement that ends at a line break closes its levels,

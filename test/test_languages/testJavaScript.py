@@ -185,6 +185,23 @@ class Test_JavaScript_keyword_as_the_name_of_a_member(unittest.TestCase):
                 self.assertEqual(expected, [(f.name, f.cyclomatic_complexity)
                                             for f in functions])
 
+    def test_comment_between_the_dot_and_the_keyword(self):
+        code = (
+            'function a(p) { if (p) p./* note */catch(g); }\n'
+            'function b(p) {\n'
+            '  if (p) p?. // note\n'
+            '    catch(g);\n'
+            '}\n'
+            'function c(o) { o.elseif(g); }\n'
+        )
+        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+            with self.subTest(filename=filename):
+                functions = analyze_file.analyze_source_code(
+                    filename, code).function_list
+                self.assertEqual([('a', 2), ('b', 2), ('c', 1)],
+                                 [(f.name, f.cyclomatic_complexity)
+                                  for f in functions])
+
     def test_keyword_after_a_dot_is_no_case_or_switch(self):
         code = (
             'function pick(list, key) {\n'

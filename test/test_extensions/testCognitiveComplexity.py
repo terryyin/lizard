@@ -871,6 +871,19 @@ class TestJavaScriptKeywordAsTheNameOfAMember(unittest.TestCase):
             with self.subTest(filename=filename):
                 self.assertEqual([0, 1, 2], cogc(filename, code))
 
+    def test_member_after_a_comment_or_a_line_break(self):
+        self.assertEqual([1, 1, 0], cogc("a.js", """
+            function load(p) {
+              if (p) p./* retry */catch(fail);         // +1
+            }
+            function pick(o) {
+              if (o.ready) o.                          // +1
+                else(run);
+            }
+            function step(o) {
+              o.elseif(run);
+            }"""))
+
 
 class TestJavaScriptGroupedExpressions(unittest.TestCase):
     """The reader takes ``x = (`` as the possible start of an arrow function
