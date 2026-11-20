@@ -14,6 +14,13 @@ class JSXChildBrace(str):
     expression container, never an object literal or a block."""
 
 
+class JSXMarkup(str):
+    """The tags and the text of a JSX element, `<p>{name}({count})</p>`:
+    never code, also when the text is a bracket or a keyword."""
+
+    is_jsx_markup = True
+
+
 def ends_expression(token):
     """Whether an expression may end with this token (JavaScript ASI)."""
     first = token[:1]

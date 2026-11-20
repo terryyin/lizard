@@ -638,6 +638,211 @@ class TestOtherBraceLanguages(unittest.TestCase):
             }"""))
 
 
+class TestJavaScriptNestedFunctions(unittest.TestCase):
+    """A nested function is measured on its own.  Its brackets must not
+    change how the rest of the enclosing function is counted."""
+
+    def test_arrow_callback_in_if_condition(self):
+        self.assertEqual([0, 3], cogc("a.js", """
+            function activate(user) {
+              if (user.roles.some(role => role.admin)) {   // +1
+                user.admin = true;
+              }
+              if (user.email) {                            // +1
+                user.verified = true;
+              }
+              if (user.banned) {                           // +1
+                user.active = false;
+              }
+            }"""))
+
+    def test_function_expression_in_if_condition(self):
+        self.assertEqual([0, 2], cogc("a.js", """
+            function activate(user) {
+              if (user.roles.some(function(role) { return role.admin; })) {  // +1
+                user.admin = true;
+              }
+              if (user.email) {                                              // +1
+                user.verified = true;
+              }
+            }"""))
+
+    def test_arrow_callback_in_loop_condition(self):
+        self.assertEqual([0, 2], cogc("a.js", """
+            function drain(queue) {
+              while (queue.jobs.some(job => job.pending)) {  // +1
+                queue.run();
+              }
+              if (queue.failed) {                            // +1
+                queue.retry();
+              }
+            }"""))
+
+    def test_callback_in_condition_keeps_nesting(self):
+        self.assertEqual([0, 3], cogc("a.js", """
+            function activate(user) {
+              if (user.roles.some(role => role.admin)) {   // +1
+                if (user.email) {                          // +2 (nesting=1)
+                  user.verified = true;
+                }
+              }
+            }"""))
+
+    def test_code_after_nested_function_declaration_is_not_nested(self):
+        self.assertEqual([0, 3], cogc("a.js", """
+            function price(order) {
+              function round(amount) {
+                return Math.round(amount);
+              }
+              const tax = order.taxFree ? 0 : 0.2;         // +1
+              const shipping = order.pickup ? 0 : 5;       // +1
+              if (order.coupon) {                          // +1
+                order.total -= round(order.coupon);
+              }
+            }"""))
+
+    def test_code_after_arrow_function_with_block_body_is_not_nested(self):
+        self.assertEqual([0, 3], cogc("a.js", """
+            function price(order) {
+              const round = (amount) => {
+                return Math.round(amount);
+              };
+              const tax = order.taxFree ? 0 : 0.2;         // +1
+              const shipping = order.pickup ? 0 : 5;       // +1
+              if (order.coupon) {                          // +1
+                order.total -= round(order.coupon);
+              }
+            }"""))
+
+    def test_code_after_callback_in_if_body_is_not_nested(self):
+        self.assertEqual([0, 2], cogc("a.js", """
+            function report(errors) {
+              if (errors.length > 0) {                     // +1
+                errors.sort((first, second) => {
+                  return first.index - second.index;
+                });
+              }
+              if (errors.fatal) {                          // +1
+                throw errors.fatal;
+              }
+            }"""))
+
+    def test_nested_function_keeps_its_own_score(self):
+        self.assertEqual([3, 2], cogc("a.js", """
+            function report(errors) {
+              if (errors.length > 0) {                     // +1
+                errors.forEach((error) => {
+                  if (error.fatal) {                       // +1 (callback)
+                    for (const hook of error.hooks) {      // +2 (callback, nesting=1)
+                      hook(error);
+                    }
+                  }
+                });
+              }
+              if (errors.fatal) {                          // +1
+                throw errors.fatal;
+              }
+            }"""))
+
+    def test_template_literal_in_callback(self):
+        self.assertEqual([0, 3], cogc("a.js", """
+            function label(items) {
+              if (items.length) {                  // +1
+                items.map(item => `${item.name}`);
+                if (items.sorted) {                // +2 (nesting 1)
+                  items.done = true;
+                }
+              }
+            }"""))
+
+    def test_template_literal_after_callback(self):
+        self.assertEqual([0, 3], cogc("a.js", """
+            function label(items) {
+              if (items.length) {                  // +1
+                items.forEach(item => {});
+                log(`${items.length}`);
+                if (items.sorted) {                // +2 (nesting 1)
+                  items.done = true;
+                }
+              }
+            }"""))
+
+    def test_parenthesis_in_jsx_text(self):
+        self.assertEqual([0, 2], cogc("a.jsx", """
+            function Page(props) {
+              if (props.ready) {                   // +1
+                render(function () {
+                  return <p>{props.name}({props.count})</p>;
+                });
+              }
+              if (props.wide) {                    // +1
+                props.expand();
+              }
+            }"""))
+
+    def test_bracket_in_jsx_text(self):
+        self.assertEqual([0, 3], cogc("a.jsx", """
+            function Page(props) {
+              if (props.ready) {                   // +1
+                function Row() {
+                  return <p>{props.a}]{props.b}</p>;
+                }
+                if (props.wide) {                  // +2 (nesting 1)
+                  props.expand();
+                }
+              }
+            }"""))
+
+    def test_typescript(self):
+        self.assertEqual([0, 2, 0, 2], cogc("a.ts", """
+            function activate(user: User): void {
+              if (user.roles.some((role: Role) => role.admin)) {  // +1
+                user.admin = true;
+              }
+              if (user.email) {                                   // +1
+                user.verified = true;
+              }
+            }
+            function report(errors: Failure[]): void {
+              if (errors.length > 0) {                            // +1
+                errors.sort((first: Failure, second: Failure) => {
+                  return first.index - second.index;
+                });
+              }
+              if (errors[0]) {                                    // +1
+                throw errors[0];
+              }
+            }"""))
+
+
+class TestJavaScriptTemplateLiterals(unittest.TestCase):
+    """The ``}`` of an interpolation ends no block."""
+
+    def test_interpolation_in_block(self):
+        self.assertEqual([3], cogc("a.js", """
+            function label(item) {
+              if (item.name) {                     // +1
+                const text = `${item.name}`;
+                if (item.bold) {                   // +2 (nesting 1)
+                  mark(text);
+                }
+              }
+            }"""))
+
+    def test_logical_operators_in_and_around_interpolation(self):
+        self.assertEqual([2], cogc("a.js", """
+            function label(a, b, c, d) {
+              return a && `${b && c}` && d;        // +1 +1
+            }"""))
+
+    def test_logical_operators_in_statements_without_semicolons(self):
+        self.assertEqual([2], cogc("a.js", """
+            function label(a, b, c) {
+              a && tag`${b}`                       // +1
+              c && go()                            // +1
+            }"""))
+
+
 class TestFlatLanguages(unittest.TestCase):
     """Blocks are not brace-delimited: increments without nesting penalty."""
 
