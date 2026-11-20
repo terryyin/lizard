@@ -229,6 +229,26 @@ class Test_JavaScript_keyword_as_the_name_of_a_member(unittest.TestCase):
                                  [(f.name, f.cyclomatic_complexity)
                                   for f in functions])
 
+    def test_keyword_after_a_decimal_point_is_a_structure(self):
+        code = (
+            'function a(x) { 1.\n'
+            'if (x) g(); }\n'
+            'function b(p) { if (p) 1 .catch(g); }\n'
+            'function c(p) { if (p) 1.5.catch(g); }\n'
+        )
+        analyzer = FileAnalyzer(get_extensions(
+            ['cognitive', 'nd', ComplexTags()]))
+        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+            with self.subTest(filename=filename):
+                functions = analyzer.analyze_source_code(
+                    filename, code).function_list
+                self.assertEqual(
+                    [('a', 2, 1, 1, [['if', 2]]), ('b', 2, 1, 1, [['if', 3]]),
+                     ('c', 2, 1, 1, [['if', 4]])],
+                    [(f.name, f.cyclomatic_complexity, f.cognitive_complexity,
+                      f.max_nesting_depth, f.complex_tags)
+                     for f in functions])
+
     def test_keyword_after_a_dot_is_no_case_or_switch(self):
         code = (
             'function pick(list, key) {\n'
