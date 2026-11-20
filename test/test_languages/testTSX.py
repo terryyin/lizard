@@ -812,6 +812,26 @@ function Note() { return <p>Use <b:</p>; }
 function after(a) { return a ? 1 : 2; }
 ''')
 
+    def test_a_regex_literal_before_a_ternary_colon(self):
+        # `</g : count >` here ends a regular expression, not an element.
+        self.assert_both([("f", 1, 1, 2), ("g", 2, 2, 2),
+                          ("after", 3, 3, 2)], '''\
+function f(ready, count) { return ready ? /a?</g : count > 0; }
+function g(ready, count) { return <p>{ready ? /[}]</g : count > 0}</p>; }
+function after(a) { return a ? 1 : 2; }
+''')
+
+    def test_a_line_break_after_a_ternary_colon(self):
+        code = '''\
+function f(flag, a, b, c) {
+  return flag ? a!
+    <b:
+    c;
+}
+'''
+        self.assertEqual([("f", 5)], [
+            (f.name, f.nloc) for f in get_tsx_function_list(code)])
+
     def test_a_namespaced_name_has_no_member(self):
         # `<a:b.c>` is no JSX element name, and the closing tag pattern
         # does not end it either.
