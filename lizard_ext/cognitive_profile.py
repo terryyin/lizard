@@ -30,7 +30,8 @@ class _Profile(object):  # pylint: disable=R0902,R0903
                  paren_heads=True, newline_ends_statement=False,
                  nullable_types=False, rvalue_refs=False, lambda_style=None,
                  case_insensitive=False, nesting=True,
-                 nested_functions=False):
+                 nested_functions=False, operator_names=False,
+                 message_colons=False):
         # Structures the reader does not list; completed in ``for_reader``.
         self.ifs = frozenset(ifs)
         self.else_ifs = frozenset(else_ifs)
@@ -61,6 +62,10 @@ class _Profile(object):  # pylint: disable=R0902,R0903
         # The reader starts a nested function in the middle of an expression
         # of the enclosing one (JavaScript callbacks).
         self.nested_functions = nested_functions
+        # ``operator,`` names an overload (C++).
+        self.operator_names = operator_names
+        # ``[view hide:a animated:b]``: a ``:`` ends a message argument.
+        self.message_colons = message_colons
 
     def for_reader(self, reader):
         """A copy with the roles of the reader's control-flow keywords added."""
@@ -82,8 +87,11 @@ _JS_LIKE = dict(_C_LIKE, newline_ends_statement=True, nested_functions=True)
 
 _PROFILES = {
     'cpp': _Profile(loops=('foreach',),         # Qt
-                    rvalue_refs=True, lambda_style='cpp', **_C_LIKE),
-    'objectivec': _Profile(loops=('foreach',), rvalue_refs=True, **_C_LIKE),
+                    rvalue_refs=True, lambda_style='cpp', operator_names=True,
+                    **_C_LIKE),
+    'objectivec': _Profile(loops=('foreach',), rvalue_refs=True,
+                           operator_names=True, message_colons=True,
+                           **_C_LIKE),
     'java': _Profile(lambda_style='arrow', **_C_LIKE),
     'csharp': _Profile(loops=('foreach',), lambda_style='arrow',
                        nullable_types=True, **_C_LIKE),

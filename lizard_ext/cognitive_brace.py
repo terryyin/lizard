@@ -104,22 +104,70 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
             frames.pop()
 
     def _end_ternaries(self, token):
-        """The alternative of a ternary ends at a ``,`` or ``:`` at its own
-        depth: ``go(a ? b : c, d ? e : f)``.  A ``:`` then starts the
-        alternative of the ternary below: ``a ? b ? 1 : 2 : 3``.  A ``,``
-        before the ``:`` is C's comma operator or in ``Map<K, V>``."""
-        state = self.state
-        frames = state.frames
+        """The alternative of a ternary ends at a ``,`` at its own depth:
+        ``go(a ? b : c, d ? e : f)``.  A ``,`` before the ``:`` is C's comma
+        operator, and one after an open ``<`` can be in ``Map<K, V>``."""
+        if self._operator_name():
+            return          # ``x.operator,(y)``
+        if token == ':':
+            self._ternary_colon()
+        else:
+            self._end_alternatives()
+
+    def _end_alternatives(self):
+        frames = self.state.frames
         while frames:
             top = frames[-1]
-            if top.kind != 'ternary' or top.pdepth != state.pdepth or \
-                    top.depth != state.depth:
-                return
-            if not top.alternative:
-                if token == ':':
-                    top.alternative = True
+            if top.kind != 'ternary' or not self._at_level(top) or \
+                    not top.alternative or top.angles:
                 return
             frames.pop()
+
+    def _ternary_colon(self):
+        """A ``:`` starts the alternative of the innermost ternary at its
+        depth that has none yet, and ends the ternaries above it:
+        ``a ? b ? 1 : 2 : 3``.  Another ``:`` ends an argument of an
+        Objective-C message (``[v hide:a ? x : y animated:b]``), and nothing
+        elsewhere (``?:``, or JSX ``<p xml:lang="en">``)."""
+        state = self.state
+        if state.prev == '?':
+            return
+        frames = state.frames
+        index = len(frames) - 1
+        while index >= 0 and frames[index].kind == 'ternary' and \
+                self._at_level(frames[index]):
+            if not frames[index].alternative:
+                frames[index].alternative = True
+                del frames[index + 1:]
+                return
+            index -= 1
+        if self.profile.message_colons:
+            self._end_alternatives()
+
+    # A ``,`` after an open ``<`` in the alternative can be in a list of type
+    # arguments (``a ? b : f<T, U>()``), so it does not end the ternary.  A
+    # ``>`` closes the ``<``.  After a comparison (``go(a ? b : x < y, c)``)
+    # the ternary then stays open, as it did before commas ended ternaries.
+
+    def _less(self):
+        frames = self.state.frames
+        if frames and frames[-1].alternative and \
+                self._at_level(frames[-1]) and not self._operator_name():
+            frames[-1].angles += 1
+
+    def _greater(self):
+        frames = self.state.frames
+        if frames and frames[-1].angles and self._at_level(frames[-1]) and \
+                not self._operator_name():
+            frames[-1].angles -= 1
+
+    def _operator_name(self):
+        """C++: ``operator,`` and ``operator>`` name an overload."""
+        return self.profile.operator_names and self.state.prev == 'operator'
+
+    def _at_level(self, frame):
+        state = self.state
+        return frame.pdepth == state.pdepth and frame.depth == state.depth
 
     def _statement_end(self):
         """A ';' at bracket depth 0 finishes the braceless bodies around it."""

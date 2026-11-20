@@ -23,6 +23,8 @@ class _BraceActions(object):
                 actions[token] = action
         if profile.ternary:
             actions['?'] = self._question
+            actions['<'] = self._less
+            actions['>'] = self._greater
         return actions
 
     def _if(self):

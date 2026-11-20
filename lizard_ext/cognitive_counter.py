@@ -34,7 +34,7 @@ class _Frame(object):  # pylint: disable=R0902,R0903
     """An open control structure (or lambda / ternary) nesting its body."""
 
     __slots__ = ('kind', 'phase', 'braced', 'depth', 'pdepth', 'level',
-                 'closing', 'alternative')
+                 'closing', 'alternative', 'angles')
 
     def __init__(self, kind, phase, depth=0, pdepth=0, level=0):
         self.kind = kind
@@ -45,6 +45,7 @@ class _Frame(object):  # pylint: disable=R0902,R0903
         self.level = level      # lizard nesting level (indentation engine)
         self.closing = False    # body finished; waiting for else/catch/...
         self.alternative = False    # ternary: its ``:`` is read
+        self.angles = 0             # and the ``<`` in its alternative
 
 
 class _FunctionState(object):  # pylint: disable=R0902,R0903
