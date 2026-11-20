@@ -12,6 +12,7 @@ from .typescript_type_annotation import TypeScriptTypeAnnotationStates
 from .typescript_states import TypeScriptStates
 from .typescript_signatures import ReturnTypeColon, return_type_colon
 from .javascript_templates import LINE_COMMENT, interpolation_code, template_tokens
+from .javascript_statements import ImpliedSemicolons
 
 # One token, so each ? in ?? is not its own ternary decision.
 NULLISH_COALESCING = r"|(?:\?\?)"
@@ -93,6 +94,8 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
     # atomic templates that need a backtick scan on the fast path.
     _scan_atomic_templates = False
     _class_field_annotations = True
+    # For the extensions: finds where a statement ends without a ';'.
+    implied_semicolons = ImpliedSemicolons
 
     # Separated condition categories
     _control_flow_keywords = {'if', 'elseif', 'for', 'while', 'catch'}

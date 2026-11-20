@@ -246,3 +246,276 @@ class TestJavaScriptNestingDepth(unittest.TestCase):
         }
         """).function_list
         self.assertEqual(1, result[0].max_nesting_depth)
+
+
+class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
+    """A statement that ends at a line break closes its levels,
+    as a statement that ends with ';' does."""
+
+    def test_sibling_braceless_ifs_do_not_nest(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function role(user) {
+          if (user.banned) return 'banned'
+          if (user.admin) return 'admin'
+          if (user.staff) return 'staff'
+          return 'user'
+        }
+        """))
+
+    def test_braceless_body_on_the_next_line(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function role(user) {
+          if (user.banned)
+            return 'banned'
+          if (user.admin)
+            return 'admin'
+          if (user.staff)
+            return 'staff'
+          return 'user'
+        }
+        """))
+
+    def test_nested_braceless_structures_still_nest(self):
+        self.assertEqual(3, self.nesting_depth("""
+        function notify(user, devices) {
+          if (user.active)
+            for (const device of devices)
+              if (device.online) device.push(user)
+          if (user.email) send(user.email)
+        }
+        """))
+
+    def test_expression_continues_on_the_next_line(self):
+        self.assertEqual(2, self.nesting_depth("""
+        function price(order, member) {
+          if (order.total) discount = member
+            ? 10
+            : 0
+          if (order.coupon) return order.coupon
+          return discount
+        }
+        """))
+
+    def test_statements_with_logical_operators(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function settings(user, team) {
+          const theme = user.theme || team.theme
+          const locale = user.locale || team.locale
+          const admin = user.admin && team.active
+          return { theme, locale, admin }
+        }
+        """))
+
+    def test_braceless_if_at_the_end_of_a_block(self):
+        self.assertEqual(2, self.nesting_depth("""
+        function count(users) {
+          let active = 0
+          for (const user of users) { if (user.active) active++ }
+          for (const user of users) { if (user.banned) active-- }
+          if (active) return active
+          return 0
+        }
+        """))
+
+    def test_do_while_loop(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function drain(queue, log) {
+          do {
+            queue.pop()
+          } while (queue.length)
+          if (log) log.flush()
+          if (queue.closed) return 1
+          return 0
+        }
+        """))
+
+    def test_braces_on_their_own_line(self):
+        self.assertEqual(2, self.nesting_depth("""
+        function notify(user, devices)
+        {
+          if (user.active)
+          {
+            for (const device of devices)
+            {
+              device.push(user)
+            }
+          }
+          try
+          {
+            send(user.email)
+          }
+          catch (error)
+          {
+            report(error)
+          }
+        }
+        """))
+
+    def test_catch_without_a_binding_before_its_block(self):
+        self.assertEqual(2, self.nesting_depth("""
+        function load(file) {
+          try {
+            open(file);
+          } catch
+          {
+            if (file.optional) skip();
+          }
+        }
+        """))
+
+    def test_line_break_before_the_await_of_a_for_loop(self):
+        self.assertEqual(3, self.nesting_depth("""
+        async function send(batch, rows) {
+          if (batch.open) for
+            await (const row of rows) if (row.ready) batch.add(row);
+        }
+        """))
+
+    def test_line_break_inside_a_declaration(self):
+        self.assertEqual(2, self.nesting_depth("""
+        function price(order, member) {
+          if (order.paid) var
+            discount = member && order.coupon;
+          return discount;
+        }
+        """))
+
+    def test_line_break_after_case(self):
+        self.assertEqual(2, self.nesting_depth("""
+        function notify(user) {
+          switch (user.role) {
+            case
+              'admin': if (user.active) alert(user);
+          }
+        }
+        """))
+
+    def test_while_loop_as_the_body_of_a_do_loop(self):
+        self.assertEqual(2, self.nesting_depth("""
+        function drain(queue, log) {
+          do while (queue.busy) if (log) log.wait(); while (queue.length);
+        }
+        """))
+
+    def test_return_ends_its_statement_at_a_line_break(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function refresh(cache, force) {
+          if (!force) return
+          (cache.pending || cache.loaded).clear()
+        }
+        """))
+
+    def test_break_ends_its_statement_at_a_line_break(self):
+        self.assertEqual(2, self.nesting_depth("""
+        function stop(jobs, done) {
+          while (jobs.length) {
+            if (done) break
+            [jobs.first || jobs.last].forEach(run)
+          }
+        }
+        """))
+
+    def test_property_with_the_name_of_an_operator(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function scope(token, list) {
+          if (token) return token.in
+          if (list) return list.of
+          return null
+        }
+        """))
+
+    def test_typescript_non_null_assertion_at_a_line_end(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function owner(first: Item | null, second: Item | null) {
+          if (first) return first.owner!
+          if (second) return second.owner!
+          return null
+        }
+        """, "a.ts"))
+
+    def test_line_break_after_a_prefix_operator(self):
+        self.assertEqual(2, self.nesting_depth("""
+        function hidden(item, user) {
+          if (item.draft) return !
+            user.admin && item.locked;
+          return false;
+        }
+        """))
+
+    def test_label_before_the_body_of_a_do_loop(self):
+        self.assertEqual(2, self.nesting_depth("""
+        function drain(queue, log) {
+          do retry: while (queue.busy) if (log) log.wait(); while (queue.length);
+        }
+        """))
+
+    def test_yield_ends_its_statement_at_a_line_break(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function* pages(book, cover) {
+          if (cover) yield
+          if (book.open) yield book.page
+        }
+        """))
+
+    def test_typescript_non_null_assertion_after_a_property(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function scope(first: Token | null, second: Token | null) {
+          if (second) return second.of!!
+          if (first) return first.in!
+          return null
+        }
+        """, "a.ts"))
+
+    def test_object_literals_stay_in_their_statement(self):
+        self.assertEqual(2, self.nesting_depth("""
+        function flags(user, post) {
+          return [{ ok: user.admin && user.active }, { ok: post.open && post.shared }];
+        }
+        """))
+
+    def test_object_literal_at_the_end_of_a_statement(self):
+        self.assertEqual(2, self.nesting_depth("""
+        function allowed(user, post) {
+          const flags = { admin: user.admin && user.active }
+          if (post.open) if (flags.admin) return true
+        }
+        """))
+
+    def test_typescript_const_assertion_at_a_line_end(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function side(left: Side | null, right: Side | null) {
+          if (left) return [left, 'left'] as const
+          if (right) return [right, 'right'] as const
+          return null
+        }
+        """, "a.ts"))
+
+    def test_typescript_void_return_type(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function close(file: File | null, force: boolean): void {
+          if (!file) return
+          if (force) file.destroy()
+        }
+        """, "a.ts"))
+
+    def test_typescript_comparison_after_an_assertion(self):
+        self.assertEqual(2, self.nesting_depth("""
+        function above(value: unknown, limit: number, strict: boolean) {
+          if (strict) return value as number >
+            limit && strict;
+          return false;
+        }
+        """, "a.ts"))
+
+    def test_tsx_generic_return_type(self):
+        self.assertEqual(1, self.nesting_depth("""
+        async function refresh(cached: boolean, offline: boolean): Promise<void> {
+          if (cached) return
+          if (offline) return
+        }
+        """, "a.tsx"))
+
+    def nesting_depth(self, code, filename="a.js"):
+        result = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
+            filename, code).function_list
+        return result[0].max_nesting_depth

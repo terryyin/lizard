@@ -72,7 +72,20 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
     def __call__(self, tokens, reader=None):
         if 'python' in getattr(reader, 'language_names', ()):
             return self._indented_structures(tokens, reader)
+        if hasattr(reader, 'implied_semicolons'):
+            return self._unterminated_statements(tokens, reader)
         return super(LizardExtension, self).__call__(tokens, reader)
+
+    def _unterminated_statements(self, tokens, reader):
+        """JavaScript ends a statement without a ';' too: read a ';'
+        where the reader finds such an end."""
+        self.context = reader.context
+        implied_semicolon_before = reader.implied_semicolons(self.context).before
+        for token in tokens:
+            if implied_semicolon_before(token):
+                self._state(';')
+            self._state(token)
+            yield token
 
     def _indented_structures(self, tokens, reader):
         """Python has no braces: a structure is a statement that starts a
