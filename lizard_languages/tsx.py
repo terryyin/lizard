@@ -166,7 +166,12 @@ class XMLTagWithAttrTokenizer(Tokenizer):
             for tok in self.sub_tokenizer(token):
                 yield tok
             if self.sub_tokenizer._ended:
+                unread = getattr(self.sub_tokenizer, 'unread', None)
                 self.sub_tokenizer = None
+                if unread is not None:
+                    # A child tag ended before this token: text again.
+                    yield from self.process_token(unread)
+                    return
                 # The TSXTokenizer consumed the closing '}'. After an
                 # attribute expression, ';' closes any expression-body
                 # arrow opened inside it (onClick={() => handler()}); a
