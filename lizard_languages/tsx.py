@@ -84,6 +84,14 @@ class TSXTokenizer(JSTokenizer):
         super().__init__()
         self._previous = None
 
+    def _sub_tokens(self, token):
+        tag = self.sub_tokenizer
+        yield from super()._sub_tokens(token)
+        if tag.unread is not None:
+            # The tag ended before this token, which is read here instead.
+            unread, tag.unread = tag.unread, None
+            yield from self.process_token(unread)
+
     def in_element_text(self):
         """True while the innermost tokenizer reads the children of a JSX
         element as text, outside any {...} child expression."""
@@ -139,6 +147,8 @@ class XMLTagWithAttrTokenizer(Tokenizer):
         self._in_expression = in_expression
         # `<svg:text>`: the tag name follows the `<` with no space.
         self._joined_name = True
+        # A token the enclosing tokenizer reads again after an abort.
+        self.unread = None
 
     @classmethod
     def children_of(cls, opening_tag):
@@ -238,7 +248,7 @@ class XMLTagWithAttrTokenizer(Tokenizer):
     def _tag_namespace_part(self, token):
         # A namespaced name has one `:` and no `.`, as its closing tag does.
         if not (self._joined() and isidentifier(token)):
-            return self.abort()
+            return self._not_a_namespace(token)
         self.state = self._after_tag
         return None
 
@@ -289,9 +299,18 @@ class XMLTagWithAttrTokenizer(Tokenizer):
         return self._joined_name and not self.cache[-2].isspace()
 
     def _attribute_namespace_part(self, token):
-        if not self._joined():
-            return self.abort()
-        return self._attribute_name_part(token)
+        if not (self._joined() and isidentifier(token)):
+            return self._not_a_namespace(token)
+        self.state = self._expecting_equal_sign
+        return None
+
+    def _not_a_namespace(self, token):
+        """The `:` was a ternary colon, so the tag ends before it, and the
+        token after it is read again as code: in `f ? a! <b: (<p>?</p>)`
+        the `(` comes before an element."""
+        self.cache.pop()
+        self.unread = token
+        return self.abort()
 
     def _attribute_name_part(self, token):
         if isidentifier(token):
