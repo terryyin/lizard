@@ -99,38 +99,32 @@ class _Counter(object):  # pylint: disable=R0902
         self.held = {}          # function -> lists of (order, token, line)
         self.order = 0          # number of tokens held so far
 
-    def process(self, token):
-        context = self.context
-        if not self.profile.nested_functions:
-            self._count(token, context.current_line, context.current_function)
-            return
-        candidates = self.candidates
-        if candidates or self.previous == '(':
-            self._settle()
-        in_brackets = (candidates and
-                       len(self.openers) >= candidates[-1].depth)
-        function, counted = context.current_function, token
-        if token in _BRACKETS:
-            function, counted = self._route(function, token)
-        if candidates and self._involved(function):
-            self._hold(function, counted)
-            top = candidates[-1]
-            if self._keeps_tokens(top, in_brackets, function, token):
-                candidates.pop()
-                self._release(top.function, top.parent)
-        else:
-            self._count(counted, context.current_line, function)
-        self.previous = token
-        self.previous_function = context.current_function
-
-    def finish(self):
-        """The end of the file: count what is still held."""
-        if self.held:
-            self._settle()
-            del self.candidates[:]
-            self._release(*list(self.held))
-
-    def _count(self, token, line, function):
+    def process(self, token, line=None, function=None):
+        """Count the token for its function.  The held tokens come back with
+        the line and the function they were read in."""
+        if function is None:
+            context = self.context
+            line, function = context.current_line, context.current_function
+            if self.profile.nested_functions:
+                candidates = self.candidates
+                if candidates or self.previous == '(':
+                    self._settle()
+                in_brackets = (candidates and
+                               len(self.openers) >= candidates[-1].depth)
+                read = token
+                if token in _BRACKETS:
+                    function, token = self._route(function, token)
+                held = candidates and self._involved(function)
+                if held:
+                    self._hold(function, token)
+                    top = candidates[-1]
+                    if self._keeps_tokens(top, in_brackets, function, read):
+                        candidates.pop()
+                        self._release(top.function, top.parent)
+                self.previous = read
+                self.previous_function = context.current_function
+                if held:
+                    return
         if function is not self.function:
             self._switch_function(function)
         self.line = line
@@ -143,6 +137,13 @@ class _Counter(object):  # pylint: disable=R0902
             token = token.lower()
         self._process(token)
         state.prev2, state.prev = state.prev, token
+
+    def finish(self):
+        """The end of the file: count what is still held."""
+        if self.held:
+            self._settle()
+            del self.candidates[:]
+            self._release(*list(self.held))
 
     def _route(self, function, token):
         """The function that counts the bracket, and the token to count.
@@ -241,7 +242,7 @@ class _Counter(object):  # pylint: disable=R0902
                 tokens = lists[0] if len(lists) == 1 else \
                     sorted(chain.from_iterable(lists))
                 for _, token, line in tokens:
-                    self._count(token, line, function)
+                    self.process(token, line, function)
 
     def _switch_function(self, function):
         self.function = function
