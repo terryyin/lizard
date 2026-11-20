@@ -24,6 +24,7 @@ from .fortran import FortranReader
 from .solidity import SolidityReader
 from .tsx import TSXReader
 from .vue import VueReader
+from .svelte import SvelteReader
 from .perl import PerlReader
 from .st import StReader
 from .r import RReader
@@ -59,6 +60,7 @@ def languages():
         ZigReader,
         TSXReader,
         VueReader,
+        SvelteReader,
         PerlReader,
         StReader,
         RReader,

@@ -6,5 +6,7 @@ Maintenance, bug fixing, and PR reviews. We accept PRs and issues that fix or im
 
 ## Taken
 
+- [Land Hafez JS cognitive/nesting PRs under performance gates](seeds/SEED-066-land-hafez-js-prs-under-performance.md#land-hafez-js-prs-under-performance) — SEED-066#land-hafez-js-prs-under-performance
+
 ## Backlog list
 

@@ -91,6 +91,7 @@ _PROFILES = {
     'typescript': _Profile(**_JS_LIKE),
     'tsx': _Profile(**_JS_LIKE),
     'vue': _Profile(**_JS_LIKE),
+    'svelte': _Profile(**_JS_LIKE),
     'php': _Profile(**_C_LIKE),
     'ttcn': _Profile(**_C_LIKE),
     'solidity': _Profile(catches=('catch',), **_C_LIKE),

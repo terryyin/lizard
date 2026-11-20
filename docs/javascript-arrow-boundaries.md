@@ -32,8 +32,8 @@ Curried arrows keep the existing outer-only reporting convention. In
 `const f = x => d ? y => y : z => z || x`, the inner arrows do not create
 additional reported functions or replace `f`'s enclosing ternary context.
 
-These rules share the JavaScript, TypeScript, JSX, TSX and Vue script reader
-paths. `.cjs` and `.mjs` use the JavaScript reader too. The existing object-comma
+These rules share the JavaScript, TypeScript, JSX, TSX, Vue and Svelte script
+reader paths. `.cjs` and `.mjs` use the JavaScript reader too. The existing object-comma
 limitation remains: a sibling arrow after a comma can be absorbed into the
 preceding object-member arrow, even without a ternary.
 

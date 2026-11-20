@@ -576,6 +576,18 @@ class TestOtherBraceLanguages(unittest.TestCase):
     def test_javascript_optional_chaining_and_nullish_coalescing(self):
         self.assertEqual([0], cogc("a.js", "function f(a) { return a?.b ?? c; }"))
 
+    def test_svelte_script(self):
+        self.assertEqual([3], cogc("a.svelte", """
+            <script>
+              function next(node) {
+                do {                          // +1
+                  switch (node.kind) {        // +2 (nesting=1)
+                    case 'leaf': return node;
+                  }
+                } while (node = node.parent)
+              }
+            </script>"""))
+
     def test_go(self):
         self.assertEqual([9], cogc("a.go", """
             func f(x int) int {
