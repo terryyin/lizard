@@ -83,7 +83,8 @@ class LizardExtension(object):  # pylint: disable=R0903
 
             # Handle other loop keywords (if, for, while, etc.)
             elif token in loops and token not in ('&&', '||') \
-                    and not getattr(token, 'is_optional', False):
+                    and not getattr(token, 'is_optional', False) \
+                    and not getattr(token, 'is_member_name', False):
                 l_depth = reader.context.open_level()
 
             if token in block_starts:

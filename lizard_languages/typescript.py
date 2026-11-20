@@ -85,6 +85,20 @@ _OPTIONAL_MEMBER_QUESTION = _OptionalMemberQuestion('?')
 _ANNOTATION_PUNCTUATION = frozenset(('?', ':'))
 
 
+class _MemberName(str):
+    """A keyword after '.' or '?.', `promise.catch(f)`: the name of a
+    member, which no metric counts as a structure."""
+
+    is_member_name = True
+
+
+_MEMBER_ACCESS = ('.', '?.')
+# The keywords that a metric counts as a structure, a case or a jump.
+_STRUCTURE_KEYWORDS = frozenset((
+    'if', 'else', 'for', 'while', 'do', 'switch', 'case', 'try', 'catch',
+    'finally', 'break', 'continue'))
+
+
 class TypeScriptReader(CodeReader, CCppCommentsMixin):
     # pylint: disable=R0903
 
@@ -117,7 +131,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         for start, end in interpolation_code(token, in_expression):
             for inner in self.generate_tokens(token[start:end]):
                 if (inner in conditions
-                        and previous not in ('.', '?.')):
+                        and previous not in _MEMBER_ACCESS):
                     self.context.add_condition()
                 previous = inner
 
@@ -131,21 +145,18 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
             self._count_interpolation_conditions(token, False)
 
     def process_token(self, token):
-        # Undo keyword member names (#546) and count conditions written
-        # inside template interpolations (opaque to the outer stream).
+        # Count conditions written inside template interpolations (opaque
+        # to the outer stream).
         previous = self._previous_token
         self._previous_token = token
-        if previous in ('.', '?.') and token in self.conditions:
-            self.context.add_condition(-1)
         self._count_conditions_from_token(previous, token)
         return False
 
     def __call__(self, tokens, reader):
         # Custom hooks and state configurations retain the generic protocol.
-        # TypeScriptReader.process_token only undoes keyword members / adds
-        # interpolation conditions and always returns False, so the fast path
-        # may keep calling it. Instance or subclass hooks still fall back to
-        # CodeReader.__call__.
+        # TypeScriptReader.process_token only adds interpolation conditions
+        # and always returns False, so the fast path may keep calling it.
+        # Instance or subclass hooks still fall back to CodeReader.__call__.
         states = self.parallel_states
         allowed_process = (
             CodeReader.process_token, TypeScriptReader.process_token)
@@ -162,15 +173,12 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         # Binding candidates are children and retain their own wrapper.
         consume = CodeStateMachine.__call__.__get__(state)
         previous = self._previous_token
-        conditions = self.conditions
         # Bind once on this hot path: ordinary JS/TS tokens pay only the
         # after_interpolation / '${' checks (no per-token helper call).
         # TSX/JSX keep the atomic backtick scan on the rare path.
         after_interpolation = previous == '${'
         scan_atomic = type(self)._scan_atomic_templates
         for token in tokens:
-            if previous in ('.', '?.') and token in conditions:
-                self.context.add_condition(-1)
             if after_interpolation:
                 self._count_interpolation_conditions(token, True)
                 after_interpolation = False
@@ -188,6 +196,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
     def preprocess(self, tokens):
         """Drop spaces, and offer each line's first code token to the
         innermost open expression arrow before any counter charges it.
+        Mark a keyword after '.' or '?.' as the name of a member.
 
         A '\n' is consumed by line_counter, and comments by comment_counter,
         before the state machine sees them, so expression_arrows cannot
@@ -196,6 +205,9 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         line_start = False
         state = self.parallel_states[0]
         annotation_punctuation = _ANNOTATION_PUNCTUATION
+        member_access_tokens = _MEMBER_ACCESS
+        structure_keywords = _STRUCTURE_KEYWORDS
+        member_access = False
         tokens = iter(self.code_tokens(tokens))
         while True:
             for token in tokens:
@@ -203,6 +215,12 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                     if line_start and not token.startswith(('//', '/*')):
                         line_start = False
                         arrows[-1].end_expression_before(token)
+                    if member_access:
+                        member_access = False
+                        if token in structure_keywords:
+                            token = _MemberName(token)
+                    elif token in member_access_tokens:
+                        member_access = True
                     if token in annotation_punctuation:
                         if token == '?':
                             if (self.context.class_field_annotations
