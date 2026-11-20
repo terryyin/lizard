@@ -515,6 +515,144 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
         }
         """, "a.tsx"))
 
+    def test_typescript_generic_assertion_at_a_line_end(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function settings(raw: unknown, saved: unknown) {
+          let config = saved as Partial<Settings>
+          if (raw) config = raw as Partial<Settings>
+          if (config.debug) enableLogging(config)
+        }
+        """, "a.ts"))
+
+    def test_typescript_nested_generic_assertion_at_a_line_end(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function index(rows: Row[] | null, cache: unknown) {
+          if (rows) return group(rows) satisfies Map<string, Array<Row>>
+          if (cache) return cache as Map<string, Array<Row>>
+          return null
+        }
+        """, "a.ts"))
+
+    def test_typescript_union_with_an_array_in_an_assertion(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function ids(input: unknown, fallback: number[]) {
+          if (input) return input as string[] | Array<number>
+          if (fallback) return fallback
+        }
+        """, "a.ts"))
+
+    def test_typescript_comparison_after_an_assertion_ends_with_its_statement(self):
+        self.assertEqual(2, self.nesting_depth("""
+        function below(value: unknown, limit: number) {
+          const small = value as number < limit
+          if (small) return limit >
+            0 && small
+        }
+        """, "a.ts"))
+
+    def test_typescript_range_check_after_an_assertion(self):
+        self.assertEqual(3, self.nesting_depth("""
+        function inRange(value: unknown, max: number, min: number) {
+          if (max) return value as number < max && min >
+            0 && max
+        }
+        """, "a.ts"))
+
+    def test_typescript_conditional_expression_after_an_assertion(self):
+        self.assertEqual(3, self.nesting_depth("""
+        function range(value: unknown, min: number, max: number, ready: boolean) {
+          if (ready) return value as number < min ? false : max >
+            min && ready
+        }
+        """, "a.ts"))
+
+    def test_vue_range_check_after_an_assertion(self):
+        self.assertEqual(2, self.nesting_depth("""
+        <script lang="ts">
+        function inRange(value: unknown, max: number, min: number, ready: boolean) {
+          if (ready) return value as number<max && min >
+            0 && ready
+        }
+        </script>
+        """, "a.vue"))
+
+    def test_typescript_shift_after_an_assertion(self):
+        self.assertEqual(2, self.nesting_depth("""
+        function signExtend(value: unknown, ready: boolean) {
+          if (ready) return value as number << 24 >>
+            24 && ready
+        }
+        """, "a.ts"))
+
+    def test_typescript_literal_union_in_an_assertion(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function mode(input: unknown, strict: boolean) {
+          if (strict) return input as "auto" | Array<Mode>
+          if (input) return []
+        }
+        """, "a.ts"))
+
+    def test_label_named_like_an_assertion(self):
+        self.assertEqual(2, self.nesting_depth("""
+        function drain(queue, log) {
+          do as: while (queue.busy)
+            if (log) log.wait();
+          while (queue.length);
+        }
+        """))
+
+    def test_typescript_function_type_in_an_assertion(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function listeners(registry: unknown, name: string) {
+          if (name) return registry as Record<string, (event: Event) => void>
+          if (registry) return {}
+        }
+        """, "a.ts"))
+
+    def test_tsx_generic_assertion_at_a_line_end(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function settings(raw: unknown, saved: unknown) {
+          let config = saved as Partial<Settings>
+          if (raw) config = raw as Map<string, Array<number>>
+          if (config.debug) enableLogging(config)
+        }
+        """, "a.tsx"))
+
+    def test_vue_generic_assertion_at_a_line_end(self):
+        self.assertEqual(1, self.nesting_depth("""
+        <script lang="ts">
+        function index(rows: Row[] | null, cache: unknown) {
+          if (cache) return cache as Map<string, Array<() => Row>>
+          if (rows) return rows
+        }
+        </script>
+        """, "a.vue"))
+
+    def test_typescript_comparison_after_a_generic_assertion(self):
+        self.assertEqual(2, self.nesting_depth("""
+        function oversized(input: unknown, limit: number) {
+          if (limit) return (input as Array<Item>).length >
+            limit && limit > 0;
+          return false;
+        }
+        """, "a.ts"))
+
+    def test_typescript_return_type_that_ends_in_an_operator_word(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function factory(source: Source, single: boolean): typeof Array.of {
+          if (single) return source.one
+          if (source.many) return source.all
+        }
+        """, "a.ts"))
+
+    def test_typescript_return_type_that_ends_in_a_value_word(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function theme(dark: boolean, saved: Theme | null): typeof themes.default {
+          if (saved) return saved
+          if (dark) return themes.dark
+        }
+        """, "a.ts"))
+
     def nesting_depth(self, code, filename="a.js"):
         result = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
             filename, code).function_list

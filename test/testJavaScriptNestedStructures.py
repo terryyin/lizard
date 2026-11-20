@@ -282,6 +282,40 @@ class TestJavaScriptNestedStructuresWithoutSemicolons(unittest.TestCase):
         }
         """, "a.tsx"))
 
+    def test_typescript_generic_assertion_at_a_line_end(self):
+        self.assertEqual(1, self.nested_structures("""
+        function index(rows: Row[] | null, cache: unknown) {
+          if (cache) return cache as Map<string, Array<Row>>
+          if (rows) return group(rows) satisfies Map<string, Row>
+          return null
+        }
+        """, "a.ts"))
+
+    def test_tsx_generic_assertion_at_a_line_end(self):
+        self.assertEqual(1, self.nested_structures("""
+        function settings(raw: unknown, saved: unknown) {
+          let config = saved as Partial<Settings>
+          if (raw) config = raw as Partial<Settings>
+          if (config.debug) enableLogging(config)
+        }
+        """, "a.tsx"))
+
+    def test_typescript_union_with_an_array_in_an_assertion(self):
+        self.assertEqual(1, self.nested_structures("""
+        function ids(input: unknown, fallback: number[]) {
+          if (input) return input as string[] | Array<number>
+          if (fallback) return fallback
+        }
+        """, "a.ts"))
+
+    def test_typescript_return_type_that_ends_in_a_keyword_property(self):
+        self.assertEqual(1, self.nested_structures("""
+        function theme(dark: boolean, saved: Theme | null): typeof themes.default {
+          if (saved) return saved
+          if (dark) return themes.dark
+        }
+        """, "a.ts"))
+
     def nested_structures(self, code, filename="a.js"):
         analyzer = FileAnalyzer(get_extensions([NestedStructure()]))
         functions = analyzer.analyze_source_code(filename, code).function_list
