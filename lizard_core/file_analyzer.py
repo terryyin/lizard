@@ -74,11 +74,6 @@ class FileAnalyzer(object):  # pylint: disable=R0903
 
     def __init__(self, extensions):
         self.processors = extensions
-        self.default_values = [
-            (name, info["default"])
-            for extension in extensions
-            for name, info in getattr(extension, "FUNCTION_INFO", {}).items()
-            if "default" in info]
 
     def __call__(self, filename):
         try:
@@ -117,7 +112,12 @@ class FileAnalyzer(object):  # pylint: disable=R0903
         a token passes. A reader can start and end a function between two
         tokens, such as a last arrow function argument before a line break,
         and the extension never sees that function."""
-        for name, value in self.default_values:
+        defaults = [
+            (name, info["default"])
+            for processor in self.processors
+            for name, info in getattr(processor, "FUNCTION_INFO", {}).items()
+            if "default" in info]
+        for name, value in defaults:
             for function in functions:
                 if not hasattr(function, name):
                     setattr(function, name, value)

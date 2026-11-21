@@ -13,6 +13,9 @@ class LizardExtension:  # pylint: disable=R0903
                    'cpp' in reader.language_names
 
         block_count = 0
+        if c_family:
+            # the global code of an empty file gets no token
+            reader.context.current_function.statement_count = 0
         for token in tokens:
             if c_family:
                 if not hasattr(reader.context.current_function,
