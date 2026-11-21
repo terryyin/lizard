@@ -83,6 +83,24 @@ class TestFanIn(unittest.TestCase):
 
 class TestCombinedResult(unittest.TestCase):
 
+    def test_function_without_a_token_of_its_own_keeps_fan_in_of_others(self):
+        ext = FanInOut()
+        code = """
+            function load(request) {
+                return request.then(
+                    (response) => parse(response),
+                    () => fallback
+                );
+            }
+            function parse(response) {
+                return response.json();
+            }
+            """
+        result = FileAnalyzer(get_extensions([ext])).analyze_source_code("a.js", code)
+        list(ext.cross_file_process([result]))
+        self.assertEqual([("(anonymous)", 0), ("(anonymous)", 0), ("load", 0), ("parse", 1)],
+                         [(f.name, f.fan_in) for f in result.function_list])
+
     def test_1_fan_in_from_another_source_file(self):
         result = fanio(
                 """ int fun(){ } """,
