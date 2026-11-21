@@ -397,6 +397,21 @@ function call({ function: fn, args }) {
                     [(f.name, f.cyclomatic_complexity, f.start_line,
                       f.end_line) for f in functions])
 
+    def test_function_expression_as_a_default_value_is_no_method(self):
+        code = '''
+const { run = async function (x) { return x; }, id } = options;
+const { stop = flag ? async function (x) { return x; } : noop } = options;
+const { wait = (async function (x) { return x; })(1), rest } = options;
+const hooks = { ready: 1, async function(x) { return x; } };
+'''
+        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+            with self.subTest(filename=filename):
+                functions = analyze_file.analyze_source_code(
+                    filename, code).function_list
+                self.assertEqual(
+                    [('run', 2), ('stop', 3), ('wait', 4), ('function', 5)],
+                    [(f.name, f.start_line) for f in functions])
+
     def test_structure_at_the_start_of_a_block_is_no_method(self):
         code = '''
 function close(stream) {
