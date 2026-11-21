@@ -24,9 +24,9 @@ class _MethodName(str):
     is_member_name = True
 
 
-# The words that the reader or a metric reads as a structure.
+# The words that the reader or a metric reads as a keyword.
 _KEYWORDS = frozenset((
-    'begin', 'end', 'do', 'then', 'def', 'class', 'module', 'it',
+    'begin', 'end', 'do', 'then', 'def', 'class', 'module', 'it', 'not', 'in',
     'if', 'unless', 'else', 'elsif', 'elseif', 'elif', 'case', 'when',
     'while', 'until', 'for', 'foreach', 'and', 'or', 'rescue', 'ensure',
     'try', 'catch', 'finally', 'except', 'switch', 'with', 'return',

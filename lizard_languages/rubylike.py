@@ -11,6 +11,13 @@ def state_embedded_doc(token):
         return True
 
 
+# Ruby expects an expression after these words, so an `if` that follows
+# one starts an expression: `else if c ... end`.
+_EXPRESSION_KEYWORDS = frozenset((
+    'and', 'or', 'not', 'then', 'else', 'elsif', 'do', 'begin', 'ensure',
+    'case', 'when', 'in', 'if', 'unless', 'while', 'until', 'for'))
+
+
 class RubylikeStateMachine(CodeStateMachine):
     # pylint: disable=R0903
     FUNC_KEYWORD = 'def'
@@ -40,18 +47,37 @@ class RubylikeStateMachine(CodeStateMachine):
         elif token in self.BLOCK_KEYWORDS and self.last_token != ".":
             self.sub_state(self.statemachine_clone())
         elif token in self.LOOP_KEYWORDS:
-            if self.is_newline():
+            if not getattr(token, 'is_member_name', False) and \
+                    not self.follows_value():
                 self.next(self._for_while)
         elif token in ("if", "unless"):
-            if self.is_newline():
-                self.sub_state(self.statemachine_clone())
-            elif not getattr(token, 'is_member_name', False):
+            if getattr(token, 'is_member_name', False):
+                pass
+            elif self.follows_value():
                 self.next(self._if)
+            else:
+                self.sub_state(self.statemachine_clone())
         elif token == "=begin":
             self.sub_state(state_embedded_doc)
 
     def is_newline(self):
         return self.context.newline or self.last_token == ";"
+
+    def follows_value(self):
+        """After a value, `x if c` and `x while c` are modifiers that open
+        no block.  At the start of a statement, or after an operator or a
+        word such as `then`, they start a block: `x = if c`."""
+        last = self.last_token
+        if last is None or self.is_newline():
+            return False
+        if getattr(last, 'is_member_name', False):
+            return True
+        if last in _EXPRESSION_KEYWORDS:
+            return False
+        end = last[-1]
+        return end.isalnum() or end in '_)]}"\'`' or (
+            len(last) > 1 and end in '?!/') or (
+            last[0] == '%' and len(last) > 2)
 
     def _def(self, token):
         if token == '(':
