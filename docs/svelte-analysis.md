@@ -10,8 +10,8 @@ machine as the script.
 - Script functions are reported as in a `.js` or `.ts` file.
 - A function expression or an arrow function in the markup is reported like
   a callback in a script. This covers attributes, directives, `{...}` tags
-  and block heads. It is `(anonymous)`, unless `{@const name = ...}` gives it
-  a name.
+  and block heads. It is `(anonymous)`, unless it has a name of its own, as
+  in `onclick={function save() {}}`, or `{@const name = ...}` gives it one.
 - `{#snippet name(params)}` is a function `name` with those parameters. It
   starts at its `{#snippet}` line and ends at its `{/snippet}` line.
 
@@ -66,3 +66,12 @@ statement that it stands for, and an expression adds its own tokens and a
   whose brackets do not match is skipped. A `{` that does not close holds
   the rest of the markup up to the next script block, as in the Svelte
   compiler.
+- To find the script blocks, lizard ends a `{...}` attribute value in a
+  start tag at its first `}`. So a value that does not close, as in
+  `<p attr={oops`, hides a script block after it, and that block's
+  functions are lost.
+- The JavaScript tokenizer finds the `}` that ends an expression, so braces
+  in strings, comments, templates and regular expressions do not end it. To
+  keep the time linear, it reads at most twice the markup again for this.
+  On invalid markup that reaches this bound, such as many strings that do
+  not close, each expression then ends at its first `}`.
