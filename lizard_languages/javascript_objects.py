@@ -1,9 +1,18 @@
 """JavaScript object and class members, including computed method names."""
 
 from .javascript_expression import active_js_state, ends_expression
+from .javascript_statements import opens_object
+
+# The tokens before the name of a method in an object literal; it reads
+# the first member with no token before it.
+_MEMBER_STARTS = frozenset((None, ',', '*', 'async', 'get', 'set'))
 
 
 class JavaScriptObjectsMixin:
+    # A class body or an object literal: braces that hold members.  The
+    # reader also reads blocks such as `catch {` or `case 1: {` as objects.
+    holds_members = False
+
     def _typed_class_member(self):
         return (self.as_class and not self._in_prop_value
                 and self.context.class_field_annotations)
@@ -11,6 +20,13 @@ class JavaScriptObjectsMixin:
     def optional_member_context(self):
         state = active_js_state(self)
         return state._state == state._state_global and state._typed_class_member()
+
+    def member_name_context(self):
+        """Whether a word before '(' here names a method, `catch(e) {}`."""
+        state = active_js_state(self)
+        return (state.holds_members and state._state == state._state_global
+                and not state._in_prop_value
+                and (state.as_class or state.last_token in _MEMBER_STARTS))
 
     def _end_field_before_modifier(self):
         """A modifier at a line start begins the next class member, so a
@@ -114,6 +130,11 @@ class JavaScriptObjectsMixin:
                     self._function(self.last_tokens)
             self.next(self._function, token)
             return True
+        elif token == '{' and self._static_seen:
+            # A static initialization block holds statements.
+            self._static_seen = False
+            self.sub_state(self.__class__(self.context))
+            return True
         # If we've seen async/static and this is an identifier, it's likely a method name
         elif (self._async_seen or self._static_seen) and token not in ('*', 'function', '=>'):
             if token == '=':
@@ -137,11 +158,33 @@ class JavaScriptObjectsMixin:
         object_reader = self._read_binding_candidate(
             '}', callback, as_object=True, track_complexity=False)
         object_reader.as_class = self._class_body_pending
+        object_reader.holds_members = self._opens_members()
         self._class_body_pending = False
         object_reader._static_seen = self._static_seen
         object_reader._async_seen = self._async_seen
         self._static_seen = False
         self._async_seen = False
+
+    def _opens_members(self):
+        """Whether the '{' just read holds members, `x = {` or a class
+        body, and not statements, `finally {`."""
+        previous = self.last_token
+        if self._class_body_pending:
+            return True
+        if previous is None:
+            # A group's first token, `f({`, but in a block, `finally { {`.
+            return not self.as_object
+        if previous == ':':
+            # A value, `{ a: {`, but in a block, `finally { label: {`.
+            return self.holds_members
+        if self.context.newline and (
+                previous == '!' or previous[0].isalpha() or previous[0] in '_$'):
+            # A "{" that starts a line after a word or a '!' is almost always
+            # a block: `return`, `x!`, `[1] as const`, `factory.of`.  An
+            # object there, `export default` + line break + `{`, keeps its
+            # base reading, without methods named like keywords.
+            return False
+        return opens_object(previous)
 
     def _collect_computed_name(self):
         # Collect tokens between [ and its ]

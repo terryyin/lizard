@@ -131,12 +131,13 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             self.last_tokens += token
             self._prev_token = '.'
             return
-        if token == 'function':
+        if token == 'function' and not getattr(token, 'is_member_name', False):
             if self.started_function and not self.as_object:
                 self._pop_function_from_stack()
             self._signature = True
             self._state = self._function
-        elif token in ('if', 'switch', 'for', 'while', 'catch'):
+        elif (token in ('if', 'switch', 'for', 'while', 'catch')
+              and not getattr(token, 'is_member_name', False)):
             self._condition_kind = token
             self.next(self._expecting_condition_and_statement_block)
         elif token in ('else', 'do', 'try', 'final'):
