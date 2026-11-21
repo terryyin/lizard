@@ -55,12 +55,13 @@ def _tokens(code, marks=None):
     """The tokens of markup code and the marks of its regular expressions,
     or None when it nests too deep to read. The marks of the forward scan,
     which also finds a regular expression after a comment, reach the
-    tokenizer through the memo and leave it. The added ']/' closes a
-    regular expression that the end of the code cuts, so it gets a mark."""
+    tokenizer through the memo and leave it. The added ' ]/' closes a
+    regular expression that the end of the code cuts, also after a
+    backslash, so it gets a mark."""
     key = ('js', id(code))
     try:
         if marks is None and '/' in code:
-            marks = mark_forward(code + ']/', True)[:len(code)]
+            marks = mark_forward(code + ' ]/', True)[:len(code)]
         if marks is None or REGEX_START_MARKER not in marks:
             # The same object makes the tokenizer use its faster pattern.
             marks = code
@@ -119,6 +120,8 @@ class _MarkupTokens:
         self.code = []
         # How much more text the end scan may read.
         self.reread = 2 * (end - start)
+        # Where the first comment that does not close starts.
+        self.unclosed = end
         self.guess = end - start
 
     def __iter__(self):
@@ -279,20 +282,24 @@ class _MarkupTokens:
 
     def _ends_after(self, kind, start, stop):
         """Where the string, the comment or the regular expression at start
-        ends, when that is after stop, else 0. A scan that finds no end
-        counts as a read of the markup, so that invalid code cannot cost
-        more than linear time."""
+        ends, when that is after stop, else 0. A string or a regular
+        expression that finds no end counts as a read of the markup, so
+        that invalid code cannot cost more than linear time."""
         source, end = self.source, self.end
+        if kind == '*/':
+            # When a comment does not close, no later comment closes.
+            close = -1 if start >= self.unclosed else source.find(
+                kind, start + 2, end)
+            if close < 0:
+                self.unclosed = min(self.unclosed, start)
+            return close + 2 if close >= stop else 0
         if self.reread < 0:
             return 0
-        if kind == '*/':
-            close = source.find(kind, start + 2, end)
-        else:
-            close = _LITERAL_TEXT[kind].match(source, start + 1, end).end()
-        if close < 0 or not source.startswith(kind, close):
-            self.reread -= (end if close < 0 else close) - start
+        close = _LITERAL_TEXT[kind].match(source, start + 1, end).end()
+        if not source.startswith(kind, close):
+            self.reread -= close - start
             return 0
-        return close + len(kind) if close >= stop else 0
+        return close + 1 if close >= stop else 0
 
     def _block_tag(self, kind, pos, close):
         # pylint: disable=R0912
