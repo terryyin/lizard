@@ -12,7 +12,7 @@ _CONTINUES_FROM_LINE_START = frozenset((
     '.', '{', 'else', 'catch', 'finally', 'match', 'with', 'yield'))
 _CONTINUES_AT_LINE_END = frozenset((
     '&&', '||', '+', '-', '*', '/', '%', '++', '::', '==', '!=', '=>',
-    '<=', '>=', '|', '&', '^', '->', '=', '+=', '-=', ':',
+    '<=', '>=', '<', '|', '&', '^', '->', '=', '+=', '-=', ':',
     ',', '.', 'else', 'then', 'do', 'yield', 'try', 'finally', 'match',
     'catch', 'new', 'throw'))
 _CONDITION_KEYWORDS = frozenset(('if', 'while', 'for'))
@@ -53,6 +53,9 @@ class ScalaReader(CodeReader, CCppCommentsMixin):
                         line_start = 0
                     elif line_start == 1:
                         line_start = 3
+                elif token.startswith('/*') and '\n' in token:
+                    # A block comment that ends on a later line.
+                    line_start = 3
                 yield token
             elif token == '\n':
                 line_start = after_line_break[line_start]
@@ -149,9 +152,10 @@ class ScalaStates(GoLikeStates):  # pylint: disable=R0903
             self.next(self._state_global, token)
         elif token == ';' and self._brackets <= 0 and not self._open_dos:
             self._end_function_body()
-        elif token == 'def':
-            # No expression goes on into a definition, for example after a
-            # comment that ends on the line of the next `def`.
+        elif token == 'def' and self.last_token[0] not in '"`':
+            # No expression goes on into a definition. After a quote, the
+            # word is text in a multi-line string, which the tokenizer
+            # splits, or a name in backticks.
             self._end_function_body()
             self.next(self._state_global, token)
         elif len(token) > 1 and token[0] == '#':
@@ -194,6 +198,9 @@ class ScalaStates(GoLikeStates):  # pylint: disable=R0903
             # `{` after a block starts a block of its own.
             return not (token == '{' and (after_blank_line or last == '}'))
         if last in _CONTINUES_AT_LINE_END and self._previous != '.':
+            return True
+        if last == '>' and self._previous == '>':
+            # A shift. One `>` can end an XML literal.
             return True
         if last in (')', '}') and self._after_condition:
             # After `if (cond)` or `for { ... }`, the body comes next.
