@@ -645,6 +645,20 @@ class TestSvelteMarkup(unittest.TestCase):
         self.assertLess(time.perf_counter() - started, 1)
         self.assertEqual([('f', 1, 1, 2)], function_summaries(functions))
 
+    def test_regular_expression_with_a_backtick_in_an_interpolation(self):
+        functions = get_svelte_function_list(
+            '{#snippet f()}' + '{`${x + /`a`[/*]/.test(x)}`}' * 50
+            + '{"}" && y}{/snippet}\n')
+        self.assertEqual([('f', 1, 1, 2)], function_summaries(functions))
+
+    def test_many_regexes_in_interpolations_take_linear_time(self):
+        started = time.perf_counter()
+        functions = get_svelte_function_list(
+            '{#snippet f()}' + '{`${x + /`a`[/*]/.test(x)}`}' * 3000
+            + '*/{x && y}{/snippet}\n')
+        self.assertLess(time.perf_counter() - started, 1)
+        self.assertEqual([('f', 1, 1, 2)], function_summaries(functions))
+
     def test_many_divisions_before_braces_in_strings(self):
         functions = get_svelte_function_list(
             '{#snippet f()}' + '{x / 2 && "}" && y}' * 50 + '{/snippet}\n')
