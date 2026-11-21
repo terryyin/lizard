@@ -121,6 +121,12 @@ class TestCppIncrements(unittest.TestCase):
     def test_method_call_with_same_name_on_another_object_is_not_recursion(self):
         self.assertEqual([0], cpp("int A::size() { return other.size(); }"))
         self.assertEqual([1], cpp("int A::size() { return this->size(); }"))
+        self.assertEqual([3], cpp("""
+            bool T::foreach(int n) {
+              if (n && this->foreach(n - 1))   // +1, +1, +1 recursion
+                return true;
+              return false;
+            }"""))
 
 
 class TestCppLogicalOperatorSequences(unittest.TestCase):
@@ -894,6 +900,30 @@ class TestJavaScriptKeywordAsTheNameOfAMember(unittest.TestCase):
             function step(o) {
               o.elseif(run);
             }"""))
+
+    def test_structure_in_a_method_named_like_it_is_no_recursion(self):
+        self.assertEqual([1, 2], cogc("a.js", """
+            class Deferred {
+              catch(onRejected) {
+                try {
+                  return this.then(null, onRejected);
+                } catch (e) {                          // +1
+                  return this;
+                }
+              }
+              for(key) {
+                if (key) return this.for(key.parent);  // +1, +1 recursion
+              }
+            }"""))
+
+    def test_other_languages_can_call_a_structure_word(self):
+        self.assertEqual([4], cogc("a.pl", """
+sub catch {
+  my ($n) = @_;
+  if ($n) { return catch($n - 1); }   # +1 if, +2 catch, +1 recursion
+  return 0;
+}
+"""))
 
 
 class TestJavaScriptGroupedExpressions(unittest.TestCase):
