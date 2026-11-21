@@ -19,11 +19,11 @@ from html import unescape
 from itertools import repeat
 
 from lizard_core.function_info import FunctionInfo
-from .js_style_regex_context import (
-    _EXPRESSION_KEYWORDS, _MARK_CACHE, REGEX_LITERAL, REGEX_TOKEN)
+from .js_style_regex_context import _MARK_CACHE, REGEX_START_MARKER
+from .js_style_regex_forward_scan import mark_forward
 from .javascript_expression import end_before_line_token
 from .javascript_statements import ImpliedSemicolons
-from .javascript_templates import LINE_COMMENT, _template_end
+from .javascript_templates import interpolation_code
 from .typescript import TypeScriptReader
 from .vue import VueReader, _attributes
 
@@ -32,18 +32,6 @@ _MARKUP_ITEM = re.compile(r'<!--|<(/?)([A-Za-z][^\s/>{]*)|\{')
 # In a start tag: an expression, a quoted value, or the end of the tag.
 _TAG_ITEM = re.compile(r'''\{|=\s*(["'])|>''')
 _QUOTED_VALUE_ITEM = {'"': re.compile(r'\{|"'), "'": re.compile(r"\{|'")}
-# In code: the units that can hold a brace as text, a template or a brace.
-# A regular expression starts after punctuation, a keyword such as `return`,
-# or an arrow. A keyword after a '.' is a member name.
-_CODE_ITEM = re.compile(
-    r'/\*.*?\*/|' + LINE_COMMENT
-    + r'''|"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'|''' + REGEX_TOKEN
-    + r'|(?:(?<![\w$])(?P<word>'
-    + '|'.join(sorted(_EXPRESSION_KEYWORDS | {'await'}))
-    + r')|=>)\s*' + REGEX_LITERAL + r'|[`{}]', re.S)
-# Spaces or one comment, skipped one at a time so that no match backtracks.
-_SPACE_OR_COMMENT = re.compile(r'\s+|/\*.*?\*/|' + LINE_COMMENT, re.S)
-_REGEX_LITERAL = re.compile(REGEX_LITERAL)
 # The head of a block tag. `{/* note */ a}` and `{// note` start code.
 _TAG_HEAD = re.compile(r'\s*([#:@]|/(?![/*]))(else\s+if\b|[\w$]*)')
 # Elements whose content is text, and the tags that end it.
@@ -54,6 +42,13 @@ _CLOSING = frozenset((')', ']', '}'))
 _MEMBER_ACCESS = ('.', '?.')
 # The zeros at the start of the number of a character reference.
 _LEADING_ZEROS = re.compile(r'(&#[xX]?)0+(?=[0-9a-fA-F])')
+# The text of a string or a regular expression up to the character that
+# ends it, or up to the end of its line.
+_LITERAL_TEXT = {quote: re.compile(
+    r'(?:\\(?:\r\n|[\s\S])|[^' + quote + r'\\\r\n])*') for quote in '"\''}
+_LITERAL_TEXT['/'] = re.compile(
+    r'(?:\\[^\r\n]|\[(?:\\[^\r\n]|[^\\\]\r\n])*\]?|[^/\\[\r\n])*')
+_BRACE = re.compile(r'[{}]')
 
 
 class _Switch(str):
@@ -191,62 +186,36 @@ class _Statements(ImpliedSemicolons):
         return True
 
 
-def _code_end(source, pos, end):
-    """The position of the '}' that ends the code at pos, or None."""
-    depth = 1
-    # A regular expression at the start of the code.
-    match = _REGEX_LITERAL.match(source, _skip_spaces(source, pos, end), end)
-    if match:
-        pos = match.end()
-    while True:
-        match = _CODE_ITEM.search(source, pos, end)
-        if match is None:
-            return None
-        token = match.group()
-        pos = match.end()
-        if match.group('word') and _after_dot(source, match.start()):
-            pos = match.end('word')
-        elif token == '{':
-            depth += 1
-        elif token == '}':
-            depth -= 1
-            if depth == 0:
-                return match.start()
-        elif token == '`':
-            pos, expressions = _template_end(source, match.start())
-            if expressions is None or pos > end:
-                return None
+def _marks(code):
+    """The marks of the regular expressions in markup code, or None when it
+    nests too deep to read. The forward scan also finds a regular
+    expression after a comment. The added ' ]/' closes a regular expression
+    that the end of the code cuts, also after a backslash, so it gets a
+    mark."""
+    try:
+        return mark_forward(code + ' ]/', True)[:len(code)] if (
+            '/' in code) else code
+    except RecursionError:
+        return None
 
 
-def _skip_spaces(source, pos, end):
-    """The position after the spaces and comments at pos."""
-    while True:
-        match = _SPACE_OR_COMMENT.match(source, pos, end)
-        if match is None:
-            return pos
-        pos = match.end()
-
-
-def _after_dot(source, pos):
-    """Whether the word at pos is a member name: it follows a '.', across
-    spaces and block comments, that does not end a number."""
-    pos -= 1
-    while pos >= 0:
-        if source[pos].isspace():
-            pos -= 1
-        elif source.endswith('*/', 0, pos + 1):
-            pos = source.rfind('/*', 0, pos - 1) - 1
-            if pos < -1:
-                return False
-        else:
-            break
-    if pos < 0 or source[pos] != '.':
-        return False
-    digits = pos
-    while digits > 0 and source[digits - 1].isdigit():
-        digits -= 1
-    return digits == pos or (
-        digits > 0 and (source[digits - 1].isalnum() or source[digits - 1] in '_$'))
+def _tokens(code, marks):
+    """The tokens of markup code and its marks, or None when it nests too
+    deep to read. The marks reach the tokenizer through the memo and leave
+    it."""
+    if marks is None:
+        return None
+    if REGEX_START_MARKER not in marks:
+        # The same object makes the tokenizer use its faster pattern.
+        marks = code
+    key = ('js', id(code))
+    try:
+        _MARK_CACHE[key] = (code, marks)
+        return list(TypeScriptReader.generate_tokens(code)), marks
+    except RecursionError:
+        return None
+    finally:
+        _MARK_CACHE.pop(key, None)
 
 
 def _balanced(tokens):
@@ -285,7 +254,7 @@ def _split_at_last(tokens, words):
 
 class _MarkupTokens:
     """The tokens of the markup between two script blocks."""
-    # pylint: disable=R0903
+    # pylint: disable=R0902,R0903
 
     def __init__(self, source, start, end):
         self.source = source
@@ -293,6 +262,12 @@ class _MarkupTokens:
         self.end = end
         self.blocks = []
         self.tail = []
+        self.code = []
+        # How much more text the end scan may read.
+        self.reread = 2 * (end - start)
+        # The text after a string or a comment start that does not close.
+        self.unclosed = {}
+        self.guess = end - start
 
     def __iter__(self):
         source, end = self.source, self.end
@@ -353,9 +328,10 @@ class _MarkupTokens:
         if in_start_tag and head and head.group(1) != '@':
             # An attribute value is an expression: `{/x/.test(a)}`.
             head = None
-        close = _code_end(self.source, head.end() if head else pos, self.end)
-        if close is None:
+        found = self._code_end(head.end() if head else pos)
+        if found is None:
             return self.end
+        close, self.code = found
         yield from self._newlines(pos)
         self.tail = []
         if head is None:
@@ -366,6 +342,120 @@ class _MarkupTokens:
                 close)
         yield from self.tail
         return close + 1
+
+    def _code_end(self, pos):
+        """The '}' that ends the code at pos and the tokens of the code, or
+        None. The tokenizer reads up to the guessed end, and then twice as
+        much up to the next '}' until a '}' in the text closes the code."""
+        source, end = self.source, self.end
+        stop = self._guess(pos)
+        while stop:
+            code = source[pos:stop]
+            marks = _marks(code)
+            # Markup after the code can look like a regular expression, and
+            # a mark makes the tokenizer slower. So the text up to the last
+            # '}' before the first mark is read on its own first.
+            first = max(marks.find(REGEX_START_MARKER), 0) if marks else 0
+            for size in sorted({code.rfind('}', 0, first) + 1, len(code)} - {0}):
+                read = _tokens(code[:size], marks and marks[:size])
+                if read is None:
+                    return None
+                index, offset = self._walk(read, pos, pos + size)
+                if index is not None:
+                    return pos + offset, read[0][:index]
+            # A string, a comment or a regular expression ends at offset.
+            following = source.find('}', max(stop, offset), end)
+            if following < 0:
+                stop = end if offset else 0
+            else:
+                stop = max(following + 1, min(end, 2 * stop - pos))
+        return None
+
+    def _guess(self, pos):
+        """After the '}' that closes the code at pos when no string, comment
+        or regular expression holds a brace, else after the first '}'. The
+        guesses read the markup at most once in all."""
+        limit = min(self.end, pos + self.guess)
+        depth = 0
+        for match in _BRACE.finditer(self.source, pos, limit):
+            if match.group() == '{':
+                depth += 1
+            elif depth:
+                depth -= 1
+            else:
+                self.guess -= match.end() - pos
+                return match.end()
+        self.guess -= limit - pos
+        return self.source.find('}', pos, self.end) + 1
+
+    def _walk(self, read, pos, stop):
+        """The index and the offset of the '}' that closes the code at pos.
+        Or None and the end of a string, a comment or a regular expression
+        before that '}' when it ends after stop, else 0."""
+        # pylint: disable=R0914
+        tokens, marks = read
+        depth = offset = 0
+        template = None
+        for index, token in enumerate(tokens):
+            kind = token[0] if token in ('"', "'", '/', '/=') else None
+            if kind == '/' and ''.join(tokens[index + 1:index + 2])[:1] == '*':
+                kind = '*/'
+            elif kind == '/' and marks[offset] == '/':
+                kind = None
+            if token == '}':
+                if not depth:
+                    return index, offset
+                depth -= 1
+            elif token in ('{', '${'):
+                depth += 1
+            if token == '${' and index + 1 < len(tokens):
+                # The code of the interpolation, without nested templates,
+                # with the marks that its context gives.
+                text, base = tokens[index + 1], offset + 2
+                for start, text_end in interpolation_code(
+                        marks[base:base + len(text)], True):
+                    inner = _tokens(text[start:text_end],
+                                    marks[base + start:base + text_end])
+                    found, reach = (0, 0) if inner is None else self._walk(
+                        inner, pos + base + start, stop)
+                    if found is None and reach:
+                        return None, reach
+            elif kind:
+                reach = self._ends_after(kind, pos + offset, stop)
+                if reach:
+                    return None, reach
+            if token == '`' and template in (None, depth):
+                template = depth if template is None else None
+            # The tokenizer puts each text of a template between backticks.
+            text = template == depth and token[:1] == '`' and len(token) > 1
+            offset += len(token) - 2 * text
+        return None, 0
+
+    def _ends_after(self, kind, start, stop):
+        """Where the string, the comment or the regular expression at start
+        ends, when that is after stop, else 0. A string or a regular
+        expression that finds no end counts as a read of the markup, so
+        that invalid code cannot cost more than linear time. A comment
+        costs no read: after one comment finds no end, no later comment
+        is scanned."""
+        source, end = self.source, self.end
+        first, last = self.unclosed.get(kind, (end, end))
+        if first <= start < last or (kind != '*/' and self.reread < 0):
+            return 0
+        if kind == '*/':
+            close = source.find(kind, start + 2, end)
+        else:
+            close = _LITERAL_TEXT[kind].match(source, start + 1, end).end()
+        if close < 0 or not source.startswith(kind, close):
+            close = end if close < 0 else close
+            if kind != '/':
+                # A start of the same kind up to close does not close either.
+                self.unclosed[kind] = (start, close)
+            if kind != '*/':
+                self.reread -= close - start
+            return 0
+        close += len(kind)
+        return close if close > stop else 0
 
     def _block_tag(self, kind, pos, close):
         # pylint: disable=R0912
@@ -471,12 +561,9 @@ class _MarkupTokens:
         """The tokens of the code from pos to close, after the newlines of
         the tag head before it. The newlines and comments after the code
         go to the tail, which comes after the tokens that end the tag."""
-        code = self.source[pos:close]
         newlines = self.source.count('\n', self.line, pos)
         self.line = close
-        tokens = _balanced(list(TypeScriptReader.generate_tokens(code)))
-        # The slice is new on each pass, so its memo would only grow.
-        _MARK_CACHE.pop(('js', id(code)), None)
+        tokens = _balanced(self.code)
         last = len(tokens)
         while last and (tokens[last - 1].isspace()
                         or tokens[last - 1].startswith(('//', '/*'))):

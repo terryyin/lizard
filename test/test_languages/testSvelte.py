@@ -579,6 +579,161 @@ class TestSvelteMarkup(unittest.TestCase):
                           ('s', 7, 10, 3), ('later', 11, 11, 2)],
                          function_summaries(functions))
 
+    def test_regular_expressions_after_comments(self):
+        functions = get_svelte_function_list('''\
+<button onclick={() => /* note */ /{/.test(x) && y}>a</button>
+<button onclick={() => (/* note */ /}/.test(x) && y)}>b</button>
+<button onclick={() => { return /* note */ /}/.test(x) && y; }}>c</button>
+<button onclick={() => x. // note
+  return / 2 && y}>d</button>
+{/* note */ /}/.test(x) && (() => y && z)}
+{#snippet later()}{x && y}{/snippet}
+''')
+        self.assertEqual([('(anonymous)', 1, 1, 2), ('(anonymous)', 2, 2, 2),
+                          ('(anonymous)', 3, 3, 2), ('(anonymous)', 4, 5, 2),
+                          ('(anonymous)', 6, 6, 2), ('later', 7, 7, 2)],
+                         function_summaries(functions))
+
+    def test_regular_expression_after_a_line_comment(self):
+        for ending in ('\n', '\r', ' ', ' '):
+            with self.subTest(ending=ending):
+                functions = get_svelte_function_list(
+                    '<button onclick={() => { // note' + ending
+                    + '/}/.test(x) && y; }}>a</button>\n'
+                    '{#snippet later()}{x && y}{/snippet}\n')
+                self.assertEqual(
+                    [('(anonymous)', 2), ('later', 2)],
+                    [(f.name, f.cyclomatic_complexity) for f in functions])
+
+    def test_long_strings_comments_and_regexes_hold_braces(self):
+        functions = get_svelte_function_list('''\
+{#snippet s(x)}
+  <p>{x /*
+    } ` }
+  */ && y}</p>
+  <p>{`${x /* `}`}` + 1} y
+  } */}` || z}</p>
+  <p>{"}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}" || x}</p>
+  <p>{x || /}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}/.test(y)}</p>
+{/snippet}
+{#snippet later()}{x && y}{/snippet}
+''')
+        self.assertEqual([('s', 1, 9, 5), ('later', 10, 10, 2)],
+                         function_summaries(functions))
+
+    def test_long_runs_of_spaces_take_linear_time(self):
+        started = time.perf_counter()
+        functions = get_svelte_function_list(
+            '{#snippet f()}{x' + ' ' * 100000 + '&& y}{/snippet}\n')
+        self.assertLess(time.perf_counter() - started, 1)
+        self.assertEqual([('f', 1, 1, 2)], function_summaries(functions))
+
+    def test_long_runs_of_line_breaks_after_a_division_take_linear_time(self):
+        started = time.perf_counter()
+        functions = get_svelte_function_list(
+            '{#snippet f()}{x / 2' + '\n' * 64000 + '&& y}{/snippet}\n')
+        self.assertLess(time.perf_counter() - started, 1)
+        self.assertEqual([('f', 1, 64001, 2)], function_summaries(functions))
+
+    def test_many_invalid_tags_on_one_line_take_linear_time(self):
+        started = time.perf_counter()
+        functions = get_svelte_function_list(
+            '<p>{a \\"}</p>' * 3000 + '\n{#snippet f()}{x && y}{/snippet}\n')
+        self.assertLess(time.perf_counter() - started, 1)
+        self.assertEqual([('f', 2, 2, 2)], function_summaries(functions))
+
+    def test_division_after_a_postfix_operator(self):
+        functions = get_svelte_function_list(
+            '{#snippet f()}' + '<p>{i++ / 2}</p>' * 100
+            + '<p>{(/a}b/.test(y) && z)}</p>{/snippet}\n')
+        self.assertEqual([('f', 1, 1, 2)], function_summaries(functions))
+
+    def test_template_in_an_interpolation(self):
+        functions = get_svelte_function_list(
+            '{#snippet f()}{`${`x`}` + "}" && y}{/snippet}\n'
+            '{`${`x`}`\n\n}\n<script>function after() {}</script>\n')
+        self.assertEqual([('f', 1, 1, 2), ('after', 5, 5, 1)],
+                         function_summaries(functions))
+
+    def test_division_after_a_template_in_an_interpolation(self):
+        functions = get_svelte_function_list(
+            '{#snippet f()}' + '{`${`x` / "["}`}' * 50
+            + '{"}" && y}{/snippet}\n')
+        self.assertEqual([('f', 1, 1, 2)], function_summaries(functions))
+
+    def test_many_divisions_in_interpolations_take_linear_time(self):
+        started = time.perf_counter()
+        functions = get_svelte_function_list(
+            '{#snippet f()}' + '{`${`x` / "["}`}' * 3000
+            + ']/{x && y}{/snippet}\n')
+        self.assertLess(time.perf_counter() - started, 1)
+        self.assertEqual([('f', 1, 1, 2)], function_summaries(functions))
+
+    def test_regular_expression_with_a_backtick_in_an_interpolation(self):
+        functions = get_svelte_function_list(
+            '{#snippet f()}' + '{`${x + /`a`[/*]/.test(x)}`}' * 50
+            + '{"}" && y}{/snippet}\n')
+        self.assertEqual([('f', 1, 1, 2)], function_summaries(functions))
+
+    def test_many_regexes_in_interpolations_take_linear_time(self):
+        started = time.perf_counter()
+        functions = get_svelte_function_list(
+            '{#snippet f()}' + '{`${x + /`a`[/*]/.test(x)}`}' * 3000
+            + '*/{x && y}{/snippet}\n')
+        self.assertLess(time.perf_counter() - started, 1)
+        self.assertEqual([('f', 1, 1, 2)], function_summaries(functions))
+
+    def test_many_divisions_before_braces_in_strings(self):
+        functions = get_svelte_function_list(
+            '{#snippet f()}' + '{x / 2 && "}" && y}' * 50 + '{/snippet}\n')
+        self.assertEqual([('f', 1, 1, 101)], function_summaries(functions))
+
+    def test_many_comment_starts_that_do_not_close(self):
+        started = time.perf_counter()
+        functions = get_svelte_function_list(
+            '{x / /a\\/*b}/.test(x)}' * 3000
+            + '{#snippet f()}{"}" && y}{/snippet}\n')
+        self.assertLess(time.perf_counter() - started, 1)
+        self.assertEqual([('f', 1, 1, 2)], function_summaries(functions))
+
+    def test_comment_cut_before_its_last_character(self):
+        functions = get_svelte_function_list(
+            '{#snippet f()}{   "}"/*}*/&&y}{/snippet}\n')
+        self.assertEqual([('f', 1, 1, 2)], function_summaries(functions))
+
+    def test_line_breaks_before_markup_with_slashes_take_linear_time(self):
+        started = time.perf_counter()
+        functions = get_svelte_function_list(
+            '{#snippet f()}{x / 2 + "{"' + '\n' * 64000
+            + '&& y}{/snippet}<p/>}\n')
+        self.assertLess(time.perf_counter() - started, 1)
+        self.assertEqual([('f', 1, 64001, 2)], function_summaries(functions))
+
+    def test_many_strings_that_do_not_close_on_one_line(self):
+        started = time.perf_counter()
+        functions = get_svelte_function_list(
+            '{x</\\"}/}' * 3000 + '\n{#snippet f()}{\'}\'&&y}{/snippet}\n')
+        self.assertLess(time.perf_counter() - started, 1)
+        self.assertEqual([('f', 2, 2, 2)], function_summaries(functions))
+
+    def test_regular_expression_cut_after_a_backslash(self):
+        functions = get_svelte_function_list(
+            '{#snippet f()}{"aaaaa}"+(/[}\\}]/.test(x))&& y}{/snippet}\n')
+        self.assertEqual([('f', 1, 1, 2)], function_summaries(functions))
+
+    def test_markup_nested_too_deep_keeps_script_functions(self):
+        nested = '`${' * 500 + 'async && /x/' + '}`' * 500
+        functions = get_svelte_function_list(
+            '<script>function before() {}</script>\n'
+            '<p>{' + nested + '}</p>\n'
+            '<script>function after() {}</script>\n')
+        self.assertEqual(['before', 'after'], [f.name for f in functions])
+
+    def test_named_function_expression_keeps_its_name(self):
+        functions = get_svelte_function_list(
+            '<button onclick={function named() { if (x) y(); }}>a</button>\n')
+        self.assertEqual([('named', 1, 1, 2)], function_summaries(functions))
+
     def test_number_that_ends_with_a_dot_is_no_member_access(self):
         functions = get_svelte_function_list('''\
 <button onclick={() => { 1.
