@@ -49,7 +49,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
-        return clike_tokens(source_code, _C_LINE_COMMENT + addition, token_class)
+        return clike_tokens(source_code, addition + _C_LINE_COMMENT, token_class)
 
     def preprocess(self, tokens):
         tilde = False
