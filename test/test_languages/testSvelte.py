@@ -624,6 +624,18 @@ class TestSvelteMarkup(unittest.TestCase):
             + '<p>{(/a}b/.test(y) && z)}</p>{/snippet}\n')
         self.assertEqual([('f', 1, 1, 2)], function_summaries(functions))
 
+    def test_template_in_an_interpolation(self):
+        functions = get_svelte_function_list(
+            '{#snippet f()}{`${`x`}` + "}" && y}{/snippet}\n'
+            '{`${`x`}`\n\n}\n<script>function after() {}</script>\n')
+        self.assertEqual([('f', 1, 1, 2), ('after', 5, 5, 1)],
+                         function_summaries(functions))
+
+    def test_many_divisions_before_braces_in_strings(self):
+        functions = get_svelte_function_list(
+            '{#snippet f()}' + '{x / 2 && "}" && y}' * 50 + '{/snippet}\n')
+        self.assertEqual([('f', 1, 1, 101)], function_summaries(functions))
+
     def test_markup_nested_too_deep_keeps_script_functions(self):
         nested = '`${' * 500 + 'async && /x/' + '}`' * 500
         functions = get_svelte_function_list(
