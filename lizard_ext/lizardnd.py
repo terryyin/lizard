@@ -53,7 +53,7 @@ class LizardExtension(object):  # pylint: disable=R0903
                 reader.context.clear_prev_was_else()
             # Don't add nesting for "if" when it immediately follows "else" (else if)
             # Syntactically else if is equivalent to else {if} but should not increase depth
-            if token == 'else':
+            if token == 'else' and not getattr(token, 'is_member_name', False):
                 reader.context.set_prev_was_else(True)
             elif token == 'if' and token in loops and reader.context.get_prev_was_else():
                 reader.context.clear_prev_was_else()
@@ -83,7 +83,8 @@ class LizardExtension(object):  # pylint: disable=R0903
 
             # Handle other loop keywords (if, for, while, etc.)
             elif token in loops and token not in ('&&', '||') \
-                    and not getattr(token, 'is_optional', False):
+                    and not getattr(token, 'is_optional', False) \
+                    and not getattr(token, 'is_member_name', False):
                 l_depth = reader.context.open_level()
 
             if token in block_starts:

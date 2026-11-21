@@ -69,7 +69,8 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
                     self._in_head(top, token):
                 return
         action = self.actions.get(token)
-        if action is not None:
+        if action is not None and \
+                not getattr(token, 'is_member_name', False):
             action()
 
     # -- statement boundaries ---------------------------------------------------
@@ -149,7 +150,9 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         state = self.state
         frames = state.frames
         bound = False
-        if token == 'else':
+        if getattr(token, 'is_member_name', False):
+            pass                        # `o.else`: no continuation
+        elif token == 'else':
             bound = self._bind(_IF_LIKE)
         elif token in self.profile.catches or token == 'finally':
             self._bind(('catch',))

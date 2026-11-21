@@ -86,6 +86,29 @@ _OPTIONAL_MEMBER_QUESTION = _OptionalMemberQuestion('?')
 _ANNOTATION_PUNCTUATION = frozenset(('?', ':'))
 
 
+class _MemberName(str):
+    """A keyword after '.' or '?.', `promise.catch(f)`: the name of a
+    member, which no metric counts as a structure."""
+
+    is_member_name = True
+
+
+_MEMBER_ACCESS = ('.', '?.')
+_COMMENT_STARTS = ('//', '/*')
+# The tokens that preprocess looks at, in one set for the hot loop.
+_MARKED_PUNCTUATION = _ANNOTATION_PUNCTUATION | frozenset(_MEMBER_ACCESS)
+# With the reader's conditions: the keywords that a metric counts as a
+# structure or a jump.
+_STRUCTURE_KEYWORDS = frozenset((
+    'else', 'do', 'switch', 'try', 'finally', 'break', 'continue'))
+
+
+def _ends_a_number(token):
+    """Whether a '.' after this token is a decimal point, `1_000.`."""
+    return bool(token) and token[0].isdigit() and token.replace(
+        '_', '').isdigit()
+
+
 class TypeScriptReader(CodeReader, CCppCommentsMixin):
     # pylint: disable=R0903
 
@@ -118,13 +141,19 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         # Re-tokenize opaque interpolation spans; keyword members stay non-
         # conditions the same way as on the outer token stream (#546).
         conditions = self.conditions
-        previous = None
+        earlier = previous = None
         for start, end in interpolation_code(token, in_expression):
             for inner in self.script_tokens(token[start:end]):
-                if (inner in conditions
-                        and previous not in ('.', '?.')):
+                # A word after a dot names a member; `1. ? a : b` is a ternary.
+                if (inner in conditions and (previous not in _MEMBER_ACCESS
+                                             or not inner[0].isalpha())):
                     self.context.add_condition()
-                previous = inner
+                if (inner == '\n' and previous == '.'
+                        and _ends_a_number(earlier)):
+                    previous = inner    # the same rule as in preprocess
+                elif not (inner.isspace()
+                          or inner.startswith(_COMMENT_STARTS)):
+                    earlier, previous = previous, inner
 
     def _count_conditions_from_token(self, previous, token):
         # Split JS/TS exposes '${' then the expression; atomic TSX/JSX
@@ -136,21 +165,18 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
             self._count_interpolation_conditions(token, False)
 
     def process_token(self, token):
-        # Undo keyword member names (#546) and count conditions written
-        # inside template interpolations (opaque to the outer stream).
+        # Count conditions written inside template interpolations (opaque
+        # to the outer stream).
         previous = self._previous_token
         self._previous_token = token
-        if previous in ('.', '?.') and token in self.conditions:
-            self.context.add_condition(-1)
         self._count_conditions_from_token(previous, token)
         return False
 
     def __call__(self, tokens, reader):
         # Custom hooks and state configurations retain the generic protocol.
-        # TypeScriptReader.process_token only undoes keyword members / adds
-        # interpolation conditions and always returns False, so the fast path
-        # may keep calling it. Instance or subclass hooks still fall back to
-        # CodeReader.__call__.
+        # TypeScriptReader.process_token only adds interpolation conditions
+        # and always returns False, so the fast path may keep calling it.
+        # Instance or subclass hooks still fall back to CodeReader.__call__.
         states = self.parallel_states
         allowed_process = (
             CodeReader.process_token, TypeScriptReader.process_token)
@@ -167,15 +193,12 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         # Binding candidates are children and retain their own wrapper.
         consume = CodeStateMachine.__call__.__get__(state)
         previous = self._previous_token
-        conditions = self.conditions
         # Bind once on this hot path: ordinary JS/TS tokens pay only the
         # after_interpolation / '${' checks (no per-token helper call).
         # TSX/JSX keep the atomic backtick scan on the rare path.
         after_interpolation = previous == '${'
         scan_atomic = type(self)._scan_atomic_templates
         for token in tokens:
-            if previous in ('.', '?.') and token in conditions:
-                self.context.add_condition(-1)
             if after_interpolation:
                 self._count_interpolation_conditions(token, True)
                 after_interpolation = False
@@ -194,7 +217,8 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         """Drop spaces, and offer each line's first code token to the
         innermost open expression arrow (or optimistic signature) before
         any counter charges it.  Offer the code token after a signature to
-        its state in the same way.
+        its state in the same way.  Mark a keyword after '.' or '?.' as the
+        name of a member.
 
         A '\n' is consumed by line_counter, and comments by comment_counter,
         before the state machine sees them, so expression_arrows cannot
@@ -203,22 +227,33 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         signatures = self.context.ended_signatures = []
         line_start = False
         state = self.parallel_states[0]
-        annotation_punctuation = _ANNOTATION_PUNCTUATION
+        marked_punctuation = _MARKED_PUNCTUATION
+        member_access_tokens = _MEMBER_ACCESS
+        structure_keywords = (_STRUCTURE_KEYWORDS | self.control_flow_keywords
+                              | self.case_keywords)
+        member_access = False
+        before_dot = ''
         tokens = iter(self.code_tokens(tokens))
         while True:
             for token in tokens:
                 if not token.isspace():
-                    if line_start and not token.startswith(('//', '/*')):
+                    if line_start and not token.startswith(_COMMENT_STARTS):
                         line_start = False
                         end_before_line_token(state, arrows, token)
                     if signatures and not token.startswith(('//', '/*')):
                         signatures.pop().end_signature_before(token)
-                    if token in annotation_punctuation:
+                    if member_access and token in structure_keywords:
+                        token = _MemberName(token)
+                        member_access = False
+                    elif token in marked_punctuation:
+                        # `1..catch`: the number and each dot are tokens.
+                        member_access = token in member_access_tokens
                         if token == '?':
+
                             if (self.context.class_field_annotations
                                     and state.optional_member_context()):
                                 token = _OPTIONAL_MEMBER_QUESTION
-                        elif state.last_token == ')':
+                        elif token == ':' and state.last_token == ')':
                             annotation = state.return_annotation_context()
                             if annotation is not None:
                                 depth, unambiguous_signature = annotation
@@ -232,8 +267,17 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                                     yield token
                                     # Resume with the buffered iterator.
                                     break
+                        elif member_access:
+                            before_dot = token == '.' and state.last_token
+                    elif member_access and not token.startswith(
+                            _COMMENT_STARTS):   # `p./* note */catch`
+                        member_access = False
                     yield token
                 elif token == '\n':
+                    if member_access and _ends_a_number(before_dot):
+                        # `1.` before a line break ends a number. On one
+                        # line, `1 .if` and `1.5.if` name a member.
+                        member_access = False
                     if arrows or awaiting_function_body(state):
                         line_start = True
                     yield token
