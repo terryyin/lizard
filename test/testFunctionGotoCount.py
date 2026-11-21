@@ -1,5 +1,6 @@
 import unittest
 from .testHelpers import get_cpp_function_list_with_extension, get_js_function_list_with_extension
+from lizard import FileAnalyzer, get_extensions
 from lizard_ext.lizardgotocount import LizardExtension as GotoCounter
 
 class TestFunctionGotoCount(unittest.TestCase):
@@ -25,3 +26,8 @@ class TestFunctionGotoCount(unittest.TestCase):
         """
         result = get_js_function_list_with_extension(code, GotoCounter())
         self.assertEqual([0, 0], [f.goto_count for f in result])
+
+    def test_extensions_given_as_an_iterator(self):
+        analyzer = FileAnalyzer(iter(get_extensions([GotoCounter()])))
+        result = analyzer.analyze_source_code("a.c", "int fun(){goto label;}").function_list
+        self.assertEqual([1], [f.goto_count for f in result])
