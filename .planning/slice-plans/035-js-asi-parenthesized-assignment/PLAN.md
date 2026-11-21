@@ -118,10 +118,9 @@ the shared implied-semicolon scan (SEED-069's area), stop and replan.
 - Correct ND by giving the level to the function that is current once the
   statement boundary is resolved, not by a keyword-specific special case.
 - Proof uses inline sources. No external package fixture.
-- [SEED-069's plan](../034-cheaper-implied-semicolon-scan/PLAN.md) changes how
-  ND/NS get implied statement ends, which may touch the same extension code.
-  Neither story depends on the other. Whichever lands second rebases onto the
-  other and keeps both proofs green.
+- SEED-069 (cheaper implied-semicolon scan for ND/NS) was dropped without
+  delivery; it would have changed how ND/NS get implied statement ends and may
+  have touched the same extension code. Neither story depended on the other.
 
 ## Concern evidence
 
