@@ -119,11 +119,18 @@ class RubylikeStateMachine(CodeStateMachine):
         self.context.add_to_long_function_name(" " + token)
 
     def _if(self, token):
-        if self.is_newline():
+        # A modifier `if` waits for a `then` (Lua) until the line ends.  A
+        # `}` that it did not open ends a block: `{ |x| return x if x }`.
+        if self.is_newline() or token == "}" and not self.br_count:
+            self.br_count = 0
             self.next(self._state_global, token)
         elif token == "then" and not getattr(token, 'is_member_name', False):
             self.next(self._state_global)
             self.sub_state(self.statemachine_clone())
+        elif token in ("{", "${"):
+            self.br_count += 1
+        elif token == "}":
+            self.br_count -= 1
 
     def _for_while(self, token):
         self._loop_head(token, self._state_global, None)
