@@ -145,11 +145,15 @@ With the original launch's supplied dashboard landing context, use the
 for publication and resume. Record its accepted comparison before refresh or
 retirement; reporting failure leaves Git acceptance accepted and retries only evidence.
 
-Apply [reviewed-checkout publication](references/publish-reviewed-checkout.md):
-use [publish the candidate](../dough-execute-plan/references/publish-the-candidate.md)
-for a wholly unpublished suffix, or history-preserving integration for a published
-prefix and the complete reviewed tip above it; for completed selected work, use
-their [visit forms](references/publish-reviewed-checkout.md#land-completed-selected-work). Keep the queued-closure check
+Apply [reviewed-checkout publication](references/publish-reviewed-checkout.md),
+which chooses the publisher: the
+[visit forms](references/publish-reviewed-checkout.md#land-completed-selected-work)
+for completed selected work, history-preserving integration for a published
+prefix and the complete reviewed tip above it, a
+[session close](references/publish-reviewed-checkout.md#publish-a-session-close)
+for ordinary reviewed work with a Dashboard landing context, or
+[publish the candidate](../dough-execute-plan/references/publish-the-candidate.md)
+for any other wholly unpublished suffix. Keep the queued-closure check
 before each reconciliation and retry, and recheck affected proof before pushing.
 Preserve the state on a conflict, refusal, failed recheck or second rejection;
 report publication, refresh and cleanup as unfinished. Do not loop.

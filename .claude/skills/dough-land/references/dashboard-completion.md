@@ -69,7 +69,8 @@ For an owned suffix, such as a one-shot result, pass
 `--landing-context <supplied absolute file>` to the installed
 `execution-increment-delivery.mjs deliver` command; its shared
 `publishExecutionIncrement` API takes the same path as `landingContext`, including
-when Dough Land uses that API without an execution observer. The installed
+when Dough Land uses that API, directly or through `publishSessionClose`,
+without an execution observer. The installed
 `publication-resume.mjs` API and `execution-increment-resume.mjs resume` accept it
 as well. Supply the retained `--suffix-base` with the candidate when resuming.
 For a Story Branch integration, pass the same flag to the installed

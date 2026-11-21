@@ -1,17 +1,21 @@
 # Publish the reviewed checkout
 
-For a wholly unpublished suffix, apply
-[publish the candidate](../../dough-execute-plan/references/publish-the-candidate.md)
-from the checkout, for that suffix and target. If the story branch has an
-already-published prefix, use
-[preserve published history](../../dough-execute-plan/references/preserve-published-history.md)
-instead: establish that the recorded published tip is an ancestor of the
-complete reviewed checkout tip and pass that **complete tip** as the API's `publishedTip`.
-This includes any local unpublished suffix above the published prefix; passing
-only the older published tip would omit that work or mistake it for an accepted
-rerun. Preserve all published SHAs and return to the same execution branch.
-The default checkout is the owned workspace when it is the one landing; do not invent a second
-sequence. The candidate's own changes must be the reviewed checkout content.
+Choose the publisher by the first row that fits the checkout:
+
+| Checkout | Publisher |
+| --- | --- |
+| Completed selected work | Its [visit forms](#land-completed-selected-work) |
+| Published prefix | [Preserve published history](../../dough-execute-plan/references/preserve-published-history.md) |
+| Ordinary reviewed work with the launch's Dashboard landing context | [Session close](#publish-a-session-close) |
+| Any other wholly unpublished suffix | [Publish the candidate](../../dough-execute-plan/references/publish-the-candidate.md) for that suffix and target |
+
+For a published prefix, establish that the recorded published tip is an
+ancestor of the complete reviewed checkout tip, including any local unpublished
+suffix above it, and pass that **complete tip** as the API's `publishedTip`.
+Preserve all published SHAs and return to the same execution branch.
+When the default checkout is the one landing, it is the owned workspace. The
+candidate's own changes are the reviewed checkout content.
+
 On each fetched target, before rewriting the candidate and before the retry
 push after a rejection, run this candidate check from the landing checkout:
 
@@ -53,6 +57,18 @@ the checkout, branch, index, and whatever state Git left. Name the conflict or
 contention, and report publication, refresh, and cleanup as not done. Do not
 loop.
 
+## Publish a session close
+
+Call the installed `publishSessionClose` API from
+`dough-execute-plan/scripts/session-record-publication.mjs` with the
+`publishExecutionIncrement` request, the project's backlog path as
+`backlogPath`, and `session: { workflow: "ad-hoc" }`. It publishes the work,
+then, once accepted, the session record under the landing context's
+`reference`, along the same route.
+Report `work` as the publication result and `record.status`; a `stopped`
+record leaves the accepted work in place. Other publishers write no session
+record; for ordinary reviewed work, report that none was written.
+
 ## Land completed selected work
 
 When retained context establishes completed selected work with a recorded
@@ -60,7 +76,7 @@ identity, it takes the visit under the shared
 [visit rule](../../dough-product-backlog/references/supplier-dependencies.md#which-completed-work-takes-the-visit),
 even when its checkout shows no consumer; a generic landing or an unfinished
 increment takes none. Publish with the installed `supplier-integration.mjs`
-APIs instead, adding `supplierIdentity`: `publishSelectedSupplier` takes the
+APIs, adding `supplierIdentity`: `publishSelectedSupplier` takes the
 `publishExecutionIncrement` request for a wholly unpublished suffix, and
 `integrateSelectedSupplier` takes the `publishHistoryPreservingCandidate`
 request for a published prefix. Keep the same candidate check, proof check and
