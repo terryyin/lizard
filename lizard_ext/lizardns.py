@@ -80,9 +80,12 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
         """JavaScript ends a statement without a ';' too: read a ';'
         where the reader finds such an end."""
         self.context = reader.context
-        implied_semicolon_before = reader.implied_semicolons(self.context).before
+        tokens, implied_semicolons = reader.implied_semicolons(tokens)
+        return self._read_with_implied_semicolons(tokens, implied_semicolons)
+
+    def _read_with_implied_semicolons(self, tokens, implied_semicolons):
         for token in tokens:
-            if implied_semicolon_before(token):
+            if implied_semicolons.before_token:
                 self._state(';')
             self._state(token)
             yield token

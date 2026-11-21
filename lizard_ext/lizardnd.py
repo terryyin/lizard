@@ -26,7 +26,14 @@ class LizardExtension(object):  # pylint: disable=R0903
             dest="ND",
             default=DEFAULT_ND_THRESHOLD)
 
-    def __call__(self, tokens, reader, l_depth=0):  # pylint: disable=R0912
+    def __call__(self, tokens, reader, l_depth=0):
+        implied_semicolons = None
+        if hasattr(reader, "implied_semicolons"):
+            tokens, implied_semicolons = reader.implied_semicolons(tokens)
+        return self._nesting_depth(tokens, reader, l_depth, implied_semicolons)
+
+    @staticmethod
+    def _nesting_depth(tokens, reader, l_depth, implied_semicolons):  # pylint: disable=R0912
         if hasattr(reader, "loops"):
             loops = reader.loops
         else:
@@ -38,11 +45,8 @@ class LizardExtension(object):  # pylint: disable=R0903
             indent_indicator = reader.indent_indicator
         else:
             indent_indicator = ';'
-        implied_semicolons = getattr(reader, "implied_semicolons", None)
-        if implied_semicolons:
-            implied_semicolon_before = implied_semicolons(reader.context).before
         for token in tokens:
-            if implied_semicolons and implied_semicolon_before(token):
+            if implied_semicolons and implied_semicolons.before_token:
                 # The statement ends here as it does at a ";".
                 reader.context.clear_prev_was_else()
                 if reader.context.get_condition_depth() == 0:
