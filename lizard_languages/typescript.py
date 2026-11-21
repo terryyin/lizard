@@ -4,7 +4,7 @@ Language parser for TypeScript
 
 from itertools import tee
 
-from .code_reader import CodeReader, CodeStateMachine
+from .code_reader import CodeReader, CodeStateMachine, MemberName
 from .clike import CCppCommentsMixin
 from .js_style_regex_expression import js_style_regex_expression
 from .javascript_bindings import JavaScriptBindings
@@ -84,13 +84,6 @@ class _OptionalMemberQuestion(str):
 
 _OPTIONAL_MEMBER_QUESTION = _OptionalMemberQuestion('?')
 _ANNOTATION_PUNCTUATION = frozenset(('?', ':'))
-
-
-class _MemberName(str):
-    """A keyword after '.' or '?.', `promise.catch(f)`: the name of a
-    member, which no metric counts as a structure."""
-
-    is_member_name = True
 
 
 _MEMBER_ACCESS = ('.', '?.')
@@ -243,7 +236,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                     if signatures and not token.startswith(('//', '/*')):
                         signatures.pop().end_signature_before(token)
                     if member_access and token in structure_keywords:
-                        token = _MemberName(token)
+                        token = MemberName(token)
                         member_access = False
                     elif token in marked_punctuation:
                         # `1..catch`: the number and each dot are tokens.
