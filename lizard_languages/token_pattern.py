@@ -17,7 +17,8 @@ _COMPILED_PATTERNS = {}
 # (`? extends List<?>`, `List<int>?`), up to _NESTING levels in all. Only a list with a `?` of its own
 # is joined: in `Map<K, List<?>>` the inner `<?>` is the token.
 _NESTING = 3
-_ANNOTATIONS = r"(?:@[\w.]+\s*)*"
+# An annotation name is read to its end, so `@AX.Y` cannot be retried as `@A X.Y` or `@AX .Y`.
+_ANNOTATIONS = r"(?:@[\w.]+(?![\w.])\s*)*"
 
 
 def _type(nesting):
@@ -27,7 +28,8 @@ def _type(nesting):
 
 def _type_arguments(nesting, check=""):
     type_ = _type(nesting - 1)
-    argument = r"\s*" + _ANNOTATIONS + r"(?:\?|" + type_ + r")(?:\s+(?:extends|super)\s+" + type_ + r")?\s*"
+    # A type reads its own annotations, so they are only read once and cannot be retried.
+    argument = r"\s*(?:" + _ANNOTATIONS + r"\?|" + type_ + r")(?:\s+(?:extends|super)\s+" + type_ + r")?\s*"
     return r"\<" + check + argument + r"(?:," + argument + r")*\>"
 
 
