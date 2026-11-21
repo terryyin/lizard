@@ -72,6 +72,6 @@ statement that it stands for, and an expression adds its own tokens and a
   functions are lost.
 - The JavaScript tokenizer finds the `}` that ends an expression, so braces
   in strings, comments, templates and regular expressions do not end it. To
-  keep the time linear, it reads at most twice the markup again for this.
-  On invalid markup that reaches this bound, such as many strings that do
-  not close, each expression then ends at its first `}`.
+  keep the time linear, it reads up to the `}` that a plain brace count
+  gives. It reads further only when a string, a comment, a template or a
+  regular expression crosses that point.
