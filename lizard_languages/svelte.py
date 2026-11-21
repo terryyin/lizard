@@ -51,7 +51,7 @@ class _ScriptEnd(str):
 _SCRIPT_END = _ScriptEnd('script')
 
 
-def _tokens(code):
+def _tokens(code, marks=None):
     """The tokens of markup code and the marks of its regular expressions,
     or None when it nests too deep to read. The marks of the forward scan,
     which also finds a regular expression after a comment, reach the
@@ -59,9 +59,10 @@ def _tokens(code):
     regular expression that the end of the code cuts, so it gets a mark."""
     key = ('js', id(code))
     try:
-        marks = code
-        if '/' in code:
-            marks = mark_forward(code + ']/', True)[:len(code)]
+        if marks is None:
+            marks = code
+            if '/' in code:
+                marks = mark_forward(code + ']/', True)[:len(code)]
         _MARK_CACHE[key] = (code, marks)
         return list(TypeScriptReader.generate_tokens(code)), marks
     except RecursionError:
@@ -253,11 +254,14 @@ class _MarkupTokens:
             elif token in ('{', '${'):
                 depth += 1
             if token == '${' and index + 1 < len(tokens):
-                text = tokens[index + 1]
+                # The code of the interpolation, without nested templates,
+                # with the marks that its context gives.
+                text, base = tokens[index + 1], offset + 2
                 for start, text_end in interpolation_code(text, True):
-                    inner = _tokens(text[start:text_end])
+                    inner = _tokens(text[start:text_end],
+                                    marks[base + start:base + text_end])
                     found, reach = (0, 0) if inner is None else self._walk(
-                        inner, pos + offset + 2 + start, stop)
+                        inner, pos + base + start, stop)
                     if found is None and reach:
                         return None, reach
             elif kind:
