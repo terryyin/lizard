@@ -52,14 +52,18 @@ _SCRIPT_END = _ScriptEnd('script')
 
 
 def _tokens(code):
-    """The tokens of markup code, or None when it nests too deep to read.
-    The marks of the forward scan, which also finds a regular expression
-    after a comment, reach the tokenizer through the memo and leave it."""
+    """The tokens of markup code and the marks of its regular expressions,
+    or None when it nests too deep to read. The marks of the forward scan,
+    which also finds a regular expression after a comment, reach the
+    tokenizer through the memo and leave it. The added ']/' closes a
+    regular expression that the end of the code cuts, so it gets a mark."""
     key = ('js', id(code))
     try:
+        marks = code
         if '/' in code:
-            _MARK_CACHE[key] = (code, mark_forward(code, True))
-        return list(TypeScriptReader.generate_tokens(code))
+            marks = mark_forward(code + ']/', True)[:len(code)]
+        _MARK_CACHE[key] = (code, marks)
+        return list(TypeScriptReader.generate_tokens(code)), marks
     except RecursionError:
         return None
     finally:
@@ -196,10 +200,11 @@ class _MarkupTokens:
         source, end = self.source, self.end
         stop = self._guess(pos)
         while stop:
-            tokens = _tokens(source[pos:stop])
-            if tokens is None:
+            read = _tokens(source[pos:stop])
+            if read is None:
                 return None
-            index, offset = self._walk(tokens, pos, stop)
+            tokens = read[0]
+            index, offset = self._walk(read, pos, stop)
             if index is not None:
                 return pos + offset, tokens[:index]
             # A string, a comment or a regular expression ends at offset.
@@ -208,8 +213,6 @@ class _MarkupTokens:
                 stop = end if offset else 0
             else:
                 stop = max(following + 1, min(end, 2 * stop - pos))
-            if offset:
-                self.reread -= stop - pos
         return None
 
     def _guess(self, pos):
@@ -229,15 +232,20 @@ class _MarkupTokens:
         self.guess -= limit - pos
         return self.source.find('}', pos, self.end) + 1
 
-    def _walk(self, tokens, pos, stop):
+    def _walk(self, read, pos, stop):
         """The index and the offset of the '}' that closes the code at pos.
         Or None and the end of a string, a comment or a regular expression
         before that '}' when it ends after stop, else 0."""
+        # pylint: disable=R0914
+        tokens, marks = read
         depth = offset = 0
+        template = None
         for index, token in enumerate(tokens):
             kind = token[0] if token in ('"', "'", '/', '/=') else None
             if kind == '/' and ''.join(tokens[index + 1:index + 2])[:1] == '*':
                 kind = '*/'
+            elif kind == '/' and marks[offset] == '/':
+                kind = None
             if token == '}':
                 if not depth:
                     return index, offset
@@ -253,19 +261,21 @@ class _MarkupTokens:
                     if found is None and reach:
                         return None, reach
             elif kind:
-                reach = self._ends_after(kind, pos, pos + offset, stop)
+                reach = self._ends_after(kind, pos + offset, stop)
                 if reach:
                     return None, reach
-            # The tokenizer puts the text of a template between backticks.
-            offset += len(token) - 2 * (token[:1] == '`' and len(token) > 1)
+            if token == '`' and template in (None, depth):
+                template = depth if template is None else None
+            # The tokenizer puts each text of a template between backticks.
+            text = template == depth and token[:1] == '`' and len(token) > 1
+            offset += len(token) - 2 * text
         return None, 0
 
-    def _ends_after(self, kind, pos, start, stop):
+    def _ends_after(self, kind, start, stop):
         """Where the string, the comment or the regular expression at start
-        in the code at pos ends, when that is after stop, else 0. A '/'
-        opens a regular expression where the forward scan reads one, as
-        for the tokenizer. The scans count as reads of the markup, so that
-        invalid code cannot cost more than linear time."""
+        ends, when that is after stop, else 0. A scan that finds no end
+        counts as a read of the markup, so that invalid code cannot cost
+        more than linear time."""
         source, end = self.source, self.end
         if self.reread < 0:
             return 0
@@ -273,15 +283,10 @@ class _MarkupTokens:
             close = source.find(kind, start + 2, end)
         else:
             close = _LITERAL_TEXT[kind].match(source, start + 1, end).end()
-        self.reread -= (end if close < 0 else close) - start
-        if close < stop or not source.startswith(kind, close):
+        if close < 0 or not source.startswith(kind, close):
+            self.reread -= (end if close < 0 else close) - start
             return 0
-        if kind == '/':
-            self.reread -= start - pos
-            code = source[pos:start] + '/ /'
-            if mark_forward(code, True)[start - pos] == '/':
-                return 0
-        return close + len(kind)
+        return close + len(kind) if close >= stop else 0
 
     def _block_tag(self, kind, pos, close):
         # pylint: disable=R0912
