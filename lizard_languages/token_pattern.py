@@ -40,8 +40,11 @@ def _nested_list(nesting):
 
 
 # Checked right after the `<`, so most comparisons fail at once: a `?` follows, past any nested lists.
+# The case without a nested list comes first and alone, so `re` can skip to the `?` or the `<` after a scan.
 _TYPE_TEXT = r"[\w\s.,@\[\]]*"
-_OWN_QUESTION_MARK = r"(?=" + _TYPE_TEXT + r"(?:" + _nested_list(_NESTING - 1) + _TYPE_TEXT + r")*\?)"
+_NESTED_LIST = _nested_list(_NESTING - 1)
+_OWN_QUESTION_MARK = r"(?=" + _TYPE_TEXT + r"\?|" + \
+    _TYPE_TEXT + _NESTED_LIST + _TYPE_TEXT + r"(?:" + _NESTED_LIST + _TYPE_TEXT + r")*\?)"
 _WILDCARD_ARGUMENTS = _type_arguments(_NESTING, _OWN_QUESTION_MARK)
 
 _FLAG_PATTERN = re.compile(r'\(\?[aiLmsux]+\)')
