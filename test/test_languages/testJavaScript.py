@@ -518,6 +518,38 @@ function match(x) {
                       f.cognitive_complexity, f.max_nesting_depth,
                       f.max_nested_structures) for f in functions])
 
+    def test_structure_in_a_block_after_a_regular_expression_operand(self):
+        code = '''
+function match(x) {
+  const re = "" + /a/
+  { if (x) { re.test(x); } }
+}
+'''
+        analyzer = FileAnalyzer(get_extensions(['cognitive', 'nd', 'ns']))
+        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+            with self.subTest(filename=filename):
+                functions = analyzer.analyze_source_code(
+                    filename, code).function_list
+                self.assertEqual(
+                    [('match', 2, 1, 1, 1)],
+                    [(f.name, f.cyclomatic_complexity,
+                      f.cognitive_complexity, f.max_nesting_depth,
+                      f.max_nested_structures) for f in functions])
+
+    def test_object_method_after_a_variable_named_static(self):
+        code = '''
+function pick(static) {
+  const { a = static ?? { run() {} } } = {};
+}
+'''
+        for filename in ('a.js', 'a.jsx'):
+            with self.subTest(filename=filename):
+                functions = analyze_file.analyze_source_code(
+                    filename, code).function_list
+                self.assertEqual(
+                    [('run', 1), ('pick', 2)],
+                    [(f.name, f.cyclomatic_complexity) for f in functions])
+
     def test_function_in_a_static_block(self):
         code = '''
 class Event {
