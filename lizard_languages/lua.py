@@ -31,6 +31,7 @@ class LuaReader(RubylikeReader):
 
 class LuaStateMachine(RubylikeStateMachine):
     FUNC_KEYWORD = 'function'
+    PARAMETERS_ON_DEF_LINE = False
 
     def __init__(self, context):
         super(LuaStateMachine, self).__init__(context)

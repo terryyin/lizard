@@ -14,6 +14,8 @@ def state_embedded_doc(token):
 class RubylikeStateMachine(CodeStateMachine):
     # pylint: disable=R0903
     FUNC_KEYWORD = 'def'
+    # Ruby needs the parameter list on the line of `def`.
+    PARAMETERS_ON_DEF_LINE = True
 
     def __init__(self, context):
         super(RubylikeStateMachine, self).__init__(context)
@@ -69,7 +71,9 @@ class RubylikeStateMachine(CodeStateMachine):
         if token == ".":
             self.context.add_to_function_name(token)
             self.next(self._def_class_method)
-        elif token == "(":
+        elif token == "(" and not (
+                self.PARAMETERS_ON_DEF_LINE and self.is_newline()):
+            # On the next line, `(a || b) if c` starts the body.
             self.next(self._def_parameters)
         else:
             self.sub_state(self.statemachine_clone(), callback, token)
