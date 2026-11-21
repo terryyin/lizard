@@ -5,7 +5,8 @@ This is an extension of lizard, that counts the statements in a function
 
 class LizardExtension:  # pylint: disable=R0903
 
-    FUNCTION_INFO = {"statement_count": {"caption": "statements"}}
+    FUNCTION_INFO = {"statement_count": {
+        "caption": "statements", "default": None}}
 
     def __call__(self, tokens, reader):
         c_family = 'c' in reader.language_names or \
