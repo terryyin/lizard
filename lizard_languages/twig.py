@@ -102,6 +102,7 @@ class _ExpressionLexer:  # pylint: disable=R0903
         self.closing = closing
         self.tokens = []
         self.nesting = []   # open brackets, '"' strings and '#{' parts
+        self.braces = 0     # how many of them are '{' or '#{'
         self.previous = None
 
     def read(self, pos):
@@ -134,9 +135,7 @@ class _ExpressionLexer:  # pylint: disable=R0903
         '''Twig rejects a tag with an unclosed bracket. Reading on would
         take the rest of the template into it, so the delimiter ends the
         tag unless it can close a hash or an interpolation.'''
-        nesting = self.nesting
-        return not nesting or self.closing is _CLOSING['%'] or \
-            ('{' not in nesting and '#{' not in nesting)
+        return not self.braces or self.closing is _CLOSING['%']
 
     def _string_part(self, pos):
         source = self.source
@@ -146,9 +145,17 @@ class _ExpressionLexer:  # pylint: disable=R0903
         pos = match.end()
         if source.startswith('#{', pos):
             self.nesting.append('#{')
+            self.braces += 1
             return pos + 2
         self.nesting.pop()
         return pos + 1
+
+    def _join_ternary(self):
+        '''``?`` and ``:`` on two lines: Twig reads ``?:`` too.'''
+        index = len(self.tokens) - 1
+        while self.tokens[index] != '?':    # only line breaks follow it
+            index -= 1
+        self.tokens[index] = self.previous = '?:'
 
     def _token(self, token):
         nesting = self.nesting
@@ -163,14 +170,15 @@ class _ExpressionLexer:  # pylint: disable=R0903
         elif token == '_self':
             token = 'self'     # the template itself: ``_self.macro()``
         elif token == ':' and self.previous == '?':
-            # ``?`` and ``:`` on two lines: Twig reads ``?:`` too.
-            index = len(self.tokens) - 1 - self.tokens[::-1].index('?')
-            self.tokens[index] = self.previous = '?:'
+            self._join_ternary()
             return
         if token in _OPENERS:
             nesting.append(token)
+            self.braces += token == '{'
         elif token in _CLOSERS and nesting:
-            if nesting.pop() == '#{':
+            opener = nesting.pop()
+            self.braces -= opener in ('{', '#{')
+            if opener == '#{':
                 return
         elif token in _KEYWORDS:
             if self.previous in ('.', '?.'):
@@ -226,36 +234,41 @@ def _names(tokens, start, tag):
             tokens[position] = _Name(token)
 
 
-def _calls(tokens, units):
+def _calls(tokens, kinds):
     '''A filter, or a function called in a block, is not the block or macro
     of the same name: ``{% block head %}{{ head() }}``.'''
-    if not units:
+    if not kinds:
         return
-    kinds = dict((name, kind) for kind, name in units)
     previous = None
     for position in range(len(tokens) - 1):
         token = tokens[position]
         if token in kinds and tokens[position + 1] == '(' and \
-                (previous == '|' or kinds[token] == 'block' and
+                (previous == '|' or kinds[token][-1] == 'block' and
                  previous not in ('.', '?.')):
             tokens[position] = _Name(token)
         previous = token
 
 
-def _track_units(tokens, units):
+def _track_units(tokens, units, kinds):
     words = [token for token in tokens if token != '\n']
     tag = words[0] if words else ''
     if tag in ('block', 'macro') and len(words) > 1 and \
             (tag == 'macro' or len(words) == 2):    # not ``{% block a 'x' %}``
-        units.append((tag, getattr(words[1], 'name', words[1])))
+        name = getattr(words[1], 'name', words[1])
+        units.append((tag, name))
+        kinds.setdefault(name, []).append(tag)
     elif tag in ('endblock', 'endmacro') and units and \
             units[-1][0] == tag[3:]:
-        units.pop()
+        name = units.pop()[1]
+        kinds[name].pop()
+        if not kinds[name]:
+            del kinds[name]
 
 
 def generate_twig_tokens(source):
     structures = []
     units = []      # kind and name of each open block and macro
+    kinds = {}      # the kinds of the open units of each name, innermost last
     pos = 0
     while True:
         match = _OPENING.search(source, pos)
@@ -279,13 +292,13 @@ def generate_twig_tokens(source):
             continue
         lexer = _ExpressionLexer(source, _CLOSING[kind])
         pos = lexer.read(pos)
-        _calls(lexer.tokens, units)
+        _calls(lexer.tokens, kinds)
         if kind == '{':
             opening, closing = '{{', ';'
             _names(lexer.tokens, 0, None)
         else:
             opening, closing = _tag_tokens(lexer.tokens, structures)
-            _track_units(lexer.tokens, units)
+            _track_units(lexer.tokens, units, kinds)
         yield opening
         yield from lexer.tokens
         if pos is None:
