@@ -577,7 +577,8 @@ class TestOtherBraceLanguages(unittest.TestCase):
         self.assertEqual([0], cogc("a.js", "function f(a) { return a?.b ?? c; }"))
 
     def test_svelte_script(self):
-        self.assertEqual([3], cogc("a.svelte", """
+        # The function, then the component with the code outside it.
+        self.assertEqual([3, 0], cogc("a.svelte", """
             <script>
               function next(node) {
                 do {                          // +1
