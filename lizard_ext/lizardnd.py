@@ -145,8 +145,18 @@ class NDFileInfoAddition(FileInfoBuilder):
         self.current_function.condition_depth += 1
 
     def decrement_condition_depth(self):
-        if self.current_function.condition_depth > 0:
-            self.current_function.condition_depth -= 1
+        function = self.current_function
+        if function.condition_depth > 0:
+            function.condition_depth -= 1
+        elif self.stacked_functions:
+            # The function did not read the "(" of this ")": the reader
+            # started it inside a group that the function around it read.
+            enclosing = self.stacked_functions[-1]
+            if enclosing.condition_depth > 0:
+                enclosing.condition_depth -= 1
+                if enclosing.condition_depth == 0:
+                    enclosing.in_condition = False
+                    enclosing.logical_operator_added = False
 
     def get_condition_depth(self):
         return self.current_function.condition_depth
