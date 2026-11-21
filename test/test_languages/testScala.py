@@ -525,3 +525,53 @@ class TestScala(unittest.TestCase):
         self.assertEqual([("work", 7, 2), ("next", 8, 1)],
                          [(f.name, f.end_line, f.cyclomatic_complexity)
                           for f in result])
+
+    def test_definition_text_in_a_multi_line_string(self):
+        result = get_scala_function_list('''
+            object C {
+              def usage(): String = """ "def fake()"
+                """
+              def next(): Int =
+                1
+            }
+            ''')
+        self.assertEqual([("usage", 3, 4), ("next", 5, 6)],
+                         [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_call_of_a_function_with_the_backtick_name_def(self):
+        result = get_scala_function_list('''
+            object C {
+              def `def`(): Int = 1
+              def call(): Int = `def`()
+              def next(): Int =
+                2
+            }
+            ''')
+        self.assertEqual([("def", 3, 3), ("call", 4, 4), ("next", 5, 6)],
+                         [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_expression_body_that_continues_after_a_shift_or_less_than(self):
+        for operator in ('<<', '>>', '>>>', '<'):
+            with self.subTest(operator=operator):
+                result = get_scala_function_list('''
+                    object C {
+                      def first(x: Int): Any = x %s
+                        1
+                      def next(): Int = 2
+                    }
+                    ''' % operator)
+                self.assertEqual(
+                    [("first", 4, 2), ("next", 5, 1)],
+                    [(f.name, f.end_line, f.nloc) for f in result])
+
+    def test_statement_after_a_comment_that_ends_on_its_line(self):
+        result = get_scala_function_list('''
+            object C {
+              def first(): Int =
+                1 /* note
+                */ println(if (ready) 2 else 3)
+            }
+            ''')
+        self.assertEqual([("first", 4, 1)],
+                         [(f.name, f.end_line, f.cyclomatic_complexity)
+                          for f in result])
