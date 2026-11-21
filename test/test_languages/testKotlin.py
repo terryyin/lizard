@@ -97,7 +97,7 @@ class Test_parser_for_Kotlin(unittest.TestCase):
             }
             class c { }
                 ''')
-        self.assertEqual(0, len(result))
+        self.assertEqual(["get"], [f.name for f in result])
 
     def test_when_cases(self):
         result = get_kotlin_function_list('''
