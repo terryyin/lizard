@@ -611,6 +611,13 @@ class TestSvelteMarkup(unittest.TestCase):
         self.assertLess(time.perf_counter() - started, 1)
         self.assertEqual([('f', 1, 1, 2)], function_summaries(functions))
 
+    def test_long_runs_of_line_breaks_after_a_division_take_linear_time(self):
+        started = time.perf_counter()
+        functions = get_svelte_function_list(
+            '{#snippet f()}{x / 2' + '\n' * 64000 + '&& y}{/snippet}\n')
+        self.assertLess(time.perf_counter() - started, 1)
+        self.assertEqual([('f', 1, 64001, 2)], function_summaries(functions))
+
     def test_many_invalid_tags_on_one_line_take_linear_time(self):
         started = time.perf_counter()
         functions = get_svelte_function_list(
