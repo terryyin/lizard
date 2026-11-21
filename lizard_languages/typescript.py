@@ -2,7 +2,6 @@
 Language parser for TypeScript
 '''
 
-from functools import cached_property
 from itertools import tee
 
 from .code_reader import CodeReader, CodeStateMachine
@@ -95,12 +94,8 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
     # atomic templates that need a backtick scan on the fast path.
     _scan_atomic_templates = False
     _class_field_annotations = True
-
-    @cached_property
-    def implied_semicolons(self):
-        """For the extensions: finds where a statement ends without a ';'.
-        The extensions on one file share this one scan."""
-        return ImpliedSemicolons(self.context)
+    # For the extensions: finds where a statement ends without a ';'.
+    implied_semicolons = ImpliedSemicolons
 
     # Separated condition categories
     _control_flow_keywords = {'if', 'elseif', 'for', 'while', 'catch'}

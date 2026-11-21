@@ -33,12 +33,11 @@ ASSERTED_TYPES = ('const', 'void')
 class ImpliedSemicolons:
     """Finds the places where a statement ends without a ';'.
 
-    Each extension takes before() from ask() and calls it once for each
-    token, in order.  A statement ends before the '}' of a block and at a
-    line break that the next token cannot continue.  It does not end
-    inside parentheses, brackets or an object literal, or while a
-    structure waits for its head or its body, `if (ready)` + line break +
-    `run()`."""
+    Ask before(token) once for each token, in order.  A statement ends
+    before the '}' of a block and at a line break that the next token
+    cannot continue.  It does not end inside parentheses, brackets or an
+    object literal, or while a structure waits for its head or its body,
+    `if (ready)` + line break + `run()`."""
 
     def __init__(self, context):
         self._context = context
@@ -52,24 +51,8 @@ class ImpliedSemicolons:
         self._postfix = False           # the last "!", "++" or "--" is postfix
         self._object_ended = False      # the last "}" closed an object literal
         self._loop_ended = False        # the ")" of "do … while (…)"
-        self._askers = 0
-        self._answers_left = 0          # askers yet to ask about the token
-        self._implied = False
-
-    def ask(self):
-        """Add an extension that asks about each token.  It must ask
-        before the first token is read.  The first extension to ask
-        about a token reads it, and the others get the same answer, so
-        the extensions between them must pass on each token before
-        they read the next one."""
-        self._askers += 1
-        return self.before
 
     def before(self, token):
-        if self._answers_left > 0:
-            self._answers_left -= 1
-            return self._implied
-        self._answers_left = self._askers - 1
         line = self._context.current_line
         implied = self._loop_ended and token != ';' or (
             (token == '}' or line != self._line)
@@ -80,7 +63,6 @@ class ImpliedSemicolons:
         self._before_previous = self._previous
         self._previous = token
         self._line = line
-        self._implied = implied
         return implied
 
     def _statement_ends(self, token, line):
