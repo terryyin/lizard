@@ -42,7 +42,9 @@ class RubylikeStateMachine(CodeStateMachine):
                 self._state = self._def
                 self.next(self._def)
         elif token == 'it':
-            if not getattr(token, 'is_member_name', False):
+            # An RSpec example starts a line or a block: `context { it "x" do`.
+            if not getattr(token, 'is_member_name', False) and (
+                    self.is_newline() or self.last_token is None):
                 self._state = self._it
         elif token in self.BLOCK_KEYWORDS and self.last_token != ".":
             self.sub_state(self.statemachine_clone())
@@ -88,9 +90,27 @@ class RubylikeStateMachine(CodeStateMachine):
         self.next(self._def_continue)
 
     def _it(self, token):
+        # `it "works" do` starts an RSpec example.  Before anything else,
+        # `it` is the block parameter of Ruby 3.4: `it.save`, `it * 2`.
+        # A description can span lines: `it "a\n b" do`.
+        if not (token in ('do', '{', '(') or token[0] in '"\':' or (
+                token[0] == '%' and len(token) > 2)) or (
+                self.is_newline() and '\n' not in token):
+            self.next(self._state_global, token)
+        else:
+            self.next(self._it_example, token)
+
+    def _it_example(self, token):
         if token in ('do', '{'):
             self.context.push_new_function(self.last_token)
             self.next(self._def_continue)
+        elif token == '${':
+            self.br_count += 1
+        elif token == '}' and self.br_count:
+            self.br_count -= 1
+        elif token == '}':
+            # `{ it(1) }` calls a method `it` without a block.
+            self.next(self._state_global, token)
 
     def _def_continue(self, token):
         def callback():
