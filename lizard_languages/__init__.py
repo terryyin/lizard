@@ -15,6 +15,7 @@ from .csharp import CSharpReader
 from .dart import DartReader
 from .php import PHPReader
 from .scala import ScalaReader
+from .groovy import GroovyReader
 from .gdscript import GDScriptReader
 from .go import GoReader
 from .lua import LuaReader
@@ -48,6 +49,7 @@ def languages():
         PHPReader,
         SwiftReader,
         ScalaReader,
+        GroovyReader,
         GDScriptReader,
         GoReader,
         LuaReader,

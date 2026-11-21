@@ -24,6 +24,7 @@ A list of supported languages:
 -  Fortran
 -  GDScript
 -  Golang
+-  Groovy (with Gradle scripts and Jenkinsfiles)
 -  Java
 -  JavaScript (With ES6 and JSX)
 -  Kotlin
