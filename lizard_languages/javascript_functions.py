@@ -54,12 +54,36 @@ class JavaScriptFunctionsMixin:
                 and token != '{'):
             # A line break after ")" ends the statement unless "{" opens the
             # body (`function f()\n{`). A line break before "=>" is invalid.
-            self._abandon_function()
-            return
+            self._discard_signature()
+            if not self.started_function:
+                return
         if (self._state == self._state_global
                 and ends_expression(self.last_token)
                 and starts_statement(token)):
             self._end_statement()
+
+    def end_signature_before(self, token):
+        """Called by the reader with the token after a signature's ")"
+        before it is counted.  A token that cannot start the body shows that
+        the signature was an expression, `x = (a)` + `if (b)`: the function
+        is discarded now, so the token counts for the function around it."""
+        if token in ('{', '=>', ':') or (
+                token == ';' and self.as_object and self._in_abstract_context):
+            return      # for _expecting_func_opening_bracket
+        self._discard_signature()
+
+    def _discard_signature(self):
+        """The signature was an expression, `x = (a) && b`: discard the
+        function that its "(" started.  In an arrow's expression body,
+        `v => o.x = (v) && b`, the "(" started none, so the arrow goes on
+        with its own signature and without the parameter defaults."""
+        if self._expression_body:
+            function = self.context.current_function
+            function.long_name, function.full_parameters = self._arrow_signature
+            self.context.add_condition(-self._parameter_bindings.defaults)
+        elif self.started_function:
+            self._abandon_function()
+        self._state = self._state_global
 
     def _abandon_function(self):
         """Discard an optimistic signature that proved to be an expression."""
@@ -142,6 +166,10 @@ class JavaScriptFunctionsMixin:
             self._static_seen = False
             self._async_seen = False
         else:
+            if self._expression_body:
+                function = self.context.current_function
+                self._arrow_signature = (
+                    function.long_name, list(function.full_parameters))
             if not self.started_function:
                 self._push_function_to_stack()
                 if self.started_function and not self._signature:
@@ -192,6 +220,7 @@ class JavaScriptFunctionsMixin:
         event = self._read_parameter_binding(token)
         if event.ended:
             self._state = self._expecting_func_opening_bracket
+            self.context.ended_signatures.append(self)
         elif (not event.in_expression or event.root_separator) and token != '(':
             return
         self.context.add_to_long_function_name(" " + token)
@@ -218,8 +247,7 @@ class JavaScriptFunctionsMixin:
             self._in_abstract_context = False
             self.next(self._state_global)
         elif token != '{' and token != '=>':
-            if self.started_function:
-                self._abandon_function()
+            self._discard_signature()
         self.next(self._state_global, token)
 
     def _field(self, token):

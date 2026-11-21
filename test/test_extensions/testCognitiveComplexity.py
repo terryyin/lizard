@@ -1003,6 +1003,27 @@ class TestJavaScriptGroupedExpressions(unittest.TestCase):
               return x;
             }"""))
 
+    def test_arrow_body_with_an_expression_in_parentheses(self):
+        self.assertEqual([1, 0], cogc("a.js", """
+            function bind(model, ready) {
+              const set = value => model.value = (value) && ready(value);  // +1
+              return set;
+            }"""))
+
+
+class TestJavaScriptCallsInCaseBlocks(unittest.TestCase):
+
+    def test_ternary_after_a_call_in_a_case_block(self):
+        self.assertEqual([3], cogc("a.js", """
+            function increment(release, identifier) {
+              switch (release) {                            // +1
+                case 'pre': {
+                  const base = Number(identifier) ? 1 : 0;  // +2
+                  return base;
+                }
+              }
+            }"""))
+
 
 class TestJavaScriptFunctionsInGroupedExpressions(unittest.TestCase):
     """The reader does not list a function that it meets in the parameters of

@@ -216,13 +216,15 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
     def preprocess(self, tokens):
         """Drop spaces, and offer each line's first code token to the
         innermost open expression arrow (or optimistic signature) before
-        any counter charges it.  Mark a keyword after '.' or '?.' as the
+        any counter charges it.  Offer the code token after a signature to
+        its state in the same way.  Mark a keyword after '.' or '?.' as the
         name of a member.
 
         A '\n' is consumed by line_counter, and comments by comment_counter,
         before the state machine sees them, so expression_arrows cannot
         change between a newline and the next code token."""
         arrows = self.context.expression_arrows = []
+        signatures = self.context.ended_signatures = []
         line_start = False
         state = self.parallel_states[0]
         marked_punctuation = _MARKED_PUNCTUATION
@@ -238,6 +240,8 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                     if line_start and not token.startswith(_COMMENT_STARTS):
                         line_start = False
                         end_before_line_token(state, arrows, token)
+                    if signatures and not token.startswith(('//', '/*')):
+                        signatures.pop().end_signature_before(token)
                     if member_access and token in structure_keywords:
                         token = _MemberName(token)
                         member_access = False
@@ -245,6 +249,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                         # `1..catch`: the number and each dot are tokens.
                         member_access = token in member_access_tokens
                         if token == '?':
+
                             if (self.context.class_field_annotations
                                     and state.optional_member_context()):
                                 token = _OPTIONAL_MEMBER_QUESTION

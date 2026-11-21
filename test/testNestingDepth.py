@@ -346,6 +346,17 @@ class TestJavaScriptNestingDepth(unittest.TestCase):
         }
         """, "ready"))
 
+    def test_arrow_body_with_an_expression_in_parentheses(self):
+        result = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
+            "a.js", """
+        function bind(model, ready) {
+          const set = value => model.value = (value) && ready(value);
+          return set;
+        }
+        """).function_list
+        self.assertEqual([('set', 1), ('bind', 0)],
+                         [(f.name, f.max_nesting_depth) for f in result])
+
     def nesting_depth(self, code, name):
         result = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
             "a.js", code).function_list
@@ -618,6 +629,37 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
           if (offline) return
         }
         """, "a.tsx"))
+
+    def test_call_at_the_end_of_a_block(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function resolve(insert, expected) {
+          if (typeof insert === "function") { insert = insert() }
+          if (typeof expected === "function") { expected = expected() }
+        }
+        """))
+
+    def test_ternary_after_an_expression_in_parentheses(self):
+        for condition in ("(current > start)", "current > start"):
+            with self.subTest(condition=condition):
+                self.assertEqual(3, self.nesting_depth("""
+                function fold(next, start, current, width) {
+                  while (next) {
+                    if (next - start > width) {
+                      end = %s ? current : next
+                    }
+                  }
+                }
+                """ % condition))
+
+    def test_call_in_a_case_block(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function dispatch(action) {
+          switch (action.type) {
+            case 'open': { show() }
+            case 'close': { hide() }
+          }
+        }
+        """))
 
     def test_typescript_return_type_that_ends_in_an_operator_word(self):
         self.assertEqual(1, self.nesting_depth("""
