@@ -16,6 +16,9 @@ class RubylikeStateMachine(CodeStateMachine):
     FUNC_KEYWORD = 'def'
     # Ruby needs the parameter list on the line of `def`.
     PARAMETERS_ON_DEF_LINE = True
+    # Each of these opens a block that ends at its own `end` or `}`.
+    BLOCK_KEYWORDS = ("begin", "do", "class", "module", "case", "{", "${")
+    LOOP_KEYWORDS = ("while", "until", "for")
 
     def __init__(self, context):
         super(RubylikeStateMachine, self).__init__(context)
@@ -34,10 +37,9 @@ class RubylikeStateMachine(CodeStateMachine):
         elif token == 'it':
             if not getattr(token, 'is_member_name', False):
                 self._state = self._it
-        elif token in ("begin", "do", "class", "module", "{", "${"
-                       ) and self.last_token != ".":
+        elif token in self.BLOCK_KEYWORDS and self.last_token != ".":
             self.sub_state(self.statemachine_clone())
-        elif token in ("while", "for"):
+        elif token in self.LOOP_KEYWORDS:
             if self.is_newline():
                 self.next(self._for_while)
         elif token in ("if", "unless"):
