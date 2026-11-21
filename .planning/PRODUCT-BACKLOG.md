@@ -6,7 +6,5 @@ Maintenance, bug fixing, and PR reviews. We accept PRs and issues that fix or im
 
 ## Taken
 
-- [Process Hafez open PRs (2026-11-19..21)](seeds/SEED-070-process-hafez-prs-nov19-21.md#process-hafez-prs-nov19-21) — SEED-070#process-hafez-prs-nov19-21
-
 ## Backlog list
 
