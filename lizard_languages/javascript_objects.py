@@ -189,7 +189,8 @@ class JavaScriptObjectsMixin:
             # object there, `export default` + line break + `{`, keeps its
             # base reading, without methods named like keywords.
             return False
-        return opens_object(previous)
+        # The token of a regular expression starts with a space.
+        return opens_object(previous.lstrip())
 
     def _collect_computed_name(self):
         # Collect tokens between [ and its ]
