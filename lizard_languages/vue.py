@@ -33,12 +33,17 @@ _TEXT_ELEMENTS = frozenset(('script', 'style', 'textarea', 'title'))
 _BLOCK_CACHE = {}
 
 
+def _attributes(tag):
+    """The name and the value of each attribute of a start tag."""
+    for match in _ATTRIBUTE.finditer(tag, 1):
+        yield match.group(1), next(
+            (v for v in match.group(2, 3, 4) if v is not None), '')
+
+
 def _attribute(tag, name):
     """The value of an attribute of a start tag, or None without it."""
-    for match in _ATTRIBUTE.finditer(tag, 1):
-        if match.group(1).lower() == name:
-            return next((v for v in match.group(2, 3, 4) if v is not None), '')
-    return None
+    return next((value for key, value in _attributes(tag)
+                 if key.lower() == name), None)
 
 
 class _ScriptTag(str):
@@ -160,7 +165,7 @@ class VueReader(TypeScriptReader):
         pos = 0
         for tag_start, tag, code, code_end in _script_blocks(source_code):
             yield from cls.markup_tokens(source_code, pos, tag_start)
-            yield tag
+            yield from cls.tag_tokens(tag)
             tokenizer = (TSXReader.generate_tokens if tag.lang in ('tsx', 'jsx')
                          else TypeScriptReader.generate_tokens)
             yield from tokenizer(code, addition, token_class)
@@ -172,6 +177,11 @@ class VueReader(TypeScriptReader):
         """The markup keeps only its newlines, so the lines are those of
         the file."""
         return repeat('\n', source_code.count('\n', start, end))
+
+    @staticmethod
+    def tag_tokens(tag):
+        """The tokens of a script tag: the tag, for code_tokens."""
+        return (tag,)
 
     def code_tokens(self, tokens):
         """Code tokens; a script tag sets the lang of the code after it."""
