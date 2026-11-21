@@ -12,6 +12,8 @@ class JavaScriptObjectsMixin:
     # A class body or an object literal: braces that hold members.  The
     # reader also reads blocks such as `catch {` or `case 1: {` as objects.
     holds_members = False
+    # In an object: a default value is open, `{ a = async function () {} }`.
+    _default_value = False
 
     def _typed_class_member(self):
         return (self.as_class and not self._in_prop_value
@@ -25,7 +27,7 @@ class JavaScriptObjectsMixin:
         """Whether a word before '(' here names a method, `catch(e) {}`."""
         state = active_js_state(self)
         return (state.holds_members and state._state == state._state_global
-                and not state._in_prop_value
+                and not state._in_prop_value and not state._default_value
                 and (state.as_class or state.last_token in _MEMBER_STARTS))
 
     def _end_field_before_modifier(self):
@@ -49,8 +51,11 @@ class JavaScriptObjectsMixin:
             # not a modifier waiting for a method name.
             self.last_tokens = 'async' if self._async_seen else 'static'
             self._async_seen = self._static_seen = False
-        if token == '=' and self.as_class:
-            self._in_prop_value = True
+        if token == '=':
+            if self.as_class:
+                self._in_prop_value = True
+            else:
+                self._default_value = True
         if (self.as_class and token.endswith('?')
                 and self._typed_class_member()):
             self.last_tokens = token[:-1]

@@ -240,7 +240,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                 if self._declaration_binding is not None:
                     self._declaration_binding = True
                 if self.as_object:
-                    self._in_prop_value = False
+                    self._in_prop_value = self._default_value = False
         if token == '<':
             self._generic_prefix = self._prev_token
         self.last_tokens = token
