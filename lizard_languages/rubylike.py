@@ -18,6 +18,17 @@ _EXPRESSION_KEYWORDS = frozenset((
     'case', 'when', 'in', 'if', 'unless', 'while', 'until', 'for'))
 
 
+def _ends_value(token):
+    if getattr(token, 'is_member_name', False):
+        return True
+    if token in _EXPRESSION_KEYWORDS:
+        return False
+    end = token[-1]
+    return end.isalnum() or end in '_)]}"\'`' or (
+        len(token) > 1 and end in '?!/') or (
+        token[0] == '%' and len(token) > 2)
+
+
 class RubylikeStateMachine(CodeStateMachine):
     # pylint: disable=R0903
     FUNC_KEYWORD = 'def'
@@ -29,6 +40,7 @@ class RubylikeStateMachine(CodeStateMachine):
 
     def __init__(self, context):
         super(RubylikeStateMachine, self).__init__(context)
+        self.name_on_def_line = True
         self.loop_br_count = 0
 
     def _state_global(self, token):
@@ -70,16 +82,8 @@ class RubylikeStateMachine(CodeStateMachine):
         no block.  At the start of a statement, or after an operator or a
         word such as `then`, they start a block: `x = if c`."""
         last = self.last_token
-        if last is None or self.is_newline():
-            return False
-        if getattr(last, 'is_member_name', False):
-            return True
-        if last in _EXPRESSION_KEYWORDS:
-            return False
-        end = last[-1]
-        return end.isalnum() or end in '_)]}"\'`' or (
-            len(last) > 1 and end in '?!/') or (
-            last[0] == '%' and len(last) > 2)
+        return last is not None and not self.is_newline() and \
+            _ends_value(last)
 
     def _def(self, token):
         if token == '(':
@@ -87,6 +91,9 @@ class RubylikeStateMachine(CodeStateMachine):
             self.next(self._def_parameters)
             return
         self.context.push_new_function(token)
+        # An endless method has its name on the line of its `def`.  Here
+        # the name was hidden, as in `def #{name}=(v)` in a heredoc.
+        self.name_on_def_line = not self.is_newline()
         self.next(self._def_continue)
 
     def _it(self, token):
@@ -113,9 +120,6 @@ class RubylikeStateMachine(CodeStateMachine):
             self.next(self._state_global, token)
 
     def _def_continue(self, token):
-        def callback():
-            self.context.end_of_function()
-            self.next(self._state_global)
         if token == ".":
             self.context.add_to_function_name(token)
             self.next(self._def_class_method)
@@ -123,10 +127,71 @@ class RubylikeStateMachine(CodeStateMachine):
                 self.PARAMETERS_ON_DEF_LINE and self.is_newline()):
             # On the next line, `(a || b) if c` starts the body.
             self.next(self._def_parameters)
+        elif token == "=" and self.name_on_def_line and (
+                self.last_token == ")" or not self._touches_name(token)):
+            self.next(self._endless)
         else:
-            self.sub_state(self.statemachine_clone(), callback, token)
+            self._def_body(token)
+
+    def _touches_name(self, token):
+        """`def x=(value)` and `def uri= uri` name a setter, while `def x = 1`
+        defines an endless method.  A token keeps its offset in the source,
+        so a setter has no space before the `=`."""
+        name = self.last_token
+        begin = getattr(name, 'begin', None)
+        return begin is None or begin + len(name) == getattr(
+            token, 'begin', None)
+
+    def _def_body(self, token):
+        self.sub_state(self.statemachine_clone(), self._end_def, token)
+
+    def _end_def(self):
+        self.context.end_of_function()
+        self.next(self._state_global)
+
+    def _endless(self, token):
+        """The body of `def f(x) = x + 1` is one expression.  It ends with
+        its line, unless a bracket, a block or an operator goes on."""
+        if token in ("(", "["):
+            self.br_count += 1
+        elif token in (")", "]"):
+            self.br_count -= 1
+        elif (token in self.BLOCK_KEYWORDS and self.last_token != ".") or (
+                token in ("if", "unless") and not self.follows_value() and
+                not getattr(token, 'is_member_name', False)):
+            self.context.at_line_end = None
+            self.sub_state(self.statemachine_clone(), self._endless_value)
+            return
+        elif token in self.LOOP_KEYWORDS and not self.follows_value() and \
+                not getattr(token, 'is_member_name', False):
+            self.context.at_line_end = None
+            self.next(self._endless_loop)
+            return
+        elif token in ("}", ";") or (
+                token == "end" and
+                not getattr(token, 'is_member_name', False)):
+            # `Class.new { def f = 1 }`: the block ends with the method.
+            self.context.at_line_end = None
+            self._end_def()
+            self._state_global(token)
+            return
+        if _ends_value(token):
+            self._endless_value()
+        else:
+            self.context.at_line_end = None
+
+    def _endless_value(self):
+        """A value that closes all brackets can end the method, if the
+        line ends after it."""
+        self.context.at_line_end = None if self.br_count else self._end_def
+
+    def _endless_loop(self, token):
+        """`def drain = while ready?` reads the loop as `_for_while` does."""
+        self._loop_head(token, self._endless, self._endless_value)
 
     def _def_class_method(self, token):
+        if self.is_newline():
+            self.name_on_def_line = False
         self.context.add_to_function_name(token)
         self.next(self._def_continue)
 
