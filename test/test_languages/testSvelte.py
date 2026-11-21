@@ -679,6 +679,26 @@ class TestSvelteMarkup(unittest.TestCase):
         self.assertLess(time.perf_counter() - started, 1)
         self.assertEqual([('f', 1, 1, 2)], function_summaries(functions))
 
+    def test_comment_cut_before_its_last_character(self):
+        functions = get_svelte_function_list(
+            '{#snippet f()}{   "}"/*}*/&&y}{/snippet}\n')
+        self.assertEqual([('f', 1, 1, 2)], function_summaries(functions))
+
+    def test_line_breaks_before_markup_with_slashes_take_linear_time(self):
+        started = time.perf_counter()
+        functions = get_svelte_function_list(
+            '{#snippet f()}{x / 2 + "{"' + '\n' * 64000
+            + '&& y}{/snippet}<p/>}\n')
+        self.assertLess(time.perf_counter() - started, 1)
+        self.assertEqual([('f', 1, 64001, 2)], function_summaries(functions))
+
+    def test_many_strings_that_do_not_close_on_one_line(self):
+        started = time.perf_counter()
+        functions = get_svelte_function_list(
+            '{x</\\"}/}' * 3000 + '\n{#snippet f()}{\'}\'&&y}{/snippet}\n')
+        self.assertLess(time.perf_counter() - started, 1)
+        self.assertEqual([('f', 2, 2, 2)], function_summaries(functions))
+
     def test_regular_expression_cut_after_a_backslash(self):
         functions = get_svelte_function_list(
             '{#snippet f()}{"aaaaa}"+(/[}\\}]/.test(x))&& y}{/snippet}\n')
