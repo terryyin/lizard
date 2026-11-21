@@ -33,6 +33,7 @@ from .cobol import CobolReader
 from .ocaml import OCamlReader
 from .fsharp import FSharpReader
 from .gherkin import GherkinReader
+from .twig import TwigReader
 
 
 def languages():
@@ -70,6 +71,7 @@ def languages():
         OCamlReader,
         FSharpReader,
         GherkinReader,
+        TwigReader,
     ]
 
 

@@ -43,6 +43,7 @@ A list of supported languages:
 -  Svelte
 -  Swift
 -  TTCN-3
+-  Twig
 -  TypeScript (With TSX)
 -  VueJS
 -  Zig
