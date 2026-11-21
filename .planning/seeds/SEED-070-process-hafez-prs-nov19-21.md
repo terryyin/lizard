@@ -71,3 +71,24 @@ the window.
 **Source:** Dashboard instruction to run lizard-process-pr and
 lizard-process-issue on PRs and issues from the past two days
 (launch `9a581ddf-1b5d-4314-81dd-3e4f657236dc`).
+
+## Dispositions (SEED-070)
+
+Direction: within maintenance/bug-fixing for all named open PRs.
+
+| PR | Disposition |
+| --- | --- |
+| #575–#578 | Already completed (prior done records / SEED-066); outside new work |
+| #579 | Merged — Vue script-block isolation; apostrophe-in-template repro fixed |
+| #580 | Merged — ND after function starting at `(` |
+| #581 | Merged — same-line parenthesized expression / signature-end offering; maintainer rebased onto master twice |
+| #582 | Draft left open — SEED-069 already dropped; single-extension ND/NS bars unmet |
+| #583 | Closed draft superseded by #587 |
+| #584 | Merged — keyword members; maintainer conflict fix with Vue `script_tokens` |
+| #585 | Merged — namespaced JSX |
+| #586 | Closed draft; SEED-067 already on trunk |
+| #587 | Merged — keyword property before block |
+
+Issues in the two-day window: none created or updated.
+
+Acknowledgement comments posted on merged PRs and on #582.
