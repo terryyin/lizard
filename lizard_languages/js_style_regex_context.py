@@ -33,6 +33,11 @@ _EXPRESSION_KEYWORDS = frozenset({
     'return', 'typeof', 'instanceof', 'in', 'new', 'delete', 'void',
     'throw', 'case', 'do', 'else', 'yield',
 })
+# Ruby starts an expression after these words too: `if /^end$/ =~ s`.
+_RUBY_EXPRESSION_KEYWORDS = _EXPRESSION_KEYWORDS | frozenset({
+    'if', 'unless', 'elsif', 'when', 'while', 'until', 'and', 'or', 'not',
+    'then', 'next', 'break',
+})
 _NEEDS_FORWARD = re.compile(r'\b(?:for|async)\b')
 # Cheap gate from the same keyword set; longer names first so ``in`` loses to
 # ``instanceof``. Skip the shared scan when no keyword/=> can open a literal.
