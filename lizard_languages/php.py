@@ -5,8 +5,10 @@ Language parser for PHP
 import re
 from .code_reader import CodeReader
 from .clike import CCppCommentsMixin
-from .php_states import PHPLanguageStates
+from .php_states import MEMBER_ACCESS, PHPLanguageStates
 from .token_pattern import compiled_token_pattern
+
+_BEFORE_MEMBER_NAME = MEMBER_ACCESS | {'function'}
 
 
 class PHPReader(CodeReader, CCppCommentsMixin):
@@ -51,3 +53,7 @@ class PHPReader(CodeReader, CCppCommentsMixin):
     def __init__(self, context):
         super(PHPReader, self).__init__(context)
         self.parallel_states = [PHPLanguageStates(context)]
+
+    def preprocess(self, tokens):
+        # `$promise->catch($f)` and `function catch()` name a member.
+        return self.mark_member_names(tokens, _BEFORE_MEMBER_NAME)
