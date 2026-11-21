@@ -89,6 +89,15 @@ class TestCsharp(unittest.TestCase):
         ''')
         self.assertEqual(2, result[0].cyclomatic_complexity)
 
+    def test_nullable_nested_type_argument_is_no_condition(self):
+        result = get_csharp_function_list('''
+            public void Method()
+            {
+                Dictionary<string, List<int>?> groups = new Dictionary<string, List<int>?>();
+            }
+        ''')
+        self.assertEqual(1, result[0].cyclomatic_complexity)
+
     def test_primary_constructor_vs_traditional(self):
         # Test with primary constructor
         result_primary = get_csharp_function_list('''
