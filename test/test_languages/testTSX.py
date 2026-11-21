@@ -766,6 +766,86 @@ function Banner() { return <p>What if we wait for it?</p>; }
 function Hello() { return <p>Hello</p>; }
 ''')
 
+    def test_text_after_a_namespaced_attribute(self):
+        self.assert_both([("Ask", 1, 1, 1), ("Button", 2, 2, 1)], '''\
+function Ask() { return <p xml:lang="en">What if we wait for it?</p>; }
+function Button() { return <b on:click={go}>Go? Or stay?</b>; }
+''')
+
+    def test_text_in_a_namespaced_element(self):
+        self.assert_both([("Caption", 1, 1, 1), ("Hello", 2, 2, 1),
+                          ("Label", 3, 3, 1), ("after", 4, 4, 2)], '''\
+function Caption() { return <svg:text x="1">What if we wait for it?</svg:text>; }
+function Hello() { return <svg:g><svg:text>Hello? Or not?</svg:text></svg:g>; }
+function Label() { return <svg:my_text>Hello? Or not?</svg:my_text>; }
+function after(a) { return a ? 1 : 2; }
+''')
+
+    def test_text_in_a_namespaced_element_with_a_spaced_closing_tag(self):
+        self.assert_both([("Caption", 1, 1, 1), ("Label", 2, 2, 1),
+                          ("Title", 3, 3, 1), ("Hello", 4, 4, 1),
+                          ("Footer", 5, 8, 1), ("after", 9, 9, 2)], '''\
+function Caption() { return <svg:text>Go? Or stay?</svg :text>; }
+function Label() { return <svg:text>Go? Or stay?</svg: text>; }
+function Title() { return <svg:text>Go? Or stay?</ svg:text>; }
+function Hello() { return <svg:text>Go? Or stay?</svg:text >; }
+function Footer() {
+  return <svg:text>Go? Or stay?</svg:text
+  >;
+}
+function after(a) { return a ? 1 : 2; }
+''')
+
+    def test_an_unfinished_namespaced_tag_in_text_keeps_the_closing_tag(self):
+        self.assert_both([("Note", 1, 1, 1), ("after", 2, 2, 2)], '''\
+function Note() { return <p>Use <b:</p>; }
+function after(a) { return a ? 1 : 2; }
+''')
+
+    def test_a_regex_literal_before_a_ternary_colon(self):
+        # `</g : count >` here ends a regular expression, not an element.
+        self.assert_both([("f", 1, 1, 2), ("g", 2, 2, 2),
+                          ("after", 3, 3, 2)], '''\
+function f(ready, count) { return ready ? /a?</g : count > 0; }
+function g(ready, count) { return <p>{ready ? /[}]</g : count > 0}</p>; }
+function after(a) { return a ? 1 : 2; }
+''')
+
+    def test_a_line_break_after_a_ternary_colon(self):
+        code = '''\
+function f(flag, a, b, c) {
+  return flag ? a!
+    <b:
+    c;
+}
+'''
+        self.assertEqual([("f", 5)], [
+            (f.name, f.nloc) for f in get_tsx_function_list(code)])
+
+    def test_a_namespaced_name_has_no_member(self):
+        # `<a:b.c>` is no JSX element name, and the closing tag pattern
+        # does not end it either.
+        for tag in ("a:b.c", "a.b:c"):
+            with self.subTest(tag):
+                self.assertEqual(["g", "after"], [
+                    f.name for f in get_tsx_function_list(
+                        "function g() { return <%s>?</%s>; }\n"
+                        "function after() { return 1; }\n" % (tag, tag))])
+
+    def test_a_ternary_colon_is_no_namespace(self):
+        # `< b:c >` here is a comparison in each branch of a ternary.
+        for ternary in ("f ? a! < b : c > d", "f ? a! < b:c > d",
+                        "f ? a! < b as boolean:c > d", "f ? {} < b:c > d",
+                        "f ? a! <b: c > d", "f ? a! <b x: y > d",
+                        "f ? a! <b: (<p>?</p>)", "f ? a!<b:(<p>?</p>)",
+                        "f ? a! <b x: (<p>?</p>)"):
+            with self.subTest(ternary):
+                self.assertEqual([("compare", 2), ("after", 1)], [
+                    (f.name, f.cyclomatic_complexity)
+                    for f in get_tsx_function_list(
+                        "function compare(f, a, b, c, d) { return %s; }\n"
+                        "function after() { return 1; }\n" % ternary)])
+
     def test_double_slash_in_text_is_not_a_comment(self):
         # A URL in element text: "//" there does not start a line comment that
         # would hide the closing tag and swallow the functions after it.

@@ -133,13 +133,17 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         self.parallel_states = [TypeScriptStates(context)]
         self._previous_token = None
 
+    def script_tokens(self, code):
+        """Tokens of a piece of code; Vue tokenizes its files as markup."""
+        return self.generate_tokens(code)
+
     def _count_interpolation_conditions(self, token, in_expression):
         # Re-tokenize opaque interpolation spans; keyword members stay non-
         # conditions the same way as on the outer token stream (#546).
         conditions = self.conditions
         earlier = previous = None
         for start, end in interpolation_code(token, in_expression):
-            for inner in self.generate_tokens(token[start:end]):
+            for inner in self.script_tokens(token[start:end]):
                 # A word after a dot names a member; `1. ? a : b` is a ternary.
                 if (inner in conditions and (previous not in _MEMBER_ACCESS
                                              or not inner[0].isalpha())):

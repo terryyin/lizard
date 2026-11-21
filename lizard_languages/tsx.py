@@ -33,6 +33,7 @@ class TSXReader(TypeScriptReader):
         addition = addition + "|" + LINE_COMMENT + \
             r"|(?:<[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)*>)" + \
             r"|(?:<\/[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)*>)" + \
+            r"|(?:<\/\s*\w+\s*:\s*\w+\s*>)" + \
             r"|(?:#\w+)" + \
             OPTIONAL_NAME + \
             JS_IDENTIFIER + \
@@ -82,6 +83,14 @@ class TSXTokenizer(JSTokenizer):
     def __init__(self):
         super().__init__()
         self._previous = None
+
+    def _sub_tokens(self, token):
+        tag = self.sub_tokenizer
+        yield from super()._sub_tokens(token)
+        if tag.unread is not None:
+            # The tag ended before this token, which is read here instead.
+            unread, tag.unread = tag.unread, None
+            yield from self.process_token(unread)
 
     def in_element_text(self):
         """True while the innermost tokenizer reads the children of a JSX
@@ -136,6 +145,12 @@ class XMLTagWithAttrTokenizer(Tokenizer):
         # Where an expression is expected, `<` can only open an element,
         # so its children are text even when they hold `=`, `;` or `)`.
         self._in_expression = in_expression
+        # `<svg:text>`: the tag name follows the `<` with no space.
+        self._joined_name = True
+        # A token the enclosing tokenizer reads again after an abort.
+        self.unread = None
+        # The `:` of a namespace was read; the next name must touch it.
+        self._after_colon = False
 
     @classmethod
     def children_of(cls, opening_tag):
@@ -153,7 +168,12 @@ class XMLTagWithAttrTokenizer(Tokenizer):
             for tok in self.sub_tokenizer(token):
                 yield tok
             if self.sub_tokenizer._ended:
+                unread = getattr(self.sub_tokenizer, 'unread', None)
                 self.sub_tokenizer = None
+                if unread is not None:
+                    # A child tag ended before this token: text again.
+                    yield from self.process_token(unread)
+                    return
                 # The TSXTokenizer consumed the closing '}'. After an
                 # attribute expression, ';' closes any expression-body
                 # arrow opened inside it (onClick={() => handler()}); a
@@ -166,6 +186,11 @@ class XMLTagWithAttrTokenizer(Tokenizer):
             yield tok
 
     def process_token(self, token):
+        if self._after_colon and token.isspace():
+            # `f ? a! <b: c`: a space after the `:` makes it a ternary colon.
+            self.cache.append(token)
+            yield from self.abort()
+            return
         if token.isspace() and '\n' in token:
             # Attribute expressions pass through before the cached tag
             # text, so newlines go out now to keep their lines in order.
@@ -206,7 +231,15 @@ class XMLTagWithAttrTokenizer(Tokenizer):
         if not isidentifier(token):
             return self.abort()
         self.tag = token
-        self.state = self._after_tag_name
+        self._joined_name = not self.cache[-2].isspace()
+        self.state = self._after_first_name
+
+    def _after_first_name(self, token):
+        if token == ':' and self._joined():
+            self.state = self._tag_namespace_part  # <svg:text>
+            self._after_colon = True
+            return None
+        return self._after_tag_name(token)
 
     def _after_tag_name(self, token):
         if token == '.':
@@ -224,6 +257,14 @@ class XMLTagWithAttrTokenizer(Tokenizer):
         if isidentifier(token) or token == '/':
             return self._after_tag(token)
         return self.abort()
+
+    def _tag_namespace_part(self, token):
+        # A namespaced name has one `:` and no `.`, as its closing tag does.
+        if not isidentifier(token):
+            return self._not_a_namespace(token)
+        self._after_colon = False
+        self.state = self._after_tag
+        return None
 
     def _tag_name_part(self, token):
         if not isidentifier(token):
@@ -255,12 +296,38 @@ class XMLTagWithAttrTokenizer(Tokenizer):
             self.state = self._expecting_value
         elif token == '-':
             self.state = self._attribute_name_part  # data-x, aria-hidden
+        elif token == ':' and self._joined():
+            self.state = self._attribute_namespace_part  # xml:lang, on:click
+            self._after_colon = True
         elif self._in_expression and self._attribute != 'extends':
             # A valueless attribute (<A x={1} flag>); `<T extends U>` is
             # a TypeScript type parameter instead.
             return self._after_tag(token)
         else:
             return self.abort()
+
+    def _joined(self):
+        """`<svg:text>` and `<p xml:lang="en">` have a namespace: the `:` is
+        joined to the name on both sides.  In `f ? a! < b:c > d` and
+        `f ? a! <b :c > d` the `:` belongs to a ternary: a space follows
+        the `<` or comes before the `:`.  A space after it ends the tag in
+        process_token."""
+        return self._joined_name and not self.cache[-2].isspace()
+
+    def _attribute_namespace_part(self, token):
+        if not isidentifier(token):
+            return self._not_a_namespace(token)
+        self._after_colon = False
+        self.state = self._expecting_equal_sign
+        return None
+
+    def _not_a_namespace(self, token):
+        """The `:` was a ternary colon, so the tag ends before it, and the
+        token after it is read again as code: in `f ? a!<b:(<p>?</p>)`
+        the `(` comes before an element."""
+        self.cache.pop()
+        self.unread = token
+        return self.abort()
 
     def _attribute_name_part(self, token):
         if isidentifier(token):
