@@ -2,6 +2,8 @@
 Language parser for Ruby
 '''
 
+import re
+
 from .rubylike import RubylikeReader
 from .js_style_regex_expression import js_style_regex_expression
 from .script_language import ScriptLanguageMixIn
@@ -34,6 +36,35 @@ _KEYWORDS = frozenset((
 _NAME_BEFORE = frozenset(('.', 'def'))
 
 
+def _delimited(opening, closing, one_line):
+    '''A % literal from its opening to its closing delimiter. A pair of
+    the same delimiters nests, as in `%w(a (b) c)` and `%r{#{a}}`. Real code
+    nests at most two levels deep; this allows three. Another delimiter,
+    as in `%w|a b|`, ends the literal on its line, so a `%` in a regex that
+    the reader misses, such as `/^%w/`, cannot run far. Only a `%r` regex
+    with such a delimiter can span lines, as an `x` flag regex often does.'''
+    opening, closing = re.escape(opening), re.escape(closing)
+    if opening == closing:
+        line_end = r"\n" if one_line else ""
+        return (opening + r"(?:\\.|[^" + closing + r"\\" + line_end +
+                r"])*" + closing)
+    body = r"(?:\\.|[^" + opening + closing + r"\\])*"
+    for _ in range(3):
+        body = (r"(?:\\.|[^" + opening + closing + r"\\]|" +
+                opening + body + closing + r")*")
+    return opening + body + closing
+
+
+def _any_delimited(one_line):
+    return "(?:" + "|".join(
+        _delimited(pair[0], pair[-1], one_line)
+        for pair in ('{}', '()', '[]', '<>', '!', '|', '/', '"', "'")) + ")"
+
+
+_PERCENT_LITERAL = (r"\%(?:[qQwWiIsx]?" + _any_delimited(True) +
+                    r"|r" + _any_delimited(False) + r"[a-z]*)")
+
+
 class RubyReader(RubylikeReader):
     # pylint: disable=R0903
 
@@ -63,14 +94,11 @@ class RubyReader(RubylikeReader):
             return ScriptLanguageMixIn.generate_common_tokens(
                 source,
                 r"|^\=begin|^\=end" +
-                r"|\%[qQrwiI]?\{(?:\\.|[^\}\\])*?\}" +
-                r"|\%[qQrwiI]?\[(?:\\.|[^\]\\])*?\]" +
-                r"|\%[qQrwiI]?\<(?:\\.|[^\>\\])*?\>" +
-                r"|\%[qQrwiI]?\((?:\\.|[^\>\\])*?\)" +
                 r"|\w+:" +
                 r"|\$\w+" +
                 r"|\.+" +
                 r"|:?\@{0,2}\w+\??\!?" +
+                r"|" + _PERCENT_LITERAL +
                 _, matcher)
         matcher = MyToken
         bracket_stack = []
