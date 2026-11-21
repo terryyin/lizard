@@ -155,3 +155,373 @@ class TestScala(unittest.TestCase):
                 ''')
         names = sorted(f.name for f in result)
         self.assertEqual(["after", "generic", "plain"], names)
+
+    def test_brace_body_ends_at_its_closing_brace(self):
+        result = get_scala_function_list('''
+            object Pricing {
+              def discount(order: Order): Int = {
+                if (order.isLarge) 10 else 0
+              } // no discount for small orders
+
+              val defaultRate = if (enabled) 5 else 0
+
+              def total(order: Order): Int = {
+                order.amount
+              }
+            }
+            ''')
+        self.assertEqual([(3, 5, 3, 21), (9, 11, 3, 15)],
+                         [(f.start_line, f.end_line, f.nloc, f.token_count)
+                          for f in result])
+
+    def test_next_line_case_does_not_count_for_the_function_above(self):
+        result = get_scala_function_list('''
+            object Shapes {
+              def area(s: Shape): Double = s.width * s.height
+              case class Circle(radius: Double)
+              def kind(s: Shape): String = s match {
+                case _: Circle => "circle"
+                case _ => "other"
+              }
+              case object Empty
+            }
+            ''')
+        self.assertEqual([("area", 3, 1), ("kind", 8, 3)],
+                         [(f.name, f.end_line, f.cyclomatic_complexity)
+                          for f in result])
+
+    def test_expression_body_on_the_next_line(self):
+        result = get_scala_function_list('''
+            class Report {
+              def title(r: Row): String =
+                if (r.isEmpty) "none" else if (r.isShort) r.name else "long"
+              def size(r: Row): Int = r.count
+            }
+            ''')
+        self.assertEqual([("title", 4, 3), ("size", 5, 1)],
+                         [(f.name, f.end_line, f.cyclomatic_complexity)
+                          for f in result])
+
+    def test_expression_body_with_arguments_on_later_lines(self):
+        result = get_scala_function_list('''
+            object Defaults {
+              def config(env: Env): Config = Config(
+                env.name,
+                if (env.debug) 1 else 0)
+              def id(env: Env): Int = env.id
+            }
+            ''')
+        self.assertEqual([("config", 5, 2), ("id", 6, 1)],
+                         [(f.name, f.end_line, f.cyclomatic_complexity)
+                          for f in result])
+
+    def test_expression_body_ends_at_a_closing_brace_on_its_line(self):
+        result = get_scala_function_list('''
+            class Worker {
+              val task = new Runnable { def run(): Unit = execute() }
+              def stop(w: Worker): Unit = {
+                if (w.running) w.halt()
+              }
+            }
+            ''')
+        self.assertEqual([("run", 3, 3), ("stop", 4, 6)],
+                         [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_expression_body_that_continues_on_the_next_line(self):
+        result = get_scala_function_list('''
+            object Access {
+              def allowed(u: User): Boolean =
+                u.isAdmin ||
+                  u.roles.contains("editor")
+              def label(u: User): String = if (u.isAdmin) {
+                "admin"
+              }
+              else {
+                "user"
+              }
+              def names(us: Seq[User]): Seq[String] = us
+                .filter(_.active)
+                .map(_.name)
+              def load(path: String): String = try {
+                read(path)
+              }
+              catch {
+                case e: IOException => ""
+              }
+            }
+            ''')
+        self.assertEqual([("allowed", 5, 2), ("label", 11, 2),
+                          ("names", 14, 1), ("load", 20, 3)],
+                         [(f.name, f.end_line, f.cyclomatic_complexity)
+                          for f in result])
+
+    def test_hash_code_call_in_expression_body(self):
+        result = get_scala_function_list('''
+            class Key(name: String) {
+              def hash(k: Key): Int = improve(k.##)
+              def same(k: Key): Boolean = k.name == name
+            }
+            ''')
+        self.assertEqual([("hash", 3), ("same", 4)],
+                         [(f.name, f.end_line) for f in result])
+
+    def test_expression_body_with_a_member_without_parameters(self):
+        result = get_scala_function_list('''
+            object Flags {
+              def on(): Flag =
+                new Flag { override def value = true }
+            }
+            ''')
+        self.assertEqual([("on", 3, 4)],
+                         [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_expression_body_after_a_condition_on_its_own_line(self):
+        result = get_scala_function_list('''
+            object Pick {
+              def pick(a: Boolean, b: Boolean): Int = if (a)
+                if (b) 1 else 2
+              else 3
+              def none(): Int = 0
+            }
+            ''')
+        self.assertEqual([("pick", 5, 3), ("none", 6, 1)],
+                         [(f.name, f.end_line, f.cyclomatic_complexity)
+                          for f in result])
+
+    def test_body_ends_at_a_semicolon(self):
+        result = get_scala_function_list('''
+            object Values {
+              def one(): Int = { 1 }; val a = if (ok) 2 else 3
+              def two(): Int = 2; val b = if (ok) 4 else 5
+            }
+            ''')
+        self.assertEqual([("one", 3, 1), ("two", 4, 1)],
+                         [(f.name, f.end_line, f.cyclomatic_complexity)
+                          for f in result])
+
+    def test_expression_body_after_a_default_in_a_second_parameter_list(self):
+        result = get_scala_function_list('''
+            class Ref {
+              def send(m: Any)(implicit s: Ref = Ref.none): Unit = ()
+
+              def stop(): Unit = ()
+            }
+            ''')
+        self.assertEqual([("send", 3), ("stop", 5)],
+                         [(f.name, f.end_line) for f in result])
+
+    def test_expression_body_that_continues_after_else(self):
+        result = get_scala_function_list('''
+            object Pick {
+              def pick(a: Boolean): Int = if (a) 1 else
+                if (a) 2 else 3
+              def none(): Int = 0
+            }
+            ''')
+        self.assertEqual([("pick", 4, 3), ("none", 5, 1)],
+                         [(f.name, f.end_line, f.cyclomatic_complexity)
+                          for f in result])
+
+    def test_enclosing_function_ends_at_a_brace_after_an_inner_body(self):
+        result = get_scala_function_list('''
+            object Outer {
+              def outer(): Unit = {
+                def inner(): Int =
+                  1 }
+            }
+            ''')
+        self.assertEqual([("inner", 4, 5), ("outer", 3, 5)],
+                         [(f.name, f.start_line, f.end_line)
+                          for f in result])
+
+    def test_member_without_parameters_counts_once(self):
+        result = get_scala_function_list('''
+            object Flags {
+              def on(): AnyRef =
+                new AnyRef { def value = true }
+            }
+            ''')
+        self.assertEqual([("on", 2, 15)],
+                         [(f.name, f.nloc, f.token_count) for f in result])
+
+    def test_expression_body_with_a_do_while_loop(self):
+        result = get_scala_function_list('''
+            object Ticker {
+              def repeat(again: Boolean): Unit = do { tick() } while (again)
+              def once(again: Boolean): Unit = do tick() while (again)
+              def after(): Int = 1
+            }
+            ''')
+        self.assertEqual([("repeat", 3), ("once", 4), ("after", 5)],
+                         [(f.name, f.end_line) for f in result])
+
+    def test_expression_body_with_a_do_while_loop_after_a_condition(self):
+        result = get_scala_function_list('''
+            object Ticker {
+              def maybe(ok: Boolean): Unit = if (ok) do tick() while (ok)
+              def loop(n: Int): Unit = while (n > 0) do step()
+              def after(): Int = 1
+            }
+            ''')
+        self.assertEqual([("maybe", 3), ("loop", 4), ("after", 5)],
+                         [(f.name, f.end_line) for f in result])
+
+    def test_function_with_a_backtick_name(self):
+        result = get_scala_function_list('''
+            object Matcher {
+              def outer(): Boolean = {
+                def `match`(x: Int): Boolean = x > 0
+                `match`(1)
+              }
+              def `set asScala`(s: Set[Int]): Int = s.size
+            }
+            ''')
+        self.assertEqual([("match", 4, 4), ("outer", 3, 6), ("set", 7, 7)],
+                         [(f.name, f.start_line, f.end_line)
+                          for f in result])
+
+    def test_expression_body_that_continues_after_a_comparison(self):
+        result = get_scala_function_list('''
+            object Compare {
+              def le(a: Int, b: Int): Boolean = a <=
+                b
+              def after(): Int = 0
+            }
+            ''')
+        self.assertEqual([("le", 4), ("after", 5)],
+                         [(f.name, f.end_line) for f in result])
+
+    def test_expression_body_after_a_nested_condition(self):
+        result = get_scala_function_list('''
+            object Pick {
+              def pick(a: Boolean): Int = if (if (a) true else false)
+                1
+              else 0
+              def after(): Int = 0
+            }
+            ''')
+        self.assertEqual([("pick", 5), ("after", 6)],
+                         [(f.name, f.end_line) for f in result])
+
+    def test_closing_brace_after_an_inner_body_counts_once(self):
+        result = get_scala_function_list('''
+            object Outer {
+              def outer(): Unit = {
+                def inner(): Int =
+                  1 }
+            }
+            ''')
+        self.assertEqual([("inner", 8), ("outer", 10)],
+                         [(f.name, f.token_count) for f in result])
+
+    def test_expression_body_with_an_xml_literal(self):
+        result = get_scala_function_list('''
+            object Page {
+              def row(kv: (String, String)) = <tr><td>{kv._1}</td></tr>
+              def cell(v: String) = <td>{v}</td>
+            }
+            ''')
+        self.assertEqual([("row", 3), ("cell", 4)],
+                         [(f.name, f.end_line) for f in result])
+
+    def test_expression_body_that_ends_with_a_symbolic_member(self):
+        result = get_scala_function_list('''
+            object Ops {
+              def bind(counter: Counter): Int => Int = counter.+
+              def next(): Int = 2
+            }
+            ''')
+        self.assertEqual([("bind", 3), ("next", 4)],
+                         [(f.name, f.end_line) for f in result])
+
+    def test_expression_body_with_a_block_on_the_next_line(self):
+        result = get_scala_function_list('''
+            object Ticker {
+              def work(ok: Boolean): Unit = repeat
+              {
+                if (ok) println("tick")
+              }
+              def next(): Int = 1
+            }
+            ''')
+        self.assertEqual([("work", 6, 2), ("next", 7, 1)],
+                         [(f.name, f.end_line, f.cyclomatic_complexity)
+                          for f in result])
+
+    def test_expression_body_with_a_loop_that_continues_on_the_next_line(self):
+        result = get_scala_function_list('''
+            object Ticker {
+              def repeat(ok: Boolean): Unit = do { tick() }
+                while (ok)
+              def each(ok: Boolean): Unit = for { i <- 1 to 2 }
+                if (ok) println(i)
+              def next(): Int = 1
+            }
+            ''')
+        self.assertEqual([("repeat", 4), ("each", 6), ("next", 7)],
+                         [(f.name, f.end_line) for f in result])
+
+    def test_block_after_a_blank_line_does_not_continue_the_body(self):
+        result = get_scala_function_list('''
+            object Journal {
+              def send(ok: Boolean): Unit = {
+                if (ok) println("ok")
+              }
+
+              {
+                if (ready) println("init")
+              }
+              def next(): Int = 1
+            }
+            ''')
+        self.assertEqual([("send", 5, 2), ("next", 10, 1)],
+                         [(f.name, f.end_line, f.cyclomatic_complexity)
+                          for f in result])
+
+    def test_function_after_a_comment_that_ends_on_its_line(self):
+        result = get_scala_function_list('''
+            object C {
+              def first(): Int = 1 /* note
+              */ def next(): Int = 2
+            }
+            ''')
+        self.assertEqual([("first", 3), ("next", 4)],
+                         [(f.name, f.start_line) for f in result])
+
+    def test_block_after_a_brace_body_does_not_continue_it(self):
+        result = get_scala_function_list('''
+            object C {
+              def first(): Int = { 1 }
+              { if (ready) println("init") }
+              def next(): Int = 2
+            }
+            ''')
+        self.assertEqual([("first", 3, 1), ("next", 5, 1)],
+                         [(f.name, f.end_line, f.cyclomatic_complexity)
+                          for f in result])
+
+    def test_do_while_loop_with_a_semicolon(self):
+        result = get_scala_function_list('''
+            object C {
+              def repeat(ok: Boolean): Unit = do (); while (ok)
+              def next(): Int = 2
+            }
+            ''')
+        self.assertEqual([("repeat", 3, 3), ("next", 4, 1)],
+                         [(f.name, f.end_line, f.cyclomatic_complexity)
+                          for f in result])
+
+    def test_block_on_the_next_line_after_a_comment_line(self):
+        result = get_scala_function_list('''
+            object Ticker {
+              def work(ok: Boolean): Unit = repeat
+              // keep the block below
+              {
+                if (ok) println("tick")
+              }
+              def next(): Int = 1
+            }
+            ''')
+        self.assertEqual([("work", 7, 2), ("next", 8, 1)],
+                         [(f.name, f.end_line, f.cyclomatic_complexity)
+                          for f in result])
