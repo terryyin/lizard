@@ -2,7 +2,7 @@
 Language parser for C Sharp
 '''
 
-from .clike import CLikeReader, CLikeStates, CLikeNestingStackStates
+from .clike import CLikeReader, CLikeStates, CLikeNestingStackStates, clike_tokens
 
 
 class CSharpReader(CLikeReader):
@@ -26,7 +26,7 @@ class CSharpReader(CLikeReader):
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
-        return CLikeReader.generate_tokens(
+        return clike_tokens(
                 source_code, r"|(?:\?\?)", token_class)
 
 
