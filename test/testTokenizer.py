@@ -111,6 +111,10 @@ class Test_generate_token_for_comments(unittest.TestCase):
         tokens = list(CLikeReader.generate_tokens("//a\\\nb"))
         self.assertEqual(['//a\\\nb'], tokens)
 
+    def test_c_reader_addition_comes_before_its_line_comment_rule(self):
+        tokens = list(CLikeReader.generate_tokens("//a\\\nb", r"|//a"))
+        self.assertEqual(['//a', '\\\n', 'b'], tokens)
+
     def test_line_comment_ends_at_its_line_after_a_backslash(self):
         tokens = generate_tokens("//a\\\nb")
         self.assertEqual(['//a\\', '\n', 'b'], tokens)
