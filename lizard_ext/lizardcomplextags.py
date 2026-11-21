@@ -20,6 +20,7 @@ class LizardExtension(object):  # pylint: disable=R0903
             yield token
             if not hasattr(context.current_function, 'complex_tags'):
                 context.current_function.complex_tags = []
-            if token in conditions and not getattr(token, 'is_optional', False):
+            if token in conditions and not getattr(token, 'is_optional', False) \
+                    and not getattr(token, 'is_member_name', False):
                 context.current_function.complex_tags.append(
                         [token, context.current_line])

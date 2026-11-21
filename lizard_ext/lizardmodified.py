@@ -18,7 +18,7 @@ class LizardExtension(object):  # pylint: disable=R0903
                 reader.context.add_condition()
                 if hasattr(reader.context, "add_nd_condition"):
                     reader.context.add_nd_condition()
-            elif token == 'case' and self._is_case_keyword(reader):
+            elif token == 'case' and self._is_case_keyword(token, reader):
                 reader.context.add_condition(-1)
                 if hasattr(reader.context, "add_nd_condition"):
                     reader.context.add_nd_condition(-1)
@@ -27,14 +27,18 @@ class LizardExtension(object):  # pylint: disable=R0903
     @staticmethod
     def _is_block_keyword(token, reader):
         """True when this token opens a switch-like block that counts as 1."""
+        if getattr(token, 'is_member_name', False):    # `list.switch(x)`
+            return False
         if token == 'switch':
             return True
         # 'match' is a soft keyword in Python; the reader sets _keyword_match.
         return getattr(reader, '_keyword_match', False)
 
     @staticmethod
-    def _is_case_keyword(reader):
+    def _is_case_keyword(token, reader):
         """True when condition_counter or the reader has already counted this 'case'."""
+        if getattr(token, 'is_member_name', False):    # `this.case`
+            return False
         # Formal keyword languages (C, C++, Java, C#): condition_counter added +1.
         if 'case' in reader.conditions:
             return True

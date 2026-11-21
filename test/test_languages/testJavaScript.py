@@ -1,6 +1,8 @@
 import unittest
 
-from lizard import analyze_file
+from lizard import FileAnalyzer, analyze_file, get_extensions
+from lizard_ext.lizardcomplextags import LizardExtension as ComplexTags
+from lizard_ext.lizardmodified import LizardExtension as Modified
 from lizard_languages import TypeScriptReader
 
 
@@ -182,6 +184,103 @@ class Test_JavaScript_keyword_as_the_name_of_a_member(unittest.TestCase):
                     filename, code).function_list
                 self.assertEqual(expected, [(f.name, f.cyclomatic_complexity)
                                             for f in functions])
+
+    def test_comment_between_the_dot_and_the_keyword(self):
+        code = (
+            'function a(p) { if (p) p./* note */catch(g); }\n'
+            'function b(p) {\n'
+            '  if (p) p?. // note\n'
+            '    catch(g);\n'
+            '}\n'
+            'function c(o) { o.elseif(g); }\n'
+        )
+        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+            with self.subTest(filename=filename):
+                functions = analyze_file.analyze_source_code(
+                    filename, code).function_list
+                self.assertEqual([('a', 2), ('b', 2), ('c', 1)],
+                                 [(f.name, f.cyclomatic_complexity)
+                                  for f in functions])
+
+    def test_keyword_after_a_number_and_a_dot(self):
+        code = (
+            'function a() { return 1..catch(g); }\n'
+            'function b(o) { return `${o. /* note */ catch(g)}`; }\n'
+            'function c(o) { return `${o?.\n  catch(g)}`; }\n'
+        )
+        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+            with self.subTest(filename=filename):
+                functions = analyze_file.analyze_source_code(
+                    filename, code).function_list
+                self.assertEqual([('a', 1), ('b', 1), ('c', 1)],
+                                 [(f.name, f.cyclomatic_complexity)
+                                  for f in functions])
+
+    def test_ternary_after_a_decimal_point_is_a_condition(self):
+        code = (
+            'function a(c) { return 1. ? c : 0; }\n'
+            'function b(c) { return `${1. ? c : 0}`; }\n'
+        )
+        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+            with self.subTest(filename=filename):
+                functions = analyze_file.analyze_source_code(
+                    filename, code).function_list
+                self.assertEqual([('a', 2), ('b', 2)],
+                                 [(f.name, f.cyclomatic_complexity)
+                                  for f in functions])
+
+    def test_keyword_after_a_decimal_point_is_a_structure(self):
+        code = (
+            'function a(x) { 1.\n'
+            'if (x) g(); }\n'
+            'function b(p) { if (p) 1 .catch(g); }\n'
+            'function c(p) { if (p) 1.5.catch(g); }\n'
+        )
+        analyzer = FileAnalyzer(get_extensions(
+            ['cognitive', 'nd', ComplexTags()]))
+        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+            with self.subTest(filename=filename):
+                functions = analyzer.analyze_source_code(
+                    filename, code).function_list
+                self.assertEqual(
+                    [('a', 2, 1, 1, [['if', 2]]), ('b', 2, 1, 1, [['if', 3]]),
+                     ('c', 2, 1, 1, [['if', 4]])],
+                    [(f.name, f.cyclomatic_complexity, f.cognitive_complexity,
+                      f.max_nesting_depth, f.complex_tags)
+                     for f in functions])
+
+    def test_keyword_after_a_decimal_point_in_a_template_is_a_condition(self):
+        code = (
+            'function a(x) { return `${(() => { 1.\n'
+            'if (x) g(); })()}`; }\n'
+            'function b(p) { return `${p && 1.5.catch(g)}`; }\n'
+        )
+        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+            with self.subTest(filename=filename):
+                functions = analyze_file.analyze_source_code(
+                    filename, code).function_list
+                self.assertEqual([('a', 2), ('b', 2)],
+                                 [(f.name, f.cyclomatic_complexity)
+                                  for f in functions])
+
+    def test_keyword_after_a_dot_is_no_case_or_switch(self):
+        code = (
+            'function pick(list, key) {\n'
+            '  return list.switch(key);\n'
+            '}\n'
+            'function label() {\n'
+            '  return this.case;\n'
+            '}\n'
+            'function load(p) {\n'
+            '  if (p) { p.catch(f); }\n'
+            '}\n'
+        )
+        analyzer = FileAnalyzer(get_extensions([Modified(), ComplexTags()]))
+        functions = analyzer.analyze_source_code('a.js', code).function_list
+        self.assertEqual([('pick', 1, []), ('label', 1, []),
+                          ('load', 2, [['if', 8]])],
+                         [(f.name, f.cyclomatic_complexity, f.complex_tags)
+                          for f in functions])
 
 
 class Test_JavaScript_line_comment_ending_with_a_backslash(unittest.TestCase):
