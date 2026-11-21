@@ -854,6 +854,48 @@ class TestJavaScriptTemplateLiterals(unittest.TestCase):
             }"""))
 
 
+class TestJavaScriptKeywordAsTheNameOfAMember(unittest.TestCase):
+    """A keyword after ``.`` or ``?.`` names a property: ``promise.catch``
+    is a method call, not a catch clause."""
+
+    CODE = """
+        function on(event, callback) {
+          if (event === 'error') {                     // +1
+            this.$initialConnection.catch(() => {});
+          }
+          return EventEmitter.prototype.on.call(this, event, callback);
+        }
+        function drain(cursor, list, options) {
+          if (cursor) {                                // +1
+            cursor.continue();
+            list?.finally(done).catch(fail);
+            options.if = options.for || options.while; // +1
+            list.switch(options.case, options.do, options.else);
+            options.break(); options.try();
+          }
+        }"""
+
+    def test_member_names_add_no_structure(self):
+        for filename, code in (('a.js', self.CODE), ('a.ts', self.CODE),
+                               ('a.jsx', self.CODE), ('a.tsx', self.CODE),
+                               ('a.vue', '<script>' + self.CODE + '</script>')):
+            with self.subTest(filename=filename):
+                self.assertEqual([0, 1, 2], cogc(filename, code))
+
+    def test_member_after_a_comment_or_a_line_break(self):
+        self.assertEqual([1, 1, 0], cogc("a.js", """
+            function load(p) {
+              if (p) p./* retry */catch(fail);         // +1
+            }
+            function pick(o) {
+              if (o.ready) o.                          // +1
+                else(run);
+            }
+            function step(o) {
+              o.elseif(run);
+            }"""))
+
+
 class TestJavaScriptGroupedExpressions(unittest.TestCase):
     """The reader takes ``x = (`` as the possible start of an arrow function
     and discards that function when no ``=>`` follows.  The expression then

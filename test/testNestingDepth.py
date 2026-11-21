@@ -247,6 +247,47 @@ class TestJavaScriptNestingDepth(unittest.TestCase):
         """).function_list
         self.assertEqual(1, result[0].max_nesting_depth)
 
+    def test_keyword_after_a_dot_names_a_member(self):
+        code = """
+        function on(event, callback) {
+          if (event === 'error') {
+            this.$initialConnection.catch(() => {});
+          }
+          return EventEmitter.prototype.on.call(this, event, callback);
+        }
+        function drain(cursor, list, options) {
+          if (cursor) {
+            list?.finally(done).catch(fail);
+            options.if = options.for + options.while + options.case;
+            Promise.try(options.try);
+          }
+        }
+        """
+        for filename, source in (('a.js', code), ('a.ts', code),
+                                 ('a.jsx', code), ('a.tsx', code),
+                                 ('a.vue', '<script>' + code + '</script>')):
+            with self.subTest(filename=filename):
+                functions = FileAnalyzer(get_extensions(
+                    [NestDepth()])).analyze_source_code(
+                        filename, source).function_list
+                self.assertEqual(
+                    [('(anonymous)', 0), ('on', 1), ('drain', 1)],
+                    [(f.name, f.max_nesting_depth) for f in functions])
+
+    def test_keyword_after_a_dot_and_a_comment_names_a_member(self):
+        code = """
+        function load(p) {
+          if (p) p./* retry */catch(fail);
+        }
+        function pick(o) {
+          if (o.else) if (o.ready) run(o);
+        }
+        """
+        functions = FileAnalyzer(get_extensions(
+            [NestDepth()])).analyze_source_code("a.js", code).function_list
+        self.assertEqual([('load', 1), ('pick', 2)],
+                         [(f.name, f.max_nesting_depth) for f in functions])
+
     def test_braceless_ifs_after_a_nested_function(self):
         self.assertEqual(1, self.nesting_depth("""
         function render(items, empty) {
