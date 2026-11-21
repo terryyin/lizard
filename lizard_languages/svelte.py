@@ -257,7 +257,8 @@ class _MarkupTokens:
                 # The code of the interpolation, without nested templates,
                 # with the marks that its context gives.
                 text, base = tokens[index + 1], offset + 2
-                for start, text_end in interpolation_code(text, True):
+                for start, text_end in interpolation_code(
+                        marks[base:base + len(text)], True):
                     inner = _tokens(text[start:text_end],
                                     marks[base + start:base + text_end])
                     found, reach = (0, 0) if inner is None else self._walk(
