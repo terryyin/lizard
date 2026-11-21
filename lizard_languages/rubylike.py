@@ -17,6 +17,7 @@ class RubylikeStateMachine(CodeStateMachine):
 
     def __init__(self, context):
         super(RubylikeStateMachine, self).__init__(context)
+        self.loop_br_count = 0
 
     def _state_global(self, token):
         # A keyword that the reader marks as a method name, `m.end(0)`,
@@ -93,12 +94,27 @@ class RubylikeStateMachine(CodeStateMachine):
             self.sub_state(self.statemachine_clone())
 
     def _for_while(self, token):
-        if self.is_newline() or (
-                token == "do" and
-                not getattr(token, 'is_member_name', False)):
-            self.next(self._state_global)
-            if token != "end":
-                self.sub_state(self.statemachine_clone())
+        self._loop_head(token, self._state_global, None)
+
+    def _loop_head(self, token, state, callback):
+        """The loop body starts after `do`, or with the first token of the
+        next line.  A bracket or a block in the condition goes on over
+        lines: `while jobs.any? { |job|`."""
+        if not self.loop_br_count:
+            if token == "do" and \
+                    not getattr(token, 'is_member_name', False):
+                self.next(state)
+                self.sub_state(self.statemachine_clone(), callback)
+                return
+            if self.is_newline():
+                self.next(state)
+                self.sub_state(self.statemachine_clone(), callback, token)
+                return
+        if token in ("(", "[", "${") or (
+                token == "{" and self.last_token != ")"):
+            self.loop_br_count += 1
+        elif token in (")", "]", "}") and self.loop_br_count:
+            self.loop_br_count -= 1
 
 
 class RubylikeReader(CodeReader, ScriptLanguageMixIn):
