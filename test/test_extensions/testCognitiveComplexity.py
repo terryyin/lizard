@@ -916,6 +916,14 @@ class TestJavaScriptKeywordAsTheNameOfAMember(unittest.TestCase):
               }
             }"""))
 
+    def test_call_of_a_method_named_like_a_structure_after_optional_chaining(self):
+        for name in ('run', 'catch'):
+            with self.subTest(name=name):
+                self.assertEqual([1], cogc("a.js", """
+                    class Deferred {
+                      static %s() { return this?.%s(); }   // +1 recursion
+                    }""" % (name, name)))
+
     def test_other_languages_can_call_a_structure_word(self):
         self.assertEqual([4], cogc("a.pl", """
 sub catch {

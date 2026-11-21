@@ -500,6 +500,24 @@ function take(of: number) {
                       f.cognitive_complexity, f.max_nesting_depth,
                       f.max_nested_structures) for f in functions])
 
+    def test_structure_in_a_block_after_a_regular_expression(self):
+        code = '''
+function match(x) {
+  const re = /a/
+  { if (x) { re.test(x); } }
+}
+'''
+        analyzer = FileAnalyzer(get_extensions(['cognitive', 'nd', 'ns']))
+        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+            with self.subTest(filename=filename):
+                functions = analyzer.analyze_source_code(
+                    filename, code).function_list
+                self.assertEqual(
+                    [('match', 2, 1, 1, 1)],
+                    [(f.name, f.cyclomatic_complexity,
+                      f.cognitive_complexity, f.max_nesting_depth,
+                      f.max_nested_structures) for f in functions])
+
     def test_function_in_a_static_block(self):
         code = '''
 class Event {
