@@ -282,6 +282,14 @@ class TestJavaScriptNestedStructuresWithoutSemicolons(unittest.TestCase):
         }
         """, "a.tsx"))
 
+    def test_typescript_return_type_that_ends_in_a_keyword_property(self):
+        self.assertEqual(1, self.nested_structures("""
+        function theme(dark: boolean, saved: Theme | null): typeof themes.default {
+          if (saved) return saved
+          if (dark) return themes.dark
+        }
+        """, "a.ts"))
+
     def nested_structures(self, code, filename="a.js"):
         analyzer = FileAnalyzer(get_extensions([NestedStructure()]))
         functions = analyzer.analyze_source_code(filename, code).function_list
