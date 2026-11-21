@@ -68,6 +68,9 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
     def __init__(self):
         super(LizardExtension, self).__init__(None)
         self.structure_piles = [0]  # Invariant: must always have at least one element
+        # The tokens that _state_global reads; it skips the others.
+        self._global_tokens = frozenset(self.structures) | frozenset((
+            '{', ';', '}', 'else', '.', '?.'))
 
     def __call__(self, tokens, reader=None):
         if 'python' in getattr(reader, 'language_names', ()):
@@ -172,6 +175,8 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
             self.context.current_function.max_nested_structures = cur_level
 
     def _state_global(self, token):
+        if token not in self._global_tokens:
+            return
         # Necessary to prevent functions without nested blocks to fail
         if not hasattr(self.context.current_function, "max_nested_structures"):
             self.context.current_function.max_nested_structures = 0
