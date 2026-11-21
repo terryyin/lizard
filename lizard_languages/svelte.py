@@ -13,7 +13,7 @@ comments and styles add no tokens.
 import re
 from itertools import repeat
 
-from .js_style_regex_context import _MARK_CACHE
+from .js_style_regex_context import _MARK_CACHE, REGEX_START_MARKER
 from .js_style_regex_forward_scan import mark_forward
 from .javascript_expression import end_before_line_token
 from .javascript_templates import interpolation_code
@@ -59,10 +59,11 @@ def _tokens(code, marks=None):
     regular expression that the end of the code cuts, so it gets a mark."""
     key = ('js', id(code))
     try:
-        if marks is None:
+        if marks is None and '/' in code:
+            marks = mark_forward(code + ']/', True)[:len(code)]
+        if marks is None or REGEX_START_MARKER not in marks:
+            # The same object makes the tokenizer use its faster pattern.
             marks = code
-            if '/' in code:
-                marks = mark_forward(code + ']/', True)[:len(code)]
         _MARK_CACHE[key] = (code, marks)
         return list(TypeScriptReader.generate_tokens(code)), marks
     except RecursionError:
