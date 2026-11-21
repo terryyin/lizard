@@ -588,6 +588,17 @@ class TestOtherBraceLanguages(unittest.TestCase):
               }
             </script>"""))
 
+    def test_vue_comparisons_without_spaces(self):
+        self.assertEqual([2], cogc("a.vue", """
+            <script>
+              function clamp(i, n, x) {
+                if (i<n && x>0) {             // +1, +1 for &&
+                  return i;
+                }
+                return n;
+              }
+            </script>"""))
+
     def test_go(self):
         self.assertEqual([9], cogc("a.go", """
             func f(x int) int {
