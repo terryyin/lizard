@@ -305,7 +305,8 @@ class _Counter(object):  # pylint: disable=R0902
                      (state.prev != '::' and state.prev2 in _SELF_REFERENCES)):
             state.pending_call = True
             state.pending += 1
-        if token in self.profile.jumps:
+        if token in self.profile.jumps and \
+                not getattr(token, 'is_member_name', False):
             state.pending_jump_line = self.line
             state.pending += 1
 

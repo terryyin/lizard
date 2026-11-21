@@ -1,7 +1,7 @@
 """Confirm ambiguous return annotations before analysis consumes their tokens."""
 
 from .javascript_bindings import JavaScriptBindings
-from .javascript_functions import ends_expression, starts_statement
+from .javascript_expression import ends_expression, starts_statement
 from .typescript_type_annotation import TypeScriptTypeAnnotationStates
 
 

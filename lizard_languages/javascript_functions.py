@@ -2,49 +2,14 @@
 and where an expression-bodied arrow ends."""
 
 from .javascript_bindings import JavaScriptBindings
+from .javascript_expression import (
+    JSXChildBrace, JSXMarkup, OPERAND_WORDS, active_js_state, ends_expression,
+    parameter_group, starts_statement)
 
-# Words that still need an operand, so a line break after them continues.
-OPERAND_WORDS = frozenset((
-    'in', 'instanceof', 'typeof', 'new', 'await', 'void', 'delete', 'yield',
-    'of', 'as', 'satisfies', 'keyof'))
-
-
-class JSXChildBrace(str):
-    """The '{' of a JSX child expression, `<p>{x && <a/>}</p>`: an
-    expression container, never an object literal or a block."""
-
-
-class JSXMarkup(str):
-    """The tags and the text of a JSX element, `<p>{name}({count})</p>`:
-    never code, also when the text is a bracket or a keyword."""
-
-    is_jsx_markup = True
-
-
-def ends_expression(token):
-    """Whether an expression may end with this token (JavaScript ASI)."""
-    first = token[:1]
-    if first.isalnum() or first in ('_', '$', '#', "'", '"', '`'):
-        return token not in OPERAND_WORDS
-    return (token in (')', ']', '}', '++', '--')
-            or (first == '/' and len(token) > 2)  # regular expression literal
-            or (first == '<' and token.endswith('>')  # JSX element end
-                and ('</' in token or token.endswith('/>'))))
-
-
-def starts_statement(token):
-    """Whether this line-start token cannot continue the previous line."""
-    first = token[0]
-    if first.isalnum() or first in ('_', '$', '#', "'", '"'):
-        # TypeScript reads `as`/`satisfies` after a line break as a statement.
-        return token not in ('in', 'instanceof')
-    # Restricted ++/--, prefix-only operators, blocks, decorators and closers.
-    return token in ('++', '--', '!', '~', '{', '@', '}', ')', ']')
-
-
-def parameter_group(prefix):
-    return (prefix is None or prefix in ('return', 'yield', 'await', 'async')
-            or (not ends_expression(prefix) and prefix not in ('.', '?.', 'new')))
+# Public API kept stable for external callers.
+__all__ = (
+    'OPERAND_WORDS', 'JSXChildBrace', 'JSXMarkup', 'ends_expression',
+    'starts_statement', 'parameter_group', 'JavaScriptFunctionsMixin')
 
 
 class JavaScriptFunctionsMixin:
@@ -59,9 +24,7 @@ class JavaScriptFunctionsMixin:
 
     def return_annotation_context(self):
         """Return ternary depth and whether the completed group proves a signature."""
-        state = self
-        while isinstance(state._state, self.__class__):
-            state = state._state
+        state = active_js_state(self)
         group = getattr(state, '_parenthesis_group', None)
         if (state._state == state._state_global and state.last_token == ')'
                 and group is not None and parameter_group(state._parenthesis_prefix)):
@@ -85,11 +48,42 @@ class JavaScriptFunctionsMixin:
 
     def end_expression_before(self, token):
         """Called by the reader with a line's first token before it is
-        counted, so an ended arrow keeps none of the next statement."""
+        counted, so an ended arrow or abandoned signature keeps none of it."""
+        if (self._state == self._expecting_func_opening_bracket
+                and self.started_function and starts_statement(token)
+                and token != '{'):
+            # A line break after ")" ends the statement unless "{" opens the
+            # body (`function f()\n{`). A line break before "=>" is invalid.
+            self._discard_signature()
+            if not self.started_function:
+                return
         if (self._state == self._state_global
                 and ends_expression(self.last_token)
                 and starts_statement(token)):
             self._end_statement()
+
+    def end_signature_before(self, token):
+        """Called by the reader with the token after a signature's ")"
+        before it is counted.  A token that cannot start the body shows that
+        the signature was an expression, `x = (a)` + `if (b)`: the function
+        is discarded now, so the token counts for the function around it."""
+        if token in ('{', '=>', ':') or (
+                token == ';' and self.as_object and self._in_abstract_context):
+            return      # for _expecting_func_opening_bracket
+        self._discard_signature()
+
+    def _discard_signature(self):
+        """The signature was an expression, `x = (a) && b`: discard the
+        function that its "(" started.  In an arrow's expression body,
+        `v => o.x = (v) && b`, the "(" started none, so the arrow goes on
+        with its own signature and without the parameter defaults."""
+        if self._expression_body:
+            function = self.context.current_function
+            function.long_name, function.full_parameters = self._arrow_signature
+            self.context.add_condition(-self._parameter_bindings.defaults)
+        elif self.started_function:
+            self._abandon_function()
+        self._state = self._state_global
 
     def _abandon_function(self):
         """Discard an optimistic signature that proved to be an expression."""
@@ -172,6 +166,10 @@ class JavaScriptFunctionsMixin:
             self._static_seen = False
             self._async_seen = False
         else:
+            if self._expression_body:
+                function = self.context.current_function
+                self._arrow_signature = (
+                    function.long_name, list(function.full_parameters))
             if not self.started_function:
                 self._push_function_to_stack()
                 if self.started_function and not self._signature:
@@ -222,6 +220,7 @@ class JavaScriptFunctionsMixin:
         event = self._read_parameter_binding(token)
         if event.ended:
             self._state = self._expecting_func_opening_bracket
+            self.context.ended_signatures.append(self)
         elif (not event.in_expression or event.root_separator) and token != '(':
             return
         self.context.add_to_long_function_name(" " + token)
@@ -248,8 +247,7 @@ class JavaScriptFunctionsMixin:
             self._in_abstract_context = False
             self.next(self._state_global)
         elif token != '{' and token != '=>':
-            if self.started_function:
-                self._abandon_function()
+            self._discard_signature()
         self.next(self._state_global, token)
 
     def _field(self, token):
@@ -262,41 +260,3 @@ class JavaScriptFunctionsMixin:
             return
         self.last_tokens += token
         self._state = self._state_global
-
-    def _expecting_condition_and_statement_block(self, token):
-        def callback():
-            self.next(self._expecting_statement_or_block)
-
-        if token == "await":
-            return
-
-        if token != '(':
-            self.next(self._state_global, token)
-            return
-
-        if self._condition_kind == 'catch':
-            def catch_callback(summary):
-                self.context.add_condition(summary.defaults)
-                callback()
-
-            self._read_binding_candidate(
-                ')', catch_callback, track_complexity=False)
-            return
-
-        self.sub_state(
-            self.__class__(self.context), callback)
-
-    def _expecting_statement_or_block(self, token):
-        def callback():
-            self._prev_token = ''
-            self.next(self._state_global)
-        if token == "{":
-            self.sub_state(
-                self.__class__(self.context), callback)
-        else:
-            self._prev_token = ''
-            self.next(self._state_global, token)
-
-    def _state_template_literal(self, token):
-        if token == '`':
-            self.next(self._state_global)

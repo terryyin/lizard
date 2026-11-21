@@ -98,6 +98,29 @@ class TestStatementAfterExpressionArrow(unittest.TestCase):
         self.assert_in_all_readers(code, [
             ('(anonymous)', 2, 2, 1, 1, 4), ('register', 1, 3, 1, 3, 10)])
 
+    def test_expression_in_parentheses_at_the_end_of_an_arrow_body(self):
+        code = ('function bind(model) {\n'
+                '  const set = value => model.value = (value)\n'
+                '  return set\n}\n')
+        self.assert_in_all_readers(code, [
+            ('set', 2, 2, 1, 1, 7), ('bind', 1, 4, 1, 4, 13)])
+
+    def test_assignment_in_parentheses_in_an_arrow_body(self):
+        code = ('function bind(model, ready) {\n'
+                '  const set = value => model.value = (last = value) && ready\n'
+                '  return set\n}\n')
+        self.assert_in_all_readers(code, [
+            ('set', 2, 2, 2, 1, 11), ('bind', 1, 4, 1, 4, 15)])
+
+    def test_parameters_of_an_arrow_with_an_expression_in_parentheses(self):
+        code = 'const set = value => model.value = (last, value) && ready\n'
+        for ext in EXTENSIONS:
+            with self.subTest(ext=ext):
+                result = analyze_file.analyze_source_code(
+                    'a.' + ext, code).function_list
+                self.assertEqual([('set', 'set', ['value'])], [
+                    (f.name, f.long_name, f.parameters) for f in result])
+
     def test_comma_separated_object_members_stay_separate(self):
         code = 'const o = {\n  a: x => x,\n  b: y => y\n}\n'
         self.assert_in_all_readers(code, [

@@ -247,6 +247,121 @@ class TestJavaScriptNestingDepth(unittest.TestCase):
         """).function_list
         self.assertEqual(1, result[0].max_nesting_depth)
 
+    def test_keyword_after_a_dot_names_a_member(self):
+        code = """
+        function on(event, callback) {
+          if (event === 'error') {
+            this.$initialConnection.catch(() => {});
+          }
+          return EventEmitter.prototype.on.call(this, event, callback);
+        }
+        function drain(cursor, list, options) {
+          if (cursor) {
+            list?.finally(done).catch(fail);
+            options.if = options.for + options.while + options.case;
+            Promise.try(options.try);
+          }
+        }
+        """
+        for filename, source in (('a.js', code), ('a.ts', code),
+                                 ('a.jsx', code), ('a.tsx', code),
+                                 ('a.vue', '<script>' + code + '</script>')):
+            with self.subTest(filename=filename):
+                functions = FileAnalyzer(get_extensions(
+                    [NestDepth()])).analyze_source_code(
+                        filename, source).function_list
+                self.assertEqual(
+                    [('(anonymous)', 0), ('on', 1), ('drain', 1)],
+                    [(f.name, f.max_nesting_depth) for f in functions])
+
+    def test_keyword_after_a_dot_and_a_comment_names_a_member(self):
+        code = """
+        function load(p) {
+          if (p) p./* retry */catch(fail);
+        }
+        function pick(o) {
+          if (o.else) if (o.ready) run(o);
+        }
+        """
+        functions = FileAnalyzer(get_extensions(
+            [NestDepth()])).analyze_source_code("a.js", code).function_list
+        self.assertEqual([('load', 1), ('pick', 2)],
+                         [(f.name, f.max_nesting_depth) for f in functions])
+
+    def test_braceless_ifs_after_a_nested_function(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function render(items, empty) {
+          function label(item) { return item.name; }
+          if (empty) return '';
+          if (!items.length) return '';
+          return items.map(label).join(', ');
+        }
+        """, "render"))
+
+    def test_braceless_ifs_after_an_arrow_function(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function total(orders, strict) {
+          const amount = (order) => { return order.amount; };
+          if (strict) check(orders);
+          if (!orders.length) return 0;
+          return orders.map(amount).reduce(add);
+        }
+        """, "total"))
+
+    def test_braceless_ifs_after_an_expression_in_parentheses(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function limit(value, max) {
+          const over = (value > max);
+          if (over) warn(value);
+          if (value < 0) return 0;
+          return over ? max : value;
+        }
+        """, "limit"))
+
+    def test_braceless_ifs_after_an_arrow_function_argument(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function names(users, strict) {
+          const ids = users.map(user => user.id);
+          if (strict) check(ids);
+          if (!ids.length) return [];
+          return ids;
+        }
+        """, "names"))
+
+    def test_braceless_ifs_after_an_arrow_function_argument_with_an_object(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function rows(users, strict) {
+          const entries = users.map(user => ({ id: user.id }));
+          if (strict) check(entries);
+          if (!entries.length) return [];
+          return entries;
+        }
+        """, "rows"))
+
+    def test_logical_operators_in_parentheses_after_a_member(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function ready(config, user, flag) {
+          const enabled = (config.on && user && flag);
+          return enabled;
+        }
+        """, "ready"))
+
+    def test_arrow_body_with_an_expression_in_parentheses(self):
+        result = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
+            "a.js", """
+        function bind(model, ready) {
+          const set = value => model.value = (value) && ready(value);
+          return set;
+        }
+        """).function_list
+        self.assertEqual([('set', 1), ('bind', 0)],
+                         [(f.name, f.max_nesting_depth) for f in result])
+
+    def nesting_depth(self, code, name):
+        result = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
+            "a.js", code).function_list
+        return next(f.max_nesting_depth for f in result if f.name == name)
+
 
 class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
     """A statement that ends at a line break closes its levels,
@@ -514,6 +629,60 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
           if (offline) return
         }
         """, "a.tsx"))
+
+    def test_call_at_the_end_of_a_block(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function resolve(insert, expected) {
+          if (typeof insert === "function") { insert = insert() }
+          if (typeof expected === "function") { expected = expected() }
+        }
+        """))
+
+    def test_ternary_after_an_expression_in_parentheses(self):
+        for condition in ("(current > start)", "current > start"):
+            with self.subTest(condition=condition):
+                self.assertEqual(3, self.nesting_depth("""
+                function fold(next, start, current, width) {
+                  while (next) {
+                    if (next - start > width) {
+                      end = %s ? current : next
+                    }
+                  }
+                }
+                """ % condition))
+
+    def test_call_in_a_case_block(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function dispatch(action) {
+          switch (action.type) {
+            case 'open': { show() }
+            case 'close': { hide() }
+          }
+        }
+        """))
+
+    def test_typescript_return_type_that_ends_in_an_operator_word(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function factory(source: Source, single: boolean): typeof Array.of {
+          if (single) return source.one
+          if (source.many) return source.all
+        }
+        """, "a.ts"))
+
+    def test_typescript_return_type_that_ends_in_a_value_word(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function theme(dark: boolean, saved: Theme | null): typeof themes.default {
+          if (saved) return saved
+          if (dark) return themes.dark
+        }
+        """, "a.ts"))
+
+    def test_object_in_an_optional_computed_member_stays_an_object(self):
+        self.assertEqual(2, self.nesting_depth("""
+        function label(user) {
+          return user?.[{ id: user && 1 }, user && 'name']
+        }
+        """))
 
     def nesting_depth(self, code, filename="a.js"):
         result = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(

@@ -588,6 +588,17 @@ class TestOtherBraceLanguages(unittest.TestCase):
               }
             </script>"""))
 
+    def test_vue_comparisons_without_spaces(self):
+        self.assertEqual([2], cogc("a.vue", """
+            <script>
+              function clamp(i, n, x) {
+                if (i<n && x>0) {             // +1, +1 for &&
+                  return i;
+                }
+                return n;
+              }
+            </script>"""))
+
     def test_go(self):
         self.assertEqual([9], cogc("a.go", """
             func f(x int) int {
@@ -843,6 +854,48 @@ class TestJavaScriptTemplateLiterals(unittest.TestCase):
             }"""))
 
 
+class TestJavaScriptKeywordAsTheNameOfAMember(unittest.TestCase):
+    """A keyword after ``.`` or ``?.`` names a property: ``promise.catch``
+    is a method call, not a catch clause."""
+
+    CODE = """
+        function on(event, callback) {
+          if (event === 'error') {                     // +1
+            this.$initialConnection.catch(() => {});
+          }
+          return EventEmitter.prototype.on.call(this, event, callback);
+        }
+        function drain(cursor, list, options) {
+          if (cursor) {                                // +1
+            cursor.continue();
+            list?.finally(done).catch(fail);
+            options.if = options.for || options.while; // +1
+            list.switch(options.case, options.do, options.else);
+            options.break(); options.try();
+          }
+        }"""
+
+    def test_member_names_add_no_structure(self):
+        for filename, code in (('a.js', self.CODE), ('a.ts', self.CODE),
+                               ('a.jsx', self.CODE), ('a.tsx', self.CODE),
+                               ('a.vue', '<script>' + self.CODE + '</script>')):
+            with self.subTest(filename=filename):
+                self.assertEqual([0, 1, 2], cogc(filename, code))
+
+    def test_member_after_a_comment_or_a_line_break(self):
+        self.assertEqual([1, 1, 0], cogc("a.js", """
+            function load(p) {
+              if (p) p./* retry */catch(fail);         // +1
+            }
+            function pick(o) {
+              if (o.ready) o.                          // +1
+                else(run);
+            }
+            function step(o) {
+              o.elseif(run);
+            }"""))
+
+
 class TestJavaScriptGroupedExpressions(unittest.TestCase):
     """The reader takes ``x = (`` as the possible start of an arrow function
     and discards that function when no ``=>`` follows.  The expression then
@@ -948,6 +1001,27 @@ class TestJavaScriptGroupedExpressions(unittest.TestCase):
               const x: number = (a ? 1 : 2);                // +1
               const g = (p: number): number => p && a ? 1 : 2;  // +2, arrow
               return x;
+            }"""))
+
+    def test_arrow_body_with_an_expression_in_parentheses(self):
+        self.assertEqual([1, 0], cogc("a.js", """
+            function bind(model, ready) {
+              const set = value => model.value = (value) && ready(value);  // +1
+              return set;
+            }"""))
+
+
+class TestJavaScriptCallsInCaseBlocks(unittest.TestCase):
+
+    def test_ternary_after_a_call_in_a_case_block(self):
+        self.assertEqual([3], cogc("a.js", """
+            function increment(release, identifier) {
+              switch (release) {                            // +1
+                case 'pre': {
+                  const base = Number(identifier) ? 1 : 0;  // +2
+                  return base;
+                }
+              }
             }"""))
 
 

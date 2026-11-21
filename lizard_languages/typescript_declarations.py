@@ -1,7 +1,7 @@
 """TypeScript declarations and type syntax excluded from runtime functions."""
 
 from .typescript_type_annotation import TypeScriptTypeAnnotationStates
-from .javascript_functions import OPERAND_WORDS, ends_expression
+from .javascript_expression import OPERAND_WORDS, ends_expression
 from .js_style_regex_context import _EXPRESSION_KEYWORDS
 
 

@@ -51,6 +51,8 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
             self._logical_operator(token)
         elif token in _EXPRESSION_BREAKERS:
             state.logical.pop(state.pdepth, None)
+            if token == ',':
+                self._pop_expression_frames(peer_comma=True)
         if token in ('(', '['):
             self._open_bracket()
         elif token in (')', ']'):
@@ -67,7 +69,8 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
                     self._in_head(top, token):
                 return
         action = self.actions.get(token)
-        if action is not None:
+        if action is not None and \
+                not getattr(token, 'is_member_name', False):
             action()
 
     # -- statement boundaries ---------------------------------------------------
@@ -89,12 +92,20 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
                 return frame
         return None
 
-    def _pop_expression_frames(self):
-        """Ternary operators end with their enclosing brackets."""
+    def _pop_expression_frames(self, peer_comma=False):
+        """Ternary operators end with their enclosing brackets or a peer comma.
+
+        A ``,`` at the same bracket depth as an open ternary ends that
+        ternary so the next one in the list is a sibling, not nested.
+        """
         frames = self.state.frames
-        while frames and frames[-1].kind == 'ternary' and \
-                frames[-1].pdepth > self.state.pdepth:
-            frames.pop()
+        pdepth = self.state.pdepth
+        while frames and frames[-1].kind == 'ternary':
+            open_depth = frames[-1].pdepth
+            if open_depth > pdepth or (peer_comma and open_depth == pdepth):
+                frames.pop()
+            else:
+                break
 
     def _statement_end(self):
         """A ';' at bracket depth 0 finishes the braceless bodies around it."""
@@ -139,7 +150,9 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         state = self.state
         frames = state.frames
         bound = False
-        if token == 'else':
+        if getattr(token, 'is_member_name', False):
+            pass                        # `o.else`: no continuation
+        elif token == 'else':
             bound = self._bind(_IF_LIKE)
         elif token in self.profile.catches or token == 'finally':
             self._bind(('catch',))
