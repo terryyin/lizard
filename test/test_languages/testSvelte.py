@@ -95,6 +95,31 @@ class TestSvelte(unittest.TestCase):
         self.assertEqual([('preload', 2, 5, 2)],
                          function_summaries(functions))
 
+    def test_generics_attribute_and_apostrophe_before_script(self):
+        functions = get_svelte_function_list('''\
+<!-- Don't move this component without its store -->
+<script lang="ts" generics="T extends Record<string, any>">
+  import { onMount } from "svelte";
+  export let items: T[] = [];
+  const pick = (a: T, b: T) => {
+    if (a && b) return "both";
+    return "one";
+  };
+</script>
+''')
+        self.assertEqual([('pick', 5, 8, 3)], function_summaries(functions))
+
+    def test_script_text_in_a_brace_attribute_is_not_code(self):
+        functions = get_svelte_function_list('''\
+<Preview markup={"<script>function ghost() {}</script>"} />
+<script>
+  const reset = () => {
+    count = 0;
+  };
+</script>
+''')
+        self.assertEqual([('reset', 3, 5, 1)], function_summaries(functions))
+
     def test_typescript_script_reads_class_field_annotations(self):
         typed = get_svelte_function_list(
             '<script lang="ts">'
