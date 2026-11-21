@@ -175,3 +175,45 @@ class Test_parser_for_Lua(unittest.TestCase):
         self.assertEqual(2, len(result))
         self.assertEqual('sum', result[0].name)
         self.assertEqual('addn', result[1].name)
+
+    def test_identifier_named_it_is_no_rspec_example(self):
+        result = get_function_list('''
+local it = 1
+function f(t)
+  t.it(it)
+  return it
+end
+function g()
+  return 2
+end
+''')
+        self.assertEqual(
+            [('f', 3, 6), ('g', 7, 9)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_parameters_on_the_line_after_the_name(self):
+        result = get_function_list('''
+function f
+(x)
+  return x
+end
+''')
+        self.assertEqual(
+            [('f', 2, 5, 1)],
+            [(f.name, f.start_line, f.end_line, f.parameter_count)
+             for f in result])
+
+    def test_call_of_it_in_a_loop_with_a_length(self):
+        result = get_function_list('''
+local function f(t, it)
+  for i = 1, #t do
+    it()
+  end
+end
+local function g()
+  return 1
+end
+''')
+        self.assertEqual(
+            [('f', 2, 6), ('g', 7, 9)],
+            [(f.name, f.start_line, f.end_line) for f in result])
