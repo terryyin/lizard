@@ -135,7 +135,7 @@ class JavaScriptObjectsMixin:
                     self._function(self.last_tokens)
             self.next(self._function, token)
             return True
-        elif token == '{' and self._static_seen:
+        elif token == '{' and self._static_seen and self.as_class:
             # A static initialization block holds statements.
             self._static_seen = False
             self.sub_state(self.__class__(self.context))
@@ -182,6 +182,10 @@ class JavaScriptObjectsMixin:
         if previous == ':':
             # A value, `{ a: {`, but in a block, `finally { label: {`.
             return self.holds_members
+        if previous == '/':
+            # The end of a regular expression can be a token of its own,
+            # `"" + /a/` + line break + `{`.  Nothing divides by an object.
+            return False
         if self.context.newline and (
                 previous == '!' or previous[0].isalpha() or previous[0] in '_$'):
             # A "{" that starts a line after a word or a '!' is almost always
