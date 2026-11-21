@@ -368,6 +368,14 @@ class A {
 """)
         self.assertEqual(3, result[0].cyclomatic_complexity)
 
+    def test_many_annotated_type_arguments_no_freeze(self):
+        """Annotated type arguments that end in a type the rule does not read must not backtrack for long."""
+        for argument in ("@A X, ", "@AX.Y, "):
+            code = "void test() { Box<?, " + argument * 40 + "X$Y> x = null; }"
+            result = get_java_function_list(code)
+            self.assertEqual(1, len(result))
+            self.assertEqual("test", result[0].name)
+
     def test_many_question_marks_after_less_than_no_freeze(self):
         """Multiple ? after < must not cause catastrophic backtracking."""
         code = """
