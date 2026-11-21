@@ -51,20 +51,30 @@ class _ScriptEnd(str):
 _SCRIPT_END = _ScriptEnd('script')
 
 
-def _tokens(code, marks=None):
-    """The tokens of markup code and the marks of its regular expressions,
-    or None when it nests too deep to read. The marks of the forward scan,
-    which also finds a regular expression after a comment, reach the
-    tokenizer through the memo and leave it. The added ' ]/' closes a
-    regular expression that the end of the code cuts, also after a
-    backslash, so it gets a mark."""
+def _marks(code):
+    """The marks of the regular expressions in markup code, or None when it
+    nests too deep to read. The forward scan also finds a regular
+    expression after a comment. The added ' ]/' closes a regular expression
+    that the end of the code cuts, also after a backslash, so it gets a
+    mark."""
+    try:
+        return mark_forward(code + ' ]/', True)[:len(code)] if (
+            '/' in code) else code
+    except RecursionError:
+        return None
+
+
+def _tokens(code, marks):
+    """The tokens of markup code and its marks, or None when it nests too
+    deep to read. The marks reach the tokenizer through the memo and leave
+    it."""
+    if marks is None:
+        return None
+    if REGEX_START_MARKER not in marks:
+        # The same object makes the tokenizer use its faster pattern.
+        marks = code
     key = ('js', id(code))
     try:
-        if marks is None and '/' in code:
-            marks = mark_forward(code + ' ]/', True)[:len(code)]
-        if marks is None or REGEX_START_MARKER not in marks:
-            # The same object makes the tokenizer use its faster pattern.
-            marks = code
         _MARK_CACHE[key] = (code, marks)
         return list(TypeScriptReader.generate_tokens(code)), marks
     except RecursionError:
@@ -120,8 +130,8 @@ class _MarkupTokens:
         self.code = []
         # How much more text the end scan may read.
         self.reread = 2 * (end - start)
-        # Where the first comment that does not close starts.
-        self.unclosed = end
+        # The text after a string or a comment start that does not close.
+        self.unclosed = {}
         self.guess = end - start
 
     def __iter__(self):
@@ -205,13 +215,19 @@ class _MarkupTokens:
         source, end = self.source, self.end
         stop = self._guess(pos)
         while stop:
-            read = _tokens(source[pos:stop])
-            if read is None:
-                return None
-            tokens = read[0]
-            index, offset = self._walk(read, pos, stop)
-            if index is not None:
-                return pos + offset, tokens[:index]
+            code = source[pos:stop]
+            marks = _marks(code)
+            # Markup after the code can look like a regular expression, and
+            # a mark makes the tokenizer slower. So the text up to the last
+            # '}' before the first mark is read on its own first.
+            first = max(marks.find(REGEX_START_MARKER), 0) if marks else 0
+            for size in sorted({code.rfind('}', 0, first) + 1, len(code)} - {0}):
+                read = _tokens(code[:size], marks and marks[:size])
+                if read is None:
+                    return None
+                index, offset = self._walk(read, pos, pos + size)
+                if index is not None:
+                    return pos + offset, read[0][:index]
             # A string, a comment or a regular expression ends at offset.
             following = source.find('}', max(stop, offset), end)
             if following < 0:
@@ -284,22 +300,27 @@ class _MarkupTokens:
         """Where the string, the comment or the regular expression at start
         ends, when that is after stop, else 0. A string or a regular
         expression that finds no end counts as a read of the markup, so
-        that invalid code cannot cost more than linear time."""
+        that invalid code cannot cost more than linear time. A comment
+        costs no read: after one comment finds no end, no later comment
+        is scanned."""
         source, end = self.source, self.end
+        first, last = self.unclosed.get(kind, (end, end))
+        if first <= start < last or (kind != '*/' and self.reread < 0):
+            return 0
         if kind == '*/':
-            # When a comment does not close, no later comment closes.
-            close = -1 if start >= self.unclosed else source.find(
-                kind, start + 2, end)
-            if close < 0:
-                self.unclosed = min(self.unclosed, start)
-            return close + 2 if close >= stop else 0
-        if self.reread < 0:
+            close = source.find(kind, start + 2, end)
+        else:
+            close = _LITERAL_TEXT[kind].match(source, start + 1, end).end()
+        if close < 0 or not source.startswith(kind, close):
+            close = end if close < 0 else close
+            if kind != '/':
+                # A start of the same kind up to close does not close either.
+                self.unclosed[kind] = (start, close)
+            if kind != '*/':
+                self.reread -= close - start
             return 0
-        close = _LITERAL_TEXT[kind].match(source, start + 1, end).end()
-        if not source.startswith(kind, close):
-            self.reread -= close - start
-            return 0
-        return close + 1 if close >= stop else 0
+        close += len(kind)
+        return close if close > stop else 0
 
     def _block_tag(self, kind, pos, close):
         # pylint: disable=R0912
