@@ -671,6 +671,19 @@ class TestSvelteMarkup(unittest.TestCase):
             '{#snippet f()}' + '{x / 2 && "}" && y}' * 50 + '{/snippet}\n')
         self.assertEqual([('f', 1, 1, 101)], function_summaries(functions))
 
+    def test_many_comment_starts_that_do_not_close(self):
+        started = time.perf_counter()
+        functions = get_svelte_function_list(
+            '{x / /a\\/*b}/.test(x)}' * 3000
+            + '{#snippet f()}{"}" && y}{/snippet}\n')
+        self.assertLess(time.perf_counter() - started, 1)
+        self.assertEqual([('f', 1, 1, 2)], function_summaries(functions))
+
+    def test_regular_expression_cut_after_a_backslash(self):
+        functions = get_svelte_function_list(
+            '{#snippet f()}{"aaaaa}"+(/[}\\}]/.test(x))&& y}{/snippet}\n')
+        self.assertEqual([('f', 1, 1, 2)], function_summaries(functions))
+
     def test_markup_nested_too_deep_keeps_script_functions(self):
         nested = '`${' * 500 + 'async && /x/' + '}`' * 500
         functions = get_svelte_function_list(
