@@ -117,7 +117,6 @@ export function selectCiEvents(
       );
       if (terminal) continue;
       const request = readMailbox(directory, root, storage);
-      if (existsSync(join(directory, "delivered"))) continue;
       mkdirSync(bindings, { recursive: true, mode: 0o700 });
       if (!claimMailbox(directory, owner)) continue;
       writeFileSync(join(bindings, hash(directory)), directory, {

@@ -19,6 +19,11 @@ class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
     _logical_operators = {'&&', '||'}
     _case_keywords = set()  # Kotlin uses 'when' expressions, not case
     _ternary_operators = {'?:'}  # Elvis operator
+    # `flow.catch { }`, `Promise::catch`, `fun catch()` and
+    # `fun <T> catch()` name a member, also across a line break.
+    _BEFORE_MEMBER_NAME = frozenset(('.', '::', 'fun'))
+    _MEMBER_ACCESS_SPANS_LINES = True
+    _TYPE_PARAMETERS_BEFORE_NAME = True
 
     def __init__(self, context):
         super(KotlinReader, self).__init__(context)
@@ -45,6 +50,7 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0903
     _EXPRESSION_BODY_ENDERS = {
         'fun', 'class', 'interface', 'val', 'var',
     }
+    _TYPE_PUNCTUATION = {'.', '?', '<', '>', ',', '(', ')', '->', '*'}
 
     def __init__(self, context, in_when_cases=False, accessor_declaration_scope=None):
         super().__init__(context)
@@ -57,7 +63,7 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0903
         self._when_return_state = self._state_global
 
     def _state_global(self, token):
-        if (token in self._ACCESSORS
+        if (token in self._ACCESSORS and self.last_token not in ('.', '::')
                 and self.context.current_function is self._accessor_declaration_scope):
             self._accessor_name = token
             self.context.push_new_function(token)
@@ -69,8 +75,7 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0903
             if self._in_when_cases:
                 self.context.add_condition()
             else:
-                self.context.push_new_function("(anonymous)")
-                self._state = super(KotlinStates, self)._expect_function_impl
+                self._state = self._function_type_result
         elif token in ('val', 'var', ','):
             self._state = self._expect_declaration_name
         elif token == 'interface':
@@ -100,6 +105,22 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0903
 
     def _expect_declaration_name(self, token):
         self._state = self._state_global
+
+    def _function_type_result(self, token):
+        # Only a function type with a lambda initializer starts a function:
+        # `val f: () -> Unit = { ... }`. The arrow of a lambda parameter list
+        # or of a type with no lambda does not.
+        if token == '=':
+            self._state = self._lambda_initializer
+        elif token not in self._TYPE_PUNCTUATION and not token[0].isupper():
+            self.next(self._state_global, token)
+
+    def _lambda_initializer(self, token):
+        if token == '{':
+            self.context.push_new_function("(anonymous)")
+            self.next(self._function_impl, token)
+        else:
+            self.next(self._state_global, token)
 
     def _expect_function_impl(self, token):
         if token == '=':

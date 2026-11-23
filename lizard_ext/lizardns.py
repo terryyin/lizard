@@ -76,10 +76,14 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
             return self._unterminated_statements(tokens, reader)
         return super(LizardExtension, self).__call__(tokens, reader)
 
+    def _start_file(self, reader):
+        super(LizardExtension, self)._start_file(reader)
+        self.structure_piles = [0]
+
     def _unterminated_statements(self, tokens, reader):
         """JavaScript ends a statement without a ';' too: read a ';'
         where the reader finds such an end."""
-        self.context = reader.context
+        self._start_file(reader)
         implied_semicolon_before = reader.implied_semicolons(self.context).before
         for token in tokens:
             if implied_semicolon_before(token):
@@ -180,7 +184,7 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
             self._state = self._block_ending
         elif token in self.structures:
             if getattr(token, 'is_member_name', False):
-                pass                    # `def if(x)`: the name of a method
+                pass                    # member/method name like catch or if
             elif token == 'else':
                 self._state = self._after_else
             else:
@@ -207,7 +211,9 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
         self._state(token)
 
     def _block_ending(self, token):
-        decrement = token in self.matching_structures
+        # `} finally(e) {` in a class starts a method, not a clause.
+        decrement = (token in self.matching_structures
+                     and not getattr(token, 'is_member_name', False))
         self._reset_or_decrement_current_scope(decrement=decrement)
         self._state = self._state_global
         self._state(token)

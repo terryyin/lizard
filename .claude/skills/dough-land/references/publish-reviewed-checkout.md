@@ -6,7 +6,7 @@ Choose the publisher by the first row that fits the checkout:
 | --- | --- |
 | Completed selected work | Its [visit forms](#land-completed-selected-work) |
 | Published prefix | [Preserve published history](../../dough-execute-plan/references/preserve-published-history.md) |
-| Ordinary reviewed work with the launch's Dashboard landing context | [Session close](#publish-a-session-close) |
+| Ordinary reviewed work with the launch's Dashboard landing context, or a story preparation | [Session close](#publish-a-session-close) |
 | Any other wholly unpublished suffix | [Publish the candidate](../../dough-execute-plan/references/publish-the-candidate.md) for that suffix and target |
 
 For a published prefix, establish that the recorded published tip is an
@@ -23,10 +23,7 @@ push after a rejection, run this candidate check from the landing checkout:
 node <installed>/dough-land/scripts/queued-closure-check.mjs check --checkout <checkout> --remote <remote> --target-ref refs/heads/<branch>
 ```
 
-The command fetches the target and checks every queued story the candidate
-closes against that tip. It identifies closures from the candidate's merge
-base with the fetched target: entries in that base's **Backlog list** that
-are in neither list at `HEAD`. It needs no retained one-shot context.
+It checks every queued story the candidate closes against the fetched target.
 
 | Result | Action |
 | --- | --- |
@@ -62,12 +59,32 @@ loop.
 Call the installed `publishSessionClose` API from
 `dough-execute-plan/scripts/session-record-publication.mjs` with the
 `publishExecutionIncrement` request, the project's backlog path as
-`backlogPath`, and `session: { workflow: "ad-hoc" }`. It publishes the work,
-then, once accepted, the session record under the landing context's
-`reference`, along the same route.
-Report `work` as the publication result and `record.status`; a `stopped`
-record leaves the accepted work in place. Other publishers write no session
-record; for ordinary reviewed work, report that none was written.
+`backlogPath`, and `session: { workflow, story }`. `workflow` is
+`dough-story-refinement` for a story preparation's landing and `ad-hoc`
+otherwise. `story` is the story identity this session's context names, such as
+a follow-up's done story; omit it when the context names none. The API
+publishes the work, then the session's record as its own commit along the same
+route. Report `work` as the publication result and `record.status`; accepted
+work stays in place whatever the record's status. Other publishers write no
+session record; for ordinary reviewed work, report that none was written.
+
+A `published` record settles the close. Otherwise, including after an
+interruption or an unanswered push such as `transport-timeout`, call
+`resumeSessionClose` from the same module with the same `workspace`, `branch`,
+`targetRef`, `backlogPath` and `session`, a Dashboard launch's own
+`landingContext`, and the result's `record.record` as `record` when it holds
+one. Otherwise the close resumes from the state it saved in the workspace for
+the session its landing context or `session.sessionId` names; only when that
+state is absent, pass the stopped
+work's `candidate` as `candidateSha` with its `suffixBase`. It never publishes
+accepted work again. Report its `record.status`, and `work` when present, and
+act on the first row that fits:
+
+| Result | Action |
+| --- | --- |
+| `record.publication.status` is `needs-validation` | Rerun with its `candidate` as `validatedCandidate` |
+| `record.status` is `session-record-conflict` | Report it: another record is already published for this session; the accepted work stays |
+| `record.status` is `stopped`, or `work` is not accepted | Report `work` and the error; resume again once it is resolved |
 
 ## Land completed selected work
 

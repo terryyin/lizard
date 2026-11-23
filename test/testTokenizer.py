@@ -1,4 +1,6 @@
 import unittest
+from lizard import analyze_file
+from lizard_languages.clike import CLikeReader
 from lizard_languages.code_reader import CodeReader
 def generate_tokens(source):
     return [t for t in CodeReader.generate_tokens(source)]
@@ -106,8 +108,16 @@ class Test_generate_token_for_comments(unittest.TestCase):
         self.assertEqual(['//aaa', '\n'], tokens)
 
     def test_cpp_style_comment_with_multiple_lines(self):
-        tokens = generate_tokens("//a\\\nb")
+        tokens = list(CLikeReader.generate_tokens("//a\\\nb"))
         self.assertEqual(['//a\\\nb'], tokens)
+
+    def test_c_reader_addition_comes_before_its_line_comment_rule(self):
+        tokens = list(CLikeReader.generate_tokens("//a\\\nb", r"|//a"))
+        self.assertEqual(['//a', '\\\n', 'b'], tokens)
+
+    def test_line_comment_ends_at_its_line_after_a_backslash(self):
+        tokens = generate_tokens("//a\\\nb")
+        self.assertEqual(['//a\\', '\n', 'b'], tokens)
 
     def test_commentedComment(self):
         tokens = generate_tokens(" /*/*/")
@@ -125,3 +135,109 @@ class Test_generate_token_for_comments(unittest.TestCase):
         comment = '/**a/*/'
         tokens = generate_tokens(comment)
         self.assertListEqual([comment], tokens)
+
+
+class Test_line_comment_ending_with_a_backslash(unittest.TestCase):
+    """Only C, C++ and Objective-C continue a // comment after a backslash."""
+
+    SOURCES = {
+        'a.java': """
+class A {
+  int f(int a) {
+    // path is C:\\
+    if (a > 1) { return 2; }
+    return 1;
+  }
+}
+""",
+        'a.cs': """
+class A {
+  int F(int a) {
+    // path is C:\\
+    if (a > 1) { return 2; }
+    return 1;
+  }
+}
+""",
+        'a.dart': """
+int f(int a) {
+  // path is C:\\
+  if (a > 1) { return 2; }
+  return 1;
+}
+""",
+        'a.go': """
+func f(a int) int {
+    // path is C:\\
+    if a > 1 { return 2 }
+    return 1
+}
+""",
+        'a.kt': """
+fun f(a: Int): Int {
+    // path is C:\\
+    if (a > 1) { return 2 }
+    return 1
+}
+""",
+        'a.rs': """
+fn f(a: i32) -> i32 {
+    // path is C:\\
+    if a > 1 { return 2; }
+    return 1;
+}
+""",
+        'a.scala': """
+object A {
+  def f(a: Int): Int = {
+    // path is C:\\
+    if (a > 1) { return 2 }
+    1
+  }
+}
+""",
+        'a.sol': """
+contract A {
+  function f(uint a) public returns (uint) {
+    // path is C:\\
+    if (a > 1) { return 2; }
+    return 1;
+  }
+}
+""",
+        'a.swift': """
+func f(a: Int) -> Int {
+    // path is C:\\
+    if a > 1 { return 2 }
+    return 1
+}
+""",
+        'a.zig': """
+fn f(a: i32) i32 {
+    // path is C:\\
+    if (a > 1) { return 2; }
+    return 1;
+}
+""",
+    }
+
+    def test_comment_ends_at_its_line(self):
+        for filename, code in self.SOURCES.items():
+            with self.subTest(filename=filename):
+                function, = analyze_file.analyze_source_code(
+                    filename, code).function_list
+                self.assertEqual(2, function.cyclomatic_complexity)
+
+    def test_c_comment_continues_on_the_next_line(self):
+        code = """
+int f(int a) {
+    // path is C:\\
+    if (a > 1) { return 2; }
+    return 1;
+}
+"""
+        for filename in ('a.c', 'a.cpp', 'a.m'):
+            with self.subTest(filename=filename):
+                function, = analyze_file.analyze_source_code(
+                    filename, code).function_list
+                self.assertEqual(1, function.cyclomatic_complexity)
