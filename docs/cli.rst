@@ -15,7 +15,7 @@ Options
                         search for all languages it knows. `lizard -l cpp -l java`searches for
                         C++ and Java code. The available languages are: cpp, java, csharp,
                         javascript, python, objectivec, ttcn, ruby, php, swift, scala, GDScript,
-                        go, lua, rust, typescript, plsql, gherkin
+                        go, lua, rust, typescript, plsql, gherkin, twig
   -V, --verbose         Output in verbose mode (long function name)
   -C CCN, --CCN CCN     Threshold for cyclomatic complexity number warning. The default value is
                         15. Functions with CCN bigger than it will generate warning

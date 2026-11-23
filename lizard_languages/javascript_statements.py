@@ -30,6 +30,14 @@ ASSERTIONS = ('as', 'satisfies')
 ASSERTED_TYPES = ('const', 'void')
 
 
+def opens_object(previous):
+    """Whether a "{" after this token opens an object literal, `x = {`.
+    After ":" it can also be a `case` body."""
+    return previous in VALUE_WORDS or not (
+        previous in BLOCK_PREFIXES or previous.endswith('>')
+        or ends_expression(previous))
+
+
 class ImpliedSemicolons:
     """Finds the places where a statement ends without a ';'.
 
@@ -142,8 +150,7 @@ class ImpliedSemicolons:
             return False                # a property name: `typeof Array.of {`
         if previous in VALUE_WORDS:
             return line == self._line       # not `return` + line break
-        return not (previous in BLOCK_PREFIXES or previous.endswith('>')
-                    or ends_expression(previous))
+        return opens_object(previous)
 
     def _close_group(self, block):
         if block.groups:

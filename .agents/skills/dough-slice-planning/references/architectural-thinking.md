@@ -8,26 +8,25 @@ or gap decision into the slices instead of repeating its search procedure here.
 
 ## Use established direction first
 
-Read the story, the PFE result, relevant existing product structure, domain
-meaning, and this project's Accepted ADRs. Also inspect the project's
-established North Star location when it has one. Judge whether the selected
-solution depends on a consequential architectural choice and which current or
-upcoming stories that choice would constrain. A choice is consequential when,
-for example, it establishes shared responsibility or a product boundary,
-changes domain meaning, or commits affected work to a difficult-to-reverse
-structure.
+Read the story, the PFE result, the product structure this work touches, its
+domain meaning, and this project's Accepted ADRs. When this project has a
+North Star, read it before writing the plan.
 
-When established structure and accepted decisions already support the work,
-write an ordinary sufficient plan. Do not create or update a North Star topic,
-architecture report, reference registry, or extra approval step merely because
-planning occurred.
+Cite every North Star topic that bears on work this plan will execute. A
+topic bears on that work when the slices follow it, would depart from it, or
+do work the topic names. In the plan, name its location and heading and state
+how the slices follow it. To depart, revise the topic first. Leave every
+other topic uncited. Do not create or update a topic, an architecture report,
+a reference registry, or an approval step merely because planning occurred.
 
-When an existing short-term topic governs a consequential choice, cite its
-location and topic in the plan and state how the selected solution follows it.
-Revise the topic only when current supporting evidence warrants a different or
-clearer direction. Consider the consequences for affected stories, domain
-meaning, and relevant Accepted ADRs before revising it; do not turn uncertainty
-or a hypothetical later need into a constraint.
+Revise a cited topic only when current evidence warrants a different or
+clearer direction. Check the affected stories, domain meaning, and Accepted
+ADRs first. Keep uncertainty and a hypothetical later need out of the topic.
+
+When no accepted decision or topic covers a choice that sets shared
+responsibility or a product boundary, changes domain meaning, or is difficult
+to reverse, record it under [Record warranted new direction
+narrowly](#record-warranted-new-direction-narrowly).
 
 ### Reconsider recorded direction during execution
 
@@ -50,10 +49,9 @@ independent work only where its direction remains supported.
 
 ## Record warranted new direction narrowly
 
-If consequential, evidence-supported direction is needed and no existing topic
-covers it, add one short topic at the project's established North Star location.
-Use a heading and a brief paragraph that state the direction, supporting
-evidence, and affected work. Refer to that topic from the plan.
+Add that uncovered choice as one short topic at the project's established
+North Star location. Use a heading and a brief paragraph that state the
+direction, supporting evidence, and affected work. Cite it as above.
 
 If the project has no North Star location, the planner may choose one shared
 `NORTH-STAR.md` under this project's established planning root and state that
