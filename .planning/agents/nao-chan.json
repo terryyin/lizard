@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "agent": "Nao-chan",
+  "email": "nao-chan@example.org",
+  "identity": "SEED-071#process-hafez-prs-nov21-23",
+  "mode": "story-branch",
+  "branch": "cursor/process-hafez-prs-nov21-23",
+  "host": "cursor",
+  "model": "auto"
+}
