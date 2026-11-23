@@ -1,4 +1,5 @@
 import unittest
+from lizard import FileAnalyzer, get_extensions
 from .testHelpers import get_cpp_function_list_with_extension
 from lizard_ext.lizardignoreassert import LizardExtension
 
@@ -24,3 +25,16 @@ class TestAssertionExtension(unittest.TestCase):
                                        [](auto& a) { return a ? b : c })); }""",
                 LizardExtension())
         self.assertEqual(1, result[0].cyclomatic_complexity)
+
+    def test_file_after_a_file_that_ends_inside_an_assertion(self):
+        analyzer = FileAnalyzer(get_extensions([LizardExtension()]))
+        analyzer.analyze_source_code("cut.c", "void f(int a) {\n  assert(a &&")
+        result = analyzer.analyze_source_code("c.c", """
+        int both(int a, int b) {
+          if (a && b) {
+            return 1;
+          }
+          return 0;
+        }
+        """).function_list
+        self.assertEqual(3, result[0].cyclomatic_complexity)

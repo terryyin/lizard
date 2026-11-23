@@ -32,6 +32,14 @@ ASSERTED_TYPES = frozenset(('const', 'void'))
 _SPECIAL_ENDS = POSTFIX | ASSERTED_TYPES | UNFINISHED
 
 
+def opens_object(previous):
+    """Whether a "{" after this token opens an object literal, `x = {`.
+    After ":" it can also be a `case` body."""
+    return previous in VALUE_WORDS or not (
+        previous in BLOCK_PREFIXES or previous.endswith('>')
+        or ends_expression(previous))
+
+
 class ImpliedSemicolons:
     """Finds the places where a statement ends without a ';'.
 
@@ -214,5 +222,4 @@ def _object_starts(token, previous, before_previous, groups, same_line):
         return False                # a property name: `typeof Array.of {`
     if previous in VALUE_WORDS:
         return same_line                # not `return` + line break
-    return not (previous in BLOCK_PREFIXES or previous.endswith('>')
-                or ends_expression(previous))
+    return opens_object(previous)

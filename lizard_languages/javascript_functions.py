@@ -206,7 +206,8 @@ class JavaScriptFunctionsMixin:
             self.next(self._state_global, name)
             self.next(self._state_global, token)
             return
-        if token == 'function' and not self._parameter_bindings.defaults:
+        if (token == 'function' and not self._parameter_bindings.defaults
+                and not getattr(token, 'is_member_name', False)):
             # The optimistic named-arrow signature is an IIFE expression.
             self._abandon_optimistic_parameter_group()
             self.next(self._state_global, token)
