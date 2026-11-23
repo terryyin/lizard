@@ -124,6 +124,7 @@ _PROFILES = {
                       case_insensitive=True, **_FLAT),
     'st': _Profile(switches=('case',), case_insensitive=True, **_FLAT),
     'tnsdl': _Profile(**_FLAT),
+    'twig': _Profile(jumps=()),                # no ``break``/``continue`` tags
 }
 
 _PYTHON = _Profile(switches=('match',))

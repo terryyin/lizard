@@ -44,6 +44,7 @@ A list of supported languages:
 -  Svelte (see `Svelte analysis <docs/svelte-analysis.md>`_)
 -  Swift
 -  TTCN-3
+-  Twig
 -  TypeScript (With TSX)
 -  VueJS
 -  Zig
