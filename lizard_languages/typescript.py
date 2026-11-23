@@ -86,6 +86,13 @@ _OPTIONAL_MEMBER_QUESTION = _OptionalMemberQuestion('?')
 _ANNOTATION_PUNCTUATION = frozenset(('?', ':'))
 
 
+class _MemberName(str):
+    """A keyword that names a member, `promise.catch(f)`, `{ if: a }` or
+    `catch(e) {}` in a class, which no metric counts as a structure."""
+
+    is_member_name = True
+
+
 _MEMBER_ACCESS = ('.', '?.')
 _COMMENT_STARTS = ('//', '/*')
 # The tokens that preprocess looks at, in one set for the hot loop.
@@ -93,7 +100,16 @@ _MARKED_PUNCTUATION = _ANNOTATION_PUNCTUATION | frozenset(_MEMBER_ACCESS)
 # With the reader's conditions: the keywords that a metric counts as a
 # structure or a jump.
 _STRUCTURE_KEYWORDS = frozenset((
-    'else', 'do', 'switch', 'try', 'finally', 'break', 'continue'))
+    'else', 'do', 'switch', 'try', 'finally', 'break', 'continue', 'with'))
+
+
+_NAMED_KEYWORDS = frozenset(('function',))
+# After a keyword, these show that it names a member: `{ if: a }`,
+# `catch = (e) => e`.  The start of a method's parameters, `catch(e)` or
+# `catch<T>(e: T)`, shows it only at the start of a member.  TSX reads
+# `<T>` as one token.
+_NAME_FOLLOWERS = frozenset((':', '='))
+_PARAMETER_STARTS = frozenset(('(', '<'))
 
 
 def _ends_a_number(token):
@@ -211,7 +227,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         innermost open expression arrow (or optimistic signature) before
         any counter charges it.  Offer the code token after a signature to
         its state in the same way.  Mark a keyword after '.' or '?.' as the
-        name of a member.
+        name of a member, and a keyword that the next token shows to be one.
 
         A '\n' is consumed by line_counter, and comments by comment_counter,
         before the state machine sees them, so expression_arrows cannot
@@ -224,19 +240,30 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         member_access_tokens = _MEMBER_ACCESS
         structure_keywords = (_STRUCTURE_KEYWORDS | self.control_flow_keywords
                               | self.case_keywords)
+        # `{ function: f }` also needs the mark: the state reads `function`.
+        name_keywords = structure_keywords | _NAMED_KEYWORDS
         member_access = False
         before_dot = ''
+        keyword = None      # waits for the next token: `{ if: a }`
         tokens = iter(self.code_tokens(tokens))
         while True:
             for token in tokens:
                 if not token.isspace():
+                    if keyword is not None:
+                        # `{ if: a }`, `catch = f`, `catch(e) {}` in a class
+                        if token in _NAME_FOLLOWERS or (
+                                token[0] in _PARAMETER_STARTS
+                                and state.member_name_context()):
+                            keyword = _MemberName(keyword)
+                        yield keyword
+                        keyword = None
                     if line_start and not token.startswith(_COMMENT_STARTS):
                         line_start = False
                         end_before_line_token(state, arrows, token)
                     if signatures and not token.startswith(('//', '/*')):
                         signatures.pop().end_signature_before(token)
                     if member_access and token in structure_keywords:
-                        token = MemberName(token)
+                        token = _MemberName(token)
                         member_access = False
                     elif token in marked_punctuation:
                         # `1..catch`: the number and each dot are tokens.
@@ -262,11 +289,18 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                                     break
                         elif member_access:
                             before_dot = token == '.' and state.last_token
-                    elif member_access and not token.startswith(
-                            _COMMENT_STARTS):   # `p./* note */catch`
-                        member_access = False
+                    else:
+                        if member_access and not token.startswith(
+                                _COMMENT_STARTS):   # `p./* note */catch`
+                            member_access = False
+                        if token in name_keywords:
+                            keyword = token
+                            continue
                     yield token
                 elif token == '\n':
+                    if keyword is not None:
+                        yield keyword
+                        keyword = None
                     if member_access and _ends_a_number(before_dot):
                         # `1.` before a line break ends a number. On one
                         # line, `1 .if` and `1.5.if` name a member.
@@ -275,6 +309,8 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                         line_start = True
                     yield token
             else:
+                if keyword is not None:
+                    yield keyword
                 return
 
     @staticmethod
