@@ -895,6 +895,20 @@ class TestJavaScriptKeywordAsTheNameOfAMember(unittest.TestCase):
               o.elseif(run);
             }"""))
 
+    def test_goto_is_no_jump(self):
+        code = """
+            async function open(page, router, url) {
+              await page.goto(url);
+              router?.goto(url);
+              goto(url);
+            }"""
+        for filename, source in (('a.js', code), ('a.ts', code),
+                                 ('a.jsx', code), ('a.tsx', code),
+                                 ('a.vue', '<script>' + code + '</script>'),
+                                 ('a.svelte', '<script>' + code + '</script>')):
+            with self.subTest(filename=filename):
+                self.assertEqual([0], cogc(filename, source))
+
 
 class TestJavaScriptGroupedExpressions(unittest.TestCase):
     """The reader takes ``x = (`` as the possible start of an arrow function
