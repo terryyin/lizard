@@ -6,9 +6,8 @@
 // resolver needs and exactly the moment a plain textual merge would otherwise
 // combine two backlog changes without ever asking whether they agree.
 //
-// The three paths Git hands this driver are ordinary files, so the shared,
-// not-Git-aware resolver reads them exactly as it reads any other three
-// versions. Success overwrites the "ours" temp file with the reconciled
+// The driver reads the files Git supplies and passes their text to the
+// shared resolver. Success overwrites the "ours" file with the reconciled
 // backlog, which Git then takes as the merged content. Refusal never writes
 // a partial result: it leaves the "ours" temp file as real Git-style conflict
 // markers around each side's untouched content, with the dispute explained
@@ -17,24 +16,11 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { mergeBacklogs } from "./product-backlog-merge.mjs";
 import { BacklogError } from "./product-backlog-refusal.mjs";
+import { readFile } from "./product-backlog-store.mjs";
 
-// The core's refusal is written for a caller naming three arbitrary files by
-// path; a person resolving a real Git conflict has no use for those temp
-// paths and every use for the one path Git is actually merging, plus how to
-// look at each side through Git itself. This rewrites the same explanation
-// for that reader without re-deciding anything the core already decided.
-function gitFacingRefusal(error, path, temporaryPaths) {
-  let body = error.message
-    .split("\n")
-    .filter(
-      (line) =>
-        !/^ {2}the (ancestor|first branch|second branch) version: /.test(line),
-    )
-    .join("\n");
-  for (const temporary of temporaryPaths) {
-    body = body.split(`(${temporary})`).join(`(${path})`);
-  }
-  body = body.replace(
+// Show the policy's explanation together with the actual path and stages.
+function gitFacingRefusal(error, path) {
+  const body = error.message.replace(
     /\nDecide what each of these should say, repair the versions by hand, and merge them again\.$/,
     "",
   );
@@ -74,17 +60,17 @@ function conflictMarkers(oursPath, theirsPath, explanation) {
   );
 }
 
-// Runs the driver over the three paths Git supplied (plus the attributed
-// path itself, for the diagnostic), and reports the outcome without touching
-// `process`, so a test can call this directly as well as through a real
-// spawned Git merge.
-export function runDriver(ancestorPath, oursPath, theirsPath, path) {
+function runDriver(ancestorPath, oursPath, theirsPath, path) {
   const named = path ?? oursPath;
   try {
-    const outcome = mergeBacklogs({
-      ancestor: ancestorPath,
-      branches: [oursPath, theirsPath],
-    });
+    const outcome = mergeBacklogs(
+      readFile(ancestorPath, `Git's ancestor version for ${named} is missing.`),
+      readFile(oursPath, `Git's first branch version for ${named} is missing.`),
+      readFile(
+        theirsPath,
+        `Git's second branch version for ${named} is missing.`,
+      ),
+    );
     writeFileSync(oursPath, outcome.source, "utf8");
     return {
       code: 0,
@@ -97,11 +83,7 @@ export function runDriver(ancestorPath, oursPath, theirsPath, path) {
     if (!(error instanceof BacklogError)) {
       throw error;
     }
-    const message = gitFacingRefusal(error, named, [
-      ancestorPath,
-      oursPath,
-      theirsPath,
-    ]);
+    const message = gitFacingRefusal(error, named);
     writeFileSync(
       oursPath,
       conflictMarkers(oursPath, theirsPath, message),

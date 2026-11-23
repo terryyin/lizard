@@ -120,8 +120,8 @@ the slice, the trunk step, and a
 [Dough Land](../dough-land/SKILL.md) `--keep-worktree` landing of the story
 branch before the step, so one go-ahead covers both and execution asks no
 separate landing question. Alternatively, record in Current decisions that the
-story executes in Trunk Mode (`--trunk`). The trunk step stays that slice's
-work, not a lifecycle owner, and keeps its own procedure and gates.
+story executes in Trunk Mode (`--trunk`). The slice owns the trunk step and follows its
+procedure and gates.
 
 After the plan file exists for a work item with a recorded identity, apply
 [record preparation facts](../dough-product-backlog/references/record-preparation.md)

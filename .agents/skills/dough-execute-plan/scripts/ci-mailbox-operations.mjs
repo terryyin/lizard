@@ -79,6 +79,7 @@ export async function runMailboxWorker(
 // `options.coordinator` names the coordinator arming this stream; its claim is
 // on the mailbox before the receipt exposes the directory.
 export async function streamMailboxWorker(request, options = {}) {
+  validateExecutionRequest(request);
   const directory = createMailbox(request, options);
   const owner = codexStreamOwner({
     root: options.root ?? checkoutRoot,
@@ -109,17 +110,21 @@ export async function streamMailboxWorker(request, options = {}) {
   });
 }
 
-export async function startExecutionMailbox(request, options = {}) {
+function validateExecutionRequest(request) {
   const validRepository = /^[\w.-]+\/[\w.-]+$/.test(request.repo ?? "");
   const validExecution =
     request.mode === "execution" &&
     validRepository &&
     typeof request.branch === "string" &&
-    request.branch.length > 0 &&
+    request.branch.trim().length > 0 &&
     Number.isFinite(request.maxDurationMs) &&
     request.maxDurationMs > 0;
   if (!validExecution)
-    throw new Error("Expected --execution OWNER/REPO BRANCH [BUDGET_MS]");
+    throw new Error("Expected --execution OWNER/REPO BRANCH");
+}
+
+export async function startExecutionMailbox(request, options = {}) {
+  validateExecutionRequest(request);
   const directory = createMailbox(request, options);
   const child = spawn(
     process.execPath,

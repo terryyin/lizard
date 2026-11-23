@@ -103,23 +103,6 @@ export function reportDirection(outcome, file) {
   return `${said}. Every entry in both lists is unchanged.`;
 }
 
-// A merge says what both branches turned out to have changed, including the
-// removals of work neither branch was about, because that is what a caller
-// checks the published result against before accepting it.
-export function reportMerge(outcome, file) {
-  const listing = `${outcome.entries} ${outcome.entries === 1 ? "entry" : "entries"}`;
-  if (outcome.changes.length === 0) {
-    return (
-      `Merged both branch versions into ${file}; neither changed the ` +
-      `ancestor, so all ${listing} carry across unchanged.`
-    );
-  }
-  return [
-    `Merged both branch versions into ${file}, now listing ${listing}:`,
-    ...outcome.changes.map((change) => `  ${change}`),
-  ].join("\n");
-}
-
 export function reportRecordState(outcome, file) {
   const { identity, key, refinement, approach, assessment } = outcome.state;
   const approachText =

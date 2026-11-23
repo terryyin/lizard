@@ -148,7 +148,6 @@ export async function resumeSessionClose({
     branch: request.branch,
     landingContext,
     backlogPath,
-    publishedRevisions: [],
   });
   if (work.held) return { work, record: { status: "not-published" } };
   return {

@@ -1,11 +1,7 @@
 // One explicit live-Claude handoff on the existing owner-bound mailbox.
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import {
-  checkoutRoot,
-  mailboxRoot,
-  readMailbox,
-} from "./ci-mailbox-location.mjs";
+import { checkoutRoot, readMailbox } from "./ci-mailbox-location.mjs";
 import {
   readDeliveryProgress,
   readMailboxEvents,
@@ -28,25 +24,11 @@ import {
   backgroundSessionLimit,
 } from "./ci-background-state.mjs";
 
-export {
-  currentProcessIdentity,
-  liveClaudeAncestor,
-  liveClaudeStillRunning,
-} from "./ci-background-session.mjs";
-export {
-  readBackgroundHandoff,
-  saveBackgroundHandoff,
-} from "./ci-background-state.mjs";
-
-export const handoffWindowMs = 10 * 60 * 1000;
-export const backgroundReceiptPrefix = "CI_BACKGROUND_HANDOFF ";
-export function validateBackgroundOwner(
-  directory,
-  session,
-  { root = checkoutRoot, storage = mailboxRoot } = {},
-) {
-  const request = readMailbox(directory, root, storage);
-  const owner = hostInputOwner(session, "claude", root);
+const handoffWindowMs = 10 * 60 * 1000;
+const backgroundReceiptPrefix = "CI_BACKGROUND_HANDOFF ";
+function validateBackgroundOwner(directory, session) {
+  const request = readMailbox(directory);
+  const owner = hostInputOwner(session, "claude", checkoutRoot);
   if (!owner || readOwnerClaim(directory) !== owner)
     throw new Error(
       "Background CI handoff requires this Claude coordinator's existing owner claim",
@@ -76,13 +58,8 @@ function verifyInstalledWaiter(root) {
       "The installed live-Claude asyncRewake Stop waiter is unavailable; use complete-revision",
     );
 }
-export function handoffPendingCi(directory, sha, session, options = {}) {
-  const { root = checkoutRoot } = options;
-  const { request, owner } = validateBackgroundOwner(
-    directory,
-    session,
-    options,
-  );
+function handoffPendingCi(directory, sha, session) {
+  const { request, owner } = validateBackgroundOwner(directory, session);
   const publication = readDeliveryProgress(directory).acceptedPublication;
   const revision = readRevisionCoverage(directory).find(
     (entry) => entry.sha === sha,
@@ -116,7 +93,7 @@ export function handoffPendingCi(directory, sha, session, options = {}) {
     throw new Error(
       "CI is already resolved or has an unread failure; use the existing completion/repair path",
     );
-  verifyInstalledWaiter(root);
+  verifyInstalledWaiter(checkoutRoot);
   const liveSession = liveClaudeAncestor();
   if (!liveSession)
     throw new Error(
@@ -144,8 +121,8 @@ export function handoffPendingCi(directory, sha, session, options = {}) {
   });
   return handoff;
 }
-export function backgroundStatus(directory, session, options = {}) {
-  validateBackgroundOwner(directory, session, options);
+function backgroundStatus(directory, session) {
+  validateBackgroundOwner(directory, session);
   const handoff = readBackgroundHandoff(directory);
   if (!handoff) return { state: "not_enrolled", resources: "retained" };
   if (handoff.state !== "pending") return handoff;

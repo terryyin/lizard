@@ -14,9 +14,15 @@ function revisionPath(directory, sha) {
   return join(revisionDirectory(directory), `${sha.toLowerCase()}.json`);
 }
 
-export function registerPushedRevision(directory, sha) {
+export function registerPushedRevision(
+  directory,
+  sha,
+  { onlyIfMissing = false } = {},
+) {
   const path = revisionPath(directory, sha);
   const normalized = sha.toLowerCase();
+  if (onlyIfMissing && listRegisteredRevisions(directory).includes(normalized))
+    return;
   mkdirSync(revisionDirectory(directory), { recursive: true, mode: 0o700 });
   if (!existsSync(path))
     publishJson(revisionDirectory(directory), `${normalized}.json`, {

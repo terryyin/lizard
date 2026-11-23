@@ -6,8 +6,8 @@ The coordinator runs this sequence after implementation, including owned CI repa
 
 For planned Story Branch work, first [settle freshness](deliver-the-change.md#settle-freshness-before-dependent-work).
 Apply [proof ownership](../../dough-story-refinement/references/planning.md#own-executable-proof).
-Complete [source-only review at acceptance](obtain-source-review.md#at-acceptance)
-before comparing the return.
+Read the complete selected story, bounded correction or quick instruction,
+including developer amendments.
 
 Use the short verdict to locate the full report and [run records](proof-evidence.md#read-the-run-record).
 A promise absent from the verdict, or a referenced report or run record missing
@@ -15,33 +15,16 @@ from disk, is incomplete proof: return the slice naming the missing promise,
 report or record. Read from the report and logs only the parts the comparison
 below needs, under [targeted retrieval](disposable-research.md).
 
-Compare that independent return with the source, then the plan, implementation
-return, actual product and proof. In existing plan or acceptance evidence compare,
-in any equivalent layout: applicable original trigger/setup → source-expected
-result → actual observation → current or legitimate remaining owner/disposition.
-A commitment the plan narrowed or omitted is a mismatch, not a disposition, and
-so is an observed location that shows a different result than the commitment
-states.
-Return it to the slice when this slice's output already owes it; when the plan
-claims a reason the story does not record, stop for human judgment.
-Include each qualification and journey example; a heading, count or plan list
-cannot stand for a compound promise. Return a concrete expected/actual mismatch
-unless a real human amendment changes it. Accept the slice and start the
-refactor pass once each source promise, affected consumer and required gate
-has a decisive observation, the story obligations are recorded, and no
-expected/actual mismatch remains unresolved. Further inspection needs a named
-expected/actual mismatch or a specific evidence gap: a promise, consumer or
-gate without a sufficient observation. Broad accuracy or compatibility claims
-cannot replace an explicit journey's expected result. Check source completeness before reuse.
-When a slice's proof includes a developer-operated observation, accept it under
-[developer-operated observation](../../dough-story-refinement/references/executable-proof.md#plan-and-reuse-developer-operated-observation).
-Establish applicability at the current trigger or output before allowing later
-ownership: a later slice cannot qualify an output that already owes the promise.
-The source and human amendments outrank plan/return; correct a contrary mapping,
-retaining source-correct behavior and proof. An owner-decision label is no human
-amendment. Preserve legitimate remaining owners, exclusions and human
-changes; resolve disputes through [human judgment](execution-decisions.md#stop-for-human-judgment),
-stopping only dependent acceptance. Use existing records, not a second promise registry.
+Compare the candidate with the outcome the source promises under the stated
+conditions. Inspect proof that would distinguish that outcome on this candidate.
+If the plan or return omitted a required outcome, return the gap to the slice
+that owes it. Preserve valid later ownership and approved scope changes. Resolve
+disputed scope through [human judgment](execution-decisions.md#stop-for-human-judgment).
+
+Accept once the applicable promises, affected consumers and required gates have
+sufficient observations and the story obligations are settled for this slice.
+Further inspection needs a specific mismatch or evidence gap. For
+developer-operated proof, follow [developer-operated observation](../../dough-story-refinement/references/executable-proof.md#plan-and-reuse-developer-operated-observation).
 
 If a delegated call was interrupted, or its return arrived only after interruption, follow
 [interrupted-delegation recovery](delegation.md#recover-an-interrupted-delegated-result) before accepting anything from it.

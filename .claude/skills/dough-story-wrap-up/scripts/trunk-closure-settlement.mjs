@@ -8,9 +8,11 @@
 // closure the target holds and resumes it the same way. Once the execution
 // worktree is gone, only an accepted closure is settled, from the recorded
 // management context.
-import { listRegisteredRevisions } from "../../dough-execute-plan/scripts/ci-mailbox-revision-records.mjs";
+import {
+  listRegisteredRevisions,
+  registerPushedRevision,
+} from "../../dough-execute-plan/scripts/ci-mailbox-revision-records.mjs";
 import { deliverManagedExecutionIncrement } from "../../dough-execute-plan/scripts/execution-increment-delivery.mjs";
-import { observerAdapter } from "../../dough-execute-plan/scripts/execution-increment-resume.mjs";
 import {
   git,
   targetBranchName,
@@ -37,20 +39,20 @@ async function resumeAcceptedClosure({
   remote,
   observers,
 }) {
-  const found = observers.select(accepted);
   const resumed = await resumeInterruptedPublication({
     ownedWorkspace: inspection,
     candidateSha: accepted,
     supersededShas: superseded,
-    publishedRevisions: [accepted],
-    observer: found.directory
-      ? observerAdapter(found.directory, targetRef)
-      : null,
     targetRef,
     remote,
   });
+  const found = observers.select(resumed.acceptedSha);
+  if (found.directory)
+    registerPushedRevision(found.directory, resumed.acceptedSha, {
+      onlyIfMissing: true,
+    });
   return {
-    acceptedSha: accepted,
+    acceptedSha: resumed.acceptedSha,
     pushCount: resumed.pushCount,
     observation: found.directory
       ? { state: "recovered", ...found, reused: true }

@@ -36,8 +36,6 @@ export const options = {
   clear: { type: "boolean", default: false },
   expect: { type: "string" },
   "expect-none": { type: "boolean", default: false },
-  ancestor: { type: "string" },
-  branch: { type: "string", multiple: true },
   return: { type: "boolean", default: false },
   all: { type: "boolean", default: false },
   dropped: { type: "boolean", default: false },

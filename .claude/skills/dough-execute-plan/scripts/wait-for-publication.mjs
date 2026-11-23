@@ -18,16 +18,10 @@ import { isDirectCliEntry } from "./ci-direct-entry.mjs";
 import { git } from "./publication-git.mjs";
 
 const usage =
-  "Usage: node wait-for-publication.mjs --remote REMOTE --ref REF[:PATH] [--ref REF[:PATH]]... [--duration-minutes MINUTES | --deadline ISO_TIME] [--interval-seconds SECONDS]";
-const flags = [
-  "remote",
-  "ref",
-  "duration-minutes",
-  "deadline",
-  "interval-seconds",
-];
+  "Usage: node wait-for-publication.mjs --remote REMOTE --ref REF[:PATH] [--ref REF[:PATH]]... [--duration-minutes MINUTES | --deadline ISO_TIME]";
+const flags = ["remote", "ref", "duration-minutes", "deadline"];
 const defaultDurationMinutes = 60;
-const defaultIntervalSeconds = 60;
+const pollIntervalMs = 60_000;
 
 function positive(text, flag) {
   const value = Number(text);
@@ -75,11 +69,6 @@ function waitRequest(argv) {
     remote,
     watched: values.ref.map(watchedItem),
     deadlineMs,
-    intervalMs:
-      positive(
-        once("interval-seconds") ?? defaultIntervalSeconds,
-        "--interval-seconds",
-      ) * 1000,
   };
 }
 
@@ -165,7 +154,7 @@ async function retainedObservation(file, key, { watched }) {
 // rejects; a later one, or a continued wait's, is tried again at the next
 // interval.
 async function waitForPublication(checkout, request) {
-  const { remote, deadlineMs, intervalMs } = request;
+  const { remote, deadlineMs } = request;
   const deadline = new Date(deadlineMs).toISOString();
   const file = await retainedPath(checkout);
   const key = waitKey(request, deadline);
@@ -175,7 +164,7 @@ async function waitForPublication(checkout, request) {
   for (;;) {
     const remaining = deadlineMs - Date.now();
     if (remaining <= 0) return { result: "deadline", remote, deadline };
-    if (pause) await delay(Math.min(intervalMs, remaining));
+    if (pause) await delay(Math.min(pollIntervalMs, remaining));
     pause = true;
     const now = await observe(checkout, request).catch(() => start);
     const changes = changesBetween(start, now);

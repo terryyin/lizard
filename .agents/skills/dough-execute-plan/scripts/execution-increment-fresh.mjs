@@ -29,7 +29,6 @@ function recoveryContext(request, candidateSha, suffixBase) {
     "targetRef",
     "repo",
     "host",
-    "preferredAlias",
     "session",
     "coordinator",
     "observerDirectory",

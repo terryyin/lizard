@@ -21,8 +21,7 @@
 //       start the diagnosis's next round, refused beyond its authorized
 //       rounds (3 unless a human authorized N); a running round continues
 //   pause                             pause the running slice or round
-//   status [--identity ID (--slice KEY | --diagnosis NAME)]
-//       report a slice or a diagnosis's latest round; the running one unless named
+//   status                            report the running slice or round
 //   run --log FILE --exit-file FILE -- COMMAND [ARG]...
 //       run COMMAND with its time excluded from the running slice or round, write its
 //       output to FILE and, when it ends, its exit status to the exit file;
@@ -49,7 +48,7 @@ import {
 const usage = `Usage: node slice-clock.mjs start --identity ID --slice KEY [--after-ended-session] [--continues OLD-KEY | --split-from OLD-KEY]
        node slice-clock.mjs start --identity ID --diagnosis NAME [--rounds-authorized N] [--after-ended-session]
        node slice-clock.mjs pause
-       node slice-clock.mjs status [--identity ID (--slice KEY | --diagnosis NAME)]
+       node slice-clock.mjs status
        node slice-clock.mjs run --log FILE --exit-file FILE -- COMMAND [ARG]...`;
 
 class UsageError extends Error {}
@@ -154,9 +153,9 @@ function pause(file, argv) {
 }
 
 function status(file, argv) {
-  const asked = namedSlice(flags(argv, ["identity", "slice", "diagnosis"]));
+  flags(argv, []);
   return updateRecord(file, (record) => {
-    const named = asked ?? record.running;
+    const named = record.running;
     if (!named) throw new Error(noneRunning);
     if (sliceOf(record, named) === undefined)
       throw new Error(`no record of ${labelOf(named)}`);

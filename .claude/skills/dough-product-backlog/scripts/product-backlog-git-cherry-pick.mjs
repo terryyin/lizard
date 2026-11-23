@@ -45,10 +45,7 @@
 // (`commitRebuiltDoneCatalog`); the catalog's own driver keeps a change to
 // the catalog alone from stopping any pick.
 import { existsSync, readFileSync } from "node:fs";
-import {
-  acceptStaged,
-  validateCandidate,
-} from "./product-backlog-git-candidate.mjs";
+import { acceptStaged } from "./product-backlog-git-candidate.mjs";
 import { acceptCleanPick } from "./product-backlog-git-cherry-pick-aggregate.mjs";
 import { interpretStop } from "./product-backlog-git-cherry-pick-stop.mjs";
 import { runGitOperationCli } from "./product-backlog-git-cli.mjs";
@@ -62,7 +59,6 @@ import {
   gitLine,
   gitOutcome,
   gitPath,
-  repositoryRoot,
 } from "./product-backlog-git-repository.mjs";
 import { BacklogError } from "./product-backlog-refusal.mjs";
 // Read-only recovery for a "disputed" result is entirely Git/operation-
@@ -70,13 +66,6 @@ import { BacklogError } from "./product-backlog-refusal.mjs";
 // reconciliation) despite living beside the rebase adapter that first needed
 // it; reused unchanged rather than duplicated.
 import { validateOperation } from "./product-backlog-git-rebase-aggregate.mjs";
-
-export {
-  ensureDriverRegistered,
-  repositoryRoot,
-  validateCandidate,
-  validateOperation,
-};
 
 // Cherry-pick's own `--continue` must never stop to open an editor: it
 // reuses the picked commit's own recorded message (plus Git's own
@@ -116,7 +105,7 @@ function stoppedPickStart(repoRoot) {
 // — the same shape a multi-commit rebase of that same line onto this same
 // destination would have. A single revision has no such gap (see this file's
 // own header) and is reported accepted as soon as its own result validates.
-export async function pickOperation({ repoRoot, file, ref, mainline }) {
+async function pickOperation({ repoRoot, file, ref, mainline }) {
   ensureDriverRegistered(repoRoot, file);
   ensureDoneCatalogDriverRegistered(repoRoot, file);
   const revisions = ref.trim().split(/\s+/).filter(Boolean);
@@ -171,7 +160,7 @@ export async function pickOperation({ repoRoot, file, ref, mainline }) {
 // any remaining picks. Deliberately never re-gated by the whole-operation
 // aggregate on finish, the same documented boundary and accepted gap
 // `product-backlog-git-rebase.mjs`'s own `continueOperation` carries.
-export async function continueOperation({ repoRoot, file }) {
+async function continueOperation({ repoRoot, file }) {
   if (!cherryPickState(repoRoot)) {
     throw new BacklogError(`No cherry-pick is in progress in ${repoRoot}.`);
   }

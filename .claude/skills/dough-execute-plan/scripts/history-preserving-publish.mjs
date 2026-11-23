@@ -63,7 +63,6 @@ export async function publishHistoryPreservingCandidate({
   onFetchedTarget,
   beforePush,
   landingContext: suppliedLandingContext,
-  register,
 }) {
   const landingContext = await resolvePublicationLandingContext({
     landingContext: suppliedLandingContext,
@@ -205,7 +204,6 @@ export async function publishHistoryPreservingCandidate({
       base: suffixBase,
       revision: prepared.sha,
     });
-    register?.(receipt);
     await returnToBranch(ownedWorkspace, branch);
     return {
       classification: "published",

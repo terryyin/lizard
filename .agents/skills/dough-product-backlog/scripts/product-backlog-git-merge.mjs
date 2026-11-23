@@ -38,11 +38,8 @@ import {
   gitLine,
   gitOutcome,
   gitPath,
-  repositoryRoot,
 } from "./product-backlog-git-repository.mjs";
 import { BacklogError } from "./product-backlog-refusal.mjs";
-
-export { ensureDriverRegistered, repositoryRoot, validateCandidate };
 
 // A fast-forward candidate never goes through reconciliation at all — only
 // one side changed anything since the ancestor — but an unreadable or
@@ -117,7 +114,7 @@ async function commitAcceptedMerge(repoRoot, file, subject) {
 // (through the driver registered above) for everything else. The merge is
 // never committed by this call alone — only once this path's own result is
 // validated, and only if Git itself has nothing else left unresolved.
-export async function mergeOperation({ repoRoot, file, ref }) {
+async function mergeOperation({ repoRoot, file, ref }) {
   const headSha = gitLine(["rev-parse", "HEAD"], repoRoot);
   const mergeBase = gitLine(["merge-base", headSha, ref], repoRoot);
   if (mergeBase === headSha) {
@@ -182,7 +179,7 @@ export async function mergeOperation({ repoRoot, file, ref }) {
 // candidate that fails this tool's invariants, one that does not match the
 // working tree, or a result holding an agent profile among the done records
 // all stay stopped exactly where they were.
-export async function continueOperation({ repoRoot, file }) {
+async function continueOperation({ repoRoot, file }) {
   if (!existsSync(gitPath(repoRoot, "MERGE_HEAD"))) {
     throw new BacklogError(`No merge is in progress in ${repoRoot}.`);
   }

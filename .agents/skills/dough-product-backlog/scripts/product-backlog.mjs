@@ -14,7 +14,6 @@ import {
 } from "./product-backlog-complete.mjs";
 import { setDirection } from "./product-backlog-direction.mjs";
 import { printIdentityEvidence } from "./product-backlog-identity-evidence.mjs";
-import { mergeBacklogs } from "./product-backlog-merge.mjs";
 import { placeEntry } from "./product-backlog-place.mjs";
 import { refreshEntry } from "./product-backlog-refresh.mjs";
 import { BacklogError } from "./product-backlog-refusal.mjs";
@@ -32,7 +31,6 @@ import {
   reportCatalogDone,
   reportComplete,
   reportDirection,
-  reportMerge,
   reportPlace,
   reportRefresh,
   reportTake,
@@ -173,21 +171,6 @@ async function adopt(file, values) {
   console.log(reportAdopt(outcome, values.file));
 }
 
-// The destination's own bytes are deliberately not read. A merge is run on a
-// file that may still hold whatever an integration left in it, so what the
-// result should say comes from the three supplied versions alone; the write
-// boundary still serializes this run against every other script writer, and a
-// refused merge still leaves the destination exactly as it was.
-async function merge(file, values) {
-  const outcome = await applyReportedChange(file, () =>
-    mergeBacklogs({
-      ancestor: resolvePath(values.ancestor),
-      branches: values.branch?.map(resolvePath),
-    }),
-  );
-  console.log(reportMerge(outcome, values.file));
-}
-
 // Operations on canonical story homes; their refusals say nothing was
 // written rather than that the backlog was unchanged.
 const preparationOperations = {
@@ -209,7 +192,6 @@ const operations = {
   refresh,
   direction,
   adopt,
-  merge,
   "identity-evidence": printIdentityEvidence,
   ...preparationOperations,
 };
