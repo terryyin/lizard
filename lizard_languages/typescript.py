@@ -4,7 +4,7 @@ Language parser for TypeScript
 
 from itertools import tee
 
-from .code_reader import CodeReader, CodeStateMachine
+from .code_reader import CodeReader, CodeStateMachine, MemberName
 from .clike import CCppCommentsMixin
 from .js_style_regex_expression import js_style_regex_expression
 from .javascript_bindings import JavaScriptBindings

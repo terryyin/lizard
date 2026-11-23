@@ -184,7 +184,7 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
             self._state = self._block_ending
         elif token in self.structures:
             if getattr(token, 'is_member_name', False):
-                pass                    # `{ if: a }` / method name like `if`
+                pass                    # member/method name like catch or if
             elif token == 'else':
                 self._state = self._after_else
             else:

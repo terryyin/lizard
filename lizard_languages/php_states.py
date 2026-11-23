@@ -4,6 +4,9 @@ PHP function/class/match state machine.
 
 from .code_reader import CodeStateMachine
 
+MEMBER_ACCESS = frozenset(('->', '?->', '::'))
+_SKIPPED = frozenset(('fn', 'public', 'private', 'protected', 'static'))
+
 
 class PHPLanguageStates(CodeStateMachine):
     """
@@ -30,7 +33,12 @@ class PHPLanguageStates(CodeStateMachine):
         self.match_case_count = 0
 
     def _state_global(self, token):
-        if token == 'use':
+        if token in _SKIPPED or (self.last_token in MEMBER_ACCESS
+                                 and token.isidentifier()):
+            # An arrow function (PHP 7.4+), a visibility modifier, or a
+            # member, `User::class` or `$app->use()`, starts no statement.
+            pass
+        elif token == 'use':
             # Enter use statement state
             self._state = self._state_use
         elif token == 'class':
@@ -41,18 +49,12 @@ class PHPLanguageStates(CodeStateMachine):
             # Treat 'function' as function declaration
             self.is_function_declaration = True
             self._state = self._function_name
-        elif token == 'fn':
-            # Skip arrow functions (PHP 7.4+), don't treat them as full functions
-            pass
         elif token == 'match':
             self.in_match = True
             self.match_case_count = 0
             self.next(self._match_expression)
         elif token in ('if', 'switch', 'for', 'foreach', 'while', 'catch'):
             self.next(self._condition_expected)
-        elif token in ('public', 'private', 'protected', 'static'):
-            # Skip visibility modifiers
-            pass
         elif token == '=>' and self.in_match:
             # Count each case in a match expression
             self.match_case_count += 1
