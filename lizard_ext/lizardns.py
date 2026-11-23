@@ -184,7 +184,7 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
             self._state = self._block_ending
         elif token in self.structures:
             if getattr(token, 'is_member_name', False):
-                pass                    # `def if(x)`: the name of a method
+                pass                    # `{ if: a }` / method name like `if`
             elif token == 'else':
                 self._state = self._after_else
             else:
@@ -211,7 +211,9 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
         self._state(token)
 
     def _block_ending(self, token):
-        decrement = token in self.matching_structures
+        # `} finally(e) {` in a class starts a method, not a clause.
+        decrement = (token in self.matching_structures
+                     and not getattr(token, 'is_member_name', False))
         self._reset_or_decrement_current_scope(decrement=decrement)
         self._state = self._state_global
         self._state(token)
