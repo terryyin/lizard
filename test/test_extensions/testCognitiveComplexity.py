@@ -635,6 +635,31 @@ class TestOtherBraceLanguages(unittest.TestCase):
                 return y
             }"""))
 
+    def test_groovy(self):
+        self.assertEqual([11], cogc("a.groovy", """
+            class OrderService {
+                def total(List items, BigDecimal discount = 0) {
+                    def sum = items.findAll { it.active && it.price > 0 }.sum() ?: 0   // +1
+                    if (discount) {                    // +1
+                        sum -= sum * discount
+                    }
+                    for (item in items)                // +1
+                        if (item.free) sum -= 1        // +2 (nesting=1)
+                    items.each { item ->               // a closure nests nothing, as in Kotlin
+                        if (item.gift) sum -= 1        // +1
+                    }
+                    while (busy)                       // +1
+                        wait()
+                    do {                               // +1
+                        sum--
+                    } while (sum > 9)
+                    switch (sum) {                     // +1
+                        case 0: return 'none'
+                        default: return sum > 9 ? 'big' : 'small'   // +2 (nesting=1)
+                    }
+                }
+            }"""))
+
     def test_rust(self):
         self.assertEqual([6], cogc("a.rs", """
             fn f(x: Option<i32>) -> i32 {
@@ -894,6 +919,20 @@ class TestJavaScriptKeywordAsTheNameOfAMember(unittest.TestCase):
             function step(o) {
               o.elseif(run);
             }"""))
+
+    def test_goto_is_no_jump(self):
+        code = """
+            async function open(page, router, url) {
+              await page.goto(url);
+              router?.goto(url);
+              goto(url);
+            }"""
+        for filename, source in (('a.js', code), ('a.ts', code),
+                                 ('a.jsx', code), ('a.tsx', code),
+                                 ('a.vue', '<script>' + code + '</script>'),
+                                 ('a.svelte', '<script>' + code + '</script>')):
+            with self.subTest(filename=filename):
+                self.assertEqual([0], cogc(filename, source))
 
 
 class TestJavaScriptGroupedExpressions(unittest.TestCase):

@@ -5,6 +5,7 @@ from .js_style_regex_context import (
     _LINE_ENDS,
     _REGEX_LITERAL_RE,
     _RUBY_EXPRESSION_KEYWORDS,
+    _STRING_LINE_ENDS,
     _apply_marks,
 )
 
@@ -42,7 +43,7 @@ def mark_forward(source, js_family):
             if ch == quote:
                 i += 1
                 return
-            if js_family and ch in line_ends:
+            if js_family and ch in _STRING_LINE_ENDS:
                 return
             i += 1
 

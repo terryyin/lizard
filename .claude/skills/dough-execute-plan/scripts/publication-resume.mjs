@@ -95,29 +95,23 @@ export async function resumeInterruptedPublication({
     const remoteTip = await revParse(ownedWorkspace, remoteTarget).catch(
       () => null,
     );
-    const held = await onFetchedTarget?.({
-      attempt: 0,
-      candidate: candidateSha,
-      remoteTip,
-    });
+    const held =
+      (await onFetchedTarget?.({
+        attempt: 0,
+        candidate: candidateSha,
+        remoteTip,
+      })) ||
+      (await doneRecordsStop({
+        workspace: ownedWorkspace,
+        candidate: candidateSha,
+        backlogPath,
+      }));
     if (held)
       return {
         classification: "not-on-remote",
         pushCount: 0,
         ...comparison,
         held,
-      };
-    const invalid = await doneRecordsStop({
-      workspace: ownedWorkspace,
-      candidate: candidateSha,
-      backlogPath,
-    });
-    if (invalid)
-      return {
-        classification: "not-on-remote",
-        pushCount: 0,
-        ...comparison,
-        held: invalid,
       };
     if (landingContext)
       await retainLandingComparison(
@@ -139,39 +133,11 @@ export async function resumeInterruptedPublication({
     if (!(await isAncestor(ownedWorkspace, candidateSha, remoteTarget))) {
       throw new Error("push did not accept the retained candidate");
     }
-    const landing = await captureLanding();
-    assertOwnedCommitsPreserved(
-      preserved,
-      await ownedCommitIdentity(ownedWorkspace),
-    );
-    appendIdentity(publishedRevisions, candidateSha);
-    const registration = registerIfBound(observer, candidateSha, targetRef);
-    const maintenance = await inspectDefaultCheckoutMaintenance(
-      ownedWorkspace,
-      defaultCheckout,
-      remote,
-      targetRef,
-    );
-    return {
-      classification: "not-on-remote",
-      ...(landing === undefined ? {} : { landing }),
-      completedObligation: "publish",
-      pushCount: 1,
-      acceptedSha: candidateSha,
-      ...comparison,
-      acceptedPublicationCount: publishedRevisions.length,
-      registration,
-      maintenance,
-      cleanup: "not-performed",
-      preservedHead: preserved.head,
-      preservedCommitCount: preserved.count,
-      remaining: remainingAfter(observer, candidateSha, targetRef, maintenance),
-    };
-  }
-
-  for (const stale of supersededShas) {
-    if (await isAncestor(ownedWorkspace, stale, remoteTarget)) {
-      throw new Error("a pre-rebase SHA must not be the published candidate");
+  } else {
+    for (const stale of supersededShas) {
+      if (await isAncestor(ownedWorkspace, stale, remoteTarget)) {
+        throw new Error("a pre-rebase SHA must not be the published candidate");
+      }
     }
   }
 
@@ -181,6 +147,9 @@ export async function resumeInterruptedPublication({
     await ownedCommitIdentity(ownedWorkspace),
   );
   const identityAppended = appendIdentity(publishedRevisions, candidateSha);
+  const pushedRegistration = accepted
+    ? undefined
+    : registerIfBound(observer, candidateSha, targetRef);
   const maintenance = await inspectDefaultCheckoutMaintenance(
     ownedWorkspace,
     defaultCheckout,
@@ -189,8 +158,8 @@ export async function resumeInterruptedPublication({
   );
   const published = {
     ...(landing === undefined ? {} : { landing }),
-    classification: "already-published",
-    pushCount: 0,
+    classification: accepted ? "already-published" : "not-on-remote",
+    pushCount: accepted ? 0 : 1,
     acceptedSha: candidateSha,
     ...comparison,
     acceptedPublicationCount: publishedRevisions.length,
@@ -199,6 +168,15 @@ export async function resumeInterruptedPublication({
     preservedHead: preserved.head,
     preservedCommitCount: preserved.count,
   };
+
+  if (pushedRegistration) {
+    return {
+      ...published,
+      completedObligation: "publish",
+      registration: pushedRegistration,
+      remaining: remainingAfter(observer, candidateSha, targetRef, maintenance),
+    };
+  }
 
   if (identityAppended) {
     return {
