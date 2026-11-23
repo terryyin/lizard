@@ -226,3 +226,62 @@ class TestCsharp(unittest.TestCase):
         add_func = next(f for f in result if f.name == "SimpleCalculator::Add")
         self.assertEqual(1, add_func.cyclomatic_complexity,
                         "Expression-bodied Add method should have complexity of 1")
+
+    def test_verbatim_identifier_is_not_a_keyword(self):
+        result = get_csharp_function_list('''
+            class Parser
+            {
+                int Weight(Token token) { return token.@if + token.@event; }
+                int Sum(int @case, int @while) { return @case + @while; }
+            }
+        ''')
+        self.assertEqual([1, 1], [f.cyclomatic_complexity for f in result])
+
+    def test_verbatim_identifier_is_not_a_structure(self):
+        result = FileAnalyzer(get_extensions(['nd', 'ns', 'cognitive'])).analyze_source_code("a.cs", '''
+            class Parser
+            {
+                int Sum(int @if, int @while) { return @if + @while; }
+            }
+        ''').function_list
+        self.assertEqual(0, result[0].max_nesting_depth)
+        self.assertEqual(0, result[0].max_nested_structures)
+        self.assertEqual(0, result[0].cognitive_complexity)
+
+    def test_verbatim_identifier_is_not_a_switch_in_modified_ccn(self):
+        result = FileAnalyzer(get_extensions(['modified'])).analyze_source_code("a.cs", '''
+            class Router
+            {
+                int Pick(int @switch) { return @switch; }
+            }
+        ''').function_list
+        self.assertEqual(1, result[0].cyclomatic_complexity)
+
+    def test_method_with_a_verbatim_name(self):
+        result = get_csharp_function_list('''
+            class Parser
+            {
+                int @if() { return 1; }
+                int Check() { return @if(); }
+            }
+        ''')
+        self.assertEqual(["Parser::if", "Parser::Check"], [f.name for f in result])
+
+    def test_class_with_a_verbatim_name(self):
+        result = get_csharp_function_list('''
+            class Node {}
+            class @class : Node
+            {
+                void Visit() {}
+            }
+        ''')
+        self.assertEqual(["class::Visit"], [f.name for f in result])
+
+    def test_verbatim_name_in_a_recursive_call(self):
+        result = FileAnalyzer(get_extensions(['cognitive'])).analyze_source_code("a.cs", '''
+            class Walker
+            {
+                void Walk() { @Walk(); }
+            }
+        ''').function_list
+        self.assertEqual(1, result[0].cognitive_complexity)
