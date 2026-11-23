@@ -3,7 +3,7 @@ Language parser for Dart
 '''
 
 from .code_reader import CodeReader
-from .clike import CLikeReader, CLikeStates, CLikeNestingStackStates
+from .clike import CLikeReader, CLikeStates, CLikeNestingStackStates, clike_tokens
 
 
 class DartReader(CLikeReader):
@@ -84,7 +84,7 @@ class DartReader(CLikeReader):
         # quotes; then nullable names, ??=, ??, ?.., ?.
         # `(?!\.)` keeps int?/T? from swallowing the ? of ?. and ?..
         # Closing ?> generics stay the existing <…?> token.
-        return CLikeReader.generate_tokens(
+        return clike_tokens(
             source_code,
             r"|(?:r)?'''[\s\S]*?'''" +
             r'|(?:r)?"""[\s\S]*?"""' +

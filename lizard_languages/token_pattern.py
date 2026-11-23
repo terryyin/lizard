@@ -76,7 +76,6 @@ def compiled_token_pattern(addition=''):
 
 def _compile_token_pattern(addition, flags):
     # DO NOT put any sub groups in the regex. Good for performance
-    until_end = r"(?:\\\n|[^\n])*"
     combined_symbols = [
         "<<=", ">>=", "||", "&&", "===", "!==",
         "==", "!=", "<=", ">=", "->", "=>",
@@ -94,7 +93,7 @@ def _compile_token_pattern(addition, flags):
         r"|\w+" +
         r"|\"(?:\\.|[^\"\\])*\"" +
         r"|\'(?:\\.|[^\'\\])*?\'" +
-        r"|\/\/" + until_end +
+        r"|\/\/[^\n]*" +
         r"|\#" +
         r"|:=|::|\*\*" +
         r"|" + _WILDCARD_ARGUMENTS +

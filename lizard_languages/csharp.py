@@ -2,7 +2,7 @@
 Language parser for C Sharp
 '''
 
-from .clike import CLikeReader, CLikeStates, CLikeNestingStackStates
+from .clike import CLikeReader, CLikeStates, CLikeNestingStackStates, clike_tokens
 
 
 # The reserved words of C#, and `record`, which this reader also reads as
@@ -44,7 +44,8 @@ class CSharpReader(CLikeReader):
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
         # A verbatim identifier, `@if`, is one name and never a keyword.
-        return CLikeReader.generate_tokens(
+        # // comments end on the same line (not C/C++ line continuation).
+        return clike_tokens(
                 source_code, r"|(?:\?\?)" + _VERBATIM_KEYWORD, token_class)
 
 
