@@ -40,7 +40,7 @@ A list of supported languages:
 -  Scala
 -  Solidity
 -  Structured Text (St)
--  Svelte
+-  Svelte (see `Svelte analysis <docs/svelte-analysis.md>`_)
 -  Swift
 -  TTCN-3
 -  TypeScript (With TSX)
