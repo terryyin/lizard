@@ -4,6 +4,7 @@ from .js_style_regex_context import (
     _EXPRESSION_KEYWORDS,
     _LINE_ENDS,
     _REGEX_LITERAL_RE,
+    _STRING_LINE_ENDS,
     _apply_marks,
     _is_property_before,
     _skip_ws_and_comments_back,
@@ -41,7 +42,7 @@ def mark_keyword_slashes(source):
                 if c == quote:
                     i += 1
                     break
-                if c in line_ends:
+                if c in _STRING_LINE_ENDS:
                     break
                 i += 1
             continue
@@ -104,7 +105,7 @@ def _skip_template(source, i, n, marks, match_literal, keywords):
                         if x == quote:
                             i += 1
                             break
-                        if x in line_ends:
+                        if x in _STRING_LINE_ENDS:
                             break
                         i += 1
                     continue
