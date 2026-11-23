@@ -182,10 +182,13 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
             if token == '}':
                 self._pop_scope()
             self._state = self._block_ending
-        elif token == 'else':
-            self._state = self._after_else
         elif token in self.structures:
-            self._state = self._in_structure_head
+            if getattr(token, 'is_member_name', False):
+                pass                    # `def if(x)`: the name of a method
+            elif token == 'else':
+                self._state = self._after_else
+            else:
+                self._state = self._in_structure_head
         elif token in ('.', '?.'):
             self._state = self._member_name
 

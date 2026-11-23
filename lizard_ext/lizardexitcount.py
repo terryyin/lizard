@@ -14,7 +14,8 @@ class LizardExtension:  # pylint: disable=R0903
             if not hasattr(reader.context.current_function, "exit_count"):
                 reader.context.current_function.exit_count = 1
                 first_return = True
-            if token == "return":
+            if token == "return" and \
+                    not getattr(token, 'is_member_name', False):
                 if first_return:
                     first_return = False
                 else:
