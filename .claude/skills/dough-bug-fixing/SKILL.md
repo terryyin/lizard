@@ -178,12 +178,10 @@ contradiction with it to the coordinator.
 When the owned workspace contains an authorized canonical story, executable
 plan, backlog change, or other durable planning evidence, those records follow
 [preparation disposition](../dough-story-refinement/references/preparation-disposition.md).
-Remove the disposable reproduction with
-[retained-artifacts.mjs](scripts/retained-artifacts.mjs). Name the disposable
-reproduction paths and the durable record. It removes only those disposable
-paths, leaves unrelated exploration content, and never commits or pushes.
-Until an explicit keep, the local draft remains in the owned workspace, is not
-published, and the module's result states that pending disposition. An
+Delete only the disposable reproduction paths inside the owned workspace. Keep
+the durable record and unrelated exploration content, and commit or push
+nothing. Until an explicit keep, the local draft remains in the owned
+workspace, is not published, and its disposition is reported as pending. An
 explicit keep lands this owned workspace through that disposition's
 [keep and publish](../dough-story-refinement/references/preparation-disposition.md#keep-and-publish-the-retained-result),
 which uses [Dough Land](../dough-land/SKILL.md); that keep stops while

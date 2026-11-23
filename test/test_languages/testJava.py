@@ -1,4 +1,5 @@
 import unittest
+from lizard import FileAnalyzer, get_extensions
 from .java_helpers import get_java_function_list
 
 
@@ -329,6 +330,51 @@ interface I {
             "int f(Map<String, ? super Integer> m, List<?> l) { return m.size() < l.size() ? 1 : 0; }")
         self.assertEqual(2, result[0].cyclomatic_complexity)
         self.assertEqual(2, result[0].parameter_count)
+
+    def test_nested_wildcards_add_no_condition(self):
+        code = """
+class A {
+  int f(List<? extends Class<?>> xs, Map<String, List<?>> m) {
+    Map<String, ? extends List<?>> y = null;
+    AtomicReference<Flow.Subscriber<? super List<ByteBuffer>>> s = null;
+    return 1;
+  }
+}
+"""
+        function = FileAnalyzer(get_extensions(['nd'])).analyze_source_code(
+            "a.java", code).function_list[0]
+        self.assertEqual(1, function.cyclomatic_complexity)
+        self.assertEqual(0, function.max_nesting_depth)
+        self.assertEqual(2, function.parameter_count)
+
+    def test_annotated_and_array_wildcards_add_no_condition(self):
+        result = get_java_function_list("""
+class A {
+  void f(Map<String, ? extends @Nullable Object> vars, List<? extends Object[]> rows) {
+    Map<Class<? extends @NonNull B>, B> copy = null;
+  }
+}
+""")
+        self.assertEqual(1, result[0].cyclomatic_complexity)
+
+    def test_ternary_next_to_nested_wildcards_counts(self):
+        result = get_java_function_list("""
+class A {
+  Object f(boolean c, int a, int b) {
+    Map<String, ? extends List<?>> m = c ? Map.<String, List<?>>of() : null;
+    return (a < b) ? List.<String>of() : new ArrayList<String>();
+  }
+}
+""")
+        self.assertEqual(3, result[0].cyclomatic_complexity)
+
+    def test_many_annotated_type_arguments_no_freeze(self):
+        """Annotated type arguments that end in a type the rule does not read must not backtrack for long."""
+        for argument in ("@A X, ", "@AX.Y, "):
+            code = "void test() { Box<?, " + argument * 40 + "X$Y> x = null; }"
+            result = get_java_function_list(code)
+            self.assertEqual(1, len(result))
+            self.assertEqual("test", result[0].name)
 
     def test_many_question_marks_after_less_than_no_freeze(self):
         """Multiple ? after < must not cause catastrophic backtracking."""

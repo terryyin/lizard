@@ -104,8 +104,10 @@ a later explicit landing uses the original launch's context.
    `git -C <owned-workspace> push <remote> <candidate>:refs/heads/<target-branch>`.
    Do not fast-forward the default checkout, force-push, or move that
    checkout's branch with `merge`, `update-ref`, or `branch -f`.
-6. After the push, fetch again and confirm the authorized remote contains
-   that exact candidate. That confirmation is publication acceptance. Do
+6. After the push, confirm from a fresh observation that the authorized
+   remote contains that exact candidate. A live read that shows the candidate
+   at the authorized target establishes acceptance directly. Fetch again when
+   the caller needs the target's history to establish containment. Do
    not require the default checkout's `HEAD`, index, or working tree to
    match. When this caller keeps published revisions, append that SHA; do
    not add a pre-rebase SHA or treat a later moving `HEAD` as the
