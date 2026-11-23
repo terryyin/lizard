@@ -60,10 +60,8 @@ export function rebaseInProgress(repoRoot) {
 // replayed off the branch actually being rebased — the opposite of whose
 // side is whose. `destination` is this step's actual parent (current HEAD,
 // which only equals `onto` for the first replayed commit; later commits
-// replay onto the previous step's own new commit). `onto` and `origHead` are
-// the rebase's overall destination and the branch's pre-rebase tip, which
-// stays reachable there for as long as the rebase remains unfinished or is
-// abandoned, so a stopped rebase never puts the unpublished suffix at risk.
+// replay onto the previous step's own new commit). `onto` is the rebase's
+// overall destination.
 // Returns `undefined` when no rebase is in progress.
 export function rebaseState(repoRoot) {
   const state = rebaseStateDirectory(repoRoot);
@@ -81,8 +79,6 @@ export function rebaseState(repoRoot) {
     replayedParent: gitLine(["rev-parse", `${replayedCommit}^`], repoRoot),
     destination: gitLine(["rev-parse", "HEAD"], repoRoot),
     onto: readOperationStateFile(join(state.directory, "onto")),
-    origHead: readOperationStateFile(join(state.directory, "orig-head")),
-    headName: readOperationStateFile(join(state.directory, "head-name")),
   };
 }
 

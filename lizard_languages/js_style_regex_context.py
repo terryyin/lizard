@@ -33,6 +33,11 @@ _EXPRESSION_KEYWORDS = frozenset({
     'return', 'typeof', 'instanceof', 'in', 'new', 'delete', 'void',
     'throw', 'case', 'do', 'else', 'yield',
 })
+# Ruby starts an expression after these words too: `if /^end$/ =~ s`.
+_RUBY_EXPRESSION_KEYWORDS = _EXPRESSION_KEYWORDS | frozenset({
+    'if', 'unless', 'elsif', 'when', 'while', 'until', 'and', 'or', 'not',
+    'then', 'next', 'break',
+})
 _NEEDS_FORWARD = re.compile(r'\b(?:for|async)\b')
 # Cheap gate from the same keyword set; longer names first so ``in`` loses to
 # ``instanceof``. Skip the shared scan when no keyword/=> can open a literal.
@@ -41,6 +46,8 @@ _MAYBE_KEYWORD_OPEN = re.compile(
     + '|'.join(sorted(_EXPRESSION_KEYWORDS, key=len, reverse=True))
     + r')\b|=>')
 _LINE_ENDS = frozenset('\r\n\u2028\u2029')
+# A string can hold U+2028 and U+2029, so only these end one that does not close.
+_STRING_LINE_ENDS = frozenset('\r\n')
 _WS = frozenset(' \t\v\f\r\n\u2028\u2029')
 _WORD_CONT = frozenset(
     'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_$')

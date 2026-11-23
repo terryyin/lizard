@@ -1,15 +1,14 @@
 // Replay only the owned unpublished suffix onto a newer authorized tip.
 // Suffixes touching the backlog or the done records beside it go through the
-// product-backlog rebase adapter; other suffixes use a raw rebase. Callers
-// own proof, push, and observation.
-import { posix } from "node:path";
+// product-backlog rebase adapter; other suffixes use a raw rebase, without
+// rename detection when they change only session records, whose near-identical
+// files would otherwise pair one writer's prune with another's new record.
+// Callers own proof, push, and observation.
 import { fileURLToPath } from "node:url";
+import { doneDirectoryBeside } from "../../dough-product-backlog/scripts/product-backlog-git-done-catalog.mjs";
+import { defaultBacklogPath } from "../../dough-product-backlog/scripts/product-backlog-store.mjs";
 import { exec, git } from "./publication-git.mjs";
-
-// Same default as dough-product-backlog; avoid importing that skill at module
-// load so a deployed execute-plan skill remains loadable alone until a
-// backlog-touching reconcile needs the adapter CLI beside it.
-export const defaultBacklogPath = ".planning/PRODUCT-BACKLOG.md";
+import { sessionRecordDirectoryBeside } from "./session-record.mjs";
 
 const rebaseCli = fileURLToPath(
   new URL(
@@ -17,11 +16,6 @@ const rebaseCli = fileURLToPath(
     import.meta.url,
   ),
 );
-
-// The done directory beside the backlog, spelled as dough-product-backlog's
-// `doneDirectoryBeside` spells it, for the same load-time reason as above.
-const doneDirectoryBeside = (backlogPath) =>
-  posix.join(posix.dirname(backlogPath), "done");
 
 async function suffixTouchesBacklogRecords(
   workspace,
@@ -41,6 +35,21 @@ async function suffixTouchesBacklogRecords(
     )
   ).stdout.trim();
   return names !== "";
+}
+
+async function suffixChangesOnlySessionRecords(
+  workspace,
+  base,
+  branch,
+  backlogPath,
+) {
+  const directory = `${sessionRecordDirectoryBeside(backlogPath)}/`;
+  const names = (
+    await git(workspace, "diff", "--name-only", `${base}..${branch}`)
+  ).stdout
+    .split("\n")
+    .filter(Boolean);
+  return names.length > 0 && names.every((name) => name.startsWith(directory));
 }
 
 async function rebaseThroughAdapter({
@@ -76,9 +85,10 @@ async function rebaseThroughAdapter({
   }
 }
 
-async function rebaseRaw(workspace, onto, upstream, branch) {
+async function rebaseRaw(workspace, onto, upstream, branch, renames = true) {
+  const config = renames ? [] : ["-c", "merge.renames=false"];
   try {
-    await git(workspace, "rebase", "--onto", onto, upstream, branch);
+    await git(workspace, ...config, "rebase", "--onto", onto, upstream, branch);
     return { ok: true };
   } catch (error) {
     return {
@@ -113,5 +123,11 @@ export async function reconcileOwnedSuffix({
       backlogPath,
     });
   }
-  return rebaseRaw(workspace, onto, upstream, branch);
+  const recordsOnly = await suffixChangesOnlySessionRecords(
+    workspace,
+    upstream,
+    branch,
+    backlogPath,
+  );
+  return rebaseRaw(workspace, onto, upstream, branch, !recordsOnly);
 }

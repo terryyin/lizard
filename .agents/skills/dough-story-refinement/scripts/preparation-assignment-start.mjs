@@ -4,6 +4,7 @@
 // assignment profile; the draft stays in the workspace.
 import { agentIdentity } from "../../dough-product-backlog/scripts/product-backlog-agent-profile.mjs";
 import { selectAgent } from "../../dough-execute-plan/scripts/agent-assignments.mjs";
+import { beginNativeSession } from "../../dough-execute-plan/scripts/execution-session-evidence.mjs";
 import { maintenance } from "../../dough-execute-plan/scripts/execution-start-maintenance.mjs";
 import { fastForwardToFetchedTrunk } from "../../dough-execute-plan/scripts/maintain-default-checkout.mjs";
 import {
@@ -15,6 +16,7 @@ import {
   configureAgentAuthorship,
   DeveloperIdentityRefused,
 } from "../../dough-execute-plan/scripts/workspace-agent-authorship.mjs";
+import { refinementSessionWorkflow } from "../../dough-execute-plan/scripts/session-record.mjs";
 import {
   backlogPath,
   remoteRef,
@@ -196,6 +198,11 @@ async function announce(request) {
     workspace,
     agentIdentity(agent.name),
   );
+  // A new announcement starts a new native session; a continued one keeps it.
+  beginNativeSession(workspace, {
+    story: request.identity,
+    workflow: refinementSessionWorkflow,
+  });
   const refresh = await maintenance(request);
   return {
     ok: true,

@@ -4,6 +4,7 @@ Base class for all language parsers
 
 import re
 from copy import copy
+from itertools import compress
 
 from .token_pattern import compiled_token_pattern, tokens_in_span
 
@@ -95,6 +96,67 @@ class CodeStateMachine:
         return decorator
 
 
+class MemberName(str):
+    """A keyword that names a member, `promise.catch(f)`: no metric counts
+    it as a structure."""
+
+    is_member_name = True
+
+
+# With a reader's conditions: the words that a metric counts as a
+# structure or a jump.
+_STRUCTURE_KEYWORDS = frozenset((
+    'else', 'elif', 'do', 'repeat', 'switch', 'case', 'try', 'except',
+    'finally', 'with', 'break', 'continue', 'goto', 'foreach', 'def'))
+_COMMENT_STARTS = ('//', '/*')
+_NOT_IN_TYPE_PARAMETERS = frozenset(('\n', '{', '}', ';', '='))
+_NOT_IN_OPERATORS = frozenset(' \t\n()[]{},;:\'"`@#$\\_')
+# Complete operators: in `a ..< .if` a member follows the range.
+_RANGE_OPERATORS = frozenset(('...', '..<'))
+
+
+def _is_operator(token):
+    return not any(c.isalnum() or c in _NOT_IN_OPERATORS for c in token)
+
+
+def _ends_dot_operator(tokens, index):
+    """True if the `.` at `index` ends an operator that starts with a
+    dot, such as `..` in `0..if` or a custom `.+.`."""
+    start = index
+    while index > 0 and _is_operator(tokens[index - 1]):
+        index -= 1
+    run = ''.join(tokens[index:start])
+    return run[:1] == '.' and run not in _RANGE_OPERATORS
+
+
+def _previous_code(tokens, index, line_breaks):
+    """The index of the token before `index`, or -1. With `line_breaks`,
+    line breaks and comments are skipped."""
+    index -= 1
+    while line_breaks and index >= 0 and (
+            tokens[index] == '\n' or tokens[index].startswith(_COMMENT_STARTS)):
+        index -= 1
+    return index
+
+
+def _before_type_parameters(tokens, index):
+    """The index of the token before the `<...>` that ends at `index`,
+    or -1."""
+    depth = 0
+    while index >= 0:
+        token = tokens[index]
+        if token == '>':
+            depth += 1
+        elif token == '<':
+            depth -= 1
+            if depth == 0:
+                return index - 1
+        elif token in _NOT_IN_TYPE_PARAMETERS:
+            return -1
+        index -= 1
+    return -1
+
+
 class CodeReader:
     """ CodeReaders are used to parse function structures from
     code of different
@@ -166,6 +228,33 @@ class CodeReader:
 
     def eof(self):
         pass
+
+    def mark_member_names(self, tokens, name_before, line_breaks=True,
+                          type_parameters=False):
+        """Drop the spaces but keep the line breaks, as the default
+        preprocessing does. Mark a keyword after a token of `name_before`
+        (a member access, or a keyword that declares a name) as the name
+        of a member. With `line_breaks`, line breaks and comments in
+        between are skipped. With `type_parameters`, so are type
+        parameters after a declaring keyword: `fun <T> catch()`.
+        Return a list."""
+        keywords = (_STRUCTURE_KEYWORDS | self.control_flow_keywords
+                    | self.case_keywords)
+        tokens = [t for t in tokens if not t.isspace() or t == '\n']
+        # Keywords are rare, so start from them and look back.
+        for index in compress(range(len(tokens)), map(keywords.__contains__, tokens)):
+            before = _previous_code(tokens, index, line_breaks)
+            if type_parameters and before > 0 and tokens[before] == '>':
+                before = _before_type_parameters(tokens, before)
+                if before < 0:
+                    continue
+                before = _previous_code(tokens, before + 1, line_breaks)
+                if before < 0 or not tokens[before].isalpha():
+                    continue    # Only a declaring keyword: `fun <T> catch`
+            if before >= 0 and tokens[before] in name_before and not (
+                    tokens[before] == '.' and _ends_dot_operator(tokens, before)):
+                tokens[index] = MemberName(tokens[index])
+        return tokens
 
     def process_token(self, token):
         """Process a token before normal handling.
