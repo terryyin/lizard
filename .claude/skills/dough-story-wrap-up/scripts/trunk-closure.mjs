@@ -2,11 +2,11 @@
 // Story wrap-up's Trunk Mode closure after the before-cleanup commit was
 // accepted: confirm the target holds that commit, publish the committed final
 // closure through managed delivery on this execution's own observer, run
-// completion once for the accepted SHA there, attempt the optional
-// default-checkout refresh, and only after a `success` receipt with confirmed
-// shutdown retire the worktree and branch through Dough Land's retirement
-// core. Any stop preserves the worktree, branch, and both closure commits and
-// names the unfinished step.
+// completion once for the accepted SHA there, only after a `success` receipt
+// with confirmed shutdown publish the session record, attempt the optional
+// default-checkout refresh, then retire the worktree and branch through Dough
+// Land's retirement core. Any stop preserves the worktree,
+// branch, and both closure commits and names the unfinished step.
 // For a selected completed supplier (`--supplier-identity`), an accepted final
 // closure first visits current consumers from the still-present worktree. A
 // clean visit, with no consumers and no discovery problems, continues in the
@@ -34,8 +34,11 @@ import { isAncestor } from "../../dough-execute-plan/scripts/workspace-publicati
 import { observerAccess } from "./trunk-closure-observer.mjs";
 import { settleFinalClosure } from "./trunk-closure-settlement.mjs";
 import { settledVisit } from "./trunk-closure-visit.mjs";
+import {
+  publishClosureRecord,
+  sealedCompletion,
+} from "./trunk-closure-session-record.mjs";
 import { finishArguments } from "./trunk-closure-arguments.mjs";
-
 import {
   completeFinalClosure,
   completionRecovery,
@@ -138,17 +141,14 @@ export async function finishTrunkClosure({
     observation,
     startReceipt: published.startReceipt,
   };
+  // Where the visit and the session record read and publish this closure.
+  const closure = { workspace, inspection, tracking, acceptedSha, targetRef };
+  Object.assign(closure, { branch, remote, backlogPath });
   const visited = await settledVisit({
-    workspace,
-    inspection,
-    tracking,
-    acceptedSha,
+    ...closure,
     supplierIdentity,
     visitSettled,
     observerDirectories: published.observerDirectories,
-    targetRef,
-    remote,
-    backlogPath,
   });
   if (visited.stopped) {
     const { stopped, ...detail } = visited;
@@ -157,7 +157,8 @@ export async function finishTrunkClosure({
   if (visited.visit) accepted.visit = visited.visit;
   const completed = visited.finalSha ?? acceptedSha;
   const { observation: completedObservation, completion } =
-    await completeFinalClosure({
+    sealedCompletion(workspace, acceptedSha) ??
+    (await completeFinalClosure({
       observation,
       sha: completed,
       workspace,
@@ -171,19 +172,26 @@ export async function finishTrunkClosure({
       preferredAlias,
       env,
       storage,
-    });
+    }));
   accepted.observation = completedObservation;
+  const closed = !completion
+    ? { stopped: "observation" }
+    : !receiptPermitsRetirement(completion)
+      ? { stopped: "completion", recovery: completionRecovery(completion) }
+      : await publishClosureRecord(closure, {
+          observation: completedObservation,
+          completion,
+        });
+  // After the record stage, so a published record reaches the checkout too.
   const refresh = await refreshDefaultCheckout({
     checkout: defaultCheckout,
     remote,
     integrationBranch: targetBranchName(targetRef),
   });
-  if (!completion) {
-    return stop("observation", { ...accepted, completion, refresh });
-  }
-  if (!receiptPermitsRetirement(completion)) {
-    const recovery = completionRecovery(completion);
-    return stop("completion", { ...accepted, completion, refresh, recovery });
+  if (closed.record) accepted.record = closed.record;
+  if (closed.stopped) {
+    const { stopped, ...detail } = closed;
+    return stop(stopped, { ...accepted, completion, refresh, ...detail });
   }
   const cleanup = await retireWorktree({
     repository,
@@ -193,7 +201,9 @@ export async function finishTrunkClosure({
     targetRef,
     identity,
     createdForWork,
-    contained: [...new Set([beforeCleanup, acceptedSha, completed])],
+    contained: [
+      ...new Set([beforeCleanup, acceptedSha, completed, closed.record?.sha]),
+    ].filter(Boolean),
   });
   return {
     ok: cleanup.removed === true,

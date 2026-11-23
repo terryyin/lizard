@@ -5,6 +5,23 @@ Language parser for C Sharp
 from .clike import CLikeReader, CLikeStates, CLikeNestingStackStates, clike_tokens
 
 
+# The reserved words of C#, and `record`, which this reader also reads as
+# a type keyword. Only these need `@` to be a name.
+_KEYWORDS = (
+    'abstract', 'as', 'base', 'bool', 'break', 'byte', 'case', 'catch',
+    'char', 'checked', 'class', 'const', 'continue', 'decimal', 'default',
+    'delegate', 'do', 'double', 'else', 'enum', 'event', 'explicit',
+    'extern', 'false', 'finally', 'fixed', 'float', 'for', 'foreach', 'goto',
+    'if', 'implicit', 'in', 'int', 'interface', 'internal', 'is', 'lock',
+    'long', 'namespace', 'new', 'null', 'object', 'operator', 'out',
+    'override', 'params', 'private', 'protected', 'public', 'readonly',
+    'record', 'ref', 'return', 'sbyte', 'sealed', 'short', 'sizeof',
+    'stackalloc', 'static', 'string', 'struct', 'switch', 'this', 'throw',
+    'true', 'try', 'typeof', 'uint', 'ulong', 'unchecked', 'unsafe',
+    'ushort', 'using', 'virtual', 'void', 'volatile', 'while')
+_VERBATIM_KEYWORD = r"|@(?:" + "|".join(_KEYWORDS) + r")\b"
+
+
 class CSharpReader(CLikeReader):
     # pylint: disable=R0903
 
@@ -26,8 +43,17 @@ class CSharpReader(CLikeReader):
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
+        # A verbatim identifier, `@if`, is one name and never a keyword.
+        # // comments end on the same line (not C/C++ line continuation).
         return clike_tokens(
-                source_code, r"|(?:\?\?)", token_class)
+                source_code, r"|(?:\?\?)" + _VERBATIM_KEYWORD, token_class)
+
+
+def _name(token):
+    """The name in a verbatim identifier: `@if` names `if`."""
+    if token[0] == '@' and token[1:2].isidentifier():
+        return token[1:]
+    return token
 
 
 class CSharpStates(CLikeStates):
@@ -79,7 +105,7 @@ class CSharpStates(CLikeStates):
             self.class_name = None
             self._state = self._state_class_declaration
         else:
-            super(CSharpStates, self)._state_global(token)
+            super(CSharpStates, self)._state_global(_name(token))
 
     def _state_class_declaration(self, token):
         if token == '(':  # Primary constructor
@@ -87,9 +113,9 @@ class CSharpStates(CLikeStates):
             self._state = self._state_primary_constructor
         elif token == '{':
             self._state = self._state_global
-        elif token[0].isalpha():
+        elif _name(token)[0].isalpha():
             if not self.class_name:  # Only set class name if not already set
-                self.class_name = token
+                self.class_name = _name(token)
 
     @CLikeStates.read_inside_brackets_then("()", "_state_class_declaration")
     def _state_primary_constructor(self, _):
