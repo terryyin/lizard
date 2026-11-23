@@ -81,8 +81,12 @@ _C_LIKE = {'switches': ('switch',), 'do_likes': ('do',), 'gotos': ('goto',)}
 # Blocks are not brace-delimited: increments without nesting penalty.
 _FLAT = {'nesting': False, 'ternary': False, 'jumps': ()}
 
-_JS_LIKE = dict(_C_LIKE, newline_ends_statement=True, nested_functions=True,
-                reserved_structures=True)
+# C-like, without goto: JavaScript has no goto statement, and
+# `page.goto(url)` is a call. reserved_structures: `{ if: a }` / method
+# names like catch are not control-flow structures.
+_JS_LIKE = {'switches': ('switch',), 'do_likes': ('do',),
+            'newline_ends_statement': True, 'nested_functions': True,
+            'reserved_structures': True}
 
 _PROFILES = {
     'cpp': _Profile(loops=('foreach',),         # Qt
@@ -110,6 +114,7 @@ _PROFILES = {
     'rust': _Profile(switches=('match',), do_likes=('loop',),
                      ternary=False, paren_heads=False),
     'scala': _Profile(switches=('match',), newline_ends_statement=True),
+    'groovy': _Profile(newline_ends_statement=True, **_C_LIKE),
     'perl': _Profile(catches=('catch',),         # Try::Tiny
                      gotos=('goto',), jumps=('last', 'next', 'redo')),
     'r': _Profile(ternary=False),               # ``switch()`` is a function
@@ -124,6 +129,7 @@ _PROFILES = {
                       case_insensitive=True, **_FLAT),
     'st': _Profile(switches=('case',), case_insensitive=True, **_FLAT),
     'tnsdl': _Profile(**_FLAT),
+    'twig': _Profile(jumps=()),                # no ``break``/``continue`` tags
 }
 
 _PYTHON = _Profile(switches=('match',))

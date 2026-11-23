@@ -1,9 +1,6 @@
 # DearDough Process Findings
 
-
 Shared evidence lives in the linked Open Dough records. Project-owned findings and qualified practices keep their original identities here.
-
-- DD-003 retired after `be8d3c273fd475a0cedc4d1e9da58ff596c6db0c` introduced a dependency stamp. Cold, warm, overlapping, changed-input and failure runs confirmed it. Eight executions are recoverable at `eebecc3e196a26f6f6b6a41df66ef97025a3361a:DearDough.md`.
 
 <a id="dd-404--absolute-sha-git-show-discriminators-fail-on-shallow-matrix-checkouts"></a>
 

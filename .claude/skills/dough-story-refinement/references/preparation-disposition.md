@@ -136,7 +136,8 @@ keep stops there and the decision goes to the developer or coordinator; do not
 land, retry, or reinterpret the story's new state.
 
 Then land the owned workspace through
-[Dough Land](../../dough-land/SKILL.md).
+[Dough Land](../../dough-land/SKILL.md), as a story preparation's
+[session close](../../dough-land/references/publish-reviewed-checkout.md#publish-a-session-close).
 Reuse the local checkout role and the target
 selection recorded in
 [Select or reuse the workspace](preparation-workspace.md#select-or-reuse-the-workspace).

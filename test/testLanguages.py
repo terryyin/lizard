@@ -1,6 +1,7 @@
 import unittest
 from lizard_languages import get_reader_for, CLikeReader, JavaReader, ObjCReader, JavaScriptReader, ScalaReader,\
-    GDScriptReader, SolidityReader, ErlangReader, StReader, GherkinReader
+    GDScriptReader, SolidityReader, ErlangReader, StReader, GherkinReader,\
+    TwigReader
 from lizard_languages.zig import ZigReader
 
 
@@ -46,3 +47,6 @@ class TestLanguageChooser(unittest.TestCase):
 
     def test_gherkin(self):
         self.assertEqual(GherkinReader, get_reader_for("a.feature"))
+
+    def test_twig(self):
+        self.assertEqual(TwigReader, get_reader_for("a.html.twig"))
