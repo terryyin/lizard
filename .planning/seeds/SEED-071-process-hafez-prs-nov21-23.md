@@ -82,3 +82,41 @@ disposition per PR.
 **Source:** Dashboard instruction to run lizard-process-pr and
 lizard-process-issue on PRs and issues updated in the past 48 hours
 (launch `cea9f0e7-5772-4dab-a8ef-0a0e54fd4396`).
+
+## Dispositions (SEED-071)
+
+Direction: within maintenance/bug-fixing/slight extension for all named PRs
+(new Groovy/Twig/Svelte readers follow existing multi-language patterns; no
+external signature changes).
+
+| PR | Disposition |
+| --- | --- |
+| #588 | Merged — Kotlin named-parameter lambdas |
+| #589 | Merged — Svelte markup functions/control flow |
+| #591 | Merged — Ruby keyword method names such as `m.end` |
+| #592 | Merged — Groovy reader |
+| #595 | Merged — Swift/Kotlin/PHP keyword members (maintainer conflict fix) |
+| #596 | Merged — Twig reader |
+| #598 | Merged — Ruby regex after keyword (maintainer conflict fix) |
+| #600 | Merged — JS/TS `page.goto` not cognitive goto |
+| #601 | Merged — JS/TS keyword method/key names (maintainer conflict fix) |
+| #602 | Merged — `//` ends on its line outside C family (maintainer conflict fix with #604) |
+| #603 | Merged — nested generic `?` not ternary |
+| #604 | Merged — C# verbatim `@if` identifiers |
+| #605 | Merged — Scala function body end |
+| #606 | Merged — extension state reset per file |
+| #607 | Merged — JS U+2028/U+2029 in strings |
+| #582 | Left open — conflicts with current ASI/implied-semicolon API; needs rebase + ND/NS paired benchmark |
+| #590 | Draft left open — review note posted |
+| #593 | Draft left open — review note posted |
+| #594 | Draft left open — review note posted |
+| #597 | Draft left open — review note posted |
+| #599 | Draft left open — review note posted |
+| #608 | Draft left open — review note posted |
+| #609 | Draft left open — review note posted |
+| #610 | Draft left open — review note posted |
+| #611 | Draft left open — review note posted |
+
+Issues in the 48-hour window: none created or updated.
+
+Acknowledgement comments posted on merged PRs; review notes on drafts and #582.
