@@ -153,19 +153,25 @@ class VueReader(TypeScriptReader):
     def __init__(self, context):
         super(VueReader, self).__init__(context)
 
-    @staticmethod
-    def generate_tokens(source_code, addition='', token_class=None):
-        """The code of the script blocks, tokenized by their lang. The
-        markup keeps only its newlines, so the lines are those of the file."""
+    @classmethod
+    def generate_tokens(cls, source_code, addition='', token_class=None):
+        """The code of the script blocks, tokenized by their lang, and the
+        tokens of the markup around them."""
         pos = 0
         for tag_start, tag, code, code_end in _script_blocks(source_code):
-            yield from repeat('\n', source_code.count('\n', pos, tag_start))
+            yield from cls.markup_tokens(source_code, pos, tag_start)
             yield tag
             tokenizer = (TSXReader.generate_tokens if tag.lang in ('tsx', 'jsx')
                          else TypeScriptReader.generate_tokens)
             yield from tokenizer(code, addition, token_class)
             pos = code_end
-        yield from repeat('\n', source_code.count('\n', pos))
+        yield from cls.markup_tokens(source_code, pos, len(source_code))
+
+    @staticmethod
+    def markup_tokens(source_code, start, end):
+        """The markup keeps only its newlines, so the lines are those of
+        the file."""
+        return repeat('\n', source_code.count('\n', start, end))
 
     def code_tokens(self, tokens):
         """Code tokens; a script tag sets the lang of the code after it."""

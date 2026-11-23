@@ -30,7 +30,7 @@ class _Profile(object):  # pylint: disable=R0902,R0903
                  paren_heads=True, newline_ends_statement=False,
                  nullable_types=False, rvalue_refs=False, lambda_style=None,
                  case_insensitive=False, nesting=True,
-                 nested_functions=False):
+                 nested_functions=False, reserved_structures=False):
         # Structures the reader does not list; completed in ``for_reader``.
         self.ifs = frozenset(ifs)
         self.else_ifs = frozenset(else_ifs)
@@ -61,6 +61,9 @@ class _Profile(object):  # pylint: disable=R0902,R0903
         # The reader starts a nested function in the middle of an expression
         # of the enclosing one (JavaScript callbacks).
         self.nested_functions = nested_functions
+        # A structure word is never a call, even in a function of that name:
+        # `catch (e)` in a JavaScript method named `catch`.
+        self.reserved_structures = reserved_structures
 
     def for_reader(self, reader):
         """A copy with the roles of the reader's control-flow keywords added."""
@@ -79,9 +82,11 @@ _C_LIKE = {'switches': ('switch',), 'do_likes': ('do',), 'gotos': ('goto',)}
 _FLAT = {'nesting': False, 'ternary': False, 'jumps': ()}
 
 # C-like, without goto: JavaScript has no goto statement, and
-# `page.goto(url)` is a call.
+# `page.goto(url)` is a call. reserved_structures: `{ if: a }` / method
+# names like catch are not control-flow structures.
 _JS_LIKE = {'switches': ('switch',), 'do_likes': ('do',),
-            'newline_ends_statement': True, 'nested_functions': True}
+            'newline_ends_statement': True, 'nested_functions': True,
+            'reserved_structures': True}
 
 _PROFILES = {
     'cpp': _Profile(loops=('foreach',),         # Qt
@@ -109,6 +114,7 @@ _PROFILES = {
     'rust': _Profile(switches=('match',), do_likes=('loop',),
                      ternary=False, paren_heads=False),
     'scala': _Profile(switches=('match',), newline_ends_statement=True),
+    'groovy': _Profile(newline_ends_statement=True, **_C_LIKE),
     'perl': _Profile(catches=('catch',),         # Try::Tiny
                      gotos=('goto',), jumps=('last', 'next', 'redo')),
     'r': _Profile(ternary=False),               # ``switch()`` is a function
@@ -123,6 +129,7 @@ _PROFILES = {
                       case_insensitive=True, **_FLAT),
     'st': _Profile(switches=('case',), case_insensitive=True, **_FLAT),
     'tnsdl': _Profile(**_FLAT),
+    'twig': _Profile(jumps=()),                # no ``break``/``continue`` tags
 }
 
 _PYTHON = _Profile(switches=('match',))

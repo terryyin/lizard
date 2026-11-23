@@ -11,6 +11,8 @@ from .clike_states import CLikeStates
 # prefix). Stops at the first ')"'. Custom delimiters use the normal string rule.
 # See #451, #478; subgroup-free per CodeReader.generate_tokens.
 _CPP_RAW_STRING_TOKEN = r"|(?:u8|u|U|L)?R\"\((?:[^)]|\)(?!\"))*\)\""
+# In C and C++, a backslash at the end of a line continues a // comment on the next line.
+_C_LINE_COMMENT = r"|\/\/(?:\\\n|[^\n])*"
 
 
 class CCppCommentsMixin(object):  # pylint: disable=R0903
@@ -19,6 +21,15 @@ class CCppCommentsMixin(object):  # pylint: disable=R0903
     def get_comment_from_token(token):
         if token.startswith("/*") or token.startswith("//"):
             return token[2:]
+
+
+def clike_tokens(source_code, addition='', token_class=None):
+    """The tokens of a C-like language, in which a // comment ends at its line."""
+    addition = _CPP_RAW_STRING_TOKEN + \
+        r"|(?:\d*\.\d+(?:[eE][-+]?\d+)?)" + \
+        r"|(?:\d+\.(?:\d+)?(?:[eE][-+]?\d+)?)" + \
+        addition
+    return CodeReader.generate_tokens(source_code, addition, token_class)
 
 
 # pylint: disable=R0903
@@ -38,11 +49,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
-        addition = _CPP_RAW_STRING_TOKEN + \
-                  r"|(?:\d*\.\d+(?:[eE][-+]?\d+)?)" + \
-                  r"|(?:\d+\.(?:\d+)?(?:[eE][-+]?\d+)?)" + \
-                  addition
-        return CodeReader.generate_tokens(source_code, addition, token_class)
+        return clike_tokens(source_code, addition + _C_LINE_COMMENT, token_class)
 
     def preprocess(self, tokens):
         tilde = False
