@@ -149,6 +149,8 @@ class _BraceActions(object):
             self._resolve_pending(token)
         if _is_word(token):
             self._arm_word(token)
+            if getattr(token, 'is_member_name', False):
+                return                  # `m.if`: the name of a method
         if token in self.logical_ops:
             self._logical_operator(token)
         elif token in _EXPRESSION_BREAKERS:
@@ -162,7 +164,9 @@ class _BraceActions(object):
             if token not in _NOT_TERNARY_NEXT:
                 self._structural()
         if token in profile.ifs:
-            if state.prev != 'else':    # ``ELSE IF`` is one hybrid increment
+            # ``ELSE IF`` is one hybrid increment; `m.else` is a method.
+            if state.prev != 'else' or \
+                    getattr(state.prev, 'is_member_name', False):
                 self._structural()
         elif token in profile.else_ifs or token == 'else' or \
                 token in profile.loops or token in profile.do_likes or \

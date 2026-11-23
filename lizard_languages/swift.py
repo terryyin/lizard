@@ -63,9 +63,18 @@ def _is_local_name(token):
 
 class SwiftReplaceLabel:
     _DECLARATION_LABELS = []
+    # A keyword after these tokens names a member: `promise.catch { }`.
+    _BEFORE_MEMBER_NAME = frozenset(('.',))
+    # Swift allows no line break or comment after a `.`.
+    _MEMBER_ACCESS_SPANS_LINES = False
+    # A Swift declaration puts its type parameters after the name.
+    _TYPE_PARAMETERS_BEFORE_NAME = False
 
     def preprocess(self, tokens):
-        tokens = [t for t in tokens if not t.isspace() or t == '\n']
+        tokens = self.mark_member_names(
+            tokens, self._BEFORE_MEMBER_NAME,
+            line_breaks=self._MEMBER_ACCESS_SPANS_LINES,
+            type_parameters=self._TYPE_PARAMETERS_BEFORE_NAME)
         labels = {k for k in self.conditions if k.isalpha()}
         labels.update(self._DECLARATION_LABELS)
         index = 0
@@ -139,7 +148,8 @@ class SwiftReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
             if self._enum_braces:
                 self._enum_braces.pop()
         elif token == 'case' and self._enum_braces \
-                and self._enum_braces[-1]:
+                and self._enum_braces[-1] \
+                and not getattr(token, 'is_member_name', False):
             self.context.add_condition(-1)
 
     @staticmethod
@@ -206,24 +216,31 @@ class SwiftStates(GoLikeStates):  # pylint: disable=R0903
     def __init__(self, context):
         super(SwiftStates, self).__init__(context)
         self._previous_token = None
+        self._dot_line = None
         self._accessor = None
         self._accessor_step = None
         self._accessor_tokens = []
         self._property = None
 
     def _state_global(self, token):
+        if self._previous_token == '.' and _is_local_name(token) \
+                and self._dot_line == self.context.current_line:
+            # A member, `.init()` or `Foo.protocol`, declares nothing.
+            # Swift allows no line break after the `.`.
+            self._previous_token = token
+            return
         name = self._introduced_function(token)
         if name is not None:
             self.context.push_new_function('')
             self.next(self._function_name, name)
-        elif token in self._ACCESSORS and self._previous_token != '.':
+        elif token in self._ACCESSORS:
             self._accessor = (token, self.context.current_line)
             self._accessor_step = 'name'
             self._accessor_tokens = []
             self._state = self._accessor_head
         elif token == 'protocol':
             self._state = self._protocol
-        elif token in ('let', 'var') and self._previous_token != '.' \
+        elif token in ('let', 'var') \
                 and self.context.current_function is \
                 self.context.global_pseudo_function:
             self._property = _PropertyHeader(token)
@@ -233,11 +250,17 @@ class SwiftStates(GoLikeStates):  # pylint: disable=R0903
         else:
             super(SwiftStates, self)._state_global(token)
         if token != '\n':
+            # As `_remember`, inline because most tokens come here.
             self._previous_token = token
+            if token == '.':
+                self._dot_line = self.context.current_line
+
+    def _remember(self, token):
+        self._previous_token = token
+        if token == '.':
+            self._dot_line = self.context.current_line
 
     def _introduced_function(self, token):
-        if self._previous_token == '.':
-            return None
         if token in self._FAILABLE_INITIALIZERS:
             return self._FAILABLE_INITIALIZERS[token]
         if token in ('init', 'subscript'):
@@ -294,7 +317,7 @@ class SwiftStates(GoLikeStates):  # pylint: disable=R0903
         # A computed property or a closure-initialized property is code
         # that runs on access, so it is reported as a function named after
         # the property. Locals inside functions stay with the function.
-        self._previous_token = token
+        self._remember(token)
         if _is_local_name(token):
             self._property.named(token, self.context)
             self._state = self._property_after_name
@@ -302,7 +325,7 @@ class SwiftStates(GoLikeStates):  # pylint: disable=R0903
             self._state = self._state_global
 
     def _property_after_name(self, token):
-        self._previous_token = token
+        self._remember(token)
         if token == ':':
             self._property.line = self.context.current_line
             self._state = self._property_type
@@ -333,7 +356,7 @@ class SwiftStates(GoLikeStates):  # pylint: disable=R0903
             elif token in (')', ']', '>'):
                 header.depth -= 1
             header.line = self.context.current_line
-        self._previous_token = token
+        self._remember(token)
 
     def _property_initializer(self, token):
         if token == '{':
@@ -372,7 +395,7 @@ class SwiftStates(GoLikeStates):  # pylint: disable=R0903
         function.token_count += tokens
 
     def _expect_declaration_name(self, token):
-        self._previous_token = token
+        self._remember(token)
         self._state = self._state_global
 
     @CodeStateMachine.read_inside_brackets_then("{}")

@@ -3,7 +3,7 @@ Language parser for Java
 '''
 
 from lizard_languages.code_reader import CodeStateMachine
-from .clike import CLikeReader, CLikeStates, CLikeNestingStackStates
+from .clike import CLikeReader, CLikeStates, CLikeNestingStackStates, clike_tokens
 
 # "record" is a keyword for type declarations, but a valid method/field name.
 # Treat as keyword only when it cannot be the name in "Type name" (field/method/parameter).
@@ -56,6 +56,10 @@ class JavaReader(CLikeReader):
         self.parallel_states = [
                 JavaStates(context),
                 CLikeNestingStackStates(context)]
+
+    @staticmethod
+    def generate_tokens(source_code, addition='', token_class=None):
+        return clike_tokens(source_code, addition, token_class)
 
 
 class JavaStates(CLikeStates):  # pylint: disable=R0903

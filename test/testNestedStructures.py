@@ -1,5 +1,6 @@
 import unittest
 
+from lizard import FileAnalyzer, get_extensions
 from .testHelpers import get_cpp_function_list_with_extension
 from lizard_ext.lizardns import LizardExtension as NestedStructure
 
@@ -259,3 +260,46 @@ class TestCppNestedStructures(unittest.TestCase):
         }
         """)
         self.assertEqual(2, result[0].max_nested_structures)
+
+
+class TestNestedStructuresAcrossFiles(unittest.TestCase):
+    """The CLI reads all files with one extension object, and a file can
+    end anywhere: inside a block, or in the condition of a structure."""
+
+    PLAIN_JS = """
+    function plainJs(x) {
+      if (x) {
+        return 1;
+      }
+      return 2;
+    }
+    """
+
+    PLAIN_C = """
+    int plain(int x) {
+      if (x) {
+        return 1;
+      }
+      return 2;
+    }
+    """
+
+    def test_file_after_a_file_that_ends_inside_a_block(self):
+        self.assertEqual([1], self.nested_structures_after(
+            ("cut.js", "if (a) {\n  if (b) {\n"), ("c.js", self.PLAIN_JS)))
+
+    def test_file_after_a_file_that_ends_in_a_condition(self):
+        self.assertEqual([1], self.nested_structures_after(
+            ("cut.c", "int f(int a) {\n  if (g(a"), ("c.c", self.PLAIN_C)))
+
+    def test_file_in_another_language(self):
+        self.assertEqual([1], self.nested_structures_after(
+            ("cut.c", "int f(int a) {\n  if (a) {\n    while (b) {\n"),
+            ("c.js", self.PLAIN_JS)))
+
+    @staticmethod
+    def nested_structures_after(first, second):
+        analyzer = FileAnalyzer(get_extensions([NestedStructure()]))
+        analyzer.analyze_source_code(*first)
+        functions = analyzer.analyze_source_code(*second).function_list
+        return [f.max_nested_structures for f in functions]
