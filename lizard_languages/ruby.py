@@ -17,11 +17,44 @@ class MyToken(str):
         self.begin = value.start() if hasattr(value, 'start') else 0
 
 
+class _MethodName(str):
+    """A keyword that names a method, `m.end(0)` or `def self.for(user)`:
+    neither the reader nor a metric reads it as a structure."""
+
+    is_member_name = True
+
+
+# The words that the reader or a metric reads as a structure.
+_KEYWORDS = frozenset((
+    'begin', 'end', 'do', 'then', 'def', 'class', 'module', 'it',
+    'if', 'unless', 'else', 'elsif', 'elseif', 'elif', 'case', 'when',
+    'while', 'until', 'for', 'foreach', 'and', 'or', 'rescue', 'ensure',
+    'try', 'catch', 'finally', 'except', 'switch', 'with', 'return',
+    'yield'))
+_NAME_BEFORE = frozenset(('.', 'def'))
+
+
 class RubyReader(RubylikeReader):
     # pylint: disable=R0903
 
     ext = ['rb']
     language_names = ['ruby']
+
+    @staticmethod
+    def preprocess(tokens):
+        """Drop spaces, and mark a keyword right after '.', '&.' or 'def'
+        on the same line as the name of a method."""
+        keywords, name_before = _KEYWORDS, _NAME_BEFORE
+        name_follows = False
+        for token in tokens:
+            if token.isspace() and token != '\n':
+                continue
+            if name_follows and token in keywords:
+                name_follows = False
+                yield _MethodName(token)
+                continue
+            name_follows = token in name_before
+            yield token
 
     @staticmethod
     @js_style_regex_expression(language='ruby')

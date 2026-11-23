@@ -113,6 +113,26 @@ class Test_function_boundaries(unittest.TestCase):
                 with self.subTest(newline=repr(newline), filename=filename):
                     self.assert_spans(filename, code, expected)
 
+    def test_string_with_a_line_separator_does_not_end_at_it(self):
+        # U+2028 and U+2029 are valid in a string literal since ES2019.
+        bodies = (
+            '  const s = "%s"; return /}/.test(x);',
+            "  const s = '%s'; return /}/.test(x);",
+            '  for (;;) { const s = "%s"; return /}/.test(x); }',
+            '  return `${"%s" + typeof /{/}`;',
+        )
+        for separator in ('\u2028', '\u2029'):
+            for head in ('function', 'async function'):
+                for body in bodies:
+                    code = (head + ' a(x) {\n' + body % separator
+                            + '\n}\nfunction b() {\n  return 2;\n}\n')
+                    for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+                        with self.subTest(separator=repr(separator),
+                                          code=code, filename=filename):
+                            self.assert_spans(
+                                filename, code,
+                                [('a', 1, 3, 3), ('b', 4, 6, 3)])
+
     def test_existing_literals_preserve_function_ranges(self):
         expressions = ('x', '`${x}`', 'x.replace(/x/g, "y")',
                        r'x.split(/\s+/)', '/[<>"]/.test(x)', 'x.match(/`/)',

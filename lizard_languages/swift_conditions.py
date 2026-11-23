@@ -36,6 +36,11 @@ def _is_type_name(token):
         len(name) > 2 and name[0] == name[-1] == '`')
 
 
+def _is_member_name(token):
+    # `key == .else` and `tool.repeat { }` name a member.
+    return getattr(token, 'is_member_name', False)
+
+
 def _brace_is_body(keyword, nxt):
     if nxt == 'else':
         return keyword != 'guard'
@@ -92,7 +97,8 @@ class _ConditionList:
                 return True
             return self._depth >= 0
         elif self._depth == 0:
-            if token == ';' or (token == 'else' and self._keyword == 'guard'):
+            if token == ';' or (token == 'else' and self._keyword == 'guard'
+                                and not _is_member_name(token)):
                 return False
             if token == ',':
                 self._context.add_condition()
@@ -149,7 +155,8 @@ class SwiftConditionLists:
             self._lists = [
                 lst for lst in self._lists if lst.consume(token, line)]
         if token == '{':
-            self._repeat_braces.append(previous == 'repeat')
+            self._repeat_braces.append(
+                previous == 'repeat' and not _is_member_name(previous))
         elif token == '}' and self._repeat_braces:
             self._closed_repeat = self._repeat_braces.pop()
         elif token in _STARTS and previous != '.' and not (

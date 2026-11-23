@@ -33,7 +33,7 @@ Curried arrows keep the existing outer-only reporting convention. In
 additional reported functions or replace `f`'s enclosing ternary context.
 
 These rules share the JavaScript, TypeScript, JSX, TSX, Vue and Svelte script
-reader paths. `.cjs` and `.mjs` use the JavaScript reader too. The existing object-comma
+reader paths and the expressions in Svelte markup. `.cjs` and `.mjs` use the JavaScript reader too. The existing object-comma
 limitation remains: a sibling arrow after a comma can be absorbed into the
 preceding object-member arrow, even without a ternary.
 
