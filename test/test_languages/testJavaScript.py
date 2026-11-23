@@ -282,6 +282,296 @@ class Test_JavaScript_keyword_as_the_name_of_a_member(unittest.TestCase):
                          [(f.name, f.cyclomatic_complexity, f.complex_tags)
                           for f in functions])
 
+    def test_method_named_like_a_keyword(self):
+        code = '''
+class Deferred {
+  catch(onRejected) {
+    if (onRejected) { return this.then(null, onRejected); }
+    return this;
+  }
+  static finally(promise) { return promise; }
+  async if(x) { return x; }
+  get switch() { return this.state; }
+  static { registry.add(this); }
+  other() { return 1; }
+  finally(done) { if (done) { done(); } return this; }
+}
+const thenable = {
+  catch(e) { if (e) { return 1; } return 2; },
+  *while(x) { yield x; },
+  ok() { return 1; }
+};
+'''
+        expected = [('catch', 2, 1), ('finally', 1, 0), ('if', 1, 0),
+                    ('get switch', 1, 0), ('other', 1, 0), ('finally', 2, 1),
+                    ('catch', 2, 1), ('while', 1, 0), ('ok', 1, 0)]
+        analyzer = FileAnalyzer(get_extensions(['ns']))
+        for filename, source in (('a.js', code), ('a.ts', code),
+                                 ('a.jsx', code), ('a.tsx', code),
+                                 ('a.vue', '<script>' + code + '</script>'),
+                                 ('a.svelte', '<script>' + code + '</script>')):
+            with self.subTest(filename=filename):
+                functions = analyzer.analyze_source_code(
+                    filename, source).function_list
+                # A .svelte file also reports its component.
+                self.assertEqual(expected, [(f.name, f.cyclomatic_complexity,
+                                             f.max_nested_structures)
+                                            for f in functions
+                                            if f.name != '(component)'])
+
+    def test_generic_method_named_like_a_keyword(self):
+        code = '''
+function wrap(promise) {
+  return {
+    catch<T>(onRejected: (e: unknown) => T) {
+      if (onRejected) { return promise.catch(onRejected); }
+      return promise;
+    }
+  };
+}
+'''
+        for filename in ('a.ts', 'a.tsx'):
+            with self.subTest(filename=filename):
+                functions = analyze_file.analyze_source_code(
+                    filename, code).function_list
+                self.assertEqual([('catch', 2), ('wrap', 1)],
+                                 [(f.name, f.cyclomatic_complexity)
+                                  for f in functions])
+
+    def test_key_named_like_a_keyword_is_no_structure(self):
+        code = '''
+function options(a) {
+  return { if: a, for: a, while: a, case: a, do: a, else: a };
+}
+function read({ catch: onError, finally: done }) {
+  const { try: attempt, switch: choose } = onError;
+  return attempt && done(choose);
+}
+class Flags {
+  catch = (e) => e;
+  switch: boolean;
+}
+'''
+        analyzer = FileAnalyzer(get_extensions(
+            ['cognitive', 'nd', 'ns', ComplexTags()]))
+        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+            source = code if filename.startswith('a.t') else code.replace(
+                '  switch: boolean;\n', '')
+            with self.subTest(filename=filename):
+                functions = analyzer.analyze_source_code(
+                    filename, source).function_list
+                self.assertEqual(
+                    [('options', 1, 0, 0, 0, []),
+                     ('read', 2, 1, 1, 0, [['&&', 7]]),
+                     ('catch', 1, 0, 0, 0, [])],
+                    [(f.name, f.cyclomatic_complexity,
+                      f.cognitive_complexity, f.max_nesting_depth,
+                      f.max_nested_structures, f.complex_tags)
+                     for f in functions])
+
+    def test_key_named_function(self):
+        code = '''
+function load(content) {
+  const { function: wrapper, sourceMapURL } = compile(content);
+  if (sourceMapURL) {
+    cache(wrapper);
+  }
+}
+class Coverage {
+  summary(options) {
+    const totals = { function: options.functions, line: options.lines };
+    if (options.empty) { return totals; }
+    return totals;
+  }
+  cleanup() { return 1; }
+}
+function call({ function: fn, args }) {
+  if (fn) { return fn(args); }
+}
+'''
+        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+            with self.subTest(filename=filename):
+                functions = analyze_file.analyze_source_code(
+                    filename, code).function_list
+                self.assertEqual(
+                    [('load', 2, 2, 7), ('summary', 2, 9, 13),
+                     ('cleanup', 1, 14, 14), ('call', 2, 16, 18)],
+                    [(f.name, f.cyclomatic_complexity, f.start_line,
+                      f.end_line) for f in functions])
+
+    def test_function_expression_as_a_default_value_is_no_method(self):
+        code = '''
+const { run = async function (x) { return x; }, id } = options;
+const { stop = flag ? async function (x) { return x; } : noop } = options;
+const { wait = (async function (x) { return x; })(1), rest } = options;
+const hooks = { ready: 1, async function(x) { return x; } };
+'''
+        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+            with self.subTest(filename=filename):
+                functions = analyze_file.analyze_source_code(
+                    filename, code).function_list
+                self.assertEqual(
+                    [('run', 2), ('stop', 3), ('wait', 4), ('function', 5)],
+                    [(f.name, f.start_line) for f in functions])
+
+    def test_structure_at_the_start_of_a_block_is_no_method(self):
+        code = '''
+function close(stream) {
+  try { stream.end(); } catch { if (stream.destroy) { stream.destroy(); } }
+}
+function pick(kind) {
+  switch (kind) {
+    case 1: { if (kind) { return 1; } break; }
+    default: { while (kind) { kind--; } }
+  }
+}
+function drain(queue) {
+  try { queue.run(); } finally { for (;;) { queue.pop(); } }
+}
+function flush(queue) {
+  try { queue.run(); } finally { { if (queue.left) { queue.pop(); } } }
+}
+function release(x) {
+  try { x.run(); } finally { cleanup: { if (!x) break cleanup; x.close(); } }
+}
+function resume(stop, x) {
+  if (stop) return
+  { if (x) { run(); } }
+}
+function* produce(x) {
+  yield
+  { if (x) { run(); } }
+}
+function build(flag) {
+  return class { static { load(); if (flag) { setup(); } } };
+}
+function connect(host, retries) {
+  const address = { interface: host, port: 80 };
+  if (host) { open(address); }
+  while (retries--) { open(address); }
+}
+'''
+        analyzer = FileAnalyzer(get_extensions(['cognitive', 'nd', 'ns']))
+        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+            with self.subTest(filename=filename):
+                functions = analyzer.analyze_source_code(
+                    filename, code).function_list
+                self.assertEqual(
+                    [('close', 3, 3, 2, 2), ('pick', 4, 5, 2, 2),
+                     ('drain', 2, 1, 1, 2), ('flush', 2, 1, 1, 2),
+                     ('release', 2, 2, 1, 2), ('resume', 3, 2, 1, 1),
+                     ('produce', 2, 1, 1, 1), ('build', 2, 1, 1, 1),
+                     ('connect', 3, 2, 1, 1)],
+                    [(f.name, f.cyclomatic_complexity,
+                      f.cognitive_complexity, f.max_nesting_depth,
+                      f.max_nested_structures) for f in functions])
+
+    def test_structure_in_a_block_after_a_line_break(self):
+        code = '''
+function check(x: unknown) {
+  x!
+  { if (x) { work(); } }
+}
+function freeze(x: boolean) {
+  const values = [1] as const
+  { if (x) { work(); } }
+}
+function assert(of: unknown) {
+  of!
+  { if (of) { work(); } }
+}
+function pick(factory: Factory) {
+  const make = factory.of
+  { if (make) { make(); } }
+}
+function take(of: number) {
+  let n = of
+  { if (n) { work(); } }
+}
+'''
+        analyzer = FileAnalyzer(get_extensions(['cognitive', 'nd', 'ns']))
+        for filename in ('a.ts', 'a.tsx'):
+            with self.subTest(filename=filename):
+                functions = analyzer.analyze_source_code(
+                    filename, code).function_list
+                self.assertEqual(
+                    [('check', 2, 1, 1, 1), ('freeze', 2, 1, 1, 1),
+                     ('assert', 2, 1, 1, 1), ('pick', 2, 1, 1, 1),
+                     ('take', 2, 1, 1, 1)],
+                    [(f.name, f.cyclomatic_complexity,
+                      f.cognitive_complexity, f.max_nesting_depth,
+                      f.max_nested_structures) for f in functions])
+
+    def test_structure_in_a_block_after_a_regular_expression(self):
+        code = '''
+function match(x) {
+  const re = /a/
+  { if (x) { re.test(x); } }
+}
+'''
+        analyzer = FileAnalyzer(get_extensions(['cognitive', 'nd', 'ns']))
+        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+            with self.subTest(filename=filename):
+                functions = analyzer.analyze_source_code(
+                    filename, code).function_list
+                self.assertEqual(
+                    [('match', 2, 1, 1, 1)],
+                    [(f.name, f.cyclomatic_complexity,
+                      f.cognitive_complexity, f.max_nesting_depth,
+                      f.max_nested_structures) for f in functions])
+
+    def test_structure_in_a_block_after_a_regular_expression_operand(self):
+        code = '''
+function match(x) {
+  const re = "" + /a/
+  { if (x) { re.test(x); } }
+}
+'''
+        analyzer = FileAnalyzer(get_extensions(['cognitive', 'nd', 'ns']))
+        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+            with self.subTest(filename=filename):
+                functions = analyzer.analyze_source_code(
+                    filename, code).function_list
+                self.assertEqual(
+                    [('match', 2, 1, 1, 1)],
+                    [(f.name, f.cyclomatic_complexity,
+                      f.cognitive_complexity, f.max_nesting_depth,
+                      f.max_nested_structures) for f in functions])
+
+    def test_object_method_after_a_variable_named_static(self):
+        code = '''
+function pick(static) {
+  const { a = static ?? { run() {} } } = {};
+}
+'''
+        for filename in ('a.js', 'a.jsx'):
+            with self.subTest(filename=filename):
+                functions = analyze_file.analyze_source_code(
+                    filename, code).function_list
+                self.assertEqual(
+                    [('run', 1), ('pick', 2)],
+                    [(f.name, f.cyclomatic_complexity) for f in functions])
+
+    def test_function_in_a_static_block(self):
+        code = '''
+class Event {
+  static {
+    check = make((value) => value !== null && value.ok);
+    trusted = describe({
+      get isTrusted() { return this !== null && this.trusted; },
+    }).get;
+  }
+  catch(e) { return e; }
+}
+'''
+        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+            with self.subTest(filename=filename):
+                functions = analyze_file.analyze_source_code(
+                    filename, code).function_list
+                self.assertEqual(
+                    [('(anonymous)', 2), ('get isTrusted', 2), ('catch', 1)],
+                    [(f.name, f.cyclomatic_complexity) for f in functions])
+
 
 class Test_JavaScript_line_comment_ending_with_a_backslash(unittest.TestCase):
     def test_line_comment_ends_at_its_line(self):

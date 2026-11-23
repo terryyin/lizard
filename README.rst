@@ -24,6 +24,7 @@ A list of supported languages:
 -  Fortran
 -  GDScript
 -  Golang
+-  Groovy (with Gradle scripts and Jenkinsfiles)
 -  Java
 -  JavaScript (With ES6 and JSX)
 -  Kotlin
@@ -43,6 +44,7 @@ A list of supported languages:
 -  Svelte (see `Svelte analysis <docs/svelte-analysis.md>`_)
 -  Swift
 -  TTCN-3
+-  Twig
 -  TypeScript (With TSX)
 -  VueJS
 -  Zig

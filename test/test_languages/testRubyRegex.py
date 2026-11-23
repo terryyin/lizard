@@ -1,5 +1,6 @@
 import unittest
 from lizard import analyze_file
+from lizard_languages.ruby import RubyReader
 
 
 def get_ruby_function_list(source_code):
@@ -29,3 +30,57 @@ class Test_Ruby_regex_literal_context(unittest.TestCase):
             'def a(s)\n s.gsub(/#/, "") || s\nend\n')[0]
         self.assertEqual(2, split_fn.cyclomatic_complexity)
         self.assertEqual(2, gsub_fn.cyclomatic_complexity)
+
+
+class Test_Ruby_regex_after_a_keyword(unittest.TestCase):
+    """After a keyword such as `if` or `when`, a `/` starts a regex."""
+
+    def tokens(self, code):
+        return [t for t in RubyReader.generate_tokens(code) if not t.isspace()]
+
+    def test_end_in_a_regex_after_if_does_not_end_the_block(self):
+        functions = get_ruby_function_list(r'''
+def strip_end(g)
+  if /^\s*end\s*$/.match?(g)
+    g
+  end
+  1
+end
+
+def last
+  1
+end
+''')
+        self.assertEqual(
+            [('strip_end', 2, 7), ('last', 9, 11)],
+            [(f.name, f.start_line, f.end_line) for f in functions])
+
+    def test_question_marks_in_a_regex_after_a_keyword_add_no_complexity(self):
+        functions = get_ruby_function_list(r'''
+def check(a, b)
+  return 1 if /^(ab)?$/ =~ a
+  return 2 unless /[cd]?/.match?(b)
+  while /(x)?y/ =~ a
+    a = a[1..]
+  end
+  a and /(z)?/.match?(b)
+end
+''')
+        self.assertEqual([4], [f.cyclomatic_complexity for f in functions])
+
+    def test_regex_after_each_keyword_is_one_token(self):
+        for keyword in ('if', 'unless', 'elsif', 'when', 'while', 'until',
+                        'and', 'or', 'not', 'then', 'return', 'next',
+                        'break'):
+            self.assertEqual([keyword, '/a b/i', '.', 'match?', 's'],
+                             self.tokens(keyword + ' /a b/i.match? s'))
+
+    def test_division_stays_division(self):
+        self.assertEqual(['a', '/', 'b', '/', 'c'], self.tokens('a / b / c'))
+        self.assertEqual(['x', '/', '=', '2'], self.tokens('x /= 2'))
+        self.assertEqual(['def', '/', '(', 'o', ')'], self.tokens('def /(o)'))
+        self.assertEqual(['1', '/', '2', 'if', 'c'], self.tokens('1 / 2 if c'))
+        self.assertEqual(['@when', '/', 'a', '/', 'b'],
+                         self.tokens('@when / a / b'))
+        self.assertEqual(['@@if', '/', 'a', '/', 'b'],
+                         self.tokens('@@if / a / b'))

@@ -2,7 +2,20 @@
 // and hold a candidate holding an agent profile among those records.
 // Publication never repairs either file or scans earlier history for completion.
 import { posix, relative, resolve, sep } from "node:path";
-import { defaultBacklogPath } from "./owned-suffix-reconciliation.mjs";
+import { parseBacklog } from "../../dough-product-backlog/scripts/product-backlog-document.mjs";
+import {
+  doneRecordDirectory,
+  doneRecordPath,
+  isDoneRecordFileName,
+  requireUncompletedIdentity,
+} from "../../dough-product-backlog/scripts/product-backlog-done-record.mjs";
+import {
+  describeMisplacedAgentProfiles,
+  hasAgentProfileFileName,
+  misplacedAgentProfiles,
+} from "../../dough-product-backlog/scripts/product-backlog-misplaced-agent-profile.mjs";
+import { BacklogError } from "../../dough-product-backlog/scripts/product-backlog-refusal.mjs";
+import { defaultBacklogPath } from "../../dough-product-backlog/scripts/product-backlog-store.mjs";
 import { git } from "./publication-git.mjs";
 
 export async function doneRecordsStop({
@@ -28,27 +41,6 @@ export async function doneRecordsStop({
     )
   ).stdout.split("\0");
   if (!present.includes(backlogPath)) return null;
-  // Execute Plan remains loadable alone when the project has no backlog.
-  const [
-    { parseBacklog },
-    {
-      doneRecordPath,
-      doneRecordDirectory,
-      isDoneRecordFileName,
-      requireUncompletedIdentity,
-    },
-    {
-      describeMisplacedAgentProfiles,
-      hasAgentProfileFileName,
-      misplacedAgentProfiles,
-    },
-    { BacklogError },
-  ] = await Promise.all([
-    import("../../dough-product-backlog/scripts/product-backlog-document.mjs"),
-    import("../../dough-product-backlog/scripts/product-backlog-done-record.mjs"),
-    import("../../dough-product-backlog/scripts/product-backlog-misplaced-agent-profile.mjs"),
-    import("../../dough-product-backlog/scripts/product-backlog-refusal.mjs"),
-  ]);
   const directory = posix.dirname(backlogPath);
   const recordDirectory = posix.join(directory, doneRecordDirectory);
   const listed = (

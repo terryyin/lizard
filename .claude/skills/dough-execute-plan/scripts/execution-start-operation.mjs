@@ -1,5 +1,6 @@
 // Startup for queued, admitted (with carried edits when requested), or one-shot
 // work. The CLI adapter stays in execution-start.mjs.
+import { beginNativeSession } from "./execution-session-evidence.mjs";
 import { git, lsRemoteSha, revParse } from "./publication-git.mjs";
 import {
   maintenance,
@@ -230,6 +231,8 @@ async function startRequested(request) {
       error: error.stderr || error.message,
     });
   }
+  // A newly published claim or admission starts its own native session.
+  beginNativeSession(selected.workspace, { story: request.identity });
   return finishAcceptedStart(
     request,
     selected,
