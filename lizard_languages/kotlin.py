@@ -19,6 +19,11 @@ class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
     _logical_operators = {'&&', '||'}
     _case_keywords = set()  # Kotlin uses 'when' expressions, not case
     _ternary_operators = {'?:'}  # Elvis operator
+    # `flow.catch { }`, `Promise::catch`, `fun catch()` and
+    # `fun <T> catch()` name a member, also across a line break.
+    _BEFORE_MEMBER_NAME = frozenset(('.', '::', 'fun'))
+    _MEMBER_ACCESS_SPANS_LINES = True
+    _TYPE_PARAMETERS_BEFORE_NAME = True
 
     def __init__(self, context):
         super(KotlinReader, self).__init__(context)
@@ -68,7 +73,7 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
         self._start_header()
 
     def _state_global(self, token):
-        if (token in self._ACCESSORS
+        if (token in self._ACCESSORS and self.last_token not in ('.', '::')
                 and self.context.current_function is self._accessor_declaration_scope):
             self._start_header()
             self._accessor_name = token

@@ -16,6 +16,8 @@ import { isDirectCliEntry } from "./ci-direct-entry.mjs";
 import { recoverObservationForResume } from "./execution-increment-observation-recovery.mjs";
 import { stopped } from "./applicable-candidate-proof.mjs";
 import { resumeInterruptedPublication } from "./publication-resume.mjs";
+import { recordAcceptedIncrement } from "./execution-session-evidence.mjs";
+import { resolveLaunchLanding } from "./resolve-publication-landing-context.mjs";
 import { targetBranchName } from "./publication-git.mjs";
 
 export function observerAdapter(directory, targetRef) {
@@ -98,6 +100,14 @@ export async function resumeManagedExecutionIncrement(request) {
         identity: oneShotIdentity,
       })
     : undefined;
+  const { landingContext: resolvedLanding, reference } =
+    await resolveLaunchLanding({
+      landingContext,
+      workspace,
+      branch,
+      remote,
+      targetRef,
+    });
   let published;
   try {
     published = await resumeInterruptedPublication({
@@ -106,7 +116,7 @@ export async function resumeManagedExecutionIncrement(request) {
       candidateSha,
       suffixBase,
       remote,
-      landingContext,
+      landingContext: resolvedLanding,
       branch,
       backlogPath: request.backlogPath,
       supersededShas,
@@ -144,6 +154,15 @@ export async function resumeManagedExecutionIncrement(request) {
       ...comparison,
       ...published.held.fields,
       observation,
+    });
+
+  // An accepted resume with a known base joins the session evidence; a repeat
+  // of an already recorded pair adds nothing.
+  if (published.suffixBase !== undefined)
+    recordAcceptedIncrement(workspace, {
+      base: published.suffixBase,
+      candidate: published.acceptedSha,
+      reference,
     });
 
   // Ensure the accepted SHA is on the recovered live owner when resume's

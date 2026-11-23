@@ -19,13 +19,18 @@ class RubylikeStateMachine(CodeStateMachine):
         super(RubylikeStateMachine, self).__init__(context)
 
     def _state_global(self, token):
+        # A keyword that the reader marks as a method name, `m.end(0)`,
+        # changes no state.
         if token in ("end", "}"):
-            self.statemachine_return()
+            if not getattr(token, 'is_member_name', False):
+                self.statemachine_return()
         elif token == self.FUNC_KEYWORD:
-            self._state = self._def
-            self.next(self._def)
+            if not getattr(token, 'is_member_name', False):
+                self._state = self._def
+                self.next(self._def)
         elif token == 'it':
-            self._state = self._it
+            if not getattr(token, 'is_member_name', False):
+                self._state = self._it
         elif token in ("begin", "do", "class", "module", "{", "${"
                        ) and self.last_token != ".":
             self.sub_state(self.statemachine_clone())
@@ -35,7 +40,7 @@ class RubylikeStateMachine(CodeStateMachine):
         elif token in ("if", "unless"):
             if self.is_newline():
                 self.sub_state(self.statemachine_clone())
-            else:
+            elif not getattr(token, 'is_member_name', False):
                 self.next(self._if)
         elif token == "=begin":
             self.sub_state(state_embedded_doc)
@@ -83,12 +88,14 @@ class RubylikeStateMachine(CodeStateMachine):
     def _if(self, token):
         if self.is_newline():
             self.next(self._state_global, token)
-        elif token == "then":
+        elif token == "then" and not getattr(token, 'is_member_name', False):
             self.next(self._state_global)
             self.sub_state(self.statemachine_clone())
 
     def _for_while(self, token):
-        if self.is_newline() or token == "do":
+        if self.is_newline() or (
+                token == "do" and
+                not getattr(token, 'is_member_name', False)):
             self.next(self._state_global)
             if token != "end":
                 self.sub_state(self.statemachine_clone())
