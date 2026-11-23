@@ -1,127 +1,163 @@
-// Portable session close record: one versioned JSON file per session UUID
-// beside the configured backlog, carrying only accepted Git comparisons.
-// publishSessionClose publishes the work through the shared publisher first;
-// only an accepted result is recorded, then the record commit follows the same
-// authorized route. The session UUID is the Dashboard launch's landing context
-// `reference`, or for a native start the explicitly retained `sessionId`. Launch state, conversations, paths and native controls
-// stay local and never enter the record.
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
+// Publish the work, then its sealed session record. Keep the exact comparison
+// and record locally per session so a close can resume at either step.
+import { defaultBacklogPath } from "../../dough-product-backlog/scripts/product-backlog-store.mjs";
 import { publishExecutionIncrement } from "./execution-increment-publication.mjs";
-import { defaultBacklogPath } from "./owned-suffix-reconciliation.mjs";
-import { git } from "./publication-git.mjs";
-import { resolvePublicationLandingContext } from "./resolve-publication-landing-context.mjs";
+import { closeNativeSession } from "./execution-session-evidence.mjs";
 import {
-  isSessionId,
-  sessionRecordPathBeside,
-  sessionRecordVersion,
-} from "./session-record.mjs";
+  readGitPathJson,
+  removeGitPathJson,
+  replaceGitPathJson,
+} from "./git-path-json-store.mjs";
+import { resumeInterruptedPublication } from "./publication-resume.mjs";
+import {
+  publishSealedRecord,
+  sealRecord,
+  sessionRecord,
+  sessionRecordPath,
+} from "./sealed-session-record.mjs";
+import { closeTarget } from "./session-close-identity.mjs";
 
-export function sessionRecordPath(sessionId, backlogPath = defaultBacklogPath) {
-  if (!isSessionId(sessionId)) {
-    throw new Error(`session id ${JSON.stringify(sessionId)} is not a UUID`);
-  }
-  return sessionRecordPathBeside(backlogPath, sessionId);
+export { sessionRecord, sessionRecordPath };
+
+const closeStatePath = (sessionId) =>
+  `open-dough/session-close/${sessionId}.json`;
+
+function saveCloseState(workspace, sessionId, facts) {
+  const path = closeStatePath(sessionId);
+  replaceGitPathJson(workspace, path, {
+    ...readGitPathJson(workspace, path),
+    ...facts,
+  });
 }
 
-/**
- * Ranges are ordered `{ base, candidate }` full commit pairs.
- * @param {{ sessionId: string, workflow: string, closedAt: string, story?: unknown, ranges: { base: string, candidate: string }[] }} close
- */
-export function sessionRecord({
-  sessionId,
-  workflow,
-  closedAt,
-  story,
-  ranges,
-}) {
-  return {
-    version: sessionRecordVersion,
-    sessionId,
-    workflow,
-    closedAt,
-    ...(story ? { story } : {}),
-    ranges: ranges.map(({ base, candidate }) => ({ base, candidate })),
-  };
+function sealClose(target, close, accepted, publication) {
+  if (target.native)
+    closeNativeSession(publication.workspace, {
+      sessionId: target.sessionId,
+      closedAt: close.closedAt,
+    });
+  const record = sealRecord(
+    {
+      sessionId: target.sessionId,
+      ...close,
+      story: target.story,
+      sharedCheckout: target.sharedCheckout,
+    },
+    accepted,
+  );
+  saveCloseState(publication.workspace, target.sessionId, { record });
+  return publishRecord(record, {
+    ...publication,
+    validatedCandidate: undefined,
+  });
 }
 
-// The kept close identity, refused before any push when absent or conflicting.
-async function closeIdentity(retained, landingContext) {
-  const launched = landingContext
-    ? JSON.parse(await readFile(landingContext, "utf8")).reference
-    : undefined;
-  if (launched && retained && launched !== retained) {
-    return {
-      status: "session-identity-conflict",
-      error: `retained session ${retained} differs from launch reference ${launched}`,
-    };
-  }
-  const sessionId = launched ?? retained;
-  if (!sessionId) {
-    return {
-      status: "session-identity-missing",
-      error:
-        "no landing context reference or retained session id names this session",
-    };
-  }
-  return { sessionId };
+// Publishes a sealed record and retires its session's saved close state once
+// published.
+async function publishRecord(record, request) {
+  const result = await publishSealedRecord({ ...request, record });
+  if (result.status === "published")
+    removeGitPathJson(request.workspace, closeStatePath(record.sessionId));
+  return result;
 }
 
 export async function publishSessionClose({
-  session: { sessionId: retained, workflow, story },
+  session,
   now = () => new Date(),
   backlogPath = defaultBacklogPath,
   ...request
 }) {
-  const landingContext = await resolvePublicationLandingContext({
-    remote: "origin",
+  const target = await closeTarget({
+    session,
+    backlogPath,
     ...request,
   });
-  const identity = await closeIdentity(retained, landingContext);
-  if (!identity.sessionId) {
-    return {
-      work: { ok: false, ...identity },
-      record: { status: "not-published" },
-    };
-  }
-  const { sessionId } = identity;
-  const path = sessionRecordPath(sessionId, backlogPath);
+  if (target.refused) return target.refused;
+  const { landingContext } = target;
   const publication = { ...request, backlogPath, landingContext };
-  const work = await publishExecutionIncrement(publication);
-  if (!work.ok) return { work, record: { status: "not-published" } };
-  const record = sessionRecord({
-    sessionId,
-    workflow,
-    closedAt: now().toISOString(),
-    story,
-    ranges: [{ base: work.suffixBase, candidate: work.receipt.sha }],
-  });
-  const { workspace } = publication;
-  const file = join(workspace, path);
-  await mkdir(dirname(file), { recursive: true });
-  await writeFile(file, `${JSON.stringify(record, null, 2)}\n`);
-  await git(workspace, "add", "--", path);
-  await git(
-    workspace,
-    "commit",
-    "-m",
-    `Record session ${sessionId}`,
-    "--",
-    path,
-  );
-  const published = await publishExecutionIncrement({
+  const work = await publishExecutionIncrement({
     ...publication,
-    previouslyPublishedBase: work.receipt.sha,
-    validatedCandidate: undefined,
-    landingContext: undefined,
+    beforePush: async (comparison) => {
+      const { candidate, suffixBase } = comparison;
+      saveCloseState(request.workspace, target.sessionId, {
+        candidate,
+        suffixBase,
+      });
+      await request.beforePush?.(comparison);
+    },
   });
+  if (!work.ok) return { work, record: { status: "not-published" } };
   return {
     work,
-    record: {
-      status: published.ok ? "published" : "stopped",
-      path,
-      record,
-      publication: published,
-    },
+    record: await sealClose(
+      target,
+      { workflow: session.workflow, closedAt: now().toISOString() },
+      { suffixBase: work.suffixBase, sha: work.receipt.sha },
+      { ...publication, now },
+    ),
+  };
+}
+
+/**
+ * Resumes a close from its first unfinished step without publishing the work
+ * twice. With the sealed `record`, only the record stage runs. Without one
+ * (the work's result was lost before sealing), `candidateSha` and
+ * `suffixBase` confirm the work through interrupted publication recovery, then
+ * the record is sealed and published. Whatever the caller does not supply
+ * comes from the state the session's close saved in this workspace, found by
+ * the `session` identity or the landing context's reference. A record
+ * commit rebased onto an advanced target stops as `needs-validation` like any
+ * publication; rerun with `validatedCandidate` set to its candidate.
+ * @param {{ record?: ReturnType<typeof sessionRecord>, session?: { sessionId?: string, workflow: string, story?: unknown }, candidateSha?: string, suffixBase?: string, now?: () => Date, workspace: string, branch: string, targetRef: string, remote?: string, backlogPath?: string, validatedCandidate?: string, landingContext?: string }} request
+ */
+export async function resumeSessionClose({
+  record,
+  session,
+  candidateSha,
+  suffixBase,
+  now = () => new Date(),
+  ...request
+}) {
+  if (record)
+    return {
+      record: await publishRecord(sessionRecord(record), { ...request, now }),
+    };
+  const { remote = "origin", backlogPath = defaultBacklogPath } = request;
+  const target = await closeTarget({
+    session,
+    ...request,
+    backlogPath,
+  });
+  if (target.refused) return target.refused;
+  const { landingContext } = target;
+  const saved =
+    readGitPathJson(request.workspace, closeStatePath(target.sessionId)) ?? {};
+  if (saved.record && !candidateSha)
+    return {
+      record: await publishRecord(sessionRecord(saved.record), {
+        ...request,
+        now,
+      }),
+    };
+  const work = await resumeInterruptedPublication({
+    ownedWorkspace: request.workspace,
+    candidateSha: candidateSha ?? saved.candidate,
+    suffixBase: candidateSha ? suffixBase : saved.suffixBase,
+    remote,
+    targetRef: request.targetRef,
+    branch: request.branch,
+    landingContext,
+    backlogPath,
+    publishedRevisions: [],
+  });
+  if (work.held) return { work, record: { status: "not-published" } };
+  return {
+    work,
+    record: await sealClose(
+      target,
+      { workflow: session.workflow, closedAt: now().toISOString() },
+      { suffixBase: work.suffixBase, sha: work.acceptedSha },
+      { ...request, remote, backlogPath, landingContext, now },
+    ),
   };
 }
