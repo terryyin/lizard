@@ -61,6 +61,7 @@ export async function acceptPublishedExecutionIncrement({
     defaultCheckout,
     remote,
     targetRef,
+    acceptedTip,
   );
   return {
     ok: true,

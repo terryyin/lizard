@@ -66,7 +66,6 @@ export async function runMailboxWorker(
         monitorUnavailableEvent({
           repo: request.repo,
           branch: request.branch,
-          sha: request.sha,
           reason: String(error).slice(0, 600),
           cause: observationCause.observationError,
         }),

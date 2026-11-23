@@ -3,11 +3,7 @@
 Save the final-closure tip already published on the remote execution branch.
 Follow [Story Branch integration observation](../../dough-execute-plan/references/wrap-up-closure-publication.md#observe-story-branch-integration)
 for the target transition, publication, and shared completion on the final
-accepted SHA: the integrated SHA, or the last consumer publication. When an
-observer for the execution-branch tip or the trunk-integrated SHA has ended
-before that SHA has a completion receipt, that procedure names
-`execution-completion-recovery.mjs complete` for the branch tip and for the
-integrated SHA; do not poll either target by hand. Its
+accepted SHA: the integrated SHA, or the last consumer publication. Its
 publication uses [Preserve published history](../../dough-execute-plan/references/preserve-published-history.md)
 from the owned execution workspace, excluding any default checkout's
 unrelated commits and pending human edit.
@@ -45,12 +41,23 @@ context. Finish the visit, or explicitly retain unresolved dependency work,
 evidence and gaps in existing active context, before the final completion and
 retirement that procedure orders; report gaps.
 
+## Publish the session record
+
+After the final accepted SHA's completion receipt and the finished visit, run
+the installed `story-branch-session-record.mjs record` with
+`--workspace <owned workspace>`, `--published-tip <saved final-closure tip>`,
+`--integrated-sha <integrated SHA>`, `--branch <execution branch>`, and the
+integration's `--landing-context` when the launch supplied one. It publishes
+the session's record as a separate commit on trunk. A printed
+`stopped: "record"` blocks retirement: follow its `recovery`.
+
 ## Retire Story Branch resources
 
 Retire the worktree and branch under Dough Land's
 [Retire the worktree](../../dough-land/SKILL.md#retire-the-worktree) with
 `--remote-branch <execution branch>` and `--contained <integrated SHA>`, adding
-`--contained` for each accepted consumer publication, with wrap-up's gate: a
+`--contained` for each accepted consumer publication and for the printed
+`record.sha`, with wrap-up's gate: a
 `success` completion receipt for the final accepted SHA whose shutdown is
 confirmed, and no active checkout-bound observer still hosting the worktree
 under [preserve pending local work](../../dough-execute-plan/references/maintain-default-checkout.md#preserve-pending-local-work).
