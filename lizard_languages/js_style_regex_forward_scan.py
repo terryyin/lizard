@@ -4,6 +4,7 @@ from .js_style_regex_context import (
     _EXPRESSION_KEYWORDS,
     _LINE_ENDS,
     _REGEX_LITERAL_RE,
+    _RUBY_EXPRESSION_KEYWORDS,
     _STRING_LINE_ENDS,
     _apply_marks,
 )
@@ -22,7 +23,7 @@ def mark_forward(source, js_family):
     pending_for = False
     marks = []
     match_literal = _REGEX_LITERAL_RE.match
-    keywords = _EXPRESSION_KEYWORDS
+    keywords = _EXPRESSION_KEYWORDS if js_family else _RUBY_EXPRESSION_KEYWORDS
     line_ends = _LINE_ENDS
 
     def after_operand(next_can_regex=False, next_expect_property=False):
@@ -198,6 +199,12 @@ def mark_forward(source, js_family):
             return
         if ch == '.':
             i += 1
+            after_operand(next_expect_property=True)
+            return
+        if ch == '@' and not js_family:
+            # A Ruby `@when` or `@@if` is a variable, so the word is a name.
+            while i < n and source[i] == '@':
+                i += 1
             after_operand(next_expect_property=True)
             return
         if ch in '=,({[?:!&|;':
