@@ -78,7 +78,10 @@ _C_LIKE = {'switches': ('switch',), 'do_likes': ('do',), 'gotos': ('goto',)}
 # Blocks are not brace-delimited: increments without nesting penalty.
 _FLAT = {'nesting': False, 'ternary': False, 'jumps': ()}
 
-_JS_LIKE = dict(_C_LIKE, newline_ends_statement=True, nested_functions=True)
+# C-like, without goto: JavaScript has no goto statement, and
+# `page.goto(url)` is a call.
+_JS_LIKE = {'switches': ('switch',), 'do_likes': ('do',),
+            'newline_ends_statement': True, 'nested_functions': True}
 
 _PROFILES = {
     'cpp': _Profile(loops=('foreach',),         # Qt

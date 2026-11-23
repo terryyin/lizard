@@ -76,10 +76,14 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
             return self._unterminated_statements(tokens, reader)
         return super(LizardExtension, self).__call__(tokens, reader)
 
+    def _start_file(self, reader):
+        super(LizardExtension, self)._start_file(reader)
+        self.structure_piles = [0]
+
     def _unterminated_statements(self, tokens, reader):
         """JavaScript ends a statement without a ';' too: read a ';'
         where the reader finds such an end."""
-        self.context = reader.context
+        self._start_file(reader)
         implied_semicolon_before = reader.implied_semicolons(self.context).before
         for token in tokens:
             if implied_semicolon_before(token):
