@@ -950,6 +950,33 @@ class TestJavaScriptKeywordAsTheNameOfAMember(unittest.TestCase):
                       static %s() { return this?.%s(); }   // +1 recursion
                     }""" % (name, name)))
 
+    def test_optional_method_call_on_another_object(self):
+        code = """
+            function run(plugin) {
+              return plugin?.run();
+            }"""
+        for filename in ('a.js', 'a.ts'):
+            with self.subTest(filename=filename):
+                self.assertEqual([0], cogc(filename, code))
+
+    def test_optional_method_call_on_grouped_this(self):
+        self.assertEqual([2], cogc("a.js", """
+            class Retry {
+              run(attempts) {
+                if (attempts > 0) (this)?.run(attempts - 1);
+              }
+            }"""))
+
+    def test_optional_method_call_on_type_asserted_this(self):
+        for receiver in ('(this as Retry | undefined)', 'this!'):
+            with self.subTest(receiver=receiver):
+                self.assertEqual([2], cogc("a.ts", """
+                    class Retry {
+                      run(this: Retry | undefined, attempts: number): void {
+                        if (attempts > 0) %s?.run(attempts - 1);
+                      }
+                    }""" % receiver))
+
     def test_other_languages_can_call_a_structure_word(self):
         self.assertEqual([4], cogc("a.pl", """
 sub catch {
