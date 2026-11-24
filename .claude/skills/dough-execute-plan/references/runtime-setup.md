@@ -86,7 +86,7 @@ attempt of that snapshot's check with an equal or later `time`, or with a
 `time` the first listed lacks, leaves it unresolved. An attempt without `branch` keeps exact coverage but never
 completes another revision. A poll that cannot discover runs withdraws the
 evidence until a later poll judges it again. The declaration never changes the
-provider's scheduling or exact-commit reuse.
+provider's scheduling.
 
 This observer handles one selected CI check per execution. It does not support
 pull-request-only CI, aggregate multiple checks, or observe deployment. If this
