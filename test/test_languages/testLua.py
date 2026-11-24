@@ -237,6 +237,33 @@ end
             [('f', 3, 6), ('g', 7, 9)],
             [(f.name, f.start_line, f.end_line) for f in result])
 
+    def test_parenthesized_call_starts_the_body_after_parameters(self):
+        result = get_function_list('''
+function writer.flush()
+  (writer.output or io.stdout):flush()
+end
+
+local function dispatch(callback)
+  (function() return callback() end)()
+end
+''')
+        self.assertEqual(
+            [('writer.flush', 2, 4, []),
+             ('(anonymous)', 7, 7, []),
+             ('dispatch', 6, 8, ['callback'])],
+            [(f.name, f.start_line, f.end_line, f.parameters) for f in result])
+
+    def test_parenthesized_call_uses_a_local_fallback(self):
+        result = get_function_list('''
+local module = io.stdout
+function writer.flush()
+  (writer.output or module):flush()
+end
+''')
+        self.assertEqual(
+            [('writer.flush', 3, 5, [])],
+            [(f.name, f.start_line, f.end_line, f.parameters) for f in result])
+
     def test_parameters_on_the_line_after_the_name(self):
         result = get_function_list('''
 function f
