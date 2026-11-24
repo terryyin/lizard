@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "sessionId": "67410972-d326-4921-ac71-2f7048298868",
+  "workflow": "dough-execute-plan",
+  "closedAt": "2026-11-24T10:56:54.198Z",
+  "story": "SEED-073#fix-svelte-implied-semicolons-ci",
+  "ranges": [
+    {
+      "base": "49d879ea4e78b205a7fd586bb3b2d6a87f74fdf6",
+      "candidate": "834313ae591cdf4553aa97cd113db4e88d5f7b09"
+    },
+    {
+      "base": "834313ae591cdf4553aa97cd113db4e88d5f7b09",
+      "candidate": "967d7281ae6d42b0455c8f26d54c4588682cdcf6"
+    }
+  ]
+}

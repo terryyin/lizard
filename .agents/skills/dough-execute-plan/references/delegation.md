@@ -112,8 +112,7 @@ Give the agent:
   [CI repair pause](ci-monitor.md#handle-a-notification) is the only
   sanctioned stash.
 - A stop before coordinator delivery: no commit, push, marking a planned slice
-  done, refactor pass, selective formatting, or independent hook-owned lint
-  command.
+  done, refactor pass, or selective formatting.
 - The [CI pause and resume contract](ci-monitor.md#pause-and-resume-writers).
 
 ## Own verification to its terminal result
