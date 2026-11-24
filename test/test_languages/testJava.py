@@ -1,6 +1,7 @@
 import unittest
 from lizard import FileAnalyzer, get_extensions
-from .java_helpers import get_java_function_list
+from lizard_core.file_analyzer import line_counter
+from .java_helpers import get_java_fileinfo, get_java_function_list
 
 
 class TestJava(unittest.TestCase):
@@ -330,6 +331,48 @@ interface I {
             "int f(Map<String, ? super Integer> m, List<?> l) { return m.size() < l.size() ? 1 : 0; }")
         self.assertEqual(2, result[0].cyclomatic_complexity)
         self.assertEqual(2, result[0].parameter_count)
+
+    def test_wrapped_wildcard_type_in_parameter_has_single_line_name(self):
+        code = """
+import java.util.List;
+import java.util.function.Consumer;
+
+class Items {
+    static <T> void visit(List<T> items, Consumer<
+            ? super T
+            > consumer) {
+        items.forEach(consumer);
+    }
+}
+"""
+        result, = get_java_function_list(code)
+        self.assertEqual('Items::visit( List<T> items , Consumer <? super T> consumer)', result.long_name)
+        self.assertEqual(['items', 'consumer'], result.parameters)
+        self.assertEqual(1, result.cyclomatic_complexity)
+        self.assertEqual(5, result.nloc)
+
+    def test_blank_line_in_wrapped_wildcard_type_in_parameter_does_not_count(self):
+        code = """
+import java.util.Map;
+
+class GroupedValues {
+    static int count(Map<
+            String,
+
+            ? extends Number> values) {
+        return values.size();
+    }
+}
+"""
+        info = get_java_fileinfo(code)
+        result, = info.function_list
+        self.assertEqual(5, result.nloc)
+        self.assertEqual(8, info.nloc)
+        self.assertEqual(10, result.end_line)
+
+        processors = [processor for processor in get_extensions([]) if processor is not line_counter]
+        without_nloc = FileAnalyzer(processors).analyze_source_code("a.java", code)
+        self.assertEqual(0, without_nloc.nloc)
 
     def test_nested_wildcards_add_no_condition(self):
         code = """
