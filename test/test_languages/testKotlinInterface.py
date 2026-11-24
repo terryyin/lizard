@@ -62,6 +62,23 @@ fun after() { }
         )
         self.assertEqual(2, result[1].cyclomatic_complexity)
 
+    def test_functional_interface_keeps_accessors_in_declaration_scope(self):
+        result = get_kotlin_function_list('''\
+fun interface ScoreFilter {
+    fun accepts(score: Int): Boolean
+
+    val description: String
+        get() { return "filter" }
+}
+
+val positiveScore: ScoreFilter
+    get() { return ScoreFilter { it >= 0 } }
+        ''')
+        self.assertEqual(
+            [("get", 5, 5), ("get", 9, 9)],
+            [(f.name, f.start_line, f.end_line) for f in result],
+        )
+
     def test_classes_and_accessors_in_a_sealed_interface(self):
         result = get_kotlin_function_list('''
 internal sealed interface MappedRange {
