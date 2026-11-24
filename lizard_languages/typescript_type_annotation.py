@@ -1,7 +1,55 @@
 """Consume type-owned brackets and return enclosing runtime delimiters."""
 
 from .code_reader import CodeStateMachine
-from .javascript_expression import starts_statement
+from .javascript_expression import JSXMarkup, OPERAND_WORDS, starts_statement
+
+
+# These words introduce an expression. A following '<' starts an angle
+# assertion or a generic arrow rather than specializing that word.
+_EXPRESSION_PREFIXES = OPERAND_WORDS | frozenset((
+    'return', 'throw', 'case', 'default', 'else', 'do', 'function',
+    'const', 'let', 'var', 'export', 'async', 'extends'))
+_NON_TYPE_OPERATORS = frozenset((
+    '+', '*', '/', '%', '**', '&&', '||', '??', '++', '--', '!',
+    '==', '!=', '===', '!==', '<=', '>=', '<<=', '>>=', '^'))
+_TYPE_SEPARATORS = frozenset(('<', '>', ',', '|', '&'))
+_TYPE_PREFIXES = frozenset(('<', ',', '.', '|', '&', 'keyof', 'readonly'))
+# These tokens cannot be operands of a greater-than comparison.
+_STATEMENTS_ONLY = frozenset((
+    'if', 'else', 'for', 'while', 'do', 'switch', 'case', 'default', 'try',
+    'catch', 'finally', 'break', 'continue', 'return', 'throw', 'debugger',
+    'const', 'var', 'export', ')', ']', '}'))
+
+
+def can_take_type_arguments(previous):
+    """Whether '<' can specialize the value or type before it."""
+    return previous and (previous in (')', ']', '!') or
+                         (previous not in _EXPRESSION_PREFIXES
+                          and (previous[0].isalpha() or previous[0] in '_$#')
+                          and not isinstance(previous, JSXMarkup)))
+
+
+def packed_type_arguments(token):
+    """TSX can supply a simple '<Name>' as one token."""
+    return (len(token) > 2 and token[1].isalpha() and token.endswith('>')
+            and not isinstance(token, JSXMarkup))
+
+
+def followed_by_new_statement(tokens, simple_type_arguments):
+    """Check only the gap after '>', plus the first following code token."""
+    newline = False
+    for token in tokens:
+        if token.isspace() or token.startswith(('//', '/*')):
+            newline |= '\n' in token
+        else:
+            if not newline:
+                return False
+            # A balanced group may look like a type to the annotation
+            # reader. Require a real statement boundary in that case.
+            if not simple_type_arguments:
+                return token in _STATEMENTS_ONLY
+            return starts_statement(token)
+    return False
 
 
 class TypeScriptTypeAnnotationStates(CodeStateMachine):
@@ -9,6 +57,7 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
         'any', 'unknown', 'never', 'number', 'bigint', 'boolean', 'string',
         'symbol', 'object', 'void', 'undefined', 'null', 'this', 'true', 'false'))
     BRACKETS = {'(': ')', '[': ']', '{': '}', '<': '>', '${': '}'}
+    CLOSERS = frozenset(BRACKETS.values())
     END_TOKENS = frozenset(('=', ';', ')', ']', '}', ',', '=>',
                             '||', '&&', '??', '?', ':', '+', '-', '*', '/',
                             '%', '**', '==', '===', '!=', '!==', '>', '>=', '<=',
@@ -95,3 +144,65 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
                 '|', '&', 'keyof', 'typeof', 'readonly', 'unique', 'infer',
                 'extends', 'is', 'in', 'as')
             self._function_arrow = False
+
+    def has_complete_type(self):
+        return not (self._expect_type or self._conditional_type
+                    or self._conditional_questions or self._qualified_type)
+
+    def mismatched_closer(self, token):
+        return (self._brackets and token in self.CLOSERS
+                and token != self._brackets[-1])
+
+
+class TypeArguments:  # pylint: disable=too-few-public-methods
+    """Follow a possible '<...>' while its tokens pass through the reader."""
+
+    def __init__(self):
+        self._argument = TypeScriptTypeAnnotationStates(None)
+        self._previous = '<'
+        self.simple = True
+
+    def __call__(self, token):
+        """Return the next state and whether this token closes the list."""
+        if token.startswith(('//', '/*')):
+            return self, False
+        if token in _NON_TYPE_OPERATORS or isinstance(token, JSXMarkup):
+            return None, False
+        if self.simple:
+            self.simple = _simple_type_token(self._previous, token)
+        self._previous = token
+        argument = self._argument
+        if argument is None:
+            if token == '>':  # An optional trailing comma.
+                return None, True
+            argument = self._argument = TypeScriptTypeAnnotationStates(None)
+        if argument.mismatched_closer(token):
+            return None, False
+        if argument(token):
+            if token == ',' and argument.has_complete_type():
+                self._argument = None
+            else:
+                return None, token == '>' and argument.has_complete_type()
+        return self, False
+
+
+def _simple_type_token(previous, token):
+    """Recognize reference types without ambiguous expression groups."""
+    if previous == '[':
+        return token == ']'  # An array suffix, but not a value subscript.
+    if token in _TYPE_SEPARATORS or token == '[':
+        return True
+    if token == '.':
+        return (previous.replace('$', '_').isidentifier()
+                and previous not in TypeScriptTypeAnnotationStates.NON_GENERIC_TYPES)
+    first = token[0]
+    if first == '<' and packed_type_arguments(token):
+        return True
+    if previous == 'typeof':
+        return token.replace('$', '_').isidentifier()
+    # TSX keeps a whole template in one token, including any expressions.
+    return (previous == '-' and first.isdigit()
+            or previous in _TYPE_PREFIXES
+            and (first in "'\"-" or first.isdigit()
+                 or first == '`' and '${' not in token
+                 or token.replace('$', '_').isidentifier()))

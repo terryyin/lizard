@@ -18,6 +18,10 @@ class JSXMarkup(str):
     is_jsx_markup = True
 
 
+class TypeArgumentEnd(str):
+    """The end of TypeScript type arguments at a statement boundary."""
+
+
 _OPERAND_STARTS = frozenset(('_', '$', '#', "'", '"', '`'))
 _STATEMENT_STARTS = frozenset(('_', '$', '#', "'", '"'))
 _EXPRESSION_ENDS = frozenset((')', ']', '}', '++', '--'))
@@ -32,8 +36,10 @@ def ends_expression(token):
         return token not in OPERAND_WORDS
     return (token in _EXPRESSION_ENDS
             or (first == '/' and len(token) > 2)  # regular expression literal
+            or (first == '>' and isinstance(token, TypeArgumentEnd))
             or (first == '<' and token.endswith('>')  # JSX element end
-                and ('</' in token or token.endswith('/>'))))
+                and ('</' in token or token.endswith('/>')
+                     or isinstance(token, TypeArgumentEnd))))
 
 
 def starts_statement(token):
