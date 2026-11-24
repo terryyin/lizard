@@ -74,3 +74,10 @@ class LuaStateMachine(RubylikeStateMachine):
             return
         self.context.push_new_function(self.probable_function_name)
         self.next(self._def_parameters)
+
+    def _def_parameters(self, token):
+        if token != ")":
+            self.context.parameter(token)
+            return
+        self.context.add_to_long_function_name(" " + token)
+        self.next(self._def_body)
