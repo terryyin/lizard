@@ -230,6 +230,77 @@ end
             [(f.name, f.start_line, f.end_line, f.parameter_count)
              for f in result])
 
+    def test_length_operator_keeps_the_rest_of_the_expression(self):
+        result = get_function_list('''
+local function groups_per_team(group_count, team)
+  return group_count / #team > 0 and 1 or 0
+end
+''')
+        self.assertEqual(3, result[0].cyclomatic_complexity)
+
+    def test_length_operator_keeps_the_loop_body(self):
+        result = get_function_list('''
+local function enable(accounts)
+  for i = 1, #accounts do
+    if accounts[i].active then
+      accounts[i]:enable()
+    end
+  end
+end
+''')
+        self.assertEqual(
+            [('enable', 2, 8)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_length_operator_in_a_wrapped_loop_header(self):
+        result = get_function_list('''
+local function enable(accounts)
+  for i = 1,
+      #accounts do
+    if accounts[i].active then
+      accounts[i]:enable()
+    end
+  end
+end
+''')
+        self.assertEqual(
+            [('enable', 2, 9)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_length_and_floor_division_in_a_wrapped_loop_header(self):
+        result = get_function_list('''
+local function paginate(limit, payload, page_size)
+  for page = 1, limit // page_size +
+      #payload do
+    send_page(payload, page)
+  end
+end
+''')
+        self.assertEqual(
+            [('paginate', 2, 7, 2)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+             for f in result])
+
+    def test_loop_header_keeps_the_callback_and_loop_body(self):
+        result = get_function_list('''
+local function visit(root)
+  for path, kind in walk(root, {
+    ignore = function(name)
+      do
+        return name == ".git"
+      end
+    end,
+  }) do
+    if kind == "file" then
+      index(path)
+    end
+  end
+end
+''')
+        self.assertEqual(
+            [('ignore', 4, 8), ('visit', 2, 14)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
     def test_call_of_it_in_a_loop_with_a_length(self):
         result = get_function_list('''
 local function f(t, it)
