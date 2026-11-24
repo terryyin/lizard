@@ -128,7 +128,8 @@ class RubyReader(RubylikeReader):
         def process_source(source, _, matcher):
             return ScriptLanguageMixIn.generate_common_tokens(
                 source,
-                r"|^\=begin|^\=end" +
+                r"|^=begin(?=\s|$).*?(?:^=end(?=\s|$)[^\n]*|\Z)" +
+                r"|^__END__(?:\r?\n|\Z).*\Z" +
                 r"|\w+:" +
                 r"|\$\w+" +
                 r"|\.+" +
@@ -140,6 +141,12 @@ class RubyReader(RubylikeReader):
         source = source_code
         while source is not None:
             for token in process_source(source, addition, matcher):
+                if token.startswith('=begin') or token == '__END__' or token.startswith(
+                        ('__END__\n', '__END__\r\n')):
+                    # Keep line positions while passing non-code to comment handling.
+                    if token.begin == 0 or source[token.begin - 1] == '\n':
+                        yield '#' + token
+                        continue
                 if token == "{":
                     bracket_stack.append("{")
                 elif token == "}":
