@@ -1,10 +1,5 @@
 # Publish wrap-up closure
 
-With [provider-owned CI reuse](../manuals/reuse-ci.md), still complete the real
-target attempt for the final accepted SHA. Source evidence is inspectable on
-that attempt's page; it never confirms publication or releases retirement
-before successful completion with confirmed observer shutdown.
-
 Story wrap-up treats each owned wrap-up commit on the execution checkout as a
 verified increment whose target remains the authorized remote trunk. Publish
 the before-cleanup commit immediately through [the common sequence](trunk-publication.md#publish-the-candidate)

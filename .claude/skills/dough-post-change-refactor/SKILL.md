@@ -15,11 +15,10 @@ committing, pushing, amending, or triggering CI.
 ## Discover scope
 
 Run `git status`, `git diff`, and `git diff --cached`. When the caller supplies
-refactor dispositions recorded since the last pass (`records-only` or an
-already-traced repair naming its accepted return), their committed changes are
-part of the change under review: read their diffs and include their concepts in
-this discovery. If there is no uncommitted change and no supplied disposition,
-report empty scope and use the completion handoff below without edits or tests.
+dispositions retained since the last pass, read their committed diffs as part of
+the change under review and include their concepts. If there is no uncommitted
+change and no supplied disposition, report empty scope and use the completion
+handoff below without edits or tests.
 
 For nonempty scope, use [shared test-entry selection](../dough-execute-plan/references/test-entry-rules.md#select-implicated-tests-for-refactoring)
 before reviewing or changing tests. It discovers staged, unstaged, untracked and
