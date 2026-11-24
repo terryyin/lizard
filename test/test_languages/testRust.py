@@ -221,6 +221,18 @@ class TestRust(unittest.TestCase):
         self.assertEqual(['default_path', 'default_size'], [function.name for function in result])
         self.assertEqual((6, 8), (result[0].start_line, result[0].end_line))
 
+    def test_callback_fields_and_foreign_declaration_have_no_body(self):
+        result = get_rust_function_list('''
+        pub struct Signal {
+            pub first: Option<extern "C" fn(i32)>,
+            pub second: Option<extern "C" fn(i32)>,
+        }
+        unsafe extern "C" {
+            pub fn signal();
+        }
+        ''')
+        self.assertEqual([], result)
+
     def test_nested_functions(self):
         result = get_rust_function_list('''
         fn main() {
