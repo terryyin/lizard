@@ -43,7 +43,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
     def __init__(self, context):
         super(CLikeReader, self).__init__(context)
         self.parallel_states = (
-                CLikeStates(context),
+                CppStates(context),
                 CLikeNestingStackStates(context),
                 CppRValueRefStates(context))
 
@@ -71,6 +71,32 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
                         yield '\n'
                 else:
                     yield token
+
+
+class CppStates(CLikeStates):  # pylint: disable=R0903
+    def _state_template_in_name(self, token):
+        if token == "<":
+            if self.br_count == 1 and self.last_token == "<":
+                self._state = self._state_shift_or_digraph
+            self.br_count += 1
+        elif token == ">":
+            self.br_count -= 1
+        self.context.add_to_function_name(token)
+        if not self.br_count:
+            self._state = self._state_function
+
+    def _state_shift_or_digraph(self, token):
+        if token == "::":
+            # This can qualify the shift operand or be part of '<::>'.
+            self.context.add_to_function_name(token)
+            return
+        # The tokenizer joins ':=' when the capture starts with '<:='.
+        if token in (":", ":=") or (token == ">" and self.last_token == "::"):
+            self._state = self._state_template_in_name
+        else:
+            self.br_count = 0
+            self._state = self._state_global
+        self._state(token)
 
 
 class CppRValueRefStates(CodeStateMachine):
