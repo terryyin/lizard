@@ -75,8 +75,9 @@ class JavaScriptFunctionsMixin:
             # pylint: disable-next=comparison-with-callable
             if self._arrow_only_signature and self._state == self._expecting_func_opening_bracket:
                 self._discard_signature()
-                self._end_statement()
-                self.next(self._expecting_statement_or_block)
+                if not self._class_body_pending:
+                    self._end_statement()
+                    self.next(self._expecting_statement_or_block)
             return
         if token in ('=>', ':') or (
                 token == ';' and self.as_object and self._in_abstract_context):
