@@ -291,6 +291,15 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         else:
             self._prev_token = ''
             self.next(self._state_global, token)
+            # pylint: disable-next=comparison-with-callable
+            if token == 'function' and self._state == self._function:
+                self.next(self._braceless_function_declaration)
+
+    def _braceless_function_declaration(self, token):
+        """Record a declaration allowed as an if body in non-strict JS."""
+        self._function(token)
+        if token == '(' and self.started_function:
+            self.context.current_function.is_braceless_declaration = True
 
     def _state_template_literal(self, token):
         if token == '`':

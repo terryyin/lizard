@@ -72,6 +72,7 @@ class ImpliedSemicolons:
         label_starts = False    # the body may start with a label
         postfix = False         # the last "!", "++" or "--" is postfix
         object_ended = False    # the last "}" closed an object literal
+        closing_function = None  # the function that read the last "}"
         loop_ended = False      # the ")" of "do … while (…)"
         found = False
         busy = False            # found, or one of the four flags above
@@ -87,8 +88,8 @@ class ImpliedSemicolons:
                     if loop_ended:
                         found = token != ';'
                     elif (not (groups or head_starts or body_starts)
-                          # A block end has ended its statement already.
-                          and (previous != '}' or object_ended)):
+                          and (previous != '}' or object_ended
+                               or _function_closed(context, closing_function))):
                         if token == '}':
                             found = _expression_ended(
                                 previous, before_previous, postfix)
@@ -133,6 +134,8 @@ class ImpliedSemicolons:
                         if blocks:
                             (groups, head, open_loops, loop_ends,
                              is_object) = blocks.pop()
+                        if not (groups or object_ended):
+                            closing_function = context.current_function
                     elif token in ('{', '${'):
                         blocks.append(
                             (groups, head, open_loops, loop_ends, is_object))
@@ -188,6 +191,13 @@ def _starts_line(token, line, last_line):
     and is not the '{' of a JSX child."""
     return (line - token.count('\n') != last_line
             and not isinstance(token, JSXChildBrace))
+
+
+def _function_closed(context, function):
+    """A closing function brace can also end a surrounding expression.
+    A declaration used as a braceless if body leaves its else attached."""
+    return (context.current_function is not function
+            and not getattr(function, 'is_braceless_declaration', False))
 
 
 def _expression_ended(previous, before_previous, postfix):
