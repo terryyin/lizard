@@ -138,6 +138,20 @@ fun mayOpenSharedSession(
 ''')
         self.assertEqual([1, 2], [f.cognitive_complexity for f in result.function_list])
 
+    def test_interpolation_keeps_the_surrounding_if_body(self):
+        analyzer = FileAnalyzer(get_extensions(["cognitive"]))
+        result = analyzer.analyze_source_code("jobs.kt", '''\
+fun jobLabel(active: Boolean, priority: Boolean, jobId: Int): String {
+    return if (active) "${jobId}" + (if (priority) ":urgent" else ":normal") else "paused"
+}
+fun jobReport(active: Boolean, priority: Boolean, jobId: Int): String {
+    return if (active) """Job
+        ID: ${jobId}
+        Status: """ + (if (priority) "urgent" else "normal") else "paused"
+}
+''')
+        self.assertEqual([5, 5], [f.cognitive_complexity for f in result.function_list])
+
     def test_nested_string_templates_count_code_at_each_level(self):
         functions = get_kotlin_function_list('''\
 fun statusLabel(active: Boolean, delayed: Boolean): String {
