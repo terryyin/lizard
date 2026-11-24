@@ -101,6 +101,34 @@ class Test_tokenizing_Ruby(unittest.TestCase):
 
 class Test_parser_for_Ruby_ccn(unittest.TestCase):
 
+    def test_escaped_interpolation_markers_do_not_add_decisions(self):
+        code = r'''
+def account_template
+  "Account: \#{user.name if user}"
+end
+
+def rendered_template(user, active)
+  "Account: \#{user.name if user}; viewer: #{user.name if active}"
+end
+
+def path_label(user)
+  "labels\\#{user.name if user}"
+end
+
+def path_template
+  "labels\\\#{user.name if user}"
+end
+'''
+        analyzer = FileAnalyzer(get_extensions(['cognitive']))
+
+        functions = analyzer.analyze_source_code('labels.rb', code).function_list
+
+        self.assertEqual(
+            [('account_template', 1, 0), ('rendered_template', 2, 1),
+             ('path_label', 2, 1), ('path_template', 1, 0)],
+            [(fn.name, fn.cyclomatic_complexity, fn.cognitive_complexity)
+             for fn in functions])
+
     def test_basic_complexity(self):
         result = get_ruby_function_list('''
             def f
