@@ -79,3 +79,26 @@ change), corrections when reachable, and an evidenced disposition per PR.
 **Source:** Dashboard instruction to run lizard-process-pr and
 lizard-process-issue on PRs and issues new or updated in the past 30 hours
 (launch `334bc899-6b90-4da4-849c-3a92e48e3f74`).
+
+## Dispositions (SEED-072)
+
+Direction: within maintenance/bug-fixing/slight language-reader extension for
+all named PRs except #612 (new CLI option — paused for approval).
+
+| PR | Disposition |
+| --- | --- |
+| #610 | Merged — skip None metric values in thresholds/sorting |
+| #611 | Merged — extension columns for tokenless functions |
+| #590 | Merged — Kotlin extension functions |
+| #594 | Merged — Kotlin lambda after comma no longer cuts a function short |
+| #597 | Merged — Ruby `%` literals with interpolation/nested delimiters |
+| #593 | Merged — Kotlin body-less declarations no longer steal the next body |
+| #599 | Merged — Svelte component reported as a unit |
+| #608 | Merged — Kotlin interface default methods (maintainer master merge) |
+| #609 | Merged — Ruby block/`end` pairing (maintainer master merge; kept #597 tests) |
+| #582 | Merged — cheaper implied-semicolon scan for ND/NS (metrics match; CI green) |
+| #612 | Paused for developer approval — adds `--warnings-to-stderr` (external CLI signature) |
+
+Issues in the 30-hour window: none created or updated.
+
+Acknowledgement comments posted on merged PRs.
