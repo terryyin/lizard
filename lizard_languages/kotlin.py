@@ -108,6 +108,7 @@ class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
 class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
 
     FUNC_KEYWORD = 'fun'
+    TYPE_KEYWORD = None
     _ACCESSORS = {'get', 'set'}
     _BEFORE_ACCESSOR_IDENTIFIER = {'.', '::', '@', ':', '=', 'typealias'}
     _ACCESSOR_MODIFIERS = {'public', 'protected', 'internal', 'private', 'inline', 'external'}
@@ -126,7 +127,7 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
     _HEADER_OPERATORS = {':', 'where', '.', '->', ',', '<', '(', '&', 'suspend'}
     # The tokens that `_state_global` acts on.
     _GLOBAL_TOKENS = _ACCESSORS | {
-        'class', 'object', '->', 'val', 'var', ',', 'interface', 'when', 'fun', 'type', '{', '}',
+        'class', 'object', '->', 'val', 'var', ',', 'interface', 'when', 'fun', '{', '}',
     }
 
     def __init__(self, context, in_when_cases=False, accessor_declaration_scope=None,
