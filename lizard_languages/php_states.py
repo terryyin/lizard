@@ -94,11 +94,16 @@ class PHPLanguageStates(CodeStateMachine):
                 self.last_tokens = ''
 
     def _state_use(self, token):
-        """Handle use statements (use function, use const, etc.)"""
+        """Skip imports and trait use statements."""
         if token == ';':
-            # End of use statement, return to global state
             self._state = self._state_global
-        # Ignore all other tokens in use statements
+        elif token == '{' and (self.in_class or self.in_trait):
+            self._state = self._state_use_block
+
+    def _state_use_block(self, token):
+        # Semicolons terminate adaptations within a trait use block.
+        if token == '}':
+            self._state = self._state_global
 
     def _trait_declaration(self, token):
         if token and not token.isspace() and token not in ['{', '(']:
