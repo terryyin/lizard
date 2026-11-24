@@ -5,7 +5,7 @@ Language parser for Apple Swift
 from .clike import CCppCommentsMixin
 from .code_reader import CodeReader, CodeStateMachine
 from .golike import GoLikeStates
-from .kotlin_literals import string_tokens
+from .kotlin_literals import INTERPOLATION_CLOSE, INTERPOLATION_OPEN, string_tokens
 from .swift import SwiftReplaceLabel
 
 
@@ -14,6 +14,7 @@ class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
 
     ext = ['kt', 'kts']
     language_names = ['kotlin']
+    interpolation_braces = INTERPOLATION_OPEN, INTERPOLATION_CLOSE
 
     # Separated condition categories
     _control_flow_keywords = {'if', 'for', 'while', 'catch'}

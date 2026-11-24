@@ -18,8 +18,16 @@ _LINE_MARK = re.compile(r'\\.|"|\$+', re.S)
 _COMMENT_MARK = re.compile(r'/\*|\*/')
 
 
+class _InterpolationBrace(str):
+    pass
+
+
+INTERPOLATION_OPEN = _InterpolationBrace('{')
+INTERPOLATION_CLOSE = _InterpolationBrace('}')
+
+
 def string_tokens(source, addition):
-    """Keep strings as one token and use the shared tokenizer for code."""
+    """Keep literal text opaque and tokenize code inside string templates."""
     pattern = compiled_token_pattern(addition)
     code_start = pos = 0
     while True:
@@ -28,14 +36,14 @@ def string_tokens(source, addition):
             break
         mark = opening.group()
         pos = opening.end()
-        if mark == '/*':
-            pos = _block_comment_end(source, pos)
-        elif mark.startswith(('"', '$')):
-            pos = _string_end(source, opening)
-        else:
+        if mark != '/*' and not mark.startswith(('"', '$')):
             continue
         yield from tokens_in_span(pattern, source, code_start, opening.start())
-        yield source[opening.start():pos]
+        if mark == '/*':
+            pos = _block_comment_end(source, pos)
+            yield source[opening.start():pos]
+        else:
+            pos = yield from _string_tokens(source, opening, pattern)
         code_start = pos
     yield from tokens_in_span(pattern, source, code_start, len(source))
 
@@ -45,35 +53,55 @@ def _string_mode(opening):
     return pattern, opening.count('$') or 1
 
 
-def _string_end(source, opening):
-    # Each frame holds the dollar threshold for a string or the brace depth
-    # for an interpolation. Strings can nest inside those expressions.
+def _string_tokens(source, opening, token_pattern):
+    # A string frame holds a dollar threshold. A code frame holds the
+    # brace depth in the interpolation. Both forms can nest.
     stack = [_string_mode(opening.group())]
+    start = opening.start()
     pos = opening.end()
+    prefix = ''
     while stack:
-        pattern, count = stack[-1]
-        match = pattern.search(source, pos)
+        marks, count = stack[-1]
+        match = marks.search(source, pos)
         if match is None:
+            yield prefix + source[start:]
             return len(source)
         mark = match.group()
         pos = match.end()
-        if pattern is _EXPRESSION_MARK:
+        if marks is _EXPRESSION_MARK:
             if mark in ('{', '}'):
                 count += 1 if mark == '{' else -1
                 if count:
-                    stack[-1] = pattern, count
+                    stack[-1] = marks, count
                 else:
+                    yield from tokens_in_span(token_pattern, source, start, match.start())
+                    yield INTERPOLATION_CLOSE
                     stack.pop()
-            elif mark == '/*':
-                pos = _block_comment_end(source, pos)
+                    start = pos
+                    # The next fragment has no opening quote of its own.
+                    # Mark it as text, even if it starts with // or /*.
+                    prefix = '"'
+            elif mark == '/*' or mark.startswith('`'):
+                yield from tokens_in_span(token_pattern, source, start, match.start())
+                pos = _block_comment_end(source, pos) if mark == '/*' else pos
+                yield source[match.start():pos]
+                start = pos
             elif mark.startswith(('"', '$')):
+                yield from tokens_in_span(token_pattern, source, start, match.start())
                 stack.append(_string_mode(mark))
+                start = match.start()
+                prefix = ''
         elif mark.startswith('"'):
+            yield prefix + source[start:pos]
             stack.pop()
+            start = pos
         elif mark.startswith('$') and len(mark) >= count:
             if source.startswith('{', pos):
+                yield prefix + source[start:pos]
                 stack.append((_EXPRESSION_MARK, 1))
+                yield INTERPOLATION_OPEN
                 pos += 1
+                start = pos
             elif (name := _BACKTICK_NAME.match(source, pos)) is not None:
                 pos = name.end()
     return pos
