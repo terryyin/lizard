@@ -18,6 +18,7 @@ class LuaReader(RubylikeReader):
             r"|\-\-\[\[.*?\]\]" +
             r"|\[\=*\[.*?\]\=*\]" +
             r"|\-\-.*?$" +
+            r"|//" +
             addition)
 
     def get_comment_from_token(self, token):
