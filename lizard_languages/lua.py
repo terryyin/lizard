@@ -3,6 +3,7 @@ Language parser for Lua
 '''
 
 from .rubylike import RubylikeReader, RubylikeStateMachine
+from .token_pattern import compiled_token_pattern, tokens_in_span
 
 
 class LuaReader(RubylikeReader):
@@ -13,12 +14,14 @@ class LuaReader(RubylikeReader):
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
-        return RubylikeReader.generate_tokens(
-            source_code,
+        pattern = compiled_token_pattern(
             r"|\-\-\[\[.*?\]\]" +
             r"|\[\=*\[.*?\]\=*\]" +
             r"|\-\-.*?$" +
+            r"|//" +
             addition)
+        return tokens_in_span(pattern, source_code, 0, len(source_code),
+                              token_class, macros=False)
 
     def get_comment_from_token(self, token):
         if token.startswith("--"):
@@ -45,12 +48,12 @@ class LuaStateMachine(RubylikeStateMachine):
             self.next(self._assigning)
             return
         self.probable_function_name = token
-        super(LuaStateMachine, self)._state_global(token)
+        # Lua's ordinary identifier `it` cannot open a Ruby RSpec example.
+        if token != 'it':
+            super(LuaStateMachine, self)._state_global(token)
 
     def _for_while(self, token):
-        # A Lua loop always has `do`.  The reader only misses it when `#`,
-        # the length operator, starts a comment: `for i = 1, #t do`.  Then
-        # it skips the first token of the body, as it did before.
+        # A Lua loop header ends at `do`; retain recovery at a line break.
         if self.is_newline() or (
                 token == "do" and
                 not getattr(token, 'is_member_name', False)):
