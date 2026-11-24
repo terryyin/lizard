@@ -6,6 +6,9 @@ from .javascript_statements import opens_object
 # The tokens before the name of a method in an object literal; it reads
 # the first member with no token before it.
 _MEMBER_STARTS = frozenset((None, ',', '*', 'async', 'get', 'set'))
+_CLASS_MEMBER_STARTS = frozenset((
+    None, ';', '}', 'static', 'async', 'get', 'set', 'public', 'protected',
+    'private', 'abstract', 'declare', 'override', 'readonly', 'accessor'))
 
 
 class JavaScriptObjectsMixin:
@@ -14,6 +17,7 @@ class JavaScriptObjectsMixin:
     holds_members = False
     # In an object: a default value is open, `{ a = async function () {} }`.
     _default_value = False
+    _class_async_modifier = False
 
     def _typed_class_member(self):
         return (self.as_class and not self._in_prop_value
@@ -41,6 +45,31 @@ class JavaScriptObjectsMixin:
         if not self._typed_class_member():
             return False
         self.context.add_condition(-1)
+        return True
+
+    def _starts_class_member(self):
+        return (self.last_token in _CLASS_MEMBER_STARTS
+                or self.context.newline and ends_expression(self.last_token))
+
+    def _read_class_new(self, token, after_field_type=False):
+        """Whether "new" names a class member outside a field value."""
+        if self._in_prop_value:
+            self._end_field_before_modifier()
+            if self._in_prop_value:
+                return False
+        elif not (after_field_type or self._starts_class_member()
+                  or self.last_token == '*' and (
+                      self._static_seen or self._async_seen and self._class_async_modifier)):
+            # A multiline initializer may already have cleared the field flag.
+            return False
+        if self.started_function:
+            if self._expression_body:
+                self._pop_function_from_stack()
+            else:
+                self._discard_signature()
+        if not self._handle_object_member(token):
+            self.last_tokens = token
+        self._prev_token = ''
         return True
 
     def _handle_object_member(self, token):
@@ -90,7 +119,7 @@ class JavaScriptObjectsMixin:
             return True
         if token == ':' and self.as_class and self._typed_class_member():
             self.function_name = self.last_tokens
-            self._consume_type_annotation()
+            self._consume_type_annotation(class_field=True)
             return True
         if token == ':':
             # Only set function_name for valid identifiers

@@ -175,12 +175,15 @@ class TypeScriptDeclarationsMixin:
                     self.next(resume or self._state_global)
         self.next(consume)
 
-    def _consume_type_annotation(self):
+    def _consume_type_annotation(self, class_field=False):
         typeStates = TypeScriptTypeAnnotationStates(self.context)
 
         def callback():
-            if typeStates.saved_token:
-                self._replay_token(typeStates.saved_token)
+            token = typeStates.saved_token
+            if class_field and token == 'new' and self.context.newline:
+                self._read_class_new(token, after_field_type=True)
+            elif token:
+                self._replay_token(token)
         self.sub_state(typeStates, callback)
 
     def _read_runtime_colon(self):

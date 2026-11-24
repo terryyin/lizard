@@ -101,11 +101,15 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                 if token == 'async':
                     if self._in_prop_value:
                         self._end_field_before_modifier()
+                    if self.as_class:
+                        self._class_async_modifier = (
+                            not self._in_prop_value and self._starts_class_member())
                     self._async_seen = True
                     self._prev_token = token
                     return
                 if token == 'new':
-                    self._prev_token = token
+                    if not self.as_class or not self._read_class_new(token):
+                        self._prev_token = token
                     return
                 if token == '?' and self.as_class:
                     if self._optional_class_member():
