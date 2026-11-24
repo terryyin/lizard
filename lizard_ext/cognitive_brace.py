@@ -2,8 +2,12 @@
 
 from .cognitive_actions import _BraceActions
 from .cognitive_counter import (
-    BODY, BODY_PENDING, BRACE_HEAD, HEAD, PAREN_HEAD, _Counter, _Frame, _IF_LIKE)
+    BODY, BODY_PENDING, BRACE_HEAD, HEAD, PAREN_HEAD, _Counter, _Frame,
+    _IF_LIKE, _INTERPOLATION_END)
 from .cognitive_profile import _EXPRESSION_BREAKERS, _LAMBDA_TRIGGERS, _is_word
+
+
+_HEAD_EXPRESSION_TOKENS = frozenset(('?', ',', ';', '{', '}', '${'))
 
 
 class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
@@ -20,6 +24,8 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         self.lambda_triggers = _LAMBDA_TRIGGERS[profile.lambda_style]
         self.ternary_in_head = reader.language_names[0] == "javascript"
         self.actions = self._keyword_actions(profile)
+        if self.ternary_in_head:
+            self.actions[','] = self._comma
         if not profile.nesting:
             self._process = self._process_flat
 
@@ -52,7 +58,7 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
             self._logical_operator(token)
         elif token in _EXPRESSION_BREAKERS:
             state.logical.pop(state.pdepth, None)
-            if token == ',':
+            if token == ',' and not self.ternary_in_head:
                 self._pop_expression_frames(peer_separator=True)
         if token in ('(', '['):
             self._open_bracket()
@@ -102,16 +108,22 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
             self._structural()
         self._push('ternary', BODY)
 
-    def _pop_expression_frames(self, peer_separator=False):
+    def _comma(self):
+        self._pop_expression_frames(peer_separator=True)
+
+    def _pop_expression_frames(self, peer_separator=False, brace_depth=None):
         """Close a ternary at its enclosing bracket or a peer separator.
 
         A comma between arguments or a semicolon between parts of a for
-        header makes the next ternary a sibling.
+        header makes the next ternary a sibling at the same depth.
         """
         frames = self.state.frames
         pdepth = self.state.pdepth
         while frames and frames[-1].kind == 'ternary':
-            open_depth = frames[-1].pdepth
+            frame = frames[-1]
+            if brace_depth is not None and frame.depth != brace_depth:
+                break
+            open_depth = frame.pdepth
             if open_depth > pdepth or (peer_separator and open_depth == pdepth):
                 frames.pop()
             else:
@@ -218,17 +230,25 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         if top.phase == PAREN_HEAD:
             if token == ')' and state.pdepth == top.pdepth:
                 top.phase = BODY_PENDING
-            elif token in ('?', ';') and self.ternary_in_head:
-                if token == '?':
-                    self._question()
-                elif (state.pdepth == top.pdepth + 1 and self.openers
-                      and self.openers[-1][0] == '('):
-                    self._pop_expression_frames(peer_separator=True)
+            elif token in _HEAD_EXPRESSION_TOKENS and self.ternary_in_head:
+                self._in_javascript_head(token)
             return True
         # BRACE_HEAD: Go / Rust / Swift ``if a && b {``
         if token == '{' and state.pdepth == top.pdepth:
             self._open_braced_body(top)
         return True
+
+    def _in_javascript_head(self, token):
+        """Track expression braces even when the head consumes their tokens."""
+        if token == '?':
+            self._question()
+        elif token in ('{', '${'):
+            self._open_block()
+        elif token == '}' or token is _INTERPOLATION_END:
+            self._close_block()
+        else:  # comma or semicolon
+            self._pop_expression_frames(peer_separator=True,
+                                        brace_depth=self.state.depth)
 
     def _start_body(self, top, token):
         if token == '{':

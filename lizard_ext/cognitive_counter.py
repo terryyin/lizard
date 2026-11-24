@@ -14,6 +14,13 @@ _BRACKETS = frozenset(_CLOSER_OF) | frozenset(_CLOSER_OF.values())
 _EXPRESSION_FRAMES = ('ternary', 'lambda')
 
 
+class _InterpolationEnd(str):  # pylint: disable=R0903
+    """A logical separator that closes an interpolation instead of a block."""
+
+
+_INTERPOLATION_END = _InterpolationEnd(',')
+
+
 def _is_markup(token):
     """JSX text is no code: ``<p>{name}({count})</p>``."""
     return getattr(token, 'is_jsx_markup', False)
@@ -154,7 +161,7 @@ class _Counter(object):  # pylint: disable=R0902
         would otherwise never see its bracket close.
 
         The ``}`` of a template interpolation ends no block.  It ends the
-        sequence of logical operators before it, so it counts as ``,``."""
+        sequence of logical operators before it, like a comma."""
         openers = self.openers
         if token in _CLOSER_OF:
             if not _is_markup(token):
@@ -163,7 +170,7 @@ class _Counter(object):  # pylint: disable=R0902
                 not _is_markup(token):
             opener, function = openers.pop()
             if opener == '${':
-                token = ','
+                token = _INTERPOLATION_END
         return function, token
 
     # -- functions the reader abandons ----------------------------------------
