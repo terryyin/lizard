@@ -313,9 +313,11 @@ const thenable = {
             with self.subTest(filename=filename):
                 functions = analyzer.analyze_source_code(
                     filename, source).function_list
+                # A .svelte file also reports its component.
                 self.assertEqual(expected, [(f.name, f.cyclomatic_complexity,
                                              f.max_nested_structures)
-                                            for f in functions])
+                                            for f in functions
+                                            if f.name != '(component)'])
 
     def test_generic_method_named_like_a_keyword(self):
         code = '''

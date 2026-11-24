@@ -5,13 +5,12 @@
 // bound stops as held stops do.
 import { resolve } from "node:path";
 import { resolveCheckoutRuntime } from "./ci-checkout-runtime.mjs";
-import { withExplicitSession } from "./ci-host-bridge.mjs";
 import {
-  mailboxRoot,
-  readRevisionCoverage,
-  registerPushedRevision,
-} from "./ci-mailbox.mjs";
-import { listRegisteredRevisions } from "./ci-mailbox-revision-records.mjs";
+  rejectRetiredObserverFlags,
+  withExplicitSession,
+} from "./ci-host-bridge.mjs";
+import { mailboxRoot } from "./ci-mailbox.mjs";
+import { registerPushedRevision } from "./ci-mailbox-revision-records.mjs";
 import { isDirectCliEntry } from "./ci-direct-entry.mjs";
 import { recoverObservationForResume } from "./execution-increment-observation-recovery.mjs";
 import { stopped } from "./applicable-candidate-proof.mjs";
@@ -19,21 +18,6 @@ import { resumeInterruptedPublication } from "./publication-resume.mjs";
 import { recordAcceptedIncrement } from "./execution-session-evidence.mjs";
 import { resolveLaunchLanding } from "./resolve-publication-landing-context.mjs";
 import { targetBranchName } from "./publication-git.mjs";
-
-export function observerAdapter(directory, targetRef) {
-  const receipts = readRevisionCoverage(directory).map((entry) => ({
-    sha: entry.sha,
-    target: targetRef,
-  }));
-  return {
-    bound: true,
-    receipts,
-    register(sha, target) {
-      registerPushedRevision(directory, sha);
-      receipts.push({ sha, target });
-    },
-  };
-}
 
 export async function resumeManagedExecutionIncrement(request) {
   const {
@@ -44,10 +28,8 @@ export async function resumeManagedExecutionIncrement(request) {
     repo,
     remote = "origin",
     supersededShas = [],
-    publishedRevisions = [],
     defaultCheckout,
     host = "cursor",
-    preferredAlias,
     session,
     coordinator,
     observerDirectory,
@@ -71,7 +53,7 @@ export async function resumeManagedExecutionIncrement(request) {
     }
   }
 
-  const runtime = resolveCheckoutRuntime(workspace, { host, preferredAlias });
+  const runtime = resolveCheckoutRuntime(workspace, { host });
   const observerRoot = root ?? runtime.checkout;
   const observerStorage = storage ?? mailboxRoot;
   const targetBranch = targetBranchName(targetRef);
@@ -89,9 +71,6 @@ export async function resumeManagedExecutionIncrement(request) {
 
   const liveDirectory =
     observation.state === "recovered" ? observation.directory : null;
-  const observer = liveDirectory
-    ? observerAdapter(liveDirectory, targetRef)
-    : null;
 
   // Queued one-shot work keeps its ownership guard when resume must push.
   const onFetchedTarget = oneShotIdentity
@@ -120,8 +99,6 @@ export async function resumeManagedExecutionIncrement(request) {
       branch,
       backlogPath: request.backlogPath,
       supersededShas,
-      publishedRevisions,
-      observer,
       targetRef,
       onFetchedTarget,
     });
@@ -165,23 +142,17 @@ export async function resumeManagedExecutionIncrement(request) {
       reference,
     });
 
-  // Ensure the accepted SHA is on the recovered live owner when resume's
-  // classification completed registration or coverage was already present.
-  if (
-    liveDirectory &&
-    !listRegisteredRevisions(liveDirectory).includes(
-      published.acceptedSha.toLowerCase(),
-    )
-  ) {
-    registerPushedRevision(liveDirectory, published.acceptedSha);
-  }
+  // Register on the recovered owner after remote acceptance.
+  if (liveDirectory)
+    registerPushedRevision(liveDirectory, published.acceptedSha, {
+      onlyIfMissing: true,
+    });
 
   return {
     ok: true,
     publication: "accepted",
     report: "accepted",
     pushCount: published.pushCount,
-    completedObligation: published.completedObligation,
     classification: published.classification,
     ...(published.landing === undefined ? {} : { landing: published.landing }),
     receipt: {
@@ -196,17 +167,16 @@ export async function resumeManagedExecutionIncrement(request) {
       entrypoint: runtime.entrypoint,
     },
     maintenance: published.maintenance ?? null,
-    registration: published.registration,
   };
 }
 
 function argumentsOf(argv) {
   if (argv[0] !== "resume") {
     throw new Error(
-      "usage: execution-increment-resume.mjs resume --workspace PATH --candidate-sha SHA --target-ref REF --repo OWNER/REPO [--suffix-base SHA] [--remote NAME] [--host cursor|claude|codex] [--preferred-alias .agents|.claude] [--session-json JSON] [--coordinator VALUE --observer-directory PATH] [--default-checkout PATH] [--superseded-sha SHA]... [--one-shot-identity ID] [--landing-context PATH]",
+      "usage: execution-increment-resume.mjs resume --workspace PATH --candidate-sha SHA --target-ref REF --repo OWNER/REPO [--suffix-base SHA] [--remote NAME] [--host cursor|claude|codex] [--session-json JSON] [--coordinator VALUE --observer-directory PATH] [--default-checkout PATH] [--superseded-sha SHA]... [--one-shot-identity ID] [--landing-context PATH]",
     );
   }
-  const result = { supersededShas: [], publishedRevisions: [] };
+  const result = { supersededShas: [] };
   for (let index = 1; index < argv.length; index += 1) {
     const flag = argv[index];
     if (flag === "--superseded-sha") {
@@ -221,6 +191,7 @@ function argumentsOf(argv) {
       .replace(/-[a-z]/g, (match) => match[1].toUpperCase());
     result[key] = argv[++index];
   }
+  rejectRetiredObserverFlags(result);
   return withExplicitSession(result);
 }
 

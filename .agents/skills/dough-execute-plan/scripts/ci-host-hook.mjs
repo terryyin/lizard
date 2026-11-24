@@ -40,11 +40,7 @@ const lostWorkerMessage = (directory, lost) =>
 const endedObserverMessage = (directory, terminal) =>
   `CI observer ended for this coordinator: ${directory} (${terminal.status})`;
 
-export function selectCiEvents(
-  input,
-  host,
-  { root = checkoutRoot, storage = mailboxRoot } = {},
-) {
+function selectCiEvents(input, host) {
   // Cursor may also load .claude/settings.json; use only its native adapter.
   if (host === "claude" && input.cursor_version) return emptySelection();
   if (
@@ -54,10 +50,10 @@ export function selectCiEvents(
     input.status !== "completed"
   )
     return emptySelection();
-  const owner = hostInputOwner(input, host, root);
+  const owner = hostInputOwner(input, host, checkoutRoot);
   if (!owner) return emptySelection();
-  const bindings = join(storage, `owner-${owner}`);
-  const generation = join(storage, `generation-${owner}`);
+  const bindings = join(mailboxRoot, `owner-${owner}`);
+  const generation = join(mailboxRoot, `generation-${owner}`);
   const managed = input.generation_id === managedDeliveryGeneration;
   // A managed generation never replaces a recorded one.
   const recordGeneration = () => {
@@ -116,7 +112,7 @@ export function selectCiEvents(
         line.slice(receiptPrefix.length),
       );
       if (terminal) continue;
-      const request = readMailbox(directory, root, storage);
+      const request = readMailbox(directory);
       mkdirSync(bindings, { recursive: true, mode: 0o700 });
       if (!claimMailbox(directory, owner)) continue;
       writeFileSync(join(bindings, hash(directory)), directory, {
@@ -184,12 +180,6 @@ export function selectCiEvents(
         recordDeliveryProgress(directory, update);
     },
   };
-}
-
-export function deliverCiEvents(input, host, options) {
-  const selection = selectCiEvents(input, host, options);
-  selection.acknowledge();
-  return selection.output;
 }
 
 if (isDirectCliEntry(import.meta.url, process.argv[1])) {

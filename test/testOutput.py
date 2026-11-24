@@ -5,7 +5,7 @@ from test.helper_stream import StreamStdoutTestCase
 import os
 from lizard import print_warnings, print_and_save_modules, FunctionInfo, FileInformation,\
     print_result, print_extension_results, get_extensions, OutputScheme, get_warnings, print_clang_style_warning,\
-    parse_args, AllResult
+    parse_args, AllResult, FileAnalyzer
 from lizard_ext import xml_output
 from lizard_ext.checkstyleoutput import checkstyle_output
 
@@ -86,6 +86,39 @@ class TestWarningOutput(StreamStdoutTestCase):
         fileSummary = FileInformation("FILENAME", 123, [self.foo, bar])
         warnings = get_warnings([fileSummary], self.option)
         self.assertEqual('bar', warnings[0].name)
+
+    def test_threshold_skips_a_function_without_a_value(self):
+        self.option = parse_args(["lizard", "-Estatementcount", "-T", "statement_count=0"])
+        analyzer = FileAnalyzer(get_extensions(["statementcount"]))
+        code = """
+            function load(id) {
+                return cache.get(id);
+            }
+            """
+        warnings = get_warnings([analyzer.analyze_source_code("a.js", code)], self.option)
+        self.assertEqual([], list(warnings))
+
+    def test_sort_warning_puts_functions_without_a_value_last(self):
+        self.option = parse_args(["lizard", "-Estatementcount", "-C", "0", "-s", "statement_count"])
+        analyzer = FileAnalyzer(get_extensions(["statementcount"]))
+        js_code = """
+            function load(id) {
+                return cache.get(id);
+            }
+            function save(id, value) {
+                cache.set(id, value);
+            }
+            """
+        c_code = """
+            int clamp(int x) {
+                if (x < 0) return 0;
+                return x;
+            }
+            """
+        files = [analyzer.analyze_source_code("a.js", js_code), analyzer.analyze_source_code("a.c", c_code)]
+        warnings = get_warnings(files, self.option)
+        self.assertEqual([("clamp", 3), ("load", None), ("save", None)],
+                         [(f.name, f.statement_count) for f in warnings])
 
     def test_sort_warning_with_generator(self):
         self.option.sorting = ['cyclomatic_complexity']

@@ -39,10 +39,9 @@ Resolve from this project, not this skill's location:
   (`DearDough.md` unless this project sets another canonical location).
 
 Before deleting a plan that carries planned-execution identity, retain the
-resolved mode, checkout, branch, remote, target, the execution checkout's
-[management context](../dough-land/SKILL.md#retire-the-worktree) and its pending
-[lifecycle commitments](references/lifecycle-commitments.md#carry-them-past-deletion)
-in the coordinator's execution context. Do not create a parallel registry.
+resolved mode, checkout, branch, remote, target, and the execution checkout's
+[management context](../dough-land/SKILL.md#retire-the-worktree) in the
+coordinator's execution context.
 If required identity is missing, stop the action that needs it.
 
 With supplied dashboard reporting context, read and retain
@@ -53,8 +52,7 @@ outside it. Reporting is the final operation.
 
 ## Establish execution completion
 
-- Planned work is complete when every slice is done. Run `check --planned-completion`
-  and take its `pendingLifecycle` rows under [lifecycle commitments](references/lifecycle-commitments.md#read-them-at-completion).
+- For planned work, run [`check --planned-completion`](../dough-execute-plan/references/story-obligations.md#use-the-record-at-execution-boundaries) on the selected plan. Every slice must be done and its obligations settled.
 - Work without a plan, including an investigation whose approach stayed unselected, is
   complete when its story or instruction, changes, and execution results show the promised outcome, including evidenced no-change.
 - If implementation is unfinished, report it, leave active work intact, and stop.
@@ -237,4 +235,4 @@ rule and its [final dashboard operation](../dough-land/references/dashboard-comp
 with the supplied launch context, after either closure path has settled. Keep the selected identity, mode and retained execution context, before-cleanup and final-closure commits, accepted publication and completion receipts, remaining coverage and cleanup dispositions in their existing operational evidence.
 
 When attention is needed, report the affected facts and next action. Distinguish accepted trunk publication from a superseded candidate, an [`integrated_state` success](../dough-execute-plan/references/ci-completion-wait.md) from the closure's own, integration from refused cleanup, committed pending publication from an accepted receipt, and completed wrap-up from a refusal that left files intact.
-Missing context, unfinished work, unresolved recovery/integration, required push, unpublished Trunk Mode closure, retained or unconfirmed observation, resource cleanup, or a [lifecycle commitment](references/lifecycle-commitments.md#report-the-outcome) without its owner's receipt prevents successful closure; name each such commitment and its owner. Local-only current-branch pending publication is not a required push.
+Missing context, unfinished work, unresolved recovery/integration, required push, unpublished Trunk Mode closure, retained or unconfirmed observation, or incomplete resource cleanup prevents successful closure. Identify the outstanding operation and its missing result. Local-only current-branch pending publication is not a required push.

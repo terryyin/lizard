@@ -15,7 +15,6 @@ import { recordAcceptedIncrement } from "./execution-session-evidence.mjs";
 import { resolveLaunchLanding } from "./resolve-publication-landing-context.mjs";
 export { resumeManagedExecutionIncrement } from "./execution-increment-resume.mjs";
 import { targetBranchName } from "./publication-git.mjs";
-import { executionBudgetMs } from "./watch-ci-execution.mjs";
 import {
   managedIncrementRequestRefusal,
   readIncrementCliRequest,
@@ -37,22 +36,18 @@ export async function deliverManagedExecutionIncrement(request) {
     targetRef,
     repo,
     host = "cursor",
-    preferredAlias,
     session,
     coordinator,
     observerDirectory,
     authority = "publish",
     remote = "origin",
-    maxDurationMs = executionBudgetMs,
     env = process.env,
     root,
     storage,
-    register,
     validate,
     validatedCandidate,
     defaultCheckout,
     backlogPath,
-    beforeRetryPush,
     beforePush,
     landingContext,
     oneShotIdentity,
@@ -79,7 +74,7 @@ export async function deliverManagedExecutionIncrement(request) {
     };
   }
 
-  const runtime = resolveCheckoutRuntime(workspace, { host, preferredAlias });
+  const runtime = resolveCheckoutRuntime(workspace, { host });
   const { alias, skillRoot, entrypoint } = runtime;
   const runtimeSummary = { alias, skillRoot, entrypoint };
   const observerRoot = root ?? runtime.checkout;
@@ -95,7 +90,6 @@ export async function deliverManagedExecutionIncrement(request) {
     observerDirectory,
     workspace,
     runtime,
-    maxDurationMs,
     env,
     root: observerRoot,
     storage: observerStorage,
@@ -131,12 +125,10 @@ export async function deliverManagedExecutionIncrement(request) {
     previouslyPublishedBase,
     targetRef,
     remote,
-    register,
     validate,
     validatedCandidate,
     defaultCheckout,
     backlogPath,
-    beforeRetryPush,
     beforePush,
     landingContext: resolvedLanding,
     onFetchedTarget,

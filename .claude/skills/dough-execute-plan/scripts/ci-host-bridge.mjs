@@ -52,6 +52,18 @@ export function withExplicitSession({ sessionJson, ...args }) {
   return sessionJson ? { ...args, session: JSON.parse(sessionJson) } : args;
 }
 
+const retiredObserverFlags = [
+  ["preferredAlias", "--preferred-alias"],
+  ["maxDurationMs", "--max-duration-ms"],
+];
+
+export function rejectRetiredObserverFlags(args, usageSuffix = "") {
+  const retired = retiredObserverFlags.find(([key]) =>
+    Object.hasOwn(args, key),
+  );
+  if (retired) throw new Error(`invalid argument ${retired[1]}${usageSuffix}`);
+}
+
 export function missingIdentityReason(host, command = "deliver") {
   const identity = hostIdentity[host];
   if (!identity)
@@ -123,7 +135,7 @@ function bridgeContext(output) {
   );
 }
 
-export async function invokeHostHook(
+async function invokeHostHook(
   host,
   input,
   { hookPath = defaultHook, cwd, env } = {},
@@ -203,18 +215,4 @@ export async function bindHostObserver({
     context,
     output,
   };
-}
-
-export function deliverHostBoundary({
-  host,
-  session,
-  workspace,
-  hookPath = defaultHook,
-  env,
-}) {
-  return invokeHostHook(host, hookInput(host, session, ""), {
-    hookPath,
-    cwd: workspace,
-    env,
-  });
 }

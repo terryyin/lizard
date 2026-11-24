@@ -192,19 +192,16 @@ still applies, but the result has no historical comparison. Do not substitute
 the candidate's parent, today's target, or an earlier starting revision after
 a rewrite.
 
-Continue only the first unfinished obligation below. Do not duplicate the
-commit or replace the caller's workspace. A pending human edit on the default
-checkout does not change this classification and is not destroyed while
-resuming. Checkout maintenance and resource cleanup are not obligations of
-this step: record maintenance by inspection only, and leave cleanup to the
-caller that already owns it.
+Continue from the observed boundary below. Preserve the caller's commit,
+workspace, and any pending human edit on the default checkout. Inspect
+checkout maintenance and leave any changes or cleanup to their owners.
 
 | Boundary | Actual state | Continue with |
 | --- | --- | --- |
-| Not on the remote | The retained candidate is not an ancestor of fetched remote history. The owned workspace still has that commit. | [Publish the candidate](#publish-the-candidate) from step 1. When that SHA still fast-forwards onto the fetched target, push it and do not commit again. When it does not fast-forward, use [rejected-push recovery](#recover-a-rejected-push); do not treat the candidate as published. Do not fast-forward the default checkout. When an observer is already bound to that target, step 6's registration is part of finishing the publication that this push accepts. |
+| Not on the remote | The retained candidate is not an ancestor of fetched remote history. The owned workspace still has that commit. | [Publish the candidate](#publish-the-candidate) from step 1. When that SHA still fast-forwards onto the fetched target, push it and preserve the original commit. When it does not fast-forward, use [rejected-push recovery](#recover-a-rejected-push). The caller handles registration after confirmed acceptance. |
 | Candidate only on the default checkout | That checkout's target tip is the owned candidate, and the remote does not contain it. The owned workspace for this suffix is that checkout. | Push that exact SHA ([Publish the candidate](#publish-the-candidate) step 5). Do not rebase or commit again unless a newer remote requires [rejected-push recovery](#recover-a-rejected-push). Preserve any pending human edit; the SHA push does not include it. |
-| Already published | The retained candidate — the rewritten SHA, when a rewrite was retained — is an ancestor of fetched remote history. The remote tip may be a later writer's commit. | Append that SHA to retained published revisions when identity omitted it. Do not push. This recognition is not registration, maintenance, or cleanup. |
-| Missing registration | The candidate is already an ancestor and its SHA is retained, but an observer already bound to this caller has no receipt for it. A caller that binds no observer has nothing to register. | Register that SHA with the existing observer. Do not push, and do not start a replacement observer. Leave maintenance and cleanup unperformed. |
+| Already published | The exact retained SHA is an ancestor of fetched remote history. The remote tip may be a later writer's commit. | Use the accepted SHA and its retained comparison. Preserve the remote and continue with the caller's remaining work. |
+| Missing registration | Publication is accepted and the caller's selected live observer for that target has no receipt for the accepted SHA. | The caller registers the accepted SHA on that observer. Reuse an existing receipt or report a coverage gap when the caller cannot recover its observer. |
 
 If the owned workspace, target, or candidate SHA is missing, contradictory, or
 matches no unique owned suffix, preserve every existing worktree, branch, and

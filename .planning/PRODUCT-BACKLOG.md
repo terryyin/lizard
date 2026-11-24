@@ -6,5 +6,7 @@ Maintenance, bug fixing, and PR reviews. We accept PRs and issues that fix or im
 
 ## Taken
 
+- [Process open PRs (past 30 hours)](seeds/SEED-072-process-open-prs-past-30h.md#process-open-prs-past-30h) — SEED-072#process-open-prs-past-30h
+
 ## Backlog list
 

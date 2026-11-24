@@ -14,14 +14,6 @@ const aliasRoots = {
   codex: [".agents"],
 };
 
-function candidateSkillRoots(preferredAlias) {
-  const preferred = preferredAlias
-    ? [preferredAlias.replace(/^\.\//, "").replace(/\/$/, "")]
-    : [];
-  const shared = [".agents", ".claude"];
-  return [...new Set([...preferred, ...shared])];
-}
-
 export function requireSelectedRuntimeEntrypoint(selectedRoot, skillRoot) {
   const selectedCheckout = realpathSync(selectedRoot);
   const entrypoint = join(skillRoot, entryRelative);
@@ -39,15 +31,10 @@ export function requireSelectedRuntimeEntrypoint(selectedRoot, skillRoot) {
   return entrypoint;
 }
 
-export function resolveCheckoutRuntime(
-  workspace,
-  { host, preferredAlias } = {},
-) {
+export function resolveCheckoutRuntime(workspace, { host } = {}) {
   const selectedCheckout = realpathSync(workspace);
   const hostOrder = aliasRoots[host] ?? [".agents", ".claude"];
-  const aliases = preferredAlias
-    ? candidateSkillRoots(preferredAlias)
-    : [...new Set([...hostOrder, ".agents", ".claude"])];
+  const aliases = [...new Set([...hostOrder, ".agents", ".claude"])];
   const tried = [];
   for (const alias of aliases) {
     const skillRoot = join(selectedCheckout, alias, "skills", skillName);

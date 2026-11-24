@@ -31,7 +31,7 @@ export function boundPublicationTransport(attemptFacts) {
   };
 }
 
-// Registers the accepted candidate and inspects the default checkout.
+// Reports the accepted candidate and inspects the default checkout.
 export async function acceptPublishedExecutionIncrement({
   workspace,
   candidate,
@@ -39,7 +39,6 @@ export async function acceptPublishedExecutionIncrement({
   suffixBase,
   landingContext,
   remote,
-  register,
   defaultCheckout,
   preRebaseSha,
   reconciliations,
@@ -55,7 +54,6 @@ export async function acceptPublishedExecutionIncrement({
         target: targetRef,
       })
     : undefined;
-  register?.(receipt);
   const maintenance = await inspectDefaultCheckoutMaintenance(
     workspace,
     defaultCheckout,
@@ -83,7 +81,6 @@ export function executionIncrementRemoteOps({
   targetRef,
   remote,
   landingContext,
-  register,
   defaultCheckout,
   preRebaseSha,
   attempt,
@@ -127,7 +124,6 @@ export function executionIncrementRemoteOps({
         suffixBase: state.suffixBase,
         landingContext,
         remote,
-        register,
         defaultCheckout,
         preRebaseSha,
         reconciliations: state.reconciliations,

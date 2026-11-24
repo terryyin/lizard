@@ -6,11 +6,6 @@ agent. Use a general-purpose agent, or `gsd-executor` when this project uses
 The coordinator retains
 [wrap-up](wrap-up.md); an execution tool does not take over that responsibility.
 
-## Obtain the source-only review
-
-Before the obligations listing below, complete
-[Obtain the source-only review](obtain-source-review.md#before-planned-delegation).
-
 ## List promises and assign the agent
 
 Before planned or planless test-authoring delegation, follow
@@ -21,22 +16,17 @@ Before planned delegation, run the installed
 [story-obligations script](../scripts/story-obligations.mjs):
 `node '<installed-execute-plan>/scripts/story-obligations.mjs' list --plan '<PLAN.md>' --slice N`.
 Resolve these inputs under [story obligations](story-obligations.md#use-the-record-at-execution-boundaries).
-A refusal blocks delegation until resolved. Carry the full listing as slice
-promises with their required observations, including returns, receiving
-obligations, and open interims. When the plan links a source review, the
-listing also carries the commitment ids allocated to this slice; pass each id
-with its source text as a slice promise to observe. Do not substitute a
-learning summary.
+A refusal blocks delegation until resolved. Include the listed returns, receiving
+obligations and open interims in the brief with their required observations.
 
 Give the agent:
 
 - The selected execution checkout and branch. Pass the complete retained
   execution identity. Require all implementation commands and edits
   to run there rather than relying on the agent's inherited working directory.
-- The execution source and current slice with mapped promises and observations,
-  including replacement and lifecycle obligations. For planned execution, pass
-  the plan path and its selected-story or bounded-correction source. Also pass
-  any relevant existing-solution finding and candidate evidence from the plan,
+- The execution source, current slice and expected observations. For planned
+  execution, pass the plan path and its full selected story or bounded correction.
+  Also pass relevant existing-solution findings and candidate evidence from the plan,
   plus new evidence that triggered a PFE revisit; a fresh agent does not repeat
   a still-valid search merely because delegation occurred. For a correction,
   pass its complete

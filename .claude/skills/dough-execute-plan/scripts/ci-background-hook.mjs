@@ -6,8 +6,6 @@ import {
 import { waitForBackgroundFailure } from "./ci-background-waiter.mjs";
 import { isDirectCliEntry } from "./ci-direct-entry.mjs";
 
-export { waitForBackgroundFailure } from "./ci-background-waiter.mjs";
-
 if (isDirectCliEntry(import.meta.url, process.argv[1])) {
   try {
     let raw = "";

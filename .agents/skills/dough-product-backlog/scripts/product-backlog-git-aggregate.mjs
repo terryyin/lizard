@@ -32,9 +32,6 @@
 // caller with different actual boundaries (a rejected-push retry rebasing
 // only an unpublished suffix, an execution-branch replay onto trunk) can
 // reuse this unchanged.
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
 import { git, gitLine } from "./product-backlog-git-repository.mjs";
 import { mergeBacklogs } from "./product-backlog-merge.mjs";
 import { BacklogError } from "./product-backlog-refusal.mjs";
@@ -47,20 +44,6 @@ function contentAt(repoRoot, file, ref) {
       `${file} is not present at ${ref}, so the whole-operation aggregate ` +
         `comparison cannot be run.`,
     );
-  }
-}
-
-function withTemporaryVersions(contents, run) {
-  const directory = mkdtempSync(join(tmpdir(), "dough-backlog-aggregate-"));
-  try {
-    const paths = contents.map((content, at) => {
-      const path = join(directory, `version-${at}.md`);
-      writeFileSync(path, content, "utf8");
-      return path;
-    });
-    return run(paths);
-  } finally {
-    rmSync(directory, { recursive: true, force: true });
   }
 }
 
@@ -90,32 +73,24 @@ export function aggregateOutcome({
   const destination = contentAt(repoRoot, file, destinationAtStart);
   const actual = contentAt(repoRoot, file, resultRef);
 
-  return withTemporaryVersions(
-    [ancestor, branch, destination],
-    ([ancestorPath, branchPath, destinationPath]) => {
-      try {
-        const outcome = mergeBacklogs({
-          ancestor: ancestorPath,
-          branches: [branchPath, destinationPath],
-        });
-        if (outcome.source !== actual) {
-          return {
-            agrees: false,
-            refusal:
-              `The shared resolver's own whole-operation candidate for ` +
-              `${file} does not match what the operation actually left at ` +
-              `${resultRef}, comparing the true pre-operation tip ` +
-              `(${preOperationTip}) against the true destination-at-start ` +
-              `(${destinationAtStart}).`,
-          };
-        }
-        return { agrees: true };
-      } catch (error) {
-        if (!(error instanceof BacklogError)) {
-          throw error;
-        }
-        return { agrees: false, refusal: error.message };
-      }
-    },
-  );
+  try {
+    const outcome = mergeBacklogs(ancestor, branch, destination);
+    if (outcome.source !== actual) {
+      return {
+        agrees: false,
+        refusal:
+          `The shared resolver's own whole-operation candidate for ` +
+          `${file} does not match what the operation actually left at ` +
+          `${resultRef}, comparing the true pre-operation tip ` +
+          `(${preOperationTip}) against the true destination-at-start ` +
+          `(${destinationAtStart}).`,
+      };
+    }
+    return { agrees: true };
+  } catch (error) {
+    if (!(error instanceof BacklogError)) {
+      throw error;
+    }
+    return { agrees: false, refusal: error.message };
+  }
 }

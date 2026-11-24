@@ -12,10 +12,7 @@ export const sessionRecordDirectory = "sessions";
 // The record schema version every writer and reader shares.
 export const sessionRecordVersion = 1;
 
-// The workflow values a close record may carry: a standalone (Dashboard
-// ad-hoc) session, including a story follow-up, a plan execution, or a story
-// refinement's landed preparation.
-export const standaloneSessionWorkflow = "ad-hoc";
+// Workflow values used by the execution and preparation record writers.
 export const executionSessionWorkflow = "dough-execute-plan";
 export const refinementSessionWorkflow = "dough-story-refinement";
 
@@ -39,12 +36,12 @@ export function isSessionId(value) {
 
 // The file name (within the session-record directory) the record of `sessionId`
 // takes. The same UUID always names the same file.
-export function sessionRecordFileName(sessionId) {
+function sessionRecordFileName(sessionId) {
   return `${sessionId}.json`;
 }
 
 // The record's path relative to the backlog's directory.
-export function sessionRecordRelativePath(sessionId) {
+function sessionRecordRelativePath(sessionId) {
   return `${sessionRecordDirectory}/${sessionRecordFileName(sessionId)}`;
 }
 

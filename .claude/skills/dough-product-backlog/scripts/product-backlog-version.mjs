@@ -22,7 +22,6 @@ import {
   takenHeading,
 } from "./product-backlog-document.mjs";
 import { BacklogError } from "./product-backlog-refusal.mjs";
-import { readFile } from "./product-backlog-store.mjs";
 
 // Where the part of the file a merge rewrites begins, established only for a
 // version holding the direction and the two lists one after another. A merge
@@ -55,16 +54,8 @@ function requireEstablishedShape(document) {
   return wanted[0];
 }
 
-// Reads one supplied version. A version this tool cannot read is named, so a
-// human repairs the file the merge actually choked on rather than guessing
-// which of the three it was.
-export function readVersion(path, label) {
-  const source = readFile(
-    path,
-    `Not found: ${path} (${label}). Supply the path to each of the three ` +
-      `versions this merge reconciles.`,
-  );
-
+// Parses the supplied text and identifies the version if its shape is invalid.
+export function readVersion(source, label) {
   let document;
   let direction;
   let opening;
@@ -75,7 +66,7 @@ export function readVersion(path, label) {
   } catch (error) {
     if (error instanceof BacklogError) {
       throw new BacklogError(
-        `${label} (${path}) is not a backlog this tool can read, so nothing ` +
+        `${label} is not a backlog this tool can read, so nothing ` +
           `was merged.\n${error.message}`,
       );
     }
@@ -84,7 +75,6 @@ export function readVersion(path, label) {
 
   return {
     label,
-    path,
     direction,
     newline: document.newline,
     hasFinalNewline: document.hasFinalNewline,

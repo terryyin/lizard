@@ -114,7 +114,14 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
         pass
 
     def _expect_declaration_name(self, token):
-        self._state = self._state_global
+        # A name after `val`, `var` or `,` is not a keyword: `val type`,
+        # `(name, set)`. A lambda or a `when` argument, a parameter
+        # (`, val x`) and the `->` of a `when` branch keep their role.
+        if token in ('{', 'when', 'val', 'var') or (
+                token == '->' and self._in_when_cases):
+            self.next(self._state_global, token)
+        else:
+            self._state = self._state_global
 
     def _function_type_result(self, token):
         # Only a function type with a lambda initializer starts a function:
@@ -229,8 +236,27 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
     def _function_name(self, token):
         if token == "<":
             self.next(self._template, token)
-        else:
+        elif token == "@":
+            self._state = self._receiver_annotation
+        elif not self._receiver_type_end(token):
             return super(KotlinStates, self)._function_name(token)
+
+    def _receiver_annotation(self, _):
+        self._state = self._function_name
+
+    def _expect_function_dec(self, token):
+        if not self._receiver_type_end(token):
+            super()._expect_function_dec(token)
+
+    def _receiver_type_end(self, token):
+        # In `fun String.f()` and `fun List<T>?.f()`, the name read so far
+        # is the receiver type. The function name comes after the dot.
+        # A type argument list with a `?`, such as `<T?>`, is one token.
+        if token == '.':
+            self.context.current_function.name = ''
+            self.context.current_function.long_name = ''
+            self._state = self._function_name
+        return token in ('.', '?') or token[:1] == '<' and token[-1:] == '>' and len(token) > 1
 
     @CodeStateMachine.read_inside_brackets_then("<>", "_function_name")
     def _template(self, tokens):

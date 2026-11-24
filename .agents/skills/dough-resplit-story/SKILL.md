@@ -70,8 +70,7 @@ and yields a useful outcome with proof independent of the remaining slices.
 If the cut needs a human decision or leaves required proof open, return the
 blocker before rewriting either story.
 
-- Keep the original Taken identity. Narrow its source to the delivered outcome,
-  [refresh its source review](../dough-execute-plan/references/obtain-source-review.md#at-acceptance),
+- Keep the original Taken identity. Narrow its source to the delivered outcome
   and check its retained proof and obligations before closure.
 - Give the remainder a new identity and plan. [Map every slice and promise](#map-and-realign-plans),
   preserve compatible evidence, and resplit an oversized remainder as preparation.

@@ -49,16 +49,8 @@ import {
   ensureDriverRegistered,
   gitLine,
   gitOutcome,
-  repositoryRoot,
 } from "./product-backlog-git-repository.mjs";
 import { BacklogError } from "./product-backlog-refusal.mjs";
-
-export {
-  ensureDriverRegistered,
-  rebaseState,
-  repositoryRoot,
-  validateOperation,
-};
 
 // Continuing a rebase must never stop to open an editor: every step reuses
 // the replayed commit's own recorded message, the same way this gate never
@@ -128,7 +120,7 @@ function interpretStop(repoRoot, file, outcome) {
 // With `--onto`, `--ref` is the upstream cutoff and Git replays only the
 // commits after that cutoff:
 // `git rebase --onto <onto> <ref> [<branch>]`.
-export async function rebaseOperation({
+async function rebaseOperation({
   repoRoot,
   file,
   ref,
@@ -189,7 +181,7 @@ function concludeRebase(repoRoot, file, replayBase, result) {
 // continuing surfaces a fresh conflict on this same path for the next
 // commit, that is reported the same way the first stop was, not conflated
 // with an invalid supplied resolution.
-export async function continueOperation({ repoRoot, file }) {
+async function continueOperation({ repoRoot, file }) {
   const state = rebaseState(repoRoot);
   if (!state) {
     throw new BacklogError(`No rebase is in progress in ${repoRoot}.`);

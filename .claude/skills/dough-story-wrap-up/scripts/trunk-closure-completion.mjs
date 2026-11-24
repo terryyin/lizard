@@ -43,7 +43,6 @@ export async function completeFinalClosure({
   session,
   coordinator,
   observerDirectory,
-  preferredAlias,
   env,
   storage,
 }) {
@@ -72,7 +71,6 @@ export async function completeFinalClosure({
       session,
       coordinator,
       observerDirectory,
-      preferredAlias,
       env,
       storage,
       workspace,

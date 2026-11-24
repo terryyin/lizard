@@ -4,7 +4,6 @@ import { unfencedPlanLines } from "../../dough-product-backlog/scripts/product-b
 // Fenced examples cannot supply plan structure or fields.
 
 const quoted = /^"([\s\S]+)"$/;
-export const commitmentId = /^[A-Za-z0-9][\w.-]*$/;
 const number = "([1-9]\\d*)";
 
 // Every disposition has one representation shared by validation and listing.
@@ -50,8 +49,7 @@ function readEntry(lines, problems) {
   let current;
   for (const line of lines.slice(1)) {
     if (!line.trim()) continue;
-    const field =
-      /^(Reported|Story clause|Disposition|Commitment):\s*(.*)$/.exec(line);
+    const field = /^(Reported|Story clause|Disposition):\s*(.*)$/.exec(line);
     if (field) {
       current = field[1];
       if (fields.has(current)) problem("duplicate-field", current);
@@ -81,63 +79,34 @@ function readEntry(lines, problems) {
   else entry.storyClause = quote[1];
   entry.disposition = readDisposition(value("Disposition") ?? "");
   if (!entry.disposition) problem("no-disposition", "Disposition");
-  // The optional field names the source-review commitments this entry disposes.
-  const commitments = value("Commitment");
-  if (commitments !== undefined) {
-    entry.commitments = commitments.split(/,\s*/).filter(Boolean);
-    if (
-      !entry.commitments.length ||
-      !entry.commitments.every((id) => commitmentId.test(id))
-    )
-      problem("malformed-commitment", "Commitment");
-  }
   return entry;
 }
 
-// Fenced lines read as blank, so examples supply no structure or fields.
-export function unfencedLines(source) {
+export function readStoryObligations(source) {
   const rawLines = source.split(/\r?\n/);
   const unfenced = unfencedPlanLines(rawLines);
-  return rawLines.map((line, index) => (unfenced[index] ? line : ""));
-}
-
-// The lines under the first matching `##` heading, and how many headings match.
-export function readSection(lines, heading) {
+  const lines = rawLines.map((line, index) => (unfenced[index] ? line : ""));
   const starts = lines.flatMap((line, index) =>
-    heading.test(line) ? [index] : [],
+    /^## +Story obligations\s*$/.test(line) ? [index] : [],
   );
-  if (!starts.length) return { count: 0, lines: [] };
+  const problems = [];
+  const entries = [];
+  if (lines.some((line) => /^\*\*Source review:\*\* +\[/.test(line)))
+    problems.push({
+      reason: "legacy-plan",
+      message:
+        "Transfer outstanding work and relevant proof from the linked record to the plan, including any delivery receipts still due. Then remove the legacy link and its Commitment fields.",
+    });
+  if (starts.length > 1)
+    problems.push({ reason: "duplicate-obligations-section" });
+  if (!starts.length) return { present: false, entries, problems };
   const start = starts[0];
   const next = lines.findIndex(
     (line, index) => index > start && /^## /.test(line),
   );
-  return {
-    count: starts.length,
-    lines: lines.slice(start + 1, next === -1 ? lines.length : next),
-  };
-}
-
-// Header links such as `**Source:** [text](href)`.
-export function planLinks(lines, label) {
-  const link = new RegExp(
-    `^(?:\\*\\*${label}:\\*\\*|${label}:) +\\[[^\\]]+\\]\\(([^)]+)\\)`,
-  );
-  return lines.flatMap((line) => {
-    const href = link.exec(line)?.[1];
-    return href ? [href] : [];
-  });
-}
-
-export function readStoryObligations(source) {
-  const lines = unfencedLines(source);
-  const section = readSection(lines, /^## +Story obligations\s*$/);
-  const problems = [];
-  const entries = [];
-  if (section.count > 1)
-    problems.push({ reason: "duplicate-obligations-section" });
-  if (!section.count) return { present: false, entries, problems };
+  const end = next === -1 ? lines.length : next;
   let pending;
-  for (const line of section.lines) {
+  for (const line of lines.slice(start + 1, end)) {
     if (/^### /.test(line)) {
       if (pending) entries.push(readEntry(pending, problems));
       pending = [line];
@@ -152,7 +121,12 @@ export function readStoryObligations(source) {
       problems.push({ entry: entry.id, reason: "duplicate-entry" });
     ids.add(entry.id);
   }
-  const sources = planLinks(lines, "Source");
+  const sources = lines.flatMap((line) => {
+    const href = /^(?:\*\*Source:\*\*|Source:) +\[[^\]]+\]\(([^)]+)\)/.exec(
+      line,
+    )?.[1];
+    return href ? [href] : [];
+  });
   return {
     present: true,
     entries,

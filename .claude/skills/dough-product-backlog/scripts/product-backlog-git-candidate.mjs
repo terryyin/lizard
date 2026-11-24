@@ -5,39 +5,15 @@
 // human's decision may deliberately differ from. This is the whole of what
 // "accepting a human resolution" means: whether the result is readable, not
 // whether it matches what the automatic merge would have produced.
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { git } from "./product-backlog-git-repository.mjs";
 import { BacklogError } from "./product-backlog-refusal.mjs";
 import { readVersion } from "./product-backlog-version.mjs";
 
-function withTemporaryFile(contents, run) {
-  const directory = mkdtempSync(join(tmpdir(), "dough-backlog-candidate-"));
-  try {
-    const path = join(directory, "candidate.md");
-    writeFileSync(path, contents, "utf8");
-    return run(path);
-  } finally {
-    rmSync(directory, { recursive: true, force: true });
-  }
-}
-
 export function validateCandidate(contents, label) {
   try {
-    withTemporaryFile(contents, (path) => {
-      try {
-        readVersion(path, label);
-      } catch (error) {
-        if (!(error instanceof BacklogError)) {
-          throw error;
-        }
-        // `readVersion` names the temporary file this validation happens to
-        // use; that path means nothing to whoever reads the refusal, so it is
-        // dropped rather than shown as if it were a real, repairable file.
-        throw new BacklogError(error.message.split(` (${path})`).join(""));
-      }
-    });
+    readVersion(contents, label);
     return { valid: true };
   } catch (error) {
     if (error instanceof BacklogError) {
