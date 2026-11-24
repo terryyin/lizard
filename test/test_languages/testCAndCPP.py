@@ -93,6 +93,85 @@ class Test_c_cpp_lizard(unittest.TestCase):
         result = get_cpp_function_list("""int fun(){char *a="\\\\";}""")
         self.assertEqual(1, len(result))
 
+    def test_logical_and_before_parenthesized_assignment(self):
+        result = get_cpp_function_list("""int read_batch(int active, int *cursor) {
+    int value;
+    if (active && (value = *cursor)) return value;
+    return 0;
+}
+""")
+
+        self.assertEqual([("read_batch", 3)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_rvalue_reference_with_initializer(self):
+        result = get_cpp_function_list("""int read();
+int update() {
+    auto&& value = read();
+    return value;
+}
+""")
+
+        self.assertEqual([("update", 1)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_logical_and_before_parenthesized_ternary(self):
+        result = get_cpp_function_list("""int read_batch(bool active, bool ready, bool valid, int *cursor) {
+    int value;
+    return active && (ready && valid ? value = *cursor : 0);
+}
+""")
+
+        self.assertEqual([("read_batch", 4)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_rvalue_reference_with_parenthesized_initializer(self):
+        result = get_cpp_function_list("""int read_at(int index);
+
+int update() {
+    int index = 0;
+    auto&& value(read_at(index = 1));
+    return value;
+}
+
+int reset() {
+    int saved;
+    return static_cast<int&&>(saved = read_at(1));
+}
+""")
+
+        self.assertEqual(
+            [("update", 1), ("reset", 1)],
+            [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_parenthesized_function_declarator_returning_rvalue_reference(self):
+        result = get_cpp_function_list("""int update() {
+    int &&(read_next(int index = 1));
+    return read_next();
+}
+""")
+
+        self.assertEqual([("update", 1)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_parenthesized_assignment_operator_declaration(self):
+        result = get_cpp_function_list("""int process_slot() {
+    struct ReadOnlySlot {
+        int &&(operator=(int)) = delete;
+    };
+    return 0;
+}
+""")
+
+        self.assertEqual([("process_slot", 1)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_parenthesized_rvalue_reference_with_attribute(self):
+        result = get_cpp_function_list("""int read();
+
+int update() {
+    auto&& (value [[trace::label(category = 1)]]) = read();
+    return value;
+}
+""")
+
+        self.assertEqual([("update", 1)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
     def test_number_with_thousands_separator_since_cpp14(self):
         result = get_cpp_function_list("""int fun(){
             int a= 100'000; if(b) c; return 123'456'789;
