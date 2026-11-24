@@ -39,6 +39,50 @@ class TestImpliedSemicolonsOfOneFile(unittest.TestCase):
                 [(f.max_nesting_depth, f.max_nested_structures)
                  for f in functions])
 
+    def test_else_after_an_assignment_that_ends_in_a_brace(self):
+        cases = (
+            ('function () {}', 'else'),
+            ('() => {}', 'else if (jobs.length)'),
+        )
+        for value, clause in cases:
+            with self.subTest(value=value, clause=clause):
+                code = f"""
+                function setup(flag, jobs) {{
+                  if (flag) jobs.run = {value}
+                  {clause} for (const job of jobs) job()
+                }}
+                """
+                setup = FileAnalyzer(get_extensions(['nd', 'ns'])) \
+                    .analyze_source_code("a.js", code).function_list[-1]
+                self.assertEqual(
+                    (2, 2), (setup.max_nesting_depth,
+                             setup.max_nested_structures))
+
+    def test_else_after_an_object_literal(self):
+        code = """
+        function configure(useDefaults, settings, hooks) {
+          if (useDefaults) settings.logging = { enabled: true }
+          else for (const hook of hooks) hook(settings)
+        }
+        """
+        configure = FileAnalyzer(get_extensions(['ns'])) \
+            .analyze_source_code("a.js", code).function_list[0]
+        self.assertEqual(2, configure.max_nested_structures)
+
+    def test_trailing_while_after_a_function_expression(self):
+        code = """
+        function setup(retry, jobs) {
+          if (retry)
+            do jobs.run = function () { return jobs.shift() }
+            while (jobs.length)
+          else for (const job of jobs) job()
+        }
+        """
+        setup = FileAnalyzer(get_extensions(['nd', 'ns'])) \
+            .analyze_source_code("a.js", code).function_list[-1]
+        self.assertEqual(
+            (2, 2), (setup.max_nesting_depth, setup.max_nested_structures))
+
     def test_each_file_gets_its_own_finder(self):
         extension = StatementEnds()
         analyzer = FileAnalyzer(get_extensions([extension]))
