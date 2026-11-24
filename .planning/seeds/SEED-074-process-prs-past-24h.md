@@ -62,3 +62,19 @@ planted: 2026-11-24
 - [#615](https://github.com/terryyin/lizard/pull/615) Keep Lua length and integer-division operators in the token stream
 - [#614](https://github.com/terryyin/lizard/pull/614) Match Lua long-string and comment bracket levels
 - [#613](https://github.com/terryyin/lizard/pull/613) Restore Svelte nesting extensions after the statement reader API change
+
+#### Intake and qualification
+
+The 35 proposals address maintenance, metric defects or small extensions to
+existing language readers. None introduces a public option or API signature.
+GitHub had no comments, submitted reviews or inline threads on the frozen open
+heads at intake.
+
+| PR | Evidence and disposition |
+| --- | --- |
+| [#613](https://github.com/terryyin/lizard/pull/613) | Already fixed by `834313ae591cdf4553aa97cd113db4e88d5f7b09`. All three submitted analyzer tests pass against `6ff51711d14d7aebca1d72690130fab6e1889fe8`, covering ND, NS and both together at a Svelte script-to-markup boundary. Keep the existing shared statement reader integration. |
+| [#614–#627](https://github.com/terryyin/lizard/pulls?q=is%3Apr+author%3AAschenbath) | The failures in the original GitHub matrices reproduced the Svelte constructor error. The exact-head branch updates were requested to pick up the master fix and obtain fresh matrices. |
+| #614–#647 | Each proposal has at least one authored analyzer assertion that fails on the frozen trunk. The authored regressions pass when each proposal is applied independently to that trunk. |
+
+Twelve PRs in the intake window were already merged before this session:
+#582, #589, #590, #593, #594, #597, #599, #608, #609, #610, #611 and #612.
