@@ -34,6 +34,10 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
             state.logical = {}
             self._open_block()
         elif token is self._interpolation_close:
+            if state.pending:
+                self._resolve_pending(token)
+            if state.pending_ternary:
+                self._resolve_pending_ternary(token)
             # Finish the expression without ending the enclosing statement.
             outer, logical, depth, frame_count = self._interpolations.pop()
             outer.logical = logical
