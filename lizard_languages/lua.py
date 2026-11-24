@@ -10,6 +10,7 @@ class LuaReader(RubylikeReader):
 
     ext = ['lua']
     language_names = ['lua']
+    loops = frozenset(('if', 'for', 'while'))
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
