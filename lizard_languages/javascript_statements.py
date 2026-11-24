@@ -87,9 +87,13 @@ class ImpliedSemicolons:
                         found = self.before_token = False
                     if loop_ended:
                         found = token != ';'
-                    elif (not (groups or head_starts or body_starts)
-                          and (previous != '}' or object_ended
-                               or _function_closed(context, closing_function))):
+                    elif groups or head_starts or body_starts:
+                        pass
+                    elif (previous != '}' or (
+                            (object_ended or _function_closed(context, closing_function))
+                            # A matching clause continues the structure.
+                            and token != 'else'
+                            and not (token == 'while' and open_loops))):
                         if token == '}':
                             found = _expression_ended(
                                 previous, before_previous, postfix)
