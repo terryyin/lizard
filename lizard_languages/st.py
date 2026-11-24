@@ -70,8 +70,8 @@ class StReader(CodeReader, StCommentsMixin):
         block_endings = '|'.join(f'END_{_}' for _ in StReader._blocks)
         addition = (
             r'(?i)'  # case-insensitive
-            r'//' + _until_end + r'|'    # line comment
-            r'\(\*' + _until_end + r'|'  # block comment  (* ... *)
+            r'|//' + _until_end + r'|'    # line comment
+            r'\(\*.*?\*\)|'  # block comment  (* ... *)
             r'OR|'
             r'AND|'
             r'XOR|'
