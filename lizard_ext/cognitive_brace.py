@@ -28,16 +28,24 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
             self._process = self._process_interpolation
 
     def _process_interpolation(self, token):
+        state = self.state
         if token is self._interpolation_open:
-            # An interpolation has its own logical sequence. Its braces
-            # still delimit any control structures in its expression.
-            state = self.state
-            self._interpolations.append((state, state.logical))
+            self._interpolations.append((state, state.logical, state.depth, len(state.frames)))
             state.logical = {}
-        _BraceCounter._process(self, token)
-        if token is self._interpolation_close:
-            state, logical = self._interpolations.pop()
-            state.logical = logical
+            self._open_block()
+        elif token is self._interpolation_close:
+            # Finish the expression without ending the enclosing statement.
+            outer, logical, depth, frame_count = self._interpolations.pop()
+            outer.logical = logical
+            outer.depth = depth
+            del outer.frames[frame_count:]
+            if outer is not state:
+                outer.prev = token
+        else:
+            if state.prev is self._interpolation_close:
+                # Newlines in the remaining literal text continue the string.
+                state.line = self.line
+            _BraceCounter._process(self, token)
 
     def _process(self, token):  # pylint: disable=E0202
         if token == '?' and getattr(token, 'is_optional', False):
