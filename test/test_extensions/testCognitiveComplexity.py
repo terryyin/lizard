@@ -622,6 +622,25 @@ class TestOtherBraceLanguages(unittest.TestCase):
                 return 0
             }"""))
 
+    def test_go_logical_sequences_in_separate_statements(self):
+        self.assertEqual([2], cogc("a.go", """
+            func allowed(enabled, verified, active bool) bool {
+                ready := enabled && verified &&
+                    active
+                allowed := enabled && ready
+                return allowed
+            }"""))
+
+    def test_go_logical_sequence_before_an_if(self):
+        self.assertEqual([3], cogc("a.go", """
+            func visible(enabled, verified bool, allowed func() bool) bool {
+                ready := enabled && allowed() /* Check only when enabled.
+                */ if ready && verified {
+                    return true
+                }
+                return false
+            }"""))
+
     def test_csharp_nullable_types_are_not_ternaries(self):
         self.assertEqual([1], cogc("a.cs", """
             class A {
