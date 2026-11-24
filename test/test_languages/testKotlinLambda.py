@@ -103,3 +103,36 @@ fun register(): Int {
 fun g() { }
         ''')
         self.assertEqual(["register", "g"], [f.name for f in result])
+
+    def test_anonymous_functions_at_file_scope_and_parenthesized_receiver(self):
+        result = get_kotlin_function_list('''\
+val shift: Int.(Int) -> Int = fun Int.(offset: Int): Int = this + offset
+
+val title: String
+    get() { return "scores" }
+
+val clamp: (Int) -> Int = fun(value: Int): Int {
+    return if (value < 0) 0 else value
+}
+
+fun (() -> Int).runTwice(): Int {
+    return this() + this()
+}
+        ''')
+        self.assertEqual(
+            [("", 1, 1, 1, 1), ("get", 4, 4, 0, 1), ("", 6, 8, 1, 2), ("runTwice", 10, 12, 0, 1)],
+            [(f.name, f.start_line, f.end_line, f.parameter_count, f.cyclomatic_complexity)
+             for f in result],
+        )
+
+    def test_receiver_annotations_leave_the_named_extension_parameters(self):
+        result = get_kotlin_function_list('''\
+fun @JvmSuppressWildcards(false) (List<Number>).countNumbers(): Int = size
+fun @kotlin.jvm.JvmSuppressWildcards(false) List<Number>.numberAt(index: Int): Number = this[index]
+fun @JvmSuppressWildcards List<Number>.countImplicitly(): Int = size
+fun @[JvmSuppressWildcards(false)] (List<Number>).countGrouped(): Int = size
+        ''')
+        self.assertEqual(
+            [("countNumbers", 0), ("numberAt", 1), ("countImplicitly", 0), ("countGrouped", 0)],
+            [(f.name, f.parameter_count) for f in result],
+        )
