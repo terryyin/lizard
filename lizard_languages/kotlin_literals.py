@@ -1,6 +1,7 @@
 """Find the boundaries of Kotlin strings and block comments."""
 
 import re
+from itertools import chain
 
 from .token_pattern import compiled_token_pattern, tokens_in_span
 
@@ -18,6 +19,34 @@ _LINE_MARK = re.compile(r'\\.|"|\$+', re.S)
 _COMMENT_MARK = re.compile(r'/\*|\*/')
 
 
+class TemplateTokens(chain):  # pylint: disable=R0903
+    """A stream that can contain both parts of a Kotlin template."""
+
+
+class TemplateText(str):
+    """A literal fragment for metrics, with the full value on the final fragment."""
+
+    def __new__(cls, text, literal=None):
+        token = super().__new__(cls, text)
+        token.literal = literal
+        return token
+
+
+class _InterpolationBrace(str):
+    pass
+
+
+INTERPOLATION_OPEN = _InterpolationBrace('{')
+INTERPOLATION_CLOSE = _InterpolationBrace('}')
+
+
+class _NullableQuestion(str):
+    is_optional = True
+
+
+_NULLABLE_QUESTION = _NullableQuestion('?')
+
+
 def may_have_nested_comment(source):
     """Look for consecutive comment openers with no closer between them."""
     start = source.find('/*')
@@ -32,7 +61,7 @@ def may_have_nested_comment(source):
 
 
 def literal_tokens(source, addition):
-    """Keep strings and block comments whole and reuse the code tokenizer."""
+    """Keep literal text opaque and tokenize code inside string templates."""
     pattern = compiled_token_pattern(addition)
     code_start = pos = 0
     while True:
@@ -41,55 +70,82 @@ def literal_tokens(source, addition):
             break
         mark = opening.group()
         pos = opening.end()
-        if mark == '/*':
-            pos = _block_comment_end(source, pos)
-        elif mark.startswith(('"', '$')):
-            pos = _string_end(source, opening)
-        else:
+        if mark != '/*' and not mark.startswith(('"', '$')):
             continue
         yield from tokens_in_span(pattern, source, code_start, opening.start())
-        yield source[opening.start():pos]
+        if mark == '/*':
+            pos = _block_comment_end(source, pos)
+            yield source[opening.start():pos]
+        else:
+            pos = yield from _string_tokens(source, opening, pattern)
         code_start = pos
     yield from tokens_in_span(pattern, source, code_start, len(source))
 
 
-def _string_mode(opening):
+def _string_mode(opening, start):
     pattern = _RAW_MARK if opening.endswith('"""') else _LINE_MARK
-    return pattern, opening.count('$') or 1
+    return pattern, opening.count('$') or 1, start
 
 
-def _string_end(source, opening):
-    # Each frame holds the dollar threshold for a string or the brace depth
-    # for an interpolation. Strings can nest inside those expressions.
-    stack = [_string_mode(opening.group())]
+def _string_tokens(source, opening, token_pattern):
+    # A string frame holds a dollar threshold. A code frame holds the
+    # brace depth in the interpolation. Both forms can nest.
+    stack = [_string_mode(opening.group(), opening.start())]
+    start = opening.start()
     pos = opening.end()
+    prefix = ''
     while stack:
-        pattern, count = stack[-1]
-        match = pattern.search(source, pos)
+        marks, count, literal_start = stack[-1]
+        match = marks.search(source, pos)
         if match is None:
+            yield prefix + source[start:]
             return len(source)
         mark = match.group()
         pos = match.end()
-        if pattern is _EXPRESSION_MARK:
+        if marks is _EXPRESSION_MARK:
             if mark in ('{', '}'):
                 count += 1 if mark == '{' else -1
                 if count:
-                    stack[-1] = pattern, count
+                    stack[-1] = marks, count, literal_start
                 else:
+                    yield from tokens_in_span(token_pattern, source, start, match.start(), _expression_token)
+                    yield INTERPOLATION_CLOSE
                     stack.pop()
-            elif mark == '/*':
-                pos = _block_comment_end(source, pos)
+                    start = pos
+                    # The next fragment has no opening quote of its own.
+                    # Mark it as text, even if it starts with // or /*.
+                    prefix = '"'
+            elif mark == '/*' or mark.startswith('`'):
+                yield from tokens_in_span(token_pattern, source, start, match.start(), _expression_token)
+                pos = _block_comment_end(source, pos) if mark == '/*' else pos
+                yield source[match.start():pos]
+                start = pos
             elif mark.startswith(('"', '$')):
-                stack.append(_string_mode(mark))
+                yield from tokens_in_span(token_pattern, source, start, match.start(), _expression_token)
+                stack.append(_string_mode(mark, match.start()))
+                start = match.start()
+                prefix = ''
         elif mark.startswith('"'):
+            fragment = prefix + source[start:pos]
+            yield fragment if start == literal_start else TemplateText(fragment, source[literal_start:pos])
             stack.pop()
+            start = pos
         elif mark.startswith('$') and len(mark) >= count:
             if source.startswith('{', pos):
-                stack.append((_EXPRESSION_MARK, 1))
+                yield TemplateText(prefix + source[start:pos])
+                stack.append((_EXPRESSION_MARK, 1, None))
+                yield INTERPOLATION_OPEN
                 pos += 1
+                start = pos
             elif (name := _BACKTICK_NAME.match(source, pos)) is not None:
                 pos = name.end()
     return pos
+
+
+def _expression_token(match):
+    # A standalone question mark qualifies a type in Kotlin.
+    token = match.group()
+    return _NULLABLE_QUESTION if token == '?' else token
 
 
 def _block_comment_end(source, pos):
