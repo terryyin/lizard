@@ -105,17 +105,22 @@ class PHPLanguageStates(CodeStateMachine):
             self._state = self._state_global
 
     def _trait_declaration(self, token):
-        if token and not token.isspace() and token not in ['{', '(']:
-            self.trait_name = token
-            self.in_trait = True
-            self.type_brace_level = self.brace_level
+        if token in ('{', '}'):
             self._state = self._state_global
-        elif token == '{':
-            self.brace_level += 1
+            self._state_global(token)
+        elif token and not token.isspace():
+            # "trait" can also name a constant, enum case or named argument.
+            first = token[0]
+            if first.isalpha() or first == '_' or not first.isascii():
+                self.trait_name = token
+                self.in_trait = True
+                self.type_brace_level = self.brace_level
             self._state = self._state_global
 
     def _class_declaration(self, token):
-        if token and not token.isspace() and token not in ['{', '(', 'extends', 'implements']:
+        if token == ':':  # "class:" names an argument.
+            self._state = self._state_global
+        elif token and not token.isspace() and token not in ['{', '(', 'extends', 'implements']:
             self.class_name = token
             self.in_class = True
             self.type_brace_level = self.brace_level
