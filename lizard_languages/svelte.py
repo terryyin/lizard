@@ -173,17 +173,15 @@ class _Statements(ImpliedSemicolons):
     continue it."""
     # pylint: disable=R0903
 
-    def __init__(self, context):
-        super().__init__(context)
-        self._script_ends = 0   # the script ends read so far
-
-    def before(self, token):
-        script_ends = self._context.script_ends
-        if self._script_ends == script_ends:
-            return super().before(token)
-        self._script_ends = script_ends
-        super().before(token)
-        return True
+    def read(self, tokens, context):
+        script_ends = 0
+        for token in super().read(tokens, context):
+            before_token = self.before_token
+            self.before_token = before_token or script_ends != context.script_ends
+            script_ends = context.script_ends
+            yield token
+            # The shared reader owns this flag between tokens.
+            self.before_token = before_token
 
 
 def _marks(code):
@@ -582,7 +580,10 @@ class SvelteReader(VueReader):
 
     ext = ['svelte']
     language_names = ['svelte']
-    implied_semicolons = _Statements
+
+    def implied_semicolons(self, tokens):
+        statements = _Statements()
+        return statements.read(tokens, self.context), statements
 
     @staticmethod
     def markup_tokens(source_code, start, end):
