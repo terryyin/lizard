@@ -26,7 +26,14 @@ class LizardExtension(object):  # pylint: disable=R0903
             dest="ND",
             default=DEFAULT_ND_THRESHOLD)
 
-    def __call__(self, tokens, reader, l_depth=0):  # pylint: disable=R0912
+    def __call__(self, tokens, reader, l_depth=0):
+        implied_semicolons = None
+        if hasattr(reader, "implied_semicolons"):
+            tokens, implied_semicolons = reader.implied_semicolons(tokens)
+        return self._nesting_depth(tokens, reader, l_depth, implied_semicolons)
+
+    @staticmethod
+    def _nesting_depth(tokens, reader, l_depth, implied_semicolons):  # pylint: disable=R0912
         if hasattr(reader, "loops"):
             loops = reader.loops
         else:
@@ -38,63 +45,61 @@ class LizardExtension(object):  # pylint: disable=R0903
             indent_indicator = reader.indent_indicator
         else:
             indent_indicator = ';'
-        implied_semicolons = getattr(reader, "implied_semicolons", None)
-        if implied_semicolons:
-            implied_semicolon_before = implied_semicolons(reader.context).before
+        # Most tokens cannot change the depth: one lookup skips them.
+        depth_tokens = frozenset(
+            (indent_indicator, 'else', 'if', '(', ')', '&&', '||')
+        ).union(block_ends, block_starts, loops)
+        context = reader.context
         for token in tokens:
-            if implied_semicolons and implied_semicolon_before(token):
+            if implied_semicolons and implied_semicolons.before_token:
                 # The statement ends here as it does at a ";".
-                reader.context.clear_prev_was_else()
-                if reader.context.get_condition_depth() == 0:
-                    l_depth = reader.context.end_statement()
-            if token in block_ends:
-                l_depth = reader.context.close_block()
-            if token in block_starts or token == indent_indicator:
-                reader.context.clear_prev_was_else()
-            # Don't add nesting for "if" when it immediately follows "else" (else if)
-            # Syntactically else if is equivalent to else {if} but should not increase depth
-            if token == 'else' and not getattr(token, 'is_member_name', False):
-                reader.context.set_prev_was_else(True)
-            elif token == 'if' and token in loops and reader.context.get_prev_was_else():
-                reader.context.clear_prev_was_else()
-            # Handle opening parenthesis - start of condition
-            elif token == '(':
-                reader.context.set_in_condition(True)
-                reader.context.increment_condition_depth()
-                reader.context.set_logical_operator_added(False)  # Reset for new condition
-            # Handle closing parenthesis - end of condition
-            elif token == ')':
-                reader.context.decrement_condition_depth()
-                if reader.context.get_condition_depth() == 0:
-                    reader.context.set_in_condition(False)
-                    reader.context.set_logical_operator_added(False)
+                context.clear_prev_was_else()
+                if context.get_condition_depth() == 0:
+                    l_depth = context.end_statement()
+            if token in depth_tokens:
+                if token in block_ends:
+                    l_depth = context.close_block()
+                if token in block_starts or token == indent_indicator:
+                    context.clear_prev_was_else()
+                # Don't add nesting for "if" when it immediately follows "else" (else if)
+                # Syntactically else if is equivalent to else {if} but should not increase depth
+                if token == 'else' and not getattr(token, 'is_member_name', False):
+                    context.set_prev_was_else(True)
+                elif token == 'if' and token in loops and context.get_prev_was_else():
+                    context.clear_prev_was_else()
+                # Handle opening parenthesis - start of condition
+                elif token == '(':
+                    context.open_condition()
+                # Handle closing parenthesis - end of condition
+                elif token == ')':
+                    context.close_condition()
 
-            # Handle logical operators && and || within conditions
-            elif token in ('&&', '||'):
-                if reader.context.get_in_condition():
-                    # Only add nesting depth for the first logical operator in a condition
-                    # Subsequent && or || operators in the same condition don't add depth
-                    if not reader.context.get_logical_operator_added():
-                        l_depth = reader.context.open_level()
-                        reader.context.set_logical_operator_added(True)
-                else:
-                    # Not in a condition, treat as regular nesting
-                    l_depth = reader.context.open_level()
+                # Handle logical operators && and || within conditions
+                elif token in ('&&', '||'):
+                    if context.get_in_condition():
+                        # Only add nesting depth for the first logical operator in a condition
+                        # Subsequent && or || operators in the same condition don't add depth
+                        if not context.get_logical_operator_added():
+                            l_depth = context.open_level()
+                            context.set_logical_operator_added(True)
+                    else:
+                        # Not in a condition, treat as regular nesting
+                        l_depth = context.open_level()
 
-            # Handle other loop keywords (if, for, while, etc.)
-            elif token in loops and token not in ('&&', '||') \
-                    and not getattr(token, 'is_optional', False) \
-                    and not getattr(token, 'is_member_name', False):
-                l_depth = reader.context.open_level()
+                # Handle other loop keywords (if, for, while, etc.)
+                elif token in loops and token not in ('&&', '||') \
+                        and not getattr(token, 'is_optional', False) \
+                        and not getattr(token, 'is_member_name', False):
+                    l_depth = context.open_level()
 
-            if token in block_starts:
-                reader.context.open_block()
-            if token == indent_indicator and \
-                    reader.context.get_condition_depth() == 0:
-                l_depth = reader.context.end_statement()
+                if token in block_starts:
+                    context.open_block()
+                if token == indent_indicator and \
+                        context.get_condition_depth() == 0:
+                    l_depth = context.end_statement()
             if l_depth < 0:
                 l_depth = 0
-                reader.context.reset_nd_complexity()
+                context.reset_nd_complexity()
             yield token
 
 
@@ -141,6 +146,21 @@ class NDFileInfoAddition(FileInfoBuilder):
 
     def get_in_condition(self):
         return self.current_function.in_condition
+
+    def open_condition(self):
+        """A "(" opens a condition, or a level inside one."""
+        function = self.current_function
+        function.in_condition = True
+        function.condition_depth += 1
+        function.logical_operator_added = False
+
+    def close_condition(self):
+        """A ")" closes a level, and the condition with its last level."""
+        self.decrement_condition_depth()
+        function = self.current_function
+        if function.condition_depth == 0:
+            function.in_condition = False
+            function.logical_operator_added = False
 
     def increment_condition_depth(self):
         self.current_function.condition_depth += 1

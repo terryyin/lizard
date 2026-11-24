@@ -127,8 +127,6 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
     # atomic templates that need a backtick scan on the fast path.
     _scan_atomic_templates = False
     _class_field_annotations = True
-    # For the extensions: finds where a statement ends without a ';'.
-    implied_semicolons = ImpliedSemicolons
 
     # Separated condition categories
     _control_flow_keywords = {'if', 'elseif', 'for', 'while', 'catch'}
@@ -141,6 +139,18 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         self.context.class_field_annotations = self._class_field_annotations
         self.parallel_states = [TypeScriptStates(context)]
         self._previous_token = None
+        self._implied_semicolons = None
+
+    def implied_semicolons(self, tokens):
+        """For the extensions: the tokens, and the finder of the places
+        where a statement ends without a ';'.  The first extension that
+        asks starts the finder, and the next ones read the same finder.
+        An extension asks when it gets the tokens, before it reads one,
+        and reads the tokens that it gets back."""
+        if self._implied_semicolons is None:
+            self._implied_semicolons = ImpliedSemicolons()
+            tokens = self._implied_semicolons.read(tokens, self.context)
+        return tokens, self._implied_semicolons
 
     def script_tokens(self, code):
         """Tokens of a piece of code; Vue tokenizes its files as markup."""

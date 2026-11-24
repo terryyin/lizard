@@ -19,15 +19,17 @@ UNFINISHED = frozenset((
     'var', 'let', 'const', 'case', 'function', 'class', 'extends'))
 # Words that are not a value, so a "!" or a "++" after them is a prefix.
 NOT_VALUES = RESTRICTED | UNFINISHED | {'throw'}
-MEMBER_ACCESS = ('.', '?.')
+MEMBER_ACCESS = frozenset(('.', '?.'))
 # Words with a value after them, so a "{" after them opens an object.
 VALUE_WORDS = frozenset(('return', 'throw', 'default', 'var', 'let', 'const'))
 # A "{" after these opens a block, although they do not end an expression.
 # So does a "{" after a ">": `() => {`, `Promise<void> {`.
 BLOCK_PREFIXES = frozenset((';', '{', 'void'))
 # TypeScript: these words are a complete type after `as`, `pair as const`.
-ASSERTIONS = ('as', 'satisfies')
-ASSERTED_TYPES = ('const', 'void')
+ASSERTIONS = frozenset(('as', 'satisfies'))
+ASSERTED_TYPES = frozenset(('const', 'void'))
+# The tokens with their own rule for the end of an expression.
+_SPECIAL_ENDS = POSTFIX | ASSERTED_TYPES | UNFINISHED
 
 
 def opens_object(previous):
@@ -41,153 +43,183 @@ def opens_object(previous):
 class ImpliedSemicolons:
     """Finds the places where a statement ends without a ';'.
 
-    Ask before(token) once for each token, in order.  A statement ends
-    before the '}' of a block and at a line break that the next token
-    cannot continue.  It does not end inside parentheses, brackets or an
-    object literal, or while a structure waits for its head or its body,
-    `if (ready)` + line break + `run()`."""
+    read(tokens, context) passes each token on, in order.  While a token
+    is passed on, before_token tells whether a statement ends before it.
+    A statement ends before the '}' of a block and at a line break that
+    the next token cannot continue.  It does not end inside parentheses,
+    brackets or an object literal, or while a structure waits for its
+    head or its body, `if (ready)` + line break + `run()`."""
 
-    def __init__(self, context):
-        self._context = context
-        self._blocks = [_Block()]
-        self._previous = ';'
-        self._before_previous = ';'
-        self._line = 0
-        self._head_starts = False       # the next "(" opens a structure head
-        self._body_starts = False       # a structure waits for its body
-        self._label_starts = False      # the body may start with a label
-        self._postfix = False           # the last "!", "++" or "--" is postfix
-        self._object_ended = False      # the last "}" closed an object literal
-        self._loop_ended = False        # the ")" of "do … while (…)"
+    __slots__ = ('before_token',)
 
-    def before(self, token):
-        line = self._context.current_line
-        implied = self._loop_ended and token != ';' or (
-            (token == '}' or line != self._line)
-            and self._statement_ends(token, line))
-        if (token in TRACKED or self._head_starts or self._body_starts
-                or self._label_starts or self._loop_ended):
-            self._read(token, line)
-        self._before_previous = self._previous
-        self._previous = token
-        self._line = line
-        return implied
+    def __init__(self):
+        self.before_token = False
 
-    def _statement_ends(self, token, line):
-        if self._head_starts or self._body_starts or self._blocks[-1].groups:
-            return False
-        # A block end has ended its statement already.
-        if self._previous == '}' and not self._object_ended:
-            return False
-        if token != '}':
-            if (line - token.count('\n') == self._line
-                    or isinstance(token, JSXChildBrace)):
-                return False
-            if self._previous in RESTRICTED and not self._after_member_access():
-                return token != ';'
-            if not starts_statement(token):
-                return False
-        return self._expression_ended()
+    # pylint: disable=R0912,R0914,R0915,R1702
+    def read(self, tokens, context):
+        # Each token passes here, so the state is in local variables.
+        blocks = []             # the blocks around the open one
+        # What is open between the last "{" and its "}":
+        groups = 0              # open "(" and "["
+        head = None             # the groups around an open structure head
+        open_loops = 0          # "do" bodies that wait for their "while"
+        loop_ends = False       # the open head is the "while" of a "do"
+        is_object = False       # the "{" opened an object literal
+        previous = before_previous = ';'
+        last_line = 0
+        head_starts = False     # the next "(" opens a structure head
+        body_starts = False     # a structure waits for its body
+        label_starts = False    # the body may start with a label
+        postfix = False         # the last "!", "++" or "--" is postfix
+        object_ended = False    # the last "}" closed an object literal
+        loop_ended = False      # the ")" of "do … while (…)"
+        found = False
+        busy = False            # found, or one of the four flags above
+        # The flags that the last token left: only a busy token reads them.
+        head_started = body_started = label_started = False
+        for token in tokens:
+            line = context.current_line
+            tracked = token in TRACKED
+            if tracked or busy or line != last_line:
+                if busy or line != last_line or token == '}':
+                    if found:
+                        found = self.before_token = False
+                    if loop_ended:
+                        found = token != ';'
+                    elif (not (groups or head_starts or body_starts)
+                          # A block end has ended its statement already.
+                          and (previous != '}' or object_ended)):
+                        if token == '}':
+                            found = _expression_ended(
+                                previous, before_previous, postfix)
+                        elif line == last_line:
+                            pass
+                        elif (previous in RESTRICTED
+                              and before_previous not in MEMBER_ACCESS):
+                            found = token != ';' and _starts_line(
+                                token, line, last_line)
+                        else:
+                            found = (
+                                _expression_ended(
+                                    previous, before_previous, postfix)
+                                and starts_statement(token)
+                                and _starts_line(token, line, last_line))
+                    if found:
+                        self.before_token = True
+                was_busy = busy
+                busy = found
+                if was_busy:
+                    head_started = head_starts
+                    body_started = body_starts
+                    label_started = label_starts
+                    head_starts = body_starts = label_starts = False
+                    loop_ended = False
+                if tracked or was_busy:
+                    if token in OPENERS:
+                        if head_started and token == '(':
+                            head = groups
+                        groups += 1
+                    elif token in CLOSERS:
+                        if groups:
+                            groups -= 1
+                        if head == groups:
+                            head = None
+                            loop_ended = loop_ends
+                            body_starts = not loop_ends
+                            loop_ends = False
+                            busy = True
+                    elif token == '}':
+                        object_ended = bool(blocks) and is_object
+                        if blocks:
+                            (groups, head, open_loops, loop_ends,
+                             is_object) = blocks.pop()
+                    elif token in ('{', '${'):
+                        blocks.append(
+                            (groups, head, open_loops, loop_ends, is_object))
+                        is_object = _object_starts(
+                            token, previous, before_previous, groups,
+                            line == last_line)
+                        # The braces of an object literal, a JSX child or
+                        # a template interpolation hold an expression, as
+                        # parentheses do.
+                        groups = 1 if (
+                            is_object or token == '${'
+                            or isinstance(token, JSXChildBrace)) else 0
+                        head = None
+                        open_loops = 0
+                        loop_ends = False
+                    elif token in POSTFIX:
+                        postfix = (
+                            line == last_line
+                            and _value_ended(
+                                previous, before_previous, postfix)
+                            and not (head_started or body_started))
+                    elif tracked and previous not in MEMBER_ACCESS:
+                        if token in HEADED:
+                            head_starts = busy = True
+                            # In `do while (a) run(); while (b)` the first
+                            # "while" is the body.
+                            if (token == 'while' and open_loops
+                                    and not body_started):
+                                open_loops -= 1
+                                loop_ends = True
+                        elif token in UNHEADED:
+                            body_starts = busy = True
+                            if token == 'do':
+                                open_loops += 1
+                        elif head_started:          # for await (…)
+                            head_starts = busy = True
+                    elif body_started:
+                        label_starts = busy = True
+                    elif label_started and token == ':':
+                        # `do retry: while (…) …`
+                        body_starts = busy = True
+                    if was_busy:
+                        # These are False between the tokens.
+                        head_started = body_started = label_started = False
+                last_line = line
+            before_previous = previous
+            previous = token
+            yield token
 
-    def _expression_ended(self):
-        previous = self._previous
-        if self._after_member_access():     # a property name: `token.in`
-            return True
+
+def _starts_line(token, line, last_line):
+    """Whether the token starts on a later line than the last one ended,
+    and is not the '{' of a JSX child."""
+    return (line - token.count('\n') != last_line
+            and not isinstance(token, JSXChildBrace))
+
+
+def _expression_ended(previous, before_previous, postfix):
+    if before_previous in MEMBER_ACCESS:    # a property name: `token.in`
+        return True
+    if previous in _SPECIAL_ENDS:
         if previous in POSTFIX:
-            return self._postfix
-        if previous in ASSERTED_TYPES and self._before_previous in ASSERTIONS:
+            return postfix
+        if previous in ASSERTED_TYPES and before_previous in ASSERTIONS:
             return True
-        return previous not in UNFINISHED and ends_expression(previous)
-
-    def _value_ended(self):
-        """Whether an operator after the previous token is a postfix one."""
-        previous = self._previous
-        if previous in POSTFIX:             # TypeScript: `item.owner!!`
-            return self._postfix
-        return self._after_member_access() or (
-            previous != '}' and previous not in NOT_VALUES
-            and ends_expression(previous))
-
-    def _after_member_access(self):
-        return self._before_previous in MEMBER_ACCESS
-
-    def _read(self, token, line):
-        block = self._blocks[-1]
-        head_starts, self._head_starts = self._head_starts, False
-        body_starts, self._body_starts = self._body_starts, False
-        label_starts, self._label_starts = self._label_starts, False
-        self._loop_ended = False
-        if token in OPENERS:
-            if head_starts and token == '(':
-                block.head = block.groups
-            block.groups += 1
-        elif token in CLOSERS:
-            self._close_group(block)
-        elif token == '}':
-            self._object_ended = (len(self._blocks) > 1
-                                  and self._blocks.pop().is_object)
-        elif token in ('{', '${'):
-            self._blocks.append(
-                _Block(token, self._object_starts(token, block, line)))
-        elif token in POSTFIX:
-            self._postfix = (line == self._line and self._value_ended()
-                             and not (head_starts or body_starts))
-        elif token in TRACKED and self._previous not in MEMBER_ACCESS:
-            self._read_word(token, block, head_starts, body_starts)
-        elif body_starts:
-            self._label_starts = True
-        elif label_starts and token == ':':  # `do retry: while (…) …`
-            self._body_starts = True
-
-    def _object_starts(self, token, block, line):
-        previous = self._previous
-        if token != '{' or isinstance(token, JSXChildBrace):
+        if previous in UNFINISHED:
             return False
-        if previous == ':':
-            # A property value or a branch of "?:", not a `case` or a label.
-            return block.groups > 0
-        if self._after_member_access() and previous not in OPENERS:
-            return False                # a property name: `typeof Array.of {`
-        if previous in VALUE_WORDS:
-            return line == self._line       # not `return` + line break
-        return opens_object(previous)
-
-    def _close_group(self, block):
-        if block.groups:
-            block.groups -= 1
-        if block.head == block.groups:
-            block.head = None
-            self._loop_ended = block.loop_ends
-            self._body_starts = not block.loop_ends
-            block.loop_ends = False
-
-    def _read_word(self, token, block, head_starts, body_starts):
-        if token in HEADED:
-            self._head_starts = True
-            # In `do while (a) run(); while (b)` the first "while" is the body.
-            if token == 'while' and block.open_loops and not body_starts:
-                block.open_loops -= 1
-                block.loop_ends = True
-        elif token in UNHEADED:
-            self._body_starts = True
-            if token == 'do':
-                block.open_loops += 1
-        elif token == 'await':          # for await (…)
-            self._head_starts = head_starts
+    return ends_expression(previous)
 
 
-class _Block:
-    """What is open between a '{' and its '}'."""
+def _value_ended(previous, before_previous, postfix):
+    """Whether an operator after the previous token is a postfix one."""
+    if previous in POSTFIX:             # TypeScript: `item.owner!!`
+        return postfix
+    return before_previous in MEMBER_ACCESS or (
+        previous != '}' and previous not in NOT_VALUES
+        and ends_expression(previous))
 
-    __slots__ = ('groups', 'head', 'open_loops', 'loop_ends', 'is_object')
 
-    def __init__(self, opener='{', is_object=False):
-        # The braces of an object literal, a JSX child or a template
-        # interpolation hold an expression, as parentheses do.
-        expression = (is_object or opener == '${'
-                      or isinstance(opener, JSXChildBrace))
-        self.is_object = is_object
-        self.groups = 1 if expression else 0    # open "(" and "["
-        self.head = None        # the groups around an open structure head
-        self.open_loops = 0     # "do" bodies that wait for their "while"
-        self.loop_ends = False  # the open head is the "while" of a "do"
+def _object_starts(token, previous, before_previous, groups, same_line):
+    if token != '{' or isinstance(token, JSXChildBrace):
+        return False
+    if previous == ':':
+        # A property value or a branch of "?:", not a `case` or a label.
+        return groups > 0
+    if before_previous in MEMBER_ACCESS and previous not in OPENERS:
+        return False                # a property name: `typeof Array.of {`
+    if previous in VALUE_WORDS:
+        return same_line                # not `return` + line break
+    return opens_object(previous)

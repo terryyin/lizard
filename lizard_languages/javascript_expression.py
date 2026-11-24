@@ -18,12 +18,19 @@ class JSXMarkup(str):
     is_jsx_markup = True
 
 
+_OPERAND_STARTS = frozenset(('_', '$', '#', "'", '"', '`'))
+_STATEMENT_STARTS = frozenset(('_', '$', '#', "'", '"'))
+_EXPRESSION_ENDS = frozenset((')', ']', '}', '++', '--'))
+_LINE_START_OPERATORS = frozenset((
+    '++', '--', '!', '~', '{', '@', '}', ')', ']'))
+
+
 def ends_expression(token):
     """Whether an expression may end with this token (JavaScript ASI)."""
     first = token[:1]
-    if first.isalnum() or first in ('_', '$', '#', "'", '"', '`'):
+    if first.isalnum() or first in _OPERAND_STARTS:
         return token not in OPERAND_WORDS
-    return (token in (')', ']', '}', '++', '--')
+    return (token in _EXPRESSION_ENDS
             or (first == '/' and len(token) > 2)  # regular expression literal
             or (first == '<' and token.endswith('>')  # JSX element end
                 and ('</' in token or token.endswith('/>'))))
@@ -32,11 +39,11 @@ def ends_expression(token):
 def starts_statement(token):
     """Whether this line-start token cannot continue the previous line."""
     first = token[0]
-    if first.isalnum() or first in ('_', '$', '#', "'", '"'):
+    if first.isalnum() or first in _STATEMENT_STARTS:
         # TypeScript reads `as`/`satisfies` after a line break as a statement.
         return token not in ('in', 'instanceof')
     # Restricted ++/--, prefix-only operators, blocks, decorators and closers.
-    return token in ('++', '--', '!', '~', '{', '@', '}', ')', ']')
+    return token in _LINE_START_OPERATORS
 
 
 def parameter_group(prefix):

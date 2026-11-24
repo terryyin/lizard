@@ -68,6 +68,9 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
     def __init__(self):
         super(LizardExtension, self).__init__(None)
         self.structure_piles = [0]  # Invariant: must always have at least one element
+        # The tokens that _state_global reads; it skips the others.
+        self._global_tokens = frozenset(self.structures) | frozenset((
+            '{', ';', '}', 'else', '.', '?.'))
 
     def __call__(self, tokens, reader=None):
         if 'python' in getattr(reader, 'language_names', ()):
@@ -84,9 +87,12 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
         """JavaScript ends a statement without a ';' too: read a ';'
         where the reader finds such an end."""
         self._start_file(reader)
-        implied_semicolon_before = reader.implied_semicolons(self.context).before
+        tokens, implied_semicolons = reader.implied_semicolons(tokens)
+        return self._read_with_implied_semicolons(tokens, implied_semicolons)
+
+    def _read_with_implied_semicolons(self, tokens, implied_semicolons):
         for token in tokens:
-            if implied_semicolon_before(token):
+            if implied_semicolons.before_token:
                 self._state(';')
             self._state(token)
             yield token
@@ -173,6 +179,8 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
             self.context.current_function.max_nested_structures = cur_level
 
     def _state_global(self, token):
+        if token not in self._global_tokens:
+            return
         # Necessary to prevent functions without nested blocks to fail
         if not hasattr(self.context.current_function, "max_nested_structures"):
             self.context.current_function.max_nested_structures = 0

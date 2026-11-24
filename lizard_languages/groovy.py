@@ -253,9 +253,13 @@ class _StatementEnds:  # pylint: disable=R0903
 
     A line break ends it, unless it is inside parentheses or brackets, a
     structure waits for its body (`if (ready)` + line break + `run()`), or
-    the tokens around it continue the expression. So does a `}`."""
+    the tokens around it continue the expression. So does a `}`.
+
+    read(tokens) passes each token on, in order.  While a token is passed
+    on, before_token tells whether a statement ends before it."""
 
     def __init__(self, context):
+        self.before_token = False
         self._context = context
         self._line = 1
         self._previous = '{'
@@ -263,7 +267,12 @@ class _StatementEnds:  # pylint: disable=R0903
         self._head = False      # the next '(' opens the head of a structure
         self._body = False      # a structure waits for its body
 
-    def before(self, token):
+    def read(self, tokens):
+        for token in tokens:
+            self.before_token = self._ends_before(token)
+            yield token
+
+    def _ends_before(self, token):
         line = self._context.current_line - token.count('\n')
         ends = ((token == '}' or line != self._line)
                 and not self._body and self._previous != '}'
@@ -304,11 +313,20 @@ class GroovyReader(CodeReader):
     # Nesting depth: the default without `def`, which declares here.
     loops = frozenset((
         'if', 'for', 'while', 'catch', 'case', 'try', '&&', '||', '?', '?:'))
-    implied_semicolons = _StatementEnds
 
     def __init__(self, context):
         super().__init__(context)
         self.parallel_states = [GroovyStates(context)]
+        self._statement_ends = None
+
+    def implied_semicolons(self, tokens):
+        """For the nesting extensions, as in the TypeScript reader: the
+        tokens, and the finder of the statement ends without a `;`.  The
+        first extension that asks starts the finder."""
+        if self._statement_ends is None:
+            self._statement_ends = _StatementEnds(self.context)
+            tokens = self._statement_ends.read(tokens)
+        return tokens, self._statement_ends
 
     @classmethod
     def match_filename(cls, filename):

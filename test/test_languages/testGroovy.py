@@ -788,3 +788,22 @@ def check(List xs) {
         self.assertEqual(("check", 1, 1),
                          (function.name, function.max_nesting_depth,
                           function.max_nested_structures))
+
+    def test_each_nesting_extension_reads_the_statement_ends(self):
+        from lizard import FileAnalyzer, get_extensions
+        code = '''\
+int count(List xs) {
+    for (String s : xs)
+        if (s != null) total++
+    if (total) println total
+    return total
+}
+'''
+        for extensions in (["nd"], ["ns"], ["nd", "ns"], ["ns", "nd"]):
+            with self.subTest(extensions=extensions):
+                function = FileAnalyzer(get_extensions(extensions)) \
+                    .analyze_source_code("a.groovy", code).function_list[0]
+                if "nd" in extensions:
+                    self.assertEqual(2, function.max_nesting_depth)
+                if "ns" in extensions:
+                    self.assertEqual(2, function.max_nested_structures)
