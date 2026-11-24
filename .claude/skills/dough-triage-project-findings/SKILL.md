@@ -146,9 +146,30 @@ adoption remains open. A matching failure under the adopted repair restores its
 lineage and eligibility for selection; an old branch, unapplied repair or similar
 symptom alone cannot establish a failed fix.
 
+## Decide which findings can become stories
+
+Check each candidate against the [three retrospective categories](../dough-execution-retrospective/references/process-finding-recording.md#classify-the-finding).
+Apply them to the available evidence when an older finding has no category.
+Carry the category and its basis with the finding when moving or shortening it.
+
+- **Engineering principle conflict or challenge.** Queue selected stories
+  directly to restore alignment or examine the challenged ADR decision.
+  A human owns any exception or change to the principle.
+- **Concrete defect.** Queue a selected repair directly, using the agreed
+  behavior and the observed failure to define what the repair should prove.
+- **Other.** Assess whether a temporary model capability limit plausibly
+  explains the observation. Could a more capable model with the same task,
+  information and authority have avoided the problem? State the evidence
+  and uncertainty. Weigh the cost of living with it against the benefit and
+  cost of intervening. Recommend action or leaving things as they are.
+  The human decides either way. Use an existing human decision when
+  it covers this finding and response. Otherwise surface the choice, leave it
+  open, and continue with eligible findings. A cycle invocation or repeated
+  occurrence does not supply that decision.
+
 ## Select zero to three new leading stories
 
-Read active responses and their canonical homes before ranking uncovered work.
+Read active responses and their canonical homes before ranking eligible uncovered work.
 Weigh distinct relevant occurrences, impact, current relevance, confidence,
 expected benefit, effort and product direction. A severe supported one-off can
 outrank frequent minor friction. More candidates do not raise the three-story

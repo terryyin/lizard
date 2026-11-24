@@ -6,41 +6,46 @@ const isObject = (value) =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
 // The dashboard reads proof or jobs only for a selected attempt. This
-// boundary checks the response envelope; the CI proof read checks a proof's
-// contents (`../../dough-test-optimization/scripts/ci-proof-read.mjs`).
-export async function readCommandProof(command, check, attempt, options) {
-  const response = await runAdapterForAttempt(
-    command,
-    "proof",
-    check,
-    attempt,
-    options,
-  );
-  const { summary, unavailable } = isObject(response) ? response : {};
-  if (isObject(summary) && unavailable === undefined) return { summary };
-  if (typeof unavailable === "string" && unavailable && summary === undefined)
+// boundary checks the response envelope, the named answer or a reason it is
+// unavailable; the CI proof read checks a proof's contents
+// (`../../dough-test-optimization/scripts/ci-proof-read.mjs`).
+async function readAttemptAnswer(operation, field, accepts, command, ...call) {
+  const response = await runAdapterForAttempt(command, operation, ...call);
+  const envelope = isObject(response) ? response : {};
+  const { [field]: answer, unavailable } = envelope;
+  if (accepts(answer) && unavailable === undefined) return { [field]: answer };
+  if (typeof unavailable === "string" && unavailable && answer === undefined)
     return {
       unavailable: truncateUtf8(unavailable, unavailableReasonBytes).text,
     };
-  throw new Error("CI adapter proof must return summary or unavailable");
+  throw new Error(
+    `CI adapter ${operation} must return ${field} or unavailable`,
+  );
 }
 
-export async function readCommandJobs(command, check, attempt, options) {
-  const response = await runAdapterForAttempt(
+/** @returns {Promise<{summary: any, unavailable?: undefined} | {summary?: undefined, unavailable: string}>} */
+export const readCommandProof = (command, check, attempt, options) =>
+  readAttemptAnswer(
+    "proof",
+    "summary",
+    isObject,
     command,
-    "jobs",
     check,
     attempt,
     options,
   );
-  const { jobs, unavailable } = isObject(response) ? response : {};
-  if (Array.isArray(jobs) && unavailable === undefined) return { jobs };
-  if (typeof unavailable === "string" && unavailable && jobs === undefined)
-    return {
-      unavailable: truncateUtf8(unavailable, unavailableReasonBytes).text,
-    };
-  throw new Error("CI adapter jobs must return jobs or unavailable");
-}
+
+/** @returns {Promise<{jobs: any[], unavailable?: undefined} | {jobs?: undefined, unavailable: string}>} */
+export const readCommandJobs = (command, check, attempt, options) =>
+  readAttemptAnswer(
+    "jobs",
+    "jobs",
+    Array.isArray,
+    command,
+    check,
+    attempt,
+    options,
+  );
 
 /** @typedef {{runId: string | number, attemptId: string | number, sha: string}} RebuildAttempt */
 /** @returns {Promise<{result: "accepted", attempt: RebuildAttempt} | {result: "refused" | "uncertain", reason: string}>} */

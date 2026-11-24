@@ -146,8 +146,8 @@ which chooses the publisher: the
 for completed selected work, history-preserving integration for a published
 prefix and the complete reviewed tip above it, a
 [session close](references/publish-reviewed-checkout.md#publish-a-session-close)
-for ordinary reviewed work with a Dashboard landing context, or
-[publish the candidate](../dough-execute-plan/references/publish-the-candidate.md)
+for ordinary reviewed work with a Dashboard landing context or a retained
+native session UUID and title, or [publish the candidate](../dough-execute-plan/references/publish-the-candidate.md)
 for any other wholly unpublished suffix. Keep the queued-closure check
 before each reconciliation and retry, and recheck affected proof before pushing.
 Preserve the state on a conflict, refusal, failed recheck or second rejection;

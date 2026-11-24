@@ -7,7 +7,7 @@
 // ancestor by local Git, then the newest completed one that did not
 // succeed, at the requested revision and then at an ancestor. Its summary is
 // read through the shared CI proof read (./ci-proof-read.mjs).
-import { createCommandAcquisition } from "../../dough-execute-plan/scripts/ci-command-adapter.mjs";
+import { discoverCommandAttempts } from "../../dough-execute-plan/scripts/ci-command-adapter.mjs";
 import { createGitHubActions } from "../../dough-execute-plan/scripts/ci-github-actions.mjs";
 import {
   readCiAdapterSummary,
@@ -68,15 +68,17 @@ export async function listedAttempts(ci, signal) {
       conclusion: run.conclusion ?? null,
     }));
   }
-  const acquisition = createCommandAcquisition({
-    command: ci.adapter,
-    repo: ci.repository,
-    branch: ci.branch,
-    root: ci.root,
-    includeOtherBranches: true,
-  });
-  await acquisition.acquireRuns(signal);
-  return (await acquisition.discoverAnsweredAttempts()).map((run) => ({
+  const { attempts } = await discoverCommandAttempts(
+    {
+      command: ci.adapter,
+      repo: ci.repository,
+      branch: ci.branch,
+      root: ci.root,
+      includeOtherBranches: true,
+    },
+    signal,
+  );
+  return attempts.map((run) => ({
     runId: String(run.databaseId),
     attemptId: String(run.attempt),
     branch: ci.branch,
