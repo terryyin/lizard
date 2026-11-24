@@ -63,6 +63,7 @@ def _any_delimited(one_line):
 
 _PERCENT_LITERAL = (r"\%(?:[qQwWiIsx]?" + _any_delimited(True) +
                     r"|r" + _any_delimited(False) + r"[a-z]*)")
+_UNESCAPED_INTERPOLATION = re.compile(r"(?<!\\)(?:\\\\)*#\{")
 
 
 class RubyReader(RubylikeReader):
@@ -149,12 +150,15 @@ class RubyReader(RubylikeReader):
                             yield token
                             break
                 elif token.startswith('"'):
-                    first, sep, _ = token.partition('#{')
-                    if sep:
-                        yield first + '"'
+                    marker = token.find('#{')
+                    if marker > 0 and token[marker - 1] == '\\':
+                        match = _UNESCAPED_INTERPOLATION.search(token)
+                        marker = match.end() - 2 if match else -1
+                    if marker != -1:
+                        yield token[:marker] + '"'
                         yield '${'  # because #will be regarded as comments
-                        bracket_stack.append(sep)
-                        source = source[token.begin + token.find(sep)+2:]
+                        bracket_stack.append('#{')
+                        source = source[token.begin + marker + 2:]
                         break
                 yield token
             else:
