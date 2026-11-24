@@ -592,6 +592,28 @@ def second = 2
             [('first', 2, 2)],
             [(f.name, f.start_line, f.end_line) for f in result])
 
+    def test_star_operator_symbols_are_single_values(self):
+        code = '''
+def product
+  @factors.reduce(:*)
+end
+
+def multiply = :*
+def exponentiate = :**
+
+def finish
+  :done
+end
+'''
+
+        functions = get_ruby_function_list(code)
+
+        self.assertEqual(
+            [('product', 2, 4), ('multiply', 6, 6),
+             ('exponentiate', 7, 7), ('finish', 9, 11)],
+            [(fn.name, fn.start_line, fn.end_line) for fn in functions])
+        self.assertEqual(8, functions[0].token_count)
+
     def test_setter_and_operator_methods_keep_their_body(self):
         result = get_ruby_function_list('''
 class Box
