@@ -11,6 +11,8 @@ class LuaReader(RubylikeReader):
     ext = ['lua']
     language_names = ['lua']
 
+    _control_flow_keywords = {'if', 'elseif', 'until', 'for', 'while'}
+
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
         return RubylikeReader.generate_tokens(
