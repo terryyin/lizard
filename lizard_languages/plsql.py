@@ -27,9 +27,8 @@ Design Decisions:
 - FOR/WHILE LOOP: The FOR/WHILE keyword adds complexity; the following LOOP
   keyword is part of the same construct and doesn't add additional complexity.
 
-- Parameter Counting: Currently counts all non-whitespace tokens and commas
-  in parameter lists. This approach works but differs from some other language
-  implementations.
+- Parameter Counting: Only commas at the formal parameter list's outer
+  level separate parameters; nested default expressions stay together.
 """
 
 from .code_reader import CodeReader, CodeStateMachine
@@ -152,6 +151,8 @@ class PLSQLStates(CodeStateMachine):
     def __init__(self, context):
         super(PLSQLStates, self).__init__(context)
         self.in_parameter_list = False
+        self._parameter_depth = 0
+        self._parameter_tokens = []
         self.last_control_keyword = None  # Track FOR/WHILE to avoid counting their LOOP
         self.declaring_nested_function = (
             False  # Track if we're declaring a nested function
@@ -263,15 +264,33 @@ class PLSQLStates(CodeStateMachine):
 
     def _parameters(self, token):
         """Read parameters."""
-        if token == ")":
-            self.in_parameter_list = False
-            self.next(self._after_parameters)
-        elif token == ",":
-            # Each comma separates parameters
+        if token.isspace():
+            return
+        if token == "(":
+            self._parameter_depth += 1
+            if self._parameter_depth == 1:
+                self._parameter_tokens = []
+                return
+        elif token == ")":
+            self._parameter_depth -= 1
+            if self._parameter_depth == 0:
+                self._finish_parameter()
+                self.in_parameter_list = False
+                self.next(self._after_parameters)
+                return
+        if token == "," and self._parameter_depth == 1:
+            self._finish_parameter()
             self.context.parameter(token)
-        elif not token.isspace() and token != "\n":
-            # Track non-whitespace tokens as potential parameters
-            self.context.parameter(token)
+        else:
+            self._parameter_tokens.append(token)
+
+    def _finish_parameter(self):
+        if self._parameter_tokens:
+            self.context.parameter(self._parameter_tokens[0])
+            if len(self._parameter_tokens) > 1:
+                self.context.add_to_long_function_name(
+                    " " + " ".join(self._parameter_tokens[1:]))
+            self._parameter_tokens = []
 
     def _after_parameters(self, token):
         """After parameters, look for IS/AS or RETURN."""
