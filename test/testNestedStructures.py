@@ -303,3 +303,30 @@ class TestNestedStructuresAcrossFiles(unittest.TestCase):
         analyzer.analyze_source_code(*first)
         functions = analyzer.analyze_source_code(*second).function_list
         return [f.max_nested_structures for f in functions]
+
+
+class TestJavaNestedStructureScopes(unittest.TestCase):
+
+    def test_anonymous_method_does_not_include_callers_if(self):
+        source = """
+        class Dispatch {
+            void dispatch(boolean enabled, Runnable report) {
+                if (enabled) {
+                    Runnable task = new Runnable() {
+                        @Override
+                        public void run() {
+                            if (!Thread.currentThread().isInterrupted()) {
+                                report.run();
+                            }
+                        }
+                    };
+                    task.run();
+                }
+            }
+        }
+        """
+        analyzer = FileAnalyzer(get_extensions([NestedStructure()]))
+        functions = analyzer.analyze_source_code('Dispatch.java', source).function_list
+        self.assertEqual([('(anonymous)::run', 1), ('Dispatch::dispatch', 1)],
+                         [(function.name, function.max_nested_structures)
+                          for function in functions])
