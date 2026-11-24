@@ -166,6 +166,8 @@ class TypeAliasContext(TypeScriptTypeAnnotationStates):
         if token.isspace():
             if '\n' in token:
                 self.statemachine_return()
+        elif token == '\\':
+            self.next(self._escaped_name)
         elif token.replace('$', '_').isidentifier():
             self.next(self._after_name)
         else:
@@ -177,8 +179,19 @@ class TypeAliasContext(TypeScriptTypeAnnotationStates):
         elif token == '<':
             self.br_count = 1
             self.next(self._type_parameters)
+        elif token == '\\':
+            self.next(self._escaped_name)
         elif not token.isspace() and not (
                 token[0] == '<' and packed_type_arguments(token)):
+            self.statemachine_return()
+
+    def _escaped_name(self, token):
+        # The tokenizer splits identifier escapes, including the braces in
+        # a Unicode code point escape, into separate tokens.
+        if token[0] in '<=' or token.isspace():
+            self.next(self._after_name)
+            self._after_name(token)
+        elif token not in ('\\', '{', '}') and not ('_' + token.replace('$', '_')).isidentifier():
             self.statemachine_return()
 
     def _type_parameters(self, token):
