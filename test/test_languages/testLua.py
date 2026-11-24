@@ -139,6 +139,16 @@ class Test_parser_for_Lua(unittest.TestCase):
         self.assertEqual(2, len(result))
         self.assertEqual(3, result[0].cyclomatic_complexity)
 
+    def test_lua_method_names_do_not_add_nesting_depth(self):
+        analyzer = FileAnalyzer(get_extensions(['nd']))
+        result = analyzer.analyze_source_code('schedule.lua', '''
+local function schedule(task, report_error)
+  task.try(1)
+  task:catch(report_error)
+end
+''')
+        self.assertEqual([0], [f.max_nesting_depth for f in result.function_list])
+
     def test_class_method(self):
         result = get_function_list('''
         function V.f(n)
