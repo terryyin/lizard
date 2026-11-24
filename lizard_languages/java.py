@@ -59,6 +59,7 @@ class JavaReader(CLikeReader):
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
+        addition = r'|"""[ \t\f]*\r?\n(?:\\.|[^\\"]|"(?!""))*"""' + addition
         return clike_tokens(source_code, addition, token_class)
 
 
