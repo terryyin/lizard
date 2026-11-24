@@ -17,10 +17,43 @@ machine as the script.
 
 Line numbers are the lines of the `.svelte` file.
 
+## The component
+
+The component itself is one more function, `(component)`. It holds the code
+outside every function and snippet: the top-level statements of the
+instance script (imports, declarations, `$:` statements, `$derived(...)`,
+plain `if` and `for`) and the top-level markup. The Svelte compiler turns
+this code into the function of the component.
+
+- Functions, callbacks and snippets in the component stay functions of
+  their own, and their decision points count only for them, as for nested
+  functions in a script. So an `$effect(() => ...)` or `$derived.by(...)`
+  callback is a function, as the same callback is in a `.js` file.
+- Markup inside a snippet belongs to the snippet. Markup between the tags
+  of a component, outside `{#snippet}`, belongs to the component.
+- The module script (`<script module>` or `<script context="module">`)
+  runs once for all instances, so its top-level code is not part of the
+  component. As in the Svelte compiler, the attribute names are case
+  sensitive. It stays outside every function, as top-level code does in a
+  script. `-Eoutside` reports it as `*global*`.
+- The component starts at its first line of code. It ends at its last
+  line of code, or at the end of the last function or snippet in it.
+- NLOC and the token count are those of the code that the component holds,
+  as for an outer function in a script. A line that starts a function
+  counts for both. So does a line with code of the component and of the
+  module script.
+- When a file ends inside a function, the function ends first, and the
+  component comes after it. A function that is still open around it is
+  not reported, as in a script.
+- A file without code in the instance script or the markup, such as static
+  markup or only a module script, has no component.
+- `#lizard forgive global` forgives the component.
+- A default value in a destructuring declaration adds one, as in a script.
+  So `let { size = 'md' } = $props();` adds one.
+
 ## Complexity
 
-Inside a function or a snippet, the block tags count like the script
-statements that they stand for:
+The block tags count like the script statements that they stand for:
 
 | Markup | Read as | CCN |
 |---|---|---|
@@ -42,6 +75,8 @@ Nesting depth (`-END`), nested structures (`-ENS`) and cognitive complexity
 (`-Ecognitive`) see the same statements. So an `{#if}` inside an `{#each}`
 nests, and `{:else if}` does not. The `{:else}` of an `{#each}` counts like
 the `else` of an `if`.
+The end of a script block ends its last statement, as a `;` does, so the
+code after `</script>` does not nest in it.
 
 ## Lines and tokens
 
@@ -53,9 +88,6 @@ statement that it stands for, and an expression adds its own tokens and a
 
 ## Limits
 
-- Logic in the markup outside every snippet and function, such as a
-  top-level `{#if}`, belongs to no reported function. Top-level script
-  statements behave the same way.
 - The rules of the JavaScript reader apply to markup expressions too. In
   `() => () => x` only the outer arrow is reported. An arrow function inside
   a template literal `${...}` is not reported. A default parameter value
@@ -66,6 +98,17 @@ statement that it stands for, and an expression adds its own tokens and a
   whose brackets do not match is skipped. A `{` that does not close holds
   the rest of the markup up to the next script block, as in the Svelte
   compiler.
+- A `<script>` tag outside every element is read as a script block, as at
+  the top level. This applies inside a block tag such as `{#if}`, and in a
+  string, a template or a comment of a markup expression. The Svelte
+  compiler reads such a tag as an element or as text.
+- The end of a script block ends a function as a line break does. So a
+  TypeScript arrow function whose body ends with a type argument, as in
+  `() => Array<string>`, holds the markup after `</script>`, as it holds
+  the next line in a `.ts` file.
+- Cognitive complexity reads markup code after `</script>` on the same line
+  as part of the last statement of the script, when that statement has no
+  `;`.
 - To find the script blocks, lizard ends a `{...}` attribute value in a
   start tag at its first `}`. So a value that does not close, as in
   `<p attr={oops`, hides a script block after it, and that block's

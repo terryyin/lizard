@@ -2,18 +2,29 @@ import time
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 import lizard
 from lizard import FileAnalyzer, analyze_file, get_extensions
 from lizard_ext.lizardcognitive import LizardExtension as Cognitive
+from lizard_ext.lizardcpre import LizardExtension as CPreprocessor
+from lizard_ext.lizarddumpcomments import LizardExtension as DumpComments
 from lizard_ext.lizardnd import LizardExtension as NestingDepth
 from lizard_ext.lizardns import LizardExtension as NestedStructures
+from lizard_ext.lizardoutside import LizardExtension as Outside
 from lizard_languages import js_style_regex_context
+
+COMPONENT = '(component)'
+
+
+def without_component(functions):
+    return [f for f in functions if f.name != COMPONENT]
 
 
 def get_svelte_function_list(source_code):
-    return analyze_file.analyze_source_code(
-        "Counter.svelte", source_code).function_list
+    """The functions of a component, without the component unit."""
+    return without_component(analyze_file.analyze_source_code(
+        "Counter.svelte", source_code).function_list)
 
 
 def function_summaries(functions):
@@ -174,7 +185,7 @@ class TestSvelte(unittest.TestCase):
             Path(directory, 'Counter.svelte').write_text(COUNTER_SCRIPT)
             results = list(lizard.analyze([directory]))
         self.assertEqual(
-            ['increment'],
+            ['increment', COMPONENT],
             [f.name for info in results for f in info.function_list])
 
 
@@ -263,7 +274,7 @@ class TestSvelteMarkup(unittest.TestCase):
             (grid.name, grid.cognitive_complexity, grid.max_nesting_depth,
              grid.max_nested_structures))
 
-    def test_top_level_markup_logic_is_outside_functions(self):
+    def test_top_level_markup_logic_goes_to_the_component(self):
         script = '''\
 <script>
   function reset() { count = 0; }
@@ -276,13 +287,19 @@ class TestSvelteMarkup(unittest.TestCase):
   {/each}
 {/if}
 '''
-        script_only = get_svelte_function_list(script)
-        with_markup = get_svelte_function_list(script + markup)
+        script_only = analyze_file.analyze_source_code('C.svelte', script)
+        with_markup = analyze_file.analyze_source_code(
+            'C.svelte', script + markup)
         self.assertEqual(
             [(f.name, f.cyclomatic_complexity, f.nloc, f.token_count)
-             for f in script_only],
+             for f in without_component(script_only.function_list)],
             [(f.name, f.cyclomatic_complexity, f.nloc, f.token_count)
-             for f in with_markup])
+             for f in without_component(with_markup.function_list)])
+        self.assertEqual(
+            [(COMPONENT, 1), (COMPONENT, 5)],
+            [(f.name, f.cyclomatic_complexity) for f in (
+                script_only.function_list[-1],
+                with_markup.function_list[-1])])
 
     def test_only_markup_lines_with_code_count_as_code(self):
         result = analyze_file.analyze_source_code('Title.svelte', '''\
@@ -303,7 +320,7 @@ class TestSvelteMarkup(unittest.TestCase):
 ''')
         self.assertEqual([('f', 2, 2, 1), ('a', 7, 11, 3)],
                          [(f.name, f.start_line, f.end_line, f.nloc)
-                          for f in result.function_list])
+                          for f in without_component(result.function_list)])
         self.assertEqual(4, result.nloc)
 
     def test_attribute_and_directive_expressions(self):
@@ -791,7 +808,7 @@ class TestSvelteMarkup(unittest.TestCase):
         self.assertEqual(
             [('s', 1, 1, 0), ('g', 3, 3, 1)],
             [(f.name, f.start_line, f.end_line, f.max_nested_structures)
-             for f in result.function_list])
+             for f in without_component(result.function_list)])
 
     def test_closing_brace_on_its_own_line_adds_no_code_line(self):
         result = analyze_file.analyze_source_code('Component.svelte', '''\
@@ -802,7 +819,7 @@ class TestSvelteMarkup(unittest.TestCase):
         self.assertEqual(
             [('(anonymous)', 2, 2, 1)],
             [(f.name, f.start_line, f.end_line, f.nloc)
-             for f in result.function_list])
+             for f in without_component(result.function_list)])
         self.assertEqual(1, result.nloc)
 
     def test_comment_after_the_code_adds_no_code_line(self):
@@ -826,3 +843,519 @@ class TestSvelteMarkup(unittest.TestCase):
         for _ in range(10):
             get_svelte_function_list(source)
         self.assertEqual(cached, len(js_style_regex_context._MARK_CACHE))
+
+
+def analyze_svelte(source_code, extensions=()):
+    return FileAnalyzer(get_extensions(list(extensions))).analyze_source_code(
+        "List.svelte", source_code)
+
+
+def component_of(result):
+    components = [f for f in result.function_list if f.name == COMPONENT]
+    return components[0] if components else None
+
+
+def complexity(function):
+    return (function.cyclomatic_complexity, function.max_nesting_depth,
+            function.max_nested_structures, function.cognitive_complexity)
+
+
+class TestSvelteComponent(unittest.TestCase):
+
+    def test_component_holds_top_level_script_and_markup(self):
+        result = analyze_svelte('''\
+<script>
+  export let items = []
+  export let mode
+  $: visible = mode === 'all' ? items : items.filter((i) => i.active)
+  $: if (visible.length > 100) console.warn('long list')
+</script>
+
+{#if visible.length}
+  <ul>
+    {#each visible as item}
+      <li class={item.done ? 'done' : ''}>{item.name}</li>
+    {/each}
+  </ul>
+{:else if mode === 'all'}
+  <p>Nothing here</p>
+{/if}
+''')
+        self.assertEqual(
+            [('(anonymous)', 4, 4, 1), (COMPONENT, 2, 16, 7)],
+            function_summaries(result.function_list))
+        self.assertEqual((10, 0), (component_of(result).nloc,
+                                   component_of(result).parameter_count))
+
+    def test_functions_and_snippets_keep_their_own_decision_points(self):
+        result = analyze_svelte('''\
+<script>
+  let { items } = $props();
+  const active = items.filter((i) => i.on && !i.hidden);
+  function pick(item) {
+    if (item.locked) return;
+    selected = item;
+  }
+</script>
+
+{#snippet row(item)}
+  {#if item.on}<b>{item.name}</b>{:else}{item.name}{/if}
+{/snippet}
+
+<ul>
+  {#each active as item}
+    <li onclick={() => item.locked || pick(item)}>{@render row(item)}</li>
+  {/each}
+</ul>
+''')
+        self.assertEqual(
+            [('(anonymous)', 3, 3, 2), ('pick', 4, 7, 2), ('row', 10, 12, 2),
+             ('(anonymous)', 16, 16, 2), (COMPONENT, 2, 17, 2)],
+            function_summaries(result.function_list))
+
+    def test_svelte_4_reactive_statements(self):
+        result = analyze_svelte('''\
+<script>
+  export let items = [];
+  export let filter;
+  $: shown = filter ? items.filter((i) => i.on) : items;
+  $: if (shown.length > 10) {
+    console.warn('many');
+  } else if (!shown.length) {
+    console.warn('none');
+  }
+  $: {
+    for (const item of shown) total += item.n ?? 0;
+  }
+</script>
+''')
+        self.assertEqual(
+            [('(anonymous)', 4, 4, 1), (COMPONENT, 2, 12, 6)],
+            function_summaries(result.function_list))
+
+    def test_rune_callbacks_are_functions_and_rune_arguments_are_not(self):
+        result = analyze_svelte('''\
+<script lang="ts">
+  let { items, filter } = $props();
+  let shown = $derived(filter === 'all' ? items : items.filter((i) => i.on));
+  const total = $derived.by(() => {
+    let sum = 0;
+    for (const i of shown) sum += i.n || 0;
+    return sum;
+  });
+  $effect(() => {
+    if (total > 10) console.log(total);
+  });
+</script>
+''')
+        self.assertEqual(
+            [('(anonymous)', 3, 3, 1), ('(anonymous)', 4, 8, 3),
+             ('(anonymous)', 9, 11, 2), (COMPONENT, 2, 11, 2)],
+            function_summaries(result.function_list))
+
+    def test_prop_defaults_count_like_destructuring_defaults(self):
+        script = "let { size = 'md', disabled = false, ...rest } = $props();"
+        component = component_of(analyze_svelte(
+            '<script>\n  ' + script + '\n</script>\n'))
+        javascript = analyze_file.analyze_source_code(
+            'a.js', 'function f() {\n  ' + script + '\n}\n').function_list[0]
+        self.assertEqual(3, component.cyclomatic_complexity)
+        self.assertEqual(javascript.cyclomatic_complexity,
+                         component.cyclomatic_complexity)
+
+    def test_top_level_statements(self):
+        result = analyze_svelte('''\
+<script>
+  import { load } from './api';
+  let rows = [];
+  try {
+    rows = await load();
+  } catch (error) {
+    rows = [];
+  }
+  outer: for (const row of rows) {
+    for (const cell of row) {
+      if (!cell) continue outer;
+    }
+  }
+  while (rows.length > 100) rows.pop();
+</script>
+''')
+        self.assertEqual([(COMPONENT, 2, 14, 6)],
+                         function_summaries(result.function_list))
+
+    def test_markup_between_and_after_snippets(self):
+        result = analyze_svelte('''\
+{#if user}<p>{user.name}</p>{/if}
+{#snippet row(item)}
+  {#if item.done}<s>{item.name}</s>{:else}{item.name}{/if}
+{/snippet}
+<Table rows={items}>
+  {#snippet header()}
+    {#each columns as column}<th>{column}</th>{/each}
+  {/snippet}
+  {#if loading}<p>...</p>{/if}
+</Table>
+{#each items as item}{@render row(item)}{/each}
+''')
+        self.assertEqual(
+            [('row', 2, 4, 2), ('header', 6, 8, 2), (COMPONENT, 1, 11, 4)],
+            function_summaries(result.function_list))
+
+    def test_module_script_is_not_part_of_the_component(self):
+        source = '''\
+<script module>
+  export const sizes = small ? [1, 2] : [3];
+  if (import.meta.env.DEV) console.log('dev');
+  export function label(size) { return size || 'none'; }
+</script>
+<script>
+  let { size } = $props();
+</script>
+<p>{size > 1 ? 'big' : 'small'}</p>
+'''
+        self.assertEqual(
+            [('label', 4, 4, 2), (COMPONENT, 7, 9, 2)],
+            function_summaries(analyze_svelte(source).function_list))
+        self.assertEqual(
+            [('label', 4, 4, 2), (COMPONENT, 7, 9, 2), ('*global*', 0, 4, 3)],
+            function_summaries(
+                analyze_svelte(source, [Outside()]).function_list))
+
+    def test_legacy_module_script_after_the_markup(self):
+        result = analyze_svelte('''\
+<script>
+  export let size;
+</script>
+<p>{size > 1 ? 'big' : 'small'}</p>
+<script context="module">
+  export const sizes = small ? [1, 2] : [3];
+</script>
+''')
+        self.assertEqual([(COMPONENT, 2, 4, 2)],
+                         function_summaries(result.function_list))
+
+    def test_files_with_and_without_component_code(self):
+        cases = (
+            ('', []),
+            ('<h1>Home</h1>\n<style>h1 { color: red; }</style>\n', []),
+            ('<script module>\n  export const a = b || c;\n</script>\n', []),
+            ("<h1>{title ?? 'Home'}</h1>\n", [(COMPONENT, 1, 1, 2)]),
+            ('<script>\n  let a = b || c;\n</script>\n',
+             [(COMPONENT, 2, 2, 2)]),
+        )
+        for source, expected in cases:
+            with self.subTest(source=source):
+                self.assertEqual(expected, function_summaries(
+                    analyze_svelte(source).function_list))
+
+    def test_lines_and_tokens_are_those_of_the_component_code(self):
+        result = analyze_svelte('''\
+<script>
+  let x = 1;
+</script>
+
+<p>{x ? 'a' : 'b'}</p>
+<style>p { color: red; }</style>
+''')
+        component = component_of(result)
+        self.assertEqual((2, 5, 2, 11), (
+            component.start_line, component.end_line, component.nloc,
+            component.token_count))
+        self.assertEqual(2, result.nloc)
+
+    def test_component_ends_with_its_last_function_or_snippet(self):
+        snippet = component_of(analyze_svelte('''\
+<p>{a}</p>
+{#snippet s(x)}
+  {x}
+{/snippet}
+'''))
+        function = component_of(analyze_svelte('''\
+<script>
+  let a = 1;
+  function f() {
+    return a;
+  }
+</script>
+<p>static</p>
+'''))
+        self.assertEqual([(1, 4), (2, 5)], [
+            (snippet.start_line, snippet.end_line),
+            (function.start_line, function.end_line)])
+
+    def test_nesting_and_cognitive_complexity_as_in_a_function(self):
+        extensions = [NestingDepth(), NestedStructures(), Cognitive()]
+        markup = '''\
+{#if a}
+  {#each items as item}
+    {#if item.ok && ready}<p>{item.x ? 1 : 2}</p>{/if}
+  {/each}
+{:else if b}
+  <p>b</p>
+{/if}
+'''
+        script = '''\
+  $: if (a) {
+    for (const i of items) {
+      if (i && b) total += i ? 1 : 2;
+    }
+  }
+  try { await load(); } catch (e) { failed = true; }
+'''
+        top_level = analyze_svelte(markup, extensions)
+        in_snippet = analyze_svelte(
+            '{#snippet c()}\n' + markup + '{/snippet}\n', extensions)
+        self.assertEqual(complexity(in_snippet.function_list[0]),
+                         complexity(component_of(top_level)))
+        top_level = analyze_svelte(
+            '<script>\n' + script + '</script>\n', extensions)
+        in_function = analyze_svelte(
+            '<script>\nfunction c() {\n' + script + '}\n</script>\n',
+            extensions)
+        self.assertEqual(complexity(in_function.function_list[0]),
+                         complexity(component_of(top_level)))
+        self.assertEqual(7, component_of(top_level).cyclomatic_complexity)
+
+    def test_forgive_global_forgives_the_component(self):
+        result = analyze_svelte('''\
+<script>
+  // #lizard forgive global
+  let x = a ? 1 : 2;
+  function keep(y) { return y || 0; }
+</script>
+<p>{x && y}</p>
+''')
+        self.assertEqual([('keep', 4, 4, 2)],
+                         function_summaries(result.function_list))
+
+    def test_cut_off_component_is_reported_once_after_the_functions(self):
+        source = '''\
+<script module>
+  export const k = a ? 1 : 2;
+</script>
+<script>
+  let { items } = $props();
+  $: if (items) go(() => items.length > 1);
+  function pick(item) { if (item) select(item); }
+</script>
+{#snippet row(item)}{#if item}{item}{/if}{/snippet}
+<ul>{#each items as item}<li onclick={() => pick(item)}>{@render row(item)}</li>{/each}</ul>
+'''
+        for end in range(len(source) + 1):
+            for extensions in ((), (Outside(),)):
+                with self.subTest(end=end, outside=bool(extensions)):
+                    names = [f.name for f in analyze_svelte(
+                        source[:end], extensions).function_list
+                             if f.name != '*global*']
+                    self.assertLessEqual(names.count(COMPONENT), 1)
+                    if COMPONENT in names and not extensions:
+                        self.assertEqual(COMPONENT, names[-1])
+
+    def test_vue_reports_no_component(self):
+        functions = analyze_file.analyze_source_code('a.vue', '''\
+<template>
+  <p v-if="a && b">{{ a ? 1 : 2 }}</p>
+</template>
+<script setup>
+const x = a ? 1 : 2;
+</script>
+''').function_list
+        self.assertEqual([], functions)
+
+    def test_lookahead_does_not_move_tokens_between_units(self):
+        instance = analyze_svelte('''\
+<script>
+  const ready = true ? (1) : 2
+</script>
+''', [Outside()])
+        module = analyze_svelte('''\
+<script module>
+  const ready = true ? (1) : 2
+</script>
+<script>
+  const name = 'Svelte';
+</script>
+''')
+        self.assertEqual(
+            [(COMPONENT, 2, 2, 2, 10), ('*global*', 1),
+             (COMPONENT, 5, 5, 1, 5)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity,
+              f.token_count) for f in instance.function_list[:1]]
+            + [(f.name, f.token_count) for f in instance.function_list[1:]]
+            + [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity,
+                f.token_count) for f in module.function_list])
+
+    def test_cut_off_function_ends_before_the_component(self):
+        source = '''\
+<script>
+  function update() {
+    if (ready) run();
+'''
+        self.assertEqual(
+            [('update', 2, 3, 2), (COMPONENT, 2, 3, 1)],
+            function_summaries(analyze_svelte(source).function_list))
+        self.assertEqual(
+            ['update', COMPONENT, '*global*'],
+            [f.name for f in analyze_svelte(
+                source, [Outside()]).function_list])
+
+    def test_open_outer_functions_are_not_reported_as_in_a_script(self):
+        sources = ['''\
+<script module>if (a) a();</script>
+<script>
+  function f() { function g() {
+''', '''\
+<script module>if (a) a();</script>
+<script>
+  function f() {
+    function g() {
+      // GENERATED CODE
+    }
+  }
+</script>
+''']
+        self.assertEqual([['g', COMPONENT]] * 2, [
+            [f.name for f in analyze_svelte(source).function_list]
+            for source in sources])
+        self.assertEqual([[('g', 1), (COMPONENT, 1), ('*global*', 2)]] * 2, [
+            [(f.name, f.cyclomatic_complexity)
+             for f in analyze_svelte(source, [Outside()]).function_list]
+            for source in sources])
+
+    def test_component_ends_at_its_last_line_of_code(self):
+        component = component_of(analyze_svelte('''\
+<script>
+  const visible = (
+    true && false
+  )
+</script>
+'''))
+        self.assertEqual((2, 4, 3), (component.start_line, component.end_line,
+                                     component.nloc))
+
+    def test_line_shared_with_the_module_script_counts_for_both(self):
+        sources = [
+            '<script module>const shared = true;</script>{shared ? 1 : 2}\n',
+            '{a}<script module>let m;</script>{b ? 1 : 2}\n',
+            '{a}<script module></script>{b ? 1 : 2}\n',
+            '<script module>m</script>{a}<script module>n</script>{b ? 1 : 2}\n',
+        ]
+        self.assertEqual([(COMPONENT, 1, 1, 2)] * 4, [
+            (f.name, f.start_line, f.nloc, f.cyclomatic_complexity)
+            for source in sources
+            for f in analyze_svelte(source).function_list])
+
+    def test_shared_line_that_another_function_counts_is_the_component_line(self):
+        tail = '<script module>let m;</script>{b ? 1 : 2}\n'
+        sources = [
+            '{#snippet s()}\n{/snippet}' + tail,
+            '{#snippet s()}{`a\nb`}{/snippet}' + tail,
+            '<script>const x = (\na)</script>' + tail,
+        ]
+        self.assertEqual([(1, 2, 2, 2)] * 3, [
+            (component.start_line, component.end_line, component.nloc,
+             component.cyclomatic_complexity)
+            for component in (component_of(analyze_svelte(source))
+                              for source in sources)])
+
+    def test_shared_line_after_an_open_module_function(self):
+        component = component_of(analyze_svelte(
+            '{x}\n{y}\n{z}\n<script module>function f() {</script>{a}'
+            '<script module>}</script>{b ? 1 : 2}\n'))
+        self.assertEqual((1, 4, 4, 2), (
+            component.start_line, component.end_line, component.nloc,
+            component.cyclomatic_complexity))
+
+    def test_module_attributes_as_the_svelte_compiler_reads_them(self):
+        sources = [
+            '<script MODULE>if (a) f()</script>\n',
+            '<script Context="module">if (a) f()</script>\n',
+            '<script context="modul&#101;">if (a) f()</script>\n',
+            '<script context="modul&#' + '0' * 5000 + '101;">if (a) f()</script>\n',
+            '<script context="&#' + '9' * 5000 + ';">if (a) f()</script>\n',
+        ]
+        self.assertEqual([
+            [(COMPONENT, 2), ('*global*', 1)],
+            [(COMPONENT, 2), ('*global*', 1)],
+            [('*global*', 2)],
+            [('*global*', 2)],
+            [(COMPONENT, 2), ('*global*', 1)],
+        ], [
+            [(f.name, f.cyclomatic_complexity)
+             for f in analyze_svelte(source, [Outside()]).function_list]
+            for source in sources])
+
+    def test_a_script_end_ends_its_last_statement(self):
+        sources = [
+            '<script>if (a) f()</script>{#if b}yes{/if}\n',
+            '<script>if (a) f()\n</script>{#if b}yes{/if}\n',
+            '<script module>if (a) f()</script>\n{#if b}yes{/if}\n',
+            '<script>if (a) f()</script>{(b) && c}\n',
+            '<script lang="ts">if (a) f<string></script>{#if b}yes{/if}\n',
+            '<script>if (a) f()</script>\n<script module>let m;</script>\n'
+            '{#if b}yes{/if}\n',
+        ]
+        self.assertEqual([(1, 1)] * 6, [
+            complexity(component_of(analyze_svelte(
+                source, [NestingDepth(), NestedStructures()])))[1:3]
+            for source in sources])
+
+    def test_code_after_a_script_end_nests_as_in_a_script(self):
+        component = component_of(analyze_svelte(
+            '<script module>let m;</script>\n<script>\nif (a) if (b) f()\n</script>\n',
+            [NestingDepth(), NestedStructures()]))
+        self.assertEqual((2, 2), complexity(component)[1:3])
+
+    def test_generated_code_ends_the_component(self):
+        source = '''\
+<script>
+  let x = a ? 1 : 2;
+  // GENERATED CODE
+  let generated = b ? 1 : 2;
+</script>
+'''
+        self.assertEqual(
+            [[(COMPONENT, 2, 2, 2)], [(COMPONENT, 2, 2, 2), ('*global*', 0, 0, 1)]],
+            [function_summaries(analyze_svelte(source, extensions).function_list)
+             for extensions in ((), (Outside(),))])
+
+    def test_comments_before_preprocessing_are_those_of_the_file(self):
+        source = '''\
+<script>
+  // Copyright Example
+  let x; // note
+</script>
+{x}
+'''
+        with patch('builtins.print') as printed:
+            analyze_svelte(source, [CPreprocessor(), DumpComments()])
+        self.assertEqual([' note'], [
+            call.args[0] for call in printed.call_args_list][3:])
+
+    def test_lines_of_the_first_and_last_code(self):
+        markup = component_of(analyze_svelte('{a ? 1 : 2}\n'))
+        script = component_of(analyze_svelte('''\
+<script>
+  let a = 1;
+  /* note
+  more */
+</script>
+'''))
+        separator = component_of(analyze_svelte(
+            '<script>let x;/* one\u2028two */</script>\n'))
+        tag = component_of(analyze_svelte('''\
+<script
+  lang="ts">
+  if (ready) start();
+</script>
+'''))
+        self.assertEqual([(1, 1, 1), (2, 2, 1), (1, 1, 1), (3, 3, 1)], [
+            (f.start_line, f.end_line, f.nloc)
+            for f in (markup, script, separator, tag)])
+
+    def test_markup_after_an_unclosed_module_function_is_in_it(self):
+        result = analyze_svelte(
+            '<script module>function f() {</script>{a ? 1 : 2}\n')
+        self.assertEqual([('f', 1, 1, 2)],
+                         function_summaries(result.function_list))

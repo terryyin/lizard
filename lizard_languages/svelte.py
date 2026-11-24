@@ -8,17 +8,24 @@ becomes the script statements that it stands for: `{#if a}` is
 `function f ( a ) {`, and each expression in a tag, an attribute or a
 directive is a statement of its own. Plain text, tags, static attributes,
 comments and styles add no tokens.
+
+The component itself is one more function, `(component)`: the code outside
+every function and snippet, in the instance script and in the markup. The
+code outside functions in `<script module>` is not part of it.
 '''
 
 import re
+from html import unescape
 from itertools import repeat
 
+from lizard_core.function_info import FunctionInfo
 from .js_style_regex_context import _MARK_CACHE, REGEX_START_MARKER
 from .js_style_regex_forward_scan import mark_forward
 from .javascript_expression import end_before_line_token
+from .javascript_statements import ImpliedSemicolons
 from .javascript_templates import interpolation_code
 from .typescript import TypeScriptReader
-from .vue import VueReader
+from .vue import VueReader, _attributes
 
 # In markup: a comment, a start or end tag, or a '{' that opens code.
 _MARKUP_ITEM = re.compile(r'<!--|<(/?)([A-Za-z][^\s/>{]*)|\{')
@@ -33,6 +40,8 @@ _RAW_TEXT_END = {name: re.compile(r'</' + name + r'\s*>')
 _OPENING = frozenset(('(', '[', '{', '${'))
 _CLOSING = frozenset((')', ']', '}'))
 _MEMBER_ACCESS = ('.', '?.')
+# The zeros at the start of the number of a character reference.
+_LEADING_ZEROS = re.compile(r'(&#[xX]?)0+(?=[0-9a-fA-F])')
 # The text of a string or a regular expression up to the character that
 # ends it, or up to the end of its line.
 _LITERAL_TEXT = {quote: re.compile(
@@ -42,13 +51,139 @@ _LITERAL_TEXT['/'] = re.compile(
 _BRACE = re.compile(r'[{}]')
 
 
-class _ScriptEnd(str):
-    """The end of a script block. Like a line that starts a statement, it
-    ends the last statement of the script, so markup code after the block
-    cannot continue it."""
+class _Switch(str):
+    """A place in the code tokens where the unit that owns the code outside
+    functions can change. It looks like a comment, so the preprocess of the
+    TypeScript reader and its lookahead pass it on, in order, without effect.
+    """
+    module = False          # the start of the module script
+    typescript = False      # the start of a script in TypeScript
 
 
-_SCRIPT_END = _ScriptEnd('script')
+# The end of a script block.
+_SCRIPT_END = _Switch('//')
+# Like a line that starts a statement, the end of a script block ends the
+# last statement of the script, so markup code after it cannot continue it.
+_STATEMENT_START = 'script'
+COMPONENT = '(component)'
+_COMMENT_STARTS = ('//', '/*')
+
+
+def _script_start(tag):
+    """The switch marker of a script tag. The module script runs once for
+    all instances of the component. As in the Svelte compiler, attribute
+    names are case sensitive, and values can hold character references."""
+    attributes = dict(_attributes(tag))
+    marker = _Switch('//')
+    marker.module = ('module' in attributes
+                     or _text(attributes.get('context', '')) == 'module')
+    marker.typescript = tag.lang in ('ts', 'tsx', 'typescript')
+    return marker
+
+
+def _text(value):
+    """An attribute value with its character references decoded."""
+    try:
+        return unescape(_LEADING_ZEROS.sub(r'\1', value))
+    except ValueError:      # a number too long for any character
+        return value
+
+
+def _enter(context, unit):
+    """Make unit the owner of the code outside functions from here on."""
+    if context.current_function is context.global_pseudo_function:
+        context.current_function = unit
+    context.global_pseudo_function = unit
+
+
+class _Units:
+    """The unit that owns the code outside functions: the component, or the
+    pseudo function of the module script. The component starts at its first
+    code and ends at its last code, which can be the end of a function in
+    it. A line that another unit counts before the component counts for
+    the component too, as for a nested function, and the same holds the
+    other way."""
+
+    def __init__(self, context):
+        self.context = context
+        self.module = context.global_pseudo_function
+        self.component = FunctionInfo(COMPONENT, context.fileinfo.filename)
+        self.component.nloc = self.component.token_count = 0
+        self.owner = self.component
+        self.region_has_code = False
+        self.end_line = 0       # the last line of code of the component
+        self.counted = {}       # the last line that each unit counts
+        _enter(context, self.component)
+
+    def switch(self, module, last_line, line):
+        """Switch to the module script or to the component. last_line is
+        the line of the last code before, and line the start of the last
+        line with code: (its number, the NLOC of the owner before it).
+        Returns whether the next code is the first code of a new region."""
+        unit = self.module if module else self.component
+        if unit is self.owner:
+            return False
+        self.end_region(last_line, line)
+        self.owner = unit
+        _enter(self.context, unit)
+        return True
+
+    def first_code(self, line, shared):
+        """The first code of a region, on a line that the code before it
+        has counted when shared."""
+        owner = self.owner
+        self.region_has_code = True
+        if self.context.current_function is owner:
+            if shared and self.counted.get(owner) != line:
+                owner.nloc += 1
+            if owner is self.component and not owner.start_line:
+                owner.start_line = line
+
+    def end_region(self, last_line, line):
+        """The current region ends; last_line is the line of its last code.
+        The owner counts last_line when its NLOC has grown by more lines
+        than the code before last_line since the start of the line."""
+        if self.region_has_code:
+            owner = self.owner
+            if owner.nloc - line[1] > last_line - line[0]:
+                self.counted[owner] = last_line
+            if owner is self.component:
+                self.end_line = last_line
+        self.region_has_code = False
+
+    def finish(self, last_line, line, state):
+        """At the end of the tokens: end the open function, report the
+        component if it has code, and give the module script its place.
+        As in a script, the functions that are still open around it are
+        not reported."""
+        context = self.context
+        self.end_region(last_line, line)
+        state.statemachine_before_return()
+        component = self.component
+        component.end_line = self.end_line
+        if component.start_line and not context.forgive_global:
+            context.fileinfo.function_list.append(component)
+        context.current_function = self.module
+        context.global_pseudo_function = self.module
+
+
+class _Statements(ImpliedSemicolons):
+    """The places where a statement ends without a ';'. The end of a script
+    ends its last statement, as a ';' does, so the code after it cannot
+    continue it."""
+    # pylint: disable=R0903
+
+    def __init__(self, context):
+        super().__init__(context)
+        self._script_ends = 0   # the script ends read so far
+
+    def before(self, token):
+        script_ends = self._context.script_ends
+        if self._script_ends == script_ends:
+            return super().before(token)
+        self._script_ends = script_ends
+        super().before(token)
+        return True
 
 
 def _marks(code):
@@ -447,6 +582,7 @@ class SvelteReader(VueReader):
 
     ext = ['svelte']
     language_names = ['svelte']
+    implied_semicolons = _Statements
 
     @staticmethod
     def markup_tokens(source_code, start, end):
@@ -454,11 +590,66 @@ class SvelteReader(VueReader):
             yield _SCRIPT_END
         yield from _MarkupTokens(source_code, start, end)
 
+    @staticmethod
+    def tag_tokens(tag):
+        yield _script_start(tag)
+        yield from repeat('\n', tag.count('\n'))
+
     def code_tokens(self, tokens):
+        """The script tags are switch markers, so all tokens are code."""
+        return tokens
+
+    @staticmethod
+    def get_comment_from_token(token):
+        """A comment, or None. A switch marker is not a comment of the file,
+        for an extension that reads the tokens before preprocess does."""
+        if token.startswith(_COMMENT_STARTS) and token.__class__ is not _Switch:
+            return token[2:]
+        return None
+
+    def preprocess(self, tokens):
+        """The tokens of TypeScriptReader.preprocess without the switch
+        markers. The code outside functions goes to the component, except
+        in the module script."""
+        context = self.context
         state = self.parallel_states[0]
-        for token in super().code_tokens(tokens):
-            if token.__class__ is _ScriptEnd:
-                end_before_line_token(
-                    state, self.context.expression_arrows, token)
-            else:
+        units = _Units(context)
+        context.script_ends = 0     # the number of scripts that have ended
+        newlines = 1        # since the last code token
+        first = True        # the next code token is the first of a region
+        # The start of the last line with code: its number, and the NLOC of
+        # the owner before it.
+        line = (1, 0)
+        try:
+            for token in super().preprocess(tokens):
+                if token == '\n':
+                    newlines += 1
+                elif token.startswith(_COMMENT_STARTS):
+                    if token.__class__ is _Switch:
+                        if token is _SCRIPT_END:
+                            end_before_line_token(
+                                state, context.expression_arrows,
+                                _STATEMENT_START)
+                            context.script_ends += 1
+                        else:
+                            context.class_field_annotations = token.typescript
+                        if units.switch(token.module,
+                                        context.current_line - newlines, line):
+                            first = True
+                            line = (context.current_line, units.owner.nloc)
+                        continue
+                    # As comment_counter counts the lines of a comment.
+                    newlines += len(token.splitlines()) - 1
+                else:
+                    if first:
+                        first = False
+                        units.first_code(context.current_line, not newlines)
+                    if newlines:
+                        line = (context.current_line, units.owner.nloc)
+                        newlines = 0
                 yield token
+        except GeneratorExit:
+            # A comment with "GENERATED CODE" ends the tokens early.
+            units.finish(context.current_line - newlines, line, state)
+            raise
+        units.finish(context.current_line - newlines, line, state)
