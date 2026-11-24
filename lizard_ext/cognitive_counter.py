@@ -301,10 +301,13 @@ class _Counter(object):  # pylint: disable=R0902
         # The reader may still be appending to the name (``A`` -> ``A::f``),
         # so it is compared on every candidate token.
         if token in function.name and token == function.unqualified_name:
-            if state.prev in _MEMBER_ACCESS:
-                calls = state.prev != '::' and state.prev2 in _SELF_REFERENCES
+            previous = state.prev
+            # A grouped or type-asserted optional receiver could be `this`.
+            if previous in _MEMBER_ACCESS or (
+                    previous == '?.' and self.profile.optional_chaining
+                    and state.prev2 not in (')', '!')):
+                calls = previous != '::' and state.prev2 in _SELF_REFERENCES
             else:
-                # `this?.catch()` names a member, as `this?.run()` does.
                 calls = getattr(token, 'is_member_name', False) or not (
                     self.profile.reserved_structures
                     and self._is_structure(token))
