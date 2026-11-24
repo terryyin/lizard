@@ -44,9 +44,13 @@ class CSharpReader(CLikeReader):
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
         # A verbatim identifier, `@if`, is one name and never a keyword.
+        # Verbatim strings double quotes; raw strings match their quote count.
         # // comments end on the same line (not C/C++ line continuation).
         return clike_tokens(
-                source_code, r"|(?:\?\?)" + _VERBATIM_KEYWORD, token_class)
+            source_code,
+            r'|@"(?:""|[^"])*"'
+            r'|(?P<csharp_quotes>"{3,})(?!").*?(?P=csharp_quotes)(?!")'
+            r"|(?:\?\?)" + _VERBATIM_KEYWORD, token_class)
 
 
 def _name(token):
