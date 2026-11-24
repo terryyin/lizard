@@ -284,3 +284,93 @@ end
         analyzer = FileAnalyzer(get_extensions(['cognitive']))
         result = analyzer.analyze_source_code('a.rb', code).function_list
         self.assertEqual([1], [f.cognitive_complexity for f in result])
+
+
+class Test_Ruby_percent_literal(unittest.TestCase):
+    """A % literal ends at its own closing delimiter. A nested pair of the
+    same delimiter or an interpolation inside it does not end it."""
+
+    def check_tokens(self, expect, source):
+        self.assertEqual(expect, list(RubyReader.generate_tokens(source)))
+
+    def test_interpolation_in_a_literal_does_not_end_the_function(self):
+        result = get_ruby_function_list(r'''
+class Store
+  def product(s, a)
+    x = s.match?(%r{/dp/#{a}\z}i)
+    x
+  end
+
+  def labels(a)
+    %W(#{a}-x #{a}-y).each do |l|
+      puts l
+    end
+  end
+
+  def finish
+    1
+  end
+end
+''')
+        self.assertEqual(
+            [('product', 3, 6), ('labels', 8, 12), ('finish', 14, 16)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_a_percent_sign_in_an_unread_regex_does_not_run_on(self):
+        result = get_ruby_function_list('''
+def kind(s)
+  if /^%w/ =~ s
+    1
+  end
+end
+
+def half(a)
+  a.sum / 2
+end
+''')
+        self.assertEqual(
+            [('kind', 2, 6), ('half', 8, 10)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_a_regex_with_another_delimiter_can_span_lines(self):
+        result = get_ruby_function_list(r'''
+def details(sql)
+  match = %r/
+    TABLE\s+(\w+)?\s+
+    (end)?
+  /xi.match(sql)
+  match
+end
+''')
+        self.assertEqual(
+            [('details', 2, 8, 1)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+             for f in result])
+
+    def test_nested_pairs_and_interpolation_stay_in_the_literal(self):
+        self.check_tokens([r'%r{/dp/#{a}\z}i'], r'%r{/dp/#{a}\z}i')
+        self.check_tokens(['%r{#{h.fetch(:a) { |k| k }}}x'],
+                          '%r{#{h.fetch(:a) { |k| k }}}x')
+        self.check_tokens(['%w(a (b) c)'], '%w(a (b) c)')
+        self.check_tokens(['%i[a [b] c]'], '%i[a [b] c]')
+        self.check_tokens(['%(<b>#{f(x)}</b>)'], '%(<b>#{f(x)}</b>)')
+        self.check_tokens(['%Q<a <b> #{c}>'], '%Q<a <b> #{c}>')
+
+    def test_every_percent_form(self):
+        self.check_tokens(['%W[#{a} b]'], '%W[#{a} b]')
+        self.check_tokens(['%I[a b]'], '%I[a b]')
+        self.check_tokens(['%x{ls #{dir}}'], '%x{ls #{dir}}')
+        self.check_tokens(['%s(a)'], '%s(a)')
+
+    def test_delimiters_that_are_not_pairs(self):
+        self.check_tokens(['%r!^/end!i'], '%r!^/end!i')
+        self.check_tokens(['%w|a b|'], '%w|a b|')
+        self.check_tokens(['%q/a b/'], '%q/a b/')
+        self.check_tokens(['%Q"a #{b} \\" c"'], '%Q"a #{b} \\" c"')
+        self.check_tokens(['%|a "b|'], '%|a "b|')
+
+    def test_modulo_stays_an_operator(self):
+        self.check_tokens(['a', ' ', '%', ' ', 'b'], 'a % b')
+        self.check_tokens(['x', ' ', '%', 'w'], 'x %w')
+        self.check_tokens(['"%d"', ' ', '%', ' ', 'n'], '"%d" % n')
+        self.check_tokens(['x', ' ', '%', '=', ' ', '2'], 'x %= 2')
