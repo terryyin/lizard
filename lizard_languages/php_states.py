@@ -174,8 +174,6 @@ class PHPLanguageStates(CodeStateMachine):
         elif token.startswith('$'):
             # Found a parameter (PHP parameters start with $)
             if self.started_function:
-                # Make sure we count each parameter uniquely
-                self.context.add_to_long_function_name(" " + token)
                 self.context.parameter(token)
 
     def _function_return_type_or_body(self, token):
