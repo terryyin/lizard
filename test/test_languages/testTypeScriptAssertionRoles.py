@@ -110,16 +110,18 @@ def test_arrow_ends_before_call_statement(suffix, factory):
 
 
 @pytest.mark.parametrize('suffix,params', [('ts', '<T>'), ('tsx', '<T,>')])
-def test_generic_function_type_alias_has_no_function_body(suffix, params):
+@pytest.mark.parametrize('name', ['Factory', r'\u0046actory', r'F\u{61}ctory'])
+def test_generic_function_type_alias_has_no_function_body(suffix, params, name):
     source = """type Result<T> = { value: T }
-type Factory = %s(
+type %s = %s(
   initializer: T,
 ) => Result<T>
 const factory: Factory = (value) => ({ value })
-""" % params
+""" % (name, params)
     functions = analyze(suffix, source)
-    assert [(f.start_line, f.end_line, f.parameters) for f in functions] == [
-        (5, 5, ['value'])]
+    assert [(f.start_line, f.end_line) for f in functions] == [(5, 5)]
+    if name == 'Factory':
+        assert functions[0].parameters == ['value']
 
 
 def test_adjacent_function_type_aliases_do_not_add_functions():
