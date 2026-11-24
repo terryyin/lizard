@@ -137,6 +137,21 @@ def recursive_repr(fillvalue='...'):
         self.assertEqual('recursive_repr.decorating_function.wrapper( self )',
                          functions[0].long_name)
 
+    def test_nested_function_name_after_explicit_line_join(self):
+        functions = get_python_function_list(r"""
+def normalize_message(prefix):
+    def with_suffix(suffix):
+        def \
+            normalize(value):
+            return prefix + value + suffix
+        return normalize
+    return with_suffix
+""")
+        self.assertEqual(
+            ['normalize_message.with_suffix.normalize',
+             'normalize_message.with_suffix', 'normalize_message'],
+            [f.name for f in functions])
+
     def test_nested_functions_ended_at_eof(self):
         class namespace6:
             def function1(a, b):
