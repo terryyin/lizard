@@ -184,6 +184,21 @@ def read_result(result):
         functions = self._get_funcs(code, Modified())
         self.assertEqual(2, functions[0].cyclomatic_complexity)
 
+    def test_nested_match_after_bare_carriage_return(self):
+        from lizard_ext.lizardmodified import LizardExtension as Modified
+        code = '''
+def classify(case, value):
+    match value:
+        case _:
+            case
+            match value:
+                case _:
+                    return True
+'''
+        code = code.replace('            case\n', '            case\r')
+        functions = self._get_funcs(code, Modified())
+        self.assertEqual(3, functions[0].cyclomatic_complexity)
+
     def test_case_variable_not_penalised_by_modified_extension(self):
         """'case = 5' must not drive complexity negative under lizardmodified."""
         from lizard_ext.lizardnd import LizardExtension as NestDepth
