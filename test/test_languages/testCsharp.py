@@ -89,6 +89,54 @@ class TestCsharp(unittest.TestCase):
         ''')
         self.assertEqual(2, result[0].cyclomatic_complexity)
 
+    def test_interpolated_string_with_quoted_brace(self):
+        result = get_csharp_function_list(r'''
+            class Labels
+            {
+                public string Join(string[] values)
+                {
+                    return $"{string.Join("\n{", values)}";
+                }
+
+                public int Count() { return 1; }
+            }
+        ''')
+        self.assertEqual(
+            [("Labels::Join", 4, 7), ("Labels::Count", 9, 9)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_interpolated_format_with_slashes(self):
+        result = get_csharp_function_list(r'''
+            class Labels
+            {
+                public string Format(System.DateTime date)
+                {
+                    return $"{date:yyyy//MM}";
+                }
+
+                public string Count(string label = "count") { return label; }
+            }
+        ''')
+        self.assertEqual(
+            [("Labels::Format", 4, 7), ("Labels::Count", 9, 9)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_interpolated_format_after_block_comment(self):
+        result = get_csharp_function_list(r'''
+            class Labels
+            {
+                public string Format(int count)
+                {
+                    return $"{count /* total */:0\\'}";
+                }
+
+                public string Footer() { return "*/}"; }
+            }
+        ''')
+        self.assertEqual(
+            [("Labels::Format", 4, 7), ("Labels::Footer", 9, 9)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
     def test_nullable_nested_type_argument_is_no_condition(self):
         result = get_csharp_function_list('''
             public void Method()
