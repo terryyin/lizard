@@ -71,6 +71,16 @@ fun statusLabel(active: Boolean): String {
              function.max_nesting_depth, function.max_nested_structures),
         )
 
+    def test_adjacent_template_conditions_are_independent(self):
+        analyzer = FileAnalyzer(get_extensions(["nd"]))
+        result = analyzer.analyze_source_code("status.kt", '''\
+fun reportStatus(active: Boolean, audit: Boolean) {
+    println("${if (active) 200 else 503} // audit: ${if (audit) "on" else "off"}")
+}
+''')
+        function, = result.function_list
+        self.assertEqual((3, 1), (function.cyclomatic_complexity, function.max_nesting_depth))
+
     def test_nested_string_templates_count_code_at_each_level(self):
         functions = get_kotlin_function_list('''\
 fun statusLabel(active: Boolean, delayed: Boolean): String {
