@@ -74,23 +74,23 @@ class _BraceActions(object):
     # -- one and two token lookaheads ----------------------------------------------
 
     def _resolve_pending_ternary(self, token):
+        """Confirm a pending conditional operator."""
         state = self.state
         if state.pending_ternary == 1:
             state.pending_ternary = 0
             if token in _NOT_TERNARY_NEXT:
-                return
+                return False
             if self.profile.nullable_types:
                 if self.line != state.pending_ternary_line:
-                    return
+                    return False
                 if _is_word(token):     # ``T? x`` or ``c ? x : y``
                     state.pending_ternary = 2
-                    return
+                    return False
         else:
             state.pending_ternary = 0
             if token in _NULLABLE_TYPE_FOLLOWERS:
-                return
-        self._structural()
-        self._push('ternary', BODY)
+                return False
+        return True
 
     def _resolve_pending_logical(self, token):
         """C++: ``T&& x = ...`` and ``auto&& x : v`` are not logical ands."""

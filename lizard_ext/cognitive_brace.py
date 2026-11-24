@@ -18,6 +18,7 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
     def __init__(self, reader, profile, gated):
         super(_BraceCounter, self).__init__(reader, profile, gated)
         self.lambda_triggers = _LAMBDA_TRIGGERS[profile.lambda_style]
+        self.ternary_in_head = reader.language_names[0] == "javascript"
         self.actions = self._keyword_actions(profile)
         if not profile.nesting:
             self._process = self._process_flat
@@ -36,8 +37,8 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         if state.pending_logical is not None:
             if self._resolve_pending_logical(token):
                 return
-        if state.pending_ternary:
-            self._resolve_pending_ternary(token)
+        if state.pending_ternary and self._resolve_pending_ternary(token):
+            self._start_ternary()
         frames = state.frames
         if frames and frames[-1].closing:
             if self._resolve_closing(token):
@@ -52,7 +53,7 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         elif token in _EXPRESSION_BREAKERS:
             state.logical.pop(state.pdepth, None)
             if token == ',':
-                self._pop_expression_frames(peer_comma=True)
+                self._pop_expression_frames(peer_separator=True)
         if token in ('(', '['):
             self._open_bracket()
         elif token in (')', ']'):
@@ -92,17 +93,26 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
                 return frame
         return None
 
-    def _pop_expression_frames(self, peer_comma=False):
-        """Ternary operators end with their enclosing brackets or a peer comma.
+    def _start_ternary(self):
+        top = self._top_structure() if self.ternary_in_head else None
+        if top is not None and top.phase == PAREN_HEAD:
+            # A control structure's nesting starts in its body.
+            self._add(len(self.state.frames))
+        else:
+            self._structural()
+        self._push('ternary', BODY)
 
-        A ``,`` at the same bracket depth as an open ternary ends that
-        ternary so the next one in the list is a sibling, not nested.
+    def _pop_expression_frames(self, peer_separator=False):
+        """Close a ternary at its enclosing bracket or a peer separator.
+
+        A comma between arguments or a semicolon between parts of a for
+        header makes the next ternary a sibling.
         """
         frames = self.state.frames
         pdepth = self.state.pdepth
         while frames and frames[-1].kind == 'ternary':
             open_depth = frames[-1].pdepth
-            if open_depth > pdepth or (peer_comma and open_depth == pdepth):
+            if open_depth > pdepth or (peer_separator and open_depth == pdepth):
                 frames.pop()
             else:
                 break
@@ -208,6 +218,12 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         if top.phase == PAREN_HEAD:
             if token == ')' and state.pdepth == top.pdepth:
                 top.phase = BODY_PENDING
+            elif token in ('?', ';') and self.ternary_in_head:
+                if token == '?':
+                    self._question()
+                elif (state.pdepth == top.pdepth + 1 and self.openers
+                      and self.openers[-1][0] == '('):
+                    self._pop_expression_frames(peer_separator=True)
             return True
         # BRACE_HEAD: Go / Rust / Swift ``if a && b {``
         if token == '{' and state.pdepth == top.pdepth:
