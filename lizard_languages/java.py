@@ -95,6 +95,8 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
     def _state_old_c_params(self, token):
         if token == '{':
             self._state_dec_to_imp(token)
+        elif token == ';':
+            self.next(self._state_global, token)
 
     def _state_dec_to_imp(self, token):
         if token == 'default':
