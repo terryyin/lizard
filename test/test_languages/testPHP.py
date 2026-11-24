@@ -147,6 +147,15 @@ function ignored() {}
         # This matches the behavior of the original implementation
         self.assertEqual(1, functions[0].parameter_count)
 
+    def test_parameters_in_long_name(self):
+        functions = get_php_function_list("""<?php
+function cacheKey(string $prefix, string $key): string {
+    return $prefix . ':' . $key;
+}
+""")
+        self.assertEqual(['cacheKey $prefix $key'],
+                         [f.long_name for f in functions])
+
     def test_function_assigning_to_a_name(self):
         functions = get_php_function_list("<?php $a = function ($a, $b){} ?>")
         self.assertEqual('$a', functions[0].name)
